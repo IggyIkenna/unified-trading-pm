@@ -23,7 +23,7 @@ summary: >-
   trigger apparently went missing. Every service Dockerfile `FROM`s this digest-pinned base image, so EVERY fleet Docker
   build has been baking in a 2+-day-stale UTL since 2026-07-23, silently, with the existing digest-refresh automation
   (`update-dependency-version.yml`) working exactly as designed but having nothing new to propagate.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -39,7 +39,7 @@ created: 2026-07-25
 parent_epic: infrastructure_master
 priority: P0
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-trading-pm@5e1a26e17
 locked_by:
 locked_since:
 source:
@@ -234,16 +234,40 @@ base-image pipeline without confirming the correct source config/IAM/connection 
       branch across 3 consecutive attempts; each retry was a clean `git pull --rebase --autostash` with zero conflicts,
       never a blind overwrite). Confirmed live on `origin/live-defi-rollout` via `git merge-base --is-ancestor` + direct
       content read (`git show origin/live-defi-rollout:.github/workflows/cloud-build-router.yml`).
-- [ ] [BACKEND] P3. Harden `notify-utl-base-image-not-configured` against an empty-`repo_type` recurrence (review flag,
-      msg 2012, 2026-07-25). The job's `repo_type != 'library'` guard fired correctly for the observed incident (run
-      30145190398 resolved `repo_type=service` for `unified-trading-library`, so the guard matched), but this same
+- [x] ✅ [BACKEND] P3. Harden `notify-utl-base-image-not-configured` against an empty-`repo_type` recurrence (review
+      flag, msg 2012, 2026-07-25). The job's `repo_type != 'library'` guard fired correctly for the observed incident
+      (run 30145190398 resolved `repo_type=service` for `unified-trading-library`, so the guard matched), but this same
       workflow already documents `repo_type` as UNRELIABLE when the dispatch payload omits it — the fallback then
       resolves to the workspace-manifest declared `type=library`, making `repo_type != 'library'` FALSE and silently
       suppressing this exact alert on a future recurrence. Gate the alert on `repo == 'unified-trading-library'`
       (identity, always known) rather than on the derived `repo_type`, or additionally fire when `repo_type` is
       empty/unknown, so a payload-omitted recurrence still pages. **Done when**: a simulated dispatch with empty
       `repo_type` for `unified-trading-library` still fires the alert. Not blocking — the shipped P2 fix fully covers
-      the OBSERVED failure mode and is QG-green; this closes a latent second suppression path only.
+      the OBSERVED failure mode and is QG-green; this closes a latent second suppression path only. —
+      **`unified-trading-pm@5e1a26e17`.** Scope turned out BROADER than the todo's literal text: the SAME
+      `repo_type != 'library'` gate that would suppress the alert also gates the auth steps AND the "Trigger Cloud Build
+      (Docker image)" step itself (`docker-build`, which is what SETS `build_triggered`/`build_failure_reason` — the
+      exact outputs the alert's own condition checks). Patching only the alert job's `if:` would NOT have satisfied its
+      own done-when: on an empty-payload dispatch, `docker-build` would still be skipped, those outputs would stay
+      empty, and the alert's `build_failure_reason == 'not-configured'` check would never match regardless of how the
+      `repo_type` clause was rewritten. Fixed at the single resolution point instead (`cloud-build-router.yml`'s `route`
+      step, where `repo_type` is derived from the manifest fallback): when the payload omits `repo_type` AND
+      `repo == 'unified-trading-library'` AND the manifest derivation lands on `library`, override it back to `service`
+      — matching what `quality-gates-v2.yml`'s own dispatch already sends explicitly today (confirmed via
+      `grep repo_type unified-trading-library/.github/workflows/quality-gates-v2.yml` → hardcoded
+      `"repo_type": "service"`), so this is aligning the fallback path with the already-established real-world behavior,
+      not introducing new semantics. This one-line-locus fix makes every downstream `repo_type != 'library'` gate
+      (auth-wif, auth-key, docker-build, AND all 6 notify jobs including `notify-utl-base-image-not-configured`) behave
+      correctly without re-special-casing the repo 8 separate times. Verified no regression: simulated the same
+      derivation for `unified-api-contracts` (a genuine wheel-only library) — still resolves to `library`, unaffected.
+      **Done-when satisfied**: simulated the empty-`repo_type` dispatch locally (`REPO=unified-trading-library`,
+      `REPO_TYPE=""` → manifest derives `library` → override fires → final `service`; confirmed via
+      `jq '.repositories["unified-trading-library"].type'` on `workspace-manifest.json` that the manifest genuinely says
+      `library`, so the override is real, not a no-op) — every downstream gate (`repo_type != 'library'`) evaluates
+      reachable, including the alert's own condition. Verified: `check_workflow_yaml_valid.py` (56/56 workflows parse),
+      extracted-script `bash -n` syntax check clean, full `bash scripts/quality-gates.sh --no-fix` exit 0. Shipped via
+      direct `git push` (closed `.github/**` carve-out per CLAUDE.md, same precedent as the sibling P2 fix — quickmerge
+      itself is not required for this class of PM change).
 
 ## Progress Log
 

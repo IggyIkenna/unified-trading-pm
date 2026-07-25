@@ -177,6 +177,23 @@ jobs:
             echo "repo_type was empty in payload → derived from manifest: '$REPO_TYPE'"
           fi
 
+          # unified-trading-library is a documented EXCEPTION to "library type never builds
+          # a Docker image": it publishes the shared base image every service Dockerfile
+          # FROMs (utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md).
+          # The manifest's `type: library` is correct for VERSIONING (it also ships a wheel)
+          # but wrong for THIS router's gating — every build/notify step below (auth,
+          # docker-build, and the dedicated not-configured alert) is guarded on
+          # `repo_type != 'library'`, so an empty-payload dispatch (e.g. semver-agent, which
+          # omits repo_type) falling through to the manifest derivation above would silently
+          # skip BOTH the Docker-build attempt and its own outage alert — a total-silence
+          # recurrence of this exact issue doc, one step earlier in the chain than the
+          # originally-observed failure. Fix at this ONE resolution point rather than
+          # re-special-casing the repo in six more `if:` conditions downstream.
+          if [ "$REPO" = "unified-trading-library" ] && [ "$REPO_TYPE" = "library" ]; then
+            echo "unified-trading-library derived as 'library' from manifest — overriding to 'service' for router gating (it publishes a Docker base image)"
+            REPO_TYPE="service"
+          fi
+
           echo "repo=$REPO branch=$BRANCH version=$VERSION type=$REPO_TYPE sha=$COMMIT_SHA"
 
           # Determine GCP project + image tag from branch

@@ -534,13 +534,14 @@ source: >-
 
 ### From `issues/sports_legacy_duplicate_triage_2026_07_22.md`
 
-- [ ] [DATA] P1. **Migrate-forward the 58 v2 post-floor rows** (16 days) into canonical per-league `entity=fixtures` /
-      `entity=fixture_stats` — reuse `migrate_sports_per_league.py`'s per-fixture-league-join logic, not a delete.
+- [x] ✅ [DATA] P1. **Migrate-forward the 58 v2 post-floor rows** (16 days) into canonical per-league `entity=fixtures`
+      / `entity=fixture_stats` — reuse `migrate_sports_per_league.py`'s per-fixture-league-join logic, not a delete.
       Re-run the sweep after to confirm these flip to `A_canonical`. (repo: instruments-service —
       `scripts/migrate_sports_per_league.py` logic against bucket `instruments-store-sports-prd`; re-run
       `scripts/migration_orphan_sweep_sports.py --bucket reference` afterward). **Done when**: all 58 rows across the 16
       days have canonical objects written, and a re-run of the orphan sweep reclassifies them as `A_canonical` instead
-      of `B_legacy_duplicate`. Source: `issues/sports_legacy_duplicate_triage_2026_07_22.md`.
+      of `B_legacy_duplicate`. Source: `issues/sports_legacy_duplicate_triage_2026_07_22.md`. —
+      **instruments-service@9d76160f**: 65 new canonical files/145 rows (additive, v2 untouched), verified A_canonical.
 - [x] ✅ [CODE] P1. **Repoint or retire the two flat-legacy readers — INSTRUMENTED, not removed** (correctly: ~478 of
       28,100 rows have no canonical twin, sole source is the fallback). (a) instruments-service@693280e7:
       `sports_reference_fixtures.py:139`'s old-path branch now logs a greppable `LEGACY_FLAT_PATH_HIT` warning on every

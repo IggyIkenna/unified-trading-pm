@@ -414,7 +414,31 @@ inherited from the first shipped batch:
       `af-backfill-*` singleton lock is clear (`gcloud compute instances list --filter='name~"^af-backfill-"'`), THEN
       relaunch `launch-api-football-backfill-vm.sh --entity FIXTURES 2020-06-06 2026-07-25` (SPOT, resumes from measured
       progress — the fixed code now correctly stays FIXTURES-scoped on stale-not-missing dates), health-check to
-      terminal, THEN resume this todo's original spot-verify + enrichment-campaign-scoping sequence.
+      terminal, THEN resume this todo's original spot-verify + enrichment-campaign-scoping sequence. — **RELAUNCHED
+      2026-07-25T15:18Z (slot 7, data_engineering)**: live quota confirmed `daily_remaining=64965/150000` (fresh
+      `get_live_quota(force_refresh=True)` read, plenty of room); singleton lock confirmed clear (both prior
+      `af-backfill-*` VMs `TERMINATED`). **Tarballs were stale** (last built 13:05Z, predating both this session's
+      P0-fix commit and the P3 START_DATE-clamp commit) — rebuilt via `create-code-tarballs.sh --asset-group SPORTS`,
+      re-verified all 4 required repos' `code/*.manifest.json` `commit_sha` match local HEAD exactly
+      (`instruments-service@693280e7`, `unified-api-contracts@0b979239`, `unified-trading-library@b025d0ce`,
+      `deployment-service@734fdd5`) via `gcloud storage cat` (gsutil itself still has the same broken-credential issue
+      prior sessions hit on this doc — used `LC_TARBALL_FRESHNESS=off` + the manual `gcloud storage` verify instead,
+      same pattern as the prior launch). **Launched `af-backfill-20260725-151845`**
+      (`--entity FIXTURES 2020-06-06     2026-07-25`, SPOT e2-standard-8, `asia-northeast1-c`) — genuinely NOW carries
+      the P0 fix (the VM's own code is the exact HEAD verified above). **Verified NOT fire-and-forget**: serial-console
+      read at T+~60s shows clean cloud-init completion (`Up 28.72 seconds`, no errors) and normal systemd service
+      startup — no crash/hang signature. Armed a background watchdog (25-min cap) polling VM status + `run.log` for a
+      terminal marker (`DEPLOYMENT_COMPLETED`/`DEPLOYMENT_FAILED`/`exit_code=`) or VM self-deletion; not completable
+      within this dispatch turn regardless (even the fast FIXTURES-only path needs health-checking to terminal, and this
+      is real, ongoing infra spend, not something to rush). Released via `/skip-current-task`, not duplicate-launched.
+      **Next dispatch**: health-check `af-backfill-20260725-151845`
+      (`gcloud compute instances list --filter='name~"^af-backfill-"'` +
+      `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260725-151845/run.log`);
+      SPECIFICALLY re-verify the P0 fix held — confirm the quota burn rate stays consistent with FIXTURES-only (~1
+      call/date, not the ~6900-calls-in-under-an-hour scope-escape signature the pre-fix run showed) via a fresh
+      `get_live_quota()` read; once terminal, spot-verify a sample of the 287 new leagues now show captured
+      `entity=fixtures` rows post-floor, THEN scope + launch the separate per-fixture enrichment campaign (budget-capped
+      per Directive A/B) before considering step 2 done or touching step 3's destructive residual-drop.
 - [x] ✅ [SCRIPT] P3. Add the same `START_DATE` clamp/warning to `launch-api-football-backfill-vm.sh` that
       `launch-sports-entity-sweep-vm.sh` already has per `/codex/02-data/sports-2020-06-data-floor.md`'s
       enforcement-surface list (item 6) — this launcher silently accepts a pre-2020-06-06 explicit start date with no

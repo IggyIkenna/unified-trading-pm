@@ -405,13 +405,39 @@ flipping the checkbox.
       `"[AUTO_SYNC] Reaper: archived"` appearing for the first time ever, and `active/` object count vs live-VM count
       (was 404 vs ~9 pre-fix). Only flip this todo (and the plan's original `[REVIEW]` checkbox) once that final
       observation confirms convergence — do not flip on the deploy alone, the fix landing does not by itself prove the
-      reap-tick actually converges. **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker — it is not SIT
-      itself.** SIT ran, passed, and logged a matching-tree stamp for `deployment-api`, but the stamp is fire-and-forget
-      (`repository_dispatch` only) and the downstream Firestore write is 403'ing FLEET-WIDE (`ci_status_store.py`
-      `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live via direct REST `PATCH` — same 403; 0/95
-      sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY SIT-covered repo's
-      promote, not just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's LDR→main pipeline,
-      not just this todo:
+      reap-tick actually converges. **FINAL RE-VERIFICATION 2026-07-25T15:25Z (slot 5): NOT CONVERGED — do NOT flip.**
+      Revision `uts-shared-deployment-api-00276-sjj` confirmed live since `2026-07-25T14:52:12Z` (~33 min uptime at
+      check time, past 2 full 900s reap-tick intervals), `minScale=1` (no scale-to-zero churn — only 2 distinct
+      `instanceId`s seen over the window, consistent with one warm instance + one scale event, not a crash loop),
+      `WORKERS=2` (matches the config the local runtime test validated), `PYTHONUNBUFFERED=1` baked into the image
+      (`Dockerfile:151`) — every precondition for the fix to work is met. Yet: (1) `active/` object count still **406**
+      (statistically unchanged from the 403-404 pre-fix baseline — zero convergence); (2) **TOTAL SILENCE** on BOTH
+      `run.googleapis.com%2Fstdout` AND `%2Fstderr` for this revision — zero hits for
+      `"Background auto-sync task started"`, `"Reaper: archived"`, `CancelledError`, OR any `severity>=WARNING` line.
+      This is the SAME "total silence" symptom the ORIGINAL pre-fix diagnosis flagged as itself suspicious ("Never saw a
+      single ... log line in 7 days ... nor even the one-time startup lines ... despite minScale=1" — see Gap 1 above) —
+      meaning silence survived past BOTH previously-diagnosed-and-fixed root causes (wrong gunicorn file,
+      `CancelledError`-interrupted ticks). Only `run.googleapis.com%2Frequests` (HTTP access logs — health checks, 200s,
+      all healthy) show any output at all. This points to a THIRD, still-undiagnosed cause: either the background task
+      genuinely never starts (a silent exception in `lifespan.py`'s startup path that isn't logged because whatever
+      raises it happens before logging is configured, or is caught and swallowed), or app-level `logging`/`print` output
+      specifically is not reaching Cloud Logging for a reason distinct from `PYTHONUNBUFFERED` (e.g. a logger handler
+      misconfiguration, or gunicorn's own log capture not forwarding worker-process stdout under this exact
+      `--preload`/`post_fork` combination — untested interaction). **Next steps for a fresh dispatch**: (1) add a cheap,
+      unconditional one-time `print("[STARTUP] lifespan begin", flush=True)` at the very top of the lifespan context
+      manager (before ANY of the leader-election/background-sync logic) and redeploy — if even THAT never appears in
+      stdout, the problem is logging plumbing, not the reaper; if it DOES appear but the leader-election line still
+      doesn't, the problem is inside `is_leader_worker()`/the background-sync dispatch itself. (2) Cross-check whether
+      `deployment-api`'s Cloud Run service has a custom logging driver/sidecar or structured-logging library that
+      intercepts stdout before Cloud Logging's default capture. (3) Do NOT re-attempt the gunicorn-file or
+      `CancelledError` fixes again — both are confirmed genuinely deployed and are not the (or not the only) remaining
+      cause. **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed,
+      and logged a matching-tree stamp for `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch`
+      only) and the downstream Firestore write is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`,
+      `unified-trading-sa` ADC identity, reproduced live via direct REST `PATCH` — same 403; 0/95 sampled
+      `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY SIT-covered repo's promote, not
+      just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's LDR→main pipeline, not just
+      this todo:
       [issues/ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md](ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md).
       Part (1) of this todo is now ALSO gated on that doc's Todo 1/2 (operator restores the Firestore permission, then
       `ci-status-update.yml` goes green again) before the promote can ever pass the SIT gate. Next dispatch: check that
