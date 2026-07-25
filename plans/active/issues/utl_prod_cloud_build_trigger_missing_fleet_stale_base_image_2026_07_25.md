@@ -202,3 +202,39 @@ base-image pipeline without confirming the correct source config/IAM/connection 
       branch across 3 consecutive attempts; each retry was a clean `git pull --rebase --autostash` with zero conflicts,
       never a blind overwrite). Confirmed live on `origin/live-defi-rollout` via `git merge-base --is-ancestor` + direct
       content read (`git show origin/live-defi-rollout:.github/workflows/cloud-build-router.yml`).
+
+## Progress Log
+
+- **2026-07-25 (slot 7, infra) — Todo 1 IN PROGRESS, second independent blocker found + fixed.** Recreated
+  `unified-trading-library-prod` in `central-element-323112`/`asia-northeast1` (`gcloud beta builds triggers import`,
+  mirroring `instruments-service-prod`'s config: `filename: cloudbuild.yaml`, `push.branch: ^main$`, GitHub connection
+  `iggyikenna-github/unified-trading-library` — already existed as a resource, reused from the working
+  `unified-trading-library-live-defi-rollout` trigger). Checked Cloud Audit Logs 2026-07-23T08:00-10:30Z per todo 1's
+  own instruction for a `DeleteBuildTrigger`/`CreateBuildTrigger` event around the 09:12:10Z last-good-publish timestamp
+  — found NONE (only unrelated `compute.instances.delete` VM-cleanup entries); the trigger's disappearance left no audit
+  trail visible within this account's log access, so the accidental-delete-vs-IaC-drift-vs-reauth question from todo 1
+  remains genuinely UNRESOLVED — noting this as an open sub-question, not silently dropping it. **Test-fired the new
+  trigger immediately** (`gcloud builds triggers run ... --branch=main`) and hit a SECOND, independent, pre-existing
+  bug: Cloud Build's build-config validator rejected the build with
+  `INVALID_ARGUMENT: key in the template "VERSION" is not a valid built-in substitution` — reproduced with zero custom
+  substitutions passed, proving it's not about anything I supplied. Root cause:
+  `unified-trading-library/cloudbuild.yaml` has 4 prose comments using a bare `:$VERSION` (single-dollar) instead of the
+  shell-escaped `:$$VERSION` used everywhere else in the file; Cloud Build's static validator scans the WHOLE file
+  content (including comments) for `$VAR`-shaped tokens and rejects any that aren't a recognized built-in or declared
+  `_substitution`. Traced via `git log -p` to commit `08b4d89a` (2026-07-23T14:51:07Z) — AFTER the 09:12:10Z outage
+  start, so this is a SEPARATE bug stacked on top of the missing-trigger root cause, not its origin; it independently
+  blocks EVERY build attempt against this cloudbuild.yaml (trigger-fired or manual) regardless of whether
+  `unified-trading-library-prod` exists. Fixed (4 one-line escape corrections, comments only, no behavior change),
+  `quality-gates.sh` green, shipped via quickmerge to `live-defi-rollout`: `unified-trading-library@24e8cf51`. Also set
+  the `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` repo variable to `true` for `unified-trading-library` specifically
+  (`gh variable set`, confirmed via `gh variable list` — was unset) — a durable, repo-scoped hardening independent of
+  slot-6's `notify-utl-base-image-not-configured` job above; both mechanisms now cover this repo, neither conflicts.
+  **BLOCKED ON ELAPSED TIME, not a decision**: the fix is on `live-defi-rollout` but has not yet reached `main` via the
+  standing `*/15` LDR→main promote cron (confirmed via `gh pr list --state merged` — last promote PR #643 merged
+  11:08:40Z, before this fix landed) — `unified-trading-library-prod` reads its `cloudbuild.yaml` from `main` at
+  invocation time, so re-firing before the promote lands would just reproduce the same INVALID_ARGUMENT. Next step
+  (queued via ScheduleWakeup): once `git show origin/main:cloudbuild.yaml` shows the `$$VERSION` fix, re-run
+  `gcloud builds triggers run unified-trading-library-prod --branch=main`, poll to `SUCCESS`, confirm a fresh
+  `UPDATE_TIME` in the artifact registry, then flip todos 1+2 with evidence and `/done` the orchestrator task. IAM
+  verified sufficient (the SA reached real INVALID_ARGUMENT, not PERMISSION_DENIED, on every test call — the router
+  code's own comments flag PERMISSION_DENIED as a known separate failure mode, ruled out here).
