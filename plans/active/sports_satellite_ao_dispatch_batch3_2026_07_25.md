@@ -264,6 +264,17 @@ the master plan; genuinely needs its own dedicated batch, not folded in here).
 Every other orphaned doc's remaining work is human-only (operator sign-off, unbuilt safety tooling, time-gated accrual,
 or a genuine design/judgment call) — see the triage journal for the full 103-item breakdown.
 
+**Re-check note (2026-07-25, batch4):** per the `/ag-closeout-audit` skill's "batchN methodology" (added 2026-07-25),
+this Deferred section's 6 docs / 7 candidates were re-checked against current state before drafting a fresh triage. 3 of
+7 cleared (footystats verify+flip, fixtures_manifest_legacy_backfill doc-sync reconcile, the
+sports_odds_stale_fixture_reinjection sweep — each provably stale/superseded or provably non-overlapping on re-check)
+and now live as dispatchable todos in `sports_satellite_ao_dispatch_batch4_2026_07_25.md`. The other 4 (both
+`data_completion_sports_2026_07_24.md` items, the `sports_legacy_fixtures_path_migration_2026_07_24.md` census, and the
+`sports_phantom_audits_reference_not_marketdata_2026_07_14.md` spot-check) remain genuinely conflicted — see that
+batch's own Deferred section and `autonomous_session_operator_decisions_2026_07_25.md` entries #5-8 (now actually
+written up, not just pointed at). The 2 `doc_too_large_or_risky_for_batch` docs are unchanged, still pending their own
+dedicated pass.
+
 ## Reconciliation
 
 Once a todo here ships, flip the corresponding checkbox/section in its named source doc, citing this plan's commit as

@@ -154,6 +154,14 @@ architecture decision, or a genuine design/judgment call — e.g. `data_completi
 human-only items include a live-production candle-pipeline change the doc itself says needs "a dedicated engineering
 session with judgment and staged verification, not a bounded solo-worker task").
 
+> **Re-check status (2026-07-25, `/ag-closeout-audit` batchN re-triage)**: all 12 fully-deferred docs + the excluded
+> item 9 above were re-checked against the CURRENT content of `prediction_consolidated_closeout_2026_07_18.md` per the
+> skill's batchN methodology. 6 of the 13 candidates cleared conflict-free (2 turned out to be duplicates of work
+> already in this plan's own todos above, contributing no new work; the other 6 produced new, conflict-free AO-eligible
+> todos) and were extracted into `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` (+ its gated
+> `..._batch2_finalize_2026_07_25.md`), both `status: draft`. The remainder stay genuinely blocked — see batch2's own
+> Deferred section for the per-item current-state note.
+
 ## Reconciliation
 
 Once a todo here ships, flip the corresponding checkbox/section in its named source doc, citing this plan's commit as
