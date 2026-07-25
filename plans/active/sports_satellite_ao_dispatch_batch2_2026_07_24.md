@@ -654,11 +654,10 @@ source: >-
       to match expectations rather than proceeding past a mismatch. (repo: market-tick-data-service — new one-off
       migration/audit script under `scripts/`, with lifecycle markers; reads/writes GCS buckets
       `market-data-tick-sports-central-element-323112` (legacy) and `market-data-tick-sports-prd-central-element-323112`
-      (canonical); consumes but does not modify `unified_trading_library.availability_stamping`). **Done when**: all 5
-      steps complete in order with each step's own stated verification gate passing; final state has the ~32 gap days'
-      550,062 keys recovered into canonical (merged, never overwritten, in-play quarantined per OR-5b(c)), verified by
-      content in a separate process, the 37,114 phantom seed rows purged, and the legacy bucket showing `unique==0`.
-      Source: `issues/mdt_legacy_canonical_row_gap_2026_07_16.md`.
+      (canonical); consumes but does not modify `unified_trading_library.availability_stamping`). **Done when**: N/A —
+      **BLOCKED-OPERATOR-DECISION 2026-07-25**, source bucket deleted 2026-07-17 pre-STEP1, data unrecoverable. Source:
+      `issues/mdt_legacy_canonical_row_gap_2026_07_16.md`,
+      `issues/mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md`.
 - [ ] [DOC] P3. **File a new issue doc** for the standalone finding: "30/200 sampled canonical MDT objects carry
       duplicate rows on the poll key (event, market, outcome, bm_time, price, fetch_utc), independent of the OR-5b
       cutover." (The de-dup-on-write remediation itself is already folded into the recovery-sequence todo above's step 2
