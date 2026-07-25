@@ -84,13 +84,19 @@ sequential: true
       `test_loop_seconds_valid_and_bounds`) asserts the default, direct-injection via the existing `set_tuning` fixture,
       and `Field` bounds validation (`ValidationError` on 0 and 101). 1648/1648 tests pass, ruff + basedpyright clean,
       full `quality-gates.sh` PASSED.
-- [ ] [BACKEND] P0. **Add a typed `directive` field to `DoneResponse` and `ProgressResponse`** in
+- [x] ✅ [BACKEND] P0. **Add a typed `directive` field to `DoneResponse` and `ProgressResponse`** in
       `server/models/worker_api.py` — `directive: Literal["compact_before_next"] | None = None` on `DoneResponse`,
       `directive: Literal["compact_now"] | None = None` on `ProgressResponse`. Do NOT overload the existing free-text
       `message`/`messages` fields — worker.md's new HARD RULE (todo 5) needs an unambiguous machine-checkable field the
       agent can branch on, not prose it has to parse. **Done when**: both models validate with and without the field
       set; existing callers/tests unaffected (field defaults to `None`); a new test asserts the field serializes
-      correctly; `quality-gates.sh` green.
+      correctly; `quality-gates.sh` green. — **`agent-orchestrator@5e22fab`**. Both fields added exactly as specified
+      (default `None`, `Literal` typed). 2 new model-level tests
+      (`test_done_response_directive_field_validates_and_serializes`,
+      `test_progress_response_directive_field_validates_and_serializes`) in
+      `tests/test_task_lifecycle_done_gate_resume.py`, deliberately scoped to schema-only (default/set/
+      `model_dump`/`model_validate` round-trip) so they don't duplicate todos 3-4's later route-behavior tests.
+      1650/1650 tests pass, full `quality-gates.sh` PASSED.
 - [ ] [BACKEND] P0. **Gate `done_slot`** (`server/routes/slots_worker.py`) **on self-reported context.** Before the
       existing next-task-selection path runs, compare `req.context_used_pct` (already submitted on every `/done` call —
       confirmed live, e.g. `context_pct: 95` on `slot_done` activity entries, currently unconsumed) against
