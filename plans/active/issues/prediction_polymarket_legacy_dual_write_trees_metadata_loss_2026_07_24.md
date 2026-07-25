@@ -191,6 +191,31 @@ venue.
    value does not even match the documented legacy shape. This may be a THIRD, previously undocumented shard-grain
    variant.
 
+   **✅ RESOLVED 2026-07-25 (operator ruling, asked directly in-session).** Investigated first (operator asked: which
+   service owns it, what's the schema, what canonicals could it migrate to, own-or-market trades) before ruling:
+   - **Owner**: `market-tick-data-service` — confirmed via `source=polymarket_clob` column + the
+     `ticks_migrated_20260419T101933Z.parquet` filename (a 2026-04-19 migration/backfill script within MTDS, not the
+     live writer, not `instruments-service` — IS holds reference/catalog data only, never raw ticks).
+   - **Schema (directly read, day=2025-04-11/underlying=BTC sample, 500 rows)**:
+     `proxy_wallet, side, asset, conditionId, size, price, timestamp, title, slug, icon, event_slug, outcome, outcome_index, name, pseudonym, bio, profile_image, profile_image_optimized, transaction_hash, condition_id, data_type, instrument_type, underlying, available_at, source`
+     — 25 columns. Confirms + extends the doc's earlier schema-#4 finding: this shape ALSO carries the trader-identity
+     fields (`name`/`pseudonym`/`bio`/`profile_image`) and outcome labels (`outcome`/`outcome_index`) that schema #4's
+     comparison didn't test for.
+   - **Own or market trades?** **Market trades, unambiguously.** `proxy_wallet`/`name`/`pseudonym`/`bio`/
+     `profile_image` are the COUNTERPARTY's public Polymarket profile fields (different per row, i.e. per distinct
+     trader) — this is a public CLOB trade-tape capture (other participants' executed trades), not the trading system's
+     own orders/positions. Same pattern as any CeFi trade-tape capture.
+   - **Canonicals it could migrate to**: the natural target is the canonical `data_type=trades` flat-per-contract shape
+     (#1/#2 above) — but that schema is only
+     `amount, instrument_id, canonical_question_group, asset_group, resolution_period` (5 cols). A straight migration
+     would silently drop the trader-identity fields, the market-question text (`title`/`slug`/`event_slug`), and the
+     outcome labels — none of which exist anywhere else in the canonical corpus (Q1, whether IS's catalogue backfills
+     `title`/`slug`/`eventSlug`, is STILL open, separate from this ruling).
+   - **Operator ruling: extend the canonical `trades` schema to preserve these fields, then migrate without loss** —
+     rejected both "migrate + accept the loss" (metadata is valuable, not proven redundant) and "register as a permanent
+     separate canonical variant" (grows the canonical grammar unnecessarily when the real fix is closing a schema gap).
+     This is now real cross-repo schema-evolution work, not a quick fix — see updated Todos below.
+
 ## Todos
 
 - [ ] [CODE] P1. Grep-then-READ the MTDS Polymarket adapter + `rebuild_prediction_manifest.py` (and any
@@ -203,13 +228,31 @@ venue.
       `non-canonical-path-inventory.md` with a real disposition, or (b) design a migration that folds shape #4's extra
       metadata into the canonical schema before any legacy-tree cleanup. Repo: `unified-trading-pm` +
       `unified-api-contracts` (schema) + `market-tick-data-service` (writer).
-- [ ] [CODE] P2. Register `prediction_trades` in `DATA_TYPES_BY_ASSET_GROUP['prediction']` (if Q3 resolves it's a real
-      legacy shape) or add a targeted migration to fold the 2,477 rows into the canonical `trades`/CQG-bundle grain (if
-      Q3 resolves it should not exist as a shard-atom value). Repo: `unified-api-contracts` +
-      `market-tick-data-service`.
+- [ ] [DESIGN] P1. **Design the extended canonical `trades` schema** (Q3 RESOLVED — operator ruling 2026-07-25: extend,
+      don't drop or permanently-fork). Decide which of the 25 `prediction_trades` columns become first-class canonical
+      fields (at minimum `title`/`slug`/`event_slug`/`outcome`/`outcome_index` — the market-question + resolution
+      metadata with no surviving copy elsewhere; trader-identity fields `proxy_wallet`/`name`/`pseudonym`/`bio`/
+      `profile_image` need a separate call — privacy/PII-adjacent, confirm they're genuinely needed downstream before
+      keeping them canonical) against the current 5-column `trades` schema
+      (`amount, instrument_id,     canonical_question_group, asset_group, resolution_period`). Repo:
+      `unified-api-contracts`.
+- [ ] [CODE] P1. **Update the MTDS Polymarket CLOB writer** to emit the extended schema going forward, and **migrate**
+      the 2,477 `data_type=prediction_trades` rows (+ shape #4's 158+ objects, per Q2's live-vs-historical finding) into
+      the canonical `data_type=trades` path/shape under the extended schema — copy+verify+delete per the standard
+      delete-safety protocol, no data loss. Repo: `market-tick-data-service`, `unified-api-contracts`.
+- [ ] [DATA] P2. Register the extended schema + this migration in `canonical-cutover-register.md` and
+      `non-canonical-path-inventory.md` so a future reconciliation pass doesn't re-flag the (now-closed) gap. Repo:
+      `unified-trading-pm`.
 
 ## Progress log
 
 - 2026-07-24/25: Found during `/data-pipeline-reconciliation --asset-group prediction` (raw-tick layer), read-only.
   Content-verified via direct parquet reads (not just existence/size). Filed per the big-finding rule; not independently
   corroborated by a second session yet.
+- 2026-07-25: Q3 asked directly to the operator via interactive chat. Investigated first (this session, read-only —
+  resolved the bucket via `resolve_bucket_name(kind='market-data-tick-prediction', ...)`, the dedicated prediction kind,
+  not `asset_group='prediction'` on `market-data`) rather than answering from inference: confirmed MTDS ownership, read
+  the real 25-column schema off a live sample object, confirmed these are public market trades (not own executions) via
+  the trader-identity columns. Operator ruled: extend the canonical schema, don't drop the metadata or leave it
+  permanently forked. Todos above rewritten from a generic "register or migrate" placeholder into the actual 3-step
+  design→writer/migrate→register sequence this ruling implies.

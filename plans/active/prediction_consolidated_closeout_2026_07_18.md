@@ -681,6 +681,15 @@ done in THIS session; each names a determinable done-when so a worker can pick i
       2026-07-24 (see this plan's 2026-07-24 Progress Log entry) — that was incidental, not an exhaustive pass; this
       todo is for the real one. Done when: findings (or an explicit "0 findings") are recorded in this plan's Progress
       Log, mirroring Track Y's format.
+- [ ] [DESIGN] P1. **POLYMARKET `prediction_trades` schema-extension migration** (operator-ruled 2026-07-25, full
+      detail + investigation in
+      `/plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` Q3 + Todos):
+      2,477 manifest rows (+ a related non-canonical deep-tree shape, ~158+ objects) hold public Polymarket CLOB trade
+      data (trader identity + market-question text + outcome labels) the canonical `trades` schema doesn't carry at all.
+      Operator ruled: extend the canonical schema to preserve this content, then migrate — not drop the metadata, not
+      leave it permanently forked. 3-step sequence tracked in the linked issue doc (schema design → writer update +
+      migration → register in the cutover/non-canonical inventories). Done when: all 3 todos in the linked issue doc are
+      checked with evidence.
 
 ## Deferred work after 2026-07-18 (HELD — unblock when the concurrent tradfi/cefi migrations free the shared files / a drain window opens)
 
