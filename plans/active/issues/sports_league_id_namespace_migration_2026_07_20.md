@@ -640,3 +640,13 @@ above are superseded by this):
   the "Evidence:" lines above were session-local one-off probes (corpus walks, sport_key enumeration, sizing). They are
   NOT committed and will vanish at session end — their MEASURED RESULTS are stated inline in this doc and are what
   matters; re-derive with a fresh probe if a number needs refreshing (each carries a 2026-07 date).
+
+## STATUS 2026-07-25 — manifest swap had silently reverted; re-applied + verified stable
+
+The 2026-07-22 manifest swap (`manifest_swap_2026_07_22.py`, raw `TRADES`/`batch_odds_api` shape) was found to have
+silently reverted (260,298 stale raw rows back, byte-identical to pre-swap) — its CAS write predated the TOCTOU
+consolidator-race fix (`unified-trading-library@14301571`, 2026-07-24) by 2 days. Re-applied and verified stable across
+5 consolidator cycles (~7.5 min). Full detail:
+`/plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. **Still genuinely outstanding**:
+`odds_horizon_bucket` (109,312 objects, needs MDPS `reprocess_sports_odds.py` Step-7) + `batch_footystats` (16,970
+objects, needs its own copy+swap pass) + the coverage-registry refresh + the human-gated final delete.

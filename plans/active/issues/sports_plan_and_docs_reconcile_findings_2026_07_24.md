@@ -111,6 +111,14 @@ reference also corrected in the same pass.
       object for the same cell is STILL PRESENT (delete genuinely pending, human-gated). Track V rewritten in
       `sports_consolidated_closeout_2026_07_19.md` to read COPY+SWAP done, DELETE pending, pointing at master_closeout's
       own 5-part-proof delete todo instead of duplicating it. `sports_consolidated_closeout_2026_07_19@local`.
+      **CORRECTION 2026-07-25**: this re-verification checked the GCS OBJECT-level state (both twins present, as
+      expected pre-delete) and the SWAP SCRIPT's own historical log claim, but not a fresh live MANIFEST ROW read — a
+      live row-count check the next day found the swap had silently reverted (260,298 stale raw rows back,
+      byte-identical to the pre-swap scope), root-caused to a TOCTOU consolidator race the swap's write predates by 2
+      days. Re-applied and this time verified stable across 5 consolidator cycles. Full detail:
+      `/plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. Lesson: "the script logged
+      VERIFY PASSED" and "GCS objects exist" are NOT proof a canonical-index write survived — always re-read the live
+      manifest row state itself, across at least 2 consolidator cycles, not just the write-time log.
 - [x] [DOC] P0. ✅ **DONE 2026-07-24.** Edited `sports_master_closeout_2026_07_21.md`'s title (line 4), H1 heading,
       intro blockquote, and `/autonomous` prompt to drop the "single source of truth" self-claim and explicitly point to
       `sports_consolidated_closeout_2026_07_19.md`'s 96+ open todos; also fixed the prompt's stale step-3/4 status
