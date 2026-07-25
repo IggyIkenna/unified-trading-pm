@@ -51,7 +51,9 @@ resolved_by:
 source:
   "found live during cicd escalation agt-e0a637 (unified-trading-pm#1465, plan_health wall); filed during the session's
   /pre-compact durability sweep, 2026-07-25"
-author: "cicd escalation worker (slot 7)"
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # agent-orchestrator boot-template STEP 2 contradicts one-shot escalation roles' `does_not` rule
