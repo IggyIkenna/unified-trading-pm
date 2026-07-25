@@ -20,7 +20,7 @@ summary:
   an independent copy of the same vulnerable `${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." && pwd)}`
   construction and remain unpatched. Worked around locally (session-scoped symlink + explicit WORKSPACE_ROOT override
   for the commit invocation only — no shared file touched) to ship the actual docs work; not fixed here.'
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -44,7 +44,15 @@ estimate_class: refactor
 source:
   "side-finding while executing plan_reconciliation_operator_decisions_2026_07_11.md's line-cap split, this session
   (2026-07-25); WORKSPACE_ROOT confirmed pre-exported to /home/ubuntu/unified-trading-system-repos in this shell"
-resolved_by:
+resolved_by: >-
+  unified-trading-pm@2283828a7 -- fixes the plan-hygiene hook (the one that actually blocked every commit this session
+  hit, since it's the only one of the three gated on files: ^(plans/|codex/)) by deriving SWEEP fresh from `git
+  rev-parse --show-toplevel` unconditionally, dropping both the WORKSPACE_ROOT inheritance and the /unified-trading-pm/
+  parent-join entirely -- matches this doc's own Recommended-decision Option A exactly. fix-commit-identity and
+  check-branch-drift (both always_run: true, not gated on plans/codex) still carry the unpatched pattern -- left as a
+  residual P3 todo below since their blast radius is meaningfully smaller (they resolve to a rarely-edited HELPER SCRIPT
+  file, not a content-validation sweep reading staged doc content, so a stale MAIN copy of the script is far less likely
+  to diverge from the worktree's copy than staged plan/codex content is).
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -123,8 +131,14 @@ working `WORKSPACE_ROOT` value at all, this is plausibly wider-blast-radius than
       slot-based convention and just doesn't apply here, or is it leaking from a parent shell/profile?). Bumped to P1
       given 4 independent agents hit this in a single session — this blocks/corrupts precommit validation for
       essentially every Agent-tool `isolation: worktree` session doing plan/codex commits, not a rare edge case.
-- [ ] [CODE] P1. Apply the same fix pattern as
-      `qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md`'s todo 2 (Option A preferred
-      here specifically, since Option B's "fixed file itself needs to be the one loaded" caveat applies just as much to
-      `.pre-commit-config.yaml`'s hook resolution) to every `${WORKSPACE_ROOT:-...}`-style `entry:` in
-      `.pre-commit-config.yaml`.
+- [x] [CODE] P1. ✅ Apply the same fix pattern as
+      `qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md`'s todo 2 to the
+      `plan-hygiene` hook's `entry:` — `unified-trading-pm@2283828a7`. Fixed by a sub-agent (`aea58a35150f61601`) that
+      independently hit the same bug during this session's line-cap split follow-up work; shipped directly since the fix
+      doesn't touch `plans/`/`codex/` and isn't gated by the hook it fixes.
+- [ ] [CODE] P3. **Residual**: `fix-commit-identity` and `check-branch-drift` (`.pre-commit-config.yaml` lines ~23-38)
+      still carry the identical unpatched `${WORKSPACE_ROOT:-...}` pattern. Lower priority than the plan-hygiene fix was
+      — both are `always_run: true` (every commit, not gated on plans/codex) but resolve to a rarely-edited HELPER
+      SCRIPT file rather than a content-validation sweep reading staged doc content, so the practical divergence risk
+      (stale MAIN copy vs worktree copy) is much smaller. Apply the identical fresh `git rev-parse --show-toplevel`
+      derivation for completeness/consistency.
