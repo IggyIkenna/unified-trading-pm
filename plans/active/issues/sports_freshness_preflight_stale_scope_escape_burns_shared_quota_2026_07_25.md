@@ -88,18 +88,28 @@ depends_on: []
       over a real stale date confirming zero out-of-scope API-Football calls — no VM launch/relaunch was performed in
       this turn; that's the P1 todo immediately below, still gated on operator/next-dispatch confirmation of quota state
       per the domestic-selection issue doc's tracker.
-- [ ] [DATA] P1. **RELAUNCHED 2026-07-25T15:18Z (slot 7), FIX CONFIRMED HOLDING, NOT yet terminal** —
-      `af-backfill-20260725-151845` (tarballs rebuilt + SHA-verified to carry the fix), launched from the
-      domestic-selection issue doc's tracker (don't duplicate-launch). **Positive confirmation 2026-07-25T15:45Z**: the
-      VM's run.log processed date **2026-04-18 — the EXACT date that triggered the original scope-escape** (1747
-      fixtures) — and logged `Per-fixture enrichment: 1747 fixtures x 0 entities = 0 calls queued` +
-      `Entity-scoped mode: restricting to FIXTURES only`, i.e. zero out-of-scope enrichment calls, unlike the pre-fix
-      run which burned ~6900 calls on this exact date. Live quota corroborates: `daily_remaining` 64965→64928 in ~27min
-      (~37 calls total, consistent with ~1 call/date), nowhere near the prior ~6900-calls-in-under-an-hour signature.
-      **Fix is proven correct in production on the reproduction case, not just unit tests.** Still running (large
-      2020-06-06..2026-07-25 range) — not yet terminal, not a hang. **Next dispatch**: health-check to terminal
-      (`gcloud compute instances list` + `run.log` tail), record final `quota_remaining`, THEN this todo + the parent
-      relaunch todo in the domestic-selection doc both flip together.
+- [ ] [DATA] P1. **RELAUNCHED 2026-07-25T15:18Z (slot 7), FIX CONFIRMED CORRECT — but VM FAILED (unrelated cause),
+      backfill INCOMPLETE, needs re-relaunch.** `af-backfill-20260725-151845` (tarballs rebuilt + SHA-verified to carry
+      the fix). **Positive confirmation 2026-07-25T15:45Z**: run.log processed date **2026-04-18 — the EXACT date that
+      triggered the original scope-escape** (1747 fixtures) — logged
+      `Per-fixture enrichment: 1747 fixtures x 0     entities = 0 calls queued` +
+      `Entity-scoped mode: restricting to FIXTURES only`, zero out-of-scope calls, unlike the pre-fix run's ~6900 calls
+      on this exact date. Continued clean (same entity-scoped, zero-leak pattern) through every date up to
+      **2026-06-02** — **the fix held for the VM's entire runtime, no scope-escape recurrence at any point.** **TERMINAL
+      2026-07-25T16:14:34Z: `DEPLOYMENT_FAILED exit_code=137` (SIGKILL)** — the python process was killed
+      (`bash: ... Killed`, rc=137) after ~56min, backfill incomplete (reached 2026-06-02 of the 2020-06-06..2026-07-25
+      range, ~53 days short). **Root cause is NOT a scope-escape regression** — ruled out via audit log: the delete that
+      followed (`v1.compute.instances.delete`, caller IP = the VM's own external IP) was **self-cleanup after the
+      failure** (`VM_SHUTDOWN_ON_COMPLETION=true`), not an external actor; and explicitly confirmed **NOT a SPOT
+      preemption** — no `PREEMPTED` marker file written, and `compute.instances.preempted` system events in the same 24h
+      window all belong to OTHER instance_ids, none to this VM. Likely OOM (e2-standard-8, no direct kernel OOM-killer
+      line found in the serial console before it went unreachable — VM self-deleted before deeper Cloud Monitoring
+      metrics could be pulled), but **not proven** — flagging as suspected, not confirmed, root cause. **Next
+      dispatch**: relaunch `launch-api-football-backfill-vm.sh --entity FIXTURES 2020-06-06 2026-07-25` (SPOT, resumes
+      via skip-if-fresh — confirmed re-verified before the P0-fix launch: a plain non-`--force` re-run only re-fetches
+      genuinely missing dates, so this correctly picks up at ~2026-06-02, not day one); if it fails again with
+      exit_code=137 at a similar point, escalate to a memory-tier bump (e.g. e2-standard-8 → e2-highmem-8) rather than
+      blind-retrying a 3rd time on the same shape.
 - [ ] [DATA] P2. Audit whether the earlier 08:12Z quota exhaustion and any other in-flight sports backfills hit the same
       stale-scope-escape (grep run logs for enrichment fetches on `--sports-entity`-scoped runs); if any already-running
       VM is escaping scope, stop it too. Cross-ref

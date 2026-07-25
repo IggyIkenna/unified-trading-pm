@@ -431,14 +431,19 @@ inherited from the first shipped batch:
       terminal marker (`DEPLOYMENT_COMPLETED`/`DEPLOYMENT_FAILED`/`exit_code=`) or VM self-deletion; not completable
       within this dispatch turn regardless (even the fast FIXTURES-only path needs health-checking to terminal, and this
       is real, ongoing infra spend, not something to rush). Released via `/skip-current-task`, not duplicate-launched.
-      **Next dispatch**: health-check `af-backfill-20260725-151845`
-      (`gcloud compute instances list --filter='name~"^af-backfill-"'` +
-      `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260725-151845/run.log`);
-      SPECIFICALLY re-verify the P0 fix held — confirm the quota burn rate stays consistent with FIXTURES-only (~1
-      call/date, not the ~6900-calls-in-under-an-hour scope-escape signature the pre-fix run showed) via a fresh
-      `get_live_quota()` read; once terminal, spot-verify a sample of the 287 new leagues now show captured
-      `entity=fixtures` rows post-floor, THEN scope + launch the separate per-fixture enrichment campaign (budget-capped
-      per Directive A/B) before considering step 2 done or touching step 3's destructive residual-drop.
+      **Health-checked to terminal 2026-07-25T16:16Z (slot 7)**: P0 fix CONFIRMED HELD for the VM's entire runtime — the
+      run.log shows `Entity-scoped mode: restricting to FIXTURES only` + `0 entities = 0 calls queued` on every single
+      date from 2020-06-06 through 2026-06-02 (incl. 2026-04-18, the exact original-bug reproduction date), and live
+      quota only dropped ~37 calls in ~27min (vs. the pre-fix ~6900-calls-in-under-an-hour signature) — **no
+      scope-escape recurrence anywhere in this run.** However the VM itself then **FAILED**:
+      `DEPLOYMENT_FAILED     exit_code=137` (SIGKILL) at 16:14:34Z, backfill incomplete (~53 days short of the
+      2026-07-25 end). Root-caused as NOT a scope-escape regression, NOT a SPOT preemption (both explicitly ruled out
+      via audit log — the delete that followed was VM self-cleanup after the failure, caller IP = the VM's own; zero
+      `PREEMPTED` marker; zero `compute.instances.preempted` events for this instance_id in the 24h window) — suspected
+      but unconfirmed OOM (e2-standard-8; VM self-deleted before deeper memory metrics could be pulled). Full evidence +
+      next-dispatch relaunch instructions (skip-if-fresh resumes from ~2026-06-02, escalate to a memory-tier bump if it
+      repeats) in the freshness-preflight issue doc's own P1 todo — not duplicated here to keep this doc lean. Step 2
+      (backfill) remains **incomplete**; step 3 (residual drop) still untouched pending step 2's actual completion.
 - [x] ✅ [SCRIPT] P3. Add the same `START_DATE` clamp/warning to `launch-api-football-backfill-vm.sh` that
       `launch-sports-entity-sweep-vm.sh` already has per `/codex/02-data/sports-2020-06-data-floor.md`'s
       enforcement-surface list (item 6) — this launcher silently accepts a pre-2020-06-06 explicit start date with no

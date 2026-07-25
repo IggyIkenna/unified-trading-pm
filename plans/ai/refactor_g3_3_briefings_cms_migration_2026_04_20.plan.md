@@ -6,7 +6,7 @@ owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.3
+  - /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §3.3
   - refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md
 # Wave G3-α — independent, parallel with G3.2/3.4/3.5/3.6.
 ---
@@ -41,11 +41,11 @@ source. Codex markdown becomes the canonical draft + audit record; a codex-sync 
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.3
-2. `/codex/14-playbooks/experience/briefings-hub.md`
-3. `/codex/14-playbooks/experience/dart-briefing.md`
-4. `/codex/14-playbooks/experience/regulatory-umbrella-briefing.md`
-5. `/codex/14-playbooks/experience/im-decision-journey.md`
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.3
+2. `/codex/14-customer-journeys/experience/briefings-hub.md`
+3. `/codex/14-customer-journeys/experience/dart-briefing.md`
+4. `/codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md`
+5. `/codex/14-customer-journeys/experience/im-decision-journey.md`
 6. `refactor_g1_12_public_site_ia_and_briefings_polish_2026_04_20.plan.md`
 7. `unified-trading-system-ui/components/marketing/` — `<BriefingHero>` + related
 
@@ -159,7 +159,7 @@ Wave G3-α; G1.12 must be shipped.
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
 git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-trading-system-ui pull
-ls /codex/14-playbooks/experience/dart-briefing.md
+ls /codex/14-customer-journeys/experience/dart-briefing.md
 ls unified-trading-system-ui/components/marketing/  # verify G1.12 BriefingHero exists
 ls unified-trading-system-ui/app/briefings/
 ```

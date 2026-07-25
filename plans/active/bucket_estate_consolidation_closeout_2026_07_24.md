@@ -31,7 +31,7 @@ related:
     /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
     /plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 parent_epic: infrastructure_master
@@ -163,7 +163,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
 
 - **2026-07-24** — Plan created. Forked verbatim from `bucket_estate_consolidation_to_sub100_2026_07_13.md`'s 6
   remaining open todos (of 21; 15 were already done) as part of the plan line-cap remediation
-  (`/plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 1 / bucket (c)). Parent archived same day to
+  (`/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md`, row 1 / bucket (c)). Parent archived same day to
   `/plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md` with `status: complete` and
   `superseded_by: [bucket_estate_consolidation_closeout_2026_07_24.md]`; its Progress Log (Waves 0-3 execution history,
   audit provenance, operator rulings) stays intact there as the historical record. No new work executed yet under this

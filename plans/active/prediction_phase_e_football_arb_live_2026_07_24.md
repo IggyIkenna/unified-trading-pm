@@ -47,7 +47,7 @@ related:
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

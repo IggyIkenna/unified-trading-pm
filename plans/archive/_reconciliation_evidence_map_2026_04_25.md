@@ -780,7 +780,7 @@ These have unambiguous superseder declarations already in their frontmatter — 
 ### playbook_ssot_stage_3_infra_spec_2026_04_19.md
 
 - frontmatter: status=active, P0, locked_by=live-defi-rollout,
-  supersedes_on_completion=/codex/14-playbooks/roadmap/next-waves.md
+  supersedes_on_completion=/codex/14-customer-journeys/roadmap/next-waves.md
 - checkboxes: 0/25 (0%)
 - evidence: a7aa782c; G1.6 derivation-engine ship per Option-X memory; G2.x refactor wave (eef08911, f5c9d80a, 0bed08bc)
 - candidate_classification: partial

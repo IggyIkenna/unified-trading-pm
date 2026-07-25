@@ -36,7 +36,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
     /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
     /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
@@ -74,7 +74,7 @@ source: >-
 # TradFi manifest/content data-correctness completion
 
 > **Forked 2026-07-24** from `tradfi_consolidated_closeout_2026_07_18.md` (line-cap remediation, 3-way split — see
-> `/plans/active/issues/plan_line_cap_remediation_2026_07_23.md` row 29). This plan carries the Surfaces A-D
+> `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` row 29). This plan carries the Surfaces A-D
 > id-canonicalisation completion workstream: Phase A1's re-drift-prevention residual, Phase B (catalogue + manifest +
 > GCS-filename + tick-content migration to `-USD@LIN`), and Phase B.5 (candle namespace quarantine recovery). All todos
 > and Progress Log content below were moved **verbatim** from the parent — nothing summarized or rewritten. Sibling

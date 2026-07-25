@@ -29,7 +29,7 @@ related:
     /plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
     /plans/active/defi_venue_lst_rates_residual_2026_07_24.md,
     /plans/active/infra_ops_residual_migration_verification_2026_07_24.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: 2026-06-10
 parent_epic: manifest_master

@@ -67,7 +67,7 @@ user, not the repo).
 
 **Canonical codex SSOT:**
 
-- `unified-trading-pm/codex/14-playbooks/dart/dart-terminal-vs-research.md`
+- `unified-trading-pm/codex/14-customer-journeys/dart/dart-terminal-vs-research.md`
 
 **New ideal-world reference docs (read selectively per phase):**
 

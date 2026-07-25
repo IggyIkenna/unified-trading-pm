@@ -17,11 +17,11 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   [
-    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.12,
-    /codex/14-playbooks/_ssot-rules/02-tone-and-posture.md,
-    /codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md,
-    /codex/14-playbooks/experience/marketing-journey.md,
-    /codex/14-playbooks/experience/briefings-hub.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §1.12,
+    /codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md,
+    /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/experience/marketing-journey.md,
+    /codex/14-customer-journeys/experience/briefings-hub.md,
   ]
 ---
 
@@ -63,11 +63,11 @@ changes, no routes added/removed, no backend.
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.12
-2. `/codex/14-playbooks/_ssot-rules/02-tone-and-posture.md`
-3. `/codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md`
-4. `/codex/14-playbooks/experience/marketing-journey.md`
-5. `/codex/14-playbooks/experience/briefings-hub.md`
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.12
+2. `/codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md`
+3. `/codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md`
+4. `/codex/14-customer-journeys/experience/marketing-journey.md`
+5. `/codex/14-customer-journeys/experience/briefings-hub.md`
 6. `unified-trading-system-ui/components/shell/site-header.tsx`
 7. `unified-trading-system-ui/components/shell/spaces-nav-sections.tsx`
 8. `unified-trading-system-ui/components/shell/service-tabs.tsx`
@@ -204,9 +204,9 @@ Research. Wave A; parallelisable with 1.1, 1.3, 1.5, 1.9, 1.14-markdown.
 ```
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm
 git checkout live-defi-rollout && git pull
-ls /codex/14-playbooks/experience/marketing-journey.md
-ls /codex/14-playbooks/experience/briefings-hub.md
-ls /codex/14-playbooks/_ssot-rules/02-tone-and-posture.md
+ls /codex/14-customer-journeys/experience/marketing-journey.md
+ls /codex/14-customer-journeys/experience/briefings-hub.md
+ls /codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md
 ls ../unified-trading-system-ui/components/shell/site-header.tsx
 ls ../unified-trading-system-ui/components/shell/nav-copy.ts
 ```

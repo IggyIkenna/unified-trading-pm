@@ -166,7 +166,11 @@ changelog/docstring comment describing the historical removal itself (never insi
       `market-data-tick-defi-prd-central-element-323112`, and the corresponding manifest rows. Prod-bucket delete,
       human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- no agent runs this; still requires
       a human with bucket-delete access to actually execute it. Done-when: zero `venue=GMX` objects remain in the
-      bucket, manifest shows zero rows for venue=gmx. (repo: market-tick-data-service)
+      bucket, manifest shows zero rows for venue=gmx. (repo: market-tick-data-service) **READY 2026-07-25**:
+      manifest-driven scope check via `read_availability_index` confirms 5,374 `venue=GMX` rows in
+      `_index/availability_index.parquet` (dex_pool_state 4115, perp_funding 1235, liquidations 8, derivative_ticker
+      16), of 24.65M total DeFi rows -- corroborates the 7 completed code-removal todos' zero-hit grep (Parts 3/4 of the
+      delete-safety proof). Ready-to-run command in the Progress Log below.
 - [x] ✅ [DOC] P2. **Update documentation referencing GMX** -- any codex docs, this plan's parent
       (`defi_consolidated_closeout_2026_07_18.md`), and related issue docs that describe GMX as active/supported.
       Done-when: a grep across `codex/` + `plans/active/` for "GMX" shows only historical/changelog-style references
@@ -177,6 +181,30 @@ changelog/docstring comment describing the historical removal itself (never insi
       CURRENTLY-ACTIVE (edited to a removal note) vs. HISTORICAL/dated (left unchanged to preserve the audit trail);
       `defi_consolidated_closeout_2026_07_18.md` and the root-cause issue doc
       (`issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md`) both received targeted annotations.
+
+## Progress Log
+
+- **2026-07-25**: GCS-purge todo confirmed ready (all 7 code-removal prereqs verified clean; manifest scope confirmed
+  5,374 `venue=GMX` rows, see todo above). This remains human-executed only per hard-stop #1 of
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- no agent may run `--apply`/`gcs_delete_object` against
+  this prod bucket regardless of operator instruction, unless that instruction names the hard-stop itself. Ready-to-run
+  command for the operator:
+
+  ```bash
+  # Preview object count first (expect low thousands, matches the manifest's 5,374-row scope above)
+  gsutil ls "gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/**/venue=GMX/**" | wc -l
+
+  # Delete
+  gsutil -m rm -r "gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/**/venue=GMX/**"
+
+  # Then re-derive the manifest from actual GCS state (drops the now-deleted GMX rows) rather than
+  # hand-editing the availability_index parquet directly:
+  cd market-tick-data-service && .venv/bin/python market_tick_data_service/scripts/rebuild_defi_manifest.py \
+    --start-date 2020-01-01 --end-date 2026-07-25 --dry-run   # drop --dry-run once the preview looks right
+  ```
+
+  AO blocked-question `BLK-op-defi_gmx_venue_removal-008` answered `partial` (kept OPEN, not closed) to reflect this --
+  ready but not yet executed.
 
 ## Codex SSOTs
 

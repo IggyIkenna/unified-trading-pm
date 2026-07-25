@@ -17,7 +17,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   [
-    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.4,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §1.4,
     refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md,
     refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md,
     refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md,
@@ -65,7 +65,7 @@ user-management-ui).
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.4
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.4
 2. `unified-trading-system-ui/lib/auth/personas.ts` (11 existing personas)
 3. `unified-trading-system-ui/lib/auth/demo-provider.ts`
 4. `unified-trading-system-ui/lib/config/auth.ts`

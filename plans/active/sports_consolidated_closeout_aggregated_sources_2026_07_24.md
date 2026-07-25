@@ -26,7 +26,7 @@ tags: [sports, discoverability, index, aggregated-source-docs, plan-hygiene]
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 parent_epic: sports_master
@@ -43,7 +43,7 @@ supersedes:
 superseded_by:
 depends_on: []
 source: >-
-  Plan line-cap hygiene remediation, 2nd pass, /plans/active/issues/plan_line_cap_remediation_2026_07_23.md -- operator
+  Plan line-cap hygiene remediation, 2nd pass, /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md -- operator
   ruling 2026-07-24 removed the umbrella:true exemption entirely (flat 1000L hard cap, no exceptions).
 assigned_role: data_engineering
 drift_direction: advance-code
@@ -216,7 +216,7 @@ drift_direction: advance-code
   - [`plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md`](/plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md)
     — 0 open todos. ⚠️ near-duplicate name of `sports_legacy_canonical_row_gap_2026_07_16.md` above — not verified
     whether these are the same finding filed twice or genuinely distinct; flagging, not resolving.
-  - [`plans/active/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md`](/plans/active/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md)
+  - [`plans/archive/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md`](/plans/archive/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md)
     — 0 open todos.
   - [`plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md`](/plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md)
     (5 open):
@@ -225,7 +225,7 @@ drift_direction: advance-code
     - **3. [CODE] P2.** Repoint or retire the two flat-legacy readers
     - **4. [REVIEW] P3.** Rescan `migration_orphan_sweep_sports.py --bucket reference`
     - **5. [REVIEW] P3.** Cross-file the pending "MANIFEST prune" deferred task against `sports_master_closeout`
-  - [`plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md`](/plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md)
+  - [`plans/archive/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md`](/plans/archive/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md)
     — `status: resolved`, 1 residual:
     - **[VERIFY] P2.** BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning) — re-run task 007
   - [`plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md`](/plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md)
@@ -297,7 +297,7 @@ drift_direction: advance-code
     — `status: superseded`, excluded (0 open todos, folded forward into the findings-sweep doc above).
   - [`plans/active/issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md`](/plans/archive/issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md)
     — `status: resolved`, 0 open todos.
-  - [`plans/active/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`](/plans/active/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md)
+  - [`plans/archive/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`](/plans/archive/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md)
     (3 open):
     - **1. [DATA] P1.** Confirm the writer's intended WEATHER layout is `PER_DAY_PER_LEAGUE`
     - **2. [CODE] P1.** Align `SPORTS_DATA_TYPE_LAYOUT["WEATHER"]` to match
@@ -312,7 +312,7 @@ drift_direction: advance-code
     - **[SCRIPT] P3.** Re-run a full (non-sliced) `quality-gates.sh` and confirm phase 5
 
 - **API-Football / source-adapter correctness**:
-  - [`plans/active/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`](/plans/active/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md)
+  - [`plans/archive/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`](/plans/archive/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md)
     — **resolved 2026-07-24** (all 5 todos were already `[x]`; frontmatter `status` was stale, now corrected).
   - [`plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`](/plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md)
     (1 open, corrected 2026-07-24 — the P1 re-fetch-backfill item was a stale checkbox, already done per the doc's own
@@ -321,7 +321,7 @@ drift_direction: advance-code
   - [`plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md`](/plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md)
     (1 open):
     - **[DATA] P2.** BLOCKED-PREREQUISITES — re-verify + re-dispatch footystats backfill VM
-  - [`plans/active/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md`](/plans/active/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md)
+  - [`plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md`](/plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md)
     — `status: resolved`, 0 open todos.
   - [`plans/active/issues/sports_trades_attempted_failed_2026_07_23.md`](/plans/active/issues/sports_trades_attempted_failed_2026_07_23.md)
     (2 open):
@@ -343,9 +343,9 @@ drift_direction: advance-code
   - [`plans/active/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`](/plans/archive/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md)
     — `status: resolved`, 1 residual:
     - **[DOCS] P1.** Correct the cutover runbook's canonical-is-a-superset premise for raw odds on early dates
-  - [`plans/active/issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md`](/plans/active/issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md)
+  - [`plans/archive/issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md`](/plans/archive/issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md)
     — `status: resolved`, 0 open todos.
-  - [`plans/active/issues/sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md`](/plans/active/issues/sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md)
+  - [`plans/archive/issues/sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md`](/plans/archive/issues/sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md)
     — `status: resolved`, 4 residual:
     - **1. [SCRIPT] P1.** Grep-then-READ every `"odds"`/`"trades"` lowercase literal in `sentinels.py`
     - **2. [SCRIPT] P1.** Make the 3 confirmed call-site changes (venue_fetch.py x2, manifest_finalize.py x1)

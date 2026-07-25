@@ -52,7 +52,7 @@ related:
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
-    /plans/active/tradfi_massive_dual_source_2026_05_28.md,
+    /plans/archive/tradfi_massive_dual_source_2026_05_28.md,
     /plans/active/tradfi_multisource_backfill_2026_06_22.md,
     /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
     /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
@@ -61,7 +61,7 @@ related:
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
@@ -115,7 +115,7 @@ source:
 ## Split notice (2026-07-24 — plan-hygiene line-cap remediation)
 
 > **This plan was trimmed from 2549 lines and forked 3 ways**, per the operator-approved split in
-> `/plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 29). The 3-way split was overwhelmingly driven by
+> `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` (row 29). The 3-way split was overwhelmingly driven by
 > an ~1700-line tick-by-tick Progress Log sitting next to a small tail of genuinely open todos — every todo and every
 > Progress Log line was moved **verbatim** to its destination, nothing was summarized, rewritten, or dropped. This
 > parent stays under the 2000-line umbrella ceiling as a trimmed coordination index (the `umbrella=true` frontmatter key
@@ -551,7 +551,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - [`plans/active/tradfi_multisource_backfill_2026_06_22.md`](/plans/active/tradfi_multisource_backfill_2026_06_22.md)
     - **[BACKFILL] P1.** Run the FX yahoo backfill to completion (operational)
     - **[TEST] P3.** NICE-TO-HAVE — deployment-service test skip resolves service name from worktree dirname
-  - [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](/plans/active/tradfi_massive_dual_source_2026_05_28.md)
+  - [`plans/archive/tradfi_massive_dual_source_2026_05_28.md`](/plans/archive/tradfi_massive_dual_source_2026_05_28.md)
     (`status: superseded`; 10 open — capped; most items below tagged OBSOLETE/WONTFIX in-doc but checkbox not yet
     flipped)
     - **❌ [UTL] P0.** OBSOLETE. Manifest consolidator dedup key omits `source` — no Massive fetches exist, moot
@@ -649,7 +649,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - **TradFi-specific residuals**:
   - [`plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`](/plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md)
     — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md`](/plans/active/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md)
+  - [`plans/archive/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md`](/plans/archive/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md)
     (`status: resolved`) — 0 open todos (closed/archived/record-only)
   - [`plans/active/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`](/plans/active/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md)
     - **[INVESTIGATE] P1.** Root-cause the actual `WithinBoundsTradfiSourceZero` trigger for the live, active

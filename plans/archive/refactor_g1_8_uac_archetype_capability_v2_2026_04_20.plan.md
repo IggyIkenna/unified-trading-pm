@@ -17,7 +17,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   [
-    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.8,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §1.8,
     /codex/09-strategy/architecture-v2/uac-registry-gaps.md (gap,
   ]
 ---
@@ -66,7 +66,7 @@ archetype's declaration, so pricing engine (G1.2 → G1.6) and derivation engine
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.8
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.8
 2. `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — especially Gap #1 in full
 3. `/codex/09-strategy/architecture-v2/README.md` — 18 archetypes + 8 families + 7 axes
 4. Every archetype declaration in `strategy-service/strategy_service/engine/strategies/v2/`:
@@ -153,12 +153,12 @@ archetype's declaration, so pricing engine (G1.2 → G1.6) and derivation engine
       hook line**:
 
       ```bash
-                                                              # G1.8 — archetype-capability UAC <-> UI coverage.ts parity.
-                                                              SYNC_ARCHETYPE_CAPABILITY="${WORKSPACE_ROOT}/unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh"
-                                                              if [[ -f "$SYNC_ARCHETYPE_CAPABILITY" ]]; then
-                                                                bash "$SYNC_ARCHETYPE_CAPABILITY" --check || exit 1
-                                                              fi
-                                                              ```
+                                                                      # G1.8 — archetype-capability UAC <-> UI coverage.ts parity.
+                                                                      SYNC_ARCHETYPE_CAPABILITY="${WORKSPACE_ROOT}/unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh"
+                                                                      if [[ -f "$SYNC_ARCHETYPE_CAPABILITY" ]]; then
+                                                                        bash "$SYNC_ARCHETYPE_CAPABILITY" --check || exit 1
+                                                                      fi
+                                                                      ```
 
 - [x] [AGENT] P0. `lib/architecture-v2/coverage.ts` regenerated via `--write` — now carries the AUTO-GENERATED banner,
       matches the UAC manifest byte-for-byte.

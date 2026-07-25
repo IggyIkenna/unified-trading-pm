@@ -7,7 +7,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.6
+  - /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §2.6
   - plans/active/deployment_topology_and_client_isolation_2026_04_17.plan.md (folded)
   - plans/active/five_space_ia_execution_child_plan_2026_04_17.md ticket #12 (folded)
   - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in — ARCHIVED
@@ -75,7 +75,7 @@ wired through unified-trading-system-ui (which now hosts the former user-managem
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.6
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.6
 2. `plans/active/deployment_topology_and_client_isolation_2026_04_17.plan.md` — full
 3. `plans/active/five_space_ia_execution_child_plan_2026_04_17.md` — ticket #12 section
 4. `codex/14-playbooks/authentication/` — all auth playbook docs

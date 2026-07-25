@@ -26,7 +26,10 @@ repos:
 scope: [engineer]
 tags: [cefi, discoverability, index, aggregated-source-docs, plan-hygiene]
 related:
-  [/plans/active/cefi_consolidated_closeout_2026_07_18.md, /plans/active/issues/plan_line_cap_remediation_2026_07_23.md]
+  [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+  ]
 created: "2026-07-24"
 parent_epic: cefi_master
 assigned_vm: NA
@@ -35,14 +38,14 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
-last_updated: "2026-07-24"
+last_updated: "2026-07-25" # 2026-07-25: appended the parent's "Pass-through from the 2026-07-18 consolidated canonicalisation audit" section verbatim (4-child split pass, cefi.4)
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 depends_on: []
 source: >-
-  Plan line-cap hygiene remediation, 2nd pass, /plans/active/issues/plan_line_cap_remediation_2026_07_23.md -- operator
+  Plan line-cap hygiene remediation, 2nd pass, /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md -- operator
   ruling 2026-07-24 removed the umbrella:true exemption entirely (flat 1000L hard cap, no exceptions).
 assigned_role: data_engineering
 drift_direction: advance-code
@@ -98,7 +101,7 @@ drift_direction: advance-code
     - 3. **[REVIEW] P1.** Audit `manifest_recorder`/honest-absence bookkeeping for this handler post-fix.
     - 4. **[DATA] P2.** If prod objects exist under the legacy `pipeline_mode=live_deribit/...` shape, migrate them
          (copy → verify → human-only purge).
-  - [`plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`](/plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md)
+  - [`plans/archive/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`](/plans/archive/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`](/plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
@@ -222,7 +225,7 @@ drift_direction: advance-code
       shards (gated on v6 canonicalisation landing).
     - **[UI] P3.** Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API
       exposes them.
-  - [`plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md`](/plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md)
+  - [`plans/archive/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md`](/plans/archive/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md`](/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md)
     (status: active)
@@ -393,7 +396,7 @@ drift_direction: advance-code
   - [`plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`](/plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md)
     - **[DESIGN] P1.** BLOCKED-OPERATOR-DECISION — confirm keeping Option B as shipped OR do the Option-A follow-up
       (declare `OKX-SPOT` its own cefi venue).
-  - [`plans/active/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`](/plans/active/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md)
+  - [`plans/archive/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`](/plans/archive/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`](/plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
@@ -676,3 +679,69 @@ drift_direction: advance-code
     - **[SCRIPT] P3.** Delete confirmed-dead code — not touched this pass (concurrent edits).
     - **[DESIGN] P2.** 31 DeFi (venue, data_type) pairs declare a genesis start-date with zero real captured rows —
       needs an operator/data-owner decision per pair.
+
+## Pass-through from the 2026-07-18 consolidated canonicalisation audit (slot-4) — decisions + measured worklist
+
+> Authored by the DeFi close-out audit (`defi_consolidated_closeout_2026_07_18.md`) and handed here per the operator's
+> ownership split (cefi findings land in THIS plan). Operator rulings 2026-07-18. **Moved verbatim from
+> `cefi_consolidated_closeout_2026_07_18.md` (2026-07-25 line-cap trim, 4-child split pass) — nothing summarized or
+> dropped.** ⚠️ **Possible overlap flagged, not resolved**: this section may duplicate content in the parent's own "CEFI
+> CANONICAL SPEC" section (operator-authoritative target spec) — both were authored the same day (2026-07-18) from
+> related but distinct audits and were never diffed against each other. Per `task_template.md` §3 finding M ("don't
+> guess-delete, preserve both copies"), this is flagged here for a LATER dedicated pass, not resolved now.
+
+**Operator decisions confirmed (cefi):**
+
+- **Venue token = HYPHENATED** (`BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN`), NOT underscore — the builder only `.upper()`s
+  the venue and it must equal the GCS `venue=` axis (always hyphen); underscore would FAIL the verify-gate `[A-Z0-9-]+`.
+  So the live manifest's ~9.5M "hyphen" rows are ALREADY canonical → **no `-`→`_` rename** (the underscore illustrative
+  form in earlier docs is wrong).
+- **ASTER quote = PER-SYMBOL REAL quote** (operator ruling 2026-07-18): use each symbol's actual on-chain `quoteAsset`
+  (predominantly USDT — 504/509 — but the tail carries its real USD1/USDC/`U`; `aster.py` already embeds the per-symbol
+  quote). ASTER data is REAL (its own Binance-compatible endpoints `fapi.asterdex.com`, not a Binance proxy).
+  Representative id = `ASTER:PERPETUAL:BTC-USDT@LIN`; **NOT hardcoded USDT** — the earlier `ASTER=USDT` note was the
+  majority, not the rule. Fix the stale docs (`shard-granularity-cefi.md:106` = USDC, `DEFI_DOWNLOAD_STRATEGY.md:164`).
+- **DERIBIT always-quote** — confirmed the gating P0 (already Track-1 / the DERIBIT quote-fix item, see
+  `cefi_migration_cutover_and_track8_completion_2026_07_25.md`).
+- **Venue purge (operator ruling, refined 2026-07-18)** — remove the CULLED/defunct venues ENTIRELY from UAC + manifest
+  - GCS data + MVP catalogue + docs, **snapshot-first** (irreversible): BITSTAMP-SPOT / HUOBI-SPOT/-FUTURES /
+    GEMINI-SPOT / PHEMEX-SPOT (defunct), and the Solana-perp cull
+    (DRIFT/PACIFICA/MANGO/ZETA/FLASH/SOLAYER/PICASSO/CAMBRIAN). **KEEP registered (NOT purged)**: **BINANCE-DELIVERY**
+    (live COIN-M product — descope from MVP backfill, keep the UAC registration/scaffold; the audit found it still fully
+    registered across UAC, which is fine — just mark non-MVP), KALSHI-PERP + POLYMARKET-PERP (roadmap — will be added),
+    LIGHTER-ZKSYNC (blocked-credentials MVP scaffold — external-data-always-available rule), EXTENDED-STARKNET (live
+    MVP). Clean the STALE `/codex/02-data/mvp-scope-canonical.md` PACIFICA-as-MVP bolding.
+- **DERIBIT-COMBO leg-aware combos (cross-AG)** — adopt the operator's 2026-07-09 leg-aware signed-weight spec (per-leg
+  human-readable `instrument_key` + weight + direction-as-sign, 1–4-leg hard cap) for DERIBIT-COMBO by extending the
+  shared `build_leg()` path to `cefi/deribit_combo_adapter.py` + `cefi/tardis/combos.py` — the open cross-AG P2 in
+  `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`.
+
+**Live manifest worklist (`market-data-tick-cefi-prd`, 11.19M rows; ~44.3% of ids non-canonical)** — the migration must
+map these (measured via the distinct-values audit; counts approximate):
+
+> **⛔ CASE DIRECTION CORRECTED 2026-07-20, operator ruling D1** — recorded in
+> [`data_pipeline_reconciliation_skill_2026_07_20.md`](/plans/active/data_pipeline_reconciliation_skill_2026_07_20.md) §
+> "OPERATOR DECISIONS — ALL THREE RULED 2026-07-20". **This table previously ordered the `instrument_type` case-fold
+> DOWN to lowercase** (row 1: `PERPETUAL`/`SPOT_PAIR`/`FUTURE`/`OPTION` → "lowercase", 7.58M rows) — **directly
+> contradicting the parent doc's own "✅ CASING FREEZE LIFTED 2026-07-20 (operator ruling D1 — UPPERCASE column
+> ratified)" note** (`instruments-service@555ddf1c`), which already shipped these 7.58M rows UPPERCASE and ratified that
+> as the target. The row count is unchanged and preserved below; **the direction is corrected — these rows are already
+> canonical, no further fold needed.** This applies to the manifest `instrument_type` **COLUMN only**: the id
+> **segment** stays UPPER, unaffected either way.
+
+| dimension       | non-canonical                                     | canonical target                                   |     ~rows | action                        |
+| --------------- | ------------------------------------------------- | -------------------------------------------------- | --------: | ----------------------------- |
+| instrument_type | `PERPETUAL`/`SPOT_PAIR`/`FUTURE`/`OPTION`         | UPPERCASE ~~lowercase~~ (D1, already shipped)      |     7.58M | already-canonical — no action |
+| instrument_type | `''`/`NULL`/`spot`/`index`                        | resolve from id / remap                            |     3.23M | resolve                       |
+| instrument_id   | perp missing `@LIN`/`@INV`                        | append margin marker                               | 2,402,330 | reconstruct                   |
+| instrument_id   | raw no-colon (`SPELLUSDT`)                        | `VENUE:TYPE:BASE-QUOTE@MARGIN`                     | 1,362,316 | reconstruct                   |
+| instrument_id   | DERIBIT option (0% canonical)                     | `DERIBIT:OPTION:BASE-USD@INV-YYYYMMDD-STRIKE-C\|P` |  ~428,600 | add quote + YYYYMMDD          |
+| instrument_id   | `VENUE:PERP:RAW` (HL/LIGHTER/ASTER)               | `VENUE:PERPETUAL:BASE-QUOTE@LIN\|INV`              |   374,272 | reconstruct                   |
+| instrument_id   | DERIBIT future `BASE-DDMMMYY`                     | `DERIBIT:FUTURE:BASE-USD@INV-YYYYMMDD`             |  ~250,600 | add quote                     |
+| instrument_id   | KRAKEN raw `FI_/FF_`                              | `KRAKEN-FUTURES:FUTURE:BASE-USD@…-YYYYMMDD`        |    68,469 | reconstruct                   |
+| source          | `''`/`NULL`                                       | vendor token (`tardis`/native)                     | 3,441,207 | backfill vendor               |
+| pipeline_mode   | `NULL`                                            | `{mode}_{source}`                                  |   345,492 | backfill                      |
+| venue           | `OKX` bare (64) · `DERIBIT-COMBO`→`DERIBIT` (226) | resolve family / encode combo in id                |      ~290 | resolve/collapse              |
+
+**Enumeration-restore (cross-AG, owned by the DeFi plan Track 6)**: a raw un-canonicalised distinct-values audit panel
+per asset_group (the view removed on `deployment-api@512180be`) is being restored so this worklist stays live-visible.

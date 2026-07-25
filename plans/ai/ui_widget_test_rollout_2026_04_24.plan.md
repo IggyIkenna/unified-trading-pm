@@ -22,7 +22,7 @@ repo_gates:
 ssot:
   - /codex/06-coding-standards/ui-testing-layers.md
   - /codex/06-coding-standards/integration-testing-layers.md
-  - /codex/14-playbooks/testing/README.md
+  - /codex/14-customer-journeys/testing/README.md
   - unified-trading-system-ui/docs/manifest/widget-certification/*.json
 ---
 
@@ -292,7 +292,7 @@ matching `tests/widgets/` file.
 
 - **UI testing SSOT**: `/codex/06-coding-standards/ui-testing-layers.md`
 - **Backend testing SSOT**: `/codex/06-coding-standards/integration-testing-layers.md`
-- **Playbook testing SSOT**: `/codex/14-playbooks/testing/README.md`
+- **Playbook testing SSOT**: `/codex/14-customer-journeys/testing/README.md`
 - **Widget cert index**: `unified-trading-system-ui/docs/manifest/widget-certification/*.json`
 - **Strategy coverage plan (sibling)**: `unified-trading-pm/plans/ai/ui_e2e_strategy_coverage_audit_2026_04_22.plan.md`
 - **Workspace UI rule**: `.claude/rules/ui.md`

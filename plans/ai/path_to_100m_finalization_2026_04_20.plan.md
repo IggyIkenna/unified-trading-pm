@@ -211,7 +211,7 @@ persona/entitlement additions if needed.
       2 allocation-lock-matrix exactly.
 - [ ] [AGENT] P0. Update `/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md` — add a
       "Current Lock State Snapshot" section dated 2026-04-20 with the same concrete cell list, cross-linked to
-      `/codex/14-playbooks/shared-core/strategy-allocation-lock-matrix.md`.
+      `/codex/14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md`.
 - [ ] [AGENT] P0. **Phase 4 success gate**: codex strategy docs and playbook SSOT agree on which cells are IM_RESERVED;
       single snapshot date; no divergent wording.
 
@@ -253,7 +253,7 @@ component changes.
 - [ ] [AGENT] P0. Grep for orphaned or broken doc links: `grep -r "(\.\.\?/\([a-z-]*\))\]" codex/14-playbooks/` — every
       outbound link must resolve.
 - [ ] [AGENT] P0. Verify the allocation-lock-matrix snapshot is cited consistently across:
-      `/codex/14-playbooks/shared-core/strategy-allocation-lock-matrix.md`,
+      `/codex/14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md`,
       `/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`,
       `/codex/09-strategy/architecture-v2/category-instrument-coverage.md`,
       `unified-trading-system-ui/lib/architecture-v2/availability.ts`.
@@ -279,34 +279,34 @@ component changes.
 - [ ] [AGENT] P0. Update memory under
       `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos/memory/` with a
       project entry summarising the final 2026 run-plan + path-to-$100M deck alignment.
-- [ ] [AGENT] P1. Add follow-up items to `/codex/14-playbooks/roadmap/next-waves.md` or equivalent: finance numbers
-      populate (Odum finance owns), Stage 3B runtime enforcement of lock_state, signal-leasing pricing confirmation, CME
-      skin-scaling confirmation, bridge-capital raise.
+- [ ] [AGENT] P1. Add follow-up items to `/codex/14-customer-journeys/roadmap/next-waves.md` or equivalent: finance
+      numbers populate (Odum finance owns), Stage 3B runtime enforcement of lock_state, signal-leasing pricing
+      confirmation, CME skin-scaling confirmation, bridge-capital raise.
 
 ## Critical files
 
 ### New (8)
 
-- `/codex/14-playbooks/shared-core/dart-pricing-axes.md`
-- `/codex/14-playbooks/shared-core/strategy-allocation-lock-matrix.md`
-- `/codex/14-playbooks/commercial-model/im-profit-share-structures.md`
-- `/codex/14-playbooks/commercial-model/signal-leasing.md`
-- `/codex/14-playbooks/commercial-model/revenue-projection-2026-monthly.md` (codex-private)
+- `/codex/14-customer-journeys/shared-core/dart-pricing-axes.md`
+- `/codex/14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md`
+- `/codex/14-customer-journeys/commercial-model/im-profit-share-structures.md`
+- `/codex/14-customer-journeys/commercial-model/signal-leasing.md`
+- `/codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md` (codex-private)
 - `/codex/14-playbooks/commercial-model/runway-and-capital-plan.md` (codex-private)
 
 ### Updated — docs
 
-- `/codex/14-playbooks/commercial-model/pricing-building-blocks.md`
-- `/codex/14-playbooks/commercial-model/dart-entry-points.md`
-- `/codex/14-playbooks/commercial-model/im-vs-reg-reporting-logic.md`
-- `/codex/14-playbooks/commercial-model/exclusivity-and-noncompete.md`
-- `/codex/14-playbooks/shared-core/strategy-origin-vs-stack-depth.md`
-- `/codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
-- `/codex/14-playbooks/shared-core/venue-chain-instrument-scope.md`
-- `/codex/14-playbooks/experience/im-decision-journey.md`
-- `/codex/14-playbooks/experience/dart-briefing.md`
-- `/codex/14-playbooks/experience/dart-demo.md`
-- `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
+- `/codex/14-customer-journeys/commercial-model/pricing-building-blocks.md`
+- `/codex/14-customer-journeys/commercial-model/dart-entry-points.md`
+- `/codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md`
+- `/codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md`
+- `/codex/14-customer-journeys/shared-core/strategy-origin-vs-stack-depth.md`
+- `/codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md`
+- `/codex/14-customer-journeys/shared-core/venue-chain-instrument-scope.md`
+- `/codex/14-customer-journeys/experience/im-decision-journey.md`
+- `/codex/14-customer-journeys/experience/dart-briefing.md`
+- `/codex/14-customer-journeys/experience/dart-demo.md`
+- `/codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md`
 - `/codex/09-strategy/architecture-v2/category-instrument-coverage.md`
 - `/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`
 

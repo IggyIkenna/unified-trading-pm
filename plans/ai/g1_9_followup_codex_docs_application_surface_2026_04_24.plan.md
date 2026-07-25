@@ -77,7 +77,7 @@ docs they should see, hide the rest" without rewriting docs themselves.
 - **Sync-script pattern (reuse):** `unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh`
 - **Scope-manifest tooling (consume):** `unified-trading-pm/codex/14-playbooks/_tools/build-scope-manifest.sh` +
   `_generated/scope-manifest.json`
-- **Rule 11 enum (consume):** `/codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md`
+- **Rule 11 enum (consume):** `/codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md`
 
 ## Mandatory read-set
 
@@ -88,12 +88,12 @@ docs they should see, hide the rest" without rewriting docs themselves.
 5. `unified-trading-system-ui/components/marketing/render-with-terms.tsx` — full (string post-processing)
 6. `unified-trading-system-ui/lib/auth/personas.ts` — full (audience mapping target)
 7. `unified-trading-system-ui/lib/help/help-search.ts` — full (search pattern to clone)
-8. `unified-trading-pm/codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md` — full
+8. `unified-trading-pm/codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md` — full
 9. `unified-trading-pm/codex/14-playbooks/_generated/scope-manifest.json` — top + bottom + 1 sample per audience
 10. `unified-trading-pm/codex/14-playbooks/_tools/build-scope-manifest.sh` + the `.py` it invokes
 11. `unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh` — pattern to mirror
 12. 3 sample codex docs (one heavy: `/codex/04-architecture/share-class-architecture.md`; one short:
-    `/codex/14-playbooks/glossary.md`; one with code blocks: `/codex/06-coding-standards/quality-gates.md`)
+    `/codex/14-customer-journeys/glossary.md`; one with code blocks: `/codex/06-coding-standards/quality-gates.md`)
 
 ## Out of scope
 

@@ -43,7 +43,7 @@ related:
   [
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

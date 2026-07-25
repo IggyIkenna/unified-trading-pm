@@ -30,14 +30,14 @@ tags: [cefi, close-out, canonicalisation, manifest, execution-log, progress-log,
 related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
     /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part1_2026_07_24.md,
     /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part2_2026_07_24.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-07-25" # 2026-07-25: appended the parent's 4 remaining DELTA sections (01:30Z/01:20Z/05:55Z/13:35Z) + Deferred-work table + Step 8 verdict, completing the migration this file's header always intended
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -615,3 +615,203 @@ to force real test execution, twice, both `4808 passed, 0 failed`).
 **Recommended next**: keep watching item 1 (KRAKEN-SPOT v4) — everything else in the CeFi filename-migration critical
 path (items 1-3, 9) chains directly off it. Items 4-6 (catalogue gaps) and 7-8 (operator-owned) are independent
 side-tracks that can run in parallel whenever picked up, but are not blocking the critical path.
+
+### DELTA — 2026-07-24 ~01:30Z (`/autonomous` invoked, operator away 6h — driving to completion, no further check-ins)
+
+**Operator invoked `/autonomous` explicitly**, stating they are away for 6 hours and to "complete everything." Per
+`cursor-configs/AUTONOMOUS_AGENT_RULES.md` (read in full this tick), decisions the operator could make are now mine to
+make using the documented record of intent — logging the one scope decision made under that authority:
+
+**DERIBIT combo partition-move `--apply` (item 7, the actual 15,119-row data MOVE) remains OUT OF SCOPE for this
+autonomous drive, NOT reinterpreted as newly-authorized.** Reasoning: earlier THIS SAME session, the operator gave an
+explicit, specific ruling on this exact item — "Proceed with P1 prep now" — deliberately answering a question that
+distinguished the P1 prep work (approved) from the actual `--apply` data move (explicitly NOT covered, "a SEPARATE
+future review required"). That is a recent, specific, documented decision from this operator about this exact action,
+not a vague old plan note — the autonomous rules direct using "the documented record of intent" to decide, and the most
+faithful reading of that record is that this carve-out stands: "complete everything" naturally refers to the currently
+in-flight work threads (Surface C, fleet chain, LIGHTER backfill, MTDS fix, final re-proof, archival), not a dormant,
+explicitly-deferred, hard-to-reverse production data migration on live-served financial data that wasn't even part of
+the in-flight list reported to the operator. If this reasoning is wrong, it is the conservative direction to be wrong in
+(leaving a real migration deferred, not launching an under-scrutinized one while unsupervised).
+
+Also leaving item 8 (`slot-cron-ff-pull.sh` hard-reset audit) untouched — it is shared cross-slot infra affecting OTHER
+concurrent agents' sessions, outside this plan's actual scope (flagged Operator-owned for a different reason: needs an
+infra owner, not a data-migration sign-off) — modifying it unsupervised carries real risk of breaking sibling sessions
+mid-task with no one able to notice quickly.
+
+**Everything else in this plan**: driving to actual completion per rule 1 (no `DEFERRED`/`BLOCKED-OPERATOR` end states),
+looping per rule 12 (self-paced `ScheduleWakeup`, journaling every tick to this Progress Log, terminating when items
+2/3/9 all reach DONE).
+
+### DELTA — 2026-07-24 ~01:20Z (item 7c SHIPPED; fresh 4-surface re-measure is REAL and FAIL as expected; Surface C hit a genuine data-safety gate)
+
+**Item 7c DONE**: `market-tick-data-service@5334bff6` removes `DERIBIT-COMBO` from both active-venue-enumeration
+call-sites (`engine/orchestrator/__init__.py::get_venues_for_asset_groups`, `adapters/umi_tick_provider.py`'s
+`_TARDIS_CEFI_VENUES`), adds a live-UAC-registry-backed regression test (imports the real
+`unified_api_contracts.registry.market_data_categories.VENUES_BY_ASSET_GROUP` and asserts non-membership, so it stays in
+sync automatically rather than hardcoding an assumption), confirmed shipped
+(`git rev-list --count origin/live-defi-rollout..HEAD` = 0).
+
+**Fresh `verify_cefi_canonical_4surface_2026_07_20.py` re-measure — a REAL, complete run** (prior 2 attempts crashed on
+GCS connectivity before reaching any surface; this one got all the way through): **OVERALL: FAIL [A=FAIL B=FAIL C=FAIL
+D=PASS]**. Corpus-level fractions: **A (filename) 48.04%** — but this hides a sharp day-by-day gradient: 94-95%
+canonical on 2025-06/08/10/11-12, then 67.04% (2025-12-15), 33.02% (2026-02-01), 23.99% (2026-05-01) — the "LATE window"
+the plan already flagged (23-28%), now re-confirmed fresh and post-KRAKEN-SPOT. **B (column) 95.00%** (38/40 sampled
+objects). **C (manifest) 98.22%** (excl. chain bundles) — 2 concrete FAIL examples shown (BITFINEX- FUTURES ADA: 7
+duplicate wire-form manifest rows alongside 4628 canonical; DERIBIT AVAX-USDC: 2 duplicates alongside 814 canonical) —
+exactly the shape the Surface C v2 apply is designed to collapse. **D (reader) PASS** — resolver correctly handles both
+wire and canonical forms either way. This is genuinely useful, not just a re-confirmation: it pinpoints the LATE-renames
+scope precisely (the 3 low-fraction dates/pattern) rather than relying on a stale 2026-07-20 histogram.
+
+**Surface C v2 manifest apply — 4th attempt got PAST the earlier connectivity failures, hit a REAL data-safety gate
+instead**:
+`STOP (DATA LOSS): dropping 'chain' would merge 3304 PIN_ATOM group(s) holding >1 CAPTURED row with DIFFERING non-zero row_count`.
+Critically, **the dry-run run a few hours earlier (2026-07-23 ~18:58Z) measured this EXACT invariant at 0/0**
+("`[v2 CHAIN-DROP=True] rows merging on chain-differing PIN_ATOM groups=0 LOSSY (captured w/ differing count)=0 [MUST be 0]`")
+— the underlying manifest data genuinely changed in the few hours between the dry-run and this apply attempt (very
+plausibly ongoing live capture continuing to write new cefi rows in that window — the whole corpus grew by other,
+unrelated measurements around the same time). Zero mutation occurred (the script's own validation stage refused before
+any write — confirmed no "Backed up original index"/"Wrote canonicalised index" log lines appear). Consolidator cron
+RESUMED again to a safe state. **Next: investigate the 3304 lossy groups before deciding whether to re-run the dry-run
+fresh (the corpus has moved since 18:58Z) + apply, or use the script's own offered `--keep-chain` escape hatch** — the
+script's error message explicitly names `--keep-chain` as the safe alternative to a forced collapse, which is a stronger
+safety property than the "operator directive 2026-07-20: derive chain from UAC on demand" preference for cleanup; do NOT
+force past this check without understanding it first.
+
+### DELTA — 2026-07-24 ~05:55Z (`/pre-compact` mid-autonomous-loop; genuine connectivity degradation confirmed, 3 workflows lost to it, 1 real commit recovered before it could be lost)
+
+**Item 7c's LIGHTER-ZKSYNC follow-up SHIPPED**: `market-tick-data-service@8835b899` ("fix(cefi): LIGHTER-ZKSYNC numeric
+market_id stem resolution for Script 2") — threads the shipped `resolve_market_index()` resolver through Script 2's
+shared `_cefi_canonical_resolver_migration_2026_07_18.py` as an optional, default-empty
+`ResolverMaps.lighter_market_index` field; substitutes a bare-numeric LIGHTER-ZKSYNC stem for its resolved symbol before
+the ordinary catalogue lookup. This commit existed locally (made by the LIGHTER-backfill workflow before it stalled) but
+was NEVER PUSHED — found by this exact pre-compact audit's Step 1 git-status check, independently re-verified green
+(`quality-gates.sh --no-fix` exit 0, fresh re-run, not trusting the stalled workflow's own claim) before pushing. **This
+is exactly the kind of loss this ritual exists to catch — a real, valuable, QG-green commit that would have been
+invisible to any future session had it stayed local.**
+
+**All 3 dispatched workflows this tick failed identically**: `LATE colliding-venue renames` (Measure phase),
+`LIGHTER- ZKSYNC backfill` (DryRun phase, already had the above commit banked from an earlier resumed attempt), and
+`Surface C chain-drop investigation` (Investigate phase) — every one "agent stalled on all 6 attempts (no progress for
+180000ms each)", burning 208/244/221 minutes respectively before giving up. **Root-caused, not assumed**: directly timed
+`gsutil stat` against the same object checked earlier tonight — took ~19-25s just now vs ~3-7s a few hours ago (same
+command, same object, same host). Host load (3.13/2.51/2.29) and free memory are unremarkable; only 1 heavy process was
+running at measurement time — this is NOT local resource contention, it is a genuine, currently-ongoing GCS connectivity
+degradation, most likely the same condition that caused 3 separate transient failures on the Surface C apply earlier
+tonight. **The LATE-renames/LIGHTER-backfill/Surface-C-investigation items are reclassified from "in progress" to
+"cannot be done yet — blocked on connectivity, not on any decision or code issue.**
+
+**LESSON (new, real cost tonight)**: when GCS connectivity is degraded, a Workflow-dispatched sub-agent running a long
+GCS-heavy script can silently stall for 180s x 6 retries (~200+ minutes wall-clock, real token spend) before the harness
+gives up and reports failure — a MUCH more expensive failure mode than a direct `Bash run_in_background` command hitting
+a clean, fast exception (the same connectivity issue crashed the direct Surface C `--apply` attempts in under a minute
+each, with a clear traceback, captured cheaply). **Going forward: during any SUSPECTED connectivity degradation, prefer
+direct `Bash run_in_background` execution over Workflow-dispatched agents for long-running, GCS-heavy scripts** — it
+fails fast and cheaply instead of stalling expensively. Confirm suspected degradation with a cheap, timed `gsutil stat`
+check before deciding which path to use.
+
+**Cross-check consolidator cron state (safety-critical, mid-audit)**: confirmed `PAUSED` at this exact moment — the
+failed `Surface C chain-drop investigation` workflow's `Investigate` phase never reached the point of pausing it
+(read-only phase, per its own design), so this PAUSED state must be a leftover from the last DIRECT apply attempt this
+session (~01:14Z) that I resumed after — re-verified and RESUMED again now, confirmed ENABLED, so it is not left paused
+through this connectivity-degraded window.
+
+**`/autonomous` loop continues** — per rule 12(e) (stall-safety: a flat progress metric = STOP and diagnose, never burn
+ticks blindly repeating a failing action), NOT re-dispatching another heavy workflow into the same degraded connectivity
+immediately. Backing off for a longer interval, will re-check connectivity health (cheap `gsutil stat` timing) before
+resuming LATE renames / LIGHTER backfill / Surface C investigation.
+
+### DELTA — 2026-07-24 ~13:35Z (connectivity recovered, resumed briefly, operator returned and called a stop — `/pre-compact` run interactively, nothing local to quickmerge)
+
+**Connectivity re-check**: `time gsutil stat` on the small (9MB) catalog object came back ~3.0s — matches the healthy
+baseline, not the ~19-25s degraded reading from the prior tick. Pulled in 17 commits (`unified-trading-pm`) + 5 commits
+(`market-tick-data-service`, across 2 pulls) that landed from other concurrent sessions while this loop was backed off;
+`instruments-service` was already current. All 3 repos fast-forwarded cleanly, no conflicts.
+
+**Surface C chain-drop investigation — STARTED, INTERRUPTED before conclusion, but already overturns the ~01:20Z DELTA's
+working hypothesis.** Read `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py` + its imported v1 module directly
+(not via Workflow, per the standing lesson). Found, by reading the code rather than assuming: `_chain_merge_safety()`
+early-returns `(0, 0)` whenever `"chain" not in df.columns`; `main()`'s dry-run path calls
+`v1._load(..., columns=v1._DRYRUN_COLS)`, and confirmed directly (`'chain' in v1._DRYRUN_COLS` → `False`) that
+`_DRYRUN_COLS` does **not** include `"chain"`; `_ensure_cols` only re-materialises `pipeline_mode`/`row_count`, never
+`chain`. **This means every dry-run reports the chain-drop invariant as 0/0 UNCONDITIONALLY, regardless of the real
+data** — `--apply` is the ONLY code path that loads the full schema (`columns=None`) and therefore the only path that
+can ever see a nonzero `chain_lossy`. **This is a plausible alternate/additional root cause to the ~01:20Z DELTA's
+"corpus moved between dry-run and apply" hypothesis — quite possibly the ENTIRE explanation, not just a contributing
+factor**, since a dry-run showing 0/0 provides zero actual evidence either way; it was never measuring anything. **NOT
+YET FULLY CONFIRMED**: a follow-up script (`investigate_chain_lossy_20260724.py`, written to the session scratchpad) was
+mid-run — it had proven the `_DRYRUN_COLS` fact above, then hit a transient `ChunkedEncodingError` on the 187MB
+full-index download (connectivity had recovered per the cheap `gsutil stat` check on the small object, but a large-blob
+download can still hit a one-off reset independent of general degradation), was retried, and was killed mid-flight when
+the operator called this stop — so the actual current `chain`-column presence and live lossy-group count in the FULL
+schema were never re-measured this tick. **Nothing was mutated**: this was a pure read/diagnostic investigation, zero
+`--apply` calls made.
+
+**New tracked todo (do not lose this finding)**:
+
+- [ ] [SCRIPT] P0. Fix (or explicitly justify) `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`'s dry-run
+      chain-drop blind spot: `_DRYRUN_COLS` excludes `"chain"`, so `_chain_merge_safety()` always reports `(0, 0)` in
+      dry-run mode regardless of the real data — the STOP-ON-SURPRISE gate for this invariant only ever fires at
+      `--apply` time. Either add `"chain"` to `_DRYRUN_COLS` (small perf cost, real safety value: a dry-run would then
+      give an honest early warning) or add an explicit log line when the check is structurally skipped, so a clean
+      dry-run is never mistaken for a proven-safe one. Re-run `investigate_chain_lossy_20260724.py` (scratchpad, this
+      session — promote it to `scripts/` first per the one-off lifecycle rule if it earns its keep) against the FULL
+      schema to get the actual current lossy-group count and inspect a sample before deciding `--keep-chain` vs. a
+      repair vs. a fixed dry-run + clean `--apply`.
+
+**Operator returned and said stop** (not the 6-hour window elapsing — an explicit interrupt). Per the autonomous skill's
+own instruction ("On operator 'stop': kill the loop/sleeper PID immediately and don't re-arm"), this session is ending
+the `/autonomous` loop now. **No `ScheduleWakeup` will be re-armed.**
+
+**Consolidator cron state**: re-verified `ENABLED` (not paused) — the interrupted investigation never reached the pause
+step (it's a read-only diagnostic phase by design), and no apply attempt happened this tick, so there was nothing to
+resume.
+
+**Nothing local to quickmerge**: `git status --porcelain` + `git diff --stat HEAD` came back empty across all 3 repos
+before this doc edit — every change from this entire `/autonomous` window was already committed and pushed (confirmed
+`ahead=0` repeatedly, most recently by the ~05:55Z pre-compact tick before this one). This plan-doc edit itself is the
+only uncommitted change at stop time, shipped via the standard `docs(plans):` direct-push carve-out.
+
+## Deferred work after 2026-07-24 ~13:35Z (supersedes all earlier Deferred-work sections in this file — items 1/4/4b/5/6/7/7c below are DONE, see DELTAs above)
+
+| #    | Item                                                                                                   | Kind                                                          | Blocked-on                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | ~~KRAKEN-SPOT Surface A~~                                                                              | **DONE**                                                      | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 2a   | Fleet chain: error-recon + fresh 4-surface reverify                                                    | **DONE**                                                      | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 2b   | LATE colliding-venue renames (fresh scope measurement, then per-venue dry-run+apply)                   | Not done                                                      | Connectivity confirmed healthy now — no longer blocked; operator called a stop before this was started this tick                                                                                                                                                                                                                                                                                                                                                       |
+| 2c   | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done                                                      | Next link after 2b; not yet started                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 3    | Surface C v2 manifest apply                                                                            | Code-level UNBLOCKED (2026-07-24 later tick)                  | `instruments-service@654d694f` folds `underlying`+`chain` into the manifest dedup key — chain-drop invariant now fully understood (0 DERIBIT/ASTER residual; 28 groups BITFINEX-SPOT/BYBIT-SPOT accepted as a small, logged, tracked tolerance). Full detail: `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding 5. The apply itself (pause cron → fresh dry-run → `--apply` → verify → resume) has NOT run yet — do that next.            |
+| 4/4b | ~~Residual ambiguous wire-keys + margin_type mislabel~~                                                | **DONE**                                                      | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 5    | ~~Catalogue-enumeration-gap script~~                                                                   | **DONE**                                                      | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 6    | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | Not done                                                      | Resolver code SHIPPED (`mtds@8835b899`); the actual dry-run + apply of the GCS rename itself never attempted this tick — operator stop landed first. **Cross-plan coordination (2026-07-25 plan-reconcile)**: cefi_satellite_ao_dispatch_batch1_2026_07_25.md has a separate LIGHTER-ZKSYNC ohlcv_1m repartition todo touching the same venue on a different mutation axis (pipeline_mode path, not filename stem) — verify neither is mid-run before starting either. |
+| 7    | DERIBIT combo PARTITION-MOVE (15,119 rows, actual data move)                                           | **Operator-owned, explicitly out of scope for `/autonomous`** | Per the `/autonomous` DELTA above — a specific, recent operator ruling this session already deferred this, not reinterpreted as newly authorized                                                                                                                                                                                                                                                                                                                       |
+| 7c   | ~~MTDS DERIBIT-COMBO venue staleness~~                                                                 | **DONE**                                                      | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 8    | `slot-cron-ff-pull.sh` hard-reset audit                                                                | **Operator-owned, explicitly out of scope for `/autonomous`** | Shared cross-slot infra affecting other concurrent sessions — per the `/autonomous` DELTA above                                                                                                                                                                                                                                                                                                                                                                        |
+| 9    | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet                                            | Gated on 2b/2c/3/6 all landing — do not assume done without re-measuring                                                                                                                                                                                                                                                                                                                                                                                               |
+
+**Recommended next (on resume)**: fix or explicitly accept the dry-run chain-drop blind spot (the new P0 todo) first —
+it changes whether ANY future dry-run reading of that invariant can be trusted — then re-run the chain-drop
+investigation against the full schema for real numbers, decide `--keep-chain` vs. repair vs. clean apply, then proceed
+to 2b (LATE renames) and 6 (LIGHTER backfill) via direct Bash, then 2c, then 9.
+
+## Step 8 verdict (`/pre-compact` run interactively — operator present, called the stop; this closes out the `/autonomous` window)
+
+**Safe to compact/stop: YES.** All 3 repos (`unified-trading-pm`, `market-tick-data-service`, `instruments-service`)
+confirmed clean (`git status --porcelain` empty) and `ahead=0` against `origin/live-defi-rollout` immediately before
+this doc edit; this edit itself is the only pending change, about to be pushed via the `docs(plans):` direct-push
+carve-out. **Nothing to quickmerge**: no code changes were made this tick (pure investigation/reading), so there is no
+`--files`-scoped quickmerge to run — the operator's "quickmerging everything local" instruction found nothing local.
+**What was at risk and is now saved**: the chain-drop dry-run blind-spot finding — a genuine, non-obvious discovery that
+would otherwise have lived only in this turn's transcript — is now a tracked P0 todo, not a chat-only fact. **What was
+killed, not lost**: two background diagnostic Python processes (`investigate_chain_lossy_20260724.py` attempts) — both
+pure read-only GCS downloads, zero mutation, safe to kill; the script itself remains in the session scratchpad for the
+next session to resume from rather than rewrite. **Where to resume**: read this DELTA + the new P0 todo, promote/re-run
+`investigate_chain_lossy_20260724.py` against the full schema first, then continue down the Deferred-work table above.
+The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocation.
+
+> **2026-07-25 note (added when the parent's Progress Log section was trimmed during the 4-child split — see
+> `cefi_consolidated_closeout_2026_07_18.md`'s Reconciliation/source docs list)**: the two "post-split DELTA updates"
+> the parent used to retain locally (the ~01:30Z/~01:20Z/~05:55Z/~13:35Z DELTAs above, the Deferred-work table, and the
+> Step 8 verdict) are now appended here, verbatim, completing the migration this file's own header always intended
+> ("moved verbatim, nothing summarized or dropped" — see the top-of-file note). The parent no longer duplicates any of
+> this — read here for the full narrative.

@@ -18,7 +18,7 @@ tags: [backfill, manifest, honest-coverage, data-completion, mtds, instruments, 
 related:
   [
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 parent_epic: mtds_mdps_master
@@ -343,28 +343,28 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       DISTINCT client from `firm-paper-determinism` (`resolve_canonical_run` isolation intact).
 
       Residual NON-paper-stream sub-parts: (b) VM-tarball rebuild is for VM-mtds (defi-live already verified without
-                                                                                                                  it); (c) odom-portal UI image auto-promotes via LDR→staging→main→image CI (NOT a manual blocker; UI code
-                                                                                                                  landed `unified-trading-system-ui@a67e3c34`). (the CODE is all landed: mtds live-tag
-                                                                                                                  `market-tick-data-service@3f5c61f9`, B1 forward-poll IaC `deployment-service@2e396f8`, B2 paper-stream engine
-                                                                                                                  `strategy-service@5557e7ef` + job/scheduler `deployment-service@ae9d6e6`). Remaining operational steps + WHO
-                                                                                                                  can run them in this env (SA = `unified-trading-sa@central-element-323112`, NOT GCP-admin — proven:
-                                                                                                                  `projects.getIamPolicy` denied): (a) **`tofu apply -target` the schedulers**
-                                                                                                                  (`defi_forward_poll_scheduler.tf` + `paper_stream_scheduler.tf`, both gated by `enable_*`/`paper_stream_enabled`
-                                                                                                                  default-true) — **operator/CI** (no `tofu`/`terraform` binary in this slot env; the deployment-service CI
-                                                                                                                  applies it). (b) **`create-code-tarballs.sh` rebuild from clean LDR** so the mtds live-tag fix + the
-                                                                                                                  paper-stream engine reach launched VMs/jobs — **runnable by this SA** (GCS-writable) once the workspace clones
-                                                                                                                  are clean.
+                                                                                                                          it); (c) odom-portal UI image auto-promotes via LDR→staging→main→image CI (NOT a manual blocker; UI code
+                                                                                                                          landed `unified-trading-system-ui@a67e3c34`). (the CODE is all landed: mtds live-tag
+                                                                                                                          `market-tick-data-service@3f5c61f9`, B1 forward-poll IaC `deployment-service@2e396f8`, B2 paper-stream engine
+                                                                                                                          `strategy-service@5557e7ef` + job/scheduler `deployment-service@ae9d6e6`). Remaining operational steps + WHO
+                                                                                                                          can run them in this env (SA = `unified-trading-sa@central-element-323112`, NOT GCP-admin — proven:
+                                                                                                                          `projects.getIamPolicy` denied): (a) **`tofu apply -target` the schedulers**
+                                                                                                                          (`defi_forward_poll_scheduler.tf` + `paper_stream_scheduler.tf`, both gated by `enable_*`/`paper_stream_enabled`
+                                                                                                                          default-true) — **operator/CI** (no `tofu`/`terraform` binary in this slot env; the deployment-service CI
+                                                                                                                          applies it). (b) **`create-code-tarballs.sh` rebuild from clean LDR** so the mtds live-tag fix + the
+                                                                                                                          paper-stream engine reach launched VMs/jobs — **runnable by this SA** (GCS-writable) once the workspace clones
+                                                                                                                          are clean.
 
-                                                                                                                  (c) **odom-portal UI image deploy** (`bash scripts/deploy-cloud-run.sh --env=prod --cloud`) — **operator/CI**:
-                                                                                                                  this SA lacks `serviceusage.services.use` on `central-element-323112_cloudbuild` → `gcloud builds submit` is
-                                                                                                                  FORBIDDEN (the ONE genuine IAM-denied step, surfaced to the operator; the UI code is landed
-                                                                                                                  `unified-trading-system-ui@a67e3c34` and rides the normal LDR→staging→main→image CI path on promotion
-                                                                                                                  regardless). (d) **manual one-shot proof of the live capture**
-                                                                                                                  (`bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices`) —
-                                                                                                                  **runnable by this SA** (compute-capable) → T+10min check rows at
-                                                                                                                  `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`;
-                                                                                                                  needs a fresh tarball (b) first or the launched VM runs the OLD batch-tag mtds. Repos: deployment-service + (CI)
-                                                                                                                  unified-trading-system-ui.
+                                                                                                                          (c) **odom-portal UI image deploy** (`bash scripts/deploy-cloud-run.sh --env=prod --cloud`) — **operator/CI**:
+                                                                                                                          this SA lacks `serviceusage.services.use` on `central-element-323112_cloudbuild` → `gcloud builds submit` is
+                                                                                                                          FORBIDDEN (the ONE genuine IAM-denied step, surfaced to the operator; the UI code is landed
+                                                                                                                          `unified-trading-system-ui@a67e3c34` and rides the normal LDR→staging→main→image CI path on promotion
+                                                                                                                          regardless). (d) **manual one-shot proof of the live capture**
+                                                                                                                          (`bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices`) —
+                                                                                                                          **runnable by this SA** (compute-capable) → T+10min check rows at
+                                                                                                                          `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`;
+                                                                                                                          needs a fresh tarball (b) first or the launched VM runs the OLD batch-tag mtds. Repos: deployment-service + (CI)
+                                                                                                                          unified-trading-system-ui.
 
 - [x] ✅ [INFRA] P2 — paper-trading UI cold-start latency **FIXED 2026-06-23 (autonomous tick-1)**: set `minScale=1` on
       Cloud Run `odum-portal` + `client-reporting-api` (asia-northeast1) via
@@ -414,25 +414,25 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       ledger writer) + UAC (DeFi DEX-pool asset resolution). Provenance: B2 deep-dive 2026-06-23.
 
       - **PARTIAL (autonomous 2026-06-23, NOT yet landed in the live ledger — stall-safety stop):**
-                                                                                                                    `strategy-service@81d9dba2` shipped + image `c9953c4a` (`0.37.0`) rebuilt + paper-stream re-executed. FIXED:
-                                                                                                                    `strategy_id` now writes the full canonical slug `DEFI_LP_VAULT@yearnv3-yvusdc1-ethereum-usdc-v2-prod` (was
-                                                                                                                    the address). The catalog spec (`catalog_yield_defi.py` `DEFI_LP_VAULT`/POOL/CONCENTRATED) now carries a
-                                                                                                                    canonical `"symbol"` (yvUSDC/sUSDe/sDAI/…); the engine (`engine/strategies/v2/defi_lp/vault.py:116,175,219`)
-                                                                                                                    emits `AtomicLeg.instrument = self.params.get("symbol") or vault_address`; a unit test asserts the
-                                                                                                                    engine→`compute_benchmark_fill`→`trade_fill_records`→`derive_ledger_asset_fields` chain → `yvUSDC`. QG-green.
+                                                                                                                            `strategy-service@81d9dba2` shipped + image `c9953c4a` (`0.37.0`) rebuilt + paper-stream re-executed. FIXED:
+                                                                                                                            `strategy_id` now writes the full canonical slug `DEFI_LP_VAULT@yearnv3-yvusdc1-ethereum-usdc-v2-prod` (was
+                                                                                                                            the address). The catalog spec (`catalog_yield_defi.py` `DEFI_LP_VAULT`/POOL/CONCENTRATED) now carries a
+                                                                                                                            canonical `"symbol"` (yvUSDC/sUSDe/sDAI/…); the engine (`engine/strategies/v2/defi_lp/vault.py:116,175,219`)
+                                                                                                                            emits `AtomicLeg.instrument = self.params.get("symbol") or vault_address`; a unit test asserts the
+                                                                                                                            engine→`compute_benchmark_fill`→`trade_fill_records`→`derive_ledger_asset_fields` chain → `yvUSDC`. QG-green.
 
-                                                                                                                  **STILL OPEN — the live ledger row STILL emits `asset_symbol=0xBe53…` / `instrument_key=YEARN_V3:DEX_POOL:0x…`**
-                                                                                                                  after a fresh tick on the rebuilt image (verified via `gcloud storage cat` the instruction `.jsonl`, mtime
-                                                                                                                  confirmed = new tick). Root remaining gap: at RUNTIME `self.params["symbol"]` is EMPTY for the live strategies →
-                                                                                                                  engine falls back to the address. The catalog + engine + unit-test path are all correct, so the gap is the
-                                                                                                                  **spec.initial_config["symbol"] → engine.params propagation** in the GroupBRunner/paper_run replay
-                                                                                                                  instantiation, OR the running paper-stream strategies carry **stale registered config** (registered before the
-                                                                                                                  `symbol` was added → need re-registration / fresh spec load).
+                                                                                                                          **STILL OPEN — the live ledger row STILL emits `asset_symbol=0xBe53…` / `instrument_key=YEARN_V3:DEX_POOL:0x…`**
+                                                                                                                          after a fresh tick on the rebuilt image (verified via `gcloud storage cat` the instruction `.jsonl`, mtime
+                                                                                                                          confirmed = new tick). Root remaining gap: at RUNTIME `self.params["symbol"]` is EMPTY for the live strategies →
+                                                                                                                          engine falls back to the address. The catalog + engine + unit-test path are all correct, so the gap is the
+                                                                                                                          **spec.initial_config["symbol"] → engine.params propagation** in the GroupBRunner/paper_run replay
+                                                                                                                          instantiation, OR the running paper-stream strategies carry **stale registered config** (registered before the
+                                                                                                                          `symbol` was added → need re-registration / fresh spec load).
 
-                                                                                                                  NEXT: trace how `_load_dex_lp_ticks`/`_load_*_vault` + GroupBRunner build the engine's `params` from the spec
-                                                                                                                  and confirm `symbol` reaches `engine.params`; add a test that exercises the LIVE replay path (paper_run →
-                                                                                                                  emitted ledger row), asserting `"0x" not in` the row's `instrument_key` (the unit test covered the engine path,
-                                                                                                                  not the replay path, so it passed while live failed).
+                                                                                                                          NEXT: trace how `_load_dex_lp_ticks`/`_load_*_vault` + GroupBRunner build the engine's `params` from the spec
+                                                                                                                          and confirm `symbol` reaches `engine.params`; add a test that exercises the LIVE replay path (paper_run →
+                                                                                                                          emitted ledger row), asserting `"0x" not in` the row's `instrument_key` (the unit test covered the engine path,
+                                                                                                                          not the replay path, so it passed while live failed).
 
 - [x] ✅ [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** —
       **SHIPPED + LIVE-VERIFIED 2026-06-24: `unified-trading-system-ui@44790f93` (`CoinPriceChart`

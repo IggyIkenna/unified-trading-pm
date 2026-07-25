@@ -26,7 +26,7 @@ related:
   [
     /plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

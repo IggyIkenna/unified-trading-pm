@@ -23,7 +23,7 @@ related:
   [
     /plans/active/github_actions_self_hosted_runner_migration_2026_07_15.md,
     /plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/archive/issues/quickmerge_agent_sentinel_race_vs_own_rebase_2026_07_16.md,
     /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md,
     /plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,

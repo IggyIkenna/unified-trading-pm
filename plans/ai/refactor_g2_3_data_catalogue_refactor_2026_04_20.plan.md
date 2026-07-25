@@ -6,7 +6,7 @@ owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.3
+  - /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §2.3
   - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md
   - refactor_g2_9_uac_remaining_gaps_2026_04_20.plan.md (gap #5 consumer)
 # Wave G2-γ — parallel with G2.4, G2.5. Gates on G1.6 + selective G2.9 gaps. Independent of G2-α/β.
@@ -48,7 +48,7 @@ data-availability metadata.
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.3
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.3
 2. `/codex/02-data/availability-manifest-and-data-status.md`
 3. `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`
 4. `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` — master matrix precedent

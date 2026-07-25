@@ -360,9 +360,9 @@ strategy is also leased externally; emission happens BEFORE execution, not inste
 
 **CREATE:**
 
-- `unified-trading-pm/codex/14-playbooks/shared-core/signal-broadcast-architecture.md` — new SSOT doc: implementation
-  map, D1-D10 resolutions, HMAC signing format, idempotency contract, failure-isolation pattern, auth model,
-  per-counterparty rate-limit table, schema-depth payload shapes.
+- `unified-trading-pm/codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md` — new SSOT doc:
+  implementation map, D1-D10 resolutions, HMAC signing format, idempotency contract, failure-isolation pattern, auth
+  model, per-counterparty rate-limit table, schema-depth payload shapes.
 - `unified-trading-pm/codex/04-architecture/signal-broadcast-topology.md` — cross-link into 04-architecture for
   service-topology discovery: shows strategy-service → WebhookTransport → counterparty, SSOT for topic/secret naming.
 - `unified-trading-pm/codex/07-security/signal-broadcast-credentials.md` — counterparty-credential lifecycle:
@@ -375,16 +375,16 @@ strategy is also leased externally; emission happens BEFORE execution, not inste
 - `unified-trading-pm/codex/00-SSOT-INDEX.md` — add rows for `signal_broadcast/` UAC sub-package,
   `signal-broadcast-architecture.md`, `signal-broadcast-topology.md`, `signal-broadcast-credentials.md`. Insert
   alphabetically near "Security + secrets patterns" row (line ~37-44).
-- `unified-trading-pm/codex/14-playbooks/commercial-model/signal-leasing.md` — already references the plan (line
+- `unified-trading-pm/codex/14-customer-journeys/commercial-model/signal-leasing.md` — already references the plan (line
   148-150). Add cross-reference to the new `shared-core/signal-broadcast-architecture.md` doc (Phase 6).
-- `unified-trading-pm/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` — brief note that Signal Leasing's
-  backend is tracked in `signal-broadcast-architecture.md` (Phase 6 task).
-- `unified-trading-pm/codex/14-playbooks/commercial-model/revenue-projection-2026-monthly.md` — Phase 7 number updates
-  (Sept-Dec signal leasing $5k/mo).
-- `unified-trading-pm/codex/14-playbooks/commercial-model/cash-deployment-plan.md` — Phase 7 minor year-end cash
+- `unified-trading-pm/codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md` — brief note that Signal
+  Leasing's backend is tracked in `signal-broadcast-architecture.md` (Phase 6 task).
+- `unified-trading-pm/codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md` — Phase 7 number
+  updates (Sept-Dec signal leasing $5k/mo).
+- `unified-trading-pm/codex/14-customer-journeys/commercial-model/cash-deployment-plan.md` — Phase 7 minor year-end cash
   revision (£464k → £429k).
-- `unified-trading-pm/codex/14-playbooks/commercial-model/pricing-building-blocks.md` — add signal-leasing rows with
-  Sept 2026 anchor.
+- `unified-trading-pm/codex/14-customer-journeys/commercial-model/pricing-building-blocks.md` — add signal-leasing rows
+  with Sept 2026 anchor.
 - `unified-trading-pm/cursor-configs/CLAUDE.md` — add Key Rule: "Strategy-service external signal emission MUST use
   shard-level failure isolation + classify_venue_error() pattern; counterparty credentials via ApiKeyReloader; never
   block strategy-service on counterparty endpoint failure (D10)."
@@ -398,7 +398,7 @@ strategy is also leased externally; emission happens BEFORE execution, not inste
   - reference this manifest (done in Phase 1 wrap-up commit).
 - `unified-trading-pm/plans/active/path_to_100m_finalization_2026_04_20.md` — tick linked phase if any references signal
   leasing backend enablement.
-- `unified-trading-pm/codex/14-playbooks/roadmap/plan-references.md` — add this plan to the roadmap index.
+- `unified-trading-pm/codex/14-customer-journeys/roadmap/plan-references.md` — add this plan to the roadmap index.
 
 **REFERENCES (no change):**
 

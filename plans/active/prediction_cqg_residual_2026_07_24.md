@@ -23,7 +23,7 @@ tags: [prediction, cqg, classifier, manifest, migration, plan-split, residual]
 related:
   [
     /plans/active/migration_verification_orphan_safety_2026_06_10.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 parent_epic: manifest_master

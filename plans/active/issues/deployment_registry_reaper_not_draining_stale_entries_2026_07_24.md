@@ -516,8 +516,84 @@ flipping the checkbox.
       worker init is redirecting fds for normal writes but not for the crash path) — worth checking whether anything in
       this app's startup (`main.py`, `lifespan.py`, UTL's `fastapi_uei_lifespan`/`setup_service_observability`)
       reassigns `sys.stdout`/ `sys.stderr` to a custom stream object (e.g. a StringIO-backed log capturer, or an
-      OTel/observability SDK's stdio interception) that only proxies through SOME writes. **UPDATE 2026-07-25T14:02Z
-      (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for
+      OTel/observability SDK's stdio interception) that only proxies through SOME writes. **CONCLUSIVE PROOF
+      2026-07-25T16:12Z (slot 5, same session): lifespan DOES run to completion — this is confirmed NOT a
+      code-execution-order problem, narrowing it to a pure stdio-transport issue.** `log_event()` (UTL's
+      `fastapi_uei_lifespan`, called from the VERY code path this doc suspected of never running) publishes to Pub/Sub,
+      not stdout — a completely independent transport. Created a temporary pull subscription on the
+      `deployment-api-events` topic (confirmed it exists and IS reachable — an earlier same-session check via a
+      lower-privileged identity wrongly read `PERMISSION_DENIED` as "topic missing"; corrected using the ADC identity),
+      forced one cheap revision update (env-var-only, no rebuild: `uts-shared-deployment-api-00278-dmw`) to produce a
+      real start/stop cycle, and pulled real messages: `{"event": "STOPPED", ...}` (old revision draining) immediately
+      followed by `{"event": "STARTED", ...}` (new revision) — both with real timestamps/correlation IDs. A `STOPPED`
+      event only fires from `fastapi_uei_lifespan`'s `finally` block AFTER the `try` body's `yield` returns cleanly —
+      i.e. the ENTIRE `deployment_api/lifespan.py` `lifespan()` body (the `app.state.config_dir = ...` line, every
+      `logger.info()` call, `is_leader_worker()`, the `asyncio.create_task(_auto_sync_running_deployments())` call) DOES
+      execute normally on every startup. **This rules out "the reaper never starts" as the mechanism** — the background
+      task genuinely gets created every time. The problem is narrower and stranger than the whole doc has assumed: SOME
+      output paths from this exact process work fine (Pub/Sub network calls, HTTP responses, the one historical
+      uncaught-exception traceback) while stdout/stderr writes from normal code paths — `print()`, `logger.info()`
+      through stdlib `logging`, AND this session's raw `sys.stderr.write()+flush()` — never reach Cloud Logging. Cleaned
+      up the temporary subscription + acked all test messages (no residual infra left). **Next dispatch, most promising
+      remaining angle**: since `log_event`'s STARTED/STOPPED events prove exact per-revision startup/shutdown timing,
+      cross-reference those timestamps against `deployment_api/utils/worker_identity.is_leader_worker()`'s logic
+      directly (e.g. add a `log_event()` call — NOT a stdout write — inside the `if is_leader_worker():` branch in
+      `lifespan.py`, carrying `worker.age`/PID in `details`) to independently verify the reap tick and leader election
+      are ALSO running via a transport proven to work, sidestepping the still-unexplained stdout/stderr mystery entirely
+      rather than continuing to chase it. **DONE + CONFIRMED 2026-07-25T16:48Z (slot 5, same session):** shipped
+      `deployment-api@a80632e` (LDR) → promote PR #381 → (initial QG attempt failed on an UNRELATED broken cross-doc
+      link in `defi_consolidated_closeout_2026_07_18.md`, fixed separately as `unified-trading-pm@fa4781ee3` — see that
+      commit for detail; re-ran clean) → merged 16:35:10Z → Cloud Build `7015ff81` → revision
+      `uts-shared-deployment-api-00279-k8q`. Created a temp Pub/Sub pull subscription on `deployment-api-events`, forced
+      ONE more cheap env-var-only revision bump (`00280-p85`, no rebuild) so the subscription would be listening before
+      a fresh startup fired, then pulled real messages: **2×`STARTED`** (one per `WORKERS=2` gunicorn worker, both
+      entering `lifespan()`) and exactly **1×`REAPER_LEADER_ELECTED`** (`{"pid": 28}`) — the SINGLE elected leader,
+      matching the design exactly. **This is definitive, positive proof the reap tick's
+      `asyncio.create_task(_auto_sync_running_deployments())` call fires correctly in prod, on the CURRENT deployed
+      code.** Cleaned up the subscription + acked all messages (no residual infra). **However — re-checked `active/`
+      immediately after: still 406, unchanged.** Important self-aware caveat: THIS session forced FOUR consecutive
+      revision restarts in under an hour (`00277`→`00278`→`00279`→`00280`, each a legitimate diagnostic step but each
+      also a fresh container = a fresh `asyncio.create_task()` that tears down whatever the PREVIOUS instance's reap
+      loop was mid-way through) — this is plausibly RE-CREATING the exact "tick never gets to finish" symptom the
+      `CancelledError` fix already solved for CONTAINER-recycling, just via MY OWN forced redeploys instead of Cloud
+      Run's own recycling. **Next dispatch, done-when clearly stated: do NOT force any more revision restarts on this
+      service** — let `uts-shared-deployment-api-00280-p85` (live since `2026-07-25T16:48:34Z`) run completely
+      undisturbed for ≥2 real reap-tick intervals (900s each, i.e. check no earlier than **2026-07-25T17:18:34Z**), THEN
+      re-measure `active/` object count vs live-VM count one final time. If it converges: the mystery is fully closed,
+      flip this todo + the plan's original `[REVIEW]` checkbox. If it STILL doesn't converge after an undisturbed
+      window: the leader-election/task-creation path is now proven innocent, so the remaining suspect narrows to the
+      reap tick's OWN logic/timing (`_run_deployment_reaper`, `background_sync.py`) rather than anything about startup —
+      the log_event pattern established here can extend to instrument that function directly. **RE-CHECKED
+      2026-07-25T17:18:34Z (slot 5, undisturbed window complete, zero redeploys since `00280-p85`): STILL 406,
+      unchanged.** So the confound theory (my own repeated forced restarts) is ALSO ruled out — 30 clean minutes with
+      the leader-elected reaper task confirmed running produced zero convergence. **Strong new lead, most likely
+      unifying root cause for BOTH this AND the stdout mystery: Cloud Run CPU throttling.** Read
+      `_run_deployment_reaper`'s own gate (`background_sync.py:67`):
+      `if (_time.time() % _REAPER_INTERVAL_SEC) >= current_interval: return` — a real 900s-cycle rate-limiter, NOT a bug
+      (with `_REAPER_MAX_PER_TICK = 500` > the entire 406 backlog, one successful tick should clear it all;
+      `sync_interval_active = 30` means the sync loop should land inside the ~30s "hit window" near-deterministically
+      once per 900s cycle under NORMAL wall-clock-driven scheduling). Checked the deployed Cloud Run config: NO
+      `run.googleapis.com/cpu-throttling` annotation is set anywhere (confirmed via both
+      `gcloud run services     describe` and `gcloud run revisions describe uts-shared-deployment-api-00280-p85`), and
+      `cloudbuild.yaml:426`'s `gcloud run deploy` command has no `--no-cpu-throttling` flag either — meaning this
+      service runs on Cloud Run's **default CPU-throttled** mode, where CPU is allocated ONLY while actively handling an
+      HTTP request and is throttled to near-zero the rest of the time. `minScale=1` keeps the CONTAINER warm (prevents
+      scale-to-zero) but is a COMPLETELY SEPARATE setting from CPU allocation — a background `asyncio` loop's
+      `sleep()`-driven wake cadence can stall for arbitrarily long stretches between requests under this mode, which
+      would explain BOTH mysteries at once: (1) the reap tick's wall-clock-aligned window check may simply never get CPU
+      time to actually re-evaluate `time.time()` at the right moment, and (2) buffered stdout/stderr writes issued
+      during a throttled period may never get flushed to the container's output stream until CPU is next allocated (and
+      Cloud Run's log agent may not capture a flush that happens on the next unrelated request boundary the same way).
+      **This is a real $ tradeoff, not a free fix** — `--no-cpu-throttling` ("CPU always allocated") bills CPU for the
+      full container lifetime, not just request-serving time, which is a materially different cost profile for a
+      `minScale=1`, `cpu=4`, `memory=16Gi` service that's already running one instance continuously. **Recommending, not
+      doing, this change** — needs an **[OPERATOR]** decision given the cost impact. Next dispatch: (1) get operator
+      sign-off on `--no-cpu-throttling` (or an alternative: a Cloud Scheduler-triggered HTTP endpoint that calls the
+      reap logic synchronously on each invocation, guaranteeing real request-context CPU without paying for always-on
+      allocation — worth proposing as a lower-cost alternative achieving the same goal); (2) if approved, add
+      `--no-cpu-throttling` to `cloudbuild.yaml:426`'s deploy command, ship, deploy, and re-run the exact same
+      log_event + `active/`-count verification this session already built out. **UPDATE 2026-07-25T14:02Z (slot 5):
+      found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for
       `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch` only) and the downstream Firestore write
       is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live
       via direct REST `PATCH` — same 403; 0/95 sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z).
@@ -545,3 +621,68 @@ flipping the checkbox.
   (P0, BACKEND) with a concrete reproduction + 4 candidate fix approaches. Did NOT flip this plan's original `[REVIEW]`
   checkbox — leaving it as-is with its existing partial-pass note, now additionally pointing at the new issue doc. No
   code changes made this session (review-only pass).
+
+- **2026-07-25T17:20Z (slot 5) — operator ruling on `BLK-d5db60a5` + implementation plan for the next dispatch.**
+  Operator chose **Option B**: a Cloud Scheduler-triggered authenticated HTTP reap endpoint (synchronous
+  reap-on-request, guaranteed request-context CPU, zero extra ongoing cost) over `--no-cpu-throttling` (rejected:
+  commits the `cpu=4`/`memory=16Gi`/`minScale=1` service to material always-on 4-vCPU billing). Explicit guardrails from
+  the ruling: (1) Cloud Scheduler with **OIDC service-account auth**, NOT a public endpoint; (2) keep
+  leader-election-style idempotency so overlapping/manual invocations are safe; (3) sane cadence (5-15 min); (4) do
+  **NOT** add `--no-cpu-throttling`; (5) verify convergence with evidence (`active/` count drop + deploy build id + a
+  post-deploy reap-tick observation); (6) ship via the normal `quickmerge --agent` + LDR→main promote flow — if
+  verification can't complete in one dispatch tick, **park durably rather than churn** (cites
+  `/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`).
+
+  **Researched the exact implementation this session (no code shipped yet — intentional; see rationale below):**
+  - **Reap logic to call**: `SyncService().reap_stale_deployments(max_reap=500)`
+    (`deployment_api/services/sync_service.py:538`) — the SAME function the background loop already calls, already
+    idempotent (bounded per-call, archives whatever's currently stale, safe to call repeatedly/concurrently). Wrap in
+    `asyncio.to_thread(...)` (mirrors the `rollup-run` endpoint's pattern below) so the synchronous GCS I/O doesn't
+    block the event loop.
+  - **Precedent for this exact pattern in THIS service**: `deployment_api/routes/data_status/_rollup.py`'s
+    `POST /rollup-run` — already a "Cloud Scheduler hits this synchronous internal endpoint" route, with a docstring
+    literally describing the same design goal (gen2 Cloud Run Jobs crash / this compute must run in the gen1 service).
+    Mirror its `async def` + `asyncio.to_thread`/`asyncio.to_thread` shape, NOT its auth (`rollup-run` uses
+    `verify_any_auth` = X-API-Key OR Firebase, which does NOT satisfy the operator's OIDC requirement).
+  - **OIDC verification primitive**: `google.oauth2.id_token.verify_oauth2_token(token, request, audience)` — already a
+    workspace-approved call, used in `execution-service/execution_service/auth.py`'s `GoogleOIDCAuth.verify_token`
+    (human/domain-restricted auth) and `deployment_api/firebase_auth.py`'s `_verify_firebase_id_token` (same
+    `google.oauth2.id_token` module, different verify function). Neither is a direct drop-in — execution-service's
+    checks an `hd` (hosted domain) claim for HUMAN Google Workspace auth, not a specific service-account identity.
+    **Write a small, NEW, purpose-built dependency** (do not force-fit the existing ones): verify the token signature
+    via `verify_oauth2_token`, then check the token's `email` claim exactly matches the Cloud Scheduler job's configured
+    invoker service account (a new setting, e.g. `REAP_SCHEDULER_INVOKER_SA` — plain config, not a secret) — mirrors
+    `firebase_auth.py`'s dependency-function shape (return the verified identity string; raise `HTTPException(401, ...)`
+    on any failure) and MUST respect the existing `DISABLE_AUTH` bypass convention (every other auth dependency in this
+    codebase does, for local/mock-mode consistency).
+  - **Router wiring**: do NOT attach under `_authenticated_router` in `main.py` (that applies `verify_any_auth`
+    fleet-wide to everything mounted on it — wrong scheme for this route). Mount a small standalone router directly on
+    `app` with the new OIDC dependency as its own `Depends(...)`, at e.g. `POST /api/internal/reap-tick`.
+  - **Cloud Scheduler job itself**: checked live — **no existing scheduler job for `rollup-run` was found either**
+    (`gcloud scheduler jobs list` / Cloud Scheduler REST API both returned 0 jobs in `asia-northeast1` for this project
+    — either it's provisioned in a different region, or that docstring's "hit by the Cloud Scheduler" claim predates an
+    actual provisioned job; not resolved this session). **The new reap-tick scheduler job needs to be created via
+    `gcloud scheduler jobs create http` with `--oidc-service-account-email` +
+    `--oidc-token-audience=<the endpoint URL>`** — this is real infra provisioning (a `[OPERATOR]`/infra action, not a
+    code change) and should happen AFTER the endpoint code is deployed and its exact prod URL is known.
+
+  **Why no code was shipped this session despite having the design**: this is genuinely NEW, security-sensitive
+  auth-path code (a wrong audience/email check either locks out the real Cloud Scheduler job OR — worse — accepts an
+  unintended caller) at the end of an already very long diagnostic session; per the operator's own parking guidance,
+  better to hand off a precise, evidence-backed plan than rush an unverified auth implementation. **Next dispatch,
+  done-when**: (1) add the new auth dependency + `/api/internal/reap-tick` route (repo: deployment-api); (2)
+  `quality-gates.sh` green, ship via `quickmerge --agent`, promote LDR→main, deploy; (3)
+  `gcloud scheduler jobs create http` with OIDC auth pointed at the deployed URL, cadence 5-15 min; (4) verify: cite the
+  deploy build id + at least one successful scheduler-triggered invocation (Cloud Scheduler's own
+  `lastAttemptTime`/status, or a direct authenticated test call) + `active/` object count actually dropping from 406
+  toward the live-VM count (currently ~9). Only then flip this todo + the plan's original `[REVIEW]` checkbox.
+
+  **SHIPPED 2026-07-25T17:40Z (slot 5, same session): `deployment-api@2b70c03`** — `POST /api/internal/reap-tick`
+  (`deployment_api/routes/_reap_scheduler.py`) + `REAP_SCHEDULER_INVOKER_SA` config field
+  (`deployment_api_config.py`/`settings.py`) + wired directly on `app` in `main.py` (NOT under `_authenticated_router`).
+  `quality-gates.sh` green; landed on LDR, promote triggered. **Remaining before done-when is satisfiable**: (1) promote
+  to `main` + deploy (infra provisioning, not code); (2) `REAP_SCHEDULER_INVOKER_SA` must actually be SET on the
+  deployed Cloud Run service (currently empty — the endpoint fails closed with 503 until it's configured, by design) to
+  the invoking service account's email; (3) create the actual Cloud Scheduler job
+  (`gcloud scheduler jobs create http ... --oidc-service-account-email=<that same SA> --uri=<deployed URL>/api/internal/reap-tick`)
+  — none of this happened yet this session; (4) THEN the convergence re-verification.

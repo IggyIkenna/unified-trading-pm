@@ -6,7 +6,7 @@ owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.8
+  - /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §2.8
   - plans/active/share_class_architecture_2026_04_01.plan.md (folded)
 # Wave G2-α — parallel with G2-α peers 2.1, 2.6, 2.9, 2.11. Gates G2.10 (allocator split).
 supersedes: [share_class_architecture_2026_04_01.plan.md]
@@ -47,18 +47,18 @@ Allocator + reporting services read from this registry instead of strings. Share
 - **Downstream Wave G2-β:** G2.10 allocator UI split (consumes this registry)
 - **Folded plan:** `plans/active/share_class_architecture_2026_04_01.plan.md` — full scope absorbed
 - **G1 cross-refs:** G1.6 derivation engine (allocator call-sites), G1.11 service-family scope (audience mapping)
-- **Codex docs:** `/codex/14-playbooks/shared-core/fund-administration-and-custody.md`,
-  `/codex/14-playbooks/shared-core/treasury-and-subaccount-model.md`,
+- **Codex docs:** `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md`,
+  `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md`,
   `/codex/14-playbooks/cross-cutting/sma-vs-pooled.md`
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.8
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.8
 2. `plans/active/share_class_architecture_2026_04_01.plan.md` — full
-3. `/codex/14-playbooks/shared-core/fund-administration-and-custody.md` — custody model SSOT
-4. `/codex/14-playbooks/shared-core/treasury-and-subaccount-model.md`
+3. `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` — custody model SSOT
+4. `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md`
 5. `/codex/14-playbooks/cross-cutting/sma-vs-pooled.md`
-6. `/codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
+6. `/codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md`
 7. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/strategy_availability.py` — existing
    `StrategyAvailabilityEntry` with `business_unit` field
 8. `strategy-service/strategy_service/portfolio_allocator/service.py` — consumer call-site
@@ -91,7 +91,8 @@ Allocator + reporting services read from this registry instead of strings. Share
       record retrievable; invariant: each `fund_id` unique; invariant: `reserving_business_unit_id` resolves to a known
       business_unit.
 - [x] [AGENT] P0. Codex parity test — structural check that
-      `/codex/14-playbooks/shared-core/fund-administration-and-custody.md`'s fund list matches the registry records.
+      `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md`'s fund list matches the registry
+      records.
 
 ### Phase C — Allocator call-site refactor — DEFERRED to G2.10
 
@@ -191,7 +192,7 @@ git -C unified-api-contracts checkout live-defi-rollout && git -C unified-api-co
 git -C strategy-service checkout live-defi-rollout && git -C strategy-service pull
 git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-trading-system-ui pull
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/strategy_availability.py
-ls /codex/14-playbooks/shared-core/fund-administration-and-custody.md 2>/dev/null || echo "verify codex path"
+ls /codex/14-customer-journeys/shared-core/fund-administration-and-custody.md 2>/dev/null || echo "verify codex path"
 ls strategy-service/strategy_service/portfolio_allocator/service.py
 ```
 

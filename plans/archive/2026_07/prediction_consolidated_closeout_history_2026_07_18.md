@@ -54,7 +54,7 @@ superseded_by:
 depends_on:
 source: >-
   Extracted 2026-07-24 from prediction_consolidated_closeout_2026_07_18.md per
-  /plans/active/issues/plan_line_cap_remediation_2026_07_23.md (the same remediation batch that forked the 4 Phase A-E
+  /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md (the same remediation batch that forked the 4 Phase A-E
   children) — the parent's Progress Log was the last remaining oversized section (~917 of the parent's 1478 lines) after
   the Phase-body content had already been split out. Content moved verbatim, no rewrite; mirrors the pattern
   `tradfi_consolidated_closeout_2026_07_18.md` and `plans/active/defi_consolidated_closeout_history_2026_07_18.md` used

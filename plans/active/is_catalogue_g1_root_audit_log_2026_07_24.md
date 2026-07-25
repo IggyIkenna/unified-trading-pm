@@ -45,7 +45,7 @@ superseded_by:
 depends_on: []
 source:
   [
-    "/plans/active/issues/plan_line_cap_remediation_2026_07_23.md #16 (bucket-d would-be-(c) split for
+    "/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md #16 (bucket-d would-be-(c) split for
     master_data_canonicalisation_migration_catalogue_2026_06_07, operator-approved unlock+fix)",
     "/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md (origin of this content; verbatim
     extraction 2026-07-24)",
@@ -57,7 +57,7 @@ drift_direction: advance-code
 
 > **Extracted verbatim 2026-07-24** from `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s
 > `## G1 expanded — IS catalogue is the ROOT of all missing-data understanding (operator 2026-06-07)` section, as part
-> of the line-cap remediation split (`/plans/active/issues/plan_line_cap_remediation_2026_07_23.md` #16). Lossless
+> of the line-cap remediation split (`/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` #16). Lossless
 > relocation — no content rewritten or summarized. See `master_data_canonicalisation_migration_catalogue_2026_06_07.md`
 > for the live gate-board + dependency DAG this content feeds into (this doc is a historical/audit record, not itself
 > gating anything).

@@ -17,9 +17,9 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   [
-    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.11,
-    /codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md,
-    /codex/14-playbooks/shared-core/same-system-principle.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §1.11,
+    /codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md,
+    /codex/14-customer-journeys/shared-core/same-system-principle.md,
     /codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md,
     refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md,
   ]
@@ -89,13 +89,13 @@ lifts them into an explicit rule file + enforcement in `access_control`.
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.11
-2. `/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` (full)
-3. `/codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
-4. `/codex/14-playbooks/shared-core/same-system-principle.md`
-5. `/codex/14-playbooks/shared-core/client-reporting-demo-walkthrough.md`
-6. `/codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
-7. `/codex/14-playbooks/shared-core/shared-reporting-core.md`
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.11
+2. `/codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md` (full)
+3. `/codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md`
+4. `/codex/14-customer-journeys/shared-core/same-system-principle.md`
+5. `/codex/14-customer-journeys/shared-core/client-reporting-demo-walkthrough.md`
+6. `/codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md`
+7. `/codex/14-customer-journeys/shared-core/shared-reporting-core.md`
 8. `/codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md`
 9. `/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md` (full)
 10. `codex/09-strategy/architecture-v2/cross-cutting/` (all files)
@@ -211,7 +211,7 @@ All Phase 11A-11E shipped in 3 commits. Option X carry-through (UAC host). Rule 
 - `codex/14-playbooks/_ssot-rules/11-service-family-scope-rules.yaml` — NEW
 - `codex/14-playbooks/_ssot-rules/_tools/validate_scope_yaml.py` — NEW
 - `codex/00-SSOT-INDEX.md` — MODIFY
-- `/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` — MODIFY (cross-ref)
+- `/codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md` — MODIFY (cross-ref)
 - `strategy-service/strategy_service/availability/service_family_scope.py` — NEW
 - `strategy-service/strategy_service/availability/derivation.py` — MODIFY (wire pre-check in `access_control`)
 - `strategy-service/tests/availability/test_service_family_scope.py` — NEW (≥ 30 cases)
@@ -290,7 +290,7 @@ D; G1.6 must be merged first; parallelisable with G1.7.
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
 git -C strategy-service checkout live-defi-rollout && git -C strategy-service pull
-ls unified-trading-pm/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md
+ls unified-trading-pm/codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md
 ls unified-trading-pm/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md
 # Verify G1.6 merged
 ls strategy-service/strategy_service/availability/derivation.py
@@ -434,13 +434,13 @@ Fallback per repo: manual `git add <files> && git commit -m "..." && git push or
 
 **COMMIT 1 — PM** `docs(ssot-rules): G1.11 — rule 12 service-family scope (yaml + md + validator + cross-refs)`
 
-| File                                                                                   | Action                                                                                     | Approx LOC |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------- |
-| `unified-trading-pm/codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.md`   | NEW — prose rule doc explaining each service-family row with rationale + cross-refs        | ~200       |
-| `unified-trading-pm/codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.yaml` | NEW — machine-readable rule table with 6 families × surfaces/excludes/route_allowlist      | ~80        |
-| `unified-trading-pm/codex/14-playbooks/_ssot-rules/_tools/validate_scope_yaml.py`      | NEW — schema validator (new `_tools/` dir under \_ssot-rules)                              | ~120       |
-| `unified-trading-pm/codex/00-SSOT-INDEX.md`                                            | MODIFY — register rule 12                                                                  | +3         |
-| `unified-trading-pm/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md`         | MODIFY — add "Service-family scope — see rule 12" cross-ref section (no table duplication) | +8         |
+| File                                                                                         | Action                                                                                     | Approx LOC |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------- |
+| `unified-trading-pm/codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md` | NEW — prose rule doc explaining each service-family row with rationale + cross-refs        | ~200       |
+| `unified-trading-pm/codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.yaml`       | NEW — machine-readable rule table with 6 families × surfaces/excludes/route_allowlist      | ~80        |
+| `unified-trading-pm/codex/14-playbooks/_ssot-rules/_tools/validate_scope_yaml.py`            | NEW — schema validator (new `_tools/` dir under \_ssot-rules)                              | ~120       |
+| `unified-trading-pm/codex/00-SSOT-INDEX.md`                                                  | MODIFY — register rule 12                                                                  | +3         |
+| `unified-trading-pm/codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md`       | MODIFY — add "Service-family scope — see rule 12" cross-ref section (no table duplication) | +8         |
 
 **COMMIT 2 — UAC** `feat(uac): G1.11 — service-family scope enforcement wired into access_control()`
 
@@ -541,7 +541,7 @@ Glob matcher chosen for readability; Python `fnmatch` with `**` handling (or `pa
 
 ```
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos
-ls unified-trading-pm/codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md  # expect exists — confirms rule-11 slot taken
+ls unified-trading-pm/codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md  # expect exists — confirms rule-11 slot taken
 .venv-workspace/bin/python -c "from unified_api_contracts.strategy import check_service_family_scope" 2>&1 | head  # expect ImportError (not yet shipped)
 # After G1.7 UAC commit lands:
 git -C unified-api-contracts log --oneline origin/live-defi-rollout | grep "G1.7" | head

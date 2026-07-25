@@ -45,7 +45,7 @@ superseded_by:
 depends_on: []
 source:
   [
-    "/plans/active/issues/plan_line_cap_remediation_2026_07_23.md #16 (bucket-d would-be-(c) split for
+    "/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md #16 (bucket-d would-be-(c) split for
     master_data_canonicalisation_migration_catalogue_2026_06_07, operator-approved unlock+fix)",
     "/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md (origin of this content; verbatim
     extraction 2026-07-24)",
@@ -57,7 +57,7 @@ drift_direction: advance-code
 
 > **Extracted verbatim 2026-07-24** from `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s
 > `## vm-defi (slot-2) status + findings — 2026-06-07` section, as part of the line-cap remediation split
-> (`/plans/active/issues/plan_line_cap_remediation_2026_07_23.md` #16). That section contained an exact ~160-line
+> (`/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` #16). That section contained an exact ~160-line
 > verbatim-duplicated verdict block (the "G2-defi readiness verdict" + "🟢 DeFi APPLY-READY VERDICT" pair appeared twice
 > byte-for-byte identically in the source, at the original file's lines 1541-1701 and 2011-2171) — the later copy is
 > kept below; the earlier duplicate was dropped. Zero content was lost (verified via `diff` before deletion — the two
