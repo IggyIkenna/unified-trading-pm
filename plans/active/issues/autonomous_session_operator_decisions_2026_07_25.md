@@ -309,7 +309,16 @@ via this specific checkout is blocked; reads work fine), and this is queued as a
 urgent. The 3 ready fixes stay queued/unapplied until a future session picks this up. Other: operator can type a custom
 answer
 
-**Status**: open
+**Operator answer (2026-07-25)**: the operator's broader directive to split all 5 AG consolidated plans (not just
+sports) into parent+child implicitly ratified option A for sports too.
+
+**Status**: resolved — option A executed. `sports_consolidated_closeout_2026_07_19.md` trimmed 986L→753L (well under the
+1000L hard cap); split into 3 new AO-dispatch children (`sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`,
+`sports_closeout_track_x_hygiene_2026_07_25.md`, `sports_closeout_track_s2_foldin_2026_07_25.md`) + their gated finalize
+plans, wired via `depends_on`/`gate_on_depends`/`related:`. The 3 queued fixes (stale `51/11`→`65/39` count, the
+`96`→`94` arithmetic slip, the missing casing-contradiction cross-reference) were applied to the parent in the same
+pass. Commits: `647987de1`, `474296235`, `c24129ea7`, `95b9d2327`, `32fad89bb`, `dfbee37ef` — all verified durable on
+`origin/live-defi-rollout`.
 
 ---
 
