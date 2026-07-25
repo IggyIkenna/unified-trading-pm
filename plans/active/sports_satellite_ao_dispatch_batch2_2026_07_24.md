@@ -200,7 +200,21 @@ source: >-
       02:30Z slot 9 / 02:49Z slot 4), latest 2026-07-25T02:49Z**: `af-backfill-20260725-002739` still RUNNING,
       `PROGRESS.json` monotonic-advancing (`last_completed_date=2025-05-30`, ~7.4/8.5yrs), rate ACCELERATING (ETA now
       <1hr vs earlier "hours"), no error/stall signature. Each check released via `/skip-current-task`, NEVER
-      duplicate-launched — re-check `EXIT_STATUS` next; may already be terminal given the accelerated rate.
+      duplicate-launched. — **TERMINAL 2026-07-25T03:21:57Z (slot 4, data_engineering): completed cleanly**
+      (`exit_code=0`, `DEPLOYMENT_COMPLETED`, `last_completed_date=2026-07-25` — reached present day, self-deleted).
+      Re-ran the INJURIES gate-query the todo asks for, but **checkbox NOT flipped — the result doesn't cleanly show
+      closure and needs a fresh assessor, not a rubber-stamp**: consolidated-index re-measurement for the 94-league
+      universe now shows `captured=9,260 / expected_unattempted=8,568` — BOTH lower than this todo's own pre-backfill
+      baseline (`captured=10,502 / expected_unattempted=10,219`), the opposite of what a successful catch-up backfill
+      should show. Cross-checked against the VM's own per-VM shard directly (not just the consolidated index, in case of
+      a consolidation-lag artifact): shard has 9,251 real captured INJURIES rows, date range 2020-06-06→2026-07-25 —
+      consistent with the consolidated count, so this isn't a lag artifact, the counts are genuinely lower. **Likely
+      confound, not verified**: the 2020-06-06 uniform data-floor WIPE (`/codex/02-data/sports-2020-06-data-floor.md`)
+      landed 2026-07-21, AFTER this todo's baseline was measured — pre-floor rows previously counted as
+      `expected_unattempted` may have been deleted from the manifest entirely, which would lower both numbers
+      independent of the backfill's real contribution. Did not have time to confirm this confound explains the full
+      delta (would need the baseline's original exact query + a floor-aware re-run to isolate the backfill's true
+      effect) — flagging for whoever assesses this todo next rather than guessing either way.
 - [x] ✅ [CODE] P1. **UAC canonical registry build/refine** — unified-api-contracts@ce18ff15. Audited every clause of
       the Architecture section against current code before touching anything (most of this program had already shipped):
       name/ids/country/season-start-end-per-year (`season_dates.get_season_start`/`get_season_end`, per-league-per-year)
