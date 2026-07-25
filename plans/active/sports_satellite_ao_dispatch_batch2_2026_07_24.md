@@ -661,19 +661,32 @@ source: >-
       unresolved/non-canonical value before write, so the `.../entity=injuries/league=235/` leakage cited as evidence is
       historical debris pre-dating that gate, not a live path — confirmed no more bare-numeric-id partitions can be
       produced going forward. Source: `issues/sports_league_id_namespace_migration_2026_07_20.md`.
-- [ ] [DATA] P0. IN PROGRESS 2026-07-25 **League_id casing migration — census→copy→reprocess→swap (4-step ordered
-      sequence, one worker, execute in order — this is one already-verified, ready-to-execute migration, not 4
-      independent jobs).** **Progress**: found step (2)'s manifest swap (raw `TRADES`/`batch_odds_api` shape) had
-      silently reverted since its 2026-07-22 run (TOCTOU consolidator race, closed by `unified-trading-library@14301571`
-      on 2026-07-24 — 2 days after the swap ran). Re-applied
-      `manifest_swap_2026_07_22.py --apply-prod --confirm-prod-write` and verified STABLE across 5 consolidator cycles
-      (~7.5 min) — the raw TRADES shape is now genuinely canonical, not just log-claimed. Full detail:
-      `/plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. **Still outstanding** (do not
-      flip this todo until done): the deferred shapes below (step 3), the coverage-registry refresh, and the MDPS
-      processed-surface regeneration. (1) `migrate_sports_league_id_casing_2026_07_21.py --apply-prod` (no
-      `--confirm-prod-write`, no `--index`) once, for the live out-of-scope census + VM-guard + PLAN, using the
-      already-committed, adversarially-verified executor (`mtds@b2a49317`) — expect results consistent with the verified
-      full-corpus dry-run baseline (266,408 objects / 34,228 units, 0 unknown raws, 0 unresolved league_ids). (2)
+- [ ] [DATA] P0. BLOCKED-CREDENTIALS 2026-07-25 (ping: `ikenna_orchestrator/pings/slot_3.md` 2026-07-25 CREDENTIAL
+      APPROVAL REQUEST) **League_id casing migration — census→copy→reprocess→swap (4-step ordered sequence, one worker,
+      execute in order — this is one already-verified, ready-to-execute migration, not 4 independent jobs).**
+      **Progress**: (a) found step (2)'s manifest swap (raw `TRADES`/`batch_odds_api` shape) had silently reverted since
+      its 2026-07-22 run (TOCTOU consolidator race, closed by `unified-trading-library@14301571` on 2026-07-24 — 2 days
+      after the swap ran). Re-applied `manifest_swap_2026_07_22.py --apply-prod --confirm-prod-write` and verified
+      STABLE across 5 consolidator cycles (~7.5 min) — the raw TRADES shape is now genuinely canonical, not just
+      log-claimed. Full detail: `/plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. (b)
+      **Coverage-registry refresh already satisfied** — ran `refresh_sports_bookmaker_league_coverage_2026_06_21.py`
+      (diff mode): "No drift vs committed coverage map"; directly confirmed the done-when criterion —
+      `is_bookmaker_league_covered("BETFAIR_EX_EU","EPL")` = `True`, `…("BETFAIR_EX_EU","PREMIER_LEAGUE")` = `False`.
+      **BLOCKED**: the remaining piece (MDPS `odds_horizon_bucket` reprocess, 109,312 objects, + `batch_footystats`
+      copy+swap, 16,970 objects) needs the sanctioned `launch-mdps-sports-bucket-vm.sh` VM launcher, which needs a fresh
+      code-tarball republish first (deployed tarballs predate the TOCTOU fix above, and the reprocess script's
+      `ManifestWriter` writes the canonical index directly — no per-VM-shard mode — so stale code would re-expose the
+      exact race just fixed). Tarball republish is blocked on a genuine `gsutil` credential failure on this host
+      (service-account federation token expired; human account needs interactive 2FA reauth) — confirmed
+      `gcloud storage`/`gcloud compute` work fine with ADC, only legacy `gsutil` is broken. Ping filed:
+      `ikenna_orchestrator/pings/slot_3.md` 2026-07-25 CREDENTIAL APPROVAL REQUEST. Full detail + dry-run validation of
+      the reprocess mechanism (clean on a sample day, no `--force` needed):
+      `/plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md`. Needs a human to
+      either run `gcloud auth login` interactively once, or refresh the service-account federation. (1)
+      `migrate_sports_league_id_casing_2026_07_21.py --apply-prod` (no `--confirm-prod-write`, no `--index`) once, for
+      the live out-of-scope census + VM-guard + PLAN, using the already-committed, adversarially-verified executor
+      (`mtds@b2a49317`) — expect results consistent with the verified full-corpus dry-run baseline (266,408 objects /
+      34,228 units, 0 unknown raws, 0 unresolved league_ids). (2)
       `--apply-prod --confirm-prod-write --index scripts/.../raw_index.tsv` — copies+CAS-verifies the raw
       `batch_odds_api/odds/trades` shape (~139,155 objects) to canonical paths
       (`league_id=<CANON>/instrument_type=ODDS/data_type=TRADES/`), with the parquet's `league_id` CONTENT column

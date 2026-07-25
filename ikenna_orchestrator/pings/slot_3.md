@@ -5,31 +5,32 @@
 **Status**: `BLOCKED-CREDENTIALS`
 
 **Task**: `cefi_ml_directional_continuous_live-002` — ≥7-day live ML signal run on OKX + Binance + Bybit
-**Plan-of-record**: `plans/active/cefi_ml_directional_continuous_live_2026_06_20.md` (P0 + P1 todos)
-**Cross-ref**: slot_6.md BLK-e64b661a (original infrastructure audit; same request)
+**Plan-of-record**: `plans/active/cefi_ml_directional_continuous_live_2026_06_20.md` (P0 + P1 todos) **Cross-ref**:
+slot_6.md BLK-e64b661a (original infrastructure audit; same request)
 
 **What I need** (in order):
 
 **1. Secret Manager secrets for live CeFi-ML trading** (GCP project `central-element-323112`):
 
-| Venue | Secret name(s) | Content (JSON) | Notes |
-|-------|----------------|----------------|-------|
-| Bybit | `bybit_api_key` | `{"api_key": "...", "api_secret": "..."}` | Single unscoped key (no read/trade split) |
-| Binance | `binance-trade-api-key` + `binance-trade-api-key-secret` | Per canonical pattern | Already declared in credentials_per_archetype.yaml |
-| OKX | `exec-<client>-okx-api-key` | `{"api_key": "..."}` | Per-client pattern — confirm active client_id(s) |
-| OKX | `exec-<client>-okx-api-secret` | `{"api_secret": "..."}` | Per-client; passphrase also needed (see below) |
-| OKX | `exec-<client>-okx-passphrase` | `{"passphrase": "..."}` | OKX requires passphrase in addition to key+secret |
+| Venue   | Secret name(s)                                           | Content (JSON)                            | Notes                                              |
+| ------- | -------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------- |
+| Bybit   | `bybit_api_key`                                          | `{"api_key": "...", "api_secret": "..."}` | Single unscoped key (no read/trade split)          |
+| Binance | `binance-trade-api-key` + `binance-trade-api-key-secret` | Per canonical pattern                     | Already declared in credentials_per_archetype.yaml |
+| OKX     | `exec-<client>-okx-api-key`                              | `{"api_key": "..."}`                      | Per-client pattern — confirm active client_id(s)   |
+| OKX     | `exec-<client>-okx-api-secret`                           | `{"api_secret": "..."}`                   | Per-client; passphrase also needed (see below)     |
+| OKX     | `exec-<client>-okx-passphrase`                           | `{"passphrase": "..."}`                   | OKX requires passphrase in addition to key+secret  |
 
-**Note on OKX passphrase**: `okx_ccxt.py` currently loads `api_key` + `api_secret` but NOT `passphrase` — need to confirm
-the SM load path adds passphrase to the ccxt `options` dict before constructing the adapter.
+**Note on OKX passphrase**: `okx_ccxt.py` currently loads `api_key` + `api_secret` but NOT `passphrase` — need to
+confirm the SM load path adds passphrase to the ccxt `options` dict before constructing the adapter.
 
 **2. Arm the ML_DIRECTIONAL_CONTINUOUS kill-switch** (manual operator gate per locked design):
 
-Kill-switch arming requires operator action: `POST /api/archetypes/ML_DIRECTIONAL_CONTINUOUS/circuit-breakers/arm`
-or equivalent dashboard action. Params: $10k/venue notional cap, 3 venues (OKX + Binance + Bybit = $30k total),
+Kill-switch arming requires operator action: `POST /api/archetypes/ML_DIRECTIONAL_CONTINUOUS/circuit-breakers/arm` or
+equivalent dashboard action. Params: $10k/venue notional cap, 3 venues (OKX + Binance + Bybit = $30k total),
 `KILL_PER_ARCHETYPE_ML_DIRECTIONAL_CONTINUOUS` scope.
 
 **Unblocks**: once SM secrets provisioned + kill-switch armed, agent will ship:
+
 - `credentials_per_archetype.yaml` (UAC) — add ML_DIRECTIONAL_CONTINUOUS entry
 - `service_config.py` (execution-service) — add `bybit_secret_name = "bybit_api_key"`
 - `live_execution_handler._create_orchestrator_for_venue()` — wire SM credential loading before `get_order_adapter()`
@@ -534,15 +535,16 @@ it, or rename the existing one).
 > **✅ 2026-06-12 — DONE**: `cefi_ml_directional_continuous_live-004` shipped.
 >
 > **Delivered**: `alerting_service/cefi_ml_event_handler.py` — 3-tier ML_SIGNAL_STALENESS ladder:
+>
 > - age < 4h → no alert
 > - 4h–12h → WARN via `route_event(ML_SIGNAL_STALENESS)` (Telegram + Slack)
 > - 12h–24h → CRITICAL via `route_event_with_explicit_channels` (PagerDuty + Telegram, pd_severity="critical")
 > - ≥24h → KILL_SWITCH via `route_event(KILL_SWITCH_ML_MODEL_FAILURE)`
 >
 > Passthrough events (ML_PNL_DEVIATION, ORDER_REJECTION_SPIKE, POSITION_CRITICAL_DISCREPANCY, etc.) route via generic
-> `route_event` per their LIVE_ALERT_RULES entries. `AlertSubscriber.dispatch_event` wired.
-> Unit tests: `tests/unit/test_cefi_ml_event_handler.py` (19 tests, all green). QG clean. Landed live-defi-rollout.
-> Plan checkbox flipped: `plans/active/cefi_ml_directional_continuous_live_2026_06_20.md` -004.
+> `route_event` per their LIVE_ALERT_RULES entries. `AlertSubscriber.dispatch_event` wired. Unit tests:
+> `tests/unit/test_cefi_ml_event_handler.py` (19 tests, all green). QG clean. Landed live-defi-rollout. Plan checkbox
+> flipped: `plans/active/cefi_ml_directional_continuous_live_2026_06_20.md` -004.
 
 ## [Slot 3 → ci] 2026-06-23 — agt-f45cb9 DONE: ldr_qg_failure/market-tick-data-service self-healed
 
@@ -550,10 +552,45 @@ it, or rename the existing one).
 
 **Outcome**: Self-healed — no code push required.
 
-- Original failure: `quality-gates-v2` run `27973955873` on SHA `0eee1ab` (feat(mtds): QG STEP 5.90 + 5.91), failed at `tests` slice (mock IMDS calls in HYPERLIQUID onchain-perp tests were hitting real IMDS endpoint)
-- Fix landed: `368c488 fix(tests): mock _assert_source_reachable to prevent IMDS calls in 4 HYPERLIQUID onchain-perp tests` — authored by a peer slot shortly after the failure
+- Original failure: `quality-gates-v2` run `27973955873` on SHA `0eee1ab` (feat(mtds): QG STEP 5.90 + 5.91), failed at
+  `tests` slice (mock IMDS calls in HYPERLIQUID onchain-perp tests were hitting real IMDS endpoint)
+- Fix landed:
+  `368c488 fix(tests): mock _assert_source_reachable to prevent IMDS calls in 4 HYPERLIQUID onchain-perp tests` —
+  authored by a peer slot shortly after the failure
 - PR #309 (live-defi-rollout → staging): already **MERGED**; subsequent runs from `db7de3c` onward are all GREEN
 - Current HEAD `9241465` (`de1376a` on my local): local `bash scripts/quality-gates.sh --no-fix` **EXIT 0** ✅
 - Working tree: clean; branch: `live-defi-rollout`; up-to-date with `origin/live-defi-rollout`
 
 **No further action needed.** Slot 3 is clean and idle.
+
+## [Slot 3 → Operator] 2026-07-25 — CREDENTIAL APPROVAL REQUEST: gcloud/gsutil reauth needed for VM launches
+
+### CREDENTIAL APPROVAL REQUEST — refresh gcloud/gsutil credentials on this host
+
+**Status**: `BLOCKED-CREDENTIALS`
+
+**Task**: `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s league_id casing migration todo — the MDPS
+`odds_horizon_bucket` reprocess step needs `launch-mdps-sports-bucket-vm.sh`, which needs a fresh code-tarball republish
+first (deployed tarballs predate `unified-trading-library@14301571`, the TOCTOU consolidator-race fix that's
+load-bearing for this exact job).
+
+**What's broken**: `gsutil` authenticates as an anonymous caller on this host regardless of active account — neither the
+service account (`github-actions-deploy@central-element-323112.iam.gserviceaccount.com`, expired
+workload-identity-federation token, "token has invalid claims: token is expired") nor the human account
+(`ikenna@odum-research.com`, `ReauthUnattendedError: ... not in an interactive session`) has a working credential path
+for gsutil specifically. `gcloud storage`/`gcloud compute` work fine with ADC — confirmed via `gcloud storage ls` and a
+real `gcloud compute instances create` both succeeding — so this is isolated to gsutil's own auth stack.
+
+**What I need** (either resolves it):
+
+1. A human runs `gcloud auth login` interactively once for `ikenna@odum-research.com` (answers the 2FA/reauth
+   challenge), which should refresh gsutil's credential store.
+2. OR refresh/reissue the `github-actions-deploy@...` service account's workload-identity-federation token.
+
+Full detail: `/plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md`.
+
+**What I did while blocked**: completed the other 2 achievable sub-goals of the parent todo (manifest-swap re-fix
+
+- coverage-registry refresh, both verified) — see
+  `/plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. This is the only remaining piece;
+  the rest of the todo is genuinely done.
