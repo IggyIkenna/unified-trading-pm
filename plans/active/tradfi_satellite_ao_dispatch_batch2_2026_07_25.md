@@ -209,24 +209,30 @@ changed since batch1.
       non-existent plan doc; all 3 corresponding checkboxes in `tradfi_backfill_throughput_followups_2026_07_24.md` are
       flipped/updated in the SAME commit. Source: `tradfi_backfill_throughput_followups_2026_07_24.md`.
 
-- [ ] [REVIEW] P2. **Correct the live tradfi `availability_index` manifest for the ~97,828 combo/chain objects
+- [ ] [OPERATOR] P2. **Correct the live tradfi `availability_index` manifest for the ~97,828 combo/chain objects
       quarantined by the 2026-07-20 recovery run** — locate `recover_tradfi_garbage_underlying_2026_07.py --apply`'s
       retained per-shard `--out` TSV / `*.apply_outcomes.json` artifacts (VM launcher convention
       `gs://deployment-scripts-*/vm-logs/<vm>/...`) as the authoritative QUARANTINED-row list, then CAS-update those
       rows' `capture_status` to `attempted_failed` in the live manifest (mirroring
       `recover_tradfi_chain_manifest_registration_2026_07_22.py`'s register/retire whole-index in-place-CAS pattern) so
-      the manifest stops silently claiming `captured` at a path that no longer physically exists. If the run's per-shard
-      artifacts are not retrievable, STOP and report that as the finding rather than launching a new full-corpus GCS
-      walk (single-walk discipline). **No real conflict** — the original triage's own conflict note confirmed zero
-      overlap with `tradfi_consolidated_closeout_2026_07_18.md`'s own remediation items (grepped, zero hits); the only
-      flagged item is a DIFFERENT, reverse-direction problem
-      (`issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`) noted purely so the operator doesn't conflate
-      the two — same non-blocking pattern as batch1's shipped Deribit combo item. Repo: market-tick-data-service. **Done
-      when**: either (a) a CAS pass has run against the live tradfi `availability_index` manifest, `capture_status`
-      reads `attempted_failed` for exactly the QUARANTINED-outcome row set from the 2026-07-20 recovery run, and a
-      post-pass spot-check confirms 0 of those rows still claim `captured` at their pre-quarantine path; or (b) the
-      run's per-shard outcome artifacts are confirmed unrecoverable and the todo is reported BLOCKED with that finding.
-      Source: `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`.
+      the manifest stops silently claiming `captured` at a path that no longer physically exists. **Tagged `[OPERATOR]`
+      per `task_template.md` §3's delete-risk rule and `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`**
+      (2026-07-25 delete/VM-launch gating pass) — this CAS-updates `capture_status` for ~97,828 live prod manifest rows,
+      an overwrite of production state, not a reversible dry-run; per this SAME plan's own "reclassification races the
+      consolidator too" near-miss precedent todo below (in-place manifest reclassification racing the live consolidator
+      cron), the operator running this must pause the manifest-consolidator cron BEFORE the CAS pass and resume only
+      after the post-pass spot-check confirms clean. If the run's per-shard artifacts are not retrievable, STOP and
+      report that as the finding rather than launching a new full-corpus GCS walk (single-walk discipline). **No real
+      conflict** — the original triage's own conflict note confirmed zero overlap with
+      `tradfi_consolidated_closeout_2026_07_18.md`'s own remediation items (grepped, zero hits); the only flagged item
+      is a DIFFERENT, reverse-direction problem (`issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`) noted
+      purely so the operator doesn't conflate the two — same non-blocking pattern as batch1's shipped Deribit combo
+      item. Repo: market-tick-data-service. **Done when**: either (a) a CAS pass has run against the live tradfi
+      `availability_index` manifest, `capture_status` reads `attempted_failed` for exactly the QUARANTINED-outcome row
+      set from the 2026-07-20 recovery run, and a post-pass spot-check confirms 0 of those rows still claim `captured`
+      at their pre-quarantine path; or (b) the run's per-shard outcome artifacts are confirmed unrecoverable and the
+      todo is reported BLOCKED with that finding. Source:
+      `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`.
 
 - [ ] [AUDIT] P2. **Sweep `market-tick-data-service` for the remaining `run_in_executor(None, ...)` network-blocking
       call sites and classify each** — the doc's original "known so far" list is STALE (all 4 `databento_fetch`/
