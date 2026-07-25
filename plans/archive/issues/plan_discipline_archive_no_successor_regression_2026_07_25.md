@@ -40,6 +40,9 @@ resolved_by: slot-6
 
 # check_plan_discipline.py C-archive-no-successor ratchet regression (0->5)
 
+> **🟢 ARCHIVED 2026-07-25** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
+
 ## What I found
 
 `bash scripts/quality-gates.sh` in unified-trading-pm fails its "Plan discipline check (ratchet mode)" post-gate step:
