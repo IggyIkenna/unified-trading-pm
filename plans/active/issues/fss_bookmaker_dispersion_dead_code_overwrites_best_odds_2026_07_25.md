@@ -21,7 +21,7 @@ summary: >-
   The `bookmaker_home_cols`/etc. kwargs ARE exercised, but only in tests
   (tests/sports/unit/calculators/test_odds_calculator.py:159, test_calculators_enriched.py:161) — never by any real
   caller.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -44,7 +44,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: features-service@fb8d57c0 (slot 10, 2026-07-25)
 ---
 
 # features-service: bookmaker-dispersion dead code silently downgrades best_odds_* from MAX to MEAN
@@ -105,12 +105,20 @@ MAX survives the merge.
       features-service). **CONFIRMED LIVE 2026-07-25** — see Progress Log entry below for full evidence (18-bookmaker
       real fixture, true max 3.10 vs. captured `best_odds_home`=2.866111=mean, 8.16% understatement; dispersion columns
       confirmed exactly 0.0/1.0 in production for every sampled row).
-- [ ] [DATA] P1. Fix the collapse so `best_odds_*` stays the correct per-fixture MAX and
+- [x] ✅ [DATA] P1. Fix the collapse so `best_odds_*` stays the correct per-fixture MAX and
       `bookmaker_disagreement_*`/`odds_variance_*`/`book_fragmentation_*`/`market_confidence_*` compute real values
       instead of always-zero — either wire real `bookmaker_home_cols`/`draw`/`away` into `compute_odds_batch`, or stop
       `compute_odds_batch`'s output from overwriting `_pivot_bucketed_to_fixture`'s fields. Add a regression test
       proving `best_odds_home` after the full exporter pipeline matches the true per-fixture max across bookmakers (not
-      the mean). (repo: features-service)
+      the mean). (repo: features-service) — **DONE features-service@fb8d57c0 (2026-07-25, slot 10)**: chose the "stop
+      the overwrite" path. `_pivot_bucketed_to_fixture` now computes the 4 dispersion families
+      (`bookmaker_disagreement_*`/`odds_variance_*`/`book_fragmentation_*`/`market_confidence_*`) from the raw
+      per-bookmaker `group`, matching the calculator's `>=2`-book branch exactly (population std/var ddof=0,
+      fragmentation==disagreement, confidence=1/(1+std)); `best_odds_*` MAX was already computed there.
+      `export_odds_features` restores these authoritative values over `compute_odds_batch`'s empty-bm_cols placeholders
+      via new `_restore_pivot_dispersion` (drop-then-merge). 3 regression tests added incl. a full-pipeline check that
+      `best_odds_home`=MAX(3.0)≠mean(2.5) with real dispersion. QG green (17,821 passed); bundled cleanly after
+      `b03a6de4`'s per-bookmaker `odds_decimal_*` work (both kept via a merge-resolve).
 
 ## Progress Log
 
@@ -138,3 +146,21 @@ MAX survives the merge.
     diagnosed from the code-read, with a concrete real-fixture magnitude. Second todo (the fix) is separately
     AO-dispatched — not implemented in this pass, consistent with the issue doc's own "not prescribing the exact fix"
     framing and this task's scoped done_definition (confirm only).
+- **2026-07-25 (slot 10, data_engineering)**: FIXED + shipped (`features-service@fb8d57c0`). Chose option (b) — stop
+  `compute_odds_batch`'s empty-bm_cols output from overwriting the pivot's fields — over option (a) (wiring wide
+  per-bookmaker columns into `compute_odds_batch`), because `snapshot_df` is already aggregated to one row per fixture
+  and `_pivot_bucketed_to_fixture` is where the raw per-bookmaker `group` naturally lives (it already computes
+  `best_odds_*` MAX, `best_venue_*`, arb, sharp-soft-spread from that group). Changes: (1) `_pivot_bucketed_to_fixture`
+  now computes `bookmaker_disagreement_*`/`odds_variance_*`/`book_fragmentation_*`/`market_confidence_*` from the
+  per-bookmaker `group`, matching `_apply_bookmaker_dispersion`'s `>=2`-book branch semantics exactly (population
+  std/var ddof=0; fragmentation == disagreement == std; confidence = 1/(1+std); else-branch 0/0/0/1.0 for <2 books); (2)
+  new `_restore_pivot_dispersion` in `export_odds_features` overlays the pivot's authoritative `best_odds_*` +
+  dispersion over `compute_odds_batch`'s placeholders (drop-then-merge via the existing `_safe_left_merge`). 3
+  regression tests: `_pivot` dispersion real (std 0.408248, var 0.166667), single-book zero, and a full-pipeline
+  `export_odds_features` check that `best_odds_home`=MAX(3.0)≠mean(2.5) with real dispersion (real `compute_odds_batch`,
+  not mocked). QG green (17,821 passed / 209 skipped). Landed cleanly rebased onto `b03a6de4` (slot-7's per-bookmaker
+  `odds_decimal_<outcome>_<venue>` compute) — the two touch the same two functions but disjoint regions; the one textual
+  conflict (both merge extra pivot columns after `available_at` in `export_odds_features`) was resolved keeping BOTH.
+  `compute_odds_batch`'s empty-bm_cols branch was left intact (still a valid standalone calculator contract: given wide
+  per-bookmaker cols it computes real dispersion; given none, best = the odds passthrough) — the real bug was the
+  exporter never providing them AND letting the wrong value win, both now addressed.
