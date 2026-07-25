@@ -104,6 +104,31 @@ locked_since:
    are meant to be permanent. The pattern also rules out "the whole plan got archived so its rows got wiped" as a clean
    explanation: within the identical plan, some task_ids survived while immediate numeric siblings vanished (see
    point 3) — a plan-level wipe would be uniform, not selective.
+9. **A second, related pattern was live-caught the same evening — status REGRESSION, not full vanish.** The watch (v1)
+   showed `done` drop 24→21 between two 60s polls (2026-07-25T22:10:24Z → 22:11:23Z) with zero full-vanish alert (the 3
+   task_ids were still present, just no longer `status='done'`). Investigated the responsible window directly:
+   `PlanRegenLoop tick complete` fired at 22:01:36Z and 22:06:38Z (both `pruned_db=0`) and not again until 22:11:41Z —
+   **18 seconds AFTER** the regression was already visible — so no regen tick caused it. Zero `reopen`-type activity
+   events anywhere in the log either. **Root cause for this specific instance NOT found** — v1 only tracked aggregate
+   counts, not the specific task_ids or their content, so there is nothing left to inspect after the fact. This gap is
+   fixed in v2 (see below). Do not assume this is definitely the same mechanism as points 1-8 (full vanish) — flag as a
+   related-but-distinct pattern until a v2 catch proves or disproves the connection.
+
+## Process nuance found during this investigation — NOT the anomaly, but worth flagging to avoid a false-positive read of the watch log
+
+Confirmed separately (unrelated to points 1-9): manually flipping a plan-file checkbox to `[x]` (marking a todo done in
+the source `.md` only, e.g. via a direct `Edit`) does **NOT** itself update the corresponding `TaskRow.status` to
+`'done'` in `state.db` — there is no code path that syncs a checkbox edit into a DB status change; only an actual worker
+completion (or an explicit "mark done" action) does that. If the task's DB row was `blocked`/`queued` (dispatched_to IS
+NULL) at the time, the next regen tick correctly treats it as an orphan (its brief no longer matches any open todo) and
+the confirmed, sanctioned `_prune_stale` GC removes it — same as any other blocked/queued zombie. **The task_id then
+disappears from `/api/backlog` entirely, but this is expected, not a recurrence of the anomaly** — it never became a
+`done` orphan because it was never marked `'done'` in the DB, only in the plan file's prose. Confirmed live 2026-07-25:
+`sports_satellite_ao_dispatch_batch2-014` (flipped via plan-file edit only, `unified-trading-pm@17acbca53`) is now fully
+absent from `/api/backlog`, distinguishable from points 1-9 by being explainable (it was never `done` in the DB) rather
+than unexplained. **Lesson for future checkbox-only completions**: if DB-level `done` audit history matters for a given
+task, also call whatever "mark done" mechanism exists for it (e.g. the parked-task `mark-done` endpoint for
+`[OPERATOR]`-tagged tasks), not just the plan-file edit.
 
 ## What is NOT yet known
 
@@ -116,16 +141,20 @@ locked_since:
 ## Live watch armed (in progress as of this doc)
 
 A detached background process is running on the orchestrator VM (`i-0c9b283b31d6b5ca7`, launched via `setsid nohup`,
-survives independent of any one SSM session) polling `/api/backlog` every 180s, diffing the full set of `done` task_ids
-against the previous poll. Any `done` task_id that disappears entirely (not merely changes status) triggers immediate
-capture of the last 10 minutes of the `orchestrator` systemd journal + a full process list into the same log, to
-correlate exactly what ran at the moment of the next occurrence.
+survives independent of any one SSM session), currently on **v2** (`agent-orchestrator@a90d3fc`), polling `/api/backlog`
+every **60s** (tightened from an initial 180s ahead of a large incoming task batch). v2 tracks the FULL task record per
+poll (not just id→status) and immediately logs full before/after JSON for either of two patterns, each triggering
+capture of the last 10 minutes of the `orchestrator` systemd journal + a full process list into the same log:
+
+1. **Full vanish** — a `done` task_id disappears from the response entirely (the original pattern, points 1-8 above).
+2. **Regression** — a `done` task_id is still present but its status is no longer `'done'` (point 9 above; v1 could not
+   capture the specific task_id or content for this pattern, only the aggregate count change).
 
 - Script: `agent-orchestrator/scripts/done_row_disappearance_watch.py` (this issue's investigation tool).
 - Live log: `/home/ubuntu/done_row_disappearance_watch.log` on the orchestrator VM.
-- State file: `/home/ubuntu/done_row_disappearance_watch_state.json` (previous-poll snapshot, for the diff).
-- Confirmed running: baseline poll logged `total=41 done=24` at 2026-07-25T20:41:08Z, matching the direct SQL count
-  taken moments earlier.
+- State file: `/home/ubuntu/done_row_disappearance_watch_state.json` (v2 format: full per-task-id records, not just id
+  lists — v2 auto-detects and discards a stale v1-format state file rather than crashing on it).
+- Confirmed running: v2 baseline poll logged at 2026-07-25T22:36:25Z after cleanly migrating past the v1 state file.
 
 ## Todos
 
