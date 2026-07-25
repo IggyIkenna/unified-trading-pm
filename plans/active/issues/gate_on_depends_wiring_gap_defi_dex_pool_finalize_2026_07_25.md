@@ -37,7 +37,6 @@ related:
     /plans/archive/issues/gate_on_depends_noop_on_assigned_vm_na_upstream_2026_07_21.md,
   ]
 created: "2026-07-25"
-author: slot-5-worker
 source: [defi_dex_pool_symbol_fix_backfill_purge_finalize-001]
 parent_epic: agent_operating_framework_master
 priority: P1
