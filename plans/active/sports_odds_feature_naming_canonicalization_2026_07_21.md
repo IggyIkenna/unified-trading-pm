@@ -214,3 +214,15 @@ work doesn't reintroduce a 5th convention.
   lower-case to match the casing decision made elsewhere in this session (sports data_type reverting to lower-case) —
   this keeps ONE casing convention across the sports vocabulary rather than introducing a second UPPER-token exception
   inside feature names.
+
+- 2026-07-25 (slot 4) **lesson for the next migration of this shape**: a quoted-string-literal search/replace for a
+  column rename is NOT sufficient on its own — several producer files build the same column names dynamically via
+  f-strings (`f"clv_{outcome}"`, `f"velocity_{side}_{suffix}"`, etc.), which a literal-string regex silently skips,
+  leaving the WRITER still emitting the old name while `ODDS_COLUMNS`/tests expect the new one (surfaced as `KeyError`
+  test failures, not a quiet no-op). Also confirm with a digit-aware f-string pattern (`{side}_24h_to_6h` has digits in
+  the static part, which an `[a-z_]*`-only regex misses) and check for DOUBLE-substitution f-strings
+  (`f"velocity_{side}_{suffix}"`) separately from single-substitution ones. Separately: this exact 139-column migration
+  landed via two independent concurrent builds (slot 11 shipped first, slot 4 built the same thing unaware) — worth a
+  fast pre-flight `git log --oneline -3 -- <target file>` / branch-drift check before starting a large mechanical rename
+  that's plausible for another slot to also be doing, to catch the collision before doing the full work rather than
+  after.
