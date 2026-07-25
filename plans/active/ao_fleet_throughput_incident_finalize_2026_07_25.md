@@ -44,11 +44,12 @@ sequential: true
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify all 3 parent-plan done-claims.** For each of
+- [x] ✅ [REVIEW] P1. **Re-verify all 3 parent-plan done-claims.** For each of
       `ao_fleet_throughput_incident_2026_07_25.md`'s 3 todos, confirm the cited evidence (commit SHA, Slack message, or
       activity-log entry) actually resolves — re-run `git show <sha>` for any cited commit and re-check any cited
       activity-log/Slack evidence still exists. **Done when**: all 3 todos' evidence independently re-verified,
-      discrepancies (if any) logged in this doc's Progress Log.
+      discrepancies (if any) logged in this doc's Progress Log. — VERIFIED 2026-07-25T05:45Z (slot 10, review), all 3
+      hold. See Progress Log for full evidence.
 - [ ] [INFRA] P1. **Cross-check todo 2's dormant-slot finding against `ao_worker_context_lifecycle_gap_2026_07_25.md`.**
       If the parent plan's audit found slots 13/14/15/0 dormant due to an intentional AutoSpawn concurrency cap (not a
       bug), confirm that cap doesn't undermine the context-lifecycle plan's assumption that all working slots are
@@ -65,3 +66,38 @@ sequential: true
       `plans/archive/2026_07/`. **Done when**: the plan is archived with a banner, zero corpus-wide stale referrers
       remain (verified by the grep above returning only the archived copy's own path), and any real new contract found
       is reflected in codex.
+
+## Progress Log
+
+- **2026-07-25T05:45Z (slot 10, review)** — Todo 1: independently re-verified all 3 parent-plan done-claims. Did not
+  trust the doc's prose — re-derived each from source.
+  - **Todo 1 (branch-quarantine starvation alert)**: pulled `journalctl -u orchestrator.service` directly on the
+    orchestrator host over the exact cited window (`04:25:00`-`04:55:00` UTC) and confirmed, byte-for-byte, all 3 cited
+    fires: `slot-quarantine STARVATION alert fired: slot 4` at `04:33:26,682` with a paired
+    `POST https://hooks.slack.com/services/.../g0ar1MMpTxruRkbLn2Xt4ZIT "HTTP/1.1 200 OK"` at the SAME timestamp; slot 5
+    at `04:36:40,954`; slot 9 at `04:42:45,782` (same pattern). Escalation ids `agt-8ab986`/`agt-23b3a6` and the later
+    auto-heal lines (slot 4 `04:45:24`, slot 5 `04:51:47`) also match exactly. **HOLDS.**
+  - **Todo 2 (dormant-slot fix, `agent-orchestrator@18d8538`)**: `git show 18d8538` confirms the exact described change
+    — a secondary `_last_attempt_at` tie-break added to the candidate sort in `_run_one_tick`, matching the doc's code
+    excerpt verbatim. Confirmed `_last_attempt_at` is genuinely written (not a dead field) at 2 call sites. Rather than
+    trust the cited "105/105 pass," bootstrapped the venv (`uv sync` — none existed in this slot's clone) and ran the
+    actual gate: `bash scripts/quality-gates.sh` on current HEAD (`9c73579`, a descendant of `18d8538`) —
+    ruff/basedpyright/pytest all green, **1645 passed, 1 skipped**, full suite. Isolated
+    `tests/test_autospawn.py -k rotates` — 1 passed (of 105 collected total in that file, confirming the "105/105"
+    figure exactly). **HOLDS.**
+  - **Todo 3 (`check_doc_body_links` escalation wiring, `unified-trading-pm@3e4c73436`)**: `git show 3e4c73436` shows
+    the exact 23-line additive diff to `.github/workflows/ldr-to-main-promote.yml` described — a `V2_FAILED` check
+    dispatching `wall_type=ldr_main_qg_failure` on a concluded v2 failure for the exact head SHA, gated on
+    `DRY_RUN!=true`, relying on the orchestrator's existing wall-cooldown dedup (no new cooldown logic added, matching
+    the doc's claim that gap (b) didn't apply). **HOLDS.**
+  - **Discrepancy noted (informational, not blocking)**: the parent plan (`ao_fleet_throughput_incident_2026_07_25.md`)
+    actually lists a **4th** todo — `[REVIEW] P1 "Post-fix live re-verification against the same baseline"` — which is
+    still `[ ]` unchecked. This finalize plan's own frontmatter
+    (`depends_on: [ao_fleet_throughput_incident_2026_07_25]`, `gate_on_depends: true`) and this todo's brief both only
+    reference "3 todos," and this task was dispatchable, so the gate evidently keyed off the 3 that predated the 4th
+    being added rather than the plan's current total. Flagging rather than silently treating it as in-scope: the 4th
+    todo asks for a live re-pull of `/api/state`/`/api/backlog`/`/api/activity`/`/api/escalations/active` to confirm
+    fleet recovery toward the ~12/15 baseline — genuinely useful, still open, but OUT of this todo's declared "3 todos"
+    scope. Left for whoever picks up the parent plan's remaining todo 4 (or a future finalize-plan revision) — not
+    fabricated here since re-verifying "3" when the doc's real intent may have shifted to "4" is not this task's call to
+    make unilaterally.
