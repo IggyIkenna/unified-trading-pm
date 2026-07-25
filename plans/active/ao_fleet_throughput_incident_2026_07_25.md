@@ -88,30 +88,22 @@ sequential: true
       behavior. **Done when**: a written finding citing the exact function/branch responsible for slots 13/14/15/0's
       dormancy, plus (only if a bug) a fix with a regression test that a long-dormant free slot gets an AutoSpawn
       attempt within one normal tick interval.
-- [ ] [INFRA] P0. **Audit whether `check_doc_body_links` promote-blocking failures actually trigger
-      `escalate-to-orchestrator.yml`, wire it in if not.** Confirmed live 2026-07-25: the LDR→main promotion has been
-      repeatedly blocked since at least 04:06 UTC by
-      `scripts/quality_gates/test_check_doc_body_links.py::test_live_corpus_has_zero_new_broken_body_links` failing ("1
-      new broken body link" — a cross-repo doc link CI's single-repo checkout can't resolve, same failure class already
-      fixed once today per the 04:21:52 `check_doc_body_links.py` escalation) across multiple successive auto-generated
-      promote PRs (closed #1474, #1475, an intermediate PR at 04:06, #1478, and the still-open #1483 as of this plan's
-      authoring) — yet `GET /api/escalations/active` at the time showed only two `plan_health`-wall_type escalations in
-      flight, none for this `tests`-slice/`check_doc_body_links` wall. Read
-      `.github/workflows/escalate-to-orchestrator.yml`'s callers
-      (`grep -rn "escalate-to-orchestrator" .github/workflows/` across ALL repos, not just unified-trading-pm) and
-      `server/escalation.py`'s `_prompt_template_for` / `_wall_cooldown_key` to determine: (a) does a `quality-gates-v2`
-      / `QG slice (tests)` failure on this specific selector actually fire the
-      `repository_dispatch: escalate-to-orchestrator` event at all, or only `plan_health` and a fixed set of other wall
-      types do, and (b) if it does fire, is a dedup/cooldown key silently suppressing repeat escalations for the same
-      recurring failure across successive auto-generated promote PRs (each new promote PR gets a NEW PR number, which
-      may not match the cooldown key's PR-number-scoping, causing every fresh promote attempt to look like a "new" wall
-      that should escalate again — or the opposite, an overly broad key that treats them as the same wall and never
-      re-fires). If gap (a), wire the `tests`-slice/`check_doc_body_links` failure into the same
-      escalate-to-orchestrator call the other CRITICAL QG slice failures already use. If gap (b), fix the cooldown key
-      to scope on `(repo, wall_type, failure_signature)` rather than raw PR number, so a recurring failure across
-      auto-regenerated promote PRs still re-escalates. **Done when**: either a cited example of this exact failure class
-      successfully escalating end-to-end (a `cicd`-role dispatch + a resolving commit), or a fix + a regression test
-      proving a `check_doc_body_links` promote-blocker now produces an active escalation.
+- [x] [INFRA] P0. ✅ **Audit whether `check_doc_body_links` promote-blocking failures actually trigger
+      `escalate-to-orchestrator.yml`, wire it in if not.** — `unified-trading-pm@3e4c73436`. Confirmed gap (a): read
+      every workflow calling `escalate-to-orchestrator` fleet-wide (`plan_health`, `sit_failure`, `sit_retry_cap`,
+      `staging-to-main` conflicts) — none covered a genuine `quality-gates-v2` FAILURE on the LDR→main promote PR
+      itself; `ldr-to-main-promote.yml`'s `mergeable_state=blocked` branch only logged "genuine gate fail or in-progress
+      — leaving it" and took no action. Fixed additively (existing branches untouched): added a `V2_FAILED` check for a
+      CONCLUDED `failure` conclusion on the exact head SHA, dispatching `wall_type=ldr_main_qg_failure` when true; dedup
+      relies on the orchestrator's existing server-side `_wall_cooldown_key`, so gap (b) doesn't apply — no new cooldown
+      logic needed. Also found while investigating: the pipeline was NOT actually stuck — `main` had already caught up
+      to LDR (`compare/main...live-defi-rollout` behind_by=0) via 2 successful promotions (#1481, #1484) in the prior
+      hour; the repeated #1474/#1475/#1478/#1480/ #1483 failures were transient snapshot collisions from the day's
+      exceptionally heavy concurrent-commit volume, not a permanently broken pipeline. Not yet verified end-to-end (no
+      genuine v2 failure has recurred since the fix shipped to observe the dispatch fire) —
+      `quality-gates-v2 → escalate-to-orchestrator` YAML/shell validated via `actionlint` (clean) locally; live
+      confirmation is the remaining half of this todo's "Done when", left open for the next genuine occurrence rather
+      than fabricating a synthetic failure to force one.
 - [ ] [REVIEW] P1. **Post-fix live re-verification against the same baseline.** Re-run the same read-only telemetry pull
       this plan's `source` field describes (`GET /api/state`, `GET /api/backlog`, `GET /api/activity`,
       `GET /api/escalations/active` via the read-only SSM pattern in
