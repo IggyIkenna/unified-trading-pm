@@ -108,3 +108,10 @@ or a per-type field gets renamed — nothing currently catches that class of dri
   slots landing `docs(plans):` commits every ~20-30s), each attempt racing `check-branch-drift` against quickmerge's own
   ~1-2min internal pass; resolved via the documented pull-`--ff-only`-then-retry loop (never the human-only
   `SKIP_BRANCH_DRIFT` override) until a gap opened.
+
+> **✅ COMPLETE — archived by plan_reconciler (agt-be8370, 2026-07-25).** All todos verified done (0 open checkboxes),
+> unlocked, no un-migrated deferrals (STEP 5f archive ritual).
+
+## Deferred work — migrated to:
+
+none
