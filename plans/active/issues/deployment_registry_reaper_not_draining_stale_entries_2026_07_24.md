@@ -516,13 +516,37 @@ flipping the checkbox.
       worker init is redirecting fds for normal writes but not for the crash path) — worth checking whether anything in
       this app's startup (`main.py`, `lifespan.py`, UTL's `fastapi_uei_lifespan`/`setup_service_observability`)
       reassigns `sys.stdout`/ `sys.stderr` to a custom stream object (e.g. a StringIO-backed log capturer, or an
-      OTel/observability SDK's stdio interception) that only proxies through SOME writes. **UPDATE 2026-07-25T14:02Z
-      (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for
-      `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch` only) and the downstream Firestore write
-      is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live
-      via direct REST `PATCH` — same 403; 0/95 sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z).
-      This blocks EVERY SIT-covered repo's promote, not just this one. Filed as its own cross-cutting P0 since it blocks
-      the whole fleet's LDR→main pipeline, not just this todo:
+      OTel/observability SDK's stdio interception) that only proxies through SOME writes. **CONCLUSIVE PROOF
+      2026-07-25T16:12Z (slot 5, same session): lifespan DOES run to completion — this is confirmed NOT a
+      code-execution-order problem, narrowing it to a pure stdio-transport issue.** `log_event()` (UTL's
+      `fastapi_uei_lifespan`, called from the VERY code path this doc suspected of never running) publishes to Pub/Sub,
+      not stdout — a completely independent transport. Created a temporary pull subscription on the
+      `deployment-api-events` topic (confirmed it exists and IS reachable — an earlier same-session check via a
+      lower-privileged identity wrongly read `PERMISSION_DENIED` as "topic missing"; corrected using the ADC identity),
+      forced one cheap revision update (env-var-only, no rebuild: `uts-shared-deployment-api-00278-dmw`) to produce a
+      real start/stop cycle, and pulled real messages: `{"event": "STOPPED", ...}` (old revision draining) immediately
+      followed by `{"event": "STARTED", ...}` (new revision) — both with real timestamps/correlation IDs. A `STOPPED`
+      event only fires from `fastapi_uei_lifespan`'s `finally` block AFTER the `try` body's `yield` returns cleanly —
+      i.e. the ENTIRE `deployment_api/lifespan.py` `lifespan()` body (the `app.state.config_dir = ...` line, every
+      `logger.info()` call, `is_leader_worker()`, the `asyncio.create_task(_auto_sync_running_deployments())` call) DOES
+      execute normally on every startup. **This rules out "the reaper never starts" as the mechanism** — the background
+      task genuinely gets created every time. The problem is narrower and stranger than the whole doc has assumed: SOME
+      output paths from this exact process work fine (Pub/Sub network calls, HTTP responses, the one historical
+      uncaught-exception traceback) while stdout/stderr writes from normal code paths — `print()`, `logger.info()`
+      through stdlib `logging`, AND this session's raw `sys.stderr.write()+flush()` — never reach Cloud Logging. Cleaned
+      up the temporary subscription + acked all test messages (no residual infra left). **Next dispatch, most promising
+      remaining angle**: since `log_event`'s STARTED/STOPPED events prove exact per-revision startup/shutdown timing,
+      cross-reference those timestamps against `deployment_api/utils/worker_identity.is_leader_worker()`'s logic
+      directly (e.g. add a `log_event()` call — NOT a stdout write — inside the `if is_leader_worker():` branch in
+      `lifespan.py`, carrying `worker.age`/PID in `details`) to independently verify the reap tick and leader election
+      are ALSO running via a transport proven to work, sidestepping the still-unexplained stdout/stderr mystery entirely
+      rather than continuing to chase it. **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker — it is not SIT
+      itself.** SIT ran, passed, and logged a matching-tree stamp for `deployment-api`, but the stamp is fire-and-forget
+      (`repository_dispatch` only) and the downstream Firestore write is 403'ing FLEET-WIDE (`ci_status_store.py`
+      `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live via direct REST `PATCH` — same 403; 0/95
+      sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY SIT-covered repo's
+      promote, not just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's LDR→main pipeline,
+      not just this todo:
       [issues/ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md](ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md).
       Part (1) of this todo is now ALSO gated on that doc's Todo 1/2 (operator restores the Firestore permission, then
       `ci-status-update.yml` goes green again) before the promote can ever pass the SIT gate. Next dispatch: check that
