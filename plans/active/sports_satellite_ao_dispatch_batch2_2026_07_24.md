@@ -301,16 +301,16 @@ source: >-
 > The doc's 3rd todo (a `FixturesBrowser.tsx` UI relabel) is EXCLUDED here — it's explicitly gated on the backend todo
 > below landing first ("once P10-B backend lands"). Add it as a follow-up once this todo ships.
 
-- [ ] [BACKEND] P2. **Switch `deployment-api/services/fixtures_browser.py` to the single catalogue** (currently still
-      the day-walk, `@5815582`). Read `prod/catalog.parquet` ONCE (schema-aware projection), filter
-      `instrument_type=="fixture"`, TTL-cache the PARSED frame. Map → `FixtureRow`: `fixture_id`=`instrument_id`;
-      `home_team_id`/`away_team_id` parsed from the id's `HOME_v_AWAY` (or UAC `build_team_id`); `venue_id`="" (honest,
-      not carried). Filter/group on `available_from` (verified 17,064/17,064 = 100% identical to the id's `:YYYYMMDD`
-      suffix, zero drift). Delete `_MAX_WINDOW_SPAN_DAYS` (120d cap). Start CLEAN from `@5815582` — a prior half-written
-      attempt broke the module and was reverted; do not resume from that state. (repo: deployment-api
-      `services/fixtures_browser.py`). **Done when**: `fixtures_browser.py` reads `prod/catalog.parquet` once (cached
-      parsed frame), filters+maps per the spec above, `_MAX_WINDOW_SPAN_DAYS` is deleted, `quality-gates.sh` is green.
-      Source: `sports_fixtures_browser_single_catalogue_source_2026_07_24.md`.
+- [x] ✅ [BACKEND] P2. **Switch `deployment-api/services/fixtures_browser.py` to the single catalogue** —
+      deployment-api@dbbf64c. Reads `prod/catalog.parquet` ONCE (schema-aware projection), TTL-cached as a parsed frame
+      filtered to `instrument_type=="fixture"` (mirrors `prediction_catalogue.py`'s `_read_catalogue`).
+      `fixture_id`=`instrument_id`; `home_team_id`/`away_team_id` parsed from the id's `HOME_v_AWAY` segment;
+      `venue_id=""` (honest, not carried). Filters AND groups on `available_from`, not `kickoff_utc`. Deleted
+      `_MAX_WINDOW_SPAN_DAYS` (kept `_MAX_WINDOW_SIDE_DAYS` as a sane bound on the relative-window defaults only — no
+      longer a read-cost bound). Rewrote `test_fixtures_browser.py` entirely for the new architecture (mocks
+      `_read_catalogue_fixture_frame`, not the retired day-walk primitives); added coverage for team-id parsing,
+      honest-blank `venue_id`, `instrument_type` filtering, available_from-vs-kickoff-day grouping, and the removed span
+      cap. `quality-gates.sh` green (4964 passed).
 
 ### From `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`
 
