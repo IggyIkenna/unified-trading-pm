@@ -199,9 +199,15 @@ inherited from the first shipped batch:
       Haiti, Honduras, Jamaica, Nicaragua, Panama, Suriname, Trinidad and Tobago (21 countries — largest batch, consider
       splitting further if a worker finds the citation-research load too heavy for one dispatch). (repo:
       unified-api-contracts). **Done when**: per the shared contract above, for this country list.
-- [ ] [DATA] P1. **West Africa (CAF)** — Benin, Burkina Faso, Cameroon, Congo, DR Congo, Gabon, Gambia, Ghana, Guinea,
-      Ivory Coast, Liberia, Mali, Mauritania, Nigeria, Senegal, Togo (16 countries). (repo: unified-api-contracts).
-      **Done when**: per the shared contract above, for this country list.
+- [x] ✅ [DATA] P1. **West Africa (CAF)** — Benin, Burkina Faso, Cameroon, Congo, DR Congo, Gabon, Gambia, Ghana,
+      Guinea, Ivory Coast, Liberia, Mali, Mauritania, Nigeria, Senegal, Togo (16 countries).
+      `unified-api-contracts@28bda62a` (16 entries, 13 verifiable countries). Burkina Faso/DR Congo/Ivory Coast SKIPPED
+      — zero entries in the api-football leagues catalog, genuinely unverifiable from this source. Cameroon + Ghana got
+      full top+below+cup; the other 11 countries got top-league only (real division-below/cup confirmed to exist via
+      WebSearch but absent from the catalog — no id to cite, omitted per the never-fabricate rule). Cameroon's/Ghana's
+      catalog "Super Cup" entries excluded (secondary exhibitions, not the primary cup). Required re-merging 3x on top
+      of concurrent South America, Eastern Europe, and Middle East/AFC-WAFF batches landing on the same file mid-session
+      — 0 collisions each time, MVP-scope count unchanged at 96 throughout. quality-gates.sh green.
 - [ ] [DATA] P1. **North/East/Southern Africa (CAF)** — Algeria, Angola, Botswana, Burundi, Eswatini, Ethiopia, Kenya,
       Lesotho, Libya, Malawi, Mauritius, Namibia, Rwanda, Somalia, South Africa, Sudan, Tanzania, Tunisia, Uganda,
       Zambia, Zimbabwe (21 countries — largest batch, consider splitting further if a worker finds the citation-research
