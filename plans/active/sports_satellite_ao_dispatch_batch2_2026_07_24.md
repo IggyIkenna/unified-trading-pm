@@ -335,14 +335,23 @@ source: >-
       the new `[DATA] P2` todo below. **Separate finding filed, NOT part of this todo's scope**:
       `compute_odds_batch()`'s dead-code `bookmaker_home_cols` path silently overwrites `best_odds_*` with a mean
       instead of the correct max — see `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`.
-- [ ] [DATA] P2. **PIT horizon-gating gap for the new `odds_decimal_<outcome>_<venue>` columns** (found while shipping
-      the todo above): `feature_expectations.py`'s `ODDS_COLUMNS` registry drives PIT horizon-gating
+- [x] ✅ [DATA] P2. **PIT horizon-gating gap for the new `odds_decimal_<outcome>_<venue>` columns** (found while
+      shipping the todo above): `feature_expectations.py`'s `ODDS_COLUMNS` registry drives PIT horizon-gating
       (`apply_horizon_gate()`), which only walks a fixed column list — the new dynamic per-venue columns aren't in it
       and so bypass PIT gating entirely (there's no schema allowlist blocking them at the parquet-write boundary either,
       so they DO reach output — just ungated). Add a pattern-match (e.g. `startswith("odds_decimal_")`) to
       `apply_horizon_gate()`/`get_column_horizons()` so these get the same leak protection as every other odds field.
       Add a regression test proving a T-24h row's `odds_decimal_*` doesn't leak a later horizon's value. (repo:
-      features-service)
+      features-service) — features-service@daa373bd. Extended `apply_horizon_gate()` to pattern-match the
+      `odds_decimal_` prefix, gating those dynamic columns at the same horizon as the static "odds" group (read from the
+      registry via `_ALWAYS_FULL_GROUPS["odds"][1]`, not duplicated, so a future change to the odds group's horizon
+      stays in sync automatically) — `get_column_horizons()` itself stays a static SSOT dict (unchanged contract for
+      downstream consumers); the dynamic extension happens only inside the sports `apply_horizon_gate()` wrapper, which
+      has the live `df.columns` needed to pattern-match. 2 regression tests: one confirming the columns survive gating
+      at T-24h (their real home horizon); one monkeypatching a later horizon and confirming the column then gets NaN'd,
+      proving the wiring is genuinely real rather than coincidentally matching the untouched-metadata path. Session
+      survived a mid-task session death (this exact fix was lost and had to be reapplied byte-for-byte before shipping —
+      verified via git status showing a clean tree post-resume). `quality-gates.sh` green.
 - [x] ✅ [DATA] P1. **Rename UAC's `OddsFeaturesMixin`/`SportsFeatureVector` fields** — unified-api-contracts@689efa54 +
       ml-service@91f031a. All 49 fields renamed to the decided scheme, grounded in `features-service`'s actual
       calculator output (`odds_calculator.py`/`odds_velocity.py`) and live consumers, not a blind find-replace — several
