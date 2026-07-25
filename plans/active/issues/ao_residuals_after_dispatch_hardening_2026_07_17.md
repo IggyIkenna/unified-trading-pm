@@ -110,14 +110,14 @@ source:
       ([`ao_backlog_prune_gcs_wrong_db_2026_07_17`](../../archive/issues/ao_backlog_prune_gcs_wrong_db_2026_07_17.md)).
       **Gate**: a plain `.venv/bin/python -c "from server import config; print(config.db_path())"` on the VM, run as
       `ubuntu` with no env overrides, prints the live DB path.
-- [ ] [BACKEND] P3. **Root-cause the 2026-07-12 degradation onset.** ⚠️ **DOUBLE-TRACKED (noted 2026-07-23)** — the same
-      item is also open in `ao_open_issues_consolidated_close_out_2026_07_17.md` Phase 5 ("07-12 degradation onset: name
-      it or close it"). Whoever picks it up should close BOTH, or collapse them into one owner first; do not let two
-      docs each wait for the other. `worker_polling_dead` went **0 → 587** and the spawn:dispatch ratio **0.6:1 → 44:1**
-      on that date. The churn itself is fixed (`f8ace1f`, proven on the live rate), but **why it started that day was
-      never explained** — so a recurrence is invisible until it costs again. **Gate**: either a named cause with
-      evidence from `activity_log`, or a recorded decision that the pre-fix window is not worth excavating now that the
-      mechanism is closed — but not silence.
+- [x] [BACKEND] P3. **Root-cause the 2026-07-12 degradation onset.** ✅ **DONE via
+      `/plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md` item 12** — the twin item in
+      `ao_open_issues_consolidated_close_out_2026_07_17.md` Phase 5 flipped `[x]` and collapsed to one owner per that
+      item's own duplicate-NOTE (this exact item; SYNCED 2026-07-25, apply_batch_12). Named cause: the true onset was
+      2026-07-12 15:00 UTC, a second, unalerted `ao-self-pull.sh` dirty-gate wedge (root: a `tempfile.gettempdir()`
+      CWD-fallback bug in `regen_backlog_from_plan.py`), not the earlier, well-known 08:1x UTC `/tmp`-ENOSPC blip (which
+      was real but contained). Root-fixed same day, `agent-orchestrator@fc9ac53`. Full hourly-breakdown methodology +
+      activity-log evidence lives in that plan's Progress Log — not duplicated here.
 - [ ] [UI] P3. **Backlog-relations view.** ⏳ **STILL BLOCKED-UPSTREAM-DESIGN, re-checked 2026-07-23 (6 days later, no
       movement):** `docs/BACKLOG_RELATIONS_UX_BRIEF.md` is present, but there is **no design deliverable, no
       `GET /api/backlog/graph` endpoint** (grepped `server/routes/`), and no relations UI commit in `dashboard/src`. The

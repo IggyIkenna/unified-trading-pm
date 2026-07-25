@@ -5,7 +5,7 @@ summary: >-
   unified-trading-pm's quality-gates.sh fails repo-wide on 2 pre-existing, unrelated checks (plan-discipline ratchet 121
   > baseline 120; a frontmatter-schema gap on sports-2020-06-data-floor.md), blocking the green-tree ship gate for any
   non-docs(plans) PM commit.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -18,6 +18,8 @@ parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: NA
 resolved_by:
+  unified-trading-pm@5225b4a08 — all todos [x], plan-discipline ratchet re-baselined 19 → 0 via --baseline-write (line
+  325-327)
 locked_by:
 source: [deployment_ui_vm_log_viewer_2026_07_20.md]
 execution_scope: orchestrator-agent
