@@ -118,15 +118,19 @@ rather than assuming it still existed (the doc's most recent entries are 8 days 
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Confirm with the operator whether the 2026-07-17 legacy-bucket deletion was deliberate (recovery
-      abandoned by decision) or accidental (recovery target lost unintentionally) — determines whether
-      `mdt_legacy_canonical_row_gap_2026_07_16.md` archives as moot or opens a broader retrospective. (repo:
-      unified-trading-pm, operator decision only)
-- [ ] [DATA] P1. Once the operator's intent is known: update `mdt_legacy_canonical_row_gap_2026_07_16.md`'s STEP 1-5
-      todos to `BLOCKED` status with this doc cross-referenced (do not leave them AO-dispatchable — every future
-      dispatch will just re-discover the 404), and re-assess whether T2.10 (seed purge, operates on the still-live
-      index) is independently actionable without the deleted bucket. (repo: unified-trading-pm +
-      market-tick-data-service)
+- [x] ✅ [OPERATOR] P0. Confirm with the operator whether the 2026-07-17 legacy-bucket deletion was deliberate or
+      accidental — **answered 2026-07-25 via `AskUserQuestion`: DELIBERATE, abandon recovery.** No retrospective needed;
+      `mdt_legacy_canonical_row_gap_2026_07_16.md` archives its execution plan as moot.
+- [x] ✅ [DATA] P1. Marked `mdt_legacy_canonical_row_gap_2026_07_16.md`'s STEP 1-6 execution plan permanently BLOCKED
+      (banner + inline marker added, this doc cross-referenced) — `unified-trading-pm@<pending>`. T2.10 re-assessed:
+      genuinely independently actionable (operates on `_index/per_vm/_legacy_seed.parquet`, the still-live manifest
+      index, never touches the deleted bucket's objects) but has **no existing tooling** — scoped as its own follow-up
+      below rather than rushed.
+- [ ] [DATA] P2. Build + run the T2.10 seed-purge: strip the 37,114 phantom `api_football × trades` rows (captured,
+      nonzero `instrument_count`) from `_index/per_vm/_legacy_seed.parquet` with the NULL-safe COALESCE `source` filter
+      (211,313 real `odds_api × trades` rows survive) — back up the index first, let the consolidator re-merge, verify
+      by content. (repo: market-tick-data-service). **Done when**: the 37,114 phantom rows are gone from the live index,
+      verified via a fresh count query, with 0 collateral loss to the 211,313 real rows.
 
 ## Codex SSOTs
 
