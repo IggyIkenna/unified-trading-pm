@@ -301,3 +301,21 @@ consistent with, not dispositive of, the cascade-step theory. **One genuinely NE
 uses (`tests/unit/ ` + the 4 cefi files) passed clean (`6918 passed, 0 failed`, 133.51s) — i.e. even `-n 1` (xdist
 active with exactly one worker) differs from true `-p no:xdist` (xdist plugin absent entirely) in whatever triggers
 this. Not chased further (matches this doc's own "do not duplicate investigation" guidance) — retrying with spacing.
+
+**Cross-reference (2026-07-25, 12th/13th/14th occurrence) — sports T6.8 one-off retirement session.** Shipping
+`sports_satellite_ao_dispatch_batch2-005` (deletes of 3 confirmed-dead legacy-bucket migration one-off scripts + an
+unrelated stale-DEFI-shard-count-baseline fix, zero overlap with either failing test's code path) via
+`quickmerge.sh --agent`, the identical 2 tests failed with the identical
+`AssertionError: market-data-tick-pred-dev-test-project` signature on THREE consecutive attempts
+(`142.92s`/`145.05s`/`149.11s` — serial-baseline timing). Three independent, sequential, standalone
+`bash scripts/quality-gates.sh` runs earlier in the SAME session (before any quickmerge attempt) all passed clean ("ALL
+QUALITY GATES PASSED") over the SAME diff — only quickmerge's own re-gate invocation reproduces the failure, never a
+direct standalone run this session (matching this doc's own prior "direct run clean, quickmerge re-gate dirty" pattern).
+`uptime` load average was LOW (1.78/2.38/3.29 on an 8-core box, no other slot's QG/pytest running) during all 3 failing
+attempts — this session's occurrence does NOT support the host-contention theory (load was genuinely idle), adding
+weight to the cascade-step theory instead (quickmerge's STAGE 0 cascade re-pulls ancestor repos
+`unified-api-contracts`/`unified-trading-library` before re-running MTDS's suite; this session's slot HAD an ancestor
+repo — instruments-service, not one of quickmerge's own cascade targets, but genuinely touched moments earlier by a
+sibling-slot push — auto-fast-forward mid-session via the 5-min slot cron, see the sibling finding
+`sports_t6_8_oneoff_retirement_residual_2026_07_25.md`). Not chased further (matches this doc's "do not duplicate
+investigation" guidance) — retrying with real spacing (not back-to-back) per this doc's established remedy.
