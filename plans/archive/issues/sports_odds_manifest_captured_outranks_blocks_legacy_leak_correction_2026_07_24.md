@@ -46,6 +46,9 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: resolved`, fix applied verbatim and confirmed durable, 0 open todos, unlocked.
+> Moved to `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+
 # reprocess_sports_odds.py --force cannot correct a false `captured` row (captured-outranks tie-break)
 
 ## What I found

@@ -37,6 +37,10 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: superseded` (`superseded_by: sports_master_closeout_2026_07_21.md`),
+> `resolved_by` cites `deployment-service@78a0aa4` (the 2020-06 pre-floor wipe), 0 open todos, unlocked. Moved to
+> `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+
 # sports derived_features re-run stopped writing mid-year — corpus still mostly fabricated
 
 ## Measured (creation-time census of the features corpus, 2026-07-21)

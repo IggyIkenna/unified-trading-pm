@@ -33,6 +33,10 @@ last_updated: 2026-07-16
 locked_since:
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: resolved` since the 2026-07-23 RE-TRIAGE (ACKED-AS-INVALID: both non-vendor
+> `source` values are deliberate, documented architecture, not leakage), 0 open todos, unlocked. Moved to
+> `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+
 # Sports IS availability-index non-vendor `source` values — root cause
 
 ## Operator's question (P9 Q3)

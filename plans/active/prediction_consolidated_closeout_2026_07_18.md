@@ -638,7 +638,7 @@ sports's own consolidated closeout plan; short digest only:
   path at all (the structural blocker); once that's a yes, scope the MTDS live-odds connector. +4 more — see file.
 - [`plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`](/plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md)
   — 0 open todos (closed/archived/record-only)
-- [`plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`](/plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md)
+- [`plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`](/plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md)
   (resolved) — 0 open todos (closed/archived/record-only)
 
 **Newly discovered (2026-07-24 completeness check via `grep -l '^asset_group:.*prediction'` — not previously named in

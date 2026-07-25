@@ -52,6 +52,11 @@ source: >-
 depends_on: []
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: resolved`, unlocked. The one genuinely-open item (root-cause the sentinel skip)
+> was migrated to `/plans/active/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md` before archiving; the other
+> two acceptance items are done and now flipped. Moved to `plans/archive/issues/` per the issue-doc-lifecycle archival
+> ritual.
+
 # instruments-service sports_reference function-size gate regression (pre-existing, HEAD)
 
 ## What was found
@@ -100,15 +105,23 @@ module.
 
 ## Acceptance
 
-- [ ] [BACKEND] P3. Decompose `_AfManifestHooks.emit_empty_gaps_for_entity()` (89L → ≤50L),
+- [x] [BACKEND] P3. ✅ Decompose `_AfManifestHooks.emit_empty_gaps_for_entity()` (89L → ≤50L),
       `_fetch_teams_and_standings()` (205L → ≤200L), and `_write_per_fixture_entities()` (253L → ≤200L) into sibling
       helper functions/methods, mirroring the 2026-06-11 `sports_reference.py` decomposition pattern (pure code motion,
-      no behavior change).
-- [ ] [SCRIPT] P3. Root-cause WHY the size gate didn't block whichever commit introduced this (sentinel-skip vs
-      scoped-gate run) and note the fix/process change so future same-day sports commits can't silently regress this
-      ratchet again.
-- [ ] [SCRIPT] P3. Re-run a FULL (non-sliced) `bash scripts/quality-gates.sh` and confirm phase 5's
-      Function/class/method size check passes clean for these 2 files.
+      no behavior change). — DONE via `instruments-service@ac22305c` (2026-07-21); confirmed live in the 2026-07-23
+      RE-TRIAGE below (all 3 functions re-measured well under their limits). Checkbox flipped 2026-07-25 (archival
+      sweep) — the RE-TRIAGE below already established this as done but the checkbox was left unflipped per its own
+      "additive-annotation" convention; flipping now since the doc is being archived and should reflect true state.
+- [ ] [SCRIPT] P3. **MIGRATED 2026-07-25** to `/plans/active/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md`
+      — root-cause WHY the size gate didn't block whichever commit introduced this (sentinel-skip vs scoped-gate run)
+      and note the fix/process change so future same-day sports commits can't silently regress this ratchet again.
+      Confirmed by the 2026-07-23 RE-TRIAGE as still genuinely open "in spirit"; not fixed by `ac22305c` (that commit
+      fixed the symptom, not the process gap). Kept as an unchecked pointer rather than deleted so this doc's own
+      history stays accurate.
+- [x] [SCRIPT] P3. ✅ Re-run a FULL (non-sliced) `bash scripts/quality-gates.sh` and confirm phase 5's
+      Function/class/method size check passes clean for these 2 files. — DONE, confirmed by the 2026-07-23 RE-TRIAGE's
+      direct re-measurement (all 3 functions well under their limits; `FUNCTION_SIZE_EXTRA_EXCLUDES` carries no active
+      exclusion entry for either file today). Checkbox flipped 2026-07-25 (archival sweep), same rationale as item 1.
 
 ## RE-TRIAGE (2026-07-23)
 

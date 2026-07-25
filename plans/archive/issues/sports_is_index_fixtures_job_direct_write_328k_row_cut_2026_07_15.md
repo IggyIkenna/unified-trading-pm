@@ -58,6 +58,12 @@ resolved_by:
   unified-trading-pm@10ad5d69a
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: resolved`, core 328k-row finding resolved (the rows were correctly-clipped
+> pre-launch artifacts, not data loss — see STEP 3). One residual item struck as void/superseded (was already explicitly
+> superseded by this doc's own STEP 3); one genuinely-open low-priority P1 forensics item remains, tracked in
+> `/plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s digest. Moved to
+> `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+
 # IS sports canonical index: fixtures-job direct write erased 328k rows — L6 gate regressed 28 → 3,316
 
 ## Timeline (all 2026-07-15 UTC, from Cloud Run logs — evidence commands at the bottom)
@@ -124,13 +130,14 @@ be 328,292 rows smaller is NOT root-caused this touch. Candidates for the P0 bel
       (`MANIFEST_PER_VM_SHARDS=true`, consolidator-mediated like every other writer) or give the direct path a
       generation-CAS + row-count/column-fill regression guard (the `MANIFEST_ROW_COUNT_REGRESSION` / `@2e132bb2`
       pattern). A 5.6% silent index shrink must page, not pass.
-- [ ] [DATA] P0. Re-run the targeted L6 manifest re-emission for the regressed cells (repo: market-tick-data-service;
-      scripts `migrate_sports_instruments_legacy_gap_2026_07_13.py` +
-      `write_sports_instruments_legacy_gap_manifest_2026_07_13.py`, both accept `--cells-csv`) — **ONLY AFTER** (a) the
-      P0 above lands (else it reverts again) AND (b) the `af-backfill-20260714-*` fleet completes (avoid the pause-cron
-      collision). Regenerate the cell list fresh at run time (the af fleet is re-capturing some 2020+ cells; 2018/2019
-      footystats-era cells it cannot re-capture). Then re-run `cf_manifest_audit_2026_06_01.py … --legacy …` per-cell to
-      a stable count.
+- [ ] ❌ [DATA] P0. ~~Re-run the targeted L6 manifest re-emission for the regressed cells~~ — **VOID, struck 2026-07-25
+      (archival sweep).** This item was already SUPERSEDED by this doc's own "STEP 3" below at the time it was written
+      (see "Recommended next steps (SUPERSEDING this doc's earlier P0-DATA re-emission item, which is now void)") — the
+      doc's central premise (that the 328k rows were legitimate data) was FALSIFIED: the rows were pre-launch artifacts
+      the UAC coverage SSOT correctly refuses to write, not a data-loss event. Re-emission was correctly never
+      performed. Leaving struck-through rather than deleted so this doc's own history stays accurate; the doc's digest
+      referrer (`sports_consolidated_closeout_aggregated_sources_2026_07_24.md`) listed this as an open residual — that
+      listing is stale and is corrected in the same commit as this archival.
 - [x] [DATA] P2. Determine whether any OTHER canonical index has the same fixtures-job-style direct-writer racing its
       consolidator (grep services for non-per-VM `ManifestWriter` usage against consolidator-managed buckets); the
       lost-update pattern is generic.
@@ -416,7 +423,10 @@ session.
 - [ ] [DATA] P1. **Forensics (the remaining open question)**: what wrote pre-launch captured rows into the IS canonical
       such that 2026-07-14 audits read legacy-only=28? Not the 07-13 script (guard-blocked), not sufficiently the 18KB
       `_legacy_seed.parquet`. Whatever it is bypasses the writer's pre-launch chokepoint and is the true
-      illegitimate-row vector. Repos: unified-trading-library, market-tick-data-service.
+      illegitimate-row vector. Repos: unified-trading-library, market-tick-data-service. **STILL GENUINELY OPEN as of
+      2026-07-25** (confirmed not investigated by the 2026-07-23 RE-TRIAGE below either) — tracked in
+      `/plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s residual-todos digest (this doc's
+      entry) so it stays visible after this doc archives.
 - [x] ✅ [DATA] P2. ~~**Operator ruling on the 2,769 copied objects** (ODDS `footystats_odds` 2018 tree) now in
       canonical without manifest rows — leave (manifest-invisible) or remove.~~ **RESOLVED 2026-07-15 by the floors
       ruling — they were given proper manifest rows, not removed.** Under the amended footystats floor (2018-01-01)

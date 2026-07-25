@@ -94,6 +94,11 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: resolved`, 0 open todos. The 2026-07-23 RE-TRIAGE confirmed the entire
+> 112,277-row `attempted_failed` population this doc diagnosed was removed as a side effect of the
+> `market-tick-data-service@e9d9dec0` `source=api_football` wipe, mooting the "restore true attempted_at" open
+> follow-up. Moved to `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+
 # sports/trades VENUE_FETCH_FAILED + EmptyFromLiveInstrumentError-guard investigation — 2026-07-15
 
 ## Ground truth (live re-query, 2026-07-15)

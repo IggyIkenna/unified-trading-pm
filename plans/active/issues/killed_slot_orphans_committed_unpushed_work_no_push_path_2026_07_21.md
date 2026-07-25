@@ -124,3 +124,17 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   remediation either; still routes through the todo + operator. Landing needs judgment (is
   `plan_reconciler_findings_2026_07_25.md` superseded by a newer scheduled run? + a 22-behind rebase of another agent's
   branch) → correctly an operator/human call, not an auto-dispatched todo.
+- **2026-07-25 ~04:48Z — slot 5** (flagged by review/slot1 msg 1931, confirmed read-only by main on-host
+  ip-172-31-5-118). Same class: slot 5 died **idle** (prereq-blocked on
+  `sports_satellite_ao_dispatch_batch2-007/-011/-015`) in the 04:28:17Z `tmux_session_lost` burst (slots 4/5/8/9 + a
+  review predecessor, correlated with the orchestrator server reload — self-healing, tasks auto-requeued), now
+  `worker_alive=false, tmux_alive=false, last_ping 04:27:38Z`. Holds **2 committed-but-unpushed `docs(plans):` commits**
+  on `live-defi-rollout` (`3a44c523c` flip Eastern-Europe/UEFA checkbox — uac@dbd64914; `79dda3cc8` flip Eastern-Europe
+  todo + close finalize-plan Phase-0 coverage gap): `unified-trading-pm` ahead=2 / behind=10 vs
+  origin/live-defi-rollout, HEAD **not** an ancestor. **Worktree CLEAN, NO rebase state** — so this is not a stuck
+  rebase blocking the FF-pull cron (review's alternate hypothesis ruled out); the cron simply cannot fast-forward a
+  2-ahead diverged HEAD. Work is durable (committed in the slot's local `.git`) but stranded off-origin. These are
+  doc-only plan-flip commits (low-stakes, no code), but landing them still needs a rebase-of-a-shared-branch that the
+  unbuilt `[INFRA] P2` reclaim-and-push todo would automate; main is barred from push/respawn, so remediation routes
+  through that todo + operator action. Second same-day recurrence (slot 10 ~02:33Z, slot 5 ~04:48Z) — the gap is
+  actively recurring.

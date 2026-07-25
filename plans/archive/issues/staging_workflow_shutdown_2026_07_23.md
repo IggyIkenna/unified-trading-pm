@@ -72,6 +72,9 @@ source:
   - "measured: GH Actions run counts 2026-07-17..23; workspace-manifest.json; repos/*/actions/runners"
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: resolved`, all 5 checklist items done, 0 open todos, unlocked. Moved to
+> `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+
 # Stop the staging-branch workflow machinery (all 6)
 
 ## Evidence that staging is dead
@@ -164,14 +167,14 @@ once promoted to `main` — landing on LDR alone does not stop a cron.
       question — did the crons stop? — measured fleet-wide on `staging-backmerge-to-ldr` across ALL 24 repos:
 
       | window                          | scheduled runs |
-                                                                                                                              | ------------------------------- | -------------- |
-                                                                                                                              | 06:00–08:00Z (2h, pre-promote)  | **47**         |
-                                                                                                                              | after 08:00Z (>1h, post-promote)| **0**          |
+                                                                                                                                      | ------------------------------- | -------------- |
+                                                                                                                                      | 06:00–08:00Z (2h, pre-promote)  | **47**         |
+                                                                                                                                      | after 08:00Z (>1h, post-promote)| **0**          |
 
-                                                                                                                              Repos still firing: **NONE**. PM's own three crons likewise 0 after 08:00Z (`reconcile-staging-versions`,
-                                                                                                                              `staging-to-main`, `staging-conflict-ldr-main-fallback` — each had 1–2 runs in the prior window). Note this was
-                                                                                                                              only tickable AFTER the promote: the same check at 07:50Z correctly showed the crons still firing, which is why
-                                                                                                                              the box was held open through two earlier status reports rather than closed on the diff.
+                                                                                                                                      Repos still firing: **NONE**. PM's own three crons likewise 0 after 08:00Z (`reconcile-staging-versions`,
+                                                                                                                                      `staging-to-main`, `staging-conflict-ldr-main-fallback` — each had 1–2 runs in the prior window). Note this was
+                                                                                                                                      only tickable AFTER the promote: the same check at 07:50Z correctly showed the crons still firing, which is why
+                                                                                                                                      the box was held open through two earlier status reports rather than closed on the diff.
 
 - [x] [DOC] P2. Add "re-enable the staging workflows" to the staging re-entry path so the reversibility guarantee is not
       half-true. — DONE: every disabled trigger carries an inline dated note naming exactly what to uncomment and the

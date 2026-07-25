@@ -38,6 +38,9 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: resolved`, all 33/33 findings applied 2026-07-24, 0 open todos, unlocked. Moved
+> to `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+
 # Sports-scoped plan-reconcile + docs-reconcile findings (2026-07-23 run)
 
 ## How this was found

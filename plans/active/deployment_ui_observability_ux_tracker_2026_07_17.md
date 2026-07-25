@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [deployment-ui, tracker, cost, billing, filters, search, logs, alerts, resource-timeline, observability]
 related:
   - /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md
-  - /plans/active/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md
   - /plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md
   - /plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md
   - /plans/archive/2026_07/deployment_ui_vm_log_viewer_2026_07_20.md

@@ -67,4 +67,15 @@ source: >-
       ritual on the parent (migrate any DEFERRED → banner → codex-alignment check → update any referrer paths
       corpus-wide → clear lock). **Done when**: the parent doc's checkbox state matches reality and it is either
       archived (if fully resolved) or left `active` with an explicit note that the remaining items are still genuinely
-      blocked as of the re-check date.
+      blocked as of the re-check date. — **🟡 GATE NOT ACTUALLY MET, checked 2026-07-25T04:52Z (slot 2)**: dispatched
+      despite the parent's ASTER live connector todo still reading `- [ ] 🚧 BLOCKED-PREREQUISITES`, not `[x]` (this
+      finalize todo's own text is explicit: "Once the ASTER live connector todo is `[x]`" — it is not). Re-read the
+      parent's own note on that todo: BOTH hard prereqs it names (cefi-007 enumerator start_date support; UAC
+      `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` book_snapshot_5/liquidations) are recorded as landed as of 2026-07-07, but
+      the note explicitly says "the connector launch + `live_aster` row-landing verification itself was NOT re-checked
+      here and the checkbox is NOT flipped on that basis alone." So the real remaining work is on the PARENT plan
+      (actually register+launch `aster_book_liq_ws.py` + verify `live_aster` rows land), not on this finalize plan — and
+      that is a substantive `[DATA]`-craft launch/verify task, not this `[DOC]` archival task. Not completable this AO
+      turn as dispatched; released without touching the parent doc (didn't want to rush a real VM launch as a rushed
+      tail-end action). A future dispatch of the PARENT's own ASTER todo should do the actual launch+verify; only then
+      does this finalize todo's gate genuinely clear.

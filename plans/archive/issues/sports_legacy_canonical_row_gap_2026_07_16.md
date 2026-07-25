@@ -60,6 +60,9 @@ resolved_by:
 source: [operator ruling 2026-07-16 "investigate the row gap first", cutover runbook F-2 / OR-1]
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: resolved`, the 2026-07-23 RE-TRIAGE verdict is RESOLVED BY LATER WORK, 0 open
+> todos, unlocked. Moved to `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+
 # Sports legacy↔canonical row gap — why canonical holds fewer rows (F-2 / OR-1)
 
 > **READ-ONLY investigation. Zero mutations** — no writes, no copies, no manifest changes, no bucket changes. Every

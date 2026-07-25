@@ -69,6 +69,9 @@ source:
   ]
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: resolved`, 0 open todos (the one residual DOCS checkbox confirmed done and
+> flipped in this pass). Moved to `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+
 # Sports canonical raw is truncated — `--force` re-derive destroys the corpus
 
 > # 🟢 THE SYMPTOM IS FIXED 2026-07-17 on the days it existed — `market-tick-data-service@75f226e8`.
@@ -277,8 +280,14 @@ Only T-0 was contaminated. The other seven are real, correctly-bucketed, irrepla
       199-day `batch_footystats` merge did not touch. Full evidence:
       `./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` § "ODDS_FEATURES recompute EXECUTED". **Fix (b) below (the
       MDPS `reprocess_sports_odds.py` guard) is still OPEN and still P0** — this closes the FEATURES path only.
-- [ ] [DOCS] P1. **Correct the cutover runbook's canonical-is-a-superset premise** for raw odds on early dates, and
-      cross-reference this issue from the delete-gate section.
+- [x] [DOCS] P1. ✅ **Correct the cutover runbook's canonical-is-a-superset premise** for raw odds on early dates, and
+      cross-reference this issue from the delete-gate section. — CONFIRMED DONE (checkbox flipped 2026-07-25, archival
+      sweep): the 2026-07-23 RE-TRIAGE below directly verified `sports_legacy_bucket_cutover_2026_07_16.md` already
+      carried an inline correction banner citing this doc by name (2026-07-16, same day). That runbook was subsequently
+      trimmed under line-cap remediation (2026-07-24) to a 129-line lean index; the correction is preserved verbatim in
+      its history extract, `/plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md:1666` ("its cause
+      corrected... fix direction (a) refused, loss-guard (b) stands, P0"). The premise is not live anywhere today (the
+      trimmed runbook doesn't restate it), so there is nothing further to correct.
 
 ## RE-TRIAGE (2026-07-23)
 

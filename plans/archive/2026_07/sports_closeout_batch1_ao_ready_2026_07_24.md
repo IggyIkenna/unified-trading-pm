@@ -196,7 +196,7 @@ todos concurrently.
                                                                                                                           slot 5 closed the underlying TOCTOU race in `unified-trading-library@14301571` so future direct-writer
                                                                                                                           corrections don't need a cron-pause dance (full evidence + root-cause trace in
                                                                                                                           `/plans/active/issues/sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md` and
-                                                                                                                          `/plans/active/issues/sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md`, both
+                                                                                                                          `/plans/archive/issues/sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md`, both
                                                                                                                           now resolved). Condition `sports-odds-consolidator-resurrection-fixed` satisfied.
 
 - [x] [DIAG] P1. ✅ Root-caused + backfilled. Corpus-empty was TWO stacked bugs, not a raw-capture gap (instruments-

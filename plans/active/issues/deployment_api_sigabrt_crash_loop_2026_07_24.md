@@ -104,24 +104,35 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `Fatal Python     error`/`Current thread` faulthandler dump naming `deployment-api@6f6a389`'s `_compute_inventory`
       cold path — if so, the SIGABRT loop is resolved by that fix and the crash rate should visibly drop; if not, do not
       re-guess — file a fresh evidence-backed BACKEND todo with the exact stuck call site. (repo: deployment-api) — **🟡
-      NOT YET LIVE, checked 2026-07-25T04:12Z (slot 2)**: correction to this todo's own text — `deployment-api` is
-      actually `ldr_main` **direct** promote (no `staging` branch exists on this repo; confirmed `git branch -a` + no
-      staging-specific promote workflow), not staging-first as originally written here. Verified via the ACTUAL ground
-      truth (`gcloud run services describe uts-shared-deployment-api`), not just git state: live revision
-      `uts-shared-deployment-api-00274-s9g` runs image tag `273c951` —
-      `git merge-base --is-ancestor 1adf54b     origin/main` confirms `1adf54b` is NOT an ancestor of that commit, so
-      the faulthandler fix has genuinely not reached prod yet. Not stuck: `origin/live-defi-rollout` is 221 commits
-      ahead of `origin/main` right now, but the most recent promote PR (`#376`, merged 2026-07-25T02:43Z, ~1.5h before
-      this check) carried 100 commits in one batch — the gap is explained by today's exceptionally heavy concurrent-slot
-      commit volume on this repo's shared LDR outrunning the promote cadence, not a broken pipeline. `1adf54b` will be
-      swept into a future automatic promote PR; this doesn't need manual intervention. Genuinely not completable this AO
-      turn (needs an automatic promote cycle + a fresh deploy + several hours of live runtime before the next SIGABRT
-      could even recur) — released, not stalled; a future dispatch should re-check
-      `git merge-base --is-ancestor 1adf54b origin/main` and the live revision's image tag before re-attempting the log
-      check.
+      STILL NOT LIVE, re-checked 2026-07-25T04:41Z (slot 6, 29min after the 04:12Z check)**: no change — live revision
+      `uts-shared-deployment-api-00274-s9g` still runs image tag `273c951`
+      (`gcloud run services describe uts-shared-deployment-api --project=central-element-323112     --region=asia-northeast1`),
+      `git merge-base --is-ancestor 1adf54b origin/main` still fails. `1adf54b` sits 13 commits behind current
+      `origin/live-defi-rollout` tip (i.e. near the front of the unpromoted queue) but `origin/main` is now 221 commits
+      behind LDR total, and no `ldr-to-main-promote.yml` workflow exists IN THIS REPO
+      (`gh workflow list --repo IggyIkenna/deployment-api --all` — the promote PRs, e.g. `#372`-`#376`, are opened by a
+      fleet-level mechanism outside this repo, not a per-repo scheduled workflow, so there's nothing repo-local to
+      requeue/dispatch). **This precondition (promote reaching main → redeploy → several hours of live runtime → next
+      SIGABRT occurrence) genuinely cannot progress faster by re-dispatching this check more frequently** — this is the
+      SECOND consecutive dispatch (slot 2 → slot 6) to observe an unchanged external state ~29 min apart, because this
+      todo carries no time-based prereq/condition, so `PlanRegenLoop` re-offers it on every regen tick regardless of
+      elapsed wall-clock time. Flagging to main via chat (not self-editing `backlog.yaml` per RULES.md §4, which scopes
+      backlog tuning to main/operator): recommend gating this task on a several-hour cooldown or an explicit
+      `1adf54b-live` condition (flip GREEN once `git merge-base --is-ancestor 1adf54b origin/main` succeeds AND the live
+      Cloud Run revision's image tag changes) so it stops burning slot-dispatch cycles on a check that cannot possibly
+      yield new information yet. Released again, not stalled — do not re-attempt this specific log-read until either
+      that gate lands or a dispatch confirms `1adf54b` is genuinely live.
 
 ## Progress Log
 
+- **2026-07-25T04:41Z (slot 6, review)** — Re-checked todo 2's precondition (`deployment-api@1adf54b` live) 29 minutes
+  after slot 2's 04:12Z check. Zero change: live revision still `uts-shared-deployment-api-00274-s9g` / image tag
+  `273c951`; `1adf54b` still not an ancestor of `origin/main`. Confirmed there is no per-repo `ldr-to-main-promote.yml`
+  workflow in `deployment-api` — the LDR→main promote PRs (`#372`-`#376`) are opened by a fleet-level mechanism outside
+  this repo, so there's no repo-local promote cadence to inspect/accelerate. Since this todo has no time-gate,
+  `PlanRegenLoop` will keep re-offering it every regen tick with no chance of new evidence until the promote genuinely
+  lands — flagged to main to add a cooldown/condition gate rather than re-attempting the log-read myself. No code
+  shipped this session (nothing to ship — the fix already shipped as `1adf54b`; this task is purely a wait-and-verify).
 - **2026-07-24 (slot 2, backend_engineer)** — Correlated + audited per the todo, then went further once the named
   hypothesis was refuted.
   - **Correlation (live `gcloud logging read` against `uts-shared-deployment-api`, project `central-element-323112`)**:

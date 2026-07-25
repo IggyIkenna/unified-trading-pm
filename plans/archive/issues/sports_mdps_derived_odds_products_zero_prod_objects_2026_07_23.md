@@ -48,6 +48,9 @@ locked_by:
 depends_on: []
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: resolved`, root-caused with no code change required, 0 open todos, unlocked.
+> Moved to `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+
 ## Why this matters
 
 Not urgent (P2, not a data-correctness regression -- these products have apparently NEVER produced real data, so there's

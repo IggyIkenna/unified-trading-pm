@@ -266,7 +266,16 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       just the mock fixture and not just the detail popover. If it still shows `—` for every live VM once the backend
       fix above ships, the next suspect is whether `HostMetricsSampler` is actually running on the CURRENTLY DEPLOYED VM
       tarball — check that alongside Link 1's own tarball-content grep (amended above) rather than opening a fourth
-      investigation from scratch.
+      investigation from scratch. — **🟡 NOT YET LIVE, checked 2026-07-25T04:50Z (slot 2)**: `deployment-api@96f5eb5`
+      (the backend fix this todo depends on) is NOT an ancestor of `origin/main` yet
+      (`git merge-base --is-ancestor 96f5eb5 origin/main` fails), and the live Cloud Run revision
+      (`uts-shared-deployment-api-00274-s9g`) still runs the pre-fix image tag `273c951` — same measured ground-truth
+      method as `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s equivalent check earlier this session. Same
+      explanation applies: not stuck, this repo's LDR is running well ahead of `main` today from exceptionally heavy
+      concurrent-slot commit volume; the fix will be swept into a future automatic promote PR. Not completable this AO
+      turn — needs the deploy to land first. A future dispatch should re-check
+      `git merge-base --is-ancestor 96f5eb5 origin/main` + the live revision's image tag before re-attempting this
+      verification.
 
 ## Success criteria
 

@@ -200,11 +200,23 @@ inherited from the first shipped batch:
       assumed); 2 pre-existing hardcoded-count tests updated (126→145 Understat gaps, 35→54 non-MVP football) matching
       the established batch pattern. All 19 confirmed `in_mvp_scope=False` via a live odds-manifest check (zero matches
       for any of the 7 countries). Full per-country citations in the commit message.
-- [ ] [DATA] P1. **North/Central America + Caribbean (CONCACAF)** — Antigua and Barbuda, Aruba, Barbados, Belize,
-      Bermuda, Canada, Costa Rica, Cuba, Curacao, Dominican Republic, El Salvador, Grenada, Guadeloupe, Guatemala,
-      Haiti, Honduras, Jamaica, Nicaragua, Panama, Suriname, Trinidad and Tobago (21 countries — largest batch, consider
-      splitting further if a worker finds the citation-research load too heavy for one dispatch). (repo:
-      unified-api-contracts). **Done when**: per the shared contract above, for this country list.
+- [x] [DATA] P1. ✅ **North/Central America + Caribbean (CONCACAF)** — all 21 countries covered across two concurrent
+      slots. A different slot independently landed `unified-api-contracts@dfeef957` for 7 countries (Costa Rica,
+      Jamaica, Honduras, Panama, Trinidad and Tobago, Canada, Guatemala) — verified their Canada/Guatemala entries
+      exactly matched this slot's own independent WebSearch analysis before treating them as done. This slot then landed
+      the remaining 14 countries via `unified-api-contracts@80717936` (Antigua and Barbuda, Aruba, Barbados, Belize,
+      Bermuda, Cuba, Curacao, Dominican Republic, El Salvador, Grenada, Guadeloupe, Haiti, Nicaragua, Suriname — 17
+      entries, since Dominican Republic/El Salvador/Nicaragua each got a top-league + cup pair). 11 of the 14 carry only
+      ONE catalog entry (top league) — division-below and cup genuinely absent from the catalog, no id to cite, skipped
+      per the never-fabricate rule. Three had real decisions, WebSearch-verified: Dominican Republic's "Copa LDF"
+      confirmed as the sole/primary cup candidate; El Salvador's "Copa Presidente" is typed `League` in the raw catalog
+      (a catalog mislabel) but confirmed as the genuine primary knockout cup, used despite the catalog's own coarse type
+      tag; Nicaragua's "Liga Primera U20" excluded (wrong axis, youth), "Copa Nicaragua" confirmed primary cup. Required
+      re-merging 4x on top of concurrent East/Southeast Asia, South Asia, and Fiji+New Zealand/OFC batches landing on
+      the same file mid-session — each resolved via reset-to-clean-HEAD + fresh re-append + live recompute (0 collisions
+      each time; `_mvp_football_league_ids()` stayed 96 throughout). Final registry: 347 entries, 335 Understat gaps,
+      244 non-MVP football (both hardcoded-count tests updated to match, live-derived not hand-arithmetic).
+      `quality-gates.sh` green on the final ship. (repo: unified-api-contracts).
 - [x] ✅ [DATA] P1. **West Africa (CAF)** — Benin, Burkina Faso, Cameroon, Congo, DR Congo, Gabon, Gambia, Ghana,
       Guinea, Ivory Coast, Liberia, Mali, Mauritania, Nigeria, Senegal, Togo (16 countries).
       `unified-api-contracts@28bda62a` (16 entries, 13 verifiable countries). Burkina Faso/DR Congo/Ivory Coast SKIPPED
@@ -239,13 +251,36 @@ inherited from the first shipped batch:
       to the same file/tests at the same time — resolved via a clean re-append against the merged base (not a manual
       hunk-by-hunk merge, too error-prone at 20+ conflict blocks) + recomputed the combined hardcoded-count tests fresh
       from the live registry (224 Understat gaps, 133 non-MVP football) rather than hand-adding deltas.
-- [ ] [DATA] P1. **South Asia (AFC)** — Bangladesh, Bhutan, India, Maldives, Nepal, Pakistan (6 countries). (repo:
-      unified-api-contracts). **Done when**: per the shared contract above, for this country list.
-- [ ] [DATA] P1. **East/Southeast Asia (AFC)** — Cambodia, Chinese Taipei, Hong Kong, Indonesia, Laos, Macao, Malaysia,
-      Mongolia, Myanmar, Philippines, Singapore, Thailand, Vietnam (13 countries). (repo: unified-api-contracts). **Done
-      when**: per the shared contract above, for this country list.
-- [ ] [DATA] P1. **Oceania (OFC)** — Fiji, New Zealand (2 countries). (repo: unified-api-contracts). **Done when**: per
-      the shared contract above, for this country list.
+- [x] ✅ [DATA] P1. **South Asia (AFC)** — Bangladesh, Bhutan, India, Maldives, Nepal, Pakistan (6 countries).
+      `unified-api-contracts@a7aa4226` (10 entries, all 6 countries verified). Two real near-miss traps caught via
+      WebSearch: (1) Bhutan's naming is INVERTED from the intuitive read — "Premier League" is the top tier, "Super
+      League" is the second tier; (2) India's catalog carries 7 entries across 3 unrelated axes (national club pyramid:
+      ISL top / I-League second — NOT "I-League 2nd Division", that's tier-3; the Santosh Trophy is an inter-state
+      representative competition, wrong axis; IFA Shield + Calcutta Premier Division are Kolkata-regional, sub-national
+      scope) — resolved to ISL/I-League/AIFF Super Cup only. 0 registry collisions, MVP-scope unchanged at 96.
+      quality-gates.sh green.
+- [x] ✅ [DATA] P1. **East/Southeast Asia (AFC)** — Cambodia, Chinese Taipei, Hong Kong, Indonesia, Laos, Macao,
+      Malaysia, Mongolia, Myanmar, Philippines, Singapore, Thailand, Vietnam (13 countries).
+      `unified-api-contracts@cf4c8491` (21 entries, 11 of 13 countries). Chinese Taipei + Hong Kong SKIPPED — zero
+      catalog entries. Indonesia/Thailand/Vietnam got full top+below+cup; the rest top-league only (+ cup where
+      genuinely unambiguous). Two real near-miss traps caught via WebSearch, not guessed: (1) Malaysia's catalog
+      "Premier League" is DEFUNCT since 2022 (replaced by the A1 Semi-Pro League, not in the catalog) — excluded rather
+      than added as a stale division-below; (2) Malaysia has two prestigious cups (Malaysia Cup, historic; FA Cup,
+      today's functionally-primary via continental qualification) — picked FA Cup on that evidence, not a coin flip.
+      Mongolia's/Thailand's catalog "Super Cup"/"Champions Cup" excluded (verified exhibition matches). 0 registry
+      collisions, MVP-scope unchanged at 96. quality-gates.sh green.
+- [x] ✅ [DATA] P1. **Oceania (OFC)** — Fiji, New Zealand (2 countries). — `unified-api-contracts@0104c2f2` (6 entries).
+      Fiji: catalog carries only the top league (376) -- WebSearch confirmed the real Fiji FA Cup exists but has no
+      api_football_id in this catalog, omitted per the never-fabricate rule. New Zealand: catalog's "Premiership" (280)
+      confirmed via WebSearch as the pre-2021 name of the current National League (2021 rebrand, same competition, not a
+      different one); 2nd tier is genuinely 3 parallel regional leagues (Central/Northern/ Southern, all 3 included,
+      mirroring the Bosnia FBiH/RS multi-entity precedent); Chatham Cup (1127) confirmed as the primary cup since 1923.
+      Zero `api_football_id` collisions; `_mvp_football_league_ids()` stayed 96; zero real captured ODDS data confirmed
+      for all 6 entries. Landed through 2 concurrent-edit collisions (East/Southeast Asia, then South Asia batches
+      landing on the same file mid-session) -- resolved both via a clean re-split of each batch's block (verified zero
+      duplicate keys each time) + recomputed the 2 hardcoded-count tests fresh from the live merged registry each time,
+      not hand-arithmetic. (repo: unified-api-contracts). **Done when**: per the shared contract above, for this country
+      list.
 - [ ] [DATA] P2. Once ALL 11 domestic-selection batches above land (not just one), run step 2 (curated-universe
       backfill, API-Football fixtures + enrichment 2019→, gated + honest-empty for no-enrichment leagues, burn budget
       per the resolved per-source caps) then step 3 (drop residual out-of-curated rows/objects, snapshot-first,

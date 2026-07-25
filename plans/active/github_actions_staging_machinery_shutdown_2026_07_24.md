@@ -24,7 +24,7 @@ related:
     /plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
     /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
-    /plans/active/issues/staging_workflow_shutdown_2026_07_23.md,
+    /plans/archive/issues/staging_workflow_shutdown_2026_07_23.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
     /plans/active/issues/stale_staging_versions_manifest_2026_07_23.md,
   ]

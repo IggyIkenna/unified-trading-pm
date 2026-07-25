@@ -793,6 +793,27 @@ source: >-
       `issues/sports_league_id_namespace_migration_2026_07_20.md`. — **Prep done 2026-07-25T02:42Z (slot 9), launch NOT
       yet executed** — tarballs re-verified/re-fixed, TOCTOU fix confirmed included, mechanism dry-run-verified correct,
       ready-to-execute command staged. Full detail + exact next step:
+      `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`. — **Step (3) MDPS `odds_horizon_bucket`
+      reprocess EXECUTED + VERIFIED 2026-07-25 (slot 7).** Re-verified tarball freshness (2 of 5 had drifted again in
+      the ~40min since the prep doc; republished), launched 4 sharded VMs
+      (`mdps-sports-bucket-20260725-{035949,040027,040053,040119}`, SPOT, `force` mode, confirmed clean start via SSH
+      each). All 4 completed: shard1 (2020-06-06→2021-12-31) 574/574 dates 0 failed; shard2 (2022-01-01→2023-06-30)
+      546/546 dates 0 failed; shard3 (2023-07-01→2024-12-31) 550/550 dates 0 failed; shard4 (2025-01-01→2026-07-25) 571
+      dates, 22 `attempted_failed` + 4 `LOSS_GUARD_BLOCKED` — investigated in full, all 26 are honest upstream gaps /
+      correct protective refusals, not script defects (18 known `ADAPTER_RETURNED_EMPTY_OUTPUT` pre-vetted in the prep
+      doc + 4 novel `RAW_ODDS_SHAPE_UNRECOGNIZED` dates confirmed via direct GCS read to have zero real odds data, only
+      `instrument_type=sport` meta-snapshots + 4 `LOSS_GUARD_BLOCKED` dates where re-deriving would have shrunk the
+      corpus, correctly refused). Total 166,751 shards / ~5.4M bucketed rows written. Manifest-verified STABLE across 2
+      consolidator-cycle-separated polls (~100s apart): `odds_horizon_bucket` = 408,815 rows / 130 distinct canonical
+      league_id values, identical both polls — no TOCTOU-style revert. Full detail + shard4 residual tracking (P2 retry
+      todo, does not block this checkbox): `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`.
+      **Remaining: step (4) `batch_footystats` copy+swap (16,970 objects) — NOT started, and NOT a simple script
+      re-target.** Spot-checked the real raw shape (3 sample days): bare `instrument_type=` segment (empty value) on
+      every object, filenames are `ticks_migrated_<timestamp>.parquet` (reads as a one-time migration dump, not this
+      pipeline's live write path — worth confirming liveness), and the existing
+      `classification.json`/`sportkey_canon_final.json` DO cover the raw league values sampled (so classification-map
+      reuse looks likely, smaller gap than first feared). The `instrument_type=` disposition is a genuine architect
+      call, not an execution detail — raising as a blocked question rather than guessing on prod data. Full addendum:
       `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`.
 
 - **`sports_odds_feature_naming_canonicalization_2026_07_21.md`'s FSS↔ml-service↔strategy-service parity test** — gated
