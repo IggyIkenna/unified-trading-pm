@@ -7,7 +7,7 @@ summary:
   so Codex/Cursor agents never got it. Adds the missing instruction, a QG parity check guarding gen_doc_index.py against
   silently drifting from docspec's schema, and a new /docs-reconcile skill scoped to retrieval-layer + codex doc health
   (distinct from /plan-reconcile's plan-lifecycle scope).
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -40,6 +40,10 @@ source:
 assigned_role: infra
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED 2026-07-25** — all 7 todos shipped in one commit (`unified-trading-pm@fdbad80ab`, PR #1384), 0 open.
+> `status:` flipped `active` → `complete` in the same pass (was never updated after shipping). Moved to
+> `plans/archive/2026_07/` per the archival ritual.
 
 # Docs retrieval-layer reconcile
 

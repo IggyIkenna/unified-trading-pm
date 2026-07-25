@@ -38,6 +38,9 @@ superseded_by:
 source: operator decision 2026-07-17 (interactive session — "keep the plain, remove the cockpit?tab= format")
 ---
 
+> **✅ ARCHIVED 2026-07-25** — `status: complete`, 12/12 todos done (self-declared archive-eligible in the Progress
+> Log below since 2026-07-24). Moved to `plans/archive/2026_07/` per the archival ritual.
+
 # deployment-ui — one URL scheme: plain routes, retire `?tab=`
 
 > **Dispatch:** local/interactive (`assigned_vm: NA`, `execution_scope: local-only`) — same track as the rest of this
