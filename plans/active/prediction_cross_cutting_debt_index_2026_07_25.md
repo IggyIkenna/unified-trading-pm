@@ -218,7 +218,7 @@ source: >-
   - 8. **[SCRIPT] P3.** S3-b — sports dual entrypoint (`python -m features_service.sports`)
 - [`plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
   - 3. **[DATA] P1.** Assess blast radius on EXISTING candle data: any past MDPS run with `max_workers>1`
-- [`plans/active/issues/migration_orphan_sweep_performance_decay_2026_07_22.md`](/plans/active/issues/migration_orphan_sweep_performance_decay_2026_07_22.md)
+- [`plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md`](/plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md)
   - 7. **[CODE] P3.** Genuinely stream `_load_manifested_cells()`'s parquet read (row-group batches)
 - [`plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md`](/plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md)
   - **[VERIFY] P1.** NEW (2026-07-14) — FLUID lending_indices silently returns 0 rows for ~18 months of its own declared

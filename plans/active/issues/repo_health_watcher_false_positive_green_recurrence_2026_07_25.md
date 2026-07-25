@@ -30,7 +30,7 @@ related:
   [
     /plans/archive/issues/repo_health_watcher_false_positive_green_2026_07_21.md,
     /plans/active/defi_gmx_venue_removal_2026_07_25.md,
-    /plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md,
+    /plans/archive/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md,
   ]
 created: "2026-07-25"
 source: [sports_fixtures_schedule_wrong_schema_day-001]

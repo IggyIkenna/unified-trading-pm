@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [asset-class-rename, cross-repo, schema, terminology, plan-discipline]
 related:
   [
-    plans/active/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md,
+    plans/archive/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md,
     plans/active/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
   ]
 created: "2026-07-21"
@@ -46,7 +46,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-source: plans/active/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md
+source: plans/archive/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md
 ---
 
 # AssetClass → AssetGroup rename (domain enum only)

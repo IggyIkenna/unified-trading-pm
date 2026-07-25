@@ -22,7 +22,7 @@ stage: [meta]
 repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: [flaky-test, test-isolation, xdist, qg, market-tick-data-service]
-related: [/plans/active/issues/cloudbuild_yaml_unescaped_substitution_comments_fleet_wide_2026_07_25.md]
+related: [/plans/archive/issues/cloudbuild_yaml_unescaped_substitution_comments_fleet_wide_2026_07_25.md]
 created: 2026-07-25
 parent_epic: infrastructure_master
 priority: P2

@@ -323,7 +323,7 @@ drift_direction: advance-code
   - [`plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
     - 3. **[DATA] P1.** Assess blast radius on EXISTING candle data — any past MDPS run with `max_workers>1` over a
       heterogeneous file list.
-  - [`plans/active/issues/migration_orphan_sweep_performance_decay_2026_07_22.md`](/plans/active/issues/migration_orphan_sweep_performance_decay_2026_07_22.md)
+  - [`plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md`](/plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md)
     - 7. **[CODE] P3.** Genuinely stream `_load_manifested_cells()`'s parquet read instead of relying on a bigger
       machine type.
   - [`plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md)

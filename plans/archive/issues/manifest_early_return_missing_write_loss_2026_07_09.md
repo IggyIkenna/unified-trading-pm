@@ -21,7 +21,7 @@ related:
   [
     plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md,
     plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md,
-    plans/active/issues/manifest_atexit_drain_races_asyncio_shutdown_2026_07_09.md,
+    plans/archive/issues/manifest_atexit_drain_races_asyncio_shutdown_2026_07_09.md,
   ]
 created: 2026-07-09
 parent_epic: sports_master

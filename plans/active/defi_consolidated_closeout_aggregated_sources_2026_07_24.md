@@ -677,7 +677,7 @@ drift_direction: none
       four canonical surfaces agree.
     - **8. [REVIEW] P1.** On writer ship, record the cutover date in the canonical-cutover-register + flip the
       non-canonical-path-inventory row #17 to EXECUTED.
-  - [`plans/active/issues/migration_orphan_sweep_performance_decay_2026_07_22.md`](/plans/active/issues/migration_orphan_sweep_performance_decay_2026_07_22.md)
+  - [`plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md`](/plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md)
     (1 open)
     - **7. [CODE] P3.** Genuinely stream `_load_manifested_cells()`'s parquet read instead of relying on a bigger
       machine type — today's fix works but doesn't scale as cefi's index keeps growing.

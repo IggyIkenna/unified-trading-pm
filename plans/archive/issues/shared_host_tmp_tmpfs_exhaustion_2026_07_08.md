@@ -17,7 +17,7 @@ stage: [meta]
 repos: [unified-trading-pm, unified-trading-library]
 scope: [engineer, admin]
 tags: [infra, disk-space, tmp, pytest, quality-gates, shared-host, ci]
-related: [plans/active/issues/manifest_record_expected_empty_blank_source_2026_07_08.md]
+related: [plans/archive/issues/manifest_record_expected_empty_blank_source_2026_07_08.md]
 created: 2026-07-08
 parent_epic: infrastructure_master
 priority: P2
