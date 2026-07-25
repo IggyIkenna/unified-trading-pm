@@ -579,13 +579,13 @@ source: >-
 
 ### From `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`
 
-- [ ] [DATA] P3. **Fleet-wide sweep for the same seeder-over-captured pattern** in other asset groups (the
-      `enumerate_v2` guard is active for every asset_group now via `main()`; verify the nightly jobs' images actually
-      pick it up fleet-wide). (repo: instruments-service — nightly Cloud Run enumerator job configs across all
-      asset_groups; cross-check against `enumerate_expected_universe.py` `main()` guard coverage; deployment-service for
-      job/image-tag inspection). **Done when**: a fleet-wide audit table is produced confirming, per asset_group's
-      nightly enumerator job, whether the deployed image contains the `ba306543` `captured_set` guard; any
-      stale/unguarded asset_group flagged as a follow-up finding. Source:
+- [x] ✅ [DATA] P3. **Fleet-wide sweep for the same seeder-over-captured pattern** — CLEAN, no unguarded asset_group.
+      `enumerate_v2()`'s `captured_set` drop-filter is ONE choke point after per-AG dispatch (no `sports`-only gate) —
+      structurally universal across all 5 `_V2_ENUMERATORS`. All 5
+      `expected-universe-v2-{cefi,defi,tradfi,sports,     prediction}` jobs share ONE terraform image ref; each job's
+      most recent (2026-07-25 ~01:30 UTC) execution resolved to the SAME digest `sha256:e88f3ded52…` = current
+      `:latest`, tagged `f539945` (built 2026-07-23, 10d after guard commit `ba306543` 2026-07-13) — content-verified
+      present (`merge-base --is-ancestor` reads false only due to the LDR→main squash, not a real gap). Source:
       `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
 - [x] [CODE] P1. ✅ **Extend the "never emit `empty_confirmed` over a captured atom" guard** to the regular sports
       instruments batch-capture emission path (`sports_fixtures.py`/`sports_reference_core.py` or wherever
