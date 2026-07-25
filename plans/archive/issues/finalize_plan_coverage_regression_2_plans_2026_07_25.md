@@ -33,6 +33,11 @@ depends_on: []
 
 # check_finalize_plan_coverage.py regression — 2 plans missing a gated finalize plan
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — `infra_capture_and_devops_leftovers_finalize_2026_07_25.md` landed,
+> gating `infra_capture_and_devops_leftovers_2026_07_06.md`; `check_finalize_plan_coverage.py` back at the pre-existing
+> baseline of 1 (re-verified 2026-07-25 during archival: checker reports exactly 1 violation,
+> `deployment_registry_firestore_p0_unblock_2026_07_14.md`, matching the RESOLVED note below).
+
 ## What's failing
 
 ```
