@@ -176,12 +176,19 @@ source: >-
       `instrument_id`+`instrument_type`+`underlying`+`canonical_instrument_id` byte-equal → upload) AND the per-day
       corpus (worklist from the manifest, single-walk), then re-run `build_instrument_catalogue.py` and assert `prod/n`
       stays canonical. (repos: instruments-service)
-- [ ] [DATA] P0. **Migrate the live manifest (Surface B) —
-      `market-tick-data-service/scripts/migrate_tradfi_manifest_usd_lin_*.py`** via the **additive per-VM-shard write**
-      (reuse `restamp_tradfi_schema_v9_tail_2026_07_16.py`'s `_vm_staging/` path — race-free vs the ~10-min
-      consolidator, NO drain needed); covers ALL data_types + re-stamps the ~400k mislabeled `instrument_type` rows.
-      Fallback only if blocked: pause-consolidator + snapshot + CAS. (repos: market-tick-data-service,
-      unified-trading-library)
+- [x] ✅ [DATA] P0. **Migrate the live manifest (Surface B) — RE-VERIFIED LIVE 2026-07-25.**
+      `market-tick-data-service/scripts/migrate_tradfi_manifest_usd_lin_2026_07_18.py --in-place-cas --apply` on
+      `canonical-migration-tradfi-manifest-cas-20260722-075028` SUCCEEDED on attempt 4/8 (`run.log`:
+      `IN-PLACE CAS APPLY COMPLETE: 6262988 rows rewritten in place ..., 1989 derivative rows corrected,     4898 bundle underlyings translated, 1751779 CASH rows migrated to -USD, 48920 simple enum re-stamps, 0     QUARANTINE_COMBO rows re-stamped. Raw derivative rows remaining: 35499 (quarantine-only, by design)`,
+      `CAS FINAL     rc=0`). Fresh live read of `_index/availability_index.parquet` (2026-07-25, 5,902,157 rows)
+      confirms this landed and held: FUTURE/OPTION `instrument_id` canonical (regex
+      `^[A-Z0-9-]+:(FUTURE|OPTION):[A-Z0-9]+-USD@LIN-\d{8}(-\d+(\.\d+)?-[CP])?$`) 363,954/403,467 (90.2%); EQUITY/ETF
+      carrying `-USD` suffix 3,189,939/3,225,484 (98.9%). **Residual non-canonical is NOT this todo's scope** — it is
+      (a) the 35,499 by-design quarantine-only unparseable rows, and (b) re-drift from writer paths not yet converged to
+      the shared builder (tracked separately: the "Converge every WRITER's instrument_type emission" P0 todo below, and
+      the chain-bundle content rewrite todo) + the FUTURE/OPTION-per-contract chain-bundle content population (tracked
+      separately below). This todo (the one CAS migration pass itself) is done and durable. (repos:
+      market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P0. **Migrate GCS filenames + tick CONTENT (Surfaces C+D)** — single-walk worklist from the
       availability_index rows; bundled OHLCV → `underlying={HUMAN_ROOT}`; flat per-contract → full
       `VENUE:TYPE:ROOT-USD@LIN-...parquet`; rename via UTL `gcs_copy_object`+`gcs_delete_object` (never `gsutil`).
@@ -709,7 +716,14 @@ questions when a decision is needed. Ran it. Findings:
   manifest-recovery pass (register the missing canonical rows, THEN retire the confirmed-superseded old ones), not a
   delete-only cleanup, which would have made data LESS visible (real captured data with zero manifest representation),
   not more hygienic. Resumed the scheduler since no write happened.
-  - `- [ ] [DATA] P1. Design + build a tradfi chain-manifest recovery pass: for each futures_chain/options_chain manifest row with a raw/untranslated underlying value, check whether a canonical-bundle GCS object exists (translate via the same EXCHANGE_CODE_TO_NAME logic the writers use); if yes and no manifest row exists for that canonical form, INSERT the correct row (register the real captured data); only THEN retire the old raw row. Do NOT delete-only. Sample evidence: COCOA/AUD on 2023-06-08 confirmed real GCS data, zero manifest registration.`
+  - `[x] ✅ [DATA] P1. Design + build a tradfi chain-manifest recovery pass — REGISTER sub-goal DONE + RE-VERIFIED LIVE 2026-07-25 (retire sub-goal tracked separately as its own P1-OPERATOR-REVIEW todo below, not part of this checkbox).`
+    Script `recover_tradfi_chain_manifest_registration_2026_07_22.py` shipped
+    `mtds@c4cc819b1845f0c1a7f4546612f80229242fe265` /`mtds@c8ace21dfeef294dc37d949264b1d373af55acca`; register `--apply`
+    wrote 1,545/1,545 rows, 0 skipped. **Fresh live re-verification (2026-07-25, direct manifest query on
+    `venue=CME, underlying=AUD, date IN (2023-06-19, 2023-06-21)`)**: all 4 sample rows read `capture_status=captured`
+    in the current consolidated `_index/availability_index.parquet` — the register-phase rows are durable, not a stale
+    one-time snapshot. Retire phase (50,520 candidate rows) remains explicitly `--apply`-gated pending operator review —
+    see the P1-OPERATOR-REVIEW todo.
 - **CME monolith investigation — in progress, not complete.** Launched a throwaway investigation VM
   (`cme-monolith-investigate-20260722`, e2-small, SPOT, NOT part of the tracked fleet registry — self-cleanup needed,
   `gcloud compute instances delete cme-monolith-investigate-20260722 --zone=asia-northeast1-c --quiet`) after the

@@ -1,0 +1,404 @@
+{
+  "schema_version": 1,
+  "skill": "data-pipeline-reconciliation",
+  "asset_group": "cefi",
+  "layer": "raw-tick",
+  "run_date": "2026-07-24",
+  "generated_at": "2026-07-25T00:50:00+00:00",
+  "read_only": true,
+  "lib_version": {
+    "unified-api-contracts": "0.72.1.dev578+gc2b303f7e",
+    "unified-trading-library": "0.56.1.dev354+gf9c23a238",
+    "market-tick-data-service": "0.92.1.dev848+g3fb95eafa.d20260724"
+  },
+  "bucket_paths": [
+    {
+      "purpose": "raw_tick_S1_S2_S3",
+      "kind": "market-data",
+      "bucket": "market-data-tick-cefi-prd-central-element-323112",
+      "reachable": true
+    },
+    {
+      "purpose": "raw_tick_alias",
+      "kind": "tick-data",
+      "bucket": "market-data-tick-cefi-prd-central-element-323112",
+      "reachable": true
+    },
+    {
+      "purpose": "catalogue_S4",
+      "kind": "instruments-store",
+      "bucket": "instruments-store-cefi-prd-central-element-323112",
+      "reachable": true
+    },
+    {
+      "purpose": "features",
+      "kind": "features",
+      "bucket": "features-cefi-prd-central-element-323112",
+      "reachable": true
+    },
+    {
+      "purpose": "legacy_flat_raw_tick",
+      "kind": "literal",
+      "bucket": "market-data-tick-cefi-central-element-323112",
+      "reachable": false,
+      "note": "404, expected"
+    },
+    {
+      "purpose": "legacy_flat_instruments",
+      "kind": "literal",
+      "bucket": "instruments-store-cefi-central-element-323112",
+      "reachable": false,
+      "note": "404, expected"
+    }
+  ],
+  "index_freshness": {
+    "consolidator_lock_held": false,
+    "latest_run_at": "2026-07-25T00:20:51.338915+00:00",
+    "latest_run_verdict": "empty",
+    "latest_run_shards_scanned": 1,
+    "latest_run_no_op": true,
+    "availability_index_age_seconds_at_probe": 28.6,
+    "availability_index_size_mb": 171.6,
+    "read_mode": "fully_consolidated",
+    "phantom_audit_generated_at": "2026-07-18T15:52:21.117812+00:00",
+    "phantom_count": 0,
+    "reprobe_audit_generated_at": "2026-07-14T06:19:32.800838+00:00",
+    "per_vm_shard_file_count": 1,
+    "per_vm_shard_note": "sole file is the Surface-C migration script's own output artifact, not a live capture writer shard"
+  },
+  "manifest_aggregate": {
+    "total_rows": 9045162,
+    "date_min": "2019-03-30",
+    "date_max": "2026-07-24",
+    "distinct_days": 2674,
+    "distinct_venues": 28,
+    "capture_status": {
+      "captured": 3425645,
+      "empty_confirmed": 2533470,
+      "expected_unattempted": 2026577,
+      "attempted_failed": 1059470
+    },
+    "reachable_coverage": {
+      "formula": "captured / (captured + attempted_failed + expected_unattempted)",
+      "value": 0.5260760183374766,
+      "value_pct": "52.61%",
+      "lower_bound": true,
+      "trend_vs_2026_07_20": "+7.76pp (44.85% -> 52.61%)",
+      "caveat": "denominator shrank 12.0% (10,282,640 -> 9,045,162) via an intervening manifest dedup (Surface-C v2 apply, 2026-07-24 ~23:20-23:30Z); not a pure apples-to-apples coverage improvement"
+    },
+    "row_count_trend": {
+      "row_count_2026_07_20_report": 10282640,
+      "row_count_pre_apply_snapshot_2026_07_24T232332Z": 10600381,
+      "row_count_post_apply_per_issue_doc": 9069094,
+      "row_count_this_run": 9045162,
+      "net_delta_vs_2026_07_20": -1237478,
+      "net_delta_pct": -12.03
+    },
+    "attempted_at": {
+      "max": "2026-07-24T01:31:59.195992+00:00",
+      "min": "2026-04-22T14:30:03.704444+00:00",
+      "staleness_at_probe_hours": 23.15,
+      "non_blank_rows": 8901202
+    },
+    "attempted_failed_top_causes": [
+      { "reason": "UNCLASSIFIED:Tardis HTTP 403", "count": 562997 },
+      { "reason": "Tardis HTTP 403", "count": 224508 },
+      { "reason": "VENUE_FETCH_FAILED", "count": 219071 },
+      { "reason": "Tardis HTTP 400", "count": 12176 },
+      { "reason": "Tardis HTTP 403 code=274 concurrent-IP-lock", "count": 9818 }
+    ]
+  },
+  "capture_status_by_date_recent": [
+    {
+      "date": "2026-07-18",
+      "attempted_failed": 127,
+      "captured": 1204,
+      "empty_confirmed": 1765,
+      "expected_unattempted": 16606
+    },
+    {
+      "date": "2026-07-19",
+      "attempted_failed": 112,
+      "captured": 1203,
+      "empty_confirmed": 1789,
+      "expected_unattempted": 16581
+    },
+    {
+      "date": "2026-07-20",
+      "attempted_failed": 118,
+      "captured": 1227,
+      "empty_confirmed": 1745,
+      "expected_unattempted": 16571
+    },
+    {
+      "date": "2026-07-21",
+      "attempted_failed": 0,
+      "captured": 5,
+      "empty_confirmed": 1193,
+      "expected_unattempted": 17481
+    },
+    {
+      "date": "2026-07-22",
+      "attempted_failed": 0,
+      "captured": 0,
+      "empty_confirmed": 1182,
+      "expected_unattempted": 17484
+    },
+    {
+      "date": "2026-07-23",
+      "attempted_failed": 0,
+      "captured": 0,
+      "empty_confirmed": 1182,
+      "expected_unattempted": 17484
+    },
+    {
+      "date": "2026-07-24",
+      "attempted_failed": 0,
+      "captured": 0,
+      "empty_confirmed": 1182,
+      "expected_unattempted": 17484
+    }
+  ],
+  "oracle_id_form_retest": {
+    "id_form_checked_asset_groups": ["defi", "cefi"],
+    "source": "unified_api_contracts.canonical.partition_paths._ID_FORM_CHECKED_ASSET_GROUPS",
+    "2026_07_20_claim": "oracle blind to cefi filename id-form (0 violations on wire-named/bare-integer objects)",
+    "this_run_measurement": "oracle now catches cefi id-form violations directly, both require_pipeline_mode settings",
+    "tests": [
+      { "path": "ADAF0:USTF0.parquet (demo string)", "violations_found": true },
+      { "path": "BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0.parquet (demo string)", "violations_found": true },
+      { "path": "DERIBIT/.../BTC-PERPETUAL.parquet (real, 2020-01-06)", "violations_found": true },
+      { "path": "LIGHTER-ZKSYNC/.../0.parquet (real, 2026-07-14)", "violations_found": true },
+      {
+        "path": "HYPERLIQUID/.../HYPERLIQUID:PERPETUAL:AAVE-USD@LIN.parquet (real, canonical)",
+        "violations_found": false
+      }
+    ],
+    "corroborates": "concurrent 2026-07-24 defi reconciliation run's FIND-09"
+  },
+  "distinct_value_census": {
+    "instrument_type": {
+      "PERPETUAL": 5910688,
+      "SPOT_PAIR": 1989366,
+      "FUTURE": 571286,
+      "OPTION": 441972,
+      "blank": 118785,
+      "COMBO": 13065
+    },
+    "instrument_type_casing": {
+      "lowercase_rows": 0,
+      "pct_lowercase": 0.0,
+      "note": "measured fully UPPERCASE-converged; register/taxonomy still describe as migration_pending for cefi"
+    },
+    "venue_census_vs_registry": {
+      "registry_source": "unified_api_contracts.registry.market_data_categories.VENUES_BY_ASSET_GROUP['cefi']",
+      "registry_count": 26,
+      "manifest_extras_not_in_registry": { "": 6, "OKX-OPTIONS": 9, "BYBIT-FUTURES": 3 },
+      "registry_venues_absent_from_manifest": ["BINANCE-DELIVERY"]
+    },
+    "chain_column": {
+      "populated_rows_2026_07_20_report": 817505,
+      "populated_rows_pre_apply_snapshot_2026_07_24T232332Z": 2701,
+      "populated_rows_this_run": 0,
+      "resolution": "intentional operator-directed drop, --keep-chain default off in complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py (chain is functionally dependent on venue for cefi, re-derivable on demand)",
+      "status": "RESOLVED, not a regression"
+    },
+    "blank_pipeline_mode": {
+      "total": 198203,
+      "post_cutover_2026_05_19": 4,
+      "post_cutover_detail": "BYBIT, captured, dates 2026-05-19..2026-05-22 -- identical to the 2026-07-20 report's F6"
+    },
+    "blank_source_pct": 26.99,
+    "blank_instrument_type_on_captured": 5232,
+    "blank_instrument_id_singles": {
+      "total_post_cutover": 6781,
+      "legit_bundle_pattern2_underlying_populated": 6256,
+      "genuine_residual_blank_id_and_underlying": 525,
+      "2026_07_20_baseline": 294
+    },
+    "combo_rows": {
+      "count": 13065,
+      "venue": "DERIBIT",
+      "date_min": "2026-02-05",
+      "date_max": "2026-07-20",
+      "2026_07_20_report_baseline": 662,
+      "note": "growth not root-caused this run"
+    },
+    "masked_empty_row_historical": {
+      "count": 127606,
+      "pct_of_empty_confirmed": 5.04,
+      "latest_date": "2026-04-18",
+      "status": "historical-only, pre-guard, no post-guard occurrence found"
+    }
+  },
+  "per_shard_samples": [
+    {
+      "id": "A",
+      "venue": "HYPERLIQUID",
+      "instrument_type": "perpetual",
+      "data_type": "trades",
+      "day": "2026-07-20",
+      "s1_structure": "OK",
+      "s1_id_form": "OK",
+      "s3": "captured",
+      "verdict": "CANONICAL"
+    },
+    {
+      "id": "B",
+      "venue": "ASTER",
+      "instrument_type": "perpetual",
+      "data_type": "trades",
+      "day": "2026-07-20",
+      "s1_structure": "OK",
+      "s1_id_form": "OK",
+      "s3": "captured",
+      "verdict": "CANONICAL"
+    },
+    {
+      "id": "C",
+      "venue": "DERIBIT",
+      "instrument_type": "perpetual",
+      "data_type": "trades",
+      "day": "2020-01-06",
+      "s1_structure": "OK",
+      "s1_id_form": "NON_CANON_now_caught",
+      "s2": "DERIBIT:PERPETUAL:BTC-PERPETUAL (double-wrapped)",
+      "s3": "captured",
+      "verdict": "unknown-vintage, id-form now machine-detectable"
+    },
+    {
+      "id": "D",
+      "venue": "LIGHTER-ZKSYNC",
+      "instrument_type": "perpetual",
+      "data_type": "derivative_ticker",
+      "day": "2026-07-14",
+      "s1_structure": "OK",
+      "s1_id_form": "NON_CANON_now_caught",
+      "s2": "LIGHTER-ZKSYNC:PERPETUAL:0",
+      "s3": "captured",
+      "verdict": "ALREADY_TRACKED, unresolved 5 days later"
+    },
+    {
+      "id": "E",
+      "venue": "DERIBIT",
+      "instrument_type": "future",
+      "data_type": "book_snapshot_5",
+      "day": "2026-07-20",
+      "s1_structure": "OK",
+      "s1_id_form": "OK",
+      "example": "DERIBIT:FUTURE:BTC-USD@INV-20260724.parquet",
+      "verdict": "CANONICAL, flat-per-contract (structural change since 2026-07-20, no chain-bundle tail found)"
+    },
+    {
+      "id": "F",
+      "venue": "OKX-FUTURES",
+      "instrument_type": "future",
+      "day": "2026-07-20",
+      "note": "prefix existence check only, no chain_bundle segment found"
+    }
+  ],
+  "big_finding": {
+    "id": "FIND-00",
+    "title": "CeFi raw-tick capture appears HALTED since >=2026-07-21, likely OOM-crash-looping since >=2026-07-23",
+    "severity": "BIG/HIGH",
+    "evidence": [
+      "manifest capture_status by date: captured collapses 1227(07-20) -> 5(07-21) -> 0/0/0 (07-22,23,24)",
+      "corpus-wide attempted_at max = 2026-07-24T01:31:59Z, ~23h stale at probe time",
+      "_index/per_vm/ contains only 1 file, itself a migration-script artifact",
+      "gcloud scheduler jobs: primary cefi triggers ENABLED and firing on schedule",
+      "gcloud run jobs executions: uts-prod-market-tick-data-service-cefi-t1-recon FAILED_COUNT=1 every run 07-15..07-24 (not new by itself)",
+      "gcloud logging read: 'Container terminated on signal 9' (SIGKILL/OOM) within ~10-40s of container start, before any venue download, confirmed 07-23 and 07-24 (both daily executions); NOT found in 07-20/21/22 logs (different, earlier-stage failure signature there, not root-caused)",
+      "Cloud Run job resources: 4 CPU / 8Gi memory"
+    ],
+    "not_established": [
+      "exact code/config change that increased memory footprint starting ~2026-07-23",
+      "whether this is causally related to the separate Surface-C dedup script OOMs documented on shared dev host / dedicated VM (different infra)",
+      "whether 2026-07-21/22 failures share the same root cause"
+    ],
+    "documented_elsewhere": false,
+    "issue_doc": "plans/active/issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md",
+    "operator_notified": true
+  },
+  "typed_findings": [
+    { "id": "FIND-00", "type": "taxonomy_gap_capture_halt", "severity": "BIG_HIGH", "status": "NEW" },
+    {
+      "id": "FIND-01",
+      "type": "non_canonical_path_id_form",
+      "severity": "MEDIUM",
+      "status": "PERSISTS_now_machine_caught"
+    },
+    { "id": "FIND-02", "type": "taxonomy_gap_shard_atom_grain_ambiguity", "severity": "MEDIUM", "status": "NEW" },
+    { "id": "FIND-03", "type": "non_canonical_axis_value", "severity": "LOW", "status": "NEW_bounded" },
+    { "id": "FIND-04", "type": "observation_c2a_convergence", "severity": "INFO", "status": "NEW_measurement" },
+    { "id": "FIND-05", "type": "observation_chain_column_drop_resolved", "severity": "INFO", "status": "RESOLVED" },
+    {
+      "id": "FIND-06",
+      "type": "shard_atom_integrity_blank_key",
+      "severity": "LOW_MEDIUM",
+      "status": "PERSISTS_growing",
+      "count": 525,
+      "baseline_2026_07_20": 294
+    },
+    {
+      "id": "FIND-07",
+      "type": "non_canonical_path_pipeline_mode",
+      "severity": "LOW",
+      "status": "PERSISTS_identical",
+      "count": 4
+    },
+    { "id": "FIND-08", "type": "source_write_wiring_gap_H6", "severity": "KNOWN_CONDITION", "status": "PERSISTS" },
+    {
+      "id": "FIND-09",
+      "type": "shard_atom_integrity_blank_instrument_type",
+      "severity": "MEDIUM",
+      "status": "PERSISTS_identical",
+      "count": 5232
+    },
+    { "id": "FIND-10", "type": "observation_combo_growth", "severity": "INFO", "status": "NEW_not_root_caused" },
+    { "id": "FIND-11", "type": "catalogue_freshness", "severity": "INFO", "status": "STANDING" },
+    { "id": "FIND-12", "type": "masked_empty_row", "severity": "MEDIUM_historical", "status": "HISTORICAL_ONLY" }
+  ],
+  "non_canonical_inventory_reconcile": [
+    { "row": 1, "location": "legacy flat buckets", "verdict": "CONFIRMED 404, unchanged" },
+    { "row": 16, "location": "instrument_availability flat", "verdict": "CONFIRMED still flat, migration_pending R2" },
+    { "row": 17, "location": "features-cefi delta_one no by_date", "verdict": "NOT re-probed this run" },
+    {
+      "row": 23,
+      "location": "_migration_backup(s) dual spelling + _remediation_backups third spelling",
+      "verdict": "CONFIRMED all 3 present, register-accuracy gap persists"
+    }
+  ],
+  "delete_suggestions": [],
+  "orphans_assessed": false,
+  "coverage_gaps": [
+    "corpus-wide id-form % not computed (needs single walk)",
+    "orphans not assessed, no fresher pre-computed sweep to reuse",
+    "chain-tail v5/v6 not confirmed on an actual bundle object this run",
+    "S4 per-instrument catalogue window join not run",
+    "H5 instruments-store-cefi phantom coverage not re-verified",
+    "features-cefi delta_one by_date migration state not re-probed",
+    "chain column downstream-reader grep not performed",
+    "COMBO row-count growth (662->13065) not root-caused",
+    "2026-07-21/22 capture-halt failure signature not confirmed as same OOM pattern as 07-23/24",
+    "no day-scoped MVP coverage figure recomputed"
+  ],
+  "verdict": {
+    "is_100pct_canonical": false,
+    "reachable_coverage_pct": 52.61,
+    "reachable_coverage_is_lower_bound": true,
+    "headline": "raw-tick capture (live+batch) has written zero new manifest rows for ~23h and zero captured rows for 3 straight days (07-22..07-24), with the batch Cloud Run job crash-looping on apparent OOM since >=07-23 -- a live production capture outage, not a canonicalisation gap, undocumented elsewhere",
+    "positive_since_2026_07_20": [
+      "chain column hygiene finding (F8) RESOLVED, intentional drop",
+      "instrument_type COLUMN casing measured fully converged (0% lowercase)",
+      "DERIBIT dated-futures appears migrated to flat-per-contract, no chain-tail found on sample",
+      "oracle id-form blindness for cefi CLOSED"
+    ],
+    "persisting_defects": [
+      "LIGHTER-ZKSYNC bare-integer filenames (already tracked, unresolved)",
+      "4 post-cutover blank-pipeline_mode BYBIT rows (identical to 2026-07-20)",
+      "blank-KEY singles residual grown 294->525",
+      "Tardis HTTP 403 attempted_failed cluster (already tracked)",
+      "_remediation_backups register-accuracy gap (flagged 2026-07-20, still unfolded)"
+    ]
+  }
+}
