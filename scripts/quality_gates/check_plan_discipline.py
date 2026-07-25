@@ -12,9 +12,10 @@ Three sub-rules:
     `<slug>.md` OR `<slug>_YYYY_MM_DD.md`; `plans/active/issues/*.md` must end
     in `_YYYY_MM_DD.md`.
   - **(c) archived-plans-with-DEFERRED-but-no-successor** (G-2 archive variant):
-    `plans/archive/*.md` that mention `DEFERRED|post-cutover|out of scope` MUST
-    reference a successor plan (presence of `**MIGRATED TO:**` or `successor:` or
-    `→ plans/active/`).
+    `plans/archive/*.md` that carry an EXPLICIT whole-doc deferral/scope marker
+    (`**DEFERRED**`-shaped, or a bold/heading `post-cutover`/`out of scope` claim)
+    MUST reference a successor plan (presence of `**MIGRATED TO:**` or
+    `successor:` or `→ plans/active/`).
 
 Origin: governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group A.
 
@@ -53,7 +54,22 @@ _SUCCESSOR_RE = re.compile(
     r"MIGRATED TO:|successor:|→\s+plans/active/|See:\s+plans/active/|see\s+plans/active/",
     re.IGNORECASE,
 )
-_ARCHIVE_OK_TOKENS_RE = re.compile(r"\bpost.cutover\b|\bout of scope\b", re.IGNORECASE)
+# _ARCHIVE_OK_TOKENS_RE matches only an EXPLICIT whole-doc deferral/scope marker
+# (bold-marked `**post-cutover**`/`**out of scope**`, or a `## Post-cutover`/
+# `## Out of scope` heading) — not the bare phrase. A bare-substring match over
+# the WHOLE archived document text produces systematic false positives: "out of
+# scope" is ordinary engineering prose in any operational-log Progress Log entry
+# ("out of scope for a single-line path fix", "out of scope here" re: one narrow
+# item) and does not itself claim the archived plan's overall remaining work
+# moved elsewhere. Confirmed 2026-07-25 (plan_discipline_archive_no_successor_
+# regression_2026_07_25.md): 5/5 flagged archive docs at the 0->5 baseline
+# regression were bare-prose hits, none an explicit whole-doc deferral marker —
+# a 100% false-positive rate for the bare-substring form. Mirrors the same
+# precision philosophy already applied to `_DEFERRED_RE` above.
+_ARCHIVE_OK_TOKENS_RE = re.compile(
+    r"\*\*(?:post.cutover|out of scope)\*\*|^##\s+(?:Post.[Cc]utover|Out of [Ss]cope)\b",
+    re.IGNORECASE | re.MULTILINE,
+)
 _ACTIVE_FNAME_RE = re.compile(r"^[a-z0-9_]+(_\d{4}_\d{2}_\d{2})?\.md$")
 _ISSUE_FNAME_RE = re.compile(r"^[a-z0-9_]+_\d{4}_\d{2}_\d{2}\.md$")
 # Directory-structure files that are NOT plans and must not be filename-checked as one. INDEX.md is
