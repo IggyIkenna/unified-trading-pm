@@ -145,6 +145,12 @@ inherited from the first shipped batch:
 
 ## Todos
 
+- [x] ✅ [DATA] P1. ~~Resolve the domestic top+below+cup selection for the 145 uncovered catalog countries~~ —
+      SUPERSEDED-BY-DECOMPOSITION 2026-07-25 (BLK-46511b79, main-approved). First verified batch shipped
+      (unified-api-contracts@162e51a3, 5 countries / 15 entries); the remaining 138 countries are decomposed into the 11
+      region-batch todos below rather than completed as one monolith — see the blockquote immediately below for the
+      shared contract every batch inherits.
+
 > **Decomposed 2026-07-25 (BLK-46511b79, main-approved)**: the original single 145-country todo is replaced by the 11
 > confederation-grouped batches below. Each batch is a DIFFERENT set of `LEAGUE_REGISTRY` rows, so all 11 are
 > independent and safe to dispatch concurrently (`sequential: false` — no shared file/row overlap between batches). The
