@@ -109,10 +109,15 @@ changelog/docstring comment describing the historical removal itself (never insi
       hits outside dated `2026-07-25` changelog comments in non-test `.py`; dated one-off migration scripts under
       `scripts/one_offs/` and `market_tick_data_service/scripts/` left untouched as historical artifacts, out of
       "capture" scope). Evidence: `bash scripts/quality-gates.sh` exit 0 (6905 passed, 0 failed).
-- [ ] [DATA] P2. **Remove GMX from `instruments-service` reference data / MVP instrument universe** --
+- [x] ✅ [DATA] P2. **Remove GMX from `instruments-service` reference data / MVP instrument universe** --
       `engine/orchestrator/defi.py`, `scripts/enumerate_expected_universe.py`,
       `scripts/dex_pool_glued_pair_id_canonicalize_2026_07_09.py`. Done-when: the definition-of-done convention above,
-      zero hits. (repo: instruments-service)
+      zero hits. (repo: instruments-service) -- instruments-service@0214bb3c (+ reference_data/factory.py, not in the
+      original pre-scoped list but matched the repo-wide grep). Cross-repo drift-guard note: also fast-forwarded onto
+      unified-api-contracts@18d53d63 (todo -001, since instruments-service's
+      `test_defi_set_equals_uac_denominator_drift_guard` set-equality invariant required it) and reconciled with a
+      concurrent fix (8df301f4, golden fixture + rule11 dedup count already regenerated upstream). Evidence:
+      `bash scripts/quality-gates.sh` exit 0 (4888 passed, 0 failed, coverage 88.59%).
 - [x] ✅ [BACKEND] P2. **Remove GMX from `execution-service`** -- `service_config.py`, the 4
       `cli/defi_*_decision_trace.py` scripts (carry_staked_basis / carry_basis_perp / arbitrage_dispersion /
       liquidation_capture) that reference GMX, `custody/pre_trade_pinger.py`. Done-when: the definition-of-done
