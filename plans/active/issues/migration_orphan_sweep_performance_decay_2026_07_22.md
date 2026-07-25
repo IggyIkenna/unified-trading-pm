@@ -236,8 +236,10 @@ residual decay, not the original cliff-to-51/s failure (which is resolved).
       COMPLETE** (ran the full walk on the same `e2-standard-4` defi is on — see todo 6's updated finding;
       `orphan_class_E=3,137,183`, `unknown_prefixes=0`; report at
       `gs://market-data-tick-pred-prd-central-element-323112/_index/audit/orphan_sweep_prediction.parquet`). **defi:
-      still open** — 2 SPOT preemptions in a row (see todo 4); a 3rd relaunch is running on the now resume-capable tool.
-      Flip this todo once defi's report parquet exists.
+      COMPLETE (verified 2026-07-25)** — the 3rd relaunch (`orphan-sweep-defi-20260722-195917`) finished; report parquet
+      exists at `gs://market-data-tick-defi-prd-central-element-323112/_index/audit/orphan_sweep_defi.parquet` (created
+      2026-07-23T21:04:33Z, 742,888,813 bytes, 15,866,464 total rows: `E_orphan_real=15,865,384` +
+      `B_legacy_duplicate=1,080`). The doc's own stated done-when for this checkbox is now satisfied.
 - [x] 6. [CODE] P2. Isolate the residual post-fix decay (11,000/s → ~2,000-5,700/s cefi, → ~380-650/s prediction/defi
       plateau). **Memory-pressure hypothesis TESTED AND LARGELY RULED OUT**: prediction ran its ENTIRE 6.6M-object walk
       to completion on the same `e2-standard-4` (16GB) machine type defi is on — if the decay were driven by unbounded

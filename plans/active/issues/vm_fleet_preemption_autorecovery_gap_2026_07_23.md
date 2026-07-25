@@ -111,7 +111,7 @@ yet, for ANY launcher family, not just candle-migration.
       `setup-data-pipeline-vm.sh` uses a systemd unit, NOT the native GCE `shutdown-script` key, so both mechanisms
       coexist safely (the "gcloud only accepts ONE shutdown-script" caveat in `lc_write_preemption_signal_file`'s
       docstring refers to two callers of THAT helper colliding, not to this cross-mechanism case). Shipped via
-      quickmerge — see commit below.
+      quickmerge as part of items 1-3's commit — see `deployment-service@a32360a` above.
 - [ ] 5. [DATA] P2. **New `DP_VM_PREEMPTED_RECOVERED` resolved-bookend event** — **REVISED, needs its own architecture
       trace before implementing** (do not blindly build this). Correction to the earlier plan: `route_finding()` is NOT
       a distinct delivery path from `log_event()` — it's a thin wrapper that runs the tier's extra action
@@ -152,21 +152,21 @@ yet, for ANY launcher family, not just candle-migration.
       a "close a total absence" sweep.
 
       **But the early-preemption blind spot this doc's fix closes (native GCE shutdown-script, available from t=0, vs
-                                                                                                                              the shared seam's systemd unit which only activates once `setup-data-pipeline-vm.sh` progresses far enough to
-                                                                                                                              install it) is REAL and independently corroborated**: `launch-mtds-dex-swaps-backfill-vm.sh` — confirmed via
-                                                                                                                              direct grep to ALSO use the shared seam AND be registered in `launcher_registry.py` (so it SHOULD have had
-                                                                                                                              coverage) — preempted 4 times in one session
-                                                                                                                              (`lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2) with zero auto-recovery firing (a different session,
-                                                                                                                              independently caught + manually relaunched each time). This is consistent with the SAME early-preemption
-                                                                                                                              pattern measured on TRADFI (18/20 shards preempted within 1-4 minutes of boot), not a separate coverage gap —
-                                                                                                                              strengthening, not weakening, the case for rolling out the native-shutdown-script defense-in-depth more broadly.
+                                                                                                                                          the shared seam's systemd unit which only activates once `setup-data-pipeline-vm.sh` progresses far enough to
+                                                                                                                                          install it) is REAL and independently corroborated**: `launch-mtds-dex-swaps-backfill-vm.sh` — confirmed via
+                                                                                                                                          direct grep to ALSO use the shared seam AND be registered in `launcher_registry.py` (so it SHOULD have had
+                                                                                                                                          coverage) — preempted 4 times in one session
+                                                                                                                                          (`lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2) with zero auto-recovery firing (a different session,
+                                                                                                                                          independently caught + manually relaunched each time). This is consistent with the SAME early-preemption
+                                                                                                                                          pattern measured on TRADFI (18/20 shards preempted within 1-4 minutes of boot), not a separate coverage gap —
+                                                                                                                                          strengthening, not weakening, the case for rolling out the native-shutdown-script defense-in-depth more broadly.
 
-                                                                                                                              **Revised scoping question for item 9**: not "which launchers lack ANY coverage" (few, if any, genuinely do —
-                                                                                                                              confirm with the passing test), but "which launchers run large concurrent SPOT fleets (more zone-contention
-                                                                                                                              exposure, matching TRADFI's failure mode) or have a long `setup-data-pipeline-vm.sh` staging chain before their
-                                                                                                                              task-specific work starts (wider blind-spot window)" — a smaller, evidence-driven list, not a blanket 100+-file
-                                                                                                                              sweep. Candidates already identified: `launch-mtds-dex-swaps-backfill-vm.sh` (proven hit), any `*-sharded-*`/
-                                                                                                                              `SHARD_OF`-fan-out launcher (same concurrency profile as candle-apply).
+                                                                                                                                          **Revised scoping question for item 9**: not "which launchers lack ANY coverage" (few, if any, genuinely do —
+                                                                                                                                          confirm with the passing test), but "which launchers run large concurrent SPOT fleets (more zone-contention
+                                                                                                                                          exposure, matching TRADFI's failure mode) or have a long `setup-data-pipeline-vm.sh` staging chain before their
+                                                                                                                                          task-specific work starts (wider blind-spot window)" — a smaller, evidence-driven list, not a blanket 100+-file
+                                                                                                                                          sweep. Candidates already identified: `launch-mtds-dex-swaps-backfill-vm.sh` (proven hit), any `*-sharded-*`/
+                                                                                                                                          `SHARD_OF`-fan-out launcher (same concurrency profile as candle-apply).
 
 - [ ] 9. [SCRIPT] P3. Apply the same 2-3 line pattern (`lc_write_preemption_signal_file` call + `--metadata-from-file`
       flag + verify `--instance-termination-action=DELETE`) to the launchers item 8's revised scoping identifies —

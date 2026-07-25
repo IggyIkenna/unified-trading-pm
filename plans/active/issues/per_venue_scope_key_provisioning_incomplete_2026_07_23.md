@@ -81,8 +81,10 @@ can't move funds out):
 
 No code change or deploy is needed once these exist — `execution-service`'s `_load_venue_trade_credentials` already
 checks for them first and only falls back to the current unscoped `bybit-api-key`/`bybit-api-secret` if they're absent
-(execution-service commit pending push, this session). The switch to the scoped key happens automatically the next time
-the service reads Secret Manager.
+(**shipped `execution-service@3f550b14` "feat(credentials): wire Bybit trade-scope secret with safe fallback",
+2026-07-24 — corrected 2026-07-25, was stale "commit pending push" text; verified reachable on
+`origin/live-defi-rollout`**). The switch to the scoped key happens automatically the next time the service reads Secret
+Manager.
 
 ## Aster — execution adapter doesn't exist; build-scope estimate
 

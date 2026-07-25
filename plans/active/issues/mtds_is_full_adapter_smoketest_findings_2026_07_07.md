@@ -290,8 +290,8 @@ the todos already promised.
 - [x] [TRIAGE] P0. Work through the P0 list above — HUOBI-SPOT/HUOBI-FUTURES/BITSTAMP-SPOT venue registration **RESOLVED
       2026-07-12 — operator decided against this finding.** This P0 item is stale/superseded: the operator confirmed
       `unified-api-contracts@181b5311`'s removal is correct and huobi/bitstamp/htx should be entirely removed, not
-      registered. See `plans/active/issues/huobi_bitstamp_htx_ssot_contradiction_2026_07_10.md`'s Resolution section for
-      the full sweep (a dangling pyproject.toml module reference + 2 stale UI capability-registry entries were also
+      registered. See `/plans/archive/issues/huobi_bitstamp_htx_ssot_contradiction_2026_07_10.md`'s Resolution section
+      for the full sweep (a dangling pyproject.toml module reference + 2 stale UI capability-registry entries were also
       cleaned up, `unified-api-contracts@62e0855c`). Prior history below, kept for context. **BLOCKED-OPERATOR-DECISION,
       re-triaged 2026-07-10** (see Progress Log — a fresh dispatch re-checked this and found the UAC registry files were
       git-clean, NOT under live concurrent edit as this session's earlier note claimed; the REAL blocker is worse — an
@@ -532,8 +532,8 @@ the todos already promised.
   live WIP in `unified-trading-library`/`unified-api-contracts`. Those dep repos were still dirty at ship time
   (unrelated files, confirmed not touched); shipped via the dirty-deps carve-out direct push per the established
   workspace pattern rather than continuing to wait indefinitely. HUOBI/BITSTAMP/HTX SSOT contradiction filed as its own
-  dedicated issue doc for the operator (`plans/active/issues/huobi_bitstamp_htx_ssot_contradiction_2026_07_10.md`) with
-  live-manifest evidence (zero captured rows for any of the 3 venues) added to sharpen the decision.
+  dedicated issue doc for the operator (`/plans/archive/issues/huobi_bitstamp_htx_ssot_contradiction_2026_07_10.md`)
+  with live-manifest evidence (zero captured rows for any of the 3 venues) added to sharpen the decision.
 - **2026-07-12 (DEFI IS force-leg triage, corroborating the 452-shard sweep's `data_pipeline_e2e_check_2026_07_10.md`
   todo 25 backlog)** — Investigated 12 DEFI venues that failed the sweep's IS force-leg with the abstracted
   `no_parquet_at_instrument_availability` reason, via live re-runs against real VMs (not the checker's summary string).

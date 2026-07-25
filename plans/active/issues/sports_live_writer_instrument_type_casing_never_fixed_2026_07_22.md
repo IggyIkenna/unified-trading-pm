@@ -14,7 +14,7 @@ summary: >-
   confirmation that K1's documented sequencing hazard (flip the writer before MDPS's orchestration_scanner.py
   dual-accepts both cases -> MDPS silently reads ZERO sports ticks) is real and current, verified by reading the live
   DeFi-DEX precedent it's modeled on.
-status: resolved
+status: superseded
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -57,7 +57,7 @@ drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: ../sports_consolidated_closeout_2026_07_19.md
 resolved_by:
   market-tick-data-service@2536b91c, market-tick-data-service@72b91703, market-data-processing-service@fa4281d
 source: >-

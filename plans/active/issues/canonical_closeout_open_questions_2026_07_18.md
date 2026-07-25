@@ -24,7 +24,7 @@ related:
     /codex/02-data/cross-asset-canonical-target-ssot.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-07-20
 parent_epic: defi_master
 priority: P1
 assigned_vm: NA
@@ -217,6 +217,11 @@ item holdings-only-done and drop the UTL/MTDS market-level migration.
 
 ## Progress Log
 
+- **2026-07-20** — Folded in the operator's D1/D2 rulings + the A6 GCS-delete correction: C2a `instrument_type` COLUMN
+  casing RULED (D1, UPPERCASE, catalogue-authoritative), section D (market/event lending data_type keying) RULED (D2, no
+  longer parked), and the A6 `dex_pools/`+`lending_indices/` prefix-delete authorization corrected/reversed after a live
+  GCS probe found real Kamino/Solend data would be destroyed. (P2 doc-recon fix 2026-07-25: this entry + the frontmatter
+  `last_updated` bump were missing despite the body edits landing same-day.)
 - **2026-07-19 (slot-4, /autonomous)** — Appended parked decision D (market/event lending data_type keying) after the
   Wave-B LENDING-retire was found to over-reach + break 5+ MTDS writers; reversed to the working interim, decision
   routed to the operator.
