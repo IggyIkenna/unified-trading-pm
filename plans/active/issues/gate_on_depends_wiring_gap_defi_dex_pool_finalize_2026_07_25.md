@@ -160,3 +160,24 @@ rather than a parser defect). Confirmed via live `agent-orchestrator/data/config
 confirmed the standing ruling live (BLK-0d30dec1, Option A) before I acted, directing this note instead of a fresh
 `/blocked`. Declining to author any reconciliation content; skipping this task. Root cause (item 1 above) is still
 unfixed as of this note.
+
+## 2026-07-25 recurrence note (slot 8, seventh bounce)
+
+Bounced again — slot 8 was dispatched `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` fresh (booted with
+`slot_role: review`). Independently re-verified from scratch, at the code level rather than relying on the parent plan's
+checkbox state alone: read `market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py`
+directly and confirmed `_CURVE_QUERY`/`_CURVE_QUERY_FILTERED` (lines 357-390) still have no `inputTokens` field, while
+`_MESSARI_DEX_QUERY`/`_MESSARI_DEX_QUERY_FILTERED` (lines 393-434+) do carry `inputTokens { symbol }` + `fees {...}` --
+but that pair was already wired pre-existing to `aerodrome_v3`/`camelot_v3`/`pancakeswap_v3`/`sushiswap_v3`, not to the
+4 venues this todo targets. Read `_dex_pools_subgraph.py`'s protocol table (lines 238-284): the `messari_basic` entry
+that `curve`/`sushiswap`/`velodrome_v2`/`trader_joe_v2` all route through (line 276-283) still resolves to
+`_h._CURVE_QUERY(_FILTERED)` + `self._parse_curve` (lines 238-241), NOT `_MESSARI_DEX_QUERY` + `_parse_messari_dex` --
+confirming the query-fix todo (parent plan todo 2, `[BACKEND] P1`) genuinely has not shipped; `git log` on the handler
+file shows only unrelated commits (GMX removal, catalogue-gate classification, freshness-cache scoping, uniswap_v2/v4
+wiring) since this plan was authored. Verified live via `agent-orchestrator/data/config/backlog.yaml`-equivalent
+(`GET /api/backlog`): `defi_dex_pool_symbol_fix_backfill_purge-001..005` are still `queued`/`blocked`, none `done`.
+Declining to author any reconciliation content on the false premise that the fix/backfill/purge landed. Per the standing
+ruling (BLK-0d30dec1, Option A), skipping this task rather than re-filing a duplicate `/blocked`. Root cause (item 1
+above) is still unfixed as of this note -- this is now the SEVENTH slot to bounce off this same wiring gap (5, 4, 6, 3,
+and now 8, per the notes above), which itself is evidence the root-cause fix (item 1's regen-tick / re-wiring
+investigation) should be prioritized over further individual bounces re-verifying the same fact.
