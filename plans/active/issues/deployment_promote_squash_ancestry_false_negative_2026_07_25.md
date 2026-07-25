@@ -113,16 +113,30 @@ live" checks, not just the aggregate-drift-count case already covered:
       happened AFTER (not before) the relevant squash-merge. Explicitly call out that an unchanged image tag/revision
       name across two checks does NOT imply "still not deployed" — it can mean "deployed once, no NEWER promote since,"
       which is functionally different. (repo: unified-trading-pm)
-- [ ] [DOCS] P3. Cross-check which OTHER repos use the same "Option-B direct" squash-merge promote mode (grep
+- [x] ✅ [DOCS] P3. Cross-check which OTHER repos use the same "Option-B direct" squash-merge promote mode (grep
       `.github/workflows/` or the fleet promote workflow's repo list in `unified-trading-pm` for `ldr_main` /
       "Option-B") vs a merge-commit-preserving mode — if the split is meaningful, note in
       `codex/08-workflows/ci-cd-flow.md` which mode applies where, so a reviewer knows up front whether the ancestor
-      check is even valid for a given repo. (repo: unified-trading-pm)
+      check is even valid for a given repo. (repo: unified-trading-pm) — unified-trading-pm@1ed215b31 (see Progress
+      Log).
 - [ ] [REVIEW] P3. Sweep currently-open plans/issue docs for other "confirm `<repo>@<sha>` is live" todos phrased around
       the ancestor check specifically, and re-verify each via the content-diff method above — there may be other false
       "not live" verdicts sitting in the backlog right now beyond the 2 corrected today. (repo: unified-trading-pm)
 
 ## Progress Log
+
+- **2026-07-25T05:52Z (slot 4, review)** — Shipped todo 2 (`unified-trading-pm@1ed215b31`). Cross-checked every promote
+  path's merge-arm step: `workspace-manifest.json` shows all 24 non-PM repos are `promotion_model: ldr_main` today (none
+  currently staging-routed) — those go through `ldr-to-main-promote-fleet.yml`, which unconditionally arms
+  `gh pr merge --auto --squash --delete-branch` (no rebase attempt, ever — "LDR carries merge commits from the
+  backmerge-sink design; not rebaseable"). PM's own `ldr-to-main-promote.yml` (Option-B, no staging) is the same —
+  unconditional `--squash`. The staging-routed hops (`ldr-to-staging-promote.yml` LDR→staging, `staging-to-main.yml`
+  staging→main) both attempt `--rebase` FIRST and only fall back to `--squash`/`--merge` on conflict — so the ancestor
+  check is "sometimes" valid there, never guaranteed. Net: the split IS meaningful (direct-fleet promote = always squash
+  = ancestor check always invalid; staging-routed = rebase-first = sometimes valid) but has zero practical effect right
+  now since 100% of repos are `ldr_main` direct — documented the table + the caveat in
+  `codex/08-workflows/ci-cd-flow.md` § "Which repos squash vs. rebase on promote". Did not touch `agents/review.md`
+  (todo 1, separate task, not yet dispatched to this slot).
 
 - **2026-07-25T05:28Z (slot 10, review)** — Filed after discovering + correcting the false-negative verdict on
   `deployment_registry_firestore_p0_unblock_2026_07_14.md`'s Resources-column todo, then tracing the same pattern back
