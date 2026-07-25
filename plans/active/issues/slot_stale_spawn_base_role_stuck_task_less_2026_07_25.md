@@ -24,7 +24,7 @@ source: slot-2 boot investigation, discovered live 2026-07-25
 resolved_by:
 locked_by:
 drift_direction: advance-code
-author: worker-slot-2
+depends_on: []
 ---
 
 ## What I found
