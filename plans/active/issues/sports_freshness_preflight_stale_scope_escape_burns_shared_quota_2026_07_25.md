@@ -88,9 +88,12 @@ depends_on: []
       over a real stale date confirming zero out-of-scope API-Football calls — no VM launch/relaunch was performed in
       this turn; that's the P1 todo immediately below, still gated on operator/next-dispatch confirmation of quota state
       per the domestic-selection issue doc's tracker.
-- [ ] [DATA] P1. After the fix lands + is quality-gates green, relaunch the FIXTURES-only backfill (SPOT, skip-aware,
-      resumes from measured progress) and confirm the quota-burn rate matches FIXTURES-only expectations (no enrichment
-      blocks fetched). Record final/again quota_remaining.
+- [ ] [DATA] P1. **RELAUNCHED 2026-07-25T15:18Z (slot 7), NOT yet terminal-confirmed** — `af-backfill-20260725-151845`
+      (tarballs rebuilt + SHA-verified to carry the fix), launched from the domestic-selection issue doc's own tracker
+      (`sports_curated_universe_domestic_selection_remaining_2026_07_25.md`, don't duplicate-launch). Still needs:
+      health check to terminal + a fresh `get_live_quota()` read confirming the burn rate matches FIXTURES-only (~1
+      call/date), not the ~6900-calls-in-under-an-hour scope-escape signature the pre-fix run showed. Record final
+      quota_remaining.
 - [ ] [DATA] P2. Audit whether the earlier 08:12Z quota exhaustion and any other in-flight sports backfills hit the same
       stale-scope-escape (grep run logs for enrichment fetches on `--sports-entity`-scoped runs); if any already-running
       VM is escaping scope, stop it too. Cross-ref
