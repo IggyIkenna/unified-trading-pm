@@ -296,22 +296,19 @@ sequential: true
       worker a brand-new task in production, ~90 seconds after the `/done` gate correctly withheld one for the SAME
       slot. Filed as a new P0 todo below covering all three dispatch sites rather than silently noting it — this
       undermines the plan's own core promise.
-- [ ] [BACKEND] P0. **Gate `heartbeat_slot` AND `boot_slot`'s dispatch on self-reported context — the two remaining
-      ungated `pick_next_task()` call sites**, found live 2026-07-25T06:40Z by the REVIEW todo above (todo 3/4 only
-      covered `/done` and `/progress`'s directive; `/heartbeat` and `/boot`'s dispatch were never in scope). In
-      `server/routes/slots_worker.py`, both `heartbeat_slot` (currently line 456) and `boot_slot` (currently line 219):
-      immediately before their own `picked = pick_next_task(session, slot_id, backlog)` call, apply the SAME gate
-      `done_slot` uses (`req.context_used_pct >= get_config().tuning.context_worker_compact_gate_pct`) — on trigger, do
-      NOT call `pick_next_task` (leave the candidate task `queued`, exactly like `done_slot`'s gate), set
-      `status="idle"`, and return the response with `new_task=None` + `directive="compact_before_next"` (reusing todo
-      2's field on `HeartbeatResponse`/`BootResponse` — add it to `BootResponse` if not already present; check before
-      assuming). Live evidence this closes: slot 3 was gated by `/done` at 90% context (`06:15:16Z`), then handed a
-      fresh task by `/heartbeat` 88 seconds later still at ~91% context (`06:16:44Z`, confirmed no compaction happened
-      via 3 subsequent `proactive_compact_guidance` reads) — this todo's fix must make that exact sequence impossible.
-      **Done when**: a unit test per route asserts it withholds `new_task`/`task` and sets the directive when
-      `context_used_pct >= threshold` (mirroring todo 3's `test_done_context_gate_withholds_next_task_above_threshold`),
-      dispatches normally below it, and the candidate task remains `queued`; a regression test reproduces the EXACT live
-      `/done`→`/heartbeat` sequence above, asserting `new_task is None` (not the bug); `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P0. **Gate `heartbeat_slot` AND `boot_slot`'s dispatch on self-reported context — the two remaining
+      ungated `pick_next_task()` call sites** — `agent-orchestrator@13889e0`. Added
+      `directive:     Literal["compact_before_next"] | None = None` to `BootResponse` (not previously present) and
+      `HeartbeatResponse` (same, reusing `DoneResponse`'s exact field name/value). In both `boot_slot` and
+      `heartbeat_slot`, immediately before their `picked = pick_next_task(...)` call: the same gate `done_slot` uses
+      (`req.context_used_pct >= get_config().tuning.context_worker_compact_gate_pct`) — on trigger, skip
+      `pick_next_task` entirely (candidate task stays `queued`, untouched), set `status="idle"`, log
+      `worker_compact_gated` with a `trigger: "boot"|"heartbeat"` detail field so the dashboard can tell which route
+      fired it, return `directive="compact_before_next"`. 5 new tests in
+      `tests/test_task_lifecycle_done_gate_resume.py`: per-route withhold-above / dispatch-below pairs for both `/boot`
+      and `/heartbeat`, plus `test_live_incident_regression_heartbeat_does_not_dispatch_after_done_gate` reproducing the
+      EXACT live sequence (`/done` at 90% withholds → `/heartbeat` at 91% "88s later" — asserts `new_task is None`, the
+      bug is closed). 1676/1676 tests pass, ruff + basedpyright clean, full `quality-gates.sh` PASSED.
 - [ ] [BACKEND] P2. **Add a migration-completeness test** asserting every column in `server/orm.py`'s `SlotRow` (and
       ideally `AgentRow`) exists in `bootstrap.py`'s `_add_missing_columns` ALTER-TABLE lists — discovered this session
       after the SAME gap bit the `slots` table TWICE in one day: `context_directive_issued` (todo 4,
