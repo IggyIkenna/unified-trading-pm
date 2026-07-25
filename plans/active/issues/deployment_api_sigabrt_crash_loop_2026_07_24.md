@@ -98,22 +98,22 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `preload_app = False` and re-measure the SIGABRT rate over the following 3 days (repo: deployment-api). —
       INVESTIGATED 2026-07-24 (slot 2). Full detail in Progress Log — deployment-api@1adf54b (faulthandler
       instrumentation shipped; root cause narrowed but NOT yet 100% confirmed, see log).
-- [ ] [REVIEW] P1. Confirm `deployment-api@1adf54b` is live, then read the next SIGABRT faulthandler dump; branch below.
-      Verify it's live via `gh pr list` / the promote workflow; once it's been live a few hours, `gcloud logging read`
-      the `run.googleapis.com%2Fstderr` stream around the next `Uncaught signal: 6` and check for a
-      `Fatal Python     error`/`Current thread` faulthandler dump naming `deployment-api@6f6a389`'s `_compute_inventory`
-      cold path — if so, the SIGABRT loop is resolved by that fix and the crash rate should visibly drop; if not, do not
-      re-guess — file a fresh evidence-backed BACKEND todo with the exact stuck call site. (repo: deployment-api) — **🟢
-      ACTUALLY LIVE since 2026-07-25T02:51:26Z — slot 6's 04:41Z "STILL NOT LIVE" was a FALSE NEGATIVE (slot 10, review,
-      2026-07-25T05:25Z)**: the ancestor check (`git merge-base --is-ancestor 1adf54b origin/main`) fails forever
-      post-squash-merge — `main` only ever receives the synthetic `chore(promote)` squash commit, never the original LDR
-      SHA — so it was never valid evidence of absence. Correct method: content-diff.
-      `git show origin/main:deployment_api/gunicorn.conf.py | grep faulthandler` shows `faulthandler.enable()` present,
-      byte-identical to LDR's copy — the fix IS on `main`, squashed into PR #376 (`273c951`, merged `02:43:58Z`). Cloud
-      Run revision `uts-shared-deployment-api-00274-s9g` (the SAME revision slot 2/6 both inspected — its image tag just
-      never changed again because no NEWER promote has landed since) was built from that commit at
-      `2026-07-25T02:51:26Z`. **So the fix has been live ~2.5h, and the precondition IS met** — filed a standalone
-      methodology issue for the false-negative pattern itself:
+- [x] ✅ [REVIEW] P1. Confirm `deployment-api@1adf54b` is live, then read the next SIGABRT faulthandler dump; branch
+      below. Verify it's live via `gh pr list` / the promote workflow; once it's been live a few hours,
+      `gcloud logging read` the `run.googleapis.com%2Fstderr` stream around the next `Uncaught signal: 6` and check for
+      a `Fatal Python     error`/`Current thread` faulthandler dump naming `deployment-api@6f6a389`'s
+      `_compute_inventory` cold path — if so, the SIGABRT loop is resolved by that fix and the crash rate should visibly
+      drop; if not, do not re-guess — file a fresh evidence-backed BACKEND todo with the exact stuck call site. (repo:
+      deployment-api) — **🟢 ACTUALLY LIVE since 2026-07-25T02:51:26Z — slot 6's 04:41Z "STILL NOT LIVE" was a FALSE
+      NEGATIVE (slot 10, review, 2026-07-25T05:25Z)**: the ancestor check
+      (`git merge-base --is-ancestor 1adf54b origin/main`) fails forever post-squash-merge — `main` only ever receives
+      the synthetic `chore(promote)` squash commit, never the original LDR SHA — so it was never valid evidence of
+      absence. Correct method: content-diff. `git show origin/main:deployment_api/gunicorn.conf.py | grep faulthandler`
+      shows `faulthandler.enable()` present, byte-identical to LDR's copy — the fix IS on `main`, squashed into PR #376
+      (`273c951`, merged `02:43:58Z`). Cloud Run revision `uts-shared-deployment-api-00274-s9g` (the SAME revision slot
+      2/6 both inspected — its image tag just never changed again because no NEWER promote has landed since) was built
+      from that commit at `2026-07-25T02:51:26Z`. **So the fix has been live ~2.5h, and the precondition IS met** —
+      filed a standalone methodology issue for the false-negative pattern itself:
       [deployment_promote_squash_ancestry_false_negative_2026_07_25.md](deployment_promote_squash_ancestry_false_negative_2026_07_25.md).
       **Read the actual next occurrence**: `gcloud logging read` on `run.googleapis.com%2Fvarlog%2Fsystem` shows one
       post-deploy `Uncaught signal: 6` at `2026-07-25T04:27:19Z` (pid=29, tid=29). Pulled the
@@ -167,6 +167,19 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `Fatal Python error`/`Current thread` dump for the stuck call site.
 
 ## Progress Log
+
+- **2026-07-25T11:56Z (slot 8, review)** — Dispatched `deployment_api_sigabrt_crash_loop-001` (this todo). Re-checked
+  before closing: the todo's own instruction is "confirm live, read the next dump, branch below" — both halves were
+  already fully executed by slot 10 at `05:25Z` (confirmed `1adf54b` live since `02:51:26Z` via content-diff, read the
+  actual next occurrence at `04:27:19Z`, found no dump, and — per the todo's own "if not, do not re-guess" instruction —
+  filed the fresh evidence-backed BACKEND todo, which then shipped as `deployment-api@7ba17e2`). The checkbox had simply
+  never been flipped despite the branch being complete. Re-verified nothing has regressed since:
+  `gcloud run revisions list` still shows `uts-shared-deployment-api-00275-7zl` (built `06:13:08Z`, carries `7ba17e2`'s
+  `post_worker_init` fix) as the current serving revision, matching slot 5's `07:08Z` note — no new information changes
+  this specific todo's already-satisfied done-when. Flipping the checkbox to close out the stale bookkeeping; the
+  ONGOING question of whether the `post_worker_init` fix actually stops the crash-loop (reading the next dump once one
+  appears) is tracked separately under `deployment_api_sigabrt_crash_loop-003` (line ~154 below), not duplicated here.
+  No code shipped this entry (pure doc reconciliation).
 
 - **2026-07-25T07:08Z (slot 5, review)** — Re-checked the `[REVIEW] P2` precondition against the actual live revision.
   Confirmed `uts-shared-deployment-api-00275-7zl` (built `06:14:00Z`, carries `deployment-api@7ba17e2`'s
