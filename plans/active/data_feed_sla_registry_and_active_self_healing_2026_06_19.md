@@ -186,7 +186,7 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
 
 ## Success criteria
 
-- One typed SSOT (`DATA_FEED_SLA`) answers "feeds × max_age × criticality"; every freshness consumer reads it; no inline
+- One typed SSOT (`ALL_FRESHNESS_CONTRACTS`/`DataFreshnessContract`) answers "feeds × max_age × criticality"; every freshness consumer reads it; no inline
   threshold literals remain (grep-verified); the no-orphan-feed CI gate is green.
 - A stale `critical` feed in live mode triggers an active mapped re-fetch, escalates on failure through the existing
   ladder, and keeps the order gate closed until recovery — verified by synthetic smoke.

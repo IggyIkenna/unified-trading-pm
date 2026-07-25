@@ -29,7 +29,7 @@ related:
     /plans/active/issues/stale_staging_versions_manifest_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: 2026-07-23
+last_updated: 2026-07-24
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -90,7 +90,7 @@ drift_direction: advance-code
       `reconcile-staging-versions.yml` (137/wk) — all measured 100% `schedule`/`success` no-ops. Comment out the
       `schedule:` blocks ONLY (keep `workflow_dispatch` + `repository_dispatch` so the reversibility path is one
       uncomment away), matching the `ldr-to-staging-promote.yml` precedent.
-- [x] ⚠️ [DOC] P2. **Add "re-enable the staging workflows" to the staging re-entry runbook.** — PARTIALLY DONE, and the
+- [ ] ⚠️ [DOC] P2. **Add "re-enable the staging workflows" to the staging re-entry runbook.** — PARTIALLY DONE, and the
       remaining half is now tracked elsewhere. Every disabled trigger carries an inline dated note naming exactly what
       to uncomment, and the procedure is written up in `plans/active/issues/staging_workflow_shutdown_2026_07_23.md`.
       **But it is NOT in codex**, and a plan archives — verified 2026-07-23: `grep -rn -i "uncomment" codex/` returns

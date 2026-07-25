@@ -126,9 +126,11 @@ related_plans:
 **Forbidden on epics**: `deadline:`, `estimate_class:`, `estimate_baseline_ai_days:`, `estimate_calibrated_ai_days:`.
 Epics are everlasting — they have no deadline. AI-day estimation lives on the active plans they reference.
 
-**Deprecated on epics** (2026-05-21): `owner:`, `asset_group:`. These fields are deprecated workspace-wide as part of
-the plan hygiene automation sweep. Remove them from existing epics when touching the file; do not add to new ones.
-`check_frontmatter.sh` flags them as violations.
+**Deprecated on epics** (2026-05-21): `owner:`. This field is deprecated workspace-wide as part of the plan hygiene
+automation sweep. Remove it from existing epics when touching the file; do not add to new ones. `check_frontmatter.sh`
+flags it as a violation. (`asset_group:` was previously listed here too, but `check_frontmatter.sh`'s
+`DEPRECATED_FIELDS` array never actually included it, and every currently-active epic still carries
+`asset_group: [cross-cutting]` in frontmatter unflagged — corrected 2026-07-25, plan-reconcile.)
 
 ## Active plan frontmatter (must declare parent_epic)
 

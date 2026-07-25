@@ -191,6 +191,5 @@ for these messages to close the verification loop.
 - [ ] [DEPLOY] P0. **Rebuild + redeploy BOTH alerting-service (`dp-alerting-subscriber`) AND deployment-api
       (`uts-prod-dp-exit-code-monitor`) Cloud Run units** so the Gap-4 verbose/actionable-alert fix (UTL envelope
       unwrap + explain block + run.log snippet + log link) is live; then verify a real `DP_VM_EXIT_NONZERO` renders VM
-      name + exit code
-  - log link + error snippet + explanation in `#data-pipeline-alerts`. (alerting-service + deployment-service) to
-    confirm end-to-end Slack delivery is working. (operator action)
+      name + exit code + log link + error snippet + explanation in `#data-pipeline-alerts`. (alerting-service +
+      deployment-service) to confirm end-to-end Slack delivery is working. (operator action)

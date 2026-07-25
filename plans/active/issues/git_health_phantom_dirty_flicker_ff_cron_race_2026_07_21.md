@@ -373,7 +373,8 @@ without needing to first identify the exact wrapper trigger. Pair with **reporte
 so the next occurrence pins the trigger. Apply the same single-source count to the FF-cron dirty gate
 (`slot-cron-ff-pull.sh:234`).
 
-- [ ] [INFRA] P2. **NEW 2026-07-23 — one non-clean row could not be verified and looks wrong.** The live sweep
+- [x] ✅ RESOLVED 2026-07-24 — REAL, not phantom (per §7 below: the alternate live-measurement path answers this
+      item's gate decisively). **NEW 2026-07-23 — one non-clean row could not be verified and looks wrong.** The live sweep
       (Verification §2) shows host `ip-172-31-0-185` slot 0 reporting `unified-trading-pm` with **`dirty_files=2172`**,
       `behind=1`, `not_clean_since=2026-07-23T12:52:01Z`, `ff_pull_last_result=skip:dirty`. Main verified every `hk` row
       against the real trees but has no access to that host, so this one is UNVERIFIED. 2172 dirty files in a PM clone
@@ -381,7 +382,9 @@ so the next occurrence pins the trigger. Apply the same single-source count to t
       dirty) or the phantom surviving in a new magnitude. **Gate**: someone with access runs
       `git -C <that clone> status --porcelain | wc -l` and states which it is. Cheap, decisive, and it either closes
       this doc's last doubt or reopens the phantom hunt with a live repro.
-- [ ] [INFRA] P1. Re-derive `dirty_files` in `slot-git-status-report.sh` from the sample-loop's kept non-blank lines
+- [x] ✅ DONE — unified-trading-pm@d2b588688 (per §7: "Item 1's shipped fix... changed `slot-git-status-report.sh` to
+      derive `dirty_files` from the sample array's length, capped at 5"). [INFRA] P1. Re-derive `dirty_files` in
+      `slot-git-status-report.sh` from the sample-loop's kept non-blank lines
       (single source of truth; `df` cannot exceed captured sample), + add the "`df>0` & empty-sample → log raw
       `porcelain | cat -A`" instrumentation to catch the wrapper trigger; mirror the count-integrity fix onto
       `slot-cron-ff-pull.sh:234`. Supersedes the blank-line/`grep -c .` framing — this is cause-agnostic and closes the
