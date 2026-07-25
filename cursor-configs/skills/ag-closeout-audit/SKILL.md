@@ -115,7 +115,11 @@ For the target `<ag>`:
    `<ag>_consolidated_closeout_aggregated_sources_*.md` (discoverability index — like the sports one, treat as
    NON-covering: being listed there is not dispatch) and `<ag>_consolidated_audit_*.md` (an earlier audit that may have
    spawned the closeout). Confirm these exist — if there is no `<ag>_consolidated_closeout_*.md` yet, stop and tell the
-   operator this AG hasn't been consolidated at all (a different, prior gap than this skill addresses).
+   operator this AG hasn't been consolidated at all (a different, prior gap than this skill addresses). **Naming
+   exception for `<ag>=cross-cutting`**: filenames are snake_case, so substitute the underscore form, not the literal
+   asset_group value — the doc is `cross_cutting_consolidated_closeout_*.md` (underscore between "cross" and "cutting"),
+   NOT `cross-cutting_consolidated_closeout_*.md` (hyphen). Every other AG name has no internal separator so this
+   exception never comes up for them.
 2. **Existing AO-dispatch-batch + finalize pairs for this AG** — TWO discovery paths, UNION the results (added
    2026-07-25 after the 5-AG consolidated-plan split found the filename-only path alone misses a real class of covering
    plan): a. **Filename-pattern path**: grep `plans/active/*.md` for `^assigned_vm: planning` docs whose `asset_group`
