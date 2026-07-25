@@ -408,7 +408,7 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
    unchecked: diagnose systematic writer failure, apply reconciliation, confirm no recurrence.
 
 10. **cefi Layer-1 denominator silently omits whole venues with real captured data**
-    `plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md` 2 `BLOCKED-OPERATOR-DECISION` remain: bare
+    `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md` 2 `BLOCKED-OPERATOR-DECISION` remain: bare
     COINBASE/DERIBIT-COMBO in `MVP_SCOPE.venues`; OKX-SPOT zero EXPECTED tuples (interim P0 fix shipped, DESIGN decision
     Option A vs B still open).
 

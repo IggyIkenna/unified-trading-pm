@@ -149,7 +149,7 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
   cefi **73.61** (72 expected / 53 present / 19 missing / 87 stray; `is@03cfd0f`, task 002) — **superseded 2026-07-07
   08:54 UTC by a newer re-measure: cefi Layer-1 = 72.60% (present 53 / expected 73, denominator +1 tuple post-uac@
   3652f99f ASTER book_snapshot_5 live-wire flip), `denominator_status=INCOMPLETE`, 20 missing / 87 stray — see
-  `plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md:200,786,790`. Corrected 2026-07-12 (finding 362, §A2
+  `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md:200,786,790`. Corrected 2026-07-12 (finding 362, §A2
   B-queue ruling); this Snapshot header was never bumped to the fresher number (the generic Stage-3 blockquotes below
   note the 73.61%/94.81% snapshot "does not reflect" later changes, but never cited the specific 72.60% figure).** ·
   defi **94.81** (77 expected / 73 present / 4 missing / 128 stray; `is@681f50a` post-D1 seeding, denominator SHRANK

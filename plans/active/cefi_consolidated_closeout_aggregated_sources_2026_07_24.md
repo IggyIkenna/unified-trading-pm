@@ -593,7 +593,7 @@ drift_direction: advance-code
   - [`plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md`](/plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md)
     - **[DATA] P3.** GATED on the P1-corrected cefi backfill re-capture sweep — run a Layer-1 completeness audit; only
       reconcile genuinely-permanent blank-instrument_type gaps.
-  - [`plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md`](/plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md)
+  - [`plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md`](/plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`](/plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md)
     — all todos checked, but `status: open` — 2 operator-gated `--apply` production data-mutation sign-offs still

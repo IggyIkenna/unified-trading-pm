@@ -50,7 +50,7 @@ referenced_by:
     /codex/03-deployment/data-status-ui-surface.md,
     /codex/04-architecture/instrument-universe-registry-consolidation.md,
     /codex/06-coding-standards/data-status-endpoint-contract.md,
-    plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
   ]
 owner:
@@ -659,7 +659,7 @@ artifacts remain retired: defi 0%/EXPECTED=3,581, sports 0%, cefi 14.9% were dia
 
 **Real Layer-1 holes (honest backfill backlog, correctly surfaced — NOT silent):** cefi BITFINEX-FUTURES +
 KRAKEN-FUTURES `future` grain (writer stamps PERPETUAL — dated-futures capture gap), BYBIT `spot_pair` (writer
-mis-stamps BYBIT-SPOT rows as PERPETUAL — see `plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md`), OKX
+mis-stamps BYBIT-SPOT rows as PERPETUAL — see `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md`), OKX
 `options_chain` (never enumerated); defi EIGENLAYER-ETHEREUM `spot_asset` ×4; tradfi CBOE `index` ohlcv + ICE
 `combo`/`options_chain` ohlcv_1m + YAHOO_FINANCE grains; sports BETFAIR/ODDS_API/PINNACLE bookmaker snapshot types;
 prediction KALSHI/POLYMARKET `market_lifecycle`.
@@ -667,7 +667,7 @@ prediction KALSHI/POLYMARKET `market_lifecycle`.
 > **Known cefi denominator caveat (2026-07-03):** the 44-tuple cefi expected matrix omits whole venues the (venue,itype)
 > gate + capability table are blind to (Tier-3 BITFINEX-SPOT/BITGET-\*/KRAKEN-SPOT, non-Tardis HYPERLIQUID/ASTER/
 > EXTENDED, capability-absent BYBIT-SPOT/COINBASE-FUTURES/BINANCE-DELIVERY/KALSHI-PERP/…) — the cefi % is measured over
-> a fraction of the real universe. SSOT: `plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md`.
+> a fraction of the real universe. SSOT: `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md`.
 
 **CERTIFICATION CAVEAT — completeness % is an UPPER bound where UAC under-specifies.** The high stray counts surfaced a
 **UAC↔writer contract gap** (a newly-discovered cross-repo finding, NOT a measurement bug): the writer captures real

@@ -25,7 +25,7 @@ related:
   [
     /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
     /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
-    /plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
