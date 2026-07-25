@@ -97,12 +97,12 @@ code_refs:
 Per `cross-asset-canonical-target-ssot.md:70-82` (§0), every shard must agree on instrument identity across four
 independent representations:
 
-| #      | surface                              | where it physically lives                                                                                                                                                                                            | how you read it                                                                                                                                                                                                                                            |
-| ------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **S1** | **GCS object path + filename**       | the parquet object under the raw-tick prefix (`raw_tick_data/by_date/…`; sports uses `sports_reference/by_date/…`)                                                                                                   | prefix-scoped listing (§5) or a direct `gcs_describe_object` on a constructed path                                                                                                                                                                         |
-| **S2** | **parquet CONTENT columns**          | inside the object — `instrument_id`, and for defi additionally `canonical_instrument_id`                                                                                                                             | read the object's columns; content, never the path, is the claim about what the file HOLDS                                                                                                                                                                 |
-| **S3** | **manifest `_index` shard-atom key** | the availability-manifest canonical index row                                                                                                                                                                        | `read_availability_index()` / `merge_canonical_with_outstanding_shards()` — `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:296,1118`                                                                                      |
-| **S4** | **catalogue / data-status render**   | (a) deployment-api reference scope: `data-catalogue.instruments-service.yaml` → `shard_status[ASSET_GROUP][VENUE].start_date`; (b) the instrument's `available_from`→`available_to` window in `prod/catalog.parquet` | `deployment_api/services/data_status/reference_scope.py:19,64-77` parses the `shard_status` map into `{(asset_group, venue): genesis}`; the `available_from/to` window is the §10 triad's third leg (`availability-manifest-and-data-status.md:1666-1667`) |
+| #      | surface                              | where it physically lives                                                                                                                                                                                                                                                                    | how you read it                                                                                                                                                                                                                                            |
+| ------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **S1** | **GCS object path + filename**       | the parquet object under the raw-tick prefix (`raw_tick_data/by_date/…`, including sports' `market-data-tick-sports-*` raw-tick bucket — see the §4.2 bucket-distinction correction; `sports_reference/by_date/…` is a DIFFERENT bucket, `instruments-store-sports-*`, not the raw-tick one) | prefix-scoped listing (§5) or a direct `gcs_describe_object` on a constructed path                                                                                                                                                                         |
+| **S2** | **parquet CONTENT columns**          | inside the object — `instrument_id`, and for defi additionally `canonical_instrument_id`                                                                                                                                                                                                     | read the object's columns; content, never the path, is the claim about what the file HOLDS                                                                                                                                                                 |
+| **S3** | **manifest `_index` shard-atom key** | the availability-manifest canonical index row                                                                                                                                                                                                                                                | `read_availability_index()` / `merge_canonical_with_outstanding_shards()` — `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:296,1118`                                                                                      |
+| **S4** | **catalogue / data-status render**   | (a) deployment-api reference scope: `data-catalogue.instruments-service.yaml` → `shard_status[ASSET_GROUP][VENUE].start_date`; (b) the instrument's `available_from`→`available_to` window in `prod/catalog.parquet`                                                                         | `deployment_api/services/data_status/reference_scope.py:19,64-77` parses the `shard_status` map into `{(asset_group, venue): genesis}`; the `available_from/to` window is the §10 triad's third leg (`availability-manifest-and-data-status.md:1666-1667`) |
 
 S4 is deliberately **two-part**. `reference_scope.py:24` states its grain explicitly: _"Grain = venue/day.
 Per-instrument_type scoping is a separate follow-on tied to a manifest-schema change and is intentionally NOT attempted
@@ -302,14 +302,31 @@ canonical-cutover register, `/codex/02-data/canonical-cutover-register.md`): `Fa
 `True` on and after. Without that date the run either floods false positives on legitimately historical data or silently
 passes post-cutover regressions.
 
-### 4.2 The oracle does NOT cover sports
+### 4.2 The oracle does NOT cover the sports REFERENCE bucket — it DOES cover sports raw-tick
 
-`canonical_path_violations` returns immediately for any path not under `raw_tick_data/by_date/` (`:681-683`), and every
-sports object lives under `sports_reference/` (§6). **Running the oracle on a sports path returns a 100% false-positive
-violation.** `canonical_path_templates("sports")` returns an empty list **by design** — _"Sports is intentionally
-template-less here … Returned as an empty list for `sports` so a caller treats it as 'use the sports dispatcher', never
-'no paths'"_ (`possible_manifest.py:368-371`). Dispatch to
-`unified_api_contracts.canonical.domain.sports.gcs_paths.candidate_parquet_paths()` instead.
+**Corrected 2026-07-24** (a `/data-pipeline-reconciliation --asset-group sports` run directly verified this section was
+wrong about which bucket its claim applies to — see
+`reconciliation_skill_sports_raw_tick_ssot_wrong_bucket_2026_07_24.md` for the full evidence). Sports has TWO relevant
+buckets with different S1 grammars:
+
+- **`market-data-tick-sports-{env}-{pid}` (raw-tick MTDS bucket, `kind="market-data"`)** — every real object here lives
+  under the STANDARD
+  `raw_tick_data/by_date/day={D}/pipeline_mode={m}/asset_group=sports/venue={V}/league_id={L}/ instrument_type={IT}/data_type={DT}/ticks.parquet`
+  grammar, exactly like every other asset_group. It DOES carry an `asset_group=sports` key and IS fully covered by
+  `canonical_path_violations` (verified 0/20 violations, both `require_pipeline_mode` settings, on a live sample). **Run
+  the oracle normally here — do not skip it for sports.**
+- **`instruments-store-sports-{env}-{pid}` (reference-data bucket, `kind="instruments-store"`)** — THIS is the bucket
+  where `sports_reference/by_date/day={D}/pipeline_mode={m}_{s}/entity={E}/league={L}/` actually lives, and where the
+  rest of this section's claim holds: `canonical_path_violations` returns immediately for any path not under
+  `raw_tick_data/by_date/` (`:681-683`), so running it on a `sports_reference/` path returns a 100% false-positive
+  violation. `canonical_path_templates("sports")` returns an empty list **by design** — _"Sports is intentionally
+  template-less here … Returned as an empty list for `sports` so a caller treats it as 'use the sports dispatcher',
+  never 'no paths'"_ (`possible_manifest.py:368-371`). Dispatch to
+  `unified_api_contracts.canonical.domain.sports.gcs_paths.candidate_parquet_paths()` instead — **but only for the
+  reference bucket**, never the raw-tick one.
+
+**Do not conflate the two buckets.** A reconciliation of sports raw-tick that skips the oracle (because "sports has no
+oracle coverage") is following the wrong half of this section.
 
 ---
 
@@ -359,9 +376,11 @@ compute-tier model, the VM launcher, and the results-manifest read-back:
 A generic loop over all five asset_groups produces destructive false positives on at least three of them. **One code
 path per AG.**
 
-- **sports — NO `asset_group=` key at all.** The tree is
-  `sports_reference/by_date/day={D}/entity={folder}/league={L}/{folder}.parquet`, with a bare (no-`league=`) variant and
-  a flat non-`by_date` singleton form
+- **sports REFERENCE bucket (`instruments-store-sports-*`) — NO `asset_group=` key at all.** (The sports RAW-TICK
+  bucket, `market-data-tick-sports-*`, is NOT this case — see the §4.2 bucket-distinction correction; it uses the
+  standard `asset_group=sports`-keyed `raw_tick_data/` grammar like every other AG.) In the reference bucket, the tree
+  is `sports_reference/by_date/day={D}/entity={folder}/league={L}/{folder}.parquet`, with a bare (no-`league=`) variant
+  and a flat non-`by_date` singleton form
   (`unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py:13-22`). `entity=` folder names are
   **non-obvious** and mapped by `SPORTS_DATA_TYPE_TO_FOLDER` — `ODDS → footystats_odds`, `MATCHES → footystats_matches`,
   `XG → understat_xg` (`gcs_paths.py:38-66`). Guessing `entity=odds/` instead of `entity=footystats_odds/` is the

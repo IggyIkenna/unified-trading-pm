@@ -182,6 +182,12 @@ The resolver writes canonical for new paths; reader fallback is hive-key-agnosti
   home.
 - [`plans/epics/sports_master.md`](../../plans/epics/sports_master.md) — sports asset_group umbrella; cites this SSOT as
   the path-layout authority.
+- `/plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md` and
+  `/plans/active/issues/reconciliation_skill_sports_raw_tick_ssot_wrong_bucket_2026_07_24.md` — both stem from the same
+  underlying dual-bucket architecture this doc describes (`instruments-store-sports-*`'s `sports_reference/` reference
+  tree vs `market-data-tick-sports-*`'s standard `raw_tick_data/` raw-tick tree): the phantom auditor and, separately,
+  `/data-pipeline-reconciliation`'s own governing codex (`four-surface-reconciliation-procedure.md` §4.2/§6) each
+  independently conflated the two buckets before being corrected.
 
 ## Reviewer checklist
 
