@@ -540,13 +540,36 @@ flipping the checkbox.
       directly (e.g. add a `log_event()` call — NOT a stdout write — inside the `if is_leader_worker():` branch in
       `lifespan.py`, carrying `worker.age`/PID in `details`) to independently verify the reap tick and leader election
       are ALSO running via a transport proven to work, sidestepping the still-unexplained stdout/stderr mystery entirely
-      rather than continuing to chase it. **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker — it is not SIT
-      itself.** SIT ran, passed, and logged a matching-tree stamp for `deployment-api`, but the stamp is fire-and-forget
-      (`repository_dispatch` only) and the downstream Firestore write is 403'ing FLEET-WIDE (`ci_status_store.py`
-      `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live via direct REST `PATCH` — same 403; 0/95
-      sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY SIT-covered repo's
-      promote, not just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's LDR→main pipeline,
-      not just this todo:
+      rather than continuing to chase it. **DONE + CONFIRMED 2026-07-25T16:48Z (slot 5, same session):** shipped
+      `deployment-api@a80632e` (LDR) → promote PR #381 → (initial QG attempt failed on an UNRELATED broken cross-doc
+      link in `defi_consolidated_closeout_2026_07_18.md`, fixed separately as `unified-trading-pm@fa4781ee3` — see that
+      commit for detail; re-ran clean) → merged 16:35:10Z → Cloud Build `7015ff81` → revision
+      `uts-shared-deployment-api-00279-k8q`. Created a temp Pub/Sub pull subscription on `deployment-api-events`, forced
+      ONE more cheap env-var-only revision bump (`00280-p85`, no rebuild) so the subscription would be listening before
+      a fresh startup fired, then pulled real messages: **2×`STARTED`** (one per `WORKERS=2` gunicorn worker, both
+      entering `lifespan()`) and exactly **1×`REAPER_LEADER_ELECTED`** (`{"pid": 28}`) — the SINGLE elected leader,
+      matching the design exactly. **This is definitive, positive proof the reap tick's
+      `asyncio.create_task(_auto_sync_running_deployments())` call fires correctly in prod, on the CURRENT deployed
+      code.** Cleaned up the subscription + acked all messages (no residual infra). **However — re-checked `active/`
+      immediately after: still 406, unchanged.** Important self-aware caveat: THIS session forced FOUR consecutive
+      revision restarts in under an hour (`00277`→`00278`→`00279`→`00280`, each a legitimate diagnostic step but each
+      also a fresh container = a fresh `asyncio.create_task()` that tears down whatever the PREVIOUS instance's reap
+      loop was mid-way through) — this is plausibly RE-CREATING the exact "tick never gets to finish" symptom the
+      `CancelledError` fix already solved for CONTAINER-recycling, just via MY OWN forced redeploys instead of Cloud
+      Run's own recycling. **Next dispatch, done-when clearly stated: do NOT force any more revision restarts on this
+      service** — let `uts-shared-deployment-api-00280-p85` (live since `2026-07-25T16:48:34Z`) run completely
+      undisturbed for ≥2 real reap-tick intervals (900s each, i.e. check no earlier than **2026-07-25T17:18:34Z**), THEN
+      re-measure `active/` object count vs live-VM count one final time. If it converges: the mystery is fully closed,
+      flip this todo + the plan's original `[REVIEW]` checkbox. If it STILL doesn't converge after an undisturbed
+      window: the leader-election/task-creation path is now proven innocent, so the remaining suspect narrows to the
+      reap tick's OWN logic/timing (`_run_deployment_reaper`, `background_sync.py`) rather than anything about startup —
+      the log_event pattern established here can extend to instrument that function directly. **UPDATE 2026-07-25T14:02Z
+      (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for
+      `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch` only) and the downstream Firestore write
+      is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live
+      via direct REST `PATCH` — same 403; 0/95 sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z).
+      This blocks EVERY SIT-covered repo's promote, not just this one. Filed as its own cross-cutting P0 since it blocks
+      the whole fleet's LDR→main pipeline, not just this todo:
       [issues/ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md](ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md).
       Part (1) of this todo is now ALSO gated on that doc's Todo 1/2 (operator restores the Firestore permission, then
       `ci-status-update.yml` goes green again) before the promote can ever pass the SIT gate. Next dispatch: check that
