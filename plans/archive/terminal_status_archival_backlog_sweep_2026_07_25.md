@@ -333,7 +333,10 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   (pre-existing, unrelated to this edit), and `check_line_caps.sh`'s scoped pre-commit check refuses ANY staged commit
   touching an over-cap file (by design, no exceptions — see the script's own comments). Fixing the referrer requires
   first splitting that doc under the cap, which is out of scope for a single-line path fix. Leaving as a known, tracked
-  gap rather than blocking this archival or bypassing the gate.
+  gap rather than blocking this archival or bypassing the gate. **MIGRATED TO:**
+  `plans/active/issues/reference_path_convention_2026_07_23.md` (already carries the P3 todo tracking this exact
+  referrer, "Left unfixed: `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s `related:`..." — done-when: split
+  under 1000L, then fix the reference).
 - 2026-07-25 (slot-2): Todo (`fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`) archived —
   resolution re-verified (`resolved_by` SHA `features-service@fb8d57c0` confirmed reachable), banner added, moved to
   `plans/archive/issues/`, `check_terminal_status_archived.py` confirmed clean. Same class of blocker as slot-7's entry

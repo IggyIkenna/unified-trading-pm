@@ -42,11 +42,12 @@ drift_direction: advance-code
 ---
 
 > **🔴 SUPERSEDED 2026-07-23 — folded into `sports_consolidated_closeout_2026_07_19.md`. Do NOT pick up further work
-> from this file; do NOT dispatch/re-dispatch any of its child plans from this doc.** Archived as part of the
-> operator-directed 4-plan fold-in pass (alongside `sports_manifest_canonicalisation_2026_06_01.md`,
-> `sports_odds_exchange_fixed_fork_2026_07_18.md`, `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` — all 4
-> archived together, live content pulled into the closeout first per operator decision). This coordinator's genuinely
-> open items at time of archival (now tracked directly as closeout todos, not via this file or its child plans):
+> from this file; do NOT dispatch/re-dispatch any of its child plans from this doc.** **MIGRATED TO:**
+> `plans/active/sports_consolidated_closeout_2026_07_19.md`. Archived as part of the operator-directed 4-plan fold-in
+> pass (alongside `sports_manifest_canonicalisation_2026_06_01.md`, `sports_odds_exchange_fixed_fork_2026_07_18.md`,
+> `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` — all 4 archived together, live content pulled into the
+> closeout first per operator decision). This coordinator's genuinely open items at time of archival (now tracked
+> directly as closeout todos, not via this file or its child plans):
 >
 > - **P2a (AF history 2015→present) — not started.** Re-homed work stranded here: G1 non-canonical-league NOISE wipe
 >   (1,437 leagues, ~106k rows); G2 2015–2017 zero-captured diagnosis (subscription-limit vs backfill-bug); G2 40,041

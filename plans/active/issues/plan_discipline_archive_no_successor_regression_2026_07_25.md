@@ -15,7 +15,7 @@ summary: >-
   `check_plan_discipline.py` is invoked only from unified-trading-pm's own `scripts/quality-gates.sh` (not from the
   shared `base-service.sh`/`base-library.sh` every other repo sources), so this blocks unified-trading-pm's own
   quickmerge sentinel, not every repo's.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -35,7 +35,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-6
 ---
 
 # check_plan_discipline.py C-archive-no-successor ratchet regression (0->5)
@@ -96,26 +96,47 @@ Per file, read the flagged DEFERRED/post-cutover/out-of-scope mention(s) in cont
 
 ## Todos
 
-- [ ] [DOCS] P1. Resolve the `C-archive-no-successor` flag on
+- [x] ✅ [DOCS] P1. Resolve the `C-archive-no-successor` flag on
       `plans/archive/terminal_status_archival_backlog_sweep_2026_07_25.md` (line ~319 `## Deferred` / ~335 "out of scope
-      for a single-line path fix") per the (a)/(b)/(c) triage above. (repo: unified-trading-pm)
-- [ ] [DOCS] P1. Resolve the `C-archive-no-successor` flag on
+      for a single-line path fix") per the (a)/(b)/(c) triage above. **Case (a)**: the genuinely-open referrer-fix gap
+      it describes was already tracked as a P3 todo in `plans/active/issues/reference_path_convention_2026_07_23.md`
+      (found by grepping the exact referrer filename) — added a `**MIGRATED TO:**` marker pointing there. —
+      unified-trading-pm (this commit)
+- [x] ✅ [DOCS] P1. Resolve the `C-archive-no-successor` flag on
       `plans/archive/defi_consolidated_closeout_history_2026_07_25.md` (line ~459 "out of scope" re: Track 6 of
       `cefi_consolidated_closeout_2026_07_18.md` — likely case (a), the successor is already named in prose, just not in
-      a machine-matched form) per the (a)/(b)/(c) triage above. (repo: unified-trading-pm)
-- [ ] [DOCS] P1. Resolve the `C-archive-no-successor` flag on
+      a machine-matched form) per the (a)/(b)/(c) triage above. **Case (a) confirmed** — added a
+      `**MIGRATED TO:**     plans/active/cefi_consolidated_closeout_2026_07_18.md` (Track 6) marker at the existing
+      prose mention. — unified-trading-pm (this commit)
+- [x] ✅ [DOCS] P1. Resolve the `C-archive-no-successor` flag on
       `plans/archive/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (line ~311 "out of scope here") per
-      the (a)/(b)/(c) triage above. (repo: unified-trading-pm)
-- [ ] [DOCS] P1. Resolve the `C-archive-no-successor` flag on
+      the (a)/(b)/(c) triage above. **Case (a)**: the doc's own SUPERSEDED banner already named the successor
+      (`sports_consolidated_closeout_2026_07_19.md`) in prose; added a `**MIGRATED TO:**` marker into that same banner
+      pointing at its `plans/active/` path. — unified-trading-pm (this commit)
+- [x] ✅ [DOCS] P1. Resolve the `C-archive-no-successor` flag on
       `plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md` (line ~281 "out of scope for a
-      launcher task") per the (a)/(b)/(c) triage above. (repo: unified-trading-pm)
-- [ ] [DOCS] P1. Resolve the `C-archive-no-successor` flag on
+      launcher task") per the (a)/(b)/(c) triage above. **Case (a)**: the "filed as its own P2 todo" claim resolved to
+      `plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md` (found by grepping "swap-event indexer");
+      also pointed at this log's still-active parent `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` (Part 1
+      of 6 of its extracted history — any other open thread continues there). — unified-trading-pm (this commit)
+- [x] ✅ [DOCS] P1. Resolve the `C-archive-no-successor` flag on
       `plans/archive/mvp_backfill_defi_onchain_v10_operational_log_part3_2026_07_24.md` (line ~590/~745 "out of scope")
-      per the (a)/(b)/(c) triage above. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. Once all 5 above are resolved, re-run `python3 scripts/quality_gates/check_plan_discipline.py` to
+      per the (a)/(b)/(c) triage above. **Case (a)**: both mentions (the perp_funding 429-fix todo and the
+      not-yet-diagnosed drift-walker stall) trace to the same still-active parent
+      `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` (Part 3 of 6 of its extracted history; the perp_funding
+      issue doc itself is `status: resolved` and already lists that same parent as its `related:`) — added a
+      `**MIGRATED TO:**` marker. — unified-trading-pm (this commit)
+- [x] ✅ [SCRIPT] P2. Once all 5 above are resolved, re-run `python3 scripts/quality_gates/check_plan_discipline.py` to
       confirm 0 violations, then decide with the operator/main agent whether any surviving false-positive class warrants
       a regex refinement in `check_plan_discipline.py` (vs. per-doc markers) so this doesn't recur every time an
-      operational log gets archived with ordinary "out of scope" scoping prose. (repo: unified-trading-pm)
+      operational log gets archived with ordinary "out of scope" scoping prose. **Re-ran: 0 violations, at baseline
+      (0).** No surviving false-positive class — all 5 had a genuine, locatable successor already in the corpus (4 were
+      already named in the flagged prose itself, just not in the checker's machine-matched shape; the 5th was findable
+      by grepping the "filed as its own... todo" claim), so **no regex refinement is warranted** — this was an archival
+      ritual completeness gap (missing `## Deferred work — migrated to:`-style markers), not a checker bug. Sample of
+      201 other `plans/archive/*.md` docs matching the same `out of scope`/`post-cutover` tokens: 196 already pass via
+      an existing successor reference somewhere in the doc, consistent with "add the marker" being the right fix, not
+      "loosen the regex." — unified-trading-pm (this commit)
 
 ## Codex SSOTs
 

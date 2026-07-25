@@ -591,7 +591,9 @@ it myself (a real code change + tests + QG, out of scope for this task's craft-s
 `/boot-per-shippable-unit` discipline, filing the todo rather than fanning out to unassigned work). No production
 writes, no code changes, no VM actions this touch — plan/issue-doc corrections only (`unified-trading-pm` commits,
 pushed directly per the PM-plan carve-out). Calling `/skip-current-task` for `-002` itself since its actual blocker
-(`BLK-5b8c2938`) is unchanged.
+(`BLK-5b8c2938`) is unchanged. **MIGRATED TO:** `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md` (this log's
+live parent plan — this is Part 3 of 6 of its extracted operational history; both the perp_funding root-cause fix and
+any further drift-walker diagnosis below continue there).
 
 ### 2026-07-14 (data_engineering slot-9) — 11th dispatch since run #6: unchanged blocker, cheap re-check only
 
