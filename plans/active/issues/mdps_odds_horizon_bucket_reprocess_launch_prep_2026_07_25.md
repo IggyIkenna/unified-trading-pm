@@ -122,15 +122,18 @@ a drop-in re-target of `migrate_sports_league_id_casing_2026_07_21.py`'s existin
    one-time migration dump (2026-05-05 timestamps seen), not this pipeline's live write path; worth confirming whether
    `batch_footystats` is even still actively written before spending migration effort on it. A 2019-08-10 sample day had
    ZERO `batch_footystats` objects at all (day-sparse, unlike `batch_odds_api`'s near-daily coverage).
-3. **Raw league values ARE non-canonical and distinct from the odds classification map** — confirmed both
-   `league=2._BUNDESLIGA` and `league=BUNDESLIGA` coexist as separate raw partitions on the same day (`day=2024-03-02`),
-   i.e. real collision/merge-on-write cases exist here too, but `classification.json` / `sportkey_canon_final.json`
-   (built for the odds shape) have not been checked for footystats coverage — may need its own classification pass, not
-   a reuse.
+3. **Raw league values ARE non-canonical, but — CORRECTED after checking — `classification.json` already covers every
+   raw value sampled**, so this is smaller than first flagged: `2._BUNDESLIGA` -> `BUNDESLIGA_2` (DEFINITE), `MLS` ->
+   `MLS` (DEFINITE, casing-only), `BUNDESLIGA`/`PRIMERA_DIVISION`/`SERIE_A`/`CHAMPIONSHIP` -> `AMBIGUOUS` (per-row split
+   via `sport_key`, same as the odds shape's known collision leagues). So the SAME `classification.json` /
+   `sportkey_canon_final.json` maps look reusable as-is for the raws checked — no separate classification pass evidenced
+   yet (still only a 3-day sample; do not treat as exhaustive coverage proof before `--dry-run`s it for real against the
+   full footystats corpus).
 
-Recommend scoping the footystats extension as its own short design pass (read `classification.json` coverage, decide the
-`instrument_type=` disposition, confirm write-path liveness) before an executor spawns code against it — flagging here
-rather than guessing under this VM-launch task's scope.
+Recommend scoping the footystats extension as its own short design pass — mainly (1) decide the `instrument_type=`
+disposition and (2) confirm `batch_footystats` write-path liveness (point 2 above) — before an executor spawns code
+against it; classification-map reuse now looks likely rather than uncertain. Flagging here rather than guessing under
+this VM-launch task's scope.
 
 ## Todos
 
