@@ -152,14 +152,19 @@ sequential: true
       Progress Log). Experienced the mechanism live while shipping this exact todo: my own `/progress` call at
       `context_used_pct: 70` returned `directive: "compact_now"` — real-time confirmation the shipped gate matches what
       I just wrote. `quality-gates.sh` green (unified-trading-pm).
-- [ ] [BACKEND] P1. **Expose worker session-start time via the API.** Add `last_spawned_at: datetime | None` to
+- [x] ✅ [BACKEND] P1. **Expose worker session-start time via the API.** Add `last_spawned_at: datetime | None` to
       `SlotView` (`server/models/slots.py`) and populate it in the `/api/state` route mapping (`server/routes/state.py`)
       from the ORM `SlotRow.last_spawned_at` field, which already exists and is already read internally
       (`server/worker_liveness/__init__.py` reads `slot.last_spawned_at`) but was never serialized out — this is the
       exact field whose absence forced this session's live diagnosis to infer session-vs-task-age carryover indirectly
       from `compactions_total`/`last_compacted_at` instead of reading it directly. **Done when**: `GET /api/state`
       returns a non-null `last_spawned_at` for every slot with a live tmux session; a test asserts the field
-      round-trips; `quality-gates.sh` green.
+      round-trips; `quality-gates.sh` green. — **`agent-orchestrator@c920d34`.** Added the field to `SlotView` and wired
+      it into `_slot_to_view` by reusing the already-computed `last_spawned` local (no duplicate `to_utc` call, the same
+      value `phase` inference already derives from). 2 new tests in `tests/test_slot_view_last_spawned_at.py`
+      (`test_last_spawned_at_none_when_never_spawned`, `test_last_spawned_at_round_trips_from_orm_row`), mirroring the
+      existing `test_slot_view_kind.py` pattern. 1687/1687 tests pass, ruff + basedpyright clean, full
+      `quality-gates.sh` PASSED.
 - [ ] [BACKEND] P1. **Fix the context-burn anomaly clock** in `server/worker_liveness_watchdog.py::_is_context_burning`
       (Trigger 4). Currently keyed on `hours_on_task` (derived from `assigned_at`, which resets on every reassignment —
       confirmed live 2026-07-25: 5 slots >=80% context produced zero `context_burn_suspected` fires over a 7h window
