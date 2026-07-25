@@ -4,15 +4,15 @@ title:
   Sports satellite AO batch 2 — finalize (reconcile all 15 source docs + resolve deferred-gate follow-ups + archive)
 summary: >-
   Gated closeout for sports_satellite_ao_dispatch_batch2_2026_07_24.md — machine-held via depends_on + gate_on_depends:
-  true until all 36 of that plan's todos are done, so this never dispatches early. Unlike
-  sports_closeout_batch1_finalize_2026_07_24.md (which reconciles ONE parent — the master closeout plan), batch 2 was
-  extracted from 15 DIFFERENT satellite plans/issues, so this finalize plan reconciles each of those 15 docs'
-  corresponding checkboxes independently, checks batch 2's own "Deferred" section (4 real AO-eligible todos that were
-  gated on something else at extraction time — 3 gated on sibling todos in this same batch, 1 gated on a human/operator
-  decision) to see if any became dispatchable and should be spun into a new todo/plan, and only then runs the standard
-  archival ritual on batch 2. This is the completeness pass — the goal is zero orphaned sports satellite work once this
-  plan's own todos are done: every source doc's real remaining work is either shipped, re-tracked as a new explicit
-  todo, or confirmed still correctly gated on a human decision.
+  true until all 37 of that plan's todos are done (corrected 2026-07-25 plan-reconcile, was 36), so this never
+  dispatches early. Unlike sports_closeout_batch1_finalize_2026_07_24.md (which reconciles ONE parent — the master
+  closeout plan), batch 2 was extracted from 15 DIFFERENT satellite plans/issues, so this finalize plan reconciles each
+  of those 15 docs' corresponding checkboxes independently, checks batch 2's own "Deferred" section (4 real AO-eligible
+  todos that were gated on something else at extraction time — 3 gated on sibling todos in this same batch, 1 gated on a
+  human/operator decision) to see if any became dispatchable and should be spun into a new todo/plan, and only then runs
+  the standard archival ritual on batch 2. This is the completeness pass — the goal is zero orphaned sports satellite
+  work once this plan's own todos are done: every source doc's real remaining work is either shipped, re-tracked as a
+  new explicit todo, or confirmed still correctly gated on a human decision.
 status: active
 nature: process
 asset_group: [sports]
@@ -54,14 +54,15 @@ drift_direction: advance-code
 # Sports satellite AO batch 2 — finalize
 
 > **Machine-gated on `sports_satellite_ao_dispatch_batch2_2026_07_24.md`** (`depends_on` + `gate_on_depends: true`) —
-> the dispatcher will not queue any todo below until all 36 tasks in that plan are `done`. `sequential: true` because
-> todo 2 (deferred-gate follow-ups) needs todo 1's reconciliation done first (to know which source docs still have real
-> open work vs. are now fully closed), and todo 3 (archival) must run last.
+> the dispatcher will not queue any todo below until all 37 tasks in that plan are `done` (corrected 2026-07-25
+> plan-reconcile, was 36). `sequential: true` because todo 2 (deferred-gate follow-ups) needs todo 1's reconciliation
+> done first (to know which source docs still have real open work vs. are now fully closed), and todo 3 (archival) must
+> run last.
 
 ## Todos
 
 - [ ] [REVIEW] P1. **Reconcile all 15 source docs' checkboxes.** For each of
-      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s 36 now-done todos: flip the corresponding checkbox in its
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s 37 now-done todos: flip the corresponding checkbox in its
       named source doc (each todo's text ends with "Source: `<doc>.md`") to `[x]`, citing the batch-2 commit(s) that
       shipped it as evidence — verify the actual shipped commit exists (`git log`/`git show`) before citing it, do not
       just copy batch-2's own evidence line. The 15 source docs are:
@@ -100,7 +101,7 @@ drift_direction: advance-code
 - [ ] [DOC] P2. **Archive `sports_satellite_ao_dispatch_batch2_2026_07_24.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any DEFERRED items to a tracked todo elsewhere (todo 2 above should have
       already cleared all 4 — verify none remain) → add the archive banner → run the codex-alignment check (do any codex
-      docs need a status update now that these 36 items shipped — e.g. the WEATHER layout fix, the odds-feature naming
+      docs need a status update now that these 37 items shipped — e.g. the WEATHER layout fix, the odds-feature naming
       migration) → update CLAUDE.md/codex if any new durable contract resulted → grep the corpus for every referrer of
       `sports_satellite_ao_dispatch_batch2_2026_07_24` (including this doc's own `depends_on` self-reference and any of
       the 15 source docs' `related:` links added during extraction) and fix each path to point at the archived location

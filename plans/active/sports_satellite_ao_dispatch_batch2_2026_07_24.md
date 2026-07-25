@@ -8,15 +8,15 @@ summary: >-
   never AO-dispatchable (that index deliberately uses non-checkbox markers so AO's regen_backlog parser can't ingest
   it). This plan extracts every genuinely AO-eligible todo from those 22 docs (concrete, determinable by a worker alone,
   no open operator/design judgment call) into one real AO-dispatchable plan, mirroring the
-  `sports_closeout_batch1_ao_ready_2026_07_24.md` pattern. 36 todos from 15 source docs. Internally-sequential
-  multi-step chains (e.g. a 5-step GCS migration recovery procedure, a 4-step census→copy→reprocess→swap execution
-  sequence) are combined into single todos rather than fanned out — AO's per-todo model has no mechanism to mechanically
-  gate step N on step N-1 within one plan short of `sequential: true` for the WHOLE plan, and this plan's other todos
-  genuinely benefit from concurrent dispatch, so combining same-job chains into one todo each is the safe choice, not a
-  fragile cross-todo ordering promise. 4 real AO-eligible items were deliberately EXCLUDED (not lost — flagged in their
-  source docs) because they depend on either another todo below landing first (a 5-repo-spanning parity test; a UI
-  relabel gated on its own backend todo) or a human/operator decision that has not yet been made (the
-  SportsMatchingEngine-vs-L0Matcher design call blocks all 3 of
+  `sports_closeout_batch1_ao_ready_2026_07_24.md` pattern. 37 todos (corrected 2026-07-25 plan-reconcile, was 36) from
+  15 source docs. Internally-sequential multi-step chains (e.g. a 5-step GCS migration recovery procedure, a 4-step
+  census→copy→reprocess→swap execution sequence) are combined into single todos rather than fanned out — AO's per-todo
+  model has no mechanism to mechanically gate step N on step N-1 within one plan short of `sequential: true` for the
+  WHOLE plan, and this plan's other todos genuinely benefit from concurrent dispatch, so combining same-job chains into
+  one todo each is the safe choice, not a fragile cross-todo ordering promise. 4 real AO-eligible items were
+  deliberately EXCLUDED (not lost — flagged in their source docs) because they depend on either another todo below
+  landing first (a 5-repo-spanning parity test; a UI relabel gated on its own backend todo) or a human/operator decision
+  that has not yet been made (the SportsMatchingEngine-vs-L0Matcher design call blocks all 3 of
   `sports_group_c_execution_backtest_harness_2026_07_21.md`'s todos; a manifest-perf verify-speedup todo depends on 2
   sibling implementation todos both landing). 7 of the 22 source docs contributed ZERO AO-eligible todos (either 100%
   human-only design/operator-decision work, or already fully done) and are untouched by this plan.
@@ -277,7 +277,10 @@ source: >-
       re-executing step 1 here would duplicate/collide with the already-dispatched batches; this todo's real done-when
       is now "all 11 batches + step 2 + step 3 land," tracked in the issue doc, not re-derived here. — **RE-VERIFIED
       2026-07-25 (slot 4): still unchecked** — step 2 gate MET but launch-BLOCKED on the `af-backfill-*` singleton lock
-      (held by `-031`'s fixture_events re-fetch); step 3 deferred. Live tracker: issue doc's final gated item.
+      (held by `-031`'s fixture_events re-fetch); step 3 deferred. Live tracker: issue doc's final gated item. —
+      **RE-VERIFIED 2026-07-25T12:56Z (slot 11): still unchecked** — lock cleared, backfill launched (this todo's
+      "2019→" text is stale vs. the 2020-06-06 sports floor, corrected), step 2 in progress, step 3 untouched. Detail in
+      the issue doc.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
@@ -494,19 +497,16 @@ source: >-
 > The doc's 4th todo (a real-backfill timing verification) is EXCLUDED here — it depends on both todos below landing
 > first. Add it as a follow-up once both ship.
 
-- [ ] [DATA] P2. **Manifest-slice replacement for `check_api_football_dependency()`** — load+filter a manifest slice
-      once per backfill run (or per chunk) instead of per-date network calls (pyarrow filter push-down on the downloaded
-      `availability_index.parquet` bytes — measured ~10s one-time download + ~0.66s filter for a 1-year slice); keep the
-      direct-GCS path as a fallback only if a genuine same-run consolidation-lag risk is confirmed real (manifest
-      consolidator cron runs every 1 min). Also unify this function's independently-hardcoded path-template constants
-      with the shared helper the other ~9 expanded-scope sites already use (`_read_per_league_entity_df`-style) — likely
-      gets absorbed automatically once the manifest-slice replacement lands (a manifest-slice check no longer needs GCS
-      path templates at all). NOTE: this exact todo text appears twice verbatim in the source doc (~line 136-140 and
-      ~217-225) — it is ONE work item. (repo: instruments-service
-      `instruments_service/reference_data/sports_dependency.py`). **Done when**: `check_api_football_dependency()` reads
-      a manifest slice instead of per-date probes; consolidation-lag fallback implemented + documented; a regression
-      test proves equivalent results to the old probe-based check; no independently-hardcoded duplicate path templates
-      remain; quality-gates green. Source: `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`.
+- [x] ✅ [DATA] P2. **Manifest-slice replacement for `check_api_football_dependency()`** —
+      `instruments-service@bd1da540`. Added `_manifest_shows_fixtures_captured()`: a pyarrow-pushed-down
+      `read_availability_index()` slice (`date`/`data_type`/`capture_status`, ~0.1s/call) as the PRIMARY check, matching
+      `data_type in {FIXTURES, FIXTURES_SCHEDULE}` + `capture_status == "captured"` — NOT `venue ==     "API_FOOTBALL"`
+      per the issue doc's prose: live-data probe found these rows carry an EMPTY `venue` column, api-football identity
+      is implied by `data_type` alone. Verified equivalent to the old GCS-probe verdict against 12+ real dates
+      (2024-2026, incl. 2 genuine-miss dates) before writing tests. Old GCS-probe KEPT UNCHANGED as fallback
+      (manifest-read failure/staleness returns `False`, never raises) — path-template duplication is moot since the hot
+      path no longer touches them, per this todo's own anticipated outcome. 9 new/updated unit tests. `quality-gates.sh`
+      PASSED. Source: `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`.
 - [x] [DATA] P2. ✅ **Cached/batched fix for `sports_fixtures.py:356`** — `instruments-service@2be5698d`. The doc's
       stated path (`instruments_service/reference_data/sports_fixtures.py`) was stale — the real file is
       `instruments_service/engine/orchestrator/sports_fixtures.py`, and the actual per-(entity×league) primitive
@@ -579,13 +579,13 @@ source: >-
 
 ### From `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`
 
-- [ ] [DATA] P3. **Fleet-wide sweep for the same seeder-over-captured pattern** in other asset groups (the
-      `enumerate_v2` guard is active for every asset_group now via `main()`; verify the nightly jobs' images actually
-      pick it up fleet-wide). (repo: instruments-service — nightly Cloud Run enumerator job configs across all
-      asset_groups; cross-check against `enumerate_expected_universe.py` `main()` guard coverage; deployment-service for
-      job/image-tag inspection). **Done when**: a fleet-wide audit table is produced confirming, per asset_group's
-      nightly enumerator job, whether the deployed image contains the `ba306543` `captured_set` guard; any
-      stale/unguarded asset_group flagged as a follow-up finding. Source:
+- [x] ✅ [DATA] P3. **Fleet-wide sweep for the same seeder-over-captured pattern** — CLEAN, no unguarded asset_group.
+      `enumerate_v2()`'s `captured_set` drop-filter is ONE choke point after per-AG dispatch (no `sports`-only gate) —
+      structurally universal across all 5 `_V2_ENUMERATORS`. All 5
+      `expected-universe-v2-{cefi,defi,tradfi,sports,     prediction}` jobs share ONE terraform image ref; each job's
+      most recent (2026-07-25 ~01:30 UTC) execution resolved to the SAME digest `sha256:e88f3ded52…` = current
+      `:latest`, tagged `f539945` (built 2026-07-23, 10d after guard commit `ba306543` 2026-07-13) — content-verified
+      present (`merge-base --is-ancestor` reads false only due to the LDR→main squash, not a real gap). Source:
       `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
 - [x] [CODE] P1. ✅ **Extend the "never emit `empty_confirmed` over a captured atom" guard** to the regular sports
       instruments batch-capture emission path (`sports_fixtures.py`/`sports_reference_core.py` or wherever

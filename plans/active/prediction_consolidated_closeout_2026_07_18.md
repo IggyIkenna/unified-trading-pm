@@ -130,9 +130,11 @@ source:
 
 **Per-child open-todo snapshot (2026-07-24 — so the split itself is AO-legible without opening each child):**
 
-- [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — **10
-  open** (all P0/P1, no P2/P3). Top: [BACKEND] P0. Finish the prediction capture-incident remediation — harden the
-  capture path; [BACKEND] P0. Kill the dead Kalshi `trading-api.kalshi.com` host reintroduced into the smoke matrix.
+- [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — **11
+  open** (corrected 2026-07-25 plan-reconcile — was 9 at split time, cited as 10 here and in batch2's re-check, now 11;
+  a `**NEW 2026-07-24**` item was added same-day after this snapshot and nobody re-counted). Top: [BACKEND] P0. Finish
+  the prediction capture-incident remediation — harden the capture path; [BACKEND] P0. Kill the dead Kalshi
+  `trading-api.kalshi.com` host reintroduced into the smoke matrix.
 - [`prediction_phase_c_data_status_ui_2026_07_24.md`](/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md) —
   **4 open**. Top P0: [UI] P0. RE-ADD the data-status "dimensions enumeration" view to deployment-ui/api.
 - [`prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`](/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md)
@@ -228,9 +230,14 @@ source: the same-day `/data-pipeline-reconciliation` four-surface pass against `
   rate is the lowest measured — this is the "prediction already measures cleanest" fact referenced elsewhere in this
   plan's gap analysis, now cited with its actual numbers rather than left undocumented. This is NOT an unqualified
   "prediction is cleanest on every axis" claim — the casing-tail axis alone would rank cefi below prediction.
-- [ ] [DATA] P3. Re-run `/data-pipeline-reconciliation prediction` after Phase B's canonicalisation migration lands and
-      record the new run's F2/C2a percentages against the 2026-07-20 baseline above. Done when: the new numbers are
-      cited in this section (or a new dated sub-section) with the new report's path — not just "re-ran, looks fine."
+- [ ] [DATA] P3. **Duplicate note (2026-07-25 plan-reconcile)**: this todo and the P2 todo below (line ~671, "Verify
+      whether a `/data-pipeline-reconciliation prediction` run predating...") both require the same underlying action —
+      a post-Phase-B-migration reconciliation run diffed against the 2026-07-20 baseline — the P2 todo is the broader
+      superset (3 dated runs total, this is 1). Execute via the P2 todo below; this P3 entry is satisfied automatically
+      once that one's Done-when is met. Re-run `/data-pipeline-reconciliation prediction` after Phase B's
+      canonicalisation migration lands and record the new run's F2/C2a percentages against the 2026-07-20 baseline
+      above. Done when: the new numbers are cited in this section (or a new dated sub-section) with the new report's
+      path — not just "re-ran, looks fine."
 
 ## MVP universe (the Phase-D / Phase-E readiness target)
 
@@ -281,9 +288,9 @@ fixture-linked before MVP backfill.
 - **This plan's own Phase A-E children (2026-07-24 fork — were listed in the Split-notice table above but not repeated
   here; added so this index is the single place every source doc lives, including this plan's own forks)**:
   - **[BACKEND] P0.**
-    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 10 open
-    (all P0/P1). Top: finish the prediction capture-incident remediation; kill the dead Kalshi `trading-api.kalshi.com`
-    host.
+    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 11 open
+    (corrected 2026-07-25 plan-reconcile, was 10). Top: finish the prediction capture-incident remediation; kill the
+    dead Kalshi `trading-api.kalshi.com` host.
   - **[UI] P0.**
     [`prediction_phase_c_data_status_ui_2026_07_24.md`](/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md) —
     4 open. Top: RE-ADD the data-status "dimensions enumeration" view to deployment-ui/api.

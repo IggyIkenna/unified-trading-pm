@@ -317,7 +317,74 @@ inherited from the first shipped batch:
       `gcloud compute instances list --filter='name~"^af-backfill-"'`; once clear, enumerate the exact new-league
       `league_id` list (all `in_mvp_scope=False` entries added across the 11 batches, i.e. everything with
       `created`/added 2026-07-25 in `league_data_other.py`'s `REFERENCE_LEAGUES`) before launching, so the backfill
-      command has a concrete scoped target rather than "all leagues."
+      command has a concrete scoped target rather than "all leagues." — **RE-CHECKED 2026-07-25 (slot 2,
+      data_engineering)**: `af-backfill-20260725-032253` is now `TERMINATED` (confirmed live via
+      `gcloud compute     instances list`) — the singleton lock IS clear (it only counts `status=RUNNING`, per the
+      launcher's own filter). **Enumeration done**: extracted every `api_football_id=` added across the 14
+      curated-universe commits
+      (`unified-api-contracts@{7b13196e,162e51a3,a04996fd,dbd64914,49049b7,4e437004,dfeef957,80717936,28bda62a,     cf06ea48,a0fd391c,a7aa4226,cf4c8491,0104c2f2}`,
+      i.e. continental majors + all 11 domestic batches) via
+      `git show <sha> -- .../league_data_other.py | grep '^\+.*api_football_id='` — **287 unique league_ids**, all
+      independently re-verified present in the current file with `in_mvp_scope=False` (0 missing, 0 wrong-scope; the 1
+      apparent mismatch on a naive substring check was a false positive — `api_football_id=504`'s comment-line mention 2
+      lines above the real field, not a second entry). Reproducible in seconds from the SHA list above — not re-pasting
+      the 287-id list inline here to keep this doc lean. **Still NOT launched**: could not verify the API-Football daily
+      quota has reset since the 2026-07-25T08:12Z exhaustion incident
+      (`issues/sports_fixture_events_refetch_progress_2026_07_25.md`'s CRITICAL entry) — this session's environment has
+      no API key loaded (`get_live_quota()` returned `live=False`, registry fallback only, not a real read), and
+      guessing the reset time risks repeating the exact silent-corruption failure mode that incident already found once
+      today. Released via `/skip-current-task`, not attempted. Next dispatch: obtain a real `/status` read (needs the
+      production API key, not available in a bare dev worktree) or operator confirmation the daily quota has reset, THEN
+      launch `launch-api-football-backfill-vm.sh` scoped to the 287 enumerated league_ids (regenerate via the SHA list
+      above, don't hand-copy) — 2019→ fixtures+enrichment, gated + honest-empty per Directive A/B. — **LAUNCHED
+      2026-07-25T12:54Z (slot 11, data_engineering), FIXTURES-only, floor-corrected range**: this session's worktree DID
+      have a working `api-football-api-key` (Secret Manager, GCP ADC) —
+      `ApiFootballAdapter.get_live_quota(force_refresh=True)` returned
+      `live=True daily_limit=150000 daily_remaining=73705` (~12:42Z), i.e. the daily quota from the 08:12Z exhaustion
+      incident HAD already reset by mid-day (not confirmed at UTC-midnight; just confirmed live, real, authoritative —
+      resolves slot 2's open blocker). **Real-code check, not guessed**: no `--league-ids`-style flag exists on this
+      launcher (confirmed reading the arg parser) and none is needed — `sports.py`'s per-league preflight
+      (`_is_in_canonical_write_universe` / the per-date "all expected leagues captured" skip) re-derives the expected
+      league set LIVE from the current registry every run, so a plain (non-`--force`) re-run correctly detects the 287
+      newly-registered leagues as missing on already-processed dates and re-fetches just that date (1 API call/date
+      either way, since fixtures-by-date returns all leagues in one call) — no redo_all/`--force` needed, no wasted
+      quota re-fetching already-correct old-league data. **Floor-date correction (real finding, not previously caught in
+      this doc)**: the "2019→" range in this todo's own text (and repeated in slot 2's note above) CONTRADICTS the
+      ratified 2026-07-21 sports data floor (`codex/02-data/sports-2020-06-data-floor.md` — "every sports artifact dated
+      before 2020-06-06 is fabrication-by-construction... DELETE, do not backfill"; that doc's own "What is MOOT"
+      section names the pre-2020-06 slice of exactly this api-football reference-expansion effort). Used the CORRECTED
+      range `2020-06-06..2026-07-25` for the actual launch, not the stale 2019 start. **Tarball-staleness check
+      performed before trusting the launch** (per the near-miss precedent in
+      `issues/sports_fixture_events_refetch_progress_2026_07_25.md`): all 4 required tarballs
+      (instruments-service/unified-api-contracts/unified-trading-library/deployment-service) were genuinely STALE
+      (verified via `gcloud storage cat <tarball>.manifest.json` vs local `git rev-parse HEAD` — `gsutil` itself has
+      invalid/broken credentials in this session, same known unrelated issue slot 2/6 hit earlier today on this same
+      doc; used `gcloud storage`, an equally-authoritative alternative, throughout). Republished via
+      `LC_TARBALL_FRESHNESS=auto` (`create-code-tarballs.sh`); the launcher's own gsutil-based re-verify then false-
+      -negatived (MISSING) purely from the same broken-gsutil-credential issue — manually re-confirmed all 4 fresh via
+      `gcloud storage` (exact SHA match) before launching with `LC_TARBALL_FRESHNESS=off`. **Launched
+      `af-backfill-20260725-125405`** (`--entity FIXTURES 2020-06-06 2026-07-25`, SPOT e2-standard-8,
+      `asia-northeast1-c`), deliberately **FIXTURES-only, not full enrichment**: cheap (~1 API call/date, launcher's own
+      ~5-30min estimate), a real prerequisite for enrichment (per-fixture stats/events/lineups/player-stats need
+      `fixture_id`s to exist first), and enrichment's own budget/cap scoping ("burn budget per the resolved per-source
+      caps") is a separate, genuinely larger campaign that deserves its own dispatch once FIXTURES for the new leagues
+      actually exists — not rushed into this same launch. **Verified NOT fire-and-forget**: serial-console read at T+90s
+      confirmed live boot progress AND, critically, confirmed via the VM's own printed manifest SHAs that ALL 4 repos
+      deployed to the VM match this session's exact HEAD (`uac sha=71e757507382`, `utl sha=86abb7ef14a3`,
+      `deployment-service sha=4e6ab8ee87bb`, `instruments-service sha=269440d7ed61`) — i.e. the VM genuinely has the
+      full 287-league registry, not a stale pre-refresh copy. Not completable this turn (even a fast FIXTURES-only run
+      needs health-checking to terminal). Released via `/skip-current-task {"reason_code": "GATED"}`, not
+      duplicate-launched. **Follow-up finding (P3, not blocking)**: `launch-api-football-backfill-vm.sh` does not itself
+      clamp `START_DATE` to the 2020-06-06 floor the way `launch-sports-entity-sweep-vm.sh` does per the floor doc's
+      enforcement-surface list — the venue-epoch skip gate (`get_venue_epoch`) is defense-in-depth against an actual
+      fabrication, but this launcher accepting a pre-floor start date silently (no warning) is a real gap an agent could
+      trip on again; worth a small follow-up to add the same clamp/warning this launcher's sibling already has. **Next
+      dispatch**: health-check `af-backfill-20260725-125405`
+      (`gcloud compute instances list --filter='name~"^af-backfill-"'` +
+      `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260725-125405/run.log`);
+      once terminal, spot-verify a sample of the 287 new leagues now show captured `entity=fixtures` rows post-floor,
+      THEN scope + launch the separate per-fixture enrichment campaign (budget-capped per Directive A/B) before
+      considering step 2 done or touching step 3's destructive residual-drop.
 
 ## Codex SSOTs
 

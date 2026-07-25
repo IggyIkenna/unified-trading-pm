@@ -3,10 +3,11 @@ doc_type: plan
 title: DeFi satellite AO batch 1 — finalize (reconcile source docs + resolve deferred items + archive)
 summary: >-
   Gated closeout for defi_satellite_ao_dispatch_batch1_2026_07_25.md — machine-held via depends_on + gate_on_depends:
-  true until all 53 of that plan's todos are done. Mirrors the cefi/tradfi/prediction batch1_finalize pattern (reconcile
-  each of the 28 distinct source docs' checkboxes independently), plus 2 batch1-specific additions: re-check the 1
-  too-large-doc exclusion for whether it's now scoped enough for a batch2 pass, and re-verify the 1 operator-ruling item
-  (Solana lending_indices path shape) has been answered before spinning it into a fresh todo.
+  true until all 54 of that plan's todos are done (53 original + todo 54, appended 2026-07-25 once operator-decision
+  entry #3 resolved). Mirrors the cefi/tradfi/prediction batch1_finalize pattern (reconcile each of the 29 distinct
+  source docs' checkboxes independently — 28 from the original 53 + 1 more for todo 54's source), plus 2 batch1-specific
+  additions: re-check the 1 too-large-doc exclusion for whether it's now scoped enough for a batch2 pass, and re-verify
+  the 1 operator-ruling item (Solana lending_indices path shape) has been answered before spinning it into a fresh todo.
 status: draft
 nature: process
 asset_group: [defi]
@@ -46,20 +47,28 @@ drift_direction: advance-code
 # DeFi satellite AO batch 1 — finalize
 
 > **Machine-gated on `defi_satellite_ao_dispatch_batch1_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) — the
-> dispatcher will not queue any todo below until all 53 tasks in that plan are `done`. `sequential: true` because todo 2
+> dispatcher will not queue any todo below until all 54 tasks in that plan are `done`. `sequential: true` because todo 2
 > needs todo 1's reconciliation done first, and todo 4 (archival) must run last.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile all 28 distinct source docs' checkboxes.** For each of
-      `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 53 now-done todos: flip the corresponding checkbox/section in
-      its named source doc (each todo's text ends with "Source: `<doc>.md`" — 3 of the 53 todos cite 2-3 source docs at
-      once since they combine same-file candidates from multiple docs; flip the checkbox/section in EVERY cited doc for
-      those), citing the batch-1 commit(s) that shipped it — verify the actual shipped commit exists before citing it.
-      The 28 source docs: `defi_dedicated_bucket_shared_migration_2026_07_13.md` (5 todos),
-      `data_completion_defi_2026_07_15.md` (3 todos, 1 shared with the enumerate_expected_universe.py combine),
-      `defi_strategy_pnl_axis_index_2026_07_24.md` (shared, lst_rates_handler.py combine),
-      `lst_rate_honest_coverage_2026_07_21.md` (shared, lst_rates_handler.py combine),
+- [ ] [REVIEW] P2. **Reconcile all 29 distinct source docs' checkboxes** (corrected 2026-07-25 plan-reconcile: the
+      original list below was missing the 29th doc,
+      `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` — the source of todo 54, appended
+      after operator-decision entry #3 resolved; batch1's own frontmatter summary already independently states the
+      correct "29 of those docs" figure, confirming 28 was the stale count). For each of
+      `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 54 now-done todos: flip the corresponding checkbox/section in
+      its named source doc (each todo's text ends with "Source: `<doc>.md`" — 3 of the 53 original todos cite 2-3 source
+      docs at once since they combine same-file candidates from multiple docs; flip the checkbox/section in EVERY cited
+      doc for those), citing the batch-1 commit(s) that shipped it — verify the actual shipped commit exists before
+      citing it. **Also flip `defi_consolidated_closeout_2026_07_18.md` Track 2's matching P0 checkbox** (the
+      `write_defi_rows()` bare-symbol-filename-leaf defect) once todo 36 ships — that consolidated-plan checkbox tracks
+      the identical defect via the same source issue doc and is NOT itself one of the 29 source docs below, so it would
+      otherwise stay stale after this reconciliation. The 29 source docs:
+      `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` (1 todo — todo 54),
+      `defi_dedicated_bucket_shared_migration_2026_07_13.md` (5 todos), `data_completion_defi_2026_07_15.md` (3 todos, 1
+      shared with the enumerate_expected_universe.py combine), `defi_strategy_pnl_axis_index_2026_07_24.md` (shared,
+      lst_rates_handler.py combine), `lst_rate_honest_coverage_2026_07_21.md` (shared, lst_rates_handler.py combine),
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md`,
       `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`,
       `issues/defi_adapter_dead_code_audit_2026_07_24.md` (2 todos),
@@ -84,9 +93,9 @@ drift_direction: advance-code
       `issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`,
       `issues/phantom_captures_defi_2026_06_28.md`, `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`.
       For each: after flipping, re-check whether it now has 0 open todos remaining (checkbox AND prose-form). Only flip
-      a doc's `status` to `resolved` if it genuinely reaches 0 open todos. **Done when**: all 28 source docs'
-      corresponding checkboxes/sections are flipped with verified evidence, and any doc that genuinely reaches 0 open
-      todos is flipped to `status: resolved`.
+      a doc's `status` to `resolved` if it genuinely reaches 0 open todos. **Done when**: all 29 source docs'
+      corresponding checkboxes/sections are flipped with verified evidence (including the consolidated-plan Track 2
+      cross-flip above), and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
 - [ ] [REVIEW] P2. **Re-check the 1 too-large-doc exclusion for a batch2 pass.** Re-read
       `issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`'s current state — has whatever made it
       too-large/risky at batch-1 triage time settled enough that a fresh, precisely-scoped triage pass could now safely

@@ -20,7 +20,7 @@ related:
   [
     plans/active/gcs_bucket_estate_cleanup_2026_07_10.md,
     plans/active/defi_manifest_canonicalisation_2026_06_01.md,
-    plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md,
+    plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md,
     plans/active/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
   ]
 created: "2026-07-13"

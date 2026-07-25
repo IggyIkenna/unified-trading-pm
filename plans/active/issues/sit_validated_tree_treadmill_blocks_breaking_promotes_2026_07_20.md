@@ -125,6 +125,18 @@ decide "already promoted".
 - [ ] [DEVOPS] P3. Add a regression test / monitor that fires when a repo has been SIT-BLOCKED for N consecutive ticks —
       the treadmill is currently only visible as a promotion-lag alert, which reads as slowness rather than a stuck
       gate.
+- [ ] [DEVOPS] P2. Distinct sub-finding (2026-07-25, not the moving-tree race itself): when two `SIT-on-LDR` dispatches
+      for the same repo overlap (e.g. two promote-fleet ticks within the concurrency-group's cancellation window), the
+      OLDER dispatch gets `cancelled` by `system-integration-tests`'s concurrency group, but its `state=failure` status
+      can still be POSTED to the LDR commit AFTER a newer, actually-`success` run's own status — clobbering a real green
+      result with a stale red one. Live-measured 2026-07-25: run `30158515857` reached `conclusion=success` at
+      `12:50:49Z`; run `30158518796` (an older, overlapping dispatch) was `cancelled` but posted `state=failure` to the
+      SAME commit at `12:51:02Z`, 13s later, becoming the commit's latest/authoritative status. Fix direction: either
+      have the status-posting step no-op when its own run was `cancelled` (a cancelled run has no informative verdict to
+      report), or key the posted status's `created_at`-ordering off run START time / a monotonic dispatch counter
+      instead of POST-call completion order so a late-posting stale run can't overwrite a fresher good one. (repo:
+      unified-trading-pm, `.github/workflows/ldr-to-main-promote-fleet.yml` and/or
+      `system-integration-tests/.github/workflows/full-workspace-sit.yml`'s status-post step)
 
 ## Progress Log
 
@@ -135,3 +147,29 @@ decide "already promoted".
   while the live branch reports `is_breaking=False` — the same repo, opposite verdicts, which is exactly the silent
   direction (a breaking delta judged on a snapshot that does not contain it → promoted ungated). The treadmill itself is
   left OPEN pending a direction ruling.
+- **2026-07-25 (slot 8, backend_engineer)** — Hit this live while trying to get `deployment-api@3fea307` (the
+  wrong-gunicorn-file fix, see `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` todo 5 part 1)
+  promoted LDR→main so its follow-up verification could proceed. Manually dispatched `ldr-to-main-promote-fleet`
+  (`workflow_dispatch`) twice, ~5 min apart, to speed past the scheduled cadence. Both times the gate logged
+  `SIT GATE BLOCK deployment-api: true-delta not SIT-validated on this tree ... fail-CLOSED. Dispatching SIT-on-LDR`
+  with a DIFFERENT `sit_validated_tree` each time even though `deployment-api`'s own LDR tree (`9a9fa61c...`) never
+  changed across the whole ~15-min window — confirms the doc's framing: the gate is racing the WHOLE workspace's moving
+  state, not just this one repo's delta. Concretely observed the compounding failure mode described above but not
+  previously measured: my FIRST manual dispatch's `SIT-on-LDR` re-dispatch produced 3 near-simultaneous
+  `full-workspace-sit` runs (`system-integration-tests` concurrency group), 2 of which got `cancelled`; the one that
+  actually reached `conclusion=success` (`30158515857`, ~4.5 min runtime) never got its status posted to the LDR commit
+  — a _later_-dispatched-but-earlier-CANCELLED run's status (`conclusion=cancelled` → posted as `state=failure`) landed
+  on the commit instead, timestamped AFTER the real success (`created_at=12:51:02Z` for the cancelled run's status vs
+  the success run completing at `12:50:49Z`). i.e. repeated manual re-dispatch while a validation is already in flight
+  doesn't just risk missing the moving-tree window — it can make an already-GOOD result invisible by racing a stale
+  status POST over it. Second (cleaner, single, non-overlapping) dispatch cycle DID correctly post
+  `sit-gate/fleet-green=success` on the right commit, but the gate still blocked on the SAME tree-mismatch pattern
+  immediately after because the workspace digest had already moved again (`712f97a1d9...` at 12:45:56 →
+  `c7a8ce88978e...` at 12:58:10, ~12 min apart, no dispatch of mine in between explains the second value). Net: backed
+  off from further manual dispatching (each attempt plausibly extends the treadmill under this fleet's churn rate rather
+  than shortening it) and is instead waiting for a natural quiet window per the doc's own "a window does exist" framing
+  — did NOT attempt the retarget fix (correctly flagged unsafe above) or any other gate-side change; out of
+  backend_engineer craft scope regardless. Adds one more concrete data point for whoever takes the P2 DEVOPS ruling: the
+  self-inflicted-status-race sub-finding (a cancelled run's status clobbering an already-successful run's status when
+  dispatches overlap) is a DISTINCT, independently fixable bug from the moving-tree race itself — worth its own todo
+  line rather than folding into "tighten cadence".

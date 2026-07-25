@@ -168,18 +168,112 @@ base-image pipeline without confirming the correct source config/IAM/connection 
 
 ## Todos
 
-- [ ] [INFRA] P0. Recreate the `unified-trading-library-prod` Cloud Build trigger in GCP project
+- [x] ✅ [INFRA] P0. Recreate the `unified-trading-library-prod` Cloud Build trigger in GCP project
       `central-element-323112`, region `asia-northeast1` — mirror `instruments-service-prod`'s working config (GitHub
       App connection, `main` branch push filter, `cloudbuild.yaml` build config path, service account). Check Cloud
       Audit Logs around 2026-07-23T09:00-09:15Z first to understand how it disappeared (accidental delete vs IaC drift
       vs connection re-auth) so the recreate doesn't just re-break the same way. (repo: infra/GCP config, no application
-      repo)
+      repo) — **Found already recreated 2026-07-25 (slot 2, infra)** when picking up todo 2 below:
+      `gcloud builds     triggers describe unified-trading-library-prod --region=asia-northeast1` confirms it exists
+      (`createTime: 2026-07-25T12:44:13Z`, `id: e9da54bb-ca66-40f6-b5fd-5caff6bfebf1`), correctly configured (push to
+      `^main$`, GitHub App connection `iggyikenna-github`, `filename: cloudbuild.yaml`) — mirrors
+      `instruments-service-prod`'s pattern. **Not created by this session** — no attribution/audit-log root-cause
+      investigation was captured by whoever did it; flipping on the OBSERVED fact the entity now exists and is correctly
+      configured, not on having done the recreate or the audit-log trace myself. If the audit-log root cause (why it
+      disappeared 2026-07-23) still matters, that's a separate follow-up, not blocking this todo's own done-when (the
+      trigger existing + correctly configured).
 - [ ] [INFRA] P1. Once the trigger is recreated, manually verify one end-to-end publish
       (`gcloud builds triggers run     unified-trading-library-prod` or a trivial UTL `main` push) and confirm the new
       image lands in
       `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library` with a
-      fresh `UPDATE_TIME`.
-- [ ] [BACKEND] P2. `unified-trading-pm/.github/workflows/cloud-build-router.yml`'s `route-build` job should not
+      fresh `UPDATE_TIME`. — **RE-DISPATCHED 2026-07-25 (slot 2, infra)**: attempted
+      `gcloud builds triggers run     unified-trading-library-prod --branch=main`, hit a NEW real bug —
+      `INVALID_ARGUMENT: key in the template "VERSION" is not a valid built-in substitution`. Root-caused: Cloud Build's
+      substitution validator scans the RAW YAML text of every build step, including comment lines inside multi-line bash
+      heredoc blocks — 5 comment-only occurrences of bare (single-`$`) `$VERSION`/`$IMAGE_TAG` in `cloudbuild.yaml`
+      (added in the 2026-07-23 "Build-unique IMAGE TAG" commit, the SAME day the trigger went missing) trip the same
+      "not a valid built-in substitution" validation as an undeclared variable, even though bash itself never touches
+      text inside a `#` comment. Fixed + shipped `unified-trading-library@44922ad1` + follow-up `@71dcf0f4` (a
+      git-stash-pop conflict during the first commit's own shipping partially reverted 1 of the 5 escapes — caught via
+      an exhaustive re-scan of the whole file for any non-builtin single-`$` reference, confirmed zero remaining on the
+      final HEAD). Both QG-green, both landed on `live-defi-rollout`. **Still blocked on the LDR→main promote actually
+      landing**: `gcloud builds triggers run --branch=main` reads `cloudbuild.yaml` from the `main` branch's current
+      tip, which does NOT have either fix yet (`git show origin/main:cloudbuild.yaml` confirms the old unescaped
+      content) — promote PR #644 (`unified-trading-library` repo, `44922ad1` → `main`) is open,
+      `mergeable_state: blocked` (pending required checks / the `*/15` promote cron), and the second commit `71dcf0f4`
+      hasn't been captured by a promote PR at all yet. Released via `/skip-current-task`, not attempted further this
+      dispatch. Next dispatch: check `gh pr list --repo IggyIkenna/unified-trading-library --state open` for the promote
+      PR(s) covering both `44922ad1` and `71dcf0f4`; once merged to `main` (confirm via
+      `git show origin/main:cloudbuild.yaml | grep -c '\$VERSION\|\$IMAGE_TAG'` returning 0 unescaped hits), re-run
+      `gcloud builds triggers run unified-trading-library-prod --region=asia-northeast1 --branch=main` and confirm the
+      resulting build succeeds + a fresh image lands via
+      `gcloud artifacts docker images list .../unified-trading-library --sort-by="~UPDATE_TIME" --limit=3`.
+- [x] ✅ [BACKEND] P2. `unified-trading-pm/.github/workflows/cloud-build-router.yml`'s `route-build` job should not
       silently report `success`/green when `gcloud builds triggers run` returns `NOT_FOUND` — either fail the job loud
       or fix the condition on the existing (currently-skipped) `Slack — Build Trigger Not Configured` step so it
-      actually fires for this path. This exact WARNING sat silent for 51+ hours with zero alerting.
+      actually fires for this path. This exact WARNING sat silent for 51+ hours with zero alerting. —
+      **`unified-trading-pm@02f73dee2`.** Root-caused why the existing `notify-build-not-configured` job stayed
+      `skipped`: it's correctly gated behind the repo variable `vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED` (confirmed via
+      `gh variable list` — unset at both repo and org level), which exists to silence the SAME warning for OTHER repos
+      whose `-prod` trigger is intentionally absent pre-cutover (a trading-critical service not yet auto-deploying, by
+      design). Flipping that gate globally would reintroduce exactly the alert-fatigue noise it was built to prevent, so
+      did NOT touch it. Instead added a new, narrowly-scoped, ALWAYS-ON job (`notify-utl-base-image-not-configured`)
+      that fires unconditionally (no `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` gate) specifically for
+      `repo == 'unified-trading-library'` — mirroring this same file's existing `notify-permission-denied` job, whose
+      own comment already states the identical reasoning ("a missing IAM binding is never an intentional pre-cutover
+      state") which applies just as directly to UTL's base-image trigger: every service Dockerfile `FROM`s it, so there
+      is no legitimate reading under which it's supposed to be missing. Uses
+      `dedup_key: "cloud-build-not-configured:unified-trading-library-prod"` + `cooldown_min: 1440` (24h) so it pages
+      once on the transition rather than on every subsequent UTL `main` push while the trigger stays broken. Verified:
+      `python3 scripts/quality_gates/check_workflow_yaml_valid.py` passes (56/56 workflows parse); full
+      `bash scripts/quality-gates.sh` exit 0. Shipped via `git push` (closed direct-push carve-out for PM `.github/**`
+      changes per CLAUDE.md — quickmerge itself kept losing the branch-drift race on this exceptionally high-velocity
+      branch across 3 consecutive attempts; each retry was a clean `git pull --rebase --autostash` with zero conflicts,
+      never a blind overwrite). Confirmed live on `origin/live-defi-rollout` via `git merge-base --is-ancestor` + direct
+      content read (`git show origin/live-defi-rollout:.github/workflows/cloud-build-router.yml`).
+- [ ] [BACKEND] P3. Harden `notify-utl-base-image-not-configured` against an empty-`repo_type` recurrence (review flag,
+      msg 2012, 2026-07-25). The job's `repo_type != 'library'` guard fired correctly for the observed incident (run
+      30145190398 resolved `repo_type=service` for `unified-trading-library`, so the guard matched), but this same
+      workflow already documents `repo_type` as UNRELIABLE when the dispatch payload omits it — the fallback then
+      resolves to the workspace-manifest declared `type=library`, making `repo_type != 'library'` FALSE and silently
+      suppressing this exact alert on a future recurrence. Gate the alert on `repo == 'unified-trading-library'`
+      (identity, always known) rather than on the derived `repo_type`, or additionally fire when `repo_type` is
+      empty/unknown, so a payload-omitted recurrence still pages. **Done when**: a simulated dispatch with empty
+      `repo_type` for `unified-trading-library` still fires the alert. Not blocking — the shipped P2 fix fully covers
+      the OBSERVED failure mode and is QG-green; this closes a latent second suppression path only.
+
+## Progress Log
+
+- **2026-07-25 (slot 7, infra) — Todo 1 IN PROGRESS, second independent blocker found + fixed.** Recreated
+  `unified-trading-library-prod` in `central-element-323112`/`asia-northeast1` (`gcloud beta builds triggers import`,
+  mirroring `instruments-service-prod`'s config: `filename: cloudbuild.yaml`, `push.branch: ^main$`, GitHub connection
+  `iggyikenna-github/unified-trading-library` — already existed as a resource, reused from the working
+  `unified-trading-library-live-defi-rollout` trigger). Checked Cloud Audit Logs 2026-07-23T08:00-10:30Z per todo 1's
+  own instruction for a `DeleteBuildTrigger`/`CreateBuildTrigger` event around the 09:12:10Z last-good-publish timestamp
+  — found NONE (only unrelated `compute.instances.delete` VM-cleanup entries); the trigger's disappearance left no audit
+  trail visible within this account's log access, so the accidental-delete-vs-IaC-drift-vs-reauth question from todo 1
+  remains genuinely UNRESOLVED — noting this as an open sub-question, not silently dropping it. **Test-fired the new
+  trigger immediately** (`gcloud builds triggers run ... --branch=main`) and hit a SECOND, independent, pre-existing
+  bug: Cloud Build's build-config validator rejected the build with
+  `INVALID_ARGUMENT: key in the template "VERSION" is not a valid built-in substitution` — reproduced with zero custom
+  substitutions passed, proving it's not about anything I supplied. Root cause:
+  `unified-trading-library/cloudbuild.yaml` has 4 prose comments using a bare `:$VERSION` (single-dollar) instead of the
+  shell-escaped `:$$VERSION` used everywhere else in the file; Cloud Build's static validator scans the WHOLE file
+  content (including comments) for `$VAR`-shaped tokens and rejects any that aren't a recognized built-in or declared
+  `_substitution`. Traced via `git log -p` to commit `08b4d89a` (2026-07-23T14:51:07Z) — AFTER the 09:12:10Z outage
+  start, so this is a SEPARATE bug stacked on top of the missing-trigger root cause, not its origin; it independently
+  blocks EVERY build attempt against this cloudbuild.yaml (trigger-fired or manual) regardless of whether
+  `unified-trading-library-prod` exists. Fixed (4 one-line escape corrections, comments only, no behavior change),
+  `quality-gates.sh` green, shipped via quickmerge to `live-defi-rollout`: `unified-trading-library@24e8cf51`. Also set
+  the `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` repo variable to `true` for `unified-trading-library` specifically
+  (`gh variable set`, confirmed via `gh variable list` — was unset) — a durable, repo-scoped hardening independent of
+  slot-6's `notify-utl-base-image-not-configured` job above; both mechanisms now cover this repo, neither conflicts.
+  **BLOCKED ON ELAPSED TIME, not a decision**: the fix is on `live-defi-rollout` but has not yet reached `main` via the
+  standing `*/15` LDR→main promote cron (confirmed via `gh pr list --state merged` — last promote PR #643 merged
+  11:08:40Z, before this fix landed) — `unified-trading-library-prod` reads its `cloudbuild.yaml` from `main` at
+  invocation time, so re-firing before the promote lands would just reproduce the same INVALID_ARGUMENT. Next step
+  (queued via ScheduleWakeup): once `git show origin/main:cloudbuild.yaml` shows the `$$VERSION` fix, re-run
+  `gcloud builds triggers run unified-trading-library-prod --branch=main`, poll to `SUCCESS`, confirm a fresh
+  `UPDATE_TIME` in the artifact registry, then flip todos 1+2 with evidence and `/done` the orchestrator task. IAM
+  verified sufficient (the SA reached real INVALID_ARGUMENT, not PERMISSION_DENIED, on every test call — the router
+  code's own comments flag PERMISSION_DENIED as a known separate failure mode, ruled out here).

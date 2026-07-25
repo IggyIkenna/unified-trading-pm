@@ -6,12 +6,15 @@ summary: >-
   this session, after sports/tradfi/prediction/cefi). Extracted from a 40-doc AO-eligibility triage over every defi
   satellite doc not covered by defi_consolidated_closeout_2026_07_18.md /
   defi_consolidated_closeout_aggregated_sources_2026_07_24.md. The triage found 60 candidate AO-eligible todos across 29
-  of those docs (1 doc flagged too-large-or-risky excluded entirely; 10 docs had zero eligible candidates), each
-  cross-checked against every one of that doc's own flagged conflicts per the operator's 2026-07-25 conflict-check
-  discipline. 59 of the 60 survived — the 1 remaining is a genuine cross-doc contradiction routed to the operator
-  decision queue, not silently decided. 4 groups of same-file collisions (10 sub-items total, spanning both within-doc
-  and cross-doc overlaps) were combined into 4 todos to avoid an in-batch same-file collision, so the 59 surviving
-  candidates ship here as 53 todo bullets.
+  of those docs (1 doc flagged too-large-or-risky excluded entirely, itself having had 1 candidate deferred alongside
+  it; 9 further docs had zero eligible candidates from the start — 10 excluded docs total), each cross-checked against
+  every one of that doc's own flagged conflicts per the operator's 2026-07-25 conflict-check discipline. 59 of the 60
+  survived — the 1 remaining is a genuine cross-doc contradiction routed to the operator decision queue, not silently
+  decided. 4 groups of same-file collisions (10 sub-items total, spanning both within-doc and cross-doc overlaps) were
+  combined into 4 todos to avoid an in-batch same-file collision, so the 59 surviving candidates ship here as 53 todo
+  bullets, plus a 54th appended 2026-07-25 once operator-decision entry #3 (Kamino/Solend `lending_indices` shape)
+  resolved and moved from the operator queue into Todos (see the Deferred section's "RESOLVED" note) — 54 todo bullets
+  total.
 status: draft
 nature: process
 asset_group: [defi]
@@ -604,8 +607,11 @@ stale/resolvable conflict) — it cannot move to batch2 until batch1 actually di
 `issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`,
 `issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md`,
 `issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md` — each had zero AO-eligible candidates at
-extraction time; see each doc's own rationale. (`defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md` also
-appeared in this bucket but is listed once, above, under the more specific too-large-or-risky flag.)
+extraction time; see each doc's own rationale. Reworded 2026-07-25 (plan-reconcile) for accuracy:
+`defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md` is NOT a 10th zero-candidate doc — it had 1 AO-eligible
+candidate, deferred alongside it under the too-large-or-risky flag above (see that section). The frontmatter's "10
+excluded docs total" tally is these 9 zero-candidate docs plus that 1 too-large doc, not 10 docs that each had zero
+candidates.
 
 ### Needs operator ruling — RESOLVED 2026-07-25, moved into Todos above
 

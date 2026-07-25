@@ -1160,6 +1160,45 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
 
+  # Alert when the unified-trading-library base-image publish trigger is missing (2026-07-25).
+  # This is a NARROWER, ALWAYS-ON counterpart to notify-build-not-configured — that job is
+  # correctly gated behind vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED (unset fleet-wide today) because
+  # a missing <repo>-prod trigger is OFTEN an intentional pre-cutover build-only posture for a
+  # trading-critical service. unified-trading-library-prod is never that: every service Dockerfile
+  # FROMs this base image, so a missing/NOT_FOUND trigger here is ALWAYS a config bug, mirroring
+  # notify-permission-denied's own "never an intentional pre-cutover state" reasoning immediately
+  # above. Root cause (found 2026-07-25): unified-trading-library-prod went missing at/after
+  # 2026-07-23T09:12:10Z and this exact WARNING sat silent for 51+ hours with zero alerting because
+  # the only wired notification was the gated one — see
+  # plans/active/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md.
+  # dedup_key + a long cooldown converts "page on every UTL main push while the trigger stays
+  # missing" into "page once on the transition, then again if it's still broken after a full day".
+  notify-utl-base-image-not-configured:
+    name: Slack — UTL Base-Image Trigger Not Configured
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo == 'unified-trading-library' &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'not-configured'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "unified-trading-library-prod Cloud Build trigger NOT_FOUND — the base Docker image every service Dockerfile
+        FROMs has stopped republishing. This is NEVER an intentional pre-cutover state (unlike other repos' prod
+        triggers). FIX: recreate the `unified-trading-library-prod` trigger in GCP project central-element-323112,
+        region asia-northeast1 (mirror instruments-service-prod's config). See
+        plans/active/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md."
+      subject_repo: unified-trading-library
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "cloud-build-not-configured:unified-trading-library-prod"
+      cooldown_min: 1440
+    secrets: inherit
+
   # Route instruments-service build failures to #data-pipeline-alerts (2026-06-26).
   # instruments-service builds the image used by all Cloud Run data-pipeline jobs
   # (sports-trigger-instruments, catalogue refresh, etc.). A build failure means jobs

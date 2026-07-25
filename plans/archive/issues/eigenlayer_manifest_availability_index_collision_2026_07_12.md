@@ -33,7 +33,7 @@ tags: [gcs, manifest, data-status, availability-index, data-pipeline-correctness
 related:
   [
     /plans/archive/2026_07/gcs_bucket_estate_cleanup_2026_07_10.md,
-    /plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md,
+    /plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md,
   ]
 created: "2026-07-12"
 parent_epic: infrastructure_master

@@ -3,11 +3,12 @@ doc_type: plan
 title: TradFi satellite AO batch 2 — finalize (reconcile source docs + re-check remaining deferrals + archive)
 summary: >-
   Gated closeout for tradfi_satellite_ao_dispatch_batch2_2026_07_25.md — machine-held via depends_on + gate_on_depends:
-  true until all 11 of that plan's todos are done. Mirrors the batch1_finalize pattern (reconcile each of the 9 distinct
-  source docs' checkboxes independently), plus one batch2-specific addition: re-check the 8 still-genuinely-conflicted
-  Deferred items + the 1 operator-gated item once the operator has ruled on the queued FX-sequencing / mvp_mode
-  decisions, and recommend whether `tradfi_manifest_content_recovery_completion_2026_07_24.md` (excluded from both
-  batch1 and batch2) is ready for its own dedicated triage/design pass yet.
+  true until all 11 of that plan's todos are done. Mirrors the batch1_finalize pattern (reconcile each of the 11
+  distinct source docs' checkboxes independently — corrected 2026-07-25 plan-reconcile, the doc list below always had 11
+  entries but the prose said 9), plus one batch2-specific addition: re-check the 8 still-genuinely-conflicted Deferred
+  items + the 1 operator-gated item once the operator has ruled on the queued FX-sequencing / mvp_mode decisions, and
+  recommend whether `tradfi_manifest_content_recovery_completion_2026_07_24.md` (excluded from both batch1 and batch2)
+  is ready for its own dedicated triage/design pass yet.
 status: draft
 nature: process
 asset_group: [tradfi]
@@ -54,10 +55,10 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile all 9 distinct source docs' checkboxes.** For each of
+- [ ] [REVIEW] P2. **Reconcile all 11 distinct source docs' checkboxes.** For each of
       `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s 11 now-done todos: flip the corresponding checkbox/section
       in its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-2 commit(s) that
-      shipped it — verify the actual shipped commit exists before citing it. The 9 source docs:
+      shipped it — verify the actual shipped commit exists before citing it. The 11 source docs:
       `data_completion_tradfi_2026_07_15.md` (2 checkboxes, 1 combined todo),
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (7 checkboxes, 1 combined todo),
       `tradfi_backfill_throughput_followups_2026_07_24.md` (3 checkboxes, 1 combined todo — plus confirm the
@@ -71,7 +72,7 @@ drift_direction: advance-code
       `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`,
       `tradfi_multisource_backfill_2026_06_22.md`. For each: after flipping, re-check whether it now has 0 open todos
       remaining. Only flip a doc's `status` to `resolved` if it genuinely reaches 0 open todos (checkbox AND
-      prose-form). **Done when**: all 9 source docs' corresponding checkboxes/sections are flipped with verified
+      prose-form). **Done when**: all 11 source docs' corresponding checkboxes/sections are flipped with verified
       evidence, and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
 - [ ] [REVIEW] P2. **Re-check the 8 still-genuinely-conflicted Deferred items + the 1 operator-gated item from batch2's
       own Deferred section**, now that time has passed and the operator may have ruled on the queued decisions in

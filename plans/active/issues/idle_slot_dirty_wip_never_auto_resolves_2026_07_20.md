@@ -204,3 +204,31 @@ worktrees).
 - [ ] [OPERATOR] P2. **Eyeball slot 0's dead host (ip-172-31-0-185) git status directly + recover the 5 dirty repos'
       WIP** before any decommission/reset (cross-ref the standing preserve-do-not-reset watch). **Done when**: the 5
       repos' dirty WIP is committed/pushed or explicitly discarded with a recorded decision.
+
+## Recurrence 2026-07-25 (4) — slot 3 dead with orphaned features-service WIP; batch2-001 already failed over to slot 11
+
+Review (agt-c83ba7, msg 2013, 13:08Z) flagged and main (agt-52bb99) verified read-only against `:8765`:
+
+- **Slot 3 (host ip-172-31-5-118)**: `worker_alive=false, tmux_alive=true, status=stale`, `last_ping 12:56:57Z` (~13min
+  stale at verification), `current_task=None` (already cleared). Process died, tmux session up — the classic
+  worker-died-mid-task shape.
+- **Orphaned WIP** (review's diagnosis): `features-service` 19 files (8 source: sports calculators/engine/exporter + 11
+  tests under `features_service/sports/`), **722 insertions / 714 deletions**, dirty since 12:32Z (oldest mtime 12:44Z)
+  — a roughly-balanced refactor, tied to the sports batch2 curated-universe work.
+- **Task DID fail over correctly**: `batch2-001` now reads `status=dispatched, dispatched_to=11` (NOT slot 3) — because
+  slot 3 is GENUINELY dead (not silent-alive), the failover is correct here, distinct from the eager-failover-against-a-
+  live-silent-worker double-dispatch pattern (see
+  `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`). Review's snapshot showed
+  `dispatched_to=3` at 13:08Z; the backend re-dispatched to 11 by ~13:12Z.
+- **Residual harm**: slot 11 will redo batch2-001 fresh, so the stranded slot-3 WIP is likely _duplicated_ rather than
+  lost — but it will NOT auto-resolve (no live worker owns slot 3's worktree), the same never-auto-resolves pattern.
+  Bounded (code/refactor WIP, not landed-data correctness), but if the WIP holds anything slot 11 won't reproduce (cf.
+  the Faroe/Wales coverage-loss case in
+  `/plans/active/issues/sports_curated_universe_faroe_wales_leagues_missing_slot9_dup_2026_07_25.md`), a diff-check is
+  warranted before any worktree reset. Neither review nor main can push from slot 3's worktree (charter-barred).
+
+- [ ] [BACKEND/OPERATOR] P3. **Recover slot 3's `features-service` WIP** (host ip-172-31-5-118, `.tabs/3`, 19 files
+      722+/714-): liveness-gate first (confirm slot 3 still dead), then a live worker inherits — `git stash`/commit the
+      WIP under a clear message, **diff it against what slot 11 lands for batch2-001** to determine unique-vs-duplicate,
+      push only the unique delta (or record it as superseded). **Done when**: the WIP is committed/pushed or recorded as
+      fully superseded by slot 11's landed batch2-001, with the diff-check noted.

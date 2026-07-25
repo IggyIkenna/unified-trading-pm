@@ -116,12 +116,16 @@ drift_direction: advance-code
       leakage). Repos: instruments-service, market-tick-data-service, unified-api-contracts (new QG check). **Done
       when**: a new QG/test fails on a synthetic non-canonical prediction `instrument_id` or `canonical_question_group`
       write and passes on the current writers; QG green. Source: `prediction_phase_ab_residuals_2026_07_24.md`.
-- [ ] [DIAG] P3. Verify whether the existing `lifecycle-catalogue-regen-prediction-daily` cron has already carried the
-      shipped underlying + cross-venue `canonical_instrument_id` fields into the live `prod/catalog.parquet` for
-      prediction (it already regenerates the catalogue on schedule for other fixes), to determine whether the staged
-      full manual regen (gated on the in-flight shared canonical-identity migration settling) is actually still needed.
-      Repo: instruments-service (`prod/catalog.parquet`, read-only). **Done when**: a yes/no verdict with the checked
-      column names + a row sample is recorded in `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. Source:
+- [ ] [DIAG] P3. **Conflict-check (2026-07-25 plan-reconcile)**: `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`
+      todo 2 ALSO writes to `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log (and flips a checkbox there).
+      Do not dispatch/commit concurrently with that todo — this batch (batch1) was drafted first, run this todo before
+      batch2 todo 2 if both are active. Verify whether the existing `lifecycle-catalogue-regen-prediction-daily` cron
+      has already carried the shipped underlying + cross-venue `canonical_instrument_id` fields into the live
+      `prod/catalog.parquet` for prediction (it already regenerates the catalogue on schedule for other fixes), to
+      determine whether the staged full manual regen (gated on the in-flight shared canonical-identity migration
+      settling) is actually still needed. Repo: instruments-service (`prod/catalog.parquet`, read-only). **Done when**:
+      a yes/no verdict with the checked column names + a row sample is recorded in
+      `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. Source:
       `prediction_phase_ab_residuals_2026_07_24.md`.
 
 ## Deferred — conflict-gated or excluded (NOT dispatched; queued for operator review)
