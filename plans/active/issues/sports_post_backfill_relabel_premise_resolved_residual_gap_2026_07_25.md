@@ -148,19 +148,33 @@ of the follow-up:
       **240 have the legacy `FIXTURES` row ALSO `expected_unattempted`** (both entities pending — concentrated in
       `CHINA_SUPER_LEAGUE`/`RUSSIA_PREMIER_LEAGUE`, added to the in-universe set 2026-07-21, so this is most likely
       their own historical-window backfill lag, a separate/already-known gap class, not this issue).
-- [ ] [DATA] P2. Close the provably-closeable subset via a safety-pattern script (never a blind no-coverage relabel) —
-      mirror `close_stale_enrichment_expected_unattempted_cells_2026_07_19.py`'s provable-closure discipline. Re-measure
-      honest-cov delta afterward. (repo: instruments-service). **Exact predicate now known (2026-07-25, slot 11)**: for
-      every `FIXTURES_OUTCOMES`/`FIXTURES_SCHEDULE` row with `capture_status=expected_unattempted` in this window, close
-      it to `expected_empty`/`empty_confirmed` IF AND ONLY IF the same `(date, league_id)`'s legacy `FIXTURES` row is
-      `empty_confirmed` with `instrument_count=0` — this closes 8,937 of the 9,265 cells (96.5%) with zero risk of
-      false-absence (the legacy entity's own confirmed-empty row is the proof). The other 328 must NOT be auto-closed:
-      88 need a targeted re-fetch (legacy proves real data exists), 240 need the same treatment applied once the legacy
-      `FIXTURES` entity itself resolves for `CHINA_SUPER_LEAGUE`/`RUSSIA_PREMIER_LEAGUE`. Also consider fixing the
-      writer itself (call the expected-empty confirmation path on no-content days, matching the legacy `FIXTURES`
-      writer's behavior) so this class doesn't keep re-accruing for future dates — out of this todo's
-      read-only-diagnosis scope, flagging for whoever picks up the write. Not attempted this session (a real PROD
-      manifest write, needs CAS per the issue doc's own §4 given the concurrently-writing backfill VM).
+- [x] [DATA] P2. ✅ Close the provably-closeable subset via a safety-pattern script (never a blind no-coverage relabel)
+      — `instruments-service@5cd1cfb0` (`scripts/close_fixtures_split_expected_unattempted_cells_2026_07_25.py`),
+      mirrors `close_stale_enrichment_expected_unattempted_cells_2026_07_19.py`'s provable-closure discipline.
+      **Correction to slot 11's 8,937/9,265 (96.5%) estimate above**: that count was measured on UNIQUE
+      `(date, league_id)` pairs (deduped across both split entities — 9,265 checks out exactly as the union) and did NOT
+      exclude `SOURCE_RETURNED_ZERO` as a mirror-safe FIXTURES reason. Re-measured per-row (both entities, 18,521 total
+      stuck rows = 9,265 + 9,256) and found 1,171 of the 8,937 "provably safe" pairs actually carry
+      `SOURCE_RETURNED_ZERO` as their legacy FIXTURES reason — mirroring that specific reason is NOT safe (the manifest
+      writer's Phase-1 KEYSTONE honest-absence gate requires real `FetchEvidence` for `SOURCE_RETURNED_ZERO`, which a
+      classification-only closer never has; a blind mirror would hard-crash `UnprovenHonestAbsenceError`, exactly the
+      failure class `close_stale_enrichment_expected_unattempted_cells_2026_07_19.py`'s own docstring documents for the
+      same reason code). **Final safe closure, applied to prod 2026-07-25T06:03Z**: 15,532 of 18,521 stuck rows closed
+      (84%), reason distribution `EXPECTED_NO_FIXTURE` 6,762×2≈13,524 / `EXPECTED_POST_SEASON` 729×2≈1,458 /
+      `EXPECTED_PRE_SEASON` 275×2≈550 (both entities). 2,989 correctly left untouched: 647×2 lack any FIXTURES proof
+      (genuine pending-fetch gaps, incl. the 240-pair `CHINA_SUPER_LEAGUE`/`RUSSIA_PREMIER_LEAGUE` case already flagged
+      below) + 1,171×2 excluded via the `SOURCE_RETURNED_ZERO` safety gate. **Verified by content, not the writer's own
+      return** — a naive immediate re-read initially showed `delta=0` because the raw
+      `_index/availability_index.parquet` is append-only between consolidator cycles (a `record_empty` write adds a NEW
+      row rather than overwriting the prior `expected_unattempted` row for the same key — confirmed directly on
+      `2026-02-20/FIXTURES_OUTCOMES/ALLSVENSKAN`, both rows present, disambiguated by `written_at`); fixed the
+      verification to dedupe by latest `written_at` per `(date, data_type, league_id)` key before counting, which
+      confirmed the exact expected delta (18,521→2,989, delta=15,532). No CAS-specific code needed —
+      `ManifestWriter.flush()` already applies `if_generation_match` internally (`_writer_io.py:912`), the standard path
+      every manifest write in this codebase uses; the issue doc's §4 CAS warning is satisfied by using the standard
+      `ManifestWriter` API, not a custom mechanism. Did NOT touch the writer itself (the "fix the root cause so this
+      stops re-accruing" follow-up stays open, flagged in todo 2's own text above, out of this todo's
+      read-only-then-provable-write scope).
 - [ ] [DATA] P3. Separately check the `odds_horizon_bucket` (11,146 rows, MDPS-owned) and `TEAMS` (1,758 rows) residuals
       in the same window — different owning writer, likely a different root cause than the FIXTURES-split timing gap.
       (repo: market-tick-data-service for odds_horizon_bucket; instruments-service for TEAMS)
