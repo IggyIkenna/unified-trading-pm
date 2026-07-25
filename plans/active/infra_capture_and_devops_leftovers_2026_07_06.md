@@ -90,7 +90,41 @@ source:
       /skip-current-task'd per main-agent directive. Unblocking actions (operator, per BLK-26ed6571 answer): (1) ship
       cefi-007 to LDR; (2) update UAC ASTER capabilities to include book_snapshot_5 + liquidations. Both this task 001
       and Plan 6 task 004 (Deribit options_chain runner? — see BLK-26ed6571 reference to "cefi-004") will unblock on the
-      same two merges.
+      same two merges. **STATUS 2026-07-25 — re-verified, BOTH original data-correctness prereqs now CONFIRMED MET on
+      LDR, but a NEW cross-cutting blocker surfaced: escalated via /blocked, checkbox still NOT flipped.** (a)
+      `instruments-service/scripts/enumerate_expected_universe.py:1179` calls `get_venue_data_type_start_date` — the
+      per-(venue,dt) start_date gate is live. (b) UAC `market_data_categories.py`
+      `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` carries `book_snapshot_5: "2026-06-23"` (live-only, correctly gated).
+      `liquidations` is intentionally ABSENT here — not a regression: an operator ruling on 2026-07-15
+      (`cefi_completion_program` workstream E) deliberately removed it because ASTER liquidations is a genuine live-only
+      feed with zero batch capture, and per the ruling "live-only feeds must NOT seed the batch denominator" — keeping
+      it out of this BATCH capabilities dict is the correct fix for the exact over-seed this task warns about, not a
+      missing prereq. Connector code is ALSO already fully shipped + self-registering:
+      `market-tick-data-service/market_tick_data_service/live/connectors/aster_book_liq_ws.py` implements
+      `AsterBookWSConnector` + `AsterLiquidationsWSConnector`, and `live/connectors/__init__.py::register_all()` already
+      lists `aster_book_liq_ws` first in its venue-module tuple — the "into `live/connector_registry.py`" half of this
+      task is DONE. **NEW BLOCKER**: launching the "+ a live VM" half would add a new persistent (on-demand,
+      indefinite-lifetime) `mtds-live-cefi-aster-*` producer into a fleet-wide CeFi live-WS capture pipeline that is
+      STILL fully dormant — re-verified today via GCE REST API listing (project `central-element-323112`, all zones):
+      **zero** `mtds-live-*` instances running anywhere (only backfill/ batch VMs: `af-backfill-*`,
+      `canonical-migration-defi-*`, `mtds-dex-swaps-backfill-*`, `vm-zombie-watchdog-*`). This is the SAME dormancy an
+      operator ruled an "intentional pause" on 2026-07-14
+      (`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md` → archived, `BLK-55d45a68`) pending a
+      cost-control VM-consolidation migration (`launch-mtds-live-cefi-consolidated.sh`) — and TWO other slots
+      (2026-07-16 slot-7, 2026-07-17 slot-10, both logged in `l2_book_microstructure_capture_2026_07_13.md`)
+      independently re-verified the pause was STILL in effect on their dispatch dates and correctly declined to relaunch
+      anything themselves. As of today the dormancy has run 26 days total (11 days past the last recheck) and the
+      identified consolidated-VM relaunch target has STILL never been launched in any state. ASTER
+      book_snapshot_5/liquidations were never part of that consolidated VM's MVP shard list (grepped
+      `launch-mtds-live-cefi-consolidated.sh` — no ASTER entries), so this task's launch is arguably orthogonal to the
+      paused migration rather than a relaunch of it — but given the precedent of 2 prior slots treating "launch a new
+      CeFi live-capture VM right now" as blocking, filed `/blocked` rather than deciding unilaterally. Launch command is
+      fully prepared and ready to fire the moment authorized:
+      `bash deployment-service/scripts/vm/launch-mtds-live.sh --asset-group cefi --shard-spec cefi:ASTER:book_snapshot_5 --instrument-ids "<MVP set>"`
+      (and a second invocation with `--shard-spec cefi:ASTER:liquidations`) — this is the generic per-shard launcher
+      (its own usage docstring gives an ASTER example), already registered in `launcher_registry.py`
+      (`mtds-live-cefi- → launch-mtds-live.sh`) and in `vm_zombie_watchdog.py`'s heartbeat-threshold table — no new
+      launcher script needed.
 - [x] ✅ [DATA] P1. **Deribit `options_chain` live runner** — wire a live cron/VM to run
       `--operation deribit-options-chain` (the handler `mtds@9ecd1e29e` is **live/replay only — no backfill**,
       `process()` collects `date.today()`), so it captures BTC/ETH `options_chain` daily → then feeds Plan 4's
@@ -196,6 +230,26 @@ source:
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-25** — **Task 001 (ASTER live connector) re-verified — both original prereqs now met, but a NEW
+  cross-cutting blocker found; escalated via `/blocked` instead of launching unilaterally** (slot 6 data_engineering).
+  Confirmed on current LDR: (a) `instruments-service` enumerator's per-(venue,dt) `start_date` gate is live
+  (`get_venue_data_type_start_date` called at `enumerate_expected_universe.py:1179`); (b) UAC
+  `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` carries `book_snapshot_5: "2026-06-23"` — `liquidations` is intentionally
+  absent per a 2026-07-15 operator ruling (live-only feeds must not seed the batch denominator), which is the correct
+  fix for this task's over-seed concern, not a gap. The connector code itself
+  (`market-tick-data-service/.../live/connectors/aster_book_liq_ws.py`) is already shipped and self-registers via
+  `connectors/__init__.py::register_all()`. What's NOT done: the "+ a live VM" half. Before launching, checked whether
+  it's safe to add a new persistent CeFi live-capture VM right now — it is not obviously safe: re-verified via GCE REST
+  API (ADC token; `gcloud` CLI's own cached creds were stale) that ZERO `mtds-live-*` instances run anywhere in the
+  project, the same fleet-wide dormancy an operator ruled an "intentional pause" on 2026-07-14
+  (`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`, archived, `BLK-55d45a68`) pending a
+  cost-control VM-consolidation migration that has STILL never launched, and that 2 other slots (2026-07-16, 2026-07-17,
+  in `l2_book_microstructure_capture_2026_07_13.md`) independently re-confirmed still in effect on their own dispatch
+  dates. Filed `/blocked` asking whether an ASTER-specific launch (outside that migration's MVP shard scope) is
+  authorized to proceed despite the broader freeze, rather than deciding unilaterally to add new billed, indefinite-
+  lifetime production infra during an operator-declared pause. Full reasoning + the ready-to-fire launch command are in
+  the task 001 checkbox note above. Docs-only, no code touched.
 
 - **2026-07-25** — **Frontmatter hygiene fix**: `last_updated` was a malformed multi-line YAML plain scalar
   (`2026-06-27` repeated 4x plus embedded `# was: 2026-07-07` correction commentary folded into the value). Cleaned to a
