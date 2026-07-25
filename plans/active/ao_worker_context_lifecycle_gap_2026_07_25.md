@@ -246,6 +246,13 @@ sequential: true
       session's other slots' work + this addition), ruff + basedpyright clean, full `quality-gates.sh` PASSED. Also
       fixed pre-existing `uv.lock` drift (already-declared `google-cloud-firestore` dep never re-locked) discovered
       while bootstrapping the venv — `agent-orchestrator@3e3e213`, unrelated to this todo, shipped alongside it.
+      **Review fix — `agent-orchestrator@57a12f4`.** Reviewer correctly flagged: the original
+      `resume_decision != "resume"` condition also fires when `resume_decision` stays `None` (an operator-PAUSED slot,
+      or an idle slot with no `current_task` — neither ever calls `classify_dead_worker`, so nothing is requeued),
+      making the `..._task_requeued` event name misleading dashboard noise for a pathology that didn't occur. Narrowed
+      to `released_task is not None` (set only when a task was ACTUALLY requeued) AND the saturated-context check. 2 new
+      regression tests for exactly those edge cases (paused-with-task, idle-no-task) confirm the event no longer fires.
+      1671/1671 tests pass, `quality-gates.sh` PASSED.
 - [x] ✅ [BACKEND] P2. **Regression test reproducing this session's full live scenario end-to-end.** —
       `agent-orchestrator@761bb9e`. New `test_context_lifecycle_end_to_end_gate_compact_then_dispatch` in
       `tests/test_task_lifecycle_done_gate_resume.py`: (1) a slot with `compactions_total=117` / `last_compacted_at`
