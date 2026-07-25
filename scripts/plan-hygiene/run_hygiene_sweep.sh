@@ -177,6 +177,10 @@ run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_
 run_check "Codex path refs resolve (legacy, subset of the ratchet check above)" soft "$SCRIPT_DIR/check_codex_refs.sh"
 run_check "Parent-epic alignment (keyword)"  soft python3 "$SCRIPT_DIR/check_parent_epic_alignment.py"
 run_check "CLAUDE↔SUB_AGENT topic parity"    soft "$SCRIPT_DIR/check_claude_subagent_parity.sh"
+# Delete/VM-launch todo tagging (task_template.md §3 finding O, 2026-07-25) — mechanical candidate
+# signal only, feeds /plan-reconcile's AO-dispatch-readiness hunter for real judgment; soft because
+# a regex cannot decide whether a self-justification is actually sound.
+run_check "Delete/VM-launch todo tagging (AO plans, candidate signal)" soft "$SCRIPT_DIR/check_delete_vm_launch_gating.sh"
 
 # Archive candidates is informational — always "passes"
 echo ""
