@@ -88,13 +88,13 @@ address-keyed (`0x00836fe5....parquet`) -- direct evidence the bug is live, not 
 
 ## Scope / impact (canonical-coverage check, 2026-07-25)
 
-| Venue/chain/data_type                                                                                                           | Current (pre-pause) coverage                                                | Same bug present?                            |
-| ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------- |
-| CURVE/ETHEREUM/dex_pool_state                                                                                                   | Yes, through 2026-07-18, address-keyed                                      | Yes -- visibly broken in current data        |
-| VELODROME_V2/OPTIMISM/dex_pool_state                                                                                            | Yes, through 2026-07-24, well-attributed                                    | Bug present but masked by catalogue coverage |
-| TRADER_JOE_V2/AVALANCHE/dex_pool_state                                                                                          | **None** -- venue currently empty per `codex/02-data/defi-data-pipeline.md` | Bug present; no current data to even show it |
-| SUSHISWAP (dex_pool_state)                                                                                                      | Stopped ~2026-06-20/25                                                      | Was address-keyed when active                |
-| GMX (dex_pools_handler's own dex_pool_state capture, separate from the perp_funding aggregate covered in the sibling issue doc) | Not checked this pass                                                       | Same query entry, presumably same gap        |
+| Venue/chain/data_type                                                                                                           | Current (pre-pause) coverage                                                 | Same bug present?                            |
+| ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
+| CURVE/ETHEREUM/dex_pool_state                                                                                                   | Yes, through 2026-07-18, address-keyed                                       | Yes -- visibly broken in current data        |
+| VELODROME_V2/OPTIMISM/dex_pool_state                                                                                            | Yes, through 2026-07-24, well-attributed                                     | Bug present but masked by catalogue coverage |
+| TRADER_JOE_V2/AVALANCHE/dex_pool_state                                                                                          | **None** -- venue currently empty per `/codex/02-data/defi-data-pipeline.md` | Bug present; no current data to even show it |
+| SUSHISWAP (dex_pool_state)                                                                                                      | Stopped ~2026-06-20/25                                                       | Was address-keyed when active                |
+| GMX (dex_pools_handler's own dex_pool_state capture, separate from the perp_funding aggregate covered in the sibling issue doc) | Not checked this pass                                                        | Same query entry, presumably same gap        |
 
 ## Recommendation (operator decision needed)
 

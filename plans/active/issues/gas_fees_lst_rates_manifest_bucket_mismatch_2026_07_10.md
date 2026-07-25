@@ -15,7 +15,7 @@ summary:
   on which side (manifest scanner target, or writer's actual write path) reflects the intended DeFi reference-data
   manifest architecture, which needs a read of manifest-consolidator-ssot.md + operator/codeowner input before choosing
   a direction."
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [data]
@@ -33,10 +33,10 @@ source:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
+locked_since:
 assigned_vm:
-resolved_by:
+resolved_by: defi_dedicated_bucket_shared_migration_2026_07_13.md Todo 3 (e2e-testing@3d219d76)
 ---
 
 # gas-fees manifest/data-status scanner reads an empty bucket the writer never populates
@@ -142,5 +142,16 @@ research/e2e script, not a live coverage report), but still open.
 ## Status
 
 `data_manifest_handler.py` side: **resolved** 2026-07-12, shipped + verified against real production data.
-`staked_basis_funding_scan.py` side: **still open** — flagged above, needs its own path-structure verification before a
-safe fix.
+`staked_basis_funding_scan.py` side: **resolved** — see RESOLVED section below.
+
+## RESOLVED (2026-07-25)
+
+The remaining open item (`staked_basis_funding_scan.py`'s `_lst_bucket()`/`_read_lst_exchange_rate` reader) was fixed by
+`defi_dedicated_bucket_shared_migration_2026_07_13.md`'s Todo 3, shipped `e2e-testing@3d219d76`: the reader's prefix
+(`day={day}/asset_group=defi/venue=.../...`) never matched even the dedicated bucket's real layout — a real,
+pre-existing silent-absence bug, not just a bucket-location issue. Fixed to the correct day-first shape + repointed to
+`kind="tick-data"`. Live-verified post-deploy against real production data (2026-07-13/14): `_read_lst_exchange_rate`
+resolves LIDO 1.2333 and JITO 1.2766, all reads now against `market-data-tick-defi-prd-central-element-323112`, zero
+reads left on the dead dedicated buckets. This doc was locked (`locked_by: live-defi-rollout`, since 2026-05-21) with no
+context on why — operator confirmed 2026-07-25 (queued via `issues/autonomous_session_operator_decisions_2026_07_25.md`
+#2) that the fix is solid and approved the unlock + flip.

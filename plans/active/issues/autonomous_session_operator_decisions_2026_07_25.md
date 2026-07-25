@@ -49,7 +49,9 @@ A:
 in place — they're self-documenting and harmless, just slightly noisy in `plans/active/`. Other: operator can type a
 custom answer
 
-**Status**: open
+**Operator answer (2026-07-25)**: A — delete both.
+
+**Status**: resolved — both files `git rm`'d, real content confirmed intact at `plans/archive/2026_07/`.
 
 ---
 
@@ -70,7 +72,11 @@ just needs the lock cleared first. [WORKER REC] B: Leave locked and open — the
 have context on (e.g. active investigation, pending a different fix). Confirm with whoever set the lock before touching
 it. Other: operator can type a custom answer
 
-**Status**: open
+**Operator answer (2026-07-25)**: A — unlock + mark resolved.
+
+**Status**: resolved — unlocked, `status: resolved`,
+`resolved_by: defi_dedicated_bucket_shared_migration_2026_07_13.md Todo 3 (e2e-testing@3d219d76)`, RESOLVED section
+appended to the issue doc.
 
 ---
 
@@ -97,7 +103,11 @@ batch entirely and rule directly on which `instrument_type` shape (`solana_lendi
 authoritative for Kamino/Solend `lending_indices`, since the writer code and the live GCS probe currently disagree.
 Other: operator can type a custom answer
 
-**Status**: open
+**Operator answer (2026-07-25)**: A — widen scope to probe both paths before concluding.
+
+**Status**: resolved — widened as item 6 in
+`issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` and dispatched as a Todos-section item
+in `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (moved out of that plan's Deferred section).
 
 ---
 

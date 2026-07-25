@@ -835,14 +835,16 @@ source: >-
       `ikenna_orchestrator/pings/slot_3.md` 2026-07-25 CREDENTIAL APPROVAL REQUEST. Full detail + dry-run validation of
       the reprocess mechanism (clean on a sample day, no `--force` needed):
       `/plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md`. Needs a human to
-      either run `gcloud auth login` interactively once, or refresh the service-account federation. (1)
+      either run `gcloud auth login` interactively once, or refresh the service-account federation. **CASING CORRECTED
+      2026-07-25** (operator ruling — repoint to lower-case; executor hardcoded UPPER, needed a real code fix; see
+      `issues/sports_satellite_batch2_casing_direction_contradicts_k1k2_revert_2026_07_25.md`): shipped `mtds@fb51d86c`
+      — casing now lower-case, QG-green; dry-run baseline below remains valid. (1)
       `migrate_sports_league_id_casing_2026_07_21.py --apply-prod` (no `--confirm-prod-write`, no `--index`) once, for
-      the live out-of-scope census + VM-guard + PLAN, using the already-committed, adversarially-verified executor
-      (`mtds@b2a49317`) — expect results consistent with the verified full-corpus dry-run baseline (266,408 objects /
-      34,228 units, 0 unknown raws, 0 unresolved league_ids). (2)
-      `--apply-prod --confirm-prod-write --index scripts/.../raw_index.tsv` — copies+CAS-verifies the raw
-      `batch_odds_api/odds/trades` shape (~139,155 objects) to canonical paths
-      (`league_id=<CANON>/instrument_type=ODDS/data_type=TRADES/`), with the parquet's `league_id` CONTENT column
+      the live out-of-scope census + VM-guard + PLAN, using the now-corrected executor (`mtds@fb51d86c`) — expect
+      results consistent with the verified full-corpus dry-run baseline (266,408 objects / 34,228 units, 0 unknown raws,
+      0 unresolved league_ids). (2) `--apply-prod --confirm-prod-write --index scripts/.../raw_index.tsv` —
+      copies+CAS-verifies the raw `batch_odds_api/odds/trades` shape (~139,155 objects) to canonical paths
+      (`league_id=<CANON>/instrument_type=odds/data_type=trades/`), with the parquet's `league_id` CONTENT column
       rewritten. COPY-ONLY: never deletes source objects; refuses while any `features-sports-sports-*` VM is
       non-terminal. (3) THEN the deferred shapes (127,488 objects — `odds_horizon_bucket` 109,312 via MDPS
       `reprocess_sports_odds.py`'s Step-7 procedure + `batch_footystats` 16,970 via the same casing-migration script
