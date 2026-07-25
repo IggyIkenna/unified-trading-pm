@@ -212,20 +212,54 @@ sacrificing that win. A proper permanent fix (bound the day-cache to only the cu
 hours instead of materializing all of them before parsing) is a real follow-up, tracked as its own todo below — not
 attempted here.
 
-**Verification status:** a manual test execution (`uts-prod-market-tick-data-service-cefi-t1-recon-mncmq`) was triggered
-immediately after the memory bump to test recovery without waiting for the next scheduled cron. Result pending at the
-time this section was written — see the Progress Log for the outcome once it lands (a background monitor is watching the
-execution to a terminal state).
+**Verification: CONFIRMED RECOVERED (2026-07-25T01:44:49Z).** The manual test execution
+(`uts-prod-market-tick-data-service-cefi-t1-recon-mncmq`) ran for the full 10m2.49s and completed with
+`status.conditions[type=Completed].status=True`, `succeededCount=1` — versus the prior pattern of dying within 10-40s on
+every execution since 07-23. Direct log evidence (`gcloud logging read`, full transcript in this run's scratchpad):
+
+- The job got past the exact point it previously died (`API keys validated for 3 data source(s)`), loaded the full
+  429,129-row cefi catalogue, ran pre-flight checks across all 24 venues, and began real per-symbol Tardis streaming
+  downloads (bitfinex-derivatives book_snapshot_5/derivative_ticker/trades, tens of thousands of rows per symbol).
+- Real parquet shards were written to the canonical path and confirmed via
+  `StreamingParquetWriter: uploaded market-data-tick-cefi-prd-.../raw_tick_data/by_date/day=2026-07-24/.../ BITFINEX-FUTURES:PERPETUAL:APE-USDT@LIN.parquet (27887 rows, ...)`
+  (dozens of such lines, all real symbols, all 20K+ row shards) — this is genuine captured data, not a dry-run or a log
+  artifact.
+- **`peak_rss=8646.5MB` is logged directly by the service's own resource profiler** — this is MEASURED (not
+  code-read-inferred) evidence that this exact run's peak memory usage (8,646.5 MiB) would NOT have fit in the OLD 8Gi
+  (8,192 MiB) container, and DOES fit in the new 16Gi one. **This confirms "insufficient memory" as the proximate cause
+  with measured evidence, not just a plausible hypothesis** — though it does not, by itself, isolate WHICH code path
+  (the HyperLiquid day-cache vs. something else, e.g. the 429K-row catalogue load, or normal per-venue fan-out at this
+  job's current universe size) is the dominant contributor; that attribution remains the hypothesis stated above.
+- **Manifest confirms real capture, with the normal consolidation lag**: `_index/per_vm/` shows 6 fresh per-VM shard
+  files timestamped 2026-07-25T01:40:37Z through 01:44:39Z (during/immediately after this execution) — the live writer's
+  own output, not the stale dedup-migration artifact seen before. The consolidated `availability_index.parquet` read
+  still shows 0 `captured` rows for `date=2026-07-24` because the periodic consolidator has not run again since this
+  execution finished (routine, expected lag — not a new problem); it will pick these up on its next pass.
+- A pre-existing, already-tracked issue class fired during the run and did NOT block progress:
+  `Tardis HTTP 403 code=274 concurrent-IP-lock` on a couple of in-flight keys (matches
+  `tardis_concurrent_ip_lockout_2026_07_12.md` / `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s own
+  diagnosis, not new). One unrelated 404 on a `BINANCE-FUTURES` instrument-availability lookup, isolated per-shard, did
+  not crash the run.
+
+**Bottom line: the live production capture outage is RESOLVED as of this execution.** The regular 06:00/09:00 UTC crons
+will now run against the 16Gi limit going forward. The underlying root-cause attribution (which specific code path
+drives the ~8.6GB peak) and a permanent code-level fix remain open follow-ups, not blockers to capture resuming.
 
 ### Todos
 
-- [ ] [BACKEND] P1. Confirm (via a memory profile / Cloud Monitoring container-memory graph of an actual execution, not
-      just code-reading) whether `market-tick-data-service@a6e974b6`'s HyperLiquid day-cache is the real root cause of
-      the OOM, or whether the 16Gi bump merely masks a different/additional growth source. Repo:
-      market-tick-data-service.
-- [ ] [BACKEND] P2. If confirmed, bound `HyperliquidS3Downloader`'s day-cache memory: either only cache/retain the coins
-      this run actually needs (not every coin HL published that day), or stream the 24 hourly fetches
-      (parse-then-discard per hour) instead of materializing all 24 decompressed texts before parsing any. Repo:
-      market-tick-data-service.
+- [x] ✅ [BACKEND] P1. Confirm (via a memory profile / Cloud Monitoring container-memory graph of an actual execution,
+      not just code-reading) whether the OOM's proximate cause is insufficient memory — **CONFIRMED via the service's
+      own `peak_rss=8646.5MB` resource-profiler log line, 2026-07-25T01:44Z execution** (exceeds the old 8Gi/8192MiB
+      limit, fits the new 16Gi). **NOT yet isolated**: whether `market-tick-data-service@a6e974b6`'s HyperLiquid
+      day-cache specifically is the dominant contributor vs. other factors (catalogue load, normal fan-out growth) — see
+      the next todo.
+- [ ] [BACKEND] P2. Isolate the dominant memory contributor (HyperLiquid day-cache vs. catalogue load vs. per-venue
+      fan-out) via a proper memory profile (e.g. `tracemalloc` or a Cloud Profiler session on a real execution), then
+      bound whichever is confirmed: for the HyperLiquid case, either only cache/retain the coins this run actually needs
+      (not every coin HL published that day), or stream the 24 hourly fetches (parse-then-discard per hour) instead of
+      materializing all 24 decompressed texts before parsing any. Repo: market-tick-data-service.
 - [ ] [OPERATOR] P2. Decide whether to keep the Cloud Run job at 16Gi permanently (small ongoing cost increase) once the
       root cause is confirmed/fixed, or revert to 8Gi after a code fix lands.
+- [ ] [DATA] P2. Once the regular 06:00/09:00 UTC crons have run a few times on the new 16Gi limit, re-verify
+      `capture_status` by `date` returns to the ~1,000-1,200/day baseline (this session only confirmed ONE manual
+      execution recovered; the steady-state pattern across multiple scheduled runs is not yet observed).
