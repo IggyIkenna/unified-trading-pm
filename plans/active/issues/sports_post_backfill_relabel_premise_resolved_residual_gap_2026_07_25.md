@@ -213,12 +213,34 @@ of the follow-up:
       by todo 3) via a safety-pattern closer script mirroring
       `close_fixtures_split_expected_unattempted_cells_2026_07_25.py`'s provable-closure discipline (never a blind
       relabel; exclude `SOURCE_RETURNED_ZERO` FIXTURES reasons the same way). (repo: market-tick-data-service)
-- [ ] [DATA] P3. Register the 66 cup/lower-tier leagues that have ZERO `odds_horizon_bucket` captures anywhere in the
-      diagnosed window (`COPA_DEL_REY`, `CARABAO_CUP`, `BRASILEIRAO_SERIE_B`, `AUSTRIAN_2_LIGA`, etc. — full list in the
-      manifest, diagnosed above by todo 3) as `EXPECTED_NO_PROVIDER_COVERAGE` (or the market-tick-data-service
-      equivalent registry) so the enumerator stops re-seeding `expected_unattempted` for leagues the odds provider
-      structurally never lists markets for — a coverage-registry fix, not a per-cell relabel. (repo:
-      market-tick-data-service)
+- [x] [DATA] P3. ✅ Register ODDS_HORIZON_BUCKET league coverage — `unified-api-contracts@2a378fb2`. **Repo attribution
+      was wrong in the original todo text** (said market-tick-data-service): the actual enumerator that seeds
+      `expected_unattempted` for this data_type is `instruments-service/scripts/enumerate_expected_universe.py`'s
+      `_enumerate_v2_sports`, which ALREADY consults a generic `get_entity_league_coverage(data_type)` SSOT
+      (`unified_api_contracts.canonical.domain.sports.provider_league_ids`) for every sports data_type — but
+      `ODDS_HORIZON_BUCKET` simply had no entry in `SPORTS_ENTITY_LEAGUE_COVERAGE`, defaulting to `None` ("all leagues
+      expected"), the exact bug. **This is an allow-list mechanism, not an exclude-list** — I don't need the 66 "never
+      covered" league_ids at all, only the (smaller) set that IS genuinely covered. Measured directly from a
+      full-history manifest read (408,815 rows, no window restriction — a structural claim needs to hold across all
+      time, not just the diagnosed window): 200,412 real captured rows across 63 DISTINCT raw `league_id` values.
+      **Found and fixed a real data-quality gap in the raw data before trusting it**: those 63 raw values were NOT fully
+      canonicalized — the same real league appears under 2-4 different forms (canonical UAC id, raw odds-api provider
+      slug in 2 casings, e.g. `A_LEAGUE` / `A-LEAGUE` / `SOCCER_AUSTRALIA_ALEAGUE` / `soccer_australia_aleague` are all
+      Australia's A-League). Resolved every raw value via `DEFAULT_CLASSIFICATION_REGISTRY`'s `odds_api_league_name`
+      field (not taken verbatim) — 32 genuinely distinct canonical leagues, all major domestic top flights (EPL,
+      LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1, BRASILEIRAO, MLS, etc.), zero cups or lower-tier leagues, consistent with
+      the todo's own framing. 9 raw values remained ambiguous after registry lookup (bare generic names like
+      `PREMIER_LEAGUE`/`SUPERLIGA`/`SUPER_LEAGUE`) — verified via real football-domain knowledge that every plausible
+      resolution of each ambiguous name maps to a league ALREADY in the 32-league set (e.g. `SUPERLIGA` → Denmark or
+      Turkey, both already covered separately), so the 32-league allow-list is complete regardless of how they resolve.
+      Added the data to `sports_league_entity_coverage.json` (mirrors the existing `PLAYER_VALUES` "observed coverage
+      from manifest" pattern) + wired `SPORTS_ENTITY_LEAGUE_COVERAGE["ODDS_HORIZON_BUCKET"]` to read it — **zero
+      enumerator code changes needed**, `get_entity_league_coverage` was already generically consulted for every
+      data_type. Verified live: `COPA_DEL_REY`/`CARABAO_CUP`/`BRASILEIRAO_SERIE_B`/`AUSTRIAN_2_LIGA` (the todo's own
+      examples) all correctly NOT covered; `EPL` etc. correctly covered. Added 22 new tests
+      (`tests/unit/sports/test_entity_league_coverage.py`) covering the None-means-all-covered entities, the new
+      allow-list membership (both directions), case-insensitivity, and a regression guard on the pre-existing Understat
+      big-5 entry. `quality-gates.sh` green.
 - [ ] [DATA] P3. Investigate whether the `odds_horizon_bucket` and `TEAMS` capture jobs actually stopped running around
       early May 2026 for a subset of leagues (diagnosed above by todo 3: `TEAMS`'s `EREDIVISIE` captured daily through
       `2026-05-04` then zero captures for any date since; `odds_horizon_bucket` has 1,982 cells where a real fixture
