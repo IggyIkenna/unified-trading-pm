@@ -191,14 +191,23 @@ source: >-
       fixed. Full evidence + the reconciliation note in the canonical closeout plan: see this todo's own re-measurement
       above; re-run `_index/availability_index.parquet` INJURIES query after the VM's `EXIT_STATUS` appears to confirm
       the gap actually closed before flipping this checkbox.
-- [ ] [CODE] P1. **UAC canonical registry build/refine** — league/cup canonical + ids + is-cup + country + season
-      start/end + transfer window; per-source eligibility maps + annual-id-change handling; team/player/fixture
-      canonical + mappings. Wire honest-coverage to consume them. (Spec fully established by the source doc's
-      Architecture section + the operator's Directive A.) (repo: unified-api-contracts canonical/domain/sports
-      registries; instruments-service honest-coverage consumers). **Done when**: UAC holds the canonical league/cup
-      registry (name/ids/is-cup/country/season start-end/transfer window), per-source eligibility maps with
-      annual-id-change handling, and team/player/fixture canonical mappings; honest-coverage code consumes them instead
-      of ad hoc logic. Source: `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
+- [x] ✅ [CODE] P1. **UAC canonical registry build/refine** — unified-api-contracts@ce18ff15. Audited every clause of
+      the Architecture section against current code before touching anything (most of this program had already shipped):
+      name/ids/country/season-start-end-per-year (`season_dates.get_season_start`/`get_season_end`, per-league-per-year)
+      and transfer window (`transfer_windows.py`) were already canonical; team cross-source mapping was already
+      comprehensive (`team_mapping_data.py`, 6,246-row CSV, all leagues); fixture/player canonical ids already derive
+      via `canonical_ids.build_fixture_id`/`build_player_id` (player id already consumed by `understat/normalize.py`);
+      annual footystats-id rotation is already handled by a real mechanism — the weekly
+      `check_footystats_season_drift.py` CI job (`.github/workflows/weekly-validation.yml`), not a season-year-keyed
+      table. Two genuine, scoped gaps closed: (1) added `LeagueDefinition.is_cup` (derived
+      `tier==0 and sport=="FOOTBALL"` property — previously only a docstring convention with zero real call sites); (2)
+      wired `is_sports_structural_gap()` into `get_expected_leagues_for_source()` — that gap/allowlist SSOT
+      (`SPORTS_STRUCTURAL_GAPS`/`SPORTS_SOURCE_LEAGUE_ALLOWLIST`) previously had zero production call sites (test-only),
+      so a future `data_sources` hand-curation edit could silently diverge from it; verified a true no-op today
+      (before/after `get_expected_leagues_for_source` counts identical across all 7 sources) but closes the ad-hoc-logic
+      duplication risk. 4 new regression tests incl. a monkeypatch proving the wiring is real (not just coincidental
+      agreement). quality-gates.sh green. (repo: unified-api-contracts). Source:
+      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
 - [ ] [DATA] P1. **Curated-universe definition → backfill → residual drop (3-step ordered sequence, one worker, execute
       in order).** (1) Define the curated ~300-league reference set (94 + the division below each country + continental
       cups [Champions League, UEFA/UECL, Copa Libertadores/Sudamericana, AFC/CAF equivalents] + major internationals
