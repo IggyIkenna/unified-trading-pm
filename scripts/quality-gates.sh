@@ -522,6 +522,24 @@ if [ -f "$PLAN_DISCIPLINE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: Finalize-plan coverage (every AO-dispatched plan needs a gated finalize plan) ──
+# SSOT: task_template.md §4 "Every AO-dispatched plan needs a gated finalize plan" (operator ruling 2026-07-24).
+# An `assigned_vm: planning` plan with no other active plan gating on it via
+# depends_on + gate_on_depends: true never gets its source-doc reconciliation or archival done. Exempts finalize
+# plans themselves and genuinely single-todo plans. Current baseline 1 (deployment_registry_firestore_p0_unblock_2026_07_14.md,
+# pre-dates this rule) — ratchet down as plans get a finalize plan / archive.
+FINALIZE_PLAN_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_finalize_plan_coverage.py"
+if [ -f "$FINALIZE_PLAN_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Finalize-plan coverage check (ratchet mode)..."
+    if python3 "$FINALIZE_PLAN_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Finalize-plan coverage check passed (at-or-below baseline)"
+    else
+        echo "❌ Finalize-plan coverage regression — a new assigned_vm: planning plan shipped with no gated finalize plan." >&2
+        echo "   Author a <slug>_finalize_*.md with depends_on: [<slug>] + gate_on_depends: true — see task_template.md §4." >&2
+        _post_gate_fail "finalize-plan-coverage"
+    fi
+fi
+
 # ── Post-gates: Evidence-backed completion (runtime-green claims cite a VERIFIED build) ──
 # SSOT: plans/PLAN_FORMAT.md § 8b "Evidence-backed completion" + CLAUDE.md.
 # A `- [x]` todo claiming a Cloud Build / deploy / promote went green MUST cite `Evidence: cloudbuild=<id>`;

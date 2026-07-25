@@ -548,10 +548,14 @@ source: >-
 
 ## Reconciliation
 
-Once a todo here ships, flip the corresponding checkbox in its named source doc, citing this plan's commit as evidence —
-same discipline `sports_closeout_batch1_finalize_2026_07_24.md` applies to batch 1. This plan does not itself own a
-finalize/archive step (unlike batch 1, it isn't extracted from one gate-able parent) — source-doc reconciliation is a
-per-doc follow-up, tracked via each doc's own remaining-todo count naturally dropping to 0.
+Once a todo here ships, flip the corresponding checkbox in its named source doc, citing this plan's commit as evidence.
+This plan's own reconciliation-then-archive step is machine-gated on it via
+`sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`
+(`depends_on: [sports_satellite_ao_dispatch_batch2_2026_07_24]`
+
+- `gate_on_depends: true`) — mirroring `sports_closeout_batch1_finalize_2026_07_24.md`'s pattern for batch 1, adapted
+  for batch 2's 15-way source-doc fan-out (batch 1 reconciles one gate-able parent; batch 2 reconciles 15 independent
+  docs, per-doc, before archiving this plan).
 
 ## Codex SSOTs
 

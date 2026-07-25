@@ -1,0 +1,6 @@
+violation_count: 1
+rule: finalize-plan-coverage
+source: "task_template.md \xA74 'Every AO-dispatched plan needs a gated finalize plan'\
+  \ (operator ruling 2026-07-24)"
+baseline_files:
+  - unified-trading-pm/plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md
