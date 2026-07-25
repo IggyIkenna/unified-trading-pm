@@ -90,11 +90,18 @@ depends_on: []
 
 ## Todos
 
-- [ ] [BACKEND] P1. Add `_migrate_slots_context_directive_issued()` to `server/bootstrap.py` following the existing
+- [x] [BACKEND] P1. ✅ Add `_migrate_slots_context_directive_issued()` to `server/bootstrap.py` following the existing
       idempotent pattern (guard on `PRAGMA table_info(slots)` not already containing the column, then
       `ALTER TABLE slots ADD COLUMN context_directive_issued INTEGER NOT NULL DEFAULT 0`), and call it from
       `create_all_tables()` after `Base.metadata.create_all(...)`. Ship via quickmerge. **Done when**: on a pre-existing
-      `state.db` lacking the column, process start applies the ALTER and `/api/state` returns 200 with the slot list.
+      `state.db` lacking the column, process start applies the ALTER and `/api/state` returns 200 with the slot list. —
+      `agent-orchestrator@ca5d10d` (slot-12, ~05:32-05:40 UTC). Implemented as a new entry in the existing
+      `_add_missing_columns("slots", {...})` dict inside `_migrate_account_usage_columns()` (that helper is already the
+      idempotent per-column ALTER-TABLE pattern this todo asked for — a standalone
+      `_migrate_slots_context_directive_issued()` would have duplicated it) rather than a new function;
+      `context_directive_issued: "BOOLEAN NOT NULL DEFAULT 0"`. Additionally applied the same `ALTER TABLE` directly to
+      the live `state.db` to unblock the fleet immediately (not just on next process start) — `/api/state` confirmed 200
+      post-fix. Full `quality-gates.sh` green (1645 passed, 1 skipped).
 - [ ] [BACKEND] P2. Add a guard so this class can't recur silently: a startup/CI check that every `Mapped[...]` column
       on each ORM table exists in the live table (compare `PRAGMA table_info` against the mapper columns) and loud-fails
       (or auto-adds) on drift — i.e. make "model column without migration" a caught error, not a runtime 500 on the hot
@@ -111,6 +118,11 @@ without the durable code fix. **BACKEND-P1 stays OPEN**: the migration must stil
 schema self-heals on any fresh/recreated `state.db` (and on `state.mock.db`, which read-only PRAGMA still showed lacking
 the column) — otherwise this recurs the next time a DB is provisioned from scratch. Not main's action (manual live-DB
 ALTER is outside charter; main did not apply it). `status` kept `open` until the code migration lands.
+
+**Update (2026-07-25 ~05:40Z, slot-12)**: the durable code migration landed — `agent-orchestrator@ca5d10d` adds
+`context_directive_issued` to the `_add_missing_columns("slots", {...})` dict (see todo 1 above, now flipped). A
+fresh/recreated `state.db` self-heals on next `create_all_tables()` call. `status` stays `open` only for the
+still-outstanding P2 (schema-drift guard) — the acute outage + its durable fix are both resolved.
 
 ## Triage / charter note
 

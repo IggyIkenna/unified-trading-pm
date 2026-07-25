@@ -289,3 +289,17 @@ genuinely operator-shaped remaining decision was the `context_burn_kill` flip, n
 - This repo currently runs at extreme commit velocity (a fresh `git pull --rebase --autostash` was needed before nearly
   every commit this session, sometimes 3-4 times in a row) — this is normal operating condition today, not an error
   signal; budget for it rather than treating repeated branch-drift rejections as a problem to diagnose.
+
+- **2026-07-25 (slot-12, ~05:32 UTC) — LIVE P0 regression from this plan's todo 4, found + hotfixed while working
+  `ao_fleet_throughput_incident_2026_07_25.md` todo 2. Resolves the
+  `orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md` issue doc flagged above.** Todo 4 added
+  `orm.py`'s `SlotRow.context_directive_issued` column but never added the matching entry to `server/bootstrap.py`'s
+  `_add_missing_columns("slots", {...})` ALTER-TABLE migration list — SQLAlchemy's `create_all()` only creates missing
+  TABLES, not new columns on an existing one, so the live SQLite DB never got the column. Every query touching `slots.*`
+  (including `/api/slots/<N>/done`) started failing fleet-wide with
+  `sqlite3.OperationalError: no such column: slots.context_directive_issued` from the `05:15:22Z` self-pull deploy
+  onward — confirmed via `journalctl -u orchestrator.service` traceback + `PRAGMA table_info(slots)` on the live DB
+  (`agent-orchestrator/data/state/state.db`) showing the column absent. Applied the additive
+  `ALTER TABLE slots ADD COLUMN context_directive_issued BOOLEAN NOT NULL DEFAULT 0` directly to the live DB to unblock
+  the fleet immediately, and shipped the matching migration-list fix (`agent-orchestrator@ca5d10d`) so a fresh DB / a
+  restore from backup gets the column automatically going forward.
