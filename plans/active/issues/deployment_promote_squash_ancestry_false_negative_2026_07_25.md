@@ -116,7 +116,7 @@ live" checks, not just the aggregate-drift-count case already covered:
 - [x] ✅ [DOCS] P3. Cross-check which OTHER repos use the same "Option-B direct" squash-merge promote mode (grep
       `.github/workflows/` or the fleet promote workflow's repo list in `unified-trading-pm` for `ldr_main` /
       "Option-B") vs a merge-commit-preserving mode — if the split is meaningful, note in
-      `codex/08-workflows/ci-cd-flow.md` which mode applies where, so a reviewer knows up front whether the ancestor
+      `/codex/08-workflows/ci-cd-flow.md` which mode applies where, so a reviewer knows up front whether the ancestor
       check is even valid for a given repo. (repo: unified-trading-pm) — unified-trading-pm@1b6fdc147 (see Progress
       Log).
 - [x] ✅ [REVIEW] P3. Sweep currently-open plans/issue docs for other "confirm `<repo>@<sha>` is live" todos phrased
@@ -136,7 +136,7 @@ live" checks, not just the aggregate-drift-count case already covered:
   check is "sometimes" valid there, never guaranteed. Net: the split IS meaningful (direct-fleet promote = always squash
   = ancestor check always invalid; staging-routed = rebase-first = sometimes valid) but has zero practical effect right
   now since 100% of repos are `ldr_main` direct — documented the table + the caveat in
-  `codex/08-workflows/ci-cd-flow.md` § "Which repos squash vs. rebase on promote". Did not touch `agents/review.md`
+  `/codex/08-workflows/ci-cd-flow.md` § "Which repos squash vs. rebase on promote". Did not touch `agents/review.md`
   (todo 1, separate task, not yet dispatched to this slot). (Correction: the codex commit's SHA was rewritten by a
   `git pull --rebase --autostash` needed to reconcile branch drift before this flip could push — first cited
   `1ed215b31`, corrected here to the actually-reachable `1b6fdc147`.)
