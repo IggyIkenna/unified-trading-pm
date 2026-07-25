@@ -164,6 +164,30 @@ depends_on: []
       waste — filed as a new P1 follow-up todo below (higher priority than the existing
       `canonical-migration-defi-rebuild` todo, since this one is empirically confirmed rather than theoretical, and
       covers more VMs).**
+
+  > **⚠️→✅ CORRECTED 2026-07-25 (adversarial verification, 3-agent independent refuter panel, 3/3 REFUTED) — the
+  > "confirmed double-fetch of already-captured data" framing above is FACTUALLY WRONG for both cited examples.**
+  > Independently re-pulled all 4 full `run.log`s and grepped for `total_records=`/`complete=True`: the PREDECESSOR VMs
+  > (`...-041531` btc-2020, `...-041824` eth-2022) never actually captured or uploaded any real rows for Chunk 1 — every
+  > date returned `total_records=0 complete=False`. Root cause visible in the same logs:
+  > `[DATABENTO_FETCH_FAILED] after 0 rows: underlying='BTC'/'ETH' is not a real product root ... quarantine, never fake-canonicalize`
+  > — the launch was configured expecting 2 atoms (FUT+OPT) for BTC/ETH CME, and the OPT atom hit an unresolvable
+  > combo-symbol path that the system correctly refused to fake-canonicalize (by design, not a bug — see new P3
+  > follow-up below). The successor VMs' pre-flight "still missing" check was therefore **CORRECT, not a presence-skip
+  > failure** — there was nothing valid to skip. The successors then succeeded because their launches expected only 1
+  > atom (FUT-only, not FUT+OPT), avoided the buggy combo path, and got real records for the first time (e.g. eth
+  > `...-051043`: 1973-8654 real records/date, `complete=True`). One refuter additionally read
+  > `market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py`'s
+  > `_apply_preflight_skip_filter` and confirmed a real atom-aware skip layer exists downstream of the coarse "Chunk
+  > N/53" progress marker — presence-skip is working as designed, the chunk-loop's log line alone just doesn't show it.
+  > **The no-`PROGRESS.json`/no-`LAUNCH_PARAMS.json` architectural gap is still real and confirmed** (all 3 refuters
+  > independently verified this) — but the "CONFIRMED billing waste" upgrade is retracted; this reverts to the SAME
+  > "bounded/theoretical risk" classification as `canonical-migration-defi-rebuild` below, not a worse one. The P1 todo
+  > below is corrected accordingly (downgraded to P2, folded alongside the other architecture-gap families rather than
+  > escalated ahead of them). **Lesson**: a chunk-level "restarted at Chunk 1/53" symptom looks identical whether the
+  > predecessor genuinely captured data (real waste on restart) or never captured anything at all (correct retry) —
+  > don't conclude "double-fetch" from the restart point alone; grep the actual `total_records=`/`complete=` values for
+  > the specific chunk before calling it confirmed.
   - **`canonical-migration-cefi-wp*`/`-content-*` migration wave (31 events: 25 `wp*` + 6 `content-*`, prioritized) —
     CLEAN, no finding.** Both sub-families invoke the same idempotent-by-design script,
     `scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py --apply --start-date … --end-date … --workers N`
@@ -265,19 +289,21 @@ depends_on: []
 
 ### New follow-up todos from this session
 
-- [ ] [BACKEND] P1. **`tradfi-bf-*` (and the shared `mtds_chunk_loop.sh` family: `mtds-backfill-tradfi-pipelinecheck`,
+- [ ] [BACKEND] P2. **`tradfi-bf-*` (and the shared `mtds_chunk_loop.sh` family: `mtds-backfill-tradfi-pipelinecheck`,
       `mtds-dex-swaps-backfill`, `cefi-aster`, `cefi-hyperliquid`, `cefi-queue-heavy-binancefutu-x17`, `af-backfill`)
-      write no `PROGRESS.json` checkpoint and CONFIRMED double-fetch already-captured data across a preemption+relaunch
-      cycle** — directly traced on two independent `tradfi-bf-*` shards (`cme-ohlcv-1m-btc-2020`,
-      `cme-ohlcv-1m-eth-2022`): the relaunch VM restarts at Chunk 1/53 and its own pre-flight check logs
-      already-captured dates as still missing, then re-fetches them from Databento. This upgrades the "bounded risk"
-      classification the first session gave `canonical-migration-defi-rebuild` (a related but distinct gap) to a
-      **confirmed, not theoretical**, billing-waste pattern, and it is the single largest remaining family (34 of 129
-      events this session covered). Wire `record_vm_progress`/`PROGRESS.json` emission into
+      write no `PROGRESS.json`/`LAUNCH_PARAMS.json` checkpoint** — confirmed architectural gap (3/3 independent
+      adversarial re-verification agreed), same class as `canonical-migration-defi-rebuild` below. **CORRECTED
+      2026-07-25** (see the adversarial-verification note above): the two sampled shards' "restart at Chunk 1/53" was
+      NOT a confirmed double-fetch of already-captured data — the predecessor VMs never actually captured any real rows
+      for that chunk (an unrelated Databento combo-symbol quarantine issue, see new P3 todo below), so the atom-aware
+      presence-skip layer (`_apply_preflight_skip_filter`) correctly retried genuinely- missing data. Downgraded from
+      P1/"confirmed" back to P2/"bounded, theoretical" — the architecture gap is real and worth closing, but there is no
+      direct evidence of actual billing waste from it yet. Wire `record_vm_progress`/`PROGRESS.json` emission into
       `_tradfi-ohlcv-launcher-lib.sh`'s `mtds_chunk_loop.sh` path (or the equivalent shared chunk-loop used by the
       sibling families above) so `relaunch_backfill_vm.py`'s existing monotonic-checkpoint resume logic (already
       implemented and working for the conformant launchers, e.g. `canonical-migration-defi-relabel`) actually engages
-      instead of falling through to a blind START_DATE replay. Repo: deployment-service, market-tick-data-service.
+      instead of falling through to a blind START_DATE replay — still worth doing for defense-in-depth even though this
+      run found no confirmed instance of it actually costing money. Repo: deployment-service, market-tick-data-service.
 - [ ] [BACKEND] P2. **`af-backfill`'s `LAUNCH_PARAMS.json` was absent from `vm-logs/af-backfill-20260718-141638/`**
       despite `launch-api-football-backfill-vm.sh` calling `lc_write_launch_params` at create time and
       `exit_code_fleet_monitor.py` sourcing the SPOT-preemption relaunch actuator's `launch_env` from exactly that file
@@ -305,5 +331,30 @@ depends_on: []
       checkpoint AND the run was not `--force` (the exact silent-gap condition). Repo: deployment-service.
 - [ ] [BACKEND] P3. **`canonical-migration-defi-pi-range` and `canonical-migration-defi-per-instrument` write no
       checkpoint at all** (not even the manifest-shard-only pattern `canonical-migration-defi-rebuild` uses) and
-      produced this audit's largest observed `run.log`s (731 MB / 79 MB) — fold into the P1 `PROGRESS.json` rollout
+      produced this audit's largest observed `run.log`s (731 MB / 79 MB) — fold into the P2 `PROGRESS.json` rollout
       above rather than treating as a separate design. Repo: deployment-service.
+- [ ] [SCRIPT] P3. **Check whether CME BTC/ETH options (OPT atom) coverage is intentionally excluded or a silent gap** —
+      surfaced by the 2026-07-25 adversarial verification of the `tradfi-bf-*` finding above: the
+      `cme-ohlcv-1m-btc-2020`/`eth-2022` predecessor VMs' launches expected 2 atoms (FUT+OPT) and hit
+      `[DATABENTO_FETCH_FAILED] ... underlying='BTC'/'ETH' is not a real product root ... quarantine, never     fake-canonicalize`
+      for the OPT atom on every attempt (0 rows, by design — the quarantine behavior itself looks correct, not a bug).
+      The SUCCESSOR VMs' launches expected only 1 atom (FUT-only) and succeeded. Not independently confirmed this run:
+      was dropping the OPT atom a deliberate decision (BTC/ETH CME options use a different root symbol this launcher
+      should resolve instead of quarantining, or are genuinely out of MVP scope), or did something silently narrow the
+      "expected atoms" set between launches without anyone deciding that on purpose? If the latter, CME BTC/ETH options
+      coverage may have quietly gone from "expected, failing" to "no longer expected" rather than being fixed. Repo:
+      market-tick-data-service, instruments-service.
+
+- **2026-07-25 (third session) — adversarial verification of the `tradfi-bf-*` "CONFIRMED double-fetch" finding: 3/3
+  independent refuters REFUTED it.** Given the finding's severity (P1, real vendor billing $ implications) and its
+  potential to trigger an operator escalation, ran a 3-agent independent adversarial-verification Workflow before
+  trusting it — each agent re-pulled the raw GCS `run.log`s from scratch and tried to find an innocent explanation. All
+  3 found the same one, independently: the predecessor VMs never captured any real rows for the cited chunk
+  (`total_records=0 complete=False` on every attempt, root-caused to an unrelated Databento combo-symbol quarantine
+  issue), so the successor's "restart at Chunk 1/53" was a correct retry of genuinely-missing data, not a double-fetch
+  of already-captured data. Corrected the finding above (P1→P2, "confirmed"→"bounded/ theoretical", matching
+  `canonical-migration-defi-rebuild`'s classification) and filed the quarantine-behavior observation as its own new P3
+  todo. **This audit's own methodology lesson, worth carrying forward**: a "chunk-loop restarted at chunk N" symptom is
+  not sufficient evidence of waste on its own — always grep the actual `total_records=`/`complete=` values for the
+  specific chunk before calling a re-fetch confirmed, since a genuinely-empty predecessor attempt looks identical to a
+  genuinely-wasted one at the chunk-marker level alone.
