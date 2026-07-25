@@ -22,7 +22,11 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [ci-cd, firestore, ci_status, promote-gate, sit-gate, permissions, fleet-wide, incident]
-related: [deployment_registry_reaper_not_draining_stale_entries_2026_07_24]
+related:
+  [
+    deployment_registry_reaper_not_draining_stale_entries_2026_07_24,
+    sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20,
+  ]
 created: 2026-07-25
 priority: P0
 parent_epic: infrastructure_master
@@ -87,6 +91,14 @@ Traced the gap:
    invalid. Please run `$ gcloud auth login`") in an UNRELATED run (`unified-trading-pm` run `30159646779`, 13:24:19Z) —
    a DIFFERENT symptom (gcloud CLI creds, not ADC) on what may be the same or a sibling self-hosted runner. Flagging as
    a possible second data point for the same underlying credential/IAM incident, not confirmed to share a root cause.
+7. Cross-ref: `sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` documents a DIFFERENT failure mode
+   on the same `sit_validated_tree` gate (a breaking-delta repo needs LDR quiescent across a full SIT round-trip, or the
+   fingerprint never matches the moving tip) — that doc predates this incident and its root cause (SIT round-trip
+   timing) is distinct from this one (Firestore write 403). Flagging only because BOTH manifest as "SIT gate never
+   satisfies, repo re-dispatches SIT forever" from the outside — a future diagnosis of a stuck promote should check THIS
+   doc's `ci-status-update.yml` run history first (cheap: `gh run list --workflow=ci-status-update.yml`) before assuming
+   the treadmill's slower LDR-quiescence cause applies. SSOT for the `ci_status` Firestore-SSOT design:
+   `/codex/08-workflows/ci-cd-flow.md`.
 
 ## Why it matters
 
