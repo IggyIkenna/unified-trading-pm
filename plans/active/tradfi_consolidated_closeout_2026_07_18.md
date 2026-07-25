@@ -255,6 +255,18 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition-of-done: a filed finding (or a
       stated "clean" verdict) per adapter directory, cited with file paths, recorded in this plan's Progress Log or a
       new `plans/active/issues/` doc. (repos: instruments-service, market-tick-data-service, execution-service)
+- [ ] [BACKEND] P1. **NEW 2026-07-24 — two live defects found by the raw-tick reconciliation's 3rd run: (1) ICE/KRX/FX
+      (all Yahoo-exclusive per SSOT) captured under `source=databento` since ~2026-07-18 (real values, wrong provenance
+      stamp, root cause not yet found — hypothesis: the 2026-06-24 DATABENTO-FIRST change missing a per-venue
+      `_VENUE_SOURCE_EXCLUSIONS` guard); (2) FX `SPOT_PAIR` manifest `instrument_id` is 0% well-formed across its entire
+      2020-2026 captured history (the GCS object + content are fine — this is a pure manifest-copy defect).** Positive
+      counter-finding same run: captured-row id-form canonicality measured ~99.3% corpus-wide (up from the 07-21
+      report's 30.8%), independently corroborated by a 99.95%-clean reconstructed-path check — strong evidence the
+      Phase-B migration in `tradfi_manifest_content_recovery_completion_2026_07_24.md` has substantially landed; that
+      plan's relevant todo should be confirmed/flipped against this evidence rather than treated as still-open. Full
+      evidence for both defects + the `_quarantine/` register going stale (146K→400K+ objects in 3-4 days, register
+      still says "deleted"): `/plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`. (repos:
+      market-tick-data-service, unified-api-contracts, unified-trading-pm)
 
 ## Phase C — data-status + honest-coverage (gated on Phase B)
 
