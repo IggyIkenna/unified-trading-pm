@@ -52,11 +52,32 @@ if [ "$CI_MODE" = "--precommit" ]; then
         ;;
     esac
   done < <(git -C "$PM_DIR" diff --cached --name-only --diff-filter=ACM -- plans/ codex/ 2>/dev/null)
-  if [ "${#STAGED_PLANS[@]}" -eq 0 ] && [ "${#STAGED_RUNBOOKS[@]}" -eq 0 ] && [ "${#STAGED_CODEX[@]}" -eq 0 ]; then
+  # Separate, filter-unrestricted detection of "did this commit touch plans/ at all" — deliberately
+  # NOT the --diff-filter=ACM loop above, because a plan ARCHIVAL is a `git mv` and git's default
+  # rename detection reports that as status R, which --diff-filter=ACM excludes. A pure archival
+  # commit (git mv plans/active/X.md -> plans/archive/.../X.md, no other plan file touched) would
+  # leave STAGED_PLANS empty and skip the whole precommit gate below — exactly the commit shape that
+  # needs the broken-link check (see the corpus-wide link check below).
+  PLANS_TOUCHED=""
+  if git -C "$PM_DIR" diff --cached --name-only -- plans/ 2>/dev/null | grep -q .; then
+    PLANS_TOUCHED=1
+  fi
+  if [ "${#STAGED_PLANS[@]}" -eq 0 ] && [ "${#STAGED_RUNBOOKS[@]}" -eq 0 ] && [ "${#STAGED_CODEX[@]}" -eq 0 ] && [ -z "$PLANS_TOUCHED" ]; then
     echo "plan-hygiene pre-commit: no staged plan/runbook/codex files — skip."
     exit 0
   fi
   PF=0
+  if [ -n "$PLANS_TOUCHED" ]; then
+    # Corpus-wide broken-link check (not staged-files-only — a link's target can be ANY plan under
+    # plans/active/ or plans/archive/, not just the files this commit stages). Fires on every commit
+    # that adds/edits/renames anything under plans/, which is exactly what makes this the fast local
+    # failure for the archiving agent instead of a fleet-wide QG-red discovered days later by an
+    # unrelated worker (unified-trading-pm/plans/active/issues/
+    # consolidated_closeout_plans_stale_archive_referrer_links_fleetwide_qg_block_2026_07_25.md).
+    python3 "$SCRIPT_DIR/../validators/validate_plan_links.py" --quiet --workspace-root "$(dirname "$PM_DIR")" \
+      && echo "  ✅ No broken links (plans/active/*.md, corpus-wide)" \
+      || { echo "  ❌ Broken relative link(s) in plans/active/*.md — a referenced doc likely moved/archived without its referrers' paths being updated (CLAUDE.md § 'Plans' archival ritual step 5: 'update every referrer's path corpus-wide')"; PF=$(( PF + 1 )); }
+  fi
   if [ "${#STAGED_PLANS[@]}" -gt 0 ]; then
     "$SCRIPT_DIR/check_frontmatter.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Frontmatter validity (staged plans)" || { echo "  ❌ Frontmatter validity (staged plans)"; PF=$(( PF + 1 )); }
     # Value-level schema gate (required NON-EMPTY fields + epic resolution) on the SAME staged
@@ -137,6 +158,12 @@ run_check "Todo format (priority + canonical)" hard "$SCRIPT_DIR/check_todo_form
 run_check "Runbook governance fields"        hard python3 "$SCRIPT_DIR/check_runbook_fields.py"
 run_check "No conflict markers (mid-line + mangled)" hard "$SCRIPT_DIR/check_conflict_markers.sh"
 run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_mangling.sh"
+# Broken relative links (plans/active/*.md -> a doc that moved to plans/archive/... without the
+# referrer's path being updated) — the same check the --precommit fast path runs on any staged
+# plans/ change, run here too so the operator's daily sweep catches drift from commits that landed
+# before this gate existed. SSOT: validate_plan_links.py (also invoked fleet-wide by every repo's
+# quality-gates.sh via run_validators.py — this is the LOCAL, fast-failure counterpart).
+run_check "No broken links (plans/active/*.md, corpus-wide)" hard python3 "$SCRIPT_DIR/../validators/validate_plan_links.py"
 # depends_on was SEEDED by fix_frontmatter.py but never VALIDATED — nothing checked the graph
 # itself. A cycle (A->B->A) gates archival forever (CLAUDE.md: depends_on gates archival), so
 # neither plan can ever close: silent permanent stasis, no error. Whole-graph check, so it lives

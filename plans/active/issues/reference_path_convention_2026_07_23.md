@@ -119,6 +119,13 @@ depends_on: []
       reference fix is blocked by `check_line_caps.sh`'s no-exceptions-on-touched-files rule until it's split. **Done
       when**: split `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` under 1000L (fold into the P3 line-cap
       cleanup below or its own pass), then fix the reference.
+- [ ] [DOC] P3. Same class of gap as the todo above, second instance (found 2026-07-25, slot-8):
+      `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` (exactly 1000 lines, at the hard cap) carries a
+      body-prose reference `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md` that needs
+      repointing to `plans/archive/issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md` — same
+      `check_line_caps.sh` no-exceptions block (a same-length text swap still trips prettier's paragraph reflow into
+      1001 lines, per `terminal_status_archival_backlog_sweep_2026_07_25.md`'s slot-2 Progress Log entry). **Done
+      when**: split `sports_satellite_ao_dispatch_batch2_2026_07_24.md` under 1000L, then fix the reference.
 - [ ] [REVIEW] P3. Confirm `/plan-reconcile`'s existing contradiction-sweep phases are sufficient to catch a doc that
       moves without its referrers being updated going forward (the archival-ritual gap above, once fixed, should be
       enforced by more than operator diligence) — extend the skill's Phase 1/AO-dispatch-readiness hunters if not.
