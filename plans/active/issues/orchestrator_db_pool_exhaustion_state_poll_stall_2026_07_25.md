@@ -105,6 +105,22 @@ depends_on: []
   BACKEND todos below (esp. #1 leak audit + #2 DB-aware readiness probe so auto-restart can fire) should be prioritised;
   until then each recurrence needs a managed restart or a ~10min self-clear, during which dispatch + the main-agent
   message/blocked sweep are blind.
+- **#4 05:12:35–05:12:40Z — ~5 min after #3, and a restart did NOT durably clear it.** At 05:10:54 a `WatchFiles` reload
+  fired (edit to `server/config.py`) — the old process (2246165) shut down cleanly, a fresh process (2929835) started
+  05:11:22. The **fresh process re-exhausted the same `QueuePool 5+10` within ~70s** (05:12:35), again with
+  `/api/agents → 500` and `autospawn slot 1: late account re-check raised`. This is the important escalation: **a
+  process restart no longer buys durable recovery** (the pool re-fills to exhaustion almost immediately), which points
+  away from a slow leak on a long-lived process and toward **sustained concurrency over the 15-connection ceiling** (the
+  per-slot git-status fan-in is saturating a freshly-restarted pool in ~1 min). The BACKEND-P3 right-sizing + git-status
+  write batching/serialisation is now the highest-leverage fix, not just the readiness probe. Self-cleared again by
+  05:13 (last pool error 05:12:40). **Four occurrences in ~1 hour with shrinking intervals (02:0x → 04:29 → 05:07 →
+  05:12); a restart at 05:11 did not prevent 05:12.**
+- **Adjacent NEW bug surfaced in the #4 window (needs its own tracking, not the same root cause):** at 05:12:52
+  `POST /api/plan-health/dispatch` returned `500` with
+  `TypeError: can't subtract offset-naive and offset-aware datetimes` (a naive-vs-aware datetime subtraction on the
+  plan-health dispatch path — a UTC-datetime-hygiene defect, the class QG normally bans). Also a transient
+  `regen: LDR plan snapshot failed (git fetch … exit 1) — falling back to PM working tree`. Flagged here for provenance;
+  the datetime TypeError should get its own issue if it recurs.
 
 ## Notes
 

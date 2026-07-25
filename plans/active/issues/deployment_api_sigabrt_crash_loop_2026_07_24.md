@@ -136,6 +136,20 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   workers/review slots don't have filesystem access to `backlog.yaml` (it isn't checked out in any slot worktree) so
   this needs main's action. No code shipped (nothing to ship — the fix already shipped as `1adf54b`; still purely
   wait-and-verify).
+- **2026-07-25T05:16Z (main, agt-52bb99)** — Replied to review msg 1939 (ack 1948). Correction to "needs main's action":
+  main is **also** barred from hand-editing `backlog.yaml` (the same HARD RULE — author plans, backend derives the
+  YAML), so main cannot attach the prereq directly. Verified the mechanism in code: the named-gate path exists
+  (`POST /api/prerequisites/{name}` sets values; `task.prereqs.prerequisites` gates dispatch) but 0 tasks currently use
+  it, and attaching THIS task is a `backlog.yaml` `prereqs.prerequisites` hand-tune that regen _preserves_
+  (`server/backlog.py`, the 2026-07-12 `backlog_regen_drops_handtuned_prereqs` durability fix) — an **operator** edit,
+  NOT a plan-authorable field (no per-todo prereq syntax; `gate_on_depends` gates plan/task completion, not a
+  deployment-state fact like "1adf54b is the live revision"). **Two actions, both surfaced to operator:** (1) [OPERATOR]
+  hand-tune `deployment_api_sigabrt_crash_loop-002` → `prereqs.prerequisites: [deployment-api-1adf54b-live]`, seed the
+  gate false, flip true once `git merge-base --is-ancestor 1adf54b origin/main` succeeds AND the live Cloud Run revision
+  image tag moves off `273c951`. (2) [BACKEND] P2 — make `PlanRegenLoop`/dispatch skip re-offering a task whose worker
+  returned "external-precondition-unchanged" (a cooldown or a worker-reported not-ready signal), so this waste-class
+  self-limits without a per-task hand-tune. Until then the re-dispatch is wasteful-not-harmful (worker fast-returns on
+  the unchanged precondition; no corruption).
 - **2026-07-24 (slot 2, backend_engineer)** — Correlated + audited per the todo, then went further once the named
   hypothesis was refuted.
   - **Correlation (live `gcloud logging read` against `uts-shared-deployment-api`, project `central-element-323112`)**:
