@@ -104,9 +104,10 @@ For the named doc:
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@db253f0c9 (moved to plans/archive/issues/, banner added, all 3 referrers
       repointed; check_terminal_status_archived.py confirmed clean).
-- [ ] [INFRA] P2. Archive `plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@40f3c5b65 (moved to plans/archive/issues/, banner added, parent doc's 3
+      referrers repointed; check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive `plans/active/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
