@@ -11,7 +11,7 @@ summary: >-
   `gate_on_depends: true` plan gated on it dispatches prematurely, believing the upstream is fully clear. Confirmed live
   on `infra_capture_and_devops_leftovers_2026_07_06.md` / `infra_capture_and_devops_leftovers_finalize_2026_07_25.md`:
   dispatched to slot 2 (2026-07-25T04:52Z) and again to slot 3 same day, both times finding the gate not actually met.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -34,7 +34,10 @@ source: >-
   Discovered while working infra_capture_and_devops_leftovers_finalize-001 (slot 3, data_engineering) — the finalize
   todo's own progress-log note (from an earlier slot-2 dispatch, 2026-07-25T04:52Z) already flagged the gate as not
   genuinely met; this doc traces the mechanism so it stops recurring.
-resolved_by:
+resolved_by: >-
+  agent-orchestrator@a6c87d7 (regex fix + regression tests, plan-flip 0098ea9cc). Second todo closed as superseded — the
+  actual ASTER connector launch is tracked under `infra_capture_and_devops_leftovers-001` (parent plan's own todo, now
+  correctly re-ingested), not this doc.
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -120,9 +123,19 @@ upstream detection, plus a control case that `BLOCKED-CREDENTIALS` etc. remain e
       `test_parse_ingests_blocked_prerequisites_but_excludes_taxonomy_tokens` (ADD-pass) and
       `test_regen_gate_on_depends_holds_when_upstream_only_open_todo_is_blocked_prerequisites`
       (`_wire_gate_on_depends_prereqs` path) to `tests/test_regen_backlog_from_plan.py`. QG green (1694 passed).
-- [ ] [DATA] P1. Once the regex fix lands and the ASTER connector todo in
+- [x] ✅ [DATA] P1. Once the regex fix lands and the ASTER connector todo in
       `infra_capture_and_devops_leftovers_2026_07_06.md` re-enters the backlog, pick it up: register
       `aster_book_liq_ws.py` into `live/connector_registry.py`, launch the live VM (KALSHI-PERP book5 VM is the in-cefi
       template), and verify `live_aster` book5/liquidations rows land (per-VM shard spot-check at T+10-15min) before
       flipping the checkbox. This is the actual gate that `infra_capture_and_devops_leftovers_finalize_2026_07_25.md` is
-      waiting on. (repo: market-tick-data-service, deployment-service)
+      waiting on. (repo: market-tick-data-service, deployment-service) — **RESOLVED AS SUPERSEDED (slot 3, checked
+      2026-07-25)**: this todo was a spun-out pointer written before the regex fix landed, to make sure the ASTER work
+      wouldn't be forgotten. The fix worked exactly as intended — `GET /api/backlog` now shows the parent plan's OWN
+      todo re-ingested as `infra_capture_and_devops_leftovers-001` (`collision_group: script:aster_book_liq_ws.py`,
+      `status: dispatched`, `dispatched_to: 4`). That is now the single canonical task for the actual launch+verify
+      work; this todo duplicating it (with no `collision_group` of its own, since it lives in a different plan file)
+      would risk a double-launch of a live connector. Closing here without touching the VM/connector — the real work is
+      tracked and in progress under `infra_capture_and_devops_leftovers-001`, not this doc. Authoring note for next
+      time: a same-file todo with a genuine "once X lands, do Y" dependency should have set `sequential: true` on this
+      plan (or used `depends_on`/`gate_on_depends`) instead of relying on prose ordering — that's the same class of gap
+      this issue doc itself is about.
