@@ -761,6 +761,27 @@ source: >-
     identified and located; actually writing the join code + the ~300 `LeagueDefinition` UAC entries + widening the
     write-gate remains real implementation work for a fresh session (still correctly not done here — a discrepancy in a
     production write-gate is expensive to unwind, worth doing with full attention).
+  - **Found the actual code-level blocker on writing entries, not just a data gap**:
+    `LeagueDefinition.season_months: tuple[int, int]`
+    (`unified_api_contracts/canonical/domain/sports/league_registry.py:60`) is a REQUIRED field, no default — confirms
+    real per-league season-window data is a hard prerequisite for every new entry, not an optional nicety. **Operator
+    resolved this directly**: use a hemisphere-based default (Northern Hemisphere Aug–May, Southern Feb–Nov, explicit
+    hardcoded exceptions like MLS Feb–Nov) with an explicit code-comment TODO marker per entry, rather than block on
+    per-league research or silently guess without flagging it. This unblocks the write-gate widening for a fresh
+    session.
+  - **Sanity-checked the continental/majors slice specifically** (the part of step 1 that does NOT need per-country
+    tier-guessing, since Directive A names the tournaments explicitly): keyword-matched the 176-entry World group
+    against Directive A's named list (World Cup, Euros, Copa America, Champions/Europa/Conference League,
+    Libertadores/Sudamericana, AFC/CAF Champions League, Nations League) → **43 raw matches**. Flagging honestly: NOT
+    all 43 are "majors" in the operator's intended sense — many are youth (`World Cup - U20`), qualifiers
+    (`World Cup - Qualification Africa`), or women's variants that Directive A's own prose de-prioritizes — a fresh
+    session should filter to senior-men's-flagship first per Directive A's literal examples, not admit all 43
+    uncritically.
+  - **Every open question for this todo is now resolved or located**: candidate leagues (375 already-captured + 1,228
+    full catalog), per-source caps (measured + operator-confirmed for ODDS), duplicate handling (bounded ~5 pairs),
+    season-month defaults (operator-approved hemisphere heuristic), and the domestic-vs-continental split (171-country
+    group vs 176-entry World group). What's left is writing, testing, and shipping the actual code — genuine
+    implementation work, not more discovery.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
