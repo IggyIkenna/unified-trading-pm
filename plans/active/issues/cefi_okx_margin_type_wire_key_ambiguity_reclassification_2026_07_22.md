@@ -19,7 +19,7 @@ summary: >-
   identity axis for these rows and a corrected dedup rule should collapse them (keeping the row matching today's correct
   classifier); if it is wrong, real distinct linear/inverse products would be silently merged into one, which is a
   substantive economic-field violation, not a housekeeping fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -45,7 +45,7 @@ source:
     flagged this as a big finding (SSOT contradiction) rather than silently overriding the shipped docstring or silently
     skipping it",
   ]
-resolved_by:
+resolved_by: instruments-service@1c920fab
 locked_by:
 ---
 
@@ -146,3 +146,12 @@ Full investigation, implementation, and adversarial-verify detail: workflow run 
 `~/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/6acb923a-160e-4747-b590-8f035b41ef6c/subagents/workflows/wf_2550fc3e-f59/journal.jsonl`.
 The unrelated, already-shipped portion of that same workflow (BINANCE-DELIVERY/BINANCE-FUTURES/KRAKEN-FUTURES fully,
 OKX-FUTURES sub-pattern A partially — 84/216 residual keys collapsed) landed at `instruments-service@bf5322bb9`.
+
+## RESOLVED (2026-07-25)
+
+Frontmatter flipped per the cefi orphan-audit (2026-07-25) — `cefi_consolidated_closeout_2026_07_18.md`'s own "Deferred
+work after 2026-07-24" table (its most-current section) marks this exact 93-row margin_type reclassification "SHIPPED
+2026-07-23 (instruments-service@1c920fab)... Folded into item 4, no longer a separate open item." Independently
+re-verified: commit `1c920fab` cites this issue doc by filename and both implements `_dedup_cefi_margin_type_mislabel()`
+(93→0) and rewrites `_dedup_cefi_expiry_off_by_one()`'s docstring to retract the "REAL, different ambiguity" claim —
+exactly the two remaining open items per the OPERATOR RULING above.

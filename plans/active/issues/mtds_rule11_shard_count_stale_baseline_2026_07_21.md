@@ -10,7 +10,7 @@ summary: >-
   matrix had never enumerated"). Reproduced against a clean HEAD (isolated from all other uncommitted peer WIP in the
   shared working tree), so this is a genuine, unrelated, pre-existing test-baseline drift — not caused by any in-flight
   change. It currently fails `bash scripts/quality-gates.sh` for EVERY MTDS change, blocking unrelated ships.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -34,7 +34,7 @@ source:
     "hit while shipping an unrelated LST rate honest-coverage Phase 1 change 2026-07-21; blocked the full-tree
     quality-gates.sh for every MTDS commit",
   ]
-resolved_by:
+resolved_by: market-tick-data-service@56d39325
 locked_by:
 ---
 
@@ -70,4 +70,11 @@ Update the hardcoded expected count in `test_rule11_per_ag_shard_counts_byte_unc
 enumeration is itself correct — i.e. no OTHER accidental venue/data_type inflation beyond the known OKX-FUTURES/OKX-SWAP
 add — before just bumping the number). If the test's intent is "byte-unchanged unless intentionally changed", consider
 whether it should snapshot the enumerated set (not just a count) so future additions fail with a clear diff instead of a
-bare count mismatch. </content>
+bare count mismatch.
+
+## RESOLVED (2026-07-25)
+
+Frontmatter flipped per the cefi orphan-audit (2026-07-25). Verified directly in market-tick-data-service:
+`test_pipeline_e2e_prediction_canonical.py` line 264 pins CEFI=208 (was 200); `git blame` shows commit `56d39325`
+(2026-07-21) "re-pin RULE-11 CEFI shard count for uac@11adf279" exactly matching this doc's described root cause/fix;
+re-ran the named test — PASSED. Also corroborated by other docs referencing this as already resolved.

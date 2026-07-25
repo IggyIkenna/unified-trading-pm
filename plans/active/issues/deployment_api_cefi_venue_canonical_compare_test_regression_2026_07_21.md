@@ -11,7 +11,7 @@ summary: >-
   set the distinct-values endpoint compares against legitimately grew to include it and the test is simply stale — but
   this wasn't verified deeply enough to be sure it isn't a real regression in canonical-set derivation. Needs someone
   with venue-canonicalization context to determine which side is wrong and fix it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -26,7 +26,7 @@ assigned_vm: NA
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21-003]
-resolved_by:
+resolved_by: deployment-api@fe8eaf1
 locked_by:
 depends_on: []
 ---
@@ -85,3 +85,10 @@ it isn't theirs, same class of interruption already logged in this session for t
       `OKX-FUTURES` now asserts `True` (matches the corrected canonical set) and a genuinely non-canonical value
       (`OKX-MARGIN`, not registered under any name) replaces it as the exact-compare negative case so the test still
       proves the comparison isn't loosened. All 12 tests in the file pass; `quality-gates.sh` green.
+
+## RESOLVED (2026-07-25)
+
+Frontmatter flipped per the cefi orphan-audit (2026-07-25) — the "Recommended decision" item above already carried full
+inline resolution (fix applied, evidence cited); only the frontmatter `status`/`resolved_by` fields were stale.
+Independently re-verified `deployment-api@fe8eaf1` exists and matches the claimed fix (OKX-FUTURES assertion updated,
+OKX-MARGIN substituted as negative case).

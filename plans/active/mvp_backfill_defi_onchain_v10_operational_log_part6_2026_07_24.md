@@ -11,7 +11,7 @@ summary: >-
   exceptions). This is Part 6 of 6 in strict chronological order — read all 6 parts in filename order for full context.
   Part 1's filename is kept stable across both the original 2026-07-24 split and this re-chunk so existing external
   references keep resolving to real content.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]

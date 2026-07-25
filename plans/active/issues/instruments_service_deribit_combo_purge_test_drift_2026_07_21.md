@@ -7,7 +7,7 @@ summary: >-
   routing tests, enumeration-completeness tests, the cefi expected-universe golden, and the CEFI per-AG dedup target
   count) still assume the old venue set and now fail deterministically. Discovered as a side-effect while fixing an
   unrelated ldr_qg_failure escalation (agt-9df557) for instruments-service#886.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -26,6 +26,7 @@ locked_by:
 locked_since:
 parent_epic: cefi_master
 resolved_by:
+  instruments-service@2b6a27d0, instruments-service@1a6be004, instruments-service@81961dae, instruments-service@35d9e707
 ---
 
 ## What I found
@@ -137,3 +138,9 @@ Whoever owns the CEFI canonicalization migration (check `cefi_consolidated_close
 
 - `/codex/08-workflows/ci-cd-flow.md` § "Local ↔ CI QG parity matrix" (this is exactly the tracked local-ahead-of-CI
   divergence class it names).
+
+## RESOLVED (2026-07-25)
+
+Frontmatter flipped per the cefi orphan-audit (2026-07-25) — all 5 `## Todos` checkboxes independently re-confirmed
+`[x]` with concrete shipped evidence (SHAs above), including a final full `quality-gates.sh` "ALL QUALITY GATES PASSED"
+run. The 4-item "Recommended decision" prose list is fully mirrored/closed by those same todos.
