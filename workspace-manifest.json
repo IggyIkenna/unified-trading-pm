@@ -760,9 +760,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.92,
-        "warn_file_count": 9,
         "large_file_count": 8,
+        "warn_file_count": 9,
+        "coverage_pct": null,
         "qg_red_reason": null
       }
     },
@@ -1103,9 +1103,9 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 9.54,
-        "warn_file_count": 0,
         "large_file_count": 0,
+        "warn_file_count": 0,
+        "coverage_pct": null,
         "qg_red_reason": null
       }
     },
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 6,
         "warn_file_count": 21,
-        "coverage_pct": null
+        "coverage_pct": 88.34,
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "coverage_pct": null,
-        "warn_file_count": 0,
         "large_file_count": 0,
-        "qg_red_reason": "ruff"
+        "warn_file_count": 0,
+        "coverage_pct": null,
+        "qg_red_reason": null
       }
     },
     "unified-trading-api": {
@@ -2185,8 +2185,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.57.1.dev1+g25c495c63",
-      "published_at": "2026-07-25T23:03:55Z",
+      "version": "0.57.1.dev2+g390e3a01c",
+      "published_at": "2026-07-25T23:32:04Z",
       "registry": "artifact-registry"
     }
   }
