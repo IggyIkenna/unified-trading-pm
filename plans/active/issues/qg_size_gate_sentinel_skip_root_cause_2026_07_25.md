@@ -26,7 +26,7 @@ tags: [code-quality, function-size, qg-ratchet, sentinel-skip, quality-gates, sp
 related:
   - /plans/archive/issues/sports_reference_function_size_qg_regression_2026_07_16.md
   - /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md
-  - /plans/active/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md
+  - /plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md
   - /plans/active/sports_consolidated_closeout_2026_07_19.md
 created: 2026-07-25
 last_updated: 2026-07-25

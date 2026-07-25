@@ -186,7 +186,7 @@ drift_direction: advance-code
       reaching the events-sink bucket without a 403. Source:
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
 - [ ] [DOC] P1. Re-verify and flip
-      `plans/active/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` to `status: resolved` with
+      `plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` to `status: resolved` with
       `resolved_by: instruments-service@ac22305c` populated — it documents the identical 3 oversized sports-domain
       functions (`_AfManifestHooks.emit_empty_gaps_for_entity()` / `_fetch_teams_and_standings()` /
       `_write_per_fixture_entities()`, same 89L/205L/253L measurements) already confirmed decomposed + resolved by the
@@ -194,9 +194,9 @@ drift_direction: advance-code
       never itself flipped. Repo: unified-trading-pm. **Done when**: the doc's frontmatter `status` reads `resolved`
       with `resolved_by` populated, citing either the same live-code re-measurement evidence already gathered in the
       sibling doc or a fresh independent re-measurement if this doc's own claims need independent reverification first.
-      Source: `issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` (corrected 2026-07-25
-      plan-reconcile — this todo's subject IS that doc; the digest previously cited as Source has 0 checkboxes and isn't
-      the doc actually being flipped).
+      Source: `plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` (corrected
+      2026-07-25 plan-reconcile — this todo's subject IS that doc; the digest previously cited as Source has 0
+      checkboxes and isn't the doc actually being flipped).
 - [ ] [DIAG] P1. **Verify whether the sports manifest's 2026-vs-prior-year enumeration-grain inconsistency (~10x more
       cells seeded per data_type for 2026 than prior years) still persists** — measure current per-data_type
       cell-seeding counts for a matched 2025 vs 2026 sample window directly against the live
