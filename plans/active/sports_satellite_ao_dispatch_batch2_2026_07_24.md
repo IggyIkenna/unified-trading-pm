@@ -494,19 +494,16 @@ source: >-
 > The doc's 4th todo (a real-backfill timing verification) is EXCLUDED here — it depends on both todos below landing
 > first. Add it as a follow-up once both ship.
 
-- [ ] [DATA] P2. **Manifest-slice replacement for `check_api_football_dependency()`** — load+filter a manifest slice
-      once per backfill run (or per chunk) instead of per-date network calls (pyarrow filter push-down on the downloaded
-      `availability_index.parquet` bytes — measured ~10s one-time download + ~0.66s filter for a 1-year slice); keep the
-      direct-GCS path as a fallback only if a genuine same-run consolidation-lag risk is confirmed real (manifest
-      consolidator cron runs every 1 min). Also unify this function's independently-hardcoded path-template constants
-      with the shared helper the other ~9 expanded-scope sites already use (`_read_per_league_entity_df`-style) — likely
-      gets absorbed automatically once the manifest-slice replacement lands (a manifest-slice check no longer needs GCS
-      path templates at all). NOTE: this exact todo text appears twice verbatim in the source doc (~line 136-140 and
-      ~217-225) — it is ONE work item. (repo: instruments-service
-      `instruments_service/reference_data/sports_dependency.py`). **Done when**: `check_api_football_dependency()` reads
-      a manifest slice instead of per-date probes; consolidation-lag fallback implemented + documented; a regression
-      test proves equivalent results to the old probe-based check; no independently-hardcoded duplicate path templates
-      remain; quality-gates green. Source: `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`.
+- [x] ✅ [DATA] P2. **Manifest-slice replacement for `check_api_football_dependency()`** —
+      `instruments-service@bd1da540`. Added `_manifest_shows_fixtures_captured()`: a pyarrow-pushed-down
+      `read_availability_index()` slice (`date`/`data_type`/`capture_status`, ~0.1s/call) as the PRIMARY check, matching
+      `data_type in {FIXTURES, FIXTURES_SCHEDULE}` + `capture_status == "captured"` — NOT `venue ==     "API_FOOTBALL"`
+      per the issue doc's prose: live-data probe found these rows carry an EMPTY `venue` column, api-football identity
+      is implied by `data_type` alone. Verified equivalent to the old GCS-probe verdict against 12+ real dates
+      (2024-2026, incl. 2 genuine-miss dates) before writing tests. Old GCS-probe KEPT UNCHANGED as fallback
+      (manifest-read failure/staleness returns `False`, never raises) — path-template duplication is moot since the hot
+      path no longer touches them, per this todo's own anticipated outcome. 9 new/updated unit tests. `quality-gates.sh`
+      PASSED. Source: `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`.
 - [x] [DATA] P2. ✅ **Cached/batched fix for `sports_fixtures.py:356`** — `instruments-service@2be5698d`. The doc's
       stated path (`instruments_service/reference_data/sports_fixtures.py`) was stale — the real file is
       `instruments_service/engine/orchestrator/sports_fixtures.py`, and the actual per-(entity×league) primitive
