@@ -175,3 +175,57 @@ retroactively for BATCH-sourced data, but not for anything that was only ever av
    `2026-07-24T01:31:59Z`.
 5. Confirm whether `market-tick-cefi-daily-download` (PAUSED since 2026-07-16) is dead code; if so, consider removing it
    to reduce future investigation noise.
+
+## Follow-up investigation + immediate mitigation (2026-07-25, `/autonomous` continuation session)
+
+**Root-cause hypothesis (not yet 100% confirmed, but strong circumstantial fit).** `market-tick-data-service@a6e974b6`
+(2026-07-20T09:27, one day before the capture cliff began) changed `HyperliquidS3Downloader` (hyperliquid + aster are 2
+of this job's 3 active data sources, confirmed from its own bootstrap log) from a per-instrument, per-day trades fetch
+to a "parse-once-per-day" cache: it now (a) fetches all 24 hourly S3 objects for a day CONCURRENTLY via
+`ThreadPoolExecutor(max_workers=12)` and materializes all 24 decompressed hour-texts in one Python list before parsing
+any of them, then (b) parses and holds EVERY coin's full-day trades in memory
+(`self._trades_cache: dict[coin, list[...]]`) instead of just the one coin previously being fetched. The intent (per the
+commit message) was fixing a 165x-redundant re-fetch that made full-universe BACKFILLS take weeks — a real problem for
+that use case — but the same code path also now runs for this job's routine twice-daily incremental capture, where the
+old per-coin behavior was never the bottleneck it solved for. This is a plausible, well-motivated perf-tradeoff
+regression, not a code defect per se; it was not caught because nobody load-tested this job's specific memory profile
+against the new caching shape before it shipped. **Not proven** — the code was read, not profiled; a proper root-cause
+confirmation would need a memory profile of an actual execution, which this session did not run (see the
+immediate-mitigation choice below for why).
+
+**Immediate mitigation applied (2026-07-25T01:3xZ), not a permanent fix:**
+
+```
+gcloud run jobs update uts-prod-market-tick-data-service-cefi-t1-recon --region=asia-northeast1 \
+  --project=central-element-323112 --memory=16Gi   # was 8Gi
+gcloud run jobs execute uts-prod-market-tick-data-service-cefi-t1-recon --region=asia-northeast1 \
+  --project=central-element-323112 --async          # manual test execution, not waiting for the 06:00/09:00 UTC cron
+```
+
+**Why memory-bump over a code fix, given the time pressure:** every day of continued outage is permanent data loss
+(live/near-real-time capture cannot be backfilled after the fact); a memory-limit change is a pure infra config edit
+with zero code-regression risk and is trivially reversible (`--memory=8Gi` reverts it), whereas a rushed code change to
+`hyperliquid_s3.py` under time pressure risks introducing a NEW regression into a file 3 concurrent sessions' worth of
+cefi migration work already touches this week. The 165x-speedup code itself is not reverted — it is a legitimate,
+valuable fix for backfills — bumping the container's ceiling lets it coexist with this job's memory profile without
+sacrificing that win. A proper permanent fix (bound the day-cache to only the currently-needed coin, or stream the 24
+hours instead of materializing all of them before parsing) is a real follow-up, tracked as its own todo below — not
+attempted here.
+
+**Verification status:** a manual test execution (`uts-prod-market-tick-data-service-cefi-t1-recon-mncmq`) was triggered
+immediately after the memory bump to test recovery without waiting for the next scheduled cron. Result pending at the
+time this section was written — see the Progress Log for the outcome once it lands (a background monitor is watching the
+execution to a terminal state).
+
+### Todos
+
+- [ ] [BACKEND] P1. Confirm (via a memory profile / Cloud Monitoring container-memory graph of an actual execution, not
+      just code-reading) whether `market-tick-data-service@a6e974b6`'s HyperLiquid day-cache is the real root cause of
+      the OOM, or whether the 16Gi bump merely masks a different/additional growth source. Repo:
+      market-tick-data-service.
+- [ ] [BACKEND] P2. If confirmed, bound `HyperliquidS3Downloader`'s day-cache memory: either only cache/retain the coins
+      this run actually needs (not every coin HL published that day), or stream the 24 hourly fetches
+      (parse-then-discard per hour) instead of materializing all 24 decompressed texts before parsing any. Repo:
+      market-tick-data-service.
+- [ ] [OPERATOR] P2. Decide whether to keep the Cloud Run job at 16Gi permanently (small ongoing cost increase) once the
+      root cause is confirmed/fixed, or revert to 8Gi after a code fix lands.
