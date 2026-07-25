@@ -739,6 +739,26 @@ cadence `0 */2` since 2026-07-17 — 6h let the host climb +19 points blind betw
 cron's PATH excludes `~/.local/bin`, a silent-failure bug fixed 2026-07-16, `pm@88310f87a`). Execution history + all
 measurements: `plans/archive/2026_07/ao_host_disk_pressure_2026_07_16.md`.
 
+## gcloud SDK PATH symlinks — non-interactive shells never source `.bashrc`
+
+**Same bug class as the cron-PATH gap above, different trigger.** A host with the snap-packaged `gcloud` pre-installed
+puts `/snap/bin` on `PATH` ahead of the real SDK, and `/snap/bin/gcloud` cannot even run inside this sandbox
+(`snap-confine is packaged without necessary permissions ... cap_dac_override not found`). `~/.bashrc` already sources
+`google-cloud-sdk/path.bash.inc`, which PREPENDS the real SDK's `bin/` — but that fix only fires in an INTERACTIVE login
+shell. An agent's sandboxed Bash-tool invocation (and any other non-interactive shell — cron, `claude -p`, …) never
+sources `.bashrc`, so it still resolves the broken snap `gcloud`/`gsutil` first; every
+`deployment-service/scripts/vm/*.sh` launcher and `create-code-tarballs.sh` depends on a working `gcloud` CLI, so this
+silently blocks any interactive-AO-slot VM launch or tarball rebuild. Root-caused + fixed 2026-07-25:
+`plans/active/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md`.
+
+**Fix**: `scripts/dev/install-gcloud-sdk-path-symlinks.sh` symlinks the real SDK's `gcloud`/`gsutil`/`bq`/
+`docker-credential-gcloud` into `~/.local/bin` — already FIRST on `PATH` in every shell type observed on this host
+(interactive and non-interactive alike), so no shell-startup file needs to run for it to take effect. Idempotent,
+host-level (not per-slot, since `~/.local/bin` is one shared user directory); self-skips cleanly on a host with no SDK
+conflict (e.g. a backfill VM that installs `gcloud` via apt with no snap present — `bootstrap_vm.sh` STEP 1.6).
+Provisioned automatically by `setup-tab-worktrees.sh --init` alongside the slot-host crons; re-run by hand on an
+already-provisioned host with `bash scripts/dev/install-gcloud-sdk-path-symlinks.sh`.
+
 ## Pre-spawn branch-state + liveness-gated dirty resolution (Phase 4, 2026-06-01)
 
 The orchestrator's spawn paths (`server.py::spawn_slot`, `autospawn._do_spawn`,

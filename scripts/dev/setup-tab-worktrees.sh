@@ -556,6 +556,15 @@ case "${MODE}" in
             WORKSPACE_ROOT="${WORKSPACE_ROOT}" bash "${PM_DIR}/scripts/dev/install-slot-cron-ff-pull.sh" 2>&1 | sed 's/^/  /' \
                 || err "slot-host cron install reported an issue — run verify-slot-host-symmetry.sh + install-slot-cron-ff-pull.sh manually"
         fi
+        # Host-level (not per-slot) fix for vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md:
+        # symlink the real gcloud SDK binaries into ~/.local/bin so they win PATH resolution
+        # in EVERY shell type (incl. a worker's non-interactive Bash tool, which never sources
+        # ~/.bashrc's snap-vs-real PATH fix). Self-skips cleanly on a host with no SDK conflict.
+        if [[ -x "${PM_DIR}/scripts/dev/install-gcloud-sdk-path-symlinks.sh" ]]; then
+            log "Provisioning gcloud SDK PATH symlinks (~/.local/bin) so gcloud/gsutil work in non-interactive shells…"
+            bash "${PM_DIR}/scripts/dev/install-gcloud-sdk-path-symlinks.sh" 2>&1 | sed 's/^/  /' \
+                || err "gcloud SDK PATH symlink install reported an issue — run install-gcloud-sdk-path-symlinks.sh manually"
+        fi
         log "Done. ${SLOT_COUNT} slots ready. Next: assign themes via the daily work-split plan + ${OPERATOR}_orchestrator/LEDGER.md slot↔theme table."
         ;;
     add-slot)

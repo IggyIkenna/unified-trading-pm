@@ -110,10 +110,19 @@ Two independent, additive fixes, neither mutually exclusive:
 
 ## Todos
 
-- [ ] 1. [INFRA] P2. Fix the PATH issue for interactive AO slots — either document it in the slot bootstrap docs
+- [x] 1. [INFRA] P2. Fix the PATH issue for interactive AO slots — either document it in the slot bootstrap docs
       (`/codex/05-infrastructure/per-tab-worktrees.md` or the slot setup script) so every worker knows to prepend
       `/home/ubuntu/google-cloud-sdk/bin`, or symlink/alias the non-snap `gcloud` ahead of the snap one in the default
-      `PATH` at slot-clone-setup time. (repo: unified-trading-pm docs, or the slot-setup script wherever it lives.)
+      `PATH` at slot-clone-setup time. (repo: unified-trading-pm docs, or the slot-setup script wherever it lives.) ✅ —
+      unified-trading-pm (SHA filled in the same-turn ship commit). Root cause: `~/.bashrc` already prepends the real
+      SDK's `bin/` via `path.bash.inc`, but that only fires in an interactive login shell — a non-interactive shell (an
+      agent's sandboxed Bash tool, cron, `claude -p`) never sources `.bashrc` and still resolves the broken snap
+      `gcloud`. Fix: new `scripts/dev/install-gcloud-sdk-path-symlinks.sh` symlinks the real SDK's
+      `gcloud`/`gsutil`/`bq`/`docker-credential-gcloud` into `~/.local/bin` (already first on `PATH` in every shell
+      type, no shell-startup file required); wired into `setup-tab-worktrees.sh --init`; documented in
+      `/codex/05-infrastructure/per-tab-worktrees.md` § "gcloud SDK PATH symlinks". Verified live on this host: ran the
+      script, then confirmed `command -v gcloud` → `~/.local/bin/gcloud` and `gcloud --version` succeeds in this exact
+      sandboxed non-interactive shell (previously resolved to the broken `/snap/bin/gcloud`).
 - [ ] 2. [INFRA] P2. Fix the WIF-token-expiry auth gap for `create-code-tarballs.sh`'s upload step — either configure a
       non-expiring ADC-backed active gcloud account for interactive slots, or change the upload step to use the UTL GCS
       client (or `gcloud storage` with explicit ADC impersonation) instead of bare `gsutil cp` against the active CLI
