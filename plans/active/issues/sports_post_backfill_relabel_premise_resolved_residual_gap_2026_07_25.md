@@ -241,14 +241,88 @@ of the follow-up:
       (`tests/unit/sports/test_entity_league_coverage.py`) covering the None-means-all-covered entities, the new
       allow-list membership (both directions), case-insensitivity, and a regression guard on the pre-existing Understat
       big-5 entry. `quality-gates.sh` green.
-- [ ] [DATA] P3. Investigate whether the `odds_horizon_bucket` and `TEAMS` capture jobs actually stopped running around
-      early May 2026 for a subset of leagues (diagnosed above by todo 3: `TEAMS`'s `EREDIVISIE` captured daily through
-      `2026-05-04` then zero captures for any date since; `odds_horizon_bucket` has 1,982 cells where a real fixture
-      existed per `FIXTURES` but no odds were ever captured for it) — check the actual cron/job logs for errors or a
-      silent stop around that date, not just the manifest's own record of the gap. (repo: market-tick-data-service for
-      odds_horizon_bucket; instruments-service for TEAMS)
+- [x] ✅ [DATA] P3. Investigate whether the `odds_horizon_bucket` and `TEAMS` capture jobs actually stopped running
+      around early May 2026 for a subset of leagues (diagnosed above by todo 3: `TEAMS`'s `EREDIVISIE` captured daily
+      through `2026-05-04` then zero captures for any date since; `odds_horizon_bucket` has 1,982 cells where a real
+      fixture existed per `FIXTURES` but no odds were ever captured for it) — check the actual cron/job logs for errors
+      or a silent stop around that date, not just the manifest's own record of the gap. (repo: market-tick-data-service
+      for odds_horizon_bucket; instruments-service for TEAMS) — **DIAGNOSED 2026-07-25 (slot 8, data_engineering) —
+      NEITHER job "silently stopped" due to a crash; both are explained by dated, git-verifiable mechanism changes. No
+      live Cloud Logging access in this sandbox (gcloud creds invalid) — evidence trail is git commit history +
+      Terraform provisioning history + script docstrings, which is conclusive on its own (dated commits pinpoint intent,
+      not just absence).**
+
+      **TEAMS (instruments-service), 33-league cliff-edge at ~2026-05-04**: this is an INTENTIONAL cadence
+          retirement, not a failure. `scripts/migrate_teams_cadence_2026_05_07.py` (instruments-service@53c67c43,
+          2026-05-07) documents the C.11 audit finding (rosters change per-season, not daily — daily writes were an
+          ~830x denominator inflation) and flips legacy daily `TEAMS` rows to `empty_confirmed`/
+          `EXPECTED_REFDATA_CADENCE_CHANGE` per a UAC `SchemaContract.cadence="per_season"` declaration shipped the same
+          day (unified-api-contracts@e12af89). The script's own docstring states the per-season REPLACEMENT writer
+          ("C.11 Unit 2") was DEFERRED, not shipped alongside the retirement — confirmed still incomplete as of this
+          check: `plans/epics/sports_master.md`'s "Trigger-date backfill script" + "VM fleet run for trigger-date
+          backfill" todos are both still `- [ ]` unchecked, and no commit touches
+          `engine/orchestrator/sports_reference.py` after 2026-05-07. So the diagnosed window's `expected_unattempted`
+          residual for these 33 leagues is the accurate, expected shape of an intentionally-paused writer awaiting its
+          replacement — not a hidden outage. Compounding but separate: the season-boundary-gated periodic dispatcher
+          that's meant to eventually replace the daily writer (`sports_trigger_periodic.py`, introduced
+          deployment-service@d9652cd 2026-04-21) had its OWN independent bug — the CLI never passed `--backend cloud`,
+          so it silently defaulted to `backend="local"` which cannot exec in the Cloud-Run-only image, meaning EVERY
+          periodic "reference"-tier dispatch attempt (TEAMS included) silently no-op'd from 2026-04-21 until fixed
+          2026-07-08 (deployment-service@bb880b6, verified against prod: `last_run.reference` advanced from a stale
+          `2026-06-24` to live). This bug is already fixed and post-dates the diagnosed window's end (06-19), so it adds
+          color but doesn't change the verdict for this window.
+
+          **Separately** (not the cliff-edge pattern, a different TEAMS root cause already fully resolved before this
+          check — confirms rather than reopens it): the "2 fully-absent leagues" thread from todo 3
+          (`RUSSIA_PREMIER_LEAGUE`/`CHINA_SUPER_LEAGUE`) is the tail of an unrelated, already-fixed enumeration bug —
+          `_fetch_teams_and_standings` looped the 33-league `get_prediction_leagues()` filter instead of the full
+          94-league `get_expected_leagues_for_source("api_football")` denominator, so 61 of 94 leagues got ZERO TEAMS
+          captures ever (instruments-service@0d2ea24f, fixed 2026-07-13). A same-day backfill
+          (`scripts/backfill_teams_61_leagues_2026_07_13.py`) closed 162,032/162,032 cells for 86 of those 94 leagues (8
+          confirmed-honest zero-roster cup competitions); `RUSSIA_PREMIER_LEAGUE`/`CHINA_SUPER_LEAGUE` were added to the
+          in-universe set 2026-07-21, 8 days AFTER this backfill ran, so they were never in its scope — exactly the
+          "already-known newly-added-league lag" todo 3 flagged, no new action needed.
+
+          **odds_horizon_bucket (market-data-processing-service, NOT market-tick-data-service — the writer is
+          `market-data-processing-service/scripts/reprocess_sports_odds.py`)**: there was NEVER a recurring scheduled
+          driver for this job anywhere in the fleet before 2026-07-14 — confirmed via
+          `deployment-service/terraform/gcp/mdps_odds_horizon_scheduler.tf`'s own header, which states plainly this job's
+          "only production path has been manual one-off VM launches"
+          (`deployment-service/scripts/vm/launch-mdps-sports-bucket-vm.sh`, itself headed "Pass K of
+          sports_predictions_e2e_2026_05_05" — i.e. a sequence of ad-hoc passes, not a cadence). So "did the job stop
+          running around early May" doesn't apply as posed — there was no regular cadence to stop; the 1,982 real-fixture
+          /no-odds cells in the diagnosed window are gaps BETWEEN irregular manual passes, consistent with the script's
+          own comment history. A genuine daily Cloud Scheduler cron
+          (`uts-prod-mdps-odds-horizon-bucket-daily`, `15 1 * * *` UTC) was provisioned 2026-07-14
+          (deployment-service@de117f5) — this class of gap should not recur going forward for new dates; the historical
+          residual in the diagnosed window is exactly what this issue doc's own still-open closer-script todo (above)
+          already exists to remediate — the coverage-registry half of that remediation shipped separately
+          (`unified-api-contracts@2a378fb2`, todo above) while this diagnosis was in flight.
+
+          **No new issue doc filed** — findings confirm/refine already-tracked open work (`sports_master.md`'s TEAMS
+          trigger-date backfill todos; this doc's own odds_horizon_bucket closer-script todo above) rather than
+          surfacing anything requiring new tracking.
 
 ## Progress Log
+
+- **2026-07-25 (slot 8, data_engineering)**: Dispatched the final open todo (investigate whether `odds_horizon_bucket` /
+  `TEAMS` capture jobs actually stopped running around early May 2026). No live gcloud/Cloud Logging access in this
+  sandbox — used git commit history + Terraform provisioning history + script docstrings as the evidence trail instead
+  (dated, verifiable, and conclusive on its own). Findings: neither job "crashed" or silently stopped. `TEAMS`'s
+  33-league cliff-edge is an intentional cadence retirement (instruments-service@53c67c43, 2026-05-07, daily→per-season
+  per the C.11 audit) whose replacement writer is still only partially delivered (`sports_master.md`'s
+  trigger-date-backfill todos remain open) — plus a since-fixed, unrelated scheduler wiring bug
+  (deployment-service@bb880b6, fixed 2026-07-08) that would have blocked season-boundary dispatch attempts in the same
+  window regardless. The separate "2 fully-absent leagues" thread is the tail of an already-fixed, fully-backfilled
+  61-league enumeration bug (instruments-service@0d2ea24f, fixed + backfilled 2026-07-13) — no new action needed there.
+  `odds_horizon_bucket` (writer lives in market-data-processing-service, not MTDS) never had ANY recurring scheduler
+  before 2026-07-14 (`deployment-service/terraform/gcp/mdps_odds_horizon_scheduler.tf`'s own header confirms this) — its
+  only path was irregular manual VM launches, so the 1,982-cell gap is inter-pass gaps, not a stopped job; a real daily
+  cron now exists going forward. No new issue doc filed — this confirms/refines already-tracked open work rather than
+  surfacing new findings. Reconciled against a concurrent peer edit (slot-3, `unified-api-contracts@2a378fb2`) that
+  landed the `ODDS_HORIZON_BUCKET` coverage-registry todo while this diagnosis was in flight — merge conflict resolved
+  by hand, keeping both todos' completed work. 5 of 6 todos in this issue doc are now resolved; only the
+  `odds_horizon_bucket` provably-empty-subset closer-script todo remains open.
 
 - **2026-07-25T06:35Z (slot 2, data_engineering)**: Dispatched todo 3 (diagnose `odds_horizon_bucket` + `TEAMS`
   residuals). Single manifest read (window-filtered, no new corpus walk), no writes. Found two DIFFERENT root causes
