@@ -222,6 +222,34 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   delete-safety protocol / the exact approval command. A todo with neither is a real gap, not a style nitpick.
   Mechanically pre-flagged (soft) by `scripts/plan-hygiene/check_delete_vm_launch_gating.sh`; judged for real by
   `/plan-reconcile`'s AO-dispatch-readiness hunter (this is a content-judgment call, not a regex-decidable one).
+- **A todo that resumes/restarts a paused writer must check for a sibling plan/issue fixing a bug on the SAME data path
+  first** _(finding P, 2026-07-25: the operator ruled on exactly this — `defi_consolidated_closeout_2026_07_18.md`'s
+  "resume the paused DeFi crons" todo would have resumed 3 collectors whose subgraph query bug a sibling plan existed
+  specifically to fix; resuming blind would keep writing the same bad rows the sibling plan was created to stop)._
+  Before drafting/dispatching a resume-a-writer todo, grep for any sibling doc fixing a defect on the same
+  venues/writers/tables. If one exists and hasn't shipped: either gate the resume on it
+  (`depends_on`+`gate_on_depends`), or split into affected-vs-unaffected scope — never resume everything
+  unconditionally.
+- **Finding O's `[OPERATOR]`-tag bar is PRIOR APPROVAL + VALIDATION, not raw scale/irreversibility alone** _(finding Q,
+  2026-07-25, operator ruling: a cefi Track-1 live financial-tick migration and a `catalog.parquet` rebuild — both
+  large, prod, hard-to-reverse — were ruled self-justifying with NO `[OPERATOR]` tag needed, because the migration was
+  already explicitly operator-approved in principle AND every constituent script was individually dry-run-validated to a
+  proven-safe outcome)._ Don't reflexively tag everything large/irreversible — check whether prior explicit approval
+  - validation already exists; if so, state that inline as the justification (finding O's option (a)) rather than
+    defaulting to `[OPERATOR]`.
+- **When splitting an over-cap plan, correctness beats file count** _(finding R, 2026-07-25, operator ruling: asked
+  whether to fork every Track with a real sequential/gating constraint into its own child+finalize even if small, vs.
+  merge related Tracks to reduce file count — ruled "correctness over file count")._ Give any Track/section with a real
+  ordering constraint its own child (+ mandatory finalize per finding already below) even if small — merging it into a
+  broader plan either wrongly serializes that plan's unrelated items behind the constraint, or leaves the real ordering
+  dispatcher-unenforced. File count is secondary to keeping every real constraint machine-enforceable via
+  `depends_on`/`gate_on_depends`.
+- **A todo flagging its own scope as unclear must stay non-dispatchable until the operator names it — never guess**
+  _(finding S, 2026-07-25: a cefi todo's own text said "SCOPE UNCLEAR" — it wanted a multi-phase external plan "done"
+  before a migration but never said which phase(s); the operator had to name the exact phases (1, 1b, 1c, 2, 5) before
+  it could become real work)._ When a design/split pass finds a todo like this, leave it explicitly flagged
+  non-dispatchable (not folded into any child) until scoped — a scope-undefined todo becomes an unbounded judgment call
+  for whoever executes it, exactly what the dispatch-scope-eligibility rule bans.
 
 ---
 
