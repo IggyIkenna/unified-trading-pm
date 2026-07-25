@@ -27,8 +27,8 @@ referenced_by:
     /codex/11-project-management/foundation-completion-gate-discipline.md,
   ]
 owner:
-last_reviewed:
-code_refs:
+last_reviewed: 2026-07-25
+code_refs: [scripts/plan-hygiene/check_terminal_status_archived.py]
 ---
 
 # Issue-Doc Lifecycle Discipline
@@ -126,17 +126,27 @@ SSOT codifies the cleaner pattern. Pattern observed across `ml_repo_consolidatio
 
 ## Audit recipe
 
-To find dual-tracking violations in `plans/active/issues/`:
+**⚠️ Corrected 2026-07-25** — the previous version of this recipe checked for a `^resolved:` frontmatter key. That key
+never existed in the live schema; the real terminal-status field is `status:` (values `resolved`/`false-positive`/
+`superseded` per `docspec.py`'s `STATUS_BY_TYPE["issue"]`), with `resolved_by:` as the conditionally-required evidence
+field. The stale recipe silently caught **zero** of the ~42 real violations found on re-audit — this is exactly why the
+dual-tracking anti-pattern accumulated undetected for months. The corrected recipe:
 
 ```bash
 # Files with COVERED BY / SUBSUMED BY banners (and similar acks)
 grep -lE "(🟡|🟢) (COVERED BY|SUBSUMED BY MEGA AUDIT|RESOLVED|RE-RESOLVED|LAUNCHED)" \
   plans/active/issues/*.md
 
-# Files with `resolved:` frontmatter still in active/issues/
+# Files with a terminal status still in active/issues/ (the real check)
 for f in plans/active/issues/*.md; do
-  grep -q "^resolved:" "$f" && echo "DUAL-TRACK: $f"
+  st=$(grep -m1 "^status:" "$f" | sed 's/^status: *//')
+  case "$st" in
+    resolved|false-positive|superseded) echo "DUAL-TRACK: $f" ;;
+  esac
 done
 ```
 
-Any output from these greps is review-blocking — archive the listed files.
+Any output from these greps is review-blocking — archive the listed files. **This is now also machine-enforced** (not
+just a manual recipe) by `scripts/plan-hygiene/check_terminal_status_archived.py`, wired into `run_hygiene_sweep.sh` — a
+shrinking-ratchet gate covering pre-existing debt while blocking any NEW terminal-status doc from landing unarchived
+(issue-side AND the plan-side parallel — see that script's docstring).

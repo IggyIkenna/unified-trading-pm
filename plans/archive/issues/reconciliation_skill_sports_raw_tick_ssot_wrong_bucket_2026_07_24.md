@@ -60,6 +60,9 @@ resolved_by: unified-trading-pm@34de8774e (all 3 fixes)
 
 # The reconciliation skill's own codex is wrong about which bucket its sports raw-tick description applies to
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — all 3 fixes shipped `unified-trading-pm@34de8774e`; archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 ## Why this is not a duplicate of the 2026-07-14 phantom-audit issue
 
 `sports_phantom_audits_reference_not_marketdata_2026_07_14.md` documents that the **phantom auditor**

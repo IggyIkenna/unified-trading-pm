@@ -335,7 +335,7 @@ proof this pass).
 ## Cross-references filed this pass
 
 - **New issue** (F3, genuinely new ground — no existing doc targets the reconciliation skill's own codex accuracy):
-  `plans/active/issues/reconciliation_skill_sports_raw_tick_ssot_wrong_bucket_2026_07_24.md`
+  `plans/archive/issues/reconciliation_skill_sports_raw_tick_ssot_wrong_bucket_2026_07_24.md` (resolved 2026-07-25)
 - **Addendum appended** to `plans/active/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`
   (F1 — answers that issue's open "is the pipeline dormant" question: no, it is writing real data; the manifest signal
   it used was reading the architecturally non-authoritative bucket)

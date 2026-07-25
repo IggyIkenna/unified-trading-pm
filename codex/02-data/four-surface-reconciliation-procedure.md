@@ -306,8 +306,8 @@ passes post-cutover regressions.
 
 **Corrected 2026-07-24** (a `/data-pipeline-reconciliation --asset-group sports` run directly verified this section was
 wrong about which bucket its claim applies to — see
-`reconciliation_skill_sports_raw_tick_ssot_wrong_bucket_2026_07_24.md` for the full evidence). Sports has TWO relevant
-buckets with different S1 grammars:
+`/plans/archive/issues/reconciliation_skill_sports_raw_tick_ssot_wrong_bucket_2026_07_24.md` (resolved 2026-07-25) for
+the full evidence). Sports has TWO relevant buckets with different S1 grammars:
 
 - **`market-data-tick-sports-{env}-{pid}` (raw-tick MTDS bucket, `kind="market-data"`)** — every real object here lives
   under the STANDARD
