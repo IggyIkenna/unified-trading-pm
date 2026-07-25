@@ -88,6 +88,24 @@ depends_on: []
       instead of hanging 30s (silent). Consider batching/serialising the per-slot git-status writes so N slots don't
       each hold a connection simultaneously.
 
+## Occurrences (frequency is increasing — escalation trigger)
+
+- **#1 ~02:0x–02:12:38Z** — first observed. Self-recovered after ~10min with no intervention, no restart.
+- **#2 ~04:29:30–04:29:47Z** — recurred. Did NOT self-clear in-window; coincided with / was cleared by a managed
+  `systemctl restart` at 04:31:03Z (`NRestarts=0`, fresh `ActiveEnterTimestamp` — a managed/manual restart, not an
+  auto-crash-loop, not main). Restart cleared the checked-out connections (the standard fix).
+- **#3 05:07:38–05:07:42Z (this one)** — recurred again. Confirmed on-host by main (agt-52bb99): `/api/state` +
+  `/api/poll` hung past a 15s client timeout (HTTP 000) while `/health` (0.0015s) and `/api/roles` (0.046s) stayed 200 —
+  the exact DB-backed-hang / lightweight-pass signature. Journal shows the
+  `QueuePool limit of size 5 overflow 10 reached, connection timed out, timeout 30.00` TimeoutError, plus
+  `GET /api/agents → 500` and `autospawn slot 1: late account re-check raised` (AutoSpawn is hitting the exhausted pool
+  too, so dispatch is degraded during the window, not just observability). **Three occurrences in ~3 hours (02:0x →
+  04:29 → 05:07) — the interval is shrinking and the root cause (pool 5+10 sizing + concurrent per-slot git-status load,
+  possible leak) is unaddressed.** This crosses the "recurs again without a durable fix → escalate" threshold: the
+  BACKEND todos below (esp. #1 leak audit + #2 DB-aware readiness probe so auto-restart can fire) should be prioritised;
+  until then each recurrence needs a managed restart or a ~10min self-clear, during which dispatch + the main-agent
+  message/blocked sweep are blind.
+
 ## Notes
 
 - Non-destructive by design on the operator side: this doc records the diagnosis only. Main did NOT restart the service
