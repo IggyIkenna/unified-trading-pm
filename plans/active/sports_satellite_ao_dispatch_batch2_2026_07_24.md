@@ -918,6 +918,11 @@ source: >-
     here.** The real remaining gap is genuinely new countries not yet in `LEAGUE_REGISTRY` at all (145 of the 171 in the
     catalog), which needs real per-country tier research (which division is "top", which is "below") — not something to
     guess at row-by-row.
+  - **Spun off the remaining work into its own issue doc** (this plan file is near its 1000-line hard cap from
+    concurrent slot activity — avoiding further growth here):
+    `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md` — full session writeup (data locations,
+    the `in_mvp_scope` architecture fix, what shipped, what's a dead end, what genuinely remains). This todo's checkbox
+    stays unchecked here; track further progress in that doc, not this Progress Log.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
