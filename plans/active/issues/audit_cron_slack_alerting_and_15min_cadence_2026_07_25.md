@@ -10,7 +10,7 @@ summary: >
   a finding first appears, a ✅ CLOSE alert the tick it clears, silence on every unchanged tick in between. Filed as its
   own issue doc (not appended to the now-`status: resolved`/archived parent) because the parent is closed and this is
   new, not-yet-done work — appending an open item to an archived doc would recreate the exact dual-tracking anti-pattern
-  `codex/11-project-management/issue-doc-lifecycle.md` exists to prevent. Not yet implemented — this doc was filed as
+  `/codex/11-project-management/issue-doc-lifecycle.md` exists to prevent. Not yet implemented — this doc was filed as
   part of a `/pre-compact` context checkpoint, before implementation started.
 status: open
 nature: notes
@@ -60,7 +60,7 @@ The operator's follow-up instruction, given the low runtime, is:
 ## Design notes (not yet built — for whoever implements this)
 
 - Mirrors the dedup-by-state-transition convention already established for `agent-orchestrator-alerts`/`ci-failures`
-  (`codex/04-architecture/agent-orchestrator-alerting.md` — "standing conditions dedup by state-transition (fire on
+  (`/codex/04-architecture/agent-orchestrator-alerting.md` — "standing conditions dedup by state-transition (fire on
   change / RESOLVED / re-remind), never every tick" and "every actionable alert that paged an OPEN gets a ✅ CLOSE
   bookend in-channel"). Reuse that webhook/notifier pattern rather than inventing a new one — check
   `server/notifications/slack.py` for an existing dedup-state helper (the codebase already has one for

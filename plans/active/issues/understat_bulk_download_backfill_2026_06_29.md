@@ -13,7 +13,11 @@ summary: "The understat xG backfill ran date-by-date on a multi-day SPOT VM and 
   "
 status: open
 nature: design
-asset_group: [cross-cutting]
+asset_group:
+  [sports] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag: this
+  # is an Understat (football/soccer xG data provider)-specific backfill for 5 sports leagues, not a generic
+  # reusable cross-AG backfill pattern -- every endpoint/registry/data type here is sports-specific
+
 stage: [data, meta]
 repos: [instruments-service, unified-api-contracts, unified-trading-library, deployment-api]
 scope: [engineer]

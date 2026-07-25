@@ -6,7 +6,11 @@ summary:
   after the CeFi MDPS canary VM failed), I hit a cascade of issues at the data-la...
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [defi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # its own `master:` field names defi_manifest_canonicalisation_2026_06_01.md ("DeFi vertical orchestrator") as
+  # owner -- content is DeFi-specific despite 3 incidental cross-repo MDPS findings noted in the body
+
 stage: [meta]
 repos: [features-service, ml-service, unified-trading-pm]
 scope: [engineer, admin]

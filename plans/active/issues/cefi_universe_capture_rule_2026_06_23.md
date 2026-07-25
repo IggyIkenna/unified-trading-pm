@@ -6,7 +6,9 @@ summary:
   "curated top-100 guess".
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [cefi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # title says "CeFi capture universe" and tags already say "cefi" -- content is cefi-only
 stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]

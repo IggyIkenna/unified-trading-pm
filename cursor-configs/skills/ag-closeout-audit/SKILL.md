@@ -158,6 +158,35 @@ For the target `<ag>`:
    `issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` was genuinely cross-AG, `cefi` dropped), never
    silently left dual-tagged or silently excluded from both audits.
 
+   **A second, distinct sub-bug (found the same day, scoping the cross-cutting AG's own candidate corpus):** the
+   dual-tag grep above only catches a doc carrying BOTH a specific AG and `cross-cutting`. It does NOT catch a doc
+   tagged with ONLY `cross-cutting` whose actual content is single-AG-specific — there is no second tag to grep for, so
+   this class is invisible to any tag-only check and only surfaces by reading the doc's real content (endpoints,
+   registries, data types, `tags:`/`related:`). Confirmed example:
+   `issues/understat_bulk_download_backfill_2026_06_29.md` was tagged bare `[cross-cutting]` but is an Understat
+   (football/soccer xG provider)-specific backfill for 5 named leagues — every endpoint/registry/data type in it is
+   sports-only, not a generic reusable pattern; retagged `[sports]`. **Before shipping any `cross_cutting_*` corpus
+   scoping decision, spot-check a sample of candidate docs' actual content against their tag, not just their frontmatter
+   shape** — a plausible-sounding generic title is not proof the content is actually cross-AG.
+
+   **A third pattern, found scoping the same corpus, confirms this is SYSTEMIC not one-off: a fork inherits its parent's
+   `cross-cutting` tag verbatim instead of being corrected to the child's real single-AG scope.** When a large cross-AG
+   coordinator/harness plan (e.g. `master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
+   `migration_verification_orphan_safety_2026_06_10.md`) gets line-cap-split and forks a per-AG residual child (e.g.
+   "the DeFi-specific bucket", "the sports pre-launch bucket"), the fork commonly copies the parent's
+   `asset_group: [cross-cutting]` forward unchanged even though the forked child's content is now single-AG-specific by
+   construction (that's WHY it was forked into its own bucket). Confirmed examples fixed 2026-07-25 (all 6 were bare
+   `[cross-cutting]`, all forked from one of the 2 coordinators above): `defi_migration_audit_log_2026_07_24.md` →
+   `[defi]`, `defi_venue_lst_rates_residual_2026_07_24.md` → `[defi]`,
+   `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` → `[cefi]`, `issues/cefi_universe_capture_rule_2026_06_23.md` →
+   `[cefi]`, `prediction_cqg_residual_2026_07_24.md` → `[prediction]`,
+   `sports_prelaunch_cf5_verify_residual_2026_07_24.md` → `[sports]`. **When auditing a doc whose title or
+   `related:`/`source:` names a per-AG fork of a cross-cutting coordinator, check the FORK's own content scope, not the
+   parent's tag** — a title starting with an AG name (`cefi_`/`defi_`/`tradfi_`/`prediction_`/`sports_`) on a doc tagged
+   bare `[cross-cutting]` is close to a guaranteed hit; grep `^plans/active/(cefi|defi|tradfi|prediction|sports)_.*\.md`
+   / `issues/(cefi|defi|tradfi|prediction|sports)_.*\.md` against the cross-cutting-tagged file list as a fast first
+   pass before the full corpus sweep.
+
 ## Phase 1 — per-doc classification (Workflow tool, one agent per doc)
 
 Given the AG-primary candidate list from Phase 0.3, launch a `Workflow` (`pipeline()` over the doc list — this corpus

@@ -102,7 +102,7 @@ Traced the gap:
    `gsutil`'s classic parse failure on a WIF-issued `external_account` credential file (the legacy Python `gsutil`
    binary frequently can't consume short-lived WIF tokens the way `gcloud storage`/native SDK calls can — same failure
    class independently documented in
-   `plans/active/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md` for a different workflow),
+   `plans/archive/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md` for a different workflow),
    NOT Firestore's `403 PermissionDenied` (an IAM-binding-missing signature). (c) different onset — the `gsutil` failure
    reproduces as far back as run `30094405633` (2026-07-24T12:48:27Z, over 22h before this incident's earliest observed
    Firestore failure at 2026-07-25T10:36Z) and is STILL reproducing on the latest `cloud-build-router.yml` run as of

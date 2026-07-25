@@ -21,7 +21,7 @@ summary:
   progress (sports_satellite_ao_dispatch_batch2-005, INJURIES enrichment backfill) because the tarballs already existed
   fresh (rebuilt by another process ~35 minutes earlier), but it WILL block the next slot/session that needs a genuinely
   fresh tarball rebuild+upload from an interactive session with no other recent rebuild to fall back on."
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -50,13 +50,18 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "deployment-service@74f22b9 -- all 4 todos done, wider sweep complete, quality-gates.sh green"
 source:
   "Found while launching an INJURIES enrichment backfill VM, sports_satellite_ao_dispatch_batch2-005, slot 4, 2026-07-25"
 depends_on: []
 ---
 
 # VM tarball upload fails under an expired WIF token in an interactive AO slot (2026-07-25)
+
+> **🟢 RESOLVED 2026-07-25** — all 4 todos done, including the wider ~150-launcher/gsutil-call-site sweep todo 4 had
+> flagged as out-of-scope. Every genuinely host-side `gsutil` call in `deployment-service/scripts/` now routes through
+> `gcloud storage` (ADC-backed); every VM-side (heredoc/`VM_BACKFILL_CMD`-embedded) `gsutil` call was deliberately left
+> untouched (different, unaffected auth domain). deployment-service@74f22b9, `quality-gates.sh` green.
 
 ## What I found
 
@@ -167,6 +172,30 @@ Two independent, additive fixes, neither mutually exclusive:
       (`TestTarballFreshnessGuard::test_fresh_tarball_passes`, `::test_stale_tarball_warn_does_not_block`) plus
       `::test_missing_manifest_enforce_blocks`'s mock from a `gsutil` shell-function stub to a `gcloud` one (they were
       asserting against the old codepath and failed post-fix until updated); `quality-gates.sh` green (12/12
-      `TestTarballFreshnessGuard` tests pass). The wider ~150-launcher/39-total-gsutil-call-site sweep this todo flagged
-      as out-of-scope remains open — only `lc_verify_tarball_freshness`/`lc_resolve_tarball_sha` were in this todo's
-      stated scope. (repo: deployment-service `scripts/vm/lib/launcher_common.sh`.)
+      `TestTarballFreshnessGuard` tests pass). **The wider sweep this todo flagged as out-of-scope — now COMPLETE,
+      deployment-service@74f22b9.** Audited every `gsutil` reference across the entire `deployment-service/scripts/`
+      tree (145 files) with a heredoc/VM_BACKFILL_CMD- boundary-aware classifier distinguishing genuinely host-side
+      (interactive-slot) calls from calls that only ever run ON a VM under its own instance credential (a different,
+      unaffected auth domain) or pure echo/comment hint text. Found + fixed 3 more genuinely host-side functions in
+      `launcher_common.sh` itself (`lc_write_launch_params`, `lc_write_tarball_pin_record` — both `gsutil -q cp -`
+      stdin-pipe writes called by 15+ launchers before `gcloud compute instances create`;
+      `lc_verify_setup_script_freshness` — `gsutil hash -m`/ `gsutil stat`/`gsutil cp`, called automatically by
+      `lc_gcloud_create` on EVERY Pattern-A launch, the single highest-blast-radius remaining call site) plus
+      `lc_gcs_object_age_seconds` (the `lc_refuse_if_vm_alive` VM-name- collision safety guard's staleness check). Fixed
+      9 more launch-*.sh/utility scripts with their own direct call sites outside `launcher_common.sh`
+      (`launch-qg-snapshot-vm.sh`'s pre-flight gate, `launch-vm-zombie-     watchdog.sh`,
+      `launch-mtds-live-{cefi,prediction}-consolidated.sh`, `launch-features-sports-parallel-backfill-     vm.sh`,
+      `launch-prediction-{features,pipeline}-vm.sh`, `reap-zombies.sh`'s zombie-reaper staleness check,
+      `refresh-tarballs-for-shard-key.sh`, `run-sports-phantom-downstream-chain.sh`, plus the Python utilities
+      `analyze_vm_costs.py`/`cleanup_old_tarballs.py`'s `gsutil ls -l` shard-outs) and 4 one-time bootstrap/infra
+      scripts (`verify-test-bucket-lifecycle.sh`, `setup-cloud-build-triggers.sh`,
+      `configure_audit_bucket_versioning.sh`, `bootstrap_gcp.sh`). Re-ran the classifier after every fix; final sweep
+      confirms **zero remaining genuinely host-side `gsutil` call sites** in the whole tree — the only 2 residual
+      classifier hits (`launch-funding-ensemble-paper-cron-vm.sh`, `launch-rate-calibration-probe-vm.sh`) were verified
+      by reading each file's context to be `VM_BACKFILL_CMD` string content that runs on the VM, not the slot. Updated
+      the matching unit-test `gsutil` shell-function/fake-binary mocks to `gcloud` across `test_vm_launcher_scripts.py`
+      (`TestSetupScriptFreshnessGuard`, `TestCanonicalMigrationVmRelaunch`, `TestDefiLaunchersSpotPreemptionContract`,
+      the qg-snapshot preflight tests) and `test_tarball_pins.py` (`TestRealLauncherOutputShape`'s real-bash-helper
+      fixture). Full `quality-gates.sh` green (2675+ passed, 0 failed) before shipping. (repo: deployment-service, 19
+      files — `scripts/vm/lib/launcher_common.sh` + the 13 scripts named above +
+      `tests/unit/test_vm_launcher_scripts.py` + `tests/unit/test_tarball_pins.py`.)
