@@ -664,6 +664,19 @@ source: >-
     write-gate + add the UAC registry entries, (5) THEN assess the REAL residual backfill gap (likely much smaller than
     a from-scratch ~300-league fetch, given most already have real data) before launching any VM. Extraction query:
     `pd.read_parquet('<backup path above>', columns=['league_id','capture_status','instrument_count']); filter capture_status=='captured' & instrument_count>0; distinct non-numeric league_id values`.
+  - **Follow-up mechanical pass on the 375 (still no code touched)**: grouped by 4-char country-prefix to find likely
+    adjective/noun-form duplicates. 9 prefix groups flagged; MOST were false positives on inspection (`SLOVAKIA_*` vs
+    `SLOVENIA_*` share a 4-char prefix but are different countries; `SUPERCOPA_ESPANA` vs `SUPERETTAN` vs `SUPER_LIG`
+    are unrelated competitions that happen to start "SUPE"). Genuine duplicate PAIRS confirmed by inspection (same
+    real-world competition, inconsistent adjective/noun naming from the pre-pruning era):
+    `AUSTRIA_2_LIGA`/`AUSTRIAN_2_LIGA`, `AUSTRIA_BUNDESLIGA`/`AUSTRIAN_BUNDESLIGA`, `AUSTRIA_CUP`/`AUSTRIAN_CUP`,
+    `SCOTLAND_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`, and likely `GREECE_SUPER_LEAGUE_1`/`GREEK_SUPER_LEAGUE` (needs a
+    capture-date/instrument-count cross-check to confirm they aren't actually two distinct tiers before merging — did
+    NOT assume). So the real de-dup burden is small (~5 pairs out of 375, not a systemic mess) — the earlier finding's
+    caution about "not a clean drop-in list" stands, but the actual cleanup is now known to be a bounded, few-pair fix,
+    not a large undertaking. A crude prefix-match heuristic is NOT sufficient on its own (produces false positives) —
+    the next pass should verify each flagged pair against real capture data before merging, same discipline this session
+    applied.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
