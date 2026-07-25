@@ -164,8 +164,13 @@ Hard stop:           prod-bucket delete (codex § 3.1) -- human-only, always.
 
 - [ ] [DATA] P1. Run a fresh exhaustive content-verify census (all remaining days in the archived doc's original
       1,815-day scope, excluding the 199 already-merged gain days) to refresh the `yes-after-verify` disposition to
-      `yes-twin-confirmed` before any human delete decision; re-run the same family-agnostic key comparison this doc
-      used. (repo: market-tick-data-service)
+      `yes-twin-confirmed` before any human delete decision. **Tool already built and shipped for this** —
+      `market-tick-data-service@c03890b3`,
+      `scripts/sports/league_id_relocation/census_footystats_orphan_content_2026_07_25.py` (read-only, per-day
+      `pure_duplicate`/`genuine_gain`/`no_migrated_objects` classification via the same family-agnostic key; smoke-
+      tested against `2022-06-15` + `2024-12-01`, matches this doc's manual findings exactly). Build a `--days-file`
+      covering the remaining ~1,616 days (the archived doc's original day list minus the 199 merged gain days) and run
+      it — do not re-derive the comparison logic from scratch. (repo: market-tick-data-service)
 - [ ] [DATA] P2. Separately re-examine the archived doc's 280-day "adds keys, zero derive gain" bucket — excluded from
       this doc's delete-suggestion; needs its own disposition. (repo: market-tick-data-service)
 - [ ] [DOCS] P3. Trace the exact commit/process that purged the 42,476 mis-stamped manifest rows between 2026-07-17 and
