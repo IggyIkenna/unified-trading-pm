@@ -7,7 +7,7 @@ summary:
   verifies every archived doc's referrer fixup actually landed, re-checks any BLOCKED-OPERATOR-DECISION item parked
   mid-sweep, shrinks the check_terminal_status_archived.py ratchet baseline to the new (ideally zero) live count, and
   archives the sweep plan itself once fully done.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -46,6 +46,14 @@ source:
 
 `status: draft` until the sweep plan is dispatched and progressing — flip to `active` once the sweep's todos start
 landing (draft-gated, per task_template.md §4; regen skips drafts so this never floods the backlog prematurely).
+
+## Progress Log
+
+- **2026-07-25 (slot-11)**: Flipped `status: draft` → `active`. `depends_on` gate
+  (`terminal_status_archival_backlog_sweep_2026_07_25`) is satisfied — that plan reached `status: complete` (all 66
+  archival todos landed, including the previously-parked `gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`
+  which a batch-archival commit `unified-trading-pm@ad4b1952c` resolved). Mechanical flip per this doc's own body note
+  above — not a judgment call.
 
 ## Todos
 
