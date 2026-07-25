@@ -122,7 +122,7 @@ rather than assuming it still existed (the doc's most recent entries are 8 days 
       accidental — **answered 2026-07-25 via `AskUserQuestion`: DELIBERATE, abandon recovery.** No retrospective needed;
       `mdt_legacy_canonical_row_gap_2026_07_16.md` archives its execution plan as moot.
 - [x] ✅ [DATA] P1. Marked `mdt_legacy_canonical_row_gap_2026_07_16.md`'s STEP 1-6 execution plan permanently BLOCKED
-      (banner + inline marker added, this doc cross-referenced) — `unified-trading-pm@<pending>`. T2.10 re-assessed:
+      (banner + inline marker added, this doc cross-referenced) — `unified-trading-pm@bb527cbd6`. T2.10 re-assessed:
       genuinely independently actionable (operates on `_index/per_vm/_legacy_seed.parquet`, the still-live manifest
       index, never touches the deleted bucket's objects) but has **no existing tooling** — scoped as its own follow-up
       below rather than rushed.
@@ -130,7 +130,21 @@ rather than assuming it still existed (the doc's most recent entries are 8 days 
       nonzero `instrument_count`) from `_index/per_vm/_legacy_seed.parquet` with the NULL-safe COALESCE `source` filter
       (211,313 real `odds_api × trades` rows survive) — back up the index first, let the consolidator re-merge, verify
       by content. (repo: market-tick-data-service). **Done when**: the 37,114 phantom rows are gone from the live index,
-      verified via a fresh count query, with 0 collateral loss to the 211,313 real rows.
+      verified via a fresh count query, with 0 collateral loss to the 211,313 real rows. — **🟡 APPEARS MOOT, checked
+      2026-07-25T04:56Z (slot 2)**: direct targeted read (single-object, not a corpus walk) of the CURRENT
+      `gs://market-data-tick-sports-prd-central-element-323112/_index/per_vm/_legacy_seed.parquet` (362,753 rows,
+      **frozen 2026-07-17T15:47:54Z — a day AFTER** the original T2.10 measurement that produced the "37,114 phantom"
+      count, which lives in `mdt_legacy_canonical_row_gap_2026_07_16.md`, dated 2026-07-16) found: `trades` rows =
+      232,098 total = **211,313 `source=odds_api` + 20,785 `source=polymarket_clob`, exactly** — zero rows with
+      `source=api_football`, zero rows with `source` NULL. The described 37,114 phantom rows are not present under
+      either interpretation of the "NULL-safe COALESCE" predicate. Most likely explanation: this seed file was
+      re-frozen/regenerated at some point after the 2026-07-16 measurement (its freeze timestamp is newer), and whatever
+      produced the phantom rows in the OLDER seed generation the original measurement read is not present in the current
+      one. **Did not run a purge against rows that don't exist.** Before re-dispatching this todo, a future session
+      should either (a) re-derive the phantom-row predicate from scratch against the CURRENT seed content (this check
+      found none under the described predicate, but a different column/value combination might still hold the real
+      phantom population — not exhaustively ruled out here), or (b) if genuinely clean, close this todo as moot with
+      that evidence rather than re-attempting the original 2026-07-16 recipe verbatim.
 
 ## Codex SSOTs
 
