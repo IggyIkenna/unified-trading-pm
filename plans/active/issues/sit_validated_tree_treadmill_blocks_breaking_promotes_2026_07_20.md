@@ -116,8 +116,12 @@ decide "already promoted".
 - [ ] [DEVOPS] P2. If a retarget is chosen: move the `sit-gate/fleet-green` POST (`:497-511`) to after the SIT gate
       closes (after `:622`) so it always lands on the final PR head, and assert the PR head carries that status before
       arming auto-merge.
-- [ ] [DEVOPS] P3. Retire `staging-backmerge-to-ldr` for `ldr_main` repos as separate hygiene, explicitly labelled NOT
-      the treadmill fix.
+- [x] ✅ [DEVOPS] P3. Retire `staging-backmerge-to-ldr` for `ldr_main` repos as separate hygiene, explicitly labelled
+      NOT the treadmill fix. **SHIPPED (verified 2026-07-25, plan-reconcile)**: `unified-trading-pm@a7b5cc27c` (verified
+      ancestor of `origin/live-defi-rollout` via `git merge-base --is-ancestor`) commented out
+      `staging-backmerge-to-ldr.yml`'s hourly `schedule: "10 * * * *"` fleet-wide (24 repos), keeping `push:[staging]` +
+      `workflow_dispatch` self-resume — via `plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md` (a
+      separate, unrelated plan; no cross-reference existed between the two docs until now).
 - [ ] [DEVOPS] P3. Add a regression test / monitor that fires when a repo has been SIT-BLOCKED for N consecutive ticks —
       the treadmill is currently only visible as a promotion-lag alert, which reads as slowness rather than a stuck
       gate.

@@ -31,7 +31,14 @@ related:
 created: "2026-07-24"
 parent_epic: manifest_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope:
+  local-only # corrected 2026-07-25 (plan-reconcile): was `orchestrator-agent`, mismatched with
+  # `assigned_vm: NA` against task_template.md's two valid PAIRED tracks (LOCAL = NA+local-only,
+  # AO-DISPATCHED = planning+orchestrator-agent). Functionally inert either way — `assigned_vm: NA` alone already
+  # yields an empty owning-VM set in `_resolve_plan_vms` (agent-orchestrator/server/regen_backlog_from_plan.py),
+  # so this plan was never ingested — but corrected for internal consistency. Same mismatch recurs on 4 sibling
+  # 2026-07-24 fork plans (infra_ops_residual_migration_verification, sports_prelaunch_cf5_verify_residual,
+  # prediction_cqg_residual, defi_venue_lst_rates_residual) — out of this doc's scope, flagged separately.
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 1
@@ -207,27 +214,6 @@ drift_direction: advance-code
   denominator re-derives genesis/launch instead of READING `expected_unattempted`\*\* (correct pre-seed; switch post
   enumerate `--apply-write` — owner: deployment-api/downstream). Both tracked as todos in the cefi plan § "PRE-APPLY
   12-POINT AUDIT VERDICT".
-- **sports (slot-4)**: **WAVE-2 dry-runs GREEN (2026-06-07)** — G1-ENUM league-grain producer DONE (is@99a5fbf5) +
-  AG-specific producer present; **fixed a real G1-ENUM bug: the UAC `("sports","league")` validity slice silently
-  dropped `ODDS` → now derived from `SPORTS_DATA_TYPE_TO_SOURCE` (uac@aff80339/PR#95)**. G1-V8 instruments-store v9
-  dry-run GREEN (2.68M → 100% v9, `asset_group`/`source`/`transport`/`available_at` all stamped,
-  `pipeline_mode=batch_<source>`). MTDS migrator object-path dry-run GREEN (source-aware `batch_odds_api`,
-  `category`→`asset_group`). `--apply` gated (G0 + IS v9 walk + IS backfill + 2 data-state findings: 6,869 blank
-  `capture_status` + mdps consolidated-index-reads-0). Full verdict: `sports_manifest_canonicalisation_2026_06_01.md` §
-  "G2 WAVE-2 readiness verdict".
-- **cefi (slot-3)**: ✅ **APPLY-READY (2026-06-08)** — Era-B + bundle-grain rollup LANDED (`uac@ae70338d`
-  options_chain/futures_chain → `{trades}` + `is@74df991d`/`687d1443` read-side `_rollup_bundle_grain`; **F1 Era-B
-  recommendation adopted**). **Enumerate RE-RUN GREEN** = **3,454 candidates**: 0 per-leaf OPTION/COMBO; **8
-  `options_chain` candidates, ONE per underlying (DERIBIT BTC/ETH option+combo), all `data_type=trades`** (no
-  `data_type=options_chain`); 0 impossible pairs; **DERIBIT 11.5%** (no longer dominates). Migrators + instruments-store
-  v9 (30,803→100% v9) re-confirmed GREEN; 7+2 audit green (CF-1…13 ✓; CF-14 options-bundle ✓). **UAC slice verified
-  correct — no change.** 🟡 **ONE residual = F2 (slot-7-owned, NOT a G4 blocker)**: `FUTURE` not rolled up (slot-7
-  DELIBERATELY omits `future→futures_chain`, venue-specific: DERIBIT/OKX bundle vs BYBIT per-contract) → 880
-  per-contract FUTURE candidates (700 DERIBIT/OKX = false over-seed) — over-seeds only the **G1.run futures seed**, fix
-  = slot-7 venue-aware `build_instrument_catalogue` rollup. **Remaining gates are OPERATIONAL only**: instruments-store
-  v9 walk RUN · IS backfill · Era-B legacy relabel (rides G4, operator `slot-7 edca81b57`) · pre-migration drain · F2
-  (slot-7). Full verdict in (archived) `plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md` § "cefi
-  APPLY-READY" (folded→M-1, archived 2026-07-13, finding 197). 🟢 G3 ✓ · G0 ✓.
 - **sports (slot-4)**: **WAVE-2 dry-runs GREEN (2026-06-07)** — G1-ENUM league-grain producer DONE (is@99a5fbf5) +
   AG-specific producer present; **fixed a real G1-ENUM bug: the UAC `("sports","league")` validity slice silently
   dropped `ODDS` → now derived from `SPORTS_DATA_TYPE_TO_SOURCE` (uac@aff80339/PR#95)**. G1-V8 instruments-store v9

@@ -29,7 +29,10 @@ execution_scope: local-only
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 3.0
-estimate_calibrated_ai_days: 2.4
+estimate_calibrated_ai_days:
+  1.8 # corrected 2026-07-25 (plan-reconcile): was 2.4 (the infra 0.8x multiplier, not
+  # design's 0.6x); design 3.0 x 0.6 = 1.8, per /codex/08-workflows/estimation-calibration.md and matching the sibling
+  # doc's correctly-applied design calibration (defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md).
 assigned_role: NA
 drift_direction: NA
 resolved_by:
