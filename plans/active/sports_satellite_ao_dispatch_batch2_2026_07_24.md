@@ -280,7 +280,7 @@ source: >-
       (held by `-031`'s fixture_events re-fetch); step 3 deferred. Live tracker: issue doc's final gated item. —
       **RE-VERIFIED 2026-07-25T12:56Z (slot 11): still unchecked** — lock cleared, backfill launched (this todo's
       "2019→" text is stale vs. the 2020-06-06 sports floor, corrected), step 2 in progress, step 3 untouched. Detail in
-      the issue doc.
+      the issue doc (P0 blocker now fixed+shipped, instruments-service@08387531).
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 

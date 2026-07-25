@@ -404,9 +404,19 @@ inherited from the first shipped batch:
       2020-06-06..2026-07-25 range and risk exhausting the shared quota again, exactly today's earlier 08:12Z failure
       class). **Next dispatch**: pick up the P0 fix in the linked doc first; once it ships, relaunch FIXTURES-only
       (SPOT, resumes from measured progress, no data lost by the stop), health-check to terminal, THEN resume this
-      todo's original spot-verify + enrichment-campaign-scoping sequence.
+      todo's original spot-verify + enrichment-campaign-scoping sequence. — **P0 FIX SHIPPED 2026-07-25 (slot 7,
+      data_engineering): `instruments-service@08387531`**, see the linked issue doc's now-`[x]` P0 todo for the code
+      change + regression-test evidence. Step 2 is UNBLOCKED for relaunch. **Still NOT relaunched this turn** — did not
+      have a live API-Football quota read available in this session to confirm the daily quota has room (the same
+      guardrail slot 11's prior launch note applied), and a relaunch is real infra spend that deserves its own
+      health-checked dispatch rather than a rushed same-turn action. **Next dispatch**: obtain a real
+      `ApiFootballAdapter.get_live_quota(force_refresh=True)` read (or operator confirmation), confirm the
+      `af-backfill-*` singleton lock is clear (`gcloud compute instances list --filter='name~"^af-backfill-"'`), THEN
+      relaunch `launch-api-football-backfill-vm.sh --entity FIXTURES 2020-06-06 2026-07-25` (SPOT, resumes from measured
+      progress — the fixed code now correctly stays FIXTURES-scoped on stale-not-missing dates), health-check to
+      terminal, THEN resume this todo's original spot-verify + enrichment-campaign-scoping sequence.
 - [ ] [SCRIPT] P3. Add the same `START_DATE` clamp/warning to `launch-api-football-backfill-vm.sh` that
-      `launch-sports-entity-sweep-vm.sh` already has per `codex/02-data/sports-2020-06-data-floor.md`'s
+      `launch-sports-entity-sweep-vm.sh` already has per `/codex/02-data/sports-2020-06-data-floor.md`'s
       enforcement-surface list (item 6) — this launcher silently accepts a pre-2020-06-06 explicit start date with no
       warning (the venue-epoch skip gate is defense-in-depth, not a substitute for the launcher itself
       refusing/clamping). Found 2026-07-25 (slot 11) while launching `af-backfill-20260725-125405` after correcting the
