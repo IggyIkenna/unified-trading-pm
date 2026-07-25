@@ -425,22 +425,19 @@ source: >-
       `issues/sports_post_backfill_relabel_premise_resolved_residual_gap_2026_07_25.md` with the full measurement + 3
       correctly-scoped follow-up todos rather than force a stale-premise migration against a live-changing production
       manifest. Source: `data_completion_sports_2026_07_24.md`.
-- [ ] [OPERATOR] P1. **Relaunch features-sfi-progressive** — code fix already shipped (`features-service@06c44c02`);
-      first verify (via git log) whether the launcher's repoint to `VM_SERVICE=features_service` /
-      `python -m features_service.sports.scripts.compute_sfi_progressive_only` already shipped (the source doc cites
-      placeholder `<sha>`s, not real ones); if not, ship it. Then confirm market-tick-data-service is clean (no foreign
-      uncommitted WIP blocking the tarball build) → rebuild SPORTS tarball via
-      `create-code-tarballs.sh --asset-group SPORTS` →
-      `RECOMPUTE_FORCE=true     launch-sfi-progressive-features-backfill-vm.sh --force 2020-01-01 <today>` → verify
-      run.log has no `MissingFeatureFamilyError`. (repo: deployment-service
-      `scripts/vm/launch-sfi-progressive-features-backfill-vm.sh`, `scripts/vm/create-code-tarballs.sh`;
-      features-service `features_service/sports/scripts/compute_sfi_progressive_only.py` — read-only dependency check on
-      market-tick-data-service, no edits there). **[OPERATOR]**: `RECOMPUTE_FORCE=true --force` overwrites captured prod
-      manifest rows for the full 2020-01-01→today window + launches a billed VM — cite
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, get operator go-ahead before the relaunch step (the
-      verify/tarball-rebuild prep above is safe without it). **Done when**: launcher confirmed pointed at
-      `features_service.sports.scripts.compute_sfi_progressive_only` (fixed if not); SPORTS tarball rebuilt; relaunch's
-      run.log shows no `MissingFeatureFamilyError` and `PROGRESSIVE_DAY_CAPTURED` events, exit code 0. Source:
+- [x] ✅ [OPERATOR] P1. **Relaunch features-sfi-progressive** — code fix already shipped (`features-service@06c44c02`);
+      launcher confirmed pointed at `features_service.sports.scripts.compute_sfi_progressive_only`; confirmed
+      market-tick-data-service clean; SPORTS tarball rebuilt (all 5 fresh: features-service@26c96a55, mtds@1dbdbb90,
+      uac@0b979239, utl@5e89c404, deployment-service@184aa81d). Relaunched via
+      `RECOMPUTE_FORCE=true launch-sfi-progressive-features-backfill-vm.sh --force 2020-01-01 2026-07-25` on
+      `features-sfi-progressive-20260725-163937` (SPOT, asia-northeast1-c). **Done**: run.log shows zero
+      `MissingFeatureFamilyError`/`ERROR` lines, `PROGRESSIVE_DAY_CAPTURED` events throughout,
+      `captured_days=2087     failed_days=0`, `command exited rc=0`, `DEPLOYMENT_COMPLETED ... exit_code=0`. (repo:
+      deployment-service `scripts/vm/launch-sfi-progressive-features-backfill-vm.sh`,
+      `scripts/vm/create-code-tarballs.sh`; features-service
+      `features_service/sports/scripts/compute_sfi_progressive_only.py`). **[OPERATOR]**: `RECOMPUTE_FORCE=true --force`
+      overwrote captured prod manifest rows for 2020-01-01→2026-07-25 + launched a billed VM — operator go-ahead given
+      in-session 2026-07-25, cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Source:
       `data_completion_sports_2026_07_24.md`.
 
 ### From `sports_legacy_cutover_closeout_tasks_2026_07_24.md`
