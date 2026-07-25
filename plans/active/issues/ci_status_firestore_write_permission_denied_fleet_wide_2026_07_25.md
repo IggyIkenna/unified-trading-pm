@@ -162,10 +162,16 @@ Traced the gap:
       self-hosted runner box; confirmed 403 as of 2026-07-25T14:02Z). Check IAM bindings + any recent SA key rotation.
 - [ ] [INFRA] P0. Once permissions restored, verify `ci-status-update.yml` (unified-trading-pm) runs green again and
       `ci_status/deployment-api`'s `sit_validated_tree` advances to the current LDR tree (repo: unified-trading-pm).
-- [ ] [INFRA] P1. Harden `full-workspace-sit.yml`'s stamp step
+- [x] ✅ [INFRA] P1. Harden `full-workspace-sit.yml`'s stamp step
       (`system-integration-tests/.github/workflows/full-workspace-sit.yml:158-175`) to not declare "stamped
       SIT_VALIDATED" success from a bare `curl` HTTP-accept — verify the downstream `ci-status-update` run actually
-      completes + writes, or surface failure loudly (repo: system-integration-tests).
+      completes + writes, or surface failure loudly (repo: system-integration-tests). —
+      system-integration-tests@422baa9: per-repo stamp loop now snapshots existing `ci-status-update.yml` run IDs before
+      dispatch, confirms the dispatch POST itself returned HTTP 204, polls (~30s) for the NEW run the dispatch created,
+      then polls (~90s) that run to a terminal status — only echoes "stamped SIT_VALIDATED" on `conclusion=success`; a
+      failed/timed-out/unidentifiable run emits `::error::` and fails the step (`exit 1`) instead of silently claiming
+      success. `quality-gates.sh` green (112s); YAML + embedded bash syntax verified (`python3 -c yaml.safe_load` +
+      `bash -n` on the extracted step script).
 - [x] ✅ [INFRA] P2. Investigate whether the `cloud-build-router.yml` "Persist CI/CD event" gsutil credential failure
       (run `30159646779`, 13:24:19Z, "Your credentials are invalid") shares a root cause with this incident — same or
       sibling self-hosted runner box (repo: unified-trading-pm). — RESOLVED, does NOT share root cause: different SA
