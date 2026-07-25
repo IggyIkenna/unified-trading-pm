@@ -33,7 +33,6 @@ related:
     /plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md,
   ]
 created: "2026-07-25"
-author: slot-5-worker
 source: [sports_fixtures_schedule_wrong_schema_day-001]
 parent_epic: agent_operating_framework_master
 priority: P2
