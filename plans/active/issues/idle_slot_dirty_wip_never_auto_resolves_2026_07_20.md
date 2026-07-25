@@ -27,7 +27,7 @@ assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-20
+last_updated: 2026-07-25
 locked_by:
 locked_since:
 ---
@@ -98,7 +98,39 @@ relying solely on the next spawn attempt:
       against slots that are dirty AND provably dead (no live tmux session). **Gate**: a deliberately-idle dirty slot
       with no tmux and an expired claim is inherited within one sweep interval, evidenced by a
       `slot_dirty_state_resolved`-class activity row with **no adjacent spawn/autospawn event**.
-- [ ] [OPERATOR] P3. **Spot-check the live fleet for a current instance before prioritising the above** — query
+- [x] [OPERATOR] P3. **Spot-check the live fleet for a current instance before prioritising the above** — query
       `/api/fleet/git-health` for any slot dirty >24h with no live session. If none exists, this is a structural gap
       without an active incident (fine to sequence behind P1 work) — which is a reason to rank it, **not** a reason to
-      close it. **Gate**: the one-line finding recorded in this doc.
+      close it. **Gate**: the one-line finding recorded in this doc. → **FINDING (2026-07-25, main agt-52bb99, raised by
+      review slot-1 msg 1991)**: a live instance EXISTS — host `ip-172-31-0-185` slot 0 (reporter stale since 03:32Z,
+      `ff_cron_stale`, `ff_pull_last=skip:dirty`). See recurrence note below. This ranks the P2 sweep above (active
+      incident with a real blast radius), it does not close the structural gap.
+
+## Concrete recurrence 2026-07-25 — ip-172-31-0-185 slot 0, 31 uncommitted plans at risk
+
+Found via `/api/fleet/git-health` (generated 08:48Z), surfaced by review (slot-1, msg 1991). Dead-idle slot 0 on host
+`ip-172-31-0-185` (reporter stale since 2026-07-25T03:32:01Z, `ff_cron_stale=true`, `ff_pull_last_result=skip:dirty`
+@03:30) with dirty WIP that the pre-spawn-only FM8 inherit never resolved because nothing is spawning into it — exactly
+this issue's failure mode. Blast radius:
+
+- **`unified-trading-pm`: 31 UNCOMMITTED plan docs** (dirty working tree, `ahead=0` → not committed, not on origin, not
+  reproducible), incl. real 2026-07-25 work: `ag_closeout_audit_rollout`, `autonomous_session_operator_decisions`,
+  `tradfi_autonomous_session_operator_decisions`, `prediction_satellite_ao_dispatch_batch1(+finalize)`,
+  `sports_satellite_ao_dispatch_batch3(+finalize)`, `tradfi_satellite_ao_dispatch_batch1(+finalize)`, and 6×
+  `mvp_backfill_defi_onchain_v10_operational_log` parts.
+- Dirty (uncommitted) files also in `market-tick-data-service` (2), `strategy-service` (1, behind 3),
+  `system-integration-tests` (2, behind 7), `unified-api-contracts` (1). **`ahead=0` everywhere → zero
+  committed-unpushed commits**; the entire risk is uncommitted on-disk content.
+
+**Cannot verify/recover from off-host**: main (agt-52bb99) and review both lack SSH/FS to `ip-172-31-0-185`, and
+`/api/state` `slot_id` collides across hosts, so neither can `kill -0` the worker to positively confirm dead. Correct
+recovery = the existing `commit_and_push_dirty_repos` (→ `wip-preserve/` ref → realign clean), but it only fires ON that
+host via a spawn attempt into slot 0, or an operator/FS-holder committing+pushing the 31 plans manually. Main is
+charter-barred from spawning slots.
+
+- [ ] [OPERATOR] P2. **Preserve the 31 uncommitted `unified-trading-pm` plan docs (+ the 4 other repos' dirty files) on
+      `ip-172-31-0-185` slot 0 BEFORE any decommission/reset.** Either bring the host runtime up enough for AutoSpawn to
+      place a worker into slot 0 (the pre-spawn dirty gate then inherits the WIP to a `wip-preserve/` ref
+      automatically), or manually commit+push the plans from that host. **DO NOT `git reset`/decommission the host until
+      this lands** — the content is not on origin and not reproducible. **Done when**: the 31 plans exist on
+      `origin/live-defi-rollout` (or a `wip-preserve/` ref) and `/api/fleet/git-health` shows slot 0 clean.
