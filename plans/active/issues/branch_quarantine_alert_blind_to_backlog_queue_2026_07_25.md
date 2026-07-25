@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: Branch-quarantine STARVATION alert only counts escalation walls, not queued backlog tasks
-status: open
+status: resolved
 nature: record
 asset_group: [meta]
 stage: [meta]
@@ -23,7 +23,7 @@ depends_on: []
 parent_epic: orchestrator_master
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: agent-orchestrator@9c73579
 ---
 
 # Branch-quarantine STARVATION alert only counts escalation walls, not queued backlog tasks
@@ -56,9 +56,16 @@ rows with `status="queued"` and no blocking `blocked_reason`, mirroring `count_q
 `notify_slot_quarantined`'s message text to name whichever queue(s) are non-empty rather than hardcoding "N escalation
 walls starved".
 
-- [ ] [INFRA] P2. Add `count_queued_backlog_tasks()` (or equivalent) to `server/escalation.py` or a shared module, and
-      change `_alert_branch_quarantine`'s starvation condition (`server/autospawn.py:1140-1146`) to
+- [x] ✅ [INFRA] P2. Add `count_queued_backlog_tasks()` (or equivalent) to `server/escalation.py` or a shared module,
+      and change `_alert_branch_quarantine`'s starvation condition (`server/autospawn.py:1140-1146`) to
       `count_queued_walls() > 0 or count_queued_backlog_tasks() > 0`. Update `notify_slot_quarantined`'s Slack copy to
       reflect whichever queue(s) triggered it. Add a regression test (mirroring
       `tests/test_alert_quality_overhaul.py::test_branch_quarantine_pages_starvation_when_walls_queued`) covering: zero
-      escalation walls + nonzero queued backlog tasks → STARVATION page still fires. (repo: agent-orchestrator)
+      escalation walls + nonzero queued backlog tasks → STARVATION page still fires. — agent-orchestrator@9c73579. Added
+      `count_queued_backlog_tasks()` (queued+undispatched `TaskRow` count) to `server/escalation.py`; wired into
+      `_alert_branch_quarantine` (`server/autospawn.py`); `notify_slot_quarantined` now takes `queued_backlog_tasks` and
+      names whichever queue(s) are non-empty in its Slack copy. New regression test
+      `test_branch_quarantine_pages_starvation_when_backlog_tasks_queued` (zero walls + 25 queued backlog tasks →
+      STARVATION page fires). Also patched two pre-existing `test_autospawn.py` tests that implicitly relied on
+      `count_queued_walls()`'s real-DB call returning 0 — they now explicitly patch both counters to stay deterministic.
+      quality-gates.sh green (1645 passed).
