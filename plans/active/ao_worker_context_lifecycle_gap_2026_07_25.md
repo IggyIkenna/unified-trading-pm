@@ -246,12 +246,17 @@ sequential: true
       session's other slots' work + this addition), ruff + basedpyright clean, full `quality-gates.sh` PASSED. Also
       fixed pre-existing `uv.lock` drift (already-declared `google-cloud-firestore` dep never re-locked) discovered
       while bootstrapping the venv — `agent-orchestrator@3e3e213`, unrelated to this todo, shipped alongside it.
-- [ ] [BACKEND] P2. **Regression test reproducing this session's full live scenario end-to-end.** A worker slot
-      completes a task at `context_used_pct=93` with `compactions_total` far predating `assigned_at` (mirrors slot 3's
-      live snapshot 2026-07-25T04:23-04:36 UTC). Assert: `done_slot` (post todo 3) withholds `next_task` and sets the
-      directive; once the worker reports a post-compact `/progress` (pct drop observed), the NEXT `/done` dispatches
-      normally. **Done when**: new integration test in `agent-orchestrator/tests/` passes, exercising todos 1, 3, and 4
-      together end-to-end; `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P2. **Regression test reproducing this session's full live scenario end-to-end.** —
+      `agent-orchestrator@761bb9e`. New `test_context_lifecycle_end_to_end_gate_compact_then_dispatch` in
+      `tests/test_task_lifecycle_done_gate_resume.py`: (1) a slot with `compactions_total=117` / `last_compacted_at`
+      hours before `assigned_at` (mirrors slot 3's live snapshot) finishes a task at `context_used_pct=93` — `done_slot`
+      withholds `next_task`, sets `directive=compact_before_next`, logs `worker_compact_gated` (todo 1's threshold +
+      todo 3's gate). (2) a fresh task lands on the same slot (mirrors the subsequent `/boot` after compaction — the
+      real `/boot` route itself is out of this test's scope) and its first `/progress` reports the post-compact
+      `context_used_pct=20`; `update_slot_ping` detects the 93→20 drop and logs `slot_compacted` (todo 4). (3) the NEXT
+      `/done`, now genuinely post-compact, dispatches normally with no lingering gate state (the check is a plain
+      per-call threshold comparison, confirmed by assertion). 1669/1669 tests pass, ruff + basedpyright clean, full
+      `quality-gates.sh` PASSED.
 - [ ] [REVIEW] P1. **Post-deploy live verification against this plan's own root-cause evidence.** Re-pull `/api/state` +
       `/api/activity` (read-only SSM, same pattern as this plan's `source` field) for slot IDs 2, 3, 5, 8, 9 (the ones
       tracked live during this session's diagnosis) and confirm: (a) no slot receives a next task while self-reporting
