@@ -605,15 +605,15 @@ source: >-
 
 ### From `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`
 
-- [ ] [DATA] P1. **`player_stats` idempotent de-dup rewrite** over all canonical `player_stats` cells (keyed
-      `(fixture_id, player_id)`), reusing the T2.4 union tooling's dedup path. ~13,964 cells remain (the SKIP_NO_NEW
-      path left untouched, out of 27,296 total canonical `entity=player_stats/*/player_stats.parquet` objects). (repo:
-      instruments-service data write/rewrite tooling; GCS bucket `instruments-store-sports-prd`; reference pattern at
-      `~/tmp-cutover/t2_4_build_canon_keys.py`). **Done when**: all remaining ~13,964 cells are rewritten with
-      exact-duplicate rows removed within each object, idempotently, using the same dedup logic the T2.4 union already
-      applied to its 4,015 cells; verifiable via the same per-object dup census methodology (rows vs
-      per-object-unique(fixture_id,player_id) converges to 0 duplicates project-wide). Source:
-      `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`.
+- [x] [DATA] P1. ✅ **`player_stats` idempotent de-dup rewrite** — `instruments-service@210d4567`. Reference tooling
+      (`~/tmp-cutover/t2_4_build_canon_keys.py`) was session-local and gone, so wrote a fresh script
+      (`scripts/dedup_canonical_player_stats_2026_07_25.py`) covering ALL 26,687 manifest-tracked
+      `PLAYER_STATS`/`captured` cells uniformly (safe no-op on already-clean objects). Object paths via UAC's
+      `candidate_parquet_paths(..., pipeline_mode=...)` SSOT; generation-matched CAS writes. **Result: 7,066 objects
+      deduped, 808,279 duplicate rows removed; re-run confirmed 0 duplicates remain project-wide** (this todo's own
+      done-when). Two incidental findings, left untouched not absorbed: schema heterogeneity also affects ~12% of
+      player_stats cells; ~4.9% of captured cells have no GCS object (2019 era). Detail:
+      `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` (Finding 1, resolved).
 - [ ] [DATA] P1. **`fixture_events` re-fetch into the canonical 13-col schema** — fold into the OR-1 `fixture_events`
       re-fetch campaign. (repo: instruments-service). **Done when**: a full re-census shows 0 genuinely non-canonical
       objects remaining (or documented unrecoverable). **🟡 IN PROGRESS (2026-07-25, slot 2)**: full census done

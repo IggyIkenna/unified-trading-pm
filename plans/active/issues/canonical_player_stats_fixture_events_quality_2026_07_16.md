@@ -73,6 +73,35 @@ item; the full measurement shows it is systemic. The writer appends without de-d
 are now dup-free**. The remaining **~13,964 canonical player_stats cells the union skipped (SKIP_NO_NEW) still carry the
 defect**. A full fix is a de-dup rewrite over the untouched cells (idempotent, keyed on `(fixture_id, player_id)`).
 
+## Finding 1 — RESOLVED 2026-07-25
+
+Ran `instruments-service/scripts/dedup_canonical_player_stats_2026_07_25.py --apply` over all 26,687 manifest-tracked
+`PLAYER_STATS`/`captured` cells (a single bounded manifest read, not a fresh GCS walk — real object paths resolved via
+UAC's `candidate_parquet_paths(..., pipeline_mode=...)` SSOT). Covered ALL cells uniformly rather than trying to
+reconstruct which of the original 27,296 the T2.4 union's 4,015 already touched (that tooling was session-local and
+didn't survive to this session) — de-duping an already-clean object is a safe no-op, so full coverage converges to the
+same end state regardless of prior partial coverage. **Result: 7,066 objects deduped, 808,279 duplicate rows removed
+(more than the original 740,725 estimate — expected, since this covers strictly more cells than the original T2.4
+scope). A re-run immediately after confirmed 0 duplicate rows remain project-wide** (the doc's own stated verification
+methodology). Generation-matched CAS writes (14 transient losses to concurrent live writers on the first pass, all
+cleanly picked up by the idempotent re-run — 0 errors on the second pass).
+
+**Two things found during this pass, not previously documented for player_stats specifically:**
+
+- **Schema heterogeneity also affects player_stats** (previously this doc only documented it for fixture_events, Finding
+  2 below): ~12% of captured cells (3,274/26,687) carry a NESTED schema — columns
+  `[team, players, fixture_id, available_at]` where `players` is a list-of-dicts per team, not one flat row per player.
+  The dedup script correctly SKIPPED these (never guessed how to dedupe a schema it wasn't built for) — they are outside
+  this finding's original scope (which measured 2,882,420 rows across 27,296 objects, implying the flat schema as the
+  dominant/measured shape) and need their own schema-normalisation pass, mirroring Finding 2's fixture_events treatment.
+  Not filed as a separate issue doc — small enough to track here as a follow-up, same remediation shape as Finding 2.
+- **1,298/26,687 (4.9%) manifest-`captured` cells have NO corresponding GCS object** — concentrated in 2019 (a
+  known-drifted writer-generation era per this doc's own Defect 3). This is a manifest-vs-reality mismatch, not a
+  duplicate-row issue; left untouched/logged (never guessed), and is a candidate for its own investigation but out of
+  this finding's scope.
+
+Evidence: `instruments-service@210d4567` (script commit).
+
 ## Finding 2 — canonical fixture_events schema heterogeneity (~30% degenerate 5-col)
 
 A 120-object random sample of canonical `entity=fixture_events/*/fixture_events.parquet` found **four concurrent
