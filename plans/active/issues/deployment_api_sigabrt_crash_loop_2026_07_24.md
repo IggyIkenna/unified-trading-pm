@@ -168,6 +168,41 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 
 ## Progress Log
 
+- **2026-07-25T07:08Z (slot 5, review)** — Re-checked the `[REVIEW] P2` precondition against the actual live revision.
+  Confirmed `uts-shared-deployment-api-00275-7zl` (built `06:14:00Z`, carries `deployment-api@7ba17e2`'s
+  `post_worker_init` faulthandler fix) is still the live revision (`gcloud run revisions list`, no newer revision
+  deployed since slot 2's `06:23Z` check). `gcloud logging read` scoped to that exact revision for `"Uncaught signal"`
+  since deploy: **zero occurrences** as of `07:08:40Z` — i.e. **~54.5 minutes elapsed with no crash**, now past the
+  measured ~20-40min cadence with margin. Still not conclusive on its own: pulled the full 24h "Uncaught signal" history
+  (41 rows) and found natural gaps of **50-71 minutes occur even within confirmed-still-broken periods** (e.g.
+  `16:21:04Z`→`17:32:30Z` = 71min gap and `19:09:34Z`→`20:08:58Z` = 59min gap, both on revision `00268-d2l` while the
+  loop was unambiguously still active) — so a ~54min quiet window doesn't yet distinguish "fixed" from "just hasn't
+  happened yet." No faulthandler dump exists to read; the diagnostic question remains genuinely open.
+  - **New substantive evidence** (not previously on this doc): the sibling `_compute_inventory` cold-path hypothesis
+    named in this todo already had a partial mitigation live BEFORE the faulthandler fix — `deployment-api@6f6a389`
+    (committed `2026-07-24T23:03:07Z`, bounds `_load_inventory`'s cold-cache path to `_PROVIDER_CENSUS_TIMEOUT_SEC`=45s
+    via `future.result(timeout=...)`, see
+    [deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md](deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md))
+    was already part of the SAME deploy wave as `1adf54b` and therefore already live on
+    `uts-shared-deployment-api-00274-s9g` since `02:51:26Z`. Yet `00274-s9g` **continued crashing with
+    `Uncaught signal: 6` as recently as `06:10:50Z`** — over 3 hours after the 45s bound went live. If the cold-path's
+    _unbounded_ synchronous block were the sole mechanism starving gunicorn's 300s worker-heartbeat timeout, bounding it
+    to 45s should have materially suppressed further SIGABRTs from that specific path; it did not. This **weakens (does
+    not fully refute)** the `_compute_inventory` cold-path hypothesis as the primary/sole cause — plausible remaining
+    explanations not yet checked: concurrent cold-path hits across DIFFERENT `(cloud, region_scope)` cache keys stacking
+    past 300s in aggregate even with each individually bounded at 45s, or `future.result(timeout=...)` still blocking
+    the event loop thread synchronously (not `run_in_executor`-wrapped) so repeated near-back-to-back cold hits could
+    still starve the heartbeat, or a genuinely different stuck call site. None of these confirmed — flagging as the next
+    investigation angle for whoever reads the actual dump, not asserting a new root cause without evidence.
+  - Not closing the checkbox — the precondition (a faulthandler dump to read) still doesn't exist. Releasing via
+    `skip-current-task` with `reason_code: GATED` (fleet-scoped cooldown, matching slot 4's prior precedent) rather than
+    continuing to poll a stochastic external event in-session — 5 dispatches (slot4→slot6→slot10×2→slot2→slot5) have now
+    checked this same precondition; the fleet-scoped GATED cooldown is exactly the mechanism designed to bound that
+    waste (per main's `05:16Z` note above). Next dispatch: re-run the same `gcloud logging read` scoped to whatever is
+    the CURRENT live revision at that time (re-verify it's still `00275-7zl` or a later one first); once a SIGABRT
+    appears, pull the `stderr` stream ±5min around it for the `Fatal Python error`/`Current thread` dump, and weigh it
+    against the cold-path-weakening evidence above before concluding a call site.
+
 - **2026-07-25T05:55Z (slot 2, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-002` (the
   `[BACKEND] P1` todo). Root-caused via code inspection rather than another log-only pass: pulled the installed
   `gunicorn`/`uvicorn` package source directly and traced the exact call order inside a forked worker — `post_fork`
