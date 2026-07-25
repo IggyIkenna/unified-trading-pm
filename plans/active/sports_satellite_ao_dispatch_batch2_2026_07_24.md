@@ -407,19 +407,19 @@ source: >-
 
 ### From `sports_prelaunch_cf5_verify_residual_2026_07_24.md`
 
-- [ ] [DATA] P1. **Sports CF-5 oracle relabel = ZERO — land the preserved fix.** Root cause already found + fixed
-      (code): `_PER_FIXTURE_DERIVED_DATA_TYPES` listed the MDPS odds tick as lowercase `"trades"`, but membership is
-      tested as `data_type.upper() in set` → `"TRADES"` never matched → step 6.5's truthset gate silently skipped every
-      `trades` empty. Fix (`"trades"`→`"TRADES"` in `mtds/scripts/rebuild_sports_manifest_v9.py` + a regression test) is
-      verified MTDS-QG-green and preserved on `origin/wip-preserve/mtds-346-cf5-trades` (`mtds@d0a15a3`) — never landed
-      because quickmerge's dep-audit refused across 3 retries (a live sibling was running fleet manifest-regen). FIRST
-      check (git log/branch diff) whether `origin/wip-preserve/mtds-346-cf5-trades` has already landed on
-      market-tick-data-service HEAD. If not: confirm the MTDS/UAC dep tree is clean, cherry-pick the wip commit onto a
-      clean tree, run MTDS `quality-gates.sh` green, land via
-      `quickmerge.sh --agent --files 'market_tick_data_service/scripts/rebuild_sports_manifest_v9.py tests/unit/scripts/test_rebuild_sports_manifest_v9.py'`.
-      (repo: market-tick-data-service). **Done when**: worker confirms landed-or-not first (citing the check); if not
-      landed, the fix + its regression test are confirmed present on market-tick-data-service main/LDR HEAD, citing the
-      landing commit sha. Source: `sports_prelaunch_cf5_verify_residual_2026_07_24.md`.
+- [x] ✅ [DATA] P1. **Sports CF-5 oracle relabel = ZERO — landed.** — market-tick-data-service@7f1262a0. Confirmed
+      `origin/wip-preserve/mtds-346-cf5-trades` (`mtds@d0a15a3`, 2026-06-16) had NOT landed and was too stale to
+      cherry-pick wholesale (predates + would regress the 2026-07-13 SFI_PROGRESSIVE_STATS retired-set fix and several
+      later CF-11/attempted_at/chain-blank fixes on the same file). Applied the isolated one-line fix
+      (`"trades"`→`"TRADES"` in `_PER_FIXTURE_DERIVED_DATA_TYPES`) directly on current HEAD + adapted the wip branch's
+      regression test onto current HEAD (not restored wholesale). TDD-verified: confirmed the new test fails against the
+      pre-fix lowercase entry and passes with the fix. quality-gates.sh green. Landing required several retries —
+      quickmerge's full-suite re-gate hit genuine host-load-induced infra flakiness (pytest-xdist worker crash under
+      load 17-30 on an 8-core box, 3+ concurrent slots running full QGs simultaneously), not a content issue; landed
+      once host load allowed a clean re-gate pass. (repo: market-tick-data-service). **Done when**: worker confirms
+      landed-or-not first (citing the check); if not landed, the fix + its regression test are confirmed present on
+      market-tick-data-service main/LDR HEAD, citing the landing commit sha. Source:
+      `sports_prelaunch_cf5_verify_residual_2026_07_24.md`.
 
 ### From `sports_fixtures_browser_single_catalogue_source_2026_07_24.md`
 
