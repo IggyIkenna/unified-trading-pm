@@ -230,3 +230,29 @@ re-triggers AutoSpawn's spawn-in-txn on restart).
   the operator/managed-path call if it recurs and does not clear.
 - Adjacent (separate) observation in the same window: slot-1 `ff_pull_last_result: "conflict"` at 01:51:06 — handled by
   `fleet-git-health-guard.sh`, not part of this DB-pool issue.
+
+## Update 2026-07-25 ~06:21Z (main agt-52bb99) — occurrence cluster #9–#11 + RESTART PROVEN NON-DURABLE
+
+New empirical data strengthening BACKEND-P1 (spawn-outside-txn) urgency. Same root cause each time (`_do_spawn` at
+`server/autospawn.py:1383` holding SQLite's write lock across the ~75s claude/tmux cold-start); `/health` stays 200 fast
+throughout (DB-independent), every DB-backed endpoint (`/poll`, `/api/state`) hangs.
+
+- **#9 ~05:55–05:57Z** — `sqlite3.OperationalError: database is locked` (busy_timeout variant), tightly correlated with
+  repeated PlanRegenLoop `sync_backlog_to_db: REFUSING to reset task id …` positional-id collisions thrashing writes
+  (see `/plans/active/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md` P3).
+  **Self-cleared ~2 min.**
+- **#10 ~06:13:58Z** — `QueuePool limit of size 5 overflow 10 reached, connection timed out` (pool-timeout variant),
+  holder `_do_spawn` (slot-1 spawn after a "late account re-check raised; proceeding" retry). Did NOT self-clear on its
+  own: a **controlled `systemctl` SIGTERM stop at 06:15:37 + clean restart at 06:16:14 (new PID 159866, ~37s downtime,
+  state preserved via pre-shutdown S3 snapshot)** cleared it. Not main's action.
+- **#11 ~06:19–ongoing (still wedged at 06:21:41Z)** — `database is locked` again, same `_do_spawn:1383` holder, **same
+  post-restart PID 159866** — i.e. the 06:16 restart landed NO code change and the wedge **recurred within ~4 minutes**.
+
+**Key finding: a restart is NOT a durable mitigation.** The 06:16 controlled restart bought only ~4 min before the wedge
+returned on the very same process. This empirically confirms what the ROOT CAUSE section argued: only the code fix (run
+`_do_spawn` OUTSIDE the `BEGIN IMMEDIATE` txn + read-only/deferred txns for read endpoints) removes the wedge; each
+restart just resets the clock. Frequency is CLIMBING (3 wedges in ~25 min: #9→#10→#11). Individual windows still
+self-clear/restart-clear under the ~10-min page threshold, so no page yet — **but if a single window sustains >10 min,
+or the cadence tightens further, this crosses into page/operator-action territory.** BACKEND-P1 should be prioritised
+now; until it lands the fleet loses a growing fraction of wall-clock to these windows. Main remains charter-barred from
+restarting the service and from shipping the fix (routes via BACKEND worker + quickmerge).
