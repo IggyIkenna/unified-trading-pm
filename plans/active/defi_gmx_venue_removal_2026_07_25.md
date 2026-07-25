@@ -1,0 +1,129 @@
+---
+doc_type: plan
+title: Remove GMX venue support (unreliable historical funding data + narrow usage)
+summary:
+  Operator decision 2026-07-25 -- GMX perp_funding's entire captured history (2022-2023) turned out to be a synthetic
+  OI-imbalance proxy, not real funding-rate observations (the native subgraph query never worked for this window; every
+  sample fell back to a derived market="all" heuristic). GMX is referenced in strategy-service's carry/ staked-basis
+  catalog but flagged there as unverified ("GMX-V2 rows pending verification"), and is not foundational -- a bounded,
+  real removal across UAC/MTDS/IS/execution-service/strategy-service/UTL plus a prod-bucket GCS+manifest purge and doc
+  updates.
+status: active
+nature: process
+asset_group: [defi]
+stage: [data]
+repos:
+  [
+    unified-api-contracts,
+    market-tick-data-service,
+    instruments-service,
+    execution-service,
+    strategy-service,
+    unified-trading-library,
+    unified-trading-pm,
+  ]
+scope: [engineer]
+tags: [defi, gmx, venue-removal, data-quality, cleanup]
+related: [defi_consolidated_closeout_2026_07_18, defi_migrated_marker_flagged_root_cause_clusters_2026_07_25]
+created: 2026-07-25
+last_updated: 2026-07-25
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 5
+estimate_calibrated_ai_days: 2
+assigned_role: backend_engineer
+drift_direction: advance-code
+depends_on: []
+source:
+  [
+    "operator decision 2026-07-25, made during a /autonomous session investigating FLAGGED delete_migrated_defi_markers
+    dry-run results -- GMX perp_funding turned out to be entirely synthetic-proxy historical data (verified via direct
+    parquet inspection across the full 2022-2023 range: funding_rate_long == -funding_rate_short on every sample, the
+    signature of the Messari-fallback OI-imbalance formula, market='all' every time -- the native per-market subgraph
+    query apparently never succeeded for this whole window). Cross-repo footprint (94 files matching /gmx/i across 6
+    repos) checked via grep before scoping this plan; strategy-service usage confirmed real but explicitly flagged
+    unverified in-code (staked_basis.py: 'GMX-V2 rows pending verification in UAC VENUE_COLLATERAL_MATRIX')",
+  ]
+resolved_by:
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+---
+
+# Remove GMX venue support
+
+## Context (read before dispatching any todo)
+
+Full root-cause analysis: `issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md` (GMX section) and the
+2026-07-25 chat/plan discussion in `defi_consolidated_closeout_2026_07_18.md`'s progress log. Short version: GMX's
+`perp_funding` capture (`market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_gmx.py`) has a
+native path (`fundingRateChangedEvents`, real per-market data) and a Messari fallback (`financialsDailySnapshots`, no
+per-market field, derives a synthetic `imbalance = (long_oi - short_oi) / total_oi` proxy written as `market="all"`).
+Every sampled historical row (2022-2023, both chains) is the fallback shape -- the native query never worked for this
+venue's whole captured history. Combined with GMX's own `GMX-V2 rows pending verification` caveat already in
+`strategy-service/strategy_service/engine/strategies/v2/ carry_and_yield/staked_basis.py`, the operator decided to
+remove GMX rather than invest in fixing/backfilling it.
+
+**Each todo below is independently dispatchable and safe to run CONCURRENTLY** -- every todo targets a different repo,
+so there is no same-file collision risk. `depends_on`/`gate_on_depends` is deliberately NOT set for the GCS-purge todo
+(no per-todo prereq syntax exists) -- it is `[OPERATOR]`-tagged so it is never auto-dispatched anyway; the human running
+it should simply wait until the code-removal todos below have landed first (nothing enforces this mechanically, it is
+operator judgment on timing).
+
+**Definition-of-done convention for every removal todo below**:
+`grep -rli "\bgmx\b" <repo> --include="*.py" | grep -v test` returns zero hits, OR only hits inside a dated
+changelog/docstring comment describing the historical removal itself (never inside live logic, registries, or enums).
+
+## Todos
+
+- [ ] [DATA] P2. **Remove GMX from `unified-api-contracts`** -- venue/adapter-key registries (`VENUE_TO_ADAPTER_KEY`),
+      `VENUE_COLLATERAL_MATRIX`, any `SOURCE_PRIORITY`/pipeline-mode entries, venue enums, and test fixtures. ~30 files
+      matched a `gmx` grep pre-scoping (some are just enum/fixture mentions, not GMX-specific logic) -- confirm each hit
+      before deleting, some may be shared collateral-matrix rows covering multiple venues. Done-when: the
+      definition-of-done convention above, zero hits in this repo. (repo: unified-api-contracts)
+- [ ] [BACKEND] P2. **Remove GMX capture from `market-tick-data-service`** -- delete
+      `cli/handlers/_perp_funding_gmx.py`, remove its dispatch wiring from `perp_funding_handler.py`, remove the `gmx`
+      protocol entry from `dex_pools_handler.py`'s protocol table and `_dex_pools_subgraph.py`'s query-selection map,
+      remove `gmx` from `_instruments_metadata.py`'s chain/address maps. ~42 files matched pre-scoping. Done-when: the
+      definition-of-done convention above, zero hits outside a dated removal-changelog comment. (repo:
+      market-tick-data-service)
+- [ ] [DATA] P2. **Remove GMX from `instruments-service` reference data / MVP instrument universe** --
+      `engine/orchestrator/defi.py`, `scripts/enumerate_expected_universe.py`,
+      `scripts/dex_pool_glued_pair_id_canonicalize_2026_07_09.py`. Done-when: the definition-of-done convention above,
+      zero hits. (repo: instruments-service)
+- [ ] [BACKEND] P2. **Remove GMX from `execution-service`** -- `service_config.py`, the 4 `cli/defi_*_decision_trace.py`
+      scripts (carry_staked_basis / carry_basis_perp / arbitrage_dispersion / liquidation_capture) that reference GMX,
+      `custody/pre_trade_pinger.py`. Done-when: the definition-of-done convention above, zero hits. (repo:
+      execution-service)
+- [ ] [BACKEND] P2. **Remove GMX from `strategy-service`** -- the `("gmx", "GMX", ShareClass.USDC)` entry in
+      `engine/strategies/v2/target_universe/catalog_carry.py`, GMX chain/config entries in
+      `engine/strategies/v2/carry_and_yield/staked_basis.py` (including the "GMX-V2 rows pending verification" comment,
+      which becomes moot once removed), any GMX rows in `catalog_directional.py`/`catalog_staked_basis.py`, the
+      venue-name-casing comment mentioning GMX in `engine/core/canonical_perp_funding_provider.py` (cosmetic, update if
+      it reads oddly without GMX), and the 3 trace/probe scripts
+      (`trace_arbitrage_price_dispersion.py`/`probe_funding_rate_dispersion_coverage.py`/`trace_all_carry_archetypes.py`)
+      if they hardcode GMX. Done-when: the definition-of-done convention above, zero hits. (repo: strategy-service)
+- [ ] [BACKEND] P3. **Remove GMX from `unified-trading-library`** -- any shared constants/registries referencing GMX (3
+      files matched pre-scoping). Done-when: the definition-of-done convention above, zero hits. (repo:
+      unified-trading-library)
+- [ ] [OPERATOR] P1. **Purge GMX GCS objects + manifest rows** -- delete every `raw_tick_data/**/venue=GMX/**` object
+      (all chains, all data_types: `perp_funding`, `derivative_ticker`, any `dex_pool_state` entries from the `gmx`
+      protocol table) in `market-data-tick-defi-prd-central-element-323112`, and the corresponding manifest rows.
+      Prod-bucket delete, human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- no agent runs
+      this. Do this AFTER the code-removal todos above have landed (so nothing still tries to read GMX data mid-purge)
+      -- operator judgment on exact timing, not machine-gated. Done-when: zero `venue=GMX` objects remain in the bucket,
+      manifest shows zero rows for venue=gmx. (repo: market-tick-data-service)
+- [ ] [DOC] P2. **Update documentation referencing GMX** -- any codex docs, this plan's parent
+      (`defi_consolidated_closeout_2026_07_18.md`), and related issue docs that describe GMX as active/supported.
+      Done-when: a grep across `codex/` + `plans/active/` for "GMX" shows only historical/changelog-style references
+      (e.g. this plan itself, the root-cause issue doc), none describing it as a currently-supported venue. (repo:
+      unified-trading-pm)
+
+## Codex SSOTs
+
+- `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- governs the GCS-purge todo.
+- `/codex/02-data/defi-canonical-naming-ssot.md` -- update if it lists GMX as a supported venue.
