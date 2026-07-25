@@ -14,8 +14,9 @@ summary: >-
   tracked as the parent's todo 19), and TRADFI (3 severe SPOT-preemption storms survived, 0 outstanding); and the P8
   cross-AG verify/reconcile (all 4 AGs independently confirmed clean, TRADFI's ~7.1M-object quarantine residual
   precisely quantified as the parent's todo 3). Continues from part 1
-  (candle_feature_canonical_path_divergence_history_part1_2026_07_25.md). Zero open todos of its own — the parent issue
-  doc remains the single live source of truth for every still-open todo (2, 3, 7, 9, 13, 15, 16, 19).
+  (/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md). Zero open todos of its
+  own — the parent issue doc remains the single live source of truth for every still-open todo (2, 3, 7, 9, 13, 15, 16,
+  19).
 status: resolved
 nature: record
 asset_group: [cefi, defi, tradfi, sports, prediction]
@@ -39,7 +40,7 @@ tags:
 related:
   [
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"
@@ -74,7 +75,7 @@ source: >-
 
 > **Companion history doc, not the live plan (2 of 2).** This holds the second half of the verbatim Progress Log
 > narrative extracted from `/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md` — continues
-> from part 1 (`/plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`) starting at
+> from part 1 (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`) starting at
 > the P6 drain. Nothing below was rewritten; it remains the verbatim historical record, in original document order (no
 > checkbox lines needed relocating from this half — all relocated todos fall within part 1's content range). The parent
 > issue doc remains the single live source of truth for the Findings/Corrected-Ruling/Decision/LOCKED-shape sections and

@@ -30,7 +30,7 @@ related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md,
   ]
 created: 2026-07-20
@@ -422,7 +422,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       after preemption); draining switched to completion-order (`as_completed`) so the cadence bound holds under a
       stalled object. Built + independently adversarially reviewed (3 lenses) via a workflow; caught 1 CRITICAL + 3
       HIGH/MEDIUM findings, all fixed with regression tests — full details in the history doc, part 1
-      (`/plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`, "Todo 12 (resume
+      (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`, "Todo 12 (resume
       checkpoint)" entry). **`deployment-service@0ed7cf5`** companion fix: `launch-canonical-migration-vm.sh` now pins
       `VM_NAME` + persists launch params on relaunch (the review's own 4th finding — without it the checkpoint could
       never be found after a real SPOT preemption of the actual launcher family).
@@ -460,7 +460,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 
 > **Full chronological narrative extracted 2026-07-25** to two companion docs (split because the combined narrative
 > itself exceeded the 1000-line cap):
-> `/plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md` (2026-07-21 writer/reader
+> `/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md` (2026-07-21 writer/reader
 > lockstep + `-test-` gate proof + P0 census + P5 executor build + prep-risk items) and `_part2_2026_07_25.md`
 > (2026-07-22/23 P6 drain → P7 per-AG SPOT `--apply` for DEFI/PREDICTION/CEFI/TRADFI → P8 cross-AG verify/reconcile).
 > This section is a condensed summary of that history; read the two history docs for the full VM-by-VM / shard-by-shard
