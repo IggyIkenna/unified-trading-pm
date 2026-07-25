@@ -110,12 +110,16 @@ upstream detection, plus a control case that `BLOCKED-CREDENTIALS` etc. remain e
 
 ## Todos
 
-- [ ] [BACKEND] P1. Narrow `_NON_DISPATCHABLE_RE` in `agent-orchestrator/server/regen_backlog_from_plan.py` (line ~957)
-      to the documented closed set of truly-external-only tokens (CREDENTIALS / OPERATOR(-DECISION) / BILLING /
+- [x] ✅ [BACKEND] P1. Narrow `_NON_DISPATCHABLE_RE` in `agent-orchestrator/server/regen_backlog_from_plan.py` (line
+      ~957) to the documented closed set of truly-external-only tokens (CREDENTIALS / OPERATOR(-DECISION) / BILLING /
       UPSTREAM-OUTAGE / PLAYWRIGHT / JURISDICTION), excluding `PREREQUISITES` (and any other non-taxonomy token) so
       those todos are ingested normally and correctly participate in `gate_on_depends` open-todo detection. Add a
       regression test in the regen test suite covering both the ADD-pass and `_wire_gate_on_depends_prereqs` paths.
-      (repo: agent-orchestrator)
+      (repo: agent-orchestrator) — agent-orchestrator@a6c87d7. Regex now anchors on the exact closed set
+      (`CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION`); added
+      `test_parse_ingests_blocked_prerequisites_but_excludes_taxonomy_tokens` (ADD-pass) and
+      `test_regen_gate_on_depends_holds_when_upstream_only_open_todo_is_blocked_prerequisites`
+      (`_wire_gate_on_depends_prereqs` path) to `tests/test_regen_backlog_from_plan.py`. QG green (1694 passed).
 - [ ] [DATA] P1. Once the regex fix lands and the ASTER connector todo in
       `infra_capture_and_devops_leftovers_2026_07_06.md` re-enters the backlog, pick it up: register
       `aster_book_liq_ws.py` into `live/connector_registry.py`, launch the live VM (KALSHI-PERP book5 VM is the in-cefi

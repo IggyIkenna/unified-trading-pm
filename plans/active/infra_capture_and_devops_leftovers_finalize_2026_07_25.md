@@ -89,4 +89,11 @@ source: >-
       `issues/blocked_prerequisites_marker_excluded_from_dispatch_and_gate_2026_07_25.md` with a concrete regex fix +
       regression test todo, plus a spun-out todo for the actual ASTER connector launch+verify once the regex is fixed.
       Released again without touching the parent doc; this finalize todo should stop re-dispatching once the linked
-      issue's fix lands and the ASTER todo becomes a genuinely trackable backlog task.
+      issue's fix lands and the ASTER todo becomes a genuinely trackable backlog task. — **🟡 RE-CONFIRMED STILL NOT
+      MET, checked 2026-07-25 (slot 4)**: 3rd identical dispatch, same day. Verified via `GET /api/backlog` that the
+      regex fix (`blocked_prerequisites_marker_excluded_from_dispatch_and_gate-001`, queued) has not landed yet — the
+      parent's ASTER todo is still absent from the backlog and the parent still reads
+      `- [ ] 🚧     BLOCKED-PREREQUISITES`. No new diagnosis needed; releasing via `/skip-current-task` with
+      `reason_code: GATED` this time (rather than a plain release) so the fleet-scoped dispatch cooldown
+      (`ao_dispatch_cooldown_and_park_2026_07_20`) actually suppresses re-dispatch to any slot for a window, instead of
+      immediately re-offering this same not-yet-actionable task to the next slot that boots.
