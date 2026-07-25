@@ -171,3 +171,36 @@ recovery (cannot push code or edit another slot's git).
       by realignment**, not just dirty-tree WIP — before realigning a dead slot's worktree to origin, detect local
       commits not on origin and preserve them to a `wip-preserve/` ref. **Gate**: a dead slot with a local commit ahead
       of origin gets that commit preserved to a ref (not orphaned) when its worktree is realigned.
+
+## Concrete recurrence 2026-07-25 (3) — dead slots 10 + 11 orphaned unpushed commits (review sweep 12:20Z)
+
+Review (agt) git-health sweep flagged dead-slot drift; main (agt-52bb99) did a read-only rev-list reconciliation:
+
+- **Slot 10 (dead) `market-tick-data-service` `4d235caf`** ("retire 3 confirmed-dead legacy-bucket migration one-offs +
+  fix stale DEFI shard-count baseline"), **1 ahead / 1 behind** origin. Content = 3 file DELETIONS (689 lines:
+  `verify_v1_archive_row_coverage_2026_06_27.py`, `migrate_legacy_tick_buckets_to_canonical.py`,
+  `patch_l6_legacy_manifest_mtds_2026_06_29.py`) + an 8-line shard-count test fix in
+  `test_pipeline_e2e_prediction_canonical.py`. The shard-count part is **very likely redundant/superseded** by slot 2's
+  already-landed `0ce00dbe` ("re-pin DEFI shard count 2592→2538 after GMX removal", now 0/0 on origin) — do NOT
+  blind-push. But the **3 dead-script deletions are UNIQUE** and worth preserving. NOTE review's sweep assumed slot 10 +
+  slot 2 carried "the same" mtds drift — they do NOT (distinct commits); slot 2's is already resolved (0/0).
+- **Slot 11 (dead) `unified-trading-pm` `c6610a36c`** ("docs(plans): enumerate curated-universe 286-league backfill
+  scope, confirm quota block (batch2-001)"), **8 ahead / 1 behind** origin (review reported ahead=1; actual is 8
+  unpushed PM commits — a doc-only divergence, low blast radius but larger than reported).
+- **Slot 0** = the known dead-HOST watch (ip-172-31-0-185), NOT a local worktree (`.tabs/0` absent here) — 5 dirty repos
+  (07-22..07-24), `last_ping`=07-06 is a stale field. Preserve-do-not-reset; needs operator access to that host.
+
+**Impact: LOW-MED** — all doc/test/cleanup, nothing trading-critical; but slot 11's 8-ahead PM commits and slot 0's
+multi-day 5-repo dirt are real unpushed work. Main is charter-barred from recovery (cannot push code / edit foreign
+worktrees).
+
+- [ ] [BACKEND/OPERATOR] P3. **Recover slot 10 `4d235caf` selectively**: inherit `.tabs/10/market-tick-data-service`,
+      rebase (it's 1-behind), DROP the shard-count hunk if redundant vs `0ce00dbe`, KEEP the 3 dead-script deletions,
+      quickmerge. **Done when**: the 3 scripts are deleted on `origin/live-defi-rollout` (or a note states they were let
+      go) and no duplicate shard-count re-pin was pushed.
+- [ ] [BACKEND/OPERATOR] P3. **Recover slot 11 `unified-trading-pm` 8-ahead** (top `c6610a36c`): inherit worktree,
+      `git fetch` + rebase, push the unpushed doc commits (dedup any already on origin via content). **Done when**: slot
+      11's unique PM doc work is on origin or recorded as superseded.
+- [ ] [OPERATOR] P2. **Eyeball slot 0's dead host (ip-172-31-0-185) git status directly + recover the 5 dirty repos'
+      WIP** before any decommission/reset (cross-ref the standing preserve-do-not-reset watch). **Done when**: the 5
+      repos' dirty WIP is committed/pushed or explicitly discarded with a recorded decision.
