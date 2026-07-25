@@ -296,7 +296,28 @@ inherited from the first shipped batch:
       backfill, API-Football fixtures + enrichment 2019→, gated + honest-empty for no-enrichment leagues, burn budget
       per the resolved per-source caps) then step 3 (drop residual out-of-curated rows/objects, snapshot-first,
       twin-verified). (repo: instruments-service). **Done when**: backfill complete for the curated set with
-      honest-empty handling; residual rows dropped snapshot-first; re-measured honest-coverage recorded.
+      honest-empty handling; residual rows dropped snapshot-first; re-measured honest-coverage recorded. — **Gate
+      condition now MET 2026-07-25 (slot 3, data_engineering)**: all 11 confederation batches above are `[x]` (South
+      America, Western Europe, Eastern Europe, Central Asia, CONCACAF, West Africa, N/E/S Africa, Middle East, South
+      Asia, East/SE Asia, Oceania — verified via a live checkbox grep of this file, not assumed). **Step 2 launch
+      BLOCKED on the af-backfill singleton lock** (`deployment-service/scripts/vm/launch-api-football-backfill-vm.sh` —
+      global across ALL `af-backfill-*`/`af-audit-*` VMs regardless of entity, since API-Football rate-limits per-key,
+      not per-entity; confirmed via the launcher's own docstring, not assumed). Lock currently held by
+      `af-backfill-20260725-032253` (the `fixture_events` canonical re-fetch, `sports_satellite_ao_dispatch_batch2-031`
+      / `issues/sports_fixture_events_refetch_progress_2026_07_25.md`), health-checked RUNNING at 2026-07-25T05:10Z,
+      genuinely hours from done (359/~2500 dates at that check). Bypassing with `--force`/`--skip-lock` would repeat the
+      documented 2026-07-14 GW re-run mistake this exact launcher's comments warn against — not done. **Separately, no
+      dedicated "curated-universe backfill" script exists** — step 2 as scoped means running the standard
+      `launch-api-football-backfill-vm.sh` mechanism against the ~200+ newly-registered `in_mvp_scope=False` league
+      entries across the 11 batches (exact count not yet enumerated this session), which is itself a
+      multi-hour-to-multi-day campaign once launched — not completable in one dispatch turn regardless of the lock. Step
+      3 (residual row/object drop) is a genuinely destructive, snapshot-first, twin-verified operation that needs its
+      own careful scoping once step 2's backfill is real and complete — not something to rush as a sub-step here.
+      Released via `/skip-current-task`, not attempted. Next dispatch: re-check
+      `gcloud compute instances list --filter='name~"^af-backfill-"'`; once clear, enumerate the exact new-league
+      `league_id` list (all `in_mvp_scope=False` entries added across the 11 batches, i.e. everything with
+      `created`/added 2026-07-25 in `league_data_other.py`'s `REFERENCE_LEAGUES`) before launching, so the backfill
+      command has a concrete scoped target rather than "all leagues."
 
 ## Codex SSOTs
 
