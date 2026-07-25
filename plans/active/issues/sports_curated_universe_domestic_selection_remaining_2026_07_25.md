@@ -317,7 +317,37 @@ inherited from the first shipped batch:
       `gcloud compute instances list --filter='name~"^af-backfill-"'`; once clear, enumerate the exact new-league
       `league_id` list (all `in_mvp_scope=False` entries added across the 11 batches, i.e. everything with
       `created`/added 2026-07-25 in `league_data_other.py`'s `REFERENCE_LEAGUES`) before launching, so the backfill
-      command has a concrete scoped target rather than "all leagues."
+      command has a concrete scoped target rather than "all leagues." — **2026-07-25T11:58Z (slot 11, data_engineering):
+      scope enumerated, launch still correctly NOT attempted — daily API quota exhausted, not just the VM lock.** (1)
+      **Lock re-checked, now CLEAR**: `af-backfill-20260725-032253` is `TERMINATED` (confirmed via
+      `gcloud compute instances list` + `gcloud compute operations list` — a `stop` op at 03:37-07:00, not a `preempted`
+      op, so this was a self-stop, not a preemption; its `run.log` tail shows it hit
+      `API-Football … "You have reached the request limit for the day"` repeatedly right up to the last line with no
+      `DEPLOYMENT_COMPLETED` marker — reasonable self-stop-on-persistent-quota-exhaustion behavior, not obviously a bug,
+      but flagging for whoever owns `sports_fixture_events_refetch_progress_2026_07_25.md` [task -031] since that's a
+      different task's scope, not re-investigated further here). (2) **Scope enumerated exactly, per the instruction
+      above**: diffed `league_data_other.py` from immediately before the first curated-universe commit (`7b13196e^`) to
+      current HEAD across all 14 curated-universe commits (11 confederation batches + the continental- majors + the
+      first verified batch + Central Asia) — **286 unique `api_football_id`s added, spanning 137 countries**,
+      cross-checked against the LIVE `REFERENCE_LEAGUES` registry (not just the diff text): all 286 resolve to a real
+      live entry, zero missing, zero accidentally `in_mvp_scope=True` (all correctly `False` per the batches' own
+      odds-manifest verification). This is the concrete target list step 2's backfill needs to cover — no further
+      enumeration work remains before launch. (3) **Launch correctly NOT attempted this session even though the lock is
+      clear**: `instruments_service/reference_data/adapters/sports/adapters/api_football.py` documents the daily quota
+      resets at **00:00 UTC**; current time 2026-07-25T11:55Z is ~12h before reset, and the just-terminated VM's own log
+      proves the key is CURRENTLY exhausted for the rest of today (every request in its final minutes returned the same
+      daily-limit-reached error). Launching now would not move any real data — it would occupy the global af-backfill
+      singleton lock for hours producing nothing but 429-equivalent log noise, blocking any other sports
+      data_engineering work that needs the same lock, which is the opposite of this craft's efficiency north-star.
+      **Next dispatch (after 2026-07-25T00:00 UTC reset, i.e. any dispatch from 2026-07-26 onward)**: re-check the lock
+      is still clear, then launch `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh` for the curated
+      set. Note the launcher has no per-league filter flag (`--entity` scopes by manifest entity, not by league) — the
+      actual per-league scoping happens registry-side via
+      `_is_in_canonical_write_universe`/`get_expected_leagues_for_source` (already widened by the 14 shipped commits,
+      confirmed above), so a plain historical-range invocation (`2019-01-01 <today>` per Directive A's "2019→"
+      instruction) will correctly cover exactly these 286 leagues + no others — no new launcher flag needs to be built.
+      Step 3 (residual drop) still needs its own careful scoping once step 2's backfill is real and complete, unchanged
+      from the prior session's note.
 
 ## Codex SSOTs
 
