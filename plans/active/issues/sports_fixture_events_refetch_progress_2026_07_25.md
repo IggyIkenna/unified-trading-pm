@@ -236,7 +236,20 @@ latest timestamp `06:46:55Z` (live); `date=` boundary unchanged at `2020-03-18` 
 genuine in-date advance, no stall, no error/ terminal marker. Not completable this turn. **Not re-escalating the
 redispatch-frequency concern** — already raised via `/blocked` by slot 5 at 06:40Z and still pending an operator/main
 answer; releasing quietly. Next dispatch: repeat this health-check; once terminal, re-run the census script per "Next
-action" above before flipping this checkbox.
+action" above before flipping this checkbox. — **Health-checked 2026-07-25T07:30Z (slot 6, data_engineering), still
+RUNNING, confirms slot 9's 06:48Z check**: `gcloud compute instances list` confirms `RUNNING` in `asia-northeast1-c`;
+heartbeat blob updateTime `07:30:37Z` (~28s old at check time, via `gcloud storage cat` — `gsutil` again failed with a
+stale credential error in this session, same known unrelated issue slot 2 hit); run.log grew 81,332→93,609 lines
+(+12,277) since the 06:48Z read, and the `date=` boundary advanced `2020-03-18`→`2020-03-19` (444 distinct dates total,
+genuine forward progress, no fallback-date stall); latest tail lines show live per-fixture
+`Fetched N events for fixture=X` interleaved with `429` rate-limit sleep/retry cycling, no
+`DEPLOYMENT_COMPLETED`/`exit_code` terminal marker anywhere in the log (`grep -c` = 0). Not completable this turn (still
+~2079 of ~2500 dates remain). **Not re-escalating the redispatch-frequency concern** — slot 5's 06:40Z `/blocked` is
+still the open ask (this is now the 11th health-check redispatch across ~3h08m); releasing quietly via
+`/skip-current-task {"reason_code": "GATED"}` per the DEDUP NOTE above so the auto-park cooldown machinery can engage.
+Next dispatch: repeat this health-check (2-read progress-metric check — a new `date=` boundary OR continued in-date
+fixture-fetch advance both count as live); once terminal, re-run the census script per "Next action" above before
+flipping this checkbox.
 
 ## Codex SSOTs
 
