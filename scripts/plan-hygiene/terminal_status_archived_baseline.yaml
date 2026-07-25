@@ -10,4 +10,4 @@
 # this fails the check — a NEW terminal-status doc landed without being
 # archived, fix it (archive it), don't raise the number. LOWER it (re-run
 # --update-baseline) as the backlog sweep archives docs. NEVER hand-raise it.
-violation_count: 66
+violation_count: 0
