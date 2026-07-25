@@ -179,7 +179,26 @@ base-image pipeline without confirming the correct source config/IAM/connection 
       image lands in
       `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library` with a
       fresh `UPDATE_TIME`.
-- [ ] [BACKEND] P2. `unified-trading-pm/.github/workflows/cloud-build-router.yml`'s `route-build` job should not
+- [x] ✅ [BACKEND] P2. `unified-trading-pm/.github/workflows/cloud-build-router.yml`'s `route-build` job should not
       silently report `success`/green when `gcloud builds triggers run` returns `NOT_FOUND` — either fail the job loud
       or fix the condition on the existing (currently-skipped) `Slack — Build Trigger Not Configured` step so it
-      actually fires for this path. This exact WARNING sat silent for 51+ hours with zero alerting.
+      actually fires for this path. This exact WARNING sat silent for 51+ hours with zero alerting. —
+      **`unified-trading-pm@02f73dee2`.** Root-caused why the existing `notify-build-not-configured` job stayed
+      `skipped`: it's correctly gated behind the repo variable `vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED` (confirmed via
+      `gh variable list` — unset at both repo and org level), which exists to silence the SAME warning for OTHER repos
+      whose `-prod` trigger is intentionally absent pre-cutover (a trading-critical service not yet auto-deploying, by
+      design). Flipping that gate globally would reintroduce exactly the alert-fatigue noise it was built to prevent, so
+      did NOT touch it. Instead added a new, narrowly-scoped, ALWAYS-ON job (`notify-utl-base-image-not-configured`)
+      that fires unconditionally (no `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` gate) specifically for
+      `repo == 'unified-trading-library'` — mirroring this same file's existing `notify-permission-denied` job, whose
+      own comment already states the identical reasoning ("a missing IAM binding is never an intentional pre-cutover
+      state") which applies just as directly to UTL's base-image trigger: every service Dockerfile `FROM`s it, so there
+      is no legitimate reading under which it's supposed to be missing. Uses
+      `dedup_key: "cloud-build-not-configured:unified-trading-library-prod"` + `cooldown_min: 1440` (24h) so it pages
+      once on the transition rather than on every subsequent UTL `main` push while the trigger stays broken. Verified:
+      `python3 scripts/quality_gates/check_workflow_yaml_valid.py` passes (56/56 workflows parse); full
+      `bash scripts/quality-gates.sh` exit 0. Shipped via `git push` (closed direct-push carve-out for PM `.github/**`
+      changes per CLAUDE.md — quickmerge itself kept losing the branch-drift race on this exceptionally high-velocity
+      branch across 3 consecutive attempts; each retry was a clean `git pull --rebase --autostash` with zero conflicts,
+      never a blind overwrite). Confirmed live on `origin/live-defi-rollout` via `git merge-base --is-ancestor` + direct
+      content read (`git show origin/live-defi-rollout:.github/workflows/cloud-build-router.yml`).
