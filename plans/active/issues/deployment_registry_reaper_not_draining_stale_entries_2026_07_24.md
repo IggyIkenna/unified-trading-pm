@@ -321,7 +321,29 @@ flipping the checkbox.
       `BASE_IMAGE_DIGEST` wasn't refreshed to a UTL base image built from `4773a3fd`, deployment-api's OWN fresh commit
       wouldn't matter — the vendored UTL code comes from a SEPARATE, independently-tagged base image, not from
       re-cloning UTL at deployment-api build time. This is a distinct, real gap from the gunicorn-file bug and needs its
-      own verification once found. (repo: deployment-api)
+      own verification once found. (repo: deployment-api) — **(2) ROOT-CAUSED 2026-07-25 (slot 6, backend_engineer),
+      part (1) still open.** Confirmed via the live service's own
+      `/api/cloud-builds/library-status/unified-trading-library` endpoint: deployed `package_version` = `0.55.0`,
+      nowhere near `main`'s current `0.56.1.dev357+g6afe62c71`. Traced the full publish chain live (gh CLI + gcloud, not
+      source-repo content-diff): UTL's `quality-gates-v2.yml` correctly dispatched `qg-passed` for the exact push
+      carrying `4773a3fd` (`gh run` `30145177081`, job "Dispatch cloud-build trigger (main release)" succeeded,
+      2026-07-25T05:06:23Z); PM's `cloud-build-router.yml` correctly received it (`gh run` `30145190398`, job
+      `route-build` reports `success`) — but that job's own log shows the REAL failure:
+      `gcloud builds triggers run unified-trading-library-prod --region=asia-northeast1` →
+      **`ERROR:     NOT_FOUND: Requested entity was not found`**, silently swallowed as a WARNING (job still reports
+      green, no alert fires). `gcloud builds triggers list --project central-element-323112` confirms **no
+      `unified-trading-library-prod` trigger exists at all** (sibling `instruments-service-prod` does, confirming the
+      naming convention). `gcloud artifacts docker images list ...unified-trading-library --sort-by="~UPDATE_TIME"`
+      confirms **zero images have published since 2026-07-23T09:12:10Z** — 51+ hours and 15+ main-branch commits stale
+      as of this writing, despite `update-dependency-version.yml`'s digest-refresh mechanism itself working correctly
+      (it just has nothing new to propagate). This is why `BASE_IMAGE_DIGEST` was already at its "freshest" refreshed
+      value and STILL didn't carry `4773a3fd` — the freshest value available IS the stale one. Full evidence +
+      recommended remediation (GCP infra action — recreate the trigger, out of backend_engineer craft scope) filed as
+      its own cross-cutting doc since this blocks EVERY service's Docker build, not just deployment-api:
+      [issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md](utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md).
+      Part (1) of this todo (live re-verification of `active/` convergence) stays open and is now ALSO gated on that
+      doc's Todo 1 (recreate the trigger) — re-verification cannot succeed until a fresh UTL base image actually
+      publishes with `4773a3fd` in it, deployment-api rebuilds against it, and a new revision deploys.
 
 - **2026-07-24 (slot-4, review)**: Re-ran the end-to-end verification per the todo above, against the freshly deployed
   `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build
