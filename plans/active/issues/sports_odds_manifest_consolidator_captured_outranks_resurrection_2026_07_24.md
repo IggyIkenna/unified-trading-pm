@@ -215,7 +215,7 @@ rather than shard provenance.
       `test_manifest_consolidator.py` + 60/60 `test_manifest_writer_per_vm.py` passing, incl. the existing
       lost-update-race regression test; 3 consolidator test files updated for the new 4-tuple `_duckdb_merge_payload`
       return shape). Full details in the sibling issue doc's own todo:
-      `/plans/active/issues/sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md`.
+      `/plans/archive/issues/sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md`.
 - [x] ✅ [DATA] P0. Once the fix lands, re-run `reprocess_sports_odds.py --force` for 2025-12-18/12-24/12-31 and verify
       the manifest read is STABLE across at least 2 consolidator cycles (not just an immediate post-write check) before
       flipping `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 3. (repo: market-data-processing-service) — Already
@@ -230,7 +230,7 @@ rather than shard provenance.
 
 **Cross-slot note (slot 4, 2026-07-24 21:15 UTC)**: independently landed the durable fix via the codex §519
 paused-consolidator CAS recipe (see
-`/plans/active/issues/sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md` todo 2, now
+`/plans/archive/issues/sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md` todo 2, now
 resolved) — same root-cause diagnosis as this doc's own conclusion above (write-time race with the live `*/1` cron, not
 a tie-break/merge-logic defect against clean inputs). Sequence: paused
 `uts-prod-manifest-consolidator-instruments-sports-cron`, confirmed no in-flight execution, CAS-wrote the 31 target

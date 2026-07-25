@@ -21,7 +21,7 @@ tags: [sports, fixtures, manifest, data_type-atom, backfill, honest-coverage]
 related:
   [
     /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
-    /plans/active/issues/sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md,
+    /plans/archive/issues/sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-24

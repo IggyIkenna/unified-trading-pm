@@ -42,7 +42,7 @@ related:
   [
     /plans/archive/issues/sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md,
     /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
-    /plans/active/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md,
+    /plans/archive/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md,
   ]
 created: 2026-07-18
 source:

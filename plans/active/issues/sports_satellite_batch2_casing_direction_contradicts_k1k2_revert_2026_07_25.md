@@ -30,7 +30,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
-    /plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md,
+    /plans/archive/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md,
     /codex/02-data/sports-data-types-catalog.md,
   ]
 created: "2026-07-25"

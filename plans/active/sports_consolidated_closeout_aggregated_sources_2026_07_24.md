@@ -84,7 +84,7 @@ drift_direction: advance-code
 - **Audit / doc-health reconciliation**:
   - [`plans/active/sports_consolidated_audit_2026_07_19.md`](/plans/active/sports_consolidated_audit_2026_07_19.md) — 0
     open todos (the 6-agent audit that fed this closeout; fully absorbed).
-  - [`plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`](/plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md)
+  - [`plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`](/plans/archive/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md)
     (13 open — doc-corpus self-consistency findings):
     - **[DOC] P0.** `authoritative_for` collision, code-verified (`sports-batch-live.md` in-play claim)
     - **[DOC] P1.** `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` is not a clean auto-archive
@@ -182,7 +182,7 @@ drift_direction: advance-code
     - **[DATA] P3.** Build the FSS live handler for the sports feature family (currently batch-only)
     - **[REVIEW] P3.** Run a sports archetype through the CLI-primary promote workflow
     - **[OPERATOR] P3.** Final explicit go-ahead to flip sports (and prediction) live
-  - [`plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`](/plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md)
+  - [`plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`](/plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md)
     — `status: resolved`, 0 open todos.
   - [`plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`](/plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md)
     (8 open, all P3 — design-spec questions, not yet implementable):
@@ -211,7 +211,7 @@ drift_direction: advance-code
     - **[INFRA] P2.** T6.8 — retire the one-offs + the dead knob + the false-progress tick
   - [`plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md`](/plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md)
     — 0 open todos.
-  - [`plans/active/issues/sports_legacy_canonical_row_gap_2026_07_16.md`](/plans/active/issues/sports_legacy_canonical_row_gap_2026_07_16.md)
+  - [`plans/active/issues/sports_legacy_canonical_row_gap_2026_07_16.md`](/plans/archive/issues/sports_legacy_canonical_row_gap_2026_07_16.md)
     — `status: resolved`, 0 open todos.
   - [`plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md`](/plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md)
     — 0 open todos. ⚠️ near-duplicate name of `sports_legacy_canonical_row_gap_2026_07_16.md` above — not verified
@@ -259,7 +259,7 @@ drift_direction: advance-code
     - **[CODE] P1.** Extend the "never emit empty_confirmed over a captured atom" guard to regular sports instruments
     - **[DATA] P3.** Sweep other asset groups for the same seeder-over-captured pattern
     - **[INFRA] P3.** Downgrade, don't drop, the original "redeploy" todo
-  - [`plans/active/issues/sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md`](/plans/active/issues/sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md)
+  - [`plans/active/issues/sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md`](/plans/archive/issues/sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md)
     — `status: resolved`, 2 residual:
     - **[DATA] P0.** Re-run the targeted L6 manifest re-emission for the regressed cells
     - **[DATA] P1.** Forensics (open question) — what wrote pre-launch captured rows into the IS canonical
@@ -289,13 +289,13 @@ drift_direction: advance-code
       gating), +40 P1, +14 P2, +1 P3 — see file for the complete 73-item breakdown.
   - [`plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`](/plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md)
     — 0 open todos.
-  - [`plans/active/issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md`](/plans/active/issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md)
+  - [`plans/active/issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md`](/plans/archive/issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md)
     — `status: resolved`, 2 residual:
     - **[DOC] P3.** Write the features-bucket path SSOT (codex/02-data)
     - **[DATA] P3.** instruments-service: `odds_api_team_mapping` coverage gap (found during the P2 fix)
-  - [`plans/active/issues/sports_features_rerun_stopped_writing_2026_07_21.md`](/plans/active/issues/sports_features_rerun_stopped_writing_2026_07_21.md)
+  - [`plans/active/issues/sports_features_rerun_stopped_writing_2026_07_21.md`](/plans/archive/issues/sports_features_rerun_stopped_writing_2026_07_21.md)
     — `status: superseded`, excluded (0 open todos, folded forward into the findings-sweep doc above).
-  - [`plans/active/issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md`](/plans/active/issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md)
+  - [`plans/active/issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md`](/plans/archive/issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md)
     — `status: resolved`, 0 open todos.
   - [`plans/active/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`](/plans/active/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md)
     (3 open):
@@ -305,7 +305,7 @@ drift_direction: advance-code
   - [`plans/active/sports_prediction_mvp_writetime_precompute_2026_07_24.md`](/plans/active/sports_prediction_mvp_writetime_precompute_2026_07_24.md)
     (1 open):
     - **[DATA] P2.** Precompute `mvp: bool` for sports/prediction (traced + designed, not yet implemented)
-  - [`plans/active/issues/sports_reference_function_size_qg_regression_2026_07_16.md`](/plans/active/issues/sports_reference_function_size_qg_regression_2026_07_16.md)
+  - [`plans/active/issues/sports_reference_function_size_qg_regression_2026_07_16.md`](/plans/archive/issues/sports_reference_function_size_qg_regression_2026_07_16.md)
     — `status: resolved`, 3 residual:
     - **[BACKEND] P3.** Decompose `_AfManifestHooks.emit_empty_gaps_for_entity()` (89L → ≤50L)
     - **[SCRIPT] P3.** Root-cause why the size gate didn't block the introducing commit
@@ -327,7 +327,7 @@ drift_direction: advance-code
     (2 open):
     - **[DESIGN] P3.** Flag `check_high_attempted_failed` owner (deployment-service) re: same-day manifest
     - **[VERIFY] P3.** Once `sports_master_closeout`'s K1/K2 fully flip + the DELETE lands, re-verify
-  - [`plans/active/issues/sports_trades_venue_fetch_failed_2026_07_15.md`](/plans/active/issues/sports_trades_venue_fetch_failed_2026_07_15.md)
+  - [`plans/active/issues/sports_trades_venue_fetch_failed_2026_07_15.md`](/plans/archive/issues/sports_trades_venue_fetch_failed_2026_07_15.md)
     — `status: resolved`, 0 open todos.
   - [`plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md`](/plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md)
     (4 open):
@@ -340,7 +340,7 @@ drift_direction: advance-code
     - **[DATA] P1.** Once the TEAMS/STANDINGS deployment question is resolved, proceed with the fix
   - [`plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`](/plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md)
     — 0 open todos.
-  - [`plans/active/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`](/plans/active/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md)
+  - [`plans/active/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`](/plans/archive/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md)
     — `status: resolved`, 1 residual:
     - **[DOCS] P1.** Correct the cutover runbook's canonical-is-a-superset premise for raw odds on early dates
   - [`plans/active/issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md`](/plans/active/issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md)
@@ -355,7 +355,7 @@ drift_direction: advance-code
     — 0 open todos.
   - [`plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`](/plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md)
     — 0 open todos.
-  - [`plans/active/issues/sports_source_mdps_instruments_service_not_leakage_2026_07_16.md`](/plans/active/issues/sports_source_mdps_instruments_service_not_leakage_2026_07_16.md)
+  - [`plans/active/issues/sports_source_mdps_instruments_service_not_leakage_2026_07_16.md`](/plans/archive/issues/sports_source_mdps_instruments_service_not_leakage_2026_07_16.md)
     — `status: resolved`, 0 open todos.
   - [`plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`](/plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md)
     — 0 open todos.

@@ -54,7 +54,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/sports_trades_venue_fetch_failed_2026_07_15.md,
+    /plans/archive/issues/sports_trades_venue_fetch_failed_2026_07_15.md,
     ../../archive/2026_07/sports_master_closeout_2026_07_21.md,
     ../sports_consolidated_closeout_2026_07_19.md,
     ../data_pipeline_alerts_batch_remediation_2026_07_15.md,

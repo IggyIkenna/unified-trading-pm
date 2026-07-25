@@ -33,7 +33,7 @@ related:
     /plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
     /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     /plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
-    /plans/active/sports_odds_exchange_fixed_fork_2026_07_18.md,
+    /plans/archive/2026_07/sports_odds_exchange_fixed_fork_2026_07_18.md,
     /plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
     /plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
@@ -614,7 +614,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       (**CORRECTED 2026-07-24** — only `sports_p2_history_apifootball_2015_to_present` is archived/superseded into this
       closeout; `sports_canonical_universe_and_apifootball_reference_expansion` is NOT — it is still `status: active`
       with its own ~9-11 open `- [ ]` todos, per
-      `/plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`. This is still the literal
+      `/plans/archive/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`. This is still the literal
       engineering work, not a text-merge — see the new tracking todo directly below).
 - [ ] [DOC] P2. **NEW 2026-07-24 (reconcile correction)** —
       `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` is a SATELLITE plan this closeout

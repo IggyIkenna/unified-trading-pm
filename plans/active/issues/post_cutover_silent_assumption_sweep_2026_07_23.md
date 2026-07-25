@@ -33,7 +33,7 @@ repos:
 scope: [engineer, admin]
 tags: [ci-cd, audit, silent-failure, kill-switch, release-tags, repository-dispatch, post-cutover, safety]
 related:
-  - /plans/active/issues/staging_workflow_shutdown_2026_07_23.md
+  - /plans/archive/issues/staging_workflow_shutdown_2026_07_23.md
   - /plans/active/issues/stale_staging_versions_manifest_2026_07_23.md
   - /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md
   - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
