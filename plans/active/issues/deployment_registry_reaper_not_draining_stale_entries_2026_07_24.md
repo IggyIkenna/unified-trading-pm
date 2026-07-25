@@ -453,9 +453,37 @@ flipping the checkbox.
       logging setup into `post_worker_init` in the ROOT `gunicorn.conf.py` (same pattern already used there for
       `faulthandler.enable()` and `worker_identity.set_worker_age()` — guaranteed to run AFTER any worker-level logging
       reconfiguration, unlike the current module-import-time `basicConfig()` call). Once root-caused and fixed for real,
-      REMOVE this diagnostic line (repo: deployment-api). **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker
-      — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for `deployment-api`, but the stamp is
-      fire-and-forget (`repository_dispatch` only) and the downstream Firestore write is 403'ing FLEET-WIDE
+      REMOVE this diagnostic line (repo: deployment-api). **DIAGNOSTIC RESULT 2026-07-25T15:59Z (slot 5): the
+      `logging`-module hypothesis is DISPROVEN — the real problem is one level lower.** `deployment-api@d750dab` reached
+      prod as revision `uts-shared-deployment-api-00277-6kd` (Cloud Build `b7628768`, deployed `2026-07-25T15:56:33Z`).
+      Confirmed the app IS genuinely running: `curl .../health` returned a real, correct response
+      (`{"status":"ok","service":"deployment-api",...}`). Yet **zero** `run.googleapis.com%2Fstderr` / `%2Fstdout`
+      output exists for this revision — not the `sys.stderr.write()` diagnostic (which bypasses Python `logging`
+      entirely), AND not even gunicorn's OWN access log (`gunicorn.conf.py`: `accesslog = "-"` → stdout — a
+      process-level write, independent of ANY app Python code) for the `/health` request that definitely hit it. This
+      rules out "a `dictConfig` disabled the app's loggers" as the cause — the silence is NOT Python-`logging`-specific,
+      it is silence at the RAW stdout/stderr stream level, for BOTH the app and gunicorn itself. Cross-checked this is
+      not a general Cloud Logging capture outage for this service: queried the SAME log streams with no revision filter
+      over the last 7 days and found FULL Python tracebacks captured fine for older revisions (e.g.
+      `uts-shared-deployment-api-00274-s9g` at `2026-07-25T06:14:03Z`, showing the OLD `CancelledError` symptom in
+      complete detail) — so Cloud Logging's stdout/stderr ingestion pipeline works in general; something about the
+      CURRENT build/deploy specifically breaks it. Leading hypothesis, NOT yet confirmed: a container/process-level
+      issue introduced somewhere between the last revision that DID log (`00274-s9g`, pre-gunicorn-file-fix) and the
+      current one — candidates: (a) something in the `deployment-api@3fea307` gunicorn-file fix's
+      `post_worker_init`/`post_fork` hooks altering stdio in a way that only manifests under Cloud Run's specific
+      process supervision (unlikely given `faulthandler.enable()` alone shouldn't touch fds, but not ruled out); (b) a
+      Dockerfile/base-image change since `00274-s9g` altering how the container's ENTRYPOINT/CMD connects stdout/stderr
+      (e.g. an added wrapper process, a changed exec form); (c) a Cloud Run log-agent-side issue specific to newer
+      revisions/instances. **This needs infra-level investigation beyond app-code changes** — next dispatch should NOT
+      try another app-code print/log instrumentation (already proven futile: raw `sys.stderr.write()` doesn't appear
+      either); instead (1) diff the Dockerfile/`ENTRYPOINT`/`CMD` between whatever commit `00274-s9g` was built from and
+      current `main` for any exec-form/wrapper changes, (2) check whether `gcloud run services describe` shows any
+      startCommand/args override that could be swallowing stdio, (3) consider whether this is a genuine GCP-side Cloud
+      Run logging regression worth a support ticket if (1)/(2) turn up nothing. Leave the diagnostic line in place
+      (harmless, already proven not to interfere with the app running) until root-caused — removing it now would only
+      lose the disambiguation this session already paid for. **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL
+      blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for `deployment-api`, but the
+      stamp is fire-and-forget (`repository_dispatch` only) and the downstream Firestore write is 403'ing FLEET-WIDE
       (`ci_status_store.py` `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live via direct REST
       `PATCH` — same 403; 0/95 sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY
       SIT-covered repo's promote, not just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's
