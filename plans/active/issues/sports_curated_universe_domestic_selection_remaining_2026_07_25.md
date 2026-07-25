@@ -208,16 +208,31 @@ inherited from the first shipped batch:
       catalog "Super Cup" entries excluded (secondary exhibitions, not the primary cup). Required re-merging 3x on top
       of concurrent South America, Eastern Europe, and Middle East/AFC-WAFF batches landing on the same file mid-session
       — 0 collisions each time, MVP-scope count unchanged at 96 throughout. quality-gates.sh green.
-- [ ] [DATA] P1. **North/East/Southern Africa (CAF)** — Algeria, Angola, Botswana, Burundi, Eswatini, Ethiopia, Kenya,
-      Lesotho, Libya, Malawi, Mauritius, Namibia, Rwanda, Somalia, South Africa, Sudan, Tanzania, Tunisia, Uganda,
-      Zambia, Zimbabwe (21 countries — largest batch, consider splitting further if a worker finds the citation-research
-      load too heavy for one dispatch). (repo: unified-api-contracts). **Done when**: per the shared contract above, for
-      this country list.
-- [ ] [DATA] P1. **Middle East (AFC/WAFF)** — Bahrain, Iran, Iraq, Israel, Jordan, Kuwait, Lebanon, Oman, Palestine,
-      Qatar, Saudi Arabia, Syria, United Arab Emirates, Yemen (14 countries). Note: Saudi Arabia has 3 catalog cup
-      competitions (Crown Prince Cup, King's Cup, Super Cup) — verify which is genuinely "the" primary domestic cup
-      before picking one, per the near-miss rules. (repo: unified-api-contracts). **Done when**: per the shared contract
-      above, for this country list.
+- [x] [DATA] P1. ✅ **North/East/Southern Africa (CAF)** — `unified-api-contracts@cf06ea48`. 30 entries across 21
+      countries. 15 of 21 countries carried only ONE catalog entry (top league only) — division-below and cup correctly
+      skipped, no id to cite, no ambiguity. Six countries had real decisions, each WebSearch-verified: Algeria (Coupe
+      Nationale = primary, excluded Coupe de la Ligue + Super Cup as secondary, U21 League as wrong axis); Angola (only
+      candidate cup is a Super Cup — no genuine primary cup exists in the catalog, skipped rather than mislabel); Kenya
+      (FKF Premier League vs Super League confirmed tier order; "Shield Cup" confirmed as the FKF President's Cup under
+      an earlier sponsorship name — Kenya's real FA-Cup equivalent); South Africa (generic "Cup" = Nedbank Cup, the
+      traditional premier knockout since 1971; "8 Cup" = MTN8, top-8-only, excluded as secondary; Diski Challenge/Shield
+      excluded as reserve/youth); Tunisia (Cup = primary, Super Cup excluded). Zero `api_football_id` collisions;
+      `_mvp_football_league_ids()` stayed 96; 2 hardcoded-count tests updated. Concurrent-edit note: another slot landed
+      a 16-entry West Africa batch to the same file/tests concurrently — resolved via the same
+      clean-reappend-against-merged-base approach as the Middle East batch (not a manual hunk merge).
+- [x] [DATA] P1. ✅ **Middle East (AFC/WAFF)** — `unified-api-contracts@a0fd391c`. 30 entries across 14 countries, each
+      WebSearch-verified against Wikipedia. Saudi Arabia's flagged ambiguity resolved: King's Cup (official title "The
+      Custodian of the Two Holy Mosques' Cup") is the CURRENT primary cup; Crown Prince Cup was abolished in 2017 —
+      excluded as defunct, not a live competition. 6 countries (Bahrain/Jordan/Lebanon/Oman/Syria/Yemen) have no valid
+      catalog 2nd-tier candidate — division-below correctly skipped, not fabricated; 4 (Iraq/Palestine/Syria/Yemen) have
+      no cup candidate at all — cup also skipped. Real near-miss traps resolved via search, not guessed: Qatar's 4 cup
+      candidates (Emir Cup = primary, open to both divisions; QSL Cup/QFA Cup/Super Cup = secondary); Kuwait's Emir Cup
+      vs Crown Prince Cup (Emir Cup confirmed "the premier domestic knockout"); UAE's President's Cup (running since
+      1974-75, both divisions) vs League Cup/Super Cup (secondary). Zero `api_football_id` collisions;
+      `_mvp_football_league_ids()` stayed 96. Concurrent-edit note: another slot landed a 49-entry Eastern Europe batch
+      to the same file/tests at the same time — resolved via a clean re-append against the merged base (not a manual
+      hunk-by-hunk merge, too error-prone at 20+ conflict blocks) + recomputed the combined hardcoded-count tests fresh
+      from the live registry (224 Understat gaps, 133 non-MVP football) rather than hand-adding deltas.
 - [ ] [DATA] P1. **South Asia (AFC)** — Bangladesh, Bhutan, India, Maldives, Nepal, Pakistan (6 countries). (repo:
       unified-api-contracts). **Done when**: per the shared contract above, for this country list.
 - [ ] [DATA] P1. **East/Southeast Asia (AFC)** — Cambodia, Chinese Taipei, Hong Kong, Indonesia, Laos, Macao, Malaysia,
