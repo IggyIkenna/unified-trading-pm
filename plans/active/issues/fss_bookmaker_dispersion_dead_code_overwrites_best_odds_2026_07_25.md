@@ -99,10 +99,12 @@ MAX survives the merge.
 
 ## Todos
 
-- [ ] [DATA] P1. Confirm this finding against a real captured `odds_features` parquet — diff `best_odds_home` computed
-      both ways (the `_pivot_bucketed_to_fixture` MAX vs. the `compute_odds_batch` MEAN that currently wins) for at
-      least one real fixture with 2+ bookmakers, to confirm the magnitude in practice before fixing. (repo:
-      features-service)
+- [x] ✅ [DATA] P1. Confirm this finding against a real captured `odds_features` parquet — diff `best_odds_home`
+      computed both ways (the `_pivot_bucketed_to_fixture` MAX vs. the `compute_odds_batch` MEAN that currently wins)
+      for at least one real fixture with 2+ bookmakers, to confirm the magnitude in practice before fixing. (repo:
+      features-service). **CONFIRMED LIVE 2026-07-25** — see Progress Log entry below for full evidence (18-bookmaker
+      real fixture, true max 3.10 vs. captured `best_odds_home`=2.866111=mean, 8.16% understatement; dispersion columns
+      confirmed exactly 0.0/1.0 in production for every sampled row).
 - [ ] [DATA] P1. Fix the collapse so `best_odds_*` stays the correct per-fixture MAX and
       `bookmaker_disagreement_*`/`odds_variance_*`/`book_fragmentation_*`/`market_confidence_*` compute real values
       instead of always-zero — either wire real `bookmaker_home_cols`/`draw`/`away` into `compute_odds_batch`, or stop
@@ -116,3 +118,23 @@ MAX survives the merge.
   `sports_odds_feature_naming_canonicalization_2026_07_21.md` new-compute todo. Not independently verified against live
   data this session — code-read only. Filed rather than dropped per the data-pipeline-correctness HARD RULE and the
   pre-compact ritual's "chat-only findings become todos" step.
+- **2026-07-25 (slot 9, data_engineering)**: CONFIRMED against real prod data. Loaded the real captured
+  `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-18/feature_group=odds_features/features.parquet`
+  (18 rows, 6 fixtures × 3 horizons). Live-verified: `best_odds_home` == `odds_home_win` (the `home_odds` passthrough)
+  EXACTLY for all 18/18 rows, and `bookmaker_disagreement_home`/`odds_variance_home`/`book_fragmentation_home` are
+  exactly `0.0` and `market_confidence_home` exactly `1.0` for all 18/18 rows — confirms the empty-`bm_cols` branch is
+  what's actually executing in production, not just a code-read hypothesis. Traced one fixture back to its real
+  per-bookmaker source rows
+  (`gs://market-data-tick-sports-prd-central-element-323112/processed/by_date/day=2026-07-18/pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/data_type=odds_horizon_bucket/league_id=K_LEAGUE_1/timeframe=T-24h/bucketed.parquet`)
+  — fixture_id `0229cd3642745eb0e1c1e555c435e16a`, T-24h horizon, **18 real bookmakers** (betfair_ex_uk, betfair_ex_eu,
+  smarkets, betsson, skybet, livescorebet, williamhill, pinnacle, betrivers, paddypower, virginbet, unibet_uk, coral,
+  unibet, casumo, draftkings, betonlineag, ladbrokes_uk), home_odds ranging **2.70–3.10**:
+  - TRUE per-fixture MAX home_odds = **3.10** (betfair_ex_uk / betfair_ex_eu).
+  - MEAN home_odds across the 18 bookmakers = **2.866111** — and this is EXACTLY the value the captured `odds_features`
+    row carries as `best_odds_home` for this (event_id, horizon).
+  - **Magnitude: the mislabeled `best_odds_home` understates the true best price by 0.233889 decimal odds, an 8.16%
+    relative understatement**, and genuine real dispersion (2.70–3.10 spread across 18 books) is reported as
+    `bookmaker_disagreement_home=0.0` (zero disagreement), which is false. This fully confirms the finding as originally
+    diagnosed from the code-read, with a concrete real-fixture magnitude. Second todo (the fix) is separately
+    AO-dispatched — not implemented in this pass, consistent with the issue doc's own "not prescribing the exact fix"
+    framing and this task's scoped done_definition (confirm only).
