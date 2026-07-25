@@ -90,13 +90,24 @@ jobs:
           echo "Updating ci_status: $REPO → $STATUS"
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
-      # STEP 2b (2026-07-17): the per-run `google-github-actions/auth@v3` step is DROPPED — this
-      # job runs ONLY on the self-hosted glue-writer pool, where the runner user's ambient ADC
-      # (~ubuntu/.config/gcloud/application_default_credentials.json) satisfies the python
-      # Firestore client. PROBED on the box before dropping (the plan's required probe): `env -i`
-      # + the unit's PATH, venv python → Firestore write+read+delete OK. gcloud-CLI credentials
-      # and the ADC file are DIFFERENT stores; the probe tested ADC specifically. If this job is
-      # ever moved back to hosted runners, restore the auth step (hosted has no ambient ADC).
+      # STEP 2b (2026-07-17) dropped the per-run `google-github-actions/auth@v3` step, relying on
+      # the self-hosted glue-writer pool's ambient ADC
+      # (~ubuntu/.config/gcloud/application_default_credentials.json) for the python Firestore
+      # client — probed working at the time. RESTORED 2026-07-25 (ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md):
+      # that ambient ADC identity (unified-trading-sa@central-element-323112.iam.gserviceaccount.com)
+      # started 403'ing on the Firestore write sometime before 2026-07-25T10:36Z (0/95 sampled runs
+      # succeeded since) — reproduced live via a direct Firestore REST PATCH using the SAME ADC
+      # identity. `secrets.GCP_SA_KEY` (a separate, key-based credential — same secret ci-health.yml
+      # uses for its own Firestore write) is NOT affected: ci-health.yml runs using it succeeded
+      # repeatedly inside this exact incident window (e.g. 2026-07-25T13:28:30Z). Explicit auth via
+      # that key sidesteps whatever broke the box's ambient ADC (key rotation, IAM binding change,
+      # or ADC-specific scoping — root cause not yet determined) without requiring a new IAM grant.
+      - name: Authenticate to GCP (Firestore SSOT write)
+        id: gcp_auth
+        if: steps.validate.outputs.skip != 'true'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Write ci_status to the Firestore SSOT + compute Slack notify gating
         id: update
