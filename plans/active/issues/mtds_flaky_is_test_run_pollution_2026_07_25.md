@@ -186,5 +186,5 @@ actioned (out of scope for this todo).
 ## Codex SSOTs
 
 No existing SSOT covers this class of quickmerge-shell-into-child-process env leak — worth a future SSOT note under
-`codex/08-workflows/ci-cd-flow.md` (quickmerge internals) if another repo hits the same class of leak; not authored here
-(out of scope for this repo-scoped fix).
+`/codex/08-workflows/ci-cd-flow.md` (quickmerge internals) if another repo hits the same class of leak; not authored
+here (out of scope for this repo-scoped fix).
