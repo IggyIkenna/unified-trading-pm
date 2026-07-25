@@ -125,20 +125,56 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       missing (candidates, unconfirmed: stderr log delivery drops on abrupt sandbox teardown; the sandbox's "Uncaught
       signal" detector may fire on a path the Python-level handler never reaches; or this occurrence belongs to a
       still-draining OLD-revision instance rather than `00274-s9g` — none verified). Not fully resolved.
-- [ ] [BACKEND] P1. Determine why the `2026-07-25T04:27:19Z` post-deploy SIGABRT produced no `faulthandler` dump on
+- [x] ✅ [BACKEND] P1. Determine why the `2026-07-25T04:27:19Z` post-deploy SIGABRT produced no `faulthandler` dump on
       `run.googleapis.com%2Fstderr` despite `deployment-api@1adf54b`'s `post_fork` `faulthandler.enable()` being
       confirmed live in the deployed image since `02:51:26Z`. Check, in order: (1) confirm which revision/instance
       actually owned pid=29 at that timestamp (rule out a still-draining pre-`00274-s9g` instance from the deploy
       transition); (2) check whether Cloud Run's structured-logging agent can lose a buffered stderr write during an
       abrupt SIGABRT teardown (vs. a graceful exit) — if so this may need `sys.stderr.flush()` or `os.fsync` immediately
       after the dump, or the dump target may need to move to a file under `/tmp` (not the banned literal path — resolve
-      via config) flushed synchronously; (3) re-check the NEXT occurrence once ruled out. (repo: deployment-api)
+      via config) flushed synchronously; (3) re-check the NEXT occurrence once ruled out. (repo: deployment-api) —
+      `deployment-api@7ba17e2`. **ROOT-CAUSED via code inspection, not log-only guessing** (neither of the two named
+      candidate hypotheses): (1) confirmed via `gcloud logging read` that pid=29's earliest log entry is `02:51:28Z` (2s
+      after the `00274-s9g` deploy) and it kept serving requests after the crash — it IS the fresh post-deploy instance,
+      not a draining old one; ruled out. (2) irrelevant — the real bug is upstream of any stderr-delivery question:
+      `faulthandler.enable()` in `post_fork` (`gunicorn/arbiter.py`'s `spawn_worker()` calls `post_fork` then
+      `worker.init_process()`) gets **silently uninstalled** moments later by
+      `uvicorn.workers.UvicornWorker.init_signals()` (called from `Worker.init_process()`), whose override does
+      `for s in self.SIGNALS: signal.signal(s, signal.SIG_DFL)` — `Worker.SIGNALS` (`gunicorn/workers/base.py`) is
+      `[SIGABRT, SIGHUP, SIGQUIT, SIGINT, SIGTERM, SIGUSR1, SIGUSR2, SIGWINCH,     SIGCHLD]`, which includes SIGABRT. So
+      every worker's SIGABRT disposition is reset to the raw kernel default microseconds after `faulthandler.enable()`
+      runs — by the time a real SIGABRT fires there is no handler left to dump anything, which is exactly Cloud Run's
+      "Uncaught signal: 6" with zero Python trace. **Fix**: moved `faulthandler.enable()` to a new `post_worker_init`
+      hook (gunicorn calls it after `init_signals()` and `load_wsgi()`, right before the worker enters its run loop) —
+      verified nothing downstream touches SIGABRT again (`uvicorn/server.py`'s `HANDLED_SIGNALS` is only
+      `SIGINT`/`SIGTERM`). 2 new tests in `tests/unit/test_gunicorn_conf.py` (`TestPostWorkerInit`): asserts
+      `post_worker_init` calls `faulthandler.enable()`, and a regression guard that `post_fork` no longer does (so the
+      two don't silently drift back together). `quality-gates.sh` PASSED (129s). Handoff to the REVIEW todo below: once
+      this deploy is live, the NEXT SIGABRT should finally produce a stderr dump — read it for the stuck call site.
 - [ ] [REVIEW] P2. Once the above BACKEND todo ships (or a subsequent SIGABRT does show a dump), read it and report the
       stuck call site per this issue's original ask — confirm/refute the `_compute_inventory` cold-path hypothesis from
       the sibling `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` Gap-2 finding. (repo:
       deployment-api)
 
 ## Progress Log
+
+- **2026-07-25T05:55Z (slot 2, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-002` (the
+  `[BACKEND] P1` todo). Root-caused via code inspection rather than another log-only pass: pulled the installed
+  `gunicorn`/`uvicorn` package source directly and traced the exact call order inside a forked worker — `post_fork`
+  (where `1adf54b` calls `faulthandler.enable()`) runs, then `Worker.init_process()` calls `self.init_signals()`, and
+  this service's `worker_class = "uvicorn.workers.UvicornWorker"` OVERRIDES that method with one that does
+  `for s in self.SIGNALS: signal.signal(s, signal.SIG_DFL)` — `Worker.SIGNALS` includes `SIGABRT`. So
+  `faulthandler.enable()`'s SIGABRT handler is silently reset to the kernel default microseconds after being installed,
+  on every single worker, every time — there was never a real handler in place by the time any actual SIGABRT fired,
+  which is exactly what "Uncaught signal: 6" with zero Python trace means. This also fully answers this session's
+  earlier open question (checked which revision/instance owned pid=29 at `04:27:19Z` via `gcloud logging read` — same
+  fresh `00274-s9g` instance, first log at `02:51:28Z`, kept serving requests after the crash — ruling out the
+  stale-instance hypothesis) and makes the stderr-buffering hypothesis moot (the handler was never armed, so there was
+  nothing to flush). Shipped `deployment-api@7ba17e2`: moved `faulthandler.enable()` to a new `post_worker_init` hook,
+  which gunicorn calls AFTER `init_signals()` — verified nothing later in the worker lifecycle (uvicorn's own `Server`
+  only ever installs SIGINT/SIGTERM handlers) touches SIGABRT's disposition again. 2 new tests, `quality-gates.sh`
+  PASSED. Checkbox flipped — the diagnostic question is answered; whether this actually stops the crash-loop (vs. just
+  making it produce a dump) is for the `[REVIEW]` todo below once this deploy is live and the next SIGABRT is read.
 
 - **2026-07-25T05:40Z (slot 4, review)** — Dispatched task `deployment_api_sigabrt_crash_loop-003` (the `[REVIEW] P2`
   todo gated on "once the above BACKEND todo ships (or a subsequent SIGABRT does show a dump)"). Checked both branches
