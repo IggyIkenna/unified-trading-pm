@@ -186,13 +186,32 @@ fix. No behavior change to the actual build (bash never executed these comments)
       trading-agent-service) — trading-agent-service@b0436ce, exhaustive re-scan (builtins/declared-substitution-aware
       regex from this doc's Recommended fix) confirmed zero remaining bad substitutions; `quality-gates.sh` green
       (112s).
-- [ ] [INFRA] P2. Determine whether this bug class also blocks real webhook/push-triggered builds (not just manual
+- [x] ✅ [INFRA] P2. Determine whether this bug class also blocks real webhook/push-triggered builds (not just manual
       `gcloud builds triggers run`) for any of the 15 repos above — check each repo's recent Cloud Build history /
       `cloud-build-router.yml` run logs for a `NOT_FOUND`/`INVALID_ARGUMENT`/"not a valid built-in substitution"
       failure. If any repo's real push-triggered builds ARE affected, that repo's base/service image may be silently
       stale exactly like unified-trading-library was — escalate to the operator immediately per the data-pipeline/
       infra-correctness HARD RULE (this would be a live, currently-silent outage, not a latent one). (repo:
-      cross-cutting investigation, no single owning repo)
+      cross-cutting investigation, no single owning repo) — **RESOLVED: no live outage. Real push/automated-triggered
+      builds are NOT affected.** Root cause of the distinction: every real Cloud Build invocation in this fleet (whether
+      fired by GCP's native GitHub-push webhook — confirmed via
+      `gcloud builds triggers describe     execution-service-build`, which carries a real
+      `repositoryEventConfig.push.branch: ^main$` — or by `cloud-build-router.yml`'s own
+      `gcloud builds triggers run "${REPO}-${ENV}" --substitutions="_VERSION=...,..."`) always resolves with an explicit
+      substitutions context. The ORIGINAL UTL repro
+      (`gcloud builds triggers run unified-trading-library-prod --branch=main`, no `--substitutions` flag at all) is the
+      outlier — an ad-hoc manual verification call, not a shape any real trigger path uses. Confirmed empirically
+      against repos that were STILL UNPATCHED at check time (bug not yet fixed in their `cloudbuild.yaml`): every recent
+      automated build reached real `build`-step execution (i.e. the trigger-creation-time `INVALID_ARGUMENT` never
+      fired) — `instruments-service-prod` build `956ca03f-626f-4b21-b972-e21f80934866` (2026-07-25T12:11Z, steps ran
+      through `build` before failing there on an unrelated docker-build issue), `features-service-build` builds
+      `3b0d33c7`/`aed3e590` (same pattern), `trading-agent-service-build` build `b3161b52` (same pattern),
+      `strategy-service-build` build `a2d6f93a` (in-flight, already past `build`-step start), and
+      `market-tick-data-service-build`'s last 5 runs all `SUCCESS`. A trigger-time substitution-validator rejection
+      never creates a build ID or runs any step — reaching `build` status (success OR failure) is proof the validator
+      passed. No escalation needed; the P1 mechanical fixes above remain worth finishing for hygiene (a future manual
+      `triggers run` verification without `--substitutions` would still hit the same class), but there is no silent
+      stale-image outage to page on.
 
 ## Codex SSOTs
 
