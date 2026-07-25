@@ -114,15 +114,24 @@ sequential: true
       `test_done_context_gate_dispatches_normally_below_threshold`) using a real `Backlog(tasks=[BacklogTask(...)])`
       candidate task (not the `empty_backlog` fixture) to assert both the above-threshold withhold + queued-untouched
       path and the below-threshold normal-dispatch path. 1652/1652 tests pass, full `quality-gates.sh` PASSED.
-- [ ] [BACKEND] P0. **Gate `progress_slot`** (same file as todo 3, `server/routes/slots_worker.py` — kept as a separate
-      sequential todo rather than merged, since the two handlers are independently testable even though they share the
-      threshold/directive contract from todos 1-2). When `req.context_used_pct >=     context_worker_compact_gate_pct`,
-      set `ProgressResponse.directive="compact_now"` — but do not re-issue on every single tick: reuse the existing
-      compaction-drop detection already in `state_store/slots.py::update_slot_ping` (`COMPACTION_DROP_THRESHOLD`) to
-      know a prior directive was actually complied with (pct dropped), and suppress re-issuing until either a drop is
-      observed or `context_worker_directive_repeat_gate` says otherwise. **Done when**: a unit test simulates a
-      `/progress` sequence crossing the threshold, receiving exactly one directive, then compacting (pct drop observed),
-      then not receiving another until climbing back over threshold; `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P0. **Gate `progress_slot`** (same file as todo 3, `server/routes/slots_worker.py` — kept as a
+      separate sequential todo rather than merged, since the two handlers are independently testable even though they
+      share the threshold/directive contract from todos 1-2). When
+      `req.context_used_pct >=     context_worker_compact_gate_pct`, set `ProgressResponse.directive="compact_now"` —
+      but do not re-issue on every single tick: reuse the existing compaction-drop detection already in
+      `state_store/slots.py::update_slot_ping` (`COMPACTION_DROP_THRESHOLD`) to know a prior directive was actually
+      complied with (pct dropped), and suppress re-issuing until either a drop is observed or
+      `context_worker_directive_repeat_gate` says otherwise. **Done when**: a unit test simulates a `/progress` sequence
+      crossing the threshold, receiving exactly one directive, then compacting (pct drop observed), then not receiving
+      another until climbing back over threshold; `quality-gates.sh` green. — `agent-orchestrator@3ace754`. Added
+      `SlotRow.context_directive_issued` (bool, tracks whether the current over-threshold stretch already fired) cleared
+      on a detected compaction drop; `progress_slot` sets `directive="compact_now"` when over threshold AND
+      (`context_worker_directive_repeat_gate` is True OR the flag is unset). Two new tests in
+      `tests/test_task_lifecycle_done_gate_resume.py`:
+      `test_progress_context_gate_dedupes_directive_until_compaction_drop` (repeat_gate=False — cross threshold → one
+      directive → suppressed → compaction drop clears it → climbs back over → fires again) and
+      `test_progress_context_gate_repeats_every_tick_when_repeat_gate_on` (default True — no suppression). 1654/1654
+      tests pass, full `quality-gates.sh` PASSED.
 - [ ] [INFRA] P0. **Update `unified-trading-pm/agents/worker.md`'s context-discipline section** (the PROGRESS step,
       currently ending in the prose-only ">~70% used, run /compact" line) with a HARD RULE: if a `/done` or `/progress`
       response's `directive` field (todo 2's exact field name) is `compact_before_next` or `compact_now`, the agent MUST
