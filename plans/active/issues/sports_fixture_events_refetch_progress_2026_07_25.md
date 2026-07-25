@@ -289,6 +289,19 @@ suspect (re-fetch, don't trust its `empty_confirmed` cells at face value in the 
 VM reaches a genuine terminal state under the fixed code should the "Next action" census script re-run and this checkbox
 flip.
 
+**Update 2026-07-25 (later same session) — VM stop confirmed; quota concern resolved differently than expected; relaunch
+still PENDING an operator decision.** (1) The gcloud auth-expiry blocker above is now root-caused + fixed — see
+`issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` (a shared-runner WIF credential poisoning the
+orchestrator VM's active gcloud account, third occurrence of a known class). VM stop executed + confirmed `TERMINATED`
+from a separate, working gcloud session. (2) Operator reports the API-Football account is now on a "mega plan" with more
+credits/quota — checked `api_football.py::get_live_quota`: the adapter reads the plan's REAL daily limit LIVE from
+api-football's own `/status` endpoint on every run, superseding any hardcoded fallback, so the mega-plan upgrade needs
+NO manual doc/config change — the next VM run self-discovers it. (3) **Not yet done**: tarballs have NOT been refreshed
+(`create-code-tarballs.sh --asset-group SPORTS`) since `f31fb2e9` landed, so a relaunch right now would still run the
+pre-fix code. (4) **Operator was asked and has not yet answered**: relaunch now (refresh tarballs then launch), or
+review this todo's own relabeling scope (the `08:12Z`-onward suspect window, item 3 above) first. Whoever picks this up
+next should re-ask rather than assume either direction.
+
 ## Codex SSOTs
 
 No new durable contract. Executes the OR-1 fixture_events re-fetch campaign already specified in
