@@ -204,7 +204,18 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       remain). Released via `/skip-current-task`, not duplicate-launched. **Seconding the prior process note**: this is
       the 8th redispatch of a pure health-check across ~1h50m — the operator/main-agent time-gate suggestion above
       remains unaddressed and still applies. Next dispatch: repeat this health-check (2-read progress-metric check);
-      once terminal, re-run the census script per "Next action" above before flipping this checkbox.
+      once terminal, re-run the census script per "Next action" above before flipping this checkbox. — **Health-checked
+      2026-07-25T06:40Z (slot 5, data_engineering), still RUNNING, confirms slot 2's 06:08Z check**:
+      `gcloud compute     instances list` confirms `RUNNING` in `asia-northeast1-c`; heartbeat blob `updateTime`
+      `06:40:08Z` (~1min old at check time); run.log grew 69,781→78,791 lines (+9,010) since the 06:08Z read, latest
+      timestamp `06:38:55Z` (live per-fixture `Fetched N events for fixture=X` lines); `date=` boundary unchanged at
+      `2020-03-18` (443 distinct dates total) but genuine in-date fixture-fetch advance (not a stall — same
+      live-progress signature as prior checks). Not completable this turn (~2100 of ~2500 dates remain). Released via
+      `/skip-current-task`, not duplicate-launched. **Escalating the process concern via `/blocked` this time** (2 prior
+      slots noted it in-doc only, unaddressed after ~2h18m / 9 redispatches) rather than re-noting it a 3rd time here —
+      see the blocked question posted against this task. Next dispatch: repeat this health-check (2-read progress-metric
+      check — a new `date=` boundary OR continued in-date fixture-fetch advance both count as live); once terminal,
+      re-run the census script per "Next action" above before flipping this checkbox.
 
 ## Codex SSOTs
 
