@@ -73,6 +73,10 @@ source: >-
 
 # Candle canonical-path migration — operational history, part 2 of 2 (2026-07-22 to 2026-07-23)
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — extraction is the resolution (closed, historical Progress Log
+> narrative; the parent issue doc remains the live source of truth for any still-open todos); archived per the
+> terminal-status backlog sweep.
+
 > **Companion history doc, not the live plan (2 of 2).** This holds the second half of the verbatim Progress Log
 > narrative extracted from `/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md` — continues
 > from part 1 (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`) starting at

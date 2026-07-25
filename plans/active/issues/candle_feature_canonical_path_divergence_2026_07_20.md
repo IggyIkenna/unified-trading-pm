@@ -31,7 +31,7 @@ related:
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-25
@@ -412,7 +412,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       happened to pass dry mode); the shard-suffixed vm_name overflowed GCE's 63-char limit for the longer category
       names; fixing that introduced an unbound-variable crash under `set -u` for non-sharded launches. 9 new regression
       tests. Full details in the history doc, part 2
-      (`/plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`, "P7 launcher: new
+      (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`, "P7 launcher: new
       `<ag>-candle-apply` category" entry).
 - [x] 12. ✅ [SCRIPT] P2. **SPOT-preemption resume checkpoint for `--apply`** — shipped `mdps@efa559a`. Per-shard
       checkpoint (`vm-logs/{vm}/MIGRATION_PROGRESS-shard{N}.json`, distinct from the day-frontier `PROGRESS.json`
@@ -454,7 +454,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       was never at risk (`KEPT_SRC` never deletes source) — this is a script gap, not a data-safety incident. Full
       root-cause writeup in the history doc, part 2, "P7c: CEFI retry — another 3-shard SPOT preemption burst;
       ROOT-CAUSED..." entry
-      (`/plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`).
+      (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`).
 
 ## Progress Log
 
