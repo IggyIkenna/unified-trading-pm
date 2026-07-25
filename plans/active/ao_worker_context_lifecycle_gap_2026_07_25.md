@@ -309,16 +309,24 @@ sequential: true
       and `/heartbeat`, plus `test_live_incident_regression_heartbeat_does_not_dispatch_after_done_gate` reproducing the
       EXACT live sequence (`/done` at 90% withholds → `/heartbeat` at 91% "88s later" — asserts `new_task is None`, the
       bug is closed). 1676/1676 tests pass, ruff + basedpyright clean, full `quality-gates.sh` PASSED.
-- [ ] [BACKEND] P2. **Add a migration-completeness test** asserting every column in `server/orm.py`'s `SlotRow` (and
-      ideally `AgentRow`) exists in `bootstrap.py`'s `_add_missing_columns` ALTER-TABLE lists — discovered this session
-      after the SAME gap bit the `slots` table TWICE in one day: `context_directive_issued` (todo 4,
-      `agent-orchestrator@ca5d10d`, live P0 that broke `/done` fleet-wide) and would have recurred for
-      `context_directive_grace_reports` (todo 9's reconciliation) had it not been caught manually. Tests using
-      `create_all_tables()` (`Base.metadata.create_all`) never catch this class of bug — that path builds the schema
-      straight from the ORM, bypassing the ALTER-TABLE list entirely, so the exact code path that's broken in production
-      is untested. **Done when**: a unit test iterates `SlotRow.__table__.columns` (and `AgentRow`'s) and asserts each
-      name appears in the corresponding `_add_missing_columns` dict — failing loud, by name, the next time this drifts;
-      `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P2. **Add a migration-completeness test** asserting every column in `server/orm.py`'s `SlotRow` (and
+      ideally `AgentRow`) exists in `bootstrap.py`'s `_add_missing_columns` ALTER-TABLE lists —
+      `agent-orchestrator@d2baf7a`. Extracted the `slots`/`agents` ALTER-TABLE dicts to module-level
+      `_SLOTS_MIGRATION_COLUMNS`/ `_AGENTS_MIGRATION_COLUMNS` constants in `bootstrap.py`, then added
+      `tests/test_migration_completeness.py`: a frozen `_BASELINE_*_COLUMNS` set (pre-migration-tooling original schema,
+      which `create_all_tables()` already creates for free) plus the migration dict must together cover every
+      `SlotRow`/`AgentRow` column, failing loud with the exact missing column name(s) otherwise; a no-overlap check
+      guards the baseline from going stale; a pinned regression test asserts
+      `context_directive_issued`/`context_directive_grace_reports` stay covered. Verified the detector actually fires by
+      transiently deleting a dict entry and confirming it's reported uncovered. 5 new tests, 1692/1692 total pass,
+      ruff + basedpyright clean, full `quality-gates.sh` PASSED. (Original context: discovered this session after the
+      SAME gap bit the `slots` table TWICE in one day: `context_directive_issued` (todo 4, `agent-orchestrator@ca5d10d`,
+      live P0 that broke `/done` fleet-wide) and would have recurred for `context_directive_grace_reports` (todo 9's
+      reconciliation) had it not been caught manually. Tests using `create_all_tables()` (`Base.metadata.create_all`)
+      never catch this class of bug — that path builds the schema straight from the ORM, bypassing the ALTER-TABLE list
+      entirely, so the exact code path that's broken in production is untested. **Done when**: a unit test iterates
+      `SlotRow.__table__.columns` (and `AgentRow`'s) and asserts each name appears in the corresponding
+      `_add_missing_columns` dict — failing loud, by name, the next time this drifts;) `quality-gates.sh` green.
 
 ## Progress Log
 
