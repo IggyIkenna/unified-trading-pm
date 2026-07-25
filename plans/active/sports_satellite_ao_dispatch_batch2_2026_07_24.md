@@ -202,12 +202,12 @@ source: >-
       exporter tests + downstream fixture files. (repo: features-service). **Done when**: all 180 `ODDS_COLUMNS`
       entries + exporter output renamed per the decided scheme; exporter tests and downstream fixtures updated;
       quality-gates green. Source: `sports_odds_feature_naming_canonicalization_2026_07_21.md`.
-- [ ] [BACKEND] P2. **Close the silent-agnostic gap in `SportsFeatureLoaderMixin`**
-      (`ml_service/training/app/core/sports_feature_loader.py`): add real schema validation against
-      `OddsFeaturesMixin`'s field set at read time, so a producer/consumer naming mismatch fails LOUD instead of
-      silently defaulting via `.get()`. (repo: ml-service). **Done when**: loader raises loudly on a producer/consumer
-      field-name/schema mismatch instead of silently absorbing it; a new test proves the loud-fail path fires on a
-      deliberately mismatched fixture. Source: `sports_odds_feature_naming_canonicalization_2026_07_21.md`.
+- [x] ✅ [BACKEND] P2. **Close the silent-agnostic gap in `SportsFeatureLoaderMixin`** — ml-service@07976ae. Added
+      `_validate_odds_schema` (checked only for the `odds_features` group): raises `ValueError` when a non-empty frame
+      has ZERO columns overlapping UAC `OddsFeaturesMixin`'s known field set — a producer/consumer naming mismatch,
+      never honest absence. 3 new regression tests: a deliberately mismatched fixture (real pre-migration FSS names
+      `home_implied_prob`/`draw_implied_prob`) raises loudly, a matching fixture (`odds_home_win`) still loads, and
+      non-`odds_features` groups are never schema-validated. quality-gates.sh green (2103 passed).
 - [ ] [BACKEND] P2. **Migrate `SportsValueBettingEngine` + `SportsArbDutchingEngine`** (`on_tick`'s
       `features: dict[str, float]` reads) AND the legacy `strategy_service/adapters/sports_feature_subscriber.py`
       (currently `ht_odds_home_implied` etc., a third/separate dialect) to the UAC-chosen field names — update unit
