@@ -480,7 +480,7 @@ per AG on the pre-apply critical path, which is acceptable to guarantee "migrate
 ## Appendix: Historical Progress Log (archived 2026-07-24, plan line-cap remediation split)
 
 > **Provenance**: this appendix is the **full verbatim Progress Log** section (originally "## Progress Log") from
-> `plans/active/migration_verification_orphan_safety_2026_06_10.md`, archived here as part of the 2026-07-24 plan
+> `plans/archive/migration_verification_orphan_safety_2026_06_10.md`, archived here as part of the 2026-07-24 plan
 > line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 18 / bucket (d)). The parent
 > plan's own V7 todos already fold the durable CF-15…CF-21 protocol into
 > `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md`, so this plan had become a **narrative

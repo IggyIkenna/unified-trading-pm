@@ -21,7 +21,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-25" # same-day correction (consolidated-closeout split pass): corrected stale "11 open total" phase_ab_residuals citation to 13 (that doc gained 2 relocated todos from the parent, untriaged by batch1)
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -60,12 +60,14 @@ drift_direction: advance-code
       `prediction_phase_ab_residuals_2026_07_24.md` for each of the 7 items (they should already be cross-referenced via
       the target docs' Progress Log entries written by each todo's own execution), citing the batch-1 commit(s).
       Re-check whether `prediction_phase_ab_residuals_2026_07_24.md` now has 0 open todos remaining (unlikely — batch1
-      was a partial extraction of its 9 AO-eligible items out of the doc's current 11 open total, corrected 2026-07-25
-      plan-reconcile from a stale "10 human-only items too" claim that didn't reconcile against the doc's actual size —
-      the real remainder is ~2 items not extracted into batch1, re-verify the exact count live rather than trusting
-      either historical figure). **Done when**: `prediction_phase_ab_residuals_2026_07_24.md`'s 7 corresponding
-      checkboxes are flipped with verified evidence, and each of the 3 sibling target docs' Progress Log entries are
-      confirmed present.
+      was a partial extraction of 9 AO-eligible items out of the doc's total **as it stood pre-relocation (11)**;
+      **corrected 2026-07-25 (same-day consolidated-closeout split pass, AFTER batch1 was drafted)**: that doc's open
+      total is now 13, +2 relocated in from the parent's former "Queued audits + reviews" section (an adapter dead-code
+      audit + a merged reconciliation-cadence todo) that batch1's triage never saw and does NOT cover — re-verify the
+      exact count live rather than trusting either historical figure, and do not assume those 2 newer items are batch1's
+      concern; they are untriaged, not blocked). **Done when**: `prediction_phase_ab_residuals_2026_07_24.md`'s 7
+      corresponding checkboxes are flipped with verified evidence, and each of the 3 sibling target docs' Progress Log
+      entries are confirmed present.
 - [ ] [REVIEW] P1. **Re-check the excluded item 9 and the 12 fully-deferred docs**, now that the operator has
       (presumably) ruled on the queued decision in `autonomous_session_operator_decisions_2026_07_25.md`. For item 9
       (the instrument_type-canonicalization re-verify excluded from batch1 for conflicting with

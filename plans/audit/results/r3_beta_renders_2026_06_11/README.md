@@ -13,5 +13,5 @@ instruments + market tick data, beta vs live.
 | prediction | superseded-grain + cqg P1 OPEN            | verdict_prediction.md |
 | tradfi     | garbage+phantom+respelling-justified      | verdict_tradfi.md     |
 
-Full adjudication narrative: plans/active/migration_verification_orphan_safety_2026_06_10.md Progress Log (2026-06-11
+Full adjudication narrative: plans/archive/migration_verification_orphan_safety_2026_06_10.md Progress Log (2026-06-11
 entries).

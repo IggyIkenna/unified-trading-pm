@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [sports, one-off-retirement, false-progress, script-lifecycle, residual]
 related:
   [
-    /plans/active/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
+    /plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
 created: 2026-07-25

@@ -197,5 +197,5 @@ For each repo, for each file under `scripts/`:
   `e2e-testing/scripts/` + repo `scripts/` into a service's QG so they don't import-rot.
 - Bucket-name SSOT (`resolve_bucket_name`) + cloud-agnostic I/O (UCI `get_storage_client`/`get_secret_client`).
 - **Delete deprecated code** + **Temporary state must have a named successor** — the one-off lifecycle.
-- `plans/active/migration_verification_orphan_safety_2026_06_10.md` — the GCS orphan-sweep gate before deleting any
+- `plans/archive/migration_verification_orphan_safety_2026_06_10.md` — the GCS orphan-sweep gate before deleting any
   migration script.

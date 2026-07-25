@@ -5,7 +5,7 @@ summary: >-
   Forked from sports_legacy_bucket_cutover_2026_07_16.md's Phase 6 (RESTORE) admin tail — the post-phase codex audit
   across 3 named codex docs (T6.7), and retiring the migration one-off scripts + the dead `include_legacy_archive` knob
   + a false-progress tick on a sibling plan (T6.8).
-status: active
+status: complete
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -50,6 +50,8 @@ source:
 ---
 
 # Sports legacy bucket cutover closeout — admin tasks
+
+> **Archived 2026-07-25** — all todos verified done, no living-tracker/recurring purpose. status: active -> complete.
 
 > **Forked 2026-07-24** from
 > [`sports_legacy_bucket_cutover_2026_07_16.md`](/plans/active/sports_legacy_bucket_cutover_2026_07_16.md) via the

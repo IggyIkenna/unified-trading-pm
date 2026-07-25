@@ -42,6 +42,11 @@ related:
     /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
     /plans/active/sports_legacy_fixtures_path_migration_2026_07_24.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
+    /plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md,
+    /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
+    /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
+    /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
   ]
 created: "2026-07-19"
 last_updated: "2026-07-25"
@@ -77,6 +82,17 @@ superseded_by: # corrected 2026-07-21 (plan-reconcile) — this doc still has 51
   # is an entry-point redirect only ("that plan + the audit remain the detailed backing" — its own words), not a
   # replacement; this doc stays status: active and is the live execution surface. See its related: list instead.
 depends_on:
+  [
+    sports_closeout_exchange_fixed_odds_fork_2026_07_25,
+    sports_closeout_track_x_hygiene_2026_07_25,
+    sports_closeout_track_s2_foldin_2026_07_25,
+  ]
+gate_on_depends:
+  true # documents the real prerequisites this split created (Track X's league_id fold-in item must land
+  # before this doc's OWN Track V league_id todos proceed; the EXCHANGE_ODDS/FIXED_ODDS fork changes the
+  # instrument_type vocabulary this doc's OWN Track C QG-assertion todo checks against) — a no-op for
+  # dispatch since this plan is `assigned_vm: NA` and never ingested, but correct documentation of the
+  # dependency direction (this doc depends on its own forked-out children, not the reverse).
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
@@ -102,6 +118,23 @@ drift_direction: advance-code
 > 20 corresponding checkboxes below are now flipped `[x]` with independently-verified evidence
 > (`sports_closeout_batch1_finalize_2026_07_24.md`). Do not re-extract any of these items into a batch 2 — check the
 > archived plan's todo list first if in doubt.
+
+> **Split notice (2026-07-25) — this doc was over the 1000-line hard cap; 3 self-contained forks moved out.** Each is
+> `status: draft`, `assigned_vm: planning`, with its own gated `_finalize` companion (never `active` until operator
+> review — see each child's own file):
+>
+> - Track C's EXCHANGE_ODDS/FIXED_ODDS fork block → `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`
+>   (`sequential: true`, 11 todos) — see the short pointer left in Track C below.
+> - Track X (plan/doc hygiene + orphan-satellite reconciliation) → `sports_closeout_track_x_hygiene_2026_07_25.md` (4
+>   todos, after excluding 3 items `sports_consolidated_native_ao_extract_2026_07_25.md` already drafted from the same
+>   Track).
+> - Track S2 (fold-in absorption from the 3 archived plans) → `sports_closeout_track_s2_foldin_2026_07_25.md` (after
+>   excluding 7 items/sub-parts `sports_consolidated_native_ao_extract_2026_07_25.md` already drafted, and correcting 4
+>   items that turned out to already be resolved — see that child's own staleness-correction note).
+>
+> Nothing was dropped: every open todo from the 2 forked Tracks lives in exactly one of the 3 children above (verify
+> against each child's own file if in doubt) — this doc's own Tracks F/C(remainder)/S/E/O/H/V/K/D and the sections below
+> are unchanged.
 
 ## Headline verdict — how sports differs from cefi/tradfi/defi
 
@@ -289,16 +322,16 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
       **MERGED here 2026-07-24** (plan-hygiene line-cap remediation, `plan_line_cap_remediation_2026_07_23.md` decision
       #6) from `sports_p2_features_history_to_ml_ready_2026_06_27.md`'s "Folded-in scope 2026-07-15" section — this
@@ -372,45 +405,20 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       once the venue-parts[0] fix above ships and existing rows are re-stamped. Also still fix the original footystats
       legacy bundle mislabel (`venue=ODDS_API`→`FOOTYSTATS`, 42,476 rows) — unrelated to the parse bug, a separate
       writer defect.
-- [ ] [CODE] P0/P1. **EXCHANGE_ODDS vs FIXED_ODDS fork — ABSORBED 2026-07-23, full 10-step sequence** (was a 1-line
-      placeholder; `sports_odds_exchange_fixed_fork_2026_07_18.md` is now archived/superseded, all 10 of its todos
-      pulled in below verbatim — priority CORRECTED from this section's earlier P2 to match the source plan's real P0/P1
-      mix, which includes a live OPERATOR block):
-  - [ ] [OPERATOR] P0. Confirm the ambiguous EXCHANGE_ODDS/FIXED_ODDS venue→class mapping: bare `BETFAIR` (33 rows),
-        `ODDS_API` (33, an aggregator fitting neither class), and `PINNACLE` (32,616 rows — sportsbook by mechanism, but
-        UAC models it `PINNACLE_AS_LINE` in `_SNAPSHOT_VENUES`, so confirm FIXED_ODDS vs a PINNACLE_AS_LINE special
-        case) remain BLOCKED-OPERATOR-DECISION. Non-ambiguous poles may proceed to design without waiting: EXCHANGE_ODDS
-        = `BETFAIR_EX_UK`/`BETFAIR_EX_EU`/`SMARKETS`/`MATCHBOOK`; FIXED_ODDS = `BETFAIR_SB_UK`/`BETMGM`.
-  - [ ] [DATA] P0. Pre-drain the sports odds writers before any GCS object move — `odds` (pre-fork instrument_type,
-        561,260 rows) is written live; stop all sports odds-writing jobs both clouds + snapshot first.
-  - [ ] [DATA] P1. Add UAC contract entries for EXCHANGE_ODDS/FIXED_ODDS BEFORE touching data (contracts-first,
-        deliberately — manifest-first previously caused the tradfi CME manifest↔disk↔registry divergence, repaired
-        `@bd115230`, must not repeat). Keep the legacy `odds` contract entry live for the dual-read window.
-  - [ ] [DATA] P1. Dual-read `odds` + `EXCHANGE_ODDS`/`FIXED_ODDS` in `lookup_contract` during the migration window; add
-        a UAC unit test covering both paths.
-  - [ ] [DATA] P1. Move the `instrument_type=odds/` GCS objects to `exchange_odds/`/`fixed_odds/` per the venue→class
-        map via UTL `gcs_copy_object`/`gcs_delete_object` (never subprocess gsutil); snapshot → move → independent
-        re-read count; idempotent + resumable.
-  - [ ] [DATA] P1. Update MDPS `dependency_checker`'s hive-token matcher for the new instrument_type partitions —
-        confirm no consumer of the legacy `odds` hive token goes orphaned.
-  - [ ] [DATA] P1. Reconcile the availability manifest to the new partitions LAST, only after GCS move + dual-read are
-        proven — verify the shard atom is identical across writer/manifest/status/gate.
-  - [ ] [DATA] P2. Cut the live sports odds writers over to the new instrument_types and un-drain.
-  - [ ] [DATA] P2. Retire the legacy `odds` contract entry + the dual-read path once no object/manifest row remains
-        under `odds` and a full corpus re-read confirms parity.
-  - [ ] [REVIEW] P2. Post-phase codex audit: update `availability-manifest-and-data-status.md` + the sports
-        canonical-naming doc with the new instrument_types + migration order.
-  - **Ordering caveat** (task_template.md §4 "Verify an Ordering note" rule): the 10 steps above state a strict sequence
-    (confirm mapping → drain writers → contracts-first → dual-read → GCS move → dependency_checker update → manifest
-    reconcile → cutover → retire legacy) but no machine gate enforces it — this plan is `assigned_vm: NA`, not currently
-    AO-dispatched, so this prose ordering is not a dispatch gate. If any step here is ever extracted into an
-    AO-dispatched child plan, encode the real ordering via `sequential: true` rather than relying on this note.
+- **[CODE] P0/P1.** EXCHANGE_ODDS vs FIXED_ODDS fork — **MOVED 2026-07-25** to its own child,
+  `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` (`sequential: true`, 11 todos — the GCS-move step split into
+  an immediately-dispatchable pass for the 5 already-unambiguous venues plus a separate `[OPERATOR]`-gated follow-on for
+  the 3 still-ambiguous ones). See the Split notice near the top of this doc. Not a checkbox here anymore (finding H) —
+  track completion via that child + its gated finalize plan.
 - [ ] [REVIEW] P1. QG assertion: sports `data_type` ∈ the UAC lower-case sports vocabulary (no UPPER entries once the
       revert above ships), `venue` ∈ the UAC venue registry (never a vendor casing variant, never a prediction-market
       venue, never a deleted venue), `instrument_type` ∈ the declared sports vocabulary (never a bookmaker name),
       `chain` is always null/absent for sports — so this whole class cannot silently return. **This is the
       QG-enforceable version of the Distinct Values target**: the deployment-ui's sports panel for venues /
       instrument_types / data_types / chains should read 0 non-canonical across all four axes once Track C lands.
+      **Forward-pointer (2026-07-25 split)**: once `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` ships, its
+      EXCHANGE_ODDS/FIXED_ODDS split changes the sports `instrument_type` vocabulary this assertion checks against —
+      re-verify this assertion's vocabulary list includes the new split values before claiming this todo done.
 
 ## Track S — STORE: bucket hygiene + legacy path elimination · P1
 
@@ -576,7 +584,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       mechanism), filed as its own issue doc:
       `plans/active/issues/sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24.md` (status: open, 1
       open todo, correctly not resolved by this todo's scope). Also spun off (found incidentally):
-      `plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (status: open, 1 open todo). The
+      `plans/archive/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (status: open, 1 open todo). The
       mechanism itself ran to full closure with zero remaining ambiguity — every row has a specific, verified reason.
 - [x] [OPERATOR] P1. ✅ **§U decision — ANSWERED 2026-07-20** (decision 2): stop capturing non-registry leagues; the
       489-pair/10,869-row population is excluded from the denominator, a purge candidate. **UNBLOCKED 2026-07-24**,

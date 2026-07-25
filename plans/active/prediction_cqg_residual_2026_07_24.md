@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [prediction, cqg, classifier, manifest, migration, plan-split, residual]
 related:
   [
-    /plans/active/migration_verification_orphan_safety_2026_06_10.md,
+    /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
@@ -42,7 +42,7 @@ supersedes:
 superseded_by:
 depends_on: []
 source: >-
-  Forked verbatim from `plans/active/migration_verification_orphan_safety_2026_06_10.md` (its own Progress Log, entries
+  Forked verbatim from `plans/archive/migration_verification_orphan_safety_2026_06_10.md` (its own Progress Log, entries
   dated 2026-06-11 / 2026-06-16) as part of the 2026-07-24 plan line-cap remediation
   (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 18 / bucket (d)). The parent plan's durable
   protocol (CF-15…CF-21) had already migrated to codex; these 2 todos were the last genuinely-open items in its
@@ -52,7 +52,7 @@ source: >-
 # Prediction cqg-classifier coverage residual
 
 > **Origin.** This plan is a **fork**, not a new investigation — both todos below are moved **verbatim** from
-> `plans/active/migration_verification_orphan_safety_2026_06_10.md` (now trimmed + unlocked; its full historical
+> `plans/archive/migration_verification_orphan_safety_2026_06_10.md` (now trimmed + unlocked; its full historical
 > Progress Log is archived to `plans/audit/results/migration_orphan_safety_goalpost_verification_2026_06_10.md` as an
 > Appendix). Read that appendix for the surrounding narrative/evidence if deeper context is needed — nothing below has
 > been rewritten or summarized from the original.

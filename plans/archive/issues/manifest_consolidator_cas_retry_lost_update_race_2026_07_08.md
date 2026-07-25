@@ -4,10 +4,10 @@ title:
   manifest consolidator's CAS-retry loop re-uploads a STALE already-computed merge on PreconditionFailed instead of
   recomputing — a lost-update race that leaves dedup-key-colliding rows coexisting in the canonical index
 summary:
-  "Escalated from plans/active/issues/manifest_record_expected_empty_blank_source_2026_07_08.md's 'Open question — dedup
-  non-collision'. Confirmed via a direct read of the RAW canonical `_index/availability_index.parquet` (not a read-time
-  per-VM-shard overlay artifact — the reader's `_merge_shard_frames` only overlays the CALLING process's own self-shard,
-  and this read used a plain pd.read_parquet against the persisted blob) that two rows sharing an IDENTICAL,
+  "Escalated from plans/archive/issues/manifest_record_expected_empty_blank_source_2026_07_08.md's 'Open question —
+  dedup non-collision'. Confirmed via a direct read of the RAW canonical `_index/availability_index.parquet` (not a
+  read-time per-VM-shard overlay artifact — the reader's `_merge_shard_frames` only overlays the CALLING process's own
+  self-shard, and this read used a plain pd.read_parquet against the persisted blob) that two rows sharing an IDENTICAL,
   byte-verified dedup key (date, venue='', data_type, service_name='instruments-service', league_id) coexist: an OLD row
   (source='understat', capture_status=expected_unattempted, error_reason='', attempted_at=2026-06-28T21:31:49Z) and a
   NEW row written by today's understat-eu-residual-closer v2 run (capture_status=empty_confirmed,
@@ -35,13 +35,13 @@ scope: [engineer, admin]
 tags: [manifest, manifest-consolidator, data-correctness, dedup, race-condition, cas, honest-absence, sports, understat]
 related:
   [
-    plans/active/issues/manifest_record_expected_empty_blank_source_2026_07_08.md,
+    plans/archive/issues/manifest_record_expected_empty_blank_source_2026_07_08.md,
     plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md,
   ]
 created: 2026-07-08
 parent_epic: sports_master
 priority: P0
-source: [plans/active/issues/manifest_record_expected_empty_blank_source_2026_07_08.md]
+source: [plans/archive/issues/manifest_record_expected_empty_blank_source_2026_07_08.md]
 assigned_vm: planning
 resolved_by: "unified-trading-library@75e59a89 + @84528344 — see Recommended decision todos below"
 locked_by:

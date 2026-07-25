@@ -64,9 +64,14 @@ related:
     /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/prediction_consolidated_native_ao_extract_2026_07_25_finalize.md,
+    /plans/active/prediction_cross_cutting_debt_index_2026_07_25.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-07-25 # was 2026-07-18 — 2026-07-25 consolidated-closeout split pass: depends_on now gates on the 4 Phase A-E children, native todos relocated out (0 remaining), related: extended to the satellite/native-extract batch docs and the new cross-cutting-debt-index child
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -81,6 +86,13 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
+  [
+    prediction_phase_ab_residuals_2026_07_24,
+    prediction_phase_c_data_status_ui_2026_07_24,
+    prediction_phase_d_formal_smoke_and_backfill_2026_07_24,
+    prediction_phase_e_football_arb_live_2026_07_24,
+  ]
+gate_on_depends: false # documents ordering only — this parent has 0 remaining native todos of its own after this pass (documentation + archival-gating only), so there is nothing left here to machine-hold
 source:
   Operator, 2026-07-18 — asked whether we have canonical football fixture ids linking sports→prediction such that we can
   arb football live-odds-API vs Polymarket vs Kalshi, and whether the question groups are canonical. Finding — the
@@ -130,16 +142,20 @@ source:
 
 **Per-child open-todo snapshot (2026-07-24 — so the split itself is AO-legible without opening each child):**
 
-- [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — **11
-  open** (corrected 2026-07-25 plan-reconcile — was 9 at split time, cited as 10 here and in batch2's re-check, now 11;
-  a `**NEW 2026-07-24**` item was added same-day after this snapshot and nobody re-counted). Top: [BACKEND] P0. Finish
-  the prediction capture-incident remediation — harden the capture path; [BACKEND] P0. Kill the dead Kalshi
-  `trading-api.kalshi.com` host reintroduced into the smoke matrix.
+- [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — **13
+  open** (verified via `grep -c` 2026-07-25 consolidated-closeout split — was 11, +2 relocated in from this parent's
+  former "Queued audits + reviews"/"Distinct Values" P3 sections: the adapter dead-code audit (new Phase-A "A5"
+  subsection) and the merged `/data-pipeline-reconciliation` cadence + duplicate-note todo (Phase B); the POLYMARKET
+  schema-extension item also relocated here but folded into the EXISTING A2 dual-write-trees todo, so it added no new
+  checkbox). Top: [BACKEND] P0. Finish the prediction capture-incident remediation — harden the capture path; [BACKEND]
+  P0. Kill the dead Kalshi `trading-api.kalshi.com` host reintroduced into the smoke matrix.
 - [`prediction_phase_c_data_status_ui_2026_07_24.md`](/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md) —
   **4 open**. Top P0: [UI] P0. RE-ADD the data-status "dimensions enumeration" view to deployment-ui/api.
 - [`prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`](/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md)
-  — **3 open** (all P0). Top: [DATA] P0. Run `data-pipeline-check-is` for prediction-only, all shards, post-migration;
-  [DATA] P0. Run `data-pipeline-check-mtds` for prediction-only, all shards, post-migration.
+  — **6 open** (verified via `grep -c` 2026-07-25 consolidated-closeout split — was 3, +3 relocated in from this
+  parent's former "Queued audits + reviews" section: the `-is`/`-mtds` 3x-cadence top-ups and the adversarial
+  AO-dispatch-readiness pass). Top (still the same 2 P0s): [DATA] P0. Run `data-pipeline-check-is` for prediction-only,
+  all shards, post-migration; [DATA] P0. Run `data-pipeline-check-mtds` for prediction-only, all shards, post-migration.
 - [`prediction_phase_e_football_arb_live_2026_07_24.md`](/plans/active/prediction_phase_e_football_arb_live_2026_07_24.md)
   — **3 open** (2 P1 + 1 P2, no P0 yet). Top: [BACKEND] P1. Verified end-to-end fixture link on Polymarket + Kalshi
   soccer; [BACKEND] P1. Wire the arb engine to CONSUME `af_fixture_id`.
@@ -230,14 +246,12 @@ source: the same-day `/data-pipeline-reconciliation` four-surface pass against `
   rate is the lowest measured — this is the "prediction already measures cleanest" fact referenced elsewhere in this
   plan's gap analysis, now cited with its actual numbers rather than left undocumented. This is NOT an unqualified
   "prediction is cleanest on every axis" claim — the casing-tail axis alone would rank cefi below prediction.
-- [ ] [DATA] P3. **Duplicate note (2026-07-25 plan-reconcile)**: this todo and the P2 todo below (line ~671, "Verify
-      whether a `/data-pipeline-reconciliation prediction` run predating...") both require the same underlying action —
-      a post-Phase-B-migration reconciliation run diffed against the 2026-07-20 baseline — the P2 todo is the broader
-      superset (3 dated runs total, this is 1). Execute via the P2 todo below; this P3 entry is satisfied automatically
-      once that one's Done-when is met. Re-run `/data-pipeline-reconciliation prediction` after Phase B's
-      canonicalisation migration lands and record the new run's F2/C2a percentages against the 2026-07-20 baseline
-      above. Done when: the new numbers are cited in this section (or a new dated sub-section) with the new report's
-      path — not just "re-ran, looks fine."
+- **Reconciliation-cadence tracking relocated (2026-07-25 consolidated-closeout split)**: the post-Phase-B-migration
+  `/data-pipeline-reconciliation` re-run (previously a P3 "Duplicate note" checkbox here, which was itself already a
+  duplicate of the Queued-Audits P2 reconciliation-cadence todo) is now ONE combined todo in
+  [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md)'s Phase B
+  section — see that doc for the live checkbox and the current cadence state (2 of 3 dated passes already cited: the
+  confirmed 2026-07-20 baseline above, plus a 2026-07-24 pass; only the post-Phase-B final gate remains).
 
 ## MVP universe (the Phase-D / Phase-E readiness target)
 
@@ -288,15 +302,17 @@ fixture-linked before MVP backfill.
 - **This plan's own Phase A-E children (2026-07-24 fork — were listed in the Split-notice table above but not repeated
   here; added so this index is the single place every source doc lives, including this plan's own forks)**:
   - **[BACKEND] P0.**
-    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 11 open
-    (corrected 2026-07-25 plan-reconcile, was 10). Top: finish the prediction capture-incident remediation; kill the
-    dead Kalshi `trading-api.kalshi.com` host.
+    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 13 open
+    (2026-07-25 consolidated-closeout split, was 11; +2 relocated in from this parent's former "Queued audits +
+    reviews"/"Distinct Values" sections). Top: finish the prediction capture-incident remediation; kill the dead Kalshi
+    `trading-api.kalshi.com` host.
   - **[UI] P0.**
     [`prediction_phase_c_data_status_ui_2026_07_24.md`](/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md) —
     4 open. Top: RE-ADD the data-status "dimensions enumeration" view to deployment-ui/api.
   - **[DATA] P0.**
     [`prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`](/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md)
-    — 3 open (all P0). Top: run `data-pipeline-check-is` for prediction-only, all shards, post-migration; run
+    — 6 open (2026-07-25 consolidated-closeout split, was 3; +3 relocated in from this parent's former "Queued audits +
+    reviews" section). Top: run `data-pipeline-check-is` for prediction-only, all shards, post-migration; run
     `data-pipeline-check-mtds` for prediction-only, all shards, post-migration.
   - **[BACKEND] P1.**
     [`prediction_phase_e_football_arb_live_2026_07_24.md`](/plans/active/prediction_phase_e_football_arb_live_2026_07_24.md)
@@ -449,177 +465,13 @@ fixture-linked before MVP backfill.
     - +9 more (untagged success-criteria checklist items, e.g. "Polymarket backtest runs end-to-end") — see file for the
       rest
 
-**Additional cross-cutting / issue-doc coverage (2026-07-24 index enrichment)**:
-
-- [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md)
-  (9 open total)
-  - **[DATA] P1.** Retrofit the ~48 DeFi adapters that build `instrument_key` as an ad hoc f-string
-  - **[DATA] P1.** Resolve the non-canonical TYPE-token question before retrofitting todo 1
-  - **[DATA] P1.** Fix the real "no VENUE:TYPE: wrap at all" gap in both Prediction adapters — Kalshi
-  - +6 more (3×P2, 3×P3) — see file for the rest
-- [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/active/candle_canonical_path_migration_execution_2026_07_24.md)
-  (16 open total — all P0/P1, listed in full)
-  - **[DATA] P0.** Rebuild code tarballs (`refresh_code_tarballs.sh`) for the 4 already-shipped repos
-  - **[DATA] P0.** VERIFY on `-test-` via `/data-pipeline-check-mdps` (force+skip+canonical legs)
-  - **[DATA] P0.** VERIFY readers dual-read correctly (features-service delta_one + volatility, unified-trading-api)
-  - **[SCRIPT] P0.** Run the sanctioned Tier-2 spot-VM single-walk census (bounded in-session sampling already)
-  - **[SCRIPT] P0.** Build the migration executor (P5): clone
-  - **[SCRIPT] P0.** Implement the path transform in the executor: backward-add `instrument_type=` via
-  - **[SCRIPT] P0.** Implement DEDUP in the executor for the split-brain candle layout (same object present under both)
-  - **[SCRIPT] P0.** Implement PURGE of empty-stem objects (`venue={V}/.parquet` with no leaf id, ~0.6-0.8% defect)
-  - **[SCRIPT] P0.** Implement QUARANTINE (never guess) for unresolvable legacy TradFi `E1AF0_*_migrated_*` leaf ids
-  - **[SCRIPT] P0.** Wire manifest re-record to the SOURCE-keyed row (via `record_captured`, path-independent) into
-  - **[SCRIPT] P0.** Upgrade the executor's pre-delete verification from SIZE-only to crc32c checksum before any prod
-  - **[DATA] P0.** Extend `launch-canonical-migration-vm.sh` for this migration's per-AG SPOT fleet launch (target)
-  - **[DATA] P0.** P7 per-AG SPOT migration apply, in order defi→prediction→cefi→tradfi (tradfi last)
-  - **[DATA] P0.** P8 verify/reconcile: 4-surface reconciliation + extend the UAC canonical-path-violations oracle
-  - **[DATA] P1.** P6 drain+snapshot: coordinate with the running `canonical-migration-cefi-wp*` raw_tick VMs
-  - **[DATA] P1.** Root-cause + close the candle object↔manifest disconnect (6 degenerate MDPS manifest rows vs 20k+)
-- [`plans/active/data_pipeline_check_mdps_features_2026_07_20.md`](/plans/active/data_pipeline_check_mdps_features_2026_07_20.md)
-  (28 open total)
-  - 8. **[DATA] P0.** RUN + VALIDATE `/data-pipeline-check-mdps` e2e: auto-select high-coverage day per AG
-  - 9. **[DATA] P0.** RUN + VALIDATE `/data-pipeline-check-features` e2e: multi-day input window per family
-  - 11. **[DATA] P0.** Cross-repo orphan/lineage audit (MTDS→MDPS→features→ml/strategy) + MIGRATE existing
-        candle/feature
-  - 13. **[DATA] P0.** Produce concrete ETA to backfill all remaining DeFi MVP (from benchmark + remaining-shard count)
-  - NEW todo. **[DATA] P0.** Verify whether MDPS `max_workers` (8 on e2-standard-8) actually OVERLAPS the GCS writes
-  - NEW todo. **[DATA] P0.** Enumerate the candle-coverage GAP per (asset_group, venue, data_type, timeframe)
-  - NEW todo. **[DATA] P0.** Run `/data-pipeline-check-mdps` across all relevant AGs NOT already in candles
-  - NEW todo. **[DATA] P0.** Run `/data-pipeline-check-features` across ALL shards (8 families x valid AGs)
-  - NEW todo. **[DATA] P0.** VERIFY the prod projection on a real prod-bucket MDPS run before sizing the win
-  - NEW todo. **[SCRIPT] P0.** Implement F1+F2 (UTL `manifest_completeness.py`) + F3 (MDPS `_publish_emission_check`)
-  - NEW todo. **[DATA] P0.** Audit every `read_availability_index` caller on defi for a missing column/filter projection
-  - NEW todo. **[SCRIPT] P0.** Fix the shared seed context (per-call immutable value object + collision-proof
-    frame-cache)
-  - NEW todo. **[SCRIPT] P0.** Implement R1 (concurrent date-subprocesses) — the months->weeks lever that is SAFE today
-  - NEW todo. **[DATA] P0.** Real-VM re-measure of end-to-end per-instrument-day rate against a PROD-sized index
-  - 10. **[DATA] P1.** Steady-state benchmark VMs (250GB disk) per representative shard-type
-  - 12. **[SCRIPT] P1.** Backfill-processing path (download→process→upload) code-ready + OPTIMIZED learning from cefi
-  - 15. **[DATA] P1.** Full DeFi-MVP candle backfill on real infra — GATED
-  - NEW todo. **[DOC] P1.** Correct `/codex/05-infrastructure/spot-vms-for-backfill.md`: the preemption signal was NOT
-  - NEW todo. **[SCRIPT] P1.** Close residual risk 1 — make arg-required launchers relaunchable (features especially)
-  - NEW todo. **[DATA] P1.** Blast radius: did any PAST prod MDPS run use max_workers>1 over a heterogeneous list
-  - NEW todo. **[SCRIPT] P1.** Implement R1: bounded-concurrent `_run_date_as_subprocess` dispatch (the 2-week
-    throughput)
-  - +6 more (P2) — see file for the rest
-- [`plans/active/is_daily_enum_capture_heal_2026_07_07.md`](/plans/active/is_daily_enum_capture_heal_2026_07_07.md)
-  (`status: draft`)
-  - **[CODE] P0.** Add `exc_info=True` to the UTL shard-isolation catch (`service_framework/_adapter.py`)
-  - **[CODE] P0.** With the real traceback now visible, re-run `is-daily-enum-{prediction,sports}` and read the ACTUAL
-  - **[VERIFY] P1.** Backfill the missed windows: prediction 07-01→07-06, sports 06-28→07-06
-- [`plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md)
-  (`status: draft`) — 0 open todos (closed/archived/record-only)
-- [`plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`](/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md)
-  (9 open total)
-  - **[OPERATOR] P0.** BLOCKED-OPERATOR-DECISION — coordinate a maintenance window with the operator for the prediction
-  - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Snapshot the prediction canonical manifest index
-  - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Apply `rebuild_prediction_manifest.py` (full date range)
-  - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Resume the prediction consolidator cron; record the before/after
-    fill-rate
-  - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Snapshot the tradfi canonical manifest index and pause its consolidator
-  - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Apply `rebuild_tradfi_manifest.py` (full date range)
-  - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Resume the tradfi consolidator cron; record evidence in the Progress Log
-  - +2 more (P2/P3) — see file for the rest
-- [`plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`](/plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md)
-  - **[VERIFY] P1.** Check whether manifest regeneration is automatic or requires an explicit re-enumeration trigger
-  - **[VERIFY] P2.** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers
-  - **[DECISION] P2.** Once the pilot trace (AAVE_V3) lands, decide the reconciliation cadence for the remaining 58
-- [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
-  - 1. **[DATA] P1.** instruments-service: canonicalise the `instrument_availability` write to
-  - 2. **[DATA] P1.** market-tick-data-service: rule on and fix the cefi chain tail — `partitioned_writer.py:291-293`
-  - 3. **[DOCS] P2.** instruments-service + market-tick-data-service: correct the three in-repo comments that assert
-  - 4. **[SCRIPT] P2.** unified-trading-pm: add a Phase-0 `-test-` assertion on the resolved WRITE bucket
-  - 5. **[DOCS] P2.** unified-trading-pm: add an explicit "never pass `--allow-live-prod-writes`" prohibition
-  - 6. **[DATA] P3.** instruments-service: decide whether `market_lifecycle` (`writers.py:495-501`) should
-- [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
-  (8 open total — listed in full, not over the >8 cap threshold)
-  - 7. **[DATA] P0.** Root-cause the object↔manifest disconnect (20,734 cefi candle objects on 2026-04-14 vs 6 MDPS)
-  - 2. **[DATA] P1.** Corpus-wide count of zero-length-stem candle objects (`…/venue=*/.parquet`); purge or repair
-  - 3. **[DATA] P1.** Canonicalise TradFi candle leaf ids (`E1AF0_C3200_migrated_*` → `VENUE:TYPE:SYMBOL`)
-  - 9. **[DATA] P1.** Split-brain candle layout (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
-  - 19. **[SCRIPT] P2.** Fix `_copy_verify_delete()`'s retry-idempotency gap
-  - 13. **[DATA] P3.** `ProvisionalTargetIndex` keys lack a bucket component, so the split-brain COUNT is off
-  - 15. **[DOC] P3.** `unified-trading-library`'s `build_canonical_candle_path()` docstring example still shows
-  - 16. **[SCRIPT] P3.** Investigate why `CEFI:DERIBIT:trades:24h`'s force-leg MEASURED classification shows
-- [`plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`](/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md)
-  - **[CODE] P1.** Add a falsifier test (mirroring `scripts/check_coverage_exclusions.py`'s pattern)
-  - **[DATA] P1.** Resolve the 8 confirmed multi-year/multi-month CeFi mismatches (BITFINEX, KRAKEN, COINBASE-SPOT)
-  - **[DATA] P2.** Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 carries `# TODO verify`
-  - **[DATA] P2.** Resolve the POLYMARKET mismatch (2022-11-21 CLOB-launch vs 2025-03-14 first-actual-instrument)
-  - **[DATA] P3.** Resolve the small 1-21 day DeFi protocol drifts (CURVE, UNISWAP_V2, UNISWAP_V4, BALANCER, LIDO)
-  - **[DATA] P3.** Publish an explicit key-mapping table between `coverage_starts.py`'s bare venue/protocol keys
-- [`plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`](/plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md)
-  (8 open total — listed in full, not over the >8 cap threshold)
-  - 5. **[DATA] P0.** Read `unified-trading-library`'s manifest consolidator (`manifest_consolidator.py`)
-  - 6. **[DATA] P0.** Check whether the round-2 remediation script
-  - 7. **[DATA] P0.** Confirm whether a consolidation cycle has actually run since the 2026-07-23 remediation
-  - 8. **[DATA] P0.** Once todos 5-7 pin the actual mechanism, re-run the remediation (or fix the consolidator input)
-  - 1. **[DATA] P1.** Pin the true full count and composition — read the `instruments-store-sports` index
-  - 2. **[BACKEND] P1.** Locate the writer — trace which job/uploader writes `asset_group=prediction` rows
-  - 3. **[BACKEND] P1.** Fix the misattribution at the writer so a prediction shard's manifest row lands only
-  - 4. **[DATA] P2.** Remediate the already-written bleed rows — decide whether to relocate them
-- [`plans/active/issues/estate_orphan_assessment_2026_07_21.md`](/plans/active/issues/estate_orphan_assessment_2026_07_21.md)
-  - 3. **[INFRA] P1.** Run the orphan sweep for defi / cefi / tradfi / prediction on a VM — deployment-service@f8e885f
-  - 4. **[CODE] P2.** Make the manifest load resumable / streamed in `migration_orphan_sweep.py`
-  - 5. **[CODE] P3.** `GcsEventSink` never `.shutdown()`s its background `ThreadPoolExecutor` (4 workers)
-  - 6. **[CODE] P2.** Give `backfill_orphan_class_e.py --apply` a batched-incremental `record_cells()` call
-  - 8. **[DATA] P2.** Measure prediction's `B_legacy_duplicate` population — never reported anywhere in this doc's
-       already-durable sweep report (prediction-specific; other-AG-only todos 7/3c not listed here)
-- [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
-  - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI
-- [`plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`](/plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md)
-  (14 open total)
-  - **[DESIGN] P1.** Fix the mockup's leaf model everywhere it still needs it (Finding 1) — CEFI/TRADFI/DEFI's
-  - **[DESIGN] P1.** Design the CEFI instrument-definition parquet resharding (Finding 2, decided)
-  - **[CODE] P1.** Widen the writer-fix scope to Solana DeFi + CURVE-OPTIMISM (same CEFI instrument-definition parquet
-    resharding design as the item above)
-  - **[CODE] P1.** Pull the real per-instrument_type breakdown for DERIBIT live (the comparison built for this doc)
-  - **[CODE] P1.** Add `missing_dates`/`dates_found_list` to the per-instrument_type and per-underlying breakdown
-  - **[CODE] P1.** Move `market_metadata` off the MTDS `per_venue_per_data_type_daily` axis
-  - **[VERIFY] P1.** Raw-parquet spot-check the 5 additional CeFi venues flagged by the pre-audit's registry read
-  - **[CODE] P1.** Backfill historical CeFi/TradFi manifest rows with the corrected per-instrument_type split
-  - +6 more (4×P2, 2×P3) — see file for the rest
-- [`plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
-  - 7. **[DATA] P1.** PROVE the fixed writers green on one real day (write + skip-if-fresh + manifest row)
-  - 8. **[REVIEW] P1.** On writer ship, record the `instrument_availability` full-hive cutover date
-- [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md)
-  - **[SCRIPT] P2.** DEX-pool catalog regeneration (finding 2, all 13 protocols) — real code is already correct
-  - **[DECISION] P2.** Confirm exact target quote-currency per on-chain-perp venue (finding 4) — ASTER/PACIFICA
-- [`plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md`](/plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md)
-  — 0 open todos (closed/archived/record-only)
-- [`plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`](/plans/active/issues/instruments_remaining_work_audit_2026_07_10.md)
-  — 0 open todos (closed/archived/record-only)
-- [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
-  - 1. **[DATA] P0.** VERIFY the prod projection before sizing the win — is `_publish_emission_check` actually firing
-  - 5. **[DATA] P0.** The 1.58 GB defi-prd index is its own P0 — audit every `read_availability_index` caller on defi
-  - 6. **[DOC] P2.** Record in codex that the per-VM manifest flush is ALREADY debounced (50 entries/5.0s,
-       `utl@6b6d53bd`)
-- [`plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md`](/plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md)
-  (8 open total — listed in full, not over the >8 cap threshold)
-  - 3. **[SCRIPT] P1.** S1-c — `mdps-sports-<year>-<ts>` emitted by `launch-mdps-sharded-backfill.sh:206` but registered
-  - 1. **[SCRIPT] P2.** S1-a — `launch-prediction-features-vm.sh` BROKEN (packages removed)
-  - 2. **[SCRIPT] P2.** S1-b — `launch-mdps-features-live.sh` non-runnable (no dispatcher branch)
-  - 4. **[SCRIPT] P3.** S2-a — trim `launch-features-backfill-vm.sh` to the redirect stub (lines 170-309 unreachable)
-  - 5. **[SCRIPT] P3.** S2-b — delete the 8 stale `features_*_service` keys in `setup-data-pipeline-vm.sh`
-  - 6. **[SCRIPT] P3.** S3-a — delete MDPS one-offs past `Delete-when` after verifying each condition
-  - 7. **[SCRIPT] P3.** S3-c — repoint `features-service/scripts/sports/smoke_matrix.py` SSOT citations
-  - 8. **[SCRIPT] P3.** S3-b — sports dual entrypoint (`python -m features_service.sports`)
-- [`plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
-  - 3. **[DATA] P1.** Assess blast radius on EXISTING candle data: any past MDPS run with `max_workers>1`
-- [`plans/active/issues/migration_orphan_sweep_performance_decay_2026_07_22.md`](/plans/active/issues/migration_orphan_sweep_performance_decay_2026_07_22.md)
-  - 7. **[CODE] P3.** Genuinely stream `_load_manifested_cells()`'s parquet read (row-group batches)
-- [`plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md`](/plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md)
-  - **[VERIFY] P1.** NEW (2026-07-14) — FLUID lending_indices silently returns 0 rows for ~18 months of its own declared
-  - **[VERIFY] P1.** Root-cause the 273 mistagged DERIBIT/COMBO rows (open question #1) — not attempted this session
-  - **[CODE] P2.** Update both drilldown mockups — not attempted this session (out of dispatched scope)
-- [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
-  — 0 open todos (closed/archived/record-only)
-- [`plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
-  (dup ref — see Capture / correctness above for its 2 open todos)
-- [`plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`](/plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md)
-  — 0 open todos (closed/archived/record-only)
-- [`plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
-  — 0 open todos (closed/archived/record-only)
+**Additional cross-cutting / issue-doc coverage** — forked out 2026-07-25 (consolidated-closeout split pass) to
+[`prediction_cross_cutting_debt_index_2026_07_25.md`](/plans/active/prediction_cross_cutting_debt_index_2026_07_25.md),
+moved verbatim (~20 docs cataloged: canonical-id-builder retrofit, candle-canonical-path migration execution,
+MDPS/features pipeline-check debt, is-daily-enum capture-heal, cross-asset backfill maintenance windows, and a dozen
+more issue-doc digests whose open work is genuinely cross-AG — defi/cefi/tradfi/sports-scoped, not prediction-owned
+dispatch surface). See that doc for the full digest; nothing here was prediction-specific work, so nothing was lost by
+the move.
 
 **Sports-tagged, prediction-relevant (shared infra/scope with sports_master)** — primary tracking: `sports_master` /
 sports's own consolidated closeout plan; short digest only:
@@ -654,55 +506,27 @@ this section)**:
 - [`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`](/plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md)
   — 0 open todos (closed/archived/record-only)
 
-## Queued audits + reviews (2026-07-24 — distributed from `data_pipeline_e2e_milestones_gate_2026_07_24.md`)
+## Queued audits + reviews — forked out (2026-07-25 consolidated-closeout split)
 
-These are new bounded todos for a future dispatched worker — none require the multi-file cross-repo audit itself to be
-done in THIS session; each names a determinable done-when so a worker can pick it up cold.
+> All 6 todos previously tracked here (5 triaged into an AO-dispatchable batch, 1 an operator-ruled schema-extension
+> migration) relocated to their thematically-correct Phase child below — this parent's native todo count is now 0,
+> documentation + archival-gating only (see the frontmatter `depends_on` on all 4 Phase children).
 
-> **AO-eligibility triage (2026-07-25)**: 5 of this section's 6 todos + the P3 "Duplicate note" below in "Distinct
-> Values / axis-value census" have been triaged and drafted into
-> [`prediction_consolidated_native_ao_extract_2026_07_25.md`](/plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md)
-> (`status: draft` — not yet dispatched). The P1 POLYMARKET `prediction_trades` schema-extension todo stays human
-> (unresolved PII/architecture call); see that doc's Deferred section for why.
+| Item (was tracked here)                                                   | New home                                                                                                                                  |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Adapter dead-code/fallback audit (`[BACKEND] P2`)                         | `prediction_phase_ab_residuals_2026_07_24.md`, new "A5 — Adapter code-quality audit" subsection                                           |
+| `data-pipeline-check-is` 3x cadence top-up (`[DATA] P2`)                  | `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section                                                             |
+| `data-pipeline-check-mtds` 3x cadence top-up (`[DATA] P2`)                | `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section                                                             |
+| `/data-pipeline-reconciliation` verify + 3x cadence (`[DATA] P2`)         | `prediction_phase_ab_residuals_2026_07_24.md`, Phase B section (merged with the former "Distinct Values" P3 duplicate note above)         |
+| Adversarial AO-dispatch-readiness pass (`[REVIEW] P2`)                    | `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section                                                             |
+| POLYMARKET `prediction_trades` schema-extension migration (`[DESIGN] P1`) | `prediction_phase_ab_residuals_2026_07_24.md`, Phase B section (folded into the existing A2 dual-write-trees todo, same source issue doc) |
 
-- [ ] [BACKEND] P2. Audit instruments-service's and market-tick-data-service's prediction adapters (kalshi.py,
-      polymarket/) for dead code, silent fallback branches, and duplicated logic, per
-      `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Exact paths:
-      `instruments_service/reference_data/adapters/prediction/kalshi.py` + `.../adapters/prediction/polymarket/`
-      (instruments-service), `.../adapters/prediction/` (market-tick-data-service). Done when: every adapter file in
-      scope has either a filed finding (a new `plans/active/issues/<slug>.md`, one per distinct defect class found) or
-      an explicit "0 findings" line recorded in this plan's Progress Log — not silence.
-- [ ] [DATA] P2. Run `data-pipeline-check-is --asset-group prediction` twice more — a pre-Phase-B baseline checkpoint
-      and a Phase-B mid-migration spot-check — to reach the 3x cadence `task_template.md` finding K requires (checkpoint
-      3, the post-migration final gate, is already the P0 todo in
-      `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`). Done when: both runs' report paths + dates are
-      cited in this plan's Progress Log.
-- [ ] [DATA] P2. Run `data-pipeline-check-mtds --asset-group prediction` twice more — the same pre-Phase-B baseline +
-      Phase-B mid-migration checkpoints as the `-is` todo above — to reach the 3x cadence (checkpoint 3 is the sibling
-      P0 todo already in `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`). Done when: both runs' report
-      paths + dates are cited in this plan's Progress Log.
-- [ ] [DATA] P2. Verify whether a `/data-pipeline-reconciliation prediction` run predating the confirmed 2026-07-20 one
-      exists in the corpus, then run enough additional dated passes (1 or 2, depending on that answer) to reach 3 total,
-      including one post-Phase-B-migration final-gate pass diffed against the 2026-07-20 baseline. Confirmed baseline:
-      `/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`. Done when: 3 dated runs' report
-      paths are cited together in this plan's Progress Log.
-- [ ] [REVIEW] P2. Run the same adversarial AO-dispatch-readiness pass sports's Track Y ran (method: the archived
-      `sports_consolidated_closeout_history_2026_07_24.md`'s "Track Y — PLAN-QUALITY REMEDIATION" section) against this
-      plan, checking for bare `§X` shorthand, ambiguous verbs (absorb/incorporate/handle/address), delete-tagging
-      inconsistency, missing definition-of-done, stale checkboxes, and unsafe digest-checkbox syntax. A same-session
-      self-check while authoring this section found no obvious instance of any of these 6 defect classes as of
-      2026-07-24 (see this plan's 2026-07-24 Progress Log entry) — that was incidental, not an exhaustive pass; this
-      todo is for the real one. Done when: findings (or an explicit "0 findings") are recorded in this plan's Progress
-      Log, mirroring Track Y's format.
-- [ ] [DESIGN] P1. **POLYMARKET `prediction_trades` schema-extension migration** (operator-ruled 2026-07-25, full
-      detail + investigation in
-      `/plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` Q3 + Todos):
-      2,477 manifest rows (+ a related non-canonical deep-tree shape, ~158+ objects) hold public Polymarket CLOB trade
-      data (trader identity + market-question text + outcome labels) the canonical `trades` schema doesn't carry at all.
-      Operator ruled: extend the canonical schema to preserve this content, then migrate — not drop the metadata, not
-      leave it permanently forked. 3-step sequence tracked in the linked issue doc (schema design → writer update +
-      migration → register in the cutover/non-canonical inventories). Done when: all 3 todos in the linked issue doc are
-      checked with evidence.
+**AO-dispatch status**:
+[`prediction_consolidated_native_ao_extract_2026_07_25.md`](/plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md)
+(`status: draft`) already carries an AO-dispatchable execution copy of the first 5 rows above (its own todos 1-5,
+drafted before this relocation). Its own text and its finalize plan's text were corrected in this same pass to reconcile
+evidence into the NEW homes above rather than into this now-relocated section — see that plan for the currently-drafted
+AO-dispatch path; the table above + the phase-child docs are the durable-tracking side of record.
 
 ## Deferred work after 2026-07-18 (HELD — unblock when the concurrent tradfi/cefi migrations free the shared files / a drain window opens)
 
@@ -762,3 +586,25 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   with 5 bounded todos (adapter dead-code audit, -is/-mtds/reconciliation 3x-checkpoint top-up, and an adversarial
   AO-dispatch-readiness pass mirroring sports's Track Y) for a future dispatched worker — none executed in this pass,
   per the distributing task's scope (documentation placement only).
+- **2026-07-25 — Consolidated-closeout split pass (reconciled against the same-day `native_ao_extract` sibling pass).**
+  Reconciliation first: `prediction_consolidated_native_ao_extract_2026_07_25.md` (+ its gated finalize, both
+  `status: draft`) had already triaged this parent's 7 native todos and added the "AO-eligibility triage" pointer-note
+  to "Queued audits + reviews", but had NOT relocated any content — the 7 native checkboxes were still live here. This
+  pass completed the relocation: (1) `depends_on` set to all 4 Phase children (`gate_on_depends: false` —
+  documentation/archival-gating only, nothing left to machine-hold); (2) `related:` extended with the 2 satellite
+  AO-dispatch batches + `native_ao_extract` + its finalize + the new cross-cutting-debt-index child; (3) the "Distinct
+  Values" P3 duplicate-note todo and all 6 "Queued audits + reviews" todos relocated verbatim (with reconciling edits,
+  not blind copies) into `prediction_phase_ab_residuals_2026_07_24.md` (adapter dead-code audit as a new "A5"
+  subsection; the reconciliation-cadence + duplicate-note merged into one Phase-B todo; the POLYMARKET schema-extension
+  folded into the existing A2 dual-write-trees todo) and `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`
+  (the `-is`/`-mtds` 3x-cadence top-ups + the adversarial AO-dispatch-readiness pass, all 3 into the Phase D section) —
+  both former sections left as short stub + pointer-table (heading text preserved so existing corpus references still
+  resolve by name); (4) the "Additional cross-cutting / issue-doc coverage" subsection (~20 non-prediction-specific
+  cross-AG docs, ~171 lines) forked verbatim to the new `prediction_cross_cutting_debt_index_2026_07_25.md` (LOCAL plan,
+  pure digest, no AO-dispatch surface of its own); (5) `prediction_consolidated_native_ao_extract_2026_07_25.md` + its
+  finalize + `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` corrected (corpus-wide referrer fixup) to point
+  their reconciliation targets at the NEW phase-child locations instead of this now-relocated section; (6) phase_ab's
+  and phase_d's open-todo counts corrected corpus-wide (11→13, 3→6, verified via `grep -c` — the design brief's own
+  estimate of 7 for phase_d didn't reconcile against the actual 3 items named for relocation; used the verified count).
+  Net: parent trimmed from 764 to 611 lines (`wc -l`, post-prettier) with 0 remaining native todos; zero engineering
+  work was done or lost — pure reorganisation, every action still a real, live checkbox somewhere in the corpus.

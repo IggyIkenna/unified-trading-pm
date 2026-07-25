@@ -205,7 +205,7 @@ drift_direction: advance-code
 - **Legacy cutover / manifest / league_id / data correctness**:
   - [`plans/active/sports_legacy_bucket_cutover_2026_07_16.md`](/plans/active/sports_legacy_bucket_cutover_2026_07_16.md)
     — 0 open todos.
-  - [`plans/active/sports_legacy_cutover_closeout_tasks_2026_07_24.md`](/plans/active/sports_legacy_cutover_closeout_tasks_2026_07_24.md)
+  - [`plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md`](/plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md)
     (2 open):
     - **[REVIEW] P1.** T6.7 — post-phase codex audit (HARD RULE)
     - **[INFRA] P2.** T6.8 — retire the one-offs + the dead knob + the false-progress tick

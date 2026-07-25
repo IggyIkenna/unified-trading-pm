@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [process-gap, recovery-plan, liveness-probe, gcs, plan-hygiene, closed]
 related:
   [
-    /plans/active/issues/mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md,
+    /plans/archive/issues/mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md,
     /plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
