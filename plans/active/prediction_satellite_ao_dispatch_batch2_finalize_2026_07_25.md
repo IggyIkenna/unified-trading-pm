@@ -67,17 +67,19 @@ drift_direction: advance-code
       migration proposed" framing (lines ~213-215, repeated in the Deferred-work section ~line 717) — replace with a
       citation to `/codex/02-data/reconciliation-finding-taxonomy.md` §5.1: C2a is RULED (operator D1, 2026-07-20)
       UPPERCASE-target, `migration_pending`, gated on the still-open honest-coverage-harness-fix issue — NOT refused or
-      unruled. (b) The "Aggregated source docs" index's "— 0 open todos (closed/archived/record-only)" claims for
-      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md` and
-      `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` — both confirmed factually wrong during
-      batch2's re-triage (the kalshi doc had 3 live prose-only follow-ups; the phantom-reconciler doc's step-4
-      remainder + residuals 5-6 were only partially executed despite an over-broad "DONE" checkmark elsewhere) — update
-      each entry to reflect the real post-batch2 state (0 open if batch2 fully closed them, or the specific named
-      residual if not). Also correct `issues/prediction_arb_live_execution_bridge_2026_07_20.md`'s "0 open todos" entry
-      — that doc's own text names an unresolved operator-directed architectural decision, not zero open work; leave it
-      flagged as OPERATOR-GATED, not silently marked done. **Done when**: all 3 corrections are made with the
-      codex/evidence citations above, and a git diff of `prediction_consolidated_closeout_2026_07_18.md` is referenced
-      in this plan's Progress Log.
+      unruled. (b) **Corrected 2026-07-25 plan-reconcile — only ONE of these two premises was actually wrong.** The
+      kalshi doc's entry is already accurate (`prediction_consolidated_closeout_2026_07_18.md:320-322` already reads
+      "status: open, 3 live-side follow-ups outstanding" — NOT a "0 open todos" claim; no edit needed there, confirm
+      it's still accurate rather than hunting for text that doesn't exist). The "Aggregated source docs" index's "— 0
+      open todos (closed/archived/record-only)" claim IS genuinely wrong for
+      `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (confirmed during batch2's re-triage: the
+      doc's step-4 remainder + residuals 5-6 were only partially executed despite an over-broad "DONE" checkmark
+      elsewhere) — update that entry to reflect the real post-batch2 state (0 open if batch2 fully closed it, or the
+      specific named residual if not). Also correct `issues/prediction_arb_live_execution_bridge_2026_07_20.md`'s "0
+      open todos" entry — that doc's own text names an unresolved operator-directed architectural decision, not zero
+      open work; leave it flagged as OPERATOR-GATED, not silently marked done. **Done when**: all 3 corrections are made
+      with the codex/evidence citations above, and a git diff of `prediction_consolidated_closeout_2026_07_18.md` is
+      referenced in this plan's Progress Log.
 - [ ] [DOC] P3. **Archive `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere if their blocker
       cleared during batch2's execution (verify none newly cleared) → add the archive banner → run the codex-alignment
