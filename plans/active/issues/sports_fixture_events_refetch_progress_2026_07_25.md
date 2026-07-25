@@ -106,7 +106,23 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       clears, then re-census to verify convergence, then flip the parent todo's checkbox in
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md` with the re-census evidence. (repo: instruments-service).
       **Done when**: re-fetch VM completes, and a full re-census shows 0 genuinely non-canonical FIXTURE_EVENTS objects
-      remaining (or each remaining one is documented as unrecoverable).
+      remaining (or each remaining one is documented as unrecoverable). — **LAUNCHED 2026-07-25T03:22Z (slot 4,
+      data_engineering), NOT complete.** Lock cleared when `af-backfill-20260725-002739` (INJURIES catch-up)
+      self-terminated cleanly (`exit_code=0`, confirmed via its run.log `DEPLOYMENT_COMPLETED`) — checked
+      `status=RUNNING` filter first, genuinely clear, no `--force`/`--skip-lock` needed. Launched
+      `af-backfill-20260725-032253` with the exact command above; verified DEPLOYMENT_STARTED + live progress within
+      ~4min (no fire-and-forget): run.log shows
+      `Recovery mode: promoting redo_all=True ... recovery_fixture_ids     has 16765 af_fixture_ids` (matches this doc's
+      16,777 count, minor variance expected) and real per-date `entity=FIXTURE_EVENTS` enrichment fetches starting
+      2019-01-20. **Stale-tarball check performed before trusting the launch** (launcher warned 4 tarballs stale):
+      instruments-service was missing exactly 1 commit (`450b1b58`, an unrelated FIXTURES_SCHEDULE empty-gap-emission
+      fix, not FIXTURE_EVENTS); unified-api-contracts missing exactly 1 commit (a Central Asia league-registry addition,
+      irrelevant to re-fetching already-known `af_fixture_id`s); unified-trading-library and deployment-service were
+      actually current (false-positive staleness warning) — none of the gaps affect this campaign's correctness. Full
+      run will take hours (2019→ present, 16,765 fixtures); not completable this turn. Next dispatch: health-check
+      `gcloud compute instances list --filter='name~"^af-backfill-20260725-032253"'` +
+      `gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260725-032253/run.log` before assuming still
+      running; once terminal, re-run the census script per "Next action" above before flipping this checkbox.
 
 ## Codex SSOTs
 
