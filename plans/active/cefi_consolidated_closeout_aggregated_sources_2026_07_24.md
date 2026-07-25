@@ -101,7 +101,7 @@ drift_direction: advance-code
     - 3. **[REVIEW] P1.** Audit `manifest_recorder`/honest-absence bookkeeping for this handler post-fix.
     - 4. **[DATA] P2.** If prod objects exist under the legacy `pipeline_mode=live_deribit/...` shape, migrate them
          (copy → verify → human-only purge).
-  - [`plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`](/plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md)
+  - [`plans/archive/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`](/plans/archive/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`](/plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
@@ -225,7 +225,7 @@ drift_direction: advance-code
       shards (gated on v6 canonicalisation landing).
     - **[UI] P3.** Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API
       exposes them.
-  - [`plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md`](/plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md)
+  - [`plans/archive/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md`](/plans/archive/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md`](/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md)
     (status: active)
@@ -396,7 +396,7 @@ drift_direction: advance-code
   - [`plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`](/plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md)
     - **[DESIGN] P1.** BLOCKED-OPERATOR-DECISION — confirm keeping Option B as shipped OR do the Option-A follow-up
       (declare `OKX-SPOT` its own cefi venue).
-  - [`plans/active/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`](/plans/active/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md)
+  - [`plans/archive/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`](/plans/archive/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`](/plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).

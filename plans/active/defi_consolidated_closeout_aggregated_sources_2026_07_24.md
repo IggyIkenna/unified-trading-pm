@@ -89,7 +89,7 @@ drift_direction: none
   - [`plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md`](/plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md)
     - **[SCRIPT] P0.** Final defi MVP verification — all 6 data_types `attempted_failed=0` AND `expected_unattempted=0`
       post-genesis; subgraph-zero-on-alive-day cells typed honest, never silent.
-  - [`plans/active/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md`](/plans/active/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md)
+  - [`plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md`](/plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/active/candle_canonical_path_migration_execution_2026_07_24.md)
     (16 open, all P0/P1 — this is the cefi-authored candle-namespace migration epic; defi is sequenced FIRST in its
@@ -374,7 +374,7 @@ drift_direction: none
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`](/plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md`](/plans/active/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md)
+  - [`plans/archive/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md`](/plans/archive/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/defi_morpho_lending_indices_never_wired_2026_07_12.md`](/plans/active/issues/defi_morpho_lending_indices_never_wired_2026_07_12.md)
     (1 open)
