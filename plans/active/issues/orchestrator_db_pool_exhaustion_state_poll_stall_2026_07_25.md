@@ -71,8 +71,56 @@ depends_on: []
 - **Recurrence risk**: pool sizing (5+10) and the concurrent git-status load pattern are unchanged, so this will recur
   under the same burst. It self-cleared this time; a genuine connection leak would not.
 
+## ROOT CAUSE — IDENTIFIED (2026-07-25 ~05:28, occurrence #7, main agt-52bb99 on-host)
+
+The "QueuePool exhausted" TimeoutError is a **symptom**, not the disease. The DB is **file-based SQLite**
+(`server/db.py:51`, default `QueuePool` 5+10), and `server/db.py` runs **`BEGIN IMMEDIATE` on _every_ transaction**
+(`_on_begin`, line 41, listens on the `"begin"` event for ALL sessions — reads included) with
+**`PRAGMA busy_timeout=120000` (120s)**. The default SQLAlchemy `pool_timeout` is **30s**. That combination is the
+wedge:
+
+1. SQLite is single-writer. `BEGIN IMMEDIATE` acquires the RESERVED write lock at the **start of every transaction**, so
+   even read-only endpoints (`/api/state → list_slots`, poll) contend for the one write lock.
+2. A slow write-lock holder parks all other requests. The confirmed holder: the **spawn path**
+   `server/autospawn.py:1316 _do_spawn` (called from `ensure_review_agents:252`) holds `BEGIN IMMEDIATE` **across a ~75s
+   claude/tmux cold-start** (this is the exact defect the `_on_connect` comment already flags as tracked in
+   `orchestrator_spawn_reliability_db_lock_2026_06_10` + `api_host_chronic_impairment_2026_05_29` — evidently never
+   fully fixed; `_do_spawn` still wraps the spawn in a write txn).
+3. Every other request waits on its own `BEGIN IMMEDIATE` for up to **120s** (busy_timeout) **while holding its pool
+   connection checked out**. Because `pool_timeout` (30s) < `busy_timeout` (120s), the 15-connection pool exhausts at
+   30s **long before** the lock-waiters give up — so the surface error is "QueuePool limit reached", masking the real
+   cause (a 120s write-lock hold).
+4. **Self-reinforcing wedge (why it's now near-continuous):** pool starvation makes slot **heartbeat/poll calls time
+   out** → the watchdog declares the worker dead (observed 05:28:50 "slot=11 … heartbeat loop dead — idle 7min.
+   Auto-recovering") → AutoSpawn **respawns** it → each respawn is another `_do_spawn` holding the write lock across a
+   ~75s cold-start → more pool starvation → more dead heartbeats. Journal at 05:28:24-25 shows the cascade directly:
+   repeated `sqlite3.OperationalError: database is locked` on `[SQL: BEGIN IMMEDIATE]` inside `_do_spawn`.
+
+**Implication for the fix:** raising `pool_size`/`max_overflow` (old BACKEND-P3) is a band-aid — more connections just
+means more waiters parked on the same single write lock. The real fixes are below (new P1/P2 todos). This also links
+this issue to the spawn-in-txn issue as very likely the **same root defect** resurfacing under the current fleet-cap
+saturation + frequent server-file reloads (config.py/slots_worker.py/autospawn.py edits every few min → each reload
+re-triggers AutoSpawn's spawn-in-txn on restart).
+
 ## Todos
 
+- [ ] [BACKEND] P1. **Break the spawn-holds-write-lock wedge (the actual root cause).** Run the slow claude/tmux spawn
+      in `server/autospawn.py::_do_spawn` **OUTSIDE** the `BEGIN IMMEDIATE` write transaction — acquire the lock only
+      for the short DB state-mutation, release it before the ~75s cold-start wait, re-acquire briefly to record the
+      result. This is the fix already scoped in `orchestrator_spawn_reliability_db_lock_2026_06_10`; the current
+      incident proves it is not yet implemented (`_do_spawn:1316` still wraps the spawn). **Done when**: a spawn holds
+      the SQLite write lock for <1s, and a pool-exhaustion reproduction under concurrent git-status + an in-flight spawn
+      no longer stalls `/api/state`.
+- [ ] [BACKEND] P1. **Stop read-only endpoints from acquiring the write lock.** `_on_begin` issues `BEGIN IMMEDIATE` for
+      EVERY transaction, so read paths (`/api/state → list_slots`, `/api/agents/*/poll` read portion) needlessly contend
+      for the single writer. Use a read-only / deferred transaction for read endpoints (WAL already allows concurrent
+      readers), reserving `BEGIN IMMEDIATE` for genuine writers (dispatch/`/done`). This alone would let `/api/state` +
+      poll stay responsive even while a writer holds the lock.
+- [ ] [BACKEND] P2. **Align the timeouts so the failure is loud + fast, not a 30s silent pool hang.** `pool_timeout`
+      (30s default) < `busy_timeout` (120s) is why lock contention surfaces as opaque pool exhaustion. Either lower
+      `busy_timeout` toward the pool timeout, or raise `pool_timeout` above `busy_timeout` so a genuine lock wait
+      surfaces as "database is locked" (actionable) rather than "QueuePool exhausted" (misleading). Consider a modest
+      `pool_size` bump too, but only alongside the two P1 fixes above (not instead of them).
 - [ ] [BACKEND] P2. Determine root cause: connection LEAK vs. concurrency-over-pool. Audit every DB-session usage on the
       hot paths (`/api/slots/*/git-status`, `/api/agents/*/poll`, `/api/state`) for a session/connection that isn't
       returned to the pool on all exit paths (missing `with Session(...)` / context-manager / `finally` close,
@@ -159,6 +207,15 @@ depends_on: []
   monitoring surface — recommend operator prioritise BACKEND-P3 (pool right-size + git-status write batching) now.** The
   acute 05:24 window will self-clear on the next reload/request-drain, but the chronic condition will persist until the
   code fix lands.
+- **#7 05:26–05:28Z — ROOT CAUSE IDENTIFIED (see the `## ROOT CAUSE` section above).** Fresh process 3336865 (started
+  05:26:20 after an `autospawn.py` reload) re-exhausted the pool at 05:27:32 (~72s uptime — faster than ever), and the
+  05:28:24-25 journal showed the smoking gun: repeated `sqlite3.OperationalError: database is locked` on
+  `[SQL: BEGIN IMMEDIATE]` inside `server/autospawn.py:1316 _do_spawn`, with a live spawn in progress (05:28:40 "usage
+  refresh: spawning claude") and a slot dying of a timed-out heartbeat (05:28:50 "slot=11 … heartbeat loop dead — idle
+  7min. Auto-recovering"). This is the self-reinforcing spawn-holds-write-lock wedge, not an undersized pool. SEVEN
+  occurrences (02:0x → 04:29 → 05:07 → 05:12 → 05:20 → 05:24 → 05:26), the bout from 05:20 onward is effectively
+  continuous. The fix direction moved from "resize pool" to the two new BACKEND-P1 todos (spawn-outside-txn +
+  read-only-txns-for-reads).
 - **Adjacent NEW bug surfaced in the #4 window (needs its own tracking, not the same root cause):** at 05:12:52
   `POST /api/plan-health/dispatch` returned `500` with
   `TypeError: can't subtract offset-naive and offset-aware datetimes` (a naive-vs-aware datetime subtraction on the
