@@ -700,13 +700,21 @@ source: >-
       still `RUNNING`, heartbeat 34s old, run.log grew 69,781→79,917 lines (+10,136) since the issue doc's 06:08Z check
       (same doc, more detail there — this parent plan's todo and the issue doc both point at the same VM; resist the
       urge to duplicate full detail in both). Released via `/skip-current-task`, not duplicate-launched.
-- [ ] [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
+- [x] ✅ [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
-      before accepting new objects. (repo: instruments-service `_writer_captured.py` row_count/effective_count logic +
-      both write paths; unified-api-contracts if a formal schema/type addition is needed — DIFFERENT files from the two
-      data-rewrite todos above). **Done when**: a duplicate-row write attempt for `player_stats` gets deduped; a
-      degenerate/non-13-col `fixture_events` write gets rejected or normalized; both covered by a regression test.
-      Source: `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`.
+      before accepting new objects. — `instruments-service@f5fa9f8a`. Added a `player_stats` de-dup gate (drop
+      within-object exact duplicates on `(fixture_id, player_id)`, mirroring
+      `dedup_canonical_player_stats_2026_07_25.py`'s own methodology) in `_prepare_fixture_entity_df`, and a
+      `fixture_events` schema-conformance gate (reindex to the canonical UAC 13-col `SPORTS_FIXTURE_EVENTS` contract —
+      missing columns null, non-canonical columns dropped) in `_write_fixture_entity_per_league`, applied AFTER the
+      league-mapping join so it never strips the join key. Both gates live in a new sibling cohesion module
+      (`sports_reference_fixture_entity_gates.py`) to keep `sports_reference_fixtures.py` under the 900-line file-size
+      ratchet. 11 new regression tests (`test_sports_reference_fixture_entity_writer_gates.py`) cover: dedup drops
+      duplicates / no-ops when already clean / no-ops when key columns absent (nested schema variant); schema gate
+      passthrough-when-canonical / fills missing + drops non-canonical columns on the degenerate 5-col stub; end-to-end
+      wiring through `_write_per_fixture_entities` proving the gate applies to the object actually handed to
+      `_gated_sink_write`. Full existing suite (124 tests across the 4 related test files) + full `quality-gates.sh`
+      green. Source: `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`.
 
 ### From `issues/mdt_legacy_canonical_row_gap_2026_07_16.md`
 
