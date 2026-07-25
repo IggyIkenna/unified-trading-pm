@@ -164,9 +164,10 @@ fix. No behavior change to the actual build (bash never executed these comments)
       greeks-service@081ad53, exhaustive re-scan confirmed zero remaining bare substitutions.
 - [ ] [INFRA] P1. Fix `instruments-service/cloudbuild.yaml` lines 74, 243 (bare `$VERSION` in comments → `$$VERSION`) +
       run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: instruments-service)
-- [ ] [INFRA] P1. Fix `market-data-processing-service/cloudbuild.yaml` line 237 (bare `$VERSION` in comment →
+- [x] ✅ [INFRA] P1. Fix `market-data-processing-service/cloudbuild.yaml` line 237 (bare `$VERSION` in comment →
       `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
-      market-data-processing-service)
+      market-data-processing-service) — market-data-processing-service@be66050, exhaustive re-scan confirmed zero
+      remaining bad substitutions; `quality-gates.sh` green (90s).
 - [ ] [INFRA] P1. Fix `market-tick-data-service/cloudbuild.yaml` lines 108 (`$BASE_IMAGE_DIGEST`), 309 (`$VERSION`) in
       comments → double-escaped + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge.
       (repo: market-tick-data-service)
