@@ -139,8 +139,8 @@ source:
   — **3 open** (all P0). Top: [DATA] P0. Run `data-pipeline-check-is` for prediction-only, all shards, post-migration;
   [DATA] P0. Run `data-pipeline-check-mtds` for prediction-only, all shards, post-migration.
 - [`prediction_phase_e_football_arb_live_2026_07_24.md`](/plans/active/prediction_phase_e_football_arb_live_2026_07_24.md)
-  — **3 open** (all P1, no P0 yet). Top: [BACKEND] P1. Verified end-to-end fixture link on Polymarket + Kalshi soccer;
-  [BACKEND] P1. Wire the arb engine to CONSUME `af_fixture_id`.
+  — **3 open** (2 P1 + 1 P2, no P0 yet). Top: [BACKEND] P1. Verified end-to-end fixture link on Polymarket + Kalshi
+  soccer; [BACKEND] P1. Wire the arb engine to CONSUME `af_fixture_id`.
 - [`prediction_consolidated_closeout_history_2026_07_18.md`](/plans/archive/2026_07/prediction_consolidated_closeout_history_2026_07_18.md)
   (archived) — **0 open** — VERIFIED: `status: complete`, 995 lines, zero unchecked checkboxes; pure verbatim record.
 
@@ -293,8 +293,8 @@ fixture-linked before MVP backfill.
     `data-pipeline-check-mtds` for prediction-only, all shards, post-migration.
   - **[BACKEND] P1.**
     [`prediction_phase_e_football_arb_live_2026_07_24.md`](/plans/active/prediction_phase_e_football_arb_live_2026_07_24.md)
-    — 3 open (all P1). Top: verify the end-to-end fixture link on Polymarket + Kalshi soccer; wire the arb engine to
-    CONSUME `af_fixture_id`.
+    — 3 open (2 P1 + 1 P2). Top: verify the end-to-end fixture link on Polymarket + Kalshi soccer; wire the arb engine
+    to CONSUME `af_fixture_id`.
 - **Capture / correctness**:
   - [`plans/active/prediction_capture_incident_remediation_2026_07_06.md`](/plans/active/prediction_capture_incident_remediation_2026_07_06.md)
     (9 open total)
@@ -311,7 +311,8 @@ fixture-linked before MVP backfill.
     - **[INFRA] P1** [BLOCKED-OPERATOR-DECISION]. Launch the historical prediction re-backfill under the widened
       catalogue
   - [`plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`](/plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md)
-    — 0 open todos (closed/archived/record-only)
+    — status: open, 3 live-side follow-ups outstanding (prose, no `- [ ]` checkboxes): day=2026-06-28 stall triage, the
+    e2e-testing host regression fix, the schema-drift GitHub issue-chain triage (#45→#590)
   - [`plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`](/plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md)
     (resolved, 1 residual — cross-link; note: archived location, not `plans/active/issues/`)
     - **[CODE] P2.** Durable fix: bound memory in the prediction CLOB universe scan (chunked pagination → incremental)
@@ -361,8 +362,10 @@ fixture-linked before MVP backfill.
   - [`plans/active/prediction_live_clob_depth_capture_2026_07_24.md`](/plans/active/prediction_live_clob_depth_capture_2026_07_24.md)
     - **[DATA] P2.** Verify END-TO-END depth-history retention — the RAW live book store is rolling-latest-window
   - [`plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md`](/plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md)
-    (8 open total — listed in full, not over the >8 cap threshold)
+    (9 open + 2 in-progress — listed in full, not over the >8 cap threshold)
     - **[SCRIPT] P0.** Populate POLYMARKET instrument lifecycle start/end + bound manifest empty-emission to it
+    - **[DESIGN] P1.** Fixture-pairing RESIDUAL — registry-resolution + mapping-population + arb wiring (nested under
+      the in-progress fixture-pairing parent; parser itself already shipped UAC@3effe2fc)
     - **[SCRIPT] P1.** e2e-testing/instruments-service — series-scoped historical backfill — DEEP CORPUS DONE
     - **[OPS] P2.** Tarball-overwrite race: a concurrent fleet `create-code-tarballs` (from a clone behind LDR) clobbers
     - **[UAC] P2.** Politics/geo cross-venue canonicalization — Kalshi Politics (2049 series: electoral-college)
@@ -553,6 +556,8 @@ fixture-linked before MVP backfill.
   - 4. **[CODE] P2.** Make the manifest load resumable / streamed in `migration_orphan_sweep.py`
   - 5. **[CODE] P3.** `GcsEventSink` never `.shutdown()`s its background `ThreadPoolExecutor` (4 workers)
   - 6. **[CODE] P2.** Give `backfill_orphan_class_e.py --apply` a batched-incremental `record_cells()` call
+  - 8. **[DATA] P2.** Measure prediction's `B_legacy_duplicate` population — never reported anywhere in this doc's
+       already-durable sweep report (prediction-specific; other-AG-only todos 7/3c not listed here)
 - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
   - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI
 - [`plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`](/plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md)
@@ -697,8 +702,11 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
 - **CQG residual §5** (shared + operator decision): add `pipeline_mode=live_*` prefix shapes to UAC `possible_manifest`
   — needs the BATCH-satisfied-by-LIVE-evidence semantics call (A: union batch+live [REC]; B: batch-only).
 - **Phase-B prod migration** (drain window): the enumeration-driven manifest canonicalisation (`prediction_trades`→
-  `trades`, `instrument_type`→`PREDICTION_MARKET` 11.70%→100%, empty `source`, `base_asset` whitespace) + the
-  fixture-attr backfill — needs a pre-migration VM drain the concurrent tradfi/cefi migrations currently occupy.
+  `trades`, empty `source`, `base_asset` whitespace) + the fixture-attr backfill — needs a pre-migration VM drain the
+  concurrent tradfi/cefi migrations currently occupy. **`instrument_type`→`PREDICTION_MARKET` is effectively DONE**
+  (99.46% per the 2026-07-20 census in "Distinct Values / axis-value census" above, up from the stale 11.70% dry-run
+  baseline this bullet previously cited) — only the 0.54% C2a-REFUSED lowercase tail (no migration proposed) and the
+  0.014% malformed-value residual remain, neither gated on this drain window.
 - **Phase C/D/E remainders** gated on the above (data-status dimensions view is partly already-served by
   `catalogue-filter-options`; smoke-test needs the MTDS prediction `-test-` bucket; arb-path unification needs the
   materialized columns + E2 resolution).
