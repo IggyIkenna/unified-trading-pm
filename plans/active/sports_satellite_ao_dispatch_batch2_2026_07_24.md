@@ -923,6 +923,9 @@ source: >-
     `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md` — full session writeup (data locations,
     the `in_mvp_scope` architecture fix, what shipped, what's a dead end, what genuinely remains). This todo's checkbox
     stays unchecked here; track further progress in that doc, not this Progress Log.
+  - **Released per main's BLK-7daa3e2a ruling** (correctly-parked research gap, not a stall): strengthened the issue doc
+    to state the specific unblocking input + the 2 near-miss error classes hit this session
+    (`unified-trading-pm@7608a8ef3`), then `/done` citing both SHAs.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
