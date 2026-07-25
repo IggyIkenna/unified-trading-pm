@@ -140,12 +140,13 @@ drift_direction: advance-code
 
 ## Deferred — conflict-gated (NOT dispatched; queued for operator review)
 
-The 21-agent triage workflow (`wf_92bc129c-2a8`) found 38 more AO-eligible candidates across 16 more docs that carried a
-flagged conflict against `tradfi_consolidated_closeout_2026_07_18.md`'s own open todos. Per the operator's 2026-07-25
-instruction, these are NOT silently resolved or dispatched here. Full detail (todo text + conflict quote) is in the
-triage journal (`subagents/workflows/wf_92bc129c-2a8/journal.jsonl`). Docs with conflict-gated candidates:
-`data_completion_tradfi_2026_07_15.md` (4 items), `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (9 items),
-`issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` (1),
+The 21-agent triage workflow (`wf_92bc129c-2a8`) found 38 more AO-eligible candidates across 14 more docs (corrected
+2026-07-25 plan-reconcile — the doc list below always had 14 entries, matching the 33+5=38 candidate math; "16" was a
+stale count) that carried a flagged conflict against `tradfi_consolidated_closeout_2026_07_18.md`'s own open todos. Per
+the operator's 2026-07-25 instruction, these are NOT silently resolved or dispatched here. Full detail (todo text +
+conflict quote) is in the triage journal (`subagents/workflows/wf_92bc129c-2a8/journal.jsonl`). Docs with conflict-gated
+candidates: `data_completion_tradfi_2026_07_15.md` (4 items), `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (9
+items), `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` (1),
 `issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` (1),
 `issues/tradfi_backfill_oom_remediation_2026_06_24.md` (2),
 `issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` (1),

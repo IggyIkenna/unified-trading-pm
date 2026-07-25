@@ -136,7 +136,9 @@ source:
 >   per-day corpus); (2) **Migrate GCS filenames + tick CONTENT (Surfaces C+D)**. The manifest migration (Surface B) is
 >   now DONE + RE-VERIFIED LIVE 2026-07-25, and the enumeration-driven-migration casing sub-scope CLOSED 2026-07-25 (its
 >   semantic-mislabel + null/blank residual moved to a separate open P1) — both are no longer open P0s.
-> - `tradfi_backfill_throughput_followups_2026_07_24.md` — **11 open** (0×P0, 8×P1, 3×P2). Top P1s: (1) Backfill-VM
+> - `tradfi_backfill_throughput_followups_2026_07_24.md` — **6 open as of 2026-07-25 (was 11 at this digest's 2026-07-24
+>   generation; 3 more shipped independently since — SIGKILL verify, phantom-row retirement, concurrency-cap raise —
+>   corrected via plan-reconcile; expect this to drop further once tradfi batch2 lands)**. Top P1s: (1) Backfill-VM
 >   startup OOM rc137 + OOM remediation baked default + consolidator throughput/backlog monitor (3 sub-issues bundled);
 >   (2) TradFi has NO working T+1 forward-fill job — add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job.
 > - `tradfi_phase_d_terminal_gate_2026_07_24.md` — **2 open** (1×P0, 1×P1). The P0: MVP backfill readiness gate — run
@@ -387,6 +389,15 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       Regenerate catalogue + manifest so the name lands live; verify the Catalogue Explorer shows `SK Hynix` /
       `Samsung Electronics` next to the code. (repos: instruments-service, market-tick-data-service, deployment-api,
       deployment-ui)
+- [ ] [BACKEND] P2. **NEW 2026-07-25 (plan-reconcile) — track the KRX name-column "STILL OPEN" work above as a real
+      todo, not just prose behind a checked box.** The P1 item above is `[x]` (code shipped 4/4, catalogue-side name
+      confirmed live), but its own STILL OPEN note names 2 pieces of work never separately tracked: (a) the
+      availability-manifest `name` column (owned by another agent — the manifest's shard-atom/writer, not the catalogue)
+      — deliberately deferred there in favor of catalogue-as-SSOT + display-time join; (b) the catalogue regeneration
+      that actually lands the name LIVE (distinct from the code shipping — confirm this has happened since the
+      2026-07-20 "10 KRX rows and NO name column" sample check, or run it). **Done when**: either both are confirmed
+      already done with fresh evidence (a live catalogue read showing the `name` column populated for KRX rows), or both
+      are executed and verified. Repos: instruments-service, market-tick-data-service, deployment-api.
 - [ ] [VERIFY] P0. 🚧 BLOCKED-INFRA — **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan
       2), record the fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now canonical-and-measured.
       **STILL BLOCKED 2026-07-21 (only PARTIALLY unblocked)**: the v9 manifest migration/rebuild are done (task 10,
@@ -605,7 +616,11 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       and `venue_mapping.py`
     - **[DATA] P1.** Resolve the 8 confirmed multi-year/multi-month CeFi mismatches (BITFINEX, KRAKEN, COINBASE-SPOT,
       etc.)
-    - **[DATA] P2.** Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 vs `venue_mapping.py`'s 2020-01-01
+    - ~~**[DATA] P2.** Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 vs `venue_mapping.py`'s 2020-01-01~~
+      — **SHIPPED, stale digest entry corrected 2026-07-25 (plan-reconcile)**: `unified-api-contracts@32b2879c` updates
+      `coverage_starts.py` to match `venue_mapping.py`'s verified 2020-01-01; this doc's own Phase C todo (line ~280)
+      and `coverage_floor_registries_no_cross_propagation_2026_07_17.md:163` are both already flipped `[x]` — this
+      digest bullet alone was stale relative to the rest of this same file.
     - **[DATA] P2.** Resolve the POLYMARKET mismatch (CLOB-launch vs first-actual-instrument)
     - **[DATA] P3.** Resolve the small 1-21 day DeFi protocol drifts + AAVE_V3 chain-axis question
     - **[DATA] P3.** Publish an explicit key-mapping table between `coverage_starts.py` and `venue_mapping.py` keys

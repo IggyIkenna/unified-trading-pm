@@ -71,8 +71,10 @@ drift_direction: advance-code
 > skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
 > operator review. All 11 todos below are same-priority; same-source-doc collisions were resolved by combining
 > candidates into ONE todo per source doc (3 combined groups: data_completion_tradfi,
-> instruments_tradfi_g1_g5_gate_execution, tradfi_backfill_throughput_followups) — verified zero remaining cross-todo
-> file collisions.
+> instruments_tradfi_g1_g5_gate_execution, tradfi_backfill_throughput_followups) — **one remaining cross-todo file
+> collision found and flagged 2026-07-25 (plan-reconcile), not zero**: todos 3 and 9 both write a checkbox flip to
+> `tradfi_backfill_throughput_followups_2026_07_24.md` as part of their own Done-when (see each todo's own
+> Conflict-check note) — do not dispatch/commit those two concurrently.
 
 ## Re-check summary (what changed since batch1's 2026-07-25 triage)
 
@@ -182,9 +184,12 @@ changed since batch1.
       checkboxes/table rows for items 1-7 are flipped/updated in the SAME commit. Source:
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
 
-- [ ] [SCRIPT] P2. **Combined throughput-followups residual pass — 3 independent, conflict-clear candidates from
-      `tradfi_backfill_throughput_followups_2026_07_24.md`, bundled into ONE todo because all 3 would otherwise edit the
-      SAME doc file concurrently**: (1) Replace `ohlcv_split_ticker_groups`'s ticker-group fan-out in
+- [ ] [SCRIPT] P2. **Conflict-check (2026-07-25 plan-reconcile): this todo's Done-when flips 3 checkboxes in
+      `tradfi_backfill_throughput_followups_2026_07_24.md`; todo 9 below flips a 4th checkbox in that SAME doc. Do not
+      dispatch/commit concurrently — run todo 9 (P1) first, then this todo (P2), so the two checkbox-flip commits don't
+      race on the same file.** **Combined throughput-followups residual pass — 3 independent, conflict-clear candidates
+      from `tradfi_backfill_throughput_followups_2026_07_24.md`, bundled into ONE todo because all 3 would otherwise
+      edit the SAME doc file concurrently**: (1) Replace `ohlcv_split_ticker_groups`'s ticker-group fan-out in
       `_tradfi-ohlcv-launcher-lib.sh` (used by `launch-tradfi-bf-nasdaq-ohlcv-1m.sh` and
       `launch-tradfi-bf-nyse-ohlcv-1m.sh`) with N contiguous DATE-range slices per venue (all tickers per VM) — MEASURED
       in this doc's own tick-26 analysis that per-calendar-date cost is ~1.46 min fixed + 7.1e-4 min/cell
@@ -284,16 +289,18 @@ changed since batch1.
       the findings (root cause identified, or documented as still-open with the specific evidence gathered). Source:
       `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`.
 
-- [ ] [DATA] P1. **Make TradFi's `todo` denominator honest below the vendor discovery floor (4-step ordered sequence,
-      one worker, execute in order)** — ALSO closes `tradfi_backfill_throughput_followups_2026_07_24.md`'s own P2
-      candidate on the SAME 182,407-cell cohort (that doc's phrasing pointed at `sentinels.py`, but a live grep
-      confirmed `sentinels.py` has zero floor-related logic today; this candidate's more precise, already-verified
-      target is the actual gap). (1) Re-measure and break down the 182,407 pre-floor cells by (venue, data_type, year) —
-      extend the doc's own 2026-07-20 re-verification by adding the YEAR axis and sweeping CBOE (floor 2020-06-01);
-      confirm each counted cell is strictly-before its venue's floor (an off-by-one would wrongly reclass a real,
-      fillable day). (2) THEN teach `instruments-service/scripts/enumerate_expected_universe.py`'s tradfi path a
-      discovery-floor clip — mirror the file's existing `_tradfi_floor_start_for_data_type()` pattern (the BILLING
-      floor) but source the NEW clip from
+- [ ] [DATA] P1. **Conflict-check (2026-07-25 plan-reconcile): this todo's Done-when ALSO flips a checkbox in
+      `tradfi_backfill_throughput_followups_2026_07_24.md` — the SAME doc the P2 todo above (3-item combined pass)
+      writes to. Run this todo FIRST (higher priority), then the P2 todo, never concurrently.** **Make TradFi's `todo`
+      denominator honest below the vendor discovery floor (4-step ordered sequence, one worker, execute in order)** —
+      ALSO closes `tradfi_backfill_throughput_followups_2026_07_24.md`'s own P2 candidate on the SAME 182,407-cell
+      cohort (that doc's phrasing pointed at `sentinels.py`, but a live grep confirmed `sentinels.py` has zero
+      floor-related logic today; this candidate's more precise, already-verified target is the actual gap). (1)
+      Re-measure and break down the 182,407 pre-floor cells by (venue, data_type, year) — extend the doc's own
+      2026-07-20 re-verification by adding the YEAR axis and sweeping CBOE (floor 2020-06-01); confirm each counted cell
+      is strictly-before its venue's floor (an off-by-one would wrongly reclass a real, fillable day). (2) THEN teach
+      `instruments-service/scripts/enumerate_expected_universe.py`'s tradfi path a discovery-floor clip — mirror the
+      file's existing `_tradfi_floor_start_for_data_type()` pattern (the BILLING floor) but source the NEW clip from
       `unified_api_contracts.registry.venue_mapping.VenueMapping.get_instrument_discovery_start(venue)`, resolved live
       at runtime — **confirmed via live grep 2026-07-25 that `get_instrument_discovery_start` is NOT currently called
       anywhere in `enumerate_expected_universe.py`, only the separate billing-floor is applied there today, so the gap
