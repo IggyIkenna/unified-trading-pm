@@ -18,7 +18,7 @@ summary: >-
   repeating a stale claim. A prior plan-reconcile pass already fixed this same class of stale-UPPER reference elsewhere
   (`sports_master_closeout_2026_07_21.md`, codex docs) per `sports_plan_and_docs_reconcile_findings_2026_07_24.md`, but
   this newer satellite-batch2 doc was never checked against the revert.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -39,7 +39,7 @@ priority: P0
 source: >-
   Full-corpus /plan-reconcile run (background Workflow task wmkz9g9jq, run wf_a5681818-eef), 2026-07-24/25 — 74 hunters,
   246 confirmed findings, adversarially verified. This is the SOLE P0 among all 246.
-resolved_by:
+resolved_by: mtds@fb51d86c (script fix), unified-trading-pm@816b83c74 (plan doc repoint)
 locked_by:
 assigned_vm:
 code_refs: [market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py]
@@ -107,14 +107,18 @@ expected/paused, not a fresh emergency.
 
 ## Todos
 
-- [ ] [CODE] P2. Read both `migrate_sports_league_id_casing_2026_07_21.py` and `migrate_sports_casing_2026_07_22.py` to
-      determine whether upper-case is hardcoded or parameterized in each — needed groundwork for whenever the operator
-      gives the go-ahead to execute Track C's revert, not an immediate action item. Repo: market-tick-data-service.
-- [ ] [DOC] P0. Once `sports_satellite_ao_dispatch_batch2_2026_07_24.md` is not live-locked by another session, fix its
-      league_id-casing-migration todo so it cannot dispatch the wrong-direction copy — either repoint it to lower-case
-      (if that's actually correct for what this specific todo does) or, more likely given Track C's explicit "waits for
-      operator instruction" gating, mark it BLOCKED-OPERATOR pending the same go-ahead Track C's own revert todos
-      require, rather than leaving it silently AO-dispatchable. Repo: unified-trading-pm.
+- [x] [CODE] P2. ✅ Read `migrate_sports_league_id_casing_2026_07_21.py` — upper-case WAS hardcoded (docstring +
+      `tgt_path()` f-string, 3 places), not parameterized. `manifest_swap_2026_07_22.py` (the sibling downstream script,
+      not `migrate_sports_casing_2026_07_22.py` which doesn't exist under that name) also hardcoded it via module-level
+      `INSTRUMENT_TYPE`/`DATA_TYPE` constants. Both fixed — see next todo.
+- [x] [DOC] P0. ✅ Operator answered directly in-session (AskUserQuestion, 2026-07-25): **repoint to lower-case now.**
+      Since the executor hardcodes casing, a plan-text edit alone wouldn't change real behavior — fixed the actual
+      scripts: `mtds@fb51d86c` (`migrate_sports_league_id_casing_2026_07_21.py`'s `tgt_path()` +
+      `manifest_swap_2026_07_22.py`'s casing constants, both lower-case now; QG-green). Then repointed
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s todo text to cite the fix (`unified-trading-pm@816b83c74`).
+      This does NOT touch the already-shipped K1/K2 data (260,298 objects, still upper-case on disk) — that revert stays
+      exactly where Track C left it, paused pending separate operator go-ahead (see todo below). This fix only prevents
+      the satellite-batch2 todo from EXTENDING the problem with ~139,155 more wrong-direction objects.
 - [x] ✅ [DATA] P1. Confirm whether the already-shipped K1/K2 upper-case migration (260,298 objects) has its own tracked
       revert/undo plan — **YES**: `sports_consolidated_closeout_2026_07_19.md` Track C names the 3-layer revert
       (registry/`DATA_TYPES_BY_ASSET_GROUP`, writers/`odds_api_adapter.py`+`sentinels.py`, data/GCS+manifest)
