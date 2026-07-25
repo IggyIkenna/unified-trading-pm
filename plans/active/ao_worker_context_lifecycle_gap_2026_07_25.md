@@ -215,7 +215,7 @@ sequential: true
       full test suite (1655 tests) re-ran green after the flip — no test anywhere relied on the old `False` default
       (grepped for every `context_burn_kill` reference first; none asserted the old value). `quality-gates.sh` green on
       all 3 files.
-- [ ] [BACKEND] P2. **Stop the WorkerLivenessKicker from blindly re-nudging a frozen+context-saturated slot.** In
+- [x] ✅ [BACKEND] P2. **Stop the WorkerLivenessKicker from blindly re-nudging a frozen+context-saturated slot.** In
       `WorkerLivenessKicker._tick_once` (`server/worker_liveness/__init__.py`): when `classify_pane(pane) == "frozen"`
       AND the slot's current `context_used_pct >= context_worker_compact_gate_pct` (todo 1's threshold), skip the
       ordinary `_kick_session(..., kind="frozen")` "proceed now" injection and instead log a new activity type
@@ -224,7 +224,14 @@ sequential: true
       "proceed now" nudges over 30 minutes at 100% context (`ping_advanced: false` on nearly every one) before
       eventually crashing. **Done when**: a unit test asserts a frozen+saturated slot gets the new log event instead of
       a kick attempt, while an ordinary frozen-but-normal-context slot's kick behavior is unaffected; `quality-gates.sh`
-      green.
+      green. — `agent-orchestrator@0db1726`. Guard inserted immediately before the kick-kind computation in
+      `_tick_once`, gated on `classification == "frozen"` AND
+      `slot.context_used_pct >=     get_config().tuning.context_worker_compact_gate_pct`; logs `frozen_at_high_context`
+      with `{context_pct, consecutive_prior_kicks}` then `continue`s (skips `_kick_session` entirely). Two new tests in
+      `tests/test_worker_liveness.py` (`test_frozen_and_context_saturated_not_kicked`,
+      `test_frozen_below_context_threshold_still_kicked`) — the first asserts the log event fires and no kick is
+      attempted at the threshold; the second confirms ordinary frozen-but-normal-context kicks are unaffected one pct
+      point below it. 1676/1676 tests pass, full `quality-gates.sh` PASSED.
 - [ ] [BACKEND] P2. **Give the reactive crash-time context-loss path its own visible event type.** In `tmux_pruner.py` /
       `resume_lifecycle.py`, the existing `resume_fresh_context_pct` skip-resume check (observed live 2026-07-25 for
       slots 5, 8, and 9 — `slot_resume_skipped`: "context 100% >= resume_fresh_context_pct 90%") currently folds into
