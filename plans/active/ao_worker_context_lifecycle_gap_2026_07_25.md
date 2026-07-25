@@ -132,14 +132,26 @@ sequential: true
       directive → suppressed → compaction drop clears it → climbs back over → fires again) and
       `test_progress_context_gate_repeats_every_tick_when_repeat_gate_on` (default True — no suppression). 1654/1654
       tests pass, full `quality-gates.sh` PASSED.
-- [ ] [INFRA] P0. **Update `unified-trading-pm/agents/worker.md`'s context-discipline section** (the PROGRESS step,
+- [x] ✅ [INFRA] P0. **Update `unified-trading-pm/agents/worker.md`'s context-discipline section** (the PROGRESS step,
       currently ending in the prose-only ">~70% used, run /compact" line) with a HARD RULE: if a `/done` or `/progress`
       response's `directive` field (todo 2's exact field name) is `compact_before_next` or `compact_now`, the agent MUST
       run the `/pre-compact` skill then `/compact` before its next tool call — for the `/done` case, MUST NOT call
       `/boot` again until compaction is confirmed done. Keep the existing prose >~70% self-discipline line as the
       earlier VOLUNTARY trigger, unchanged — the new directive is the enforced backstop, not a replacement. **Done
       when**: worker.md's PROGRESS section and the boot-loop section both reference the exact `directive` field/values
-      by name; any doc-lint/prek check on `unified-trading-pm` passes.
+      by name; any doc-lint/prek check on `unified-trading-pm` passes. — **DONE — `unified-trading-pm@a6bf2eba8`.**
+      Added the HARD RULE block to the PROGRESS section (3 sub-points: what the field means, the 2-step
+      pre-compact→compact action, and the `compact_before_next` "don't re-`/boot` until compacted" rule), a matching
+      note on the DONE step's `next_task` docs, and a `4b.` line in the `### The required loop` boot-loop pseudocode —
+      satisfies the "PROGRESS section AND boot-loop section" requirement literally. **Scope correction against the
+      actual shipped implementation**: this todo's own text (and todo 2's) only named `/done`/`/progress`, but by the
+      time this todo was dispatched todo 13 (later in this same plan) had already shipped `directive` on
+      `BootResponse`/`HeartbeatResponse` too (`agent-orchestrator@13889e0`) — documented all four routes
+      (`/progress`/`/done`/`/boot`/`/heartbeat`) rather than the stale 2-route scope, so the doc doesn't immediately
+      drift from the real system (mirrors this plan's own "todo 1's env-overridable" self-correction precedent, see
+      Progress Log). Experienced the mechanism live while shipping this exact todo: my own `/progress` call at
+      `context_used_pct: 70` returned `directive: "compact_now"` — real-time confirmation the shipped gate matches what
+      I just wrote. `quality-gates.sh` green (unified-trading-pm).
 - [ ] [BACKEND] P1. **Expose worker session-start time via the API.** Add `last_spawned_at: datetime | None` to
       `SlotView` (`server/models/slots.py`) and populate it in the `/api/state` route mapping (`server/routes/state.py`)
       from the ORM `SlotRow.last_spawned_at` field, which already exists and is already read internally
