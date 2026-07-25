@@ -158,6 +158,17 @@ For the target `<ag>`:
    `issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` was genuinely cross-AG, `cefi` dropped), never
    silently left dual-tagged or silently excluded from both audits.
 
+   **A second, distinct sub-bug (found the same day, scoping the cross-cutting AG's own candidate corpus):** the
+   dual-tag grep above only catches a doc carrying BOTH a specific AG and `cross-cutting`. It does NOT catch a doc
+   tagged with ONLY `cross-cutting` whose actual content is single-AG-specific — there is no second tag to grep for, so
+   this class is invisible to any tag-only check and only surfaces by reading the doc's real content (endpoints,
+   registries, data types, `tags:`/`related:`). Confirmed example:
+   `issues/understat_bulk_download_backfill_2026_06_29.md` was tagged bare `[cross-cutting]` but is an Understat
+   (football/soccer xG provider)-specific backfill for 5 named leagues — every endpoint/registry/data type in it is
+   sports-only, not a generic reusable pattern; retagged `[sports]`. **Before shipping any `cross_cutting_*` corpus
+   scoping decision, spot-check a sample of candidate docs' actual content against their tag, not just their frontmatter
+   shape** — a plausible-sounding generic title is not proof the content is actually cross-AG.
+
 ## Phase 1 — per-doc classification (Workflow tool, one agent per doc)
 
 Given the AG-primary candidate list from Phase 0.3, launch a `Workflow` (`pipeline()` over the doc list — this corpus
