@@ -97,7 +97,7 @@ sequential: true
       `tests/test_task_lifecycle_done_gate_resume.py`, deliberately scoped to schema-only (default/set/
       `model_dump`/`model_validate` round-trip) so they don't duplicate todos 3-4's later route-behavior tests.
       1650/1650 tests pass, full `quality-gates.sh` PASSED.
-- [ ] [BACKEND] P0. **Gate `done_slot`** (`server/routes/slots_worker.py`) **on self-reported context.** Before the
+- [x] ✅ [BACKEND] P0. **Gate `done_slot`** (`server/routes/slots_worker.py`) **on self-reported context.** Before the
       existing next-task-selection path runs, compare `req.context_used_pct` (already submitted on every `/done` call —
       confirmed live, e.g. `context_pct: 95` on `slot_done` activity entries, currently unconsumed) against
       `get_config().tuning.context_worker_compact_gate_pct`. At/above threshold: do NOT dispatch a next task to this
@@ -107,7 +107,13 @@ sequential: true
       mirroring how `proactive_compact_guidance` is already logged for main/review in `context_lifecycle.py`. **Done
       when**: a unit test asserts `done_slot` withholds `next_task` and sets the directive when
       `context_used_pct >= threshold`, dispatches normally below it, and the candidate task remains `queued` (not
-      silently dropped); `quality-gates.sh` green.
+      silently dropped); `quality-gates.sh` green. — `agent-orchestrator@55148c8`. Gate inserted immediately before
+      `pick_next_task` inside the existing `session_scope()` block; logs `worker_compact_gated` with
+      `{context_pct, threshold}`. Two new tests added to `tests/test_task_lifecycle_done_gate_resume.py`
+      (`test_done_context_gate_withholds_next_task_above_threshold`,
+      `test_done_context_gate_dispatches_normally_below_threshold`) using a real `Backlog(tasks=[BacklogTask(...)])`
+      candidate task (not the `empty_backlog` fixture) to assert both the above-threshold withhold + queued-untouched
+      path and the below-threshold normal-dispatch path. 1652/1652 tests pass, full `quality-gates.sh` PASSED.
 - [ ] [BACKEND] P0. **Gate `progress_slot`** (same file as todo 3, `server/routes/slots_worker.py` — kept as a separate
       sequential todo rather than merged, since the two handlers are independently testable even though they share the
       threshold/directive contract from todos 1-2). When `req.context_used_pct >=     context_worker_compact_gate_pct`,
