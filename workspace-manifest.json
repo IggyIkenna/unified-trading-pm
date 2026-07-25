@@ -72,17 +72,17 @@
     "deployment-service": "0.106.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.39.0",
-    "features-service": "0.66.0",
+    "features-service": "0.67.0",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
-    "instruments-service": "0.88.0",
-    "market-tick-data-service": "0.91.0",
+    "instruments-service": "0.91.0",
+    "market-tick-data-service": "0.93.0",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.72.0",
     "unified-trading-library": "0.57.0",
-    "unified-trading-pm": "1.2.604",
+    "unified-trading-pm": "1.2.608",
     "market-data-processing-service": "0.22.0",
-    "e2e-testing": "0.6.0",
+    "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
     "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.11",
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
+        "coverage_pct": 90.92,
         "warn_file_count": 9,
-        "coverage_pct": null,
-        "large_file_count": 8
+        "large_file_count": 8,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
+        "coverage_pct": 83.29,
+        "warn_file_count": 39,
         "large_file_count": 0,
-        "coverage_pct": null,
-        "warn_file_count": 39
+        "qg_red_reason": null
       }
     },
     "ml-service": {
@@ -1103,10 +1103,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "coverage_pct": 9.54,
         "warn_file_count": 0,
-        "qg_red_reason": null,
         "large_file_count": 0,
-        "coverage_pct": null
+        "qg_red_reason": null
       }
     },
     "trading-agent-service": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
         "coverage_pct": null,
         "warn_file_count": 0,
-        "qg_red_reason": null
+        "large_file_count": 0,
+        "qg_red_reason": "ruff"
       }
     },
     "unified-trading-api": {
@@ -2185,8 +2185,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.57.0",
-      "published_at": "2026-07-25T21:06:20Z",
+      "version": "0.57.1.dev1+g25c495c63",
+      "published_at": "2026-07-25T23:03:55Z",
       "registry": "artifact-registry"
     }
   }
