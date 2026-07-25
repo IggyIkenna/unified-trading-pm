@@ -128,7 +128,23 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       2019-01-03→2019-12-24 between two checks ~6min apart, monotonic, no error/stall signature. Not completable this
       turn (genuinely hours from done, 2019→2026-07-25 range). Released via `/skip-current-task`, not
       duplicate-launched. Next dispatch: repeat this health-check; once terminal (`exit_code=0`/`DEPLOYMENT_COMPLETED`,
-      self-deleted), re-run the census script per "Next action" above before flipping this checkbox.
+      self-deleted), re-run the census script per "Next action" above before flipping this checkbox. — **Health-checked
+      2026-07-25T05:10Z (slot 3, data_engineering), still RUNNING**: `gcloud compute instances list` confirms `RUNNING`
+      in `asia-northeast1-c`; run.log timestamps continuous up to 05:09:45 (30s before check, live process, not
+      stalled); 359 distinct `date=` markers seen since the 03:22:53 launch, currently on `2019-12-25`. **Efficiency
+      finding, not blocking**: 2 of the 359 dates so far (`2019-12-24`, `2019-12-25`) hit a
+      "`Per-fixture GCS skip: no GCS fixtures for date=X — using 16765 recovery IDs directly`" fallback — when a date
+      has no GCS-cached fixture list, the script falls back to attempting ALL 16,765 recovery fixture IDs against that
+      single date instead of just the handful that actually played that day. `date=2019-12-24` alone took ~66min
+      (03:53:41→05:00:02) under this fallback vs. seconds for a normal date. At the observed ~0.6% fallback-date rate
+      this could add several hours across the full 2019→2026 range — real but not correctness-affecting (every real
+      fixture still gets fetched exactly once via the allowlist filter, just slower on affected dates); not something to
+      intervene on mid-run. Not completable this turn (2141 of ~2500 dates remain even ignoring further fallback hits).
+      Released via `/skip-current-task`, not duplicate-launched. Next dispatch: repeat this health-check (2-read
+      progress-metric check, not single-snapshot); once terminal, re-run the census script per "Next action" above
+      before flipping this checkbox. If the fallback-date rate turns out much higher than 0.6% over a longer observation
+      window, consider filing a separate perf follow-up issue doc for the launcher/enrichment script (out of scope for
+      this todo — do not fix mid-flight on a running prod VM).
 
 ## Codex SSOTs
 
