@@ -145,7 +145,16 @@ someone else, or the manifest shape may have shifted.
       confirm which one is live per `/codex/02-data/honest-coverage-model.md`, tooling may have moved since 2026-07-07)
       after todos 2-3 land, and confirm the BYBIT-SPOT tuple closes cleanly (matches
       `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` = `{trades, book_snapshot_5}` exactly, no stray tuples for this
-      venue). Record the before/after cefi Layer-1 % in this plan's Progress Log. (repo: instruments-service)
+      venue). Record the before/after cefi Layer-1 % in this plan's Progress Log. (repo: instruments-service) -- **NOT
+      YET -- dispatched to slot-2 2026-07-25 ahead of todo 3 landing (sequential prereq-chain gap: the auto-wired
+      `completed_tasks` chains each task to its immediate PLAN-ORDER predecessor, i.e. this todo's task row chains to
+      todo 2's, not todo 3's, so the dispatcher offered it before its real precondition was met -- worth a dispatcher
+      note, not a plan defect). Ran `measure_honest_coverage.py --asset-group cefi` anyway (cheap, read-only, tooling
+      confirmed still live/current) to record the honest BEFORE state -- see Progress Log. Confirmed the tuple does NOT
+      close cleanly yet: BYBIT-SPOT still carries all 6 stray tuples (the spot-nonsense data_types), 0 missing tuples,
+      cefi Layer-1 = 98.59% (71 expected / 70 present). Left this checkbox UNCHECKED and skipped the task back to the
+      queue (BLOCKED, citing todo 3) rather than false-close it -- re-run this measurement after todo 3's `--apply`
+      actually lands.**
 - [ ] [PM] P3. **Close the loop**: once todos 1-4 land, add a corrective note to
       `plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md` (which already flags this exact gap) citing this plan's
       commit(s), and confirm whether `bybit_spot_manifest_stray_captures_2026_07_07.md`'s archived `status: resolved` is
@@ -228,3 +237,40 @@ someone else, or the manifest shape may have shifted.
   it; the underlying 53,934-row purge target itself is unchanged and still needed. Did NOT edit the script or run
   `--smoke`/`--apply` -- out of this task's scope (todo 1, read-only re-verification) and the mutation remains
   `[OPERATOR]`-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`.
+
+- **2026-07-25 (slot-2 data_engineering)** -- **Todo 4 dispatched ahead of todo 3 (dispatcher gap), ran the
+  re-measurement anyway to record the honest BEFORE state, left the checkbox unchecked, skipped back to queue.**
+  `instruments-service/scripts/measure_honest_coverage.py --asset-group cefi` is confirmed still the live canonical
+  entry point per `/codex/02-data/honest-coverage-model.md` (Layer-1 completeness + Layer-2 reachable %, schema_version
+  2, writes `gs://central-element-323112-honest-coverage/<date>/coverage.json`) -- no tooling move since 2026-07-07. Ran
+  it read-only (no `--apply`, no mutation):
+
+  ```
+  cefi Layer-1: denominator_status=INCOMPLETE, completeness_pct=98.59 (70/71 expected tuples present)
+  cefi-wide missing_tuples: 1 -- (OKX, options_chain, trades) -- unrelated to BYBIT-SPOT
+  cefi-wide stray_tuples:   86 total
+
+  BYBIT-SPOT stray tuples (filtered from the 86): 6 -- exactly the todo-3 spot-nonsense set, all now carrying
+  instrument_type=SPOT_PAIR (the same organic-coalesce cause noted in todo 1's Progress Log entry, not "" anymore):
+    (BYBIT-SPOT, SPOT_PAIR, derivative_ticker)
+    (BYBIT-SPOT, SPOT_PAIR, futures_chain)
+    (BYBIT-SPOT, SPOT_PAIR, liquidations)
+    (BYBIT-SPOT, SPOT_PAIR, ohlcv_1m)
+    (BYBIT-SPOT, SPOT_PAIR, options_chain)
+    (BYBIT-SPOT, SPOT_PAIR, perp_funding)
+  BYBIT-SPOT missing tuples: 0
+  ```
+
+  **Verdict: the BYBIT-SPOT tuple does NOT close cleanly yet** -- this todo's own Done-when ("no stray tuples for this
+  venue") is not met, because todo 3 (the spot-nonsense purge) has not run. This is expected and not a new finding -- it
+  directly confirms todo 3's still-needed status from the prior entry. Did not flip this checkbox; did not claim
+  closure. Re-run this exact measurement after todo 3's `--apply` lands to get the real after-state.
+
+  **Dispatch-gap note (informational, not a plan defect)**: this task (`cefi_bybit_spot_manifest_remediation-004`) was
+  offered to a worker before todo 3 completed. `sequential: true`'s auto-wired `completed_tasks` chains each task to its
+  immediate plan-order predecessor (todo 4 -> todo 2, todo 3 -> todo 1) rather than to every semantically-required
+  earlier todo the plan prose names ("after todos 2-3 land") -- there is no per-todo custom-prereq syntax to express
+  "depends on todo 3 specifically, which is two todos back in a differently-ordered chain" (CLAUDE.md: "no per-todo
+  prereq syntax -- prereqs come only from sequential/gate_on_depends"). Not filing a separate issue doc for this -- it's
+  a known modeling limit of the sequential-chain feature, not a bug, and the practical mitigation (skip back to queue
+  with reason_code=BLOCKED once the true dependency is discovered) worked as intended.
