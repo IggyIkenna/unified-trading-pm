@@ -339,14 +339,24 @@ source: >-
       hit for canonicalised dates) or removed outright (worker's engineering call, given ~478 of the 28,100 rows
       currently rely on the fallback as sole source); Part 4 grep+READ re-run recorded. Source:
       `issues/sports_legacy_duplicate_triage_2026_07_22.md`.
-- [ ] [REVIEW] P3. **Rescan `migration_orphan_sweep_sports.py --bucket reference`** to retire the 4,735 stale
+- [x] ✅ [REVIEW] P3. **Rescan `migration_orphan_sweep_sports.py --bucket reference`** to retire the 4,735 stale
       (already-deleted) flat pre-floor rows from the durable audit parquet, and fix the classifier's
       `is_covered_sports`-before-`_is_pre_launch` ordering so pre-floor cells with a stale-captured manifest row
       classify `C3_pre_launch_window` instead of `B_legacy_duplicate` (mirrors the already-shipped E-class fix,
       `unified-api-contracts@46d865df`, on a different branch of the same function). (repo: instruments-service
       `scripts/migration_orphan_sweep_sports.py`; unified-api-contracts classifier mirror). **Done when**: rescan no
       longer surfaces the 4,735 stale rows; classifier ordering fix causes correct classification, mirroring the
-      already-shipped E-class pattern. Source: `issues/sports_legacy_duplicate_triage_2026_07_22.md`.
+      already-shipped E-class pattern. Source: `issues/sports_legacy_duplicate_triage_2026_07_22.md`. —
+      **instruments-service@6cf44d31**: `classify_reference_object`'s flat/non-`by_date` branch now checks
+      `_is_pre_launch` BEFORE `is_covered_sports` (day-less FLAT singletons unaffected — `_is_pre_launch` returns
+      `False` on `day=""`); the pre-existing "covered wins" semantics on the SEPARATE `by_date`-tree branch (tested by
+      `test_pre_launch_window_is_c3_not_e`) are deliberately left untouched — a different, already-decided policy
+      question (the v2 pre-floor 728-row disposition, issue doc §7 todo 1, `[OPERATOR]`-gated). 36/36 unit tests green
+      (incl. new regression `test_flat_legacy_pre_floor_stale_captured_is_c3_not_b`); QG green. Live rescan run against
+      `instruments-store-sports-prd-central-element-323112` (2026-07-25): fresh audit parquet written to
+      `_index/audit/orphan_sweep_sports.parquet` — verified **0** flat pre-floor `B_legacy_duplicate` rows remain (down
+      from 4,735); new counts `B_legacy_duplicate=27,238` / `E_orphan_real=2,179` / `C3_pre_launch_window=800` (30,217
+      actionable rows total, 916,394 objects walked).
 - [x] [REVIEW] P3. ✅ **Cross-file the archived `sports_master_closeout_2026_07_21.md`'s pending "MANIFEST prune"
       deferred task** — the 944,776 phantom pre-floor manifest rows it already tracks are the root cause of this doc's
       §2 misclassification too. (repo: unified-trading-pm — add a cross-reference note to the archived plan's existing

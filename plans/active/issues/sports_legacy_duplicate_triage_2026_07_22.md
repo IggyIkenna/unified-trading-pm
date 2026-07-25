@@ -327,12 +327,18 @@ Recommended next steps, in priority order:
       reconsidered for delete: (a) `sports_reference_fixtures.py:139`'s old-path branch — verify it is never actually
       reached for canonicalised dates (add a counter/log), or remove it now that canonical coverage is ~98%; (b)
       `data_status_sports.py`'s level-4 fallback — same treatment. Re-run Part 4 grep+READ after either change lands.
-- [ ] 4. [REVIEW] P3. **Rescan `migration_orphan_sweep_sports.py --bucket reference`** to retire the 4,735 stale
+- [x] ✅ 4. [REVIEW] P3. **Rescan `migration_orphan_sweep_sports.py --bucket reference`** to retire the 4,735 stale
       (already-deleted) flat pre-floor rows from the durable audit parquet, and to fix the classifier's
       `is_covered_sports`-before-`_is_pre_launch` ordering so pre-floor cells with a stale-captured manifest row
       classify `C3_pre_launch_window` instead of `B_legacy_duplicate` (mirrors the fix already shipped for the `E` class
       in `sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md`, `unified-api-contracts@46d865df` — this is
-      the same bug on a different branch of the same function, not yet fixed there).
+      the same bug on a different branch of the same function, not yet fixed there). — **DONE**,
+      `instruments-service@6cf44d31` + live rescan 2026-07-25 (0 flat pre-floor `B_legacy_duplicate` rows remain, down
+      from 4,735; fresh audit parquet: `B_legacy_duplicate=27,238` / `E_orphan_real=2,179` /
+      `C3_pre_launch_window=800`). Full evidence: `/plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` (its
+      mirrored todo). NOTE: the `by_date`-tree branch's "covered wins" semantics (the SEPARATE v2 pre-floor 728-row
+      population) are deliberately unchanged — that is todo 1's `[OPERATOR]`-gated policy question, not this ordering
+      bug.
 - [ ] 5. [REVIEW] P3. Cross-file `sports_master_closeout_2026_07_21.md`'s (archived) pending "MANIFEST prune" deferred
       task — the 944,776 phantom pre-floor manifest rows it already tracks are the root cause of §2's misclassification
       here too; pruning them removes the `is_covered_sports` false-positive at the source.
