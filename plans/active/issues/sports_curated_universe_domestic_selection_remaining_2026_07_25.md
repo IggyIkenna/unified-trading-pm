@@ -182,8 +182,18 @@ inherited from the first shipped batch:
       per the near-miss "never fabricate an id" rule those tiers are omitted rather than guessed. Turkmenistan's catalog
       "Youth League" (829) explicitly excluded as wrong-axis. 0 registry collisions, MVP-scope count unchanged at 96,
       `in_mvp_scope=False` (no captured odds data for any of the 5 countries). quality-gates.sh green.
-- [ ] [DATA] P1. **South America (CONMEBOL)** — Bolivia, Colombia, Ecuador, Paraguay, Peru, Uruguay, Venezuela (7
-      countries). (repo: unified-api-contracts). **Done when**: per the shared contract above, for this country list.
+- [x] [DATA] P1. ✅ **South America (CONMEBOL)** — `unified-api-contracts@4e437004`. 19 entries across 7 countries, each
+      WebSearch-verified against Wikipedia before adding. Two deliberate skips (never guessed): Bolivia's division-below
+      (the catalog's only 2nd-tier candidate, "Nacional B", was Bolivia's real 2nd tier ONLY 2011-2016, replaced by Copa
+      Simón Bolívar in 2016 which isn't in the catalog at all); Peru's cup (Copa Perú is an amateur/promotion
+      tournament, not a knockout cup; Copa Bicentenario was dissolved after 2021, defunct — neither is a genuine current
+      primary cup). Real near-miss traps beyond this doc's documented list: Paraguay/Uruguay split their top flight into
+      Apertura/Clausura HALVES of the same season (not two tiers) — used Apertura as the representative row, did not add
+      Clausura as a second entry; Colombia's "Liga Femenina" (women's league) correctly excluded, not a men's-pyramid
+      candidate. Zero `api_football_id` collisions; `_mvp_football_league_ids()` stayed 96 (verified directly, not
+      assumed); 2 pre-existing hardcoded-count tests updated (126→145 Understat gaps, 35→54 non-MVP football) matching
+      the established batch pattern. All 19 confirmed `in_mvp_scope=False` via a live odds-manifest check (zero matches
+      for any of the 7 countries). Full per-country citations in the commit message.
 - [ ] [DATA] P1. **North/Central America + Caribbean (CONCACAF)** — Antigua and Barbuda, Aruba, Barbados, Belize,
       Bermuda, Canada, Costa Rica, Cuba, Curacao, Dominican Republic, El Salvador, Grenada, Guadeloupe, Guatemala,
       Haiti, Honduras, Jamaica, Nicaragua, Panama, Suriname, Trinidad and Tobago (21 countries — largest batch, consider
