@@ -126,7 +126,7 @@ rather than assuming it still existed (the doc's most recent entries are 8 days 
       genuinely independently actionable (operates on `_index/per_vm/_legacy_seed.parquet`, the still-live manifest
       index, never touches the deleted bucket's objects) but has **no existing tooling** — scoped as its own follow-up
       below rather than rushed.
-- [ ] [DATA] P2. Build + run the T2.10 seed-purge: strip the 37,114 phantom `api_football × trades` rows (captured,
+- [x] ✅ [DATA] P2. Build + run the T2.10 seed-purge: strip the 37,114 phantom `api_football × trades` rows (captured,
       nonzero `instrument_count`) from `_index/per_vm/_legacy_seed.parquet` with the NULL-safe COALESCE `source` filter
       (211,313 real `odds_api × trades` rows survive) — back up the index first, let the consolidator re-merge, verify
       by content. (repo: market-tick-data-service). **Done when**: the 37,114 phantom rows are gone from the live index,
@@ -140,11 +140,15 @@ rather than assuming it still existed (the doc's most recent entries are 8 days 
       either interpretation of the "NULL-safe COALESCE" predicate. Most likely explanation: this seed file was
       re-frozen/regenerated at some point after the 2026-07-16 measurement (its freeze timestamp is newer), and whatever
       produced the phantom rows in the OLDER seed generation the original measurement read is not present in the current
-      one. **Did not run a purge against rows that don't exist.** Before re-dispatching this todo, a future session
-      should either (a) re-derive the phantom-row predicate from scratch against the CURRENT seed content (this check
-      found none under the described predicate, but a different column/value combination might still hold the real
-      phantom population — not exhaustively ruled out here), or (b) if genuinely clean, close this todo as moot with
-      that evidence rather than re-attempting the original 2026-07-16 recipe verbatim.
+      one. **Did not run a purge against rows that don't exist.** — **CLOSED AS MOOT 2026-07-25T05:20Z (slot 11,
+      data_engineering)**: re-derived the phantom-row predicate from scratch against the SAME current seed download
+      rather than trusting the prior single-predicate check. Checked every plausible variant: `source` unique values are
+      exactly `{odds_api, polymarket_clob}` (no case variants, no third value); `empty_confirmed` rows with nonzero
+      `instrument_count` (the exact contradiction a phantom "captured but shouldn't be" row would show) = 0; `venue`
+      breakdown for `trades` has no `api_football`/`API_FOOTBALL`-shaped entry among its 29 distinct venues (all real
+      sportsbook/exchange venues); total count 232,098 = 211,313 + 20,785 exactly, no residual. No phantom population
+      exists under ANY column/value combination checked. Genuinely clean — closing per option (b) with this evidence,
+      not re-attempting the 2026-07-16 recipe.
 
 ## Codex SSOTs
 
