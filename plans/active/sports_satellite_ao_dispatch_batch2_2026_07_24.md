@@ -347,12 +347,14 @@ source: >-
       `scripts/migration_orphan_sweep_sports.py`; unified-api-contracts classifier mirror). **Done when**: rescan no
       longer surfaces the 4,735 stale rows; classifier ordering fix causes correct classification, mirroring the
       already-shipped E-class pattern. Source: `issues/sports_legacy_duplicate_triage_2026_07_22.md`.
-- [ ] [REVIEW] P3. **Cross-file the archived `sports_master_closeout_2026_07_21.md`'s pending "MANIFEST prune" deferred
-      task** — the 944,776 phantom pre-floor manifest rows it already tracks are the root cause of this doc's §2
-      misclassification too. (repo: unified-trading-pm — add a cross-reference note to the archived plan's existing
+- [x] [REVIEW] P3. ✅ **Cross-file the archived `sports_master_closeout_2026_07_21.md`'s pending "MANIFEST prune"
+      deferred task** — the 944,776 phantom pre-floor manifest rows it already tracks are the root cause of this doc's
+      §2 misclassification too. (repo: unified-trading-pm — add a cross-reference note to the archived plan's existing
       pending item). **Done when**: the archived plan's pending MANIFEST-prune item carries an added cross-reference to
       `issues/sports_legacy_duplicate_triage_2026_07_22.md` noting the shared root cause. Source:
-      `issues/sports_legacy_duplicate_triage_2026_07_22.md`.
+      `issues/sports_legacy_duplicate_triage_2026_07_22.md`. Added cross-reference to both
+      `plans/archive/2026_07/sports_master_closeout_2026_07_21.md` (PENDING EXECUTION item) and its companion
+      `sports_master_closeout_progress_log_2026_07_24.md` (tracking table row) — unified-trading-pm@PENDING_SHA.
 
 ### From `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`
 
