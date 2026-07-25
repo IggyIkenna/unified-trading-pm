@@ -1,0 +1,168 @@
+---
+doc_type: plan
+title: AO plain-worker context lifecycle gap — gate dispatch, enforce compact, fix the blind anomaly clock
+summary: >-
+  context_lifecycle.py's tier-1/tier-2 proactive compact policy explicitly excludes ordinary plan-backlog workers (only
+  main/review/large-plan-todo-count carve-out are covered) under the assumption "/boot-per-shippable-unit already bounds
+  them." Confirmed FALSE by both code and live telemetry 2026-07-25: `/done`'s persistent-session design
+  (server/routes/slots_worker.py, "reaping them per task was the exact defect this fixes") means the SAME session drains
+  many tasks back-to-back with no context reset, `/done` already receives context_used_pct on every call but nothing
+  gates on it, and the one worker-scoped anomaly detector (context_burn Trigger 4) keys off hours-on-TASK which resets
+  every reassignment — live: 5 slots >=80% context, 0 context_burn_suspected fires in 7h. This plan closes the loop:
+  gate /done + /progress on self-reported context, return a machine-directive telling the worker to compact before
+  continuing (reusing the existing messages/next_task response-field convention, not new pane-injection machinery), fix
+  the anomaly clock to survive task reassignment, and stop the kicker from blindly re-nudging a frozen+saturated session
+  (observed live: slot 9, ~14 "proceed now" kicks over 30min at 100% context, ping_advanced=false on nearly all,
+  eventually crashed/killed). Companion, independently-dispatchable plan ao_fleet_throughput_incident_2026_07_25.md
+  covers the fleet-capacity-refill side of the same live incident.
+status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
+scope: [engineer]
+tags: [orchestrator, context-management, compaction, worker-lifecycle, observability]
+related: [/plans/active/ao_fleet_throughput_incident_2026_07_25.md, /plans/epics/orchestrator_master.md]
+created: "2026-07-25"
+last_updated: "2026-07-25"
+parent_epic: orchestrator_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P0
+estimate_class: infra
+estimate_baseline_ai_days: 3.5
+estimate_calibrated_ai_days: 2.8
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source: >-
+  Operator question 2026-07-25: "how is context getting to 100% when we are supposed to be running pre-compact at 70%...
+  check all this," followed by "either workers are getting more than one task without resetting their context or tasks
+  arent really short enough to assume no reset context needed mid task," then "action it in full... deployed to agent
+  orchestrator /autonomous." Root-caused this session via code read (server/context_lifecycle.py,
+  server/routes/slots_worker.py::done_slot, agents/worker.md, server/worker_liveness_watchdog.py) plus two rounds of
+  read-only SSM telemetry against the live orchestrator VM (i-0c9b283b31d6b5ca7): first pull found slot 3 at 93% context
+  0.00h into a freshly-assigned task with 117 lifetime compactions, last compaction 3.93h BEFORE the task was assigned;
+  second pull ~13min later found the SAME slot still climbing (100%) after shipping 2 more tasks in between with no
+  compaction (`slot_done` events literally carry `context_pct: 93/95` in their own payload, unconsumed by dispatch),
+  while slot 9 (also 100%) showed 14 worker_kicked "frozen"/"proceed now" cycles over 30min before eventually crashing
+  (`tmux_session_lost` -> `slot_resume_skipped`: "context 100% >= resume_fresh_context_pct 90%").
+assigned_role: backend_engineer
+drift_direction: advance-code
+sequential: true
+---
+
+# AO plain-worker context lifecycle gap
+
+> **Why `sequential: true`**: todos 1-2 (config + response-model schema) are load-bearing for todos 3-4 (the actual
+> gates, which use that schema) and todo 5 (worker.md, which documents the exact field names todos 2-4 define); todo 7
+> (anomaly-clock fix) consumes todo 6's new field; several todos also share `server/routes/slots_worker.py` and
+> `server/config.py`. This is a real dependency chain, not a reflexive default — see task_template.md §4.
+>
+> **Codex SSOTs to check against / update on completion**:
+> `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`,
+> `/codex/05-infrastructure/vm-launcher-runbook.md` (VM/fleet monitoring section, if the new event types belong there).
+
+## Todos
+
+- [ ] [BACKEND] P0. **Add worker-scoped context-gate config to `Tuning`** in `server/config.py` (agent-orchestrator),
+      mirroring the existing `context_compact_guidance_pct`/`context_recycle_compactions` `Field(...)` pattern
+      immediately above them: `context_worker_compact_gate_pct: int = Field(default=70, ge=1, le=100)` (matches the
+      number already documented as the honor-system threshold in `unified-trading-pm/agents/worker.md`) and
+      `context_worker_directive_repeat_gate: bool = Field(default=True)` (governs whether todo 4 re-issues a directive
+      every tick or only once per un-compacted stretch). **Done when**:
+      `get_config().tuning.context_worker_compact_gate_pct` resolves to 70 by default and is env-overridable in a new
+      unit test; `quality-gates.sh` green.
+- [ ] [BACKEND] P0. **Add a typed `directive` field to `DoneResponse` and `ProgressResponse`** in
+      `server/models/worker_api.py` — `directive: Literal["compact_before_next"] | None = None` on `DoneResponse`,
+      `directive: Literal["compact_now"] | None = None` on `ProgressResponse`. Do NOT overload the existing free-text
+      `message`/`messages` fields — worker.md's new HARD RULE (todo 5) needs an unambiguous machine-checkable field the
+      agent can branch on, not prose it has to parse. **Done when**: both models validate with and without the field
+      set; existing callers/tests unaffected (field defaults to `None`); a new test asserts the field serializes
+      correctly; `quality-gates.sh` green.
+- [ ] [BACKEND] P0. **Gate `done_slot`** (`server/routes/slots_worker.py`) **on self-reported context.** Before the
+      existing next-task-selection path runs, compare `req.context_used_pct` (already submitted on every `/done` call —
+      confirmed live, e.g. `context_pct: 95` on `slot_done` activity entries, currently unconsumed) against
+      `get_config().tuning.context_worker_compact_gate_pct`. At/above threshold: do NOT dispatch a next task to this
+      slot — leave the candidate task `queued` untouched, return
+      `DoneResponse(next_task=None,     directive="compact_before_next", ...)`. Below threshold: existing behavior
+      unchanged. Log a new activity type `worker_compact_gated` (slot_id, context_pct, threshold) on every fire,
+      mirroring how `proactive_compact_guidance` is already logged for main/review in `context_lifecycle.py`. **Done
+      when**: a unit test asserts `done_slot` withholds `next_task` and sets the directive when
+      `context_used_pct >= threshold`, dispatches normally below it, and the candidate task remains `queued` (not
+      silently dropped); `quality-gates.sh` green.
+- [ ] [BACKEND] P0. **Gate `progress_slot`** (same file as todo 3, `server/routes/slots_worker.py` — kept as a separate
+      sequential todo rather than merged, since the two handlers are independently testable even though they share the
+      threshold/directive contract from todos 1-2). When `req.context_used_pct >=     context_worker_compact_gate_pct`,
+      set `ProgressResponse.directive="compact_now"` — but do not re-issue on every single tick: reuse the existing
+      compaction-drop detection already in `state_store/slots.py::update_slot_ping` (`COMPACTION_DROP_THRESHOLD`) to
+      know a prior directive was actually complied with (pct dropped), and suppress re-issuing until either a drop is
+      observed or `context_worker_directive_repeat_gate` says otherwise. **Done when**: a unit test simulates a
+      `/progress` sequence crossing the threshold, receiving exactly one directive, then compacting (pct drop observed),
+      then not receiving another until climbing back over threshold; `quality-gates.sh` green.
+- [ ] [INFRA] P0. **Update `unified-trading-pm/agents/worker.md`'s context-discipline section** (the PROGRESS step,
+      currently ending in the prose-only ">~70% used, run /compact" line) with a HARD RULE: if a `/done` or `/progress`
+      response's `directive` field (todo 2's exact field name) is `compact_before_next` or `compact_now`, the agent MUST
+      run the `/pre-compact` skill then `/compact` before its next tool call — for the `/done` case, MUST NOT call
+      `/boot` again until compaction is confirmed done. Keep the existing prose >~70% self-discipline line as the
+      earlier VOLUNTARY trigger, unchanged — the new directive is the enforced backstop, not a replacement. **Done
+      when**: worker.md's PROGRESS section and the boot-loop section both reference the exact `directive` field/values
+      by name; any doc-lint/prek check on `unified-trading-pm` passes.
+- [ ] [BACKEND] P1. **Expose worker session-start time via the API.** Add `last_spawned_at: datetime | None` to
+      `SlotView` (`server/models/slots.py`) and populate it in the `/api/state` route mapping (`server/routes/state.py`)
+      from the ORM `SlotRow.last_spawned_at` field, which already exists and is already read internally
+      (`server/worker_liveness/__init__.py` reads `slot.last_spawned_at`) but was never serialized out — this is the
+      exact field whose absence forced this session's live diagnosis to infer session-vs-task-age carryover indirectly
+      from `compactions_total`/`last_compacted_at` instead of reading it directly. **Done when**: `GET /api/state`
+      returns a non-null `last_spawned_at` for every slot with a live tmux session; a test asserts the field
+      round-trips; `quality-gates.sh` green.
+- [ ] [BACKEND] P1. **Fix the context-burn anomaly clock** in `server/worker_liveness_watchdog.py::_is_context_burning`
+      (Trigger 4). Currently keyed on `hours_on_task` (derived from `assigned_at`, which resets on every reassignment —
+      confirmed live 2026-07-25: 5 slots >=80% context produced zero `context_burn_suspected` fires over a 7h window
+      because none had spent >=4h on their CURRENT task even though their sessions carried compaction histories hours
+      older than the task). Replace/supplement that input with a session-scoped clock derived from `last_spawned_at`
+      (todo 6) — "hours since this SESSION last compacted or was spawned," not "hours on this task." Keep the existing
+      `context_pct >= min_pct OR compactions_total >= min_compactions` disjunct. **Done when**: a new unit test
+      reproduces the exact live scenario from this session (task reassigned 0.08h ago, context 100%, last compaction >4h
+      before assignment) and asserts `_is_context_burning` now returns `True` where the old task-clock version returned
+      `False`; `quality-gates.sh` green.
+- [ ] [OPERATOR] P1. BLOCKED-OPERATOR-DECISION — decide whether to flip `context_burn_kill` (`server/config.py`) from
+      its current default `False` to `True` now that todo 7 fixes the detector's blind spot and todos 3-4 give workers a
+      graceful compact-first path before any kill would ever trigger. Do NOT flip this default as part of this plan's
+      automated execution — it's a live-fleet auto-kill behavior change that a prior operator deliberately gated behind
+      manual opt-in "until the heuristic has fleet mileage"; re-evaluate only after todos 1-7 have run in production for
+      a burn-in period the operator sets.
+- [ ] [BACKEND] P2. **Stop the WorkerLivenessKicker from blindly re-nudging a frozen+context-saturated slot.** In
+      `WorkerLivenessKicker._tick_once` (`server/worker_liveness/__init__.py`): when `classify_pane(pane) == "frozen"`
+      AND the slot's current `context_used_pct >= context_worker_compact_gate_pct` (todo 1's threshold), skip the
+      ordinary `_kick_session(..., kind="frozen")` "proceed now" injection and instead log a new activity type
+      `frozen_at_high_context` (slot_id, context_pct, consecutive prior kick count from `_consecutive_kick_failures`) —
+      this is the exact live pathology observed 2026-07-25: slot 9 received ~14 `worker_kicked`/`worker_kick_failed`
+      "proceed now" nudges over 30 minutes at 100% context (`ping_advanced: false` on nearly every one) before
+      eventually crashing. **Done when**: a unit test asserts a frozen+saturated slot gets the new log event instead of
+      a kick attempt, while an ordinary frozen-but-normal-context slot's kick behavior is unaffected; `quality-gates.sh`
+      green.
+- [ ] [BACKEND] P2. **Give the reactive crash-time context-loss path its own visible event type.** In `tmux_pruner.py` /
+      `resume_lifecycle.py`, the existing `resume_fresh_context_pct` skip-resume check (observed live 2026-07-25 for
+      slots 5, 8, and 9 — `slot_resume_skipped`: "context 100% >= resume_fresh_context_pct 90%") currently folds into
+      the generic `tmux_session_lost` event. Log a distinct, clearly-labeled activity type (e.g.
+      `context_saturated_session_lost_task_requeued`) when `resume_decision != "resume"` AND the dying slot's last-known
+      `context_used_pct >= 90`, so this failure mode stays separately visible/countable on the dashboard even after
+      todos 3-4-7 reduce how often sessions ever reach that point. **Done when**: the new event type fires exactly under
+      that condition; existing `tmux_session_lost` logging is otherwise untouched; `quality-gates.sh` green.
+- [ ] [BACKEND] P2. **Regression test reproducing this session's full live scenario end-to-end.** A worker slot
+      completes a task at `context_used_pct=93` with `compactions_total` far predating `assigned_at` (mirrors slot 3's
+      live snapshot 2026-07-25T04:23-04:36 UTC). Assert: `done_slot` (post todo 3) withholds `next_task` and sets the
+      directive; once the worker reports a post-compact `/progress` (pct drop observed), the NEXT `/done` dispatches
+      normally. **Done when**: new integration test in `agent-orchestrator/tests/` passes, exercising todos 1, 3, and 4
+      together end-to-end; `quality-gates.sh` green.
+- [ ] [REVIEW] P1. **Post-deploy live verification against this plan's own root-cause evidence.** Re-pull `/api/state` +
+      `/api/activity` (read-only SSM, same pattern as this plan's `source` field) for slot IDs 2, 3, 5, 8, 9 (the ones
+      tracked live during this session's diagnosis) and confirm: (a) no slot receives a next task while self-reporting
+      `context_used_pct` at/above the gate threshold (todo 3), (b) a reproduced long-session/ short-task-age scenario
+      now trips `context_burn_suspected` (todo 7), (c) the new `frozen_at_high_context` (todo 9) and
+      `context_saturated_session_lost_task_requeued` (todo 10) event types appear when their trigger conditions are
+      manually reproduced in a test env. **Done when**: a written verification note citing actual post-deploy event/log
+      evidence for (a)-(c), attached to this plan's Progress Log.
