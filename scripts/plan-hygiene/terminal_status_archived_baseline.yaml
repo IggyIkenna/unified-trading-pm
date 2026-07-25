@@ -1,0 +1,13 @@
+# Baseline for check_terminal_status_archived.py — no plan/issue doc with a
+# TERMINAL status (issue: resolved/false-positive/superseded; plan: complete/
+# superseded/cancelled) may sit in plans/active/ or plans/active/issues/ instead
+# of plans/archive/ (operator finding 2026-07-25 — issue-doc-lifecycle.md's own
+# archive-on-resolve rule had a dead audit recipe and ~55 docs accumulated
+# unarchived; see issue_and_plan_archival_backlog_sweep_2026_07_25.md).
+#
+# This is a SHRINKING ratchet. violation_count is the number of pre-existing
+# unarchived terminal-status docs the gate tolerates. A live count EXCEEDING
+# this fails the check — a NEW terminal-status doc landed without being
+# archived, fix it (archive it), don't raise the number. LOWER it (re-run
+# --update-baseline) as the backlog sweep archives docs. NEVER hand-raise it.
+violation_count: 66

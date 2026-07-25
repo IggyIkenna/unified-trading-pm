@@ -83,11 +83,11 @@ drift_direction: advance-code
       (`pipeline_mode=batch_aster`/`batch_hyperliquid`/`batch_lighter_api`/`batch_extended`) so it produces
       `processed_candles/` for them — MTDS already captures their raw trades broadly, MDPS just isn't pointed at them.
       Then backfill `timeframe=24h` candles over each venue's already-captured raw-trade range per the manifest (ASTER
-      is 2024-01-01 onward per `issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`, not the UAC-native
-      2023-07-22 start, until that doc's GAP-4 is separately resolved). SPOT VM backfill per the heavy-I/O +
-      SPOT-default infra rules. **Coordination note**: MDPS's `processed_candles/` namespace has other independent
-      in-flight work (cefi_consolidated_closeout's Track 1 raw-tick canonical-ID migration and Track 7 candle
-      bundle-collision residual, both for the EXISTING tardis-sourced venues, not these 4) — confirm neither is
+      is 2024-01-01 onward per `plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`, not
+      the UAC-native 2023-07-22 start, until that doc's GAP-4 is separately resolved). SPOT VM backfill per the
+      heavy-I/O + SPOT-default infra rules. **Coordination note**: MDPS's `processed_candles/` namespace has other
+      independent in-flight work (cefi_consolidated_closeout's Track 1 raw-tick canonical-ID migration and Track 7
+      candle bundle-collision residual, both for the EXISTING tardis-sourced venues, not these 4) — confirm neither is
       mid-write on the same code paths/objects before shipping. Repo: market-data-processing-service. **Done when**:
       `processed_candles/` objects with real non-zero `quote_volume` exist for a recent day for each of the 4 venues;
       features-service's `RollingAdvReader.compute_rolling_adv()` returns a non-`NO_DATA` `AdvStatus` for at least one

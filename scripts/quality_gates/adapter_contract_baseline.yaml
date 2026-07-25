@@ -326,8 +326,6 @@ baseline:
     count: 0
   market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_umi.py:
     count: 1
-  market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_gmx.py:
-    count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/_risk_params_stage.py:

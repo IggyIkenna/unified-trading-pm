@@ -272,11 +272,12 @@ source: >-
       data_engineering): checkbox correctly stays unchecked — this todo is ALREADY superseded-by-decomposition, not a
       fresh start.** Step 1's continental-majors slice shipped (`unified-api-contracts@7b13196e`); the 171-country
       domestic-selection slice is split into 11 confederation-batch todos in
-      `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md` (backlog-verified: 4 dispatched, 7
-      queued, 1 done+orphaned as of 2026-07-25T03:02Z — real progress already in flight under separate task ids). Steps
-      2 (backfill) + 3 (residual drop) are explicitly gated on all 11 landing first. No code touched this session —
+      `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md` (all 11 now `[x]`, see re-verify
+      below). Steps 2 (backfill) + 3 (residual drop) are explicitly gated on all 11 landing first. No code touched:
       re-executing step 1 here would duplicate/collide with the already-dispatched batches; this todo's real done-when
-      is now "all 11 batches + step 2 + step 3 land," tracked in the issue doc, not re-derived here.
+      is now "all 11 batches + step 2 + step 3 land," tracked in the issue doc, not re-derived here. — **RE-VERIFIED
+      2026-07-25 (slot 4): still unchecked** — step 2 gate MET but launch-BLOCKED on the `af-backfill-*` singleton lock
+      (held by `-031`'s fixture_events re-fetch); step 3 deferred. Live tracker: issue doc's final gated item.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 

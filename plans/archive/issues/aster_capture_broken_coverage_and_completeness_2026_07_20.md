@@ -53,6 +53,10 @@ source:
 
 # ASTER capture: clean provenance, broken coverage + completeness
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — all fix items (A/B/C/D/GAP-4) shipped + verified with real data in all
+> 3 repos: `execution-service@e11e6a136`, `unified-trading-pm@12b0d9db8`, `market-tick-data-service@d8efc6d6` +
+> `market-tick-data-service@a7f7769a`; archived per the terminal-status backlog sweep.
+
 ## Q — Binance-proxy worry: TRUE ASTER (resolved)
 
 Every ASTER fetch path points at a `*.asterdex.com` host, NOT binance.com:

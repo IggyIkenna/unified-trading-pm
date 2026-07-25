@@ -134,3 +134,68 @@ another idle slot (only removes the offending slot from consideration for that o
 landing commit for the `messari_basic` query fix in `market-tick-data-service`). Skipped again with the same reasoning;
 main (`agt-52bb99`) confirmed the ruling live and directed this note rather than a re-investigation. Root cause (item 1
 above) is still unfixed as of this note.
+
+## 2026-07-25 recurrence note (slot 6, third bounce)
+
+Bounced again — slot 6 was dispatched `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` fresh (no prior task
+history in this session). Independently re-verified before finding this doc: read the parent plan
+(`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`), confirmed all 5 todos still `- [ ]`; read
+`market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py` directly and confirmed
+`_CURVE_QUERY`/`_CURVE_QUERY_FILTERED` (the query used by `curve`/`sushiswap`/`velodrome_v2`/`trader_joe_v2` via the
+`messari_basic` protocol-table entry) still have no `inputTokens` field, and the protocol table still maps all four to
+`_parse_curve`, not `_parse_messari_dex` — the BACKEND query-fix todo has not shipped, confirming the checkbox state is
+accurate, not stale. Declining to flip any of the 3 referencing docs per this issue's existing recommendation A.
+Skipping this task rather than re-filing a duplicate `/blocked` (BLK-0d30dec1 already covers the question and already
+has main's answer). Root cause (item 1 above) is still unfixed as of this note.
+
+## 2026-07-25 recurrence note (slot 3, sixth bounce)
+
+Bounced again — slot 3 was dispatched `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` fresh. Independently
+re-verified before finding this doc (filed then deleted a duplicate issue doc with the same evidence + a static code
+read of `_wire_gate_on_depends_prereqs`/`_parse_frontmatter_depends_on`/`_parse_frontmatter_gate_on_depends` — found no
+obvious parsing bug on this frontmatter shape, consistent with this doc's "wiring simply didn't happen" conclusion
+rather than a parser defect). Confirmed via live `agent-orchestrator/data/config/backlog.yaml`: upstream tasks
+`defi_dex_pool_symbol_fix_backfill_purge-001..005` still exist, none carry a `done_sha`;
+`defi_dex_pool_symbol_fix_backfill_purge_finalize-001`'s `prereqs.completed_tasks` is still `[]`. Main (`agt-52bb99`)
+confirmed the standing ruling live (BLK-0d30dec1, Option A) before I acted, directing this note instead of a fresh
+`/blocked`. Declining to author any reconciliation content; skipping this task. Root cause (item 1 above) is still
+unfixed as of this note.
+
+## 2026-07-25 park recipe re-applied (slot 8)
+
+Per main (`agt-52bb99`)'s live directive after this bounce, re-applied the RULES.md §4 park recipe by hand on the live
+`agent-orchestrator/data/config/backlog.yaml` `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` entry (the prior
+park had been silently wiped by an intervening `POST /api/backlog/regen` tick, per main: "the park override got wiped by
+a backlog re-derivation tick (done 106->83)"). Set `priority: 999` + `priority_override: true` (was `50` / `false`), and
+populated `prereqs.completed_tasks` with the 5 real upstream task ids
+(`defi_dex_pool_symbol_fix_backfill_purge-00{1..5}`) instead of a synthetic named condition — `completed_tasks` is the
+exact mechanism `dispatch.py::_completed_task_satisfied` already implements correctly (per this doc's own earlier
+analysis), so this is effectively hand-applying the wiring `_wire_gate_on_depends_prereqs` should have done
+automatically, not a workaround. Verified via `GET /api/backlog/.../blockers`: now correctly reports "prereq task ...
+not done" for all 5 ids (was "ready (no blockers)"). Re-verified the gate SURVIVES both `POST /api/backlog/reload` and a
+forced `POST /api/backlog/regen` (598 plans rescanned, 0 new tasks/prereqs) — the hand-set `completed_tasks` +
+`priority_override` were NOT reverted. Root cause (why `_wire_gate_on_depends_prereqs` didn't wire this automatically at
+ingestion) is still open — item 1's investigation remains the durable fix; this hand-park is a stopgap that stops the
+8-slot bounce cycle until that lands and the parent plan's todos genuinely complete (at which point this hand-set
+`completed_tasks` list becomes redundant with, not a blocker to, the real gate).
+
+## 2026-07-25 recurrence note (slot 8, seventh bounce)
+
+Bounced again — slot 8 was dispatched `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` fresh (booted with
+`slot_role: review`). Independently re-verified from scratch, at the code level rather than relying on the parent plan's
+checkbox state alone: read `market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py`
+directly and confirmed `_CURVE_QUERY`/`_CURVE_QUERY_FILTERED` (lines 357-390) still have no `inputTokens` field, while
+`_MESSARI_DEX_QUERY`/`_MESSARI_DEX_QUERY_FILTERED` (lines 393-434+) do carry `inputTokens { symbol }` + `fees {...}` --
+but that pair was already wired pre-existing to `aerodrome_v3`/`camelot_v3`/`pancakeswap_v3`/`sushiswap_v3`, not to the
+4 venues this todo targets. Read `_dex_pools_subgraph.py`'s protocol table (lines 238-284): the `messari_basic` entry
+that `curve`/`sushiswap`/`velodrome_v2`/`trader_joe_v2` all route through (line 276-283) still resolves to
+`_h._CURVE_QUERY(_FILTERED)` + `self._parse_curve` (lines 238-241), NOT `_MESSARI_DEX_QUERY` + `_parse_messari_dex` --
+confirming the query-fix todo (parent plan todo 2, `[BACKEND] P1`) genuinely has not shipped; `git log` on the handler
+file shows only unrelated commits (GMX removal, catalogue-gate classification, freshness-cache scoping, uniswap_v2/v4
+wiring) since this plan was authored. Verified live via `agent-orchestrator/data/config/backlog.yaml`-equivalent
+(`GET /api/backlog`): `defi_dex_pool_symbol_fix_backfill_purge-001..005` are still `queued`/`blocked`, none `done`.
+Declining to author any reconciliation content on the false premise that the fix/backfill/purge landed. Per the standing
+ruling (BLK-0d30dec1, Option A), skipping this task rather than re-filing a duplicate `/blocked`. Root cause (item 1
+above) is still unfixed as of this note -- this is now the SEVENTH slot to bounce off this same wiring gap (5, 4, 6, 3,
+and now 8, per the notes above), which itself is evidence the root-cause fix (item 1's regen-tick / re-wiring
+investigation) should be prioritized over further individual bounces re-verifying the same fact.

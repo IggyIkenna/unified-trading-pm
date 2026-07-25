@@ -155,6 +155,16 @@ run_check "Reference path convention (/plans, /codex — ratchet)" hard python3 
 # orphan nothing will ever pick up. Same shrinking-ratchet shape as the two checks above
 # (ag_closeout_linkage_baseline.yaml): hard-fails only on a NEW orphan, never on debt.
 run_check "AG-closeout linkage (single-AG docs -> consolidated closeout, ratchet)" hard python3 "$SCRIPT_DIR/check_ag_closeout_linkage.py" --quiet
+# Terminal-status-archived (operator finding 2026-07-25) — no plan/issue doc with a TERMINAL
+# status (issue: resolved/false-positive/superseded; plan: complete/superseded/cancelled) may
+# sit in plans/active/ or plans/active/issues/ instead of plans/archive/ — this is
+# codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule, now
+# machine-enforced after its manual audit recipe was found to be silently dead (grepped a
+# frontmatter field the schema no longer has). Same shrinking-ratchet shape as the two checks
+# above (terminal_status_archived_baseline.yaml): hard-fails only on a NEW unarchived
+# terminal-status doc, never on the pre-existing backlog being cleared by
+# terminal_status_archival_backlog_sweep_2026_07_25.md.
+run_check "Terminal-status-archived (plan/issue docs -> plans/archive/, ratchet)" hard python3 "$SCRIPT_DIR/check_terminal_status_archived.py" --quiet
 # Line caps (plans 500 soft/1000 hard; epics 2000 hard flat, NO umbrella-exemption escape hatch —
 # operator ruling 2026-07-24) — flipped from advisory to a real hard gate 2026-07-24 via the SAME
 # shrinking-ratchet shape as the reference-path check above (line_caps_baseline.yaml): hard-fails

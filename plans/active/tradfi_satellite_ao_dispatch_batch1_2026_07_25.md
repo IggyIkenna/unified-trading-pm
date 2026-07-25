@@ -160,6 +160,15 @@ Also deferred entirely (flagged `doc_too_large_or_risky_for_batch` by the triage
 pass): `tradfi_manifest_content_recovery_completion_2026_07_24.md` (5 AO-eligible candidates found, 5 conflicts —
 genuinely needs its own batch, not folded in here).
 
+**2026-07-25 re-check (batchN methodology, `/ag-closeout-audit`)**: this section's 33 conflict-gated candidates were
+re-checked against `tradfi_consolidated_closeout_2026_07_18.md`'s live content + a git-log sweep of the relevant repos.
+20 cleared (11 shipped independently outside AO between this triage and the re-check, 9 resolved by re-mapping each
+conflict to its actual target candidate rather than the whole source doc), landing in
+`tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` (11 dispatchable todos after same-file-collision combining); 8
+remain genuinely conflict-gated (see that plan's own Deferred section for the current per-item status).
+`tradfi_manifest_content_recovery_completion_2026_07_24.md` is still excluded from both batches — still needs its own
+dedicated pass.
+
 Every other orphaned doc's remaining work is human-only (operator sign-off, unbuilt safety tooling, time-gated accrual,
 or a genuine design/judgment call) — see the triage journal for the full breakdown (~95 human-only items across the 21
 docs).

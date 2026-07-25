@@ -109,10 +109,31 @@ changelog/docstring comment describing the historical removal itself (never insi
       hits outside dated `2026-07-25` changelog comments in non-test `.py`; dated one-off migration scripts under
       `scripts/one_offs/` and `market_tick_data_service/scripts/` left untouched as historical artifacts, out of
       "capture" scope). Evidence: `bash scripts/quality-gates.sh` exit 0 (6905 passed, 0 failed).
-- [ ] [DATA] P2. **Remove GMX from `instruments-service` reference data / MVP instrument universe** --
+- [x] ✅ [DATA] P2. **Remove GMX from `instruments-service` reference data / MVP instrument universe** --
       `engine/orchestrator/defi.py`, `scripts/enumerate_expected_universe.py`,
       `scripts/dex_pool_glued_pair_id_canonicalize_2026_07_09.py`. Done-when: the definition-of-done convention above,
-      zero hits. (repo: instruments-service)
+      zero hits. (repo: instruments-service) -- instruments-service@0214bb3c (+ reference_data/factory.py, not in the
+      original pre-scoped list but matched the repo-wide grep). Cross-repo drift-guard note: also fast-forwarded onto
+      unified-api-contracts@18d53d63 (todo -001, since instruments-service's
+      `test_defi_set_equals_uac_denominator_drift_guard` set-equality invariant required it) and reconciled with a
+      concurrent fix (8df301f4, golden fixture + rule11 dedup count already regenerated upstream). Evidence:
+      `bash scripts/quality-gates.sh` exit 0 (4888 passed, 0 failed, coverage 88.59%). **Third concurrent-dispatch
+      cleanup** -- instruments-service@2de3418e (slot-3, discovered 0214bb3c/8df301f4 already landed mid-session;
+      reconciled via 3-way conflict resolution rather than blind-overwrite, keeping the peers' dated-changelog-comment
+      style). Residual GMX references beyond the peers' scope: `docs/DEFI_INSTRUMENTS.md` (multiple current-tense "GMX
+      is a supported DEX-pool protocol" passages -- adapter architecture counts 13->12/8->7, protocol x chain coverage
+      table row, known-gaps `GMX-AVALANCHE` entry, `DEX_VENUE_KEYWORDS` list, Graph-sourcing table row; historical dated
+      2026-07-09 migration-results table left untouched as a genuine historical record),
+      `tests/unit/test_orchestrator_coverage.py` (`GMX-ARBITRUM` used only as an arbitrary example venue in
+      `test_cefi_tradfi_below_half_ratio_is_flagged`, renamed to `RADIANT-ARBITRUM` -- no GMX-specific behavior was
+      under test), `tests/unit/scripts/test_enumerate_expected_universe_v2.py` (docstring rationale claiming
+      `perp_funding` legitimately appears in the POOL union "because GMX" -- now false since GMX was the only POOL
+      protocol declaring `perp_funding`, updated to a dated-removal note), and
+      `scripts/dex_pool_glued_pair_id_canonicalize_2026_07_09.py`'s "8 protocols that share
+      UniswapV3ReferenceDataAdapter" comment (peers' commit updated the docstring/set counts to 12/7 but missed this one
+      inline comment, left at stale "8"). Verification: `grep -rli "\bgmx\b" . --include="*.py" | grep -v test` zero
+      hits; full-repo (incl. tests) grep shows only dated 2026-07-25 changelog comments. Evidence:
+      `bash scripts/quality-gates.sh --no-fix` exit 0 (4888 passed, 7 skipped, 0 failed, sentinel matches HEAD).
 - [x] ✅ [BACKEND] P2. **Remove GMX from `execution-service`** -- `service_config.py`, the 4
       `cli/defi_*_decision_trace.py` scripts (carry_staked_basis / carry_basis_perp / arbitrage_dispersion /
       liquidation_capture) that reference GMX, `custody/pre_trade_pinger.py`. Done-when: the definition-of-done

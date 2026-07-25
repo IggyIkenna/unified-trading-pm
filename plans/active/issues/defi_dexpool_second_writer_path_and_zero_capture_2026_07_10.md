@@ -69,3 +69,30 @@ symbol-shape canonicalization work, discovered as a side effect of reading the c
 2. **Item 2**: confirm with the operator whether `uniswap_v2`/`uniswap_v4`/`trader_joe_v2`/`velodrome_v2` are meant to
    be captured at all (check the current DeFi MVP scope decision) — if yes, this is a real coverage gap needing a fix
    plan; if these are intentionally out of MVP scope, downgrade/close this half of the issue.
+
+## Update 2026-07-25 (re-check for `defi_satellite_ao_dispatch_batch2` — per `ag-closeout-audit` batchN methodology)
+
+This doc was excluded whole from `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (`doc_too_large_or_risky_for_batch`).
+Re-checked fresh per that plan's own finalize-plan todo 2 (`defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`)
+to see whether either item has settled enough for a batch2 candidate.
+
+- **Item 2 (4 zero-capture protocols) — SUPERSEDED, no batch2 action needed.** `uniswap_v2`/`uniswap_v4`/
+  `trader_joe_v2`/`velodrome_v2` were wired + smoke-tested 2026-07-14 (`defi_consolidated_closeout_2026_07_18.md` Track
+  4), and real ground-truth coverage was verified 2026-07-24
+  (`issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`, 160 venue×data_type×date combos probed against
+  live GCS). That verification found real substantive historical data for all 4 protocols but 2 residual gaps
+  (TRADER_JOE_V2 `dex_pool_swaps` 0% ever captured — TheGraph schema-cascade bug; VELODROME_V2 `dex_pool_swaps`
+  near-zero) — **both already dispatched** as part of `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s combined
+  `dex_swaps_handler.py` todo (Source: `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`). This half of
+  the doc is closed by that coverage — nothing new to extract.
+- **Item 1 (second writer path historical migration) — STILL genuinely too-large/risky, unchanged since 2026-07-10.** No
+  new information found (no citing doc, commit, or plan addresses the `batch_onchain_subgraph`
+  bare-`0x<address>.parquet` shape or its resolver question). "Scope a dedicated historical migration ... needs a real
+  resolver ... same backup-first, VM-eligible pattern as the rest of this effort" is still a real, open-ended
+  design-plus-migration effort (confirm/build a pool-address→symbol/venue/chain resolver, then a VM-eligible historical
+  backfill/transform over a genuinely-live production data shape) — not a bounded, single-worker-checkable batchN todo.
+  Per the `ag-closeout-audit` skill's non-batchable taxonomy, this stays in the "too-large-or-risky-for-a-batch-todo"
+  category: it needs its own dedicated triage/design pass as a standalone plan when picked up, not a `batchN` slot.
+
+**Net effect**: no `defi_satellite_ao_dispatch_batch2` item drafted from this doc. Re-check again at the next batch
+cycle only if item 1's resolver/scope question gets independently investigated elsewhere first.

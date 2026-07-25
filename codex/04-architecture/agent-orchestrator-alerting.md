@@ -55,10 +55,12 @@ Automatic backend lifecycle events — the orchestrator handled them, no human i
   to pass the /done gate). All log + digest, none page (operator 2026-07-13 full audit). The one respawn/quarantine case
   that still pages is a slot actively **starving** escalation dispatch (`notify_slot_quarantined`). **Verified live
   2026-07-25** (`plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md` — 3 independent fires, journal +
-  Slack-200 confirmed): the starvation condition is `escalation.count_queued_walls() > 0` — this counts only queued
-  CI-escalation walls, NOT the (usually much larger) plain backlog-task queue. A quarantine with backlog tasks queued
-  but zero escalation walls queued currently pages the quiet path instead — tracked as
-  `plans/active/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md` (P2, open).
+  Slack-200 confirmed): the starvation condition was `escalation.count_queued_walls() > 0` — this counted only queued
+  CI-escalation walls, NOT the (usually much larger) plain backlog-task queue, so a quarantine with backlog tasks queued
+  but zero escalation walls queued would have silently paged the quiet path instead. **Fixed
+  `agent-orchestrator@9c73579`**: the condition is now `count_queued_walls() > 0 or count_queued_backlog_tasks() > 0`,
+  and `notify_slot_quarantined`'s Slack copy names whichever queue(s) triggered it — see
+  `plans/archive/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md`.
 
 Each of these calls `logger.info(...)` (the "D11 downgrade" convention) instead of `slack._post(...)`. Their events are
 recorded in the DB **activity log** (`log_activity`) by the callers, which is what the digest reads.

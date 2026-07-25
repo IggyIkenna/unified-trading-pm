@@ -30,8 +30,8 @@ related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-25
@@ -412,7 +412,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       happened to pass dry mode); the shard-suffixed vm_name overflowed GCE's 63-char limit for the longer category
       names; fixing that introduced an unbound-variable crash under `set -u` for non-sharded launches. 9 new regression
       tests. Full details in the history doc, part 2
-      (`/plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`, "P7 launcher: new
+      (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`, "P7 launcher: new
       `<ag>-candle-apply` category" entry).
 - [x] 12. ✅ [SCRIPT] P2. **SPOT-preemption resume checkpoint for `--apply`** — shipped `mdps@efa559a`. Per-shard
       checkpoint (`vm-logs/{vm}/MIGRATION_PROGRESS-shard{N}.json`, distinct from the day-frontier `PROGRESS.json`
@@ -422,7 +422,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       after preemption); draining switched to completion-order (`as_completed`) so the cadence bound holds under a
       stalled object. Built + independently adversarially reviewed (3 lenses) via a workflow; caught 1 CRITICAL + 3
       HIGH/MEDIUM findings, all fixed with regression tests — full details in the history doc, part 1
-      (`/plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`, "Todo 12 (resume
+      (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`, "Todo 12 (resume
       checkpoint)" entry). **`deployment-service@0ed7cf5`** companion fix: `launch-canonical-migration-vm.sh` now pins
       `VM_NAME` + persists launch params on relaunch (the review's own 4th finding — without it the checkpoint could
       never be found after a real SPOT preemption of the actual launcher family).
@@ -454,13 +454,13 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       was never at risk (`KEPT_SRC` never deletes source) — this is a script gap, not a data-safety incident. Full
       root-cause writeup in the history doc, part 2, "P7c: CEFI retry — another 3-shard SPOT preemption burst;
       ROOT-CAUSED..." entry
-      (`/plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`).
+      (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`).
 
 ## Progress Log
 
 > **Full chronological narrative extracted 2026-07-25** to two companion docs (split because the combined narrative
 > itself exceeded the 1000-line cap):
-> `/plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md` (2026-07-21 writer/reader
+> `/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md` (2026-07-21 writer/reader
 > lockstep + `-test-` gate proof + P0 census + P5 executor build + prep-risk items) and `_part2_2026_07_25.md`
 > (2026-07-22/23 P6 drain → P7 per-AG SPOT `--apply` for DEFI/PREDICTION/CEFI/TRADFI → P8 cross-AG verify/reconcile).
 > This section is a condensed summary of that history; read the two history docs for the full VM-by-VM / shard-by-shard

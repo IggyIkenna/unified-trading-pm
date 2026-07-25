@@ -28,6 +28,9 @@ resolved_by: agent-orchestrator@9c73579
 
 # Branch-quarantine STARVATION alert only counts escalation walls, not queued backlog tasks
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — `agent-orchestrator@9c73579`; archived per the terminal-status backlog
+> sweep.
+
 ## What I found
 
 `_alert_branch_quarantine` (`agent-orchestrator/server/autospawn.py:1112`) decides whether a quarantined slot fires the

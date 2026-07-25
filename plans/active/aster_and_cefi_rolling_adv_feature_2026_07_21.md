@@ -32,7 +32,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
+    /plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
     /codex/02-data/data-lineage-MTDS-features-ml.md,
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
   ]
@@ -95,7 +95,7 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 
 - `/codex/02-data/data-lineage-MTDS-features-ml.md` § Layer 2 — MDPS canonical path (corrected 2026-07-21) + the
   on-chain-perp coverage gap note.
-- `plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md` — the ASTER data-completeness work
+- `plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md` — the ASTER data-completeness work
   this originated from, including the funding-rate realism finding.
 
 ## Progress Log

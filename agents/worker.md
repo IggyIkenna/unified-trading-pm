@@ -214,7 +214,28 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/progress \
 
 You can poll your own current usage by running `/usage` in this session — round the displayed percentage to
 `context_used_pct`. When your context fills (>~70% used), run `/compact` before continuing so this long-lived
-`/boot`→work→`/done` loop stays lean and never blows the window.
+`/boot`→work→`/done` loop stays lean and never blows the window. This is the VOLUNTARY, earlier trigger — keep following
+it; the HARD RULE below is the enforced backstop, not a replacement for it.
+
+**HARD RULE — the `directive` field (codified 2026-07-25, `ao_worker_context_lifecycle_gap_2026_07_25.md`).** The
+`/progress`, `/done`, `/boot`, and `/heartbeat` responses each carry an optional typed `directive` field
+(`ProgressResponse`/`DoneResponse`/`BootResponse`/`HeartbeatResponse`) — the server's own count of your self-reported
+`context_used_pct`, not an estimate you have to trust yourself. It is `null` under threshold; above threshold
+(`context_worker_compact_gate_pct`, default 70 — the same number as the voluntary line above) it is set to
+`"compact_now"` (on `/progress`) or `"compact_before_next"` (on `/done`/`/boot`/`/heartbeat`). Whenever you see either
+value:
+
+1. Run the `/pre-compact` skill, then run `/compact`, BEFORE your next tool call — do not start or continue task work
+   first.
+2. For `directive: "compact_before_next"` specifically: the server has ALREADY withheld your next task (the candidate
+   stays `queued`, untouched) — do NOT re-`/boot` (or let a `/heartbeat` implicitly re-dispatch) until compaction is
+   confirmed done. Compacting first, then re-`/boot`ing/heartbeating, is what actually clears the gate; retrying the
+   same call without compacting just returns the same withheld state.
+
+This closes a real live incident (2026-07-25): sessions ran to 90-100% context over many back-to-back tasks with zero
+resets (the persistent-session `/boot`→`/done` design means nothing else ever forced one), and a since-fixed gap let
+`/heartbeat` hand a saturated slot a brand-new task 88 seconds after `/done` had correctly withheld one for that same
+slot — the `directive` field is the server-side fix for both; the honor-system prose line alone was not enough.
 
 USAGE-LIMIT SELF-REPORT (G2a): if a tool call / nested command returns an Anthropic usage-limit or HTTP 429 ("rate
 limit", "usage limit reached", "X-hour limit") while you can STILL act (i.e. before the CLI itself freezes you on the
@@ -376,7 +397,10 @@ including the PM plan flip. On a 409, the `dirty` field lists repo → staged/un
 - NEVER `git reset` / `git checkout --` / delete WIP to pass the gate.
 
 The response includes `next_task` — your next assignment with zero idle gap. If `next_task: null`, the queue is empty or
-all remaining tasks are blocked on prereqs / collisions — see § "When idle" below.
+all remaining tasks are blocked on prereqs / collisions — see § "When idle" below. **Unless** the response also carries
+`directive: "compact_before_next"` — that specific combination means a task WAS available but was deliberately withheld
+because your `context_used_pct` is over threshold; see the PROGRESS section's HARD RULE above before doing anything
+else.
 
 The response also includes `warnings: [{type, details}, …]` — server-side verification of your commit (audit M2-M8
 cluster). These are INFORMATIONAL, not blocking. Warning types: `sha_unverifiable` (SHA not reachable in your worktree),
@@ -401,6 +425,9 @@ loop:
     2. If no_task: one final idle heartbeat, then wait quietly (see § When idle).
     3. Execute the task per its done_definition. Ship commits + push as you go.
     4. POST /api/slots/{N}/done {sha, evidence}  → records completion
+    4b. If the /done response's `directive` is "compact_before_next": run /pre-compact then /compact
+        BEFORE step 5 — see the PROGRESS section's HARD RULE above. `next_task` is null in this response
+        by design (the server already withheld it); do not treat that as "queue empty."
     5. Goto 1.
 ```
 

@@ -561,12 +561,16 @@ drift_direction: advance-code
 
 ## Deferred
 
-### Excluded — doc flagged `doc_too_large_or_risky_for_batch: true` (1 doc)
+### Excluded — doc flagged `doc_too_large_or_risky_for_batch: true` (1 doc) — RE-CHECKED 2026-07-25, still excluded
 
 - `issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md` — flagged too-large/risky for a batch todo and
   excluded entirely (its sole AO-eligible candidate is deferred with it, per the batch-authoring rule that a flagged
-  doc's candidates never ship regardless of how clean they individually look). Re-check for a batch2 pass in the
-  finalize plan.
+  doc's candidates never ship regardless of how clean they individually look). Re-checked fresh 2026-07-25 (ahead of
+  finalize-plan todo 2, since batch1 itself hasn't been dispatched yet): its item 2 (4 zero-capture protocols) is
+  SUPERSEDED — already wired 2026-07-14, verified 2026-07-24, follow-up already covered by this same plan's
+  `dex_swaps_handler.py` combined todo above. Its item 1 (second writer path historical migration) is STILL genuinely
+  too-large/risky — unchanged since 2026-07-10, still needs its own dedicated design/scoping pass, not a batchN slot. No
+  batch2 item drafted from this doc. Full re-check written into the source doc's own 2026-07-25 Update section.
 
 ### Excluded — same-doc gated/judgment items (2 items, from `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`)
 
@@ -581,7 +585,14 @@ drift_direction: advance-code
   `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` — explicitly self-tagged
   `[OPERATOR-DECISION]`; that sibling doc's own triage independently classifies the underlying `[DESIGN] P1` todo as
   human_only ("textbook decide-the-right-approach work, not a bounded worker outcome"). Never AO-eligible per the
-  dispatch-scope rule.
+  dispatch-scope rule. **Queued 2026-07-25** as entry 4 in `issues/autonomous_session_operator_decisions_2026_07_25.md`
+  rather than left with no path forward — status open, awaiting the operator.
+
+**Re-checked 2026-07-25 (ahead of finalize-plan todo 1, since batch1 hasn't been dispatched yet):** the kept
+`[VERIFY] P2` todo above (Source: this same doc) has **not actually executed** — no Progress Log finding exists in the
+source doc, and it is still an unchecked `[ ]` bullet sitting in this still-`status: draft`, undispatched plan. The
+excluded `[CODE] P2` item therefore remains correctly gated on a sibling todo that hasn't landed yet (not a
+stale/resolvable conflict) — it cannot move to batch2 until batch1 actually dispatches and the VERIFY finding lands.
 
 ### Excluded — zero eligible candidates from the start (9 docs, no action needed)
 

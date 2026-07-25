@@ -134,3 +134,40 @@ charter-barred from spawning slots.
       automatically), or manually commit+push the plans from that host. **DO NOT `git reset`/decommission the host until
       this lands** — the content is not on origin and not reproducible. **Done when**: the 31 plans exist on
       `origin/live-defi-rollout` (or a `wip-preserve/` ref) and `/api/fleet/git-health` shows slot 0 clean.
+
+## Concrete recurrence 2026-07-25 (2) — slot 6 committed-then-ORPHANED (new variant), GMX cleanup
+
+Found by main (agt-52bb99) during the poll loop after review (msg 2000) flagged slot 6's `unified-api-contracts`
+worktree idle with 2 committed-but-unpushed commits. This is a **distinct variant** of this issue: not dirty-uncommitted
+WIP, but **committed commits orphaned by a worktree realignment** after the worker died — which the FM8 pre-spawn
+dirty-handler (`commit_and_push_dirty_repos`) does **not** catch (it only inherits _dirty tree_ state, not
+already-committed-unpushed commits that a realignment then orphans).
+
+Timeline (all verified read-only on host `ip-172-31-5-118`):
+
+- Slot 6 shipped `defi_gmx_venue_removal-001` → landed on origin as `uac@18d53d63`
+  (`feat(defi): remove GMX venue support from unified-api-contracts`).
+- Slot 6 then found residual GMX cleanup and made 2 follow-up commits on `.tabs/6/unified-api-contracts`:
+  `44de0cf0 test(defi): drop stale gmx_arbitrum_ws cassette mapping` +
+  `11ed7f09 chore(defi): remove residual GMX cassette mapping + external mocks`. It went **idle before pushing** them.
+- Main messaged slot 6 (via `/api/slots/6/message`) to push them. Before it could, the **tmux session `orch-slot-6`
+  died** (`tmux has-session` → gone) and `.tabs/6/unified-api-contracts` **HEAD was realigned back to `18d53d63`**,
+  orphaning both commits.
+- Current state: `44de0cf0` + `11ed7f09` are **dangling objects** in `.tabs/6` (present via `git cat-file -t`, NOT
+  reachable from HEAD, NOT on origin, NOT on any branch) — recoverable via reflog/`cat-file` **until git GC prunes
+  them** (default `gc.pruneExpire` ~2 weeks).
+
+**Impact: LOW** — these are residual GMX test cassette-mapping + external-mock cleanup; `-001` landed green so nothing
+is broken (just dead fixtures left behind). Filed so it is a decision, not a silent GC loss. Main is charter-barred from
+recovery (cannot push code or edit another slot's git).
+
+- [ ] [OPERATOR/BACKEND] P3. **Decide + (if worth it) recover slot 6's 2 orphaned GMX-cleanup commits before GC.**
+      Recovery recipe: from `.tabs/6/unified-api-contracts`, `git branch preserve-gmx-cleanup 11ed7f09` (un-orphans both
+      — `44de0cf0` is its parent), then a worker cherry-picks onto `live-defi-rollout` + `quickmerge`s, or an
+      FS-holder/operator does the same. Low value (dead-fixture cleanup) so a legitimate NO-recover is fine — but record
+      the choice. **Done when**: either the commits are on `origin/live-defi-rollout`, or a note here states they were
+      deliberately let go.
+- [ ] [BACKEND] P2. **Extend the dirty-resolution sweep (P2 above) to also catch committed-but-unpushed commits orphaned
+      by realignment**, not just dirty-tree WIP — before realigning a dead slot's worktree to origin, detect local
+      commits not on origin and preserve them to a `wip-preserve/` ref. **Gate**: a dead slot with a local commit ahead
+      of origin gets that commit preserved to a ref (not orphaned) when its worktree is realigned.

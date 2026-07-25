@@ -213,7 +213,7 @@ source: >-
   self-referential, its own Track 3/Track 4 have zero checkboxes at all, so it's genuinely NOT self-covering unlike
   sports'/tradfi's/prediction's master docs; real satellite orphan count is **29**), **7 `archivable_now`** (real,
   independently-verified-done docs sitting un-archived — `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
-  `issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`,
+  `plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`,
   `issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`,
   `issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`,
   `issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`,
@@ -434,3 +434,52 @@ GCS-path context + verification commands in chat; still awaiting the operator's 
 ship commits confirmed ancestors of origin). No uncommitted work. Loop ends here — success criteria (all 5 AGs audited,
 every AO-eligible orphaned doc either dispatched via a new conflict-checked batch or explicitly deferred with a reason,
 every genuine operator-decision-caliber question queued not silently decided) are met.
+
+## Round 2 — batch2/batch4 drain pass (2026-07-25, operator-directed continuation)
+
+Operator asked to (1) upgrade `/ag-closeout-audit` to document the batchN methodology + non-batchable taxonomy (shipped
+`unified-trading-pm@a5353654f`), then (2) re-triage each AG's batch1/batch3 Deferred section against current state and
+draft batch2/batch4 wherever conflicts have cleared, "as far as we can reasonably go." Ran 5 parallel agents (one per
+AG), each following the skill's new "re-check the prior batch's Deferred section first" step before any fresh triage:
+
+- **tradfi** (the largest remaining gap, 33 conflict-gated candidates across 13 docs): **20 cleared → 11 new todos** in
+  `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` (4 had already shipped independently outside AO dispatch since
+  batch1's triage; 16 more cleared because the original conflict actually targeted a sibling item in the same doc, not
+  the AO-eligible candidate itself — batch1 conservatively deferred whole docs). 1 candidate subsumed into another
+  (dead-code false lead, the real gap already covered by a different candidate). **8 remain genuinely conflict-gated**
+  (competing closeout-plan claims still open). `tradfi_manifest_content_recovery_completion_2026_07_24.md` stays
+  excluded (still needs its own dedicated pass, not a batch slot).
+- **prediction** (12 of 13 orphaned docs had zero prior extraction): **6 cleared → 6 new todos** in
+  `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`. Notably recovered item 9 (the excluded 9th candidate from
+  batch1's own source doc) in narrowed read-only form — the codex SSOT showed the "REFUSED — unruled axis" framing
+  batch1 relied on was itself stale (operator D1 ruled 2026-07-20, same day as the closeout's own census). 2 candidates
+  confirmed exact duplicates of batch1 todos (no new work, ground already covered). 5 stay genuinely blocked
+  (operator-gated design decisions or still-0-candidate phase children).
+- **sports**: **3 cleared → 3 new todos** in `sports_satellite_ao_dispatch_batch4_2026_07_25.md` (2 were stale-doc-sync
+  gaps — the competing master-plan claim had already shipped/closed but the satellite doc's own checkbox was never
+  updated; 1 was a read-only sweep confirmed to touch a different mechanism than its flagged conflict). 4 remain
+  genuinely deferred, written up as full operator-decision entries #5-8 (previously only pointed at by batch3, never
+  actually drafted with options).
+- **cefi**: **no batch2** — all 3 too-large docs re-verified still genuinely blocked with FRESH evidence (live `gcloud`
+  infra checks, not stale rationale): the 4surface migration doc is mid-pause (not settled) with an explicit unfinished
+  "Resume sequence"; the catalogue-reload design fork is still unruled even though the OOM outage it conflicted with
+  resolved; the mislabeled-venues sibling-doc disagreement resolved but every resulting action item was already
+  dispatched in batch1 or is a doc-hygiene-only stale checkbox (flagged for a future `/plan-reconcile` pass, not
+  actioned here).
+- **defi**: **no batch2** — coverage was already very clean (54/59 candidates in batch1). The 1 genuinely-gated item
+  (canonical `perp_daily_ctx` registration) is correctly waiting on batch1's own VERIFY todo actually being DISPATCHED
+  first (confirmed via git log the VERIFY hasn't run yet — it's queued in a still-draft plan, not stale). The
+  perp_funding-demote design decision was properly operator-gated, queued as entry #4.
+
+**Net this round**: 20 new dispatchable todos across 3 new batch2/batch4 pairs (tradfi 11, prediction 6, sports 3), 5
+more operator-decision entries queued (#4-8, bringing the total to 8), and — critically — the remaining truly-stuck docs
+are now confirmed via FRESH re-verification (not stale 2026-07-25 rationale) to be genuinely operator-gated or
+too-large, not just under-triaged. `autonomous_session_operator_decisions_2026_07_25.md`'s shared-file concurrent-edit
+risk (5 agents, 3 of which touched it) was verified clean — all 8 entries present, correctly sequential, no collision
+damage.
+
+**Next**: ship this round's 12 touched/new files, then `/pre-compact` to checkpoint this long session, then a
+`/plan-reconcile` pass scoped to just the 5 consolidated-closeout docs + their batch siblings (10 base docs + their
+finalize plans) to catch any contradiction between them before anything moves toward full AO-dispatch-readiness — per
+the operator's explicit sequencing: reconciliation and clear depends_on/blocked_by/parallelizable understanding BEFORE
+converting everything into AO-doable tasks.
