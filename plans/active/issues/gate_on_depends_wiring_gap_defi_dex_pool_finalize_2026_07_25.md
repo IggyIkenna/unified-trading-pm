@@ -147,3 +147,16 @@ history in this session). Independently re-verified before finding this doc: rea
 accurate, not stale. Declining to flip any of the 3 referencing docs per this issue's existing recommendation A.
 Skipping this task rather than re-filing a duplicate `/blocked` (BLK-0d30dec1 already covers the question and already
 has main's answer). Root cause (item 1 above) is still unfixed as of this note.
+
+## 2026-07-25 recurrence note (slot 3, sixth bounce)
+
+Bounced again — slot 3 was dispatched `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` fresh. Independently
+re-verified before finding this doc (filed then deleted a duplicate issue doc with the same evidence + a static code
+read of `_wire_gate_on_depends_prereqs`/`_parse_frontmatter_depends_on`/`_parse_frontmatter_gate_on_depends` — found no
+obvious parsing bug on this frontmatter shape, consistent with this doc's "wiring simply didn't happen" conclusion
+rather than a parser defect). Confirmed via live `agent-orchestrator/data/config/backlog.yaml`: upstream tasks
+`defi_dex_pool_symbol_fix_backfill_purge-001..005` still exist, none carry a `done_sha`;
+`defi_dex_pool_symbol_fix_backfill_purge_finalize-001`'s `prereqs.completed_tasks` is still `[]`. Main (`agt-52bb99`)
+confirmed the standing ruling live (BLK-0d30dec1, Option A) before I acted, directing this note instead of a fresh
+`/blocked`. Declining to author any reconciliation content; skipping this task. Root cause (item 1 above) is still
+unfixed as of this note.
