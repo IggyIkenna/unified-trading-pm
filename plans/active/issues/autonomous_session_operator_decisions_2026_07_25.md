@@ -34,8 +34,27 @@ depends_on: []
 
 # Autonomous session 2026-07-25 — queued operator decisions
 
-No entries yet as of session start (2026-07-25, /autonomous invoked). This doc will accumulate entries as genuine
-judgment calls surface during the cefi/defi/tradfi/prediction closeout-audit rollout. Format for each entry:
+## 1. `git rm` 2 stale-duplicate stub files (2026-07-25, sports archival)
+
+Not a judgment call — a mechanically-safe delete blocked by a hard guardrail
+(`agent-orchestrator/scripts/hooks/block_destructive_commands.py`) that forbids `git rm` for autonomous workers,
+correctly. A concurrent commit (`9aed72662`, unrelated tradfi work) picked up the ADD half of a `git mv` archival rename
+but not the DELETE half, leaving stale full-content duplicates at the OLD paths alongside the correct archived copies.
+Both stale files were overwritten with an explicit `⚠️ STALE DUPLICATE` stub + a queued `[OPERATOR]` todo (so they're
+self-explanatory and harmless in the meantime) rather than left as confusing full duplicates.
+
+A:
+`git rm plans/active/sports_closeout_batch1_finalize_2026_07_24.md plans/active/data_completion_sports_history_2026_07_24.md`
+— removes both stub files; the real content already lives at `plans/archive/2026_07/`. [WORKER REC] B: Leave the stubs
+in place — they're self-documenting and harmless, just slightly noisy in `plans/active/`. Other: operator can type a
+custom answer
+
+**Status**: open
+
+---
+
+No further entries yet. This doc will accumulate entries as genuine judgment calls surface during the
+cefi/defi/tradfi/prediction closeout-audit rollout. Format for each entry:
 
 ```
 ## <N>. <short title> (<date>, <AG/doc context>)

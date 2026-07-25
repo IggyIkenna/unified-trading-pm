@@ -55,13 +55,16 @@ source: >-
 
 ## Todos
 
-- [ ] [DOC] P1. **Sports**: get the 53-doc orphan-audit workflow's results (in flight at session start,
-      `wf_8cdc5fb5-b1f`), synthesize counts by verdict, journal to this Progress Log, report to operator (already
-      requested). **Done when**: counts reported + logged with the full orphaned-doc list.
+- [x] [DOC] P1. **Sports**: got the 53-doc orphan-audit workflow's results (`wf_8cdc5fb5-b1f`, 53/53 agents, 0 errors),
+      synthesized + journaled below, reported to operator. Also archived the 2 `archivable_now` docs the audit found
+      (`sports_closeout_batch1_finalize_2026_07_24.md`, `data_completion_sports_history_2026_07_24.md`) —
+      unified-trading-pm (see Progress Log; this specific ship hit a real bug, see the 2026-07-25 "shipping bug" entry
+      below).
 - [ ] [DOC] P1. **Sports**: conflict-check + draft the next `sports_satellite_ao_dispatch_batch3_<date>.md` +
       `..._batch3_finalize_<date>.md` pair (status: draft) for any AO-eligible orphaned work the audit finds, per
       ag-closeout-audit skill Phase 3. Skip if the audit finds nothing AO-eligible remaining. **Done when**: drafted +
-      shipped (as draft docs) or explicitly logged as "nothing to draft."
+      shipped (as draft docs) or explicitly logged as "nothing to draft." AO-eligibility triage workflow
+      (`wf_74a99101-69b`, 26 docs) launched, in flight.
 - [ ] [DOC] P1. **cefi**: run /ag-closeout-audit Phases 0-3 in full (discover covering plans, per-doc classify Workflow,
       synthesize+report, conflict-check + draft next batch). **Done when**: audit results logged, any draft
       batch/finalize pair shipped.
@@ -77,7 +80,67 @@ source: >-
 
 - **2026-07-25 (session start)**: Plan created. Prior work this session (before /autonomous): shipped the
   finalize-plan-coverage QG rule (task_template.md + check_finalize_plan_coverage.py + baseline), landed the
-  verify-slot-host-symmetry.sh RECOVERED-bookend fix, built + shipped the /ag-closeout-audit skill (2 branch-drift
-  retries), filed `issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` (found while
-  shipping the skill — real flakiness in a pre-existing test, not caused by this session's changes). Launched a 53-agent
-  Workflow classifying every sports-primary doc (`wf_8cdc5fb5-b1f`) — in flight when /autonomous was invoked.
+  verify-slot-host-symmetry.sh RECOVERED-bookend fix, built + shipped the /ag-closeout-audit skill (6 branch-drift /
+  shared-venv-corruption retries — all confirmed transient, none real defects), filed
+  `issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` (found while shipping the
+  skill — real flakiness in a pre-existing test, not caused by this session's changes). Launched a 53-agent Workflow
+  classifying every sports-primary doc (`wf_8cdc5fb5-b1f`) — in flight when /autonomous was invoked.
+
+- **2026-07-25, sports orphan-audit results** (`wf_8cdc5fb5-b1f`, 53/53 agents done, 0 errors, 3.46M subagent tokens,
+  2453s): of 72 total sports-primary docs (asset_group ⊆ {sports, prediction, meta}, cross-cutting multi-AG docs
+  pre-excluded), 19 were already `status: resolved`/`archived` before this audit (excluded from the deep pass) and 53
+  were classified. Breakdown of those 53: **2 archivable_now** (zero real remaining open work today — see next entry,
+  both archived), **22 archivable_after_planned_work** (open today, but ALL of it is dispatched via a real todo in
+  `sports_consolidated_closeout_2026_07_19.md` or `sports_satellite_ao_dispatch_batch2_2026_07_24.md` +
+  `batch2_finalize` — will reach 0 once those land), **27 orphaned** (13 `orphaned_partial_coverage` + 14
+  `orphaned_never_touched` — one of the 14 is `sports_consolidated_closeout_2026_07_19.md` itself, a tautological
+  self-reference since the doc's own todos completing is the audit's premise, so the real count is **26 satellite
+  docs**), **2 exclude_cross_cutting** (the per-doc agent correctly caught 2 docs the deterministic asset_group
+  pre-filter missed: `predictions_ml_walk_forward_and_arb_2026_06_20.md` and
+  `issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`). **Answer to the operator's
+  question**: **26 sports-primary plan/issue docs would remain orphaned** even after
+  `sports_consolidated_closeout_2026_07_19.md`'s own todos AND `sports_satellite_ao_dispatch_batch2_2026_07_24.md` + its
+  finalize plan ALL run to completion. Full per-doc list + reasoning:
+  `subagents/workflows/wf_8cdc5fb5-b1f/journal.jsonl` (also mirrored to `/tmp/.../scratchpad/sports_audit_results.json`
+  this session, not committed — regenerate from the journal if needed). The 26: `data_completion_sports_2026_07_24.md`,
+  `sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`, `sports_catalog_league_grain_only_scope_2026_07_08.md`,
+  `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`,
+  `sports_group_c_execution_backtest_harness_2026_07_21.md`,
+  `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`,
+  `sports_legacy_fixtures_path_migration_2026_07_24.md`, `sports_live_availability_and_source_latency_2026_07_24.md`,
+  `sports_odds_feature_naming_canonicalization_2026_07_21.md`,
+  `sports_predictions_live_mode_activation_readiness_2026_07_21.md`,
+  `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`,
+  `issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md`,
+  `issues/fixtures_manifest_legacy_backfill_2026_07_24.md`,
+  `issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md`,
+  `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`,
+  `issues/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`,
+  `issues/sports_features_layer_findings_sweep_2026_07_18.md` (~35+ open checkboxes, the 73-todo sweep doc — too large
+  for batch3, needs its own dedicated triage pass, see todo below),
+  `issues/sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24.md`,
+  `issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`,
+  `issues/sports_legacy_duplicate_triage_2026_07_22.md`,
+  `issues/sports_odds_markets_outcomes_settlements_arbitrage_expected_since_2024_zero_captured_2026_07_24.md`,
+  `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`,
+  `issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`,
+  `issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`,
+  `issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`,
+  `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`. Next: conflict-checked batch3 draft for the
+  AO-eligible subset (triage workflow `wf_74a99101-69b` launched).
+
+- **2026-07-25, archival + a real shipping bug found**: archived the 2 `archivable_now` docs
+  (`sports_closeout_batch1_finalize_2026_07_24.md`, `data_completion_sports_history_2026_07_24.md` →
+  `plans/archive/2026_07/`) with ARCHIVED banners and fixed the 3 real corpus referrers
+  (`data_completion_sports_2026_07_24.md`, `sports_live_availability_and_source_latency_2026_07_24.md`,
+  `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`). **First ship attempt landed a HALF-migration**: a
+  concurrent, unrelated commit (`9aed72662`, "verify + flip 3 tradfi cheap-win checkpoints") picked up only the ADD half
+  of the `git mv` rename (both archived docs' new-path content, correct) but NOT the DELETE half — leaving a stale
+  duplicate at BOTH the old `plans/active/...` path AND the new `plans/archive/2026_07/...` path simultaneously — and
+  separately dropped this doc's own todo-1-flip and this whole Progress Log entry back to the session-start version
+  (confirmed via `git ls-files` showing both paths tracked at HEAD, and this file reverting to 83 lines). This is
+  exactly the class of bug `/plan-reconcile`'s Phase 5.9(c) warns about ("VERIFY AT HEAD — never trust a commit
+  summary... a hook conflicts, the restore fails, and your edits are silently rolled back while the working tree still
+  LOOKS right"), now confirmed on THIS branch under heavy concurrent load, not just a hypothetical. Redid all the lost
+  edits + `git rm`'d the stale active-path duplicates in a second ship, this time verifying content immediately before
+  AND after staging.

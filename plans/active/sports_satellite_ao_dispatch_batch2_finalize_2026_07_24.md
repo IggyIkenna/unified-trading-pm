@@ -25,7 +25,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/sports_closeout_batch1_finalize_2026_07_24.md,
+    /plans/archive/2026_07/sports_closeout_batch1_finalize_2026_07_24.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

@@ -24,7 +24,7 @@ related:
     /plans/active/data_completion_tradfi_2026_07_15.md,
     /plans/active/data_completion_prediction_2026_07_15.md,
     /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
-    /plans/active/data_completion_sports_history_2026_07_24.md,
+    /plans/archive/2026_07/data_completion_sports_history_2026_07_24.md,
   ]
 created: "2026-07-24"
 parent_epic: manifest_master
