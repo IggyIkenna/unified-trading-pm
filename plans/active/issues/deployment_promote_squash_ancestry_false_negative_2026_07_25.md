@@ -119,9 +119,10 @@ live" checks, not just the aggregate-drift-count case already covered:
       `codex/08-workflows/ci-cd-flow.md` which mode applies where, so a reviewer knows up front whether the ancestor
       check is even valid for a given repo. (repo: unified-trading-pm) — unified-trading-pm@1b6fdc147 (see Progress
       Log).
-- [ ] [REVIEW] P3. Sweep currently-open plans/issue docs for other "confirm `<repo>@<sha>` is live" todos phrased around
-      the ancestor check specifically, and re-verify each via the content-diff method above — there may be other false
-      "not live" verdicts sitting in the backlog right now beyond the 2 corrected today. (repo: unified-trading-pm)
+- [x] ✅ [REVIEW] P3. Sweep currently-open plans/issue docs for other "confirm `<repo>@<sha>` is live" todos phrased
+      around the ancestor check specifically, and re-verify each via the content-diff method above — there may be other
+      false "not live" verdicts sitting in the backlog right now beyond the 2 corrected today. (repo:
+      unified-trading-pm) — SWEPT 2026-07-25T06:00Z (slot 10, review). See Progress Log for the full sweep + findings.
 
 ## Progress Log
 
@@ -145,3 +146,28 @@ live" checks, not just the aggregate-drift-count case already covered:
   through 2 prior dispatches on `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s todo 2 (corrected in that doc
   directly). No code shipped — this doc is the tracked follow-up for the process/docs fix; the 2 concrete plan
   corrections already happened inline in their own docs.
+
+- **2026-07-25T06:00Z (slot 10, review)** — Todo 3 (sweep): searched `plans/active/` for the specific pattern
+  (`git merge-base --is-ancestor ... origin/main`, narrowed from a much noisier bare `is-ancestor` grep across 36 files,
+  most unrelated — tarball/lineage ancestor checks against LDR, not this bug). Found and triaged every genuine hit:
+  - **`deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`** (Gap-1 todo,
+    `unified-trading-library@4773a3fd`) — a real, uncaught instance: the todo's own forward-looking verification
+    instruction told a future dispatch to rely on the ancestor check. Re-verified NOW via content-diff instead (fix's
+    content confirmed on `main`) — but the behavioral check (`active/` count vs live-VM count, `"Reaper: archived"` log
+    presence) shows the fix has **NOT** actually resolved the convergence problem (`active/` still 404 vs 9 running VMs,
+    ~2.5h post-deploy, zero archived-lines AND zero tracebacks). Corrected the doc's verification guidance + filed a
+    fresh `[BACKEND]` P0 todo for the still-open non-convergence (possible cause: deployment-api vendors UTL via a local
+    editable path, not a pinned version, so UTL's own `main` having the fix doesn't prove the built container does).
+  - **`data_completion_defi_2026_07_15.md:864`** — an ancestor check that returned exit 0 (true positive). Not an
+    instance of this bug — the bug only produces false NEGATIVES; a positive ancestor result is always valid evidence.
+    No action needed.
+  - **`issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md`** — PRIOR ART, not a defect: this doc
+    independently discovered the identical squash-breaks-ancestry mechanism on 2026-07-20 (5 days before this session)
+    and already correctly recommends "tree-equality (not ancestry)" for detecting already-promoted commits. Reinforces
+    that this pattern has been independently rediscovered multiple times without ever reaching the reviewer's standard
+    playbook — strengthens the case for todo 1 (the `review.md`/`RULES.md` guidance fix) rather than making it
+    redundant.
+  - All other `is-ancestor` / "NOT YET LIVE" grep hits inspected and found unrelated (checking ancestry against LDR, not
+    `origin/main`; or generic "is live" prose with no ancestor-check involved). No other undetected false "not live"
+    verdicts found this sweep. Todo 1 (the `review.md`/`RULES.md` docs fix) remains open — slot 4 shipped todo 2
+    concurrently (see the entry above); this entry covers todo 3 only.

@@ -239,7 +239,36 @@ flipping the checkbox.
       fresh Cloud Run deploy + several minutes of reap-tick cadence (900s interval) before `active/` count convergence
       can be measured; a future dispatch should re-run the same verification as Todo 3 (`active/` count vs live-VM
       count, plus checking for the now-expected `"Reaper: archived"` log lines) once the fix is confirmed live via
-      `git merge-base --is-ancestor 4773a3fd origin/main` + the deployed image tag.
+      `git merge-base --is-ancestor 4773a3fd origin/main` + the deployed image tag. **UPDATE 2026-07-25T05:55Z (slot 10,
+      review) — RE-VERIFIED, fix IS deployed but `active/` STILL has NOT converged.** Correcting this todo's own
+      verification instruction: do NOT rely on `git merge-base --is-ancestor` alone — it fails FOREVER post-squash-merge
+      regardless of whether the content shipped (full writeup:
+      [issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md](deployment_promote_squash_ancestry_false_negative_2026_07_25.md)).
+      Content-diffed instead: `git show origin/main:unified_trading_library/deployment_registry.py` shows
+      `ThreadPoolExecutor(max_workers=32)` present, byte-identical to LDR's copy — the fix's content genuinely reached
+      `main`. Caveat found while checking: deployment-api consumes UTL via a **local editable path**
+      (`unified-trading-library = { path = "../unified-trading-library", editable = true}`, `pyproject.toml:67`), not a
+      pinned version, so UTL's own `main` having the fix does NOT by itself prove the DEPLOYED CONTAINER's build
+      vendored that exact content — flagging as a real verification gap, not glossed over. Checked BEHAVIORALLY instead
+      (sidesteps that gap): since revision `uts-shared-deployment-api-00274-s9g` went live (`2026-07-25T02:51:26Z`,
+      ~2.5h before this check), `gcloud logging read` shows **zero** `"Reaper: archived"` lines (still absent, as before
+      the fix) AND **zero** `_run_deployment_reaper`/`CancelledError` tracebacks either (also absent — the OLD failure
+      symptom isn't recurring, but neither is the expected NEW success signal). `active/` object count measured **404**
+      right now vs **9** currently-running VMs (`GET .../inventory?status=running` → `vm_count=9`) — unchanged from the
+      pre-fix 403-404 baseline. **Not resolved** — either the built container doesn't actually carry the UTL fix (the
+      editable-path gap above), or the reap tick still isn't executing/completing for a different reason than diagnosed.
+      New todo added below rather than re-asserting the fix worked without evidence.
+- [ ] [BACKEND] P0. **Determine why `active/` still hasn't moved (404, unchanged) despite
+      `unified-trading-library@4773a3fd`'s parallelization fix being live on `main` for ~2.5h with zero
+      `"Reaper: archived"` lines AND zero `_run_deployment_reaper` tracebacks (neither the old failure nor the expected
+      new success signal appears in Cloud Logging).** Check, in order: (1) confirm the DEPLOYED CONTAINER's build
+      actually vendored the fixed UTL content — deployment-api depends on `unified-trading-library` via a local editable
+      path (`pyproject.toml:67`), not a pinned version, so verifying UTL's own `main` has the fix does not prove the
+      built image does; inspect the Cloud Build log / image layer for the actual bundled `deployment_registry.py`
+      content if possible. (2) If the container IS correct, confirm the reaper tick is being invoked AT ALL post-deploy
+      (add a cheap one-time INFO log at tick start if none exists — the total silence of BOTH the old error and the new
+      success line is itself suspicious). (3) Re-check `active/` vs live-VM count once resolved. (repo: deployment-api,
+      unified-trading-library)
 
 - **2026-07-24 (slot-4, review)**: Re-ran the end-to-end verification per the todo above, against the freshly deployed
   `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build
