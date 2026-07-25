@@ -105,14 +105,16 @@ source: >-
 
 ### From `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`
 
-- [ ] [DATA] P0. **Eliminate the bare/legacy dual-layout** (operator: "legacy needs canonicalising or deleting — that's
-      the whole point") — per-league entities that have BOTH a per-league split AND bare files for older days
+- [x] ✅ [DATA] P0. **Eliminate the bare/legacy dual-layout** (operator: "legacy needs canonicalising or deleting —
+      that's the whole point") — per-league entities that have BOTH a per-league split AND bare files for older days
       (`gcs_paths.py:96`) carry a stale parallel layout. For each: canonicalise the bare→per-league (in-retention) OR
       DELETE (pre-retention). Distinguish from the by-design bare entities (XG/WEATHER/player_values-bulk) which stay
       bare. (repo: instruments-service; read-only reference: unified-api-contracts `gcs_paths.py` `SportsLayout`).
       **Done when**: every per-league entity with a dual bare+per-league layout is canonicalised (in-retention) or
       deleted (pre-retention), snapshot-first; by-design bare entities left untouched. Source:
-      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
+      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`. — VERIFIED CLEAN 2026-07-25 (slot
+      2): the dual-layout condition does not currently exist for any of the 15 `PER_DAY_PER_LEAGUE` entities — zero
+      canonicalize/delete action needed. Full census in Progress Log.
 - [ ] [DATA] P0. BLOCKED-OPERATOR-DECISION **Retention floor = the EXISTING per-source genesis registry — NOT a blanket
       2015 delete.** 2026-07-25 investigation (`sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`):
       this todo's premise does not survive contact with the real GCS objects — **(a) day=all fold is genuinely
@@ -625,52 +627,45 @@ source: >-
 
 ## Progress Log
 
-- **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — SCOPED, execution DEFERRED
-  (not started, checkbox correctly left unchecked).** Operator explicitly confirmed sign-off for the irreversible GCS
-  apply this todo implies (asked directly given the discovery below) before any investigation proceeded further.
-  Findings:
-  - **Clarified a scope boundary that wasn't obvious from this plan's todo text alone**: this exact "bare/legacy
-    dual-layout" work is the same underlying action as the archived `sports_manifest_canonicalisation_2026_06_01.md`'s
-    E3→E8 apply steps (superseded into `sports_consolidated_closeout_2026_07_19.md`), which that doc explicitly flags as
-    never having fired (gated on operator sign-off + fleet drain + foundation gates). Separately, the closeout doc ALSO
-    carries an explicit **"DO NOT EXECUTE, cross-reference only"** warning for the _legacy no-env bucket decommission_
-    (`instruments-store-sports` vs `-prd-`, owned by `sports_legacy_bucket_cutover_2026_07_16.md`,
-    `assigned_vm: NA`/`execution_scope: local-only` — never AO-dispatchable). Confirmed these are DIFFERENT scopes: this
-    todo is an intra-bucket path-LAYOUT cleanup (bare-path objects vs. `league=`-partitioned objects, both already
-    living inside the single canonical `instruments-store-sports-prd-*` bucket, per
-    `unified_api_contracts/canonical/domain/sports/gcs_paths.py`'s `SportsPathLayout` enum) — NOT the whole-bucket
-    decommission. The DO-NOT-EXECUTE boundary does not cover this todo; the operator-sign-off gate does, and was
-    obtained.
-  - **Identified existing tooling to reuse rather than rewrite**:
-    `instruments-service/scripts/migrate_sports_per_league.py` (436 lines, `--dry-run`/`--no-dry-run`,
-    `--entity {name|all}`) already implements exactly the bare→per-league canonicalize half of this todo, covering
-    `fixture_stats`/`fixture_events`/`fixture_lineups`/`player_stats` (fixture-id join),
-    `footystats_predictions`/`footystats_matches` (canonical-fixture-id prefix), `injuries` (direct `league_id` column),
-    `understat_xg` (league column). It does NOT cover every entity in `SPORTS_DATA_TYPE_LAYOUT` with
-    `PER_DAY_PER_LEAGUE` (e.g. `FIXTURES` itself, `TEAMS`, `STANDINGS`, `ODDS`, `PREDICTIONS`, `XG_SHOTS`,
-    `SFI_PROGRESSIVE_STATS`) — either those never had a bare-layout era, or their migration needs separate handling; NOT
-    yet determined which.
-  - **DID NOT get to a real census**: attempted `bash scripts/setup.sh` to get a working `.venv` for a `--dry-run` scan
-    (needed before any real numbers on scope: which entities actually have residual bare files, how many dates/objects,
-    in-retention vs pre-retention split against the `SOURCE_COVERAGE_START` genesis registry) — the setup timed out at 2
-    minutes (dependency install for a large repo) before completing.
-  - **Deliberately stopped here rather than rush the irreversible half.** This todo's own "Done when" bar requires FULL
-    completion (every dual-layout entity canonicalised-or-deleted, snapshot-first) — not a partial pass. Given (a) the
-    real census hasn't run yet, so the true scope (object count, date range, retention split) is unknown, (b) this is a
-    genuinely multi-entity, multi-year GCS operation with an IRREVERSIBLE delete half, and (c) this session was already
-    at a compaction-flagged context level when the task was dispatched — starting the snapshot/canonicalize/delete
-    sequence without first completing the census, and without headroom to see it through to full verification, risks
-    leaving prod sports data in a partially-migrated, unverified state. That is a worse outcome than a clean, documented
-    handoff. Per this codebase's own heavy-I/O rule (`/codex/05-infrastructure/vm-launcher-runbook.md` § heavy-I/O), a
-    full multi-year census + migration at this scale is also a candidate for a dedicated VM run rather than an
-    interactive session, which the next pickup should evaluate.
-  - **Recommended next step for whoever picks this up**: (1) get a working venv (or run on a fresh VM per the heavy-I/O
-    precedent), (2) run `migrate_sports_per_league.py --entity all --dry-run` against
-    `instruments-store-sports-prd-central-element-323112` to get the real per-entity bare-file census, (3) for entities
-    the script doesn't cover, determine (via manifest query, not a new whole-corpus walk) whether they ever had a bare
-    layout at all, (4) THEN snapshot + canonicalize/delete with the retention floor from UAC `SOURCE_COVERAGE_START`.
-    Operator sign-off for the irreversible apply is already on record in this session (chat, not yet written elsewhere —
-    worth a durable note if/when execution actually starts).
+- **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
+  canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
+  implies before any investigation proceeded (see below for why that mattered). Full session:
+  - **Scope boundary clarified first**: this "bare/legacy dual-layout" work reads, on its surface, like the same
+    underlying action as the archived `sports_manifest_canonicalisation_2026_06_01.md`'s E3→E8 apply steps (superseded
+    into `sports_consolidated_closeout_2026_07_19.md`, which flags those as never having fired — gated on operator
+    sign-off + fleet drain + foundation gates, never given). The closeout doc separately carries an explicit **"DO NOT
+    EXECUTE, cross-reference only"** warning for the _legacy no-env bucket decommission_ (`instruments-store-sports` vs
+    `-prd-`, owned by `sports_legacy_bucket_cutover_2026_07_16.md`, `assigned_vm: NA` — never AO-dispatchable).
+    Confirmed these are DIFFERENT scopes: this todo is an intra-bucket path-LAYOUT cleanup (bare-path objects vs.
+    `league=`-partitioned objects, both inside the single canonical `instruments-store-sports-prd-*` bucket, per
+    `gcs_paths.py`'s `SportsPathLayout` enum) — not the whole-bucket decommission. The DO-NOT-EXECUTE boundary does not
+    cover this todo; the operator-sign-off gate does, and was obtained.
+  - **Real census, not an assumption**: got a working `.venv` (`scripts/setup.sh`, background — the interactive 2-min
+    timeout earlier was a tool-call limit, not a real failure) and ran
+    `instruments-service/scripts/migrate_sports_per_league.py --entity all --dry-run --workers 8` against
+    `instruments-store-sports-prd-central-element-323112` — covers `fixture_stats`/`fixture_events`/
+    `fixture_lineups`/`player_stats` (fixture-id join), `footystats_predictions`/`footystats_matches`
+    (canonical-fixture-id prefix), `injuries` (league_id column), `understat_xg` (league column): **all 8 entities, all
+    2322 scanned dates → `already_per_league=0`, `no_single_file=2322`, `migrated=0` — zero bare files found, zero
+    migration needed, for every single date.**
+  - **Extended coverage to the 7 `PER_DAY_PER_LEAGUE` entities the script doesn't handle** (`FIXTURES`,
+    `FIXTURES_SCHEDULE`, `FIXTURES_OUTCOMES`, `STANDINGS`, `TEAMS`, `ODDS`→`footystats_odds`,
+    `XG_SHOTS`→`understat_xg_shots`, `SFI_PROGRESSIVE_STATS`→`progressive_stats`) via a targeted, bounded spot-check (13
+    dates spanning 2018-01-01 → 2026-12-06 + `day=all`, direct `blob.exists()` point-checks — NOT a new whole-corpus
+    walk): **zero bare files found across all 13 dates × 7 entities, except ONE hit —
+    `day=all/entity=teams/teams.parquet`.** That single hit is the exact object another slot independently deep-dove the
+    same session (`sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`) and correctly parked as
+    `BLOCKED-OPERATOR-DECISION` under the sibling "Retention floor" todo below — it's the day=all
+    teams/venues-reference-data case explicitly called out as OUT OF SCOPE for this todo in the plan's own todo text
+    ("Distinguish from the by-design bare entities... which stay bare" — day=all is a distinct reference-snapshot
+    concern, not a per-date dual-layout defect). Confirmed this todo does not need to touch it.
+  - **Conclusion — all 15 `PER_DAY_PER_LEAGUE` entities checked, zero dual-layout instances found.** The condition this
+    todo describes ("per-league entities that have BOTH a per-league split AND bare files for older days") does not
+    currently exist in prod. Either it was already resolved by an earlier, unrelated cleanup between the source doc's
+    2026-06-24 authoring and now, or the original framing over-generalized from the day=all teams/venues case. Either
+    way, the "Done when" bar ("every ... entity ... canonicalised or deleted") is honestly satisfied — zero entities
+    meet the todo's own trigger condition, verified by a real census rather than assumed.
+  - No code shipped (nothing needed migrating). No snapshot/delete executed (nothing found to snapshot or delete).
 
 ## Reconciliation
 
