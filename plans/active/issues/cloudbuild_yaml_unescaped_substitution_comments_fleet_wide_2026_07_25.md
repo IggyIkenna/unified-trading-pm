@@ -171,8 +171,9 @@ fix. No behavior change to the actual build (bash never executed these comments)
 - [ ] [INFRA] P1. Fix `market-tick-data-service/cloudbuild.yaml` lines 108 (`$BASE_IMAGE_DIGEST`), 309 (`$VERSION`) in
       comments → double-escaped + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge.
       (repo: market-tick-data-service)
-- [ ] [INFRA] P1. Fix `ml-service/cloudbuild.yaml` lines 94, 261 (bare `$VERSION` in comments → `$$VERSION`) + run the
-      exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: ml-service)
+- [x] ✅ [INFRA] P1. Fix `ml-service/cloudbuild.yaml` lines 94, 261 (bare `$VERSION` in comments → `$$VERSION`) + run
+      the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: ml-service) —
+      ml-service@1257161, exhaustive re-scan confirmed zero remaining bare substitutions.
 - [ ] [INFRA] P1. Fix `strategy-service/cloudbuild.yaml` line 308 (bare `$VERSION` in comment → `$$VERSION`) + run the
       exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: strategy-service)
 - [ ] [INFRA] P1. Fix `trading-agent-service/cloudbuild.yaml` lines 94, 262 (bare `$VERSION` in comments →
