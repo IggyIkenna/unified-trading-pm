@@ -7,7 +7,10 @@ summary:
   backtest genuinely passes.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [cefi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # exclusively Deribit DVOL-index CeFi vol trading, explicitly tagged ("cefi","volatility_index") in the registry
+
 stage: [data, backtest]
 repos: [unified-api-contracts, market-tick-data-service, strategy-service]
 scope: [engineer]

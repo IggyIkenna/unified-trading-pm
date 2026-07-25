@@ -734,3 +734,5 @@ drift_direction: none
     owner.
   - [`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`](/plans/active/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md)
     — e2e defi-strategy funding/APR/gas/lending-rate correctness bugs, `parent_epic: defi_master`.
+  - [`e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`](/plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md)
+    — e2e DeFi strategy configs taxonomy/wizard round-trip fidelity gaps; repos/paths all `e2e-testing/scripts/defi/*`.

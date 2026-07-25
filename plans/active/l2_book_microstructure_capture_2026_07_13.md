@@ -7,7 +7,10 @@ summary:
   capability rows from honest-absent to live_capable — unblocks MARKET_MAKING_QUEUE_MICROSTRUCTURE's backtest.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [cefi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # scoped entirely to 9 CeFi venues already carrying book_snapshot_5 (Binance/OKX/Bybit/Deribit/Coinbase/Upbit)
+
 stage: [data, features]
 repos: [market-tick-data-service, features-service, unified-api-contracts]
 scope: [engineer]

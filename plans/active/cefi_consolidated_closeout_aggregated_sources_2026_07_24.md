@@ -745,3 +745,13 @@ map these (measured via the distinct-values audit; counts approximate):
 
 **Enumeration-restore (cross-AG, owned by the DeFi plan Track 6)**: a raw un-canonicalised distinct-values audit panel
 per asset_group (the view removed on `deployment-api@512180be`) is being restored so this worklist stays live-visible.
+
+## Retagged into cefi scope 2026-07-25
+
+Orthogonality mistags found scoping the new cross-cutting AG layer — see
+`cursor-configs/skills/ag-closeout-audit/SKILL.md`'s Orthogonality HARD CHECK:
+
+- [`crypto_alpha_research_2026_07_24.md`](/plans/active/crypto_alpha_research_2026_07_24.md) — book construction /
+  signal research / paper-trading POC, overwhelmingly Binance-perp/CeFi content.
+- [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md) —
+  DVOL-backtestable VOL_CARRY + VOL_ARB_RV_IV engines, exclusively Deribit DVOL-index CeFi vol trading.

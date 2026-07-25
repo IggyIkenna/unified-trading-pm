@@ -8,7 +8,10 @@ summary: >-
   migration proposal.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [cefi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # body is overwhelmingly Binance-perp/CeFi (momentum, basis, RFQ execution calibration) content
+
 stage: [strategy, paper]
 repos: [e2e-testing, strategy-service, execution-service]
 scope: [engineer, admin]

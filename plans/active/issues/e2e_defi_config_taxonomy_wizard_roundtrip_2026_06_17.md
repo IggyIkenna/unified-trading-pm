@@ -6,7 +6,10 @@ summary:
   configuration-axis taxonomy and are constructible in the strategy wizard.
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [defi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # title says "e2e DeFi strategy configs", repos/paths are all e2e-testing/scripts/defi/* -- content is defi-only
+
 stage: [meta]
 repos: [e2e-testing, strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
