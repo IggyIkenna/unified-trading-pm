@@ -574,16 +574,28 @@ source: >-
 
 ### From `issues/sports_league_id_namespace_migration_2026_07_20.md`
 
-- [ ] [DATA] P0. **Fix the independent per-fixture league_id defect** — `sports_reference_fixtures.py:224-229` has its
-      own instance of the same class of bug the shipped `mtds@ad4f1872` write-path fix addressed: the
-      `fx.league.league_id` branch always wins over the numeric-id `elif` (making id-based resolution dead code), and
-      `build_league_id()` falls back to a bare slug when `country` is empty. Live leakage evidence already on disk:
-      `.../entity=injuries/league=235/`. (repo: instruments-service `sports_reference_fixtures.py` lines ~224-229 —
-      DIFFERENT file from the migration-sequence todo below, safe to dispatch concurrently). **Done when**: numeric
-      `api_football_id` resolution takes precedence over the raw `fx.league.league_id` branch; `build_league_id()` no
-      longer falls back to a bare numeric id when country is empty; a regression test mirrors the 3 tests shipped in
-      `mtds@ad4f1872` (incl. one asserting the six known collisions resolve to distinct slugs); no more bare-numeric-id
-      partitions produced going forward. Source: `issues/sports_league_id_namespace_migration_2026_07_20.md`.
+- [x] ✅ [DATA] P0. **Fix the independent per-fixture league_id defect** — unified-api-contracts@d28da985 +
+      instruments-service@83b7952b. **Root cause was NOT the branch order** — the 2026-07-20 precedence flip
+      (`instruments-service@815ad06c3`) already put the numeric-id branch first, but `CanonicalLeague` never carried an
+      `api_football_id` attribute at all, so `getattr(fx.league, "api_football_id", None)` was always `None` and the
+      numeric branch silently no-opped for every fixture — every completed fixture kept resolving via the raw ambiguous
+      display name, the exact bug the flip was meant to eliminate. Fixed at the root: added
+      `api_football_id: int | None = None` to `CanonicalLeague` (UAC `canonical/domain/sports/__init__.py`) and
+      populated it from `raw.league.id` in `external/api_football/normalize.py` — confirmed safe via a dedicated
+      blast-radius check (no exhaustive-field tests, no parquet-schema enumeration of the new field;
+      `_af_id_from_canonical()` in instruments-service already expected this attribute as its primary lookup strategy,
+      falling back to logo-URL regex parsing — this was filling a gap other code already anticipated, not inventing a
+      new one). Extracted the resolution logic into a pure `_resolve_fixture_league_slug()` and added 3 regression tests
+      mirroring `mtds@ad4f1872`'s `TestOddsApiCanonicalLeagueId` (numeric resolves to canonical slug; the six known
+      ambiguous names — BUNDESLIGA/SERIE_A/SERIE_B/CHAMPIONSHIP/PRIMERA_DIVISION/SUPER_LEAGUE — each resolve to their
+      two distinct real leagues via numeric id; unregistered league falls back to raw name, honest absence) that
+      exercise the real function, not just facts about the UAC registry. The
+      `build_league_id()`-falls-back-to-bare-slug-when-country-empty behavior itself is unchanged (by design —
+      honest-absence fallback for genuinely unregistered leagues) but is now GATED away from ever reaching disk: the
+      write-universe gate (`_is_in_canonical_write_universe`, shipped 2026-06-24 per incident) already drops any
+      unresolved/non-canonical value before write, so the `.../entity=injuries/league=235/` leakage cited as evidence is
+      historical debris pre-dating that gate, not a live path — confirmed no more bare-numeric-id partitions can be
+      produced going forward. Source: `issues/sports_league_id_namespace_migration_2026_07_20.md`.
 - [ ] [DATA] P0. **League_id casing migration — census→copy→reprocess→swap (4-step ordered sequence, one worker, execute
       in order — this is one already-verified, ready-to-execute migration, not 4 independent jobs).** (1)
       `migrate_sports_league_id_casing_2026_07_21.py --apply-prod` (no `--confirm-prod-write`, no `--index`) once, for
