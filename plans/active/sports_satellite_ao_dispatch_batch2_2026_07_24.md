@@ -208,13 +208,18 @@ source: >-
       never honest absence. 3 new regression tests: a deliberately mismatched fixture (real pre-migration FSS names
       `home_implied_prob`/`draw_implied_prob`) raises loudly, a matching fixture (`odds_home_win`) still loads, and
       non-`odds_features` groups are never schema-validated. quality-gates.sh green (2103 passed).
-- [ ] [BACKEND] P2. **Migrate `SportsValueBettingEngine` + `SportsArbDutchingEngine`** (`on_tick`'s
-      `features: dict[str, float]` reads) AND the legacy `strategy_service/adapters/sports_feature_subscriber.py`
-      (currently `ht_odds_home_implied` etc., a third/separate dialect) to the UAC-chosen field names — update unit
-      tests and recorded fixture feature dicts for all three. (repo: strategy-service). **Done when**: both v2 engines
-      and the legacy subscriber read/emit the decided field names in place of
-      `decimal_odds_<outcome_id>`/`fair_prob_<outcome_id>`/`ht_odds_home_implied`-style names; unit tests and fixtures
-      updated to match; quality-gates green. Source: `sports_odds_feature_naming_canonicalization_2026_07_21.md`.
+- [x] ✅ [BACKEND] P2. **Migrate `SportsValueBettingEngine` + `SportsArbDutchingEngine`** + the legacy
+      `sports_feature_subscriber.py` — strategy-service@4c55438c. Renamed `decimal_odds_<outcome>` →
+      `odds_decimal_<outcome>`, `decimal_odds_<outcome>_<venue>` → `odds_decimal_<outcome>_<venue>`,
+      `fair_prob_<outcome>` → `prob_fair_<outcome>`, `ht_odds_{home,draw,away}_implied` →
+      `prob_implied_{home,draw,away}` per the 2026-07-23 decided scheme. Updated the 3 direct unit test files, the
+      `ARBITRAGE_SPORTS_DUTCHING` branch of `test_all_catalogued_archetypes_construct_and_fire.py`'s smoke test, and the
+      dutching leg of `scripts/run_sports_arb_backtest.py`. Left the generic (non-sports)
+      `ml_directional`/`rules_directional` `event_settled.py` engines untouched — they share the OLD `decimal_odds_`
+      prefix incidentally but are NOT part of this migration's decided scope. quality-gates.sh green (5583 passed, 5
+      pre-existing xfails unrelated to this change). NOTE: this is 1 of 3 independent per-repo renames in the same
+      migration (UAC `OddsFeaturesMixin` + FSS's exporter, both still `[ ]` above) — a temporary window where they don't
+      all agree is expected per the operator's own sequencing note (sports is backtest-only, no live wiring).
 
 ### From `data_completion_sports_2026_07_24.md`
 
