@@ -30,7 +30,7 @@ related:
     /codex/02-data/reconciliation-finding-taxonomy.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-25" # same-day correction (consolidated-closeout split pass): phase_ab_residuals open-count refs corrected 10/11 -> 13; the POLYMARKET schema-extension pointer corrected to phase_ab_residuals' A2 todo (was the parent's now-relocated "Queued audits + reviews")
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -145,12 +145,13 @@ drift_direction: advance-code
       **Resolution note**: the flagged conflict is `prediction_phase_c_data_status_ui_2026_07_24.md`'s own P1 todo,
       which bundles ALL 3 of this doc's open items under one claimed closure — but that phase_c todo is machine-gated
       (`depends_on: [prediction_phase_ab_residuals_2026_07_24], gate_on_depends: true`) and
-      `prediction_phase_ab_residuals_2026_07_24.md` still has 10 open todos as of this re-check, so the gate has not
-      opened and cannot race this todo. Once this ships, batch2-finalize cross-links it in
-      `predictions_other_bucket_and_ui_drilldown_2026_06_20.md` so phase_c's future bundled closure finds it already
-      done, not re-attempted. **Done when**: a new/extended unit test in market-tick-data-service (extend
-      `tests/unit/engine/test_manifest_finalize_coverage.py`) proves that for a processing date with ≥1 CQG absent from
-      `state.prediction_cluster_counts_by_venue` for a venue, `_finalize_prediction_bundles` now emits an
+      `prediction_phase_ab_residuals_2026_07_24.md` still has 13 open todos (**corrected 2026-07-25 consolidated-
+      closeout split, was 10** — that doc gained 2 relocated todos from the parent's former "Queued audits + reviews"
+      section the same day), so the gate has not opened and cannot race this todo. Once this ships, batch2-finalize
+      cross-links it in `predictions_other_bucket_and_ui_drilldown_2026_06_20.md` so phase_c's future bundled closure
+      finds it already done, not re-attempted. **Done when**: a new/extended unit test in market-tick-data-service
+      (extend `tests/unit/engine/test_manifest_finalize_coverage.py`) proves that for a processing date with ≥1 CQG
+      absent from `state.prediction_cluster_counts_by_venue` for a venue, `_finalize_prediction_bundles` now emits an
       `empty_confirmed[SOURCE_RETURNED_ZERO]` `prediction_canonical_question_group` manifest row for that (venue, cqg,
       day) instead of omitting it; `quality-gates.sh` is green. Source:
       `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`.
@@ -228,17 +229,22 @@ of these clear by re-check; a future batch3 should re-check them again only if t
   actioned here.
 - **`prediction_phase_c_data_status_ui_2026_07_24.md`, `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`,
   `prediction_phase_e_football_arb_live_2026_07_24.md`** — 0 AO-eligible each (all remaining work is either
-  machine-gated on `prediction_phase_ab_residuals_2026_07_24.md`'s 11 open items (corrected 2026-07-25 plan-reconcile,
-  was 10), or is itself the human-scale post-migration smoke/backfill/football-arb work the consolidated plan scopes as
-  a dedicated phase, not a bounded solo-worker todo). Unchanged from batch1.
+  machine-gated on `prediction_phase_ab_residuals_2026_07_24.md`'s 13 open items (**corrected 2026-07-25 consolidated-
+  closeout split, was 11** — that doc gained 2 relocated todos from the parent the same day; phase_d itself also grew
+  from 3 to 6 open items via the same relocation, still all 0-AO-eligible on re-check), or is itself the human-scale
+  post-migration smoke/backfill/football-arb work the consolidated plan scopes as a dedicated phase, not a bounded
+  solo-worker todo). Unchanged from batch1.
 - **`issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`** — both of its 2 AO-eligible
   candidates are DUPLICATE-OF-BATCH1 (batch1 todo 5 already combines the exact same grep-then-READ +
   title/slug-recoverability investigation). No new todo. The doc's OWN Q3/Todos (the operator-ruled POLYMARKET
-  `prediction_trades` schema-extension migration) remain tracked directly in
-  `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" section, not this batch's concern. The
-  data_type=`prediction_trades` axis-disposition conflict flagged against this doc (open question vs. already-applied
-  fold) stays OPERATOR-GATED — the doc's own 2,477-row live measurement (most recently written 2026-07-23) genuinely
-  contradicts the "already durable" claim elsewhere and needs the operator to reconcile, not a re-triage guess.
+  `prediction_trades` schema-extension migration) are **corrected 2026-07-25 (consolidated-closeout split, corpus-wide
+  referrer fixup)** — no longer tracked in `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews"
+  (that section was forked out the same day); the ruling + 3-step sequence now live folded into
+  `prediction_phase_ab_residuals_2026_07_24.md`'s existing A2 dual-write-trees todo (Phase B section) — not this batch's
+  concern either way. The data_type=`prediction_trades` axis-disposition conflict flagged against this doc (open
+  question vs. already-applied fold) stays OPERATOR-GATED — the doc's own 2,477-row live measurement (most recently
+  written 2026-07-23) genuinely contradicts the "already durable" claim elsewhere and needs the operator to reconcile,
+  not a re-triage guess.
 - **`predictions_other_bucket_and_ui_drilldown_2026_06_20.md`'s other 2 items** (Phase-5 canonical-groups backfill, the
   `[VERIFY][UI]` deployment-ui drilldown re-walk) — not AO-eligible per the original triage (UI/design-adjacent, needs
   the writer fix this batch's sentinel-fan-out todo ships first); re-check unchanged.
