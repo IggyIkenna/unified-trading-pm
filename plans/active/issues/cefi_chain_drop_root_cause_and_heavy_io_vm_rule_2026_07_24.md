@@ -443,7 +443,13 @@ original 6-date pattern plus a recurring, mislabel-driven DERIBIT trickle across
   range (venue scoping fully isolates a run from other venues' collisions, so this sidesteps the whole "which of the 6
   dates is safe" question cleanly). Next step, still under the same cron-pause drain gate.
 
-## What's left (unchanged from the parent plan's last-known Deferred-work table, ~13:35Z revision)
+## What's left (current as of Finding 10, 2026-07-25 ~05:30Z — table below is STALE, see Finding 8/9/10 for current
+
+state: item 2b DONE via Range A/B/C 504,280 renamed; 2,962 safe renames still pending across EXTENDED-STARKNET/
+LIGHTER-ZKSYNC/BYBIT-SPOT/COINBASE-FUTURES, zero collision risk, NEXT STEP; collision residual grew 1114→1292,
+root-caused, still queued as BLOCKED-OPERATOR-DECISION; 2c DONE 2026-07-23 pre-session + recurrence-fix shipped;
+colon_wire NOT explicitly reconfirmed, check via loop-until-dry; line-cap on the parent plan is ALREADY RESOLVED,
+908/617 lines, no longer blocks archival)
 
 | #           | Item                                                              | State                                             | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ----------- | ----------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -464,10 +470,39 @@ remain operator-owned / out of `/autonomous` scope, unchanged.
 1. ~~Fix the DERIBIT chain-BUNDLE `underlying`-key gap~~ — **DONE, see Finding 5** (`instruments-service@654d694f`).
 2. ~~Surface C v2 apply~~ — **DONE, see Finding 7**. Applied on `e2-standard-16`, verified via a clean second dry-run,
    cron resumed + verified `ENABLED`.
-3. LATE colliding-venue renames, properly scoped this time (`--start-date` near the actual regression onset, not the
-   full 2019 corpus — the fresh 4-surface reverify from ~01:05Z today pinpoints 2025-12-15/2026-02-01/2026-05-01 as the
-   low-canonical-fraction dates).
-4. LIGHTER-ZKSYNC backfill.
-5. MID window + colon_wire + loop-until-dry.
-6. Final 4-surface re-proof + plan archival — including resolving the line-cap block on the parent (split/promote to
-   epic) so the archival ritual can actually write to it.
+3. ~~LATE colliding-venue renames (bulk)~~ — **DONE, see Finding 10** (504,280 renamed via Range A/B/C).
+4. ~~LIGHTER-ZKSYNC backfill~~ — **DONE, subsumed by item 3** (Finding 8/10).
+5. ~~MID window~~ — **DONE, see Finding 9** (already resolved 2026-07-23; recurrence-fix shipped this session,
+   `mtds@fd5cfc35`).
+6. **NEXT — 2,962-object safe residual**: 4 sequential `--venue`-scoped `cefi-late-renames` applies (EXTENDED-STARKNET
+   704 / LIGHTER-ZKSYNC 177 / BYBIT-SPOT 1561 / COINBASE-FUTURES 520) over `2025-11-01..2026-07-24` — zero collision
+   risk (none of these venues appear in the STOP-ON-SURPRISE breakdown). **MUST pause the cron first**
+   (`gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1`,
+   verify `PAUSED`), run all 4 sequentially (shared manifest, no CAS), resume + verify `ENABLED` after.
+7. colon_wire confirmation (NOT yet explicitly reconfirmed — check as part of the next full-range dry-run, don't assume
+   subsumed) + loop-until-dry (2 consecutive clean full-range verifier passes).
+8. Final 4-surface re-proof (`verify_cefi_canonical_4surface_2026_07_20.py`) + plan archival — the line-cap block on the
+   parent is ALREADY RESOLVED (908/617 lines, well under the 1000L cap), so archival's write step is unblocked.
+
+## Session paused 2026-07-25 ~05:30Z — operator-requested, host contention
+
+Operator asked (mid-session, direct chat instruction) to commit/push everything, launch no further VMs, and checkpoint
+via `/pre-compact` — reason given: too many concurrent agents on this shared host, slowing everything down. Confirmed
+independently: shipping Finding 10 alone took **6 attempts** before landing, hitting 5 DIFFERENT transient failures in a
+row (a doc-index-determinism test race against concurrent plan-file writes — twice, with different diffs each time; a
+corrupted `pandas` import mid-reinstall; a corrupted `pydantic` import mid-reinstall; a known/already-being-fixed
+`finalize-plan-coverage` regression; a `.git/index.lock` held by a live concurrent `git pull`+quickmerge process from
+another slot on this exact host) — landed via the sanctioned `plans/**` direct-push carve-out
+(`check_strict_quickmerge.py`'s `CARVE_PREFIX`) rather than a 7th quickmerge retry, once host load allowed a clean
+`git push`.
+
+**Exact state at pause**: cron `ENABLED` (verified directly — safe resting state, RESUMED after Range A/B/C, no drain in
+progress). No VMs running (verified via `gcloud compute instances list` — the last VM self-deleted after the final
+verification dry-run). All 4 touched repos (`instruments-service`, `market-tick-data-service`, `deployment-service`,
+`unified-trading-pm`) confirmed `ahead=0` against `origin/live-defi-rollout`.
+
+**Resume sequence** (next session, once host load allows): apply the 2b-safe-residual (pause cron → verify PAUSED → 4
+sequential venue-scoped applies → verify each → resume cron → verify ENABLED) → run the loop-until-dry full-range
+verifier (2 consecutive clean passes, confirming colon_wire's actual status along the way) → run
+`verify_cefi_canonical_4surface_2026_07_20.py` for the final done-state re-proof → archive this plan + its parent
+(line-cap already clear).
