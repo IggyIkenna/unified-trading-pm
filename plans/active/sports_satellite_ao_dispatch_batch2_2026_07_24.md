@@ -382,11 +382,12 @@ source: >-
       those specific fields until the P2 FSS-side migration lands; this is the gate doing its designed job (loud, not
       silent), not a regression, but P2 should be prioritized to close the window. Source:
       `sports_odds_feature_naming_canonicalization_2026_07_21.md`.
-- [ ] [DATA] P1. **Migrate `features_service/sports/calculators/odds_columns.py`'s `ODDS_COLUMNS`** + the odds-features
-      exporter to emit the UAC-chosen field names instead of the current `home_implied_prob`-style convention; update
-      exporter tests + downstream fixture files. (repo: features-service). **Done when**: all 180 `ODDS_COLUMNS`
-      entries + exporter output renamed per the decided scheme; exporter tests and downstream fixtures updated;
-      quality-gates green. Source: `sports_odds_feature_naming_canonicalization_2026_07_21.md`.
+- [x] ✅ [DATA] P1. **Migrate `features_service/sports/calculators/odds_columns.py`'s `ODDS_COLUMNS`** + the
+      odds-features exporter to emit the UAC-chosen field names instead of the current `home_implied_prob`-style
+      convention; update exporter tests + downstream fixture files. (repo: features-service). **Done when**: all 180
+      `ODDS_COLUMNS` entries + exporter output renamed per the decided scheme; exporter tests and downstream fixtures
+      updated; quality-gates green. Source: `sports_odds_feature_naming_canonicalization_2026_07_21.md`. — SHIPPED (slot
+      11): all 139 entries renamed per the DECIDED scheme, QG green. features-service@0ded2449.
 - [x] ✅ [BACKEND] P2. **Close the silent-agnostic gap in `SportsFeatureLoaderMixin`** — ml-service@07976ae. Added
       `_validate_odds_schema` (checked only for the `odds_features` group): raises `ValueError` when a non-empty frame
       has ZERO columns overlapping UAC `OddsFeaturesMixin`'s known field set — a producer/consumer naming mismatch,
