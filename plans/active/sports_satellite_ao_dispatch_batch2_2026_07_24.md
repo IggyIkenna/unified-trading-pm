@@ -523,7 +523,7 @@ source: >-
       nightly enumerator job, whether the deployed image contains the `ba306543` `captured_set` guard; any
       stale/unguarded asset_group flagged as a follow-up finding. Source:
       `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
-- [ ] [CODE] P1. **Extend the "never emit `empty_confirmed` over a captured atom" guard** to the regular sports
+- [x] [CODE] P1. ✅ **Extend the "never emit `empty_confirmed` over a captured atom" guard** to the regular sports
       instruments batch-capture emission path (`sports_fixtures.py`/`sports_reference_core.py` or wherever
       `uts-prod-instruments-service-sports-fixtures`'s `--operation=instruments --mode=batch --asset-group=SPORTS` run
       emits `EXPECTED_NO_FIXTURE`/`EXPECTED_PAUSED_LEAGUE`/etc.) — same guard shape as `ba306543`
@@ -531,7 +531,22 @@ source: >-
       instruments-service — exact emission site TBD by worker on read). **Done when**: a `captured_set`-style guard is
       added to the batch-capture emission path; unit tests added and passing; a fresh production run no longer produces
       new masking rows of the observed pattern. Source:
-      `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
+      `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`. — DONE 2026-07-25: exact emission site found at
+      `process_write._write_sports_fixture_venue`'s empty-gap loop
+      (`instruments_service/engine/orchestrator/     process_write.py`) — the ACTUAL masking writer named in the issue
+      doc's "ROOT CAUSE CORRECTED" section. Added `_manifest_captured_fixture_leagues` (`sports_reference_core.py`, kept
+      out of `process_write.py` to stay under the 900-line file cap) — a single filtered manifest read (row-group
+      pushdown on date, slim columns) building the set of leagues already CAPTURED for FIXTURES_SCHEDULE on this date;
+      unioned into the empty-gap exclusion set. A manifest-read failure returns `None` and the caller skips the whole
+      empty-emission pass (fail-safe, mirrors `_AfManifestHooks._presence_guarded_captured_leagues`'s existing contract)
+      rather than risk masking. 6 new unit tests (`tests/unit/test_process_write_fixtures_captured_guard.py`) cover the
+      guard helper (canonical-captured filtering, empty-index, read-failure fail-safe) and the integration
+      (manifest-captured league excluded even with zero this-run captures; this-run-captured league still excluded;
+      read-failure skips empty-emission entirely) — QG green (909 sports/fixture/process_write tests passing, full
+      quality-gates.sh green). The "fresh production run no longer produces new masking rows" half of done-when is a
+      live-verification follow-up for the NEXT real `uts-prod-instruments-service-sports-fixtures` production run (code
+      is now shipped to LDR; not independently re-verified against live prod data in this session) —
+      instruments-service@450b1b58.
 - [x] [INFRA] P3. **Downgrade, don't drop, the original "redeploy expected-universe-v2-sports" todo** — that image IS
       current (`:latest` confirmed to contain `ba306543` as of 2026-07-23T08:07:36Z) and Cloud Run Jobs re-pull a
       mutable tag per execution, so no redeploy is likely needed; the doc's own 2026-07-23 second-pass trace found the
