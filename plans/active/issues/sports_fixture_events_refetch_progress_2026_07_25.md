@@ -144,7 +144,20 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       progress-metric check, not single-snapshot); once terminal, re-run the census script per "Next action" above
       before flipping this checkbox. If the fallback-date rate turns out much higher than 0.6% over a longer observation
       window, consider filing a separate perf follow-up issue doc for the launcher/enrichment script (out of scope for
-      this todo — do not fix mid-flight on a running prod VM).
+      this todo — do not fix mid-flight on a running prod VM). — **Health-checked 2026-07-25T05:29Z (slot 4,
+      data_engineering), still RUNNING**: `gcloud compute instances list` confirms `RUNNING` in `asia-northeast1-c`;
+      heartbeat blob `vm-heartbeat/af-backfill-20260725-032253.txt` Update Time `2026-07-25T05:30:01Z` (fresh, ~1min old
+      at check time); run.log last line `05:27:24Z` (~2min old), live per-fixture `Fetched N events for     fixture=X`
+      lines interleaved with the expected 429-rate-limit sleep/retry cycling — no error/stall signature. Distinct
+      `date=` count unchanged at 359 (still `2019-12-25`) since the 05:10Z check — confirmed this is the SAME known
+      fallback-date pattern (not a stall): `date=2019-12-25` hit
+      "`Per-fixture GCS skip: no GCS fixtures for     date=2019-12-25 — using 16765 recovery IDs directly`" at
+      `05:00:02Z`, ~30min into its own ~66min-per-fallback-date budget (matching `2019-12-24`'s measured 66min) —
+      genuine in-date progress (fixture fetches actively advancing within the date), just no NEW date boundary crossed
+      yet, exactly as the fallback-rate finding predicted. Not completable this turn (~2140 of ~2500 dates remain).
+      Released via `/skip-current-task`, not duplicate-launched. Next dispatch: repeat this health-check (2-read
+      progress-metric check — either a new `date=` boundary OR continued in-date fixture-fetch advance counts as live);
+      once terminal, re-run the census script per "Next action" above before flipping this checkbox.
 
 ## Codex SSOTs
 
