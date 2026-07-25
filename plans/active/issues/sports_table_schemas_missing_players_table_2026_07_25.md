@@ -56,12 +56,16 @@ test's expected-table list stale and should be updated to reflect that player da
 
 ## Todos
 
-- [ ] [DATA] P2. Diagnose + fix `test_table_schemas_dict_has_all_sport_tables` (repo: features-service,
-      unified-api-contracts) — either add the missing `players` table schema to UAC's `TABLE_SCHEMAS`, or update the
-      test's expected-table list if `players` was intentionally folded into `fixture_lineups`/`fixture_events`. **Done
-      when**:
-      `tests/sports/integration/test_unified_deps_functional.py::     TestUnifiedApiContractsFunctional::test_table_schemas_dict_has_all_sport_tables`
-      passes, with the fix matching whichever side turns out to be correct (not a blind add-the-missing-key patch).
+- [x] ✅ [DATA] P2. **Diagnose + fix `test_table_schemas_dict_has_all_sport_tables` — DONE, stale test, not a missing
+      schema.** — features-service@30d419f6. Correction to this doc's framing: `TABLE_SCHEMAS` is defined LOCALLY in
+      `features_service/sports/schemas/output_schemas.py`, not UAC. Root cause found via `git log`: `d564bf6f`
+      (2026-07-18, "delete players/coaches/referees/rounds dimension tables") deliberately shrank `TABLE_SCHEMAS` from
+      14 to 10 entries — all 4 removed tables ALWAYS wrote empty parquets (100% empty_confirmed); real data lives in
+      `fixture_lineups.coach_id/name` (coach), `fixtures.referee_id` (referee), `fixture_lineups`/`player_stats`
+      (player), `fixtures.round` (round). That commit updated 3 other test files pinning the old 14-table contract but
+      missed this integration test. Removed `players`, `referees`, `coaches`, `rounds` from `expected_tables` (not just
+      `players` — the test fails fast on the first missing entry in list order, so the doc's title undercounted; the
+      other 3 were equally stale). Test passes; full 23-test file green; `quality-gates.sh` green.
 
 ## Codex SSOTs
 
