@@ -7,7 +7,7 @@ summary: >-
   finalize-plan-coverage gap for a plan predating the 2026-07-24 rule (task_template.md §4): not a batch extraction (its
   own todos are the primary record, nothing to reconcile back into a source doc), so this finalize's job is narrower —
   re-check each still-open BLOCKED-* item's gate, then run the standard archival ritual once genuinely done.
-status: draft
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -32,7 +32,7 @@ estimate_calibrated_ai_days: 0.4
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: infra_capture_and_devops_leftovers_finalize_2026_07_25
 depends_on: [infra_capture_and_devops_leftovers_2026_07_06]
 gate_on_depends: true
 source: >-
@@ -45,6 +45,13 @@ drift_direction: advance-code
 ---
 
 # Infra capture wiring + devops leftovers — finalize
+
+> **🟡 SUPERSEDED 2026-07-25 (slot 9)** — an accidental duplicate:
+> `infra_capture_and_devops_leftovers_finalize_2026_07_25.md` was independently created the same day for the same
+> parent/gate and reached `status: active` (actually dispatched + completed the re-check + reconciliation this doc
+> describes). This doc was never ingested (`status: draft` the whole time), so there was no dispatch collision in
+> practice — flagging here only so a future doc-health sweep doesn't re-activate two finalize plans for one parent. No
+> further action needed on this doc.
 
 > **Machine-gated on `infra_capture_and_devops_leftovers_2026_07_06.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue any todo below until every todo in that plan is `done`. `sequential: true` because todo 2
