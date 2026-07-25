@@ -22,7 +22,7 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer]
 tags: [orchestrator, context-management, compaction, worker-lifecycle, observability]
-related: [/plans/active/ao_fleet_throughput_incident_2026_07_25.md, /plans/epics/orchestrator_master.md]
+related: [/plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md, /plans/epics/orchestrator_master.md]
 created: "2026-07-25"
 last_updated: "2026-07-25"
 parent_epic: orchestrator_master

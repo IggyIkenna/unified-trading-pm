@@ -53,7 +53,12 @@ Automatic backend lifecycle events — the orchestrator handled them, no human i
 - `notify_agent_stuck_escalation` ("Auto-respawn FAILED"), `notify_autospawn_flap`, `notify_stash_on_done` — automatic
   self-healing / lifecycle events (a respawn a guard skipped, an AutoSpawn retry loop backing off, a worker stashing WIP
   to pass the /done gate). All log + digest, none page (operator 2026-07-13 full audit). The one respawn/quarantine case
-  that still pages is a slot actively **starving** escalation dispatch (`notify_slot_quarantined`).
+  that still pages is a slot actively **starving** escalation dispatch (`notify_slot_quarantined`). **Verified live
+  2026-07-25** (`plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md` — 3 independent fires, journal +
+  Slack-200 confirmed): the starvation condition is `escalation.count_queued_walls() > 0` — this counts only queued
+  CI-escalation walls, NOT the (usually much larger) plain backlog-task queue. A quarantine with backlog tasks queued
+  but zero escalation walls queued currently pages the quiet path instead — tracked as
+  `plans/active/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md` (P2, open).
 
 Each of these calls `logger.info(...)` (the "D11 downgrade" convention) instead of `slack._post(...)`. Their events are
 recorded in the DB **activity log** (`log_activity`) by the callers, which is what the digest reads.

@@ -14,7 +14,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [orchestrator, autospawn, incident, close-out]
-related: [/plans/active/ao_fleet_throughput_incident_2026_07_25.md, /plans/epics/orchestrator_master.md]
+related: [/plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md, /plans/epics/orchestrator_master.md]
 created: "2026-07-25"
 last_updated: "2026-07-25"
 parent_epic: orchestrator_master
@@ -57,10 +57,10 @@ sequential: true
       slots never actually run long enough to accumulate the cross-task context carryover this plan complex was built
       for, note that explicitly (informational, not a required code change). **Done when**: a one-paragraph cross-check
       note is added to this doc's Progress Log.
-- [ ] [INFRA] P2. **Run the standard 6-step archival ritual** on `ao_fleet_throughput_incident_2026_07_25.md`: migrate
-      any DEFERRED items into new tracked todos, add a `> **🟢 ARCHIVED**` banner, run the codex-alignment check (does
-      any `/codex/05-infrastructure/vm-launcher-runbook.md` or orchestrator-alerting doc need updating given todo 1's
-      alert-verification findings?), update CLAUDE.md/codex on any new contract discovered (e.g. if the dormant-slot
+- [x] ✅ [INFRA] P2. **Run the standard 6-step archival ritual** on `ao_fleet_throughput_incident_2026_07_25.md`:
+      migrate any DEFERRED items into new tracked todos, add a `> **🟢 ARCHIVED**` banner, run the codex-alignment check
+      (does any `/codex/05-infrastructure/vm-launcher-runbook.md` or orchestrator-alerting doc need updating given todo
+      1's alert-verification findings?), update CLAUDE.md/codex on any new contract discovered (e.g. if the dormant-slot
       audit revealed AutoSpawn's real concurrency target, that belongs in
       `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`), fix every referrer's path corpus-wide
       (`grep -rl ao_fleet_throughput_incident_2026_07_25 plans/ codex/` and update each hit), then move the plan file to
@@ -114,3 +114,34 @@ sequential: true
   it. The fleet cap itself (8 concurrent workers) is unchanged and still bounds how many slots run AT ONCE, but which
   slots take turns is now fair — so the context-gate logic's reach (every currently-dispatched slot, regardless of
   slot_id) is unaffected by the fix; it was never scoped to "only the historically-busy slots" in the first place.
+
+- **2026-07-25T06:14Z (slot-12)** — Todo 3 (archival ritual). Parent plan's own 4th todo (post-fix re-verification,
+  flagged as an out-of-scope discrepancy above) was completed first (`unified-trading-pm@4590a5f00` — partial throughput
+  recovery confirmed, (b)/(c)/(d) genuinely not-yet-observable rather than failed, no regressions in any of the 3
+  shipped fixes) so the archival below reflects the plan's true FULL completion, not just the stale "3 todos" the gate
+  keyed off.
+  1. **DEFERRED migration**: none found — the parent plan carries no `DEFERRED` items or a "Deferred work" section.
+  2. **Banner**: added `> **🟢 COMPLETE 2026-07-25 — ARCHIVED.**` to the plan body + `status: complete` in frontmatter
+     (matching the `ao_config_env_var_consolidation_2026_07_18.md` precedent pattern).
+  3. **Codex-alignment check**: two real gaps found and closed —
+     `/codex/04-architecture/agent-orchestrator-autospawn.md` had NO section documenting slot candidate ordering at all
+     (only the budget-SIZE contract, not WHICH slots get picked) — added a new "Slot candidate ordering — round-robin
+     fairness (2026-07-25)" section describing the `_last_attempt_at` tie-break fix and its scope (doesn't change the
+     fleet cap, only fairness among equally-eligible idle slots).
+     `/codex/04-architecture/agent-orchestrator-alerting.md` documented `notify_slot_quarantined` without the
+     `count_queued_walls()`-is-escalation-only caveat — added, cross-linked to the P2 issue doc.
+     `/codex/05-infrastructure/vm-launcher-runbook.md` checked — no relevant content to touch (todo 1's finding was
+     alerting-scoped, not VM-launcher-scoped; correctly out of that doc's remit).
+  4. **Corpus-wide referrer fix**: `grep -rl ao_fleet_throughput_incident_2026_07_25 plans/ codex/` found 6 referrers.
+     Fixed the 3 with a leading-slash `/plans/active/...` PATH reference (`related:`/`source:` frontmatter arrays in
+     `ao_worker_context_lifecycle_gap_2026_07_25.md`, this finalize plan, and
+     `issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md`) to
+     `/plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md`. Left the bare-slug `depends_on:` field on this
+     finalize plan's own frontmatter untouched (machine-parsed bare slug, explicitly out of scope per
+     `cross-reference-path-convention.md`) and left informal backtick-only prose mentions (no leading slash) as-is —
+     neither is the corpus's enforced path-link convention. `active_plan_inventory_dashboard_2026_07_24.md`'s stale row
+     was NOT hand-edited — regenerated via `scripts/plans/regenerate_active_plan_inventory.py` instead (180 plans, 0
+     orphans post-regen).
+  5. **File move**:
+     `git mv plans/active/ao_fleet_throughput_incident_2026_07_25.md plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md`.
+  6. **Lock**: `locked_by`/`locked_since` were already empty on the parent plan — nothing to clear.

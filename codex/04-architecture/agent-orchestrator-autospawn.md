@@ -99,6 +99,32 @@ it.
 
 ---
 
+## Slot candidate ordering — round-robin fairness (2026-07-25)
+
+**Which slots the budget's spawn attempts LAND on is a separate question from how big the budget is** (the section
+above). `_run_one_tick` orders candidate `SlotRow`s via `select(SlotRow).order_by(SlotRow.slot_id)` then stable-sorts by
+a tuple `(recent_failure_count, last_attempt_at)` — failure-count first (doomed slots go to the back, unchanged since
+`ao_task_lifecycle` Phase C 2026-07-09), then **least-recently-ATTEMPTED** (never-attempted sorts first via an epoch
+sentinel).
+
+**Why the second key matters**: with only the failure-count key, slots tied at zero failures kept the raw ascending
+`slot_id` order from the ORM query. Combined with `fleet_worker_cap()` (`ORCHESTRATOR_FLEET_WORKER_CAP`, 8 on the
+planning VM) and the budget-exhaustion early-skip (`if len(to_spawn) >= spawn_budget: continue` — fires BEFORE
+`_should_spawn`, so a skipped slot gets no `autospawn_failed`/`autospawn_succeeded` activity row at all, not even a skip
+reason), this permanently favored low-numbered slots whenever fleet-wide demand kept refilling headroom before the scan
+reached the tail. Live-confirmed: slots 13/14/15 measured ZERO AutoSpawn activity for 378min-27168min while
+lower-numbered slots cycled continuously (`plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md` todo 2).
+Fixed in `agent-orchestrator@18d8538` — `self._last_attempt_at` (already tracked for the cooldown gate) now also drives
+the tie-break, so a chronically at-cap fleet rotates through every idle slot instead of starving the tail forever.
+Regression: `tests/test_autospawn.py::test_tick_rotates_through_idle_slots_when_chronically_at_cap`.
+
+**This does NOT change the fleet cap itself** — `fleet_worker_cap()` still bounds how many slots run AT ONCE (an
+intentional, documented ceiling); the fix only changes WHICH idle slots take turns filling that ceiling. A slot with
+genuinely no claimable task in the current queue (a `SLOT`/`CAPABILITY`-scope filter rejection, see above) still won't
+spawn regardless of ordering — fairness only applies among slots that are otherwise equally eligible.
+
+---
+
 ## Account-pick rotation
 
 `_pick_headroom_account()` runs inside the tick for Gate 3:
