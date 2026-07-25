@@ -277,7 +277,10 @@ source: >-
       re-executing step 1 here would duplicate/collide with the already-dispatched batches; this todo's real done-when
       is now "all 11 batches + step 2 + step 3 land," tracked in the issue doc, not re-derived here. — **RE-VERIFIED
       2026-07-25 (slot 4): still unchecked** — step 2 gate MET but launch-BLOCKED on the `af-backfill-*` singleton lock
-      (held by `-031`'s fixture_events re-fetch); step 3 deferred. Live tracker: issue doc's final gated item.
+      (held by `-031`'s fixture_events re-fetch); step 3 deferred. Live tracker: issue doc's final gated item. —
+      **RE-VERIFIED 2026-07-25T12:56Z (slot 11): still unchecked** — lock cleared, backfill launched (this todo's
+      "2019→" text is stale vs. the 2020-06-06 sports floor, corrected), step 2 in progress, step 3 untouched. Detail in
+      the issue doc.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
