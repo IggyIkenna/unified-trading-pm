@@ -44,6 +44,7 @@ jobs:
       alert: ${{ steps.scan.outputs.alert }}
       severity: ${{ steps.scan.outputs.severity }}
       report: ${{ steps.scan.outputs.report }}
+      red_transitions_json: ${{ steps.scan.outputs.red_transitions_json }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -101,3 +102,34 @@ jobs:
       # block (unlike `secrets: inherit`) only forwards what's named here, so this was a plain
       # omission, not an intentional restriction.
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  # ── ESCALATE RED TRANSITIONS TO THE ORCHESTRATOR (2026-07-26) ────────────────────────────
+  # escalate-to-orchestrator.yml has existed since the conflict-resolution pivot and explicitly
+  # supports wall_type=ldr_qg_failure (a dedicated case for exactly this monitor's alert), but
+  # this workflow never called it — a RED transition posted to #ci-failures and stopped there,
+  # with no attempt to hand the wall to an orchestrator worker and no distinct "escalation
+  # failed" signal either (found via a real operator question: "why didn't this escalate to
+  # AO?"). One matrix job per red-transitioned repo this tick (usually 0 or 1; a fleet-wide
+  # LDR-red event is rare enough that the matrix cardinality is never a concern). Not PR-scoped
+  # (pr_number: 0) since a raw LDR-red isn't tied to a specific promote PR — the worker fixes it
+  # directly on live-defi-rollout. escalate-to-orchestrator.yml's OWN notify job already pages on
+  # both outcomes (dispatched ✅ / hard-failure ⚠️, deduped) — this job intentionally has no
+  # notify step of its own, matching the operator's "only tell me when it fails" ask without
+  # duplicating an alert escalate-to-orchestrator.yml already sends.
+  escalate:
+    needs: monitor
+    if: needs.monitor.outputs.red_transitions_json != '' && needs.monitor.outputs.red_transitions_json != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        transition: ${{ fromJson(needs.monitor.outputs.red_transitions_json) }}
+    uses: ./.github/workflows/escalate-to-orchestrator.yml
+    with:
+      repo: ${{ matrix.transition.repo }}
+      pr_number: 0
+      wall_type: ldr_qg_failure
+      context:
+        "ldr-ci-monitor detected live-defi-rollout went RED for ${{ matrix.transition.repo }} at commit ${{
+        matrix.transition.sha }}.\nGate run: ${{ matrix.transition.url }}\n${{ matrix.transition.attribution }}"
+      authoring_slot: "ldr-ci-monitor"
+    secrets: inherit
