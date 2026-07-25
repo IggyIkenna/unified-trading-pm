@@ -185,8 +185,14 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
      is actually restated, not just cited.
    - **No ambiguous verb** (`absorb`/`incorporate`/`handle`/`address`) where the literal action differs materially
      between readings.
-   - **Delete-risk tagging consistency** — every todo deleting/overwriting prod data either carries `[OPERATOR]` + cites
-     the delete-safety protocol, or explicitly states why it doesn't need to (soft-delete window, etc.).
+   - **Delete/VM-launch-risk tagging consistency** (widened 2026-07-25, task_template.md finding O — a scoped
+     `/plan-reconcile` pass found 8 of ~15 batch docs contain a GCS delete/`--apply` and 5 contain a VM launch, with no
+     systematic check any were correctly tagged) — every todo deleting/overwriting prod data OR launching a billed VM
+     either carries `[OPERATOR]` + cites the delete-safety protocol / exact approval command, or explicitly states why
+     it doesn't need one (soft-delete window, an already-established idempotent copy-verify-delete pattern, etc.). Pull
+     candidates from `scripts/plan-hygiene/check_delete_vm_launch_gating.sh`'s soft-warn output (mechanical pre-filter,
+     not authoritative) and adjudicate each — that script cannot judge whether a stated justification is actually sound,
+     only whether one exists at all.
    - **Definition-of-done present** — every todo states what evidence proves it's done, not just the goal.
    - **Bounded outcome, no judgment call** (operator ruling 2026-07-23,
      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility") — is the

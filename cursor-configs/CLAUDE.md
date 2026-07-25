@@ -184,13 +184,15 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   dependency chain or same-file overlap — don't reflex-set it), **partial-parallelism isn't expressible in one plan →
   SPLIT** (parallel work in Plan A; the gated step in Plan B via `depends_on` + `gate_on_depends: true`); **no per-todo
   prereq syntax** (prereqs come only from `sequential`/`gate_on_depends`); per-task `[TAG]` roles route each todo
-  (SHIPPED); an audit is its own plan **only when precisely scoped** — a todo is AO-eligible only if its outcome is
-  DETERMINABLE by the worker alone (a checkable fact, a scoped change, an audit with a stated done-when), NEVER an
-  open-ended judgment/design call ("figure out how X should look" is a human decision wearing a todo's clothes — resolve
-  it FIRST as a LOCAL plan/interactive session, dispatch only the properly-scoped todo against that decision's outcome;
-  operator ruling 2026-07-23, SSOT `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §
-  "Dispatch-scope eligibility"); draft-gated phase chains (later phases `status: draft` until the prior phase's last
-  todo flips them `active`). **Never hand-edit `backlog.yaml`** — author plans, the backend derives it.
+  (SHIPPED); **every AO todo with a GCS delete/`--apply` or VM launch needs `[OPERATOR]`+delete-safety-cite OR a stated
+  safe-idempotent justification** (`task_template.md` finding O; soft pre-filter `check_delete_vm_launch_gating.sh`); an
+  audit is its own plan **only when precisely scoped** — a todo is AO-eligible only if its outcome is DETERMINABLE by
+  the worker alone (a checkable fact, a scoped change, an audit with a stated done-when), NEVER an open-ended
+  judgment/design call ("figure out how X should look" is a human decision wearing a todo's clothes — resolve it FIRST
+  as a LOCAL plan/interactive session, dispatch only the properly-scoped todo against that decision's outcome; operator
+  ruling 2026-07-23, SSOT `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope
+  eligibility"); draft-gated phase chains (later phases `status: draft` until the prior phase's last todo flips them
+  `active`). **Never hand-edit `backlog.yaml`** — author plans, the backend derives it.
 - **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid
