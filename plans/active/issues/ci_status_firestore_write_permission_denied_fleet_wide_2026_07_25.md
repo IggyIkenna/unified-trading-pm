@@ -161,7 +161,8 @@ Traced the gap:
       via `gcloud auth application-default print-access-token` + a direct Firestore REST `PATCH` from the affected
       self-hosted runner box; confirmed 403 as of 2026-07-25T14:02Z). Check IAM bindings + any recent SA key rotation. —
       resolved by operator; last `ci-status-update.yml` failure observed 2026-07-25T14:11:52Z, first green run
-      2026-07-25T14:26:07Z (verified below).
+      2026-07-25T14:26:07Z (verified below). **Independently re-confirmed at the IAM-binding level** (closes the
+      verification gap this todo's own note flagged, below) — see Progress Log entry timestamped 14:5xZ.
 - [x] ✅ [INFRA] P0. Once permissions restored, verify `ci-status-update.yml` (unified-trading-pm) runs green again and
       `ci_status/deployment-api`'s `sit_validated_tree` advances to the current LDR tree (repo: unified-trading-pm). —
       verified live 2026-07-25T14:3xZ: `gh run list --workflow=ci-status-update.yml --limit 50` → 50/50 `success`
@@ -240,3 +241,29 @@ Traced the gap:
   flipping doc `status: resolved`. Remaining follow-up (todo 4 of the "Recommended decision" list — re-verify
   `deployment_registry_reaper_not_draining_stale_entries-002`'s remaining chain now that the SIT gate is unblocked) is
   tracked in that issue doc, not this one.
+- **2026-07-25T14:5xZ (interactive session, operator-directed) — independent IAM-level corroboration + a correction to
+  todo 1's mechanism.** Landed AFTER this doc was already closed by slot-3; adding evidence, not reopening. (1) **Direct
+  IAM confirmation**: read `unified-trading-sa`'s live project bindings via `resourcemanager.projects.get/setIamPolicy`
+  (this session's `ikenna@odum-research.com` ADC identity had the access no prior session had) — at read time the SA
+  held ZERO datastore/firestore roles. Granted `roles/datastore.user` (etag-safe append, matches the original
+  `ci_status_firestore_side_store_2026_06_10.md:146` design intent, though that grant went to a different SA at the
+  time). Verified via impersonated Firestore REST `PATCH`: 403 → success ~15s after grant (propagation lag), fresh
+  `getIamPolicy` re-read confirmed the binding independent of the write-response echo. This closes the exact
+  verification gap todo 2's note flagged ("impersonation of `unified-trading-sa` still 403s ... not blocking since CI
+  logs are authoritative"). (2) **Correction**: todo 1's "resolved by operator ... first green run 14:26:07Z" is not
+  actually explained by an IAM restoration — `git show HEAD:.github/workflows/ci-status-update.yml` shows the _actual_
+  shipped fix for the acute incident was switching the auth step from ambient ADC to explicit
+  `google-github-actions/auth@v3` with `secrets.GCP_SA_KEY` (comment: "RESTORED 2026-07-25 ... sidesteps whatever broke
+  the box's ambient ADC ... without requiring a new IAM grant") — i.e. the workflow stopped depending on
+  `unified-trading-sa`'s ambient-ADC permissions entirely, which is consistent with this session finding the SA's IAM
+  still empty afterward. My IAM grant is a real, verified, harmless hardening (restores the SA to its
+  originally-intended capability) but was NOT what unblocked the 14:26Z recovery — that workflow-level credential swap
+  was. (3) **Flagging, not resolving**: this worktree's local git state (encountered via a `git pull` autostash conflict
+  while committing this note, resolved by keeping the live `HEAD` version of `ci-status-update.yml` and leaving the
+  conflicting side in the stash untouched) contains UNCOMMITTED WIP proposing a third, more specific root-cause theory —
+  the self-hosted box's `ubuntu` HOME (and therefore its ADC file) is shared with co-located agent-orchestrator workers,
+  and an unrelated process overwrote `application_default_credentials.json` with a `unified-trading-sa` key at 10:37Z,
+  explaining the SA-identity-but-no-Firestore-role signature — plus a WIF-based per-job-credential fix. Not verified or
+  shipped by this session (deliberately left alone, not mine to land unreviewed); worth a follow-up P2 todo if that WIP
+  isn't already tracked elsewhere, since a shared-ADC-file overwrite is a recurrence risk the `GCP_SA_KEY`-only fix
+  doesn't fully close.
