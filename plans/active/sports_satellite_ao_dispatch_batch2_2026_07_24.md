@@ -627,6 +627,44 @@ source: >-
 
 ## Progress Log
 
+- **2026-07-25 (slot 2, data_engineering) — "Curated-universe definition → backfill → residual drop" todo — step 1
+  substantially de-risked, NOT complete (checkbox correctly left unchecked, no write-gate code changed).** Directive A/B
+  (the operator's own spec for the curated list, quoted in full in the source doc) requires real judgment to turn into a
+  concrete ~300-league list — not a mechanical transcription — so rather than guess, checked whether a candidate pool
+  already exists from prior work instead of assuming a fresh API-Football enumeration was needed.
+  - **Found a major shortcut, not previously called out in any plan**: the pre-pruning manifest backup
+    (`gs://instruments-store-sports-prd-central-element-323112/_index/_backups/availability_index.20260505T132209Z.pre-leagues-retire.parquet`,
+    from before the 2026-05 cutdown to the 94-league baseline) still has **375 distinct league_ids with real
+    `capture_status=captured, instrument_count>0` rows** — i.e. leagues API-Football data was ALREADY fetched and paid
+    for, spanning dozens of countries' top divisions, second/third divisions (e.g. `ALBANIA_2ND_DIVISION_GROUP_A`,
+    `ARGENTINA_PRIMERA_C`), and domestic cups (`ALGERIA_COUPE_NATIONALE`, `ARMENIA_CUP`) — exactly the shape Directive
+    A/B describes (top league + division below + cups). This directly matches the operator's own framing ("we already do
+    have a bunch of fixtures in the API football, so it wouldn't be a full re-backfill") — meaning step 2's "burn ~6M
+    over weeks" may be a smaller residual gap than the todo's framing implies, not a fresh 300-league backfill from
+    zero.
+  - **NOT a clean drop-in list — needs real cleanup before it can back a write-gate**: sampled the 375 and found
+    naming-scheme duplicates from the pre-pruning era (`AUSTRIAN_2_LIGA` vs `AUSTRIA_2_LIGA`, `AUSTRIAN_BUNDESLIGA` vs
+    `AUSTRIA_BUNDESLIGA`) — the raw candidate set needs de-duplication + validation against UAC's existing
+    canonical-slug conventions before it's safe to feed into
+    `_is_in_canonical_write_universe`/`get_expected_leagues_for_source`. 63 additional league_id values in the same
+    snapshot are still RAW numeric API-Football IDs (33 of which already map via `_API_FOOTBALL_ID_TO_LEAGUE`, 30
+    genuinely unmapped) — those need canonical-slug assignment before inclusion, not silent numeric-ID admission
+    (mirrors the exact class of bug already fixed elsewhere in this same plan's league_id-namespace todos).
+  - **Deliberately did NOT touch the write-gate or UAC's `LEAGUE_REGISTRY` this session** — turning this candidate pool
+    into ~300 correctly-classified, de-duplicated, correctly-countried `LeagueDefinition` entries (with season
+    start/end + transfer-window metadata, per the plan's own UAC-registry todo) is real, careful data-entry work against
+    a PRODUCTION write-gate; doing it hastily risks baking wrong entries into the exact code path that controls weeks of
+    real API spend and manifest correctness. The raw candidate list is preserved at this session's working artifacts
+    (not committed — regenerate via the query below, cheap, no new GCS walk needed) rather than guessed at from scratch.
+  - **Recommended next step**: (1) re-run the extraction query below against the SAME backup parquet (already
+    identified, no new census needed) to regenerate the 375-league candidate list, (2) de-duplicate the naming-scheme
+    variants + resolve the 30 unmapped numeric IDs to canonical slugs, (3) cross-reference against Directive A/B's
+    per-source caps (Understat ~6, footystats ~50, SFI/odds-API bounded by API-Football availability) — those caps are a
+    genuine ceiling on how much of the 375 is actually eligible, not all 375 necessarily qualify, (4) THEN widen the
+    write-gate + add the UAC registry entries, (5) THEN assess the REAL residual backfill gap (likely much smaller than
+    a from-scratch ~300-league fetch, given most already have real data) before launching any VM. Extraction query:
+    `pd.read_parquet('<backup path above>', columns=['league_id','capture_status','instrument_count']); filter capture_status=='captured' & instrument_count>0; distinct non-numeric league_id values`.
+
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
   implies before any investigation proceeded (see below for why that mattered). Full session:
