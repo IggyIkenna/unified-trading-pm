@@ -35,7 +35,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-07-25" # was 2026-07-24 — consolidated-closeout split pass added 3 todos relocated from the parent's "Queued audits + reviews" section (-is/-mtds 3x-cadence top-ups + the adversarial AO-dispatch-readiness pass); open-todo count 3 -> 6
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -136,6 +136,31 @@ source: >-
       `IS_TEST_RUN`-aware (`deployment_env="test"`), OR (b) accepting the prod-catalogue read as canonical (arguably
       more correct) and marking the `-test-` trades universe as prod-catalogue-sourced. NOT a data-correctness bug. Then
       re-run both skills for a formal all-green Phase-D. (repos: market-tick-data-service)
+- [ ] [DATA] P2. **`data-pipeline-check-is` 3x cadence top-up (relocated 2026-07-25 from the parent's "Queued audits +
+      reviews" section).** Run `/data-pipeline-check-is --asset-group prediction` twice more — a pre-Phase-B baseline
+      checkpoint and a Phase-B mid-migration spot-check — to reach the 3x cadence `task_template.md` finding K requires
+      (checkpoint 3, the post-migration final gate, is already this doc's own P0 todo above). Also tracked as an
+      AO-dispatchable partial-slice execution copy in `prediction_consolidated_native_ao_extract_2026_07_25.md`
+      (`status: draft`) todo 2 — that plan's own Done-when now cites THIS checkbox's Progress Log (updated 2026-07-25,
+      corpus-wide referrer fixup), not the parent's now-relocated section; it explicitly does NOT flip this checkbox
+      itself (only the pre-Phase-B leg lands there — the mid-migration leg stays tracked here). Done when: both runs'
+      report paths + dates are cited in this plan's Progress Log.
+- [ ] [DATA] P2. **`data-pipeline-check-mtds` 3x cadence top-up (relocated 2026-07-25 from the parent's "Queued audits +
+      reviews" section).** Run `/data-pipeline-check-mtds --asset-group prediction` twice more — the same pre-Phase-B
+      baseline + Phase-B mid-migration checkpoints as the `-is` todo above — to reach the 3x cadence (checkpoint 3 is
+      this doc's own sibling P0 todo above). Also tracked as an AO-dispatchable partial-slice execution copy in
+      `prediction_consolidated_native_ao_extract_2026_07_25.md` (`status: draft`) todo 3 — same reconciliation-target
+      update as the `-is` todo above. Done when: both runs' report paths + dates are cited in this plan's Progress Log.
+- [ ] [REVIEW] P2. **Adversarial AO-dispatch-readiness pass, Track-Y-style (relocated 2026-07-25 from the parent's
+      "Queued audits + reviews" section).** Run the same adversarial AO-dispatch-readiness pass sports's Track Y ran
+      (method: the archived `sports_consolidated_closeout_history_2026_07_24.md`'s "Track Y — PLAN-QUALITY REMEDIATION"
+      section) against `prediction_consolidated_closeout_2026_07_18.md` itself: check for bare `§X` shorthand, ambiguous
+      verbs (absorb/incorporate/handle/address), delete-tagging inconsistency, missing definition-of-done, stale
+      checkboxes, and unsafe digest-checkbox syntax. Also tracked as an AO-dispatchable execution copy in
+      `prediction_consolidated_native_ao_extract_2026_07_25.md` (`status: draft`) todo 5 — that plan's own Done-when now
+      reconciles evidence back into THIS checkbox (updated 2026-07-25, corpus-wide referrer fixup), not the parent's
+      now-relocated section. Done when: findings (or an explicit "0 findings") are recorded in this plan's Progress Log,
+      mirroring Track Y's format.
 - [ ] [DATA] P0. **MVP backfill readiness gate** — only after A–D green: run the prediction MVP backfills and verify
       manifest-counted canonical rows for each MVP cell (Polymarket + Kalshi × trades + book_snapshot_5, CQG cluster).
 
@@ -147,3 +172,8 @@ source: >-
   full session-by-session history of what is already shipped here, and for why formal all-green is not yet cited (SPOT
   flakiness + a canonical-read residual + the MTDS `trades` `-test-` catalogue-gating follow-up, per tick 25). Future
   work on this plan logs new entries below.
+- **2026-07-25 (consolidated-closeout split pass) — relocated 3 todos in from the parent's now-forked "Queued audits +
+  reviews" section**: the `data-pipeline-check-is` and `data-pipeline-check-mtds` 3x-cadence top-ups, and the
+  adversarial AO-dispatch-readiness pass. All 3 placed before the MVP-backfill-readiness-gate todo (their natural
+  position — checkpoints feed the gate). Net: open-todo count 3 → 6. No engineering work executed in this pass — pure
+  relocation + reconciliation of pre-existing tracked items.
