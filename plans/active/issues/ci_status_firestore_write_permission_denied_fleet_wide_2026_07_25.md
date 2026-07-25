@@ -91,6 +91,25 @@ Traced the gap:
    invalid. Please run `$ gcloud auth login`") in an UNRELATED run (`unified-trading-pm` run `30159646779`, 13:24:19Z) —
    a DIFFERENT symptom (gcloud CLI creds, not ADC) on what may be the same or a sibling self-hosted runner. Flagging as
    a possible second data point for the same underlying credential/IAM incident, not confirmed to share a root cause.
+   **RESOLVED (slot 6, 2026-07-25T14:xx): does NOT share this incident's root cause.** Evidence: (a) different SA —
+   `cloud-build-router.yml`'s `route-build` job authenticates via `google-github-actions/auth@v3` WIF to
+   `execution-service-sa@central-element-323112.iam.gserviceaccount.com` (`GCP_SERVICE_ACCOUNT` secret, per
+   `codex/07-security/gha-wif-migration.md`), NOT `unified-trading-sa` (this doc's affected SA, ambient ADC, no per-run
+   auth step). (b) different failure signature — "Your credentials are invalid. Please run `$ gcloud auth login`" is
+   `gsutil`'s classic parse failure on a WIF-issued `external_account` credential file (the legacy Python `gsutil`
+   binary frequently can't consume short-lived WIF tokens the way `gcloud storage`/native SDK calls can — same failure
+   class independently documented in
+   `plans/active/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md` for a different workflow),
+   NOT Firestore's `403 PermissionDenied` (an IAM-binding-missing signature). (c) different onset — the `gsutil` failure
+   reproduces as far back as run `30094405633` (2026-07-24T12:48:27Z, over 22h before this incident's earliest observed
+   Firestore failure at 2026-07-25T10:36Z) and is STILL reproducing on the latest `cloud-build-router.yml` run as of
+   2026-07-25T14:03:14Z (well after this incident began) — a pre-existing, continuously-failing, unrelated tooling
+   issue, not a new symptom of this SA's permission change. The step has `continue-on-error` semantics (job conclusion
+   stays `success` despite the internal gsutil failure), which is why it silently persisted this long. Filed as its own
+   follow-up:
+   `[INFRA] P3. cloud-build-router.yml's "Persist CI/CD event" gsutil call fails under WIF auth for execution-service-sa — switch to \`gcloud
+   storage cp\` or otherwise make WIF-compatible (repo: unified-trading-pm)` — separate from this incident's remediation
+   chain.
 7. Cross-ref: `sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` documents a DIFFERENT failure mode
    on the same `sit_validated_tree` gate (a breaking-delta repo needs LDR quiescent across a full SIT round-trip, or the
    fingerprint never matches the moving tip) — that doc predates this incident and its root cause (SIT round-trip
@@ -147,9 +166,19 @@ Traced the gap:
       (`system-integration-tests/.github/workflows/full-workspace-sit.yml:158-175`) to not declare "stamped
       SIT_VALIDATED" success from a bare `curl` HTTP-accept — verify the downstream `ci-status-update` run actually
       completes + writes, or surface failure loudly (repo: system-integration-tests).
-- [ ] [INFRA] P2. Investigate whether the `cloud-build-router.yml` "Persist CI/CD event" gsutil credential failure (run
-      `30159646779`, 13:24:19Z, "Your credentials are invalid") shares a root cause with this incident — same or sibling
-      self-hosted runner box (repo: unified-trading-pm).
+- [x] ✅ [INFRA] P2. Investigate whether the `cloud-build-router.yml` "Persist CI/CD event" gsutil credential failure
+      (run `30159646779`, 13:24:19Z, "Your credentials are invalid") shares a root cause with this incident — same or
+      sibling self-hosted runner box (repo: unified-trading-pm). — RESOLVED, does NOT share root cause: different SA
+      (`execution-service-sa` via WIF vs `unified-trading-sa` via ambient ADC), different failure signature (gsutil
+      WIF-credential parse failure vs Firestore 403 PermissionDenied), different onset (reproduces back to
+      2026-07-24T12:48Z, 22h before this incident began, and still reproducing after — pre-existing unrelated tooling
+      issue). Full evidence in "What I found" item 6 above. Follow-up filed as new todo below.
+- [ ] [INFRA] P3. `cloud-build-router.yml`'s "Persist CI/CD event" step's `gsutil cp` GCS write fails under WIF auth for
+      `execution-service-sa@central-element-323112.iam.gserviceaccount.com` ("Your credentials are invalid. Please run
+      `$ gcloud auth login`") — pre-existing since at least 2026-07-24T12:48Z (run `30094405633`), still failing as of
+      2026-07-25T14:03Z (run `30160874407`); `continue-on-error` hides it from the job conclusion. Switch to
+      `gcloud storage cp` (native ADC/WIF support) or otherwise make the `persist-event` composite action's gsutil call
+      WIF-compatible (repo: unified-trading-pm, `.github/actions/persist-event`).
 
 ## Progress Log
 
@@ -161,3 +190,13 @@ Traced the gap:
   which isn't true right now, so there is nothing for an INFRA worker to verify. Skipping todo 2 (GATED) rather than
   forcing it; todo 3 (harden `full-workspace-sit.yml`'s stamp step) is independently actionable NOW (does not depend on
   todo 1) and is a legitimate separate INFRA P1 pickup.
+- **2026-07-25T14:xxZ (slot 6, infra) — todo 4 resolved: does NOT share this incident's root cause.** Also parked todo 2
+  the same way (BLK-d5ab20de, main confirmed A: skip until operator restores IAM). For todo 4, pulled both
+  `cloud-build-router.yml`'s WIF-authenticated SA (`execution-service-sa`, per `codex/07-security/gha-wif-migration.md`
+  - this run's own `Authenticate to GCP via WIF` step) and the `gsutil` failure's onset (confirmed via direct job-log
+    API pull on runs `30094405633` 2026-07-24T12:48Z, `30155923766` 2026-07-25T11:15Z, `30159646779` 13:24Z,
+    `30160874407` 14:03Z — same "Your credentials are invalid" signature on every one, spanning >22h before AND after
+    this incident's 10:36Z onset). Two independent SAs, two independent auth mechanisms (WIF vs ambient ADC), two
+    independent failure signatures, non-overlapping timelines — conclusively unrelated. Filed the gsutil/WIF
+    incompatibility as its own P3 follow-up todo (this doc) rather than a new issue doc, since it's already scoped and
+    tracked here. Full evidence added to "What I found" item 6.
