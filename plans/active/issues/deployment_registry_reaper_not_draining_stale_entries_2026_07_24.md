@@ -207,24 +207,24 @@ flipping the checkbox.
       `[REVIEW]` checkbox. Full detail + a NEW P0 finding (the P1 cold-cache fix removed the old global serialization on
       cold census computations — 2 concurrent cache-key computations OOM-killed the whole container, 17,002MiB used vs
       16,384MiB limit, `Container terminated on signal 9`, a MORE SEVERE failure mode than the bug it fixed) in
-      [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md).
+      [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](/plans/archive/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md).
 - [x] ✅ [BACKEND] P1. **Root-cause why `active/` is still not converging toward the live-VM count after the P0
       `CancelledError`/grace-period fix (Todo 1) and P1 cold-cache fix (Todo 2) both shipped and were re-verified live
       (Todo 3, slot-4: still 403–404, unchanged).** This is Gap 1 itself, distinct from the sibling OOM regression
-      (`deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`, which tracks a DIFFERENT, newly-discovered
-      crash bug from the P1 fix) — that sibling doc's own fix does not address why reap ticks that DO complete aren't
-      archiving the sampled stale entries. Next steps: confirm a reap tick is actually completing end-to-end post-fix
-      (look for the `"[SYNC_SERVICE] Reaper: archived"` / `"[AUTO_SYNC] Reaper: archived"` log lines that were NEVER
-      observed in 7 days pre-fix — their continued absence post-fix would point at a second, still-undiagnosed blocker
-      beyond the `CancelledError` symptom); if ticks ARE completing, re-sample the 30 previously-`status="stale"`
-      entries to see whether they were archived or the reap logic itself is silently no-op'ing on them. Done-when: the
-      root cause of non-convergence is identified and either fixed + re-verified (`active/` ≈ live-VM count) or a
-      concrete blocker is documented. — **ROOT-CAUSED + FIXED 2026-07-25 (slot 2)**: `unified-trading-library@4773a3fd`.
-      `"[AUTO_SYNC] Reaper: archived"` confirmed STILL absent 3+ hours after the P0/P1 fixes deployed
-      (`gcloud logging read` against `uts-shared-deployment-api`, no matches over 3 days) — AND the exact same
-      `asyncio.wait_for(_background_task, timeout=20)` → `_run_deployment_reaper`'s `run_in_executor` failure from Todo
-      1 is STILL firing live (traceback captured `2026-07-25T01:03:36Z`, well after the 5s→20s fix shipped). Root cause:
-      `DeploymentsRegistry.list_active()` (`unified_trading_library/deployment_registry.py`) downloads every
+      (`plans/archive/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`, which tracks a DIFFERENT,
+      newly-discovered crash bug from the P1 fix) — that sibling doc's own fix does not address why reap ticks that DO
+      complete aren't archiving the sampled stale entries. Next steps: confirm a reap tick is actually completing
+      end-to-end post-fix (look for the `"[SYNC_SERVICE] Reaper: archived"` / `"[AUTO_SYNC] Reaper: archived"` log lines
+      that were NEVER observed in 7 days pre-fix — their continued absence post-fix would point at a second,
+      still-undiagnosed blocker beyond the `CancelledError` symptom); if ticks ARE completing, re-sample the 30
+      previously-`status="stale"` entries to see whether they were archived or the reap logic itself is silently
+      no-op'ing on them. Done-when: the root cause of non-convergence is identified and either fixed + re-verified
+      (`active/` ≈ live-VM count) or a concrete blocker is documented. — **ROOT-CAUSED + FIXED 2026-07-25 (slot 2)**:
+      `unified-trading-library@4773a3fd`. `"[AUTO_SYNC] Reaper: archived"` confirmed STILL absent 3+ hours after the
+      P0/P1 fixes deployed (`gcloud logging read` against `uts-shared-deployment-api`, no matches over 3 days) — AND the
+      exact same `asyncio.wait_for(_background_task, timeout=20)` → `_run_deployment_reaper`'s `run_in_executor` failure
+      from Todo 1 is STILL firing live (traceback captured `2026-07-25T01:03:36Z`, well after the 5s→20s fix shipped).
+      Root cause: `DeploymentsRegistry.list_active()` (`unified_trading_library/deployment_registry.py`) downloads every
       `active/*.json` blob **sequentially**, one `download_string` call at a time — the doc's own cited ~138s/~3k-entry
       rate implies ~46ms/blob, so at the current ~400-entry backlog the tick itself takes ~18-20s, landing right at (or
       over) the 20s grace period. The P0 fix bought headroom but the tick's own duration eats it right back — every
@@ -335,7 +335,7 @@ flipping the checkbox.
   concurrently), and 2 concurrent census computations (default-region stale-refresh + an `all_regions=true` cold poll)
   OOM-killed the container (17,002MiB vs 16,384MiB limit, `signal 9`) — plausibly the SAME mechanism behind the
   still-unconfirmed SIGABRT crash-loop in the sibling issue doc. Filed
-  [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md)
+  [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](/plans/archive/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md)
   (P0, BACKEND) with a concrete reproduction + 4 candidate fix approaches. Did NOT flip this plan's original `[REVIEW]`
   checkbox — leaving it as-is with its existing partial-pass note, now additionally pointing at the new issue doc. No
   code changes made this session (review-only pass).

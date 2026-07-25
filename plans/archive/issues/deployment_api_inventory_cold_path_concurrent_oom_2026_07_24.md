@@ -52,6 +52,10 @@ resolved_by: deployment-api@91dc53c (fix) + this REVIEW re-verification (slot 7,
 
 # deployment-api inventory cold-path: concurrent census computations OOM the container (2026-07-24)
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — `deployment-api@91dc53c` (`max_workers=2` → `1`, re-verified live
+> against the deployed Cloud Run revision: no OOM, no signal-9, real data eventually served); archived per the
+> terminal-status backlog sweep.
+
 ## What I found
 
 Re-running the end-to-end verification that `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`'s
