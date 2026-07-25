@@ -2182,5 +2182,12 @@
     "unified-trading-api",
     "unified-trading-library",
     "unified-trading-system-ui"
-  ]
+  ],
+  "published_packages": {
+    "unified-trading-library": {
+      "version": "0.57.0",
+      "published_at": "2026-07-25T21:06:20Z",
+      "registry": "artifact-registry"
+    }
+  }
 }
