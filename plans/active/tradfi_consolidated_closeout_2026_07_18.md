@@ -277,12 +277,38 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Phase C — data-status + honest-coverage (gated on Phase B)
 
-- [ ] [BACKEND] P1. **Honest-coverage for tradfi**: out-of-window `expected_unattempted` clipping
-      (`honest_coverage_out_of_window_expected_unattempted_not_clipped_2026_07_16.md`, RESOLVED — verify for tradfi);
-      reference-data shard-dimension model (`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`);
-      coverage-floor registry cross-propagation (`coverage_floor_registries_no_cross_propagation_2026_07_17.md`). Gate:
-      all 3 cited findings re-verified against live tradfi data (clipping holds, shard-dimension model applied,
-      coverage-floor registries cross-propagate) with the results recorded.
+- [x] ✅ [BACKEND] P1. **Honest-coverage for tradfi**: out-of-window `expected_unattempted` clipping
+      (`/plans/archive/issues/honest_coverage_out_of_window_expected_unattempted_not_clipped_2026_07_16.md`, RESOLVED —
+      verify for tradfi); reference-data shard-dimension model
+      (`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`); coverage-floor registry
+      cross-propagation (`coverage_floor_registries_no_cross_propagation_2026_07_17.md`). Gate: all 3 cited findings
+      re-verified against live tradfi data (clipping holds, shard-dimension model applied, coverage-floor registries
+      cross-propagate) with the results recorded. **VERIFIED 2026-07-25, all 3 against LIVE tradfi manifests
+      (`market-data-tick-tradfi-prd-central-element-323112` 5,826,709 rows +
+      `instruments-store-tradfi-prd-central-element-323112` 27,251 rows, both freshly downloaded):** (1) **out-of-window
+      clipping — STILL HOLDS.** All 400,643 `expected_unattempted` rows carry blank `error_reason` (never an
+      `EXPECTED_*` reason, so `expected_unattempted_known_empty` stays empty for tradfi exactly as the archived doc
+      predicted); 2,647,410 of 3,802,192 `empty_confirmed` rows carry an `OUT_OF_COVERAGE_WINDOW_REASONS` member
+      (`EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED`/`_NO_PROVIDER_COVERAGE`/`_OUT_OF_COVERAGE_WINDOW`/
+      `_DEPRECATED_DATA_TYPE`) and are clipped from both numerator+denominator by deployment-api's
+      `coverage.py::oow_reason_mask` against UAC's live `OUT_OF_COVERAGE_WINDOW_REASONS` frozenset — code path unchanged
+      since the 2026-07-16 verification. (2) **reference-data shard-dimension model — CORRECTLY APPLIED.** All 7 tradfi
+      IS venues show real per-`(venue, instrument_type)` splits with no blank-collapse (CME:
+      FUTURE=2024/COMBO=1995/OPTION=1995; CBOE 5 types; ICE/NYSE/NASDAQ/KRX/FX all multi-type) — the 2026-07-07
+      `_split_by_instrument_type` writer fix is live for tradfi; residual blank-`instrument_type` rows (4,504/27,251)
+      are exclusively `EXPECTED_WEEKEND`/`_HOLIDAY`/`_PRE_VENUE_LAUNCH` non-trading pre-stamps (already documented as
+      "no fix needed" in the source doc) + 93 genuine unclassified adapter errors, not a writer regression; no
+      DERIBIT-COMBO-style fake-venue analog exists in tradfi's venue list. (3) **coverage-floor cross-propagation — WAS
+      STILL LIVE, NOW FIXED.** Confirmed the cited CME mismatch was still unresolved as of session start
+      (`coverage_starts.py:175` `"CME": date(2010, 1, 1), # TODO verify` vs `venue_mapping.py:334` `"CME": "2020-01-01"`
+      no TODO). Probed the live MTDS manifest per `coverage_starts.py`'s own docstring instruction — earliest CME
+      `capture_status=captured` row is 2020-01-01, every pre-2020 date is `empty_confirmed`/`expected_unattempted` —
+      confirming `venue_mapping.py` was right. **Shipped: unified-api-contracts@32b2879c** updates
+      `TRADFI_SOURCE_COVERAGE_START["CME"]` to `date(2020, 1, 1)` and drops the TODO; gate `dbd6491`→`32b2879c` all
+      green (583s, sentinel `dbd649140e946cbcf91275a6bd10bd73c12516a5`). Matching P2 todo flipped in
+      `coverage_floor_registries_no_cross_propagation_2026_07_17.md`. The other 2 registries (TARDIS `# TODO verify`,
+      the 8 CeFi mismatches, POLYMARKET, DeFi drifts) are that doc's own separately-tracked P1/P2/P3 items, out of this
+      tradfi-scoped todo's gate.
 - [ ] [CODE] P2. **Billing-gated Databento L2/L3 cells must not count as `attempted_failed`.** Databento tradfi's
       billing entitlement is 1-month L3 + 1-year L1 (see the "Data-type × source priority" note above), so
       `mbp_10`/`trades`/`tbbo` lookback/entitlement-guard rejections are EXPECTED, not real failures — but no

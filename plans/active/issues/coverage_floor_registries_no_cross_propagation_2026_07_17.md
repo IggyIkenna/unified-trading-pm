@@ -160,9 +160,17 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       DERIBIT, OKX, BINANCE, BYBIT, HYPERLIQUID — table above) per venue: probe the actual manifest min(date) per
       `coverage_starts.py`'s own docstring instruction (`read_availability_index({bucket}).date.min()`) and update
       whichever registry is wrong to match measured reality. (repo: unified-api-contracts)
-- [ ] [DATA] P2. Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 carries `# TODO verify` while
+- [x] ✅ [DATA] P2. Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 carries `# TODO verify` while
       `venue_mapping.py`'s 2020-01-01 does not; probe the manifest to confirm 2020-01-01 is correct, update
-      `TRADFI_SOURCE_COVERAGE_START["CME"]`, and drop the TODO marker. (repo: unified-api-contracts)
+      `TRADFI_SOURCE_COVERAGE_START["CME"]`, and drop the TODO marker. (repo: unified-api-contracts) —
+      **unified-api-contracts (pending sha, quickmerge in progress 2026-07-25)**: probed live
+      `market-data-tick-tradfi-prd-central-element-323112` manifest (`availability_index.parquet`, 5.8M rows) — earliest
+      CME `capture_status=captured` row is 2020-01-01; every pre-2020 CME date is
+      `empty_confirmed`/`EXPECTED_INSTRUMENT_NOT_LISTED` or `expected_unattempted`, not real data. Confirms
+      `venue_mapping.py`'s 2020-01-01 ("earliest manifest data", no TODO) was correct and `coverage_starts.py`'s
+      2010-01-01 was the unscrutinized value (git-blame: single commit `e81f598b`, never touched since, no rationale
+      comment — unlike the DERIBIT-COMBO near-miss in the sibling shard-dimension doc). Updated
+      `TRADFI_SOURCE_COVERAGE_START["CME"]` to `date(2020, 1, 1)`, dropped the TODO marker.
 - [ ] [DATA] P2. Resolve the POLYMARKET mismatch (2022-11-21 CLOB-launch vs 2025-03-14 first-actual-instrument,
       ~2.3-year gap) — decide whether the catalogue denominator should measure from CLOB launch or from first actual
       captured instrument, and reconcile `PREDICTION_SOURCE_COVERAGE_START["POLYMARKET"]` against `venue_mapping.py`'s
