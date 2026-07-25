@@ -222,3 +222,27 @@ sequential: true
       `context_saturated_session_lost_task_requeued` (todo 12) event types appear when their trigger conditions are
       manually reproduced in a test env. **Done when**: a written verification note citing actual post-deploy event/log
       evidence for (a)-(c), attached to this plan's Progress Log.
+
+## Progress Log
+
+**2026-07-25 (autonomous session, ~05:00-05:20 UTC).** Fleet picked this plan up and is executing it — slot 2 completed
+todos 1 (`agent-orchestrator@9c08c61`, "feat(config): add worker-scoped context-gate Tuning knobs") and 2
+(`agent-orchestrator@5e22fab`, "feat(models): add typed compact directive field to DoneResponse/ProgressResponse", with
+tests) via quickmerge, and is now dispatched on todo 3 (gate `done_slot`). **Deploy-currency CONFIRMED live**:
+`ao-self-pull.sh` (cron, `*/15`, `AO_DIR=/home/ubuntu/unified-trading-system-repos/agent-orchestrator`) picked up the FF
+from `9c08c61`→`5e22fab` and restarted the orchestrator service at `2026-07-25T05:15:01Z`
+(`systemctl show orchestrator --property=ActiveEnterTimestamp` = `05:15:22 UTC`, ~21s later, consistent) — i.e. this
+plan's shipped todos are ALREADY running in the live production orchestrator, not just merged to LDR. Combined with
+`uvicorn --reload --reload-dir server` (hot-reloads on file change between cron ticks), this closes the "deployed to LDR
+≠ deployed to AO" gap the operator flagged: no separate manual deploy step is needed for anything landing via quickmerge
+to `live-defi-rollout` — verify future todos the same way (`tail /var/log/ao-self-pull.log` via SSM, looking for
+`FF <old>-><new> — restarting orchestrator` citing the todo's commit).
+
+Deliberately did NOT touch `server/config.py` / `server/models/worker_api.py` / `server/routes/slots_worker.py` myself
+despite the operator's "even locally as a fallback" authorization — the fleet was already actively, successfully working
+these exact files (slot 2 mid-task on todo 3 at time of writing); editing them concurrently would have been a same-file
+collision, not a genuine fallback (the queue was NOT blocking completion — it was actively completing it). Reserved
+local/manual intervention for genuinely non-colliding, independent work instead: see
+`ao_fleet_throughput_incident_2026_07_25.md`'s Progress Log for the `check_doc_body_links` promote-escalation fix
+(`unified-trading-pm@3e4c73436`), which is this exact "operator-authorized, not my plan's own scope, unblock the
+pipeline" case.

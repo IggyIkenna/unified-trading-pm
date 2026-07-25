@@ -157,3 +157,15 @@ sequential: true
   `tests/test_alert_quality_overhaul.py::test_branch_quarantine_pages_starvation_when_walls_queued` (quarantined slot
   - nonzero `count_queued_walls()` → `notify_slot_quarantined`; zero → the lighter alert) — no new test needed for this
     todo's verified-not-broken outcome.
+
+- **2026-07-25 (autonomous session, ~05:00-05:25 UTC).** Fleet + operator session working this plan concurrently on
+  non-overlapping files: slot 12 completed todo 1 (evidence above) and is dispatched on todo 2 (dormant-slot audit).
+  Todo 3 (`check_doc_body_links` escalation audit) completed directly in this session — `unified-trading-pm@3e4c73436` —
+  since it's outside `agent-orchestrator/server/` (a `.github/workflows/` fix in a different repo), no collision risk
+  with slot 12's active work. Confirmed the LDR→main promotion pipeline was NOT actually stuck (main caught up to LDR, 2
+  promotions merged in the hour prior — #1481, #1484) despite the operator-forwarded Slack alerts; the fix adds the
+  missing escalation for a genuine future recurrence rather than unblocking an active one. Separately confirmed
+  (companion `ao_worker_context_lifecycle_gap_2026_07_25.md`'s Progress Log) that the fleet's shipped code for THAT plan
+  is already running live in production — `ao-self-pull.sh` FF-pulled + restarted the orchestrator at
+  `2026-07-25T05:15:22Z` — so "queue blocking completion" is not currently the operative failure mode for either plan;
+  both are actively converging.
