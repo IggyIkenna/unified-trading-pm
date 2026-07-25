@@ -44,9 +44,11 @@ resolution_progress:
   fabrication, NOT the ODDS partial-revert class). 219,508 live PLAYER_STATS rows vs ZERO FIXTURE_PLAYER_STATS; zero
   manifest rows rewritten. Mis-stamp guard now ON and proven to ACCEPT the real write path
   (`_sports_ref_source('player_stats')='api_football'`); `_KNOWN_SPORTS_REGISTRY_DRIFT` is EMPTY (reconciled, not
-  waived). Docs aligned: deployment-service@bc30249 + PM codex. STILL OPEN: (1) the 127,018-row ODDS purge, deliberately
-  deferred behind the in-flight P0 index repair; (2) post-deploy verification that the nightly ODDS re-seed stopped; (3)
-  the §D post-07-13 rebuild-delta reconcile."
+  waived). Docs aligned: deployment-service@bc30249 + PM codex. UPDATE (2026-07-25): items (1) and (2) below are now
+  DONE — (1) the ODDS purge completed 2026-07-16T13:09Z (T3.1 in `sports_legacy_bucket_cutover_2026_07_16.md`,
+  re-measured 123,149 rows purged, re-verified 0 remain in prod as of 2026-07-23/24); (2) the nightly re-seed-stopped
+  verification completed 2026-07-16 (T3.2 in the same doc, three independent re-measurements). STILL OPEN: (3) the §D
+  post-07-13 rebuild-delta reconcile."
 nature: notes
 asset_group: [sports, meta]
 stage: [meta]
