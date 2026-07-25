@@ -162,10 +162,17 @@ drift_direction: advance-code
       instruments-preflight-chain doc (`/codex/04-architecture/instruments-preflight-chain.md`). **(MIGRATED FROM:
       `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P1. **TradFi backfill UNBLOCKED** (`MASSIVE_API_KEY` provided by operator 2026-06-01) — run the dual-source
-      backfill per `tradfi_massive_dual_source_2026_05_28.md` Phase 5: stamp `source=databento` on legacy tradfi rows +
-      ingest MASSIVE via **S3 flat-files** for bulk history (flat-files are independent of the REST tier — the bulk
-      path; REST for incremental/live). Unblock the dual-source plan's deferred table accordingly. **(MIGRATED FROM:
+- [ ] ❌ [DATA] P1. OBSOLETE/WONTFIX. ~~TradFi backfill UNBLOCKED (`MASSIVE_API_KEY` provided by operator 2026-06-01) —
+      run the dual-source backfill per `tradfi_massive_dual_source_2026_05_28.md` Phase 5: stamp `source=databento` on
+      legacy tradfi rows + ingest MASSIVE via **S3 flat-files** for bulk history (flat-files are independent of the REST
+      tier — the bulk path; REST for incremental/live). Unblock the dual-source plan's deferred table accordingly.~~
+      **Massive was REMOVED as a TradFi source 2026-07-19** (operator ruling: Databento = batch SoT, Yahoo = daily;
+      routing DELETED `uac@a2beed46`/`mtds@362a487e`) and its GCS corpus **PURGED 2026-07-21** (accepted permanent
+      loss); `tradfi_massive_dual_source_2026_05_28.md` itself now carries a `status: superseded` banner ("OBSOLETE — do
+      not build"). No MASSIVE ingestion remains possible or wanted. The still-valid half (zero-blank `source` on every
+      tradfi cell, including legacy rows) is already covered generically by the P0 "Data parquets" / "Manifest" todos
+      below in this same doc — no separate carve-out needed. SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md`,
+      `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`. **(MIGRATED FROM:
       `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [AUDIT] P1. After enforcement lands, read ACTUAL `source` column distribution per (asset_group, venue, data_type)

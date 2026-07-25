@@ -621,9 +621,10 @@ manual session because firing breaking/red/billing states on the live fleet jams
   the slot-5 checkout): plan→regen→dispatch→execute→done→blocked→**main-agent auto-answer (31 s)**→resume→done. SHIPPED
   agent-orchestrator@05be1e0+6b63a77+a658519: **MainAgentKeeper** (main agent auto-spawned at backend start — closes the
   "nobody answers /blocked on a fresh VM" gap) + main.md STEP 2.5 blocked-sweep duty + lock refresh. 7 new findings
-  filed as todos in § "Orchestrator e2e control-plane validation" above (P1: manual-regen vm_id bypass · pm-pull
-  dual-installer branch conflict · autospawn missing dirty-gate; P2: /done no-origin-verify · WORKSPACE_ROOT missing in
-  spawns · blocked telemetry · context-burn detector; P3: dashboard :8026 default).
+  filed as todos in § "Orchestrator e2e control-plane validation" (now in
+  `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` per the 2026-07-24 split) (P1: manual-regen vm_id bypass ·
+  pm-pull dual-installer branch conflict · autospawn missing dirty-gate; P2: /done no-origin-verify · WORKSPACE_ROOT
+  missing in spawns · blocked telemetry · context-burn detector; P3: dashboard :8026 default).
 - **2026-06-10 (slot-3)** — deployment-api aggregator BUILT + live-verified (25 repos, real SHAs, 10 real stuck
   conflict-wall PRs surfaced on first run; detail endpoint shows per-branch history with slot-attributed authors).
   deployment-ui Repos CI page built (route `/repos`, SIT panel + stuck panel + matrix + dropdown), vitest 8/8, pw

@@ -293,9 +293,10 @@ Coverage is the verification lens — every number flows through `compute_honest
       (`lifecycle-catalogue-regen-cefi`/`manifest-consolidator-cefi`/`expected-universe-v2-cefi` BATCH registered);
       alert coverage complete (deadman multi-layer + stale-image DP-VM-007 + CI-fail). Follow-ups tracked separately:
       the 486→0 within-window silent-gap drain landed 2026-06-26 (`cefi-instr-all-20260626-161800`);
-      MVP-capture-perp-gated backfill in-flight under `plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md`
-      (separate, waves G1→G4 already SIGNED there). — instruments-service@f739a41 + @cc81cad +
-      deployment-service@9d0e457.
+      MVP-capture-perp-gated backfill tracked under `plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md`
+      (separate — that plan's own G4 verdict ended NOT MET and it was archived `status: complete` 2026-07-15 with the
+      remaining open work folded out to its target per plan-reconcile §6; see this doc's own G4 section below — not
+      "already SIGNED there"). — instruments-service@f739a41 + @cc81cad + deployment-service@9d0e457.
 - 🚦 **GATE G2 — SIGNED OFF 2026-07-06** (evidence above).
 - [x] ✅ [SCRIPT] P0. **G3 — aggregate + verify the scheduler runs the latest code — SIGNED OFF 2026-07-06** (RECONCILE:
       already-run). Evidence: (1) `lifecycle-catalogue-regen-cefi` at 01:00 UTC in the per-AG daily scheduler
@@ -354,18 +355,20 @@ Coverage is the verification lens — every number flows through `compute_honest
   G5 SUB-SIGNED (mechanism + typed-reason discipline) but full "coverage climbs day-by-day to steady state" evidence
   still accruing under the MVP backfill; NOT SIGNED HERE. Live status: (a) Layered coverage SSOT SHIPPED `UAC@755c40515`
   (Unit-1, `LayeredCoverage` NamedTuple + `compute_layered_coverage(day_counts, depth_counts)` via the single
-  `compute_honest_coverage` — day/depth cannot diverge). (b) MVP backfill (`mvp_backfill_cefi_tick_v10_2026_06_27.md`)
-  is IN FLIGHT — coverage 2026-06-28 cefi=11.68% (716,159/6,133,155); 4 wave-1 VMs COMPLETED at T+2h40min; wave-2 gated
-  on wave-1 completion + phantom reconcile. (c) Typed-reason discipline wired at the writer via
-  `instruments-service@9e6dab5` (pre-genesis/no-activity/weekend/failed → typed empty_confirmed/attempted_failed) +
-  G4-gate reclass @fccb1961. (d) UAC↔writer matrix reconciliation `instruments-service@3bb7acd` (cefi venue-suffix fold,
-  ASTER carve-out) → residual gaps have UAC-derived typed reasons. (e) Full-history honest-coverage backfill CULMINATION
-  2026-06-26: empty_confirmed cefi 0→20,580; every representable shard×day represented (captured / empty_confirmed-typed
-  / attempted_failed / EU). **REMAINING for GATE G5 sign-off**: (i) MVP backfill waves 1–N drive to done (climbing
-  metric = captured cells / day for MVP perp universe); (ii) verify Layer-2 SSOT number rises + Layer-1 remains 100% via
-  cockpit; (iii) residual gaps audit → every remaining EU/failed/empty carries a typed reason (no unexplained holes).
-  Tracked in the MVP backfill plan — cross-linked here, not duplicated. — UAC@755c40515 (SSOT) +
-  instruments-service@9e6dab5 + @3bb7acd + market-tick-data-service@fccb1961.
+  `compute_honest_coverage` — day/depth cannot diverge). (b) MVP backfill (`mvp_backfill_cefi_tick_v10_2026_06_27.md`) —
+  AS OF 2026-06-28 snapshot: coverage cefi=11.68% (716,159/6,133,155); 4 wave-1 VMs COMPLETED at T+2h40min; wave-2 gated
+  on wave-1 completion + phantom reconcile. **That plan is no longer in flight** — archived `status: complete`
+  2026-07-15 with remaining open work folded out to its target (plan-reconcile §6); see this doc's own G4 section for
+  the current gate verdict. (c) Typed-reason discipline wired at the writer via `instruments-service@9e6dab5`
+  (pre-genesis/no-activity/weekend/failed → typed empty_confirmed/attempted_failed) + G4-gate reclass @fccb1961. (d)
+  UAC↔writer matrix reconciliation `instruments-service@3bb7acd` (cefi venue-suffix fold, ASTER carve-out) → residual
+  gaps have UAC-derived typed reasons. (e) Full-history honest-coverage backfill CULMINATION 2026-06-26: empty_confirmed
+  cefi 0→20,580; every representable shard×day represented (captured / empty_confirmed-typed / attempted_failed / EU).
+  **REMAINING for GATE G5 sign-off**: (i) MVP backfill waves 1–N drive to done (climbing metric = captured cells / day
+  for MVP perp universe); (ii) verify Layer-2 SSOT number rises + Layer-1 remains 100% via cockpit; (iii) residual gaps
+  audit → every remaining EU/failed/empty carries a typed reason (no unexplained holes). Tracked in the MVP backfill
+  plan — cross-linked here, not duplicated. — UAC@755c40515 (SSOT) + instruments-service@9e6dab5 + @3bb7acd +
+  market-tick-data-service@fccb1961.
 - 🚦 **GATE G5 — SUB-SIGNED 2026-07-06** (mechanism + typed-reason discipline SHIPPED); full sign-off (cefi DONE) held
   until the MVP backfill waves drive coverage to steady state (owned by `mvp_backfill_cefi_tick_v10_2026_06_27.md`).
 

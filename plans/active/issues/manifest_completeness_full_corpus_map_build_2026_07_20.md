@@ -154,8 +154,7 @@ isolation, consolidator merge/dedup, stale-blob liveness and the `captured`-outr
 - [ ] 5. [DATA] P0. **The 1.58 GB defi-prd index is its own P0** — audit every `read_availability_index` caller on defi
       for a missing column/filter projection (OOM risk), and consider whether the index needs compaction/partitioning.
 - [ ] 6. [DOC] P2. Record in codex that the per-VM manifest flush is ALREADY debounced (50 entries/5.0s, `utl@6b6d53bd`)
-    so the "flush is O(n²)" hypothesis is not re-derived by the next reader.
-</content>
+      so the "flush is O(n²)" hypothesis is not re-derived by the next reader.
 
 ## 2026-07-20 — F1+F2 SHIPPED (16.7x, value-equivalent); F3 premise DISPROVEN
 

@@ -334,17 +334,6 @@ per MTDS consolidation ruling.)**
       schema_version registry so binance reads green. Repo: unified-api-contracts. parent_epic: manifest_master.
       **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [INFRA] P2. **PRE-EXISTING UAC QG RED (not tradfi; flagged slot-6 2026-06-08) — blocks the UAC `--no-fix` sentinel
-      → no clean UAC quickmerge fleet-wide.** `tests/unit/test_schema_version_matrix.py` 3 failing
-      (`test_green_status_when_versions_match` / `test_na_schema_version_does_not_trigger_red` /
-      `test_load_providers_green_when_versions_match`): assert `binance.computed_status == "green"` but it is `"yellow"`
-      (schema_version provider-status drift). **Proven PRE-EXISTING** (stash-test: fails identically on clean LDR
-      without my matrix change) + **unrelated** to the G1-ENUM data_type validity matrix + **outside the tradfi AG**
-      (the schema_version provider subsystem is cefi/cross-cutting). My `uac@576f8fa8` adds ZERO net-new failures (8,617
-      pass, ruff clean). Owner: the schema_version-provider/cefi AG or vm-cross-cutting — align the provider
-      schema_version registry so binance reads green. Repo: unified-api-contracts. parent_epic: manifest_master.
-      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
-
 - [ ] ❌ [DATA] P1. ~~NEXT — run Massive tradfi reference capture → regenerate catalogue → unblock gate-b (VM, requires
       live `MASSIVE_API_KEY`). With the adapter shipped (above), run IS instrument capture with `--source massive` to
       refill `instrument_availability/by_date/` to today.~~ **SUPERSEDED 2026-07-21** — Massive removed as a tradfi
