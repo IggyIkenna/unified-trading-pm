@@ -159,8 +159,9 @@ fix. No behavior change to the actual build (bash never executed these comments)
       `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
       fund-administration-service) — fund-administration-service@b62d896, exhaustive re-scan confirmed zero remaining
       bad substitutions; `quality-gates.sh` green (97s).
-- [ ] [INFRA] P1. Fix `greeks-service/cloudbuild.yaml` line 259 (bare `$VERSION` in comment → `$$VERSION`) + run the
-      exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: greeks-service)
+- [x] ✅ [INFRA] P1. Fix `greeks-service/cloudbuild.yaml` line 259 (bare `$VERSION` in comment → `$$VERSION`) + run the
+      exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: greeks-service) —
+      greeks-service@081ad53, exhaustive re-scan confirmed zero remaining bare substitutions.
 - [ ] [INFRA] P1. Fix `instruments-service/cloudbuild.yaml` lines 74, 243 (bare `$VERSION` in comments → `$$VERSION`) +
       run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: instruments-service)
 - [ ] [INFRA] P1. Fix `market-data-processing-service/cloudbuild.yaml` line 237 (bare `$VERSION` in comment →
