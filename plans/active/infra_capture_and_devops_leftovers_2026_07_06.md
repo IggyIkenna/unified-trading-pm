@@ -24,12 +24,9 @@ related:
     /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-06
-last_updated: 2026-06-27
-  2026-06-27 2026-06-27 2026-06-27 2026-07-12 # was: 2026-07-07 — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 143: body
-  # carries a dated 2026-07-12 correction (finding id 114, §A2 B-queue ruling) on the ASTER-connector task that was
-  # never reflected in this frontmatter timestamp
+last_updated: 2026-07-14
 parent_epic: instruments_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
@@ -200,6 +197,11 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-25** — **Frontmatter hygiene fix**: `last_updated` was a malformed multi-line YAML plain scalar
+  (`2026-06-27` repeated 4x plus embedded `# was: 2026-07-07` correction commentary folded into the value). Cleaned to a
+  single ISO date (`2026-07-14`, matching the body's own dated 2026-07-12 correction — finding id 114, §A2 B-queue
+  ruling on the ASTER-connector task — plus this doc's most recent Progress Log entry below). No content change,
+  frontmatter-only.
 - **2026-07-14** — **Hybrid-venue enumerator/data-status consistency task FLIPPED ✅** (slot-9 data_engineering,
   `market-tick-data-service@1fff193b`). Investigated instruments-service (confirmed already symmetric across all 5
   hybrid venues post-`2f7d4548` — not the gap) and deployment-api (confirmed `_build_chain_breakdown` already reads any

@@ -29,7 +29,7 @@ source: >-
   here after that plan (and its execution-log child) became hard-blocked from any edit by the line-cap gate.
 resolved_by:
 locked_by:
-assigned_vm:
+assigned_vm: NA
 code_refs:
   [
     instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py,

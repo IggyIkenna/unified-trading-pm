@@ -173,13 +173,17 @@ drift_direction: advance-code
       `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [INFRA] P3. **DEFERRED** Decide migrate-first/retire for the UNMANAGED legacy prod resources surfaced by the
-      reconcile (not destroyed): unified `strategy-store-central-element-323112` + `strategy-store-test-…` (superseded
-      by per-AG); legacy non-prefixed schedulers (`client-reporting-hourly`, `instruments-daily-backfill`,
-      `sports-ref-v3-{1,2,3}-start`, `t1-daily-pipeline-trigger`, `qg-snapshot-daily`, `market-tick-*-daily-*`,
-      `*-service-daily-trigger`) + `uts-prod-ml-inference-t1-schedule` (TF canonical is `ml-service-t1-recon`). These
-      are NOT TF-modeled → not destroy-drift; importing entrenches old naming, so migrate consumers → canonical then
-      delete. `uts-dev-*`/`uts-staging-*` schedulers are OTHER-ENV (managed under terraform/state/{dev,staging}) —
-      correctly absent from prod state, out of scope. Provenance: TF reconcile 2026-06-19.
+      reconcile (not destroyed). ~~unified `strategy-store-central-element-323112` + `strategy-store-test-…` (superseded
+      by per-AG)~~ — **RESOLVED, no longer applicable**: the flat `strategy-store-central-element-323112` bucket was
+      DELETED 2026-07-18 per `bucket_fold_execution_strategy_2026_07_17.md`'s Fold-D cutover (re-tiered to
+      `strategy-store-prd`, source flat bucket deleted, operator pre-authorized), independently re-verified live
+      2026-07-25 (`gcloud storage buckets describe` → 404 not found). Remaining open portion: legacy non-prefixed
+      schedulers (`client-reporting-hourly`, `instruments-daily-backfill`, `sports-ref-v3-{1,2,3}-start`,
+      `t1-daily-pipeline-trigger`, `qg-snapshot-daily`, `market-tick-*-daily-*`, `*-service-daily-trigger`) +
+      `uts-prod-ml-inference-t1-schedule` (TF canonical is `ml-service-t1-recon`). These are NOT TF-modeled → not
+      destroy-drift; importing entrenches old naming, so migrate consumers → canonical then delete.
+      `uts-dev-*`/`uts-staging-*` schedulers are OTHER-ENV (managed under terraform/state/{dev,staging}) — correctly
+      absent from prod state, out of scope. Provenance: TF reconcile 2026-06-19.
 
 **NEVER destroyed a live resource.** Lock file (`.terraform.lock.hcl`) intentionally left on the committed
 HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mirror, but that swap is a tool artifact

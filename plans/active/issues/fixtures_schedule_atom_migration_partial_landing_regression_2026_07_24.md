@@ -31,7 +31,13 @@ stage: [meta]
 repos: [unified-api-contracts, instruments-service, deployment-api]
 scope: [engineer]
 tags: [data-correctness, cross-repo, sports, honest-coverage, migration, regression]
-related: [sports_closeout_batch1_ao_ready_2026_07_24, deployment_registry_reaper_not_draining_stale_entries_2026_07_24]
+related:
+  [
+    sports_closeout_batch1_ao_ready_2026_07_24,
+    deployment_registry_reaper_not_draining_stale_entries_2026_07_24,
+    /plans/active/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md,
+    /plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md,
+  ]
 created: 2026-07-24
 priority: P0
 parent_epic: sports_master
@@ -112,5 +118,11 @@ Both options landed: (A) `instruments-service@e19c5a7a` migrated the 8 writer ca
 `unified-api-contracts@c2b303f7` kept `SCHEDULE_DEFINING_DATA_TYPES` additive (`{"FIXTURES", FIXTURES_SCHEDULE}`) as the
 stop-gap during the transition. Re-ran `deployment-api/tests/unit/data_status/test_oow_denominator.py` at current HEAD:
 40 passed (all 4 previously-red tests green). The residual exact-set narrowing (dropping the legacy `"FIXTURES"` literal
-once the corpus census confirms zero remaining rows) is tracked separately in
-`sports_closeout_batch1_ao_ready_2026_07_24.md`'s `[DATA]` backfill todo, not here.
+once the corpus census confirms zero remaining rows) was tracked in `sports_closeout_batch1_ao_ready_2026_07_24.md`'s
+`[DATA]` backfill todo, which is now complete/archived
+(`/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md`) — that todo's own Done-when was RESCOPED
+2026-07-24 (282,231/337,464 legacy rows safely restamped; 55,233 could not be, being exact-duplicate collisions needing
+a DELETE-safety decision) and split into
+`/plans/active/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md` (status: open, live tracker for the
+55,233 residual rows) — see also `/plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md` for the full
+analysis. `SCHEDULE_DEFINING_DATA_TYPES` stays additive until that issue's todo closes.

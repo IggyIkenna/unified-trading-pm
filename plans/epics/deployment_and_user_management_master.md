@@ -47,8 +47,11 @@ Management | user-management-ui | archived") + CLAUDE.md's system map ("`user-ma
 `user-management-service` repo exists in the workspace. Findings #314/#385, plan-reconciliation
 `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.)
 
-**Status**: stub created 2026-05-21 by `migrate_epics_2026_05_21.py`. Operator fills body with P0/P1/P2/P3 priority
-blocks listing all assigned active plans.
+**Status**: populated (was: "stub created 2026-05-21 by `migrate_epics_2026_05_21.py`. Operator fills body with
+P0/P1/P2/P3 priority blocks listing all assigned active plans." — left in place after fill, corrected 2026-07-25, same
+class as batch_live_symmetry_master.md's finding id 311, §A2 B-queue ruling). Body below (UI Verification Contract,
+codex SSOT table, 12 active plans in P0-tier blocks) is populated as of `last_updated: 2026-07-14`; this line is no
+longer describing an empty stub.
 
 See [`README.md`](README.md) for the canonical epic frontmatter schema + body structure.
 

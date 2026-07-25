@@ -13,7 +13,11 @@ stage: [meta]
 repos: [features-service]
 scope: [engineer, admin]
 tags: [features, pipeline, in-memory, parquet, basedpyright, efficiency, colocated]
-related: [../epics/features_and_ml_master.md, ../archive/2026_06/features_calc_efficiency_and_correctness_2026_05_27.md]
+related:
+  [
+    /plans/epics/features_and_ml_master.md,
+    /plans/archive/2026_06/features_calc_efficiency_and_correctness_2026_05_27.md,
+  ]
 created: "2026-06-21"
 parent_epic: features_and_ml_master
 assigned_vm: NA
