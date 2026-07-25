@@ -136,8 +136,9 @@ fix. No behavior change to the actual build (bash never executed these comments)
 - [x] ✅ [INFRA] P1. Fix `agent-orchestrator/cloudbuild.yaml` line 150 (bare `$VERSION` in comment → `$$VERSION`) + run
       the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: agent-orchestrator) —
       agent-orchestrator@d421635, exhaustive re-scan confirmed zero remaining bare substitutions.
-- [ ] [INFRA] P1. Fix `alerting-service/cloudbuild.yaml` line 269 (bare `$VERSION` in comment → `$$VERSION`) + run the
-      exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: alerting-service)
+- [x] ✅ [INFRA] P1. Fix `alerting-service/cloudbuild.yaml` line 269 (bare `$VERSION` in comment → `$$VERSION`) + run
+      the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: alerting-service) —
+      alerting-service@0c7c42d, exhaustive re-scan confirmed zero remaining bare substitutions.
 - [ ] [INFRA] P1. Fix `batch-live-reconciliation-service/cloudbuild.yaml` lines 94, 261 (bare `$VERSION` in comments →
       `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
       batch-live-reconciliation-service)
