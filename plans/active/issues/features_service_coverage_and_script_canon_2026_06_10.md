@@ -3,7 +3,10 @@ doc_type: issue
 title: features-service coverage push + script-homes canon — findings & follow-ups
 summary:
   Session 2026-06-10 (1) deleted dead one-off scripts + fixed a cloud-SDK-direct violation in features-service per the
-  new **script-homes canon** (`/codex/06-coding-standards/script-homes.md`), and (2...
+  new **script-homes canon** (`/codex/06-coding-standards/script-homes.md`), and (2) raised features-service unit
+  coverage 81.28% → 86.18% (~955 new tests, 11 modules; 17,204 pass / 0 fail; zero hacks/suppressions/source-changes),
+  surfacing real source-level findings along the way (reported, not fixed, to avoid bundling unreviewed production
+  behaviour changes into the coverage push).
 status: open
 nature: process
 asset_group: [cross-cutting]

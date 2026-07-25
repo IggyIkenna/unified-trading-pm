@@ -593,7 +593,9 @@ drift_direction: advance-code
   - [`plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md`](/plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`](/plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md)
-    — 0 open todos (closed/archived/record-only).
+    — all todos checked, but `status: open` — 2 operator-gated `--apply` production data-mutation sign-offs still
+    pending (relabel ~2.59M/3.13M raw-symbol Tardis manifest rows to canonical ids; purge ~49,720 stale-shape
+    `expected_unattempted` rows), deliberately never captured as separate checkboxes. NOT closed/archived/record-only.
   - [`plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`](/plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md)
     - **[BLOCKED-CREDENTIALS] P1.** Tardis prod API key only has free-tier/preview entitlement for `lighter` exchange
       historical CSVs — needs operator subscription upgrade or an accepted-limitation ruling.

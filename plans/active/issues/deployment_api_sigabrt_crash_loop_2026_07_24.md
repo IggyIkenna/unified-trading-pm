@@ -75,7 +75,7 @@ While diagnosing the reaper-drain P0, I queried live Cloud Logging for `uts-shar
   recycling would produce under normal traffic, and is DRASTICALLY more frequent than the reaper's 900s tick interval —
   meaning almost every reaper attempt has a real chance of landing inside one of these crash windows, independent of
   (and likely compounding) the cancellation-timeout race fixed in the sibling P0 todo (`lifespan.py`'s
-  `_cancel_background_tasks` timeout, bumped 5s→20s in `deployment-api@<this task's SHA>`).
+  `_cancel_background_tasks` timeout, bumped 5s→20s in `deployment-api@1c1987ad`).
 - A container that crashes via SIGABRT (not a graceful SIGTERM) may not even run the ASGI `lifespan` shutdown path at
   all for that instance — meaning the reaper timeout fix helps the WORKER-RECYCLE case but does nothing for a hard
   process abort, which could still discard in-flight archiving work with zero graceful-shutdown log trail.
@@ -98,15 +98,16 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `preload_app = False` and re-measure the SIGABRT rate over the following 3 days (repo: deployment-api). —
       INVESTIGATED 2026-07-24 (slot 2). Full detail in Progress Log — deployment-api@1adf54b (faulthandler
       instrumentation shipped; root cause narrowed but NOT yet 100% confirmed, see log).
-- [ ] [REVIEW] P1. Once `deployment-api@1adf54b` (faulthandler instrumentation) has been live for at least a few hours
-      (verify via `gh pr list`/the promote workflow that it actually reached the deployed revision — this repo is
-      `staging`-first, not direct-to-main), `gcloud logging read` the `run.googleapis.com%2Fstderr` stream for
-      `uts-shared-deployment-api` around the next `Uncaught signal: 6` timestamp and confirm whether a
-      `Fatal Python error`/`Current thread` faulthandler dump appears. Cross-reference the stuck frame against
-      `deployment-api@6f6a389` (the sibling issue doc's Gap-2 `_compute_inventory` cold-path fix, already shipped) — if
-      the dump names that same code path, the SIGABRT loop should now be resolved by that fix and the crash rate should
-      drop; if the dump names something else, file a fresh evidence-backed BACKEND todo here with the exact stuck call
-      site rather than re-guessing. (repo: deployment-api)
+- [ ] [REVIEW] P1. Verify `deployment-api@1adf54b` is live in prod (`gh pr list` / the promote workflow — this repo is
+      `staging`-first, not direct-to-main), then once it's been live a few hours, `gcloud logging read` the
+      `run.googleapis.com%2Fstderr` stream around the next `Uncaught signal: 6` and confirm whether a
+      `Fatal Python error`/`Current thread` faulthandler dump names `deployment-api@6f6a389`'s `_compute_inventory` cold
+      path — if so the SIGABRT loop is resolved by that fix; if not, file a fresh evidence-backed BACKEND todo with the
+      exact stuck frame. (repo: deployment-api) Supplementary detail: `deployment-api@1adf54b` is the faulthandler
+      instrumentation shipped 2026-07-24 (slot 2); `deployment-api@6f6a389` is the sibling issue doc's Gap-2
+      `_compute_inventory` cold-path fix, already shipped. If the dump names that same code path, the crash rate should
+      visibly drop after this fix; if it names something else, do not re-guess — cite the exact stuck call site in the
+      new todo.
 
 ## Progress Log
 
