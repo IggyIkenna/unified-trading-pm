@@ -3,7 +3,9 @@ doc_type: issue
 title: AWS CodeBuild posts a "failure" commit-status on automated promote PRs (PR-approval gate) — cosmetic but noisy
 summary:
   "The commit-status `AWS CodeBuild ap-northeast-1 (<repo>)` shows **`failure`** on automated `staging→main` /
-  `LDR→staging` promote PRs (observed on UTL #475, head `53852d11`). It is **not a broken b..."
+  `LDR→staging` promote PRs (observed on UTL #475, head `53852d11`). It is **not a broken build** — CodeBuild's own
+  status description says the build was never triggered because it requires PR approval first; cosmetic noise, not a
+  real CI failure."
 status: open
 nature: process
 asset_group: [cross-cutting]

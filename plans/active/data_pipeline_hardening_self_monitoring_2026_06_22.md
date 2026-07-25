@@ -528,6 +528,20 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
     re-run the exit_code/heartbeat fleet monitor sweep against the named VM prefixes and confirm whether they
     recovered/were relaunched/self-resolved, or (b) if genuinely still frozen, escalate as a fresh P0 rather than
     relying on this month-old entry. Not forked into a child plan — this is a status-check ask, not new scope.
+  - 🟡 **PARTIAL RE-VERIFICATION (2026-07-25, plan-reconcile apply pass)**: `gcloud compute instances list` against
+    `central-element-323112` for `mtds-live-cefi-deribit-*`, `mtds-live-cefi-hyperliquid-*`,
+    `mtds-live-tradfi-cme-trades`, `tradfi-bf-cme-ohlcv-1m-ym-2020`, `tradfi-fwd-daily-cron-*`, and broader
+    `deribit`/`hyperliquid`/`cme-trades`/ `live-cefi`/`live-tradfi` name substrings — **zero matches** (0 instances,
+    exit 0) — none of the originally-named VMs still exist under this project. Cross-checked AWS (`427895769566`,
+    `ap-northeast-1`) — only the orchestrator + human-planning VMs are running, no cefi/tradfi live-capture instances
+    there either. **This does NOT confirm recovery** — it only confirms the specific "frozen, silently RUNNING"
+    manifestation from 2026-06-23 is gone (the VMs no longer exist to be frozen); it is equally consistent with (a) a
+    clean relaunch under fresh timestamped names I did not think to search for, (b) an operator/watchdog cleanup that
+    terminated them without a relaunch, or (c) live capture for these families having stopped entirely. Could NOT check
+    GCS object recency directly (`storage.buckets.list` denied for the `unified-trading-sa` service account in this
+    session — 403). **Still open, needs a follow-up with either broader VM-name search + GCS manifest freshness check
+    (`measure_honest_coverage.py --asset-group cefi` / `--asset-group tradfi`) or an operator-side confirmation** — NOT
+    flipping this todo to done on this partial evidence.
 
 ---
 

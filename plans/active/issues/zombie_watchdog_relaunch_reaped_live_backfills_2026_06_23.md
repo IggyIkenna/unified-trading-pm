@@ -297,7 +297,7 @@ config-tuning gap.
       todo below rather than fixed inline (root-cause work is `infra`/`deployment-service` craft, out of
       `data_engineering` scope per `does_not`).
 
-## Incident 3 — 2026-07-15→18, `cefi-queue-heavy-binancefutu-x15`/`-x17` (SINGLE_VM_QUEUE Tardis workers) killed mid-stream, cause NOT YET root-caused
+## Incident 3 — 2026-07-15→18, `cefi-queue-heavy-binancefutu-x15`/`-x17` (SINGLE_VM_QUEUE Tardis workers) killed mid-stream, RESOLVED — see below
 
 Found during the -006 audit above (fleet-wide `gcloud logging read` sweep for the `agent-name/claude_code` UA on
 `v1.compute.instances.delete`). **12 `cefi-queue-heavy-binancefutu-x15`/`-x17` VMs** were deleted by

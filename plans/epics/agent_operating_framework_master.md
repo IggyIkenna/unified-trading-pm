@@ -32,7 +32,7 @@ related_plans:
   - ../active/docs_retrieval_layer_reconcile_2026_07_23.md
   - ../active/l0_doc_index_generator_2026_06_24.md
   - ../active/task_template.md
-last_updated: 2026-06-25
+last_updated: 2026-07-23
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
 ---

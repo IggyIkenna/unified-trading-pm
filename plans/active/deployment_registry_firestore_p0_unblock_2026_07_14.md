@@ -206,7 +206,8 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       2026-07-25 (slot 5): Cloud Run flag flipped (`uts-shared-deployment-api-00272-jgb`) + 2 real live-fleet VMs
       launched with `DUAL_WRITE=true`, parity diff 2/2 PASS (Firestore doc count 1→3, status/last_heartbeat_at/counters
       exact match vs GCS archive). Full detail + evidence in Progress Log. Widening the flag further is deliberately NOT
-      part of this todo's scope. **CODE-CORRECTNESS PROVEN, LIVE-FLEET ROLLOUT DEPLOY-GATED** (parallels P0 todo3):
+      part of this todo's scope. **CODE-CORRECTNESS PROVEN, GATED ON LINKS 1–4 ABOVE** (parallels P0 todo3, corrected
+      framing per the 2026-07-17 note below — links 1-4 have since cleared, see the [VERIFY]/[DATA] todos above):
       validated against REAL Firestore 2.27.0 with a synthetic deployment — real `FieldFilter` query + real transaction
       CAS + field-parity (Firestore doc `to_json()` == GCS blob shape, exact), see Progress Log. ~~Enabling the flag on
       live VMs needs the deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy.~~ **CORRECTED
