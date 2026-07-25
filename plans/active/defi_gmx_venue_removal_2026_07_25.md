@@ -85,12 +85,20 @@ changelog/docstring comment describing the historical removal itself (never insi
       matched a `gmx` grep pre-scoping (some are just enum/fixture mentions, not GMX-specific logic) -- confirm each hit
       before deleting, some may be shared collateral-matrix rows covering multiple venues. Done-when: the
       definition-of-done convention above, zero hits in this repo. (repo: unified-api-contracts)
-- [ ] [BACKEND] P2. **Remove GMX capture from `market-tick-data-service`** -- delete
-      `cli/handlers/_perp_funding_gmx.py`, remove its dispatch wiring from `perp_funding_handler.py`, remove the `gmx`
-      protocol entry from `dex_pools_handler.py`'s protocol table and `_dex_pools_subgraph.py`'s query-selection map,
-      remove `gmx` from `_instruments_metadata.py`'s chain/address maps. ~42 files matched pre-scoping. Done-when: the
-      definition-of-done convention above, zero hits outside a dated removal-changelog comment. (repo:
-      market-tick-data-service)
+- [x] ✅ [BACKEND] P2. **Remove GMX capture from `market-tick-data-service`** -- market-tick-data-service@68407ae5.
+      Deleted `_perp_funding_gmx.py` + `gmx_arbitrum_ws.py`; stripped gmx dispatch from `perp_funding_handler.py`
+      (DEFAULT_PROTOCOLS, GMX subgraph queries, `_run_process` branch, class stage-bindings, `preflight()`'s graph-key
+      loading), `dex_pools_handler.py`'s protocol table, `_dex_pools_subgraph.py`'s query-selection map,
+      `liquidations_handler.py` + `_liquidations_queries.py` (GMX liquidation capture -- found beyond the todo's
+      explicit scope via the repo-wide grep, in-scope under "remove GMX capture"), `_instruments_metadata.py`'s
+      chain/address map, the connectors registry, `subgraph_health_probe.py`, `data_manifest_handler.py` + `cli/main.py`
+      doc/help strings. Removed/updated GMX-specific test coverage (`test_perp_funding_handler_coverage.py` +
+      `test_perp_funding_normalization.py` deleted -- fully GMX-scoped; `test_perp_funding_handler.py`,
+      `test_liquidations_handler_coverage.py`, `test_cf11_swallow_remediation.py`,
+      `test_defi_lst_perp_specialty_ws_scaffolds.py` trimmed). Verified via the definition-of-done grep convention (zero
+      hits outside dated `2026-07-25` changelog comments in non-test `.py`; dated one-off migration scripts under
+      `scripts/one_offs/` and `market_tick_data_service/scripts/` left untouched as historical artifacts, out of
+      "capture" scope). Evidence: `bash scripts/quality-gates.sh` exit 0 (6905 passed, 0 failed).
 - [ ] [DATA] P2. **Remove GMX from `instruments-service` reference data / MVP instrument universe** --
       `engine/orchestrator/defi.py`, `scripts/enumerate_expected_universe.py`,
       `scripts/dex_pool_glued_pair_id_canonicalize_2026_07_09.py`. Done-when: the definition-of-done convention above,
