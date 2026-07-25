@@ -80,11 +80,21 @@ changelog/docstring comment describing the historical removal itself (never insi
 
 ## Todos
 
-- [ ] [DATA] P2. **Remove GMX from `unified-api-contracts`** -- venue/adapter-key registries (`VENUE_TO_ADAPTER_KEY`),
-      `VENUE_COLLATERAL_MATRIX`, any `SOURCE_PRIORITY`/pipeline-mode entries, venue enums, and test fixtures. ~30 files
-      matched a `gmx` grep pre-scoping (some are just enum/fixture mentions, not GMX-specific logic) -- confirm each hit
-      before deleting, some may be shared collateral-matrix rows covering multiple venues. Done-when: the
-      definition-of-done convention above, zero hits in this repo. (repo: unified-api-contracts)
+- [x] ✅ [DATA] P2. **Remove GMX from `unified-api-contracts`** -- unified-api-contracts@18d53d63. Actual footprint was
+      wider than the ~30-file pre-scoping (word-boundary grep missed `gmx_v2`/`gmxv2` forms): 44 files across
+      `registry/` (venue/adapter-key registries, `VENUE_COLLATERAL_MATRIX`, capability declarations, launch
+      dates/cadence), `internal/architecture_v2/` (collateral/jurisdiction/order-semantics/simulation-assumptions/
+      liquidation-bonus registries + the `_STAKED_HEDGE_VENUES`/`gmx_v2` eligible-venue-id entries in
+      `archetype_leg_spec_seeds.py`), `internal/reference/`, `internal/schemas/`, `scripts/`, and test fixtures (incl.
+      hardcoded registry-count assertions that dropped by 1 after the removal). Confirmed each hit per the todo's
+      caveat: left GMX-the-CeFi-token-symbol in `cefi_instrument_universe.py` and GMX-the-Morpho-collateral- asset in
+      `defi_reserve_params.py` untouched (different namespace, not the DeFi venue); left the
+      `test_ws_cassette_coexistence.py` `gmx_arbitrum_ws` mapping in place pending the sibling market-tick-data-service
+      todo's connector deletion (that test reads the READ-ONLY root MTDS clone, which still has the connector file --
+      removing the mapping now would fail for an unrelated reason). Definition-of-done grep
+      (`grep -rli '\bgmx\b' . --include="*.py"`) returns zero hits outside dated `2026-07-25` removal comments + the 2
+      out-of-scope token entries + the 1 documented pending-sibling-todo mapping. `bash scripts/quality-gates.sh` green
+      (11925 passed, 0 failed, exit 0).
 - [x] ✅ [BACKEND] P2. **Remove GMX capture from `market-tick-data-service`** -- market-tick-data-service@68407ae5.
       Deleted `_perp_funding_gmx.py` + `gmx_arbitrum_ws.py`; stripped gmx dispatch from `perp_funding_handler.py`
       (DEFAULT_PROTOCOLS, GMX subgraph queries, `_run_process` branch, class stage-bindings, `preflight()`'s graph-key
