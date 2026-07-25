@@ -196,11 +196,11 @@ source: >-
       launch) so the VM booted on valid code, but this auth gap will block the NEXT slot's tarball rebuild attempt until
       fixed. Full evidence + the reconciliation note in the canonical closeout plan: see this todo's own re-measurement
       above; re-run `_index/availability_index.parquet` INJURIES query after the VM's `EXIT_STATUS` appears to confirm
-      the gap actually closed before flipping this checkbox. — **Re-health-checked 3x (01:45Z slot 7 / 02:24Z slot 2 /
-      02:30Z slot 9), latest 2026-07-25T02:30Z**: `af-backfill-20260725-002739` still RUNNING, `PROGRESS.json`
-      monotonic-advancing (`last_completed_date=2024-08-06`, ~6.6/8.5 years covered), `run.log` shows live fetches, no
-      error/stall signature. Genuinely still hours from completion; each check released via `/skip-current-task`, NEVER
-      duplicate-launched — re-check `PROGRESS.json`/`EXIT_STATUS` before assuming still running.
+      the gap actually closed before flipping this checkbox. — **Re-health-checked 4x (01:45Z slot 7 / 02:24Z slot 2 /
+      02:30Z slot 9 / 02:49Z slot 4), latest 2026-07-25T02:49Z**: `af-backfill-20260725-002739` still RUNNING,
+      `PROGRESS.json` monotonic-advancing (`last_completed_date=2025-05-30`, ~7.4/8.5yrs), rate ACCELERATING (ETA now
+      <1hr vs earlier "hours"), no error/stall signature. Each check released via `/skip-current-task`, NEVER
+      duplicate-launched — re-check `EXIT_STATUS` next; may already be terminal given the accelerated rate.
 - [x] ✅ [CODE] P1. **UAC canonical registry build/refine** — unified-api-contracts@ce18ff15. Audited every clause of
       the Architecture section against current code before touching anything (most of this program had already shipped):
       name/ids/country/season-start-end-per-year (`season_dates.get_season_start`/`get_season_end`, per-league-per-year)
