@@ -83,10 +83,16 @@ actual current location. Re-ran `run_validators.py --scope all` → `OK: No brok
       unified-trading-pm)
 - [x] ✅ [DOCS] P0. Fix the 7 stale links in `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`. (repo:
       unified-trading-pm)
-- [ ] [SCRIPT] P2. Consider whether the archival ritual's step 5 ("update every referrer's path corpus-wide") should be
-      backed by an automated check (e.g. `run_validators.py` or a QG step run at archive-time rather than only surfacing
-      fleet-wide at next quickmerge) so this recurs as a fast local failure for the archiving agent, not a fleet-wide
-      QG-red discovered by an unrelated worker days later. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. Consider whether the archival ritual's step 5 ("update every referrer's path corpus-wide") should
+      be backed by an automated check (e.g. `run_validators.py` or a QG step run at archive-time rather than only
+      surfacing fleet-wide at next quickmerge) so this recurs as a fast local failure for the archiving agent, not a
+      fleet-wide QG-red discovered by an unrelated worker days later. (repo: unified-trading-pm) — Wired
+      `validate_plan_links.py` into `run_hygiene_sweep.sh`'s `--precommit` fast path (and the full sweep), gated on any
+      staged `plans/` change including renames (the existing staged-file scan used `--diff-filter=ACM`, which excludes
+      git's default rename detection — a pure archival `git mv` commit would otherwise skip the whole precommit gate).
+      Verified in isolated scratch repos: a stale-referrer archival commit now fails locally with exit 1 pointing at
+      this ritual step; a correctly-repointed referrer passes; unrelated commits still no-op. —
+      unified-trading-pm@701437723
 
 ## Codex SSOTs
 
