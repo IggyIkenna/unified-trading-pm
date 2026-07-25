@@ -388,13 +388,30 @@ flipping the checkbox.
       check `gh pr list --repo IggyIkenna/deployment-api --state all --limit 5` for a new promote PR past `#377` having
       merged sha `108e2fd`'s tree, confirm via `git show origin/main:Dockerfile | grep BASE_IMAGE_DIGEST` reads
       `sha256:a302c0cd...` (or newer), THEN proceed with the original re-verification steps exactly as scoped above.
-      **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and
-      logged a matching-tree stamp for `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch` only)
-      and the downstream Firestore write is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`,
-      `unified-trading-sa` ADC identity, reproduced live via direct REST `PATCH` — same 403; 0/95 sampled
-      `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY SIT-covered repo's promote, not
-      just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's LDR→main pipeline, not just
-      this todo:
+      **UPDATE 2026-07-25T14:47Z (slot 5): the fleet-wide blocker is FIXED + the promote landed.** Shipped
+      `unified-trading-pm@16a9f422f` (direct to `main`, closed carve-out for a `.github/**` change that must reach
+      `main` to unblock the pipeline) restoring `ci-status-update.yml`'s `google-github-actions/auth@v3` step using
+      `secrets.GCP_SA_KEY` instead of the broken ambient ADC — confirmed live (`ci-status-update.yml` run `30161507161`
+      succeeded, real Firestore write observed: `ci_status/unified-trading-pm: MAIN_GREEN ->     MAIN_GREEN`). A fresh
+      `full-workspace-sit` run then correctly stamped `deployment-api`'s `sit_validated_tree` to `c2bd5b9c...`
+      (confirmed via direct Firestore REST read). The SIT gate PASSED, opening `deployment-api` PR **#378**, which
+      auto-merged to `main` at **2026-07-25T14:44:04Z**. Cloud Build `deployment-api-main-deploy`
+      (`76697590-0adf-4090-87a2-4ecfed4bdc0a`) succeeded; Cloud Run revision **`uts-shared-deployment-api-00276-sjj`**
+      is now live serving 100% traffic. Direct image extraction (not source-repo diff) confirms the deployed image
+      contains BOTH `post_worker_init` (`faulthandler.enable()`/leader-election fix) AND `ThreadPoolExecutor` (reaper
+      parallelization fix) — the correct root file, this time genuinely deployed. **Remaining, NOT yet done**: wait ≥2
+      reap-tick intervals (900s each, i.e. until ~15:15Z) then re-run the exact original verification —
+      `gcloud logging     read` for `"Background auto-sync task started (leader worker)"` exactly once per instance +
+      `"[AUTO_SYNC] Reaper: archived"` appearing for the first time ever, and `active/` object count vs live-VM count
+      (was 404 vs ~9 pre-fix). Only flip this todo (and the plan's original `[REVIEW]` checkbox) once that final
+      observation confirms convergence — do not flip on the deploy alone, the fix landing does not by itself prove the
+      reap-tick actually converges. **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker — it is not SIT
+      itself.** SIT ran, passed, and logged a matching-tree stamp for `deployment-api`, but the stamp is fire-and-forget
+      (`repository_dispatch` only) and the downstream Firestore write is 403'ing FLEET-WIDE (`ci_status_store.py`
+      `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live via direct REST `PATCH` — same 403; 0/95
+      sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY SIT-covered repo's
+      promote, not just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's LDR→main pipeline,
+      not just this todo:
       [issues/ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md](ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md).
       Part (1) of this todo is now ALSO gated on that doc's Todo 1/2 (operator restores the Firestore permission, then
       `ci-status-update.yml` goes green again) before the promote can ever pass the SIT gate. Next dispatch: check that
