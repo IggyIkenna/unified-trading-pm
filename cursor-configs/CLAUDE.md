@@ -81,23 +81,23 @@ UAC-internal.
   (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config` (set at clone time by
   `setup-tab-worktrees.sh`). Derivation SSOT `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH, 2026-07-09);
   audit/stamp a host via `scripts/dev/check-slot-commit-identity.sh [--fix]`.
-- **quickmerge lands on LDR**; **default promote is LDR→`main` DIRECT — staging is BYPASSED** (per-repo `ldr_main` GHA
-  toggle; the standing `ldr-to-main-promote.yml` + fleet `ldr-to-main-promote-fleet.yml` PR, `*/15`, v2-gated
-  auto-merge; verify by CONTENT `gh api …/compare/main...live-defi-rollout`, not squash-inflated `ahead_by`). `--hotfix`
-  needs a `[hotfix]` marker. **LDR never runs server QG** (the promote PR carries `quality-gates-v2`).
-  `unified-trading-codex` ARCHIVED (live SSOT = PM's `codex/`).
+- **quickmerge lands on LDR**; **default promote is LDR→`main` DIRECT — staging DORMANT** (per-repo
+  `promotion_model: ldr_main` toggle; standing `ldr-to-main-promote-fleet.yml` + PM's `ldr-to-main-promote.yml`, `*/15`,
+  auto-merge). **The LDR→main gate set is exactly THREE**: `sit-gate/fleet-green` (fleet-shared SIT signal, REQUIRED
+  check on `ldr_main` repos) + `quality-gates-v2` (promote PR) + quickmerge-provenance — label-check / SIT-digest /
+  dep-order are RETIRED/advisory, NOT blocking. `staging` KEPT but the toggle is REVERSIBLE (major/breaking bump or
+  operator decision routes THROUGH staging; gates unchanged). **LDR never runs server QG**; `main` = reconciled
+  projection back-merged to LDR (`main-backmerge-to-ldr`). `--hotfix` needs `[hotfix]`. **Release**: semver-agent on
+  `push:[main]` (retargeted off `staging` 2026-07-25) → git-tag mint + `publish-package` wheel to AR; label-check
+  ADVISORY, major/1.0.0 via human staging; `reconcile_release_tags.py` = stall detector, not minter.
+  `unified-trading-codex` ARCHIVED (SSOT = PM's `codex/`).
 - **Behind-remote / tag conflict**: `git pull --rebase --autostash` (quickmerge STAGE 0.4 auto-reconciles); genuine
   same-file conflict → `rebase --abort` + structured `QUICKMERGE_BLOCKED` exit, recover per the autostash recipe, never
   blind-overwrite; tag clobber → `git fetch origin --tags --force` + `git pull --ff-only`. **NEVER force-push a shared
   branch.**
-- **LDR is the SSOT**; `main` = the reconciled projection (back-merged DOWN to LDR via `main-backmerge-to-ldr`). **Fleet
-  default = LDR→`main` DIRECT, NO staging** (PM + agent-orchestrator + all standard repos are `ldr_main`); the `staging`
-  branch is KEPT but the per-repo toggle is **REVERSIBLE** — a breaking/major bump or operator decision routes that repo
-  THROUGH staging. **Gates UNCHANGED on both paths** — SIT (re-homed onto a frozen LDR snapshot for direct repos) +
-  `quality-gates-v2` + quickmerge-to-main (ONE gating v2, not two). SSOT (in-flight refactor):
-  `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` → `/codex/08-workflows/ci-cd-flow.md`.
-- SSOTs: `/codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / LDR-is-SSOT / branch-protection /
-  deployment flow) + `/codex/05-infrastructure/per-tab-worktrees.md` (commit attribution).
+- SSOTs: `/codex/08-workflows/ci-cd-flow.md` (gate set / quickmerge / strict-quickmerge / LDR-is-SSOT /
+  branch-protection / semver + wheel release / deployment flow) + `/codex/05-infrastructure/per-tab-worktrees.md`
+  (commit attribution); in-flight refactor `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`.
 
 ## CI verification after every push
 
