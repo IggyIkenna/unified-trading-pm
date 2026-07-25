@@ -76,9 +76,7 @@ depends_on: []
 All three hit this independently, on different files, in different worktrees, during different tasks — this is a
 reproducible structural gap, not a one-off flake.
 
-## Root cause (found this session, not independently re-derived by the 3 agents — they diagnosed the symptom, this
-
-## confirms the exact line)
+## Root cause (found this session — the 3 agents diagnosed the symptom, this confirms the exact line)
 
 `.pre-commit-config.yaml` line ~53-56:
 
