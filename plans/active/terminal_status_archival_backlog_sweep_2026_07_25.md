@@ -132,9 +132,10 @@ For the named doc:
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@54cbb2dae (moved to plans/archive/issues/, banner added, both referrers in
       the sibling reaper-drain doc repointed; check_terminal_status_archived.py confirmed clean).
-- [ ] [INFRA] P2. Archive `plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@bc48ccf2d (moved to plans/archive/issues/, banner added, all 5 referrers
+      across 3 plans + 1 codex doc repointed; check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive
       `plans/active/issues/detached_nohup_worker_processes_reaped_as_orphans_by_config_dir_match_2026_07_24.md`
       (status=superseded, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
