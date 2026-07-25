@@ -257,8 +257,18 @@ inherited from the first shipped batch:
       today's functionally-primary via continental qualification) — picked FA Cup on that evidence, not a coin flip.
       Mongolia's/Thailand's catalog "Super Cup"/"Champions Cup" excluded (verified exhibition matches). 0 registry
       collisions, MVP-scope unchanged at 96. quality-gates.sh green.
-- [ ] [DATA] P1. **Oceania (OFC)** — Fiji, New Zealand (2 countries). (repo: unified-api-contracts). **Done when**: per
-      the shared contract above, for this country list.
+- [x] ✅ [DATA] P1. **Oceania (OFC)** — Fiji, New Zealand (2 countries). — `unified-api-contracts@0104c2f2` (6 entries).
+      Fiji: catalog carries only the top league (376) -- WebSearch confirmed the real Fiji FA Cup exists but has no
+      api_football_id in this catalog, omitted per the never-fabricate rule. New Zealand: catalog's "Premiership" (280)
+      confirmed via WebSearch as the pre-2021 name of the current National League (2021 rebrand, same competition, not a
+      different one); 2nd tier is genuinely 3 parallel regional leagues (Central/Northern/ Southern, all 3 included,
+      mirroring the Bosnia FBiH/RS multi-entity precedent); Chatham Cup (1127) confirmed as the primary cup since 1923.
+      Zero `api_football_id` collisions; `_mvp_football_league_ids()` stayed 96; zero real captured ODDS data confirmed
+      for all 6 entries. Landed through 2 concurrent-edit collisions (East/Southeast Asia, then South Asia batches
+      landing on the same file mid-session) -- resolved both via a clean re-split of each batch's block (verified zero
+      duplicate keys each time) + recomputed the 2 hardcoded-count tests fresh from the live merged registry each time,
+      not hand-arithmetic. (repo: unified-api-contracts). **Done when**: per the shared contract above, for this country
+      list.
 - [ ] [DATA] P2. Once ALL 11 domestic-selection batches above land (not just one), run step 2 (curated-universe
       backfill, API-Football fixtures + enrichment 2019→, gated + honest-empty for no-enrichment leagues, burn budget
       per the resolved per-source caps) then step 3 (drop residual out-of-curated rows/objects, snapshot-first,
