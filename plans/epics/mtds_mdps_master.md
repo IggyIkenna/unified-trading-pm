@@ -166,6 +166,13 @@ locked_since: 2026-05-20
 > excluded from the roster too (doc-reconciliation finding 168). Read the roster above as "themed-consolidation
 > survivors as of 2026-07-13", not as an exhaustive enumeration of live `parent_epic: mtds_mdps_master` work — re-derive
 > the current live set via `rg -l '^parent_epic: mtds_mdps_master' plans/active/*.md plans/active/issues/*.md`.
+>
+> **[2026-07-25 correction]**: `sports_manifest_canonicalisation_2026_06_01`, named above (line 147/153) as a live
+> "delegated vertical" child of this epic, was subsequently **archived/superseded** — folded into
+> `sports_consolidated_closeout_2026_07_19.md` (its 4 constituent plans, including this one, archived per that plan's
+> Progress Log) and moved to `plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md`. It is correctly
+> absent from the "Assigned active plans" auto-populated section below (currently 4 plans, none of them this one) — the
+> 2026-07-13 prose roster above is stale on this one entry and should be read accordingly.
 
 > **Operator directive 2026-05-20 round 5**: "EVERYTHING needs to be in writing contained within PM active plans which
 > can reference issues and audits, but I should be able to go to an orchestrator with the problem and use ALL the PM

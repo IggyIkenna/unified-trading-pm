@@ -45,11 +45,12 @@ record_zero_rows | record_failed | record_catalog_unavailable | record_shard_fai
 
 **Confirmed pre-existing, not caused by this session's fix**: a raw pattern grep across the same 8 tracked names returns
 an IDENTICAL count for `canonical_writer.py` at HEAD (my commit `market-data-processing-service@69bfab1`) and at HEAD~1
-(immediately before it) — 16 either way. My diff to this file was exactly 2 lines (threading `asset_group=asset_group`
-into two existing `_infer_instrument_type`/`_infer_chain` calls, neither of which is a tracked contract-call pattern),
-so it could not have changed this count. The 17-vs-18 baseline drift already existed on `live-defi-rollout` before this
-session touched the file. Baseline SSOT: `unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml`
-(`canonical_writer.py: count: 18`).
+(immediately before it) — 17 either way (corrected 2026-07-25: matches the 17 reported by QG above and the Resolution
+section's fully-reconciled walk; "16" was a typo in this confirmation narrative). My diff to this file was exactly 2
+lines (threading `asset_group=asset_group` into two existing `_infer_instrument_type`/`_infer_chain` calls, neither of
+which is a tracked contract-call pattern), so it could not have changed this count. The 17-vs-18 baseline drift already
+existed on `live-defi-rollout` before this session touched the file. Baseline SSOT:
+`unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml` (`canonical_writer.py: count: 18`).
 
 Not independently re-diagnosed here (out of scope for the sports parse-bug fix that surfaced it) — needs the same
 diagnose-before-fix treatment as the linked 2026-07-09/2026-05-20 precedents: confirm whether the missing call is a

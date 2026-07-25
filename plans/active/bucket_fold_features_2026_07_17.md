@@ -282,3 +282,14 @@ design's counts are 2026-07-13).
   window). **deployment-api** batch_config_utils Fold-A repoint DEFERRED (display-only; its tree co-mingles an unshipped
   Fold-B ml-store display repoint in `deployment_api_config.py` + a `data_status` axis-census WIP — ship each in its own
   scoped commit, tracked as a loose end).
+
+- **2026-07-25, `/plan-reconcile` reconciliation.** The "NOT YET DONE (gated follow-ons)" list in the entry directly
+  above is stale for items (b)/(c)/(d) — the Todos section above (checked `[x]` same day, 2026-07-18) already carries
+  their completion evidence: **(b) BQ re-mount** DONE (external table sourceUris re-pointed to the folded prefix,
+  verified via `SELECT COUNT(*) WHERE day='2026-01-25'` = 766,074 rows); **(c) Consolidator N→5 retarget** DONE (3
+  per-kind consolidators retargeted via direct gcloud, verified onchain-defi run wrote root
+  `features-defi-prd/_index/latest.json`); **(d) Delete sources + TF-reconcile** DONE (all 15 legacy per-kind buckets
+  deleted, parity pre-verified, TF state reconciled). Only **(a) REDEPLOY+VERIFY** genuinely remains open/unconfirmed in
+  this pass — no todo checkbox or later Progress Log entry confirms the LDR→main promote→features-service redeploy
+  - a post-redeploy feature-batch WRITE/READ cite (`Evidence: cloudbuild=<id>` SUCCESS) actually ran; treat that piece
+    as still pending until such evidence is added.

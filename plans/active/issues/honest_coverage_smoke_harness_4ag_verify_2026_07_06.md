@@ -117,15 +117,18 @@ gate is not honestly satisfied until the 4 runners are green or documented-block
 
 ## Recommended decision
 
-Land the 4 fixes below (all tracked as todos). Priority ordering respects existing plan-blocker chains:
+Land the 4 fixes below (all tracked as todos). Priority ordering respects existing plan-blocker chains. **(Numbering
+corrected 2026-07-25 to match the Todos/Progress-Log/backlog-task-ID numbering actually used elsewhere in this doc:
+-001=prediction, -002=cefi, -003=defi, -004=tradfi — this section previously used a different, incompatible
+numbering.)**
 
-- Fix `-002` (prediction bucket) FIRST — smallest, unblocks prediction verify immediately, catches any classifier-
+- Fix `-001` (prediction bucket) FIRST — smallest, unblocks prediction verify immediately, catches any classifier-
   semantic finding on prediction shards analogous to the sports full-season finding.
-- Fixes `-003` + `-004` (build cefi + defi runners) next — modelled on the existing tradfi runner (which uses
+- Fixes `-002` + `-003` (build cefi + defi runners) next — modelled on the existing tradfi runner (which uses
   `MdpsUniverseProvider` + `resolve_bucket_name(kind='instruments-store', asset_group=<ag>)` to load the AG catalogue,
   then feeds atoms into `build_coverage_matrix`). Both AGs have live manifests + live IS catalogues (see the Layer-1
   certifications) so the runners can be green immediately.
-- Fix `-001` (tradfi) is gated on Plan 2 landing — no runner change needed; the tradfi runner already correctly reports
+- Fix `-004` (tradfi) is gated on Plan 2 landing — no runner change needed; the tradfi runner already correctly reports
   the empty matrix. Track resolution as re-run once Plan 2 catalogue write lands.
 
 ## Todos

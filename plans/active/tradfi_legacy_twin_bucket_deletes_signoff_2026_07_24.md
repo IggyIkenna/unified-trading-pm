@@ -5,9 +5,10 @@ summary:
   Small operator-gated follow-up forked out of tradfi_v9_stage1_finish_2026_07_06.md (now archived, all its other tasks
   closed) during the 2026-07-24 plan-hygiene line-cap remediation. Carries the single remaining
   BLOCKED-OPERATOR-DECISION todo — after the tradfi v9 apply + orphan-sweep E=0 + a byte-verify, the legacy-path twin
-  objects (defi / tradfi / pred; cefi + sports already done) can be deleted in a quiet window, but Ikenna's migration
-  sign-off gates it — bucket deletes are never-autonomous (hard-stop). This plan does NOT re-run or duplicate the
-  dry-run evidence; it references it.
+  objects (defi / tradfi / pred; cefi previously reported done, **sports is NOT done** — 0 of 34,385
+  `B_legacy_duplicate` rows pass the 5-part delete-safety proof per `sports_legacy_duplicate_triage_2026_07_22.md`,
+  corrected 2026-07-25) can be deleted in a quiet window, but Ikenna's migration sign-off gates it — bucket deletes are
+  never-autonomous (hard-stop). This plan does NOT re-run or duplicate the dry-run evidence; it references it.
 status: active
 nature: process
 asset_group: [tradfi]
@@ -23,7 +24,7 @@ related:
     /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: 2026-06-27
+last_updated: 2026-07-25
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -66,12 +67,13 @@ restated here.
 
 ## Todo
 
-- [ ] [REVIEW] P1. **Verify (or correct) the "cefi + sports already done" claim in this plan's summary/banner** —
-      `data_pipeline_e2e_milestones_gate_2026_07_24.md` §3 found sports's OWN measurement shows 0 of 34,385
-      `B_legacy_duplicate` rows pass the 5-part delete proof yet, contradicting this plan's "cefi + sports already done"
-      framing. Definition-of-done: either find the evidence that actually closes sports's 34,385 rows (cite it here) and
-      leave the claim as-is, or correct the summary/banner to state sports is NOT yet done and file the real current
-      state.
+- [x] ✅ [REVIEW] P1. **Verify (or correct) the "cefi + sports already done" claim in this plan's summary/banner —
+      CORRECTED 2026-07-25.** Re-checked `sports_legacy_duplicate_triage_2026_07_22.md` — no evidence closes sports's
+      34,385-row population; it independently measures **0 of 34,385 `B_legacy_duplicate` rows** pass the 5-part
+      delete-safety proof (every sub-population fails per its own per-row triage). No newer doc supersedes that
+      measurement. Corrected the frontmatter summary and body banner below to state sports is NOT yet done, citing that
+      doc; left the cefi half of the claim unchanged (out of this todo's scope — no contradicting evidence found for
+      cefi in this pass).
 - [ ] [DATA] P1. **Run the dry-run (not the delete) as the safe next step**:
       `cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet --dry-run`
       against the 995 legacy-B candidate rows (see "Where the dry-run evidence already lives" above). This is NOT the
@@ -79,8 +81,10 @@ restated here.
       produces the verified-delete candidate list + byte-verify evidence the BLOCKED todo below needs to post.
       Definition-of-done: dry-run output cited (report path + row count), ready for the sign-off ask.
 - [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION — legacy-twin bucket DELETES (defi / tradfi / pred).** After the tradfi
-      apply + orphan-sweep E=0 + a byte-verify, the legacy-path twin objects can be deleted in a quiet window (cefi +
-      sports already done). **Ikenna's migration sign-off GATES this — bucket deletes are never-autonomous
+      apply + orphan-sweep E=0 + a byte-verify, the legacy-path twin objects can be deleted in a quiet window (cefi
+      previously reported done; **sports is NOT done** — 0 of 34,385 `B_legacy_duplicate` rows pass the 5-part proof,
+      per `sports_legacy_duplicate_triage_2026_07_22.md` — sports deletes stay blocked on that separately, independent
+      of this tradfi/defi/pred gate). **Ikenna's migration sign-off GATES this — bucket deletes are never-autonomous
       (hard-stop).** Do NOT run any delete until the operator signs off; the working agent posts the byte-verify
       evidence and RAISES for sign-off. _(Carries `BLOCKED-` so the orchestrator will not dispatch it — stays visible
       for the operator.)_ **STATUS 2026-07-10 (this session): still correctly BLOCKED, NOT run — two real reasons, not
@@ -108,6 +112,11 @@ restated here.
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-25** — `/plan-reconcile` fix pass: corrected the "cefi + sports already done" claim (frontmatter summary,
+  body banner, BLOCKED-OPERATOR-DECISION todo) to state sports is NOT done — 0/34,385 `B_legacy_duplicate` rows pass the
+  5-part delete-safety proof per `sports_legacy_duplicate_triage_2026_07_22.md` — and flipped todo 1 to done with that
+  evidence cited. Also fixed `last_updated` (was 2026-06-27, predating this doc's own `created: 2026-07-24`) to
+  2026-07-25.
 - **2026-07-24** — Forked out of `tradfi_v9_stage1_finish_2026_07_06.md` (task 11) via the operator-approved
   plan-hygiene line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md` row 30). Content
   moved verbatim; no new work performed. The parent plan's remaining task (Folded-in-scope Layer-1 certify) moved to
