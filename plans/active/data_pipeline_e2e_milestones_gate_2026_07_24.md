@@ -444,3 +444,15 @@ Read-only investigation + Edit (no `grep`/`wc -l`/git ops) for the remainder. No
 `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`'s parallel-agent guidance — worth a note there if this
 recurs: **more than ~3-5 concurrent background agents in one session risk exhausting the shared tmpfs**, degrading Bash
 for everyone until agents finish and free space, not just a risk for the dispatching session.
+
+## Operator decisions queued (2026-07-25, `/autonomous` extended run — operator away up to 8h)
+
+Per explicit operator instruction: genuine judgment/authority-only calls found during this run are **parked here**
+(pointer + one-line question) rather than decided unilaterally or blocked-on synchronously. Everything else (mechanical
+fixes, provable-from-evidence corrections, AG-plan todo additions) is applied directly without asking, per the
+workspace's own ASK>PARK calibration now that the operator is away. Each row's issue doc carries the full
+`BLOCKED-OPERATOR-DECISION` entry (options + recommendation, SUB_AGENT_MANDATORY_RULES escalation format) — this table
+is the single place to scan them all in one pass.
+
+| #   | Question (one line) | Issue doc | Status |
+| --- | ------------------- | --------- | ------ |
