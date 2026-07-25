@@ -328,12 +328,13 @@ source:
       `ohlcv_split_ticker_groups` fan-out with N contiguous DATE slices per venue (all tickers per VM): equity critical
       path 7.1 h → 1.2 h and equity compute 231 → 46 VM-h. Keep the ticker-group code path behind a flag for the
       pathological case (a single VM exceeding memory on the full universe). (repo: deployment-service)
-- [ ] [INFRA] P1. **Raise `OHLCV_FLEET_CONCURRENCY_CAP` 60 → 150 and default `TRADFI_OHLCV_MACHINE=e2-highmem-16`.** The
-      corrected ETA is THROUGHPUT-bound (~999 VM-h against a cap of 60), not critical-path-bound, so the cap is the
+- [x] ✅ [INFRA] P1. **Raise `OHLCV_FLEET_CONCURRENCY_CAP` 60 → 150 and default `TRADFI_OHLCV_MACHINE=e2-highmem-16`.**
+      The corrected ETA is THROUGHPUT-bound (~999 VM-h against a cap of 60), not critical-path-bound, so the cap is the
       single highest-leverage knob: 60 → 150 takes expected ~22 h → ~9 h. Safe for the same reason `d85d06e` gave for 20
-      → 60 (Databento limits are per-IP and every VM gets its own ephemeral IP). The machine default is still
-      `e2-highmem-4` (`_tradfi-ohlcv-launcher-lib.sh:28`) while every measurement and the shipped date-concurrency
-      derivation assume 16 vCPU. (repo: deployment-service)
+      → 60 (Databento limits are per-IP and every VM gets its own ephemeral IP). Shipped `deployment-service@545ff76`:
+      `_tradfi-ohlcv-launcher-lib.sh:35` `TRADFI_OHLCV_MACHINE` default `e2-highmem-4` → `e2-highmem-16`,
+      `_tradfi-ohlcv-launcher-lib.sh:172` `OHLCV_FLEET_CONCURRENCY_CAP` default `60` → `150`, both verified present at
+      their call sites (`bash -n` clean). (repo: deployment-service)
 - [ ] [DATA] P2. **Re-measure CME per-root-date cost for ~6 roots across the liquidity spectrum (ES, NQ, GC, 6E, PL,
       CT).** CME is 76% of total backfill VM-hours but is anchored on only two run.logs whose per-date costs differ 26×
       (CL 2.59 min/date vs SI 0.10). This is the single measurement that collapses the 15–30 h ETA band to ~±15%. Read

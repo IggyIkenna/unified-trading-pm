@@ -53,6 +53,54 @@ custom answer
 
 ---
 
+## 2. `gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md` — locked doc, audit says resolved (2026-07-25, defi)
+
+The defi orphan-audit classified this doc `archivable_now`: its own latest section (2026-07-12) claims one item still
+open (`e2e-testing/staked_basis_funding_scan.py`'s `_lst_bucket()`/`_read_lst_exchange_rate` reader), but that claim
+looks stale — sibling plan `defi_dedicated_bucket_shared_migration_2026_07_13.md`'s Todo 3 (checked `[x]`, 2026-07-13)
+explicitly fixed that exact function, with a live-verified post-deploy parity todo (2026-07-13/14: "e2e
+`_read_lst_exchange_rate` LIDO 1.2333 + JITO 1.2766 ... zero reads left on the dedicated buckets"). I did NOT flip this
+doc's frontmatter — it carries `locked_by: live-defi-rollout` (`locked_since: 2026-05-21`), an explicit human "not
+yours" signal per CLAUDE.md's plan-locking rule, which I'm treating as applying here even though this is an issue-doc
+status flip, not a plan archival — the lock predates this session and I have no context on why it's held.
+
+A: `[unlock-plan]` + flip `status: resolved` with
+`resolved_by: <the defi_dedicated_bucket_shared_migration commit that shipped Todo 3>` — the evidence looks solid, this
+just needs the lock cleared first. [WORKER REC] B: Leave locked and open — the lock may be protecting something I don't
+have context on (e.g. active investigation, pending a different fix). Confirm with whoever set the lock before touching
+it. Other: operator can type a custom answer
+
+**Status**: open
+
+---
+
+## 3. Kamino/Solend `lending_indices` `instrument_type` shape — writer code vs live GCS probe disagree (2026-07-25, defi)
+
+`issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`'s follow-up todo ("does the
+dex_pools-class fake-history-snapshot bug also affect Kamino/Solend Solana lending_indices in the `-prd-` bucket")
+asserts the CORRECT real path shape to probe is `instrument_type=solana_lending`, citing
+`market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py::resolve_lending_instrument_type()`
+as ground truth (Kamino/Solend resolve to `InstrumentType.SOLANA_LENDING`). But
+`defi_consolidated_closeout_2026_07_18.md`'s Track 2 independently reports a 2026-07-20 live GCS probe finding a KAMINO
+`lending_indices` canonical twin (47 objects) actually sitting under `instrument_type=solana_amm_pool` at
+`day=2026-04-14` — a THIRD, different path shape from both the already-known-wrong `instrument_type=pool` and this
+todo's targeted `solana_lending`. Neither doc has cross-checked the discrepancy against the other. The conflict-check
+run over the 2026-07-25 defi satellite AO-eligibility triage explicitly flagged this as needing operator sign-off rather
+than a silent reconciliation — if a worker probes only `solana_lending` as originally scoped, it risks filing a false
+"clean bill" finding while missing the population Track 2 actually found live under `solana_amm_pool`.
+
+A: Widen the todo's scope to ALSO probe `instrument_type=solana_amm_pool` for KAMINO/SOLEND before filing any "clean
+bill" finding, explicitly reconciling against Track 2's 2026-07-20 47-object finding. [WORKER REC] B: Dispatch the todo
+exactly as scoped (probe only `solana_lending`) and accept the risk that the finding may be incomplete if real
+Kamino/Solend `lending_indices` data actually lives under `solana_amm_pool` instead. C: Hold this todo out of any AO
+batch entirely and rule directly on which `instrument_type` shape (`solana_lending` vs `solana_amm_pool`) is
+authoritative for Kamino/Solend `lending_indices`, since the writer code and the live GCS probe currently disagree.
+Other: operator can type a custom answer
+
+**Status**: open
+
+---
+
 No further entries yet. This doc will accumulate entries as genuine judgment calls surface during the
 cefi/defi/tradfi/prediction closeout-audit rollout. Format for each entry:
 

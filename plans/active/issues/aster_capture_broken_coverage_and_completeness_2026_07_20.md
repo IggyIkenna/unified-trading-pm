@@ -20,7 +20,7 @@ summary: >-
   correct only because each subclass explicitly passes url=_ASTER_STREAM_URL — one future omission = silent Binance data
   tagged ASTER) and GAP 4 (expected_start_dates.yaml trades genesis 2021-08-30 is pre-launch Astherus-pre-rebrand data
   mirroring Binance values vs UAC native 2023-07-22 — must be clipped).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -45,7 +45,7 @@ estimate_calibrated_ai_days: 2.0
 assigned_role: data-pipeline
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: execution-service@e11e6a136, unified-trading-pm@12b0d9db8, market-tick-data-service@d8efc6d6, mtds@a7f7769a
 locked_by:
 source:
   ["multi-agent ASTER audit 2026-07-20 (operator asked: is ASTER working, all coins, were we proxied with Binance)"]
@@ -280,3 +280,10 @@ still be flat today, not a stale pipeline artifact) and `1000SATS` (flat, and li
 essentially a dead market). This is genuine ASTER exchange behavior for illiquid instruments, not a pipeline defect —
 tracked as a downstream feature-quality concern, not a data-correctness issue, in the new ADV-feature plan (see
 `plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md`).
+
+## RESOLVED (2026-07-25)
+
+Frontmatter flipped per the cefi orphan-audit (2026-07-25): all four fix items (A/B/C/D) plus GAP-4 confirmed shipped
+
+- verified with real data in all 3 repos (see `## Status (2026-07-21)` above); the only remaining item was the
+  administrative status flip itself.

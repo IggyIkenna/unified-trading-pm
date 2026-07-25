@@ -37,8 +37,8 @@ drift_direction: correct-codex
 > it is **NOT** archived or superseded. Track V of `/plans/active/sports_consolidated_closeout_2026_07_19.md` (the
 > canonical, single actionable sports execution plan) previously carried a false "both archived/superseded into this
 > closeout" claim about this doc — corrected 2026-07-24 (see
-> `/plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`). This doc's own ~9-11 open `- [ ]` todos
-> (UAC canonical registry build/refine, the curated ~300-league reference set + backfill
+> `/plans/archive/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`). This doc's own ~9-11 open `- [ ]`
+> todos (UAC canonical registry build/refine, the curated ~300-league reference set + backfill
 >
 > - residual drop, bare/legacy dual-layout cleanup, retention-floor cleanup, the E8 legacy-delete stub, etc.) are NOT
 >   duplicated inside the closeout — this remains a satellite plan the closeout references (see this doc in the

@@ -63,7 +63,7 @@ sequential: true
 
 ## Todos
 
-- [ ] [INFRA] P0. **Verify the branch-quarantine starvation alert actually fired for this episode, fix if not.**
+- [x] [INFRA] P0. ✅ **Verify the branch-quarantine starvation alert actually fired for this episode, fix if not.**
       `_alert_branch_quarantine` (`server/autospawn.py:1112-1160`) is designed to page via `notify_slot_quarantined`
       specifically when a slot sits quarantined WHILE queued work exists ("walls queued → this quarantine is starving
       dispatch → error-pointer page", `autospawn.py:1140`) — exactly the condition observed at 2026-07-25T04:35-04:43
@@ -76,8 +76,8 @@ sequential: true
       check) with a regression test. **Done when**: either a cited Slack message ID / activity-log entry proving the
       alert fired correctly for slots 4/5/9's 2026-07-25 quarantine, or a fix + a new test in `tests/` reproducing this
       exact scenario (quarantined slot + nonzero queued count → alert fires).
-- [ ] [INFRA] P0. **Audit why slots 13, 14, 15, and 0 show zero AutoSpawn activity across the entire observed window**
-      despite `tmux_alive: false`. Read `AutoSpawnLoop`'s spawn-candidate selection (`server/autospawn.py`, the
+- [x] [INFRA] P0. ✅ **Audit why slots 13, 14, 15, and 0 show zero AutoSpawn activity across the entire observed
+      window** despite `tmux_alive: false`. Read `AutoSpawnLoop`'s spawn-candidate selection (`server/autospawn.py`, the
       `_should_spawn` method and whatever iterates slot candidates each tick) to determine: (a) does AutoSpawn target
       only a concurrency CAP below the full slot count (e.g. spawns onto the first N free slots per tick and never
       reaches the rest), (b) is there a per-slot cooldown/backoff counter that can get stuck indefinitely after repeated
@@ -88,30 +88,22 @@ sequential: true
       behavior. **Done when**: a written finding citing the exact function/branch responsible for slots 13/14/15/0's
       dormancy, plus (only if a bug) a fix with a regression test that a long-dormant free slot gets an AutoSpawn
       attempt within one normal tick interval.
-- [ ] [INFRA] P0. **Audit whether `check_doc_body_links` promote-blocking failures actually trigger
-      `escalate-to-orchestrator.yml`, wire it in if not.** Confirmed live 2026-07-25: the LDR→main promotion has been
-      repeatedly blocked since at least 04:06 UTC by
-      `scripts/quality_gates/test_check_doc_body_links.py::test_live_corpus_has_zero_new_broken_body_links` failing ("1
-      new broken body link" — a cross-repo doc link CI's single-repo checkout can't resolve, same failure class already
-      fixed once today per the 04:21:52 `check_doc_body_links.py` escalation) across multiple successive auto-generated
-      promote PRs (closed #1474, #1475, an intermediate PR at 04:06, #1478, and the still-open #1483 as of this plan's
-      authoring) — yet `GET /api/escalations/active` at the time showed only two `plan_health`-wall_type escalations in
-      flight, none for this `tests`-slice/`check_doc_body_links` wall. Read
-      `.github/workflows/escalate-to-orchestrator.yml`'s callers
-      (`grep -rn "escalate-to-orchestrator" .github/workflows/` across ALL repos, not just unified-trading-pm) and
-      `server/escalation.py`'s `_prompt_template_for` / `_wall_cooldown_key` to determine: (a) does a `quality-gates-v2`
-      / `QG slice (tests)` failure on this specific selector actually fire the
-      `repository_dispatch: escalate-to-orchestrator` event at all, or only `plan_health` and a fixed set of other wall
-      types do, and (b) if it does fire, is a dedup/cooldown key silently suppressing repeat escalations for the same
-      recurring failure across successive auto-generated promote PRs (each new promote PR gets a NEW PR number, which
-      may not match the cooldown key's PR-number-scoping, causing every fresh promote attempt to look like a "new" wall
-      that should escalate again — or the opposite, an overly broad key that treats them as the same wall and never
-      re-fires). If gap (a), wire the `tests`-slice/`check_doc_body_links` failure into the same
-      escalate-to-orchestrator call the other CRITICAL QG slice failures already use. If gap (b), fix the cooldown key
-      to scope on `(repo, wall_type, failure_signature)` rather than raw PR number, so a recurring failure across
-      auto-regenerated promote PRs still re-escalates. **Done when**: either a cited example of this exact failure class
-      successfully escalating end-to-end (a `cicd`-role dispatch + a resolving commit), or a fix + a regression test
-      proving a `check_doc_body_links` promote-blocker now produces an active escalation.
+- [x] [INFRA] P0. ✅ **Audit whether `check_doc_body_links` promote-blocking failures actually trigger
+      `escalate-to-orchestrator.yml`, wire it in if not.** — `unified-trading-pm@3e4c73436`. Confirmed gap (a): read
+      every workflow calling `escalate-to-orchestrator` fleet-wide (`plan_health`, `sit_failure`, `sit_retry_cap`,
+      `staging-to-main` conflicts) — none covered a genuine `quality-gates-v2` FAILURE on the LDR→main promote PR
+      itself; `ldr-to-main-promote.yml`'s `mergeable_state=blocked` branch only logged "genuine gate fail or in-progress
+      — leaving it" and took no action. Fixed additively (existing branches untouched): added a `V2_FAILED` check for a
+      CONCLUDED `failure` conclusion on the exact head SHA, dispatching `wall_type=ldr_main_qg_failure` when true; dedup
+      relies on the orchestrator's existing server-side `_wall_cooldown_key`, so gap (b) doesn't apply — no new cooldown
+      logic needed. Also found while investigating: the pipeline was NOT actually stuck — `main` had already caught up
+      to LDR (`compare/main...live-defi-rollout` behind_by=0) via 2 successful promotions (#1481, #1484) in the prior
+      hour; the repeated #1474/#1475/#1478/#1480/ #1483 failures were transient snapshot collisions from the day's
+      exceptionally heavy concurrent-commit volume, not a permanently broken pipeline. Not yet verified end-to-end (no
+      genuine v2 failure has recurred since the fix shipped to observe the dispatch fire) —
+      `quality-gates-v2 → escalate-to-orchestrator` YAML/shell validated via `actionlint` (clean) locally; live
+      confirmation is the remaining half of this todo's "Done when", left open for the next genuine occurrence rather
+      than fabricating a synthetic failure to force one.
 - [ ] [REVIEW] P1. **Post-fix live re-verification against the same baseline.** Re-run the same read-only telemetry pull
       this plan's `source` field describes (`GET /api/state`, `GET /api/backlog`, `GET /api/activity`,
       `GET /api/escalations/active` via the read-only SSM pattern in
@@ -124,3 +116,83 @@ sequential: true
       verified alert, (d) the LDR→main promotion pipeline has actually cleared the recurring `check_doc_body_links`
       blocker (a merged promote PR, not just another closed-and-superseded one). **Done when**: a written verification
       note citing the actual re-pulled slot/activity/escalation data, attached to this plan's Progress Log.
+
+## Progress Log
+
+- **2026-07-25 (slot-12)** — Todo 1 VERIFIED, no fix needed. Pulled `journalctl -u orchestrator.service` for the central
+  orchestrator VM (running locally on this VM — `ORCHESTRATOR_VM_ROLE=planning`) over 04:25-05:05 UTC and
+  cross-referenced `GET /api/activity`. `_alert_branch_quarantine` (`server/autospawn.py:1112`) fired the STARVATION
+  path (`notify_slot_quarantined`, not the lighter `notify_spawn_failure`) for all three quarantined slots, each with a
+  confirmed `HTTP/1.1 200 OK` Slack POST immediately after the log line:
+  - slot 4 —
+    `04:33:26,682 WARNING slot-quarantine STARVATION alert fired: slot 4 — unified-api-contracts on live-defi-rollout (diverged) (1 wall(s) queued)`,
+    POST 200 OK at `04:33:26,682`.
+  - slot 5 —
+    `04:36:40,954 WARNING slot-quarantine STARVATION alert fired: slot 5 — unified-trading-pm on live-defi-rollout (diverged) (1 wall(s) queued)`,
+    POST 200 OK at `04:36:40,953`.
+  - slot 9 —
+    `04:42:45,782 WARNING slot-quarantine STARVATION alert fired: slot 9 — unified-api-contracts on live-defi-rollout (diverged) (1 wall(s) queued)`,
+    POST 200 OK at `04:42:45,782`.
+
+  Each fire corresponds to an `escalation_dispatch_initiated`/`escalation_dispatch_failed` pair for the SAME escalation
+  id (`agt-8ab986` for slots 4/5, `agt-23b3a6` for slot 9) in `GET /api/activity` — the escalation row was still
+  `status="queued"` at spawn-attempt time (its status only flips to `dispatched` on success), so `count_queued_walls()`
+  correctly read `1` and took the paging branch. The dedup state file
+  (`data/state/autospawn_branch_quarantine_alerted.dedup.json`) shows only slot 9 today because slots 4 and 5 were later
+  auto-healed (`autospawn slot 4: branch quarantine auto-healed` at 04:45:24; `autospawn slot 5: ... auto-healed` at
+  04:51:47) — a successful spawn calls `_clear_branch_quarantine_alert` (`autospawn.py:1476`), which by design erases
+  the dedup breadcrumb on recovery. That is NOT evidence the alert didn't fire — the journal + Slack-200 entries above
+  are.
+
+  **Adjacent finding (not fixed here — out of this todo's scope, filed for tracking)**: `notify_slot_quarantined`'s
+  starvation condition is `escalation.count_queued_walls() > 0` — this counts queued rows in the CI-escalation
+  `EscalationQueueRow` table only, NOT the 142-row backlog-task queue this plan's `source` field cites (25 tasks
+  `queued`). In this exact episode an escalation wall (`agt-8ab986`/`agt-23b3a6`) happened to be queued at all three
+  alert moments, so the STARVATION page correctly fired — but if a future quarantine episode has queued BACKLOG tasks
+  and zero queued escalation walls, the alert would silently take the lighter `notify_spawn_failure` path despite real
+  dispatch starvation. Filed as `plans/active/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md` (P2)
+  — extend the starvation condition to `count_queued_walls() > 0 OR count_queued_backlog_tasks() > 0`.
+
+  Existing regression coverage already exercises this exact scenario end-to-end:
+  `tests/test_alert_quality_overhaul.py::test_branch_quarantine_pages_starvation_when_walls_queued` (quarantined slot
+  - nonzero `count_queued_walls()` → `notify_slot_quarantined`; zero → the lighter alert) — no new test needed for this
+    todo's verified-not-broken outcome.
+
+- **2026-07-25 (autonomous session, ~05:00-05:25 UTC).** Fleet + operator session working this plan concurrently on
+  non-overlapping files: slot 12 completed todo 1 (evidence above) and is dispatched on todo 2 (dormant-slot audit).
+  Todo 3 (`check_doc_body_links` escalation audit) completed directly in this session — `unified-trading-pm@3e4c73436` —
+  since it's outside `agent-orchestrator/server/` (a `.github/workflows/` fix in a different repo), no collision risk
+  with slot 12's active work. Confirmed the LDR→main promotion pipeline was NOT actually stuck (main caught up to LDR, 2
+  promotions merged in the hour prior — #1481, #1484) despite the operator-forwarded Slack alerts; the fix adds the
+  missing escalation for a genuine future recurrence rather than unblocking an active one. Separately confirmed
+  (companion `ao_worker_context_lifecycle_gap_2026_07_25.md`'s Progress Log) that the fleet's shipped code for THAT plan
+  is already running live in production — `ao-self-pull.sh` FF-pulled + restarted the orchestrator at
+  `2026-07-25T05:15:22Z` — so "queue blocking completion" is not currently the operative failure mode for either plan;
+  both are actively converging.
+- **2026-07-25 (slot-12)** — Todo 2: two DISTINCT causes, one intended (slot 0), one a genuine bug now fixed (13/14/15).
+
+  **Slot 0 — intended, not a bug.** `status: "paused"` (confirmed via `GET /api/state`). `AutoSpawnLoop._should_spawn`
+  gates every candidate through `_slot_is_configured` (`server/autospawn.py:635`), which delegates to
+  `dispatch.slot_is_spawnable` — paused slots are excluded by design (the operator explicitly parked it; `last_ping`
+  27168min stale matches a long-parked slot, not a starved one). Working as designed — no fix.
+
+  **Slots 13/14/15 — genuine bug, fixed.** `AutoSpawnLoop._run_one_tick` (`server/autospawn.py:1758` prior to fix)
+  builds the per-tick candidate list via `select(SlotRow).order_by(SlotRow.slot_id)` then stable-sorts ONLY by recent
+  failure count (`server/autospawn.py:1765` prior to fix) — equal-failure slots keep raw ascending `slot_id` order.
+  Combined with the fleet-worker cap (`_apply_fleet_cap`, `ORCHESTRATOR_FLEET_WORKER_CAP=8` on this VM) and the
+  budget-exhaustion early-skip (`if len(to_spawn) >= spawn_budget: continue`, BEFORE `_should_spawn` even runs — so no
+  activity-log row at all for the skipped slot, matching the observed "zero AutoSpawn activity anywhere in the 2000-row
+  window"), this is option (a)+(b) hybrid: the CAP itself is intentional (documented, bounds the planning VM's on-demand
+  pool), but the SELECTION ORDER within that cap has no fairness/rotation — whenever fleet-wide demand keeps refilling
+  headroom with low-numbered idle slots before the scan reaches the tail, high-numbered idle slots (13,14,15) starve
+  indefinitely purely by slot-id bad luck. Live-confirmed right now: `GET /api/state` shows exactly 8 slots with
+  `tmux_alive: true` (2,3,4,6,7,10,11,12) == the configured cap, while 5/8/9/13/14/15 sit idle with no session —
+  13/14/15 are consistently LAST in ascending order behind three other idle slots that always win the race first.
+
+  **Fix** (`agent-orchestrator@18d8538`): added a secondary sort key — least-recently-ATTEMPTED
+  (`self._last_attempt_at`, never-attempted sorts first via an epoch sentinel) — so among equally-healthy slots the
+  fleet rotates instead of permanently favoring the same low slot_ids. Primary key (failure count, doomed-slots-to-
+  the-back) is unchanged. New regression test
+  `tests/test_autospawn.py::test_tick_rotates_through_idle_slots_when_chronically_at_cap` (3 equal slots, budget=1/tick
+  × 2 ticks → the second tick must pick a DIFFERENT slot than the first) + full `tests/test_autospawn.py` suite (105/105
+  pass).

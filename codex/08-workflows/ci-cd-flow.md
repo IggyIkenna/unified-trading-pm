@@ -154,6 +154,33 @@ path to `main`** until the next quickmerge opens a new one.
   (docs(plans) flips, scripts/`.github`, dirty-deps), and remember to leave (or open) a standing LDR→main PR so they
   land on `main`.
 
+### Which repos squash vs. rebase on promote — the ancestor-check validity map (codified 2026-07-25)
+
+> **The trap**: `git merge-base --is-ancestor <ldr-sha> origin/main` is the intuitive recipe for "is commit X live", but
+> it silently returns `false` FOREVER after a squash-merge — the squash produces a NEW synthetic commit on `main` that
+> is never a descendant of the individual original commit in git's graph sense, even the instant the content lands. 3
+> review dispatches were burned on this false negative in one session
+> (`plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`) before it was traced back to
+> the promote mode. Checked every promote workflow's merge-arm step to answer "which repos are actually at risk":
+
+| Path                                                                                                                                                           | Merge strategy actually armed                                                                                                                                        | Is the ancestor check ever valid?                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **`ldr_main` direct** (`ldr-to-main-promote-fleet.yml`) — every current fleet repo (all 24 in `workspace-manifest.json`; none currently route through staging) | Unconditionally `gh pr merge --auto --squash --delete-branch` — no rebase attempt, ever ("LDR carries merge commits from the backmerge-sink design; not rebaseable") | **Never.** Guaranteed false-negative-prone 100% of the time.                         |
+| **PM's own `main`-direct** (`ldr-to-main-promote.yml`, Option-B, PM has no `staging`)                                                                          | Same — unconditionally `--squash`                                                                                                                                    | **Never.**                                                                           |
+| **staging-routed** (only reached if a repo's per-repo toggle is flipped OFF `ldr_main` — none are today): LDR→staging (`ldr-to-staging-promote.yml`)           | `--rebase` attempted FIRST (preserves original commit SHAs), `--squash` fallback only when the rebase can't be armed (real conflicts / a merge-laden LDR range)      | **Sometimes** — valid whenever the rebase path actually armed; still not guaranteed. |
+| **staging-routed**: staging→main (`staging-to-main.yml`)                                                                                                       | `--rebase` → `--squash` → `--merge` fallback chain (same rebase-first preference)                                                                                    | **Sometimes** — same caveat.                                                         |
+
+**Bottom line**: because every repo in the fleet is `promotion_model: ldr_main` today (verified via
+`workspace-manifest.json`, 2026-07-25 — 24/24 non-PM repos + PM's own dedicated Option-B path), the ancestor check is
+currently invalid for **100% of repos in this workspace**, not just `deployment-api`. The split only becomes
+operationally relevant if/when the reversible per-repo toggle (§ "Fleet default = LDR→main DIRECT" in workspace
+CLAUDE.md) routes a specific repo through `staging` — even then, don't trust the ancestor check unconditionally; it's
+merely "sometimes valid" there, not "always valid". **Always prefer the content-diff recipe**
+(`git show <branch>:<path> | grep <marker>`, compared byte-for-byte against LDR's copy, cross-referenced against the
+promote PR's `mergedAt` vs. the deployed artifact's build timestamp) over the ancestor check for "is commit X live" —
+full recipe tracked as a `unified-trading-pm/agents/review.md` doc fix in
+`plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`.
+
 ### Convergence + conflict-resolution model (the LDR ↔ reconciliation loop)
 
 - **LDR = the fast live integration axis** — agents commit here (tab→LDR), allowed to be _temporarily inconsistent_; no

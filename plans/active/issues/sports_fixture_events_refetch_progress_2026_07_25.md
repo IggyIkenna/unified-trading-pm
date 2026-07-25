@@ -128,7 +128,73 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       2019-01-03→2019-12-24 between two checks ~6min apart, monotonic, no error/stall signature. Not completable this
       turn (genuinely hours from done, 2019→2026-07-25 range). Released via `/skip-current-task`, not
       duplicate-launched. Next dispatch: repeat this health-check; once terminal (`exit_code=0`/`DEPLOYMENT_COMPLETED`,
-      self-deleted), re-run the census script per "Next action" above before flipping this checkbox.
+      self-deleted), re-run the census script per "Next action" above before flipping this checkbox. — **Health-checked
+      2026-07-25T05:10Z (slot 3, data_engineering), still RUNNING**: `gcloud compute instances list` confirms `RUNNING`
+      in `asia-northeast1-c`; run.log timestamps continuous up to 05:09:45 (30s before check, live process, not
+      stalled); 359 distinct `date=` markers seen since the 03:22:53 launch, currently on `2019-12-25`. **Efficiency
+      finding, not blocking**: 2 of the 359 dates so far (`2019-12-24`, `2019-12-25`) hit a
+      "`Per-fixture GCS skip: no GCS fixtures for date=X — using 16765 recovery IDs directly`" fallback — when a date
+      has no GCS-cached fixture list, the script falls back to attempting ALL 16,765 recovery fixture IDs against that
+      single date instead of just the handful that actually played that day. `date=2019-12-24` alone took ~66min
+      (03:53:41→05:00:02) under this fallback vs. seconds for a normal date. At the observed ~0.6% fallback-date rate
+      this could add several hours across the full 2019→2026 range — real but not correctness-affecting (every real
+      fixture still gets fetched exactly once via the allowlist filter, just slower on affected dates); not something to
+      intervene on mid-run. Not completable this turn (2141 of ~2500 dates remain even ignoring further fallback hits).
+      Released via `/skip-current-task`, not duplicate-launched. Next dispatch: repeat this health-check (2-read
+      progress-metric check, not single-snapshot); once terminal, re-run the census script per "Next action" above
+      before flipping this checkbox. If the fallback-date rate turns out much higher than 0.6% over a longer observation
+      window, consider filing a separate perf follow-up issue doc for the launcher/enrichment script (out of scope for
+      this todo — do not fix mid-flight on a running prod VM). — **Health-checked 2026-07-25T05:29Z (slot 4,
+      data_engineering), still RUNNING**: `gcloud compute instances list` confirms `RUNNING` in `asia-northeast1-c`;
+      heartbeat blob `vm-heartbeat/af-backfill-20260725-032253.txt` Update Time `2026-07-25T05:30:01Z` (fresh, ~1min old
+      at check time); run.log last line `05:27:24Z` (~2min old), live per-fixture `Fetched N events for     fixture=X`
+      lines interleaved with the expected 429-rate-limit sleep/retry cycling — no error/stall signature. Distinct
+      `date=` count unchanged at 359 (still `2019-12-25`) since the 05:10Z check — confirmed this is the SAME known
+      fallback-date pattern (not a stall): `date=2019-12-25` hit
+      "`Per-fixture GCS skip: no GCS fixtures for     date=2019-12-25 — using 16765 recovery IDs directly`" at
+      `05:00:02Z`, ~30min into its own ~66min-per-fallback-date budget (matching `2019-12-24`'s measured 66min) —
+      genuine in-date progress (fixture fetches actively advancing within the date), just no NEW date boundary crossed
+      yet, exactly as the fallback-rate finding predicted. Not completable this turn (~2140 of ~2500 dates remain).
+      Released via `/skip-current-task`, not duplicate-launched. Next dispatch: repeat this health-check (2-read
+      progress-metric check — either a new `date=` boundary OR continued in-date fixture-fetch advance counts as live);
+      once terminal, re-run the census script per "Next action" above before flipping this checkbox. — **Health-checked
+      2026-07-25T05:37Z (slot 3, data_engineering), still RUNNING, confirms slot 4's 05:29Z check**: run.log grew
+      47,010→55,413 lines since the 05:10Z read, latest timestamp 05:37:48 (live); still the same `date=2019-12-25`
+      fallback (37min in of its ~66min budget), no stall. Released via `/skip-current-task` again, no new finding. —
+      **Health-checked 2026-07-25T05:53Z (slot 3, data_engineering), still RUNNING, new finding**: log growing (59,547
+      lines), heartbeat at 05:51:24Z (~2min old, live); still `date=2019-12-25` (359 distinct dates unchanged). **New**:
+      log now shows `429 Rate limited ... sleeping 60s to next minute` retries against
+      `v3.football.api-sports.io/fixtures/events` — API-Football rate-limiting has kicked in on this date's 16,765-
+      fixture fallback burst, which explains why `2019-12-25` is running noticeably longer than `2019-12-24`'s ~66min
+      (each 429 costs a 60s sleep on top of the normal per-fixture call). Not correctness-affecting (the client's own
+      retry/backoff handles it, per the `attempt 1/10` counter), but pushes the total ETA further out — worth knowing if
+      a future health-check sees this date still running well past 66min, that's the rate-limit cost accumulating, not a
+      new stall. Released via `/skip-current-task` again. — **Health-checked 2026-07-25T05:54Z (slot 12,
+      data_engineering), still RUNNING, confirms slot 3's concurrent 05:53Z check**: `gcloud compute instances list`
+      confirms `RUNNING` in `asia-northeast1-c`; heartbeat blob fresh (~14s old at check time); run.log grew
+      55,413→60,162 lines (+4,749) since the 05:37Z read, latest timestamp `05:53:49` (live per-fixture
+      `Fetched N events for fixture=X` lines); still `date=2019-12-25` (~74min into its own ~66min fallback-date budget
+      — consistent with slot 3's just-logged 429-rate-limit finding explaining the overrun, not a new stall), no
+      `DEPLOYMENT_COMPLETED`/`exit_code` terminal marker. Not completable this turn (still ~2140 of ~2500 dates remain).
+      Released via `/skip-current-task`, not duplicate-launched. Next dispatch: repeat this health-check (2-read
+      progress-metric check — either a new `date=` boundary OR continued in-date fixture-fetch advance counts as live);
+      once terminal, re-run the census script per "Next action" above before flipping this checkbox. — **Health-checked
+      2026-07-25T06:00Z (slot 4, data_engineering), still RUNNING, confirms recovery from the fallback-date stall**:
+      `gcloud compute instances list` confirms `RUNNING` in `asia-northeast1-c`; heartbeat blob update time
+      `2026-07-25T06:00:57Z` (~3s old at check time). Run log grew 59,547→65,126 lines since slot 3's 05:53Z read, and
+      **the date boundary finally advanced past the `2019-12-25` fallback** to `date=2020-02-21` (65 completed fixture
+      IDs via the normal GCS-based enrichment path, not the 16,765-ID fallback) — confirms the rate-limit-heavy fallback
+      date resolved on its own via the client's retry/backoff, exactly as the 05:53Z finding predicted, no intervention
+      needed. No error/stall signature. Not completable this turn (still early 2020 of the 2019→2026-07-25 range).
+      Released via `/skip-current-task`, not duplicate-launched. **Process note (not fixed, just flagged)**: this task
+      has now been redispatched to 6 different slots within ~1h42m (04:18/05:10/05:29/05:37/05:53/05:54/06:00Z — 7
+      checks) purely to re-confirm a VM known to run for hours — each dispatch is a full agent turn spent on a
+      health-check that adds little beyond "still alive". Worth the operator/main agent considering a longer minimum
+      re-dispatch gap (e.g. park via priority + a time-gated prerequisite per `RULES.md` § "Park a task") for this
+      specific todo until the VM is closer to terminal, rather than a fix I should make unilaterally as a dispatched
+      worker. Next dispatch: repeat this health-check (2-read progress-metric check — a new `date=` boundary OR
+      continued in-date fixture-fetch advance both count as live); once terminal, re-run the census script per "Next
+      action" above before flipping this checkbox.
 
 ## Codex SSOTs
 

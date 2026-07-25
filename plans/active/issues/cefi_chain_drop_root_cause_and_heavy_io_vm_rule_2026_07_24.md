@@ -388,7 +388,68 @@ A/B/C `cefi-late-renames` apply (Finding 8) if their dates fall in 2025-11-01..2
 full-range verification dry-run will confirm this empirically rather than requiring a separately-scoped run**; do not
 build one preemptively.
 
-## What's left (unchanged from the parent plan's last-known Deferred-work table, ~13:35Z revision)
+## Finding 10 (2026-07-25) — Range A/B/C applied (504,280 renamed, 1,333 dup-sources deleted); collision count GREW to
+
+1292 as a natural side-effect of the safe-majority apply, root-caused (not new/alarming); safe residual (~2,962) queued
+for a follow-up venue-scoped pass
+
+**Range A/B/C all completed successfully** on the `cefi-late-renames` VM category, drain-gated by the paused cron
+(Finding 7's discipline reused): Range A (`2025-11-03..2025-12-31`) 4,386 renamed/0 errors; Range B
+(`2026-01-04..2026-07-10`, the bulk) 499,119 renamed + 1,333 duplicate wire-sources deleted (content-identical except
+`instrument_id` — safely deleted, not renamed) + 10 transient-503 `copyTo` errors; Range C (`2026-07-12..2026-07-24`)
+765 renamed/0 errors. **All 10 Range B stragglers retried and confirmed renamed** (pre-verified
+source-present/target-absent for each, then re-invoked the real script's own `do_rename()` via a tiny scratchpad script
+— the SAME recovery pattern the 2026-07-23 KRAKEN-SPOT apply used for its own 6 stragglers). LIGHTER-ZKSYNC's
+separately-tracked backfill (item 6) is confirmed fully subsumed — no gap.
+
+**Fresh full-range verification dry-run** (`2025-11-01..2026-07-24`, post-apply): `would_rename=3646` remains — MORE
+than the 1114 originally queued, because Range A/B/C excluded the 6 known-colliding dates WHOLESALE (simplicity over
+precision), so every OTHER venue's safe renames on those same 6 days got skipped too, not just the truly-colliding ones.
+Per-venue:
+`EXTENDED-STARKNET: 704, LIGHTER-ZKSYNC: 177, ASTER: 60, BYBIT-SPOT: 1561, COINBASE-FUTURES: 520, DERIBIT: 276, HYPERLIQUID: 348`.
+**ASTER (60) and BYBIT-SPOT (1561) / COINBASE-FUTURES (520) are UNCHANGED from the very first pre-apply measurement** —
+their entire remaining population sits exactly on the 6 excluded dates, never touched.
+EXTENDED-STARKNET/LIGHTER-ZKSYNC/DERIBIT/HYPERLIQUID dropped substantially (most of their volume WAS outside the 6 dates
+and got applied).
+
+**STOP-ON-SURPRISE now reports 1292 (not 1114)** — `breakdown by venue: {HYPERLIQUID: 660, ASTER: 444, DERIBIT: 188}`.
+HYPERLIQUID/ASTER are **byte-identical to Finding 8's original measurement** (genuinely pre-existing, unaffected by this
+session's applies). **DERIBIT grew 10→188 — root-caused, not a new/independent problem**: it is the SAME mislabel
+pattern already flagged elsewhere in this exact run's own output
+(`MISLABEL... 26 source(s)... DERIBIT spot X_USDC/X_USDT in instrument_type=perpetual/`, "Needs a separate
+spot-partition move") — a raw DERIBIT `BTC_USDC` / `ETH_USDC` / `BNB_USDC` / `SOL_USDC` / `XRP_USDC` SPOT wire object
+sits (mis-catalogued) inside the `perpetual` partition and resolves to `DERIBIT:PERPETUAL:{SYM}-USDC@LIN`. On a date
+where NO genuine PERPETUAL canonical object of that name exists yet, the tool correctly leaves it honest-raw (the 26
+`mislabel_left_raw` count). **But on a date where Range A/B's OWN successful renames of the REAL PERPETUAL wire data
+just created that exact canonical target, the SAME mislabeled SPOT object now GENUINELY COLLIDES with it** (content
+differs — real PERPETUAL data vs. real SPOT data under one contested name) — a same-run-order artifact of applying the
+safe renames, not new corruption or moving data. Recurs in ~5-per-day clusters (the same 5 mislabeled symbols) across
+MANY dates spanning Nov 2025–Apr 2026 (log shows 16+ distinct dates in just the top-20 sample) — this will very likely
+grow a bit further as the SAFE remainder below lands (more PERPETUAL canonical targets get created, more latent SPOT
+mislabel collisions get exposed), and should be treated as an evolving-but-understood count, not a fixed one.
+
+**No action taken on the 1292** — same reasoning as Finding 8's queued question, now simply covering a fuller,
+better-understood population: the DERIBIT growth is **pre-existing catalogue mislabel debt** ("Needs a separate
+spot-partition move" — already named as its own fix in the script's own summary text, itself a live-served-data change
+appropriately out of this autonomous session's unsupervised scope), not a new decision to make. **The queued operator
+question from Finding 8 is UPDATED, not superseded**: same 3 options (leave as-is / investigate / operator rules), same
+recommendation (leave as-is for now), scope widened from "1114 on 6 dates" to "1292, dominated by HYPERLIQUID/ASTER's
+original 6-date pattern plus a recurring, mislabel-driven DERIBIT trickle across many more dates."
+
+**Safe residual identified and NOT yet applied**: `EXTENDED-STARKNET (704) + LIGHTER-ZKSYNC (177) + BYBIT-SPOT (1561)
+
+- COINBASE-FUTURES (520) =
+  2,962`renames belong to venues with ZERO collisions anywhere in the full scan — safe to apply via 4 sequential`--venue`-scoped `cefi-late-renames`runs over the FULL`2025-11-01..2026-07-24`
+  range (venue scoping fully isolates a run from other venues' collisions, so this sidesteps the whole "which of the 6
+  dates is safe" question cleanly). Next step, still under the same cron-pause drain gate.
+
+## What's left (current as of Finding 10, 2026-07-25 ~05:30Z — table below is STALE, see Finding 8/9/10 for current
+
+state: item 2b DONE via Range A/B/C 504,280 renamed; 2,962 safe renames still pending across EXTENDED-STARKNET/
+LIGHTER-ZKSYNC/BYBIT-SPOT/COINBASE-FUTURES, zero collision risk, NEXT STEP; collision residual grew 1114→1292,
+root-caused, still queued as BLOCKED-OPERATOR-DECISION; 2c DONE 2026-07-23 pre-session + recurrence-fix shipped;
+colon_wire NOT explicitly reconfirmed, check via loop-until-dry; line-cap on the parent plan is ALREADY RESOLVED,
+908/617 lines, no longer blocks archival)
 
 | #           | Item                                                              | State                                             | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ----------- | ----------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -409,10 +470,39 @@ remain operator-owned / out of `/autonomous` scope, unchanged.
 1. ~~Fix the DERIBIT chain-BUNDLE `underlying`-key gap~~ — **DONE, see Finding 5** (`instruments-service@654d694f`).
 2. ~~Surface C v2 apply~~ — **DONE, see Finding 7**. Applied on `e2-standard-16`, verified via a clean second dry-run,
    cron resumed + verified `ENABLED`.
-3. LATE colliding-venue renames, properly scoped this time (`--start-date` near the actual regression onset, not the
-   full 2019 corpus — the fresh 4-surface reverify from ~01:05Z today pinpoints 2025-12-15/2026-02-01/2026-05-01 as the
-   low-canonical-fraction dates).
-4. LIGHTER-ZKSYNC backfill.
-5. MID window + colon_wire + loop-until-dry.
-6. Final 4-surface re-proof + plan archival — including resolving the line-cap block on the parent (split/promote to
-   epic) so the archival ritual can actually write to it.
+3. ~~LATE colliding-venue renames (bulk)~~ — **DONE, see Finding 10** (504,280 renamed via Range A/B/C).
+4. ~~LIGHTER-ZKSYNC backfill~~ — **DONE, subsumed by item 3** (Finding 8/10).
+5. ~~MID window~~ — **DONE, see Finding 9** (already resolved 2026-07-23; recurrence-fix shipped this session,
+   `mtds@fd5cfc35`).
+6. **NEXT — 2,962-object safe residual**: 4 sequential `--venue`-scoped `cefi-late-renames` applies (EXTENDED-STARKNET
+   704 / LIGHTER-ZKSYNC 177 / BYBIT-SPOT 1561 / COINBASE-FUTURES 520) over `2025-11-01..2026-07-24` — zero collision
+   risk (none of these venues appear in the STOP-ON-SURPRISE breakdown). **MUST pause the cron first**
+   (`gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1`,
+   verify `PAUSED`), run all 4 sequentially (shared manifest, no CAS), resume + verify `ENABLED` after.
+7. colon_wire confirmation (NOT yet explicitly reconfirmed — check as part of the next full-range dry-run, don't assume
+   subsumed) + loop-until-dry (2 consecutive clean full-range verifier passes).
+8. Final 4-surface re-proof (`verify_cefi_canonical_4surface_2026_07_20.py`) + plan archival — the line-cap block on the
+   parent is ALREADY RESOLVED (908/617 lines, well under the 1000L cap), so archival's write step is unblocked.
+
+## Session paused 2026-07-25 ~05:30Z — operator-requested, host contention
+
+Operator asked (mid-session, direct chat instruction) to commit/push everything, launch no further VMs, and checkpoint
+via `/pre-compact` — reason given: too many concurrent agents on this shared host, slowing everything down. Confirmed
+independently: shipping Finding 10 alone took **6 attempts** before landing, hitting 5 DIFFERENT transient failures in a
+row (a doc-index-determinism test race against concurrent plan-file writes — twice, with different diffs each time; a
+corrupted `pandas` import mid-reinstall; a corrupted `pydantic` import mid-reinstall; a known/already-being-fixed
+`finalize-plan-coverage` regression; a `.git/index.lock` held by a live concurrent `git pull`+quickmerge process from
+another slot on this exact host) — landed via the sanctioned `plans/**` direct-push carve-out
+(`check_strict_quickmerge.py`'s `CARVE_PREFIX`) rather than a 7th quickmerge retry, once host load allowed a clean
+`git push`.
+
+**Exact state at pause**: cron `ENABLED` (verified directly — safe resting state, RESUMED after Range A/B/C, no drain in
+progress). No VMs running (verified via `gcloud compute instances list` — the last VM self-deleted after the final
+verification dry-run). All 4 touched repos (`instruments-service`, `market-tick-data-service`, `deployment-service`,
+`unified-trading-pm`) confirmed `ahead=0` against `origin/live-defi-rollout`.
+
+**Resume sequence** (next session, once host load allows): apply the 2b-safe-residual (pause cron → verify PAUSED → 4
+sequential venue-scoped applies → verify each → resume cron → verify ENABLED) → run the loop-until-dry full-range
+verifier (2 consecutive clean passes, confirming colon_wire's actual status along the way) → run
+`verify_cefi_canonical_4surface_2026_07_20.py` for the final done-state re-proof → archive this plan + its parent
+(line-cap already clear).

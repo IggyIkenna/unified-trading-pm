@@ -293,18 +293,24 @@ The shard→key-index round-robin (`get_key_index_for_shard`) collapses to index
 
 The allowlist + `assert_*` guards gate **Databento requests only** (the MTDS streaming fetch + the IS definition fetch).
 They do **not** delete stored data, do **not** touch the manifest / data-status, do **not** run inside the candle
-aggregator, and never execute on a non-Databento adapter. So **Barchart / Yahoo VIX `ohlcv_15m`** (a separate source) is
-fully unaffected: `ohlcv_15m` and `ohlcv_24h` remain registered TradFi `data_types`
-(`registry/market_data_categories.py`), existing 15m/24h parquets are not deleted, and the Barchart/Yahoo adapters never
-call the Databento allowlist. (Note: Databento doesn't even serve a 15m schema — `ohlcv-15m` would only raise if someone
-wrongly routed it through the Databento fetch path, which nothing does.)
+aggregator, and never execute on a non-Databento adapter. So **Yahoo VIX `ohlcv_15m`** (a separate source; **Barchart
+was RETIRED 2026-06-24** — see below, no longer a live adapter) is fully unaffected: `ohlcv_15m` and `ohlcv_24h` remain
+registered TradFi `data_types` (`registry/market_data_categories.py`), existing 15m/24h parquets are not deleted, and
+the Yahoo adapter never calls the Databento allowlist. (Note: Databento doesn't even serve a 15m schema — `ohlcv-15m`
+would only raise if someone wrongly routed it through the Databento fetch path, which nothing does.)
 
 ## VIX — futures vs the cash index (do not conflate)
 
+**⚠️→✅ CORRECTED 2026-07-25** — this section previously described Barchart as a live VIX 15m source; Barchart was
+RETIRED 2026-06-24 (operator ruling, plan-reconcile finding 375, §A2 B-queue — see
+`/plans/active/tradfi_massive_dual_source_2026_05_28.md` line 64) and is no longer wired anywhere. Ground-truth
+`SOURCE_PRIORITY` for `("tradfi", "ohlcv_15m")` is now `["databento", "massive", "yahoo"]` (was:
+`["databento", "yahoo", "barchart"]`).
+
 The CFE feed (`XCBF.PITCH` dataset) gives **VX futures** (the VIX futures curve). It does **NOT** provide the **VIX cash
-index** at 15m. The VIX 15m **index** gap remains Barchart-preload + Yahoo-rolling-60d + honest gap (see
-`registry/data_source_continuity.py` and the VIX 15m one-liner in CLAUDE.md). Adding CFE does **not** close that index
-gap; it adds the futures.
+index** at 15m. The VIX 15m **index** gap remains Yahoo-rolling-60d + honest gap (Barchart-preload is retired, no longer
+part of this picture; see `registry/data_source_continuity.py` and the VIX 15m one-liner in CLAUDE.md). Adding CFE does
+**not** close that index gap; it adds the futures.
 
 ## Source provenance is WRITE-STAMPED by the FETCHING adapter — SOURCE_PRIORITY is READ-time only (operator 2026-06-19)
 

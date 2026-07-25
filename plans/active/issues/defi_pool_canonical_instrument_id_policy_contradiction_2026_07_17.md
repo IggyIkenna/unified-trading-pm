@@ -14,7 +14,7 @@ summary:
   deliberately canonicalized the mirror SOURCE rather than blanket-copying the emitted id specifically to preserve the
   POOL contract the test pins. Filed per the findings-triage HARD RULE (SSOT contradiction = NOTIFY OPERATOR + issue
   doc). Needs a DeFi ruling on which policy is authoritative, then reconcile the losing side."
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -45,7 +45,7 @@ depends_on:
 source:
   "Discovered by the Phase -1 catalogue-defect fix (slot-3, 2026-07-17) for the CeFi canonical-completeness program;
   surfaced while deciding whether `canonical_instrument_id` could be blanket-mirrored onto the rebuilt `instrument_id`."
-resolved_by:
+resolved_by: instruments-service@c31d37c3, unified-api-contracts@e319864f
 ---
 
 # DeFi POOL rows: `canonical_instrument_id` policy contradiction
@@ -103,9 +103,18 @@ cefi gate closes without ruling on DeFi. **No cefi rows are POOL rows** — the 
 
 ## Todos
 
-- [ ] [BACKEND] P2. Trace `backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py`'s POOL code path — does it enforce
+- [x] [BACKEND] P2. Trace `backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py`'s POOL code path — does it enforce
       the docstring's "pool or not" invariant, or does it already carve POOL out (making this a docstring-only defect)?
-      (repo: instruments-service)
-- [ ] [BACKEND] P2. Apply the operator's ruling (default **A** if none given: test wins, fix the docstring), reconcile
+      (repo: instruments-service) — instruments-service@c31d37c3.
+- [x] [BACKEND] P2. Apply the operator's ruling (default **A** if none given: test wins, fix the docstring), reconcile
       the losing side, and add a single pinned test naming the authoritative policy so this cannot re-diverge. (repo:
-      instruments-service)
+      instruments-service) — instruments-service@c31d37c3, unified-api-contracts@e319864f.
+
+## RESOLVED (2026-07-25)
+
+Frontmatter flipped per the defi orphan-audit (2026-07-25). Both todos above closed by
+`defi_track01_per_instrument_and_canon_id_2026_07_24.md` (extracted verbatim from
+`defi_consolidated_closeout_2026_07_18.md`'s own Track 1 — CANON section for line-cap reasons), which cites this issue
+doc by filename: "✅ SHIPPED (Option A pinned) instruments-service@c31d37c3 + unified-api-contracts@e319864f. Backfill
+docstring POOL carve-out corrected + CODE-path-doesn't-converge-POOL verified + pinning test
+test_pool_rows_diverge_option_a_and_backfill_does_not_enforce_convergence."

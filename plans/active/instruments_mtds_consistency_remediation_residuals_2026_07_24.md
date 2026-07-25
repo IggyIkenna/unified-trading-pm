@@ -44,7 +44,7 @@ related:
 created: "2026-07-24"
 parent_epic: instruments_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -849,13 +849,13 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
 
       CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-                                                                                                  chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
-                                                                                                  even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
-                                                                                                  UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-                                                                                                  column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-                                                                                                  migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
-                                                                                                  canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
-                                                                                                  AG. — market-tick-data-service
+                                                                                                      chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+                                                                                                      even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
+                                                                                                      UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
+                                                                                                      column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+                                                                                                      migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+                                                                                                      canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
+                                                                                                      AG. — market-tick-data-service
 
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
