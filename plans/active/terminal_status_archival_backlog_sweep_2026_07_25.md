@@ -144,9 +144,10 @@ For the named doc:
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@0c21c56c2 (moved to plans/archive/issues/, banner added, no other corpus
       referrers; check_terminal_status_archived.py confirmed clean).
-- [ ] [INFRA] P2. Archive `plans/active/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@e31106704 (moved to plans/archive/issues/, banner added, no corpus referrers
+      to repoint; check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive
       `plans/active/issues/fixtures_schedule_atom_migration_partial_landing_regression_2026_07_24.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
