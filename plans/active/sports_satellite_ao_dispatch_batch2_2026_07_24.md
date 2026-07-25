@@ -832,6 +832,27 @@ source: >-
     meet the todo's own trigger condition, verified by a real census rather than assumed.
   - No code shipped (nothing needed migrating). No snapshot/delete executed (nothing found to snapshot or delete).
 
+- **2026-07-25 (slot 7, data_engineering) — League_id casing migration, step (3) MDPS `odds_horizon_bucket` reprocess —
+  LAUNCHED, running.** Picked up from `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`'s
+  ready-to-execute recipe. Re-verified tarball freshness first (the prep doc's own claim was already 40min stale):
+  `market-tick-data-service` and `unified-api-contracts` tarballs had drifted from local HEAD again — republished via
+  `deployment-service/scripts/vm/create-code-tarballs.sh` (no flags, default CORE_REPOS covers UAC/UTL/MTDS/
+  deployment-service), re-verified all 5 repos byte-exact via `gcloud storage cat .../code/<tarball>.manifest.json` vs
+  local `git rev-parse HEAD` (not the launcher's own `lc_verify_tarball_freshness`, which reads via `gsutil` and is
+  still blind per the credential-blocker doc's residual gap — it printed false "MISSING" warnings on launch despite the
+  manual gcloud-storage check confirming all 5 fresh seconds earlier; this is a known gap, not a new defect). Launched
+  the 4-way sharded split per the launcher's own docstring example: `mdps-sports-bucket-20260725-035949`
+  (2020-06-06→2021-12-31), `-040027` (2022-01-01→2023-06-30), `-040053` (2023-07-01→2024-12-31), `-040119`
+  (2025-01-01→2026-07-25), all `mode=force`, SPOT. Confirmed clean start on all 4 via SSH (`ps aux` shows the
+  `reprocess_sports_odds.py` worker live + `/tmp/vm-exec-*.log` streaming `LOSS_GUARD_PASS`/bucketed-row lines, no
+  tracebacks) — no fire-and-forget. Throughput ~25-30 days/min per shard against 546-574 days/shard → each shard ETA
+  well under 1hr, matching the launcher's <1hr sharded target. Monitoring to completion (EXIT_STATUS + failure-
+  signature watch armed); once all 4 report `DEPLOYMENT_COMPLETED`, will poll `_index/availability_index.parquet`'s
+  `odds_horizon_bucket` league_id distribution across ≥2 consolidator cycles before flipping this todo, per
+  `sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`'s lesson (a prior manifest write on this exact
+  migration silently reverted due to a TOCTOU race — do not declare done from the VM's own completion log alone).
+  `batch_footystats` copy+swap (16,970 objects, separate step) not yet started.
+
 ## Reconciliation
 
 Once a todo here ships, flip the corresponding checkbox in its named source doc, citing this plan's commit as evidence.
