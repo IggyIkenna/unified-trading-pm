@@ -51,6 +51,7 @@ jobs:
       alert: ${{ steps.poll.outputs.alert }}
       report: ${{ steps.poll.outputs.report }}
       dedup_key: ${{ steps.poll.outputs.dedup_key }}
+      recovered: ${{ steps.poll.outputs.recovered }}
     steps:
       # Secrets are not directly testable in `if:` without exposing them; map to env
       # in a probe step and emit presence flags so the auth steps can be skipped
@@ -103,9 +104,36 @@ jobs:
         if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
         uses: google-github-actions/setup-gcloud@v3
 
+      # Recovery detection (2026-07-25): this watcher only ever PAGES on a failure tick — there
+      # was no all-clear, so a repo could sit red for hours (or be fixed in 11 minutes) and Slack
+      # never said so, mirroring the exact gap ci-status-update.yml had before its own operator
+      # ruling 2026-07-18 ("the failure and the recovery should be recorded at all times"). This
+      # watcher is stateless across ticks (nothing it writes persists whether the LAST tick had a
+      # failure), so recovery needs an explicit marker — read the prior tick's alert state
+      # (best-effort; a missing/unreadable marker reads as "no prior alert", so a fresh watcher
+      # never fires a spurious recovery on its first-ever tick).
+      - name: Read previous tick's alert state
+        id: prev-state
+        if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
+        env:
+          CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET }}
+        run: |
+          set -euo pipefail
+          PREV_ALERT="false"
+          if [ -n "${CICD_EVENTS_BUCKET:-}" ]; then
+            if gsutil cp "gs://${CICD_EVENTS_BUCKET}/cicd/watchers/cloud-build-failure-watcher/state.json" /tmp/cb_prev_state.json 2>/dev/null; then
+              PREV_ALERT=$(python3 -c "import json; print(str(json.load(open('/tmp/cb_prev_state.json')).get('alert', False)).lower())" 2>/dev/null || echo "false")
+            fi
+          fi
+          echo "prev_alert=${PREV_ALERT}" >> "$GITHUB_OUTPUT"
+          echo "Previous tick alert state: ${PREV_ALERT}"
+
       - name: Poll recent Cloud Builds + classify failures
         id: poll
         if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
+        env:
+          PREV_ALERT: ${{ steps.prev-state.outputs.prev_alert }}
+          CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET }}
         run: |
           set -euo pipefail
 
@@ -262,15 +290,41 @@ jobs:
                   f"{len(builds)} recent build(s). All clear."
               )
 
+          # RECOVERED: last tick paged (prev_alert=true) and this tick has nothing (not failed).
+          # Steady-state (prev=false, now=false) and steady-red (prev=true, now=true, a DIFFERENT
+          # failure set) are NOT recoveries — the latter is still red, just a new dedup_key, and
+          # the existing `notify` job (gated on alert==true) already re-pages it correctly.
+          prev_alert = os.environ.get("PREV_ALERT", "false") == "true"
+          recovered = prev_alert and not failed
+
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
               fh.write(f"alert={'true' if failed else 'false'}\n")
               fh.write(f"count={len(failed)}\n")
               fh.write(f"silent={silent_count}\n")
               fh.write(f"dedup_key={dedup_key}\n")
+              fh.write(f"recovered={'true' if recovered else 'false'}\n")
               # Multiline report via a randomized heredoc delimiter (GitHub-recommended).
               fh.write("report<<__CB_RPT__\n")
               fh.write(report + "\n")
               fh.write("__CB_RPT__\n")
+
+          # Persist THIS tick's alert state for the NEXT tick's recovery check. Best-effort:
+          # `state.json` staying stale just means the next tick's recovery detection degrades to
+          # "no prior alert" (never a spurious recovery, at worst a missed one) — it must never
+          # fail the watcher itself.
+          import subprocess
+
+          bucket = os.environ.get("CICD_EVENTS_BUCKET", "")
+          if bucket:
+              state = json.dumps({"alert": bool(failed), "silent_count": silent_count})
+              proc = subprocess.run(
+                  ["gsutil", "cp", "-", f"gs://{bucket}/cicd/watchers/cloud-build-failure-watcher/state.json"],
+                  input=state.encode(),
+                  capture_output=True,
+                  check=False,
+              )
+              if proc.returncode != 0:
+                  print(f"::warning::failed to persist watcher state: {proc.stderr.decode(errors='replace')}")
           PY
 
       - name: Job-log summary
@@ -281,6 +335,12 @@ jobs:
         run: |
           set -euo pipefail
           echo "::warning::cloud-build-failure-watcher: ${FAILED_COUNT} failed Cloud Build(s) in the last ${LOOKBACK_MINUTES}m (${SILENT_COUNT} silent config-rejection(s)) — see the job above"
+
+      - name: Job-log summary (recovery)
+        if: steps.poll.outputs.recovered == 'true'
+        run: |
+          set -euo pipefail
+          echo "::notice::cloud-build-failure-watcher: all failing Cloud Builds from the prior tick have cleared — no failures this tick"
 
   # ── SLACK NOTIFY (via the shared carrier) ────────────────────────────────────
   # Routed through notify-slack.yml instead of the old inline `curl` (alert_quality_audit_2026_06_18):
@@ -302,4 +362,28 @@ jobs:
       # is suppressed, but a genuinely-new failure on the next tick still pages.
       dedup_key: ${{ needs.watch.outputs.dedup_key }}
       cooldown_min: 45
+    secrets: inherit
+
+  # ── SLACK RECOVERY NOTIFY (2026-07-25) ────────────────────────────────────────
+  # This watcher previously had NO all-clear path — `notify` above only fires on
+  # `alert == 'true'`, so a repo could sit red for hours or be fixed in one tick and Slack would
+  # never say either way. Same operator ruling as ci-status-update.yml (2026-07-18): "the failure
+  # and the recovery should be recorded at all times." Mutually exclusive with `notify` above (a
+  # tick is either a failure tick, a recovery tick, or silent steady-state) so this never
+  # double-posts alongside it.
+  notify-recovery:
+    needs: watch
+    if: needs.watch.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ":white_check_mark: *cloud-build-failure-watcher: recovered* — no failed Cloud Builds this tick (prior
+        tick had\
+        \ failure(s)) — project central-element-323112"
+      severity: INFO
+      conclusion: success
+      workflow_name: cloud-build-failure-watcher
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Explicit recovery flag — the carrier's routine-green suppressor only posts an INFO/success
+      # message when `recovery: true` (same belt-and-suspenders as ci-status-update.yml's notify job).
+      recovery: true
     secrets: inherit

@@ -24,6 +24,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Every repo is now `dynamic = ["version"]` + hatch-vcs (source = "vcs") — a shallow
+          # checkout carries no tags, so `git describe` below would silently resolve to nothing.
+          fetch-depth: 0
 
       - name: Extract version and dispatch
         run: |
@@ -32,13 +36,14 @@ jobs:
           REPO="${{ github.event.repository.name }}"
           COMMIT_SHA="${{ github.sha }}"
 
-          # Extract version from pyproject.toml
-          VERSION=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml || echo "")
-
-          if [ -z "$VERSION" ]; then
-            echo "ERROR: Could not extract version from pyproject.toml"
-            exit 1
-          fi
+          # VERSION here is a best-effort HINT only — the receiver (PM's publish-package.yml)
+          # builds the actual wheel and republishes under the BUILT version, which is the one
+          # that's authoritative. A static `version = "X.Y.Z"` grep matches nothing under
+          # `dynamic = ["version"]` (every repo, since the hatch-vcs migration), so derive it
+          # the same way hatch-vcs does: from the nearest reachable tag. An unreachable tag
+          # (shallow history, no v* tag yet) must NOT block the dispatch — the receiver's own
+          # fetch-depth:0 checkout + fail-closed-on-0.0.0.dev0 guard is the real gate.
+          VERSION=$(git describe --tags --always --match 'v*' 2>/dev/null | sed 's/^v//' || echo "unknown")
 
           echo "Dispatching publish-package: repo=$REPO version=$VERSION sha=$COMMIT_SHA"
 

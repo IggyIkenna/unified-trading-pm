@@ -399,7 +399,34 @@ codex, or a future staging re-entry gets a dead pipeline.
 - [ ] [INFRA] P2. **Reconcile the ~4 weeks of missing tags.** NOTE: this is deliberately NOT a backfill of ~2,490
       intermediate releases — those artifacts never existed and inventing them would be fabrication. Each repo's first
       post-fix promotion mints ONE tag capturing current `main`; the gap stays a gap, correctly. This todo is only to
-      CONFIRM that happened for all 22, and to hand-mint for any repo whose promotion is idle.
+      CONFIRM that happened for all 22, and to hand-mint for any repo whose promotion is idle. **2026-07-25 partial
+      progress**: hand-minted + republished `unified-trading-library` and `unified-api-contracts` specifically (see the
+      two new checked items below) — these were the two actively blocking real production Cloud Build failures
+      (`instruments-service` and others could not resolve `unified-trading-library>=0.56.0`, a floor no published
+      version satisfied since 2026-06-27). The other ~20 stalled repos in the table above are still open; this todo item
+      itself stays unchecked.
+- [x] ✅ [INFRA] P1. **`publish-package.yml`'s per-repo DISPATCHER was never actually installed on the two frozen
+      library repos (2026-07-25 finding, sharpens the "dead listener" framing above)** — not merely un-rolled-out in the
+      abstract: `unified-trading-library/.github/workflows/publish-package.yml` was still the **pre-refactor "Publish to
+      GitHub Packages" workflow** (triggers on `push: tags: v*`, builds a wheel, uploads it as a GitHub Actions build
+      artifact — never touches Artifact Registry at all; a leftover from before this repo was renamed from
+      `unified-cloud-services`), and `unified-api-contracts` had **no `publish-package.yml` file whatsoever**. So even
+      with F2 fixed, neither repo would have dispatched anything. Separately, the CANONICAL propagation template itself
+      (`scripts/propagation/templates/publish-package.yml`) still had the same dead static-`version =` grep as
+      `reconcile_release_tags.py` — installing it as-is would have `exit 1`'d on every hatch-vcs repo. Fixed: the
+      template now derives a best-effort `git describe`-based version hint (the receiver's own build-the-wheel step is
+      the authoritative version regardless — this is only for the dispatch payload), installed on both repos.
+- [x] ✅ [INFRA] P1. **`unified-trading-library/cloudbuild.yaml` REGRESSION from the 2026-07-23 `:VERSION` Docker-tag
+      fix above — silently rejected every push-triggered build since** (2026-07-25 finding, separate from F2/F3). That
+      same commit's new comments referenced the bare shell variable as `$VERSION` (single `$`) instead of the
+      double-escaped `$$VERSION` every other reference in the file correctly uses. Cloud Build's substitution validator
+      does a RAW TEXT scan of the whole resolved build config — including comments — for `$IDENTIFIER` tokens, so a bare
+      `$VERSION` anywhere trips
+      `invalid value for 'build.substitutions': key in the template     "VERSION" is not a valid built-in substitution`
+      before a single build step runs (the `cloud-build-failure-watcher` "silent config-rejection" class — no repo/sha
+      substitutions, GitHub shows nothing). Confirmed via `gcloud builds list --filter=status=FAILURE`: recurring
+      roughly hourly since 2026-07-23T23:58, ~13+ instances. Fixed by escaping the 4 offending comment lines to
+      `$$VERSION`.
 - [ ] [INFRA] P1. **Stop re-pointing a released Docker tag at new content** (found by the F2 blast-radius probe): the
       UTL base image is rebuilt daily and re-tagged `0.55.0`/`latest`, so `0.55.0` names a different tree every day and
       rollback-by-version is undefined. Once tagging is fixed, each rebuild must get its own immutable version tag;

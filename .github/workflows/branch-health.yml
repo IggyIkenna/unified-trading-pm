@@ -168,6 +168,12 @@ jobs:
       concurrency_suffix: lag
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      # Was missing fleet-wide (incident 2026-07-25): an explicit `secrets:` block only forwards
+      # what's named here, so every one of this repo's notify-slack.yml callers that used this
+      # exact block silently ran the carrier's alert-ledger auth without a credential — fail-open
+      # (continue-on-error), so the Slack post itself still went out, but dedup + the GCS ledger
+      # (deployment-ui Alerts page) silently never ran.
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
   lag-notify-resolved:
     needs: lag-monitor
@@ -189,6 +195,12 @@ jobs:
       concurrency_suffix: lag-cleared
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      # Was missing fleet-wide (incident 2026-07-25): an explicit `secrets:` block only forwards
+      # what's named here, so every one of this repo's notify-slack.yml callers that used this
+      # exact block silently ran the carrier's alert-ledger auth without a credential — fail-open
+      # (continue-on-error), so the Slack post itself still went out, but dedup + the GCS ledger
+      # (deployment-ui Alerts page) silently never ran.
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
   # ── JOB 3: AR lag metric (G9a) ───────────────────────────────────────────────────────
   # Checks published-vs-required Artifact Registry lag: for each repo on main, asserts its
@@ -281,3 +293,9 @@ jobs:
       concurrency_suffix: ar-lag
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      # Was missing fleet-wide (incident 2026-07-25): an explicit `secrets:` block only forwards
+      # what's named here, so every one of this repo's notify-slack.yml callers that used this
+      # exact block silently ran the carrier's alert-ledger auth without a credential — fail-open
+      # (continue-on-error), so the Slack post itself still went out, but dedup + the GCS ledger
+      # (deployment-ui Alerts page) silently never ran.
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}

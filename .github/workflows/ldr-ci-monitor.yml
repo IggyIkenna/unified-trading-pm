@@ -93,3 +93,11 @@ jobs:
     secrets:
       # Dedicated #ci-failures incoming webhook (falls back to general if unset).
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      # GCP_SA_KEY was missing here (incident 2026-07-25): notify-slack.yml's alert-ledger
+      # auth step silently degrades fail-open without it (`continue-on-error: true`), so the
+      # Slack post itself still went out, but the read-back dedup gate + GCS alert-ledger
+      # persistence (deployment-ui's Alerts page) silently never ran for every ldr-ci-monitor
+      # alert — including this workflow's own RED→GREEN recovery posts. An explicit `secrets:`
+      # block (unlike `secrets: inherit`) only forwards what's named here, so this was a plain
+      # omission, not an intentional restriction.
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}

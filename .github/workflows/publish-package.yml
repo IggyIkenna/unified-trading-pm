@@ -91,7 +91,13 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v3
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY_PROD }}
+          # Was `secrets.GCP_SA_KEY_PROD` (2026-03-13, semver-rollout[bot]) — that secret was
+          # NEVER PROVISIONED in this repo (only GCP_SA_KEY + WORKLOAD_IDENTITY_PROVIDER exist,
+          # confirmed via `gh secret list`), so every dispatch through this workflow since its
+          # creation hit "must specify exactly one of workload_identity_provider or
+          # credentials_json" and failed before the checkout even ran. Found 2026-07-25 via a real
+          # `unified-trading-library` publish-package FAILED alert.
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3

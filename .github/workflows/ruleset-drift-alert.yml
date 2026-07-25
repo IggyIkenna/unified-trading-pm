@@ -77,3 +77,7 @@ jobs:
       cooldown_min: 120
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      # Was missing (incident 2026-07-25) — see branch-health.yml for the full incident note;
+      # this is the same fleet-wide omission (fail-open dedup/ledger degradation, Slack post
+      # itself was unaffected).
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}

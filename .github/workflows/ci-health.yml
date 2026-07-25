@@ -120,3 +120,7 @@ jobs:
     secrets:
       # Dedicated #ci-failures incoming webhook (falls back to general if unset).
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      # Was missing (incident 2026-07-25): degrades the carrier's dedup + GCS alert-ledger write
+      # fail-open (Slack post itself was unaffected) — see branch-health.yml for the full incident
+      # note; this is the same fleet-wide omission.
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
