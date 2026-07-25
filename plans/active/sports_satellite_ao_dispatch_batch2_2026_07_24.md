@@ -145,9 +145,16 @@ source: >-
       the codebase's own documented cutover is **~2023** (v3→v4 endpoint version), not ~2024 as this todo's text states
       — flagged for whoever eventually builds a cadence-derived check to confirm the correct date before relying on it.
       Source: `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
-- [ ] [DATA] P0. **Drop 2 out-of-universe numeric `league=` dirs** (`14231`/`315`), snapshot-first, twin/scope-verified.
-      (repo: instruments-service). **Done when**: both dirs are dropped (snapshot-first) or explicitly folded into the
-      curated-set residual-drop todo below's tracked scope. Source:
+- [x] ✅ [DATA] P0. **Drop 2 out-of-universe numeric `league=` dirs** (`14231`/`315`), snapshot-first,
+      twin/scope-verified. — instruments-service@2c4fa059. Live-reverified via `get_league_by_api_football_id()` that
+      neither id has a UAC registry entry (pure drop, no canonical twin possible). Scope was WIDER than the source doc's
+      "only 2 in 2025" claim — a bounded listing (day=2025-\* + day=2026-\* prefixes, not a whole-corpus walk) found 197
+      real GCS objects (175 in 2025, 22 more in 2026 the 2026-06-24 audit predates) and 166 stale
+      `_index/availability_index.parquet` rows. Deliberately excluded 2 bare `entity=injuries/injuries.parquet` fallback
+      objects that share other leagues' data (separate bare/legacy-layout todo, not this scope). Snapshot-first
+      throughout (GCS objects backed up to `sports_reference/_purge_backups/2026_07_25_drop_14231_315/`; manifest index
+      backed up via CAS-safe generation-preconditioned write). Applied in prod + verified twice: 0 remaining objects, 0
+      remaining manifest rows. (repo: instruments-service). Source:
       `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
 - [ ] [DATA] P0. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
       (XG_SHOTS 0% / XG 13% / PLAYER_STATS 21% / MATCHES 35% / INJURIES 37%), NOT a schema artifact. API-Football

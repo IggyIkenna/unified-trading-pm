@@ -182,8 +182,8 @@ satisfies every requirement:
       documents the per-league canonical hive partition + all 4 `SportsLayout` variants + `candidate_parquet_paths`.
       (`sports-adapter-dependency-order.md` still shows `entity=fixtures` shorthand without `league=` — minor, fold into
       the next sports-codex touch.)
-- [ ] [DATA] P0. **2 out-of-universe numeric `league=` dirs** (`14231`/`315`) — fold into the hybrid residual-drop (P2
-      below) or drop now (snapshot-first).
+- [x] ✅ [DATA] P0. **2 out-of-universe numeric `league=` dirs** (`14231`/`315`) — dropped now, snapshot-first. Full
+      resolution in `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s matching todo — instruments-service@2c4fa059.
 - [ ] [DATA] P0. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
       (XG_SHOTS 0% / XG 13% / PLAYER_STATS 21% / MATCHES 35% / INJURIES 37%), NOT a schema artifact. API-Football
       fixtures (fast, already 100%) → enrichment for the 94, fix broken, be thorough → re-measure toward 100%. Needs the
