@@ -320,3 +320,18 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   the 1000-line hard cap — the one-line path repoint pushes it to 1001 and `check_line_caps` hard-fails the commit.
   Reverted the repoint edit; left the stale `issues/...` relative reference un-fixed as a known, tracked gap rather than
   blocking this archival.
+- **2026-07-25 (slot-2): BLOCKED-OPERATOR-DECISION — todo
+  (`gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`) NOT archived.** Resolution itself checks out
+  (`resolved_by` cites `tradfi_manifest_canonicalisation_2026_06_01.md` E7
+  - `cefi_manifest_canonicalisation_2026_06_01.md` E2, both already archived at `plans/archive/2026_07/`, confirming
+    they ran to completion; recurrence-guard SHA `unified-trading-pm@5d6d398e4` reachable) — but the doc itself carries
+    `locked_by: live-defi-rollout` with no `[unlock-plan]` on record. Per CLAUDE.md's plan-locking HARD RULE, a locked
+    doc is never autonomous-archived. This is NOT a stray/boilerplate `locked_by` value on this particular doc — the
+    corpus already flags it as a PARKED, unanswered operator-decision item:
+    `canonical_closeout_open_questions_2026_07_18.md` § C. `/plan-reconcile` parked rulings, item **C1** — "archival of
+    `gcs_hive_partition_malformed_paths_remediation_ 2026_06_01.md` (terminal/superseded but
+    `locked_by: live-defi-rollout`) — locked plans are never autonomous-archived; needs `[unlock-plan]`. REC: unlock +
+    archive." No operator answer is recorded there yet. Leaving the checkbox unchecked and NOT archiving this session —
+    doing so would be the exact autonomous-unlock CLAUDE.md forbids. Next dispatch: check whether C1 has since been
+    answered in `canonical_closeout_open_questions_2026_07_18.md`; if yes and the answer is unlock+archive, proceed per
+    the normal Procedure; if still unanswered, this stays parked (not this sweep's call to make).
