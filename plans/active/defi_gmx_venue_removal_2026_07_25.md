@@ -135,11 +135,16 @@ changelog/docstring comment describing the historical removal itself (never insi
       this. Do this AFTER the code-removal todos above have landed (so nothing still tries to read GMX data mid-purge)
       -- operator judgment on exact timing, not machine-gated. Done-when: zero `venue=GMX` objects remain in the bucket,
       manifest shows zero rows for venue=gmx. (repo: market-tick-data-service)
-- [ ] [DOC] P2. **Update documentation referencing GMX** -- any codex docs, this plan's parent
+- [x] ✅ [DOC] P2. **Update documentation referencing GMX** -- any codex docs, this plan's parent
       (`defi_consolidated_closeout_2026_07_18.md`), and related issue docs that describe GMX as active/supported.
       Done-when: a grep across `codex/` + `plans/active/` for "GMX" shows only historical/changelog-style references
       (e.g. this plan itself, the root-cause issue doc), none describing it as a currently-supported venue. (repo:
-      unified-trading-pm)
+      unified-trading-pm) -- unified-trading-pm@bfda5df5b. Fanned out to 6 sub-agents covering 26 codex docs + 15
+      plans/active docs (40 files changed, 1 excluded: `instrument_id_format_canonicalization_2026_07_08.md` was already
+      1309L, over the 1000L hard cap pre-existing this change -- deferred, not shipped). Each mention was judged
+      CURRENTLY-ACTIVE (edited to a removal note) vs. HISTORICAL/dated (left unchanged to preserve the audit trail);
+      `defi_consolidated_closeout_2026_07_18.md` and the root-cause issue doc
+      (`issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md`) both received targeted annotations.
 
 ## Codex SSOTs
 
