@@ -157,7 +157,10 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       yet, exactly as the fallback-rate finding predicted. Not completable this turn (~2140 of ~2500 dates remain).
       Released via `/skip-current-task`, not duplicate-launched. Next dispatch: repeat this health-check (2-read
       progress-metric check — either a new `date=` boundary OR continued in-date fixture-fetch advance counts as live);
-      once terminal, re-run the census script per "Next action" above before flipping this checkbox.
+      once terminal, re-run the census script per "Next action" above before flipping this checkbox. — **Health-checked
+      2026-07-25T05:37Z (slot 3, data_engineering), still RUNNING, confirms slot 4's 05:29Z check**: run.log grew
+      47,010→55,413 lines since the 05:10Z read, latest timestamp 05:37:48 (live); still the same `date=2019-12-25`
+      fallback (37min in of its ~66min budget), no stall. Released via `/skip-current-task` again, no new finding.
 
 ## Codex SSOTs
 
