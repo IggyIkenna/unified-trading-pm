@@ -99,16 +99,50 @@ silently wrong.
 5. THEN steps 2 (backfill, ~6M API-Football calls over weeks per Directive A) and 3 (residual drop, snapshot-first) of
    the original 3-step todo.
 
+## What unblocks this (the specific missing input, not a vague "needs research")
+
+This todo is parked — not stalled — pending ONE of:
+
+- A **reliable per-country football-league-tier reference source** (e.g. a licensed/structured football-data provider's
+  league-hierarchy endpoint, Wikipedia's per-country league pyramid articles cross-checked against `leagues.parquet`'s
+  `api_football_id`s, or an operator-provided authoritative list) that can resolve "which division is genuinely
+  top-tier, which is the division below" for each of the 145 countries WITHOUT guessing from the catalog's bare `name`
+  field alone. The catalog's `name` field is NOT sufficient on its own — this session hit real, confirmed ambiguity even
+  on well-known competitions (see "Near-miss error classes" below).
+- OR an **operator-provided explicit country/league list** (sidesteps the research requirement entirely — the operator
+  names the leagues, the worker just resolves `api_football_id`s and ships).
+
+Whoever picks this up should NOT attempt per-country research from general/training knowledge alone and self-verify via
+spot-checks — that is exactly the pattern that produced 2 near-misses this session even with careful verification. Get
+the reliable source first.
+
+## Near-miss error classes this session hit (inherit this verification bar)
+
+1. **Data-matching / type bugs that silently produce false "new candidate" results.** `catalog['league_id']` is STRING
+   dtype; comparing it against a `set()` of INTEGER `api_football_id`s from `LEAGUE_REGISTRY` silently never matches —
+   every entry looks "not yet in registry" even when 100% are already present. Caught via a direct
+   `LEAGUE_REGISTRY.get(key)` lookup before writing any code, not by trusting the filtered candidate list. **Rule for
+   next session**: before adding ANY entry, do a direct membership check by `api_football_id` (not just by generated key
+   name) against the live registry.
+2. **Uncertain-competition-identity ambiguity that superficial keyword/name matching does not catch.** Two examples: (a)
+   a keyword filter for "continental majors" matched `Kings World Cup Nations` and `AGCFF Gulf Champions League` — both
+   excluded on inspection as not genuinely "major" despite passing the filter; (b) Switzerland's `Erste Liga Cup` and
+   Mexico's `Copa MX`/`Copa por México`/`Campeón de Campeones` all had real, unresolved ambiguity about which one is the
+   current/correct primary competition — excluded rather than guessed. **Rule for next session**: a name/keyword match
+   is a CANDIDATE, never a decision — every inclusion needs independent confirmation it's the genuinely correct,
+   current, primary competition for that country/tier.
+
 ## Todos
 
 - [ ] [DATA] P1. Resolve the domestic top+below+cup selection for the 145 uncovered catalog countries (real per-country
-      tier research, not fabricated) and add the corresponding `LeagueDefinition` entries to
+      tier research from a reliable source — see "What unblocks this" above — not fabricated, not guessed from
+      training-knowledge recall) and add the corresponding `LeagueDefinition` entries to
       `unified_api_contracts/canonical/domain/sports/league_data_other.py`'s `REFERENCE_LEAGUES` (or a new
       curated-universe-specific dict, worker's call), `in_mvp_scope=False` unless verified against real captured odds
-      data per this session's pattern. (repo: unified-api-contracts). **Done when**: every genuinely-selectable country
-      from Directive A/B's rules has its top league + division-below + domestic cup added, verified via
-      `_mvp_football_league_ids()` count staying at 96 (or intentionally moving, with evidence, if a league is confirmed
-      to belong in MVP scope), `quality-gates.sh` green.
+      data per this session's pattern. Apply both near-miss rules above at every step. (repo: unified-api-contracts).
+      **Done when**: every genuinely-selectable country from Directive A/B's rules has its top league + division-below +
+      domestic cup added, verified via `_mvp_football_league_ids()` count staying at 96 (or intentionally moving, with
+      evidence, if a league is confirmed to belong in MVP scope), `quality-gates.sh` green.
 - [ ] [DATA] P2. Once the domestic selection lands, run step 2 (curated-universe backfill, API-Football fixtures +
       enrichment 2019→, gated + honest-empty for no-enrichment leagues, burn budget per the resolved per-source caps)
       then step 3 (drop residual out-of-curated rows/objects, snapshot-first, twin-verified). (repo:
