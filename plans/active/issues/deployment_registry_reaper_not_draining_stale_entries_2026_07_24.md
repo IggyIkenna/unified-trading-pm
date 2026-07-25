@@ -258,7 +258,7 @@ flipping the checkbox.
       pre-fix 403-404 baseline. **Not resolved** — either the built container doesn't actually carry the UTL fix (the
       editable-path gap above), or the reap tick still isn't executing/completing for a different reason than diagnosed.
       New todo added below rather than re-asserting the fix worked without evidence.
-- [ ] [BACKEND] P0. **Determine why `active/` still hasn't moved (404, unchanged) despite
+- [x] ✅ [BACKEND] P0. **Determine why `active/` still hasn't moved (404, unchanged) despite
       `unified-trading-library@4773a3fd`'s parallelization fix being live on `main` for ~2.5h with zero
       `"Reaper: archived"` lines AND zero `_run_deployment_reaper` tracebacks (neither the old failure nor the expected
       new success signal appears in Cloud Logging).** Check, in order: (1) confirm the DEPLOYED CONTAINER's build
@@ -268,7 +268,60 @@ flipping the checkbox.
       content if possible. (2) If the container IS correct, confirm the reaper tick is being invoked AT ALL post-deploy
       (add a cheap one-time INFO log at tick start if none exists — the total silence of BOTH the old error and the new
       success line is itself suspicious). (3) Re-check `active/` vs live-VM count once resolved. (repo: deployment-api,
-      unified-trading-library)
+      unified-trading-library) — **ROOT-CAUSED 2026-07-25 (slot 3) via DIRECT IMAGE INSPECTION, not source-repo
+      content-diff** (the same false-confidence gap slot 10 flagged but nobody had yet directly checked):
+      `docker     pull`ed the LIVE revision's actual image (`uts-shared-deployment-api-00275-7zl`,
+      `sha256:1282490246ad38c7b9398ae09f1982351d3aea0837935c8e8b1b00c3421f42a6`), extracted
+      `unified_trading_library/deployment_registry.py` and both `gunicorn.conf.py` copies from inside it. Confirmed the
+      deployed `deployment_registry.py` has **NO `ThreadPoolExecutor`** — the UTL parallelization fix genuinely never
+      reached this image, even though `git show origin/main:...` (what every prior verification pass checked) has it.
+      Traced further: the triggering Cloud Build (`7b80517d...`, commit `2efbbcb` — which DOES contain the fix per
+      content-diff) produced this EXACT image digest, so the gap isn't a stale/skipped build — chasing that is now a
+      separate open question (see the new todo below), not needed to close THIS one. **The real, confirmed, and now
+      FIXED root cause for the other symptom (zero faulthandler dumps, zero "Reaper: archived" lines, zero "Started
+      background sync task" lines) is a wrong-file bug, unrelated to any build/cache mystery**: two `gunicorn.conf.py`
+      files existed in `deployment-api` — a repo-root one (`COPY`'d + loaded by BOTH `Dockerfile` and
+      `Dockerfile.dashboard` via `-c /app/gunicorn.conf.py`) and `deployment_api/gunicorn.conf.py` (a duplicate). The
+      two SIGABRT/leader-election fix commits (`1adf54b`, `7ba17e2`, both cited as "confirmed live" by prior sessions
+      via `git show origin/main:deployment_api/gunicorn.conf.py`) both edited the **`deployment_api/` copy — which
+      `deployment_api/gunicorn.conf.py`'s own unit test exercised (hence green `quality-gates.sh`), but which production
+      NEVER LOADS**. Extracted the root file from the SAME live image: it's the old stub — bare `pass` in `post_fork`,
+      no `post_worker_init` hook at all, so `faulthandler.enable()` never runs AND `worker_identity.set_worker_age()`
+      never runs, meaning `is_leader_worker()` (which defaults `True` when `_worker_age` is unset) returns `True` for
+      **every** worker, not one — every gunicorn worker has been redundantly running its own auto-sync/reaper loop this
+      whole time, contending on the same GCS locks. **Fixed**: `deployment-api@3fea307` — ported both hooks
+      (leader-election `post_fork` + faulthandler `post_worker_init`) into the ACTUAL root `gunicorn.conf.py` using
+      deferred (function-local, not module-level) imports of `deployment_api.settings`/`worker_identity` — a
+      module-level import in this file crashes gunicorn at config-load time (reproduced locally:
+      `BucketNamingError: GCP_PROJECT_ID is not set`, since config-load happens BEFORE `preload_app`'s own app import) —
+      this is exactly why the root file was originally written to read `PORT`/`WORKERS` straight from env instead of
+      importing settings. Deleted the dead `deployment_api/gunicorn.conf.py` duplicate + repointed its test at the real
+      file. **Runtime-verified end-to-end against a real local gunicorn boot** (not just unit tests): with `WORKERS=2`,
+      exactly one worker now logs `"Background auto-sync task started (leader     worker)"` and the other logs
+      `"...skipped (non-leader worker)"` (previously ALL workers would claim leadership); sent a real `SIGABRT` to a
+      running worker and it produced a full `Fatal Python error`/`Current thread` faulthandler dump before gunicorn
+      cleanly respawned a replacement worker (which itself correctly re-elected a new leader).
+      `bash scripts/quality-gates.sh` green (pytest + all steps, twice — once pre-commit dirty-tree, once post-commit
+      against the exact shipped SHA). Shipped via `quickmerge --agent --files`, landed on `live-defi-rollout` at
+      `deployment-api@3fea307c679d8c974dc68594555d4760524a4935`. **NOT yet re-verified against PROD `active/`
+      convergence** (needs a fresh Cloud Run deploy of this fix + several reap-tick intervals to observe — see new todo
+      below) and the SEPARATE "why did a build from a commit with the UTL fix produce an image without it" question is
+      also still open — both spun into a new todo rather than closing this one on an unverified assumption.
+- [ ] [BACKEND] P0. **Two follow-ups from the wrong-gunicorn-file root-cause fix (`deployment-api@3fea307`):** (1) Once
+      `3fea307` reaches a fresh Cloud Run deploy, re-verify via the SAME direct-image-extraction method used to find
+      this bug (NOT source-repo content-diff — grep the actual pulled/extracted image for `post_worker_init` in
+      `/app/gunicorn.conf.py`) that it's really live, then watch `gcloud logging read` for
+      `"Background auto-sync task     started (leader worker)"` appearing exactly ONCE per instance (not per-worker) and
+      `"[AUTO_SYNC] Reaper: archived"` appearing at all for the first time ever; re-measure `active/` object count vs
+      live-VM count after ≥2 reap-tick intervals (900s each). (2) SEPARATELY, root-cause why Cloud Build
+      `7b80517d-0457-44b7-9e59-b53076b9bbc9` (triggered from commit `2efbbcb`, which DOES contain
+      `unified-trading-library@4773a3fd`'s `ThreadPoolExecutor` fix per content-diff) produced image
+      `sha256:1282490246...` whose `unified_trading_library/deployment_registry.py` does NOT contain that fix — check
+      the Dockerfile's `FROM ...unified-trading-library@${BASE_IMAGE_DIGEST}` base-image pin (line ~45): if
+      `BASE_IMAGE_DIGEST` wasn't refreshed to a UTL base image built from `4773a3fd`, deployment-api's OWN fresh commit
+      wouldn't matter — the vendored UTL code comes from a SEPARATE, independently-tagged base image, not from
+      re-cloning UTL at deployment-api build time. This is a distinct, real gap from the gunicorn-file bug and needs its
+      own verification once found. (repo: deployment-api)
 
 - **2026-07-24 (slot-4, review)**: Re-ran the end-to-end verification per the todo above, against the freshly deployed
   `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build
