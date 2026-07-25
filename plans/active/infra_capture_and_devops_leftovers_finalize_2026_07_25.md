@@ -56,7 +56,7 @@ source: >-
 
 ## Todos
 
-- [ ] [DOC] P2. **Reconcile + archive `infra_capture_and_devops_leftovers_2026_07_06.md`.** Once the ASTER live
+- [x] ✅ [DOC] P2. **Reconcile + archive `infra_capture_and_devops_leftovers_2026_07_06.md`.** Once the ASTER live
       connector todo is `[x]`: (1) verify no other checkbox in the doc silently regressed (grep the doc for any `- [ ]`
       besides the 4 known `BLOCKED-*` items); (2) if the 4 `BLOCKED-*` items are still genuinely blocked
       (credentials/operator decision not yet resolved — re-check, don't assume), leave the doc `status: active` and do
@@ -96,4 +96,28 @@ source: >-
       `- [ ] 🚧     BLOCKED-PREREQUISITES`. No new diagnosis needed; releasing via `/skip-current-task` with
       `reason_code: GATED` this time (rather than a plain release) so the fleet-scoped dispatch cooldown
       (`ao_dispatch_cooldown_and_park_2026_07_20`) actually suppresses re-dispatch to any slot for a window, instead of
-      immediately re-offering this same not-yet-actionable task to the next slot that boots.
+      immediately re-offering this same not-yet-actionable task to the next slot that boots. — **✅ GATE NOW GENUINELY
+      MET, checked 2026-07-25 (slot 9)**: the parent's ASTER item no longer reads `BLOCKED-PREREQUISITES` — it was
+      re-resolved today to `- [ ] 🚧 BLOCKED-OPERATOR-DECISION` (`BLK-4f52080e`, main: HOLD, do not launch, pending the
+      still-active 2026-07-14 CeFi live-capture cost-control freeze `BLK-55d45a68`). `BLOCKED-OPERATOR-DECISION` IS in
+      `_NON_DISPATCHABLE_RE`'s intended closed set, so the parent genuinely has zero open non-blocked todos now — not a
+      dispatcher-bug artifact this time. Did the full reconciliation per the todo's own 4-step procedure: (1) grepped
+      the parent for every `- [ ]` — found exactly 5 (ASTER + the 4 known credential/operator items), no silent
+      regression. (2)/(3) Re-verified each of the 5, not assumed: **ASTER** — still genuinely blocked (operator hold
+      today, cited above). **pyth oracle `collect-oracle-prices`** — its `BLOCKED-CREDENTIALS` premise was STALE: the
+      launcher scaffold already exists twice (`launch-mtds-pyth-archive-backfill-vm.sh` +
+      `launch-mtds-pyth-lst-backfill-vm.sh`, both `VM_OPERATION=collect-oracle-prices`), the Pyth Hermes endpoint needs
+      no auth (`oracle_prices_handler.py` docstring: "Free, no auth required"), and the data_type is actively being
+      backfilled under `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part5_2026_07_24.md` — flipped `[x]`
+      on the parent with citation rather than spinning a duplicate todo, since the real work is already tracked
+      elsewhere. **MANTLE gas-fees RPC**, **Live ODDS quota**, **rate-limit probe VM** — all re-confirmed still
+      genuinely blocked as of today (evidence + citations added inline on the parent, most recently restated 2026-07-24
+      in sibling plans, no grant/sanction found). (4) Net: 1 of 5 parent items now `[x]`, 4 of 5 remain genuinely
+      blocked (not silently stale) — so per the todo's own step (2), the parent stays `status: active`, NOT archived;
+      the 6-step archival ritual does not fire yet. Also found + fixed an adjacent issue while in the doc: an accidental
+      duplicate finalize plan for the same parent
+      (`infra_capture_and_devops_leftovers_2026_07_06_finalize_2026_07_25.md`, `status: draft`, never dispatched) —
+      marked `status: superseded` + `superseded_by:` pointing here so a future doc-health sweep doesn't reactivate two
+      finalize plans for one parent. Evidence: `unified-trading-pm@<pending-sha>`. Done per this todo's own
+      done-definition: parent checkbox state now matches reality and is explicitly left `active` with a dated re-check
+      note — this finalize todo does not need to re-run until one of the 4 remaining blockers clears.

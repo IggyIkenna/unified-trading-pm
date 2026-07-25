@@ -187,16 +187,34 @@ source:
 
 ## Credential / operator-gated (visible, not auto-dispatched — scaffold + park)
 
-- [ ] [DATA] P1. **BLOCKED-CREDENTIALS — defi oracle/pyth `collect-oracle-prices` launcher.** No launcher for the
-      `collect-oracle-prices` data_type today. Build the launcher scaffold; the pyth Hermes endpoint may need a key →
-      credential ask [ack-pending]. Gate: launcher scaffold exists; status BLOCKED-CREDENTIALS until the key lands.
+- [x] ✅ [DATA] P1. **BLOCKED-CREDENTIALS premise was STALE — RESOLVED-AS-ALREADY-BUILT, checked 2026-07-25 (slot 9,
+      finalize task).** Re-verified rather than assumed: the `collect-oracle-prices` launcher scaffold this todo asks
+      for already exists TWICE (`deployment-service/scripts/vm/launch-mtds-pyth-archive-backfill-vm.sh` +
+      `launch-mtds-pyth-lst-backfill-vm.sh`, both `VM_OPERATION=collect-oracle-prices`, registered in
+      `deployment_service/vm_prefix_registry.py` + `launcher_registry.py`), routes through
+      `market_tick_data_service/cli/handlers/oracle_prices_handler.py`, and the `[ack-pending]` credential ask never
+      applied — the handler's own docstring states "Pyth Network price feeds — REST API (https://hermes.pyth.network/)
+      Free, no auth required." This data_type is not merely scaffolded but ACTIVELY being backfilled under a separate,
+      unrelated active plan (`plans/active/mvp_backfill_defi_onchain_v10_operational_log_part5_2026_07_24.md`,
+      `oracle_prices` `attempted_failed` count actively dropping across sessions through 2026-07-24 as of this check).
+      No further action needed here — this item duplicated already-in-flight work; tracking continues in the v10
+      operational log, not this doc.
 - [ ] [DATA] P1. **BLOCKED-CREDENTIALS — gas-fees MANTLE paid RPC.** gas-fees on MANTLE needs a paid RPC endpoint key (→
       Secret Manager) [ack-pending]. Build the adapter scaffold anyway. Gate: adapter scaffold ready;
-      BLOCKED-CREDENTIALS.
+      BLOCKED-CREDENTIALS. **RE-CONFIRMED STILL BLOCKED, checked 2026-07-25 (slot 9, finalize task)**: no Secret Manager
+      entry or key-grant evidence found; the ask is still open and most recently restated 2026-07-24 in
+      `plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md` and
+      `plans/active/data_completion_defi_2026_07_15.md`. Genuinely still credential-gated.
 - [ ] [DATA] P2. **BLOCKED-CREDENTIALS — Live ODDS quota + cheap second source.** The live ODDS quota decision + a cheap
-      second source [ack-pending]. Gate: quota decision documented; scaffold for the second source.
+      second source [ack-pending]. Gate: quota decision documented; scaffold for the second source. **RE-CONFIRMED STILL
+      BLOCKED, checked 2026-07-25 (slot 9, finalize task)**: still open, most recently restated 2026-07-24 in
+      `plans/active/sports_live_availability_and_source_latency_2026_07_24.md` (book set + quota tier undecided); no
+      operator answer recorded. Genuinely still operator-decision-gated.
 - [ ] [INFRA] P1. **BLOCKED-OPERATOR-DECISION — rate-limit probe VM.** Needs a disposable-IP VM (operator-gated). Gate:
-      probe design ready; awaits the operator's disposable-IP sanction.
+      probe design ready; awaits the operator's disposable-IP sanction. **RE-CONFIRMED STILL BLOCKED, checked 2026-07-25
+      (slot 9, finalize task)**: no sanction found; only restated in
+      `plans/active/instruments_completion_tracker_2026_07_06.md` and
+      `plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`. Genuinely still operator-decision-gated.
 - [x] ✅ [DATA] P1. **CLASSIFICATION ALREADY DECIDED — remaining scope is enumerator/data-status consistency** (was:
       "BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification (Lighter / Pacifica / Extended): are these
       cefi or a distinct on-chain-CLOB group? Operator classification call." — corrected 2026-07-14, doc-reconciliation
