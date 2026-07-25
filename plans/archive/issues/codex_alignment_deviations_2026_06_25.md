@@ -26,6 +26,9 @@ last_updated: 2026-07-25 # status flipped resolved -- body's own Verdict section
 
 # Codex Alignment Deviation Scan — 2026-06-25
 
+> **🟢 RESOLVED 2026-06-25 — ACKED-AS-INVALID** — verdict CLEAN, no action items (a completed one-off scan, not ongoing
+> work); archived per the terminal-status backlog sweep.
+
 Produced by `[AGENT] P1` in `plans/epics/plan_hygiene_master.md` Phase 4.
 
 **Scope**: all 42 active plans with `## Codex SSOTs` sections; 8 had open todos + codex refs (semantic risk surface).
