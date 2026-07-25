@@ -680,9 +680,43 @@ flipping the checkbox.
   **SHIPPED 2026-07-25T17:40Z (slot 5, same session): `deployment-api@2b70c03`** — `POST /api/internal/reap-tick`
   (`deployment_api/routes/_reap_scheduler.py`) + `REAP_SCHEDULER_INVOKER_SA` config field
   (`deployment_api_config.py`/`settings.py`) + wired directly on `app` in `main.py` (NOT under `_authenticated_router`).
-  `quality-gates.sh` green; landed on LDR, promote triggered. **Remaining before done-when is satisfiable**: (1) promote
-  to `main` + deploy (infra provisioning, not code); (2) `REAP_SCHEDULER_INVOKER_SA` must actually be SET on the
-  deployed Cloud Run service (currently empty — the endpoint fails closed with 503 until it's configured, by design) to
-  the invoking service account's email; (3) create the actual Cloud Scheduler job
-  (`gcloud scheduler jobs create http ... --oidc-service-account-email=<that same SA> --uri=<deployed URL>/api/internal/reap-tick`)
-  — none of this happened yet this session; (4) THEN the convergence re-verification.
+  `quality-gates.sh` green; landed on LDR, promote triggered. Merged (PR #382, `2026-07-25T17:51:04Z`), deployed to
+  `uts-shared-deployment-api-00281-t79` — and hitting it live surfaced something far more important than any remaining
+  infra step below.
+
+  **THE ACTUAL ROOT CAUSE, FOUND + FIXED 2026-07-25T18:05Z (slot 5, same session):** calling the new endpoint returned
+  HTTP 500. Reproduced locally against the SAME prod bucket
+  (`GCP_PROJECT_ID=central-element-323112 python3 -c "SyncService().reap_stale_deployments()"`) and got the full,
+  untruncated traceback (prod's Cloud Logging was chunking this exact multi-line traceback across separate log entries —
+  a genuinely separate minor observability gap, not chased further): `DeploymentsRegistry._read_true_exit_code`
+  (`unified_trading_library/deployment_registry.py:501`) does
+  `except (FileNotFoundError, KeyError, ValueError, OSError): return None` — a deliberate "never raises" try, written
+  and unit-tested against `InMemoryStorageClient` (the test fake), which correctly raises `FileNotFoundError` for a
+  missing key. **But the REAL storage client never raises `FileNotFoundError`** — `RealStorageClient.download_string` is
+  a bare passthrough to `blob.download_as_bytes()`, which raises `google.api_core.exceptions.NotFound` on a 404, a
+  completely different exception class the except clause never catches. **Every single VM whose `EXIT_STATUS` GCS blob
+  was never written or got cleaned up crashed the ENTIRE `reap_stale()` batch on this one line** — not a timing problem,
+  not CPU throttling, not the reap tick failing to fire (all three were live-verified as fine/innocent earlier this
+  session) — the reap simply never got past its first bad entry, ever, across every revision this whole investigation
+  touched. **Fixed**: `unified-trading-library@2649ffc6`, mirroring the exact string-name exception-type check idiom
+  already used elsewhere in this module family (`manifest_consolidator.py`) for the same real-vs-fake-client divergence,
+  rather than a hard `google.api_core` import. **Live-verified against prod immediately**: re-ran the same local repro
+  after the fix — it archived 5 real stale entries (`vm=canonical-migration-defi-relabel-...`,
+  `vm=canonical-migration-defi-per-instrument-...`, etc., all `reason=vm_not_running`) and
+  `gs://deployment-scripts-central-element-323112/deployments/active/` genuinely dropped **406 → 400** (measured via
+  `gcloud storage ls | wc -l` before/after). This is the first time in this entire multi-day issue that `active/` has
+  moved AT ALL. Shipped via `quickmerge --agent`, landed on LDR (`unified-trading-library@2aa25c8`) — **but
+  deployment-api consumes UTL via a local editable path (`pyproject.toml:67`, per this doc's own earlier finding), so
+  this fix needs the SAME base-image-digest propagation chain already exercised twice this session** (UTL promote to
+  `main` → fresh base image publishes → `digest-drift-sweep.yml` refreshes `deployment-api`'s pinned digest → rebuild →
+  redeploy) before the FIX reaches the actual serving container — triggered the promote, not yet re-verified end-to-end
+  as of this note. **Remaining before done-when is satisfiable**: (1) confirm the UTL fix's digest genuinely propagates
+  to a fresh deployment-api deploy (repeat the direct-image-extraction check this session already used twice); (2) SET
+  `REAP_SCHEDULER_INVOKER_SA` on the deployed Cloud Run service (currently empty — the endpoint fails closed with 503
+  until configured, by design) to the invoking SA's email —
+  `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (the service's own existing runtime identity) is
+  the natural, no-new-SA-needed choice; (3) create the actual Cloud Scheduler job
+  (`gcloud scheduler jobs create http ... --oidc-service-account-email=<that SA> --uri=<deployed URL>/api/internal/reap-tick`);
+  (4) THEN the final convergence re-verification — though given the fix is ALREADY proven live via the direct local
+  repro, a manual `gcloud storage ls .../active/ | wc -l` re-check after the fresh deploy alone may be sufficient
+  evidence, independent of whether the scheduler infra is fully wired up yet.
