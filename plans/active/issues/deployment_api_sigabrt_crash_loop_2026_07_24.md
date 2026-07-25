@@ -103,27 +103,56 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       the `run.googleapis.com%2Fstderr` stream around the next `Uncaught signal: 6` and check for a
       `Fatal Python     error`/`Current thread` faulthandler dump naming `deployment-api@6f6a389`'s `_compute_inventory`
       cold path — if so, the SIGABRT loop is resolved by that fix and the crash rate should visibly drop; if not, do not
-      re-guess — file a fresh evidence-backed BACKEND todo with the exact stuck call site. (repo: deployment-api) — **🟡
-      STILL NOT LIVE, re-checked 2026-07-25T04:41Z (slot 6, 29min after the 04:12Z check)**: no change — live revision
-      `uts-shared-deployment-api-00274-s9g` still runs image tag `273c951`
-      (`gcloud run services describe uts-shared-deployment-api --project=central-element-323112     --region=asia-northeast1`),
-      `git merge-base --is-ancestor 1adf54b origin/main` still fails. `1adf54b` sits 13 commits behind current
-      `origin/live-defi-rollout` tip (i.e. near the front of the unpromoted queue) but `origin/main` is now 221 commits
-      behind LDR total, and no `ldr-to-main-promote.yml` workflow exists IN THIS REPO
-      (`gh workflow list --repo IggyIkenna/deployment-api --all` — the promote PRs, e.g. `#372`-`#376`, are opened by a
-      fleet-level mechanism outside this repo, not a per-repo scheduled workflow, so there's nothing repo-local to
-      requeue/dispatch). **This precondition (promote reaching main → redeploy → several hours of live runtime → next
-      SIGABRT occurrence) genuinely cannot progress faster by re-dispatching this check more frequently** — this is the
-      SECOND consecutive dispatch (slot 2 → slot 6) to observe an unchanged external state ~29 min apart, because this
-      todo carries no time-based prereq/condition, so `PlanRegenLoop` re-offers it on every regen tick regardless of
-      elapsed wall-clock time. Flagging to main via chat (not self-editing `backlog.yaml` per RULES.md §4, which scopes
-      backlog tuning to main/operator): recommend gating this task on a several-hour cooldown or an explicit
-      `1adf54b-live` condition (flip GREEN once `git merge-base --is-ancestor 1adf54b origin/main` succeeds AND the live
-      Cloud Run revision's image tag changes) so it stops burning slot-dispatch cycles on a check that cannot possibly
-      yield new information yet. Released again, not stalled — do not re-attempt this specific log-read until either
-      that gate lands or a dispatch confirms `1adf54b` is genuinely live.
+      re-guess — file a fresh evidence-backed BACKEND todo with the exact stuck call site. (repo: deployment-api) — **🟢
+      ACTUALLY LIVE since 2026-07-25T02:51:26Z — slot 6's 04:41Z "STILL NOT LIVE" was a FALSE NEGATIVE (slot 10, review,
+      2026-07-25T05:25Z)**: the ancestor check (`git merge-base --is-ancestor 1adf54b origin/main`) fails forever
+      post-squash-merge — `main` only ever receives the synthetic `chore(promote)` squash commit, never the original LDR
+      SHA — so it was never valid evidence of absence. Correct method: content-diff.
+      `git show origin/main:deployment_api/gunicorn.conf.py | grep faulthandler` shows `faulthandler.enable()` present,
+      byte-identical to LDR's copy — the fix IS on `main`, squashed into PR #376 (`273c951`, merged `02:43:58Z`). Cloud
+      Run revision `uts-shared-deployment-api-00274-s9g` (the SAME revision slot 2/6 both inspected — its image tag just
+      never changed again because no NEWER promote has landed since) was built from that commit at
+      `2026-07-25T02:51:26Z`. **So the fix has been live ~2.5h, and the precondition IS met** — filed a standalone
+      methodology issue for the false-negative pattern itself:
+      [deployment_promote_squash_ancestry_false_negative_2026_07_25.md](deployment_promote_squash_ancestry_false_negative_2026_07_25.md).
+      **Read the actual next occurrence**: `gcloud logging read` on `run.googleapis.com%2Fvarlog%2Fsystem` shows one
+      post-deploy `Uncaught signal: 6` at `2026-07-25T04:27:19Z` (pid=29, tid=29). Pulled the
+      `run.googleapis.com%2Fstderr` stream for ±5min around it (`04:25:00Z`–`04:30:00Z`) — **zero entries**, and a 24h
+      stderr sweep shows the nearest entries are `01:03:36Z` (before the crash) and nothing after — **no faulthandler
+      dump appeared for this post-deploy crash**, despite `faulthandler.enable()` being confirmed present in the
+      deployed image's `post_fork` hook. Per this todo's own instruction ("if not, do not re-guess — file a fresh
+      evidence-backed BACKEND todo"), NOT closing this out — added todo below rather than guessing why the dump is
+      missing (candidates, unconfirmed: stderr log delivery drops on abrupt sandbox teardown; the sandbox's "Uncaught
+      signal" detector may fire on a path the Python-level handler never reaches; or this occurrence belongs to a
+      still-draining OLD-revision instance rather than `00274-s9g` — none verified). Not fully resolved.
+- [ ] [BACKEND] P1. Determine why the `2026-07-25T04:27:19Z` post-deploy SIGABRT produced no `faulthandler` dump on
+      `run.googleapis.com%2Fstderr` despite `deployment-api@1adf54b`'s `post_fork` `faulthandler.enable()` being
+      confirmed live in the deployed image since `02:51:26Z`. Check, in order: (1) confirm which revision/instance
+      actually owned pid=29 at that timestamp (rule out a still-draining pre-`00274-s9g` instance from the deploy
+      transition); (2) check whether Cloud Run's structured-logging agent can lose a buffered stderr write during an
+      abrupt SIGABRT teardown (vs. a graceful exit) — if so this may need `sys.stderr.flush()` or `os.fsync` immediately
+      after the dump, or the dump target may need to move to a file under `/tmp` (not the banned literal path — resolve
+      via config) flushed synchronously; (3) re-check the NEXT occurrence once ruled out. (repo: deployment-api)
+- [ ] [REVIEW] P2. Once the above BACKEND todo ships (or a subsequent SIGABRT does show a dump), read it and report the
+      stuck call site per this issue's original ask — confirm/refute the `_compute_inventory` cold-path hypothesis from
+      the sibling `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` Gap-2 finding. (repo:
+      deployment-api)
 
 ## Progress Log
+
+- **2026-07-25T05:25Z (slot 10, review)** — Corrected the false "STILL NOT LIVE" verdict from slots 2/6/10's own earlier
+  check this session: `deployment-api@1adf54b` HAS been live since `2026-07-25T02:51:26Z` (revision
+  `uts-shared-deployment-api-00274-s9g`, built from squash-merged PR #376 / `273c951`) — the repeated
+  `git merge-base --is-ancestor 1adf54b origin/main` check is structurally incapable of returning true after a
+  squash-merge promote (verified via content-diff instead: `faulthandler.enable()` is present in `origin/main`'s
+  `gunicorn.conf.py`, byte-identical to LDR). Filed the systemic verification-methodology bug as its own issue:
+  [deployment_promote_squash_ancestry_false_negative_2026_07_25.md](deployment_promote_squash_ancestry_false_negative_2026_07_25.md).
+  With the precondition now confirmed met, read the actual next SIGABRT occurrence (`04:27:19Z`, post-deploy) — no
+  faulthandler dump appeared on stderr for it (24h stderr sweep shows nothing between `01:03:36Z` and now). Per the
+  todo's own instruction, did NOT re-guess a root cause — filed a fresh evidence-backed `[BACKEND]` todo above for why
+  the dump is missing, plus a follow-on `[REVIEW]` todo to read the dump once it does appear. Checkbox left unchecked —
+  the diagnostic question ("what's the stuck call site") remains genuinely open, just for a new reason (missing
+  evidence, not an undeployed fix). No code shipped this entry (pure investigation + doc correction).
 
 - **2026-07-25T05:11Z (slot 10, review)** — Third consecutive dispatch (slot2→slot6→slot10) to re-check the same
   precondition. Zero change since slot 6's 04:41Z check (~30 min prior): live revision still

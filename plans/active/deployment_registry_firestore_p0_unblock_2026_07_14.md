@@ -261,21 +261,33 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       file) had no `cpu_pct`/etc. attributes, so `_vm_item()`'s new unconditional `entry.cpu_pct` read raised
       `AttributeError`. Fixed by adding the same 4 D.1-field 0.0 defaults to that fake class.
       `quality-gates.sh --no-fix` fresh green (not cached) on the corrected tree. deployment-api@96f5eb5.
-- [ ] [REVIEW] P2. Verify against the DEPLOYED API with REAL (non-mock) data — confirm the inline Resources column on
+- [x] ✅ [REVIEW] P2. Verify against the DEPLOYED API with REAL (non-mock) data — confirm the inline Resources column on
       `/deployments` shows a real cpu/mem/disk% for at least one live VM whose registry entry carries D.1 metrics, not
-      just the mock fixture and not just the detail popover. If it still shows `—` for every live VM once the backend
-      fix above ships, the next suspect is whether `HostMetricsSampler` is actually running on the CURRENTLY DEPLOYED VM
-      tarball — check that alongside Link 1's own tarball-content grep (amended above) rather than opening a fourth
-      investigation from scratch. — **🟡 NOT YET LIVE, checked 2026-07-25T04:50Z (slot 2)**: `deployment-api@96f5eb5`
-      (the backend fix this todo depends on) is NOT an ancestor of `origin/main` yet
-      (`git merge-base --is-ancestor 96f5eb5 origin/main` fails), and the live Cloud Run revision
-      (`uts-shared-deployment-api-00274-s9g`) still runs the pre-fix image tag `273c951` — same measured ground-truth
-      method as `deployment_api_sigabrt_crash_loop_2026_07_24.md`'s equivalent check earlier this session. Same
-      explanation applies: not stuck, this repo's LDR is running well ahead of `main` today from exceptionally heavy
-      concurrent-slot commit volume; the fix will be swept into a future automatic promote PR. Not completable this AO
-      turn — needs the deploy to land first. A future dispatch should re-check
-      `git merge-base --is-ancestor 96f5eb5 origin/main` + the live revision's image tag before re-attempting this
-      verification.
+      just the mock fixture and not just the detail popover. — **VERIFIED LIVE 2026-07-25T05:20Z (slot 10, review)**.
+      slot 2's 04:50Z "NOT YET LIVE" conclusion was a **false negative from a squash-merge verification bug**:
+      `git merge-base --is-ancestor 96f5eb5 origin/main` correctly reports NO (the ORIGINAL LDR commit SHA is never an
+      ancestor of `main` post-squash — `main` only ever gets the synthetic `chore(promote)` squash commit, e.g.
+      `273c951`), but that does NOT mean the CONTENT is absent. Confirmed by direct content diff instead of SHA ancestry
+      (per CLAUDE.md's own "verify by CONTENT... not squash-inflated ahead_by" rule, which this check had been missing):
+      `git show origin/main:deployment_api/routes/deployments_inventory.py | grep cpu_pct` shows `cpu_pct=entry.cpu_pct`
+      at line 823 — byte-identical to `origin/live-defi-rollout`'s copy — so the fix's content IS on `main`, deployed as
+      image `273c951` (revision `uts-shared-deployment-api-00274-s9g`, created `2026-07-25T02:51:26Z`, 7 min after PR
+      #376 squash-merged at `02:43:58Z` — same image tag slot 2 saw, but slot 2 assumed unchanged tag ⇒ pre-fix, when
+      actually it was already post-fix and just hadn't been superseded by a newer promote yet). Then hit the DEPLOYED
+      API for real (list-endpoint, not detail-popover) data:
+      `GET https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app/api/deployments/inventory?status=running` → 9
+      running VM items, 6 with non-null D.1 metrics, e.g. `canonical-migration-defi-marker-cleanup-20260724-182226`
+      (asset_group=defi, heartbeat_age=8s — fresh/live) showing
+      `cpu_pct=33.4, mem_pct=23.4, mem_slope=0.0444,     disk_pct=1.9`. This IS the list endpoint that backs the inline
+      `/deployments` Resources column (not `/deployments/{name}/detail`), so the todo's exact ask is met. (Note: the
+      very first hit against this endpoint returned `total=0` — the plan's own documented cold-cache/`_load_inventory`
+      COLD-path gap; a warm retry a few seconds later returned the real `total=2072` / `vm_count=1782` — not a
+      regression, matches the known gap already tracked elsewhere in this plan's Progress Log.) **Broader implication
+      flagged separately**: this same false-negative pattern (checking
+      `git merge-base --is-ancestor <pre-squash-sha> origin/main` instead of content) had ALSO produced 2 consecutive
+      false "not live" verdicts on the sibling `deployment_api_sigabrt_crash_loop_2026_07_24.md` todo (1adf54b) — see
+      that issue doc's Progress Log for the correction; filing a standalone methodology issue doc since it's a
+      fleet-wide verification-recipe bug, not scoped to either plan.
 
 ## Success criteria
 
@@ -287,6 +299,20 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-25T05:20Z (slot 10, review) — [REVIEW] P2 "Verify Resources column against DEPLOYED API" — VERIFIED LIVE,
+  corrects a false-negative from slot 2.** Re-dispatched after slot 2's 04:50Z "NOT YET LIVE" note. Rather than
+  re-running the same ancestor check, content-diffed `origin/main`'s `deployments_inventory.py` directly and found
+  `cpu_pct=entry.cpu_pct` (96f5eb5's fix) already present, byte-identical to LDR — so the promote-squash SHA mismatch
+  (`git merge-base --is-ancestor 96f5eb5 origin/main` fails, always will post-squash) was being misread as "not
+  promoted" when the CONTENT had, in fact, already landed via PR #376 (`273c951`, merged 02:43:58Z; Cloud Run revision
+  `uts-shared-deployment-api-00274-s9g` built from it at 02:51:26Z). Hit the live list endpoint
+  (`GET .../api/deployments/inventory?status=running`) directly — 6/9 running VMs carry real, non-null D.1 metrics
+  (sample: `canonical-migration-defi-marker-cleanup-20260724-182226`,
+  `cpu_pct=33.4/mem_pct=23.4/mem_slope=0.0444/ disk_pct=1.9`, heartbeat_age=8s). Flipped the checkbox. Full write-up in
+  the todo body above. No code changed (pure verification); filed
+  `issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md` for the broader methodology bug since it also
+  produced 2 false negatives on the sibling SIGABRT plan.
 
 - **2026-07-25 (slot 5, data_engineering) — [DATA] P1 "Enable dual-write on a SUBSET of the live fleet" — DONE, parity
   diff 2/2 PASS.** Picked up after slot 7's `[VERIFY]` positively proved the code path on one synthetic soak VM (0→1
