@@ -62,6 +62,7 @@ related:
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
 last_updated: "2026-07-24"
