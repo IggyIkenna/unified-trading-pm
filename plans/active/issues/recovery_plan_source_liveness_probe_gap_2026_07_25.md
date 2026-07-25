@@ -53,7 +53,7 @@ than trusting a plan's premise as of authoring time — is worth keeping as a na
 
 - [x] ✅ [DOC] P3. Add a one-line "live-probe the data source before writing the recovery/backfill script" step to
       `plans/active/task_template.md`'s recovery/backfill guidance, so it's a named habit rather than incidental. (repo:
-      unified-trading-pm) — unified-trading-pm@PENDING_SHA, added as finding N in §3 Todo format.
+      unified-trading-pm) — unified-trading-pm@11a15faa2, added as finding N in §3 Todo format.
 
 ## Codex SSOTs
 
