@@ -31,14 +31,7 @@ related:
 created: "2026-07-24"
 parent_epic: manifest_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
-  local-only # corrected 2026-07-25 (plan-reconcile): was `orchestrator-agent`, mismatched with
-  # `assigned_vm: NA` against task_template.md's two valid PAIRED tracks (LOCAL = NA+local-only,
-  # AO-DISPATCHED = planning+orchestrator-agent). Functionally inert either way — `assigned_vm: NA` alone already
-  # yields an empty owning-VM set in `_resolve_plan_vms` (agent-orchestrator/server/regen_backlog_from_plan.py),
-  # so this plan was never ingested — but corrected for internal consistency. Same mismatch recurs on 4 sibling
-  # 2026-07-24 fork plans (infra_ops_residual_migration_verification, sports_prelaunch_cf5_verify_residual,
-  # prediction_cqg_residual, defi_venue_lst_rates_residual) — out of this doc's scope, flagged separately.
+execution_scope: local-only
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 1
@@ -365,3 +358,19 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
   could-exist decision).
 - G1.run-full-history (extend bounded-window seed to full 2018→today): N/A — no migration, named successor is this same
   item (gated on operator review of the 190M index-size blow-up), still owned + open in this plan.
+
+## Progress Log
+
+- **2026-07-25**: `execution_scope` corrected `orchestrator-agent` → `local-only` to match `assigned_vm: NA`
+  (`task_template.md`'s two valid paired tracks: LOCAL = NA+local-only, AO-DISPATCHED = planning+orchestrator-agent).
+  Functionally inert either way — `assigned_vm: NA` alone already yields an empty owning-VM set in `_resolve_plan_vms`
+  (`agent-orchestrator/server/regen_backlog_from_plan.py`), so this plan was never ingested — corrected for internal
+  consistency. The same mismatch recurs on 4 sibling 2026-07-24 fork plans (`infra_ops_residual_migration_verification`,
+  `sports_prelaunch_cf5_verify_residual`, `prediction_cqg_residual`, `defi_venue_lst_rates_residual`), fixed in the same
+  pass. Also repaired a frontmatter YAML defect from the original 2026-07-25 fix attempt: the correction had been
+  written as a trailing multi-line comment directly under `execution_scope:` rather than replacing the value inline,
+  which this corpus's frontmatter parser folded into the scalar itself
+  (`execution_scope: 'orchestrator-agent local-only'`, an invalid enum value) — found via the corpus-wide
+  `check_frontmatter_schema.py` full sweep, confirmed via direct `docspec.parse_frontmatter()` inspection before fixing
+  (grep/`git show` alone showed the file as clean, since they don't fold multi-line YAML scalars the way the parser
+  does).

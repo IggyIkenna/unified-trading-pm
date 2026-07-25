@@ -31,7 +31,7 @@ related:
 created: "2026-07-24"
 parent_epic: manifest_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 3
