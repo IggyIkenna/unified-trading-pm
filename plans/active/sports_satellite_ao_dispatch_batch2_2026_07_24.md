@@ -179,15 +179,31 @@ source: >-
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
-- [ ] [SCRIPT] P0. **Fix `fixture_id=NULL` propagation in the odds_api backfill path** — golden window `trades` data has
-      all fixture_ids as NULL, which blocks per-fixture cluster validation entirely. Likely market-tick-data-service
+- [x] ✅ [SCRIPT] P0. **Fix `fixture_id=NULL` propagation in the odds_api backfill path** — golden window `trades` data
+      has all fixture_ids as NULL, which blocks per-fixture cluster validation entirely. Likely market-tick-data-service
       (`market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py` + `fixture_id_resolver.py`, which
       already has partial `af_fixture_id` join scaffolding) — NOT instruments-service despite the source doc's
       frontmatter; confirm exact ownership at execution time (grep both repos for the golden-window trades write path)
       before scoping. (repo: market-tick-data-service). **Done when**: golden-window (2025-09-01..2025-11-30) odds_api
       `trades` rows carry a non-NULL `fixture_id` (or the existing `af_fixture_id` join is confirmed to already satisfy
       this — either outcome is determinable); a regression test proves `fixture_id` is stamped on newly-captured trades
-      rows; `quality-gates.sh` green. Source: `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`.
+      rows; `quality-gates.sh` green. Source: `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`. — FIXED
+      2026-07-25 (slot 7, data_engineering): confirmed ownership is market-tick-data-service, not instruments-service
+      (instruments-service only owns the FIXTURES reference table `af_fixture_id_resolver.py` reads from — it has no
+      odds_api trades write path at all). Root cause: `_build_fixture_rows()` in `odds_api_adapter.py` correctly
+      resolves + stamps `af_fixture_id` on every row (this half already worked, with existing test coverage), but the
+      row dict never contained a key literally named `fixture_id` — only `af_fixture_id`. The actual write path,
+      `market_tick_data_service/engine/orchestrator/venue_fetch.py::_process_sports_venue_with_leagues()`, normalises
+      via `if "fixture_id" not in records_df.columns: records_df["fixture_id"] = ""` and then GROUPS shards by
+      `["bookmaker_key", "league_id", "fixture_id"]` — since odds_api rows never had that column, this branch always
+      fired, forcing every row's `fixture_id` to `""` and collapsing odds_api into league-level shards instead of
+      per-fixture ones (exactly the golden-window symptom; `opticodds_adapter.py` already does this correctly for
+      comparison). Fix: `_build_fixture_rows()` now also emits
+      `"fixture_id": str(af_fixture_id) if af_fixture_id is     not None else ""` alongside the existing
+      `af_fixture_id`, matching the string-shard-key convention `venue_fetch.py`/`opticodds_adapter.py` already use.
+      Extended `test_odds_api_fixture_id_join.py` with `fixture_id` assertions on all 4 existing test cases
+      (matched/unresolved/no-fixture-data/end-to-end via `download_batch()`) — 6/6 tests pass.
+      `quality-gates.sh --no-fix` green (fresh, not cached). — market-tick-data-service@3401c0ab.
 
 ### From `sports_odds_feature_naming_canonicalization_2026_07_21.md`
 
