@@ -47,6 +47,10 @@ resolved_by: unified-trading-pm@93ca33d
 
 # Squash-merge breaks naive SHA-ancestry "is it live" checks (2026-07-25)
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — `unified-trading-pm@93ca33d` (review.md content-diff recipe) +
+> `unified-trading-pm@1b6fdc147` (codex ancestor-check validity map) + a corpus sweep for other false-negative
+> instances; archived per the terminal-status backlog sweep.
+
 ## What I found
 
 Both `deployment_api_sigabrt_crash_loop_2026_07_24.md` and `deployment_registry_firestore_p0_unblock_2026_07_14.md`

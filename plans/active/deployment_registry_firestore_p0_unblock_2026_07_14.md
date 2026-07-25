@@ -311,8 +311,8 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
   (sample: `canonical-migration-defi-marker-cleanup-20260724-182226`,
   `cpu_pct=33.4/mem_pct=23.4/mem_slope=0.0444/ disk_pct=1.9`, heartbeat_age=8s). Flipped the checkbox. Full write-up in
   the todo body above. No code changed (pure verification); filed
-  `issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md` for the broader methodology bug since it also
-  produced 2 false negatives on the sibling SIGABRT plan.
+  `plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md` for the broader methodology bug
+  since it also produced 2 false negatives on the sibling SIGABRT plan.
 
 - **2026-07-25 (slot 5, data_engineering) — [DATA] P1 "Enable dual-write on a SUBSET of the live fleet" — DONE, parity
   diff 2/2 PASS.** Picked up after slot 7's `[VERIFY]` positively proved the code path on one synthetic soak VM (0→1

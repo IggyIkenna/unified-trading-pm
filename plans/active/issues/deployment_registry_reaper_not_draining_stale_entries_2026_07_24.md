@@ -243,7 +243,7 @@ flipping the checkbox.
       review) — RE-VERIFIED, fix IS deployed but `active/` STILL has NOT converged.** Correcting this todo's own
       verification instruction: do NOT rely on `git merge-base --is-ancestor` alone — it fails FOREVER post-squash-merge
       regardless of whether the content shipped (full writeup:
-      [issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md](deployment_promote_squash_ancestry_false_negative_2026_07_25.md)).
+      [issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md](/plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md)).
       Content-diffed instead: `git show origin/main:unified_trading_library/deployment_registry.py` shows
       `ThreadPoolExecutor(max_workers=32)` present, byte-identical to LDR's copy — the fix's content genuinely reached
       `main`. Caveat found while checking: deployment-api consumes UTL via a **local editable path**

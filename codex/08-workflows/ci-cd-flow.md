@@ -160,7 +160,7 @@ path to `main`** until the next quickmerge opens a new one.
 > it silently returns `false` FOREVER after a squash-merge — the squash produces a NEW synthetic commit on `main` that
 > is never a descendant of the individual original commit in git's graph sense, even the instant the content lands. 3
 > review dispatches were burned on this false negative in one session
-> (`plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`) before it was traced back to
+> (`plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`) before it was traced back to
 > the promote mode. Checked every promote workflow's merge-arm step to answer "which repos are actually at risk":
 
 | Path                                                                                                                                                           | Merge strategy actually armed                                                                                                                                        | Is the ancestor check ever valid?                                                    |
@@ -179,7 +179,7 @@ merely "sometimes valid" there, not "always valid". **Always prefer the content-
 (`git show <branch>:<path> | grep <marker>`, compared byte-for-byte against LDR's copy, cross-referenced against the
 promote PR's `mergedAt` vs. the deployed artifact's build timestamp) over the ancestor check for "is commit X live" —
 full recipe tracked as a `unified-trading-pm/agents/review.md` doc fix in
-`plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`.
+`plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`.
 
 ### Convergence + conflict-resolution model (the LDR ↔ reconciliation loop)
 
