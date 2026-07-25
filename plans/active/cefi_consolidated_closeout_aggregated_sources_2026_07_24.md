@@ -100,7 +100,7 @@ drift_direction: advance-code
          (copy → verify → human-only purge).
   - [`plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`](/plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`](/plans/active/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md)
+  - [`plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`](/plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/issues/bug_c_normalize_id_collision_options_futures_2026_07_22.md`](/plans/active/issues/bug_c_normalize_id_collision_options_futures_2026_07_22.md)
     - **[BACKEND] P1.** Fix `_normalize_instrument_id_for_match` so OPTION/dated-FUTURE instrument_ids don't collide.

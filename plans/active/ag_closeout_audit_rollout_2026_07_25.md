@@ -215,7 +215,7 @@ source: >-
   independently-verified-done docs sitting un-archived — `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
   `plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`,
   `issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`,
-  `issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`,
+  `plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`,
   `issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`,
   `issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`,
   `issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md`), 9 `exclude_cross_cutting` (correctly caught — several

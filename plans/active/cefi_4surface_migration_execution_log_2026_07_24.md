@@ -553,7 +553,7 @@ this is instead a stale artifact of an already-documented, already-fixed 2026-07
 substantive economic-identity-field question (not a housekeeping timestamp) where a wrong call would silently merge two
 real distinct instruments, the workflow's implement/verify agents both explicitly declined to act on it and flagged it
 for operator review instead of guessing either direction. Filed as
-`plans/active/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md` — **operator sign-off
+`plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md` — **operator sign-off
 required before anyone builds that dedup rule.**
 
 ### DELTA — 2026-07-23 ~08:00Z (KRAKEN-SPOT apply: 2 safe near-misses, hardened, attempt 3 in flight; BYBIT dedup SHIPPED in parallel)
