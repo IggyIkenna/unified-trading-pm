@@ -15,7 +15,7 @@ summary: >-
   cloudbuild.yaml change is a YAML comment-only edit with zero Python surface, so it cannot be the cause either way —
   this is non-deterministic test-order pollution in the full xdist-parallel suite, most likely a shared/global
   `IS_TEST_RUN`-style flag leaking between tests depending on xdist worker assignment order.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -34,7 +34,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: market-tick-data-service@1dbdbb90
 ---
 
 # market-tick-data-service — flaky IS_TEST_RUN-adjacent test pollution
@@ -82,11 +82,11 @@ owner.
 
 ## Todos
 
-- [ ] [BACKEND] P2. Bisect and fix the test-order-dependent global-state leak causing
+- [x] ✅ [BACKEND] P2. Bisect and fix the test-order-dependent global-state leak causing
       `test_prediction_stays_prod_without_is_test_run` and
       `test_adapter_resolves_canonical_cefi_bucket_is_test_run_aware` to fail non-deterministically in the full xdist
       suite while passing in isolation. Add/verify test-isolation (autouse teardown fixture) at the leaking state's
-      source, not in the two victim tests. (repo: market-tick-data-service)
+      source, not in the two victim tests. (repo: market-tick-data-service) — market-tick-data-service@1dbdbb90
 
 ## 2026-07-25 re-verification (slot 6, cicd escalation agt-f5f1f6, repo-blocker RB-73d9075c)
 
@@ -113,7 +113,78 @@ Dispatched to resolve the `ldr_qg_failure` wall this issue produced. Findings, i
 5. Repo-blocker `RB-73d9075c` resolved; the underlying xdist/DEPLOYMENT_ENV cross-test leak itself is still NOT
    root-caused (mitigated twice over now: serial workers + a non-overridable pin) — the todo below stays open.
 
+## 2026-07-25 RESOLUTION (slot 8, backend_engineer) — actual root cause, not xdist/test-ordering at all
+
+**The whole xdist-worker-count / test-ordering investigation across this doc and its two siblings
+(`mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`,
+`mtds_deployment_env_race_survives_single_worker_2026_07_23.md`, 14+ occurrences over 2 days) was chasing the wrong
+mechanism.** The leak is not test-to-test pollution inside pytest at all — it is an ambient-env leak from
+`quickmerge.sh` itself into its own child-process re-gate.
+
+**Mechanism (confirmed via static read + reproduced locally, not inferred):**
+`unified-trading-pm/scripts/quickmerge.sh`'s STAGE 2 "ENVIRONMENT AUTO-DETECT" block (around line 1214) runs:
+
+```bash
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
+if [ -z "${ENVIRONMENT:-}" ]; then
+  if [ "$CURRENT_BRANCH" = "main" ] || [ "${PROD_FLAG:-false}" = "true" ]; then
+    export ENVIRONMENT="production"
+  else
+    export ENVIRONMENT="development"   # <-- every agent, every repo, every push: branch is live-defi-rollout, never main
+    ...
+```
+
+This `export` lives in quickmerge.sh's own bash process. Later in that SAME process, whenever the `--agent` fast-path's
+SHA sentinel is stale (HEAD moved since Pass-1 QG — e.g. a peer pushed, or the slot-cron 5-min FF-pull landed a real
+ancestor commit), quickmerge re-invokes `bash scripts/quality-gates.sh --no-fix` as a CHILD PROCESS of that same shell —
+which inherits `ENVIRONMENT=development`.
+`unified_trading_library.cloud_interface.bucket_naming._resolve_deployment_env_short` falls back to
+`os.environ.get("ENVIRONMENT")` when `DEPLOYMENT_ENV` is unset, mapping `"development"` → short form `"dev"` — exactly
+the `-dev-` bucket-tier leak observed in every single occurrence logged across all three docs
+(`market-data-tick-pred-dev-test-project` instead of `-prd-`).
+
+This exactly explains every previously-unexplained data point:
+
+- **Only fails on quickmerge's own re-gate, never a standalone `quality-gates.sh` run**: a bare shell never has
+  `ENVIRONMENT` exported.
+- **Non-deterministic even on an unchanged tree / even serially (`PYTEST_WORKERS=1`)**: it depends on whether the
+  `--agent` sentinel was stale at that moment (peer push / cron FF landing real content), not on pytest internals —
+  `PYTEST_WORKERS=1` was a coincidental no-op mitigation, unrelated to the actual mechanism.
+- **Correlated with quickmerge's cascade/pull step landing a real ancestor commit**: that is precisely what invalidates
+  the content-based sentinel and forces the re-gate branch to fire.
+- **Both prior test-level fixes (`monkeypatch.delenv("DEPLOYMENT_ENV", ...)`) were empirically falsified by quickmerge's
+  own re-gate**: they scrubbed the wrong variable. The actual ambient culprit is `ENVIRONMENT`, which neither fix ever
+  touched.
+
+**Reproduced locally, byte-for-byte:**
+
+```
+$ ENVIRONMENT=development .venv/bin/python -m pytest tests/unit/test_websocket_streaming_handler.py::TestResolveLiveBucketPrediction::test_prediction_stays_prod_without_is_test_run tests/market_interface/adapters/cefi/test_tardis_canonical_output.py::test_adapter_resolves_canonical_cefi_bucket_is_test_run_aware -p no:xdist -q
+AssertionError: market-data-tick-pred-dev-test-project    # identical to every prior occurrence's signature
+```
+
+**Fix shipped**: `market-tick-data-service@1dbdbb90` adds an autouse fixture to `tests/conftest.py` that
+`monkeypatch.delenv`s BOTH `DEPLOYMENT_ENV` and `ENVIRONMENT` before EVERY test (not just the two victims) — a global
+hermeticity baseline at the actual leaking state's source (the ambient process env quickmerge's own shell exports), not
+a per-test patch. A test that wants a specific tier still layers its own `monkeypatch.setenv` on top (verified:
+`test_prediction_universe_prod_catalogue_gating.py`'s `DEPLOYMENT_ENV` parametrized cases still pass unaffected).
+
+**Verified**: full `bash scripts/quality-gates.sh --no-fix` (`QG_SENTINEL_DISABLE=true`, genuine re-run, not cache-hit)
+with `ENVIRONMENT=development` injected (exactly reproducing quickmerge's own contamination) —
+`6901 passed, 17 skipped, 1 xpassed, 0 failed`, `147.98s`, `1/1 worker`. Also verified clean under a
+`DEPLOYMENT_ENV=dev` injection (the other half of the fallback chain) and clean under normal (uncontaminated)
+conditions.
+
+**Not fixed here (deliberately out of scope for this repo-scoped task)**: `quickmerge.sh`'s STAGE 2 branch-mode env
+auto-detect is a workspace-wide SSOT (`unified-trading-pm/scripts/quickmerge.sh`), used by every repo in the fleet for
+routing GCP project selection during shipping — changing ITS behavior has a much larger blast radius than this repo's
+test suite and was not this task's scope (`repos: [market-tick-data-service]`). Any OTHER repo whose test suite reads an
+ambient `ENVIRONMENT`/`DEPLOYMENT_ENV` fallback without its own test-level scrub is equally exposed to this same class
+of leak on its own quickmerge re-gate — worth a fleet-wide grep if this recurs elsewhere, flagged here rather than
+actioned (out of scope for this todo).
+
 ## Codex SSOTs
 
-No existing SSOT covers xdist test-order-pollution debugging for this repo specifically — out of scope to author one
-here; flagging as a possible follow-up if this recurs.
+No existing SSOT covers this class of quickmerge-shell-into-child-process env leak — worth a future SSOT note under
+`codex/08-workflows/ci-cd-flow.md` (quickmerge internals) if another repo hits the same class of leak; not authored here
+(out of scope for this repo-scoped fix).
