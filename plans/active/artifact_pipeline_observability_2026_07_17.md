@@ -635,7 +635,7 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       bulk per-object GCS operations against the `market-data-tick-{defi,cefi}-prd` buckets. This is legitimate,
       expected migration work — the cost is a side effect of GCS Data Access audit logging being enabled project-wide,
       not a bug in the migration itself. Filed at the operator's request:
-      `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md` — the exclusion-filter decision (touches
+      `plans/archive/2026_07/gcs_data_access_audit_log_cost_2026_07_24.md` — the exclusion-filter decision (touches
       logging/audit posture, not just cost) lives there now, routed to Ikenna (or the operator, Monday).
 
 ## Progress log
@@ -809,8 +809,8 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   new todo split out.** Walked the operator through every open decision and unclear item from the earlier audit; folded
   each answer into the plan rather than leaving them in chat:
   - **GCS Data Access cost finding → issue doc filed**, at the operator's explicit request "so Ikenna can pick this up":
-    `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md`. Operator: will route it to Ikenna, or pick it up
-    personally Monday.
+    `plans/archive/2026_07/gcs_data_access_audit_log_cost_2026_07_24.md`. Operator: will route it to Ikenna, or pick it
+    up personally Monday.
   - **"Default view = What's running" — DECIDED, not re-opened.** Operator: "keep this one" — confirms the original
     2026-07-17 lock stands; the remaining work is a mechanical `useState<TabId>` flip in `ArtifactPipeline.tsx`, no
     further decision needed. Phase 3 todo + Deferred-work table updated to reflect DECIDED rather than "re-decide with
@@ -939,7 +939,7 @@ ready whenever picked back up.
 | Tarball-bucket provider (Phase 3d) — Pipeline/Artifacts/Running tarball rows           | **Not started** — NEW 2026-07-24, confirmed structural gap (no provider ever read the GCS tarball-manifest bucket, in local OR prod, unrelated to today's IAM/logging bugs)                                                                                                                       | —                                      |
 | Phase 7 — prod-vs-local parity: root causes #1/#2/#3 (IAM/logging/buffering)           | ✅ **FIXED 2026-07-24** — `deployment-service@74306a1`, `deployment-api@f27a8f1`/`@6518e82` — but prod endpoint STILL empty on a fresh revision after all 3                                                                                                                                       | —                                      |
 | Phase 7 — CPU-throttling test (leading untested hypothesis for the still-open symptom) | **Paused 2026-07-24 — operator ask** ("let's check the locally running one first")                                                                                                                                                                                                                | operator resume                        |
-| GCS Data Access audit-log cost finding (Cloud Logging, ~151 GB/7d, MTDS buckets)       | ✅ **Issue doc FILED 2026-07-24** — `issues/gcs_data_access_audit_log_cost_2026_07_24.md`; operator to route to Ikenna (or pick up Monday)                                                                                                                                                        | Ikenna / operator                      |
+| GCS Data Access audit-log cost finding (Cloud Logging, ~151 GB/7d, MTDS buckets)       | ✅ **Issue doc FILED 2026-07-24** — `plans/archive/2026_07/gcs_data_access_audit_log_cost_2026_07_24.md`; operator to route to Ikenna (or pick up Monday)                                                                                                                                         | Ikenna / operator                      |
 | Whole-mock sign-off, all 5 tabs, tarball stamp scope                                   | ✅ **DONE 2026-07-21** — operator: "good to start … on all the tabs 1 to 5"; DO-NOT-START banner lifted (`pm@161200196`)                                                                                                                                                                          | —                                      |
 | Pipeline (builds) view — backend + live UI tab                                         | ✅ **DONE** — `deployment-api@8eda1f8`/`0a920c2`, `deployment-ui@47e6379`/`038038e`                                                                                                                                                                                                               | —                                      |
 | Deploy timeline view — backend + live UI tab                                           | ✅ **DONE 2026-07-23** — `deployment-api@72a0108`, `deployment-ui@797180c`                                                                                                                                                                                                                        | —                                      |
