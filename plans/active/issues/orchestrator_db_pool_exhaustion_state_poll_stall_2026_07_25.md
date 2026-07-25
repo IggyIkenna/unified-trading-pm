@@ -30,7 +30,7 @@ related:
   ]
 created: 2026-07-25
 last_updated: 2026-07-25
-priority: P2
+priority: P1
 parent_epic: orchestrator_master
 source: "main orchestrator (agt-52bb99) on-host diagnosis during poll loop, 2026-07-25 ~02:12"
 assigned_vm: NA
@@ -131,6 +131,34 @@ depends_on: []
   reload-triggered restart cleared #5 within ~1.5 min, so this was NOT the >10-min sustained-outage page trigger** — but
   the frequency and the fact that a fresh pool re-exhausts in single-digit minutes keeps BACKEND-P3 (right-size pool +
   batch/serialise per-slot git-status writes) the highest-leverage fix.
+- **#6 05:24:16Z — sixth occurrence; culprit call site now PINNED, and this window is the cleanest proof of
+  concurrency-over-pool (no leak).** Fresh process 3214408 (started 05:21:38, uptime ~2m40s) exhausted the pool at
+  05:24:16 **with NO intervening `WatchFiles` reload** — it simply ran ~2.5 min under normal ~16-slot git-status fan-in
+  and hit the 15-connection wall on its own. Main confirmed on-host: `/api/state` + `/api/poll` hung (HTTP 000 at 12s
+  AND 20s client timeouts) while `/health` (200, fresh-process healthy) and `/api/roles` (200, 0.026s) stayed up — the
+  heavy aggregating endpoint starves first. **Exact culprit pinned by the ASGI traceback:**
+  `server/routes/state.py:79 get_state → server/state_store/slots.py:78 list_slots` raises the
+  `QueuePool limit of size 5 overflow 10 reached … timeout 30.00` — `list_slots` (iterating all slots in the state
+  aggregation) is where the checkout blocks. **This narrows BACKEND-P1 (leak-vs-concurrency audit) to a verdict:** a
+  freshly-restarted process with an empty pool re-saturating in ~2.5 min under baseline load is **sustained concurrency
+  over the 15-conn ceiling, not a slow accumulating leak** (a leak would take far longer to fill a fresh pool). So
+  **BACKEND-P3 (raise `pool_size`/`max_overflow` to cover peak concurrent slot-git-status + poll fan-in, and/or batch/
+  serialise the per-slot git-status writes, and/or lower `pool_timeout` to fail-fast-loud instead of hanging 30s silent)
+  is the definitive fix, and BACKEND-P2's DB-aware readiness probe is the detection complement.** A managed restart is
+  NOT a fix here (it buys only ~2.5–4.5 min). **Client-timeout gotcha for future diagnosis:** a 12s client timeout is
+  SHORTER than the 30s server-side `pool_timeout`, so a starved probe returns 000 with NO journal error yet — wait for
+  the full 30s pool window before concluding "no error logged ≠ not pool-starved."
+- **⚠️ ESCALATION STATE (2026-07-25 ~05:24Z, main agt-52bb99):** the condition has crossed from
+  intermittent-self-clearing to **near-continuous** — SIX occurrences (02:0x → 04:29 → 05:07 → 05:12 → 05:20 → 05:24),
+  the last FOUR inside ~17 min, with a freshly-restarted pool re-exhausting in single-digit minutes every time. Each
+  window blinds the main-agent poll/blocked sweep and degrades AutoSpawn dispatch for the ~30s+ pool-timeout duration.
+  This is no longer a one-off self-clearing blip; it is a persistent fleet-degrading incident with a **known root cause
+  and a code-only fix that a restart cannot substitute for**. Main is charter-barred from restarting the service and
+  from shipping the code fix (routes via BACKEND-P3 / operator). Because the main-agent's own escalation channels (poll
+  `/reply`, blocked-queue answer) are themselves DB-backed and down during each window, **this issue doc is the operator
+  monitoring surface — recommend operator prioritise BACKEND-P3 (pool right-size + git-status write batching) now.** The
+  acute 05:24 window will self-clear on the next reload/request-drain, but the chronic condition will persist until the
+  code fix lands.
 - **Adjacent NEW bug surfaced in the #4 window (needs its own tracking, not the same root cause):** at 05:12:52
   `POST /api/plan-health/dispatch` returned `500` with
   `TypeError: can't subtract offset-naive and offset-aware datetimes` (a naive-vs-aware datetime subtraction on the
