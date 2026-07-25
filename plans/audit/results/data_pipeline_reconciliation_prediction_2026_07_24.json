@@ -1,0 +1,326 @@
+{
+  "doc_type": "audit-result-json",
+  "asset_group": "prediction",
+  "layer": "raw-tick",
+  "date": "2026-07-24",
+  "auditor": "/data-pipeline-reconciliation (dispatched sub-agent run)",
+  "prior_run": "plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md",
+  "scope": "PROD bucket market-data-tick-pred-prd-central-element-323112 only, read-only, raw-tick layer only (candles out of scope)",
+  "phase0": {
+    "bucket_resolution": {
+      "kind": "market-data-tick-prediction",
+      "asset_group_kwarg_passed": false,
+      "deployment_env": "prd",
+      "resolved_bucket": "market-data-tick-pred-prd-central-element-323112",
+      "reachable": true,
+      "top_level_prefixes": ["_index/", "_migration_backup/", "_vm_staging/", "processed_candles/", "raw_tick_data/"]
+    },
+    "index_freshness": {
+      "availability_index_updated_utc": "2026-07-25T00:26:41.861Z",
+      "num_rows": 761288,
+      "num_row_groups": 7,
+      "num_columns": 40,
+      "latest_json": {
+        "last_run_at": "2026-07-25T00:26:42.105014+00:00",
+        "success": true,
+        "verdict": "empty",
+        "incremental": true,
+        "no_op": true,
+        "shards_scanned": 1,
+        "rows_added": 0
+      },
+      "consolidator_lock_exists": false,
+      "consolidator_stall_state": { "streak": 0, "baseline_shards": 2 },
+      "phantom_audit_latest": {
+        "generated_at": "2026-07-13T15:14:37.314737+00:00",
+        "phantom_count": 2028,
+        "staleness_days_approx": 11.4
+      },
+      "reprobe_audit_latest": {
+        "generated_at": "2026-07-14T06:23:15.666965+00:00",
+        "new_empties": 0,
+        "disagreements": 0,
+        "ambiguous": 0,
+        "proven": 0,
+        "reclassified": 0
+      }
+    }
+  },
+  "manifest_distribution": {
+    "total_rows": 761288,
+    "capture_status": {
+      "empty_confirmed": 690799,
+      "captured": 67543,
+      "expected_unattempted": 2891,
+      "attempted_failed": 55
+    },
+    "venue": { "POLYMARKET": 583973, "KALSHI": 177315 },
+    "data_type": {
+      "book_snapshot_5": 397608,
+      "trades": 290589,
+      "prediction_canonical_question_group": 68334,
+      "prediction_trades": 2477,
+      "market_lifecycle": 2280
+    },
+    "instrument_type_column": {
+      "PREDICTION_MARKET": 751422,
+      "prediction_market": 9720,
+      "prediction": 76,
+      "blank": 70
+    },
+    "pipeline_mode": {
+      "batch_polymarket_clob": 709670,
+      "batch_kalshi": 30240,
+      "live_kalshi": 17867,
+      "batch_polymarket_gamma_api": 2280,
+      "live_polymarket_clob": 1231
+    },
+    "source": {
+      "polymarket_clob": 710901,
+      "kalshi": 48107,
+      "polymarket_gamma_api": 2280
+    },
+    "date_range": { "min": "2018-01-01", "max": "2026-07-24" }
+  },
+  "coverage": {
+    "formula": "captured / (captured + attempted_failed + expected_unattempted), empty_confirmed EXCLUDED",
+    "overall_pct": 95.82,
+    "overall_prior_run_pct": 94.63,
+    "is_lower_bound": true,
+    "per_venue_data_type": [
+      {
+        "venue": "KALSHI",
+        "data_type": "book_snapshot_5",
+        "captured": 12515,
+        "attempted_failed": 0,
+        "expected_unattempted": 0,
+        "empty_confirmed": 56852,
+        "reachable_coverage_pct": 100.0
+      },
+      {
+        "venue": "KALSHI",
+        "data_type": "market_lifecycle",
+        "captured": 0,
+        "attempted_failed": 0,
+        "expected_unattempted": 0,
+        "empty_confirmed": 1306,
+        "reachable_coverage_pct": null
+      },
+      {
+        "venue": "KALSHI",
+        "data_type": "prediction_canonical_question_group",
+        "captured": 10203,
+        "attempted_failed": 2,
+        "expected_unattempted": 819,
+        "empty_confirmed": 10913,
+        "reachable_coverage_pct": 92.55
+      },
+      {
+        "venue": "KALSHI",
+        "data_type": "trades",
+        "captured": 25385,
+        "attempted_failed": 50,
+        "expected_unattempted": 0,
+        "empty_confirmed": 59270,
+        "reachable_coverage_pct": 99.8
+      },
+      {
+        "venue": "POLYMARKET",
+        "data_type": "book_snapshot_5",
+        "captured": 1514,
+        "attempted_failed": 0,
+        "expected_unattempted": 0,
+        "empty_confirmed": 326727,
+        "reachable_coverage_pct": 100.0
+      },
+      {
+        "venue": "POLYMARKET",
+        "data_type": "market_lifecycle",
+        "captured": 0,
+        "attempted_failed": 0,
+        "expected_unattempted": 0,
+        "empty_confirmed": 974,
+        "reachable_coverage_pct": null
+      },
+      {
+        "venue": "POLYMARKET",
+        "data_type": "prediction_canonical_question_group",
+        "captured": 7291,
+        "attempted_failed": 2,
+        "expected_unattempted": 2072,
+        "empty_confirmed": 37032,
+        "reachable_coverage_pct": 77.85
+      },
+      {
+        "venue": "POLYMARKET",
+        "data_type": "prediction_trades",
+        "captured": 2477,
+        "attempted_failed": 0,
+        "expected_unattempted": 0,
+        "empty_confirmed": 0,
+        "reachable_coverage_pct": 100.0,
+        "note": "non-canonical data_type; coverage number not meaningful"
+      },
+      {
+        "venue": "POLYMARKET",
+        "data_type": "trades",
+        "captured": 8158,
+        "attempted_failed": 1,
+        "expected_unattempted": 0,
+        "empty_confirmed": 197725,
+        "reachable_coverage_pct": 99.99
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "carried_from": "2026-07-20",
+      "type": "taxonomy_gap_cross_ag_bleed",
+      "severity": "MEDIUM",
+      "surfaces": ["S3"],
+      "status": "not_reverified_this_run",
+      "summary": "asset_group=prediction rows physically present in instruments-store-sports-prd manifest",
+      "issue_doc": "plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md"
+    },
+    {
+      "id": "F2",
+      "carried_from": "2026-07-20",
+      "type": "taxonomy_gap_malformed_axis_value",
+      "severity": "LOW-MEDIUM",
+      "surfaces": ["S3"],
+      "status": "growing",
+      "summary": "instrument_type=prediction (76 rows, unchanged) + blank (70 rows, up from 30 on 2026-07-20)",
+      "delete_eligible": false
+    },
+    {
+      "id": "F3",
+      "carried_from": "2026-07-20",
+      "type": "stale_object",
+      "severity": "LOW",
+      "surfaces": ["S4"],
+      "status": "not_reverified_this_run",
+      "summary": "instruments-store-pred-prd prod/catalog.parquet vs stale prd/catalog.parquet shadow"
+    },
+    {
+      "id": "F4",
+      "carried_from": "2026-07-20",
+      "type": "catalogue_gap",
+      "severity": "MEDIUM",
+      "surfaces": ["S4"],
+      "status": "unchanged",
+      "summary": "MTDS _CATALOG_ASSET_GROUPS does not include prediction; no prediction_catalog_reader.py exists"
+    },
+    {
+      "id": "F5",
+      "carried_from": "2026-07-20",
+      "type": "non_canonical_path",
+      "severity": "MEDIUM",
+      "surfaces": ["S1"],
+      "status": "refined_this_run",
+      "summary": "build_prediction_partition_path has no pipeline_mode kwarg (claim not independently retested); this run found a DIFFERENT, non-latent set of non-canonical shapes (F6) that all carry pipeline_mode, contradicting the 'latent only' framing"
+    },
+    {
+      "id": "F6",
+      "new_this_run": true,
+      "type": "legacy_duplicate_candidate_plus_non_canonical_path",
+      "severity": "HIGH",
+      "surfaces": ["S1", "S2"],
+      "big_finding": true,
+      "issue_doc": "plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md",
+      "summary": "POLYMARKET raw-tick trade data exists content-verified-identical under >=4 structurally distinct GCS path shapes for one (day, venue) cell; UAC oracle returns CANONICAL (0 violations) for all shapes; legacy schema carries title/slug/eventSlug fields the canonical schema drops",
+      "sample_scope": "day=2025-04-11, venue=POLYMARKET, one condition_id content-verified, 79-condition_id directory sampled for the double-naming count",
+      "delete_eligible": false,
+      "disposition": "no-migrate-first"
+    },
+    {
+      "id": "F6a",
+      "new_this_run": true,
+      "type": "orphan_real_candidate",
+      "severity": "HIGH",
+      "surfaces": ["S3"],
+      "parent_finding": "F6",
+      "summary": "data_source=/market_category=/market_type=/resolution_period= path axes have NO corresponding column in availability_index.parquet (40 columns, verified) -- these objects cannot be represented by any S3 row under the current manifest schema",
+      "delete_eligible": false
+    },
+    {
+      "id": "F6b",
+      "alias": "F8",
+      "new_this_run": true,
+      "type": "non_canonical_axis_value",
+      "severity": "MEDIUM-HIGH",
+      "surfaces": ["S1", "S3"],
+      "summary": "manifest data_type=prediction_trades: 2477 rows, 100% captured, 100% blank instrument_id, schema_version=9 (current), most recent written_at=2026-07-23T05:11Z, 348 distinct dates, not in DATA_TYPES_BY_ASSET_GROUP['prediction'], not covered by any migration_pending suppression axis",
+      "delete_eligible": false,
+      "disposition": "no-migrate-first",
+      "not_suppressed_by": "none -- does not match C2a casing or defi LENDING (the two RULED migration_pending axes)"
+    },
+    {
+      "id": "F7",
+      "new_this_run": true,
+      "type": "non_canonical_id_form_candidate",
+      "severity": "MEDIUM",
+      "surfaces": ["S1", "S2"],
+      "parent_finding": "F6",
+      "summary": "canonical data_type=trades directory itself contains 100%-sampled (79/79) bare-vs-colon-prefixed double-named condition_id pairs (same class as the documented CeFi wire-named/double-wrapped hazard)",
+      "corpus_wide_extent": "unknown -- single-date sample only",
+      "delete_eligible": false,
+      "disposition": "unknown"
+    },
+    {
+      "id": "F9",
+      "new_this_run": true,
+      "type": "catalogue_gap_partial",
+      "severity": "MEDIUM",
+      "surfaces": ["S4"],
+      "refines": "F4 (a different, MTDS-side mechanism)",
+      "summary": "data-catalogue.instruments-service.yaml shard_status.PREDICTION lists only POLYMARKET (genesis 2025-03-14); KALSHI entirely absent despite 177315 real manifest rows since 2021-06-30 and is_mvp()=True for all (KALSHI, {trades,book_snapshot_5,prediction_canonical_question_group}) cells",
+      "register_patch_candidate": "add PREDICTION.KALSHI.start_date to data-catalogue.instruments-service.yaml (genesis date needs independent confirmation; 2021-06-30 is this run's measured earliest genuine captured row)"
+    }
+  ],
+  "migration_pending_axes_not_flagged": [
+    {
+      "axis": "C2a instrument_type COLUMN casing",
+      "measured_upper_pct": 98.7,
+      "measured_lower_pct": 1.28,
+      "ruling": "D1 2026-07-20, UPPERCASE target, migration_pending"
+    },
+    { "axis": "decision D defi LENDING keying", "applicable": false, "reason": "defi-only axis" }
+  ],
+  "suppressed_exception_counts": {
+    "AE-1": 0,
+    "AE-2": 0,
+    "AE-3": 0,
+    "AE-4": 0,
+    "AE-5": 0,
+    "AE-6": 0,
+    "pre_2020_honest_placeholder_rows": 5840
+  },
+  "delete_suggestions": {
+    "total": 0,
+    "above_unknown": 0,
+    "human_only_hard_stops_approached": 0
+  },
+  "orphans_assessed": false,
+  "coverage_gaps": [
+    "candles layer out of scope this dispatch",
+    "F6/F6a/F7 corpus-wide extent unmeasured (single-cell sample only, no Tier-2 walk)",
+    "F1 sports bleed not reverified",
+    "F3 catalogue shadow not reverified",
+    "F4 MTDS _CATALOG_ASSET_GROUPS not re-grepped fresh",
+    "F5 original narrow claim not retested",
+    "title/slug/eventSlug downstream-survival (F6 Q1) not checked",
+    "orphans not assessed (no walk)",
+    "writer/script identification for F6 legacy shapes deferred",
+    "features-pred / strategy-pred layers not touched",
+    "phantom/reprobe audits ~11-12 days stale relative to this report"
+  ],
+  "headline_verdict": {
+    "is_100pct_canonical": false,
+    "manifest_visible_non_canonical_lower_bound_pct": 0.325,
+    "manifest_visible_non_canonical_lower_bound_rows": 2477,
+    "manifest_visible_non_canonical_lower_bound_denominator": 761288,
+    "caveat": "structurally excludes F6a (manifest-schema-invisible objects) and F7 (double-naming inside the canonical directory, 100% on the one sample taken); true corpus-wide non-canonical fraction requires a Tier-2 SPOT-VM walk to state defensibly",
+    "oracle_says_canonical_for_all_sampled_non_canonical_shapes": true
+  }
+}
