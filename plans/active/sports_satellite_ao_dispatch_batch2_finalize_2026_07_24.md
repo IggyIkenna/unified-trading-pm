@@ -54,9 +54,10 @@ drift_direction: advance-code
 # Sports satellite AO batch 2 — finalize
 
 > **Machine-gated on `sports_satellite_ao_dispatch_batch2_2026_07_24.md`** (`depends_on` + `gate_on_depends: true`) —
-> the dispatcher will not queue any todo below until all 36 tasks in that plan are `done`. `sequential: true` because
-> todo 2 (deferred-gate follow-ups) needs todo 1's reconciliation done first (to know which source docs still have real
-> open work vs. are now fully closed), and todo 3 (archival) must run last.
+> the dispatcher will not queue any todo below until all 37 tasks in that plan are `done` (corrected 2026-07-25
+> plan-reconcile, was 36). `sequential: true` because todo 2 (deferred-gate follow-ups) needs todo 1's reconciliation
+> done first (to know which source docs still have real open work vs. are now fully closed), and todo 3 (archival) must
+> run last.
 
 ## Todos
 
