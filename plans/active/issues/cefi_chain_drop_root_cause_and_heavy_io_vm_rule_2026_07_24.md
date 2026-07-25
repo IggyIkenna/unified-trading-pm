@@ -39,6 +39,7 @@ code_refs:
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
     market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py,
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -348,16 +349,56 @@ honest-raw rather than guess" pattern (Finding 2).
 > 2b-residual, `assigned_vm: NA` (needs a human data-risk call, not dispatch-eligible per the plan-authoring rule on
 > open-ended judgment calls).
 
+## Finding 9 (2026-07-25) — "MID window" / KRAKEN-SPOT hive-segment: ALREADY resolved 2026-07-23 (stale item, not new work); write-time recurrence fix shipped anyway
+
+Before building a bespoke migration for "the 48+ KRAKEN-SPOT `ADA/USD.parquet`-style corrupt objects" (this session's
+dispatch item 5), checked `cefi_4surface_migration_execution_log_2026_07_24.md` for the exact mechanism — and found the
+item is **already closed**, just not reflected in the framing this session was dispatched with:
+
+- **`cefi_4surface_migration_execution_log_2026_07_24.md` item 1**: `~~KRAKEN-SPOT --apply~~` — **DONE 2026-07-23
+  ~15:40Z**: 155,872 auto-renamed + 1,157 stale duplicates deleted, all 6 transient-503 stragglers independently
+  verified canonical. **"KRAKEN-SPOT Surface A is genuinely, fully clean."**
+- **"MID window" is NOT a date range** — it's that same execution log's own label for a regex fix (Kraken
+  slash-tolerance parsing for `ATOM/USD`-style GCS-pseudo-dir paths the OLD resolver regex silently failed to parse)
+  that was a PREREQUISITE for the above apply to even discover those corrupt objects, not separate future work.
+- **Independently re-confirmed empirically before trusting the doc**: sampled 7 dates spanning the full corpus
+  (2025-06-01 through 2026-07-01, plus the exact 2026-05-01 the original 48-object finding cited) via a scoped
+  `gsutil ls` for any nested nested-directory nested-parquet shape under
+  `venue=KRAKEN-SPOT/instrument_type=*/data_type=*/` — **zero hive-segment-corrupt objects found on any sampled date**.
+  This session's own fresh LATE-window dry-run (Finding 8) independently corroborates it too: KRAKEN-SPOT does not
+  appear AT ALL in the `would_rename` per-venue breakdown (only `KRAKEN-FUTURES: 40884` does) — everything KRAKEN-SPOT
+  is already `already_canonical`.
+
+**No data migration needed — the historical corruption is gone.** What WAS still open: nothing was stopping the SAME
+class of bug recurring on a future write (the code-level cause, `tardis_shared.py`'s `build_partition_path` writing
+`file_stem` verbatim with no `/`-escaping, was never itself fixed — only its 2026-07-23 SYMPTOM was cleaned up). **Fixed
+forward**: `market-tick-data-service@fd5cfc35` ("fix(cefi): escape stray '/' in filename stem to prevent spurious
+hive-segment corruption") — wraps `file_stem` in the already-shipped `sanitize_file_stem` (2026-07-20, the sibling
+batch=live-divergence fix) at the one remaining unescaped call site, verified both that a slash-bearing raw wire stem
+(`"ADA/USD"`) no longer forges an extra path segment AND that a normal canonical colon-bearing stem
+(`"KRAKEN-SPOT:SPOT_PAIR:ADA-USD"`) survives byte-for-byte. Had to trim the accompanying comment twice to fit —
+`tardis_shared.py` sits EXACTLY at the 900-line file-size cap with zero headroom, so this net-zero-line-count discipline
+will bite the next person touching this file too.
+
+**Revised remaining scope for item 2c**: just `colon_wire` (~1,697 objects — historical LIVE-lane objects with a literal
+`:` in a non-fully-canonical wire form, per `issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md` §4) +
+the loop-until-dry re-verification. Given these are ordinary wire-form objects to Script 2 (colons vs. no colons doesn't
+change how it resolves them through the catalogue), they are very likely ALREADY being swept up by the in-flight Range
+A/B/C `cefi-late-renames` apply (Finding 8) if their dates fall in 2025-11-01..2026-07-24 — **the planned final
+full-range verification dry-run will confirm this empirically rather than requiring a separately-scoped run**; do not
+build one preemptively.
+
 ## What's left (unchanged from the parent plan's last-known Deferred-work table, ~13:35Z revision)
 
-| #           | Item                                                                                                   | State                                     | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ----------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2b          | LATE colliding-venue renames                                                                           | In progress (Finding 8)                   | Scope confirmed + fully characterized; safe majority (~507,851 objects) about to apply via 3 date-range passes excluding 6 known-colliding dates. LIGHTER-ZKSYNC (item 6) fully subsumed — closes with this.                                                                                                                                                                                                    |
-| 2b-residual | 1114 HYPERLIQUID/ASTER/DERIBIT genuine collisions on 6 dates                                           | **BLOCKED-OPERATOR-DECISION** (Finding 8) | Queued above — NOT blocking the rest of 2b. Default posture: leave both objects under current names (zero data loss) until the operator rules.                                                                                                                                                                                                                                                                  |
-| 2c          | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done                                  | Next after 2b                                                                                                                                                                                                                                                                                                                                                                                                   |
-| 3           | Surface C v2 manifest apply                                                                            | **DONE** (Finding 7)                      | Applied successfully on `cefi-dedup-apply` / `e2-standard-16`: `V2 APPLY COMPLETE + GATE GREEN`, chain-lossy=28 (`TOLERATED`, as predicted), 0 invariant violations. Verified via a clean second dry-run (chain-lossy=0, all markers already landed). Cron paused before / resumed + verified `ENABLED` after. See Finding 7 for the full record, incl. a second tarball-staleness near-miss caught pre-launch. |
-| 6           | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | **Subsumed by 2b** (Finding 8)            | 12,373 LIGHTER-ZKSYNC renames confirmed within the same LATE-window scope — no separate run needed                                                                                                                                                                                                                                                                                                              |
-| 9           | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet                        | Gated on 2b/2c/3/6 all landing                                                                                                                                                                                                                                                                                                                                                                                  |
+| #           | Item                                                              | State                                             | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----------- | ----------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2b          | LATE colliding-venue renames                                      | In progress (Finding 8)                           | Scope confirmed + fully characterized; safe majority (~507,851 objects) about to apply via 3 date-range passes excluding 6 known-colliding dates. LIGHTER-ZKSYNC (item 6) fully subsumed — closes with this.                                                                                                                                                                                                    |
+| 2b-residual | 1114 HYPERLIQUID/ASTER/DERIBIT genuine collisions on 6 dates      | **BLOCKED-OPERATOR-DECISION** (Finding 8)         | Queued above — NOT blocking the rest of 2b. Default posture: leave both objects under current names (zero data loss) until the operator rules.                                                                                                                                                                                                                                                                  |
+| 2c          | MID window (KRAKEN-SPOT hive-segment)                             | **DONE** (Finding 9, was already done 2026-07-23) | Historical corruption already migrated; write-time recurrence fix shipped `mtds@fd5cfc35`. No data migration needed.                                                                                                                                                                                                                                                                                            |
+| 2c-residual | colon_wire (~1,697 objects) + loop-until-dry                      | Pending final re-verification (Finding 9)         | Expected to already be subsumed by the in-flight Range A/B/C apply — confirm via the planned final full-range dry-run, don't build a separate run preemptively.                                                                                                                                                                                                                                                 |
+| 3           | Surface C v2 manifest apply                                       | **DONE** (Finding 7)                              | Applied successfully on `cefi-dedup-apply` / `e2-standard-16`: `V2 APPLY COMPLETE + GATE GREEN`, chain-lossy=28 (`TOLERATED`, as predicted), 0 invariant violations. Verified via a clean second dry-run (chain-lossy=0, all markers already landed). Cron paused before / resumed + verified `ENABLED` after. See Finding 7 for the full record, incl. a second tarball-staleness near-miss caught pre-launch. |
+| 6           | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects) | **Subsumed by 2b** (Finding 8)                    | 12,373 LIGHTER-ZKSYNC renames confirmed within the same LATE-window scope — no separate run needed                                                                                                                                                                                                                                                                                                              |
+| 9           | Final 4-surface done-state re-proof + plan archival               | Cannot be done yet                                | Gated on 2b/2c/3/6 all landing                                                                                                                                                                                                                                                                                                                                                                                  |
 
 Items 1 / 2a / 4 / 4b / 5 / 7c from the parent plan are DONE (unchanged, see the parent's own last-committed revision,
 commit `6cb36c9d2`, for that history). Item 7 (DERIBIT combo partition-move) and item 8 (`slot-cron-ff-pull.sh` audit)
