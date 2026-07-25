@@ -125,11 +125,11 @@ Add a bucket-scoping clause to `four-surface-reconciliation-procedure.md` §4.2 
 
 ## Todos
 
-- [ ] 1. [DOC] P2. Add the bucket-scoping clause above to `/codex/02-data/four-surface-reconciliation-procedure.md` §4.2
-      and §6 (repo: unified-trading-pm).
-- [ ] 2. [DOC] P2. Mirror the same clause into the `/data-pipeline-reconciliation` skill's own §3d sports hazard-table
-      row (`.claude/skills/data-pipeline-reconciliation/SKILL.md`) so a future dispatch does not repeat the same
-      wrong-playbook risk (repo: unified-trading-pm).
-- [ ] 3. [DOC] P3. Cross-link this issue and `sports_phantom_audits_reference_not_marketdata_2026_07_14.md` from
+- [x] ✅ 1. [DOC] P2. Add the bucket-scoping clause above to `/codex/02-data/four-surface-reconciliation-procedure.md`
+      §4.2 and §6 (repo: unified-trading-pm) — `pm@34de8774e`.
+- [x] ✅ 2. [DOC] P2. Mirror the same clause into the `/data-pipeline-reconciliation` skill's own §3d sports
+      hazard-table row (`.claude/skills/data-pipeline-reconciliation/SKILL.md`) so a future dispatch does not repeat the
+      same wrong-playbook risk (repo: unified-trading-pm) — `pm@34de8774e`.
+- [x] ✅ 3. [DOC] P3. Cross-link this issue and `sports_phantom_audits_reference_not_marketdata_2026_07_14.md` from
       `/codex/02-data/sports-gcs-path-ssot.md`'s existing bucket-naming section, since both stem from the same
-      underlying dual-bucket architecture for sports.
+      underlying dual-bucket architecture for sports — `pm@34de8774e`.
