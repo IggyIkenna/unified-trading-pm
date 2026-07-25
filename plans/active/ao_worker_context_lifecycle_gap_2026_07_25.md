@@ -184,12 +184,15 @@ sequential: true
       unit test asserts kill does NOT fire at 85% context with no prior directive (below the new kill threshold), does
       NOT fire at 99% if a directive was sent but the grace window hasn't elapsed yet, and DOES fire at 99% once a
       directive was sent and 2 consecutive reports show no pct drop; `quality-gates.sh` green.
-- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — decide whether to flip `context_burn_kill` (`server/config.py`) from
-      its current default `False` to `True`, now gated on the sharpened near-100%-and-directive-already-failed trigger
-      above (not the old 80%-only condition) and with WIP preserved before any kill. Do NOT flip this default as part of
-      this plan's automated execution — it's a live-fleet auto-kill behavior change a prior operator deliberately gated
-      behind manual opt-in "until the heuristic has fleet mileage"; re-evaluate only after the two todos above plus
-      todos 1-7 have run in production for a burn-in period the operator sets.
+- [ ] [BACKEND] P2. **APPROVED 2026-07-25 (operator, in-session, verbatim: "you can do this please now")** — flip
+      `context_burn_kill` (`server/config.py`) default `False` → `True`. Prerequisite: the two todos immediately above
+      this one (WIP-preservation via `stash_dirty_repos` in `_kill_slot`, and the sharpened
+      near-100%-and-directive-already-failed trigger) must land first — this todo's own `sequential: true` plan ordering
+      already enforces that; do not dispatch this ahead of them even though it's no longer `[OPERATOR]`-gated. Once
+      those ship: change `context_burn_kill: BoolEnvFalse = Field(default=False)` to `default=True` in `Tuning`
+      (`server/config.py`), update the existing test(s) asserting the old default, and note the flip in this todo's own
+      evidence line citing the sha. **Done when**: `get_config().tuning.context_burn_kill` resolves `True` by default,
+      the WIP-preservation + sharpened-trigger prerequisites are cited by sha, and `quality-gates.sh` is green.
 - [ ] [BACKEND] P2. **Stop the WorkerLivenessKicker from blindly re-nudging a frozen+context-saturated slot.** In
       `WorkerLivenessKicker._tick_once` (`server/worker_liveness/__init__.py`): when `classify_pane(pane) == "frozen"`
       AND the slot's current `context_used_pct >= context_worker_compact_gate_pct` (todo 1's threshold), skip the
@@ -246,3 +249,43 @@ local/manual intervention for genuinely non-colliding, independent work instead:
 `ao_fleet_throughput_incident_2026_07_25.md`'s Progress Log for the `check_doc_body_links` promote-escalation fix
 (`unified-trading-pm@3e4c73436`), which is this exact "operator-authorized, not my plan's own scope, unblock the
 pipeline" case.
+
+**2026-07-25 ~05:35 UTC — pre-compact checkpoint (context ~81%, interactive session, operator still present but
+compacting imminently).** Operator approved the `context_burn_kill` flip verbatim ("you can do this please now") —
+captured above by de-gating that todo from `[OPERATOR]`/`BLOCKED-OPERATOR-DECISION` to a normal dispatchable `[BACKEND]`
+todo (this plan's own `sequential: true` still correctly orders it behind the WIP-preservation + sharpened-trigger
+prerequisites, so approval does not skip the safety ordering). This was the one genuinely at-risk item this session — a
+verbal approval that existed only in chat until this edit.
+
+## Deferred work after 2026-07-25
+
+| Item                                                                                                                          | State              | Blocked on                                                                                         |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------- |
+| `context_burn_kill` flip (todo, now approved+dispatchable)                                                                    | Not done           | Nobody — real work, fleet will pick it up once the 2 prerequisite todos land                       |
+| Todos 5-13 (worker.md, `/progress` gate, anomaly-clock fix, kicker fix, observability, regression test, final review)         | Not done           | Nobody — fleet actively working sequentially (slot 2), self-sustaining                             |
+| Both gated finalize plans (`ao_worker_context_lifecycle_gap_finalize`, `ao_fleet_throughput_incident_finalize`)               | Cannot be done yet | `depends_on` + `gate_on_depends: true` — machine-held until their parent plan's todos are all done |
+| `ao_fleet_throughput_incident` todo 4 (post-fix live review)                                                                  | Cannot be done yet | Sequential ordering behind todos 1-3 (all done as of this checkpoint)                              |
+| `orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md` (fleet-filed issue doc, discovered mid-session) | Not done           | Nobody — not investigated this session, flagged here so it isn't missed; not yet read in full      |
+| `branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md` (fleet-filed, P2)                                              | Not done           | Nobody — filed by slot 12, not yet picked up                                                       |
+
+**Recommended next item**: nothing needs a human right now — the fleet is actively converging on the above in priority
+order via normal AO dispatch, and every merge auto-deploys within ~15 min (confirmed live this session). The only
+genuinely operator-shaped remaining decision was the `context_burn_kill` flip, now resolved above.
+
+**Lessons this session (would otherwise be re-learned):**
+
+- The AO fleet reliably self-corrects stale plan claims — todo 1 above initially said "env-overridable," which slot 2
+  caught as contradicting the actual `TuningDefaults` contract (env-free by design since 2026-07-18) and fixed against
+  the real contract instead of blindly implementing the stale spec. Trust the fleet to catch this class of drift rather
+  than hand-verifying every todo's assumptions before dispatch.
+- **Deploy is automatic and required no new mechanism**: `ao-self-pull.sh` (cron `*/15`) +
+  `uvicorn --reload --reload-dir server` together mean anything merged to `live-defi-rollout` is live in production
+  within ~15 minutes with zero manual step. Verify via `tail /var/log/ao-self-pull.log` on the orchestrator VM (SSM),
+  not by assuming.
+- **`git stash pop`/autostash conflicts on a shared, high-velocity branch**: `git checkout --theirs <file>` during an
+  autostash-pop conflict did NOT reliably pick the incoming/upstream side (verified: it picked the wrong side once this
+  session) — always verify post-resolution content with `git diff origin/<branch> -- <file>` before trusting which side
+  you kept, never trust the flag name alone.
+- This repo currently runs at extreme commit velocity (a fresh `git pull --rebase --autostash` was needed before nearly
+  every commit this session, sometimes 3-4 times in a row) — this is normal operating condition today, not an error
+  signal; budget for it rather than treating repeated branch-drift rejections as a problem to diagnose.
