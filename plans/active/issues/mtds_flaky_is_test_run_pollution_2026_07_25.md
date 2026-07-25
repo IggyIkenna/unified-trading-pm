@@ -88,6 +88,31 @@ owner.
       suite while passing in isolation. Add/verify test-isolation (autouse teardown fixture) at the leaking state's
       source, not in the two victim tests. (repo: market-tick-data-service)
 
+## 2026-07-25 re-verification (slot 6, cicd escalation agt-f5f1f6, repo-blocker RB-73d9075c)
+
+Dispatched to resolve the `ldr_qg_failure` wall this issue produced. Findings, in order:
+
+1. `gh run list --branch live-defi-rollout --repo IggyIkenna/market-tick-data-service` showed the 3 most recent
+   `quality-gates-v2` CI runs on `live-defi-rollout` (12:42, 13:32, 14:32) were all `success` — the branch was never
+   actually RED on GitHub Actions. Two earlier same-day failures (12:21, 12:31) were unrelated ("likely failed because
+   of a workflow file issue", i.e. a workflow-definition problem, not a test failure) and predate the current HEAD
+   lineage.
+2. A fresh-shell (no ambient env) `bash scripts/quality-gates.sh --no-fix` reproduction on `live-defi-rollout` HEAD
+   (`a1de76ac`) came back clean: `6901 passed, 17 skipped, 1 xpassed, 0 failed`, `ALL QUALITY GATES PASSED` — the exact
+   same result as slot 2's own "control run" (stashed diff).
+3. Root cause of the DISCREPANCY (slot 2's shell saw 3/3 failures, mine saw 0/1): `scripts/quality-gates.sh` line 64 was
+   `PYTEST_WORKERS=${PYTEST_WORKERS:-1}` — a SOFT default. Per `base-service.sh`'s precedence ("explicit PYTEST_WORKERS
+   wins; else CI→auto, local→1"), an ambient `PYTEST_WORKERS` already exported in a long-lived agent shell (e.g. left
+   over from an earlier task/experiment in that same session) silently overrides the repo's own safety pin and
+   re-enables `-n 2`+ — which is exactly the untamed xdist condition this file's 2026-07-23 comment block already
+   documents as reproducing the leak. My clean slot-6 shell had no such export, so I got the safe path; slot 2's shell
+   most likely did not.
+4. **Fix shipped**: `market-tick-data-service@6351312c` hard-pins `PYTEST_WORKERS=1` (no longer `${PYTEST_WORKERS:-1}`)
+   — this repo now ignores an inherited/ambient override entirely until the underlying leak (item below) is root-caused.
+   Re-verified clean after the change: `6901 passed, 0 failed`, `ALL QUALITY GATES PASSED` (268s).
+5. Repo-blocker `RB-73d9075c` resolved; the underlying xdist/DEPLOYMENT_ENV cross-test leak itself is still NOT
+   root-caused (mitigated twice over now: serial workers + a non-overridable pin) — the todo below stays open.
+
 ## Codex SSOTs
 
 No existing SSOT covers xdist test-order-pollution debugging for this repo specifically — out of scope to author one
