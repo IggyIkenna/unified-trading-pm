@@ -118,6 +118,15 @@ live-code consumers but not every possible offline consumer — this is a genuin
 sign-off, not a properly-scoped AO-dispatchable todo per the "Dispatch-scope eligibility" rule
 (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`).
 
+## Disposition (main, 2026-07-25)
+
+Interim: **leave `day=all` in place** (Option C below) — this investigation is the deliverable; the AO-dispatched todo
+(`sports_satellite_ao_dispatch_batch2_2026_07_24.md`) is closed as resolved-as-investigated on that basis. Two items
+remain genuinely escalated to the operator, not re-opened as worker-dispatchable work: (1) authorize/decline the
+irreversible delete of the two `day=all` objects (Option A — soft-delete=0, no recovery net); (2) the TEAMS FLAT-layout
+design decision (Option B — net-new UAC layout vs fold into per-day-per-league). This doc stays `open` until the
+operator rules on either.
+
 ## Options
 
 - **A (recommended). Treat `day=all` as confirmed-dead legacy data and delete both objects** (following the standard GCS
