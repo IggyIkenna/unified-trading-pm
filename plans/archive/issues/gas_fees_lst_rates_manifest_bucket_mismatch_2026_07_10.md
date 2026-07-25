@@ -41,6 +41,12 @@ resolved_by: defi_dedicated_bucket_shared_migration_2026_07_13.md Todo 3 (e2e-te
 
 # gas-fees manifest/data-status scanner reads an empty bucket the writer never populates
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — `data_manifest_handler.py` side fixed 2026-07-12
+> (`market-tick-data-service@8b730664`); `staked_basis_funding_scan.py`'s `_lst_bucket()` reader fixed by
+> `defi_dedicated_bucket_shared_migration_2026_07_13.md` Todo 3 (`e2e-testing@3d219d76`), live-verified against real
+> production data. Operator confirmed 2026-07-25 (queued via
+> `issues/autonomous_session_operator_decisions_2026_07_25.md` #2) and approved the unlock + flip.
+
 ## What was found
 
 While auditing which GCS buckets in `central-element-323112` are actually used by live code (full estate cleanup, see

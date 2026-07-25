@@ -18,7 +18,7 @@ related:
   [
     plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
-    plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md,
+    plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md,
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
   ]
 created: "2026-07-10"

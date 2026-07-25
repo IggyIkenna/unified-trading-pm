@@ -366,7 +366,7 @@ drift_direction: none
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md`](/plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`](/plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md)
+  - [`plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`](/plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md`](/plans/active/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md)
     — 0 open todos (closed/archived/record-only).
