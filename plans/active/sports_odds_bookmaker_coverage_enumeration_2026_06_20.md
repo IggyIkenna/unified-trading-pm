@@ -6,7 +6,10 @@ summary:
   odds cluster configurations for the sports vertical.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [sports] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # title/summary say "the sports vertical" explicitly, parent_epic is sports_master -- content is sports-only
+
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]

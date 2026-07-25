@@ -732,3 +732,5 @@ drift_direction: none
   - [`features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md)
     — DeFi features-service e2e test blocker; `master:` field names `defi_manifest_canonicalisation_2026_06_01.md` as
     owner.
+  - [`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`](/plans/active/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md)
+    — e2e defi-strategy funding/APR/gas/lending-rate correctness bugs, `parent_epic: defi_master`.

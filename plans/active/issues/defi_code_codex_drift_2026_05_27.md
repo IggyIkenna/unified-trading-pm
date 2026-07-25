@@ -6,7 +6,10 @@ summary:
   against the codex SSOTs. **Comprehensive audit record (13 findings D1–D13, audit-resu...
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [defi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # "DeFi pipeline -- code<->codex drift" audit, parent_epic is defi_master -- content is defi-only
+
 stage: [meta]
 repos: [features-service, market-data-processing-service]
 scope: [engineer, admin]
