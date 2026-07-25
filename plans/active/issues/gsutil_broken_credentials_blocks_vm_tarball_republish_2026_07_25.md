@@ -15,14 +15,14 @@ summary: >-
   instances create` launch both succeeding. This blocks any VM launcher that republishes/verifies code tarballs before
   launch (the standard pattern for MDPS/sports/etc. backfill VMs) until either the service-account federation is
   refreshed or a human runs an interactive `gcloud auth login` once.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [gcloud, gsutil, credentials, vm-launcher, infra, blocked-credentials]
-related: []
+related: [/plans/active/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md]
 created: 2026-07-25
 assigned_vm: NA
 parent_epic: infrastructure_master
@@ -35,7 +35,7 @@ source: >-
   deployed tarballs predate `unified-trading-library@14301571` (the TOCTOU consolidator-race fix), and the reprocess
   script's `ManifestWriter` writes directly to the canonical index (no `MANIFEST_PER_VM_SHARDS`), so stale code would
   re-expose the exact race that already silently reverted the league_id manifest swap once this session.
-resolved_by:
+resolved_by: deployment-service@3ba14ff (gcs_upload_via_adc.py, routes tarball uploads through ADC not gsutil)
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -113,6 +113,32 @@ two achievable sub-goals of the parent todo directly (no VM/gsutil needed — bo
   for is already satisfied (done by earlier work, not by me — just verified it's real and current).
 - Everything else already documented in the sibling issue doc (the manifest-swap re-fix).
 
-**Still genuinely outstanding, blocked on this credential issue**: the MDPS `odds_horizon_bucket` reprocess (109,312+
-objects, needs the sanctioned `launch-mdps-sports-bucket-vm.sh` launcher, needs fresh tarballs first) and the
-`batch_footystats` copy+swap extension (16,970 objects, same launcher family).
+**Still genuinely outstanding, no longer blocked on credentials**: the MDPS `odds_horizon_bucket` reprocess (109,312+
+objects, needs the sanctioned `launch-mdps-sports-bucket-vm.sh` launcher) and the `batch_footystats` copy+swap extension
+(16,970 objects, same launcher family) — see below.
+
+## RESOLVED 2026-07-25
+
+Main answered the filed ping (`ikenna_orchestrator/pings/slot_3.md`): swap the `gsutil` upload for a path that doesn't
+depend on it — rejecting a service-account WIF token reissue as a least-privilege regression for a problem
+`gcloud storage`/ADC already solves. **Independently, another slot (4) had hit the identical symptom** and filed
+`vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md`; that thread's fix landed first —
+`deployment-service@3ba14ff` routes `create-code-tarballs.sh`'s upload through `gcs_upload_via_adc.py` (a UTL ADC-backed
+uploader), not `gsutil`.
+
+**Re-verified end-to-end, not just "someone committed a fix"**: bootstrapped `deployment-service/.venv`
+(`bash scripts/setup.sh`, needed by the new upload path), then re-ran the exact same 5-repo republish that failed
+earlier in this session — all 5 tarballs + manifests + 156 bare launcher scripts uploaded successfully. Directly
+confirmed via `gcloud storage cat` that a fresh `unified-api-contracts-code.manifest.json` landed with today's commit
+SHA and timestamp.
+
+**Residual, narrower gap found while re-verifying (not blocking, but worth flagging)**: `launcher_common.sh`'s
+`lc_verify_tarball_freshness`/`lc_resolve_tarball_sha` (the freshness CHECK a launcher runs before creating a VM) still
+shell out to `gsutil` internally (`gsutil -q cp`/`gsutil cat`) — only the upload path in `create-code-tarballs.sh` was
+fixed. Confirmed the check now always reports every tarball "MISSING" (it can't read the manifest.json it needs to
+compare against) even though the manifest genuinely exists and is fresh — this is warn-only, not a hard block, so it
+doesn't prevent a launch, but it means the freshness check is currently blind or useless, not just
+unreliable-when-stale. A live launch was NOT reattempted here (out of scope — this todo's own credential blocker is
+resolved; the reprocess job itself belongs to the sibling todo, already skip-current-task'd and closed). Follow-up:
+apply the same `gcloud storage` swap to `lc_verify_tarball_freshness`/`lc_resolve_tarball_sha` so the check itself works
+again, not just the upload it's supposed to gate.

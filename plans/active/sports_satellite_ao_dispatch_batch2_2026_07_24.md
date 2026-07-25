@@ -681,14 +681,18 @@ source: >-
       unresolved/non-canonical value before write, so the `.../entity=injuries/league=235/` leakage cited as evidence is
       historical debris pre-dating that gate, not a live path — confirmed no more bare-numeric-id partitions can be
       produced going forward. Source: `issues/sports_league_id_namespace_migration_2026_07_20.md`.
-- [ ] [DATA] P0. BLOCKED-CREDENTIALS 2026-07-25 (ping: `ikenna_orchestrator/pings/slot_3.md` 2026-07-25 CREDENTIAL
-      APPROVAL REQUEST) **League_id casing migration — census→copy→reprocess→swap (4-step ordered sequence, one worker,
-      execute in order — this is one already-verified, ready-to-execute migration, not 4 independent jobs).**
-      **Progress**: (a) found step (2)'s manifest swap (raw `TRADES`/`batch_odds_api` shape) had silently reverted since
-      its 2026-07-22 run (TOCTOU consolidator race, closed by `unified-trading-library@14301571` on 2026-07-24 — 2 days
-      after the swap ran). Re-applied `manifest_swap_2026_07_22.py --apply-prod --confirm-prod-write` and verified
-      STABLE across 5 consolidator cycles (~7.5 min) — the raw TRADES shape is now genuinely canonical, not just
-      log-claimed. Full detail: `/plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. (b)
+- [ ] [DATA] P0. **CREDENTIAL BLOCKER RESOLVED 2026-07-25** (`deployment-service@3ba14ff` routes tarball uploads through
+      ADC, not gsutil — re-verified end-to-end: full 5-repo republish succeeded). The MDPS `odds_horizon_bucket`
+      reprocess + `batch_footystats` copy+swap remain genuinely un-executed (not a credential issue anymore, just not
+      yet done) — pick up fresh via `launch-mdps-sports-bucket-vm.sh`. Full detail:
+      `/plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md`. **League_id casing
+      migration — census→copy→reprocess→swap (4-step ordered sequence, one worker, execute in order — this is one
+      already-verified, ready-to-execute migration, not 4 independent jobs).** **Progress**: (a) found step (2)'s
+      manifest swap (raw `TRADES`/`batch_odds_api` shape) had silently reverted since its 2026-07-22 run (TOCTOU
+      consolidator race, closed by `unified-trading-library@14301571` on 2026-07-24 — 2 days after the swap ran).
+      Re-applied `manifest_swap_2026_07_22.py --apply-prod --confirm-prod-write` and verified STABLE across 5
+      consolidator cycles (~7.5 min) — the raw TRADES shape is now genuinely canonical, not just log-claimed. Full
+      detail: `/plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. (b)
       **Coverage-registry refresh already satisfied** — ran `refresh_sports_bookmaker_league_coverage_2026_06_21.py`
       (diff mode): "No drift vs committed coverage map"; directly confirmed the done-when criterion —
       `is_bookmaker_league_covered("BETFAIR_EX_EU","EPL")` = `True`, `…("BETFAIR_EX_EU","PREMIER_LEAGUE")` = `False`.
