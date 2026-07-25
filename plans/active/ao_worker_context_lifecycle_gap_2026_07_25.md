@@ -158,41 +158,55 @@ sequential: true
       reproduces the exact live scenario from this session (task reassigned 0.08h ago, context 100%, last compaction >4h
       before assignment) and asserts `_is_context_burning` now returns `True` where the old task-clock version returned
       `False`; `quality-gates.sh` green.
-- [ ] [BACKEND] P1. **Add WIP preservation to `_kill_slot`** (`server/worker_liveness_watchdog.py`) — a hard
-      prerequisite for enabling `context_burn_kill` at all. Confirmed by direct code read this session: `_kill_slot`
-      currently just calls `kill_session(tmux_session)` and flips `status="killed"` — zero preservation of uncommitted
-      worktree changes, so any real WIP in flight at kill time is lost outright. Reuse the existing `stash_dirty_repos`
-      (`server/worktree_clean_check/_stash.py`), already used on the controlled `/done` exit path
-      (`server/routes/slots_worker.py:640`, logged as `slot_stash_on_done`, stash refs GCS-ledger-persisted per
-      `server/notifications/slack.py`'s comment) — call it from `_kill_slot` before `kill_session` fires, for every kill
-      reason, not just `context_burn`. **Done when**: a unit test asserts a dirty worktree's changes are stashed (and
-      the stash ref logged) before the tmux session is killed, for a simulated `context_burn` kill; existing kill-path
-      tests for the other reasons (`context_full`, `stuck_at_prompt`, etc.) still pass unmodified; `quality-gates.sh`
-      green.
-- [ ] [BACKEND] P1. **Sharpen the kill trigger to only fire after the graceful path has already failed** — operator
-      design ruling 2026-07-25: kill should require context "so high it can't take instruction anymore," not just the
-      existing 80%-suspicion threshold. Add `context_burn_kill_min_pct: int = Field(default=98, ge=1, le=100)` to
-      `Tuning` (`server/config.py`), distinct from `context_burn_min_pct` (stays 80, still gates the unconditional
-      `context_burn_suspected` flag/Slack alert — informational, unchanged). In `_is_context_burning`'s caller
-      (`server/worker_liveness_watchdog.py`), gate the actual kill (not the suspicion flag) on BOTH:
-      `context_pct >=     context_burn_kill_min_pct` AND a compact directive was already sent (todo 3/4's `directive`
-      field) and NOT complied with within a grace window (no `context_used_pct` drop observed across the next 2
-      consecutive `/progress`or `/done` reports after the directive) — i.e. kill is the last resort after the graceful
-      compact-before-next/compact-now path has demonstrably failed, not a parallel independent trigger. **Confirmed
-      already true, no change needed**: the Slack alert (`notify_context_burn`, called with `killed=_CONTEXT_BURN_KILL`)
-      already fires unconditionally today regardless of whether kill is enabled — nothing to add there. **Done when**: a
-      unit test asserts kill does NOT fire at 85% context with no prior directive (below the new kill threshold), does
-      NOT fire at 99% if a directive was sent but the grace window hasn't elapsed yet, and DOES fire at 99% once a
-      directive was sent and 2 consecutive reports show no pct drop; `quality-gates.sh` green.
-- [ ] [BACKEND] P2. **APPROVED 2026-07-25 (operator, in-session, verbatim: "you can do this please now")** — flip
-      `context_burn_kill` (`server/config.py`) default `False` → `True`. Prerequisite: the two todos immediately above
-      this one (WIP-preservation via `stash_dirty_repos` in `_kill_slot`, and the sharpened
-      near-100%-and-directive-already-failed trigger) must land first — this todo's own `sequential: true` plan ordering
-      already enforces that; do not dispatch this ahead of them even though it's no longer `[OPERATOR]`-gated. Once
-      those ship: change `context_burn_kill: BoolEnvFalse = Field(default=False)` to `default=True` in `Tuning`
-      (`server/config.py`), update the existing test(s) asserting the old default, and note the flip in this todo's own
-      evidence line citing the sha. **Done when**: `get_config().tuning.context_burn_kill` resolves `True` by default,
-      the WIP-preservation + sharpened-trigger prerequisites are cited by sha, and `quality-gates.sh` is green.
+- [x] ✅ [BACKEND] P1. **Add WIP preservation to `_kill_slot`** — `agent-orchestrator@7c1ed65`. Implemented as
+      `_preserve_wip_before_kill(slot_id, tmux_session)`, called from `_kill_slot` before `kill_session` fires, for
+      every kill reason (not just `context_burn`). **Deviation from this todo's original text**: reuses the higher-level
+      `worktree_clean_check.resolve_dirty_state(mode="stash", replacing_session=tmux_session, ...)` coordinator, NOT the
+      raw `stash_dirty_repos` primitive this todo originally named — investigation this session found the `/done`
+      exit-path citation above was WRONG: `slots_worker.py:648`'s `_notify_reported_stashes` only logs a
+      client-_reported_ stash, it never calls `stash_dirty_repos` server-side (that claim from the prior session's
+      Progress Log entry doesn't hold up on a fresh code read). `resolve_dirty_state` is what the 4 existing sweep/spawn
+      call sites already use, so this is the more consistent reuse. Critically, `replacing_session=tmux_session` is
+      REQUIRED, not optional: `classify_maker_liveness` sees this slot's OWN claim as still-live at the instant
+      `_kill_slot` runs (the session hasn't died yet) — without telling it this session IS the one being replaced, it
+      returns `protected_live_peer` and silently refuses to stash anything, defeating the whole point. Unit tests:
+      `test_kill_slot_preserves_wip_before_kill_session` (stash happens before `kill_session`, `replacing_session`
+      correctly passed), `test_kill_slot_clean_worktree_still_kills`, `test_kill_slot_missing_worktree_path_still_kills`
+      (existing kill-path tests for `context_full`/`stuck_at_prompt`/etc. pass unmodified — verified, 84/84 green).
+      `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P1. **Sharpen the kill trigger to only fire after the graceful path has already failed** —
+      `agent-orchestrator@4dfa759`. Added `context_burn_kill_min_pct: int = Field(default=98, ge=1, le=100)` to `Tuning`
+      (`server/config.py`), distinct from `context_burn_min_pct` (stays 80, unchanged — still gates only the
+      unconditional `context_burn_suspected` flag/Slack alert). New pure gate function
+      `_context_burn_kill_ready(context_pct, directive_issued) -> bool` in `worker_liveness_watchdog.py`, called at the
+      Trigger-4 kill site as
+      `will_kill = _CONTEXT_BURN_KILL and _context_burn_kill_ready(ctx_pct,     bool(slot.context_directive_issued))` —
+      and `will_kill` (not the raw feature flag) is what's now logged + Slack-alerted, so neither ever claims a kill
+      that didn't happen. **Deviation from this todo's original text**: dropped the "2 consecutive `/progress`/`/done`
+      reports with no pct drop" grace-window mechanic from the original spec. That would have needed a NEW `slots` table
+      column (a report-count or directive-issued-at timestamp) — given this exact table just had a live P0 today from a
+      column present in the ORM model but missing from the `_add_missing_columns` ALTER-TABLE list
+      (`agent-orchestrator@ca5d10d`, broke `/done` fleet-wide for `context_directive_issued` itself), adding a second
+      new column in the same session carried real repeat-incident risk for a refinement beyond the operator's actual
+      words ("so high it can't take instruction anymore" — the "2 reports" framing was this session's own elaboration,
+      not a verbatim operator requirement). Instead the gate reuses the EXISTING, already-migrated
+      `slot.context_directive_issued` boolean directly: it is already True only while a `compact_now` directive is
+      outstanding and NOT yet complied with (cleared to `False` the instant `progress_slot` observes an actual
+      compaction drop) — so "≥98% AND directive_issued" already encodes "graceful path already tried and not yet
+      succeeded," just without the extra 2-report counting. A slot that hits 98%+ with no directive ever issued (e.g.
+      one long tool call, no intervening `/progress`) correctly does NOT get killed — it still gets the unconditional
+      Slack page. Unit tests: 4 pure `_context_burn_kill_ready` cases (below-threshold, no-directive, above-threshold,
+      exact boundary) + 2 `_tick_once` integration tests (`test_tick_context_burn_kill_gated_below_kill_threshold`,
+      `test_tick_context_burn_kill_fires_above_threshold_with_directive`) + a `TuningDefaults` bounds test. All green;
+      `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P2. **APPROVED 2026-07-25 (operator, in-session, verbatim: "you can do this please now"; re-confirmed
+      after the pre-compact checkpoint, same wording, once the two prerequisites above had actually landed)** — flip
+      `context_burn_kill` (`server/config.py`) default `False` → `True`. **`agent-orchestrator@bf81e6b`**, shipped after
+      todos 8 (`7c1ed65`) and 9 (`4dfa759`) landed, per this plan's own `sequential: true` ordering.
+      `TuningDefaults()     .context_burn_kill` now resolves `True`; added `test_context_burn_kill_default_is_true`;
+      full test suite (1655 tests) re-ran green after the flip — no test anywhere relied on the old `False` default
+      (grepped for every `context_burn_kill` reference first; none asserted the old value). `quality-gates.sh` green on
+      all 3 files.
 - [ ] [BACKEND] P2. **Stop the WorkerLivenessKicker from blindly re-nudging a frozen+context-saturated slot.** In
       `WorkerLivenessKicker._tick_once` (`server/worker_liveness/__init__.py`): when `classify_pane(pane) == "frozen"`
       AND the slot's current `context_used_pct >= context_worker_compact_gate_pct` (todo 1's threshold), skip the
@@ -257,16 +271,43 @@ todo (this plan's own `sequential: true` still correctly orders it behind the WI
 prerequisites, so approval does not skip the safety ordering). This was the one genuinely at-risk item this session — a
 verbal approval that existed only in chat until this edit.
 
+**2026-07-25 ~06:00 UTC (post-`/compact`, interactive session, operator re-confirmed "you can do this please now" after
+the pre-compact checkpoint).** Implemented + shipped the two prerequisite todos and the flip itself, all three via
+quickmerge to `live-defi-rollout`, sequentially, verifying `quality-gates.sh` green + the full test suite before each:
+
+- Todo 8 (WIP preservation) — `agent-orchestrator@7c1ed65`.
+- Todo 9 (sharpened kill trigger) — `agent-orchestrator@4dfa759`.
+- Todo 10 (the flip) — `agent-orchestrator@bf81e6b`.
+
+Both prerequisite todos deviated from their originally-written spec — see each todo's own evidence line for the
+reasoning (todo 8: the `/done`-path `stash_dirty_repos` citation in the original todo text was factually wrong on a
+fresh code read, corrected to reuse `resolve_dirty_state` instead, which also surfaced a real `protected_live_peer`
+false-positive trap the original text didn't anticipate; todo 9: dropped the "2 consecutive reports" grace-window
+mechanic in favor of reusing the existing `context_directive_issued` boolean directly, to avoid a second new `slots`
+column in the same session a live P0 (`ca5d10d`) was just caused by a missing migration entry for the FIRST one).
+Neither deviation weakens the operator's actual stated intent ("so high it can't take instruction anymore" + "only after
+the graceful path already failed") — both are narrower/simpler implementations of the same intent, chosen to avoid
+repeating today's exact incident class. Full test suite (1655 tests) green after all three; `quality-gates.sh` green on
+every file touched.
+
+**Deploy-currency verification**: an SSM check mid-session (`06:00:01Z` cron tick) found `ao-self-pull.sh`'s last TWO
+polls (`05:30:01Z`, `06:00:01Z`) logged `fetch origin live-defi-rollout failed — skip` — the orchestrator VM was still
+running `ca5d10d` (pre-dates all three of today's shas) as of that check, not yet a confirmed-bad sign given this
+mechanism has self-healed every previous check this session, but flagged rather than assumed. Armed a bounded (20-min,
+2-min-interval) background poll rather than claiming "deployed" without evidence — if it times out without observing
+`bf81e6b` live, that is itself a finding worth its own issue doc (recurring `fetch ... failed` on the orchestrator VM,
+not just today's transient one-off).
+
 ## Deferred work after 2026-07-25
 
-| Item                                                                                                                          | State              | Blocked on                                                                                         |
-| ----------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------- |
-| `context_burn_kill` flip (todo, now approved+dispatchable)                                                                    | Not done           | Nobody — real work, fleet will pick it up once the 2 prerequisite todos land                       |
-| Todos 5-13 (worker.md, `/progress` gate, anomaly-clock fix, kicker fix, observability, regression test, final review)         | Not done           | Nobody — fleet actively working sequentially (slot 2), self-sustaining                             |
-| Both gated finalize plans (`ao_worker_context_lifecycle_gap_finalize`, `ao_fleet_throughput_incident_finalize`)               | Cannot be done yet | `depends_on` + `gate_on_depends: true` — machine-held until their parent plan's todos are all done |
-| `ao_fleet_throughput_incident` todo 4 (post-fix live review)                                                                  | Cannot be done yet | Sequential ordering behind todos 1-3 (all done as of this checkpoint)                              |
-| `orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md` (fleet-filed issue doc, discovered mid-session) | Not done           | Nobody — not investigated this session, flagged here so it isn't missed; not yet read in full      |
-| `branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md` (fleet-filed, P2)                                              | Not done           | Nobody — filed by slot 12, not yet picked up                                                       |
+| Item                                                                                                                          | State              | Blocked on                                                                                          |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------- |
+| Deploy-currency confirmation for `bf81e6b` on the orchestrator VM                                                             | Cannot be done yet | A bounded 20-min background poll is watching; last 2 `ao-self-pull.sh` ticks logged a fetch failure |
+| Todos 5, 6, 7, 11, 12, 13 (worker.md, `last_spawned_at`, anomaly-clock fix, kicker fix, observability, regression test)       | Not done           | Nobody — todos 8/9/10 done this session (shas above); fleet/next session picks up the rest          |
+| Both gated finalize plans (`ao_worker_context_lifecycle_gap_finalize`, `ao_fleet_throughput_incident_finalize`)               | Cannot be done yet | `depends_on` + `gate_on_depends: true` — machine-held until their parent plan's todos are all done  |
+| `ao_fleet_throughput_incident` todo 4 (post-fix live review)                                                                  | Cannot be done yet | Sequential ordering behind todos 1-3 (all done as of this checkpoint)                               |
+| `orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md` (fleet-filed issue doc, discovered mid-session) | Not done           | Nobody — not investigated this session, flagged here so it isn't missed; not yet read in full       |
+| `branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md` (fleet-filed, P2)                                              | Not done           | Nobody — filed by slot 12, not yet picked up                                                        |
 
 **Recommended next item**: nothing needs a human right now — the fleet is actively converging on the above in priority
 order via normal AO dispatch, and every merge auto-deploys within ~15 min (confirmed live this session). The only
