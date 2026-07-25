@@ -155,7 +155,7 @@ def _check_gcp_bucket_subprocess(name: str) -> bool:
 def _check_aws_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
     """Bulk-check S3 buckets using boto3 list_buckets."""
     try:
-        import boto3  # type: ignore[import-untyped]
+        import boto3  # type: ignore[import-untyped]  # noqa: TID251, RUF100 — bulk list_buckets has no UTL StorageClient equivalent (AWS provider only implements per-bucket ops)
 
         s3 = boto3.client("s3")  # pyright: ignore[reportUnknownMemberType]
         response = s3.list_buckets()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
