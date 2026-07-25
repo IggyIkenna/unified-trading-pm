@@ -151,9 +151,11 @@ For the named doc:
 - [ ] [INFRA] P2. Archive
       `plans/active/issues/fixtures_schedule_atom_migration_partial_landing_regression_2026_07_24.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@d31c02a96 (moved to plans/archive/issues/, banner added,
+      check_terminal_status_archived.py confirmed clean; 0/1 referrer repointed, blocked on a pre-existing line-cap
+      violation — see Progress Log).
 - [ ] [INFRA] P2. Archive `plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
@@ -310,3 +312,10 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   touching an over-cap file (by design, no exceptions — see the script's own comments). Fixing the referrer requires
   first splitting that doc under the cap, which is out of scope for a single-line path fix. Leaving as a known, tracked
   gap rather than blocking this archival or bypassing the gate.
+- 2026-07-25 (slot-2): Todo (`fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`) archived —
+  resolution re-verified (`resolved_by` SHA `features-service@fb8d57c0` confirmed reachable), banner added, moved to
+  `plans/archive/issues/`, `check_terminal_status_archived.py` confirmed clean. Same class of blocker as slot-7's entry
+  above: its 1 corpus referrer (`plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md`) is already at exactly
+  the 1000-line hard cap — the one-line path repoint pushes it to 1001 and `check_line_caps` hard-fails the commit.
+  Reverted the repoint edit; left the stale `issues/...` relative reference un-fixed as a known, tracked gap rather than
+  blocking this archival.
