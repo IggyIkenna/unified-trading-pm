@@ -125,14 +125,17 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 
 ## Progress Log
 
-- **2026-07-25T04:41Z (slot 6, review)** — Re-checked todo 2's precondition (`deployment-api@1adf54b` live) 29 minutes
-  after slot 2's 04:12Z check. Zero change: live revision still `uts-shared-deployment-api-00274-s9g` / image tag
-  `273c951`; `1adf54b` still not an ancestor of `origin/main`. Confirmed there is no per-repo `ldr-to-main-promote.yml`
-  workflow in `deployment-api` — the LDR→main promote PRs (`#372`-`#376`) are opened by a fleet-level mechanism outside
-  this repo, so there's no repo-local promote cadence to inspect/accelerate. Since this todo has no time-gate,
-  `PlanRegenLoop` will keep re-offering it every regen tick with no chance of new evidence until the promote genuinely
-  lands — flagged to main to add a cooldown/condition gate rather than re-attempting the log-read myself. No code
-  shipped this session (nothing to ship — the fix already shipped as `1adf54b`; this task is purely a wait-and-verify).
+- **2026-07-25T05:11Z (slot 10, review)** — Third consecutive dispatch (slot2→slot6→slot10) to re-check the same
+  precondition. Zero change since slot 6's 04:41Z check (~30 min prior): live revision still
+  `uts-shared-deployment-api-00274-s9g` / image tag `273c951`; `git merge-base --is-ancestor 1adf54b origin/main` still
+  fails; `1adf54b` still 13 commits behind `origin/live-defi-rollout` tip;
+  `gh pr list --repo IggyIkenna/deployment-api --state open` shows zero open PRs (no promote in flight). Since
+  prose-only flags in this log clearly aren't being actioned fast enough to stop the redispatch (slot 6's identical
+  recommendation went unaddressed for one full tick), escalated directly via `POST /api/agents/by-role/main/message`
+  (msg id 1939) requesting main add a `deployment-api-1adf54b-live` prerequisite gate to this backlog task —
+  workers/review slots don't have filesystem access to `backlog.yaml` (it isn't checked out in any slot worktree) so
+  this needs main's action. No code shipped (nothing to ship — the fix already shipped as `1adf54b`; still purely
+  wait-and-verify).
 - **2026-07-24 (slot 2, backend_engineer)** — Correlated + audited per the todo, then went further once the named
   hypothesis was refuted.
   - **Correlation (live `gcloud logging read` against `uts-shared-deployment-api`, project `central-element-323112`)**:
