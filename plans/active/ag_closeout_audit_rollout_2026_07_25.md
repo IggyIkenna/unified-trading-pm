@@ -65,9 +65,8 @@ source: >-
       ag-closeout-audit skill Phase 3. Skip if the audit finds nothing AO-eligible remaining. **Done when**: drafted +
       shipped (as draft docs) or explicitly logged as "nothing to draft." AO-eligibility triage workflow
       (`wf_74a99101-69b`, 26 docs) launched, in flight.
-- [ ] [DOC] P1. **cefi**: run /ag-closeout-audit Phases 0-3 in full (discover covering plans, per-doc classify Workflow,
-      synthesize+report, conflict-check + draft next batch). **Done when**: audit results logged, any draft
-      batch/finalize pair shipped.
+- [x] [DOC] P1. **cefi**: audit done (`wf_90271270-b12`, 49/49 agents, 0 errors) — see Progress Log. 7
+      `archivable_now` + triage workflow for the 29 orphaned satellite docs still to run.
 - [ ] [DOC] P1. **defi**: same, for defi.
 - [x] [DOC] P1. **tradfi**: audit done (`wf_daa543c3-c36`, 23/23 agents, 0 errors) — see Progress Log. Triage workflow
       for the 21 orphaned docs launching next.
@@ -199,3 +198,46 @@ source: >-
     workflows for both AGs' orphaned docs (mirroring sports batch3), then draft `tradfi_satellite_ao_dispatch_batch1`
     and `prediction_satellite_ao_dispatch_batch1` (status: draft) for the AO-eligible subset of each. cefi (49 docs) and
     defi (56 docs) audits still in flight.
+
+- **2026-07-25, cefi orphan-audit results** (`wf_90271270-b12`, 49/49 agents, 0 errors, 3.53M subagent tokens): 30
+  orphaned (20 `orphaned_never_touched` + 10 `orphaned_partial_coverage`, one of the 10 is the master closeout itself —
+  self-referential, its own Track 3/Track 4 have zero checkboxes at all, so it's genuinely NOT self-covering unlike
+  sports'/tradfi's/prediction's master docs; real satellite orphan count is **29**), **7 `archivable_now`** (real,
+  independently-verified-done docs sitting un-archived — `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
+  `issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`,
+  `issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`,
+  `issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`,
+  `issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`,
+  `issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`,
+  `issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md`), 9 `exclude_cross_cutting` (correctly caught — several
+  prediction-primary docs mis-tagged with cefi, plus a few genuinely cross-cutting issue docs), 3
+  `archivable_after_planned_work`. Same structural pattern as tradfi/prediction: satellite docs' items are only
+  digest-referenced in the master's Track sections, not actually dispatched via a real checkbox. cefi has never had an
+  AO-dispatch-batch extraction. The 29 orphaned satellite docs: `aster_and_cefi_rolling_adv_feature_2026_07_21.md`,
+  `cefi_4surface_migration_execution_log_2026_07_24.md`, `data_completion_cefi_2026_07_15.md`,
+  `instruments_cefi_g1_g5_gate_execution_2026_07_24.md`, `issues/aster_mtds_failure_count_regression_2026_07_07.md`,
+  `issues/bug_c_normalize_id_collision_options_futures_2026_07_22.md`,
+  `issues/cefi_available_at_wallclock_despite_deterministic_row_timestamp_2026_07_24.md`,
+  `issues/bybit_futures_chain_write_shape_2026_07_13.md`, `issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md`,
+  `issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`,
+  `issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md`,
+  `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`,
+  `issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`,
+  `issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md`,
+  `issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`,
+  `issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`,
+  `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`,
+  `issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md`,
+  `issues/cefi_residual_followups_after_honest_done_2026_07_17.md`,
+  `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`,
+  `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`,
+  `issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`,
+  `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`,
+  `issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md`,
+  `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`,
+  `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md`,
+  `issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`, `issues/tardis_concurrent_ip_lockout_2026_07_12.md`,
+  `issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`. Next: archive the 7
+  `archivable_now` docs (careful ship this time — the earlier sports archival hit a half-landed-rename bug from
+  concurrent branch activity, verify AT HEAD not just exit code) + launch the AO-eligibility triage for the 29 orphaned.
+  defi (56 docs) audit still in flight.
