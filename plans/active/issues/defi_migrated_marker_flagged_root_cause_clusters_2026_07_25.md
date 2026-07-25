@@ -3,13 +3,12 @@ doc_type: issue
 title: FLAGGED `_migrated_*` markers are 3+ distinct unresolved root-cause clusters, not just interrupted runs
 summary:
   Live sampling of the delete_migrated_defi_markers_2026_07_23.py dry-run (2026-07-25) found the FLAGGED population is
-  NOT dominated by simple interrupted-migration cases as originally assumed. At least 3 distinct clusters with
-  different root causes and no safe blind-remediation path: GMX perp_funding 1-row aggregate snapshots (~1,896
-  markers, matches the tool's own docstring precedent — needs_attribution flush never ran), TRADER_JOE_V2/AVALANCHE
-  dex_pool_state rows that DO have a real distinct on-chain pool_id per row but never got symbol/pool_address resolved
-  (~944 markers — NOT unattributable data, an unresolved symbol-resolution gap), and an lst_rates cluster
-  (COINBASE/MAKER/SWELL, ~678 markers). None of these are fixed by blindly re-running
-  migrate_defi_batch_to_per_instrument.py --apply.
+  NOT dominated by simple interrupted-migration cases as originally assumed. At least 3 distinct clusters with different
+  root causes and no safe blind-remediation path -- GMX perp_funding 1-row aggregate snapshots (~1,896 markers, matches
+  the tool's own docstring precedent, needs_attribution flush never ran), TRADER_JOE_V2/AVALANCHE dex_pool_state rows
+  that DO have a real distinct on-chain pool_id per row but never got symbol/pool_address resolved (~944 markers, NOT
+  unattributable data, an unresolved symbol-resolution gap), and an lst_rates cluster (COINBASE/MAKER/SWELL, ~678
+  markers). None of these are fixed by blindly re-running migrate_defi_batch_to_per_instrument.py --apply.
 status: open
 nature: issue
 asset_group: defi
