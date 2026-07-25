@@ -96,6 +96,18 @@ depends_on: []
       pass (candidate for a Workflow fan-out — independent per-reference, no cross-file dependency) rather than one
       session's manual sweep. **Done when**: `existence_count` in the baseline reaches 0, or the remaining count is
       explicitly re-baselined with a stated reason per entry (e.g. "intentionally documents unshipped future work").
+- [ ] [DOC] P3. **2026-07-25 plan_health regression (agt-4b54e5)**: 3 new dangling refs landed from the 2026-07-25
+      terminal-status archival sweep (`ad4b1952c`) not updating referrers — `/plans/active/issues/<slug>.md` targets
+      moved to `/plans/archive/issues/<slug>.md`. Fixed 2 of 3
+      (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` → `cefi_tardis_throughput_collapse_350x_2026_07_17.md`;
+      `gcs_bucket_estate_cleanup_2026_07_10.md` (archive) →
+      `gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`), bringing `existence_count` to 1256 (< baseline 1257,
+      gate green). **Left unfixed**: `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s
+      `related:` still points at `/plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`
+      (now archived) — that file is itself 1216L, over the 1000L hard cap (RULE-11), so staging it for even a 1-line
+      reference fix is blocked by `check_line_caps.sh`'s no-exceptions-on-touched-files rule until it's split. **Done
+      when**: split `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` under 1000L (fold into the P3 line-cap
+      cleanup below or its own pass), then fix the reference.
 - [ ] [REVIEW] P3. Confirm `/plan-reconcile`'s existing contradiction-sweep phases are sufficient to catch a doc that
       moves without its referrers being updated going forward (the archival-ritual gap above, once fixed, should be
       enforced by more than operator diligence) — extend the skill's Phase 1/AO-dispatch-readiness hunters if not.

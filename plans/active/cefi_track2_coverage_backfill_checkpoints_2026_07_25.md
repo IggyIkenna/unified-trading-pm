@@ -21,7 +21,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
+    /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
   ]
 created: "2026-07-25"

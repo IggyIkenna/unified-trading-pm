@@ -294,8 +294,8 @@ interactive-portion deletions listed in "Already shipped" above. Breakdown by ca
   first). `data_manifest_handler.py`'s data-status/coverage scanner resolves a different (and now-confirmed-empty)
   bucket than what the actual writer populates. If this scanner feeds a live coverage report, it's currently showing
   false-0%/RED for real, present gas-fees data. Filed as
-  `unified-trading-pm/plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md` (PR #920) — this is
-  the "big finding, data-correctness" flag per workspace rules. **Needs your read + a direction call**: point the
+  `unified-trading-pm/plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md` (PR #920) — this
+  is the "big finding, data-correctness" flag per workspace rules. **Needs your read + a direction call**: point the
   readers at the market-data bucket, or make the writer dual-write — the doc lays out both options and what to check
   first (`/codex/05-infrastructure/manifest-consolidator-ssot.md`).
 
