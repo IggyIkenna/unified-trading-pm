@@ -50,7 +50,7 @@ related:
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
     /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     /plans/active/data_completion_sports_2026_07_24.md,
-    /plans/active/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
+    /plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
     /plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
     /plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md,
     /plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,

@@ -7,7 +7,7 @@ title:
 summary:
   Build the "migrate once, never need a v10" harness — a canonical possible-manifest registry + bidirectional orphan
   sweep + schema-attribute completeness verification that acts as the G3.5 pre-apply gate for the v9 data migration.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -68,6 +68,8 @@ drift_direction: advance-code
 ---
 
 # Migration verification & orphan-safety — the "migrate once" harness
+
+> **Archived 2026-07-25** — all todos verified done, no living-tracker/recurring purpose. status: active -> complete.
 
 > **🟡 TRIMMED + UNLOCKED (2026-07-24, plan line-cap remediation split,
 > `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` row 18 / bucket (d)).** This plan's durable protocol

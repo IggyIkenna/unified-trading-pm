@@ -25,7 +25,7 @@ scope: [engineer, admin]
 tags: [infra, ops, audit, manifest, migration, plan-split, residual]
 related:
   [
-    /plans/active/migration_verification_orphan_safety_2026_06_10.md,
+    /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
@@ -45,7 +45,7 @@ supersedes:
 superseded_by:
 depends_on: []
 source: >-
-  Forked verbatim from `plans/active/migration_verification_orphan_safety_2026_06_10.md` (its own main body A2/B
+  Forked verbatim from `plans/archive/migration_verification_orphan_safety_2026_06_10.md` (its own main body A2/B
   sections + Progress Log entries dated 2026-06-12 through 2026-06-22) as part of the 2026-07-24 plan line-cap
   remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 18 / bucket (d)). The parent plan's
   durable protocol (CF-15…CF-21) had already migrated to codex; these 9 items were the last genuinely-open items that
@@ -56,7 +56,7 @@ source: >-
 # Infra/ops residual tail
 
 > **Origin.** All 9 todos below are moved **verbatim** from
-> `plans/active/migration_verification_orphan_safety_2026_06_10.md` (now trimmed + unlocked; full historical Progress
+> `plans/archive/migration_verification_orphan_safety_2026_06_10.md` (now trimmed + unlocked; full historical Progress
 > Log archived to `plans/audit/results/migration_orphan_safety_goalpost_verification_2026_06_10.md` as an Appendix). 2
 > of the 9 (`MVP Phase 2-3`, `Execution-config compatibility pre-flight`) came from the parent's `## A2`/`## B` sections
 > rather than its Progress Log — both are **pointer-only** items whose own text says they belong to a different

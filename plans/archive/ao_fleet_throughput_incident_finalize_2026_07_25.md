@@ -7,7 +7,7 @@ summary: >-
   todo 2's dormant-slot finding changes anything about the companion ao_worker_context_lifecycle_gap_2026_07_25.md plan
   (a fixed AutoSpawn cap/backoff could change how many slots are ever candidates for the context-gate logic that plan
   ships), and runs the standard archival ritual.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -38,6 +38,8 @@ sequential: true
 ---
 
 # AO fleet throughput incident — finalize
+
+> **Archived 2026-07-25** — all todos verified done, no living-tracker/recurring purpose. status: active -> complete.
 
 > **Machine-gated on `ao_fleet_throughput_incident_2026_07_25.md`** — will not dispatch until all 3 of that plan's todos
 > are `done`.

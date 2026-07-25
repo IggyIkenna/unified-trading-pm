@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [defi, lst-rates, venue-canonicalisation, manifest, migration, plan-split, residual]
 related:
   [
-    /plans/active/migration_verification_orphan_safety_2026_06_10.md,
+    /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
@@ -42,7 +42,7 @@ supersedes:
 superseded_by:
 depends_on: []
 source: >-
-  Forked verbatim from `plans/active/migration_verification_orphan_safety_2026_06_10.md` (its own Progress Log, entry
+  Forked verbatim from `plans/archive/migration_verification_orphan_safety_2026_06_10.md` (its own Progress Log, entry
   dated 2026-06-16) as part of the 2026-07-24 plan line-cap remediation
   (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 18 / bucket (d)). The parent plan's durable
   protocol (CF-15…CF-21) had already migrated to codex; these were the last genuinely-open items in its defi-venue
@@ -52,7 +52,7 @@ source: >-
 # DeFi venue hygiene + lst-rates aggregation residual
 
 > **Origin.** Both todos below are moved **verbatim** from
-> `plans/active/migration_verification_orphan_safety_2026_06_10.md` (now trimmed + unlocked; full historical Progress
+> `plans/archive/migration_verification_orphan_safety_2026_06_10.md` (now trimmed + unlocked; full historical Progress
 > Log archived to `plans/audit/results/migration_orphan_safety_goalpost_verification_2026_06_10.md` as an Appendix).
 > Neither is a data gap — both are data-status aggregation / venue-spelling hygiene items, explicitly NICE-TO-HAVE / P3
 > in the source.

@@ -28,7 +28,7 @@ related:
     /plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md,
     ../epics/sports_master.md,
     /plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md,
-    /plans/active/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
+    /plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
     /plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md,
   ]
 created: 2026-07-16
@@ -108,7 +108,7 @@ remediation, `plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 
 - [`sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`](/plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
   — T2.9 (MDT `(sports, odds, trades)` schema-contract drift) + T2.10 (47,253 phantom `api_football × trades` rows,
   entangled with `_legacy_seed.parquet`/OR-4/OR-5b). Both still open, P0.
-- [`sports_legacy_cutover_closeout_tasks_2026_07_24.md`](/plans/active/sports_legacy_cutover_closeout_tasks_2026_07_24.md)
+- [`sports_legacy_cutover_closeout_tasks_2026_07_24.md`](/plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md)
   — T6.7 (post-phase codex audit) + T6.8 (retire the migration one-offs + dead `include_legacy_archive` knob + a
   false-progress tick). Both still open, P1/P2.
 

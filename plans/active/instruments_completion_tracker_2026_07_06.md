@@ -18,7 +18,7 @@ related:
   [
     /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
-    /plans/active/migration_verification_orphan_safety_2026_06_10.md,
+    /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,

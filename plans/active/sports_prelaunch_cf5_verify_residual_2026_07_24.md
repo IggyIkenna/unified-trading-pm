@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [sports, cf-5, pre-launch-window, manifest, migration, plan-split, residual]
 related:
   [
-    /plans/active/migration_verification_orphan_safety_2026_06_10.md,
+    /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
@@ -42,7 +42,7 @@ supersedes:
 superseded_by:
 depends_on: []
 source: >-
-  Forked verbatim from `plans/active/migration_verification_orphan_safety_2026_06_10.md` (its own Progress Log, entries
+  Forked verbatim from `plans/archive/migration_verification_orphan_safety_2026_06_10.md` (its own Progress Log, entries
   dated 2026-06-11 / 2026-06-16) as part of the 2026-07-24 plan line-cap remediation
   (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 18 / bucket (d)). The parent plan's durable
   protocol (CF-15…CF-21) had already migrated to codex; these were the last genuinely-open items in its sports thread
@@ -52,7 +52,7 @@ source: >-
 # Sports pre-launch-window + CF-5 relabel residual
 
 > **Origin.** Both todos below are moved **verbatim** from
-> `plans/active/migration_verification_orphan_safety_2026_06_10.md` (now trimmed + unlocked; full historical Progress
+> `plans/archive/migration_verification_orphan_safety_2026_06_10.md` (now trimmed + unlocked; full historical Progress
 > Log archived to `plans/audit/results/migration_orphan_safety_goalpost_verification_2026_06_10.md` as an Appendix).
 > **Freshness flag (not an edit to the text below):** the CF-5 fix was last recorded (2026-06-16) as code-complete but
 > **not yet landed** (blocked on a dirty MTDS/UAC dep tree, preserved on a wip branch) — over a month has passed since,
