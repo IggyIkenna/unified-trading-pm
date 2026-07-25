@@ -164,7 +164,7 @@ source: >-
       backed up via CAS-safe generation-preconditioned write). Applied in prod + verified twice: 0 remaining objects, 0
       remaining manifest rows. (repo: instruments-service). Source:
       `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
-- [ ] [DATA] P0. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
+- [x] ✅ [DATA] P0. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
       (XG_SHOTS 0% / XG 13% / PLAYER_STATS 21% / MATCHES 35% / INJURIES 37%), NOT a schema artifact. API-Football
       fixtures (fast, already 100%) → enrichment for the 94, fix broken, be thorough → re-measure toward 100%. (Its
       stated prerequisite — the tarball rebuild with the write-gate — is already DONE.) (repo: instruments-service).
@@ -214,7 +214,32 @@ source: >-
       `expected_unattempted` may have been deleted from the manifest entirely, which would lower both numbers
       independent of the backfill's real contribution. Did not have time to confirm this confound explains the full
       delta (would need the baseline's original exact query + a floor-aware re-run to isolate the backfill's true
-      effect) — flagging for whoever assesses this todo next rather than guessing either way.
+      effect) — flagging for whoever assesses this todo next rather than guessing either way. — **CONFOUND RESOLVED,
+      CHECKBOX FLIPPED 2026-07-25T04:20Z (slot 11, data_engineering): it was a methodology artifact, not a real
+      regression.** Downloaded 3 manifest snapshots directly (`availability_index.20260724-202648.bak.parquet` /
+      `availability_index.20260725-002417.drop_14231_315.bak.parquet` [the actual pre-backfill baseline] / current
+      `availability_index.parquet`) and re-ran the INJURIES query filtered consistently to the same 96-league canonical
+      set (`unified_api_contracts...mvp_scope_rules._mvp_football_league_ids()`) across all three. Root cause of the
+      apparent regression: the prior assessor's cited baseline (`captured=10,502 / expected_unattempted=10,219`) was
+      **unfiltered** (all leagues), while the cited "current" re-measurement
+      (`captured=9,260 / expected_unattempted=     8,568`) was 94-league-**filtered** — an apples-to-oranges comparison,
+      not a real decrease. Re-run with the SAME filter both times: baseline (00:24, post-drop_14231_315, i.e. the true
+      pre-backfill state) `captured=8,803 /     expected_unattempted=10,219` (pre-floor phantom 8,474 + post-floor real
+      gap 1,745) → current (04:12) `captured=     9,260 / expected_unattempted=8,474` (pre-floor phantom 8,474
+      UNCHANGED, post-floor gap 1,745→**0**, fully closed). Three independent signals rule out a lost-update/floor-clamp
+      confound: (1) the pre-floor phantom count is byte-identical (8,474) across all 3 snapshots spanning
+      before/during/after the backfill — the deferred manifest phantom-prune
+      (`/codex/02-data/sports-2020-06-data-floor.md`) genuinely has not touched these rows; (2) filtered row COUNT grew
+      (294,920→299,090), ruling out a row-collapse/lost-update explanation (a collapse loses rows, this gained them);
+      (3) captured is monotonically increasing across all 3 reads (8,800→8,803→9,260) both filtered and unfiltered
+      (10,499→10,502→10,920) — consistent with real, ongoing backfill progress, not noise. **Done-when met**: the 6
+      non-INJURIES entities were already confirmed exhaustively-attempted (>99% honest-absence) by the prior session's
+      re-measurement above; INJURIES — the one genuine exception — now shows its post-floor real gap closed 100%
+      (1,745→0 `expected_unattempted`). `af-backfill-20260725-002739` confirmed terminal
+      (`exit_code=0`/`DEPLOYMENT_COMPLETED`, self-deleted, per the prior session); the only `af-backfill-*` VM currently
+      running (`af-backfill-20260725-032253`) is an unrelated FIXTURE_EVENTS refetch-recovery job from a different task,
+      not a duplicate of this one. Source:
+      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
 - [x] ✅ [CODE] P1. **UAC canonical registry build/refine** — unified-api-contracts@ce18ff15. Audited every clause of
       the Architecture section against current code before touching anything (most of this program had already shipped):
       name/ids/country/season-start-end-per-year (`season_dates.get_season_start`/`get_season_end`, per-league-per-year)
