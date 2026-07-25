@@ -536,8 +536,8 @@ source: >-
 
 ### From `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`
 
-- [ ] [CODE] P1. **Stop stale/zombie ticks at bucket assignment** (fix locus: MDPS, not MTDS raw ingestion). Primary fix
-      in `market-data-processing-service/.../adapters/sports/bucket_assignment_adapter.py`: drop rows whose
+- [x] ✅ [CODE] P1. **Stop stale/zombie ticks at bucket assignment** (fix locus: MDPS, not MTDS raw ingestion). Primary
+      fix in `market-data-processing-service/.../adapters/sports/bucket_assignment_adapter.py`: drop rows whose
       `staleness_seconds` (`fetch_utc − bm_time`) exceeds a sane cap (hours-scale, ≥ the largest horizon window) or
       whose `kickoff_utc` is far outside the fetch day's horizon reach, BEFORE horizon assignment — record
       honest-absence/zero rows for that league-day instead. Per the doc's own status: the post-kickoff (`bm_minutes<0`)
@@ -549,7 +549,18 @@ source: >-
       `kickoff_utc` falls outside the fetch day's horizon reach; the known zombie fixtures no longer land in any horizon
       bucket on re-processed days, while a genuine single-snapshot real-fixture case is NOT dropped; covered by a
       unit/regression test for both zombie classes plus the real case. Source:
-      `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`.
+      `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`. — SHIPPED 2026-07-25 (slot 7, data_engineering):
+      added `STALENESS_CAP_SECONDS` (48h — comfortably ≥ the largest horizon window, 24h/1440min) and
+      `KICKOFF_PAST_CAP_SECONDS` (7 days) checks to `_prepare_tick_data()`, the single choke point BOTH
+      `process_to_candles()` and `process_to_bucketed_df()` already call before `assign_horizon_bucket(s)` — a **design
+      choice, not literally inside those two functions as the todo text implies**: `_prepare_tick_data` is where the
+      existing causality filter (`bm_time <= fetch_utc`) already lives, so this mirrors that established pattern and
+      protects both entry points identically without duplicating the check. `staleness_seconds` catches the
+      Russia-Premier-League zombie class directly (bm_minutes≈1423≈T-24h but bm_time 3.5 years stale);
+      `kickoff_utc`/`commence_time` (naming varies by corpus generation, same fallback as `_derive_match_midnight_us`)
+      is a second independent signal. 5 new tests (years-stale-bm_time, fresh-scrape-not-dropped,
+      partial-drop-still-processes, years-past-kickoff, genuine-near-term-kickoff-not- dropped) — 67/67 pass.
+      `quality-gates.sh --no-fix` fresh green (75s, sentinel not cached). market-data-processing-service@aa6e8ac.
 
 ### From `issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`
 
