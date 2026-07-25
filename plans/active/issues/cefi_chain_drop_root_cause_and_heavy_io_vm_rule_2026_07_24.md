@@ -38,6 +38,7 @@ code_refs:
     instruments-service/scripts/verify_cefi_dedup_key_fold_2026_07_24.py,
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
+    market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py,
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -286,15 +287,77 @@ lesson.
 
 **Surface C is now DONE.** Item 3 in the Deferred-work table below is closed.
 
+## Finding 8 (2026-07-25) — LATE-renames scoped dry-run: LIGHTER-ZKSYNC already covered; 1114 GENUINE collisions found + fully characterized; safe majority unblocked via date-range exclusion; residual queued as an operator question
+
+**New VM launcher category** `cefi-late-renames` added to `launch-canonical-migration-vm.sh`
+(`deployment-service@bce12fc`) — mirrors `cefi-dedup-apply` but for
+`migrate_cefi_tardis_filename_canonical_2026_07_17.py` (market-tick-data-service). Unlike `cefi-dedup-apply`,
+`START_DATE`/`END_DATE` are honored for REAL (not cosmetic) — this is what makes a properly-scoped run tractable at all
+(an unscoped 2019-2026 walk measures 48-67 HOURS, per Finding 4).
+
+**Scoped dry-run** (`cefi-late-renames 2025-11-01 2026-07-24 dry`, ~37min wall-clock, e2-standard-8): confirms the "LATE
+window" framing was right — 690,286 already-canonical, 508,965 `would_rename`, 18,356 `unresolved_wire` (honest, left
+raw), 204 DERIBIT SPOT/PERPETUAL mislabels (left raw, pre-existing/known). **LIGHTER-ZKSYNC: 12,373 planned renames
+within this SAME window** — exceeds the original "~11,283 objects" estimate for the separately-tracked LIGHTER-ZKSYNC
+backfill (Deferred-work item 6), confirming that item is **fully subsumed by this LATE-renames run** — no separate
+wider-range run is needed; item 6 closes as part of item 2b.
+
+**STOP-ON-SURPRISE: 1114 genuine collisions**
+(`target ... collides with existing distinct object (content differs — NOT a duplicate, genuine collision)`) — the
+script correctly REFUSED to proceed to `--apply` while these exist (would `sys.exit(4)` before any mutation). The first
+run only logged `surprises[:40]` (2 venues, 3 dates visible) — not enough to characterize root cause, so added full
+venue+date breakdown logging (`mtds@780c91a8`, "fix(cefi): log full venue/date breakdown for STOP-ON-SURPRISE
+collisions") and re-ran. **Full picture**: `breakdown by venue: {HYPERLIQUID: 660, ASTER: 444, DERIBIT: 10}`,
+`breakdown by date: {2026-01-01: 494, 2026-01-02: 488, 2026-01-03: 121, 2025-11-01: 5, 2025-11-02: 5, 2026-07-11: 1}` —
+**1103 of 1114 (99%) concentrate on exactly 3 consecutive dates (2026-01-01/02/03), split across HYPERLIQUID + ASTER**
+(two structurally different venues — one on-chain DEX writing canonical filenames natively, one Tardis-sourced CEX-style
+capture) — the DERIBIT 10 (2025-11-01/02) are a separate, small, pre-existing pattern already adjacent to the known
+mislabel issue; the lone 2026-07-11 entry is an isolated outlier.
+
+**Root-cause hypothesis (not yet independently confirmed against raw object content)**: a writer/pipeline transition
+around 2026-01-01 changed HYPERLIQUID/ASTER's file-naming convention (or a historical backfill using the OLD wire-form
+convention re-captured those 3 specific days after a live/forward pipeline had ALREADY written canonical-form objects
+for the same days) — producing two REAL, DIFFERENT-CONTENT captures of the same nominal (day, venue, instrument) slot
+under two different filenames. This is structurally the same shape as Finding 5's ASTER `chain`-tagging transition and
+the BITFINEX-SPOT/BYBIT-SPOT residual (Finding 5) — a genuine "two real captures, no way to prefer one without a policy
+call" situation, but at the PHYSICAL FILE level this time (forcing past it would mean literally deleting one object's
+content via the rename's copy+delete, not just dropping a duplicate manifest row) — meaningfully higher stakes than the
+Surface C residual.
+
+**Resolution taken (no data-loss judgment call made unilaterally)**: since ALL 1114 collisions fall on exactly 6
+distinct dates, and the dry-run already proves NO OTHER collisions exist anywhere else in the 2025-11-01..2026-07-24
+window, the safe 508,965−~1114 renames can proceed via **three excluding date-range `--apply` passes** — Range A
+`2025-11-03..2025-12-31`, Range B `2026-01-04..2026-07-10` (the bulk), Range C `2026-07-12..2026-07-24` — each provably
+collision-free per this dry-run. The 6 excluded dates (2025-11-01, 2025-11-02, 2026-01-01, 2026-01-02, 2026-01-03,
+2026-07-11) stay wire-form/unrenamed for now, tracked as their own residual item — **maximizes safe, real progress now
+without gambling on the ambiguous slice**, mirroring this session's own established "leave mislabels/residuals
+honest-raw rather than guess" pattern (Finding 2).
+
+> **🟡 OPERATOR QUESTION QUEUED (not blocking — answer whenever convenient)**: the 1114 HYPERLIQUID/ASTER/DERIBIT
+> collisions on 2026-01-01/02/03 (+2025-11-01/02, +2026-07-11) are two genuinely different captures per (day, venue,
+> instrument) slot — one under the wire-form filename, one under the canonical filename, **content differs, not a
+> duplicate**. Forcing a rename here means the copy+delete step DESTROYS whichever object doesn't survive. Options:
+> **(a) leave both under their current names permanently** (safest — zero data loss, but the wire-form copy stays
+> non-canonical forever, i.e. Surface A never reaches 100% for these exact slots); **(b) investigate further** (pull
+> both objects' row counts / capture-time-range / actual tick content for a handful of the 1114 to determine whether one
+> is a strict subset/partial of the other, which could make a safe merge-not-overwrite possible — this is real,
+> non-trivial investigation work, not a quick check); **(c) operator inspects a sample directly and rules on which
+> capture is authoritative** for this specific (writer-transition) population. **Recommendation: (a) for now** (zero
+> risk, the volume is tiny — 1114 of 508,965, 0.2% — and nothing downstream is blocked by leaving them as-is), revisit
+> with (b) if and when there's a reason to care about that exact 0.2%. Tracked in the Deferred-work table below as item
+> 2b-residual, `assigned_vm: NA` (needs a human data-risk call, not dispatch-eligible per the plan-authoring rule on
+> open-ended judgment calls).
+
 ## What's left (unchanged from the parent plan's last-known Deferred-work table, ~13:35Z revision)
 
-| #   | Item                                                                                                   | State                | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
-| --- | ------------------------------------------------------------------------------------------------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2b  | LATE colliding-venue renames                                                                           | Not done             | Needs a properly-scoped (`--start-date`/`--venue`) run — the unscoped attempt above was killed; run from the migrated VM                                                                                                                                                                                                                                                                                        |
-| 2c  | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done             | Next after 2b                                                                                                                                                                                                                                                                                                                                                                                                   |
-| 3   | Surface C v2 manifest apply                                                                            | **DONE** (Finding 7) | Applied successfully on `cefi-dedup-apply` / `e2-standard-16`: `V2 APPLY COMPLETE + GATE GREEN`, chain-lossy=28 (`TOLERATED`, as predicted), 0 invariant violations. Verified via a clean second dry-run (chain-lossy=0, all markers already landed). Cron paused before / resumed + verified `ENABLED` after. See Finding 7 for the full record, incl. a second tarball-staleness near-miss caught pre-launch. |
-| 6   | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | Not done             | Resolver code SHIPPED (`mtds@8835b899`); dry-run + apply itself never attempted                                                                                                                                                                                                                                                                                                                                 |
-| 9   | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet   | Gated on 2b/2c/3/6 all landing                                                                                                                                                                                                                                                                                                                                                                                  |
+| #           | Item                                                                                                   | State                                     | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2b          | LATE colliding-venue renames                                                                           | In progress (Finding 8)                   | Scope confirmed + fully characterized; safe majority (~507,851 objects) about to apply via 3 date-range passes excluding 6 known-colliding dates. LIGHTER-ZKSYNC (item 6) fully subsumed — closes with this.                                                                                                                                                                                                    |
+| 2b-residual | 1114 HYPERLIQUID/ASTER/DERIBIT genuine collisions on 6 dates                                           | **BLOCKED-OPERATOR-DECISION** (Finding 8) | Queued above — NOT blocking the rest of 2b. Default posture: leave both objects under current names (zero data loss) until the operator rules.                                                                                                                                                                                                                                                                  |
+| 2c          | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done                                  | Next after 2b                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 3           | Surface C v2 manifest apply                                                                            | **DONE** (Finding 7)                      | Applied successfully on `cefi-dedup-apply` / `e2-standard-16`: `V2 APPLY COMPLETE + GATE GREEN`, chain-lossy=28 (`TOLERATED`, as predicted), 0 invariant violations. Verified via a clean second dry-run (chain-lossy=0, all markers already landed). Cron paused before / resumed + verified `ENABLED` after. See Finding 7 for the full record, incl. a second tarball-staleness near-miss caught pre-launch. |
+| 6           | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | **Subsumed by 2b** (Finding 8)            | 12,373 LIGHTER-ZKSYNC renames confirmed within the same LATE-window scope — no separate run needed                                                                                                                                                                                                                                                                                                              |
+| 9           | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet                        | Gated on 2b/2c/3/6 all landing                                                                                                                                                                                                                                                                                                                                                                                  |
 
 Items 1 / 2a / 4 / 4b / 5 / 7c from the parent plan are DONE (unchanged, see the parent's own last-committed revision,
 commit `6cb36c9d2`, for that history). Item 7 (DERIBIT combo partition-move) and item 8 (`slot-cron-ff-pull.sh` audit)
