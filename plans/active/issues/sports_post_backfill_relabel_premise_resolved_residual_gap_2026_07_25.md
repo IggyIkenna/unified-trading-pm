@@ -123,13 +123,44 @@ of the follow-up:
 
 ## Todos
 
-- [ ] [DATA] P2. Confirm or refute the FIXTURES-split-timing hypothesis for the 18,521
+- [x] ✅ [DATA] P2. Confirm or refute the FIXTURES-split-timing hypothesis for the 18,521
       `FIXTURES_OUTCOMES`/`FIXTURES_SCHEDULE` `expected_unattempted` rows in the 2026-02-20->06-19 window (check whether
       the legacy `FIXTURES` entity's own row proves the fixture happened for a sample of these cells, and whether the
-      writer has ever been asked to backfill the split entities for pre-cutover dates). (repo: instruments-service)
-- [ ] [DATA] P2. Once diagnosed, close the provably-closeable subset via a safety-pattern script (never a blind
-      no-coverage relabel) — mirror `close_stale_enrichment_expected_unattempted_cells_2026_07_19.py`'s provable-closure
-      discipline. Re-measure honest-cov delta afterward. (repo: instruments-service)
+      writer has ever been asked to backfill the split entities for pre-cutover dates). (repo: instruments-service) —
+      **REFUTED 2026-07-25T06:00Z (slot 11, data_engineering) — the true root cause is different and simpler than the
+      timing-mismatch hypothesis.** Downloaded the current `_index/availability_index.parquet` (single read, no new
+      corpus walk) and checked per-league status across the window date-by-date: `ALLSVENSKAN`'s `FIXTURES_SCHEDULE`
+      rows alternate `captured` (real `instrument_count`, e.g. 2/3/4/5) on genuine match days and `expected_unattempted`
+      (blank count) on days with no matches, INTERLEAVED throughout the whole window — not a clean pre/post-cutover date
+      split as the hypothesis predicted. **The writer clearly ran on every date in range** (proven by real captured rows
+      scattered across the full window, not clustered after 2026-07-14) — it just never writes ANYTHING (not even an
+      empty-confirmation) on a day with zero real fixtures for that league. Cross-checked against the legacy `FIXTURES`
+      entity (which DOES correctly mark `empty_confirmed`/`instrument_count=0` for the exact same off-days) — confirming
+      these are genuinely zero-fixture days, not silently-dropped real data. **Root cause**: the
+      `FIXTURES_OUTCOMES`/`FIXTURES_SCHEDULE` writer skips writing on a no-content day instead of calling the same
+      expected-empty confirmation path the legacy `FIXTURES` writer uses — leaving the enumerator's original
+      `expected_unattempted` seed permanently unresolved for every genuinely-empty day, not just pre-cutover ones.
+      Verified at full scale, not just the one sample league: of all 9,265 unique `(date, league_id)` cells the split
+      entities carry as `expected_unattempted` in this window, **8,937 (96.5%) have a legacy `FIXTURES` row confirming
+      `empty_confirmed`/0 instruments** — provably safe honest-absence, not a real gap. The remaining 328 split into two
+      genuinely different buckets: **88 have a legacy `FIXTURES` row showing `captured`** (real fixture data exists
+      there but never reached the split entities — a genuine, narrow gap needing a targeted re-fetch, NOT a relabel);
+      **240 have the legacy `FIXTURES` row ALSO `expected_unattempted`** (both entities pending — concentrated in
+      `CHINA_SUPER_LEAGUE`/`RUSSIA_PREMIER_LEAGUE`, added to the in-universe set 2026-07-21, so this is most likely
+      their own historical-window backfill lag, a separate/already-known gap class, not this issue).
+- [ ] [DATA] P2. Close the provably-closeable subset via a safety-pattern script (never a blind no-coverage relabel) —
+      mirror `close_stale_enrichment_expected_unattempted_cells_2026_07_19.py`'s provable-closure discipline. Re-measure
+      honest-cov delta afterward. (repo: instruments-service). **Exact predicate now known (2026-07-25, slot 11)**: for
+      every `FIXTURES_OUTCOMES`/`FIXTURES_SCHEDULE` row with `capture_status=expected_unattempted` in this window, close
+      it to `expected_empty`/`empty_confirmed` IF AND ONLY IF the same `(date, league_id)`'s legacy `FIXTURES` row is
+      `empty_confirmed` with `instrument_count=0` — this closes 8,937 of the 9,265 cells (96.5%) with zero risk of
+      false-absence (the legacy entity's own confirmed-empty row is the proof). The other 328 must NOT be auto-closed:
+      88 need a targeted re-fetch (legacy proves real data exists), 240 need the same treatment applied once the legacy
+      `FIXTURES` entity itself resolves for `CHINA_SUPER_LEAGUE`/`RUSSIA_PREMIER_LEAGUE`. Also consider fixing the
+      writer itself (call the expected-empty confirmation path on no-content days, matching the legacy `FIXTURES`
+      writer's behavior) so this class doesn't keep re-accruing for future dates — out of this todo's
+      read-only-diagnosis scope, flagging for whoever picks up the write. Not attempted this session (a real PROD
+      manifest write, needs CAS per the issue doc's own §4 given the concurrently-writing backfill VM).
 - [ ] [DATA] P3. Separately check the `odds_horizon_bucket` (11,146 rows, MDPS-owned) and `TEAMS` (1,758 rows) residuals
       in the same window — different owning writer, likely a different root cause than the FIXTURES-split timing gap.
       (repo: market-tick-data-service for odds_horizon_bucket; instruments-service for TEAMS)
