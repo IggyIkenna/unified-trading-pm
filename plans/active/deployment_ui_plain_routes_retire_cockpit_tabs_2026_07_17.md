@@ -8,7 +8,7 @@ summary: >-
   also FIXES a real bug the tab scheme caused: because the cockpit shell owns the URL, embedded tabs cannot own their
   query params, so `DeploymentsContent` abandons the URL for local state when embedded — silently losing filter
   deep-linking.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -18,7 +18,7 @@ tags: [deployment-ui, routing, url-scheme, refactor, cockpit, deep-link]
 related:
   - /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md
 created: "2026-07-17"
-last_updated: "2026-07-17"
+last_updated: "2026-07-25"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only

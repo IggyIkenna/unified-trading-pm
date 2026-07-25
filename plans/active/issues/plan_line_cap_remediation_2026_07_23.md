@@ -11,7 +11,7 @@ summary: >-
   inline work (disqualifying it from a pure index/hub read) or is already over the 2000L ceiling where umbrella-flagging
   alone cannot help. 14 of 30 are bucket (d) because locked_by=live-defi-rollout is set -- CLAUDE.md/PLAN_FORMAT.md
   require an operator "[unlock-plan]" grant before any of those can be touched.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting, meta]
 stage: [meta]
@@ -40,7 +40,11 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: NA
-resolved_by:
+resolved_by: >-
+  body's own FINAL RESOLUTION 2026-07-24 -- all 30 original + 9 newly-exposed plans closed, check_line_caps.sh green.
+  Re-verified live 2026-07-25: 1 pre-existing violation within the shrinking-ratchet baseline (17), not a regression --
+  new organic growth since 2026-07-24 is normal ongoing hygiene tracked by the ratchet itself, not a reopening of this
+  issue's original 30-plan debt.
 ---
 
 # Plan line-cap remediation — 30-plan triage

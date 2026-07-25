@@ -2,7 +2,7 @@
 doc_type: issue
 title: Codex Alignment Deviation Scan — 2026-06-25
 summary: Produced by `[AGENT] P1` in `plans/epics/plan_hygiene_master.md` Phase 4.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -15,13 +15,13 @@ parent_epic: plan_hygiene_master
 priority: P2
 source: [plan_hygiene_master]
 assigned_vm: vm-cross-cutting
-resolved_by:
+resolved_by: verdict CLEAN, no action items (see body)
 locked_by: live-defi-rollout
 locked_since: 2026-06-25 # (was: 2026-05-21 -- corrected 2026-07-15, plan-reconcile: predated created: 2026-06-25, an impossible ordering -- realigned to created)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-25 # status flipped resolved -- body's own Verdict section reads "CLEAN...no action needed"; a completed one-off scan, not ongoing work
 ---
 
 # Codex Alignment Deviation Scan — 2026-06-25

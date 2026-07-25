@@ -4,7 +4,7 @@ title: vm-zombie-watchdog relaunch (dry_run=false) reaped 9 live campaign backfi
 summary:
   While restoring the genuinely-down `vm-zombie-watchdog` (its census blob `vm-census/watchdog-census.json` was absent →
   `DP_ZOMBIE_WATCHDOG_DOWN`, because the running VM `vm-zombie-watchdog-20260528...
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,12 +26,12 @@ source:
     scripts/vm/vm_zombie_watchdog.py,
   ]
 assigned_vm: NA
-resolved_by:
+resolved_by: deployment-service@763b4f4
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-18
+last_updated: 2026-07-25 # status flipped resolved -- 0 open todos remain, final fix deployment-service@763b4f4; real-mode relaunch stays a separate operator-gated decision (out of this issue's scope)
 ---
 
 ## What I found

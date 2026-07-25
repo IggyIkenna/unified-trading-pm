@@ -4,7 +4,7 @@ title: VERIFY P1 cross-plan prereq DAG + seasonal_continuous during-season seman
 summary:
   "Filed per the BLK-d378494f scope decision (Option B): wire the live reader + run the EPL 2025 sports slice now; defer
   the other 4 AGs to their prereq sequence. Two findings."
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,12 +21,12 @@ parent_epic: plan_hygiene_master
 priority: P2
 source: [plans/archive/2026_07/honest_coverage_smoke_harness_2026_06_28.md, BLK-d378494f]
 assigned_vm: NA
-resolved_by:
+resolved_by: e2e-testing@997d66b, e2e-testing@4a617fb
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-04 # (was: 2026-06-27 -- corrected 2026-07-15, §A2 B-queue ruling: predated created: 2026-06-29, an impossible ordering; realigned to the doc's latest evidenced modification, git commit 1e0699fc8 dated 2026-07-04)
+last_updated: 2026-07-25 # status flipped resolved -- all 6 actionable follow-ups [x], Option 1 (clip-to-today) implemented + verified (unified-api-contracts@0d7805a8), both follow-up CLIs shipped
 locked_since: 2026-06-29 # (was: 2026-05-21 -- corrected 2026-07-15, §A2 B-queue ruling: predated created: 2026-06-29, an impossible ordering; realigned to the doc's creation date)
 ---
 
