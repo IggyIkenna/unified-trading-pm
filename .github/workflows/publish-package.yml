@@ -33,6 +33,8 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    outputs:
+      recovery: ${{ steps.recovery.outputs.recovery }}
     steps:
       - name: Validate payload
         id: payload
@@ -217,6 +219,40 @@ jobs:
           events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
           gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
 
+      # Recovery detection (2026-07-25): notify-slack.yml's carrier SUPPRESSES a routine
+      # INFO/success post ("routine green/INFO success — not a recovery; suppressed") unless
+      # `recovery: true` is set — so a successful publish following a failed one was silently
+      # dropped (a real gap: `unified-trading-library` v0.57.0 published cleanly after the
+      # GCP_SA_KEY_PROD auth-bug fix, but nothing said so in Slack, only the FAILURE alerts that
+      # preceded it were visible). Per-repo GCS marker (mirrors cloud-build-failure-watcher's
+      # same-day fix) tracks the LAST conclusion for this repo so a genuine fail→success
+      # transition can flag `recovery: true`; a routine repeat success (already green) does not.
+      - name: Check publish recovery state
+        id: recovery
+        if: always()
+        env:
+          CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET }}
+        run: |
+          set -uo pipefail
+          REPO="${{ steps.payload.outputs.repo }}"
+          CONCLUSION="${{ job.status }}"
+          RECOVERED="false"
+          if [ -n "${CICD_EVENTS_BUCKET:-}" ] && [ -n "$REPO" ]; then
+            MARKER_URI="gs://${CICD_EVENTS_BUCKET}/cicd/watchers/publish-package/${REPO}.json"
+            PREV_CONCLUSION="unknown"
+            if gsutil cp "$MARKER_URI" /tmp/pp_prev_state.json 2>/dev/null; then
+              PREV_CONCLUSION=$(python3 -c "import json; print(json.load(open('/tmp/pp_prev_state.json')).get('conclusion','unknown'))" 2>/dev/null || echo "unknown")
+            fi
+            if [ "$PREV_CONCLUSION" = "failure" ] && [ "$CONCLUSION" = "success" ]; then
+              RECOVERED="true"
+            fi
+            echo "Previous publish conclusion for ${REPO}: ${PREV_CONCLUSION}; this run: ${CONCLUSION}; recovery=${RECOVERED}"
+            STATE_JSON=$(python3 -c "import json; print(json.dumps({'conclusion': '${CONCLUSION}'}))")
+            printf '%s' "$STATE_JSON" | gsutil cp - "$MARKER_URI" 2>/dev/null \
+              || echo "::warning::failed to persist publish-package recovery marker for ${REPO}"
+          fi
+          echo "recovery=${RECOVERED}" >> "$GITHUB_OUTPUT"
+
   # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
     name: Slack — Publish Package
@@ -234,4 +270,5 @@ jobs:
       conclusion: ${{ needs.publish.result }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      recovery: ${{ needs.publish.outputs.recovery == 'true' }}
     secrets: inherit
