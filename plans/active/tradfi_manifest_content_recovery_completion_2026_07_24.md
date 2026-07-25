@@ -134,10 +134,11 @@ source: >-
       fails any `instrument_id`/`instrument_key` assignment built via a raw f-string/`.format()` colon-shaped literal
       outside the allow-listed canonical-builder calls
       (`build_instrument_id`/`build_canonical_instrument_id`/`build_leg`/`derive_tradfi_row_instrument_id`/
-      `derive_row_instrument_id`/`canonicalize_raw_tradfi_id`). 0 findings on ship. **Honest caveat**: NOT YET WIRED
-      into `quality-gates.sh`/`base-service.sh` (a fleet-wide blocking-gate change needs the RULE-11 whole-fleet-passes
+      `derive_row_instrument_id`/`canonicalize_raw_tradfi_id`). 0 findings on ship (independently re-verified this
+      session too, incl. an added live-tree anti-regression test). **Honest caveat**: NOT YET WIRED into
+      `quality-gates.sh`/`base-service.sh` (a fleet-wide blocking-gate change needs the RULE-11 whole-fleet-passes
       diligence, out of scope for this single-repo pass) — runnable standalone today, wiring it in is a tracked
-      followup, not silently dropped. (repos: market-tick-data-service)
+      followup, not silently dropped. (repos: market-tick-data-service, unified-api-contracts)
 
 ## Phase B — run the migrations (all four surfaces, gated on Phase A green)
 
@@ -234,10 +235,11 @@ source: >-
       write window and resumed after. **Fresh live re-verification (separate read, post-apply): 0 non-UPPERCASE
       `instrument_type` rows for tradfi, excluding the permanent `futures_chain`/`options_chain` bundle-grain axis** —
       this satisfies the casing directive's literal-100% bar
-      (`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) for the CASING dimension specifically. Bundle
-      atoms `futures_chain`/`options_chain` are a SEPARATE partition-grain axis (manifest-only, null-id) — kept
-      distinct, NOT folded into the enum, per design. (repos: market-tick-data-service, unified-trading-library,
-      instruments-service)
+      (`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) for the CASING dimension specifically.
+      **INDEPENDENT re-verification (separate session, same day, post-writer-fix):** `Rows CHANGED: 0`,
+      `SELF-VERIFY: 4,988,822/4,988,822 UPPERCASE` — corroborates 0 residual with a second, later read. Bundle atoms
+      `futures_chain`/`options_chain` are a SEPARATE partition-grain axis (manifest-only, null-id) — kept distinct, NOT
+      folded into the enum, per design. (repos: market-tick-data-service, unified-trading-library, instruments-service)
 - [ ] [DATA] P1. **Residual from the casing migration above — semantic-mislabel relabel + null/blank resolve are
       SEPARATE, STILL OPEN sub-scopes.** The 2026-07-25 casing script deliberately did NOT touch: (a) the ~566,630 (57%)
       semantically-mismatched rows (options mislabeled `FUTURE`→should-be-`OPTION`, combos→should-be-`COMBO` — a
@@ -256,9 +258,11 @@ source: >-
       `expected_unattempted`/`empty_confirmed` sentinel rows, not captures). Extends the original 3-token map
       (equity/etf/index) to also cover future/combo/spot_pair/spot/currency/bond/cds/commodity. `futures_chain`/
       `options_chain` remain the sole PERMANENT exclusion (bundle-grain axis, unchanged), and the GCS partition-path
-      segment stays lowercase (unchanged, correct — only the MANIFEST column casing is affected). This is the
-      writer-side half of re-drift prevention; the QG-gate half is the separate P1 todo above ("Route the tradfi writers
-      through the shared build_canonical_instrument_id"). (repos: market-tick-data-service, unified-trading-library)
+      segment stays lowercase (unchanged, correct — only the MANIFEST column casing is affected). Evidence: 159/159
+      targeted tests green (23 new + 136 pre-existing, 2 updated to the new correct behavior), full `quality-gates.sh`
+      green (267s). This is the writer-side half of re-drift prevention; the QG-gate half is the separate P1 todo above
+      ("Route the tradfi writers through the shared build_canonical_instrument_id"). (repos: market-tick-data-service,
+      unified-trading-library)
 - [ ] [DATA] P1. **v9 schema / manifest-status finish** (`tradfi_v9_stage1_finish_2026_07_06.md`) — fresh CF-1…CF-12
       all-GREEN re-run; confirm live `_index.schema_version` is int64 not string `'9'`
       (`cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`); Layer-1 % recorded. **Legacy-twin bucket
