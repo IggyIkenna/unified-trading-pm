@@ -4,16 +4,24 @@ title:
   Cross-cutting consolidated close-out — data-pipeline concerns spanning IS/MTDS/features-service/data-status/
   manifest/GCS-path/UAC/UTL across all 5 asset groups
 summary: >-
-  New 6th "asset-group-style" umbrella (alongside cefi/defi/tradfi/prediction/sports) for data-pipeline work that
-  genuinely spans multiple asset groups rather than belonging to one. Authored 2026-07-25 from a 5-agent audit of the
-  68-doc cross-cutting candidate corpus (epic-filtered: infrastructure_master's data-relevant subset +
-  instruments_master + mtds_mdps_master + manifest_master + features_and_ml_master), after fixing 7 real asset_group-tag
-  mistags found while scoping (docs that were single-AG-specific but mistagged cross-cutting, or a fork that inherited
-  its parent coordinator's cross-cutting tag verbatim — see the ag-closeout-audit skill's Orthogonality HARD CHECK
-  section for the full pattern + fixed examples). Organizes the corpus into 15 Tracks with a Reachability map, mirroring
-  the structure of the 5 existing `<ag>_consolidated_closeout_*.md` docs. A same-day light-residual-closeout workflow is
-  executing ~12 bounded fixes + an archival sweep against named items below — Tracks affected carry an `[IN FLIGHT
-  2026-07-25]` marker; re-verify those specific items before trusting this doc's status prose without a fresh check.
+  New 6th "asset-group-style" umbrella (alongside cefi/defi/tradfi/prediction/sports) for data-pipeline (+ a small
+  strategy/execution-determinism angle, Track 24) work that genuinely spans multiple asset groups rather than belonging
+  to one. Authored 2026-07-25 from a 5-agent audit of an initial 68-doc epic-filtered candidate corpus
+  (infrastructure_master's data-relevant subset + instruments_master + mtds_mdps_master + manifest_master +
+  features_and_ml_master), then extended the SAME day with a corpus-wide sweep (all `asset_group: cross-cutting` docs
+  across EVERY parent_epic — 234 total) to make the AG↔topic partition genuinely total: found ~40 more genuine
+  cross-cutting docs missed by the epic-filter (Tracks 16-24, mostly from `observability_master`/`deployment_and_
+  user_management_master`/`orchestrator_master`/`agent_operating_framework_master`/`strategy_master`) plus 19 more real
+  asset_group-tag mistags (single-AG content wrongly tagged cross-cutting, or a fork that inherited its parent
+  coordinator's tag verbatim — see the ag-closeout-audit skill's Orthogonality HARD CHECK section for the full pattern +
+  every fixed example). The same corpus-wide sweep also classified the REMAINDER (docs that are genuinely NOT
+  asset-group-specific data-pipeline content) into 3 new sibling tranches — `ao` (agent-orchestrator, ~35 docs), `ci`
+  (CI/CD, ~33 docs), `infra` (generic repo/dependency/terraform/org hygiene, ~29 docs) — so the full partition (5 AGs +
+  cross-cutting + ao + ci + infra) covers the entire plans/issues corpus with zero unaccounted docs. Now organizes 24
+  Tracks with a Reachability map, mirroring the structure of the 5 existing `<ag>_consolidated_closeout_*.md` docs. A
+  same-day light-residual-closeout workflow is executing ~12 bounded fixes + an archival sweep against named items below
+  — Tracks affected carry an `[IN FLIGHT 2026-07-25]` marker; re-verify those specific items before trusting this doc's
+  status prose without a fresh check.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -121,6 +129,16 @@ silently double-tracked).
 13. **Reconciliation-skill follow-through + bucket split-brain/missing buckets** → Track 13
 14. **Scheduled-job reliability + concurrency/OOM defects + manifest reprocessing tooling** → Track 14
 15. **Test/CI hygiene + closed/retriage-only** → Track 15
+16. **UAC/manifest/catalogue schema-wide audits** → Track 16 (added 2026-07-25, epic-scoping gap)
+17. **pipeline_mode partition + live-pipeline hot-path decoupling** → Track 17 (added 2026-07-25)
+18. **Manifest-consolidator throughput + data-feed SLA/self-healing** → Track 18 (added 2026-07-25)
+19. **Data-pipeline hardening/self-monitoring family** → Track 19 (added 2026-07-25)
+20. **Data-status family** → Track 20 (added 2026-07-25)
+21. **Data-pipeline alert/monitoring bugs** → Track 21 (added 2026-07-25)
+22. **Manifest-hygiene / phantom-capture monitor instances** → Track 22 (added 2026-07-25)
+23. **Manifest schema bump: write-time MVP precompute** → Track 23 (added 2026-07-25)
+24. **Strategy/execution cross-AG determinism + capability-registry** → Track 24 (added 2026-07-25, different angle —
+    flag as the first extraction candidate if this doc ever needs a line-cap split)
 
 ## Track 1 — Coordinator + gate DAG (entry point) · P0
 
@@ -418,6 +436,167 @@ than direct dispatch)
 
 **Close-out criterion**: the 4 in-flight hygiene items close; `empty_reprobe_disagreement` re-triaged or archived;
 `instruments_remaining_work_audit` gets a historical-snapshot banner.
+
+## Track 16 — UAC/manifest/catalogue schema-wide audits · P1/P2
+
+> **Added 2026-07-25** — these 8 docs are genuinely cross-cutting data-pipeline content that got epic-tagged into
+> `agent_operating_framework_master`/`orchestrator_master` instead of one of the 4 epics this doc originally scoped
+> from, so they were missed in the first authoring pass. Already correctly `asset_group: cross-cutting`, no retag needed
+> — just folded in here for coverage.
+
+**Sources**:
+[asset_class_to_asset_group_rename_2026_07_21.md](/plans/active/asset_class_to_asset_group_rename_2026_07_21.md) (UAC
+domain-level `AssetClass`→`AssetGroup` enum rename across all 5 AGs + 7 repos) ·
+[issues/catalogue_census_equivalents_inventory_2026_07_24.md](/plans/active/issues/catalogue_census_equivalents_inventory_2026_07_24.md)
+(manifest/catalogue distinct-values census gaps across strategy/features/fixtures/UAC registries) ·
+[issues/cli_shard_split_flag_coverage_audit_2026_07_24.md](/plans/active/issues/cli_shard_split_flag_coverage_audit_2026_07_24.md)
+(shard-key CLI convention coverage audit across instruments-service/MDPS/features-service) ·
+[issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md](/plans/active/issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md)
+(coverage-percent formula symmetric-inclusion invariant audit, honest-coverage-model) ·
+[issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md](/plans/active/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md)
+(UAC capability-manifest/strategy-catalogue data gaps) ·
+[issues/features_service_catalogue_completeness_inventory_2026_07_24.md](/plans/active/issues/features_service_catalogue_completeness_inventory_2026_07_24.md)
+(features-service catalogue completeness across all 9 modules) ·
+[issues/mvp_scope_resolver_code_read_2026_07_24.md](/plans/active/issues/mvp_scope_resolver_code_read_2026_07_24.md)
+(code-read of the paper/live strategy-universe resolver vs UAC `MVP_SCOPE`, across all 5 AG plans) ·
+`data_pipeline_e2e_milestones_gate_2026_07_24.md` (already cited — the 14-criteria gate doc itself; kept here as a
+pointer, not duplicated, since Track 1 already references its `related:` graph indirectly).
+
+**Close-out criterion**: each audit's own open todos closed or handed to the specific AG closeout its finding lands in.
+
+## Track 17 — pipeline_mode partition + live-pipeline hot-path decoupling · P1
+
+**Sources**:
+[pipeline_mode_partition_migration_2026_06_01.md](/plans/active/pipeline_mode_partition_migration_2026_06_01.md)
+(promotes `pipeline_mode` to an on-disk hive partition across every asset group's next whole-corpus manifest walk) +
+[issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md](/plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md)
+(MTDS/MDPS live-pipeline persistence/hot-path architecture, log-spine decoupling — applies to the whole live pipeline,
+not one AG).
+
+**Close-out criterion**: the hive-partition migration lands on the next scheduled whole-corpus walk (single-walk
+discipline applies — do not schedule a dedicated walk just for this); the hot-path decoupling design ships.
+
+## Track 18 — Manifest-consolidator throughput + data-feed SLA/self-healing · P1/P2
+
+**Sources**:
+[consolidator_throughput_backlog_monitor_2026_07_09.md](/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md)
+(per-AG manifest-consolidator backlog/throughput + "did the run produce its expected data" verdict; open: the v2
+truthful merged-per-tick histogram, currently DESCOPED pending WS-H's structured-progress spine, + the deployments-page
+split) +
+[data_feed_sla_registry_and_active_self_healing_2026_06_19.md](/plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md)
+(open: build the single declarative SLA registry consolidating scattered freshness thresholds, plus active
+re-fetch-on-stale self-healing).
+
+**Close-out criterion**: both open items ship or are explicitly re-deferred to WS-H's spine landing first.
+
+## Track 19 — Data-pipeline hardening/self-monitoring family · P0/P1
+
+**Sources**:
+[data_pipeline_hardening_self_monitoring_2026_06_22.md](/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+(the canonical anti-silent-misclassification hardening doc, explicitly "across all 5 asset groups" — an otherwise-
+shipped detect→auto_recover→file_issue→page loop) + its 3 residual forks (all 2026-07-24):
+[data_pipeline_ag_residual_backfill_decisions_2026_07_24.md](/plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md)
+(tradfi `attempted_failed` retries, a UAC image-packaging bug, tradfi `ohlcv_15s` spurious-aggregation bug, defi
+DIVERGENT_EMPTY backfill-vs-scope campaign) ·
+[data_pipeline_alert_substrate_residual_2026_07_24.md](/plans/active/data_pipeline_alert_substrate_residual_2026_07_24.md)
+(alert-substrate/digest/writer-invariant residuals, alerting-service app-log visibility) ·
+[data_pipeline_self_healing_completion_residual_2026_07_24.md](/plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md)
+(Phase 6-C self-heal actuator wiring/packaging/scheduling).
+
+**Close-out criterion**: all 3 forks' residual items closed; the parent's detect→recover→file→page loop verified live
+end-to-end for all 5 AGs.
+
+## Track 20 — Data-status family · P1
+
+**Sources**:
+[data_status_catalogue_true_source_phase2_2026_07_24.md](/plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md)
+(Phase-2 true-catalogue/expected-universe source via instruments-service) ·
+[data_status_cell_grid_rearchitecture_2026_07_18.md](/plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md)
+(bound/stream/precompute cell-grid rewrite to kill a deployment-api OOM reading the whole manifest) ·
+[data_status_page_ux_and_canonicalisation_2026_07_16.md](/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+(honest-coverage fix + P1-P8 UX/canonicalisation: instrument-type canonicalisation, catalogue explorer, cefi chain-axis
+drift, sports league-drilldown) ·
+[data_status_tab_and_downloads_remediation_2026_06_16.md](/plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md)
+(data-status tab bugs + instruments CSV download regressions, gated on the v9 manifest migration) ·
+[deployment_redesign_cherrypicks_2026_07_20.md](/plans/active/deployment_redesign_cherrypicks_2026_07_20.md)
+(cherry-picks from a superseded branch: triage panel, dark-theme default, `reason_summary`/`reason_category`, mock-mode
+coverage-summary, flat `capture_status` matrix endpoint — all data-status/API items).
+
+**Close-out criterion**: all 5 docs' open P1/P2 items ship; the v9-migration gate on `_tab_and_downloads_remediation`
+re-checked before dispatch (do not surface pre-migration data through the UI, per the data-pipeline-correctness rule).
+
+## Track 21 — Data-pipeline alert/monitoring bugs · P1
+
+**Sources**:
+[issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md](/plans/active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md)
+(DP_NOT_V9/rate-limit alert false-positives tied to the manifest schema v9 migration + consolidation lag) ·
+[issues/dp_event_pubsub_delivery_gap_2026_06_22.md](/plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md)
+(DP_* events have no PubSub→subscriber→router path to `#data-pipeline-alerts`) ·
+[issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md](/plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md)
+(nightly cron VM undersized + launcher SSOT drift across 4 conflicting launcher artifacts → partial `coverage.json`) ·
+[issues/live_mode_event_sink_topic_missing_2026_06_21.md](/plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md)
+(fleet-wide latent bug: live-mode lifecycle event sink publishes to non-existent PubSub topics, MTDS/MDPS).
+
+**Close-out criterion**: all 4 alerting bugs fixed + verified live (the false-positive fix, the missing PubSub route,
+the cron launcher-SSOT reconcile, the missing `{service_name}-events` topic creation for live-mode launches).
+
+## Track 22 — Manifest-hygiene / phantom-capture monitor instances · P2
+
+**Sources**: dated outputs of 2 standing cross-cutting monitors —
+[issues/manifest_hygiene_red_2026_06_27.md](/plans/active/issues/manifest_hygiene_red_2026_06_27.md) (defi instance) +
+[issues/manifest_hygiene_red_2026_06_29.md](/plans/active/issues/manifest_hygiene_red_2026_06_29.md) (cefi instance) —
+both from `manifest_hygiene_daily.py`;
+[issues/phantom_captures_prediction_2026_06_28.md](/plans/active/issues/phantom_captures_prediction_2026_06_28.md)
+
+- [issues/phantom_captures_tradfi_2026_06_28.md](/plans/active/issues/phantom_captures_tradfi_2026_06_28.md) — both from
+  the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py`).
+
+**Close-out criterion**: each candidate CSV triaged (real gap → backfill, code bug → fix adapter/writer, intentional new
+venue → extend the UAC oracle); the prediction/tradfi phantom rows reconciled via `--apply` flips to `attempted_failed`.
+
+## Track 23 — Manifest schema bump: write-time MVP precompute · P2
+
+**Source**:
+[sports_prediction_mvp_writetime_precompute_2026_07_24.md](/plans/active/sports_prediction_mvp_writetime_precompute_2026_07_24.md)
+— despite the AG-sounding filename, this bumps UTL's shared `AvailabilityRecord` manifest schema (v9→v10), the ONE
+dataclass written by every asset_group and every producer service — a genuine fleet-wide schema/manifest change (a
+caching/perf optimization, not sports/prediction business logic), not a per-AG doc.
+
+**Close-out criterion**: the write-time `mvp: bool` stamp added to `AvailabilityRecord`, schema bumped 9→10,
+manifest-consolidator schema-evolution handling verified, historical rows backfilled.
+
+## Track 24 — Strategy/execution cross-AG determinism + capability-registry · P1/P2
+
+> **A different angle than Tracks 1-23** — these 10 docs are cross-cutting from a STRATEGY/EXECUTION/capability-
+> registry angle (spanning multiple AGs' strategy archetypes or the paper=batch=live determinism guarantee), not a
+> data-pipeline angle. Kept in this same doc (one asset_group = one consolidated closeout, matching the other 5 AGs'
+> pattern) rather than forking a second competing "primary" doc — but flagged distinctly since a future split (if this
+> doc nears the line-cap) should extract this Track as its own child first, being the most thematically separable.
+
+**Sources**:
+[carry_staked_basis_funding_scan_experiment_2026_06_16.md](/plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md)
+
+- [carry_strategy_ensemble_productionization_2026_07_24.md](/plans/active/carry_strategy_ensemble_productionization_2026_07_24.md)
+- [cross_venue_funding_reversion_research_2026_07_24.md](/plans/active/cross_venue_funding_reversion_research_2026_07_24.md)
+  (the carry_staked_basis family — combines DeFi LST staking with CeFi perp funding across venues; open: live/broad-
+  universe coverage-completion work) ·
+  [citadel_paper_batch_live_reconciliation_2026_06_19.md](/plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md)
+- [issues/batch_live_reconciliation_service_audit_2026_05_27.md](/plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md)
+- [issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md](/plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md)
+  (the paper==batch-rerun==live determinism-spine family — finishing the ε=0 proof machinery + BLRS audit remediation
+- the 4-AG smoke-harness discrepancy set) ·
+  [defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md](/plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
+- [issues/capability_wizard_analysis_findings_2026_06_11.md](/plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md)
+- [issues/capability_wizard_gap_discovery_2026_06_11.md](/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)
+  (the capability-wizard family — full-taxonomy coverage across the 53-57 archetype registry, spans DeFi/CeFi treasury
+  splits + options/vol) · [v2_engine_venue_buildout_2026_06_15.md](/plans/active/v2_engine_venue_buildout_2026_06_15.md)
+  (confirmed multi-AG: CeFi venues, DeFi/GMX, sports/betfair-smarkets, TradFi/CME options, prediction/ML_LEAN engines,
+  one buildout).
+
+**Close-out criterion**: the carry_staked_basis ensemble ships live coverage; the determinism-spine ε=0 proof lands
+
+- BLRS audit items close; the capability-wizard's drift-check/gap-tracker items close across the full taxonomy;
+  v2_engine_venue_buildout's per-venue items close.
 
 ## Codex SSOTs (read before touching a track)
 
