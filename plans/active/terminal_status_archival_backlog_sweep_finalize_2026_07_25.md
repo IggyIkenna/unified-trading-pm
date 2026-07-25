@@ -17,7 +17,7 @@ tags: [archival, plan-hygiene, issue-lifecycle, backlog-sweep, finalize]
 related:
   [
     /codex/11-project-management/issue-doc-lifecycle.md,
-    /plans/active/terminal_status_archival_backlog_sweep_2026_07_25.md,
+    /plans/archive/terminal_status_archival_backlog_sweep_2026_07_25.md,
   ]
 created: 2026-07-25
 last_updated: 2026-07-25

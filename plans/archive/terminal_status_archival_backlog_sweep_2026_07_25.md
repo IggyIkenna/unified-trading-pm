@@ -45,6 +45,9 @@ source:
 
 # Archive the terminal-status backlog
 
+> **Archived 2026-07-25** — all 66 todos done, `check_terminal_status_archived.py` 0 violations against this plan's own
+> 66-item baseline. Finalized by `terminal_status_archival_backlog_sweep_finalize_2026_07_25.md`.
+
 ## Why `sequential: true`
 
 Each todo's archival step ends with a corpus-wide referrer grep-fix (§ Procedure step 4) — the target set of files that

@@ -269,7 +269,7 @@ epic._
 | [`migration_verification_orphan_safety_2026_06_10`](./migration_verification_orphan_safety_2026_06_10.md)                                                               | master           | design    | 25/25      | 100%         | 0.0      | —        |
 | [`mvp_backfill_defi_onchain_v10_operational_log_2026_07_24`](./mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md)                                             | master           | infra     | 7/7        | 100%         | 0.0      | —        |
 | [`sports_legacy_cutover_closeout_tasks_2026_07_24`](./sports_legacy_cutover_closeout_tasks_2026_07_24.md)                                                               | master           | infra     | 2/2        | 100%         | 0.0      | —        |
-| [`terminal_status_archival_backlog_sweep_2026_07_25`](./terminal_status_archival_backlog_sweep_2026_07_25.md)                                                           | master           | refactor  | 66/66      | 100%         | 0.0      | —        |
+| [`terminal_status_archival_backlog_sweep_2026_07_25`](../archive/terminal_status_archival_backlog_sweep_2026_07_25.md)                                                  | master           | refactor  | 66/66      | 100%         | 0.0      | —        |
 | **TOTAL** (214 plans)                                                                                                                                                   | 4 orphans, 0 TBD | —         | —          | **44% done** | **428**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
