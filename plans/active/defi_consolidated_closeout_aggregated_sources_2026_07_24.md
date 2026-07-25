@@ -290,15 +290,24 @@ drift_direction: none
     - **[REVIEW] P1.** On writer ship, record the full-hive cutover date in
       `/codex/02-data/canonical-cutover-register.md` + flip the non-canonical-path-inventory row #16 to EXECUTED.
   - [`plans/active/issues/estate_orphan_assessment_2026_07_21.md`](/plans/active/issues/estate_orphan_assessment_2026_07_21.md)
-    (4 open)
+    (7 open — corrected 2026-07-25 plan-reconcile, was undercounted at 4; 3 items below were missing, including the
+    doc's single highest-priority defi item)
     - **[INFRA] P1.** Run the orphan sweep for defi/cefi/tradfi/prediction on a VM — cefi + prediction COMPLETE (real
       measured `E_orphan_real` counts); defi IN PROGRESS (3rd attempt, now resume-capable after 2 SPOT preemptions).
+    - **[DATA] P1.** (todo 3c, previously missing from this digest) **Scope + run the defi orphan_class_E (15,865,384
+      rows) backfill** — mirrors todo 3b's proven cefi/prediction pattern, but must first separate genuine production
+      silent-write gaps from test-artifact contamination before `--apply`; also resolve 8 flagged `unknown_prefixes`.
     - **[CODE] P2.** Make the manifest load resumable/streamed in `migration_orphan_sweep.py` — folded into
       `migration_orphan_sweep_performance_decay_2026_07_22.md`, don't duplicate investigation here.
     - **[CODE] P3.** `GcsEventSink` never `.shutdown()`s its background `ThreadPoolExecutor` — costs ~11.5 real SPOT-VM
       minutes per batch script using this pattern.
     - **[CODE] P2.** Give `backfill_orphan_class_e.py --apply` a batched-incremental `record_cells()` call
       (cell-boundary-safe) so a SPOT preemption doesn't lose 100% of progress.
+    - **[DATA] P3.** (todo 7, previously missing from this digest) **14 cefi objects mis-bucketed into the DEFI bucket,
+      ESCALATED not backfilled** — found via defi's backfill dry-run 2026-07-24.
+    - **[DATA] P2.** (todo 8, previously missing from this digest) **Measure prediction's `B_legacy_duplicate`
+      population** — never reported anywhere in this doc's corpus; read the already-durable sweep report from todo 3's
+      completed run, no re-walk needed.
   - [`plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`](/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/phantom_captures_defi_2026_06_28.md`](/plans/active/issues/phantom_captures_defi_2026_06_28.md)
@@ -338,11 +347,8 @@ drift_direction: none
     - **[AGENT] P2.** `SolidlyCLForkPool` historical golden-swap validation — ≥20 Velodrome + ≥20 Aerodrome real
       on-chain fixtures within 5 bps.
   - [`plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`](/plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md)
-    (2 open)
-    - **[BACKEND] P2.** Trace `backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py`'s POOL code path — does it
-      enforce the "pool or not" invariant, or is this a docstring-only defect?
-    - **[BACKEND] P2.** Apply the operator's ruling (default A: test wins, fix the docstring), reconcile the losing
-      side, pin a test naming the authoritative policy.
+    — 0 open todos (closed/archived/record-only) — corrected 2026-07-25 (plan-reconcile): `status: resolved`, both
+    bullets `[x]`.
   - [`plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`](/plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`](/plans/active/issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md)
