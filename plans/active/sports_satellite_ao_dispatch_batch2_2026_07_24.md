@@ -205,7 +205,11 @@ source: >-
       other dispatchable work isn't blocked on this slot idling — a future dispatch should re-check
       `PROGRESS.json`/`EXIT_STATUS` before assuming still-running. — **Re-health-checked 2026-07-25T02:24Z (slot 2)**:
       still RUNNING, `PROGRESS.json` monotonic-advanced to `last_completed_date=2024-03-31`, no stall signature.
-      Genuinely still hours from completion; released again, no duplicate action.
+      Genuinely still hours from completion; released again, no duplicate action. — **Re-health-checked
+      2026-07-25T02:30Z (slot 9, data_engineering)**: still RUNNING, `PROGRESS.json` monotonic-advanced to
+      `last_completed_date=2024-08-06`, run.log tail shows live per-date ticking with fresh timestamps, no error/stall
+      signature (only a benign pandas FutureWarning). ~6.6 of ~8.5 years covered. Genuinely still hours from completion
+      (2018-01-01→present at this rate); released again via `/skip-current-task`, no duplicate action taken.
 - [x] ✅ [CODE] P1. **UAC canonical registry build/refine** — unified-api-contracts@ce18ff15. Audited every clause of
       the Architecture section against current code before touching anything (most of this program had already shipped):
       name/ids/country/season-start-end-per-year (`season_dates.get_season_start`/`get_season_end`, per-league-per-year)
