@@ -335,3 +335,15 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
     doing so would be the exact autonomous-unlock CLAUDE.md forbids. Next dispatch: check whether C1 has since been
     answered in `canonical_closeout_open_questions_2026_07_18.md`; if yes and the answer is unlock+archive, proceed per
     the normal Procedure; if still unanswered, this stays parked (not this sweep's call to make).
+- **2026-07-25 (slot-3): RE-DISPATCHED, re-confirmed still parked, NOT archived.** Re-checked both gates slot-2 found:
+  (1) `plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md` frontmatter still carries
+  `locked_by: live-defi-rollout` (unchanged). (2) `canonical_closeout_open_questions_2026_07_18.md` § C1 still reads as
+  a standing "REC: unlock + archive" recommendation with no recorded operator answer/decision timestamp — nothing has
+  changed since slot-2's pass. No new archival action taken (would violate the plan-locking HARD RULE). This is the SAME
+  dispatch-churn class main just filed for a different external gate:
+  `plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (an
+  `auto_unpark__<task-id>`-style durable park, not a worker-applied `priority_override`, is the fix that survives
+  backlog re-derivation) — cross-referencing rather than filing a duplicate issue doc. Not filing a fresh `/blocked`
+  either: C1 is already a live, unanswered, correctly-worded operator recommendation in the tracker doc; a second
+  identical escalation adds noise, not new information. Skipping this task via `/skip-current-task` so it releases
+  cleanly; the durable-park BACKEND fix above is the tracked remediation for the repeat-dispatch cost itself.
