@@ -60,9 +60,12 @@ drift_direction: advance-code
       `prediction_phase_ab_residuals_2026_07_24.md` for each of the 7 items (they should already be cross-referenced via
       the target docs' Progress Log entries written by each todo's own execution), citing the batch-1 commit(s).
       Re-check whether `prediction_phase_ab_residuals_2026_07_24.md` now has 0 open todos remaining (unlikely — batch1
-      was a partial extraction of its 9 AO-eligible items, and it has 10 human-only items too). **Done when**:
-      `prediction_phase_ab_residuals_2026_07_24.md`'s 7 corresponding checkboxes are flipped with verified evidence, and
-      each of the 3 sibling target docs' Progress Log entries are confirmed present.
+      was a partial extraction of its 9 AO-eligible items out of the doc's current 11 open total, corrected 2026-07-25
+      plan-reconcile from a stale "10 human-only items too" claim that didn't reconcile against the doc's actual size —
+      the real remainder is ~2 items not extracted into batch1, re-verify the exact count live rather than trusting
+      either historical figure). **Done when**: `prediction_phase_ab_residuals_2026_07_24.md`'s 7 corresponding
+      checkboxes are flipped with verified evidence, and each of the 3 sibling target docs' Progress Log entries are
+      confirmed present.
 - [ ] [REVIEW] P2. **Re-check the excluded item 9 and the 12 fully-deferred docs**, now that the operator has
       (presumably) ruled on the queued decision in `autonomous_session_operator_decisions_2026_07_25.md`. For item 9
       (the instrument_type-canonicalization re-verify excluded from batch1 for conflicting with
