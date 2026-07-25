@@ -696,7 +696,10 @@ source: >-
       RUNNING since 03:22Z** (launched by slot 4, health-checked healthy by slot 11 at 04:18Z and again now — heartbeat
       fresh, no stall, now in the slower per-fixture event-loop phase covering 16,765 fixtures across 2019→2026-07-25).
       Genuinely hours from terminal; not completable in an AO turn. Full detail in the issue doc above — do not
-      re-dispatch a duplicate health-check within the next ~30min.
+      re-dispatch a duplicate health-check within the next ~30min. — **Health-checked 2026-07-25T06:43Z (slot 2)**:
+      still `RUNNING`, heartbeat 34s old, run.log grew 69,781→79,917 lines (+10,136) since the issue doc's 06:08Z check
+      (same doc, more detail there — this parent plan's todo and the issue doc both point at the same VM; resist the
+      urge to duplicate full detail in both). Released via `/skip-current-task`, not duplicate-launched.
 - [ ] [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. (repo: instruments-service `_writer_captured.py` row_count/effective_count logic +
