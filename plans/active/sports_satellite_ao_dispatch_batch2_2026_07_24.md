@@ -879,6 +879,17 @@ source: >-
     data for", and several of these 11 majors DO have real odds-API coverage per this session's earlier per-source-cap
     measurement). Do not repeat this session's naive-add attempt without resolving (a)/(b)/(c) first — QG will catch it
     again, but better to design it correctly than rely on the test suite as the only guardrail.
+  - **RESOLVED + SHIPPED, same session.** Operator picked option (a) directly. Added
+    `LeagueDefinition.in_mvp_scope: bool = True` (default preserves all 107 pre-existing entries' behavior unchanged —
+    none needed individual edits) and repointed `_mvp_football_league_ids()` to filter on it instead of classification.
+    Re-added the 11 continental-majors entries with `in_mvp_scope=False` explicit. **Verified before shipping, not
+    assumed**: `_mvp_football_league_ids()` still returns exactly 96 (unchanged) and none of the 11 new entries appear
+    in it — confirmed via direct call, not just "tests pass." Fixed the 2 tests that hardcoded `sport=="FOOTBALL"`
+    counts to filter on `in_mvp_scope` instead (verifying, not assuming, that all 11 new entries are genuine Understat
+    structural gaps before updating the count). Full `quality-gates.sh` green (279s, 11895 passed). Shipped:
+    **unified-api-contracts@7b13196e**. This closes the continental-majors SLICE of step 1 — the full ~300-league
+    curated universe (the 171-country domestic top+below+cup selection) remains open; main todo checkbox stays unchecked
+    since steps 2 (backfill) and 3 (residual drop) haven't started and even step 1 isn't fully done.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
