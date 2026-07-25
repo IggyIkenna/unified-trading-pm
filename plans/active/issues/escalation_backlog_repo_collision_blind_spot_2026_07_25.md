@@ -16,14 +16,16 @@ summary: >-
   pr_number, wall_type)`, never against the backlog's active-repo state; `escalation.py::_pick_free_slot` has no
   repo-collision check at all; and the backlog's own repo-collision protection (`dispatch.py::_blocks_repo_collision` →
   `_active_repos_excluding`) resolves each OTHER slot's repos via `backlog.get(slot.current_task)` — a typed/one-off
-  agent slot (escalation/cicd/plan_health/conflict_resolver, claimed via `claim_slot_for_typed_agent`) is given a
-  free-text descriptor, not a `BacklogTask` id, so `backlog.get(...)` returns `None` and it contributes NOTHING to
-  `active_repos`. The blind spot is bidirectional and structural: two atomically-correct claim mechanisms (backlog's
-  SQLite-serialized transaction; escalation's own slot-pick loop), each internally consistent, with no shared repo-level
-  lock or visibility between them. In THIS incident both workers happened to converge safely (the escalation fixed a
-  stale fixture caused by an upstream UAC commit, independent of whether slot 7's own fix had landed; no reported
-  file-level conflict), but the pattern is a real double-dispatch risk on the same repo any time an LDR QG wall fires
-  for a repo a backlog task is already actively working.
+  agent slot (escalation/cicd/plan_health/conflict_resolver, claimed via `claim_slot_for_typed_agent`) has
+  `SlotRow.current_task` set to `None` (the descriptor goes in `last_msg` instead — see Root cause item 3, corrected
+  2026-07-25 after adversarial review), so `_active_repos_excluding` skips the slot via `if slot.current_task is None:
+  continue` and never reaches `backlog.get()` at all. It contributes NOTHING to `active_repos` either way. The blind
+  spot is bidirectional and structural: two atomically-correct claim mechanisms (backlog's SQLite-serialized
+  transaction; escalation's own slot-pick loop), each internally consistent, with no shared repo-level lock or
+  visibility between them. In THIS incident both workers happened to converge safely (the escalation fixed a stale
+  fixture caused by an upstream UAC commit, independent of whether slot 7's own fix had landed; no reported file-level
+  conflict), but the pattern is a real double-dispatch risk on the same repo any time an LDR QG wall fires for a repo a
+  backlog task is already actively working.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -94,14 +96,24 @@ after abandonment.
 2. `escalation.py::_pick_free_slot` (~line 171) picks any slot with no live tmux session — no repo-collision check at
    all.
 3. `dispatch.py::_active_repos_excluding` (~line 690) — the backlog's OWN repo-collision table — resolves each other
-   slot's repos via `backlog.get(slot.current_task)`. Typed/one-off agent slots (escalation/cicd/plan_health/
-   conflict_resolver) are claimed via `state_store.slots.claim_slot_for_typed_agent`, which sets `SlotRow.current_task`
-   to a free-text descriptor (e.g. `"cicd: instruments-service#0 — ldr_qg_failure"`), not a `BacklogTask.id`. So
-   `backlog.get(...)` returns `None` for that slot and it contributes NOTHING to `active_repos` — the backlog's own
-   collision guard is blind to every escalation/typed-agent occupant.
-4. `SlotRow` (server/orm.py) has no structured `repo` column for typed-agent occupants — only the free-text
-   `current_task` — so there is no cheap read either direction can use today; closing the gap requires adding structure,
-   not just a new read.
+   slot's repos via `backlog.get(slot.current_task)`. **Corrected 2026-07-25 (adversarial review caught the original
+   mechanism citation was wrong):** typed/one-off agent slots (escalation/cicd/plan_health/conflict_resolver), claimed
+   via `state_store.slots.claim_slot_for_typed_agent` (`server/state_store/slots.py:229-230`), do NOT get a free-text
+   descriptor in `SlotRow.current_task` — that function explicitly sets `slot.current_task = None` and puts the
+   descriptor in `slot.last_msg` instead (its own docstring: "a free-form descriptor must NOT go there"). So
+   `_active_repos_excluding` skips the slot entirely via `if slot.current_task is None: continue` — it never even calls
+   `backlog.get()` for these occupants. The end conclusion is unchanged (escalation-occupied slots are invisible to the
+   repo-collision table), but the causal mechanism is `current_task is None`, not a `backlog.get()` miss on a descriptor
+   string.
+4. `SlotRow` (server/orm.py) has no structured `repo` column read directly by `_active_repos_excluding` for typed-agent
+   occupants. **However** (also surfaced by adversarial review): `AgentRow.source` is already populated with the repo at
+   escalation-dispatch time (`server/escalation.py`'s `register_agent(..., source=repo, ...)`), and
+   `SlotRow.tmux_session` equals `AgentRow.tmux_session` for the same occupant (both derived from
+   `tmux_spawn.session_name(slot_id)`) — so a join from `SlotRow` to `AgentRow` on `tmux_session` COULD recover the repo
+   for escalation/cicd/conflict_resolver/data_pipeline_failure occupants today, with no schema change, just a new read.
+   This is NOT universal: `plan_health`'s `register_agent` call (`server/plan_health.py:432-445`) does not set `source`
+   at all (plan_health isn't repo-scoped, so arguably fine, but it means a join-based fix wouldn't uniformly cover every
+   typed-agent kind — see the updated option list below).
 
 ## Why this needs a design decision, not a mechanical patch
 
@@ -116,7 +128,12 @@ after abandonment.
   change (`claim_slot_for_typed_agent` + every one-off caller — cicd/conflict_resolver/
   plan_health/data_pipeline_failure — would need to start passing a real `repo`, and `SlotRow` likely needs a new column
   since `current_task` is currently the only per-slot "what am I doing" field and is already overloaded as a
-  human-readable descriptor).
+  human-readable descriptor). (c) **Cheaper partial version of (b), added 2026-07-25 after adversarial review**: join
+  `SlotRow.tmux_session` to `AgentRow.tmux_session` and read `AgentRow.source` (already populated with the repo for
+  escalation-dispatched agents, no schema change) — this makes `_active_repos_excluding` symmetric for
+  escalation/cicd/conflict_resolver/data_pipeline_failure occupants specifically, at the cost of NOT covering
+  `plan_health` (which never sets `source`) unless that call site is also updated. Whoever makes the directionality
+  decision should weigh (c) against (b) as a lower-cost stepping stone, not just (a) vs (b).
 - **Urgency-vs-safety tradeoff for escalations specifically.** Several wall_types (`ldr_qg_failure`, `sit_failure`,
   `main_ci_red`) exist BECAUSE CI is red — deferring/queuing that escalation until a same-repo backlog task finishes
   keeps CI red longer, which may itself be worse than the (bounded, so far self-resolving) collision risk. Whether ALL
