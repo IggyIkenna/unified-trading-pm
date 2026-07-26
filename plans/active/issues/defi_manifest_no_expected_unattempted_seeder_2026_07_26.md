@@ -163,6 +163,13 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       as of 2026-03" `SUBGRAPH_IDS` scoping decision (re-verify the underlying claim is still current) vs. needing an
       honest "not IS-producible" manifest stamp once/if the P2 seeder above exists. (repo: unified-api-contracts docs
       review + market-tick-data-service)
-- [ ] [DOCS] P3. Correct `data_completion_defi_2026_07_15.md` item C8 (and any other doc still citing "DRIFT-SOLANA...
-      confirmed present" as a DeFi manifest done-criterion) — DRIFT-SOLANA was deliberately removed 2026-07-16 and must
-      never be a target for re-appearance. (repo: unified-trading-pm)
+- [x] ✅ [DOCS] P3. **DONE 2026-07-26 (slot 9)** — Corrected `data_completion_defi_2026_07_15.md` item C8: dropped the
+      stale "DRIFT-SOLANA... confirmed present" done-criterion (deliberately removed 2026-07-16, must never reappear)
+      and the FRAX category-mismatch framing, with a pointer to this doc's full re-diagnosis. A `plans/active/` grep for
+      the same stale framing turned up one more instance —
+      `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`'s C8 summary bullet (line 152) repeated the
+      identical "genuine absentees DRIFT-SOLANA/FRAX/MORPHO/FLUID" line — corrected there too, same pointer added. The
+      plan's own `defi_satellite_ao_dispatch_batch2_2026_07_26.md` C8 todo (lines 82-101) still states the original
+      stale framing verbatim in its body text, but that's intentional — it's the ORIGINAL task text being re-diagnosed
+      by this doc's annotation immediately below it, not a separate uncorrected citation; left as-is as the historical
+      record. (repo: unified-trading-pm)
