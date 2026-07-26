@@ -49,6 +49,7 @@ related:
   [
     /plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
     /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
+    /plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-17
@@ -102,6 +103,14 @@ depends_on: []
 > The two remaining `- [ ] [INFRA] P0. DELETE reconcile-release-tags` todos carrying this dead verdict
 > (`/plans/active/github_actions_operator_gated_followups_2026_07_17.md`, and this doc's own Verdict) are annotated but
 > **left unticked** — retiring vs rewriting them is a planning call, parked for the operator.
+>
+> **Known rough edge, same hatch-vcs/git-tag subsystem (2026-07-26)**:
+> `/plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` found an adjacent
+> failure mode — `main`'s squash-merge history can make a real release tag (`v0.72.0`) unreachable from `main`'s own
+> commit graph even though content is byte-identical, so `git describe`/hatch-vcs on `main` falls back to a stale tag
+> and computes a version below the current floor. Not the same bug as this doc's dead reconciler (that one is about
+> `_main_version()` reading a deleted pyproject field; this one is about tag ANCESTRY on `main`), but both live in the
+> hatch-vcs/git-tag versioning subsystem — worth checking together before re-diagnosing either from scratch.
 
 ## The contradiction, in one line
 

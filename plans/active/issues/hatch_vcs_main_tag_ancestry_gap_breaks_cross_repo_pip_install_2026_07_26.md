@@ -183,9 +183,10 @@ not currently a live self-heal path until that breaker clears.
       `pip install -e     _deps/unified-api-contracts -e _deps/unified-trading-library` succeeds (both the
       `ui-reference-data.json` AND `capability-manifest.json` diff steps should then execute for real, rather than the
       whole job dying at the install step).
-- [ ] [DOCS] P3. Cross-link this doc from `reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md` and
+- [x] ✅ [DOCS] P3. Cross-link this doc from `reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md` and
       `promotion_lag_alert_hides_provenance_block_2026_07_17.md` — same hatch-vcs/git-tag subsystem, adjacent failure
-      modes, worth a shared "known rough edges" note so the next diagnosis doesn't restart from zero.
+      modes, worth a shared "known rough edges" note so the next diagnosis doesn't restart from zero. —
+      unified-trading-pm@pending (both docs' `related:` frontmatter + a "Known rough edge" body note added).
 
 ## Provenance
 
