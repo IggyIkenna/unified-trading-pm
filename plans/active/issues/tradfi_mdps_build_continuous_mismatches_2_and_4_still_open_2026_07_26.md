@@ -292,14 +292,39 @@ start without real tradfi/ES feature parquets.
       diagnosis and a periodic re-run policy (not a code fix) is the right long-term remediation. If it does NOT rise
       even after a second full pass, that disproves the timing theory and reopens the investigation — check that finding
       against this doc before assuming timing again. (repo: market-data-processing-service)
-- [ ] [AGENT] P2. Re-run the process step for ES/MES on `2020-03-26` only
+- [x] [AGENT] P2. Re-run the process step for ES/MES on `2020-03-26` only
       (`launch-mdps-backfill-vm.sh --instrument-ids "CME:FUTURE:ES CME:FUTURE:MES" tradfi 2020-03-26 2020-03-26 full`,
       no `--force` needed). This one date was recorded `attempted_failed` in the `y2020es` per-VM shard because slot 2
       killed its per-date subprocess after ~12 min mistakenly believing it had hung (see the 2026-07-26 slot-2 progress
       log entry "self-correction on a premature kill" for the full evidence chain — a sibling shard's identical-looking
       case self-resolved cleanly at 13.5 min, proving this WASN'T a real hang). `2020-03-26` is COVID-crash-era with
       almost certainly real, large trading volume, so this is a genuine one-day gap, not a data-correctness risk left
-      unaddressed — just not urgent enough to interrupt the other 6 shards for. (repo: market-data-processing-service)
+      unaddressed — just not urgent enough to interrupt the other 6 shards for. (repo: market-data-processing-service) —
+      ✅ ACTION DONE 2026-07-26 (slot 5), but the underlying gap did NOT close — see the new P1 finding below. Launched
+      `mdps-backfill-tradfi-20260726-223423` (single isolated VM, no fleet contention this time, all 5 dependency
+      tarballs verified fresh) — ran clean, `exit_code=0`, self-deleted in ~6s of actual processing time. Pre-launch
+      baseline: ES had real data for all 6 timeframes (created 2026-07-23, predating today's attempts, so already fine);
+      MES had ZERO files for any timeframe on this date. Post-run: MES is **still completely missing** across all 6
+      timeframes — the re-run genuinely executed but produced 0/0 succeeded/failed (not a crash, not a timeout, not a
+      kill — a clean "no upstream data" verdict). Root cause is NOT the originally-diagnosed premature-kill: the process
+      step's own log shows `Listed 0 files from .../raw_tick_data/by_date/day=2020-03-26/ for data_type=ohlcv_1m` (and
+      identically for all 5 other checked data_types) → `Skipped 6 data_types with no upstream data`. But **live GCS
+      verification directly disproves that** — the raw
+      `futures_chain/data_type=ohlcv_1m/underlying=SP500/quote=USD/margin=linear/ticks.parquet` file (SP500 is the real
+      raw-bucket `underlying=` for ES/MES per this doc's earlier `EXCHANGE_CODE_TO_NAME` finding) DOES exist, with a
+      real 74,823-byte payload, `Creation Time: 2026-07-26T22:10:12Z` — a full 24 minutes BEFORE this VM was even
+      launched (22:34:23Z) and 27 minutes before its listing call ran (22:37:14Z). No other TradFi raw-ingestion VM was
+      running concurrently at launch time (checked `gcloud compute instances list` — only
+      `mdps-backfill-tradfi-buildcontinuous-es-20260726-223325`, a `build-continuous` read of `processed_candles/`, not
+      a raw writer, was concurrently active). This is new, stronger evidence than this doc's prior "TIMING/RACE
+      condition" theory (which assumed concurrent multi-shard fleet contention as the cause) — here there was NO
+      contention, and the file had already been sitting there, fully settled, for 24+ minutes. Filed as a new,
+      higher-priority P1 finding below since this pattern — real raw data genuinely invisible to the process step's own
+      day-wide listing — is the most plausible explanation for why this doc's TWO full ES/MES backfill passes (todo
+      above + slot 6's in-flight second pass) have both failed to move the `1d`/`24h` hit rate off its ~19% ceiling: if
+      the listing itself is unreliable, no amount of re-running the SAME listing-based process step will ever converge.
+      No code shipped for this todo — the fix belongs to whoever picks up the new finding below. (repo:
+      market-data-processing-service, verification only)
 - [ ] [AGENT] P2. `process_handler.py:706`'s per-date `subprocess.run(cmd)` (the `--subprocess-per-date` driver) has NO
       timeout — a genuinely hung child (vs. a legitimately slow-but-real date, which CAN take 13+ minutes, confirmed
       live 2026-07-26) blocks that shard's entire remaining date range forever with no self-recovery. Add a generous
@@ -311,6 +336,36 @@ start without real tradfi/ES feature parquets.
       this session — the ONE observed "hang-like" case turned out to be a false positive (see the todo above), so there
       is not yet concrete evidence of a REAL unbounded hang, only a real code-level gap that would let one go
       unrecovered if it ever occurs. (repo: market-data-processing-service)
+- [ ] [AGENT] P1. NEW FINDING (2026-07-26, slot 5): `_list_instrument_files`'s day-wide raw listing
+      (`orchestration_scanner.py:462`, `self.storage_client.list_blobs(bucket=bucket_name, prefix=prefix)` where
+      `prefix = f"raw_tick_data/by_date/day={date_str}/"`) returned 0 files for ES/MES's `2020-03-26` re-run across ALL
+      6 checked data_types, even though the real raw
+      `futures_chain/data_type=ohlcv_1m/underlying=SP500/.../ticks.parquet` file (74,823 bytes, confirmed via direct
+      `gcloud storage ls -L`) had `Creation Time: 2026-07-26T22:10:12Z` — fully 24 minutes before the isolated,
+      non-contended VM that ran this listing was even launched, and 27 minutes before the listing call itself. No other
+      TradFi raw-writer VM was running concurrently (verified via `gcloud compute instances     list` at launch time).
+      This is DIFFERENT from — and stronger evidence than — this doc's earlier "TIMING/RACE condition" theory
+      (2026-07-26, slot 2's `y2020es`/`y2026es` investigation): that theory assumed concurrent multi-shard GCS
+      contention as the cause, but this repro had zero contention and the file had already been sitting fully settled
+      for 24+ minutes. The prior sub-agent code read (this doc, 2026-07-26, "Backfill MDPS's per-contract process step"
+      todo) concluded the LISTING LOGIC ITSELF is correct as written — no caching, no per-date-varying scoping found in
+      the Python code. Traced the actual call chain to `unified_trading_library/cloud_interface/providers/gcp.py:303`'s
+      `list_blobs`, which is a thin passthrough to `google.cloud.storage`'s native
+      `bucket.list_blobs(prefix=..., delimiter=None,     max_results=None)` — no application-level caching found there
+      either. **This strongly suggests the real root cause is a GCS list-consistency edge case (not app code)** — worth
+      checking whether this bucket has any non-standard consistency/replication configuration, or whether `list_blobs`
+      needs a `start_offset`/pagination fix, or whether the `google-cloud-storage` client version in use has a known
+      list-staleness issue. **Why this matters beyond one date**: if raw data can be genuinely present-but-
+      invisible-to-listing, that is the most plausible explanation for why this doc's TWO full ES/MES process-step
+      backfill passes (the P0 "Backfill MDPS's per-contract process step" todo above + slot 6's concurrent in-flight
+      second pass) have both left the `1d`/`24h` hit rate stuck at the same ~19% (454/2398) ceiling — re-running the
+      SAME listing mechanism can never converge if the listing itself is unreliable, regardless of how many times the
+      underlying data-availability improves. Needs someone to (1) reproduce this listing gap in isolation (list the
+      exact prefix via the MDPS venv's `CloudDataProvider`/`gcp.py` client right after confirming the object exists, not
+      via `gcloud storage ls` which may use a different code path/consistency guarantee), (2) check GCS bucket
+      consistency settings (`gcloud storage buckets describe market-data-tick-tradfi-prd-central-element-323112`), (3)
+      if reproduced, escalate to whether a retry-with-backoff or a stronger consistency read is needed in
+      `_list_instrument_files`. (repo: market-data-processing-service, unified-trading-library, investigation)
 - [x] [AGENT] P1. `_TfClusterMixin._process_tf_clusters_date_range`'s per-date loop (`_process_one_date_for_cluster`
       returning `False` → `if not ok: return False`) aborts the ENTIRE multi-day range on the FIRST date that fails for
       ANY reason — including a genuine, expected absence (e.g. a market holiday). Any real multi-year backfill will
@@ -814,9 +869,10 @@ start without real tradfi/ES feature parquets.
 | Todo 4 (this file, P0) — real features-delta-one-tradfi production launch + manifest verification                            | ✅ DONE 2026-07-26 (slot 3) — real feature parquets + real manifest `captured` rows verified via direct GCS listing + parquet-content inspection                                                                                                                                                                    | N/A — closed                                                                                                       |
 | New P1 todo — MDPS `24h`/`1d` sparse coverage investigation                                                                  | ✅ DONE 2026-07-26 (slot 2) — root cause found (upstream per-contract processed-candle data gap, not a build-continuous code bug); see progress log for the 3-part evidence chain                                                                                                                                   | N/A — closed                                                                                                       |
 | New P0 todo — backfill MDPS's per-contract "process" step for ES/MES full history                                            | ✅ DONE 2026-07-26 (slot 2) — all 7 shards + build-continuous re-run completed with real verified data, BUT the hit rate did NOT improve (still 454/2398≈19%, unchanged); real root cause diagnosed (raw-ingestion/process-step timing race, not a code bug — 2 wrong hypotheses ruled out first, see progress log) | N/A — closed as an action; the underlying sparse-coverage goal is NOT resolved, see the new P2 catch-up-rerun todo |
-| New P2 todo — re-run process step for ES/MES on `2020-03-26` only                                                            | Not done — one date recorded `attempted_failed` due to slot 2's premature kill (see progress log); genuinely small, not urgent                                                                                                                                                                                      | Nobody — cheap, can run any time                                                                                   |
+| New P2 todo — re-run process step for ES/MES on `2020-03-26` only                                                            | ✅ ACTION DONE 2026-07-26 (slot 5) — clean re-run, but MES still fully missing; root cause is NOT the premature-kill theory — new P1 listing-anomaly finding filed below                                                                                                                                            | N/A — closed as an action; underlying gap reopened as the new P1 listing-anomaly finding                           |
+| New P1 todo — `_list_instrument_files` returned 0 raw files despite the target file existing 24+ min prior, zero contention  | Not done — new finding (slot 5, 2026-07-26); disproves the earlier timing/race theory; likely explains the stuck ~19% hit-rate ceiling across BOTH full backfill passes; needs isolated repro + GCS consistency check                                                                                               | Nobody — needs someone with time to reproduce the listing call in isolation and check bucket consistency config    |
 | New P2 todo — add a generous timeout to `process_handler.py:706`'s `subprocess.run(cmd)`                                     | Not done — real code gap (unbounded per-date subprocess wait), but NOT confirmed as an actual live hang (the one observed case was a false positive); flagged for whoever has time to size a timeout wide enough to avoid false-failures                                                                            | Nobody — needs a wider sample of real per-date durations to size the timeout safely                                |
-| New P2 todo — re-run the SAME process-step backfill a SECOND time to catch up on late-landing raw data (timing-race finding) | Not done — this is now the real path to improving the `1d`/`24h` hit rate; a plain idempotent re-run, no code change needed                                                                                                                                                                                         | Nobody — cheap, can run any time; re-measure the hit rate afterward to confirm/disprove the timing theory          |
+| New P2 todo — re-run the SAME process-step backfill a SECOND time to catch up on late-landing raw data (timing-race finding) | IN PROGRESS 2026-07-26 (slot 6) — 7 fresh per-year VMs relaunched; per the new P1 finding above, this pass may hit the SAME ~19% ceiling for a listing-consistency reason rather than a timing-race reason — worth re-checking against the P1 finding once slot 6's re-measurement lands                            | Slot 6's in-flight re-run; re-measure hit rate, then cross-check against the new P1 listing finding                |
 
 **Recommended next item**: the backfill + build-continuous re-run + hit-rate re-verification all genuinely happened
 (2026-07-26) — the surprising result is that the hit rate did NOT move (still ~19%), and the real root cause turned out
@@ -888,3 +944,27 @@ anyone, any time — none are blocking.
   needed now that the 24h/1d normalisation fix is already shipped), then re-measure the `1d` hit rate against the
   454/2398 baseline and record whether it rose (confirms the timing-race diagnosis) or held flat (reopens the
   investigation, per this todo's own instruction).
+- 2026-07-26 (slot 5, the P2 "re-run ES/MES on `2020-03-26` only" todo, DONE + new finding): pre-launch baseline check
+  found ES already had real data for all 6 timeframes (created 2026-07-23, predating today's activity) while MES had
+  ZERO files for any timeframe — confirming the gap was real, not already fixed by slot 6's broader in-flight re-run.
+  Launched `mdps-backfill-tradfi-20260726-223423` per the todo's exact command; all 5 dependency tarballs verified
+  fresh, ran clean with zero fleet contention (only concurrent VM was slot 6's `build-continuous` read, not a raw
+  writer), completed `exit_code=0` in ~6s of real processing and self-deleted. Post-run: MES is STILL completely missing
+  across all 6 timeframes — not because of a crash/timeout/kill this time, but because the process step's own log shows
+  a clean "no upstream data" verdict (`Listed 0 files ... for data_type=ohlcv_1m` etc. across all 6 checked data_types →
+  `Skipped 6 data_types with no upstream data`). Directly falsified that verdict against live GCS: the raw
+  `futures_chain/underlying=SP500/.../ohlcv_1m/ticks.parquet` file (SP500 is ES/MES's real raw-bucket `underlying=`, per
+  this doc's earlier `EXCHANGE_CODE_TO_NAME` finding) genuinely exists, 74,823 real bytes,
+  `Creation Time: 2026-07-26T22:10:12Z` — 24 minutes before this VM was even launched and 27 minutes before its listing
+  ran, with no concurrent raw-writer VM active. This DISPROVES this doc's own prior "TIMING/RACE condition" theory for
+  at least this case (that theory required concurrent fleet contention as the cause; here there was none, and the file
+  had already been fully settled for 24+ minutes) — traced the call chain to confirm the listing code itself
+  (`orchestration_scanner.py` → `unified_trading_library/cloud_interface/providers/gcp.py`'s `list_blobs`) is a thin
+  passthrough to the native GCS client with no app-level caching, pointing toward a GCS list-consistency edge case
+  rather than an application bug. Filed as a new, higher-priority P1 finding (this doc, above) since — if raw data can
+  be genuinely present-but-listing-invisible — this is the most plausible explanation for why BOTH of this doc's full
+  ES/MES backfill passes (the completed P0 todo + slot 6's concurrent second pass) have left the `1d`/`24h` hit rate
+  stuck at the same ~19% ceiling: re-running an unreliable listing mechanism cannot converge no matter how many times
+  the underlying raw data improves. Flipped this todo's own checkbox (the literal re-run ACTION is complete and was
+  executed correctly) but the underlying `2020-03-26` MES gap remains open, now tracked under the new P1 finding rather
+  than the original (disproven) premature-kill theory. No code shipped — verification + new finding only.
