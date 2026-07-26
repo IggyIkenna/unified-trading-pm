@@ -258,10 +258,10 @@ concurrent workers do not collide on this file.
       SA the workspace actually uses has an entry, each entry's roles match the live policy, `last_executed` is dated,
       and the diff between registry and reality is recorded in the source doc. Source:
       `issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md` ([BACKEND] P3).
-- [ ] [DOC] P2. **`/codex/08-workflows/ci-cd-flow.md` — retire the stale staging-as-canonical narrative, add the staging
-      re-entry procedure, and fix the WARN-default line.** FOUR docs independently claim this one file, so it is one
-      combined todo. (a) L75-109 still shows `ldr-to-staging-promote` draining every service repo on a 15-min cron and
-      labels direct-to-main as "PM only"; L763, L777-786, L1183 still describe `quickmerge → staging → main` as
+- [x] ✅ [DOC] P2. **`/codex/08-workflows/ci-cd-flow.md` — retire the stale staging-as-canonical narrative, add the
+      staging re-entry procedure, and fix the WARN-default line.** FOUR docs independently claim this one file, so it is
+      one combined todo. (a) L75-109 still shows `ldr-to-staging-promote` draining every service repo on a 15-min cron
+      and labels direct-to-main as "PM only"; L763, L777-786, L1183 still describe `quickmerge → staging → main` as
       canonical — bring all four sites to the current LDR→main-direct model. (b) Add the staging **re-entry** procedure
       INCLUDING "uncomment the disabled triggers" — verified 2026-07-23 that `grep -rn -i "uncomment" codex/` returns
       one unrelated hit, so this fact currently lives only in inline YAML comments and a plan (plans archive; codex is
@@ -271,7 +271,14 @@ concurrent workers do not collide on this file.
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([DOC] P2 + § Docs) ·
       `github_actions_staging_machinery_shutdown_2026_07_24.md` (its single open [DOC] P2) ·
       `github_actions_operator_gated_followups_2026_07_17.md` (Deferred-after-07-23 row 5, "Blocked on: Nobody") ·
-      `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P3).
+      `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P3). **DONE 2026-07-26
+      (slot-5, cicd)** — `unified-trading-pm@97970974e`. (a) verified via broad grep this session that the four
+      staging-as-canonical narrative sites were already corrected by prior work (no stale hits remain for
+      `ldr-to-staging-promote`/"15-min cron"/"PM only"/"quickmerge → staging → main" outside the now-current
+      LDR→main-direct model). (b) added the "Staging re-entry procedure" section (manifest flip + the 6 disabled
+      triggers table + default-branch schedule gotcha + measure-don't-assume verification). (c) corrected the
+      strict-quickmerge line from "WARN-default" to "BLOCKS by default" (operator policy 2026-06-26). prettier +
+      `check_reference_paths.py` both clean (at baseline); shipped via `quality-gates.sh` → `quickmerge --agent`.
 - [ ] [INFRA] P3. **The two husky UI repos carry no strict-quickmerge guard.** The pre-push self-heal skips them
       (`case "${_hooks_dir}" in */.husky/*) continue`), so `deployment-ui` and `unified-trading-system-ui` are the only
       clones with no provenance guard at all. Wire the strict guard into each repo's husky `pre-push`. This touches
