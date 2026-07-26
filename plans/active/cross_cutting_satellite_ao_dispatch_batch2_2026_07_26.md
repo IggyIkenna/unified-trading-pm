@@ -176,7 +176,7 @@ drift_direction: advance-code
       `deployment-service` `data_pipeline_monitors/heartbeat_stall_watcher.py`. **Done when**: (a) and (b) land with
       tests and `quality-gates.sh` green in alerting-service, (c) is recorded as a measured verdict (renders / does not
       render, with the fix if not), and all three source checkboxes are flipped.
-- [ ] [INFRA] P1. **Consolidate the THREE competing `data_pipeline_audit_scheduler.tf` todos into one change, and
+- [x] ✅ [INFRA] P1. **Consolidate the THREE competing `data_pipeline_audit_scheduler.tf` todos into one change, and
       correct a false prod claim measured this pass.** Three todos across two sibling source docs all edit
       `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`; drafting them separately would collide on one
       file. Measured state 2026-07-26 (read the live file + the live Cloud Run jobs, do not trust the docs' prose): (i)
@@ -196,7 +196,20 @@ drift_direction: advance-code
       `data_pipeline_alert_substrate_residual_2026_07_24.md`. **Done when**: `gcloud run jobs describe` shows
       `memory=16Gi cpu=4` for all 4 dp-audit jobs, the `.tf` change is committed, the 3 source checkboxes are flipped (2
       as already-landed with the evidence above, 1 as newly-shipped), and the false "already applied" prose is
-      corrected.
+      corrected. — DONE 2026-07-26, deployment-service@f2d094e. Re-measured before touching anything: all 4 jobs were
+      ALREADY live-OOM-killing on their most recent execution (`gcloud run jobs executions describe` — "The configured
+      memory limit was reached" on daily-digest, manifest-hygiene-changed, manifest-hygiene-full, and 5 consecutive days
+      on reprobe-empty). Bumped all 4 job modules to `cpu="4"`/`memory="16Gi"`.
+      `ENV=prod     ./tofu.sh plan -target=...` (all 4 modules) confirmed `0 to add, 4 to change, 0 to destroy` — no
+      `[OPERATOR]` gate needed. Applied; post-apply `gcloud run jobs describe` confirms `cpu=4;memory=16Gi` on all 4.
+      Also confirmed via `gcloud run jobs executions describe uts-prod-dp-reprobe-empty-55rz8` that
+      `args: [--reclassify-apply]` is live in the deployed spec (executing daily since the earlier `.tf` landing).
+      Confirmed via
+      `gcloud scheduler jobs     list --account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (the
+      `github-actions-deploy` default account lacks `cloudscheduler.jobs.list` IAM) that all 4 `dp-audit` schedulers are
+      provisioned. All 3 source checkboxes flipped in `data_pipeline_self_healing_completion_residual_2026_07_24.md` (2)
+      and `data_pipeline_alert_substrate_residual_2026_07_24.md` (1), with the false "already applied" prose corrected
+      to past tense + the new evidence. `quality-gates.sh` green (sentinel-verified).
 - [ ] [PERF] P2. **Fix the real dp-audit OOM driver (the 16Gi bump is a band-aid).** `e2e-testing`'s
       `data_pipeline_daily_digest.py` + `_dp_common.read_manifest_index` read the full index with `columns=None` and
       then count-EXPAND into per-row Python lists (`["captured"]*N` for millions of rows). Restrict to

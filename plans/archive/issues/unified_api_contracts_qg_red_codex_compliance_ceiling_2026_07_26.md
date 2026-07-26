@@ -30,6 +30,13 @@ source:
   ]
 ---
 
+> **🟢 RESOLVED 2026-07-26.** `unified_api_contracts/canonical/partition_paths.py` split into `partition_paths.py`
+> (626L, builders/facade, unchanged public import path) + new `_partition_path_canonicality.py` (710L, validator) —
+> `unified-api-contracts@da76afe1` (cicd-agent slot-11). `bash scripts/quality-gates.sh` now reports "✅ Codex
+> compliance PASSED" + "✅ ALL QUALITY GATES PASSED (308s)" — see `resolved_by` above and the todo below. Archived here
+> (plan_health hygiene-sweep hard-gate fix, escalation `agt-49d751`) per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 ## What I found
 
 Running `bash scripts/quality-gates.sh` on `unified-api-contracts` fails at the CODEX COMPLIANCE ceiling check:

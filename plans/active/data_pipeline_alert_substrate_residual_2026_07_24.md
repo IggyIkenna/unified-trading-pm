@@ -80,10 +80,20 @@ locked_since:
       re-derived) via a new shared `_dp_common.schema_version_readiness()`, also backing `manifest_hygiene_daily.py`'s
       CF-1/`DP_NOT_V9` check.
 
-- [ ] [INFRA] P0. **Apply the data-pipeline-audit terraform** (the crons run only once deployed): after the var-change
-      lands, targeted `terraform apply -target=...` the 4 `dp-audit` Cloud Run Jobs + 4 schedulers (NOT a blanket apply
-      of `terraform/gcp/` — drift risk). The `cf_manifest_audit` apply convention is the model. Until applied, the crons
-      exist in code + the image is ready, but the schedulers are not yet provisioned. — **deployment-service**
+- [x] ✅ [INFRA] P0. **Apply the data-pipeline-audit terraform** (the crons run only once deployed): after the
+      var-change lands, targeted `terraform apply -target=...` the 4 `dp-audit` Cloud Run Jobs + 4 schedulers (NOT a
+      blanket apply of `terraform/gcp/` — drift risk). The `cf_manifest_audit` apply convention is the model. Until
+      applied, the crons exist in code + the image is ready, but the schedulers are not yet provisioned. — DONE
+      2026-07-26 (`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` todo 5). **Already fully provisioned** —
+      verified live via `gcloud run jobs describe` (all 4: `uts-prod-dp-daily-digest`, `-dp-manifest-hygiene-changed`,
+      `-dp-manifest-hygiene-full`, `-dp-reprobe-empty` exist and have been executing daily, confirmed via
+      `gcloud run jobs executions list`) and `gcloud scheduler jobs list --location=asia-northeast1` (all 4:
+      `uts-prod-dp-daily-digest-cron`, `-dp-manifest-hygiene-changed-cron`, `-dp-manifest-hygiene-full-cron`,
+      `-dp-reprobe-empty-cron` present). Note: the `github-actions-deploy` SA lacks
+      `cloudscheduler.jobs.list`/`run.jobs.list` IAM — use
+      `--account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` to verify. Nothing further needed
+      here; the only remaining gap in this area was the OOM memory bump, tracked + shipped separately in
+      `data_pipeline_self_healing_completion_residual_2026_07_24.md`. — deployment-service
 
 - [ ] [CODE] P0. **UTL `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` string constants** (cleanliness only — routing already
       works via the UAC rule matching the event string): 2-line add to `events/event_types.py` + `events/__init__`

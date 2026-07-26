@@ -92,17 +92,30 @@ drift_direction: advance-code
       `resolve_bucket_name(cloud="gcp", kind="tick-data", asset_group="defi")`; removed the now-vestigial
       `canonical_bucket_kind` field from `SubsetSpec` and all 8 constructions (every subset writes to the same shared
       bucket now, so the field no longer carried information). `quality-gates.sh` green (286s, sentinel written).
-- [ ] [SCRIPT] P1. Repoint `strategy-service/scripts/trace_carry_staked_basis.py`'s `_LST_RATES_BUCKET_TEMPLATE` /
+- [x] ✅ [SCRIPT] P1. Repoint `strategy-service/scripts/trace_carry_staked_basis.py`'s `_LST_RATES_BUCKET_TEMPLATE` /
       `_PERP_FUNDING_BUCKET_TEMPLATE` off the dead flat-bucket-name templates to
       `resolve_bucket_name(kind="tick-data",     asset_group="defi")`, mirroring the pattern already shipped for
       `canonical_dex_pool_provider.py` / `canonical_perp_funding_provider.py`. Repo: strategy-service. **Done when**:
       both templates are removed/replaced; `main()`'s slot-processing loop still runs against real prod GCS data without
-      error; `quality-gates.sh` green. Source: `defi_dedicated_bucket_shared_migration_2026_07_13.md`.
-- [ ] [SCRIPT] P1. Repoint `strategy-service/scripts/probe_funding_rate_dispersion_coverage.py`'s
+      error; `quality-gates.sh` green. Source: `defi_dedicated_bucket_shared_migration_2026_07_13.md`. — **Already
+      resolved, no code change needed**: `strategy-service/scripts/trace_carry_staked_basis.py` (and both templates) no
+      longer exist — the whole file was deleted `strategy-service@c09785a8` (2026-07-21, "fix: repoint funding/staking
+      diagnostic scripts off deleted flat buckets to canonical resolve_bucket_name"), 4 days before this batch1 plan's
+      2026-07-25 triage ran, superseded by `scripts/trace_all_carry_archetypes.py` (unified 7-archetype tracer,
+      `strategy-service@24a40d5f`, reads `features-onchain`/`features-delta-one` via `resolve_bucket_name` already — no
+      raw-tick-data bucket template of this shape survives anywhere in the repo, confirmed via corpus grep). Verified
+      via `git log --diff-filter=D` + `git show c09785a8` on `live-defi-rollout`; nothing to ship.
+- [x] ✅ [SCRIPT] P1. Repoint `strategy-service/scripts/probe_funding_rate_dispersion_coverage.py`'s
       `_DEFAULT_PERP_FUNDING_BUCKET_TEMPLATE` default to `resolve_bucket_name(kind="tick-data", asset_group="defi")`.
       Repo: strategy-service. **Done when**: the default no longer references a dead flat bucket name; running with no
       `--perp-funding-bucket` override resolves the shared bucket; `quality-gates.sh` green. Source:
-      `defi_dedicated_bucket_shared_migration_2026_07_13.md`.
+      `defi_dedicated_bucket_shared_migration_2026_07_13.md`. — **Already resolved, no code change needed** (found while
+      verifying the adjacent todo above, same source doc/same commit): `_resolve_buckets()` in
+      `probe_funding_rate_dispersion_coverage.py` already calls
+      `resolve_bucket_name(cloud=cloud, kind="tick-data", asset_group="defi")` for the funding bucket (and
+      `asset_group="cefi"` for the tick bucket) — `_DEFAULT_PERP_FUNDING_BUCKET_TEMPLATE`/
+      `_DEFAULT_TICK_DATA_BUCKET_TEMPLATE` were removed in the same `strategy-service@c09785a8` commit above. Verified
+      by reading the current file; nothing to ship.
 - [ ] [CHORE] P1. Correct (or remove) the stale `"bucket_type": "dex-pools"`/`"perp-funding"` values in the module-level
       `OPERATIONS` constant in `market-tick-data-service/cli/handlers/data_manifest_handler.py` (confirmed unused
       elsewhere, contradicting the same file's own correct `_build_operations_dict()`, already `kind="tick-data"`).
