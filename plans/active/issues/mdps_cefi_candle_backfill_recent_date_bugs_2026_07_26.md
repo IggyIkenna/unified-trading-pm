@@ -50,14 +50,23 @@ depends_on: []
 Backfilling HYPERLIQUID `trades` candles for `day=2026-07-19` alone (177 tradable instruments, all 7 timeframes
 `15s..24h`) on a `e2-standard-8` (32GB RAM) VM was killed by the kernel OOM-killer at `rc=137` after RSS climbed
 monotonically through the aggregation cascade: 17.1 → 20.1 → 24.8 → 26.2 → 27.1 GiB (58.5% → 88.6% mem) before being
-killed. This reproduced identically on TWO separate VM launches for the same date/venue (once as part of a 7-day window,
-once in isolation) — not a fluke. A 2-instrument-scoped run (`--instrument-ids` narrowed to BTC/ETH only) for the SAME
-date completed with a comfortable ~1.5-2.4GB RSS, confirming the scaling is roughly linear in instrument count and the
-full 177-instrument sweep is what exceeds the ceiling, not the date range. Separately, a MULTI-day run (30-day + 7-day
-windows) also OOM'd, but only reached ~2-4 days in before crashing — consistent with per-day memory not being released
-between dates (each date's full instrument sweep pushes it over the edge sooner as the process's baseline footprint
-grows). Suspected root cause: the candle aggregator likely holds every tradable instrument's data (or a large fraction
-of it) in memory simultaneously per date rather than streaming/chunking per-instrument or per-batch;
+killed. This reproduced identically on THREE separate VM launches for the same date/venue (once as part of a 7-day
+window, once in single-day isolation, once with an `--instrument-ids` filter narrowed to BTC/ETH only) — not a fluke,
+and **not bounded by the instrument-id filter**. **Correction to an earlier reading of this same session**: a
+2-instrument-scoped run initially LOOKED like it fit comfortably (~1.5-2.4GB RSS at the ~1-minute mark), but continued
+monitoring past that point showed RSS climbing on the SAME trajectory as the full 177-instrument run — 17.1 → 21.7 →
+23.5 → 25.7 GiB (60.6% → 85.1% mem) — before the VM went silent (no new log/heartbeat activity for 6+ minutes, no clean
+kernel OOM message this time, effectively hung/dead) despite processing only 2 of 177 instruments' raw files. **This
+means the memory driver is NOT the number of instruments actually being aggregated** — something in the per-date
+invocation (loading "13601 cefi instruments from GCS" / "177 instruments tradable" / the `cefi_wire_bridge` catalogue,
+all logged identically regardless of the `--instrument-ids` filter) holds a large in-memory structure sized to the FULL
+venue universe, not the requested subset. A `MACHINE_TYPE=e2-highmem-8` (64GB RAM, vs the launcher's default
+`e2-standard-8` 32GB) relaunch of the same narrow 2-instrument request is in flight to confirm whether doubling RAM is a
+viable stopgap or whether the growth is effectively unbounded. Separately, a MULTI-day run (30-day + 7-day windows) also
+OOM'd, but only reached ~2-4 days in before crashing — consistent with per-date memory not being released between dates
+(each date's fixed catalogue-load footprint compounds with whatever the process already retained). Suspected root cause:
+the candle aggregator (or its dependency/schema/catalogue loading step) likely loads a fixed, large, venue-wide
+structure per date invocation regardless of the actual instrument scope requested — not scoped streaming/chunking;
 `cefi_wire_bridge: loaded 429129 catalogue rows` is reloaded once per date-invocation, which may also not be released.
 
 ### Bug 2 — `derivative_ticker` candle building fails for ALL HYPERLIQUID instruments sampled (P2)
@@ -81,24 +90,30 @@ on-chain-CLOB wire format.
 
 ## Why it matters
 
-- Bug 1 makes ANY multi-instrument, high-volume-venue CeFi candle backfill on the default `e2-standard-8` launcher
-  unreliable — not just for these 4 venues. It will recur for BITGET/BINANCE/etc. tardis-sourced venues too if their
-  instrument counts are similarly large, though the full-range 2024-dated backfill (fewer historical instruments) has
-  run 80+ days cleanly so far, suggesting the ceiling is instrument-count-dependent and mostly a problem for
-  CURRENT/recent-date backfills.
+- Bug 1 makes ANY recent-date CeFi candle backfill on the default `e2-standard-8` launcher unreliable for a
+  large-universe venue — not just for these 4 venues, and (per the corrected finding above) NOT avoidable by narrowing
+  `--instrument-ids`/`--venues` scope, since the memory driver appears tied to the per-date invocation's full-universe
+  catalogue load rather than the actual instruments processed. It will recur for BITGET/BINANCE/etc. tardis-sourced
+  venues too if their CURRENT (2026) instrument counts are similarly large; the full-range 2024-dated backfill (smaller
+  historical universe at that point in time) has run 80+ days cleanly so far, suggesting the ceiling tracks the VENUE'S
+  CURRENT universe size at invocation time, not the requested date/ instrument scope.
 - Bugs 2/3 are narrower (specific data_types) but silently drop real candle coverage for those data_types/venues without
   a loud, actionable alert beyond a WARNING/CRITICAL log line — worth a proper fix so `derivative_ticker` and
   `book_snapshot_5` candle coverage isn't permanently zero for HYPERLIQUID.
 
 ## Recommended decision
 
-- [ ] [DATA] P1. **Fix MDPS's per-day candle-aggregation memory scaling.** Root-cause why processing all tradable
-      instruments for one CeFi venue/date exceeds 32GB RAM (suspected: no per-instrument streaming/chunking, or the
-      instruments catalogue/wire-bridge cache growing unbounded across the date-loop). Either add per-instrument
-      batching/streaming to the aggregator, or make the backfill launcher scale machine type to instrument count. Repo:
-      market-data-processing-service. **Done when**: a full (all-instrument) HYPERLIQUID `trades` candle backfill for
-      one high-volume recent day completes on the standard launcher without OOM, with a regression test/benchmark
-      recorded.
+- [ ] [DATA] P1. **Fix MDPS's per-date candle-aggregation memory scaling.** Root-cause why a single CeFi venue/date
+      invocation exceeds 32GB RAM even when `--instrument-ids` narrows the actual work to 2 instruments — the memory
+      growth appears tied to a fixed per-date catalogue/universe load (13,601 instruments loaded, 177 tradable), NOT the
+      instrument scope requested, so narrowing scope is not a viable workaround on its own. Find and fix whatever
+      loads/retains the full-universe structure regardless of the instrument filter (the instruments catalogue,
+      `cefi_wire_bridge` wire map, or a validation/schema step that iterates the full tradable set even when only a
+      subset was requested). Repo: market-data-processing-service. **Done when**: a `--instrument-ids`-narrowed (e.g.
+      2-instrument) HYPERLIQUID `trades` candle backfill for one high-volume recent day completes on the STANDARD
+      `e2-standard-8` launcher without OOM (confirming the fix actually scopes memory to the requested work), with a
+      regression test/benchmark recorded. A full (all-177-instrument) run completing is a stretch goal, not required for
+      this item's own done-when.
 - [ ] [DATA] P2. **Fix HYPERLIQUID `derivative_ticker`→`deriv_ohlcv_1m` candle building.** Root-cause the
       `instrument_type='UNKNOWN'` resolution (should resolve `perpetual`) for HYPERLIQUID `derivative_ticker` rows, then
       either fix the resolution or register the missing
