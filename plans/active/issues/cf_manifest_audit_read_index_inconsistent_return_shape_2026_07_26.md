@@ -9,7 +9,7 @@ summary: >-
   type signature declares `-> pd.DataFrame | None`, never a tuple. Not diagnosed further live (the local disk was
   independently failing with ENOSPC at the same time, so root-causing was not safe/possible in that window) — filed so
   the discrepancy is tracked rather than lost as chat-only prose.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -22,7 +22,7 @@ parent_epic: infrastructure_master
 priority: P2
 source: [tradfi_mdps_build_continuous_mismatches_2_and_4_still_open-010, slot 6, 2026-07-26]
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-6, 2026-07-26 — confirmed intentional (unified-trading-library@6ce1ddb6), not a bug
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -58,12 +58,17 @@ make its CF-1/CF-3/CF-4/CF-8/etc verdicts wrong for that bucket without any visi
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P2. Reproduce `_read_index('market-data-tick-tradfi-prd-central-element-323112', ...)` in a clean `.venv`
-      (fresh `uv sync`, not a possibly-stale long-lived one) and confirm whether the tuple-return repros. If it does,
-      read `unified_trading_library/cf_manifest_audit.py`'s actual installed/imported source
-      (`python -c "import     unified_trading_library.cf_manifest_audit as m; print(m.__file__)"`) to rule out a
-      stale-package-vs-live-source mismatch (this workspace uses live-source dev installs; a `.venv` that lagged a
-      mid-session `unified-trading-library` quickmerge could explain it). If NOT reproducible cleanly, close as a
-      session-local artifact (unrelated to the Cloud Run Job's own venv). Repo: unified-trading-library. **Done when**:
-      the tuple-return either reproduces with a root cause identified (and a fix follow-up filed), or is confirmed
-      non-reproducible in a clean venv, recorded here either way.
+- [x] ✅ [SCRIPT] P2. DONE 2026-07-26 (slot 6) — **NOT A BUG, confirmed intentional.**
+      `python -c "import     unified_trading_library.cf_manifest_audit as m; print(m.__file__)"` confirmed the `.venv`
+      is a live-source editable install (not a stale wheel — that hypothesis is ruled out). The live source's current
+      signature IS `_read_index(...) -> tuple[pd.DataFrame, frozenset[str]] | None` (column-pruned df + full-columns
+      frozenset), NOT the plain-`DataFrame` signature this doc's "What I found" observed earlier in the same session.
+      `git log` pinpoints the exact change: `unified-trading-library@6ce1ddb6` ("fix(cf-manifest-audit): column-prune +
+      pyarrow-backed read to stop the daily OOM", slot-10, `2026-07-26T21:07:41Z`) — a legitimate, intentional,
+      well-justified fix (stopping a real daily-OOM bug in the scheduled Cloud Run Job) that quickmerge-landed to
+      `live-defi-rollout` BETWEEN this doc's two `_read_index()` calls (cefi call was ~19:33Z, before the fix; tradfi
+      call was ~22:34Z+, after). The "inconsistency" was this session observing a shared, continuously-shipping module's
+      before/after state across a real intervening commit — not a defect. No fix needed; any caller written against the
+      OLD single-DataFrame signature (as this doc's own diagnostic scripts were) should be updated to unpack the tuple,
+      which the tradfi_mdps doc's own re-measurement code already did once this was discovered live. Repo:
+      unified-trading-library (read-only diagnosis).
