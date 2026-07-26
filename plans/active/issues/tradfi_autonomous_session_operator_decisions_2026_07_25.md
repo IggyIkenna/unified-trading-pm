@@ -254,3 +254,40 @@ what each sentence was going to say, and rewriting another session's just-commit
       inline here and propagate into the named plan doc(s). Items 5 and 7 additionally need their target plans'
       frontmatter / todo tags edited to match the ruling; item 6 must re-run
       `scripts/plan-hygiene/check_ag_closeout_linkage.py` and confirm 0 orphans in the SAME commit as any retag.
+
+## 10. TIME-CRITICAL — the legacy-bucket delete was 2026-07-14, not 2026-07-06; your soft-delete check is more likely to succeed than the doc says [RECOMMEND OPTION A]
+
+**Appended 2026-07-26 by `/ag-closeout-audit` (tradfi tranche, autonomous pass). This is not a design question — it is
+one read-only command only you can run, plus a measured correction that changes its urgency.**
+
+`plans/active/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md` (P0, data-loss) says the
+legacy `market-data-tick-tradfi-central-element-323112` bucket was "permanently deleted 2026-07-06", and computes its
+TIME-CRITICAL recovery-window item as "20 days ago". **A Cloud Audit Log read this session shows exactly ONE
+`storage.buckets.delete` for that bucket over a 120-day window: `2026-07-14T11:03:03.648128088Z`, principal
+`ikenna@odum-research.com`.** So it is **12 days ago, not 20** — and it happened 3 minutes before that day's ICE-purge
+consolidator pause, i.e. during your 2026-07-14 session, not as part of the 2026-07-06 v9 apply. Full evidence is
+appended as a dated addendum to that issue doc (append-only; nothing above it was edited).
+
+Why it needs you specifically: the audit probed and confirmed the gate is real, not a false block —
+`gcloud alpha storage buckets list --soft-deleted --project=central-element-323112` returns
+`HTTPError 403: unified-trading-sa@... does not have storage.buckets.list access`, while
+`gcloud alpha storage buckets describe gs://market-data-tick-tradfi-central-element-323112 --soft-deleted` returns
+`HTTPError 400: Bucket generation is required` (a 400, not a 403 — the only missing input is the generation, and only
+the 403-denied list call yields it). No available worker credential can close this loop; one command from you can.
+
+- **A [WORKER REC]: run `gcloud alpha storage buckets list --soft-deleted --project=central-element-323112` first
+  thing.** At the GCS default 7-day retention the window is closed either way, but any configured retention of 14+ days
+  (the range is 7-90) leaves it OPEN at 12 days — and the census evidence already in that doc found a real structural
+  uncovered slice (pre-2023 tradfi `trades`/`tbbo` + options/futures chain snapshots) that canonical's Databento source
+  cannot retroactively capture. If a generation comes back, the restore decision is yours; if nothing comes back, the
+  window is provably closed and the doc's remaining `[OPERATOR]` P0 collapses to "accept the loss with the census
+  evidence".
+- **B: grant `storage.buckets.list` on `central-element-323112` to `unified-trading-sa` and let a worker run it.**
+  Slower to set up, but makes this class of check autonomous next time.
+- **C: skip the check and rule on the census evidence alone** — accept the loss now, on the basis that 12 days almost
+  certainly exceeds whatever retention is configured. Cheapest, but it closes the only remaining path to actually
+  confirming or recovering the missing granularity.
+- Other: operator can type a custom answer.
+
+**Recommendation: A.** It is a single read-only command, it is the only step that can still change the outcome, and
+every day narrows or closes it permanently.

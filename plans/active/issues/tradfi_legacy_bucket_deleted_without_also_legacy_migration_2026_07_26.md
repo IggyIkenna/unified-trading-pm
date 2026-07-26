@@ -271,3 +271,49 @@ the only remaining way to actually confirm/recover the content.
 
 `/codex/02-data/data-pipeline-correctness-hard-rule.md` (the rule this may violate),
 `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (the delete-safety procedure R1/E7 were supposed to follow).
+
+## 2026-07-26 addendum — the delete DATE in this doc is wrong by 8 days (MEASURED, audit log)
+
+**Appended by `/ag-closeout-audit tradfi` (autonomous pass, 2026-07-26). Append-only: no existing text, checkbox, or
+`[OPERATOR]` item above was edited — this section records a measurement that the two open `[OPERATOR]` P0 items should
+be re-read against before either is actioned.**
+
+This doc states throughout that the legacy bucket "was permanently deleted 2026-07-06", and the TIME-CRITICAL
+`[OPERATOR]` P0 above computes its recovery-window urgency from it ("deleted 2026-07-06 = 20 days ago as of this
+writing"). **A Cloud Audit Log read disproves that date.** Query (read-only, run this session):
+
+```
+gcloud logging read \
+  'protoPayload.resourceName:"buckets/market-data-tick-tradfi-central-element-323112" AND
+   (protoPayload.methodName="storage.buckets.delete" OR protoPayload.methodName="storage.buckets.create")' \
+  --project=central-element-323112 --freshness=120d --limit=10
+```
+
+Over a **120-day** window it returns **exactly ONE** event and no create:
+
+| timestamp                        | methodName               | principal                  |
+| -------------------------------- | ------------------------ | -------------------------- |
+| `2026-07-14T11:03:03.648128088Z` | `storage.buckets.delete` | `ikenna@odum-research.com` |
+
+**Three consequences for the items above:**
+
+1. **Elapsed time is 12 days, not 20.** At the GCS default 7-day bucket soft-delete retention the window is closed
+   either way, but any configured retention of 14 days or more (the setting range is 7-90) leaves it OPEN. The
+   `[OPERATOR]` soft-delete check above is therefore materially more likely to succeed than this doc currently implies —
+   it is worth running promptly, not writing off.
+2. **The delete was not part of the 2026-07-06 v9 apply.** It landed **3 minutes before** the 2026-07-14T11:06:16Z
+   consolidator pause that `/plans/active/tradfi_multisource_backfill_2026_06_22.md` records for the ICE non-24h purge —
+   i.e. it was a step in that day's operator session. The reconstruction in "What I found" items (3) and (5) above
+   (which infers the delete date from E7's 2026-07-06 apply) should be corrected to the audited date. It does NOT change
+   the substantive finding: the completing apply's launcher still never passed `--also-legacy`, and 8 more days of
+   separation between the apply and the delete does not supply the missing migration.
+3. **The credential gate above is REAL, confirmed by probe, and needs no re-attempt.**
+   `gcloud alpha storage buckets list --soft-deleted --project=central-element-323112` returns
+   `HTTPError 403: unified-trading-sa@... does not have storage.buckets.list access`. Separately,
+   `gcloud alpha storage buckets describe gs://market-data-tick-tradfi-central-element-323112 --soft-deleted` returns
+   `HTTPError 400: Bucket generation is required` — a 400, not a 403, so the only missing input is the soft-deleted
+   bucket's **generation**, which is obtainable solely from the 403-denied list call. A worker cannot close this loop;
+   an operator (or any principal with `storage.buckets.list`) can, in one command.
+
+Folding this correction into the doc's own summary and the `[OPERATOR]` P0's arithmetic is drafted as todo 1 of
+`/plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (`status: draft`, awaiting operator approval).
