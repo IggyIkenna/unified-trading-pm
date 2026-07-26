@@ -101,5 +101,5 @@ attempting the full build here:
 ## Codex SSOTs
 
 None directly on point — this is a UAC-registry-internal chain-onboarding gap, not a cross-cutting data pipeline
-contract. `codex/02-data/defi-canonical-naming-ssot.md` may be relevant once capture wiring actually starts (venue
+contract. `/codex/02-data/defi-canonical-naming-ssot.md` may be relevant once capture wiring actually starts (venue
 naming conventions).

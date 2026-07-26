@@ -41,6 +41,10 @@ superseded_by:
 
 # Finalize — AO backlog id-collision alert + remediation UI
 
+> **🟢 ARCHIVED 2026-07-26** — all 3 todos done: independent re-verification from a fresh checkout, a live
+> real-code-path collision reproduction, and the parent's 6-step archival ritual. Parent already archived to
+> `/plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md`.
+
 ## Todos
 
 - [x] ✅ [BACKEND] P1. **DONE 2026-07-26 (slot-14).** Re-verified each parent todo's cited evidence independently from a
