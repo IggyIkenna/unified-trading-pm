@@ -381,28 +381,38 @@ drift_direction: advance-code
       `verify_ml_readiness.py` re-run output is posted showing the 17-date failure set cleared/shrunk with the remainder
       attributable to genuine honest-absence, and the two-part gate-semantics fix is shipped + QG-green with a
       regression test covering a zero-in-window-fixture day passing vacuously and a sparse-column day no longer flagged.
-- [ ] [CODE] P2. **Build the remaining Part 3 safety tooling (excluding the CAS mechanism, already tracked) and unskip
-      §2.2's data_type vocabulary guard.** Direction is fully decided (§4.3 ✅ DECIDED 2026-07-22 — lowercase
-      `data_type` canonical; §4.1/4.2/4.4 also closed) — nothing left here is a judgment call, only unbuilt
-      implementation. Scope: (a) build the three still-missing Part 3 safety-tooling pieces the RE-TRIAGE (2026-07-23)
-      names as genuinely unbuilt — row-identity assertions for the purge/relabel/drop scripts, a consolidator-paused
-      pre-flight check, and a `coverage_drift.py` pre-notify mechanism — plus a `--dry-run` mode on the 3.2/3.3/3.4
-      remediation scripts; (b) in `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`,
-      remove the uppercase `"ODDS"`-family case-variant entries from `DATA_TYPES_BY_ASSET_GROUP["sports"]` (keep only
-      the lowercase forms) and un-skip `unified-api-contracts/tests/unit/test_sports_data_type_vocabulary.py` (drop the
-      `_SKIP_REASON_K0B` gate) per §2.2. Do NOT build or duplicate the cross-object-CAS+alarm mechanism itself — that is
-      already a tracked open todo (`sports_consolidated_closeout_2026_07_19.md`, "NEW 2026-07-23 (decision 12)"). Do NOT
-      execute any actual manifest purge/relabel/drop against prod (3.2/3.3/3.4 remain gated on the standing human-only
-      execution trigger per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) — this todo is build-only.
-      Source: `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (RE-TRIAGE 2026-07-23 section + §2.2). Done
-      when: the four safety-tooling pieces exist as reviewable code/scripts (dry-run mode included) with unit tests, the
-      uppercase `ODDS`-family entries are removed from the sports data_type registry,
+- [x] ✅ [CODE] P2. **DONE 2026-07-26 (slot-8, `data_engineering`) — closed the last remaining piece, 3.4's dry-run.**
+      Direction is fully decided (§4.3 ✅ DECIDED 2026-07-22 — lowercase `data_type` canonical; §4.1/4.2/4.4 also
+      closed) — nothing left here was a judgment call, only unbuilt implementation. Scope: (a) build the three
+      still-missing Part 3 safety-tooling pieces the RE-TRIAGE (2026-07-23) names as genuinely unbuilt — row-identity
+      assertions for the purge/relabel/drop scripts, a consolidator-paused pre-flight check, and a `coverage_drift.py`
+      pre-notify mechanism — plus a `--dry-run` mode on the 3.2/3.3/3.4 remediation scripts; (b) in
+      `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`, remove the uppercase
+      `"ODDS"`-family case-variant entries from `DATA_TYPES_BY_ASSET_GROUP["sports"]` (keep only the lowercase forms)
+      and un-skip `unified-api-contracts/tests/unit/test_sports_data_type_vocabulary.py` (drop the `_SKIP_REASON_K0B`
+      gate) per §2.2. Did NOT build or duplicate the cross-object-CAS+alarm mechanism itself — that stays a separate
+      tracked open todo (`sports_consolidated_closeout_2026_07_19.md`, "NEW 2026-07-23 (decision 12)"). Did NOT execute
+      any actual manifest purge/relabel/drop against prod (3.2/3.3/3.4 remain gated on the standing human-only execution
+      trigger per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) — build-only, as scoped. Source:
+      `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (RE-TRIAGE 2026-07-23 section + §2.2). **Done when**
+      (all now met): the four safety-tooling pieces exist as reviewable code/scripts (dry-run mode included) with unit
+      tests, the uppercase `ODDS`-family entries are removed from the sports data_type registry,
       `test_sports_data_type_vocabulary.py` runs unskipped and green, and both repos' `quality-gates.sh` are green —
       with no manifest/GCS write performed. **PARTIAL 2026-07-26 (slot-2)**: (b) done — `uac@a32ad5fb` (+ regression fix
       `mtds@f7504a10`). (a) 2/3 pieces + 1/2 dry-runs — `assert_consolidator_paused`/`assert_row_identity`/3.3 dry-run
       (`mtds@f7504a10`), `coverage_drift.py` pre-notify (`deployment-api@1f0d3a0`); 3.4's dry-run deferred (needs live
       per-row GCS-existence check). All 3 repos green, zero writes. Full writeup + a `consolidator_liveness.py`
-      naming-bug finding in `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s entry — `pm@be0540e3d`.
+      naming-bug finding in `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s entry — `pm@be0540e3d`. **DONE
+      2026-07-26 (slot-8)**: built + live-tested `drop_sports_odds_phantom_uppercase_2026_07_26.py` (`mtds@8b60b415`) —
+      `--dry-run`-only (no `--apply` flag at all, same posture as 3.3), 8 unit tests, plus a real prod dry-run against
+      85 sampled captured uppercase-ODDS rows (2 separate seeds/sample-sizes): 85/85 confirmed phantom (no backing GCS
+      object under either of 2 empirically-discovered `raw_tick_data/` path shapes — the doc's original single-template
+      assumption doesn't hold across the full 2020-06-06..2026-04-14 date range, see the script's own module docstring
+      for both shapes + how they were verified via direct `gcloud storage ls`, not guessed), 0 unexpected hits, every
+      lowercase `odds` twin confirmed present. `quality-gates.sh` green (6993 passed, 80.52% coverage). Confirmed the
+      consolidator scheduler-state 404 slot-2 already found + filed (`_scheduler_job_name_for_bucket` "prd" vs real
+      "prod") — same already-tracked bug, not re-filed. Zero writes. All 4 safety-tooling pieces + the vocabulary fix
+      are now complete — this todo's done-when is fully met.
 - [x] ✅ [BACKEND] P2. **DONE 2026-07-26 (slot-7, `backend_engineer`) — Close the T6.8 one-off-retirement residual
       (items 1 + 3; item 2 already done).** (a) v9 cluster: workspace-wide import-graph (all repos) found only docstring
       hits outside the cluster. **KEPT** `migrate_sports_canonical_v9.py` + its 2 imported helpers
