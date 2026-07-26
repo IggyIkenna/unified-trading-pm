@@ -213,6 +213,62 @@ def test_bare_reprovenance_commit_cannot_self_forgive(repo: Path):
     assert csq.commit_violates(bypass, reprov)[0] is True
 
 
+# ── 2026-07-26: fail-CLOSED on a bad --range + confirm _backmerge merges are exempt ──────────────
+# issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md ([DEVOPS] P2) +
+# issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md (Fix direction 3)
+
+
+def test_main_fails_closed_on_unresolvable_range(repo: Path, monkeypatch: pytest.MonkeyPatch, capsys):
+    """An unresolvable --range (typo'd ref, unfetched branch) must NOT read as '0 bypassed code
+    commits' — `git rev-list` on a bad range prints to stderr with empty stdout, which previously
+    fell straight through to the ✅ "no bypassed" success path (found while testing the pre-push
+    hook). It must exit non-zero UNCONDITIONALLY, independent of --block."""
+    _commit(repo, "README.md", "# base\n", "chore: base")
+    monkeypatch.setattr(sys, "argv", ["check_strict_quickmerge.py", "--range", "definitely-not-a-real-ref..HEAD"])
+    rc = csq.main()
+    out = capsys.readouterr().out
+    assert rc != 0
+    assert "no bypassed code commits" not in out
+    assert "could not resolve range" in out
+
+
+def test_main_fails_closed_on_unresolvable_range_even_without_block(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    """The fail-closed range check is independent of --block / STRICT_QUICKMERGE_BLOCK — those only
+    gate the warn-vs-hard-fail choice for a REAL scan result, never "the scan could not run"."""
+    _commit(repo, "README.md", "# base\n", "chore: base")
+    monkeypatch.delenv("STRICT_QUICKMERGE_BLOCK", raising=False)
+    monkeypatch.setattr(sys, "argv", ["check_strict_quickmerge.py", "--range", "bogus1..bogus2"])
+    rc = csq.main()
+    assert rc != 0
+
+
+def test_backmerge_merge_commit_is_exempt(repo: Path):
+    """A `_backmerge` merge commit ("Merge remote-tracking branch 'origin/main' into _backmerge")
+    carries no `Quickmerge:` trailer by construction — confirm it is ALREADY carve-out-exempt via
+    the generic 2-parent "merge/reconcile commit" rule, with no special-casing needed."""
+    _commit(repo, "README.md", "# base\n", "chore: base")
+    _git(repo, "checkout", "-q", "-b", "_backmerge")
+    _git(repo, "checkout", "-q", "-b", "topic")
+    _commit(repo, "src/other.py", "y = 1\n", "feat: unrelated main work\n\nQuickmerge: agent")
+    _git(repo, "checkout", "-q", "_backmerge")
+    subprocess.run(
+        ["git", "merge", "--no-ff", "-m", "Merge remote-tracking branch 'origin/main' into _backmerge", "topic"],
+        cwd=repo,
+        env={"PATH": _path(), **_ENV},
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, env={"PATH": _path()}, check=True, capture_output=True, text=True
+    ).stdout.strip()
+    bad, why = csq.commit_violates(sha)
+    assert bad is False
+    assert "merge/reconcile commit" in why
+
+
 def test_reprovenance_only_forgives_the_named_sha(repo: Path):
     # A blessing for sha A must not forgive an UNRELATED bypass B.
     base = _commit(repo, "README.md", "# base\n", "chore: base")
