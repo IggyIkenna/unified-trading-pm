@@ -164,6 +164,15 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       as of 2026-03" `SUBGRAPH_IDS` scoping decision (re-verify the underlying claim is still current) vs. needing an
       honest "not IS-producible" manifest stamp once/if the P2 seeder above exists. (repo: unified-api-contracts docs
       review + market-tick-data-service)
+- [ ] [INFRA] P3. Close a gate gap in agent-orchestrator's `/done` M3 verification found 2026-07-26 (slot-2,
+      BLK-0222fc53 ruling): a `- [ ]` cross-repo todo that is genuinely re-scoped/superseded (never flipped `[x]`,
+      because there is nothing to complete against — see `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s C8 entry,
+      converted to a non-checkbox `CANCELLED — SUPERSEDED` bold marker) has no `/done` path: M3 hard-rejects
+      (`cross_repo_pm_file_touched_no_checkbox_flip`) any commit touching the plan file that doesn't flip `[ ]`→`[x]`,
+      forcing a worker to `/skip-current-task` instead, with no way to record real disposition on the task itself. Add
+      an M3 exception: if the referenced todo line was converted from `- [ ]` to a non-checkbox CANCELLED/SUPERSEDED
+      marker (per `task_template.md`'s "remove a todo" convention) in the verification window, accept `/done` (or an
+      equivalent explicit-cancellation close) without requiring a `[x]` flip. (repo: agent-orchestrator)
 - [x] ✅ [DOCS] P3. **DONE 2026-07-26 (slot 9)** — Corrected `data_completion_defi_2026_07_15.md` item C8: dropped the
       stale "DRIFT-SOLANA... confirmed present" done-criterion (deliberately removed 2026-07-16, must never reappear)
       and the FRAX category-mismatch framing, with a pointer to this doc's full re-diagnosis. A `plans/active/` grep for
@@ -186,3 +195,11 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
   reconciliation todo; marked the P2 follow-up todo above `BLOCKED-OPERATOR-DECISION` + superseded-by-tracking so it
   does not get picked up by a worker ahead of that plan. No code changes; this task's disposition is fully captured in
   this doc + the new plan.
+- 2026-07-26 (slot 2): `/done` (unified-trading-pm@628324586) rejected with
+  `cross_repo_pm_file_touched_no_checkbox_flip` — M3 requires an actual `[ ]`→`[x]` flip, which the ruling above
+  forbids. Escalated as BLK-0222fc53; ruled **Option A**: self-`/skip-current-task` (no M3 run) + convert the C8 todo in
+  `defi_satellite_ao_dispatch_batch2_2026_07_26.md` from a `- [ ]` checkbox to a non-checkbox `CANCELLED — SUPERSEDED`
+  bold marker (per `task_template.md`'s "remove a todo" convention) so `regen_backlog_from_plan.py` drops it from the
+  dispatchable queue instead of re-deriving it. Done: batch2 plan's C8 entry converted; the M3 gate-gap itself filed as
+  a new P3 follow-up todo above (repo: agent-orchestrator) per the ruling's guardrail, not a blocker on closing this
+  task.

@@ -79,29 +79,19 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P1. Fill DeFi manifest venue-key under-enumeration (C8): UAC's `defi_venue_capabilities.py` declares 90
-      defi venue-keys, but the `_index/availability_index.parquet` manifest currently enumerates only a partial subset
-      per instrument_type family — lst 14/22, lending 6/21, perp 5/8 — leaving genuine absentee venues with NO manifest
-      row at all (not even `expected_unattempted`): DRIFT-SOLANA (Solana MVP), FRAX, MORPHO, FLUID. Audit the
-      enumeration path that seeds `expected_unattempted` rows for defi (the same enumerator touched by the 2026-06-22
-      blank-`asset_group`/blank-`chain` fixes referenced in this plan's Progress Log) and confirm it is being driven off
-      the full UAC venue-capability registry rather than a stale/partial venue list; re-run (or extend) the seeding pass
-      so every one of the 90 UAC-declared venue-keys gets a manifest row (captured or honest `expected_unattempted`) for
-      its declared instrument_type family, with DRIFT-SOLANA/FRAX/MORPHO/FLUID confirmed present. Source:
-      /plans/active/data_completion_defi_2026_07_15.md (item C8). Done when: a manifest census (deployment-api
-      `_axis_census.py` or equivalent) shows lst/lending/perp venue-key counts matching UAC's 90-key registry (100%
-      enumerated, not just 14/22, 6/21, 5/8), with DRIFT-SOLANA, FRAX, MORPHO, and FLUID each carrying at least one
-      manifest row; quality-gates.sh green. **RE-DIAGNOSED 2026-07-26 (slot-4)**: premise was wrong — no DeFi
-      `expected_unattempted` seeder exists at all (DeFi is explicitly excluded from the sentinel fan-out every other
-      asset_group uses); there is no seeding pass to "re-run or extend." DRIFT-SOLANA's absence is CORRECT (deliberately
-      removed 2026-07-16) — that done-criterion is unsatisfiable-by-design and must be dropped. FLUID's gap is not
-      list-drift; it's the already-tracked "adapter built, never wired to the manifest-writing CLI handler" class
-      (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md`). Full re-diagnosis + properly-scoped follow-up todos:
-      `/plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`. This checkbox stays unchecked
-      pending an operator/architecture decision on that doc's Option A/B — not AO-completable as originally written.
-      **RULED 2026-07-26 (slot-2)**: Option A (build a real seeder) — tracked now as human plan
-      `/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md`; this checkbox flips only once that plan's
-      seeder ships + a manifest census confirms coverage (its own P3 todo).
+- **[DATA] P1. CANCELLED — SUPERSEDED 2026-07-26 (slot-2, per BLK-7c950d06 + BLK-3221d4b3).** Original ask: fill DeFi
+  manifest venue-key under-enumeration (C8) — UAC's `defi_venue_capabilities.py` declares 90 defi venue-keys, but the
+  `_index/availability_index.parquet` manifest currently enumerates only a partial subset per instrument_type family —
+  lst 14/22, lending 6/21, perp 5/8. **RE-DIAGNOSED 2026-07-26 (slot-4)**: premise was wrong — no DeFi
+  `expected_unattempted` seeder exists at all (DeFi is explicitly excluded from the sentinel fan-out every other
+  asset_group uses); there is no seeding pass to "re-run or extend," and the original done-criterion requiring
+  DRIFT-SOLANA present is unsatisfiable-by-design (deliberately removed 2026-07-16). Full re-diagnosis:
+  `/plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`. **RULED 2026-07-26 (slot-2)**:
+  Option A (build a real seeder) — the actual work is tracked as human plan
+  `/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md` (assigned_vm: NA, gated on an operator
+  capability-reconciliation decision). This entry is intentionally NOT a `- [ ]`/`- [x]` checkbox — it must never be
+  faked `[x]` (no seeder exists to complete against) and must never re-enter the dispatchable queue; the superseding
+  plan is the live tracking doc going forward. Source: /plans/active/data_completion_defi_2026_07_15.md (item C8).
 - [ ] [CHORE] P3. Finish the two housekeeping-cluster sub-items NOT already covered by
       `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (which only covers the OPERATIONS dict fix and the
       paper_run_handler stale comments): (1) delete
