@@ -84,26 +84,24 @@ gate that excludes phase 5 — the regression could ship silently.
       candidates), 173L → 225L (further grown to 253L by `a66fc295`, also a listed candidate).
 
       Ruled out `FUNCTION_SIZE_EXTRA_EXCLUDES` (the workaround-exclusion mechanism): `git show
-                                  0d9ffabd0:scripts/quality-gates.sh` confirms `sports_reference_core.py`/`_fixtures.py` carried NO active
-                                  exclusion entry at any of the 3 crossing commits — the only re-exclusion window was `7d56b9d6` (2026-07-20,
-                                  4-6 days AFTER these commits, `instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`) through
-                                  `ac22305c` (2026-07-21, the real decomposition fix) — a LATER, separate, already-closed episode, not the
-                                  cause of the original miss.
 
-                                  **Mechanism**: NOT a `QG_SLICE`-scoped run (all 3 are full feature/bugfix commits with real test suites, no
-                                  scoping evidence), NOT the exclusion workaround (ruled out above). `0d9ffabd0`'s own commit message claims
-                                  "Quality gates: 134s, sentinel written" — i.e. the agent's local Pass-1 run reportedly passed and wrote a
-                                  green sentinel, YET direct re-measurement of that EXACT commit's tree shows a genuine 52L>50L violation with
-                                  no exclusion in effect. Re-running the identical check logic in isolation against the extracted file DOES
-                                  correctly flag the violation — so this is not a bug in the AST size-measurement logic itself. The gap is most
-                                  consistent with either (a) the committed tree differing from whatever tree the agent's local QG run actually
-                                  verified (edits made after the Pass-1 run, before commit, that should have invalidated the content-sentinel
-                                  but evidently didn't block `quickmerge --agent`), or (b) a live, not-yet-reproduced bug in the sentinel
-                                  comparison itself. Distinguishing (a) from (b) needs a LIVE reproduction (deliberately grow a function past
-                                  cap, run the real Pass-1→commit→quickmerge-agent sequence, and see whether the mismatch is actually caught)
-                                  — filed as a follow-up todo below rather than attempted here, since the historical `.qg_content_sentinel`
-                                  artifacts from these 2026-07-13/14/15 commits are local, uncommitted, and long gone; nothing in the historical
-                                  record can further disambiguate (a) vs (b) without a fresh repro.
+0d9ffabd0:scripts/quality-gates.sh`confirms`sports_reference_core.py`/`_fixtures.py`carried NO active       exclusion entry at any of the 3 crossing commits — the only re-exclusion window was`7d56b9d6`(2026-07-20,       4-6 days AFTER these commits,`instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`) through       `ac22305c`
+(2026-07-21, the real decomposition fix) — a LATER, separate, already-closed episode, not the cause of the original
+miss.
+
+**Mechanism**: NOT a `QG_SLICE`-scoped run (all 3 are full feature/bugfix commits with real test suites, no scoping
+evidence), NOT the exclusion workaround (ruled out above). `0d9ffabd0`'s own commit message claims "Quality gates: 134s,
+sentinel written" — i.e. the agent's local Pass-1 run reportedly passed and wrote a green sentinel, YET direct
+re-measurement of that EXACT commit's tree shows a genuine 52L>50L violation with no exclusion in effect. Re-running the
+identical check logic in isolation against the extracted file DOES correctly flag the violation — so this is not a bug
+in the AST size-measurement logic itself. The gap is most consistent with either (a) the committed tree differing from
+whatever tree the agent's local QG run actually verified (edits made after the Pass-1 run, before commit, that should
+have invalidated the content-sentinel but evidently didn't block `quickmerge --agent`), or (b) a live,
+not-yet-reproduced bug in the sentinel comparison itself. Distinguishing (a) from (b) needs a LIVE reproduction
+(deliberately grow a function past cap, run the real Pass-1→commit→quickmerge-agent sequence, and see whether the
+mismatch is actually caught) — filed as a follow-up todo below rather than attempted here, since the historical
+`.qg_content_sentinel` artifacts from these 2026-07-13/14/15 commits are local, uncommitted, and long gone; nothing in
+the historical record can further disambiguate (a) vs (b) without a fresh repro.
 
 - [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot 4)** — **Verdict: does NOT subsume this gap; needs its own fix.**
       `qg_sentinel_environment_blind_2026_07_23.md`'s planned fix binds `ENVIRONMENT` (dev/prod) into the sentinel hash
