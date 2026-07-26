@@ -24,7 +24,7 @@ scope: [engineer, admin]
 tags: [cf-manifest-audit, data-correctness, cross-cutting, cf-8, era-b, cefi, tradfi, sports, prediction]
 related:
   [
-    /plans/active/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md,
+    /plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md,
     /plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
