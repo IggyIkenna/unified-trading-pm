@@ -92,19 +92,30 @@ person re-checking.
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Repoint or remove the 5 dead doc-references in shipped code.** For each of the 5 lines above,
+- [x] ✅ [BACKEND] P2. **Repoint or remove the 5 dead doc-references in shipped code.** For each of the 5 lines above,
       either point at the surviving SSOT (the concurrency contract and API-endpoint descriptions now live in
       `/codex/04-architecture/agent-orchestrator-overview.md` + the worker-liveness doc — confirm before citing) or
       delete the dangling clause if the docstring stands on its own. **Do NOT resurrect the deleted files.** **Gate**:
       `rg -n 'AUDIT_FINDINGS_2026_05_18|docs/PLAN\.md|MAIN_AGENT_CUTOVER_REVIEW' agent-orchestrator/server/` returns
-      zero hits, and each replacement pointer resolves to a file that exists.
-- [ ] [DOCS] P3. **Fix `README.md`'s directory tree + the 2 inline `agents/*.md` links.** The `agents/` dir is gone;
+      zero hits, and each replacement pointer resolves to a file that exists. — **DONE** `agent-orchestrator@367252219`
+      (2026-07-24 06:11:16Z, "fix(docs): repoint dead docs/PLAN.md, AUDIT_FINDINGS, and MAIN_AGENT_CUTOVER_REVIEW refs
+      in server/"). **Gate re-measured 2026-07-26 (/plan-reconcile ao)**: the exact `rg` command returns **zero hits**
+      (exit 1) over `agent-orchestrator/server/`.
+- [x] ✅ [DOCS] P3. **Fix `README.md`'s directory tree + the 2 inline `agents/*.md` links.** The `agents/` dir is gone;
       role prompts live in `unified-trading-pm/agents/`. Replace the tree section with a pointer rather than re-listing
       files that will drift again. **Gate**: every path in README.md's tree resolves; no link to a nonexistent `agents/`
-      file.
-- [ ] [DOCS] P3. **Correct `REPO_PROVENANCE.md`'s branch-flow sentence** to the current model (per-slot clones →
+      file. — **DONE** `agent-orchestrator@f52b223cd` (2026-07-24 06:19:27Z, "docs: replace README agents/ tree with a
+      pointer to unified-trading-pm/agents/"). **Gate re-measured 2026-07-26**: `README.md:447-448` is now a pointer
+      reading "no agents/ dir — REMOVED in agent-orchestrator@5eaea29; role boot prompts now live in
+      unified-trading-pm/agents/"; the 2 inline links at `:365`/`:397` resolve to `unified-trading-pm/agents/main.md`
+      and `…/review.md` (both exist); all 24 remaining tree paths resolve on disk.
+- [x] ✅ [DOCS] P3. **Correct `REPO_PROVENANCE.md`'s branch-flow sentence** to the current model (per-slot clones →
       `live-defi-rollout`; LDR → `main` direct, staging bypassed by the per-repo `ldr_main` toggle). SSOT:
-      `/codex/08-workflows/ci-cd-flow.md`. **Gate**: no `tab ->` flow description remains in the file.
+      `/codex/08-workflows/ci-cd-flow.md`. **Gate**: no `tab ->` flow description remains in the file. — **DONE**
+      `agent-orchestrator@5d8cdc8ee` (2026-07-24 06:12:26Z, "docs: correct REPO_PROVENANCE branch-flow to per-slot
+      LDR->main direct model"). **Gate re-measured 2026-07-26**: `rg 'tab ->'` on the file returns zero hits; line 3 now
+      reads "no `tab` branch — that model is retired … promotion is `live-defi-rollout -> main` DIRECT, with `staging`
+      bypassed via the per-repo `ldr_main` toggle".
 - [x] ✅ [REVIEW] P2. **Correct the tracker's "0 dead links" Progress Log claim** in
       `ao_open_issues_consolidated_close_out_2026_07_17.md` to state the sweep's ACTUAL scope, so the line stops reading
       as fleet-wide proof. **Gate**: the entry names which commits swept what, and links this doc for the batch it

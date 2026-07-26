@@ -80,11 +80,22 @@ completed) — mirroring the existing "every actionable alert gets a ✅ CLOSE b
 
 ## Todos
 
-- [ ] [BACKEND] P2. Implement `notify_task_auto_parked` + wire it into the GATED skip-park path per the recommendation
-      above. Add a paired "RESOLVED" notification when the park condition clears (auto-unpark fires, or the underlying
-      task completes/is cancelled while parked). **Done when**: a unit test simulates a GATED skip-park and asserts the
-      Slack notify function is called exactly once (not once per tick/poll), and a simulated auto-unpark asserts a
-      resolved/close notification fires; `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P2. Implement `notify_task_auto_parked` + wire it into the GATED skip-park path per the
+      recommendation above. Add a paired "RESOLVED" notification when the park condition clears (auto-unpark fires, or
+      the underlying task completes/is cancelled while parked). **Done when**: a unit test simulates a GATED skip-park
+      and asserts the Slack notify function is called exactly once (not once per tick/poll), and a simulated auto-unpark
+      asserts a resolved/close notification fires; `quality-gates.sh` green. — **DONE** `agent-orchestrator@fd749e3b6`
+      (2026-07-25 19:42:39Z, "feat(dashboard): surface auto-parked tasks in health strip + Slack alert on park/unpark").
+      **Verified 2026-07-26 (/plan-reconcile ao)** by reading the shipped code + tests, not by grep alone: the call
+      chain is live end-to-end — `server/routes/slots_ops.py:677` (`/skip-current-task`, reason_code one of
+      BLOCKED/PARKED/GATED) → `auto_park.maybe_auto_park(...)` → `server/auto_park.py:103` `notify_task_auto_parked`
+      (immediately after the `ss.log_activity` park event, exactly where this doc's Recommendation said to put it); the
+      RESOLVED half is `server/auto_park.py:147` `notify_task_auto_unparked`. Tests:
+      `tests/test_auto_park.py::test_park_fires_slack_notify_exactly_once` (`assert_called_once` + asserts
+      `reason_code`/`skip_count`/`condition` kwargs), `::test_repeat_skip_past_threshold_does_not_re_notify` (no re-page
+      per tick), `::test_unpark_fires_resolved_notify_exactly_once`, and a park-survives-a-Slack-outage test, plus 6
+      rendering tests in `tests/test_slack_notifications.py`. The doc's **Notes** item (wire
+      `BacklogSummary.auto_parked` as a UI-visible counter) also landed in the same commit — see its subject line.
 - [ ] [BACKEND] P3. Audit whether any OTHER `reason_code` values passed to `/skip-current-task` have the same silent gap
       (this investigation was scoped to `GATED` specifically, prompted by one live incident — confirm the finding
       generalizes or is GATED-specific before assuming full coverage).

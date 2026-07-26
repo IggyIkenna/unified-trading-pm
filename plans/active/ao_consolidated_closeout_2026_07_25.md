@@ -5,10 +5,12 @@ summary: >-
   New "topic tranche" umbrella (sibling to the 5 asset groups + cross-cutting) for agent-orchestrator-internal work:
   backlog/dispatch scheduling, worker/slot lifecycle + multi-agent git-safety, orchestrator VM/auth infra, AO
   alerting/observability, and the `agent_operating_framework_master` process tooling that runs the orchestrator itself.
-  Authored 2026-07-25 from a corpus-wide classification pass (36 docs, `parent_epic` ∈ `{orchestrator_master,
-  agent_operating_framework_master}` plus 8 more reclassified out of the `infrastructure_master` "pure-infra" bucket) —
+  Authored 2026-07-25 from a corpus-wide classification pass over `parent_epic` ∈ `{orchestrator_master,
+  agent_operating_framework_master}` plus docs reclassified out of the `infrastructure_master` "pure-infra" bucket —
   part of making the AG↔topic partition (5 AGs + cross-cutting + ao + ci + infra) total across the whole plans/issues
-  corpus, per operator request.
+  corpus, per operator request. The Tracks' **Sources** lists below are the authoritative membership (they are what a
+  topic-scoped `/plan-reconcile ao` / `/ag-closeout-audit ao` run resolves against) — count them, do not restate a count
+  here.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -41,7 +43,7 @@ superseded_by:
 depends_on: []
 source: >-
   Corpus-wide classification pass (unified-trading-pm, 2026-07-25) splitting `parent_epic: {orchestrator_master,
-  agent_operating_framework_master}` docs (all previously `asset_group: cross-cutting`) plus 8 reclassified
+  agent_operating_framework_master}` docs (all previously `asset_group: cross-cutting`) plus reclassified
   `infrastructure_master` docs into this AO tranche, per operator request to make the 5-AG + cross-cutting + ao + ci +
   infra topic partition total (zero orphans) for sharded `/plan-reconcile` and `/ag-closeout-audit` runs.
 ---
@@ -175,7 +177,19 @@ posts; dead code refs restored or removed cleanly; Playwright port-collision fix
 ## Progress Log
 
 - **2026-07-25** — Doc authored from a corpus-wide classification pass splitting 234 `asset_group: cross-cutting` docs
-  into the 5-AG + cross-cutting + ao + ci + infra topic partition, per operator request. 36 docs classified into this AO
-  tranche (26 from `orchestrator_master`/`agent_operating_framework_master` directly + 8 reclassified out of
-  `infrastructure_master`'s "pure-infra" bucket + 2 from other epics). No fixes applied in this pass — pure
-  consolidation for `/ag-closeout-audit`/`/plan-reconcile` sharding.
+  into the 5-AG + cross-cutting + ao + ci + infra topic partition, per operator request. Docs were classified into this
+  AO tranche from `orchestrator_master`/`agent_operating_framework_master` directly, from `infrastructure_master`'s
+  "pure-infra" bucket, and from a couple of other epics — see the Tracks' **Sources** lists for the membership itself.
+  No fixes applied in this pass — pure consolidation for `/ag-closeout-audit`/`/plan-reconcile` sharding.
+- **2026-07-26** (`/plan-reconcile ao`, autonomous) — **Corrected a countable contradiction between this doc's own
+  narrative and its own Sources lists.** The 2026-07-25 entry claimed 36 docs in this AO tranche, made up of 26 from
+  `orchestrator_master`/`agent_operating_framework_master` plus 8 reclassified out of `infrastructure_master` plus 2
+  from other epics. Measured directly from the Tracks' Sources lists: **35** docs — **23** `orchestrator_master` and
+  **3** `agent_operating_framework_master` (26 ✓), **7** (not 8) `infrastructure_master`, and **1**
+  `observability_master` plus **1** `escalation_and_disaster_recovery_master` (2 ✓). So the `infrastructure_master` leg,
+  and therefore the total, was over-stated by one. Per this skill's "prefer deleting a derivable restated fact over
+  correcting it" rule the hardcoded counts were **removed** from the `summary`/`source` frontmatter and this log rather
+  than re-pinned (a hardcoded count re-stales the next time a Source is added), and the Sources lists were named as the
+  membership SSOT. **Not resolved by this pass**: whether an 8th `infrastructure_master` doc was _intended_ for this
+  tranche and dropped during authoring — that is a classification/ownership call for `/ag-closeout-audit ao`, not a
+  count correction, and removing the number does not assert the membership is complete.
