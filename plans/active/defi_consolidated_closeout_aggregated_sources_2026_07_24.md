@@ -266,13 +266,13 @@ drift_direction: none
       classification to HYPERLIQUID/ASTER, audit MTDS/reference-data conflation elsewhere; P3: update a UI tooltip,
       clarify the venue-detail link naming) — see file for the rest.
   - [`plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`](/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md)
-    (6 open)
+    (5 open — recounted live 2026-07-26 by `/plan-reconcile defi`, was "6 open"; the CME item below flipped `[x]`)
     - **[CODE] P1.** Add a falsifier test that fails CI when a venue/source key present in both coverage registries
       disagrees on its date — the permanent backstop against re-divergence.
     - **[DATA] P1.** Resolve the 8 confirmed multi-year/multi-month CeFi mismatches (BITFINEX, KRAKEN, COINBASE-SPOT,
       DERIBIT, OKX, BINANCE, BYBIT, HYPERLIQUID) against measured manifest reality.
-    - **[DATA] P2.** Resolve the CME mismatch — probe the manifest to confirm 2020-01-01, drop the `# TODO verify`
-      marker.
+    - ~~**[DATA] P2.** Resolve the CME mismatch~~ — ✅ DONE, flipped `[x]` at
+      `coverage_floor_registries_no_cross_propagation_2026_07_17.md:163`.
     - **[DATA] P2.** Resolve the POLYMARKET mismatch (CLOB-launch vs first-actual-instrument, ~2.3-year gap).
     - **[DATA] P3.** Resolve the small 1-21 day DeFi protocol drifts (CURVE, UNISWAP_V2/V4, BALANCER, LIDO) + the
       AAVE_V3 chain-axis question.
@@ -365,7 +365,17 @@ drift_direction: none
     — 0 open todos (closed/archived/record-only) — corrected 2026-07-25 (plan-reconcile): `status: resolved`, both
     bullets `[x]`.
   - [`plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`](/plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md)
-    — 0 open todos (closed/archived/record-only).
+    (4 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos
+    (closed/archived/record-only)" entry was wrong, this doc is `status: open` with 4 live `- [ ]` todos at
+    `:82`/`:84`/`:87`/`:89`)
+    - **[DATA] P1.** Verify each of the 6 known cross-chain pool-address collisions (1 CURVE + 5 BALANCER) resolves
+      correctly under Option A end-to-end (catalogue → MTDS → MDPS → features → manifest/data-status).
+    - **[DATA] P1.** Reconcile the 2026-07-08 Balancer `@CHAIN` `instrument_id` patch against the 2026-07-18 Option-A
+      ruling — revert the patch, or explicitly ratify Balancer as an intentional carve-out and document why.
+    - **[DATA] P1.** Fix CURVE's still-bare, still-colliding `instrument_id` (the only one of the 6 with zero
+      mitigation).
+    - **[DOC] P2.** Update `/codex/02-data/defi-canonical-naming-ssot.md` with the two-id/dual-key POOL model
+      (post-phase codex audit).
   - [`plans/active/issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`](/plans/active/issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md)
     (3 open)
     - **[BACKEND] P1.** Generalise `catalogue_pool_ids_for_shard` beyond `instrument_type=='pool'` — the prerequisite
@@ -377,8 +387,12 @@ drift_direction: none
   - [`plans/active/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`](/plans/active/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`](/plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md)
-    — 0 open todos (closed/archived/record-only) — its still-open relabel-forward verification is tracked as its own
-    todo under `defi_track01_per_instrument_and_canon_id_2026_07_24.md` below.
+    (1 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos" entry only accounted for
+    the relabel-forward verification tracked under `defi_track01_per_instrument_and_canon_id_2026_07_24.md` below, and
+    missed this separate item at `:254`)
+    - **[DATA] P2.** Item 6 — resolve item 4's "inconclusive, not a clean bill" gap for Kamino/Solend `lending_indices`;
+      probe BOTH `instrument_type=solana_lending` AND `instrument_type=solana_amm_pool` path shapes before filing a
+      verdict (operator ruling 2026-07-25).
   - [`plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`](/plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md)
     (1 open)
     - **[DESIGN] P3.** Author the dedicated implementation plan when this becomes a priority — not urgent, a 2-venue gap
@@ -399,7 +413,18 @@ drift_direction: none
     — 0 open todos (closed/archived/record-only) — its follow-up capture work is tracked under
     `defi_track01_per_instrument_and_canon_id_2026_07_24.md` below.
   - [`plans/active/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`](/plans/active/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md)
-    — 0 open todos (closed/archived/record-only).
+    (4 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos
+    (closed/archived/record-only)" entry was wrong, this doc is `status: open` with 4 live `- [ ]` todos at
+    `:144`/`:150`/`:160`/`:165`)
+    - **[DATA] P1.** Run `--apply` on a VM + verify the manifest rows actually flipped — NOT YET RUN (2 VM-launch
+      attempts 2026-07-24 both failed differently); blocked by the heavy-I/O hard rule.
+    - **[SCRIPT] P2.** In `dex_swaps_handler.py`, detect the terminal "subgraph not found: no allocations" GraphQL
+      response at FETCH time so the writer calls `record_empty(reason=EXPECTED_SUBGRAPH_DEINDEXED)`, not
+      `record_failed`.
+    - **[DESIGN] P3.** Evaluate wiring `curve_adapter.py`/`api.curve.fi` REST into batch `dex_pool_swaps` for
+      CURVE/OPTIMISM.
+    - **[SCRIPT] P3.** Repeat the live-subgraph-health spot-check for the remaining un-investigated long-tail
+      `attempted_failed` buckets.
   - [`plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`](/plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md)
     (1 open)
     - **[DESIGN] P1.** GATED on parity results — decide whether to demote `perp_funding` from a captured raw type to a
@@ -533,11 +558,11 @@ drift_direction: none
     - **[DECISION] P2.** Once the pilot trace (AAVE_V3) lands, decide the reconciliation cadence for the remaining 58
       findings.
   - [`plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`](/plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md)
-    (2 open)
-    - **[DATA] P1.** Re-fetch/backfill the ~3,116 undocumented api_football `attempted_failed` rows; investigate the 461
-      blank-data_type failures first.
-    - **[DATA] P2.** Remove/relabel 2 rows mis-filed in the sports manifest under `source=api_football` (a
-      defi/UNISWAP_V3-BASE row + a cefi row) — same wrong-non-blank-value bug class.
+    (1 open — recounted live 2026-07-26 by `/plan-reconcile defi`, was "2 open"; the P1 re-fetch/backfill item flipped
+    `[x]` at `:98`)
+    - **[DATA] P2.** Remove/relabel the 1 defi/UNISWAP_V3-BASE row mis-filed in the sports manifest under
+      `source=api_football` (date=2026-06-26), plus the second mislabeled `source=instruments_service asset_group=cefi`
+      row found in the same probe — same wrong-non-blank-value bug class.
   - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
     (6 open)
     - **1. [DATA] P1.** instruments-service: canonicalise the `instrument_availability` write using the sink PREFIX
@@ -641,9 +666,9 @@ drift_direction: none
     - **[FIX] P3.** BLOCKED-OPERATOR-DECISION — extending the live-probe mechanism to cefi CEX venues contradicts a
       deliberate RULE 11 invariant; needs an explicit operator ruling.
   - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
-    (1 open)
-    - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI — needs an owner
-      decision between a local fix (MTDS) and a shared UTL fix before coding.
+    — 0 open todos (recounted live 2026-07-26 by `/plan-reconcile defi`, was "1 open"): the
+    default-to-yesterday-date-bridge item flipped `[x] ✅ … FIXED 2026-07-16` at `:271`. Archival candidate — see this
+    doc's own `## Archival + consolidation candidates` note.
   - [`plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
     (2 open — sports/prediction-primary, tracked here for cross-AG catalogue overlap)
     - **[OPS] P2.** Verify the next scheduled `lifecycle-catalogue-regen-sports` run promotes successfully and
@@ -655,7 +680,11 @@ drift_direction: none
   - [`plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`](/plans/active/issues/instruments_remaining_work_audit_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
-    — 0 open todos (closed/archived/record-only).
+    (1 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos
+    (closed/archived/record-only)" entry was wrong, the doc's single `- [ ]` sits at `:118`)
+    - **[CODE] P2.** Add a collision-resistant component (8-hex slug of `hash(venue, data_type)`) to
+      `pipeline_e2e_check.py::_vm_name()`, under GCE's 63-char limit, + a regression test asserting two same-second
+      same-asset_group shard launches produce distinct VM names.
   - [`plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`](/plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`](/plans/archive/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md)
