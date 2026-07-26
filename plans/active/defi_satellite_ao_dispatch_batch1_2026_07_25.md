@@ -409,7 +409,8 @@ drift_direction: advance-code
       untouched — comment-text-only fix. Repo: unified-api-contracts. **Done when**: the comment no longer claims "no
       UAC subgraph_id registered" and states the real Ethereum-only-adapter reason instead; `quality-gates.sh` green; no
       other lines changed. Source: `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`.
-- [ ] [INFRA] P1. Diagnose and, if still broken, fix the `uts-prod-data-status-rollup` Cloud Run Job — as of 2026-07-10
+- [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7) — original symptom NOT recurring; job healthy in the sense that
+      matters.** Diagnose and, if still broken, fix the `uts-prod-data-status-rollup` Cloud Run Job — as of 2026-07-10
       Cloud Scheduler had been firing into `UNAVAILABLE` (gRPC 14) since 2026-07-05T15:53Z. FIRST check current job
       health (`gcloud run jobs executions list`, blob `last_modified` on
       `gs://{pid}-data-status-rollups/market-tick-data-service/full.json.gz`) — a separate active plan
@@ -419,7 +420,13 @@ drift_direction: advance-code
       deployment-service. **Done when**: either (a) the most recent execution succeeded and the rollup blob's
       `last_modified` is within ~10 min, confirming resolution, OR (b) the issue doc's Progress Log records the job was
       already healthy and only the separate image-staleness item remains open. Source:
-      `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`.
+      `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`. **Note (2026-07-26 correction)**: the job is
+      actually the Cloud Run SERVICE `uts-prod-data-status-rollup-svc` + scheduler `uts-prod-data-status-rollup-cron`
+      (there is no Cloud Run JOB by this name — `gcloud run jobs executions list` returns nothing because it's the wrong
+      resource type; the todo's own command was mis-specified). Full diagnosis in the Progress Log below — original
+      UNAVAILABLE/gRPC14 is gone; current DEADLINE_EXCEEDED/gRPC4 on the scheduler's own client-side wait is cosmetic
+      (the backend keeps running past it and completes for ~12/14 services every cycle); the one real pre-existing gap
+      (market-tick-data-service) is a KNOWN, already-tracked limitation, not new breakage.
 - [ ] [DATA] P1. Measure the scale of bare-symbol-leaf DeFi batch writes since 2026-07-20 — run a bounded per-day GCS
       delimiter descent (not a corpus walk) over
       `raw_tick_data/by_date/day={YYYY-MM-DD}/pipeline_mode=batch_*/asset_group=defi/` for every day from 2026-07-20
@@ -598,6 +605,38 @@ drift_direction: advance-code
       sampled for real KAMINO/SOLEND objects (uri + timestamp-vs-day= check, same method as items 4/5 in the source
       doc), the 47-object Track-2 population is accounted for, and a definitive verdict (clean / same fabrication bug as
       the dex_pools class / a different issue) is recorded in the source doc.
+
+## Progress Log
+
+- **2026-07-26 (slot-7)** — Diagnosed the `uts-prod-data-status-rollup` todo. **Resource-type correction**: it's a Cloud
+  Run SERVICE (`uts-prod-data-status-rollup-svc`) fronted by Cloud Scheduler (`uts-prod-data-status-rollup-cron`,
+  `*/20 * * * *`), not a Cloud Run JOB — `gcloud run jobs executions list` (the todo's own suggested command) returns
+  nothing because it's the wrong API surface; `gcloud scheduler jobs describe` + `gcloud run services describe` are the
+  right tools.
+  - **Original symptom (UNAVAILABLE / gRPC 14, since 2026-07-05) is NOT recurring.** Current scheduler `status.code: 4`
+    (DEADLINE_EXCEEDED) is a DIFFERENT code — the scheduler's own client-side HTTP wait (`attemptDeadline: 900s`,
+    matching the Cloud Run `timeoutSeconds: 900`) times out, but Cloud Run does not kill the backend request just
+    because the caller stopped waiting — confirmed by reading live `Creation Time` timestamps on
+    `gs://central-element-323112-data-status-rollups/{service}/full.json.gz`: 12 of 14 `_DEFAULT_SERVICES` got a FRESH
+    rollup within the same ~40min cycle (20:43–21:20 UTC), including `strategy-service` and `execution-service` (the
+    LAST two in the worker's sequential processing list) — direct proof the backend keeps running to completion for the
+    achievable set regardless of what the scheduler's own status field reports.
+  - **market-tick-data-service is the one persistent gap — and it's a KNOWN, already-tracked limitation, not new
+    breakage.** `plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md` already documents
+    MTDS's full-2018-today manifest build as exceeding any sane per-child memory ceiling ("no RAM tier through 64GB
+    survives it") — the per-service child-process isolation fix from that plan (`RLIMIT_AS` 24Gi) stops MTDS's failure
+    from blocking OTHER services (confirmed here: MDPS, right after MTDS in the processing order, DOES succeed — direct
+    evidence the isolation fix still holds), but MTDS's own rollup was never expected to succeed until the real fix
+    (`/plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md`, still active) lands. This matches the todo's
+    own "Done when (b)" branch: the job is healthy for what it can do; the remaining gap is a separately-owned,
+    already-tracked item, not this todo's to fix.
+  - **New finding along the way (filed, not fixed here)**: `ml-service`'s `full.json.gz` is ALSO missing (only
+    `coverage.json.gz` exists), but unlike MTDS this is NOT explained by the known OOM class — both services processed
+    AFTER ml-service in the sequential list (strategy-service, execution-service) succeeded in the same cycle, ruling
+    out a simple "loop got cut off here" explanation. Filed
+    `issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md` (P2, `assigned_vm: planning`, 2 scoped todos:
+    re-confirm across more cycles, then root-cause the coverage-vs-full divergence) rather than open-ended debugging
+    with only 16 log entries/2h to go on from this vantage point.
 
 ## Deferred
 
