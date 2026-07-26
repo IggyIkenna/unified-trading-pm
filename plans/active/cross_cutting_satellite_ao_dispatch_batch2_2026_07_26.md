@@ -120,7 +120,7 @@ drift_direction: advance-code
       location the harness lives in at execution time and note which, rather than assuming the pre-relocation path.
       Source: `issues/features_service_catalogue_completeness_inventory_2026_07_24.md`. **Done when**: both checkboxes
       are flipped, (a) carries the 9-module table and (b) cites a real run with its verdict.
-- [ ] [CODE] P0. **UTL writer-side invariant bundle — three verbatim residuals in one repo pass** (Source:
+- [x] ✅ [CODE] P0. **UTL writer-side invariant bundle — three verbatim residuals in one repo pass** (Source:
       `data_pipeline_alert_substrate_residual_2026_07_24.md` Phase-4 + Phase-6-B items). (a) Make
       `record_captured`/`record_empty` assert the resolved GCS path `is_canonical()` before write, so a non-canonical
       write fails loudly at the writer instead of days later in an audit. (b) Add the live==batch schema invariant
@@ -132,7 +132,21 @@ drift_direction: advance-code
       in the same module; if both are in flight, land them as separate commits and re-run UTL `quality-gates.sh` after
       each rather than co-staging. **Done when**: all three asserts/enrichments are implemented with regression tests (a
       non-canonical path raises; a live record missing the `asset_group` column raises; the emitted event carries the 4
-      new fields), UTL `quality-gates.sh` is green, and the three source-doc checkboxes are flipped.
+      new fields), UTL `quality-gates.sh` is green, and the three source-doc checkboxes are flipped. — DONE
+      unified-trading-library@d7b3ed7d: (a) `_assert_canonical_write_path` in `manifest_writer/_rows.py` (new
+      `NonCanonicalWritePathError`), wired into `record_captured` (`_writer_captured.py`) + `record_empty`'s
+      `_record_status` backend (`_writer_record.py`, gated by a `check_canonical_path` flag so `record_failed`/
+      `record_expected_unattempted` are unaffected) — STRUCTURAL-only, scoped to the 4 UAC `candidate_parquet_paths`-
+      covered asset_groups (cefi/defi/tradfi/prediction) with resolvable dimensions; every other write shape (sports,
+      features/ML/service rows, an unresolvable instrument_type) is a resolution skip, never a false block — landed in
+      `_rows.py` not `_core.py` (the structural mixin-stub base, no concrete logic lives there) since both writer files
+      already import from `_rows.py`. (b) `LiveCapturedAssetGroupInvariantError` raised in `record_captured` when
+      `validate=False` (the live bookkeeping boundary) resolves no `asset_group` for a market-data cell (venue present,
+      no `feature_group`); scoped to that boundary only, the fleet-wide self-heal-else-blank behaviour in
+      `_resolve_asset_group` is unchanged for every other callsite. (c) `_emit_unproven_honest_absence` now takes
+      `row_key` and stamps `venue`/`data_type`/`day` + a human-readable `error_message` into the emitted details. 8 new
+      regression tests (`tests/unit/test_manifest_writer_phase4_writer_invariants.py`); full UTL suite green (4689
+      passed, 0 failed); `quality-gates.sh` green (sentinel matches HEAD).
 - [ ] [CODE] P1. **alerting-service reliability trio — one repo, three verbatim residuals** (Sources:
       `data_pipeline_alert_substrate_residual_2026_07_24.md` "Later-surfaced alert-substrate bugs"). (a) Make
       `config_reloaders._fetch` tolerate missing secrets — today it calls
