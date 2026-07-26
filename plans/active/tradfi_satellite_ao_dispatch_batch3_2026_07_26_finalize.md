@@ -8,7 +8,7 @@ summary: >-
   operator-gated/too-large-or-risky items for any that have since cleared — including re-checking whether the operator
   has ruled on `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08`'s DECISION per batch2_finalize's own live tracking),
   then archives batch3 via the standard 6-step ritual.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]

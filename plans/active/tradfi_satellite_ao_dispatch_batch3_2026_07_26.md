@@ -13,7 +13,7 @@ summary: >-
   — is a well-established, repeatedly-confirmed operator-gated item with its own live re-check mechanism already in
   `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md`), and 1 too-large-or-risky item in the Deferred section
   below.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -62,10 +62,10 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 3 — fresh triage extraction
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
-> skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review. All 9 todos below are same-priority-independent and touch distinct files/docs (verified — zero
-> cross-todo file collisions).
+> **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
+> ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
+> explicit operator review). All 9 todos below are same-priority-independent and touch distinct files/docs (verified —
+> zero cross-todo file collisions).
 
 ## Todos
 
