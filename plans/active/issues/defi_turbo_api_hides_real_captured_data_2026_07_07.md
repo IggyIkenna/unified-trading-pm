@@ -258,10 +258,29 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       days) behind current Ethereum mainnet — a dead/stalled upstream that should be re-verified before any future phase
       flip to 'live'" (`defi_venue_capabilities.py:150-153`). Any capture wiring landed before this is re-verified as
       caught-up would produce results that are stale by construction — re-check the subgraph's sync lag BEFORE wiring
-      gap 1 above, not after.
-- [ ] [VERIFY] P3. Resolve which "Plasma" chain UAC's `FLUID-PLASMA`/`AAVE-PLASMA` placeholders are meant to refer to
+      gap 1 above, not after. — **RE-VERIFIED 2026-07-26 (slot-11, data_engineering) — CLOSED as BLOCKED-UPSTREAM, worse
+      than measured.** Live-queried both Goldsky endpoints
+      (`api.goldsky.com/api/public/project_cm4iagnemt1wp01xn4gh1agft/subgraphs/euler-v2-{mainnet,arbitrum}/latest/gn`)
+      with the standard `_meta` health-check query — both return
+      `HTTP 404 "Subgraph not found. Have you deleted     this subgraph recently?"`, confirmed on retry (not transient)
+      and via an alternate version-pinned path. This is NOT "still 38 days behind" — the subgraph no longer exists at
+      this endpoint at all. Per this todo's own gate ("do NOT wire capture if it is still stalled"), gaps 1+2
+      (capability `mtds_operations` repoint, capture trigger) are NOT actioned — nothing to wire against. No code
+      changed for this sub-item. Note: `defi_venues.py` currently has `EULER_V2-ETHEREUM: "live"` despite this — a
+      pre-existing inconsistency flagged here for whoever next touches that phase dict, not fixed in this pass (out of
+      scope for a capture-wiring todo; the phase-dict fix would be its own small follow-up).
+- [x] ✅ [VERIFY] P3. Resolve which "Plasma" chain UAC's `FLUID-PLASMA`/`AAVE-PLASMA` placeholders are meant to refer to
       (the 2025 Tether-backed Plasma L1, or the unrelated pre-2020 Polygon Plasma bridge) before doing anything else
-      with those two entries — UAC's own maintainers have this flagged unresolved.
+      with those two entries — UAC's own maintainers have this flagged unresolved. — **DONE (slot-11, 2026-07-26):
+      RESOLVED via real-world verification, not a guess — `unified-api-contracts@fc788094`.** Web search confirms Aave
+      launched on Plasma (the 2025 Tether-backed L1, XPL, chain_id 9745) 2025-09-25 with >$6.5B deposits in the first
+      week (now Aave's 2nd-largest deployment by TVL after Ethereum mainnet); Fluid also has a confirmed live Plasma
+      deployment. The pre-existing code comment claiming "Polygon Plasma bridge-side" (the dead 2018-2020 bridge) was
+      simply wrong — fixed with the real-world citation. This is a large, real, currently active market with ZERO chain
+      registration anywhere in this codebase (no `MAINNET_CHAIN_IDS`, no `CHAIN_GENESIS_DATES`, no capture adapter) —
+      full onboarding is real feature work, properly scoped as its own follow-up:
+      `issues/defi_plasma_chain_onboarding_gap_2026_07_26.md` (not attempted here — identity resolution was this todo's
+      actual scope).
 - [ ] [CODE] P1. **PARTIALLY FIXED 2026-07-21 (Track 6, `defi_consolidated_closeout_2026_07_18.md`) — user-facing
       symptom resolved via a deployment-api-local stopgap, UAC declaration still open.** `deployment-api@427ede5` adds a
       supplemental whitelist (`_CEFI_DEFI_HYBRID_VENUE_CHAIN_PAIRS` in `defi.py`) admitting the exact confirmed

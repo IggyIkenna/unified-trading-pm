@@ -336,7 +336,7 @@ drift_direction: advance-code
       defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md (todo 5). Done when: F10 has a row in the register doc
       with the same fields (finding id, severity, description, delete_elig) as other register entries, and the register
       doc's F10 row links back to data_pipeline_reconciliation_defi_2026_07_20.md.
-- [ ] [CODE] P2. Wire EULER_V2 lending-indices capture and resolve the UAC "Plasma" chain ambiguity — per
+- [x] ✅ [CODE] P2. Wire EULER_V2 lending-indices capture and resolve the UAC "Plasma" chain ambiguity — per
       `plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`'s two remaining unblocked open todos
       (items EULER_V2-capture-wiring and Plasma-chain-resolution; the doc's HYPERLIQUID/ASTER UAC-registry todo is
       intentionally excluded — see note): (1) Re-verify the EULER_V2 Goldsky subgraph's current sync lag (measured ~38
@@ -359,7 +359,16 @@ drift_direction: advance-code
       consistently with the collector actually used and a capture run demonstrably produces >0 real `lending_indices`
       rows for EULER_V2-ETHEREUM and/or EULER_V2-ARBITRUM in the manifest (if still stalled, this sub-item closes as
       `BLOCKED-UPSTREAM` with the measured lag cited instead); and the Plasma chain identity is either
-      confirmed/documented in UAC or explicitly filed `BLOCKED-OPERATOR-DECISION`.
+      confirmed/documented in UAC or explicitly filed `BLOCKED-OPERATOR-DECISION`. — **DONE (slot-11, 2026-07-26).** (1)
+      Subgraph lag re-verified — worse than the prior 38-day measurement: both Goldsky endpoints now return
+      `HTTP 404 "Subgraph not found"` (confirmed via retry + an alternate version-pinned path, not transient). Gate hit
+      — did NOT wire capture. Closes `BLOCKED-UPSTREAM` per this todo's own fallback; gaps 1+2 (`mtds_operations`
+      repoint, capture trigger) not actioned, nothing to wire against. (2) Plasma chain identity CONFIRMED via
+      real-world web-search verification (not a guess): the 2025 Tether-backed Plasma L1 (chain_id 9745) — Aave has
+      $6.5B+ deposits there since 2025-09-25 (2nd-largest Aave deployment by TVL), Fluid also live there. Fixed the
+      wrong "Polygon Plasma bridge" code comment (`unified-api-contracts@fc788094`). Full chain onboarding (real
+      market-coverage gap, out of scope here) filed as `issues/defi_plasma_chain_onboarding_gap_2026_07_26.md`. Both
+      source-doc sub-items updated with full evidence in `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`.
 - [x] ✅ [DEPLOY] P1. **DONE (2026-07-26, slot-12, `data_engineering`) — redeploy confirmed + re-collect launched as a
       documented monitored handoff (VMs still running a multi-year confirmatory walk; target STALE class already at
       0).** Redeploy the DeFi backfill VM tarball/image carrying `market-tick-data-service@420221b4` (or later HEAD),
