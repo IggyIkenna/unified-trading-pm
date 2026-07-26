@@ -72,23 +72,31 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Break the SQLite write-lock wedge that starves the orchestrator connection pool** — split
-      read-only sessions off `BEGIN IMMEDIATE` in `agent-orchestrator/server/db.py` (`_on_begin` currently issues
-      `BEGIN IMMEDIATE` for EVERY transaction including reads, so `/api/state`'s `list_slots` read contends for the
-      single SQLite writer), align `pool_timeout` against the `busy_timeout` PRAGMA set in `_on_connect` so lock
-      contention surfaces as "database is locked" rather than as an opaque "QueuePool limit reached", and audit every
-      remaining caller of `autospawn._do_spawn` for one still wrapping the slow spawn in its own `session_scope()`.
-      **Measured at HEAD 2026-07-26 (still open)**: `_on_begin` is unconditional; the `busy_timeout=120000` PRAGMA
-      comment in `db.py` still points at the never-landed fix "tracked in
-      orchestrator_spawn_reliability_db_lock_2026_06_10", a plan that has since been ARCHIVED; `ensure_review_agents`
-      HAS already been refactored to call `_do_spawn` outside its transaction, so that leg is done and must not be
-      redone. **Done when**: a read-path session no longer takes the write lock (proved by a test in which a simulated
-      long write-lock hold does not block a read-path session), the two timeouts are aligned with the reasoning recorded
-      in a code comment, any still-wrapping `_do_spawn` caller is named (fixed, or recorded as already-correct), and
-      `bash scripts/quality-gates.sh` is green. Source:
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-26 (slot-7, `backend_engineer`) — `agent-orchestrator@361e0fe`.** Break the SQLite
+      write-lock wedge that starves the orchestrator connection pool — split read-only sessions off `BEGIN IMMEDIATE` in
+      `agent-orchestrator/server/db.py` (`_on_begin` currently issues `BEGIN IMMEDIATE` for EVERY transaction including
+      reads, so `/api/state`'s `list_slots` read contends for the single SQLite writer), align `pool_timeout` against
+      the `busy_timeout` PRAGMA set in `_on_connect` so lock contention surfaces as "database is locked" rather than as
+      an opaque "QueuePool limit reached", and audit every remaining caller of `autospawn._do_spawn` for one still
+      wrapping the slow spawn in its own `session_scope()`. Added `read_only_session_scope` — its connection carries
+      `execution_options(orch_read_only=True)`, which `_on_begin` checks to skip `BEGIN IMMEDIATE` and fall through to
+      SQLite's default deferred BEGIN (WAL already allows concurrent readers); wired into `state.py`'s 4 genuinely
+      read-only handlers (`get_state`, `get_activity`, `get_activity_rollup`, `get_fleet_kpis`) — `agent_poll` stays on
+      `session_scope` since it writes every call (ping update + drain). `pool_timeout` (was the SQLAlchemy default 30s)
+      now set to `busy_timeout + 5s` via one `BUSY_TIMEOUT_MS`/`POOL_TIMEOUT_S` source of truth in `db.py`, with the
+      reasoning + why `busy_timeout` itself is kept at 120s (not lowered) recorded in a code comment. **`_do_spawn`
+      audit verdict: all 5 real callers** (`autospawn.py` ×3 — `ensure_review_agents`/`_run_one_tick`/`_resume_pass` —
+      plus `escalation.py` + `plan_health.py`) **already run the slow spawn with no session held** (confirmed by reading
+      each call site, not just grep) — Phase 2 of the archived `orchestrator_spawn_reliability_db_lock_2026_06_10`
+      landed everywhere, not only `ensure_review_agents`. Found + fixed 2 stale comments in
+      `escalation.py`/`plan_health.py` that still described the pre-fix (wrong) "keep the spawn inside the session"
+      behavior. New regression test (`tests/test_db_read_only_session.py`) empirically proves a
+      `read_only_session_scope` session does not block on a real held write lock (0.001s vs. a >10s hold), with a
+      control proving the identical scenario genuinely blocks on a plain `session_scope` (validates the test harness).
+      Full `agent-orchestrator` `quality-gates.sh` green (1760 passed, 1 skipped, 49.83s). Did NOT raise
+      `pool_size`/`max_overflow` per the source doc's own occurrence #6/#7 evidence. Source:
       `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (BACKEND P1 ×2 + P2 timeout
-      alignment). Do NOT also raise `pool_size`/`max_overflow` — that doc's own occurrence #6/#7 evidence supersedes the
-      resize direction.
+      alignment).
 - [ ] [BACKEND] P2. **Add a zero/collapse circuit-breaker to the PlanRegenLoop prune path** in
       `agent-orchestrator/server/regen_backlog_from_plan.py`: when a regen tick derives `total=0`, or the derived total
       collapses by more than ~75% versus the last successful tick while `scanned` is non-trivial, skip `prune_stale`
