@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 7,
-        "large_file_count": 4,
+        "coverage_pct": 89.54,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "warn_file_count": 7,
+        "large_file_count": 4
       }
     },
     "market-tick-data-service": {
