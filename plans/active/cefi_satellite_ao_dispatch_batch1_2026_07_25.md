@@ -102,17 +102,24 @@ drift_direction: advance-code
       a written per-adapter verdict (routes-through-finalize / intentionally-exempt) is recorded in this plan's Progress
       Log or a new issue doc; any non-routing, non-exempt adapter is filed as a follow-up finding, not silently fixed.
       Source: `data_completion_cefi_2026_07_15.md`.
-- [ ] [REVIEW] P1. **Verify MDPS cefi candle-manifest faithfulness.** On a sample day (e.g. 2026-05-03), compare
-      `ohlcv_*` manifest-row coverage against actual `processed_candles/` candle-file coverage, and reconcile the
-      cross-writes noted in the source doc (782 MTDS-written `ohlcv` rows; 616 MDPS-written `trades` rows) to determine
-      which service legitimately emits `ohlcv` per venue (MTDS REST-poll venues like LIGHTER/PACIFICA vs MDPS-processed
-      venues). Repos: market-data-processing-service, market-tick-data-service. **Conflict-check note**: this reads the
-      same `processed_candles/` corpus as the master closeout's Track 7 149-object bundle-collision residual, but the
-      triage's own text calls it "low collision risk (different defect axis)" — a faithfulness/coverage check, not the
-      bundle-collision defect Track 7 already quarantined. **Done when**: a written comparison report
-      (ohlcv-row-coverage vs candle-file-coverage + cross-write reconciliation) with a PASS/FAIL faithfulness verdict is
-      recorded in this plan's Progress Log or a new issue doc; on PASS, the absorbed
-      `cefi_processed_candles_manifest_file_disconnect` issue doc is archived per its own closing instruction. Source:
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
+      candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
+      cefi availability index for the FULL set of MDPS candle data_type prefixes
+      (`ohlcv_*`/`book5_ohlcv_*`/`deriv_ohlcv_*`/`liq_agg_*`/`swaps_ohlcv_*`/`state_ohlcv_*`, per
+      `canonical_writer_shaping.py::mdps_data_type_key` — not a naive `ohlcv_` grep) found 2,953 rows total, 100% from
+      `market-tick-data-service` (COINBASE-FUTURES/EXTENDED-STARKNET/LIGHTER-ZKSYNC REST-poll venues), **0 from
+      market-data-processing-service, ever**. **File side**: `gcloud storage ls` on
+      `processed_candles/by_date/day=2026-05-03/` found 1,236 real parquet files (BITGET-FUTURES 662, BITGET-SPOT 340,
+      BITFINEX-FUTURES 199, KRAKEN-FUTURES 35, across 7 timeframes). **Verdict: FAIL** — MDPS's candle-generation
+      pipeline writes real files but has never registered a single one in the manifest. **Cross-write reconciliation:
+      RESOLVED, non-concerning** — MTDS legitimately owns `ohlcv` for its 3 REST-poll venues (grew naturally since the
+      782-row observation); MDPS's now-70-row `trades` cross-write is all `venue=HYPERLIQUID`, a narrow unrelated
+      routing detail. Filed `issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md` (P1, OPERATOR-NOTIFY,
+      `assigned_vm: planning`) with the root-cause hypothesis + a dispatched fix todo, since this is a genuine
+      cross-repo data-correctness gap, not a same-turn fix. The absorbed
+      `cefi_processed_candles_manifest_file_disconnect` doc is NOT archived (it already sits in `plans/archive/issues/`
+      from an earlier hygiene pass, ahead of this FAIL verdict existing — noted in the new issue doc, not
+      force-reverted). Repos: market-data-processing-service, market-tick-data-service. Source:
       `data_completion_cefi_2026_07_15.md`.
 - [ ] [DATA] P1. **Re-run `cf_manifest_audit.py` against the live cefi manifest, no `--apply`.** Re-run against live
       `instruments-store-cefi-prd-central-element-323112` and report current CF-1/CF-3/CF-4/CF-8 status, null
