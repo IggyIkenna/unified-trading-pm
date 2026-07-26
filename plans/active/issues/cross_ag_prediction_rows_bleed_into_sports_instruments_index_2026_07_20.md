@@ -44,7 +44,7 @@ related:
     sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15,
   ]
 created: 2026-07-20
-last_updated: 2026-07-24
+last_updated: 2026-07-26 # was 2026-07-24 — /plan-reconcile prediction shard flipped the ROUND-3 duplicate `[ ]` 5/6/7 that were already answered as `[x]` 5/6/7 in this same doc
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -237,17 +237,22 @@ pre-remediation row set, verbatim, reappearing with no new growth.
 
 **Next steps (do NOT guess-fix; this needs its own investigation before any further remediation is attempted):**
 
-- [ ] 5. [DATA] P0. Read `unified-trading-library`'s manifest consolidator (`manifest_consolidator.py`, referenced
+- [x] 5. [DATA] P0. Read `unified-trading-library`'s manifest consolidator (`manifest_consolidator.py`, referenced
       elsewhere in this epic) to find every input surface it merges from when rebuilding `instruments-store-sports`'s
-      `availability_index.parquet` — confirm whether one of them still carries the pre-remediation rows.
-- [ ] 6. [DATA] P0. Check whether the round-2 remediation script
+      `availability_index.parquet` — confirm whether one of them still carries the pre-remediation rows. — **ANSWERED
+      2026-07-24; see the same-numbered `[x] 5` entry immediately below for the full finding** (checkbox flipped
+      2026-07-26, `/plan-reconcile` prediction shard: this ROUND-3 "next step" was answered by appending a second
+      `[x] 5` rather than flipping this one, leaving the same todo simultaneously open and done).
+- [x] 6. [DATA] P0. Check whether the round-2 remediation script
       (`scripts/sports/remediate_cross_ag_prediction_bleed_2026_07_23.py`) wrote its REMOVE anywhere the consolidator
       does NOT read from (e.g. it may have edited a snapshot copy or a different index path than the one the live
-      consolidator treats as authoritative).
-- [ ] 7. [DATA] P0. Confirm whether a consolidation cycle has actually run since the 2026-07-23 remediation (check the
+      consolidator treats as authoritative). — **ANSWERED 2026-07-24; see the same-numbered `[x] 6` entry immediately
+      below** (checkbox flipped 2026-07-26, `/plan-reconcile` prediction shard).
+- [x] 7. [DATA] P0. Confirm whether a consolidation cycle has actually run since the 2026-07-23 remediation (check the
       consolidated index's own `written`/generation metadata) — if the index literally hasn't been rebuilt since
       remediation, the presence of 11,727 rows would instead mean the REMOVE never actually took effect on the LIVE
-      index in the first place (a different root cause than a rebuild-time reversion).
+      index in the first place (a different root cause than a rebuild-time reversion). — **ANSWERED 2026-07-24; see the
+      same-numbered `[x] 7` entry immediately below** (checkbox flipped 2026-07-26, `/plan-reconcile` prediction shard).
 - [x] 5. [DATA] P0. **DONE 2026-07-24.** Read `manifest_consolidator.py` end-to-end (3266 lines). Every input surface
       lives under `_index/` in the SAME bucket (canonical index, per-VM shards, lock/stall/latest-run blobs, a
       `TemporaryDirectory` scratch space) — no BigQuery/Firestore/DB/other-bucket surface exists. The canonical index is
