@@ -378,7 +378,7 @@ drift_direction: advance-code
       `instruments_store_cf_canonicalization_single_walk_2026_07_24.md`. Done when: each sub-item's fix lands with a
       passing regression test/verification and the corresponding checkbox in
       `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` flips.
-- [ ] [INFRA] P1. Fix the scheduled `uts-prod-cf-manifest-audit` Cloud Run Job (asia-northeast1, cron 06:00 UTC), which
+- [x] ✅ [INFRA] P1. Fix the scheduled `uts-prod-cf-manifest-audit` Cloud Run Job (asia-northeast1, cron 06:00 UTC), which
       has produced zero successful runs since 2026-07-04 (fails daily -- most days exit-1 "Application exec likely
       failed", 2026-07-13 specifically OOM'd at its 4Gi limit on the `--all-ags` invocation) -- affecting all 5
       asset_groups' daily CF-1..CF-14 manifest audit equally. Diagnose the non-OOM exit-1 days (2026-07-04 through
@@ -391,7 +391,24 @@ drift_direction: advance-code
       `gs://cf-manifest-audit-central-element-323112/cf_audit/` shows a fresh dated output object for all 5 asset_groups
       (cefi/defi/tradfi/sports/prediction) from a real green run, cited with `Evidence: cloudbuild=<id>` or the
       equivalent Cloud Run execution-success reference, and the source issue doc's 3 "Next steps" todos are flipped
-      checked.
+      checked. — **Diagnosis**: distinct bug, not the same OOM (2026-06-27..07-12 = silent exec failure, exit-1;
+      2026-07-13..07-26, 14 straight days = genuine OOM at 4Gi once the exec bug's 2026-07-10 fix let it actually
+      run). **Fix**: root-caused + fixed the memory cost itself first — `unified-trading-library@6ce1ddb6`
+      column-pruned + pyarrow-backed `_read_index()` (~3.7-4x RSS reduction, measured against live prod indices) —
+      then bumped the Cloud Run Job to 32Gi/8vCPU (16Gi/4vCPU still OOM'd live on the defi-tick bucket; went straight
+      to Cloud Run's ceiling rather than re-guessing), applied via `ENV=prod ./tofu.sh apply` in
+      `deployment-service/terraform/gcp` (+ AWS parity leg). **Also fixed** a false-positive checker bug discovered by
+      this being the first-ever complete run — `_probe_paths()` always sampled an irrelevant `_`-prefixed
+      metadata/backup dir over real data, RED'ing CF-2-paths/CF-3-partition on 10/10 buckets
+      (`unified-trading-library@21069582`). **Evidence — real green run**: Cloud Run execution
+      `uts-prod-cf-manifest-audit-qsp6r` (2026-07-26T21:14:24Z-21:18:13Z) completed all 10 buckets with ZERO OOM,
+      including the previously-fatal defi-tick bucket (26,316,834 rows); wrote
+      `gs://cf-manifest-audit-central-element-323112/cf_audit/2026-07-26.json` — the bucket's FIRST EVER object. The
+      3 source-doc Next-steps are flipped in
+      `plans/active/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` (now `status: resolved`).
+      Genuine (non-checker-bug) CF reds the run surfaced across cefi/tradfi/sports/prediction are tracked separately,
+      not fixed here (data-quality triage, out of this todo's infra scope):
+      `plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`.
 - [ ] [DATA] P1. **Bring cefi's raw_tick_data manifest to CF-1/CF-4/CF-5/Era-B GREEN using the proven cross-AG
       playbook.** cefi is the one AG this doc's 2026-07-14 Adjudication explicitly leaves un-adjudicated (no fresh
       CF-audit found). First re-run `cf_manifest_audit.py` against the live `market-data-tick-cefi-prd` manifest to get
