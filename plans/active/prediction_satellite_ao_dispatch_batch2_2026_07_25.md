@@ -187,13 +187,14 @@ drift_direction: advance-code
       with a before/after delta logged, or the item is recorded as already-resolved with the confirming count. Both
       recorded in `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`'s Progress Log in
       the same commit. Source: `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`.
-- [ ] [REVIEW] P1. **Reconcile `prediction_universe_capture_dead_since_07_01_2026_07_06.md`'s stale `status: open`
-      against its already-shipped fix chain** — confirm `market-tick-data-service@a664511f` (Root Cause #4: composite
-      `VENUE:TYPE:BARE_ID` lifecycle market_id → bare per-venue id normalization in `_load_market_lifecycle_for_date`),
-      `instruments-service@1fa9177f` (Root Cause #5: per-venue `{group,day,venue}` `market_lifecycle` partition —
-      POLYMARKET no longer clobbers KALSHI), and `market-tick-data-service@d2040f8f` (Root Cause #6: Kalshi
-      millisecond-vs-second timestamp fix) are all present on `live-defi-rollout`/`main` in their respective repos
-      (`git log`/`git branch --contains`, not merely a feature branch); confirm the production capture proof cited in
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review)** — Reconcile
+      `prediction_universe_capture_dead_since_07_01_2026_07_06.md`'s stale `status: open` against its already-shipped
+      fix chain** — confirm `market-tick-data-service@a664511f` (Root Cause #4: composite `VENUE:TYPE:BARE_ID` lifecycle
+      market_id → bare per-venue id normalization in `_load_market_lifecycle_for_date`), `instruments-service@1fa9177f`
+      (Root Cause #5: per-venue `{group,day,venue}` `market_lifecycle` partition — POLYMARKET no longer clobbers
+      KALSHI), and `market-tick-data-service@d2040f8f` (Root Cause #6: Kalshi millisecond-vs-second timestamp fix) are
+      all present on `live-defi-rollout`/`main` in their respective repos (`git log`/`git branch --contains`, not merely
+      a feature branch); confirm the production capture proof cited in
       `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`'s 2026-07-14T11:00Z entry (423 captured trades
       rows / 6,407 Kalshi trades for day=2026-07-09) still holds; then append a dated Progress Log entry citing all
       three SHAs + the corroborating doc and flip the target doc's frontmatter `status: open` → `status: resolved`.
@@ -206,6 +207,13 @@ drift_direction: advance-code
       `kalshi_live_capture_regression_and_drift_2026_07_13.md` as the corroborating production proof, and ancestry on
       `live-defi-rollout` is confirmed for all three. Source:
       `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
+
+      **Evidence**: all 3 SHAs confirmed on `live-defi-rollout` (`git merge-base --is-ancestor`) AND `main`
+          (content-diff, since these repos squash-merge on promote — distinctive marker lines from each commit found
+          live in `origin/main`'s copies). Production capture proof re-verified live: `venue=KALSHI, data_type=trades,
+          date=2026-07-09` in the prediction manifest returns exactly 423 `captured` rows summing to 6,407 — an exact
+          match to the cited 2026-07-14T11:00Z proof, still holding. `status` flipped to `resolved`, `resolved_by`
+          populated, dated Progress Log entry added — unified-trading-pm@`<pending>`.
 
 ## Deferred — still genuinely blocked after re-check (NOT dispatched)
 
