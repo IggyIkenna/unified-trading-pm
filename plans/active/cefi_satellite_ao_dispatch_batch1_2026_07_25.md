@@ -142,8 +142,8 @@ drift_direction: advance-code
       not launch both simultaneously. **Done when**: `instrument_availability/by_date/` for a sampled recent day shows
       the previously-missing venues present in the IS reference catalogue, with a measured before/after venue-count and
       row-count delta recorded in this plan's Progress Log. Source: `data_completion_cefi_2026_07_15.md`.
-- [ ] [DIAG] P1. **Root-cause the ASTER MTDS `attempted_failed` regression (3,491 → 17,675), evidence-gathering only.**
-      (a) Re-run
+- [x] ✅ [DIAG] P1. **Root-cause the ASTER MTDS `attempted_failed` regression (3,491 → 17,675), evidence-gathering
+      only.** (a) Re-run
       `GET /api/data-status/turbo?service=market-tick-data-service&start_date=2018-01-01&end_date=<today>&asset_group=CEFI&include_sub_dimensions=true`
       and record `asset_groups.CEFI.venues.ASTER.failure_pillars.failed_other` + `capture_status_counts` to confirm
       reproducibility; (b) pull the raw manifest rows behind that count from the
@@ -158,7 +158,15 @@ drift_direction: advance-code
       data and appends findings to this issue doc. Safe to run now, independent of when the master's later checkpoint
       eventually fires. **Done when**: all three sub-checks have a recorded, evidenced result appended to this issue
       doc's Progress Log; root cause need not be conclusively identified — the deliverable is the evidence. Source:
-      `issues/aster_mtds_failure_count_regression_2026_07_07.md`.
+      `issues/aster_mtds_failure_count_regression_2026_07_07.md`. — **DONE (slot-11, 2026-07-26, done incidentally while
+      executing the downstream `cefi_satellite_ao_dispatch_batch2_2026_07_26.md` todo that consumes this evidence — this
+      todo was still unchecked when that dispatch landed, and its 3 sub-checks are identical to what the downstream todo
+      needed anyway, so ran them once rather than duplicate the read across two dispatches).** All three sub-checks
+      recorded with evidence in `issues/aster_mtds_failure_count_regression_2026_07_07.md`'s 2026-07-26 Progress Log
+      entry: (a) not reproducible at 17,675 — live manifest read shows 150; (b) NOT the same May-13 rows (different
+      error class `UpstreamTimestampBiasError`, same-day 2026-07-25 timestamps); (c) multiple manifest rebuild/snapshot
+      events found in the 06-22→07-07-adjacent window (plausible mechanism, not conclusively pinned — noted as moot
+      since the count already recovered). Doc's `status:` flipped to `resolved` in that same session.
 - [ ] [REVIEW] P1. **Audit every remaining `_normalize_instrument_id_for_match` call site for the same collision.** In
       `deployment_api/services/data_status/instrument_coverage.py` — the `missing_instruments` computation,
       `normalized_iid_counts`, and the `per_instrument` breakdown block — for the same `@`-suffix normalization

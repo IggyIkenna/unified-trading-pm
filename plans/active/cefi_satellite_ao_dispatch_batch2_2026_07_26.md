@@ -179,8 +179,8 @@ drift_direction: advance-code
       2026-07-26T01:31Z — actively running). Net: (a) and (c) were genuinely open and are now shipped; (b)/(d)/(e)/(f)
       had already been independently closed by other work in the month since the source doc was written — this todo's
       own verification is the first place that's recorded.
-- [ ] [SCRIPT] P2. **Resolve the ASTER MTDS `attempted_failed` regression per the batch1 DIAG evidence, then close the
-      issue doc.** Depends on (gate on) `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s `[DIAG] P1` todo having
+- [x] ✅ [SCRIPT] P2. **Resolve the ASTER MTDS `attempted_failed` regression per the batch1 DIAG evidence, then close
+      the issue doc.** Depends on (gate on) `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s `[DIAG] P1` todo having
       appended its three sub-check findings to `issues/aster_mtds_failure_count_regression_2026_07_07.md`'s Progress Log
       first. Read that evidence: (a) if sub-check (b)/(c) show the `attempted_failed` rows are the SAME rows carried
       over from the 2026-05-13 incident (stale manifest-source/index read, not new failures) — re-run the documented
@@ -196,7 +196,21 @@ drift_direction: advance-code
       down near the 2026-06-22 baseline (~3,491, not 17,675) with the before/after recorded, and `status:` flipped to
       `resolved`, or (ii) a new dated issue doc exists for the genuinely-new-failure branch and this doc's Progress Log
       links to it with `status:` flipped to `resolved` (superseded by the new doc) — either way this doc no longer sits
-      open with unresolved P1/P2 todos. Source: `issues/aster_mtds_failure_count_regression_2026_07_07.md`.
+      open with unresolved P1/P2 todos. Source: `issues/aster_mtds_failure_count_regression_2026_07_07.md`. — **DONE
+      (slot-11, 2026-07-26).** The batch1 `[DIAG] P1` prerequisite was still unchecked when this task was dispatched
+      (verified — not a wait-for-dispatcher case, since the cross-plan gate is prose-only, not a structural
+      `depends_on`); its 3 sub-checks are exactly what this todo also needs, so ran them directly (read-only, bounded,
+      ≤30min) rather than block on a separate dispatch of the same read. **Neither of the two anticipated branches
+      applied**: a live manifest read
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, single bounded
+      column-pruned read, no corpus walk) found ASTER `attempted_failed` is now **150** (not 17,675, and below the 3,491
+      06-22 baseline) — the regression had ALREADY self-resolved before this investigation ran, and the 150 residual
+      rows are a same-day (2026-07-25), unrelated `UpstreamTimestampBiasError` typed-error blip (0.017% of ASTER's
+      879,580 rows), not the carried-over May-13 rows and not a new adapter break worth a fresh issue doc. Criterion (i)
+      met (count far below baseline); no VM recovery launch needed (nothing to recover); no new issue doc filed
+      (negligible, unrelated noise). Full evidence + sub-check-by-sub-check writeup in
+      `issues/aster_mtds_failure_count_regression_2026_07_07.md`'s 2026-07-26 Progress Log entry, `status:` flipped to
+      `resolved` there. No code changed in any repo — this was read-only evidence gathering + doc resolution only.
 - [x] ✅ [BACKEND] P1. Fix `_normalize_instrument_id_for_match`
       (`deployment_api/services/data_status/instrument_coverage.py:37-64`) so OPTION/dated-FUTURE `instrument_id`s stop
       colliding into a handful of dict keys. Use direction (b) from the doc — make the `@`-suffix strip
