@@ -223,6 +223,7 @@ epic._
 | [`cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25`](./cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md)                                   | master           | infra     | 0/3        | 0%           | 0.4      | —        |
 | [`defi_consolidated_native_ao_extract_2026_07_25_finalize`](./defi_consolidated_native_ao_extract_2026_07_25_finalize.md)                                               | master           | infra     | 0/3        | 0%           | 0.4      | —        |
 | [`prediction_satellite_ao_dispatch_batch2_2026_07_25`](./prediction_satellite_ao_dispatch_batch2_2026_07_25.md)                                                         | master           | infra     | 0/6        | 0%           | 0.4      | —        |
+| [`prediction_satellite_ao_dispatch_batch5_2026_07_26`](./prediction_satellite_ao_dispatch_batch5_2026_07_26.md)                                                         | master           | infra     | 0/3        | 0%           | 0.4      | —        |
 | [`sports_closeout_exchange_fixed_odds_fork_2026_07_25_finalize`](./sports_closeout_exchange_fixed_odds_fork_2026_07_25_finalize.md)                                     | master           | infra     | 0/3        | 0%           | 0.4      | —        |
 | [`sports_satellite_ao_dispatch_batch3_finalize_2026_07_25`](./sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md)                                               | master           | infra     | 0/3        | 0%           | 0.4      | —        |
 | [`sports_satellite_ao_dispatch_batch5_2026_07_26_finalize`](./sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md)                                               | master           | infra     | 0/3        | 0%           | 0.4      | —        |
@@ -274,6 +275,7 @@ epic._
 | [`defi_dedicated_bucket_shared_migration_2026_07_13`](./defi_dedicated_bucket_shared_migration_2026_07_13.md)                                                           | master           | infra     | 15/17      | 88%          | 0.2      | —        |
 | [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md)                                                                         | master           | design    | 35/41      | 85%          | 0.2      | —        |
 | [`prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize`](./prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md)                                       | master           | infra     | 0/3        | 0%           | 0.2      | —        |
+| [`prediction_satellite_ao_dispatch_batch5_2026_07_26_finalize`](./prediction_satellite_ao_dispatch_batch5_2026_07_26_finalize.md)                                       | master           | infra     | 0/3        | 0%           | 0.2      | —        |
 | [`tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24`](./tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md)                                                     | master           | infra     | 1/3        | 33%          | 0.2      | —        |
 | [`orchestrator_vm_e2e_hardening_2026_07_24`](./orchestrator_vm_e2e_hardening_2026_07_24.md)                                                                             | master           | design    | 27/30      | 90%          | 0.1      | —        |
 | [`defi_satellite_ao_dispatch_batch2_2026_07_26`](./defi_satellite_ao_dispatch_batch2_2026_07_26.md)                                                                     | master           | infra     | 21/22      | 95%          | 0.1      | —        |
@@ -286,7 +288,7 @@ epic._
 | [`defi_venue_lst_rates_residual_2026_07_24`](./defi_venue_lst_rates_residual_2026_07_24.md)                                                                             | master           | design    | 2/2        | 100%         | 0.0      | —        |
 | [`deployment_registry_firestore_p0_unblock_2026_07_14`](./deployment_registry_firestore_p0_unblock_2026_07_14.md)                                                       | master           | infra     | 16/16      | 100%         | 0.0      | —        |
 | [`infra_capture_and_devops_leftovers_finalize_2026_07_25`](./infra_capture_and_devops_leftovers_finalize_2026_07_25.md)                                                 | master           | infra     | 1/1        | 100%         | 0.0      | —        |
-| **TOTAL** (230 plans)                                                                                                                                                   | 0 orphans, 0 TBD | —         | —          | **42% done** | **446**  | —        |
+| **TOTAL** (232 plans)                                                                                                                                                   | 0 orphans, 0 TBD | —         | —          | **42% done** | **446**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
