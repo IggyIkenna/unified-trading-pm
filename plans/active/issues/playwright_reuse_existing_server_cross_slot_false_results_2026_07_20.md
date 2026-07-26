@@ -24,7 +24,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 ---
 

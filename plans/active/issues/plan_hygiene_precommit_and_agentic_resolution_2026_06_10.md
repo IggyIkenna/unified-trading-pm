@@ -19,7 +19,7 @@ source:
     .github/workflows/plan-health-agent.yml,
     scripts/plan-hygiene/run_hygiene_sweep.sh,
   ]
-assigned_vm:
+assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: local-only

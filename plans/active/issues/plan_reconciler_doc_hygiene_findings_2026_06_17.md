@@ -23,7 +23,7 @@ source:
     "scripts/plan-hygiene/run_hygiene_sweep.sh — check_codex_refs: 1 broken ref",
     "scripts/plan-hygiene/build_health_digest.sh — INDEX.md ↔ active-plans drift: 99",
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

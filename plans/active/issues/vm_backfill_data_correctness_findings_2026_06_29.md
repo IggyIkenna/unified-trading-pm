@@ -23,7 +23,7 @@ created: 2026-06-29
 parent_epic: infrastructure_master
 priority: P1
 source: VM spend/health audit 2026-06-29 (gcp_vm_spend_audit.md)
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 audited_scope: data-correctness

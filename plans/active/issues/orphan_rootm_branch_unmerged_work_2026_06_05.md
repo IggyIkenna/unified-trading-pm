@@ -28,7 +28,7 @@ source:
     tab/rootm/* cleanup 2026-06-05 (global-unique tab-branch naming follow-up),
     tab_branch_global_uniqueness (qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md § precondition),
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

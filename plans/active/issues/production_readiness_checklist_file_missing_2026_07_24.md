@@ -31,7 +31,7 @@ source: >-
   backing file itself is missing, which is a bigger and different problem than a stale prose number.
 resolved_by:
 locked_by:
-assigned_vm:
+assigned_vm: NA
 code_refs: []
 execution_scope: local-only
 drift_direction: advance-code

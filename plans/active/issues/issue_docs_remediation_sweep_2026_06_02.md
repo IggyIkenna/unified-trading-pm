@@ -44,7 +44,7 @@ source:
     plans/active/issues/running_vm_fleet_status_2026_05_27.md,
     plans/active/issues/uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md,
   ]
-assigned_vm:
+assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: local-only

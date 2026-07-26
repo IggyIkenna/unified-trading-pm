@@ -22,7 +22,7 @@ source:
     "market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py::_load_latest_catalog",
     "serial-console (gc/es/6j/nyse-2024): repeated `Out of memory: Killed process (python)` anon-rss ~15.3GB",
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

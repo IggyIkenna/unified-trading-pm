@@ -21,7 +21,7 @@ related:
 created: 2026-07-21
 priority: P1
 parent_epic: defi_master
-assigned_vm:
+assigned_vm: planning
 locked_by:
 resolved_by:
 source: [/plan-reconcile audit, 2026-07-21]

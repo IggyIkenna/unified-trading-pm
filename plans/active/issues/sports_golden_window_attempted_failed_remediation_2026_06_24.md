@@ -28,7 +28,7 @@ source:
     "Coverage audit 2026-06-24: golden window (2025-09-01..2025-11-30) instruments 98.0% / market-data 94.1%; ~5,900
     attempted_failed cells",
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

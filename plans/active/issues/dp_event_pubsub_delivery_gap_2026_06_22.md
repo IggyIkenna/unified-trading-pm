@@ -22,7 +22,7 @@ created: 2026-06-22
 parent_epic: observability_master
 priority: P2
 source: [data_pipeline_hardening_self_monitoring_2026_06_22.md, DP-WATCHER (delivery substrate)]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

@@ -27,7 +27,7 @@ source:
     "2026-07-22 migrated out of test_fleet_image_builds_from_current_code_2026_06_17.md so that plan could archive clean
     (0 open todos) — this todo remained genuinely unstarted, not folded into any other work this session",
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent

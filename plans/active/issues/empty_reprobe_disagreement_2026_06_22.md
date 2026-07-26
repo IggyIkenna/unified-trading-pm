@@ -16,7 +16,7 @@ created: 2026-06-22
 parent_epic: infrastructure_master
 priority: P2
 source: [reprobe_new_empty_confirmed.py, data_pipeline_hardening_self_monitoring_2026_06_22.md]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

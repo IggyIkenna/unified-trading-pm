@@ -21,7 +21,7 @@ created: 2026-06-21
 parent_epic: infrastructure_master
 priority: P2
 source: ["GCS vm-logs sweep of ~75 running VMs (all lanes), 2026-06-21 ~16:10 UTC"]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

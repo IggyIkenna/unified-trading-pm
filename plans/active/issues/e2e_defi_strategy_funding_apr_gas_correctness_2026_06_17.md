@@ -31,7 +31,7 @@ source:
     APRs),
     e2e-testing/scripts/defi/staked_basis_funding_scan.py + colocated_engine.py,
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

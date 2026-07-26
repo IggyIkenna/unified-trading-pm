@@ -26,7 +26,7 @@ source:
     "Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_SOURCE_RATE_LIMITED instr-backfill-tradfi-ice-20260627-075400)",
     "Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_NOT_V9 cefi / defi / tradfi)",
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

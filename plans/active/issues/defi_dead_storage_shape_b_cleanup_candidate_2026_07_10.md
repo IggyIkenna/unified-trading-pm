@@ -21,7 +21,7 @@ tags: [dead-storage, cleanup, gcs, cost, defi]
 related: [/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md]
 created: 2026-07-10
 parent_epic: instruments_master
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 source:
   "Real finding from the DeFi legacy-naming audit agent (wf_9e5f13e3-962, 2026-07-09), the same session that found and

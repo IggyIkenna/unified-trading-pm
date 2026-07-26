@@ -38,7 +38,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-assigned_vm:
+assigned_vm: NA
 resolved_by:
 ---
 

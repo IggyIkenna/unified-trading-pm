@@ -42,7 +42,7 @@ related: [/plans/active/bucket_fold_ml_2026_07_17.md]
 created: 2026-07-18
 parent_epic: infrastructure_master
 priority: P1
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by:
 source:

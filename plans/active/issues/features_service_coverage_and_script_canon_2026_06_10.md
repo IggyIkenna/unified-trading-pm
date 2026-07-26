@@ -19,7 +19,7 @@ created: 2026-06-10
 parent_epic: infrastructure_master
 priority: P2
 source: [features-service test-coverage session 2026-06-10, /codex/06-coding-standards/script-homes.md]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

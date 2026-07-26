@@ -26,7 +26,7 @@ source:
     "alerts.log (830 lines, 2026-06-23",
     aggregated AG-agent prompts (deadman crash / tradfi fleet-monitor false-positives / alert-lifecycle gaps),
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-06-23

@@ -37,7 +37,7 @@ source:
     stuck; XG_SHOTS captured=0 across all history",
     instruments-service@527b9d9 — get_match_shots endpoint fix (/getMatch → /getMatchData),
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

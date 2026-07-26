@@ -31,7 +31,7 @@ source:
     /codex/02-data/data-lineage-MTDS-features-ml.md,
     /codex/02-data/defi-data-types-catalog.md,
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 master:

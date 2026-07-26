@@ -33,7 +33,7 @@ source:
     unified-api-contracts quality-gates.sh (64 vcrpy AttributeError on aiohttp 3.14.0),
     deployment-api uv lock --upgrade-package aiohttp (deployment-service pyproject TOML parse error),
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
