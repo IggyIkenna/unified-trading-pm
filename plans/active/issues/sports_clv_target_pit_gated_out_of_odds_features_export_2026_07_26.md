@@ -192,3 +192,19 @@ Three candidate directions — genuinely a design decision, not something a sing
   export; ml-service: repoint the target generator) — both explicitly gated on operator sign-off before quickmerge, per
   the interim guidance's disposition (partial — direction ratified, implementation still needs final operator
   ratification at merge time). Did not implement either todo myself this turn.
+- 2026-07-26 (slot-7, `data_engineering`): built the `[DATA] P2` `odds_targets` export (uac + features-service,
+  QG-green), filed `BLK-ec018203` requesting the merge-time sign-off the guardrail above requires. Got only an interim
+  "HOLD, escalating upward" answer (08:41 UTC) — `BLK-ec018203` was never given a final operator ratification. That
+  holding session then froze and was reaped as dead by `WorkerLivenessWatchdog` (09:13 UTC); its generic
+  reclaim-unpushed-commits safety net (no awareness of an open sign-off-gating BLK) auto-pushed the held commits to
+  `live-defi-rollout` anyway at 09:19 UTC (now `unified-api-contracts@5b57f6d2` / `features-service@332ea5d5` — same
+  content as `b95012ed`/`0f90702e`, rebased). **This checkbox is intentionally left unflipped** — the code is live on
+  LDR but without the operator ratification the guardrail requires, so this is not a legitimate "done." Filed
+  `BLK-eccd3383` asking the operator to ratify-after-the-fact or revert before the next LDR→main promote cycle, plus an
+  issue doc for the underlying tooling gap (superseded moments later by main-agent's own, more thorough version:
+  `issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`). **Main-agent answered `BLK-eccd3383` with
+  `disposition:partial`**: declined Option A (ratify-after-the-fact is operator-reserved, not main's or a worker's to
+  grant), instructed the worker to HOLD — no repoint, no further push, no self-authorized revert — and paged the
+  operator directly with a recommendation to revert both commits from LDR before the next `*/15` promote cycle reaches
+  `main`. **Holding per that instruction.** The `[ML] P2` repoint todo below remains untouched pending the operator's
+  actual disposition of `BLK-ec018203`/`BLK-eccd3383`.

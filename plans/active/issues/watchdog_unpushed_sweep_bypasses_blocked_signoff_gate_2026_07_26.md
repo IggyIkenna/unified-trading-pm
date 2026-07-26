@@ -7,7 +7,7 @@ summary: >-
   merge-time HOLD. This let a genuinely operator-sign-off-gated commit pair reach `live-defi-rollout` without the
   ratification its own guardrail required, purely because the holding session froze and was reaped before the operator
   answered.
-status: open
+status: superseded
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -18,6 +18,7 @@ related:
   [
     /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    /plans/active/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
   ]
 created: 2026-07-26
 parent_epic: agent_operating_framework_master
@@ -37,7 +38,15 @@ source:
 resolved_by:
 locked_by:
 locked_since:
+supersedes:
+superseded_by: watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26
 ---
+
+> **SUPERSEDED 2026-07-26** — main-agent independently root-caused the same gap moments after this doc was filed and
+> landed the canonical version first:
+> `/plans/active/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` (also answers `BLK-eccd3383`
+> below with `disposition:partial` — Option A declined, operator paged with a revert recommendation). Kept here only for
+> the investigation timeline; track the fix + `BLK-ec018203`/`BLK-eccd3383` disposition in the superseding doc.
 
 # WorkerLivenessWatchdog's unpushed-commits sweep bypasses an open /blocked sign-off gate
 
