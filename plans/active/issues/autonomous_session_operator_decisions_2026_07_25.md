@@ -389,6 +389,36 @@ re-fixes referrer paths corpus-wide. Other: operator can type a custom answer
 **Status**: open — note that whichever way this goes, the stale `locked_by:` on the archived copy needs clearing
 (tracked as a todo in the gate issue doc).
 
+## 12. Fold target for the near-complete `prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (2026-07-26, prediction)
+
+`/plan-reconcile prediction` (2026-07-26, autonomous shard) flagged this plan as a **near-complete consolidation
+candidate**: 1 open todo, 10 done. Per the skill's Phase-4 routing, WHERE a live remnant lives is a planning decision —
+autonomous mode parks it with a named recommendation rather than auto-folding.
+
+Side A — the remnant itself, `/plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md:129`:
+
+> `- [ ] [SCRIPT] P1. **Polymarket-perp enumerator — BLOCKED-UPSTREAM (no public perps API exists yet — CONFIRMED`
+
+Side B — an umbrella todo that already claims this ground,
+`/plans/active/prediction_phase_ab_residuals_2026_07_24.md:178-180`:
+
+> `- [ ] [BACKEND] P1. **Close the 12 residuals on Kalshi/Polymarket perpetual futures + live CLOB depth/quotes** (funding / basis / dispersion arb inputs). `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` (12 open of 85) — **split + archived 2026-07-24** (plan line-cap remediation) into …`
+
+They do not contradict each other — B is the parent umbrella that A was split out of — but a 1-todo shell plan whose
+single item is `BLOCKED-UPSTREAM` is exactly the "remnant too small to justify a standalone plan" case, and the shell
+cannot archive while it holds live work.
+
+A: Fold the single BLOCKED-UPSTREAM todo into `prediction_phase_ab_residuals_2026_07_24.md` § "A3 — Venue-perps + live
+CLOB depth residuals", which already carries the umbrella todo for exactly this population, then archive the emptied
+shell via the 6-step ritual. [WORKER REC] — keeps the venue-perps residuals in one place, removes a shell plan, and the
+item is upstream-blocked so nothing is actively being worked in the shell today. B: Leave it standing as its own plan —
+BLOCKED-UPSTREAM work is legitimately long-lived, and a dedicated doc keeps the Polymarket-perps upstream watch visible
+rather than buried in a 345-line residuals plan. C: Fold it instead into
+`/plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (2 open), the other Phase-A3 split sibling. Other:
+operator can type a custom answer.
+
+**Status**: open
+
 ---
 
 This doc will accumulate entries as genuine judgment calls surface during the cefi/defi/tradfi/prediction/sports

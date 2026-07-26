@@ -794,7 +794,9 @@ Hit this twice this round (once via agent-orchestrator's own `quality-gates.sh`,
 calls at 0MB free). Root cause + workaround (`TMPDIR=/var/tmp/claude-agent-scratch`) filed as
 `issues/shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` (shipped `01ed47f6c`) — this is almost certainly why agent #9
 (and others in the same workflow) failed to ship despite finishing their work. Not fixed at the host-config level
-(operator judgment call on tmpfs sizing vs RAM headroom — parked in the issue doc, not urgent).
+(operator judgment call on tmpfs sizing vs RAM headroom — parked in the issue doc, not urgent). **Resolved + archived
+2026-07-26**: `plans/archive/issues/shared_host_tmp_tmpfs_exhaustion_2026_07_26.md`
+(`unified-trading-pm@594d79031c7b8b185413eaa26867af8e03e53755`, cleanup cron shipped + registered live).
 
 ### Deferred work after 2026-07-26 (Round 6)
 

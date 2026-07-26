@@ -66,7 +66,13 @@ is_in_use() {
     if command -v fuser >/dev/null 2>&1; then
         fuser -s "${path}" 2>/dev/null && return 0
         # fuser only checks the dir inode itself; also check open files beneath it.
-        if find "${path}" -type f -print0 2>/dev/null | xargs -0 -r fuser -s 2>/dev/null; then
+        # Collect into an array first, and only invoke fuser when non-empty -- `xargs -r`
+        # exits 0 (success) on empty stdin, which would otherwise make an EMPTY dir look
+        # "in use" on every call (found while building cleanup-stale-claude-session-tmp.sh,
+        # which mirrors this function -- there it was a 344/363 false-positive skip rate).
+        local beneath=()
+        while IFS= read -r -d '' f; do beneath+=("${f}"); done < <(find "${path}" -type f -print0 2>/dev/null)
+        if [ "${#beneath[@]}" -gt 0 ] && fuser -s "${beneath[@]}" 2>/dev/null; then
             return 0
         fi
         return 1

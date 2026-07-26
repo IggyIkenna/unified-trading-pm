@@ -71,7 +71,7 @@ related:
     /plans/active/prediction_cross_cutting_debt_index_2026_07_25.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-25 # was 2026-07-18 — 2026-07-25 consolidated-closeout split pass: depends_on now gates on the 4 Phase A-E children, native todos relocated out (0 remaining), related: extended to the satellite/native-extract batch docs and the new cross-cutting-debt-index child
+last_updated: 2026-07-26 # was 2026-07-25 — /plan-reconcile prediction shard re-counted the predictions_master epic digest (38→41 open, 9→12 untagged) and confirmed all 6 data_pipeline_e2e_milestones_gate todos targeted here genuinely landed. 2026-07-25 consolidated-closeout split pass: depends_on now gates on the 4 Phase A-E children, native todos relocated out (0 remaining), related: extended to the satellite/native-extract batch docs and the new cross-cutting-debt-index child
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -436,10 +436,14 @@ fixture-linked before MVP backfill.
   - - the `data-pipeline-check-mtds` / `data-pipeline-check-is` skills (skill definitions, not plan files — no todos to
       track here).
 - **Parent epic (stale — see Progress Log)**:
-  - [`plans/epics/predictions_master.md`](/plans/epics/predictions_master.md) (38 open total — 24 P0 + 5 P1 + 9 untagged
-    success-criteria checkboxes; frontmatter says `status: active` but this doc is functionally SUPERSEDED by the Phase
-    A-E children + the aggregated docs above — the items below are UNVERIFIED against current reality, listed here only
-    per the completeness rule)
+  - [`plans/epics/predictions_master.md`](/plans/epics/predictions_master.md) (41 open total — 24 P0 + 5 P1 + 12
+    untagged success-criteria checkboxes; **re-counted 2026-07-26, `/plan-reconcile` prediction shard** — was "38 …+ 9
+    untagged", the P0/P1 splits were right and the untagged tail was undercounted by 3. 40 of the 41 sit under that
+    epic's own explicitly SUPERSEDED history-only sections — "Consolidated todos (P0 only)" 29, "May-23 deliverable" 9,
+    "`available_at` adapter stamping" 2 — so this doc's "functionally SUPERSEDED" characterisation agrees with the
+    epic's own banners rather than contradicting them; the 1 genuinely-live remainder is the `[SCRIPT] P1` predictions
+    `feature_groups` → UAC `FEATURE_REQUIRED_INPUTS` item under "Folded-in scope 2026-07-15". The items below are
+    UNVERIFIED against current reality, listed here only per the completeness rule)
     - **[SCRIPT] P0.** Replace POLYMARKET writer (`orchestrator.py:1990–1995`): old `data_type = <base_asset>` → new
     - **[SCRIPT] P0.** Reader migration: every callsite with `data_type=BTC|ETH|...` →
     - **[SCRIPT] P0.** Per-market lifecycle gating in feature compute: `LookaheadBiasError` extension
@@ -621,3 +625,15 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   estimate of 7 for phase_d didn't reconcile against the actual 3 items named for relocation; used the verified count).
   Net: parent trimmed from 764 to 611 lines (`wc -l`, post-prettier) with 0 remaining native todos; zero engineering
   work was done or lost — pure reorganisation, every action still a real, live checkbox somewhere in the corpus.
+- **2026-07-26 — `/plan-reconcile` prediction shard (autonomous).** Re-measured every countable digest claim in the
+  Aggregated-source-docs index against real `- [ ]` counts. Result: all 6
+  `data_pipeline_e2e_milestones_gate_2026_07_24.md` todos targeted at this file are confirmed genuinely landed (§1
+  adapter dead-code audit, §2 Distinct-Values census section, §11 the 3 checkpoint top-ups, §12 the 4 Phase A-E digest
+  bullets, §13 the adversarial-pass todo, §14 the MVP-universe Codex SSOTs bullet) — several now living in the
+  2026-07-25 phase children, which is the split working as intended, not drift. Every child-plan open-count in the index
+  re-measured exact (cqg=2, phase_ab=13, phase_c=4, phase_d=6, phase_e=3, capture-incident=9). One count was provably
+  wrong and is corrected above: the `predictions_master.md` epic entry said "38 open total — 24 P0 + 5 P1 + 9 untagged";
+  measured 41 = 24 P0 + 5 P1 + **12** untagged. Also recorded there: 40 of those 41 sit under that epic's own
+  explicitly-SUPERSEDED history-only sections, so this doc's "functionally SUPERSEDED" wording agrees with the epic's
+  own banners — an earlier read of this as a live contradiction between two active docs was refuted by counting the
+  todos per section.

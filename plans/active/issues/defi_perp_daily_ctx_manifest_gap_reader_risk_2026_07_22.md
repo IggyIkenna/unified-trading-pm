@@ -186,8 +186,8 @@ only ever sees what's in the manifest." That can be fixed WITHOUT touching the l
    `perp_funding`/`perp_daily_ctx` data_types exactly as-is (zero change to what the reader sees or reads).
 3. Backfill manifest rows for the already-migrated historical `(venue, data_type, day)` shard tuples sitting in the
    shared bucket today (mirrors the precedent already executed for the dex_pools/lending_indices fold —
-   `plans/active/issues/defi_fold_manifest_registration_pending_2026_07_21.md` — a manifest-registration-only pass, zero
-   GCS object mutation).
+   `/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`, `status: resolved` 2026-07-22, path
+   corrected 2026-07-26 by `/plan-reconcile defi` — a manifest-registration-only pass, zero GCS object mutation).
 
 **This proposal is NOT executed here either**, for one reason worth flagging explicitly: step 1 (adding a new canonical
 `data_type` to `DATA_TYPES_BY_ASSET_GROUP`) is the same class of change this exact parent plan

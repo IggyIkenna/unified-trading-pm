@@ -212,11 +212,16 @@ drift_direction: advance-code
       exactly. Current live consolidated index (`_index/availability_index.parquet`, 242,065 rows) + the sole per-VM
       shard (`_index/per_vm/legacy_seed.parquet`) both show **0** rows for all four `feature_group` values — the
       coverage denominator (computed directly off this index) no longer counts them by construction. No further action
-      needed; not re-running `--apply` (would be a no-op against an already-empty target). **Note**: the source A2 issue
-      doc's own mirror checkbox was NOT flipped in this pass — `sports_features_layer_findings_sweep_2026_07_18.md` is
-      already 1,846 lines (pre-existing, over the plans/active/ 1,000L hard cap), and `check_line_caps.sh`'s prek gate
-      blocks staging ANY edit to an already-over-cap file, regardless of diff size — this is a pre-existing
-      corpus-hygiene debt unrelated to this todo, out of scope to fix here (would require splitting that doc).
+      needed; not re-running `--apply` (would be a no-op against an already-empty target). **Update 2026-07-26T02:xxZ**:
+      the source A2 issue doc's own mirror checkbox is now also flipped —
+      `sports_features_layer_findings_sweep_2026_07_18.md` was 1,846 lines (over the `plans/active/` 1,000L hard cap,
+      which blocked staging ANY edit to it regardless of diff size); resolved by a verbatim, byte-for-byte,
+      zero-content-loss 3-way split by section boundary (precedent:
+      `sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md`) into the original filename (596L, § A-F, A2's
+      checkbox now `[x]` here) + `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md` (600L, § G-N) +
+      `_part3_2026_07_26.md` (825L, § O-AA) — all 73 original open checkboxes accounted for (17+24+31=72 still open, 1
+      newly closed = A2), verified via `diff` against a pre-split backup that the raw split is byte-identical to the
+      original (zero content loss).
 - [x] [DATA] P1. ✅ 2026-07-26 — `instruments-service@e0b48bc2`. Root-cause and resolve the 4,991 phantom
       `capture_status=captured` FIXTURE_EVENTS manifest rows (concentrated 2019-2020, instruments-service) that have NO
       backing GCS object at any candidate path (canonical, pipeline_mode-aware, or legacy
@@ -263,20 +268,20 @@ drift_direction: advance-code
       gap-dates, verified against the `_index` manifest (not a re-derived count).
 
       **BLOCKED-CREDENTIALS 2026-07-26 (slot-4)** — the actual backfill cannot run: the odds-api key is
-                              DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl
-                              against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This
-                              blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see
-                              `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos.
-                              Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to
-                              `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in
-                              `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped,
-                              full-population backfills). Also found + worked around a separate pre-existing bug in
-                              `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to
-                              `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date
-                              from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM
-                              (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox
-                              stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the
-                              operator fixes the key (exact command in the issue doc's follow-up todos).
+                                      DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl
+                                      against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This
+                                      blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see
+                                      `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos.
+                                      Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to
+                                      `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in
+                                      `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped,
+                                      full-population backfills). Also found + worked around a separate pre-existing bug in
+                                      `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to
+                                      `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date
+                                      from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM
+                                      (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox
+                                      stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the
+                                      operator fixes the key (exact command in the issue doc's follow-up todos).
 
 - [ ] [CODE] P1. **PARTIAL 2026-07-26 (slot-7, `data_engineering`) — (a)+(b) DONE (by a concurrent slot, verified by
       me), (c) thoroughly diagnosed, genuinely BLOCKED on a deeper pre-existing ml-service gap.** (a)+(b): a concurrent

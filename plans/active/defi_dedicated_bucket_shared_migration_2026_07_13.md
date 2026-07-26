@@ -266,19 +266,28 @@ readers still point at the dedicated buckets.
       (`breakdowns_domain.py::_build_defi_sub_dimension_breakdown`) degrades gracefully — `all_sources` unions the
       static list with whatever `_defi_source` values actually appear in the data at runtime, so no UI code path assumes
       these keys statically exist. — `deployment-api@b5641cf79`, quality-gates.sh green.
-- [ ] [SCRIPT] P2. (Found by the final verification sweep, NOT fixed — separate repos/scope) 3 diagnostic/migration
-      scripts still hardcode dead flat bucket-name templates for `dex-pools`/`lst-rates`/`perp-funding` and would error
-      if re-invoked: `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py`
-      (`SubsetSpec.canonical_bucket_kind = "dex-pools"`/`"lst-rates"` isn't a valid UTL domain key, falls through to a
-      legacy fallback that builds the now-404 flat bucket names — lines 92/94/95/132-136, used at 271/314);
-      `strategy-service/scripts/trace_carry_staked_basis.py` (`_LST_RATES_BUCKET_TEMPLATE`/
-      `_PERP_FUNDING_BUCKET_TEMPLATE` at lines 81/83, used in `main()`'s slot-processing loop — this one is likely still
-      actively used, it's the same carry_staked_basis archetype verified via paper-trading VM earlier this session);
-      `strategy-service/scripts/probe_funding_rate_dispersion_coverage.py` (`_DEFAULT_PERP_FUNDING_BUCKET_     TEMPLATE`
-      at line 106, default unless `--perp-funding-bucket` passed explicitly). Each needs the same
-      `resolve_bucket_name(kind="tick-data", asset_group="defi")` repoint already shipped everywhere else this plan
-      touched — small, mechanical, same pattern 3x over, just not done here to keep this plan's scope to the 3 original
-      kinds + what directly blocked them.
+- [ ] [SCRIPT] P2. (Found by the final verification sweep, NOT fixed — separate repos/scope) Diagnostic/migration
+      scripts still hardcoding dead flat bucket-name templates for `dex-pools`/`lst-rates`/`perp-funding`, which would
+      error if re-invoked. Each needs the same `resolve_bucket_name(kind="tick-data", asset_group="defi")` repoint
+      already shipped everywhere else this plan touched — small, mechanical, just not done here to keep this plan's
+      scope to the 3 original kinds + what directly blocked them. **Re-measured 2026-07-26 by `/plan-reconcile defi`:
+      the original list of 3 is now down to 1 — 2 of the 3 resolved themselves and are struck through below. Do NOT
+      re-derive a count from this bullet; re-grep before working it.** 1. **STILL OPEN** —
+      `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py`: `SubsetSpec.canonical_bucket_kind`
+      is still typed `# "lending-indices" | "dex-pools"` (`:67`) and fed straight to
+      `get_write_bucket_name(spec.canonical_bucket_kind)` (`:271`, `:314`) — neither is a valid UTL domain key, so it
+      falls through to the legacy fallback that builds the now-404 flat bucket names. (Original line refs
+      92/94/95/132-136 have shifted; the ones above are measured 2026-07-26.) 2.
+      ~~`strategy-service/scripts/trace_carry_staked_basis.py`
+      (`_LST_RATES_BUCKET_TEMPLATE`/`_PERP_FUNDING_BUCKET_TEMPLATE`)~~ — ✅ MOOT: **the file no longer exists**
+      (`find strategy-service -name '*carry_staked_basis*'` returns only configs/close_all/tests, no
+      `scripts/trace_carry_staked_basis.py`), and
+      `rg '_LST_RATES_BUCKET_TEMPLATE|_PERP_FUNDING_BUCKET_TEMPLATE|trace_carry_staked_basis' strategy-service` returns
+      **zero hits repo-wide**. 3. ~~`strategy-service/scripts/probe_funding_rate_dispersion_coverage.py`
+      (`_DEFAULT_PERP_FUNDING_BUCKET_TEMPLATE`)~~ — ✅ ALREADY FIXED, exactly as this todo prescribes: the script now
+      resolves via `resolve_bucket_name(cloud=cloud, kind="tick-data", asset_group="defi")` (`:180`), the template
+      constant is gone, and `:106-107` carries the dated in-code note that the old flat forms "were deleted
+      2026-07-10/07-13; the perp-funding data now lives in the shared canonical DeFi" bucket.
 - [ ] [CHORE] P3. (Found by the final verification sweep, NOT fixed) Housekeeping cluster, all low-risk/low-value: (1)
       `market_tick_data_service/scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` — its own documented
       `Delete-when: dex-pools-prd/lst-rates-prd/perp-funding-prd are deleted` condition is now satisfied, script should

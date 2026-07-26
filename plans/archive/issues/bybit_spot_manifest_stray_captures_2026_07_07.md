@@ -405,9 +405,9 @@ rows land with correct `instrument_type=spot_pair`.
 
 - **2026-07-26 (ADDENDUM — closure confirmed for real)** — the `status: resolved` correction noted above (2026-07-14,
   flagging that `--apply` was never actually run despite checkbox-only closure) is now genuinely TRUE, not just
-  corrected-but-still-pending. `plans/active/cefi_bybit_spot_manifest_remediation_2026_07_25.md` re-verified live state
-  2026-07-25 (found the PERPETUAL→SPOT_PAIR gate already organically satisfied via routine reprocessing, no `--apply`
-  needed there) and ran the actual spot-nonsense purge `--apply` 2026-07-26 (53,934 rows deleted, verified via
+  corrected-but-still-pending. `plans/archive/2026_07/cefi_bybit_spot_manifest_remediation_2026_07_25.md` re-verified
+  live state 2026-07-25 (found the PERPETUAL→SPOT_PAIR gate already organically satisfied via routine reprocessing, no
+  `--apply` needed there) and ran the actual spot-nonsense purge `--apply` 2026-07-26 (53,934 rows deleted, verified via
   `by_data_type` showing only `{trades, book_snapshot_5}` for BYBIT-SPOT, and independently reconfirmed via
   `measure_honest_coverage.py`: 0 of the cefi-wide `stray_tuples` belong to BYBIT-SPOT). This `status: resolved` is now
   accurate to the live production state, not just to a checkbox history. See that plan's Progress Log for the full

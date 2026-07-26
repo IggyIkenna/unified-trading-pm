@@ -107,7 +107,7 @@ related:
   ]
 created: 2026-07-18
 last_updated: 2026-06-27
-  2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+  2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"
@@ -705,8 +705,10 @@ file, not here.
 > of every other defi-relevant plan/issue with its open-todo digest.
 
 **Missing digest entry (gate-audit §12, 2026-07-24)**: `defi_track01_per_instrument_and_canon_id_2026_07_24.md` is
-referenced 3x by "tracked under X below" prose in `defi_consolidated_closeout_aggregated_sources_2026_07_24.md` but
-never appears there as a linked entry — recorded here pending the fix below.
+referenced by "tracked under X below" prose in `defi_consolidated_closeout_aggregated_sources_2026_07_24.md` but never
+appears there as a linked entry — recorded here pending the fix below. (The gate audit's hardcoded "3x" was recounted
+live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggregated_sources_2026_07_24.md:379` and
+`:398`. Count deliberately not re-hardcoded here; grep the file rather than trusting a restated number.)
 
 - **[`defi_track01_per_instrument_and_canon_id_2026_07_24.md`](/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md)**
   — 13 open (5 P0, 3 P1, 5 P2 — 11 plain-open + 2 `[~]` partial; re-verified LIVE 2026-07-25, corrects the stale "18
@@ -714,5 +716,6 @@ never appears there as a linked entry — recorded here pending the fix below.
   deploy-gated, ~16.7M-row LENDING→A_TOKEN/DEBT_TOKEN Wave-D migration, residual canon walk C2-C12, address/UUID
   fallback elimination in `canonical_instrument_id`.
 - [ ] [DOC] P1. **Add the digest entry above into `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`** and
-      fix its 3 dangling "tracked under X below" references to point at it (bold digest style, task_template.md finding
-      H). (repo: unified-trading-pm)
+      fix every dangling "tracked under X below" reference there to point at it (bold digest style, task_template.md
+      finding H) — re-grep the file for the live set rather than trusting a restated count; as of 2026-07-26 there are
+      exactly 2, at `…aggregated_sources_2026_07_24.md:379` and `:398`. (repo: unified-trading-pm)

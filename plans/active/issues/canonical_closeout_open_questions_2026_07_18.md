@@ -90,7 +90,20 @@ The operator sequenced code+data changes AFTER the SSOT. These are ready; each n
   > below** — the other A6 legs (culled-venue data, the C0f legacy bucket) are unaffected and may still be authorized.
   > **Required order: (1) content-UNION into canon; (2) repoint execution-service to `data_type=dex_pool_state` and fix
   > its broken `resolve_bucket_name` call; (3) only then consider delete.** Full evidence + resolution criteria:
-  > `defi_dex_pools_delete_order_stale_2026_07_20.md`.
+  > `/plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`.
+  >
+  > **✅ RESOLVED 2026-07-21 — this withdrawal no longer gates anything (recorded 2026-07-26 by `/plan-reconcile defi`;
+  > the block above is kept verbatim as the historical record, do not act on it as live).** The required order was
+  > executed in full: the 648 legacy-only Solana twins were content-folded to canonical and verified, the
+  > execution-service reader was repointed, and the operator executed the prod delete — legacy `dex_pools/` +
+  > `lending_indices/` prefixes now hold 0 objects. Evidence:
+  > `/plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md` (`status: resolved`,
+  > `resolved_by: operator-executed prod delete 2026-07-21 (fold+repoint+delete complete; twins verified surviving)`),
+  > and the manifest-registration residual it spawned is itself closed
+  > (`/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`, `status: resolved`,
+  > `resolved_by: 2026-07-22 — todo 3 shipped market-tick-data-service@ae6fccef`). **Scope note:** this closes ONLY the
+  > Shape-B `dex_pools/`+`lending_indices/` leg of A6. The other A6 legs (culled-venue DRIFT/PACIFICA data, the C0f
+  > legacy lending-indices bucket) are untouched by this and remain operator-gated exactly as written above.
 
 - **A7 [P1] — restore the raw distinct-values data-status enumeration view** (deployment-api/ui) — the SSOT-alignment
   tool the operator asked for.

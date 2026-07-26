@@ -23,7 +23,7 @@ related:
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-26" # was 2026-07-25 — /plan-reconcile prediction shard re-measured every digest open-count; 3 provably-stale entries corrected (bleed doc, pipeline_e2e_check_vm_name_collision, group_c triage)
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -161,15 +161,21 @@ source: >-
   - **[DATA] P3.** Resolve the small 1-21 day DeFi protocol drifts (CURVE, UNISWAP_V2, UNISWAP_V4, BALANCER, LIDO)
   - **[DATA] P3.** Publish an explicit key-mapping table between `coverage_starts.py`'s bare venue/protocol keys
 - [`plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`](/plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md)
-  (8 open total — listed in full, not over the >8 cap threshold)
-  - 5. **[DATA] P0.** Read `unified-trading-library`'s manifest consolidator (`manifest_consolidator.py`)
-  - 6. **[DATA] P0.** Check whether the round-2 remediation script
-  - 7. **[DATA] P0.** Confirm whether a consolidation cycle has actually run since the 2026-07-23 remediation
-  - 8. **[DATA] P0.** Once todos 5-7 pin the actual mechanism, re-run the remediation (or fix the consolidator input)
+  (8 open total — listed in full, not over the >8 cap threshold; **re-measured 2026-07-26, `/plan-reconcile` prediction
+  shard** — the previous list was a stale ROUND-3 snapshot: it named todos 5/6/7 (answered 2026-07-24) and a todo 8 that
+  does not exist in the target doc, while silently omitting ROUND-4/5/6's todos 12/13/14/15 — three of them P0)
+  - 12. **[BACKEND] P0.** Fix `_write_consolidated`'s CAS precondition to be correlated with the content read, not a
+    late `blob.reload()` — makes a genuine conflict actually raise `PreconditionFailed`
+  - 13. **[BACKEND] P0.** Once todo 12 ships, confirm a new consolidator Cloud Run image build+deploys via the normal
+        CI/CD pipeline rather than needing a manual trigger
+  - 14. **[DATA] P0.** Only after todo 13's image is confirmed serving: re-run
+        `remediate_cross_ag_prediction_bleed_round3_2026_07_24.py` and verify it holds across a real consolidation cycle
   - 1. **[DATA] P1.** Pin the true full count and composition — read the `instruments-store-sports` index
   - 2. **[BACKEND] P1.** Locate the writer — trace which job/uploader writes `asset_group=prediction` rows
   - 3. **[BACKEND] P1.** Fix the misattribution at the writer so a prediction shard's manifest row lands only
   - 4. **[DATA] P2.** Remediate the already-written bleed rows — decide whether to relocate them
+  - 15. **[DATA] P2.** Determine whether `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/`empty_confirmed` rows
+        are the same bleed class or a separate population
 - [`plans/active/issues/estate_orphan_assessment_2026_07_21.md`](/plans/active/issues/estate_orphan_assessment_2026_07_21.md)
   - 3. **[INFRA] P1.** Run the orphan sweep for defi / cefi / tradfi / prediction on a VM — deployment-service@f8e885f
   - 4. **[CODE] P2.** Make the manifest load resumable / streamed in `migration_orphan_sweep.py`
@@ -178,7 +184,10 @@ source: >-
   - 8. **[DATA] P2.** Measure prediction's `B_legacy_duplicate` population — never reported anywhere in this doc's
        already-durable sweep report (prediction-specific; other-AG-only todos 7/3c not listed here)
 - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
-  - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI
+  — 0 open todos (all 6 `[x]`; **corrected 2026-07-26, `/plan-reconcile` prediction shard** — the previously-listed
+  `[INFRA] P1` default-to-yesterday date bridge is `[x]` in the target doc, and the artifact is live:
+  `unified_trading_library/service_framework/_adapter.py::_default_batch_dates_to_yesterday()` (line 26) is called by
+  `_build_io()`'s BATCH branch at lines 209-210, per `unified-trading-library@3485c4d0`)
 - [`plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`](/plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md)
   (14 open total)
   - **[DESIGN] P1.** Fix the mockup's leaf model everywhere it still needs it (Finding 1) — CEFI/TRADFI/DEFI's
@@ -225,7 +234,10 @@ source: >-
   - **[VERIFY] P1.** Root-cause the 273 mistagged DERIBIT/COMBO rows (open question #1) — not attempted this session
   - **[CODE] P2.** Update both drilldown mockups — not attempted this session (out of dispatched scope)
 - [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
-  — 0 open todos (closed/archived/record-only)
+  (1 open — **corrected 2026-07-26, `/plan-reconcile` prediction shard**; was wrongly digested as "0 open todos
+  (closed/archived/record-only)")
+  - **[CODE] P2.** Add a collision-resistant component (e.g. an 8-hex slug of `hash(venue, data_type)`) to the
+    pipeline-e2e-check VM name
 - [`plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
   (dup ref — see `prediction_consolidated_closeout_2026_07_18.md`'s "Aggregated source docs → Capture / correctness"
   subsection for its 2 open todos — corrected 2026-07-25, was "see Capture / correctness above," which only resolved
@@ -243,3 +255,13 @@ source: >-
   cross-reference corrected in the move (the `prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue` dup-ref,
   which said "see Capture / correctness above" — no longer true once relocated to a different file). No other content
   changed; every doc's own open-todo count and item list is exactly as it was in the parent.
+- **2026-07-26** — `/plan-reconcile` prediction shard (autonomous). Re-measured every `N open` digest claim in this file
+  against real `- [ ]` counts and fixed the 3 that were provably stale — this file inherited them verbatim from the
+  parent, so they were stale before the fork, not introduced by it: (1)
+  `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` listed a ROUND-3 snapshot (todos 5/6/7,
+  answered 2026-07-24, plus a todo 8 that does not exist in the target doc) while omitting ROUND-4/5/6's todos
+  12/13/14/15 — three of them P0, i.e. genuinely open P0 work invisible in the index that promises "nothing is silently
+  dropped"; (2) `pipeline_e2e_check_vm_name_collision_2026_07_12.md` was digested as "0 open" but has 1 open `[CODE] P2`
+  at line 118; (3) `group_c_cloud_run_job_failures_triage_2026_07_16.md` was digested with an open `[INFRA] P1` that is
+  `[x]` in the target doc and whose artifact is live in UTL. The remaining 20-odd digest claims in this file re-measured
+  clean.

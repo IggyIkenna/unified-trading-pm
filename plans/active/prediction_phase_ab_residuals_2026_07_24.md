@@ -52,7 +52,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-25" # was 2026-07-24 — consolidated-closeout split pass added 2 todos relocated from the parent (adapter dead-code audit as new A5; merged reconciliation-cadence + duplicate-note in Phase B) + folded the POLYMARKET schema-extension ruling into the existing A2 todo (no new checkbox); open-todo count 11 -> 13
+last_updated: "2026-07-26" # was 2026-07-25 — /plan-reconcile prediction shard corrected the A1 Kalshi-smoke-matrix todo's per-todo repo attribution (e2e-testing, not MTDS-only); no checkbox changes. 2026-07-25 — consolidated-closeout split pass added 2 todos relocated from the parent (adapter dead-code audit as new A5; merged reconciliation-cadence + duplicate-note in Phase B) + folded the POLYMARKET schema-extension ruling into the existing A2 todo (no new checkbox); open-todo count 11 -> 13
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -116,7 +116,11 @@ source: >-
       (9 open). (repos: market-tick-data-service, unified-trading-library, deployment-service)
 - [ ] [BACKEND] P0. **Kill the dead Kalshi `trading-api.kalshi.com` host reintroduced into the smoke matrix** + add the
       regression check that the elections-subdomain plan Phase 4 never added; fix the `raw_tick_data/by_date/` drift.
-      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`. (repos: market-tick-data-service)
+      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`. (repos: **e2e-testing** — the dead host is at
+      `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py:552`, re-verified still present 2026-07-26 — +
+      market-tick-data-service for the `by_date/` drift leg; **repo list corrected 2026-07-26, `/plan-reconcile`
+      prediction shard**: it previously named only `market-tick-data-service`, which does not contain the smoke matrix,
+      so a dispatched worker would have found nothing for this todo's primary named action)
 - [ ] [BACKEND] P1. **Adapters must apply lifecycle bounds BEFORE the network call** — today inactive days land as
       `SOURCE_RETURNED_ZERO` instead of an honest `EXPECTED_*`, and the CLOB catalogue scoped to `end_date_iso==day` can
       cap backfills to the resolution day.
@@ -343,3 +347,13 @@ source: >-
   operator-ruled (2026-07-25) POLYMARKET `prediction_trades` schema-extension migration into the existing A2
   dual-write-trees todo (same source issue doc, same finding — no new checkbox needed). Net: open-todo count 11 → 13. No
   engineering work executed in this pass — pure relocation + reconciliation of pre-existing tracked items.
+- **2026-07-26 (`/plan-reconcile` prediction shard, autonomous) — one AO-dispatch-readiness repo-attribution fix, no
+  checkbox changes.** The A1 "Kill the dead Kalshi `trading-api.kalshi.com` host" todo annotated
+  `(repos: market-tick-data-service)`, but its primary named action lives in a repo that annotation never named:
+  `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py:552` — re-verified 2026-07-26 that the dead host
+  is still literally in the current tree at that exact line, and that the linked issue doc
+  (`/plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`) lists `e2e-testing` first in its own
+  `repos:`. A worker dispatched on the todo's own annotation would have searched MTDS and found nothing. Repo list
+  corrected to name both legs (`e2e-testing` for the smoke matrix, `market-tick-data-service` for the
+  `raw_tick_data/by_date/` drift). The plan's frontmatter `repos:` already included `e2e-testing` — the gap was
+  per-todo, which is the level AO dispatch actually reads.
