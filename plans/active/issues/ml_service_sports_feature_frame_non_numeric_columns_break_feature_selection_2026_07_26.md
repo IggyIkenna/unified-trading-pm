@@ -150,10 +150,22 @@ here — flagging so the eventual retrain attempt checks target-class balance be
       shipped via `quickmerge.sh --agent`. Did NOT implement the alternative (SPORTS loader excludes
       identity/categorical columns at the source) — the defensive drop-before-fit shape protects every asset group
       uniformly and needed no changes to `sports_feature_loader.py`. (repo: ml-service)
-- [ ] [DATA] P2. Diagnose the 23 `xg_*` columns upcast to `object` dtype — find the null-sentinel or mixed-type write
+- [x] ✅ [DATA] P2. Diagnose the 23 `xg_*` columns upcast to `object` dtype — find the null-sentinel or mixed-type write
       causing the upcast and fix at the source (likely a features-service write path or a join step in
       `sports_feature_loader.py`), rather than papering over it with a blanket `pd.to_numeric(errors="coerce")` in
-      ml-service. (repo: features-service or ml-service, needs source tracing)
+      ml-service. (repo: features-service or ml-service, needs source tracing) — **DONE (slot-11, 2026-07-26):
+      `features-service@c54f9eaf`.** Root cause: `multisource_xg_calculator.py::compute_multisource_xg_batch`
+      initialized every declared `MULTISOURCE_XG_COLUMNS` entry with `out[col] = pd.NA` (line 143) — `pd.NA`, not
+      `np.nan`, upcasts the column to `object` dtype, which then survives GCS write/read and poisons the ml-service
+      merge/concat across dates. NOT a mixed-type write or a null-sentinel string — the real, deeper cause is that
+      `compute_multisource_xg()` only ever returns 7 of the 28 declared column keys, so 21 columns are NEVER assigned a
+      value past the `pd.NA` init and stay that dtype forever. Fix: `out[col] = pd.NA` → `out[col] = np.nan`, keeping
+      every column float64 from creation whether filled or not — source-side, not a read-side `pd.to_numeric`
+      papering-over as the todo asked to avoid. Does NOT restore the missing 21 columns' computations — that's a
+      separate, much bigger feature-engineering gap (no formula exists for any of them, not a dtype bug), filed as its
+      own scoped issue doc: `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`. 2 new
+      regression tests assert every `MULTISOURCE_XG_COLUMNS` entry is numeric dtype (filled or not). 17835 tests pass;
+      `quality-gates.sh` green in features-service (370s, sentinel-verified).
 - [ ] [DATA] P3. Check whether `pinnacle_closing_odds_home`/`odds_home_avg` (or `clv_home`'s real source columns) exist
       for ANY date window in `features-sports-prd` — if genuinely absent everywhere, the CLV target may need a different
       source/window before a meaningful retrain is possible; if present elsewhere, the `2026-04-01..17` window
@@ -173,3 +185,8 @@ here — flagging so the eventual retrain attempt checks target-class balance be
   Status left `open` — the `[DATA] P2` (xg_* upcast root cause), `[DATA] P3` (CLV target-source availability), and
   `[ML] P2` (re-attempt retrain) todos remain genuinely open. The `[ML] P2` retrain is still blocked on
   `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s own remaining items too.
+- 2026-07-26 (slot-11, `data_engineering`): shipped `[DATA] P2` (`features-service@c54f9eaf`) — root cause was `pd.NA`
+  init upcasting to object dtype, not a mixed-type write; fixed at the source. Found + spun off a separate, larger
+  finding while diagnosing (21 of 28 declared `MULTISOURCE_XG_COLUMNS` never actually computed —
+  `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`). Status left `open` — `[DATA] P3` and
+  `[ML] P2` remain genuinely open.

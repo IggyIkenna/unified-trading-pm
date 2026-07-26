@@ -362,6 +362,9 @@ drift_direction: advance-code
       `feature_selection`) + a CLV-target-100%-flat finding, filed as
       `ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`. **UPDATE (slot-12)**:
       shipped that doc's `[CODE] P2` fix (`ml-service@5a9e3050`); (c) still ⏳, 3 other todos remain — see that doc.
+      **UPDATE (slot-11)**: shipped `[DATA] P2` (`features-service@c54f9eaf`, `pd.NA`→`np.nan` at the source); spun off
+      `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md` (design/scoping, not fixed here). (c)
+      still ⏳ — `[DATA] P3`/`[ML] P2` remain open in that doc.
 - [x] ✅ [DATA] P1. Resolve the sports odds manifest-routing regression opened by the 2026-07-24 addendum to
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`: (1) grep+READ the manifest-write target
       resolution in the sports capture path in market-tick-data-service (same class of `_resolve_manifest_bucket()`
