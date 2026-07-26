@@ -127,6 +127,17 @@ on-chain-CLOB wire format.
       the book-candle aggregator expects. Repo: market-data-processing-service. **Done when**: a real `book_snapshot_5`
       backfill for at least one HYPERLIQUID instrument produces a valid candle instead of the "Missing bid_price_0"
       warning + refused honest-absence write.
+- [ ] [DATA] P2. **Found while fixing bug 1 (2026-07-26) — same unscoped-listing bug class in a SEPARATE, un-fixed
+      file.** `market_data_processing_service/app/core/orchestration_scheduling.py::_list_instrument_files` (a distinct
+      implementation from `orchestration_scanner.py`'s, used by the live/scheduled candle-processing path rather than
+      the CLI backfill path this session's fix targeted) has the IDENTICAL bug: a bare
+      `raw_tick_data/by_date/day={date}/` GCS listing materialized in full before any venue/instrument_ids filter
+      applies. NOT fixed this session (out of scope — the reported OOM reproduced via the CLI backfill path, which uses
+      `orchestration_scanner.py`, not this file) — Repo: market-data-processing-service. **Done when**: apply the same
+      venue-derivation + scoped-prefix pattern shipped in `orchestration_scanner.py`
+      (`market-data-processing-service@86a16239c3`) to this file's `_list_instrument_files`, with its own regression
+      tests; confirm whether this path is actually exercised by any live/scheduled (non-CLI) candle-processing trigger
+      before assuming it's dead code.
 
 ## Progress Log
 

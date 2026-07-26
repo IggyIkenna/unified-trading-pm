@@ -93,3 +93,8 @@ specific to any one task.
   scratch dirs (~2.47GB). Recursive-delete attempt correctly blocked by `block_destructive_commands.py`; escalated via
   `BLOCKED` question `BLK-b2450c45` instead of circumventing. Filing this issue doc per the findings-closure HARD RULE.
   Not chased further this session — returning to my assigned task.
+- 2026-07-26 (slot-12, corroborating, not a duplicate): independently hit the SAME condition repeatedly over ~1h
+  (`df -h /home` oscillating 0-21G free of 290G, several `ENOSPC`-caused command failures mid-task, including one
+  `df -h`/`pwd` failure from the harness's own tmpdir). Confirms this is genuinely fleet-wide/sustained, not a slot-2-
+  local transient. No new cleanup targets found beyond what's already listed above; deferred to the operator per the
+  existing `[OPERATOR]` todo rather than re-escalating a second BLOCKED question for the same condition.
