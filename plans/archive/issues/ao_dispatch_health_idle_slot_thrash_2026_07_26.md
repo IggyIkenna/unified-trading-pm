@@ -42,7 +42,7 @@ source:
   real activity log, and a read-only run of the orchestrator's own dispatch-eligibility filter chain
   (first_blocking_filter) against the live DB, then a full activity-log timeline for slot 10 showing the exact boot ->
   idle -> polling_dead -> kicked -> boot cycle repeating.
-resolved_by: interactive session, 2026-07-26, agent-orchestrator@222a4be, unified-trading-pm (this commit)
+resolved_by: interactive session, 2026-07-26, agent-orchestrator@222a4be, unified-trading-pm@1a154624c
 locked_by:
 supersedes:
 superseded_by:
