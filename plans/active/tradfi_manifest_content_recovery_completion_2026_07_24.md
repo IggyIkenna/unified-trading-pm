@@ -930,12 +930,12 @@ questions when a decision is needed. Ran it. Findings:
     112,839-row hygiene cleanup that turned out to have a wrong premise. Needs deliberate operator-visible review before
     ever applying, not a same-session rush.
   - `[x] [DATA] P1. Re-verify the register-phase rows landed in the CONSOLIDATED _index/availability_index.parquet — confirmed via a direct manifest query (venue=CME, underlying=AUD): the exact 2023-06-19/2023-06-21 options_chain rows the plan originally cited as sample evidence (real GCS data, zero manifest registration) now read capture_status=captured in the live consolidated index. Consolidator merge cycle already ran.`
-  - `- [ ] [DATA] P1-OPERATOR-REVIEW. Review the retire-phase candidate list (50,520 rows, recovery_retire.tsv in this session's scratchpad — regenerable via --retire dry-run) before ever running --apply. Once reviewed/approved: --apply is an in-place-CAS whole-index REPLACE (snapshot backup automatic) — re-run the dry-run first if picked up more than a day or two later (the manifest keeps moving).`
-
-**2026-07-26 addendum — fresh retire dry-run, still NOT applied.** New launcher case `tradfi-manifest-retire`
-(`deployment-service@ab8e0d7`) ran dry via VM, rc=0: 498,859 rows loaded, 106,907 unparseable `underlying` (skipped),
-**65,628 safe-to-retire** (up from 50,520 four days ago). `--apply` still withheld per the standing operator instruction
-above; launcher ready (`MODE=full`) pending operator go-ahead.
+  - `[x] ✅ [DATA] P1-OPERATOR-REVIEW. Retire-phase candidate list reviewed + APPLIED — DONE 2026-07-26 (operator go-ahead).`
+    New launcher `tradfi-manifest-retire` (`deployment-service@ab8e0d7`): fresh dry-run (65,628 safe-to-retire, up from
+    50,520), then `MODE=full` apply on VM `canonical-migration-tradfi-manifest-retire-20260726-160002`. Lost the CAS
+    race vs the manifest consolidator's cron 6x (each safely aborted "UNCHANGED-SAFE", auto-retried), succeeded attempt
+    7: **65,628 rows dropped in place** (generation 1785080389281002→1785080714940928, 5,824,751 remain) — exact match
+    to the reviewed count. Pre-retire snapshot backed up to `_index/backups/` first.
 
 \*\*Remaining, in priority order for the next continuation: (1) re-verify the register-phase rows landed in the
 consolidated index, (2) get operator review on the retire-phase candidate list before ever applying it, (3) finish the
