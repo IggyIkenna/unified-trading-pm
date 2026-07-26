@@ -229,4 +229,7 @@ directions and I could not fully reconcile them in this read-only pass:
    lifecycle (`# Lifecycle: oneoff`,
    `# Delete-when: cefi content instrument_id catalogue-canonicalisation applied + verified corpus-wide`) — worth a
    follow-up to confirm completion and delete it per that marker. Not investigated further here (out of this issue's
-   scope; flagging only since it's directly adjacent).
+   scope; flagging only since it's directly adjacent). — **FOLLOWED UP 2026-07-26 (worker, slot 6)**: it did NOT
+   complete — only 23/44 shards reached the terminal summary; 21 shards died partway through (1.2%-99.9% done, several
+   with `exit_code=137`/SIGKILL, exactly this doc's alerting gap in action at fleet scale). Script left in place, NOT
+   deleted. Full evidence: `/plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md`.

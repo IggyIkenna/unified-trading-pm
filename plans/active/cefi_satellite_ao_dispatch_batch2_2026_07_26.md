@@ -255,11 +255,18 @@ drift_direction: advance-code
       `market-tick-data-service@31958a05`, `quality-gates.sh` green (sentinel-verified), shipped via quickmerge. Full
       evidence + follow-ups in `issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`'s "Dominant-
       contributor isolation + permanent fix (2026-07-26)" section, with its own corresponding todo flipped.
-- [ ] [SCRIPT] P3. **Confirm the sharded `--apply` cefi content-canonicalisation fleet completed corpus-wide, then
-      delete the abandoned oneoff dry-run pilot script per its own Delete-when marker.** Check whether the ~44-48-way
-      date-range-sharded `canonical-migration-cefi-content-NN-20260719-*` `--apply` fleet (launched ~1hr after the
-      unsharded pilot VM `canonical-migration-cefi-content-20260719-121302` was killed at 0.31% done) ran the cefi
-      content instrument_id catalogue-canonicalisation to completion + verified corpus-wide (grep
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (worker, slot 6) — NOT complete, script left in place.** Grepped all 100
+      `run.log` files across the 44 shards (+ retry/resumption attempts): only 23/44 shards (01-12, 27, 30-39) reached
+      the terminal `SCRIPT 1 CONTENT MIGRATION SUMMARY`. The other 21 (13-26, 28, 29, 40-44) died partway through
+      (1.2%-99.9% done, several `exit_code=137`/SIGKILL), consistent with the alerting gap
+      `cefi_content_migration_vm_wedged_worker_2026_07_23.md` already diagnosed. Did NOT delete the script (per this
+      todo's own instruction for the not-complete case). Filed
+      `issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md` (P1) with full per-shard evidence + an
+      `[OPERATOR]` relaunch todo. **Confirm the sharded `--apply` cefi content-canonicalisation fleet completed
+      corpus-wide, then delete the abandoned oneoff dry-run pilot script per its own Delete-when marker.** Check whether
+      the ~44-48-way date-range-sharded `canonical-migration-cefi-content-NN-20260719-*` `--apply` fleet (launched ~1hr
+      after the unsharded pilot VM `canonical-migration-cefi-content-20260719-121302` was killed at 0.31% done) ran the
+      cefi content instrument_id catalogue-canonicalisation to completion + verified corpus-wide (grep
       `vm-logs/canonical-migration-cefi-content-*/run.log` for terminal `SCRIPT 1 CONTENT MIGRATION SUMMARY`/non-zero
       `patched` stats across all shards, cross-check against the availability manifest /
       `cefi_consolidated_closeout_2026_07_18.md`'s Phase-1 corpus-migration record). If confirmed complete, delete
