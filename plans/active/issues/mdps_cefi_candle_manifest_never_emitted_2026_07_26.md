@@ -37,6 +37,7 @@ locked_by:
 locked_since:
 resolved_by:
 drift_direction: advance-code
+depends_on: []
 ---
 
 # MDPS cefi candle-manifest emission: 0 rows, ever
