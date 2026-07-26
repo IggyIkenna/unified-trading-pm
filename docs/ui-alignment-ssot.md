@@ -125,7 +125,7 @@ so a stale bundled manifest can merge to `main` via ordinary UI CI undetected. T
 `capability-verdict-matrix.json`.
 
 **Confirmed live** (found while investigating
-`plans/active/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md` finding 2): at the time of that
+`plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md` finding 2): at the time of that
 investigation the UI's bundled `capability-manifest.json` was stale by a full UAC regen
 (`unified-api-contracts@13266bf8` vs the UI's last sync `a0105d9f`, six minutes older — 574/2428 vs the fresh 582/2762
 nodes/edges) — i.e. the exact "a fix landing in UAC does not automatically reach the wizard UI" scenario. Manually

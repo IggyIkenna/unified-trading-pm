@@ -108,8 +108,9 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
       rotate the `odds-api-key` secret in GCP Secret Manager (project `central-element-323112`) to a working key.
       BLOCKED-OPERATOR-DECISION / credential fix — no worker action possible. (repo: N/A, GCP Secret Manager +
       the-odds-api.com account)
-- [ ] [DATA] P2. **PREREQUISITE UPDATED (see new P1 todo below) — do NOT re-run blind.** Once the key is fixed, re-run
-      the 3-league golden-window backfill using the now-shipped `--league` flag:
+- [ ] [DATA] P2. BLOCKED-CREDENTIALS (odds-api key still `DEACTIVATED_KEY` as of 2026-07-26, re-verified live — see the
+      `[OPERATOR]` todo above). **PREREQUISITE UPDATED (see new P1 todo below) — do NOT re-run blind.** Once the key is
+      fixed, re-run the 3-league golden-window backfill using the now-shipped `--league` flag:
       `bash deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --vm-name     mtds-backfill-odds-ucl-gap --league UCL,CHINA_SUPER_LEAGUE,RUSSIA_PREMIER_LEAGUE --start 2025-09-01 --end     2025-11-30 --force`.
       Verify `_index/availability_index.parquet` shows 0 `attempted_failed` for these 3 leagues across the golden window
       afterward (baseline before this fix: only 11/91 days per league captured, all via non-`--league`-scoped organic
@@ -125,9 +126,9 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
       operational re-run blocked on the scoping bug too)
 
       **UNBLOCKED 2026-07-26 (slot 6)**: the P1 root-cause todo below is done — the scoping code was live-tested
-          correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
-          This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
-          is needed first. Still blocked only on the operator's credential fix (todo above).
+                  correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
+                  This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
+                  is needed first. Still blocked only on the operator's credential fix (todo above).
 
 - [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 4)** — Confirmed via direct manifest query
       (`gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`): ZERO `odds_api`
@@ -203,3 +204,19 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
   gone, so I can't inspect what it actually ran. Flipped the P1 todo done and un-blocked P2 (re-run + verify manifest
   afterward is now the correct next step, once the credential todo is fixed by the operator) — no code change shipped,
   this was investigation-only.
+- 2026-07-26 (slot 10): Dispatched the P2 re-run todo (`sports_odds_api_key_deactivated-004`) despite the `[OPERATOR]`
+  P0 credential-fix todo (`-001`) still `status=blocked`, not done — confirmed live via `GET /api/backlog`. Re-verified
+  the credential itself before touching anything: pulled the current `odds-api-key` secret
+  (`gcloud secrets versions access latest --secret=odds-api-key --project=central-element-323112`) and curled
+  `https://api.the-odds-api.com/v4/sports?apiKey=...` directly — still `error_code=DEACTIVATED_KEY`, unchanged from the
+  original finding. Re-running the backfill now would just burn compute writing more `attempted_failed` rows with zero
+  chance of success. Root cause of the premature dispatch: this doc had no `sequential: true`/`depends_on`, and per
+  `task_template.md`'s own documented caveat, `sequential: true` would NOT have helped here anyway — a
+  `[OPERATOR]`-tagged predecessor is excluded from the sequential chain's ingested-predecessor count, so the dispatcher
+  would still offer P2 immediately regardless. The correct mechanism for THIS shape (blocked on a genuinely
+  operator-only credential, not another AO-dispatchable todo) is the `BLOCKED-<TOKEN>` marker
+  (`server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE`, matches `BLOCKED-CREDENTIALS` on the todo's first
+  physical line) — added it to the P2 todo above so regen excludes it from ingestion until an operator actually fixes
+  the key (whoever does should also strip the marker so the todo re-enters the backlog). Declining to run the backfill
+  or flip the checkbox; skipping this task (`reason_code: GATED`) rather than fabricating progress against a still-dead
+  credential.

@@ -280,10 +280,10 @@ source: >-
       (held by `-031`'s fixture_events re-fetch); step 3 deferred. Live tracker: issue doc's final gated item. —
       **RE-VERIFIED 2026-07-25T12:56Z (slot 11): still unchecked** — lock cleared, backfill launched (this todo's
       "2019→" text is stale vs. the 2020-06-06 sports floor, corrected), step 2 in progress, step 3 untouched. Detail in
-      the issue doc (P0 blocker now fixed+shipped, instruments-service@08387531). — **2026-07-26T09:35Z**: `-013313`
-      SPOT-preempted 04:16:47Z, undetected ~5h20m; relaunched `af-backfill-20260726-103202`, same fix, re-verifying
-      already-covered dates (curated set grew +1 league mid-gap, no quota waste). Issue doc archived, resolved:
-      `/plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`.
+      the issue doc (P0 fixed+shipped, instruments-service@08387531; archived+resolved:
+      `/plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`). **SPOT
+      preemption recurring** (2x 2026-07-26: `-013313` @04:16Z undetected 5h20m, `-103202` @09:54Z caught in ~10min once
+      tightened) — each relaunch resumes cleanly, no data loss. Current: `af-backfill-20260726-110610`, healthy.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
