@@ -122,19 +122,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-                                                                                                                                                              > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-                                                                                                                                                              > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-                                                                                                                                                              > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-                                                                                                                                                              > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-                                                                                                                                                              > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-                                                                                                                                                              > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-                                                                                                                                                              > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-                                                                                                                                                              > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-                                                                                                                                                              > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-                                                                                                                                                              > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-                                                                                                                                                              > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-                                                                                                                                                              > — it caused no canonical-form regression. Recorded in
-                                                                                                                                                              > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+                                                                                                                                                                  > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+                                                                                                                                                                  > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+                                                                                                                                                                  > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+                                                                                                                                                                  > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+                                                                                                                                                                  > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+                                                                                                                                                                  > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+                                                                                                                                                                  > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+                                                                                                                                                                  > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+                                                                                                                                                                  > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+                                                                                                                                                                  > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+                                                                                                                                                                  > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+                                                                                                                                                                  > — it caused no canonical-form regression. Recorded in
+                                                                                                                                                                  > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
 - [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
       canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144.
@@ -769,7 +769,7 @@ formula.) (v9 `schema_version` uniformity is a SEPARATE P3 axis, HARD-gated on a
       `launch-mtds-prediction-backfill-vm.sh` hardcodes `VM_VENUE=POLYMARKET`; add `--venues` pass-through so Kalshi
       backfills (keyless-public trade-api). — **DONE** `deployment-service@0a7c3f8` (2026-06-20):
       `--venue POLYMARKET|KALSHI` flag wired; cross-reference marker closed in
-      `plans/active/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md` (slot-12, 2026-07-06).
+      `plans/archive/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md` (slot-12, 2026-07-06).
 - [x] [SCRIPT] P2. **`launch-mtds-sports-odds-backfill-vm.sh --tier` arg rejected by MTDS CLI (intermittent)** — startup
       translates `VM_TIER`→`--tier`, a flag the CLI doesn't declare; fix the right side. — **DONE,
       deployment-service@b42d98c** ("fix(deployment-service): remove invalid --tier arg from sports MTDS odds backfill

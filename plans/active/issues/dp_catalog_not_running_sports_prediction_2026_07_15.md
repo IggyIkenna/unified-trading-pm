@@ -45,7 +45,7 @@ related:
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     plans/active/issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md,
-    plans/active/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md,
+    plans/archive/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md,
     plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     plans/active/issues/utl_uac_skew_fleet_audit_2026_07_15.md,
   ]

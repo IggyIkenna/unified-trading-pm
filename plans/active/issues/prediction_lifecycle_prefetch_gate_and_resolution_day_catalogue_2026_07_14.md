@@ -17,7 +17,7 @@ tags: [prediction, lifecycle, honest-absence, manifest, data-correctness, polyma
 related:
   [
     plans/active/prediction_capture_incident_remediation_2026_07_06.md,
-    plans/active/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md,
+    plans/archive/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md,
     plans/active/issues/phantom_captures_prediction_2026_06_28.md,
     plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
   ]

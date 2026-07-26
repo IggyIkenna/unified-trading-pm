@@ -106,14 +106,14 @@ The enumerator's halt message is explicit: "Increase `--max-writes-per-run` afte
       report per-(venue, data_type, year) distribution so the operator can review what's being seeded.
 
       2026-07-03 run `enum-universe-defi-20260703-154354` (scan-only, cap 50M): **1,380,376 candidates**, report CSV
-                                  `/tmp/enum-universe-defi-20260703-154354.csv` (slot-2 host). Distribution: **99.95% is 2018 (695,830) + 2019
-                                  (683,862)** — pre-launch/pre-genesis days for protocols that did not exist yet (AAVE_V3 / PANCAKESWAP_V3 /
-                                  YEARN_V3 / BEEFY etc. all launched years later), i.e. HONEST-ABSENCE documentation rows (record_expected_empty
-                                  reason EXPECTED wildcard), NOT download work.
+                                      `/tmp/enum-universe-defi-20260703-154354.csv` (slot-2 host). Distribution: **99.95% is 2018 (695,830) + 2019
+                                      (683,862)** — pre-launch/pre-genesis days for protocols that did not exist yet (AAVE_V3 / PANCAKESWAP_V3 /
+                                      YEARN_V3 / BEEFY etc. all launched years later), i.e. HONEST-ABSENCE documentation rows (record_expected_empty
+                                      reason EXPECTED wildcard), NOT download work.
 
-                                  Only **684 cells across 2021–2025** are potentially actionable "remaining to download" rows. Even spread across
-                                  data_types (~80k each); top venues BEEFY 96k / BALANCER 86k / PANCAKESWAP_V3 64k. (First attempt hit a
-                                  transient consolidator read race — 404 on a replaced `_index` generation — retry succeeded; not a defect.)
+                                      Only **684 cells across 2021–2025** are potentially actionable "remaining to download" rows. Even spread across
+                                      data_types (~80k each); top venues BEEFY 96k / BALANCER 86k / PANCAKESWAP_V3 64k. (First attempt hit a
+                                      transient consolidator read race — 404 on a replaced `_index` generation — retry succeeded; not a defect.)
 
 - [x] ✅ [INFRA] P1. **RESOLVED 2026-07-10 (operator, fresh review at real v2 scale): Option A — apply the full
       63,876,053 rows in one run**, same "honest by default" principle as the original 2026-07-03 decision, now at the
@@ -137,7 +137,7 @@ The enumerator's halt message is explicit: "Increase `--max-writes-per-run` afte
       which is the `build_instrument_catalogue.py` Cloud Run catalog-builder job, a different script) — prediction's v2
       EXPECTED-UNIVERSE enumerator cannot currently complete even a scan-only run against the full catalog. Not fixed
       here (out of this task's scope); needs its own fix-worker dispatch. This P2 scan-only investigation is
-      complementary to (and updates) `plans/active/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md`, whose
+      complementary to (and updates) `plans/archive/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md`, whose
       cefi/tradfi/prediction quantum estimates (~1.75M cefi Kraken-6yr, ~818k prediction cqg EU, etc.) were grep-based
       static estimates against the OLD landscape and are now understated by 1-2+ orders of magnitude post the 2026-07-06
       v1→v2 retirement — that doc's per-AG owning-plan todos remain the right home for the fix work, this note is the
