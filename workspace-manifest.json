@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 6,
-        "coverage_pct": 82.59,
-        "warn_file_count": 14
+        "warn_file_count": 14,
+        "coverage_pct": null,
+        "qg_red_reason": null
       }
     },
     "deployment-service": {
@@ -393,8 +393,8 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "warn_file_count": 11,
-        "coverage_pct": 73.05,
         "large_file_count": 2,
+        "coverage_pct": 73.11,
         "qg_red_reason": null
       }
     },
@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "large_file_count": 0,
         "warn_file_count": 20,
-        "coverage_pct": null
+        "large_file_count": 0,
+        "coverage_pct": 84.45,
+        "qg_red_reason": null
       }
     },
     "features-service": {
@@ -529,9 +529,9 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": 85.57,
         "warn_file_count": 14,
+        "large_file_count": 0,
+        "coverage_pct": 85.56,
         "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN"
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 8,
-        "coverage_pct": 90.9,
-        "warn_file_count": 9
+        "warn_file_count": 9,
+        "coverage_pct": null,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -882,9 +882,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
-        "qg_red_reason": null,
         "warn_file_count": 39,
-        "coverage_pct": 83.3
+        "coverage_pct": 83.54,
+        "qg_red_reason": null
       }
     },
     "ml-service": {
@@ -947,10 +947,10 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "coverage_pct": 82.6,
-        "qg_red_reason": null,
-        "warn_file_count": 5,
-        "large_file_count": 0
+        "large_file_count": 0,
+        "warn_file_count": 6,
+        "coverage_pct": 82.61,
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN"
     },
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
+        "warn_file_count": 21,
         "large_file_count": 6,
-        "coverage_pct": 88.33,
-        "warn_file_count": 21
+        "coverage_pct": null,
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 0,
-        "coverage_pct": null,
-        "warn_file_count": 0
+        "warn_file_count": 0,
+        "coverage_pct": 72.57,
+        "qg_red_reason": "pytest"
       }
     },
     "unified-trading-api": {
@@ -1515,10 +1515,10 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 10,
+        "warn_file_count": 9,
         "coverage_pct": null,
-        "warn_file_count": 8
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
