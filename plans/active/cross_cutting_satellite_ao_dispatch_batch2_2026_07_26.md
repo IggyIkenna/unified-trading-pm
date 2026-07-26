@@ -85,7 +85,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Close the 4 never-touched Track-16 read-only audits as one bundle** (all four are pure
+- [x] ✅ [REVIEW] P2. **Close the 4 never-touched Track-16 read-only audits as one bundle** (all four are pure
       inventory/audit asks with an explicit Definition-of-done, zero code changes, zero competing claim — verified: the
       cross-cutting closeout is their only citer). (a) `issues/catalogue_census_equivalents_inventory_2026_07_24.md` —
       state yes/no per catalogue (strategy-service registry, features-service per-family registries, sports fixtures
@@ -106,7 +106,17 @@ drift_direction: advance-code
       **Coordination**: (d) is read-only and does NOT overlap batch1b's `FeaturesMvpRule`/`StrategiesMvpRule` todo,
       which WRITES UAC `mvp_scope.py` — do not implement anything here. **Done when**: all 6 checkboxes across the 4
       docs are flipped, each with its stated definition-of-done satisfied and any discovered gap filed as a new bounded
-      todo.
+      todo. — DONE 2026-07-26 (unified-trading-pm, this commit): all 5 original audit checkboxes across the 4 docs
+      flipped (a: 1, b: 1, c: 2, d: 1). Verdicts: (a) strategy catalogue YES (`registry_router.py`), features catalogue
+      NO, sports fixtures YES (`fixture_completeness.py`), UAC registries-beyond-4-axes NO — 2 gap follow-ups filed. (b)
+      NO VIOLATION found anywhere in the corpus (6 formula sites read, all PASS); the "3rd undocumented formula"
+      (`attempt_coverage_pct`) is actually PASS, just undocumented — 1 doc-only follow-up filed. (c) confirmed
+      `decompose_shard_key` has zero hits outside MTDS across instruments-service/MDPS/all 9 features-service families;
+      corrected the doc's own baseline (the chain-scoping flags belong to MTDS's `--operation download`, not
+      instruments-service, which has no `download` operation) — 2 gap follow-ups filed. (d) REFUTED: strategy-service
+      has zero `MVP_SCOPE`/`is_mvp` references anywhere — the universe resolver hardcodes catalog specs with no
+      MVP-membership filter — 1 fix follow-up filed, cross-referenced against
+      `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`.
 - [ ] [DIAG] P2. **features-service catalogue completeness inventory + the smoke-check masking test.** (a) Per-module
       table across all 9 features-service modules: does a per-feature declarative registry exist (`BuilderEntry`-shaped
       or equivalent), and does each entry carry `status`/`formula_version` — confirming or correcting the known baseline
