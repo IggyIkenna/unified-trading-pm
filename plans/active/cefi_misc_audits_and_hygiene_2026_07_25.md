@@ -99,7 +99,11 @@ drift_direction: advance-code
       `resolved` 2026-07-14 on checkbox-only evidence, but a 2026-07-10 live-manifest read
       (`instruments_remaining_work_audit_2026_07_10.md` item 7) found the actual `--apply` relabel/delete was never run
       against production (135,444 anomalous BYBIT-SPOT rows unchanged) — likely needs its status corrected + the
-      remediation actually re-run, independent of this archival.
+      remediation actually re-run, independent of this archival. **CLOSED 2026-07-26**:
+      `cefi_bybit_spot_manifest_remediation_2026_07_25.md` re-verified, ran the real `--apply` (53,934 spot-nonsense
+      rows deleted, verified via `by_data_type` + `measure_honest_coverage.py` -- 0 remaining BYBIT-SPOT stray tuples),
+      and added a closure addendum to the archived issue doc confirming its `status: resolved` is now genuinely accurate
+      to live production state, not just to checkbox history. No further action needed on this finding.
 
 ## Reconciliation
 

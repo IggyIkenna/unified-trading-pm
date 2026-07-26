@@ -141,26 +141,31 @@ someone else, or the manifest shape may have shifted.
       `venue + data_type-in-{6 nonsense types} +     capture_status=empty_confirmed + row_count=0`, not the itype value)
       -- then dry-run/`--smoke`/`--apply` per the updated script. Do not hand-wave past the script's own
       stop-on-surprise refusal; it is correctly protecting against exactly this kind of drift.
-- [ ] [DATA] P2. **Re-measure cefi Layer-1** (`measure_honest_coverage.py` or the current canonical entry point --
+- [x] ✅ [DATA] P2. **Re-measure cefi Layer-1** (`measure_honest_coverage.py` or the current canonical entry point --
       confirm which one is live per `/codex/02-data/honest-coverage-model.md`, tooling may have moved since 2026-07-07)
       after todos 2-3 land, and confirm the BYBIT-SPOT tuple closes cleanly (matches
       `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` = `{trades, book_snapshot_5}` exactly, no stray tuples for this
-      venue). Record the before/after cefi Layer-1 % in this plan's Progress Log. (repo: instruments-service) -- **NOT
-      YET -- dispatched to slot-2 2026-07-25 ahead of todo 3 landing (sequential prereq-chain gap: the auto-wired
-      `completed_tasks` chains each task to its immediate PLAN-ORDER predecessor, i.e. this todo's task row chains to
-      todo 2's, not todo 3's, so the dispatcher offered it before its real precondition was met -- worth a dispatcher
-      note, not a plan defect). Ran `measure_honest_coverage.py --asset-group cefi` anyway (cheap, read-only, tooling
-      confirmed still live/current) to record the honest BEFORE state -- see Progress Log. Confirmed the tuple does NOT
-      close cleanly yet: BYBIT-SPOT still carries all 6 stray tuples (the spot-nonsense data_types), 0 missing tuples,
-      cefi Layer-1 = 98.59% (71 expected / 70 present). Left this checkbox UNCHECKED and skipped the task back to the
-      queue (BLOCKED, citing todo 3) rather than false-close it -- re-run this measurement after todo 3's `--apply`
-      actually lands.**
-- [ ] [PM] P3. **Close the loop**: once todos 1-4 land, add a corrective note to
+      venue). Record the before/after cefi Layer-1 % in this plan's Progress Log. (repo: instruments-service) -- **DONE
+      2026-07-26 (`/autonomous` session)**. Re-ran `measure_honest_coverage.py --asset-group cefi` after todo 3's
+      `--apply` landed + the consolidator marker was genuinely re-stamped (see Progress Log). Confirmed via direct
+      `coverage.json` inspection: `by_venue_data_type.cefi.BYBIT-SPOT` now shows ONLY
+      `{trades: 86,536 rows,     book_snapshot_5: 86,519 rows}` -- exactly `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]`,
+      and 0 of the 80 remaining cefi-wide `stray_tuples` belong to BYBIT-SPOT (all 80 are elsewhere --
+      OKX/ASTER/BINANCE-DELIVERY/blank-venue, unrelated). **The tuple closes cleanly -- this todo's Done-when is met.**
+      cefi Layer-1: 98.59% before (71 expected/70 present, unchanged from the 2026-07-25 BEFORE reading since
+      BYBIT-SPOT's spot-nonsense rows were never counted in the EXPECTED/missing-tuple math to begin with, only in
+      `stray_tuples`) -> still 98.59% after (70/71 present, 1 missing: `(OKX, options_chain, trades)`, confirmed
+      unrelated to BYBIT-SPOT) -- the purge improves `stray_tuples` (BYBIT-SPOT's 6 dropped to 0) without moving the
+      completeness_pct denominator, which is the expected/correct outcome (stray tuples were never part of that ratio).
+- [x] ✅ [PM] P3. **Close the loop**: once todos 1-4 land, add a corrective note to
       `plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md` (which already flags this exact gap) citing this plan's
       commit(s), and confirm whether `bybit_spot_manifest_stray_captures_2026_07_07.md`'s archived `status: resolved` is
       now actually TRUE (it always claimed to be, retroactively made honest by this plan) or needs its own banner
       correction noting the 2026-07-10→2026-07-25 gap between "marked resolved" and "actually executed". (repo:
-      unified-trading-pm)
+      unified-trading-pm) -- **DONE 2026-07-26 (`/autonomous` session)**. Added a `CLOSED 2026-07-26` note to
+      `cefi_misc_audits_and_hygiene_2026_07_25.md`'s flagged finding, and an addendum to the archived issue doc
+      confirming its `status: resolved` is now genuinely accurate (not just corrected-but-still-pending) -- the real
+      `--apply` landed, independently verified two ways (by_data_type + measure_honest_coverage.py).
 
 ## Codex SSOTs
 
@@ -300,3 +305,13 @@ someone else, or the manifest shape may have shifted.
   (`[DATA]`/`[PM]`), genuinely AO-eligible, and per the `/autonomous` completion contract (rule 1: finish completely, no
   partial states) will be completed in this same session once the restamp+resume+durability-watch closes out, rather
   than left for a future dispatch.
+
+- **2026-07-26 (`/autonomous` session, plan closed)**: force-consolidate genuinely succeeded on retry
+  (`shards_scanned=1, rows_in=9,138,791, rows_out=9,138,791, no_op_lock=False` -- real merge, index rewritten,
+  `MANIFEST_CONSOLIDATED` event fired, mtds@fa7f576d's no-op-lock-detection fix landed first so this run's success claim
+  is trustworthy). Resumed `uts-prod-manifest-consolidator-market-data-cefi-cron` (confirmed `state: ENABLED`). Watched
+  4/4 post-resume durability cycles (dry-run re-reads of the BYBIT-SPOT spot-nonsense filter, ~5 min spaced): all 4
+  confirmed `rows to delete: 0` -- no resurrection, holds durably even as the manifest legitimately grew ~18,734 rows
+  from unrelated ongoing cefi capture activity between cycles. Todos 4 and 5 completed and flipped above. **All 5 todos
+  in this plan are now DONE.** Archival is a separate, deliberate plan-hygiene step (not attempted here, matching the
+  sibling GMX plan's same scoping decision this session).
