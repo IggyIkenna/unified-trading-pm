@@ -208,20 +208,25 @@ drift_direction: advance-code
       currency universe, a currency constraint would need new engine-internal logic — separately scoped, not attempted
       here). Cross-referenced back: `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`'s own DOCS P3 todo
       is checked off citing this exact commit + location.
-- [ ] [CODE] P3. Fix wrong catalog-builder import alias in `tests/integration/test_recursive_borrow_scenarios.py`:
-      `FAMILY_2_CELL_IDS` is built by importing `_build_carry_recursive_staked` (the **plain** `CARRY_RECURSIVE_STAKED`
-      archetype's catalog builder) aliased as `_build_carry_recursive_borrow_perp_hedged`, instead of importing the real
-      `build_carry_basis_perp_inv` (the `CARRY_BASIS_PERP_INV` archetype's actual catalog builder). Today this is
-      harmless (both builders happen to satisfy the same `len(...) >= 5` row-count assertion) but the Family-2 test cell
-      IDs are silently sourced from the wrong archetype's catalog rows. Fix: import and alias
-      `build_carry_basis_perp_inv` correctly, re-run the file's tests, confirm `FAMILY_2_CELL_IDS` now reflects
-      `CARRY_BASIS_PERP_INV`'s real 10-row catalog and the existing assertions still pass (adjust the row-count
-      assertion only if the real count differs from 5+). Ship via quickmerge scoped to this one test file. Source:
+- [x] ✅ [CODE] P3. **DONE 2026-07-26 (slot 4)** — Fix wrong catalog-builder import alias in
+      `tests/integration/test_recursive_borrow_scenarios.py`: `FAMILY_2_CELL_IDS` is built by importing
+      `_build_carry_recursive_staked` (the **plain** `CARRY_RECURSIVE_STAKED` archetype's catalog builder) aliased as
+      `_build_carry_recursive_borrow_perp_hedged`, instead of importing the real `build_carry_basis_perp_inv` (the
+      `CARRY_BASIS_PERP_INV` archetype's actual catalog builder). Today this is harmless (both builders happen to
+      satisfy the same `len(...) >= 5` row-count assertion) but the Family-2 test cell IDs are silently sourced from the
+      wrong archetype's catalog rows. Fix: import and alias `build_carry_basis_perp_inv` correctly, re-run the file's
+      tests, confirm `FAMILY_2_CELL_IDS` now reflects `CARRY_BASIS_PERP_INV`'s real 10-row catalog and the existing
+      assertions still pass (adjust the row-count assertion only if the real count differs from 5+). Ship via quickmerge
+      scoped to this one test file. Source:
       plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md ("Minor incidental finding" under
-      the `CARRY_RECURSIVE_BORROW_LENDING_ONLY` / `CARRY_BASIS_PERP_INV` orchestrator-stub section, 2026-07-24). Done
-      when: `tests/integration/test_recursive_borrow_scenarios.py` imports `build_carry_basis_perp_inv` (not the
-      plain-archetype builder) for its Family-2 registry, `bash scripts/quality-gates.sh --no-fix` is green, and the fix
-      is shipped + the plan checkbox flipped.
+      the `CARRY_RECURSIVE_BORROW_LENDING_ONLY` / `CARRY_BASIS_PERP_INV` orchestrator-stub section, 2026-07-24).
+      **Confirmed**: `catalog.py` exports `build_carry_basis_perp_inv` as a plain (non-underscore) name — no underscore
+      alias existed for it (unlike the other two builders), so the test's import line was changed from
+      `_build_carry_recursive_staked as _build_carry_recursive_borrow_perp_hedged` to
+      `build_carry_basis_perp_inv as     _build_carry_recursive_borrow_perp_hedged`. Directly verified the real catalog:
+      10 rows, all correctly slot-labeled `CARRY_BASIS_PERP_INV@...` (was silently `CARRY_RECURSIVE_STAKED@...` before).
+      The `>=5` row-count assertion needed no change (10>=5). 40/40 tests pass (`pytest -m "not requires_credentials"`);
+      full `quality-gates.sh --no-fix` green (126s, sentinel written). Shipped `strategy-service@628a0a32`.
 - [ ] [DESIGN] P3. Evaluate wiring the existing `curve_adapter.py`/`api.curve.fi` REST path
       (`market_tick_data_service/market_interface/adapters/defi/curve_adapter.py`) into the batch `dex_pool_swaps`
       collection cascade for CURVE/OPTIMISM (mirroring the "ARB/POLY only on hosted service (deprecated) — use
