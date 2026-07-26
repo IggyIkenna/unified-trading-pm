@@ -216,8 +216,13 @@ drift_direction: advance-code
 - **`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`**: Not a fresh finding — already triaged
   repeatedly across the covering-plan corpus. The doc's own first todo is an explicit [DECISION] operator call (wire
   mvp_mode live vs. delete dead code) blocking items 2/3. 5 covering docs independently confirm operator_gated;
-  tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md (active) already owns the job of re-checking this doc
-  against autonomous_session_operator_decisions_2026_07_25.md and spinning a follow-up todo once the operator rules.
+  tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md (**`status: draft` — corrected 2026-07-26 by
+  /plan-reconcile; this entry previously read "(active)", contradicting this same doc's own summary above, which already
+  states batch2 "+finalize, both still `status: draft`, undispatched"**) already CARRIES the todo for re-checking this
+  doc against autonomous_session_operator_decisions_2026_07_25.md and spinning a follow-up todo once the operator rules
+  — but being draft it is NOT ingested/dispatched, so nothing is actively working it. Flipping batch2+batch2_finalize to
+  `status: active` is an operator decision (CLAUDE.md § "Plan destination"); until that happens this deferral has no
+  live owner.
 
 ## Deferred — too-large-or-risky (needs its own dedicated plan, not a batch todo)
 
