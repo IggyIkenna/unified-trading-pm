@@ -181,7 +181,7 @@ not currently a live self-heal path until that breaker clears.
       2026-07-26, **REVISED** after the (a)-only conclusion proved wrong): **(b) — force-retag `v0.72.0` onto `b52aea5d`
       — is the actual required fix; blocked on operator/main authorization for the shared-ref force-push, see `/blocked`
       question.**
-- [ ] [DEVOPS] P2. Implement direction (B) from main's `BLK-2d9aae3f` partial answer (authorized 2026-07-26, see
+- [x] ✅ [DEVOPS] P2. Implement direction (B) from main's `BLK-2d9aae3f` partial answer (authorized 2026-07-26, see
       "Decision" section below) — main approved proceeding with B now while A (force-retag) stays operator-reserved, but
       B was never captured as a tracked todo, so it hasn't landed. Harden the semver-agent tag-mint idempotency guard
       from existence-only (`git rev-parse "v${NEW_VERSION}"`, currently
@@ -192,7 +192,25 @@ not currently a live self-heal path until that breaker clears.
       `rollout-workflow-templates.sh` and verify every generated copy is committed + pushed (repo: unified-trading-pm).
       This is what would let the NEXT qualifying `main` promote mint a genuinely new, correctly-anchored tag (e.g.
       `v0.72.1`/`v0.73.0`) above the `>=0.72.0` floor — placed BEFORE todo "re-run registry-drift" below since that todo
-      can only succeed once this lands (or A does) AND a new tag is actually minted on `main`.
+      can only succeed once this lands (or A does) AND a new tag is actually minted on `main`. — DONE 2026-07-26 (slot
+      6): template hardened at unified-trading-pm@85cca9314 (existence-only guard replaced with
+      `git merge-base --is-ancestor "v${NEW_VERSION}" HEAD`; a genuine ancestor still idempotent-skips, a
+      stale/unreachable same-name tag now `exit 1`s loudly instead of silent no-op). Ran
+      `rollout-workflow-templates.sh --template semver-agent.yml.tmpl` and pushed the rendered copy to all 24 fleet
+      repos (YAML-validated + diff-verified before push): alerting-service@7462d86,
+      batch-live-reconciliation-service@76dfad7, client-reporting-api@8d26322, deployment-api@c31f6f8,
+      deployment-service@d636b57, execution-service@37b5c61b, features-service@1bdae3e0,
+      fund-administration-service@1f95b00, greeks-service@8d50a0f, ibkr-gateway-infra@5aff2e1,
+      instruments-service@5deb3c52, market-data-processing-service@294f9fb, market-tick-data-service@c584de99,
+      ml-service@0ff61d1, strategy-service@d4eae25a, system-integration-tests@822604d, trading-agent-service@bbbce47,
+      unified-api-contracts@4db2f706, unified-trading-library@bd5180b7, unified-trading-api@ac66ace,
+      unified-trading-system-ui@02072c74, deployment-ui@9ccf69c, e2e-testing@797a9de, agent-orchestrator@b4669c7. Note:
+      unified-trading-system-ui and deployment-ui carried a stale pre-2026-07-25 semver-agent.yml copy (still on the
+      retired `push:[staging]` trigger) — the rollout also caught those two fully current to the template as a
+      byproduct, not just this guard change. This does NOT retroactively fix `main`'s existing wedged baseline (still
+      `v0.71.0` per the ancestry gap) — that still needs direction A (force-retag `v0.72.0` onto `b52aea5d`,
+      operator-reserved) or a brand-new tag past the floor; what this todo unblocks is that the NEXT qualifying mint
+      attempt fails loudly instead of silently no-op'ing, so the wedge can no longer hide.
 - [ ] [SCRIPT] P3. Once the tag-ancestry gap is fixed, re-run the `registry-drift` job on unified-trading-system-ui's
       `main`/next promote PR and confirm
       `pip install -e     _deps/unified-api-contracts -e _deps/unified-trading-library` succeeds (both the

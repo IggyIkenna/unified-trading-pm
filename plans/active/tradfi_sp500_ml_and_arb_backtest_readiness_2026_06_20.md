@@ -146,9 +146,9 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       (^VIX) is NOT in TRADFI IS catalog (only CME venue). CLAUDE.md: VIX 15m sourced from Barchart preload + Yahoo
       rolling 60d. Wiring `compute_vix_features()` requires: (1) add VIX IS entry or a special-case static instrument,
       (2) add a Yahoo/Barchart VIX OHLCV load path to `data_loader.py`, (3) add `"realized_vol_vix"` or `"vix"` to
-      `FEATURE_GROUPS`, (4) dispatch in `feature_group_service._calculate_features`. (was: "Blocked on operator
-      decision: route VIX through existing Barchart/Yahoo MTDS path or add a new VIX-specific data source. Status:
-      **BLOCKED-OPERATOR-DECISION**.") **RESOLVED by prior operator ruling 2026-06-23** — VIX cash index DELETED
+      `FEATURE_GROUPS`, (4) dispatch in `feature_group_service._calculate_features`. (was: "an operator decision was
+      needed on routing VIX through the existing Barchart/Yahoo MTDS path or a new VIX-specific data source" — that
+      decision has since been made, see next.) **RESOLVED by prior operator ruling 2026-06-23** — VIX cash index DELETED
       entirely; VIX exposure = VX futures via XCBF.PITCH. See tradfi_multisource_backfill_2026_06_22.md §VIX. Synced per
       plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 304). (Provenance: slot-23
       investigation 2026-06-24.)

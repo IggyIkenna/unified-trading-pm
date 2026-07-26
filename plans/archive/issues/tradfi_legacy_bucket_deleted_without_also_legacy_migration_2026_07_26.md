@@ -20,7 +20,7 @@ summary: >-
   launcher; (3) the legacy bucket (`market-data-tick-tradfi-central-element-323112`) is confirmed permanently deleted
   (`bucket.exists() == False` via ADC, ADC has active read creds). Net: at most ~1% of the legacy corpus was ever copied
   to canonical before the bucket holding the rest was destroyed.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -49,10 +49,15 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "operator (ikenna@odum-research.com), interactive session, 2026-07-26 — accept-the-loss decision, see closing addendum"
 drift_direction: advance-code
 ---
 
 # TradFi legacy bucket deleted without the required --also-legacy migration — potential historical data loss
+
+> **🟢 RESOLVED 2026-07-26** — recovery window confirmed CLOSED (soft-delete restore unavailable); operator decision:
+> accept the loss. All P0 todos + the durable safeguard (`verify_legacy_bucket_decommission_precondition.py`) shipped.
+> See "2026-07-26 operator recovery-window verdict" section below for the full evidence trail.
 
 ## What I found
 
@@ -133,14 +138,12 @@ worker can do read-only now vs what is genuinely operator-gated:
       section below for the full methodology + numbers. This does NOT resolve the parent finding — the two `[OPERATOR]`
       todos below stay open and this evidence feeds their decision. Repo: market-tick-data-service / instruments-service
       (read-only manifest census, no code changes).
-- [ ] [OPERATOR] P0. **TIME-CRITICAL — GCS soft-delete / Object-Versioning recovery-window check.** Needs
-      `storage.buckets.get` / `gcloud storage buckets list --soft-deleted`, which no available worker credential has.
-      The bucket was deleted 2026-07-06 = 20 days ago as of this writing; GCS bucket soft-delete DEFAULT retention is 7
-      days (configurable 7-90). If default, the restore window is ALREADY CLOSED; if a longer retention was configured,
-      a SHRINKING window may remain. Check immediately — every day may close it permanently.
-- [ ] [OPERATOR] P0. **The remediation decision itself** (restore the soft-deleted bucket if recoverable / re-run
-      `migrate_tradfi_to_v9_canonical --apply --also-legacy` from a restored copy / accept the loss with the census
-      evidence above) — prod-bucket-level infra, operator-only, gated on both items above.
+- [x] ✅ [OPERATOR] P0. **TIME-CRITICAL — GCS soft-delete / Object-Versioning recovery-window check.** — DONE 2026-07-26
+      (operator, interactive session, ADC as `ikenna@odum-research.com`). **VERDICT: window CLOSED, unrecoverable.** See
+      "2026-07-26 operator recovery-window verdict" addendum below for the 3-signal evidence.
+- [x] ✅ [OPERATOR] P0. **The remediation decision itself** — DONE 2026-07-26 (operator, interactive session).
+      **DECISION: accept the loss.** Restore is not available (see verdict above), so this reduces to the one remaining
+      option — accept, informed by the census evidence already in this doc. See addendum below.
 - [x] ✅ [SCRIPT] P2. Fix `data_completion_tradfi_2026_07_15.md` lines 298/304 (R1/R2 checkboxes) — DONE (same session):
       R1 stays open pending the operator decision above; R2 flipped done citing this doc's clean 3-target inventory.
 - [x] ✅ [SCRIPT] P3. Add a pre-delete GATE to `launch-canonical-migration-vm.sh` (or the runbook that invokes it) so a
@@ -317,3 +320,33 @@ Over a **120-day** window it returns **exactly ONE** event and no create:
 
 Folding this correction into the doc's own summary and the `[OPERATOR]` P0's arithmetic is drafted as todo 1 of
 `/plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (`status: draft`, awaiting operator approval).
+
+## 2026-07-26 operator recovery-window verdict — CLOSED, both `[OPERATOR]` items resolved
+
+**Run by the operator directly (interactive session, ADC as `ikenna@odum-research.com`, project
+`central-element-323112`), closing both remaining `[OPERATOR]` P0 items above.** Three independent read-only checks, all
+consistent:
+
+1. **Soft-deleted bucket list is empty** —
+   `gcloud alpha storage buckets list --soft-deleted --project=central-element-323112 --format=json` (no filter, so this
+   isn't a filter-syntax artifact) returns `[]`. Zero soft-deleted buckets exist in the project.
+2. **Live `describe` 404s** — `gcloud storage buckets describe gs://market-data-tick-tradfi-central-element-323112` →
+   `HTTPError 404`. Not active, not in soft-delete state either.
+3. **Audit log shows the soft-delete retention was very likely zeroed just before the delete** —
+   `protoPayload.resourceName:"buckets/market-data-tick-tradfi-central-element-323112"` over a 180-day window shows a
+   `storage.buckets.update` at `2026-07-14T01:36:59Z`, ~9.5 hours before the `storage.buckets.delete` at
+   `2026-07-14T11:03:03Z` (same principal, `ikenna@odum-research.com`). That update call's `callerIp` is `13.113.200.22`
+   — the orchestrator VM (`planning`) — invoked non-interactively (`interactive/False`) via
+   `gcloud.storage.buckets.update`. Cloud Audit Logs at this tier don't carry the field-level before/after diff, so the
+   exact config change isn't directly visible, but the timing (same session window) and non-interactive VM origin are
+   consistent with a scripted retention-disable-then-delete decommission step, not an unrelated setting change.
+
+**Verdict: the recovery window is CLOSED. This bucket is not recoverable via GCS soft-delete restore — no further check
+changes this.**
+
+**Operator decision (2026-07-26): accept the loss.** With restore off the table, the remediation options collapse to one
+— accept, per the census evidence already documented above (canonical's own Databento source has ~0% coverage of
+pre-2023 `trades`/`tbbo`/`options_chain`/`futures_chain` content, so the likely-lost slice is genuinely uncovered, not a
+"no net loss" case). No further action is pending on this doc; `status` flipped to `resolved` in frontmatter. Todo 5's
+durable artifact (`verify_legacy_bucket_decommission_precondition.py`, already shipped per the addendum above) remains
+the standing safeguard against this class recurring for other asset_groups.

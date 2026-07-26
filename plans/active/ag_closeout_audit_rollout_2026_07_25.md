@@ -845,3 +845,48 @@ completion notification first (`/workflows` or the task list). When it completes
 array from both stages into ONE consolidated batched Q&A (options + recommendation each, per
 `SUB_AGENT_MANDATORY_RULES.md`'s escalation format) — do not present 18 separate scattered questions. Only after the
 operator answers that batched Q&A does the mass-flip proceed.
+
+## Round 7 (2026-07-26) — `wf_e4b32d17-dcf` FULLY COMPLETE (18/18, 0 errors); full batch delivered
+
+`wf_e4b32d17-dcf` needed 6 resume attempts total after the operator returned mid-run (see Round 6b for the first
+interruption). Failure sequence + fixes, in order: (1) 6x transient API `529 Overloaded` on the 6 not-yet-run audit
+stages — pure retry; (2) 6x "Cannot create agent worktree" — misdiagnosed first as a worktree-count problem (pruned 14
+already-landed worktrees, which didn't actually fix it); (3) 529 again; (4)+(5) the SAME worktree-creation error
+recurring — root-caused this time: **my own shell's cwd had drifted to `/home/ubuntu/unified-trading-system-repos` (the
+parent of all repo checkouts, not inside any git repo)**, almost certainly from `cd`-ing into a worktree subdirectory
+that a prior `git worktree remove` then deleted out from under the shell. Fixed with a plain `cd` back into
+`unified-trading-pm`; (6) succeeded — 18/18 agents, 0 errors, 7.8M subagent tokens across the full run.
+
+**Final tallies**: 78 reconcile auto-fixes, 228 orphans found across all 9 tranches, a
+`<tranche>_satellite_ao_dispatch_batchN`
+
+- finalize pair drafted for **every one of the 9 tranches** (all still `status: draft`) — ao/ci/infra got their
+  FIRST-EVER dispatch vehicle (their closeout hubs had zero todos, zero prior batch plans). 2 more stranded
+  worktree-branch commits surfaced and were landed the same way as Round 6b's defi/prediction (rebase + resolve the
+  inevitable append-only-log conflict + push): defi's reconcile stage (already covered in 6b) and **infra's audit
+  stage** (`pm@89469c6b2`, worktree-18 — this one rebased clean, no conflict).
+
+**Full 70-item batched Q&A delivered to the operator in chat**, and **durably recorded** in
+`plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` (entries 1-12 = reconcile-stage items from
+before the interruption, already there; 13-14 = audit:prediction, already self-filed by that agent; **15-38 = the
+remaining 24 audit-stage items (sports/cross-cutting/ao/ci/infra), added this round** since those agents returned their
+parked items via the workflow's structured schema rather than filing directly — commit `df282a53c`). Item #35 in the
+chat numbering (tradfi bucket recovery-window check) was independently resolved by the operator personally while this
+ran: `unified-trading-pm@63eaf06f8`, **accept-the-loss**, window confirmed closed/unrecoverable.
+
+**Operator directive for next phase**: apply worker recommendations directly for everything NOT genuinely uncertain
+(explicit trust granted, 2026-07-26) — only bring back genuine toss-ups. Do NOT wait for line-by-line answers to all 70
+before starting resolutions.
+
+### Deferred work after 2026-07-26 (Round 7)
+
+| Item                                                                                                                                                               | State                    | Blocked on                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Apply recommendations across the 70-item batch (24 in `autonomous_session_operator_decisions_2026_07_25.md` entries 15-38 + the 44 already in chat/Round 6)        | Not started              | Nothing — explicitly authorized, next actionable item                                                                                                       |
+| Flip each tranche's newly-drafted batchN/finalize pair to `active` per the applied recommendations                                                                 | Not started              | The above                                                                                                                                                   |
+| Mass flip (draft→active, NA→planning) for the ORIGINAL 5-AG consolidated parents + native_ao_extract pairs + split children + satellite batches + ao/ci/infra docs | Not started              | Now effectively covered by this round's per-tranche audits — no longer needs a SEPARATE operator-personal audit run; proceeds as part of applying the batch |
+| `.scratch_recovery/` (untracked, repo root, `cc_base.md`/`cc_desired.md`/2 diffs, ~13h stale)                                                                      | Not investigated further | Not mine — created by a different concurrent process during the earlier cross-cutting workflow; safe to ignore, not touched                                 |
+
+**Recommended next item**: work through the 70-item batch applying `[REC]` where confident (the large majority), landing
+each resolution with real evidence per the same discipline as everything else this session; return only genuine
+toss-ups.
