@@ -138,22 +138,23 @@ changed since batch1.
       ohlcv_15m/24h cells for tradfi, and the line-629 checkbox's sub-bullet is updated with deploy evidence (tarball
       sha / VM name / T+10min manifest read). Source: `data_completion_tradfi_2026_07_15.md`.
 
-- [ ] [REVIEW] P1. **Combined instruments-foundation cleanup pass — 7 independent, conflict-clear candidates from
-      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, bundled into ONE todo because all 7 would otherwise edit
-      the SAME doc file concurrently** (mirrors batch1's tradfi_legacy_twin combine): (1) Verify instruments-service CME
-      (GLBX.MDP3) instrument-definition catalog manifest coverage for 2019-01-01 through today in
-      `instruments-store-tradfi`, checking the already-running `launch-tradfi-is-defs-sharded.sh` 9-shard fleet's
-      current coverage first; launch a backfill shard for any real gap (never copy definitions between dates — CME
-      futures expire daily). (2) Write unit tests for UAC's `databento_subscription_allowlist` covering allowed vs
-      blocked dataset, banned OHLCV schema, per-level lookback-floor boundaries, batch-ban behavior, break-glass
-      override, and enum-repr normalization (repo: unified-api-contracts). (3) Add a grep-based QG ratchet check
-      enforcing no raw `batch.submit_job` call outside the guarded `submit_batch_job` wrapper and no off-allowlist
-      Databento dataset string literal in tradfi fetch paths; wire into market-tick-data-service's `quality-gates.sh`.
-      (4) Re-fetch a small sample of old tradfi instrument-definition dates whose `instrument_count` changed (equity
-      ETFs re-routed XNAS.ITCH→DBEQ.BASIC; CME cells now include EC* event contracts) via instruments-service; confirm
-      the re-fetched parquet's instrument set matches the current universe, enumerate the remaining un-refetched range.
-      (5) Remove the stale post-VIX-INDEX-retirement CBOE `ohlcv_15m` capability registrations: delete the `ohlcv_15m`
-      entry from CBOE's list in UAC `expected_coverage.py` (~lines 135/156) and the
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review)** — Combined instruments-foundation cleanup pass — 7
+      independent, conflict-clear candidates from `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, bundled into
+      ONE todo because all 7 would otherwise edit the SAME doc file concurrently** (mirrors batch1's tradfi_legacy_twin
+      combine): (1) Verify instruments-service CME (GLBX.MDP3) instrument-definition catalog manifest coverage for
+      2019-01-01 through today in `instruments-store-tradfi`, checking the already-running
+      `launch-tradfi-is-defs-sharded.sh` 9-shard fleet's current coverage first; launch a backfill shard for any real
+      gap (never copy definitions between dates — CME futures expire daily). (2) Write unit tests for UAC's
+      `databento_subscription_allowlist` covering allowed vs blocked dataset, banned OHLCV schema, per-level
+      lookback-floor boundaries, batch-ban behavior, break-glass override, and enum-repr normalization (repo:
+      unified-api-contracts). (3) Add a grep-based QG ratchet check enforcing no raw `batch.submit_job` call outside the
+      guarded `submit_batch_job` wrapper and no off-allowlist Databento dataset string literal in tradfi fetch paths;
+      wire into market-tick-data-service's `quality-gates.sh`. (4) Re-fetch a small sample of old tradfi
+      instrument-definition dates whose `instrument_count` changed (equity ETFs re-routed XNAS.ITCH→DBEQ.BASIC; CME
+      cells now include EC* event contracts) via instruments-service; confirm the re-fetched parquet's instrument set
+      matches the current universe, enumerate the remaining un-refetched range. (5) Remove the stale
+      post-VIX-INDEX-retirement CBOE `ohlcv_15m` capability registrations: delete the `ohlcv_15m` entry from CBOE's list
+      in UAC `expected_coverage.py` (~lines 135/156) and the
       `DataTypeCapability(venue="CBOE", data_type="ohlcv_15m", instrument_type="")` entry in UAC
       `data_type_capability.py`; update the stale `TradfiOhlcv15mAdapter` docstring in MDPS `ohlcv_passthrough.py` —
       this doc's own G1.f.2 post-retirement-cleanup section confirms zero live impact (0 consumers) and that this is
@@ -183,6 +184,20 @@ changed since batch1.
       G1.b/G1.c DONE entries) AND `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s corresponding
       checkboxes/table rows for items 1-7 are flipped/updated in the SAME commit. Source:
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
+
+      **Evidence**: (1) CME coverage verified against its TRUE declared floor (2020-01-01, not 2019-01-01 — confirmed
+          live via a SPOT VM finding zero active venues for all of 2019); 1 genuine gap (2024-11-08) backfilled, 2
+          anomalous Sundays filed as a new P3 finding. (2) `databento_subscription_allowlist` unit tests already existed
+          (39/39 pass, all 6 scenarios) — no new test needed. (3) The QG grep-ratchet already existed (MTDS STEP
+          5.92/5.93) — re-verified green. (4) 2 of 3 sample re-fetches succeeded (2020-01-02: 38,669 records; 2023-01-03:
+          47,810 records), confirming the pre-lockdown universe was far narrower; full 2020-01-01→2026-06-18 re-fetch
+          range enumerated and filed as a new P2 finding for a dedicated backfill plan. (5) UAC's stale CBOE `ohlcv_15m`
+          entries were already removed (2026-07-15); fixed the one remaining stale MDPS docstring. (6) uac@599acf93
+          confirmed live on `main` via merge-ancestry + zero reverts + the removed symbols still absent a month later. (7)
+          Doc self-contradiction corrected, live-reverified post IS@92084d5c. Shipped:
+          `market-data-processing-service@aebca177c5` (docstring fix) + `instruments-service@6a54828f84` (script bugfix +
+          2024-11-08 backfill, no code diff for the manifest write itself). All findings + underlying checkboxes flipped
+          in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` in the same commit.
 
 - [ ] [SCRIPT] P1. **Conflict-check (2026-07-25 plan-reconcile): this todo's Done-when flips 3 checkboxes in
       `tradfi_backfill_throughput_followups_2026_07_24.md`; todo 9 below flips a 4th checkbox in that SAME doc. Do not

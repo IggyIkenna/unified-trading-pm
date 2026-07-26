@@ -82,12 +82,15 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       daily-capture trigger isn't PAUSED. Baseline §9.
   - **Already-fixed G1 code (this session, IS `50bf1c8`, QG-green, 7/7 venues now write):** KRX→databento routing
     (`CANONICAL_VENUE_TO_ADAPTER`) + the `AssetClass("cefi")` crash on NASDAQ/NYSE equities (`_resolve_asset_group`
-    guarded so domain values fall through to the dataset-default EQUITY). **Remaining G1 refinements (NOT yet done):**
-    (i) the cefi-domain equity-perp singles (NVDA/MSFT/AAPL…, `DatabentoInstrumentDef.asset_group="cefi"`) currently
-    resolve to EQUITY and **stay in the tradfi pipeline** — per the registry-comment intent ("keeps them out of the
-    tradfi data pipeline") they must be **EXCLUDED** from the tradfi adapter (they belong to cefi), not just un-crashed;
-    (ii) `_DATASET_TO_asset_group["XCBF.PITCH"]=EQUITY` + XCBF absent from `_FUTURES_DATASETS` — VX are FUTURE (the
-    `instrument_type` lands FUTURE, but the asset-class map is wrong → fix to FUTURE/COMMODITY).
+    guarded so domain values fall through to the dataset-default EQUITY). **Both refinements below are DONE — corrected
+    2026-07-26 (this doc's own contradiction: this bullet said "NOT yet done" while G1.b/G1.c further down already
+    showed both shipped 2026-06-25; re-verified live post IS@92084d5c this pass):** (i) the cefi-domain equity-perp
+    singles (NVDA/MSFT/AAPL…, `DatabentoInstrumentDef.asset_group="cefi"`) are EXCLUDED from the tradfi adapter —
+    `databento/adapter.py::get_instruments` filters `TRADFI_DATABENTO_INSTRUMENTS` to
+    `d.asset_group in frozenset(AssetClass)`, so a `"cefi"` asset_group (not a valid `AssetClass` member) is dropped
+    before it ever reaches the tradfi pipeline (SP500-overlap tickers still enter correctly via the separate equity
+    path). See G1.b below. (ii) `_DATASET_TO_asset_group["XCBF.PITCH"]` resolves `AssetClass.COMMODITY` (not EQUITY) and
+    `XCBF.PITCH` is a member of `_FUTURES_DATASETS` (`databento/symbology.py`). See G1.c below.
 
 ---
 
@@ -355,16 +358,43 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   reference the now-deleted VIX cash INDEX. Zero downstream consumers of CBOE ohlcv_15m (features=0). Filed as a plan
   todo under G1.f.2 post-retirement cleanup above. Notify operator if a 15m VX-futures consumer is added before cleanup.
 
+- 2026-07-26 — **CME instrument-definitions coverage verification + old-date re-fetch sample (slot-5, review; batch2-002
+  combined todo, items 1+4).** (1) The 9-shard fleet had self-deleted; checked live manifest coverage for CME 2019-01-01
+  through today via `verify_instrument_manifest_coverage.py` (fixed a real one-line bug found in the same pass —
+  `args.category` → `args.asset_group`, the script would AttributeError on every invocation). Found 368 "missing" dates,
+  ALL in 2019. Investigated: CME's declared discovery-start is `2020-01-01` (UAC `venue_mapping.py` +
+  `canonical/coverage_starts.py`, both explicit) — NOT a bug, a deliberate floor. Launched a SPOT VM
+  (`instr-backfill-tradfi-cme-a-20260726-164850`, 2019-01-01→2019-12-31, self-shut-down, exit_code=0) to CONFIRM this
+  live rather than trust the config alone: it correctly found "no active venues" for every 2019 date and wrote ZERO rows
+  — the floor is real, 2019 is honestly out of scope, no code/data fix needed. Re-checked coverage against the TRUE
+  floor (2020-01-01→today, 2,399 days): only 3 residual gaps — `2024-06-02` (Sun), `2024-10-06` (Sun), `2024-11-08`
+  (Fri, a REAL trading day). Backfilled `2024-11-08` (45,787 records written, confirmed via
+  `verify_instrument_manifest_coverage.py` re-run: down to the 2 Sundays only). The 2 Sundays hard-fail with
+  `RuntimeError: URDI returned zero records` instead of writing an honest `empty_confirmed` row like the other 363
+  weekends in the manifest do — a minor pre-existing inconsistency (2/2,399 days = 99.92% floor coverage), not fixed
+  here (would need adapter-level investigation into why these 2 specific Sundays diverge from the other 363 weekend rows
+  already carrying `empty_confirmed`). **Net: CME instrument-definition coverage is effectively complete against its
+  real declared floor.** (2) Re-fetched 3 sample old dates (`--force`) to confirm the re-fetch mechanism picks up the
+  CURRENT universe (post-2026-06-19 EC\* event-contract + DBEQ.BASIC consolidation): `2020-01-02` → 38,669 records (was
+  captured under the pre-lockdown narrow universe), `2023-01-03` → 47,810 records (both confirm the OLD dates were
+  captured under a dramatically narrower universe and a forced re-fetch correctly expands to match today's ~74-95K/day
+  range); `2026-06-17` hit a live transient `URDI returned zero records` error on retry (not investigated further — a
+  single transient failure, not a pattern). **Enumerated un-refetched range**: every CME date from `2020-01-01` through
+  `2026-06-18` (~2,368 calendar days, the pre-lockdown era) was captured under the OLD narrower universe and would
+  benefit from a full re-fetch to pick up EC\* event contracts + the DBEQ.BASIC consolidation — this is a genuinely
+  large campaign (not a "small sample" task), tracked here as a NEW finding for a dedicated future backfill plan, not
+  attempted in full in this todo (scope was explicitly "small sample + enumerate the range").
+
 ---
 
 ## Deferred work after 2026-06-26
 
-| #   | Item                                                                                                                                                                                                                      | Repo       | Priority | Blocked on                   |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------- | ---------------------------- |
-| 1   | Clean stale CBOE ohlcv_15m capability entries (expected_coverage.py + data_type_capability.py + MDPS adapter docstring) post VIX-INDEX retirement                                                                         | UAC + MDPS | P2       | Nothing (no live consumers)  |
-| 2   | Verify UAC uac@599acf93 SIT passes (~30min Tier-C drain → staging → quality-gates-v2)                                                                                                                                     | UAC        | P1       | CI auto                      |
-| 3   | ~~G1.f (partial — DXY key migration ICE→FX)~~ — RESOLVED 2026-06-25: operator REVERSED the planned migration, DXY KEEPS venue=ICE, ICE→FX key-migration CANCELLED outright (see G1.f above). No decision remains pending. | UAC + IS   | —        | Resolved (no longer blocked) |
-| 4   | G1.g MVP tags; G1.a.2 massive.py §7.1; G1.a.3 router.py dead config                                                                                                                                                       | IS + MTDS  | P1/P2    | None                         |
+| #   | Item                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Repo       | Priority | Blocked on                   |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------- | ---------------------------- |
+| 1   | ~~Clean stale CBOE ohlcv_15m capability entries~~ — RESOLVED 2026-07-26: UAC's `expected_coverage.py`/`data_type_capability.py` were ALREADY clean (removed 2026-07-15, predates this todo — verified via live grep, 0 hits in both files). Fixed the one remaining stale artifact: MDPS `ohlcv_passthrough.py`'s `TradfiOhlcv15mAdapter` docstring still cited the retired Yahoo VIX-cash/Barchart source — corrected to state the real current status (VX futures 1s/1m only, no aggregation writer yet, zero live consumers) — `market-data-processing-service@<pending>` | UAC + MDPS | —        | Resolved                     |
+| 2   | ~~Verify UAC uac@599acf93 SIT passes~~ — RESOLVED 2026-07-26: confirmed via PR #503 (merged 2026-06-26T13:32:05Z, first main-merge carrying the commit), `git merge-base --is-ancestor` TRUE (UAC promotes via real merge commits, not squash), zero revert commits in history, and the removed VIX symbols are still absent from `origin/main` a month later with hundreds of subsequent green `quality-gates-v2` runs on `main` — the breaking change landed clean and never needed rollback                                                                               | UAC        | —        | Resolved (verified live)     |
+| 3   | ~~G1.f (partial — DXY key migration ICE→FX)~~ — RESOLVED 2026-06-25: operator REVERSED the planned migration, DXY KEEPS venue=ICE, ICE→FX key-migration CANCELLED outright (see G1.f above). No decision remains pending.                                                                                                                                                                                                                                                                                                                                                    | UAC + IS   | —        | Resolved (no longer blocked) |
+| 4   | G1.g MVP tags; G1.a.2 massive.py §7.1; G1.a.3 router.py dead config                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | IS + MTDS  | P1/P2    | None                         |
 
 ---
 
@@ -402,12 +432,22 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
 
 ### From `tradfi_databento_subscription_universe_lockdown_2026_06_18` (archived; 26/33 done — universe lockdown + billing guards SHIPPED)
 
-- [ ] [IS] P1. **Backfill the IS CME (GLBX.MDP3) catalog for 2019-01-01→present** (the IS-side universe producer — owned
-      HERE) so the tradfi OHLCV download has a per-date instrument universe (definition schema is L0/free, 16y). CME
-      futures expire daily — never copy definitions between dates. Repo: instruments-service. **The downstream MTDS
-      market-data download is M-1's** (`path_to_100pct_backfill_mtds_is`); the CME EC\* event-contract slice is the
-      tradfi-domain plan-of-record `tradfi_cme_event_contract_backfill_2026_06_20` (tradfi_master) — coordinate, don't
-      duplicate. (MIGRATED FROM: `tradfi_databento_subscription_universe_lockdown_2026_06_18`.)
+- [x] ✅ [IS] P1. **DONE 2026-07-26 (slot-5, review)** — Verified IS CME (GLBX.MDP3) instrument-definitions catalog
+      coverage. The "2019-01-01→present" framing was itself stale: CME's DECLARED discovery-start is `2020-01-01` (UAC
+      `venue_mapping.py` + `canonical/coverage_starts.py`, both explicit) — confirmed LIVE by launching a SPOT VM
+      (`instr-backfill-tradfi-cme-a-20260726-164850`, 2019-01-01→2019-12-31, self-shut-down exit_code=0) which correctly
+      found "no active venues" for every 2019 date and wrote zero rows — 2019 is honestly out of scope, not a gap.
+      Re-checked coverage against the TRUE floor (2020-01-01→today): only 3 residual gaps found, of which 1
+      (`2024-11-08`, a real Friday trading day) was a genuine miss — backfilled (45,787 records written). The other 2
+      (`2024-06-02`, `2024-10-06`, both Sundays) hard-fail with `RuntimeError: URDI returned zero records` instead of an
+      honest `empty_confirmed` like the other 363 weekends — filed as a new P3 finding (§ "Deferred work after
+      2026-07-26"), not fixed here (out of scope). Fixed a real one-line bug found along the way in
+      `verify_instrument_manifest_coverage.py` (`args.category` → `args.asset_group` — the script AttributeError'd on
+      every invocation) — `instruments-service@<pending>`. **Net: CME instrument-definitions coverage is complete
+      against its real declared floor.** The downstream MTDS market-data download stays M-1's
+      (`path_to_100pct_backfill_mtds_is`); the CME EC\* event-contract slice is the tradfi-domain plan-of-record
+      `tradfi_cme_event_contract_backfill_2026_06_20` (tradfi_master) — coordinate, don't duplicate. (MIGRATED FROM:
+      `tradfi_databento_subscription_universe_lockdown_2026_06_18`.)
 - [ ] [SCRIPT] P1. **(→ M-1) MTDS tradfi market-data backfill across all 3 datasets** (GLBX.MDP3 + DBEQ.BASIC + CFE) ×
       the L0 16y window, sharded; verify per-dataset manifest coverage (captured + honest-absence); confirm equity cells
       re-routed to DBEQ.BASIC and CFE/VX cells exist. **EXECUTE UNDER M-1** (`path_to_100pct_backfill_mtds_is`, which
@@ -435,34 +475,45 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       READ-ONLY root PM clone (`unified-trading-system-repos/unified-trading-pm/`), not the slot's own PM clone. Worked
       around via `--output-csv` for this run; the path bug itself is a residual follow-up (not fixed here — out of this
       todo's scope).
-- [ ] [UAC] P1. **Unit tests for `databento_subscription_allowlist`** (allowed/blocked dataset, banned OHLCV schema,
-      per-level lookback floor boundaries, batch ban, break-glass, enum-repr normalization). Repo:
-      unified-api-contracts. (MIGRATED FROM: same.)
-- [ ] [PM] P1. **QG grep-ratchet** — no raw `batch.submit_job` outside the guarded `submit_batch_job`; no off-allowlist
-      dataset string literal in tradfi fetch paths. Wire into market-tick-data-service `quality-gates.sh`. Repo: PM +
-      market-tick-data-service. (MIGRATED FROM: same.)
-- [ ] [SCRIPT] P2. **instruments-service — re-fetch a sample of old tradfi dates whose `instrument_count` changed**
-      (equity ETFs XNAS.ITCH→DBEQ.BASIC; CME cells now include EC\* event contracts) to confirm the new parquet's
-      instrument set matches the new universe; enumerate the un-refetched range. Repo: instruments-service. (MIGRATED
-      FROM: same.)
+- [x] ✅ [UAC] P1. **DONE — already shipped pre-2026-07-25 (verified 2026-07-26, slot-5, review).** Unit tests for
+      `databento_subscription_allowlist` already exist at `tests/unit/test_databento_subscription_allowlist.py`
+      (introduced by `uac` commit `4ad54282`, already on `main` — verified via `git merge-base --is-ancestor` and a live
+      `pytest` run: 39/39 pass) covering all 6 required scenarios: allowed/blocked dataset, banned OHLCV schema,
+      per-level lookback-floor boundaries (L0-L3), batch-API ban + break-glass override, and enum-repr normalization. No
+      new test needed. Repo: unified-api-contracts. (MIGRATED FROM: same.)
+- [x] ✅ [PM] P1. **DONE — already shipped pre-2026-07-25 (verified 2026-07-26, slot-5, review).** The QG grep-ratchet
+      already exists: MTDS `scripts/quality-gates.sh` STEP 5.92 (no raw `batch.submit_job` outside the guarded
+      `submit_batch_job` wrapper) + STEP 5.93 (no off-allowlist Databento dataset string literal in tradfi fetch paths)
+      — both wired in and re-verified GREEN live (manually re-ran both grep checks against the current tree: 0 hits
+      each). No new check needed. Repo: PM + market-tick-data-service. (MIGRATED FROM: same.)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-26 (slot-5, review)** — Re-fetched 3 sample old tradfi dates (`--force`) for CME to
+      confirm the re-fetch mechanism picks up the CURRENT universe (post-2026-06-19 EC\* event-contract + DBEQ.BASIC
+      consolidation lockdown): `2020-01-02` → 38,669 records (was captured under the pre-lockdown narrow universe:
+      ~15-18K/day), `2023-01-03` → 47,810 records (same pattern) — both confirm the mechanism correctly expands to the
+      current universe on a forced re-fetch. `2026-06-17` hit a single live transient `URDI returned zero records` error
+      (not investigated further — not a pattern). **Enumerated un-refetched range**: every CME date from `2020-01-01`
+      through `2026-06-18` (~2,368 calendar days) was captured under the OLD narrower universe and would benefit from a
+      full re-fetch — filed as a NEW P2 finding (§ "Deferred work after 2026-07-26") for a dedicated future backfill
+      plan; a full re-fetch of that range is a real campaign, not "small sample" scope, and was not attempted here.
+      Repo: instruments-service. (MIGRATED FROM: same.)
 - [ ] [SCRIPT] P3. **OPTIONAL physical-GCS cleanup of old ICE-Databento instrument parquets** once tombstone
       reconciliation confirms 0 consumers (twin-verify; operator-gated delete, never blind). Repo: deployment-service +
       instruments-service. (MIGRATED FROM: same.)
 
 ### G1.f.2 post-retirement cleanup (2026-06-26)
 
-- [ ] [UAC] P2. **Clean up stale CBOE `ohlcv_15m` capability registrations post VIX-INDEX retirement.** Two stale
-      artifacts remain in UAC after G1.f.2: (a) `expected_coverage.py` line 135 still says "CBOE provides VIX 15m" and
-      line 156 still includes `"ohlcv_15m"` in CBOE's list — the comment is stale (that entry was the now-deleted VIX
-      cash INDEX source; VX futures are `ohlcv_1s`/`ohlcv_1m` only); (b) `data_type_capability.py` has a
-      `DataTypeCapability(venue="CBOE", data_type="ohlcv_15m", instrument_type="")` with empty instrument_type — this
-      entry was for the INDEX type and has no live source post-retirement. Also: `TradfiOhlcv15mAdapter` docstring ("for
-      15-minute OHLCV data (Barchart VIX)") in MDPS `ohlcv_passthrough.py` is stale. Current impact = **zero**
-      (features=0 consumers; 15m VX-futures data was never requested downstream — VX futures are used at 1s/1m
-      granularity). Cleanup path: remove `ohlcv_15m` from CBOE's `expected_coverage` + remove the stale CBOE `ohlcv_15m`
-      `DataTypeCapability` + update the MDPS adapter docstring. IMPORTANT: if a consumer of `CBOE:FUTURE:VX ohlcv_15m`
-      is added in the future, the 1s/1m→15m aggregation path must be wired first (MDPS `TradfiOhlcv1sAdapter` comment
-      says "Coarser bars aggregate downstream" but NO aggregation code exists — that's a doc-ahead-of-implementation
-      gap). Repos: unified-api-contracts + market-data-processing-service. **Operator notification**: retiring VIX-INDEX
-      left stale `ohlcv_15m` entries in UAC and MDPS; zero live impact but cleanup needed before adding any 15m VX
-      futures consumer.
+- [x] ✅ [UAC] P2. **DONE 2026-07-26 (slot-5, review)** — Clean up stale CBOE `ohlcv_15m` capability registrations post
+      VIX-INDEX retirement. UAC's `expected_coverage.py` (CBOE list is `["ohlcv_1s", "ohlcv_1m", "ohlcv_24h"]`, no
+      `ohlcv_15m`) and `data_type_capability.py` (0 grep hits for a CBOE/ohlcv_15m entry) were BOTH already clean —
+      removed 2026-07-15, predating this todo. Fixed the one remaining stale artifact: `TradfiOhlcv15mAdapter` docstring
+      in MDPS `ohlcv_passthrough.py` still cited the retired Yahoo VIX-cash/Barchart source — corrected to state the
+      real current status (VX futures via Databento XCBF.PITCH 1s/1m only; no 1s/1m→15m aggregation writer exists yet;
+      zero live consumers) — `market-data-processing-service@<pending>`. The IMPORTANT aggregation-path caveat below
+      still applies for any future 15m VX-futures consumer.
+
+## Deferred work after 2026-07-26
+
+| #   | Item                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Repo | Priority | Blocked on                                              |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- | -------- | ------------------------------------------------------- |
+| 1   | **NEW FINDING (2026-07-26)**: full CME instrument-definitions re-fetch for `2020-01-01`→`2026-06-18` (~2,368 days), captured under the pre-lockdown narrower universe (EC\* event contracts + DBEQ.BASIC consolidation absent) — sample-verified (2 dates re-fetched, both confirm the gap: instrument_count jumps from ~15-18K/day pre-lockdown to ~74-95K/day post). This is a real backfill campaign, not a "small sample" task — needs its own dedicated plan/VM launch, not attempted here. | IS   | P2       | Nothing (scoping only; needs a dedicated backfill plan) |
+| 2   | 2 anomalous Sundays (`2024-06-02`, `2024-10-06`) in the CME instrument-definitions manifest hard-fail with `RuntimeError: URDI returned zero records` instead of writing an honest `empty_confirmed` row like the other 363 weekends — a minor adapter-level inconsistency (99.92% floor coverage otherwise), needs investigation into why these 2 specific dates diverge.                                                                                                                       | IS   | P3       | Nothing (low-priority, non-blocking)                    |
