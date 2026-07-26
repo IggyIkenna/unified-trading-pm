@@ -60,7 +60,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile GMX-removal status into the referencing docs.** (1)
+- [x] ✅ [REVIEW] P2. **Reconcile GMX-removal status into the referencing docs.** (1)
       `defi_consolidated_closeout_2026_07_18.md` — its progress log (around the GMX/FLAGGED-marker discussion, ~line
       642-660) currently describes the removal as a forward-looking decision ("operator decided: remove GMX entirely —
       `defi_gmx_venue_removal_2026_07_25.md` (8 todos, AO-dispatched...)"); update that passage to state the removal
@@ -74,7 +74,16 @@ drift_direction: advance-code
       confirmed closed — check that plan's own status first. If only the GMX cluster is closed, add a dated note to the
       issue doc recording that half as resolved without changing its overall `status`. **Done when**: both docs reflect
       the true current state with verified evidence, and the shared issue doc's `status` field is touched only if
-      genuinely warranted by both clusters' real state (not just this plan's half).
+      genuinely warranted by both clusters' real state (not just this plan's half). — unified-trading-pm (this commit).
+      Verified all 8 GMX-removal commits exist (`git log`, not copied uncritically): unified-api-contracts@18d53d63,
+      market-tick-data-service@68407ae5, instruments-service@0214bb3c+2de3418e, execution-service@09a828ed,
+      strategy-service@ca818ff8, unified-trading-library@f22e516f, plus the `[OPERATOR]` GCS+manifest purge (5,374
+      `venue=GMX` manifest rows dropped, zero objects remain) and the docs commit (unified-trading-pm@bfda5df5b).
+      Updated `defi_consolidated_closeout_2026_07_18.md`'s GMX passage from forward-looking to shipped-with-citations.
+      Re-checked `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`: still 0/5 todos done — added a dated note to
+      `issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md` confirming the GMX cluster closed while
+      explicitly leaving the doc's overall `status: open` untouched (sibling TRADER_JOE_V2/VELODROME_V2/CURVE +
+      lst_rates-MAKER/ETHENA clusters remain unshipped).
 - [ ] [DOC] P3. **Archive `defi_gmx_venue_removal_2026_07_25.md`** via the standard 6-step ritual (per CLAUDE.md's
       plan-archival rule): confirm zero `DEFERRED` markers remain (the parent plan has none by design — its `[OPERATOR]`
       todo is timing-gated by operator judgment, not a deferral) → add the archive banner + flip `status: active` →
