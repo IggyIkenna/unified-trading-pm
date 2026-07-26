@@ -710,21 +710,21 @@ dispatched (`plans/PLAN_FORMAT.md` — `status: draft` is not ingested). Before 
   `ml-service@c2de6209`, `unified-trading-library@d27813b1`, `deployment-ui@d3aa192`, `system-integration-tests@c0663d0`
   (green via `--ignore-timeout` after a pure host-contention wall-clock-SLA failure — no correctness issues). **Filed 2
   issue docs + repo-blockers** for genuinely pre-existing unrelated red gates hit along the way: instruments-service
-  function-size (`issues/instruments_service_qg_red_function_size_sports_reference_2026_07_26.md`, RESOLVED by another
-  agent), unified-api-contracts codex-compliance ceiling
+  function-size (`/plans/archive/issues/instruments_service_qg_red_function_size_sports_reference_2026_07_26.md`,
+  RESOLVED by another agent), unified-api-contracts codex-compliance ceiling
   (`issues/unified_api_contracts_qg_red_codex_compliance_ceiling_2026_07_26.md` — partially resolved by the quoting fix,
   `partition_paths.py` 1297L still open), ibkr-gateway-infra pyasn1 CVE
-  (`issues/ibkr_gateway_infra_qg_red_pyasn1_pysec_2026_07_26.md`, open). **Also hit + worked around**: a fleet-wide
-  `/home` disk-full incident (290G at 0 bytes free, ~18:00-18:15 UTC) that corrupted 2 in-flight venvs
-  (`unified-trading-library` pydantic/polars install, `unified-api-contracts` pydantic) — both self-healed via
-  `scripts/setup.sh --force`; other slots were already remediating the disk fleet-wide, so no cleanup action taken here
-  beyond my own scratchpad. **Key finding (see Deferred table + lesson below)**: the orchestrator's
-  `MIN_AHEAD_COMMIT_AGE_SECONDS_FOR_REALIGN=900` (15 min) branch-realign guard silently reset local commits on repos
-  whose real QG runtime regularly exceeds 15 min under the current fleet's host load (`unified-api-contracts` alone hit
-  4 resets across attempts of 613s/972s/1228s QG runtime) — batch-committing many repos up front before shipping each is
-  the anti-pattern that caused this; see Deferred table for exact current state and
-  `codex/12-agent-workflow/commit-push-flip-rule.md` "Half 1 without Half-2 in the SAME turn" for why single-repo tight
-  cycles are the correct pattern instead.
+  (`/plans/archive/issues/ibkr_gateway_infra_qg_red_pyasn1_pysec_2026_07_26.md`, RESOLVED —
+  `ibkr-gateway-infra@133a78f`). **Also hit + worked around**: a fleet-wide `/home` disk-full incident (290G at 0 bytes
+  free, ~18:00-18:15 UTC) that corrupted 2 in-flight venvs (`unified-trading-library` pydantic/polars install,
+  `unified-api-contracts` pydantic) — both self-healed via `scripts/setup.sh --force`; other slots were already
+  remediating the disk fleet-wide, so no cleanup action taken here beyond my own scratchpad. **Key finding (see Deferred
+  table + lesson below)**: the orchestrator's `MIN_AHEAD_COMMIT_AGE_SECONDS_FOR_REALIGN=900` (15 min) branch-realign
+  guard silently reset local commits on repos whose real QG runtime regularly exceeds 15 min under the current fleet's
+  host load (`unified-api-contracts` alone hit 4 resets across attempts of 613s/972s/1228s QG runtime) —
+  batch-committing many repos up front before shipping each is the anti-pattern that caused this; see Deferred table for
+  exact current state and `/codex/12-agent-workflow/commit-push-flip-rule.md` "Half 1 without Half-2 in the SAME turn"
+  for why single-repo tight cycles are the correct pattern instead.
 
 ## Deferred work after 2026-07-26 (slot-11, item 2 fleet rollout — 8/25 shipped incl. PM)
 
@@ -733,7 +733,7 @@ dispatched (`plans/PLAN_FORMAT.md` — `status: draft` is not ingested). Before 
 | agent-orchestrator, batch-live-reconciliation-service, e2e-testing, fund-administration-service, greeks-service, trading-agent-service, unified-trading-api, unified-trading-system-ui, ibkr-gateway-infra | **Not done** — corrected commit still local (ahead=1), never reset                                                                                                                                | Pick up next: fresh-pull, run QG, quickmerge. ibkr-gateway-infra also needs its pyasn1-CVE repo-blocker to clear first (see issue doc)                                                                                                                                                                                                                                                                                                                                                                                                   |
 | alerting-service, client-reporting-api, deployment-api, execution-service, features-service, market-data-processing-service, strategy-service, unified-api-contracts                                       | **Not done** — local commit was silently RESET by the orchestrator's branch-realign guard (>900s unpushed); fix must be re-copied from `unified-trading-pm/scripts/setup.sh` before re-committing | Re-run: `cp ../unified-trading-pm/scripts/setup.sh scripts/setup.sh && chmod 755 scripts/setup.sh && git add scripts/setup.sh && git commit -m "fix(setup): sync astral-uv bootstrap fallback from PM template" && bash scripts/quality-gates.sh` then ship the MOMENT it's green — unified-api-contracts specifically needs the full commit→QG→ship cycle to land in well under 15 min (its real QG runtime is 15-20 min, so expect repeat resets; consider running it first, alone, right after a fresh boot when host load is lowest) |
 | unified-api-contracts (partition_paths.py 1297L)                                                                                                                                                           | **Operator-owned** — split the file or bump the repo's codex-compliance ceiling by 1                                                                                                              | `issues/unified_api_contracts_qg_red_codex_compliance_ceiling_2026_07_26.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ibkr-gateway-infra (pyasn1 CVE)                                                                                                                                                                            | **Not done** — real fix (dep bump), small                                                                                                                                                         | `issues/ibkr_gateway_infra_qg_red_pyasn1_pysec_2026_07_26.md`; bump `pyasn1>=0.6.4`, re-lock, re-run QG                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ibkr-gateway-infra (pyasn1 CVE)                                                                                                                                                                            | **Done** — resolved by cicd-agent slot-10, `ibkr-gateway-infra@133a78f`                                                                                                                           | `/plans/archive/issues/ibkr_gateway_infra_qg_red_pyasn1_pysec_2026_07_26.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 **Recommended next item**: `unified-trading-system-ui` or `unified-trading-api` (both `ahead=1`, never reset, no known
 blockers) — ship those first while host load is checked, THEN tackle the 8 reset repos (cheap re-copy, just needs a

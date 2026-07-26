@@ -26,6 +26,13 @@ depends_on: []
 source: ["ibkr-gateway-infra quality-gates.sh run 2026-07-26 (slot-11, task infra_satellite_ao_dispatch_batch1-002)"]
 ---
 
+# ibkr-gateway-infra QG RED — pyasn1 0.6.3 vulnerable (PYSEC-2026-3455/3456/3457)
+
+> **🟢 RESOLVED 2026-07-26.** Direct `pyasn1>=0.6.4,<0.7.0` pin added to `ibkr-gateway-infra/pyproject.toml`
+> (`ibkr-gateway-infra@133a78f`, cicd-agent slot-10) — see `resolved_by` above and § "Resolution" below. Archived here
+> (plan_health hygiene-sweep hard-gate fix, escalation `agt-24e69c`) per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 ## What I found
 
 Running `bash scripts/quality-gates.sh` on `ibkr-gateway-infra` fails pip-audit:
