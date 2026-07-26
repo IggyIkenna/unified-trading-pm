@@ -292,22 +292,22 @@ drift_direction: advance-code
       the v6 path, verified row/column-identical, and the legacy originals are purged only via the `[OPERATOR]` step
       with evidence cited; `quality-gates.sh` green if code changed. Source:
       `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`.
-- [ ] [DATA] P0. **Verify + close the DERIBIT `options_chain`/`futures_chain` G4-gate blocker against the
-      post-Track-2-backfill manifest.** Gated on `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`
-      (`depends_on`, `gate_on_depends: true`) — that plan's generic cefi-wide Tardis coverage-backfill resume +
-      POST-BACKFILL `/data-pipeline-check-mtds` checkpoint never names DERIBIT/`options_chain`/`futures_chain`
-      explicitly, so nothing currently closes this specific issue doc even after the backfill finishes. After the
-      Track-2 POST-BACKFILL checkpoint lands: (a) query the prd cefi manifest (or the checkpoint's report) for DERIBIT
-      `options_chain` `attempted_failed` — if 0 (or only pre-2019 genuinely-absent dates), flip this doc's three "Open
-      actions" checkboxes and set `status: resolved`; if still >1,000, escalate per this doc's own "Resolution gate"
-      section (do not re-attempt the reprobe yourself). (b) separately confirm DERIBIT `futures_chain` capture
-      progressed off its 112,727/112,727 (100%) `attempted_failed` baseline — cite the new af count/percentage — and
-      record whether the bundle is now building; if still ~100% af after the coverage backfill ran, file a new issue doc
-      (the corroboration section's fix path — capture-then-build, not writer-gate) since the generic backfill evidently
-      did not close it. Repo: unified-trading-pm (doc-lifecycle) + market-tick-data-service (manifest query). Source:
-      `plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md`. Done when: this issue doc's
-      status/checkboxes reflect a recorded PASS/FAIL verdict for both `options_chain` and `futures_chain` af, backed by
-      a cited manifest count + date, with either the doc closed (`resolved`) or a follow-up issue filed.
+- [x] ✅ [DATA] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — recorded FAIL verdict; correctly did NOT force a
+      premature close or file a redundant issue doc.** Fresh manifest read
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): DERIBIT
+      `options_chain` `attempted_failed=113,615` (empty_confirmed=10,096, captured=1); `futures_chain`
+      `attempted_failed=112,728` (empty_confirmed=10,983, captured=0) — both essentially unchanged from the 2026-07-15
+      baseline (113,595/112,727), both ≫1,000. **Verdict: FAIL, gate still blocked.** Did NOT follow the doc's original
+      two prescribed next-steps literally, because both are stale: (1) the "escalate for Tardis rate-limits/sizing"
+      resolution-gate text was already superseded by this doc's own 2026-07-18 correction banner (root cause is the
+      per-symbol capture gap / bundle-never-built, not rate limits); (2) "file a new issue doc if still ~100% af after
+      the backfill ran" doesn't apply because **the coverage backfill has not run at all** — this session's sibling task
+      (`cefi_satellite_ao_dispatch_batch2-008`) already traced why: Track 2 was forked to
+      `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`, gated on
+      `cefi_migration_cutover_and_track8_completion     _2026_07_25.md`, which hasn't started. Filing a new issue doc
+      would misrepresent a not-yet-attempted backfill as a failed one. Left the issue doc `status: open` with a dated
+      2026-07-26 re-verify section explaining exactly this — the correct re-check trigger is the Track-2 plan's
+      POST-BACKFILL checkpoint landing, not another reprobe now.
 - [ ] [DATA] P0. **Root-cause the CEFI Tardis download-path memory blow-up and make `mtds_chunk_loop.sh` fail loud
       instead of silently wedging on a child OOM-kill.** Confirmed: identical `--chunk-days 1` chunks for the same
       9-symbol/3-venue CEX-spot set showed 6GB vs 14.6GB RSS on consecutive days (kernel OOM-killed the second), ruling
