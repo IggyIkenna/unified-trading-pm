@@ -529,10 +529,10 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "warn_file_count": 14,
-        "large_file_count": 0,
-        "coverage_pct": 85.56,
-        "qg_red_reason": null
+        "large_file_count": 1,
+        "warn_file_count": 13,
+        "qg_red_reason": null,
+        "coverage_pct": 85.62
       },
       "ldr_ci_status": "GREEN"
     },
@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 4,
         "warn_file_count": 7,
+        "large_file_count": 4,
         "qg_red_reason": null,
-        "coverage_pct": 89.13
+        "coverage_pct": null
       }
     },
     "market-tick-data-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 83.56,
-        "warn_file_count": 40,
         "large_file_count": 0,
-        "qg_red_reason": null
+        "warn_file_count": 40,
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "ml-service": {
@@ -1011,10 +1011,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 85.82,
-        "warn_file_count": 10,
         "large_file_count": 5,
-        "qg_red_reason": null
+        "warn_file_count": 10,
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "system-integration-tests": {
@@ -1215,7 +1215,7 @@
         "warn_file_count": 29,
         "large_file_count": 28,
         "qg_red_reason": null,
-        "coverage_pct": 96.4
+        "coverage_pct": null
       }
     },
     "unified-trading-library": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
         "warn_file_count": 0,
+        "large_file_count": 0,
         "qg_red_reason": null,
-        "coverage_pct": 72.57
+        "coverage_pct": null
       }
     },
     "unified-trading-api": {
@@ -1366,7 +1366,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
