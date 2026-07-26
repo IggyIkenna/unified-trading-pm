@@ -30,6 +30,13 @@ source:
   ]
 ---
 
+# instruments-service QG RED — `_fetch_sports_reference_data()` exceeds MAX_FUNCTION_LINES (206L > 200L)
+
+> **🟢 RESOLVED 2026-07-26.** `_fetch_sports_reference_data()` is back under `MAX_FUNCTION_LINES=200`
+> (`instruments-service@2d706d2c` + `instruments-service@<pending>` — see `resolved_by` above and the todo below).
+> Archived here (plan_health hygiene-sweep hard-gate fix, escalation `agt-24e69c`) per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 ## What I found
 
 Running `bash scripts/quality-gates.sh` on `instruments-service` (to verify an unrelated `scripts/setup.sh` change)
@@ -72,11 +79,11 @@ this issue's author's craft (infra).
       Verified: `bash scripts/quality-gates.sh` reports `✅ Function/class/method size OK` post-merge, no regression.
 
       **Related finding (same session, different file)**: fixing this exposed that `instruments-service@9c203ce1`
-                              (an earlier, unrelated `cross_cutting_satellite_ao_dispatch_batch1-012` commit, same slot) had pushed
-                              `process_write.py` from exactly 900→904 lines (`MAX_FILE_LINES` cap) — undetected by 2 full `quality-gates.sh`
-                              runs that both reported "ALL QUALITY GATES PASSED" in between. Fixed via docstring compaction (904→895L,
-                              verified format-stable post `ruff format`) — `instruments-service@<pending, ships alongside this todo>`. The
-                              SILENT-MISS mechanism (2 real, independently-confirmed violations across 2 different files/check-classes both
-                              surviving multiple full "ALL QUALITY GATES PASSED" runs) is tracked as its own, now-P1, issue:
-                              `/plans/active/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md` (pre-existing doc, added corroborating
-                              evidence + a new instrumentation todo this session — not duplicated here).
+                                  (an earlier, unrelated `cross_cutting_satellite_ao_dispatch_batch1-012` commit, same slot) had pushed
+                                  `process_write.py` from exactly 900→904 lines (`MAX_FILE_LINES` cap) — undetected by 2 full `quality-gates.sh`
+                                  runs that both reported "ALL QUALITY GATES PASSED" in between. Fixed via docstring compaction (904→895L,
+                                  verified format-stable post `ruff format`) — `instruments-service@<pending, ships alongside this todo>`. The
+                                  SILENT-MISS mechanism (2 real, independently-confirmed violations across 2 different files/check-classes both
+                                  surviving multiple full "ALL QUALITY GATES PASSED" runs) is tracked as its own, now-P1, issue:
+                                  `/plans/active/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md` (pre-existing doc, added corroborating
+                                  evidence + a new instrumentation todo this session — not duplicated here).
