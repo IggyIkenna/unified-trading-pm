@@ -418,7 +418,7 @@ drift_direction: advance-code
       against the evidence table (diff-verifiable), QG green, and the issue doc's 3rd checkbox is flipped `[x]` with the
       commit cited; if this closes the doc's last open todo, run the standard archival ritual. Source:
       `issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`.
-- [ ] [CODE] P1. **Log the Tardis HTTP-400 error code, then register Tardis codes 140/300 in UAC
+- [x] ✅ [CODE] P1. **Log the Tardis HTTP-400 error code, then register Tardis codes 140/300 in UAC
       `classify_venue_error`.** Currently `tardis_csv_transport.py:523` logs only `"Tardis HTTP %s error"` with no code,
       so `code=300` (invalid-symbol) and `code=140` (date-not-available) are indistinguishable in logs even though
       `market-tick-data-service@a7569298` already classifies both as structural-absence in the transport's
@@ -434,7 +434,13 @@ drift_direction: advance-code
       resolving to structural-absence/honest-absence (not `attempted_failed`); a unit test in unified-api-contracts
       covers both codes; QG green in both repos; the two now-covered checkboxes ([CODE] P1 "Log the Tardis error code"
       and [CONTRACT] P2 "Register Tardis error codes in UAC") are flipped in the source issue doc with commit-sha
-      evidence.
+      evidence. — **DONE 2026-07-26**: (a) VERIFIED already done — the SAME commit that added the structural-absence
+      classification (`market-tick-data-service@a7569298`, 2026-07-18) already logs `code=%s` on both 400-path log lines
+      (streaming + non-streaming). (b) shipped `unified-api-contracts@c144f975` — registered Tardis `140`/`300` in
+      `classify_venue_error` as `ErrorAction.SKIP` (honest absence, matching the MTDS-side
+      `STRUCTURAL_ABSENCE_400_CODES` behavior); 2 new unit tests (57/57 pass); generic tardis `400`/5xx/429/274 stay
+      untouched. QG green in unified-api-contracts (278s full run). Source issue doc checkboxes flipped same commit
+      range.
 
 ## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION, not batchable)
 

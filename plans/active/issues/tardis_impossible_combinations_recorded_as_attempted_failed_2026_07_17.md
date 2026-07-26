@@ -114,17 +114,20 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
       per-venue catalog; refresh daily. This is the operator's "impossible combinations" exclusion with the VENDOR as
       the authority — coordinate with the in-flight `coverage_exclusions` work in unified-api-contracts (another agent,
       live as of 2026-07-17).
-- [ ] [CODE] P0. Stop recording impossible combos as `attempted_failed`. Distinguish by Tardis JSON code: `140`/`300` ->
-      honest absence / excluded (NOT the denominator); keep 5xx/429/`274` -> `attempted_failed` (genuinely transient).
-      The body is ALREADY captured on `TardisHTTPError` (added for the 274 lock) — it is simply discarded on the 400
-      path.
-- [ ] [CODE] P1. **Log the Tardis error code.** `tardis_csv_transport.py:523` logs only `"Tardis HTTP %s error"`, so
+- [x] ✅ [CODE] P0. Stop recording impossible combos as `attempted_failed`. Distinguish by Tardis JSON code: `140`/`300`
+      -> honest absence / excluded (NOT the denominator); keep 5xx/429/`274` -> `attempted_failed` (genuinely
+      transient). The body is ALREADY captured on `TardisHTTPError` (added for the 274 lock) — it is simply discarded on
+      the 400 path. — **DONE**: `market-tick-data-service@a7569298` (2026-07-18).
+- [x] ✅ [CODE] P1. **Log the Tardis error code.** `tardis_csv_transport.py:523` logs only `"Tardis HTTP %s error"`, so
       `code=300` and `code=140` are indistinguishable in the logs — the split is currently UNMEASURABLE. Log the code
-      before anything tries to size this.
+      before anything tries to size this. — **VERIFIED DONE 2026-07-26**: the same commit `a7569298` already added
+      `code=%s` to both 400-path log lines (streaming + non-streaming).
 - [ ] [DATA] P1. Size the damage: count existing `attempted_failed` rows attributable to 400s, and purge/reclassify them
       (operator-gated, snapshot-first, like the 2026-07-17 eu purge). Expect a real coverage-% correction upward.
-- [ ] [CONTRACT] P2. Register Tardis error codes in UAC (`classify_venue_error` currently knows none), so the
-      honest-absence-vs-fetch-failure decision is contract-driven rather than string-matched on `"Empty CSV"`.
+- [x] ✅ [CONTRACT] P2. Register Tardis error codes in UAC (`classify_venue_error` currently knows none), so the
+      honest-absence-vs-fetch-failure decision is contract-driven rather than string-matched on `"Empty CSV"`. — **DONE
+      2026-07-26**: `unified-api-contracts@c144f975` — `140`/`300` registered as `ErrorAction.SKIP`, 2 new unit tests,
+      QG green.
 
 ## Progress Log (append-only)
 
