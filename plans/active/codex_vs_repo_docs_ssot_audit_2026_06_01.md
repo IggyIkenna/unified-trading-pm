@@ -60,12 +60,17 @@ thinking: high
 **Run this plan on `claude-opus` with the 1M-token context window (`opus-1m`), `thinking: high`.** Rationale (per
 `/codex/06-coding-standards/model-tier-selection.md`, this is `opus-required`, not `sonnet-doable`):
 
-- **Large working set**: each repo's consolidation requires holding the relevant slice of the **800-doc codex corpus** +
-  the repo's **full `docs/` tree** in context simultaneously to decide, per doc, "is this canonical content that already
-  lives in codex doc X, or a genuine repo-specific delta?" — a 200k window forces lossy chunking and mis-classification.
-- **Cross-repo + governance judgment**: migrate-vs-redirect-vs-delete + "migrate unique delta into codex" are
-  irreversible-ish editorial calls across 20 repos. This is cross-cutting architecture/governance work — Opus-grade
-  reasoning, not Sonnet.
+- ~~**Large working set**: … a 200k window forces lossy chunking and mis-classification.~~ **RETIRED as a rationale
+  2026-07-26 (`/plan-reconcile` infra shard) — this bullet cited a trigger the codex SSOT it names has since deleted.**
+  `/codex/06-coding-standards/model-tier-selection.md:36-38` reads: "Sonnet 5 has a **1M context window — the same size
+  as Opus 4.8.** This retires context SIZE as an opus-escalation reason entirely: the old '>200k context provably
+  required' and '>50KB plan + multiple full files' triggers below are **RETIRED**, not just softened. Opus is now a
+  PURELY QUALITATIVE escalation" (operator ruling 2026-07-23; mirrored in `cursor-configs/CLAUDE.md` § Model tier). Size
+  never justifies Opus now — Sonnet 5 holds the same 1M working set. **The `opus-required` tier below still stands**, on
+  the next bullet alone.
+- **Cross-repo + governance judgment** (the ONE surviving qualitative trigger for this plan): migrate-vs-redirect-vs-
+  delete + "migrate unique delta into codex" are irreversible-ish editorial calls across 20 repos. This is cross-cutting
+  architecture/governance work — Opus-grade reasoning, not Sonnet.
 - **Sub-agents**: per-repo audit/consolidation may fan out to sub-agents; those `Agent` calls MUST set `model`
   explicitly (`opus` for the migrate/redirect judgment passes; `sonnet` acceptable only for the mechanical FIX-STALE
   literal sweeps).

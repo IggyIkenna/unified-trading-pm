@@ -34,7 +34,11 @@ stage: [meta]
 repos: [unified-trading-pm, unified-trading-library]
 scope: [engineer]
 tags: [ci-cd, quickmerge, environment, ldr-is-ssot, false-flaky, quickmerge-blocker, config-defaults-conflict]
-related: []
+related:
+  [
+    /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md,
+    /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
+  ]
 created: 2026-07-25
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
@@ -143,12 +147,12 @@ change needs a caller audit across the repo before touching it — out of scope 
 ## Suggested next steps
 
 1. [INFRA] P1. ✅ DONE 2026-07-25 — see Resolution above.
-2. [INFRA] P2. Align `UnifiedCloudServicesConfig.environment`'s alias with `BaseConfig.environment`'s
-   (`populate_by_name`
-   - bare `"environment"` in `AliasChoices`) so the real constructor's `environment=` kwarg isn't silently dropped in
-     favour of ambient env — confirmed root cause in Resolution above, not yet fixed (needs a caller audit: anywhere in
-     the repo passing `environment=` to `UnifiedCloudServicesConfig(...)` expecting it to win is currently silently
-     getting the ambient value instead, which is worth auditing FOR before changing the precedence).
+2. [INFRA] P2. Align `UnifiedCloudServicesConfig.environment`'s alias with `BaseConfig.environment`'s (add
+   `populate_by_name` and the bare `"environment"` entry to `AliasChoices`) so the real constructor's `environment=`
+   kwarg isn't silently dropped in favour of ambient env — confirmed root cause in Resolution above, not yet fixed
+   (needs a caller audit: anywhere in the repo passing `environment=` to `UnifiedCloudServicesConfig(...)` expecting it
+   to win is currently silently getting the ambient value instead, which is worth auditing FOR before changing the
+   precedence).
 3. [INFRA] P2. ONLY once (2) is done (or confirmed non-breaking): revisit whether `scripts/quickmerge.sh`'s branch check
    should ALSO be broadened to recognise `live-defi-rollout`/`staging` — blast radius is now safer for the 7 sites fixed
    here, but (2) is a separate latent risk the broadening would still expose if any other in-repo caller relies on the

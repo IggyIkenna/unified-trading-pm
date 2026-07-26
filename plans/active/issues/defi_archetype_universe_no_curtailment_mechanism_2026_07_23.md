@@ -603,11 +603,13 @@ run SEQUENTIALLY, not in parallel:
       `instrument_type=` path segment, a non-existent `quote_volume` column, and `derivative_ticker`'s hardcoded-zero
       `volume` — flagged in-module for features-service's own owners, not fixed here). Falls back to the static list on
       any read failure or empty ranked result.
-- [ ] [DOCS] P3. **Explicitly OUT of the tick-builder-wiring scope**: `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`,
-      `ARBITRAGE_MEV_JIT_LIQUIDITY`, `ARBITRAGE_MEV_BACKRUN` — architecturally opportunistic/runtime-mempool-driven, no
-      catalog-declared currency universe to build a day-partition tick loader against. Flagged, not silently dropped — a
-      currency constraint for these three would need new logic inside the engines themselves, a materially different
-      (and separately-scoped) piece of work.
+- [x] [DOCS] P3. **DONE 2026-07-26, `strategy-service@8d7c6549`**. Explicitly OUT of the tick-builder-wiring scope:
+      `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, `ARBITRAGE_MEV_JIT_LIQUIDITY`, `ARBITRAGE_MEV_BACKRUN` — architecturally
+      opportunistic/runtime-mempool-driven, no catalog-declared currency universe to build a day-partition tick loader
+      against. Flagged, not silently dropped — a currency constraint for these three would need new logic inside the
+      engines themselves, a materially different (and separately-scoped) piece of work. Written down permanently in
+      `strategy_service/cli/handlers/paper_universe.py` directly after the `_ENGINE_DRIVABLE_ARCHETYPES` frozenset
+      definition (module-level comment naming all 3 archetypes + this doc as source).
 - [x] [BACKEND] P2. Side-decision 1 — **DELETED 2026-07-24, `strategy-service@813ec66b`** (dead code, Finding 2 above;
       whole class was dead, not just `allowed_venues` — see Finding 2's resolution note).
 - [x] [BACKEND] P2. Side-decision 2 — **SHIPPED 2026-07-24, `unified-api-contracts@211e0d05` + `e2e-testing@0000f5d8`**.

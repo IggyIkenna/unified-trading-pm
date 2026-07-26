@@ -2,13 +2,11 @@
 doc_type: audit-result
 title: Features + ML Master — Audit Result 2026-05-29
 summary:
-  Features+ML master audit — 14 GREEN (registry covers all 34 CALCULATOR_REGISTRY
-  groups, formula_version stamped on the parquet write path, drift gate STEP 5.91
-  operational, 8409 tests pass), 3 DRIFT (instructions list 8 asset-group families
-  vs the 10 computation-type code subdirs, 2 stale plan refs), and 3 BLOCKED
-  (l/live-versioning/batch-live) because ZERO features-delta-one parquets exist in
-  any of the 7 candidate buckets so the Phase-3 path-partition design is unproven
-  against a real write. No Phase-1-5 regression.
+  Features+ML master audit — 14 GREEN (registry covers all 34 CALCULATOR_REGISTRY groups, formula_version stamped on the
+  parquet write path, drift gate STEP 5.91 operational, 8409 tests pass), 3 DRIFT (instructions list 8 asset-group
+  families vs the 10 computation-type code subdirs, 2 stale plan refs), and 3 BLOCKED (l/live-versioning/batch-live)
+  because ZERO features-delta-one parquets exist in any of the 7 candidate buckets so the Phase-3 path-partition design
+  is unproven against a real write. No Phase-1-5 regression.
 status: partial
 nature: record
 asset_group: [cross-cutting]
@@ -19,15 +17,13 @@ tags: [audit, features, ml, ssot-audit, feature-formula-versioning, batch-live, 
 related:
   [
     ../instructions/features_and_ml_master_audit_instructions.md,
-    ../../active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
+    /plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
   ]
 created: 2026-05-29
 audited_scope:
-  features-service registry SSOT + formula versioning + path-partition + drift
-  gate + batch/live parity (items a-t + batch-live/live-versioning). NOT covered
-  (NOT-RUN) — ml-service inference/training e2e (items c/d, deferred to an
-  ml-service-focused pass); BLOCKED items need a real features-delta-one parquet
-  write to verify.
+  features-service registry SSOT + formula versioning + path-partition + drift gate + batch/live parity (items a-t +
+  batch-live/live-versioning). NOT covered (NOT-RUN) — ml-service inference/training e2e (items c/d, deferred to an
+  ml-service-focused pass); BLOCKED items need a real features-delta-one parquet write to verify.
 date: 2026-05-29
 auditor: harsh (claude opus 4.7)
 parent_epic: features_and_ml_master
@@ -66,7 +62,7 @@ name.
 features-delta-one parquet to inspect. After surveying all 7 candidate buckets (4 legacy `features-delta-one-{ag}-` + 3
 prd `features-delta-one-{ag}-prd-`), **zero parquets** exist under any `feature_group=*/` partition. The Phase 3
 path-partition design is shipped in code but unproven against any real write. Composes with
-[`plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md`](../../active/issues/features_service_defi_data_loading_blockers_2026_05_29.md).
+[`plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md).
 
 ## Item-by-item
 
@@ -188,7 +184,7 @@ All return either `_index/` only (zero parquets) or no matching objects. **No re
 anywhere** that follows the new `feature_group=X/feature_group_version=N/...` partition layout.
 
 Composes with
-[`plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md`](../../active/issues/features_service_defi_data_loading_blockers_2026_05_29.md)
+[`plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md)
 — features-service has not successfully run end-to-end against any real data source. The Phase 3 path-partition design
 is correct in code (item k green) but **unproven in production**.
 
@@ -331,7 +327,7 @@ point that can validate the path-partition design end-to-end. Add to § Triggers
 ## Findings worth filing as separate issues
 
 None new beyond the
-[`features_service_defi_data_loading_blockers_2026_05_29.md`](../../active/issues/features_service_defi_data_loading_blockers_2026_05_29.md)
+[`features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md)
 issue filed earlier today. Items (l) / (live-versioning) / (batch-live) all unblock together once any of the four
 operator decisions in that issue is made.
 

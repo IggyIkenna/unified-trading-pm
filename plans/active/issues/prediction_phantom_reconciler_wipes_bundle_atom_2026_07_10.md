@@ -37,7 +37,7 @@ related: [
 created: 2026-07-10
 parent_epic: mtds_mdps_master
 priority: P0
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by:
 source:
@@ -205,3 +205,30 @@ cross-AG regression rigor as the original bundle-atom fix)**:
      script L543-560). Verified live 2026-07-18 (slot-2, prediction close-out §6, independent git-log + code read). The
      ~11,988 HISTORICAL mislabeled rows self-correct on the next `rebuild_prediction_manifest.py` run — that DATA
      re-emit is part of the held Phase-B prediction migration, not a separate code task.
+
+## Todos (migrated 2026-07-26 from `prediction_satellite_ao_dispatch_batch3_2026_07_26.md` at archival)
+
+`/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md`'s finalize plan archived that doc; this
+todo was its own remaining `[OPERATOR]` residual close-out, migrated here (this doc's own source) rather than left
+stranded in `plans/archive/` where the backlog regen (active-plans-only) would never surface it again.
+
+- [ ] [OPERATOR] P1. **Combined residual close-out for this doc's remaining 4 uncovered items** (batch2's OPERATOR todo
+      covered only 2 of the doc's 4 residual sets; these are the other 2, all against the SAME prediction manifest
+      `_index` — merged into one todo to avoid a concurrent-write race): (a) Diagnose and, only if confirmed
+      safe/superseded, purge the 189 blank/UNKNOWN-venue rows against the live prediction `_index`
+      (`market-data-tick-pred-prd-central-element-323112`), following the
+      `purge_prediction_index_final_residuals_2026_07_11.py` snapshot-then-write, stop-on-surprise-reverify precedent.
+      (b) Re-evaluate the ~2,414 remaining non-`captured` schema_version=4/5-family rows left out of the 2026-07-11
+      6,760-row purge (remediation step 4's unfinished remainder) — confirm superseded-by-bundle or genuine surviving
+      evidence, purge only the former. (c) Re-run `--unphantom-only --apply` against the live prediction corpus (the
+      held Phase-B DATA re-emit unblocked by `unified-api-contracts@e7ed754e`'s live-prefix union) to get the first
+      defensible genuine-vs-recoverable split for the 13,292 Class-B phantom rows; record the resulting
+      genuine-honest-absence count. (d) Re-run `rebuild_prediction_manifest.py` once more (or confirm a rebuild has
+      already run since `market-tick-data-service@3397e7ae` landed) so the ~11,988 KALSHI rows mislabeled
+      `pipeline_mode=batch_polymarket_clob`/`source=polymarket_clob` self-correct to the venue-resolved values; verify
+      via a live count of remaining mislabeled KALSHI rows (expect 0). **Tagged `[OPERATOR]`** per `task_template.md` §3
+      delete-risk rule + `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — (a)/(b) purge/mutate live
+      prediction-manifest rows and (c)/(d) rewrite live manifest capture_status/provenance values on the same `_index`;
+      snapshot-then-write is not an adequate substitute for the codex's Part-2 content-verify proof, so human sign-off
+      is required before any `--apply`. Repo: market-tick-data-service. **Done when**: all four sub-items have either
+      landed with evidence or an explicit non-actionable ruling.

@@ -16,9 +16,9 @@ scope: [engineer, admin]
 tags: [strategy, capability-wizard, ci-regen, client-lite, successor-plan, docspec]
 related:
   [
-    plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
-    plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
-    plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
+    /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
+    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
     /codex/09-strategy/architecture-v2/capability-wizard.md,
   ]
 created: "2026-07-24"
@@ -65,13 +65,12 @@ Context (carried from the parent plan's Phase 0, verbatim history preserved ther
 `generate-unified-openapi.sh` run needs every service importable in ONE interpreter (`.venv-workspace`), which was
 absent on every host used during the original build. `generate_config_registry.py` extracts 0/32 services and would
 EMPTY the committed registry if run on such a host (restored via `git checkout` when this was hit — finding F12). No CI
-workflow runs `generate-unified-openapi.sh` on any runner today; `uic-openapi-sync` (uts-ui
+workflow runs `generate-unified-openapi.sh` on any runner today; `uic-openapi-sync` (uts-ui and fund-admin-service)
+ships TS types only, from already-committed `*.openapi.json/yaml`, not a fresh aggregate regen (finding F14). Per the
+original plan's operator mandate, no new CI infrastructure was built to work around this — the todo stayed open, blocked
+on a `.venv-workspace`-capable CI runner being provisioned (operator action).
 
-- fund-admin-service) ships TS types only, from already-committed `*.openapi.json/yaml`, not a fresh aggregate regen
-  (finding F14). Per the original plan's operator mandate, no new CI infrastructure was built to work around this — the
-  todo stayed open, blocked on a `.venv-workspace`-capable CI runner being provisioned (operator action).
-
-* [ ] [SCRIPT] P1. Fresh full run of `generate-unified-openapi.sh`; commit regenerated outputs; verify
+- [ ] [SCRIPT] P1. Fresh full run of `generate-unified-openapi.sh`; commit regenerated outputs; verify
       `check_openapi_drift.py` quality gate is green and actually fires on synthetic drift. **PARTIAL 2026-06-11
       (capability-exporter, slot-4):** UAC-importable outputs regenerated + committed — `ui-reference-data.json`
       (byte-identical to committed = already current post-Phase-0), `capability-manifest.json` (new,

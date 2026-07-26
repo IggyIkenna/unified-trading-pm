@@ -224,8 +224,9 @@ Review (agt-c83ba7, msg 2013, 13:08Z) flagged and main (agt-52bb99) verified rea
   lost — but it will NOT auto-resolve (no live worker owns slot 3's worktree), the same never-auto-resolves pattern.
   Bounded (code/refactor WIP, not landed-data correctness), but if the WIP holds anything slot 11 won't reproduce (cf.
   the Faroe/Wales coverage-loss case in
-  `/plans/active/issues/sports_curated_universe_faroe_wales_leagues_missing_slot9_dup_2026_07_25.md`), a diff-check is
-  warranted before any worktree reset. Neither review nor main can push from slot 3's worktree (charter-barred).
+  `/plans/archive/issues/sports_curated_universe_faroe_wales_leagues_missing_slot9_dup_2026_07_25.md` (resolved +
+  archived 2026-07-26)), a diff-check is warranted before any worktree reset. Neither review nor main can push from slot
+  3's worktree (charter-barred).
 
 - [ ] [BACKEND/OPERATOR] P3. **Recover slot 3's `features-service` WIP** (host ip-172-31-5-118, `.tabs/3`, 19 files
       722+/714-): liveness-gate first (confirm slot 3 still dead), then a live worker inherits — `git stash`/commit the

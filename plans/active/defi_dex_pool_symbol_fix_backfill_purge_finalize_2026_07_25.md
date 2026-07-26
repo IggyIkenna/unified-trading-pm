@@ -9,8 +9,8 @@ summary: >-
   is a direct extraction of — flip it to resolved once the query fix + backfill + purge all land),
   defi_consolidated_closeout_2026_07_18.md's progress log, and the TRADER_JOE_V2/VELODROME_V2/CURVE cluster row in
   issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md (that doc also covers the sibling GMX cluster
-  owned by defi_gmx_venue_removal_2026_07_25.md — do NOT flip the issue doc's own status to resolved unless BOTH
-  clusters are independently confirmed closed), then runs the standard 6-step archival ritual.
+  owned by /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md — do NOT flip the issue doc's own status to
+  resolved unless BOTH clusters are independently confirmed closed), then runs the standard 6-step archival ritual.
 status: active
 nature: process
 asset_group: [defi]
@@ -72,11 +72,12 @@ drift_direction: advance-code
       TRADER_JOE_V2/VELODROME_V2/CURVE cluster row: if the parent plan's purge todos landed (zero unattributed
       address-keyed `dex_pool_state` leaves remaining within the confirmed-recoverable range, per that todo's own
       done-when), this cluster's portion is resolved; **do NOT flip the doc's own top-level `status` to `resolved`**
-      unless the sibling GMX cluster (owned by `defi_gmx_venue_removal_2026_07_25.md`, a separate in-flight plan) is
-      ALSO independently confirmed closed — check that plan's own status first. If only this cluster is closed, add a
-      dated note to the issue doc recording that half as resolved without changing its overall `status`. **Done when**:
-      all 3 docs reflect the true current state with verified evidence, and the shared root-cause-clusters issue doc's
-      `status` field is touched only if genuinely warranted by both clusters' real state (not just this plan's half).
+      unless the sibling GMX cluster (owned by `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`, a separate
+      in-flight plan) is ALSO independently confirmed closed — check that plan's own status first. If only this cluster
+      is closed, add a dated note to the issue doc recording that half as resolved without changing its overall
+      `status`. **Done when**: all 3 docs reflect the true current state with verified evidence, and the shared
+      root-cause-clusters issue doc's `status` field is touched only if genuinely warranted by both clusters' real state
+      (not just this plan's half).
 - [ ] [DOC] P3. **Archive `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm zero `DEFERRED` markers remain → add the archive banner + flip
       `status: active` → `status: complete` → run the codex-alignment check (does any codex doc describing dex-pool

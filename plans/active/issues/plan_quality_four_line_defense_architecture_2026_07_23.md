@@ -179,7 +179,7 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       to **13 plans still HARD** (from 30), so `plan_line_cap_remediation_2026_07_23.md` (still `status: open`) has made
       real progress but the prerequisite is not yet clear. This todo still cannot ship. **Progress check 2026-07-24
       (later same day, tradfi/defi/cefi/prediction/sports consolidated-closeout remediation session)**:
-      `bash scripts/plan-hygiene/check_line_caps.sh` now shows **10 plans still HARD** (down from 13) — this session
+      `bash scripts/plan-hygiene/check_line_caps.sh` now shows **10 plans still HARD\*\* (down from 13) — this session
       trimmed/umbrella-exempted the 5 asset-group consolidated close-outs, which were among the over-cap set. Still not
       zero; `plan_line_cap_remediation_2026_07_23.md` remains the tracked owner of the remaining 10. Also found and
       fixed a real blind spot in `check_estimate_sanity.sh` while re-running the full sweep: it silently skipped a plan
@@ -247,7 +247,18 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       authored this same day as a companion, DATA-PIPELINE-CONTENT-correctness gate (14 cross-AG criteria) alongside
       this doc's PLAN-FORMAT-correctness scope — line 3 (`/plan-reconcile`)'s hunter list was extended with a 6th class
       ("data-pipeline-milestones drift") to check it going forward, so the "runs automatically" guarantee this
-      architecture provides for format now also covers that content.
+      architecture provides for format now also covers that content. **⚠️ CORRECTION 2026-07-26 (`/plan-reconcile` infra
+      shard, re-measured this turn): "line 2 IS NOW LIVE" / "All 4 lines are now confirmed live" is NOT true on this
+      doc's own definition of line 2, and contradicts the measured statement earlier in this same todo.** Line 2 is
+      defined in § "The four lines of defense" item 2 as "wire the FULL sweep (not just `--precommit`'s 3 local checks)
+      into `quality-gates.sh` for the `unified-trading-pm` repo" — and
+      `grep -n run_hygiene_sweep scripts/quality-gates.sh` still returns **nothing** (re-run 2026-07-26: same command,
+      same empty result as the "confirmed NOT wired" measurement above). What `pm@0bba96586` actually shipped is
+      `check_line_caps.sh` promoted to a hard gate in the **prek `--precommit`** path — i.e. one more staged-files
+      check, which is exactly the subset item 2 calls insufficient. So the acceptance-test Gate ("all four lines
+      producing their expected signal") is still structurally unmeetable and this todo correctly stays `- [ ]`. Do not
+      close it on the "all 4 lines live" claim: either wire the full sweep into `quality-gates.sh`, or get an operator
+      ruling that the prek hard-gate satisfies line 2 and rewrite item 2's definition to match.
 
 ## Codex SSOTs
 

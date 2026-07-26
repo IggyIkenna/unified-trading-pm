@@ -330,12 +330,10 @@ drift_direction: none
       today despite captured rows).
     - **[DATA] P3.** Orphan/junk defi venues — `VAULT` + `SUSHISWAP` classic-vs-V3 ambiguity reconciliation in
       `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES`.
-  - [`plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md)
-    (linked here 2026-07-25 ag-closeout-linkage fix) — `status: open`, `BLOCKED-OPERATOR-DECISION` (4 original DeFi
-    data-type-mapping/legacy-manifest/OHLC-contract/duplicate-column decisions RESOLVED 2026-06-01 per its own OPERATOR
-    DECISION LEDGER banner); the doc's live residual is the parallel CeFi-pivot smoke-test thread it records (3
-    MDPS/features-service cross-repo bugs — tz-aware-vs-naive datetime join, canonical_writer column-order drift,
-    filter-pushdown memory overhead) — no `- [ ]` checkboxes of its own, tracked as prose in its EOD handoff section.
+  - [`features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md)
+    — ✅ RESOLVED 2026-07-26 (worker, slot 6), archived: all 4 original decisions + the 3 CeFi-pivot cross-repo bugs
+    (tz-aware-vs-naive datetime join, canonical_writer column-order drift, filter-pushdown memory overhead) re-verified
+    live against current code, all confirmed shipped.
   - [`plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md`](/plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
     (2 open)
     - **[HUMAN-AGENT] P1.** Pyth Hermes coverage SSOT + jitoSOL pre-2023-10 backtest scope — operator go/no-go on
@@ -733,9 +731,8 @@ drift_direction: none
   — see `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s Orthogonality HARD CHECK):
   - [`defi_venue_lst_rates_residual_2026_07_24.md`](/plans/active/defi_venue_lst_rates_residual_2026_07_24.md) —
     lst-rates aggregation + venue-spelling residual, forked from `migration_verification_orphan_safety_2026_06_10`.
-  - [`features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md)
-    — DeFi features-service e2e test blocker; `master:` field names `defi_manifest_canonicalisation_2026_06_01.md` as
-    owner.
+  - [`features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md)
+    — ✅ RESOLVED + archived 2026-07-26; `master:` field named `defi_manifest_canonicalisation_2026_06_01.md` as owner.
   - [`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`](/plans/active/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md)
     — e2e defi-strategy funding/APR/gas/lending-rate correctness bugs, `parent_epic: defi_master`.
   - [`e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`](/plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md)

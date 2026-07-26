@@ -6,7 +6,7 @@ summary:
   already refuses to silently recycle a done row on a positional task_id collision — but it only logs an ERROR nobody
   watches. A new todo can land on a stale done+done_sha id and sit invisibly un-dispatched forever unless a human goes
   digging with SSM+SQL. Give this event a Slack page, a dashboard panel, and a one-click safe fix.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -38,13 +38,18 @@ source:
   (it was a real, already-done, unrelated fix with done_sha=41840c1), so the new todo silently read as done and would
   never dispatch. The 2026-07-20 plan's own closing note flagged this exact residual as "worth watching for in practice"
   — this plan is that watch.
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 ---
 
 # AO backlog id-collision — surface it and offer a one-click safe fix
+
+> **🟢 ARCHIVED 2026-07-26** — all 4 todos shipped + independently re-verified from a fresh checkout (fresh QG run,
+> commit-sha spot checks, and a live real-code-path collision reproduction — not just the parent's own "green" claim) by
+> `ao_backlog_collision_alert_and_remediation_ui_finalize_2026_07_26.md`. See that finalize doc for the re-verification
+> evidence.
 
 ## Why this, why now
 
@@ -80,7 +85,7 @@ detection/remediation gap the ruling explicitly left open instead.
       (`notify_backlog_sibling_reset_guard_refused()` in `server/notifications/slack.py`, called from the guard branch
       in `sync_backlog_to_db` deduped via a seen-keys set at `dedup_state.backlog_sibling_reset_guard_alerted_path()`
       keyed by `f"{task_id}:{incoming_brief_hash}"`; QG green, 1752 passed).
-- [ ] [BACKEND] P2. **`POST /api/backlog/{task_id}/remint-collision` — safe one-click remediation endpoint.** Given a
+- [x] ✅ [BACKEND] P2. **`POST /api/backlog/{task_id}/remint-collision` — safe one-click remediation endpoint.** Given a
       task_id currently flagged (via todo 1's record) as an unresolved sibling-reset-guard collision: atomically mint a
       genuinely fresh task_id, checking uniqueness against BOTH `backlog.yaml`'s current ids AND the full historical
       `state.db` task_id space (the actual gap `_make_task_id`/`next_index` has today — it only checks yaml's current
@@ -91,13 +96,42 @@ detection/remediation gap the ruling explicitly left open instead.
       exact `slot_stale_spawn_base_role_stuck_task_less-004` scenario (a done+done_sha row, a colliding new brief),
       calls the endpoint, and asserts (a) a new task_id exists with the incoming content in a clean queued/blocked
       state, (b) the original task_id's terminal fields are byte-for-byte unchanged, (c) a 404 on a task_id with no
-      flagged collision.
-- [ ] [UI] P2. **Dashboard "Backlog Integrity" panel, pinned above the fold.** Lists every currently-unresolved
-      collision from todo 1's activity records (task_id, incoming brief, old done_sha, first-detected timestamp), each
-      row with a "Fix" button calling todo 3's endpoint; the row disappears from the panel on a successful response.
-      Definition of done: a Playwright `pw:L2` spec drives todo 3's exact fixture scenario through the live UI — panel
-      shows the row, click Fix, row disappears, a follow-up API call confirms the new task_id exists clean and the
-      original is unchanged.
+      flagged collision. — **DONE (slot-3, 2026-07-26): `agent-orchestrator@ffd0ab0`.** Reads the incoming
+      brief/title/tier/priority/operator_gated straight off `backlog.yaml`'s CURRENT entry at `task_id` (regen always
+      writes the new checkbox's content there positionally, even though `sync_backlog_to_db`'s guard refuses to reset
+      the DB row) — cross-checked against todo 1's activity record's `new_brief_hash` to confirm the collision is still
+      live (not already resolved/superseded) before acting. Mints via the SAME `_make_task_id` SSOT regen uses, checked
+      against yaml ids ∪ the full historical `tasks` table. Renames the yaml entry in place (old id removed, new id
+      added, content byte-identical) so future regen ticks stop re-deriving that position onto the collided id; never
+      touches the original TaskRow. 5 unit tests incl. the exact `slot_stale_spawn_base_role_stuck_task_     less-004`
+      scenario + a historical-DB-gap regression (a yaml-pruned-but-still-in-DB id at the next positional slot must not
+      be re-collided with by the remint itself); `quality-gates.sh` green (1746 passed).
+- [x] ✅ [UI] P2. **DONE (2026-07-26, slot-4, `ui_developer`).** Dashboard "Backlog Integrity" panel, pinned above the
+      fold. Lists every currently-unresolved collision from todo 1's activity records (task_id, incoming brief, old
+      done_sha, first-detected timestamp), each row with a "Fix" button calling todo 3's endpoint; the row disappears
+      from the panel on a successful response. `agent-orchestrator@914a825`: `unresolvedBacklogCollisions()`
+      (dashboard/src/layout.tsx) — a pure reducer over an `/api/activity` page that dedups by task_id (keeping the
+      latest of `backlog_sibling_reset_guard_refused`/`_collision_reminted`, surfacing only rows still `_refused`);
+      `BacklogIntegrityPanel` pinned above `BlockedPanel` in the rail (both desktop layout branches) and in
+      `MobileTriage`'s alerts tab; `App.tsx` runs a dedicated `/api/activity` pull for both collision event types
+      (independent of the category-filtered feed, which can page these events out of view) and an `onFixCollision`
+      handler that treats a 404 (already resolved) the same as success. Definition of done: a Playwright `pw:L2` spec
+      drives todo 3's exact fixture scenario through the live UI — panel shows the row, click Fix, row disappears, a
+      follow-up API call confirms the new task_id exists clean and the original is unchanged. **Built a new isolated e2e
+      backend+fixture pair** (`dashboard/tests/e2e/backlog-collision.spec.ts`, port 8792/5200, mirroring the
+      `parked-tasks` pattern) whose seed script (`seed_e2e_collision_state.py`) reproduces
+      `test_backlog_remint_collision.py`'s exact `_seed_collision` scenario as a DB fixture — both specs pass:
+      `2 passed (44.2s)`, verified in complete isolation and re-verified after landing (not just once, per the
+      unattended-worker no-optimistic-claim discipline). The follow-up API check authenticates with the page's own
+      stored JWT (backend calls go straight to the isolated backend URL, not through a Vite proxy) and asserts a second
+      remint call 404s (already resolved). Found the remint endpoint rewrites `backlog.yaml` in place — the launcher now
+      copies the fixture into a gitignored `.tmp-collision/` dir rather than pointing at the checked-in file directly,
+      so the tracked fixture never drifts across runs (caught + fixed after the first run silently renamed
+      `E2E-COLLISION-004` to `-005` in the tracked file). 6 new pure-function unit tests (`backlogCollisions.test.ts`);
+      full repo `quality-gates.sh` green (1746 backend + 137 dashboard tests). **Found + filed, not fixed (out of this
+      todo's UI-only scope)**: 2 pre-existing, reproducible `backlog-detail.spec.ts` failures (Queue-lag column blank +
+      timestamp-sort order wrong for the `E2E-DISPATCHED` fixture row), confirmed unrelated to this change via a
+      stash-and-rerun on the clean tree — `issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`.
 
 ## Codex SSOTs
 

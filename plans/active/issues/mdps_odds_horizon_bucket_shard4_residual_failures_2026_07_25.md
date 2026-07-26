@@ -22,6 +22,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
     /plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md,
+    /plans/active/issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md,
   ]
 created: 2026-07-25
 assigned_vm: NA
@@ -100,5 +101,9 @@ stabilize. Left untracked, this manifest residual would silently persist forever
       `LOSS_GUARD_BLOCKED` dates) once the upstream odds_api source for 2026-06-21..24 has real data and/or enough time
       has passed for the loss-guard-thin dates to catch up; verify manifest afterward. (repo:
       market-data-processing-service, deployment-service)
-- [ ] [DATA] P3. Flag the 2026-06-21..24 4-day only-meta-snapshot gap to the odds_api raw-ingestion owner as a possible
-      real upstream fetch issue, independent of this reprocess task. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-10)** — Flagged the 2026-06-21..24 4-day only-meta-snapshot gap to the
+      odds_api raw-ingestion owner. Escalation issue doc:
+      `issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md` (re-verified the gap live via a scoped
+      `gcloud storage ls -r` on exactly the 4 dates, both `pipeline_mode` variants — unchanged from this doc's original
+      finding). Cross-linked both directions (this doc's `related:` above + the new doc's own `related:`). No
+      backfill/re-derivation attempted — escalation/documentation only, per the todo's own scope.

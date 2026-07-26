@@ -24,6 +24,7 @@ tags: [ci-cd, quickmerge, quality-gates, sentinel, test-isolation, environment, 
 related:
   - /plans/archive/issues/staging_workflow_shutdown_2026_07_23.md
   - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
+  - /plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md
 created: 2026-07-23
 priority: P1
 parent_epic: infrastructure_master
@@ -127,7 +128,19 @@ Both readings are defensible and the operator should pick — they lead to diffe
 - [ ] [INFRA] P2. Fix the env-coupled tests in `unified-trading-library`
       (`tests/cloud_interface/unit/test_constants.py`), `deployment-api`, `strategy-service`, and the two
       `market-tick-data-service` cases — set the environment explicitly per-test instead of relying on the ambient
-      default.
+      default. **PARTIAL 2026-07-25 — 1 of 4 repos done; box stays open** (`/plan-reconcile ci`, 2026-07-26): the
+      **`unified-trading-library` half is SHIPPED and verified live at the cited path** —
+      `tests/cloud_interface/unit/test_constants.py:32-37`'s autouse `_clear_cache` fixture now does
+      `monkeypatch.delenv("DEPLOYMENT_ENV", raising=False)` + `monkeypatch.delenv("ENVIRONMENT", raising=False)` with
+      the in-file comment _"Isolate from ambient DEPLOYMENT_ENV/ENVIRONMENT (e.g. quickmerge.sh's branch-based …)"_,
+      fixing `test_get_bucket_name_gcp` +4 siblings in one place. Full write-up + the 2 sibling test sites also fixed in
+      that repo:
+      [/plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md](/plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md)
+      § Resolution. **DEFERRED — still open**: `deployment-api` and `strategy-service` (not verified this pass), and the
+      two `market-tick-data-service` cases, which are demonstrably NOT fixed — they were still failing intermittently as
+      late as 2026-07-24 per
+      [/plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md](/plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md)
+      (5 consecutive quickmerge re-gate hits, `1/1 worker` serial).
 - [ ] [DOC] P2. Correct the "re-run quality-gates.sh --no-fix then retry" guidance wherever it is taught (agent prompts,
       runbooks): as written it is a sentinel-laundering step, not a fix. It is only safe once the sentinel binds
       configuration.

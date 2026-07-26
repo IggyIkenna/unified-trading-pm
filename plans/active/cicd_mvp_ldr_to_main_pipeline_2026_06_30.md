@@ -18,7 +18,8 @@ stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]
 tags: [cicd, mvp, ldr-main, single-path, staging-dormant, SIT, quickmerge, simplification]
-related: [plans/active/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md, /codex/08-workflows/ci-cd-flow.md]
+related:
+  [/plans/archive/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md, /codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-30
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -65,7 +66,9 @@ blocker.
 > `live-defi-rollout` via `quickmerge`. SIT validates the LDR content. We merge LDR→main. That's it. `staging` stays
 > dormant behind a reversible switch. This plan **supersedes the entire WS-L "complex pipeline" family** (see
 > frontmatter `supersedes`) and **resolves** the promotion-stall issue docs. Full forensic detail of how we got here
-> lives in `issues/ldr_main_promotion_findings_consolidated_2026_06_29.md` (the findings-of-record).
+> lives in
+> [/plans/archive/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md](/plans/archive/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md)
+> (the findings-of-record; archived by this plan's own Phase-3 [DOCS] P2 item — path repointed 2026-07-26).
 
 ## The MVP gate set (the ONLY gates on LDR→main)
 
@@ -363,8 +366,75 @@ Phase 1:
       tag defines the version) and its own STALL message names semver-agent as the minter. Added an explicit in-doc
       "Correction (2026-07-25)" superseding the Option-B claim + the Option-B doc's F2 minting sub-steps. Evidence:
       `unified-trading-pm@b9d0b9209` (same docs(codex) ship as the Phase-3 rewrite above, PR #1534 → main).
-- [ ] [VERIFY] P2. Confirm `instruments-service` (and any other real consumer, not just the local-path CI build) picks
-      up the newly-published wheel where it matters (a real deployed image / Docker build, not just local-path CI).
+- [x] [VERIFY] P0. ✅ **Base-image Cloud Build fix HOLDING — confirmed via the watcher's own live signal (2026-07-26,
+      post-compaction resume).** The 5 repos (client-reporting-api, market-data-processing-service,
+      trading-agent-service, alerting-service, fund-administration-service) were failing on
+      `unified-trading-library>=0.57.0 not found` because they build `FROM` a pinned base-image digest, not the wheel
+      directly — a third, separate fan-out mechanism from tag-mint/wheel-publish. The dispatched sub-agent's work was
+      not directly re-inspected (no completion notification survived compaction), but `cloud-build-failure-watcher`'s
+      own poll (properly GCP-credentialed, independent of my local session's broken gcloud auth) shows **0 failed Cloud
+      Builds across two consecutive ticks** — run `30179255424` (23:21 UTC, "No failed Cloud Builds in the last 20m
+      across 60 recent build(s). All clear.") and run `30181444156` (00:36 UTC, same result, plus fired a genuine
+      RECOVERED transition — see the CICD_EVENTS_BUCKET fix below). Over an hour clean vs. the prior ~20min recurring
+      failure cadence is strong evidence the fix held. NOT directly re-verified: a per-repo `gcloud builds list` SUCCESS
+      (local gcloud ADC was unauthenticated this session — human accounts needed re-login, the GCE default SA lacks
+      `cloudbuild.builds.list`). If a fresh cloud-build-failure-watcher CRITICAL fires for any of these 5 repos, re-open
+      this.
+- [x] [VERIFY] P1. ✅ **Root cause found + fixed fleet-wide — not the marker logic, the bucket NAME was never configured
+      (2026-07-26).** `cloud-build-failure-watcher.yml`'s recovery-detection step reads/writes
+      `gs://${CICD_EVENTS_BUCKET}/cicd/watchers/<workflow>/<repo>.json`, gated on `if [ -n "${CICD_EVENTS_BUCKET:-}" ]`
+      with **no fallback default** — and the `CICD_EVENTS_BUCKET` Actions _variable_ (not secret) was unset in **all 25
+      repos**, confirmed by `gh variable list` (only 5 unrelated vars present in unified-trading-pm; 0 present anywhere)
+      and by the live run log literally printing `CICD_EVENTS_BUCKET: ` (blank) plus "Previous tick alert state: false"
+      every tick regardless of real history — recovery detection was a permanent no-op fleet-wide, not just for
+      publish-package.yml. The target bucket (`unified-trading-cicd-events`, GCP project `central-element-323112`,
+      region `asia-northeast1`) already existed (created 2026-06-10, confirmed via the GCS JSON API) — only the variable
+      pointing repos at it was missing. Note: the separate `persist-event` composite action (the general CI-event
+      ledger, `cicd/events/...`) has an internal `${RAW_EVENTS_BUCKET:-unified-trading-cicd-events}` fallback, so that
+      path was likely fine — only the no-fallback recovery-marker reads/writes in `cloud-build-failure-watcher.yml` /
+      `publish-package.yml` were actually broken. **Fix**:
+      `gh variable set CICD_EVENTS_BUCKET --body unified-trading-cicd-events` across all 25 repos in
+      `workspace-manifest.json`'s `repositories` (done, all `OK`). **Verified live**: re-ran
+      `cloud-build-failure-watcher.yml` via `workflow_dispatch` (run `30181444156`) — it read `prev_alert=true` from the
+      (previously-seeded) state marker, found the current tick clean, computed `recovered=true`, and the
+      `notify-recovery` job fired and posted
+      `✅ cloud-build-failure-watcher: recovered — no failed Cloud Builds this     tick (prior tick had failure(s))` to
+      #ci-failures — the exact "why doesn't it show resolved" gap the operator flagged, end-to-end confirmed working.
+      `publish-package.yml`'s OWN recovery marker (`.../publish-package/<repo>.json`) still has 0 objects as of this
+      check (no fail→success transition has occurred since the var was fixed) — the mechanism is proven via the
+      identical cloud-build-failure-watcher code path, but publish-package.yml itself is unverified until a real
+      transition happens; not re-opening as a separate todo since it's the same fix + same pattern, just needs a live
+      event to trigger.
+- [x] [INFRA] P1. ✅ **`escalate-to-orchestrator.yml`'s PR-scoped idempotency-label step was failing 100% — root cause
+      found + fixed (2026-07-26), triggered by the operator asking "did we fix all the bugs [in the auto-escalation
+      path]".** The `ldr_qg_failure` wiring shipped this session (`1c71cd595`) is unaffected — it passes `pr_number: 0`,
+      and the "Mark PR escalated" step is already gated `if: ... pr_number != '0'`, so it skips cleanly. But the OTHER 4
+      wall types (`merge_conflict`/`plan_health`/`sit_failure`/`main_ci_red`, which ARE PR-scoped) hit
+      `gh pr edit "${PR_NUMBER}" --add-label escalation-dispatched` on every dispatch, and it failed on all 5 of the
+      most recent real runs (`30180601587`/`30179516433`/`30179385957`/`30179213450`/`30178741884`) with a
+      `GraphQL: Projects (classic) is being deprecated ... (repository.pullRequest.projectCards)` error → exit 1. Root
+      cause: the `escalate` job runs on the self-hosted `[self-hosted, glue]` pool (the orchestrator VM,
+      `i-0c9b283b31d6b5ca7`), and its `gh` CLI was **2.45.0** (installed from Ubuntu's own `noble` universe apt archive,
+      not GitHub's official repo) — old enough to still request the now-hard-removed `projectCards` GraphQL field.
+      `bootstrap-ci-host.sh`'s `install_gh()` DOES set up the correct `cli.github.com` apt source, but only when
+      `have gh` is false — on this box `gh` pre-existed from the base Ubuntu image before the script ever ran, so the
+      official-repo branch was skipped forever, silently pinning the version. Confirmed via
+      `scripts/self-hosted-runners/ssm-run.sh` (the documented SSM-only path to this VM — no inbound SSH):
+      `apt-cache policy gh` showed the ONLY candidate was the Ubuntu-universe package; no
+      `/etc/apt/sources.list.d/github-cli.list` existed. **Fix**: (1) live box — added the official `cli.github.com` apt
+      source + `apt-get install -y -qq --only-upgrade gh` → **2.96.0**; re-ran the exact failing command
+      (`gh pr edit 1541 --repo unified-trading-pm --add-label escalation-dispatched` as the `ubuntu` user) and it now
+      exits 0 cleanly, no GraphQL error. (2) `bootstrap-ci-host.sh`'s `install_gh()` rewritten so repo setup is keyed on
+      whether the official source file exists, not merely on `have gh`, so a re-provisioned box can't regress into the
+      same trap. **Secondary, lower-severity finding not separately fixed**: even on the OLD gh version, the `notify`
+      job's `if: needs.escalate.outputs.dispatched == 'true' || needs.escalate.result == 'failure'` was observed
+      SKIPPING on a hard job failure where `dispatched` had already been set `true` by an earlier step in the same job
+      (run `30180601587`) — GH Actions' propagation of a failed job's step-outputs to `needs.<job>.outputs` is the
+      suspect, not the condition expression itself. Since the root cause (gh version) is fixed and this was only ever a
+      visibility gap on TOP of an already-succeeding dispatch (POST /api/escalate had already returned `dispatched=true`
+      in every one of those 5 failing runs — a worker WAS spawned each time, just re-labeled/re- dispatched on the next
+      tick since the idempotency marker never landed), not reopening as a blocking item; if a hard escalate-job failure
+      recurs post-gh-upgrade and still doesn't page, that's the next thread to pull.
 
 ## Operator decisions / notes
 
@@ -397,6 +467,17 @@ Phase 1:
 
 ## Progress Log
 
+- 2026-07-26 (adjacent finding — ldr-ci-monitor never escalated to the orchestrator): Real operator question after a
+  genuine (unrelated) LDR-red incident on `unified-trading-pm` itself ("why didn't this escalate to AO?") surfaced a
+  real gap: `escalate-to-orchestrator.yml` has existed since the conflict-resolution pivot and explicitly supports
+  `wall_type=ldr_qg_failure` (built for exactly this), and its own `notify` job already pages on both outcomes
+  (dispatched ✅ / hard-failure ⚠️, deduped) — but `ldr-ci-monitor.yml` never called it. A RED transition posted to
+  `#ci-failures` and stopped there. Fixed: `ldr_ci_monitor.py` now emits red transitions as a `red_transitions_json`
+  output; `ldr-ci-monitor.yml` has a new `escalate` job (matrix over red repos) calling `escalate-to-orchestrator.yml`,
+  not PR-scoped. No new notify step added (would duplicate the alert escalate-to-orchestrator.yml already sends).
+  Shipped: `unified-trading-pm@1c71cd595`. The triggering LDR-red incident itself was unrelated to this plan (another
+  session's plan-discipline/finalize-plan-coverage regression, already self-resolved by their own follow-up commits
+  before this fix shipped) — not re-litigated here.
 - 2026-07-25 (Phase 3 + Phase 4 DOCS — ci-cd-flow.md + CLAUDE.md rewritten to the MVP, `/autonomous`): Full rewrite of
   `/codex/08-workflows/ci-cd-flow.md` (1372→1096 lines) + the CLAUDE.md "Git discipline + shipping pipeline" section,
   correcting the pervasive stale "LDR→staging→main default" framing to **LDR→main-DIRECT / staging-DORMANT-reversible**.
@@ -539,3 +620,24 @@ Phase 1:
   build is stale-red (last build failed pre-UAC-catch-up; no rebuild since — main@`f3336945` has no new push). It will
   go green on the next features-service main push or a manual `gcloud builds` retrigger; it does NOT block promotion
   (the pipeline gates on v2+SIT, not the image build) and won't re-alert unless rebuilt.
+- 2026-07-26 (post-compaction resume — pre-compact ship, then live alert triage): Resumed the pre-compact plan-doc ship
+  after a branch-drift retry (`bpup9wwt4` failed on 2-commit drift; `git pull --rebase --autostash` reconciled cleanly,
+  content verified intact). While shipping, the operator flagged live #ci-failures alerts asking whether they were
+  genuinely unresolved. Investigation found the pasted failures were either pre-fix stragglers (the `GCP_SA_KEY` auth
+  bug, all clean since 21:05 UTC 2026-07-25) or a benign Artifact Registry immutability 400 on a duplicate dispatch
+  (unified-api-contracts v0.72.0 IS live — confirmed via `gcloud artifacts versions list`) — but that dig surfaced a
+  real, previously-undiscovered fleet-wide bug: `CICD_EVENTS_BUCKET` (the Actions VARIABLE, not secret, that points
+  every recovery-detection/event-persistence workflow at `gs://unified-trading-cicd-events`) was unset in all 25 repos,
+  permanently no-opping recovery-transition detection. Fixed fleet-wide + verified live (see the `[VERIFY] P1` item
+  above). Separately, the operator asked whether the AO auto-escalation path (dispatched CI failures to planning-VM
+  agents for auto-resolution) was fully fixed — found + fixed a second real bug there too: the self-hosted glue runner's
+  `gh` CLI was 6 months stale (2.45.0, from Ubuntu's own apt archive, not GitHub's), causing 100% failures on the
+  PR-scoped escalation idempotency-label step; upgraded to 2.96.0 live + hardened `bootstrap-ci-host.sh` so a
+  re-provisioned box can't regress into the same trap (see the `[INFRA] P1` item above). The `ldr_qg_failure` wiring
+  itself (`1c71cd595`, unrelated to the gh-version bug since it skips the PR-label step entirely for `pr_number=0`) is
+  confirmed live on `main` and correctly no-ops when there's nothing to escalate (one real LDR-red event today
+  self-healed before the fix's first post-promotion tick could catch it — not yet exercised against a genuine RED
+  transition). Also answered two operator questions about the deployment-api CI cockpit (MTDS's grey image cell =
+  build-signal cache/scan-window staleness, not a real gap — confirmed 3 fresh SUCCESS builds via direct Cloud Build
+  query; and confirmed only deployment-api+deployment-ui auto-redeploy continuously on green build, every other service
+  builds-only and deploys via a separate deployment-service-driven action).

@@ -8,7 +8,7 @@ summary:
   catalog but flagged there as unverified ("GMX-V2 rows pending verification"), and is not foundational -- a bounded,
   real removal across UAC/MTDS/IS/execution-service/strategy-service/UTL plus a prod-bucket GCS+manifest purge and doc
   updates.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -55,6 +55,16 @@ superseded_by:
 ---
 
 # Remove GMX venue support
+
+> **🟢 COMPLETE 2026-07-25 — ARCHIVED.** All 8 todos landed (verified commits: unified-api-contracts@18d53d63,
+> market-tick-data-service@68407ae5, instruments-service@0214bb3c+2de3418e, execution-service@09a828ed,
+> strategy-service@ca818ff8, unified-trading-library@f22e516f, the `[OPERATOR]` GCS+manifest purge — 5,374 `venue=GMX`
+> manifest rows dropped, zero objects remain — and unified-trading-pm@bfda5df5b for the doc updates). Reconciled into
+> `defi_consolidated_closeout_2026_07_18.md` and
+> `issues/defi_migrated_marker_flagged_root_cause_ clusters_2026_07_25.md` by
+> `defi_gmx_venue_removal_finalize_2026_07_25.md` todo 1. Codex-alignment re-verified clean
+> (`defi-canonical-naming-ssot.md`, `defi-venue-protocol-catalogue.md`, `defi-data-types-catalog.md` all correctly
+> describe GMX as REMOVED with citation, not live). Archived alongside its finalize plan in the same commit.
 
 ## Context (read before dispatching any todo)
 

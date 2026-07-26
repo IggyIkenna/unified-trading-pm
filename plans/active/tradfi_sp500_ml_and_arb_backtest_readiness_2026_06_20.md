@@ -88,27 +88,36 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       (data_type=ohlcv_1m). MDPS process VM launched for 2020-01-01→2026-06-23 (`mdps-backfill-tradfi-20260624-065912`).
       **Sequencing**: process → build-continuous → features (3 VMs in order). See todos below for build-continuous +
       features VM steps.
-- [ ] [AGENT] P0. **BLOCKED-OPERATOR-DECISION** Run MDPS `--operation build-continuous --root ES` after process VM
-      completes. Write path:
-      `processed_candles/by_date/day={D}/timeframe={tf}/data_type=ohlcv_1m/instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet`
-      **STATUS 2026-06-24**: MDPS process VM `mdps-backfill-tradfi-20260624-065912` was KILLED — architectural
-      investigation confirmed it would produce output that CANNOT feed build-continuous (triple mismatch). Architectural
-      decision required from operator before this step can run. See issue doc + ping:
-      `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`. Mismatches: (1) MDPS writes
-      `data_type=trades` but build-continuous reads `data_type=ohlcv_1m`; (2) MDPS filenames are `ESH0.parquet` but
-      build-continuous expects `CME:FUTURE:ES-20200320.parquet`; (3) ES absent from Databento ohlcv_1m (build-continuous
-      designed for); (4) build-continuous output path != features-service read path. **Options**: A (fast — direct MTDS
-      read in features-service, bypass MDPS+build-continuous) vs B (fix 3+ components). **GATED ON**: operator decision
-      on Option A vs B + corresponding code fix + re-run. **slot-22 review 2026-06-24**: confirmed
-      BLOCKED-OPERATOR-DECISION — VM killed, triple mismatch stands. Cannot proceed without operator decision on Option
-      A vs B.
-- [ ] [AGENT] P0. **BLOCKED-OPERATOR-DECISION** Run `features-delta-one-service` for **tradfi/ES** across its
-      calculators (continuous-series + roll-adjusted; `FuturesRollAdjuster` already shipped per epic). Confirm feature
-      parquets land with no NaN-blanket placeholders and `available_at` correctly stamped per row (write-time). (Epic
-      L245.) **STATUS 2026-06-24**: BLOCKED on architectural decision (same mismatch as P0 #2 above). Cannot proceed
-      until MDPS pipeline mismatch is resolved via Option A or B. **GATED ON**: Option A (direct MTDS read fix in
-      features-service) shipped + QG-green, OR Option B fully fixed (MDPS + build-continuous + features-service) +
-      continuous series parquets present for `underlying=ES`.
+- [ ] [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-26, was stale BLOCKED-OPERATOR-DECISION).** The
+      operator-decision fork itself is resolved — partial fixes shipped 2026-06-28/29
+      (`market-data-processing-service@cc63d1b`: MDPS's `TradfiTradesAdapter` now writes `data_type=ohlcv_1m`, fixing
+      mismatch (1); `features-service@34a5d4ff`: fixed the blank-`instrument_id` manifest-lookup bug;
+      `market-data-processing-service@7d630a3`: unrelated subprocess-per-date regression fix) — but re-verified live
+      2026-07-26 that this did NOT actually unblock the pipeline: **no successful run has ever landed** (the
+      `features-tradfi-prd-central-element-323112` bucket has NO `_index/availability_index.parquet` at all — 404, not
+      just empty), and mismatches (2) filename format (`panama_core.contract_id_for_expiry` still returns
+      `CME:FUTURE:{root}-{expiry}` Databento-date format; MDPS's canonical output is still the short-symbol
+      `CME:FUTURES:{root}{month}{year}.parquet` form — unchanged) and (4) build-continuous output path vs
+      features-service read path (`_DERIVATIVE_DATA_TYPES = {"options_chain", "futures_chain"}` in
+      `features_service/delta_one/app/core/data_loader.py:650` still has no `continuous_future` entry) are BOTH
+      confirmed still unfixed by direct code read. Also: the archived
+      `features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`'s own "RESOLVED via Option A (direct raw-MTDS read,
+      bypass MDPS)" summary does not match what actually shipped — `TRADFI_DATA_TYPE_FALLBACKS` /
+      `_try_one_tradfi_fallback` in `data_loader.py` still calls `self.load_candles(...)` (the SAME MDPS
+      `processed_candles/` path with a different `data_type`), not a raw-MTDS bypass; this looks like a partial
+      Option-B-direction fix instead, flagged as its own discrepancy in the follow-up issue doc below (not resolved here
+      — a documentation-provenance question, not a code blocker). **New done-when**: fix mismatches (2)+(4) (or make and
+      implement a definitive Option A/B call), THEN run MDPS `--operation build-continuous --root ES` and confirm output
+      actually lands at
+      `processed_candles/by_date/day={D}/timeframe={tf}/data_type=ohlcv_1m/instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet`.
+      Follow-up: `plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
+- [ ] [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-26)** Run `features-delta-one-service` for **tradfi/ES**
+      across its calculators (continuous-series + roll-adjusted; `FuturesRollAdjuster` already shipped per epic).
+      Confirm feature parquets land with no NaN-blanket placeholders and `available_at` correctly stamped per row
+      (write-time). (Epic L245.) Same re-diagnosis as P0 item above: the operator-decision fork is resolved but the
+      underlying pipeline is still unverified working — gated on the SAME mismatches (2)+(4) fix + build-continuous run
+      above landing real `continuous_future` parquets for `underlying=ES` before this can run (and succeed rather than
+      repeat the 3 prior failed VM attempts).
 - [ ] [AGENT] P0. Run `features-volatility-service` for **tradfi/ES + tradfi/CBOE-VIX** (realized-vol + skew;
       `compute_vix_features()` calculator already shipped per epic — level, contango proxy, momentum, vol-of-vol).
       Confirm feature parquets land clean. (Epic L247.) **BLOCKED-UPSTREAM**: features-volatility-service reads

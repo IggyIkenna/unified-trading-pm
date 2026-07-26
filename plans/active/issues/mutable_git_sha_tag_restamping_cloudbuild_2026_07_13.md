@@ -174,7 +174,11 @@ Exposure is lower than deployment-api (no build-time sibling-repo vendoring) but
 drift means a same-commit rebuild can still produce a different digest, and same-SHA double-builds are observed in
 trigger history.
 
-## Proposed (NOT yet done)
+## Follow-ups (the fleet rollout below is DONE; the P3 items are not)
+
+_(Heading corrected 2026-07-26 by `/plan-reconcile ci`: it read "Proposed (NOT yet done)" while its own first item is
+`- [x] … ✅ 2026-07-13`, shipped across 19 repos with the evidence table above — the heading contradicted the content
+directly beneath it.)_
 
 - [x] [INFRA] P2. Roll the guarded push out to the 16 per-repo `cloudbuild.yaml` copies +
       `configs/cloudbuild-infra-template.yaml` via `scripts/propagation/rollout-cloudbuild.py` — but FIRST diff each

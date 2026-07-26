@@ -132,13 +132,13 @@ data_types with months of manifest history (re-homing the coverage denominator i
 (whether `perp_daily_ctx`/mark-price should be folded into the same demotion) has an answer to fold into.
 
 A: File the re-scoped cross-source funding-parity todo first (surviving venues: HYPERLIQUID/ASTER — GMX removed
-2026-07-25 per `defi_gmx_venue_removal_2026_07_25.md`, DRIFT/PACIFICA already removed) and gate the demote decision on
-its results — matches the original design's own evidence-first intent, no live-reader risk taken without proof. [WORKER
-REC] B: Rule directly now that parity evidence is NOT required — proceed straight to scoping/executing the
-demote-to-derived-view migration (re-home the MVP-gate accounting, migrate the features-onchain bypass read, retire
-`perp_funding` raw capture). C: Rule directly now that `perp_funding` stays a permanently separate captured raw type
-(keep dual-capture; close the DESIGN todo as "keep both — no parity check needed"). Other: operator can type a custom
-answer
+2026-07-25 per `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`, DRIFT/PACIFICA already removed) and gate
+the demote decision on its results — matches the original design's own evidence-first intent, no live-reader risk taken
+without proof. [WORKER REC] B: Rule directly now that parity evidence is NOT required — proceed straight to
+scoping/executing the demote-to-derived-view migration (re-home the MVP-gate accounting, migrate the features-onchain
+bypass read, retire `perp_funding` raw capture). C: Rule directly now that `perp_funding` stays a permanently separate
+captured raw type (keep dual-capture; close the DESIGN todo as "keep both — no parity check needed"). Other: operator
+can type a custom answer
 
 **Status**: open
 

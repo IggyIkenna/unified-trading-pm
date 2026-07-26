@@ -166,10 +166,20 @@ the churn the pin prevents). Align the fleet TO the pin.
 sibling) is **unsatisfiable** → editable install FAILS on any fresh setup fleet-wide; `e2e-testing` +
 `system-integration-tests` cascade from strategy-service. agent-orch-vm's working venvs only predate UTL's bump.
 
-- [ ] [DEPS] P1. **Operator decision**: either lower UTL's starlette to `>=1.1.0,<1.3.0` (align to the canonical cap —
-      what the version-aligner already wants) OR raise the canonical cap + re-pin all consumers to allow `>=1.3.1`. Do
-      NOT unilaterally change the T0 lib. Repos: `unified-trading-library` + the 3 consumers.
-- [ ] [DEPS] P2. After the pin decision, re-lock affected repos (uv 0.10.8) + re-verify editable install.
+- [x] ✅ [DEPS] P1. **VOID — no operator decision needed; the premise was a stale-clone artifact and both sides are
+      already aligned.** Superseded by this doc's own later "UPDATE — starlette conflict was a STALE-CLONE ARTIFACT, now
+      RESOLVED" section. Re-measured 2026-07-26 (`/plan-reconcile` infra shard, HARD evidence, both files read this
+      turn): `unified-trading-library/pyproject.toml:43` → `"starlette>=1.1.0,<1.3.0"` and PM
+      `workspace-constraints.toml:121` → `starlette = "starlette>=1.1.0,<1.3.0"` (plus
+      `canonical-dependency-manifest.json:391-392` → `"starlette>=1.1.0,<1.3.0"`) — identical ranges, so there is no
+      conflict left to rule on and no T0 change was made. The genuine remaining starlette work (LIFT the `<1.3.0` cap
+      after fixing UTL's `_IncludedRouter` route-introspection) is owned by
+      `/plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md`'s first `[SCRIPT] P2` todo, not here.
+      Was: "**Operator decision**: either lower UTL's starlette to `>=1.1.0,<1.3.0` … OR raise the canonical cap …".
+- [x] ✅ [DEPS] P2. **VOID with the todo above** (it was gated on "after the pin decision", and there is no pin decision
+      to make). This doc's own UPDATE section records the re-verification that closed it: "Verified: `strategy-service`
+      editable install now EXIT=0; all 6 previously-failing repos set up OK (0 failed). NO T0 change." Was: "After the
+      pin decision, re-lock affected repos (uv 0.10.8) + re-verify editable install."
 
 ### Durable boot-script hardening — WRITTEN + VALIDATED, BLOCKED from landing (see version divergence below)
 

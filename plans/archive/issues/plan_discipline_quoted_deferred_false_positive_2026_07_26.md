@@ -36,6 +36,9 @@ resolved_by: unified-trading-pm (check_plan_discipline.py _has_live_deferred_mar
 drift_direction: advance-code
 ---
 
+> **🟢 RESOLVED 2026-07-26** — `check_plan_discipline.py` fixed (`_has_live_deferred_marker()` quoted-reference
+> exclusion) + archived per the terminal-status-archived rule. No further action needed on this doc.
+
 ## What I found
 
 `check_plan_discipline.py`'s `_DEFERRED_RE` (`\bDEFERRED\b\s+[—-]`) matches a DEFERRED token regardless of whether it
@@ -77,3 +80,12 @@ doesn't help an agent that genuinely needs the full `quality-gates.sh` green (e.
 
 None new — this is a checker-calibration bug in `scripts/quality_gates/check_plan_discipline.py`, not a doc-content or
 architecture question.
+
+## Resolution note
+
+Independently found + fixed the same root cause in parallel this session, before this doc's own shipped fix (above)
+landed — same file, same approach, resolved via a genuine `git pull --rebase --autostash` merge conflict rather than
+overwriting either side. The version that shipped (in the "Recommended decision" item above) is more complete — it also
+covers rule C (`_check_rule_c`, the archive-no-successor check) and ships with 7 unit tests
+(`tests/unit/test_check_plan_discipline.py`) — so that is the one in the tree; this note just records that a second,
+narrower fix existed and was superseded, not layered on top, to avoid two competing implementations of the same regex.

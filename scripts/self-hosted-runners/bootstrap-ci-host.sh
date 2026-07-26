@@ -94,17 +94,28 @@ install_base() {
 }
 
 # ── 2. gh (GitHub CLI) — 181 uses, the single biggest dep ───────────────────────────────────────
+# NOTE (found 2026-07-26): `have gh && return` used to skip repo setup ENTIRELY whenever any gh
+# binary pre-existed — on a box where gh came pre-installed from Ubuntu's own `noble` universe
+# archive (not this script), that left the official cli.github.com apt source never configured,
+# silently pinning gh at whatever Ubuntu ships (measured: 2.45.0, ~6 months stale) forever, since
+# re-runs kept short-circuiting on the same check. `apt-cache policy gh` is the tell: a real
+# official-repo install shows `500 https://cli.github.com/packages stable/main` as a candidate
+# source; Ubuntu-only shows just the `noble`/`noble-updates` universe lines. This bit
+# escalate-to-orchestrator.yml's `gh pr edit --add-label` step, which started hard-failing on a
+# GraphQL "Projects (classic) deprecated" error that only reproduces on the old client.
 install_gh() {
-  have gh && { log "gh present ($(gh --version | head -1))"; return; }
-  log "installing gh from the official apt repo"
-  install -d -m 0755 /etc/apt/keyrings
-  curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-    | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
-  chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-    > /etc/apt/sources.list.d/github-cli.list
-  apt-get update -qq
+  if [ ! -f /etc/apt/sources.list.d/github-cli.list ]; then
+    log "gh present but not from the official apt repo (or absent) — configuring cli.github.com"
+    install -d -m 0755 /etc/apt/keyrings
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list
+    apt-get update -qq
+  fi
   apt-get install -y -qq gh
+  log "gh: $(gh --version | head -1)"
 }
 
 # ── 3. gcloud — 16 uses (Firestore writes, Artifact Registry, Cloud Build dispatch) ─────────────

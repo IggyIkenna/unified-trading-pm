@@ -29,7 +29,7 @@ authoritative_for:
 referenced_by:
   [
     /codex/04-architecture/artifact-versioning.md,
-    plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
+    plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
   ]
 owner:
 last_reviewed: 2026-05-28

@@ -4,7 +4,7 @@ title: features-service DeFi end-to-end test blocked on multiple data layer issu
 summary:
   While trying to run a smoke test of features-service `delta_one` against real DeFi data (operator-directed 2026-05-29
   after the CeFi MDPS canary VM failed), I hit a cascade of issues at the data-la...
-status: open
+status: resolved
 nature: process
 asset_group:
   [defi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
@@ -34,7 +34,21 @@ source:
   ]
 assigned_vm:
 resolved_by:
-locked_by: live-defi-rollout
+  'worker, slot 6, 2026-07-26 — all 4 decisions + 3 CeFi-pivot bugs re-verified against current code, all live: (1)
+  volume_analysis/vwap/microstructure resolve to dex_pool_swaps via FEATURE_GROUP_DATA_TYPE_OVERRIDES +
+  resolve_data_type_for_feature_group() (unified-api-contracts/unified_api_contracts/registry/
+  market_data_categories.py:746-786; features-service tests/delta_one/integration/test_delta_one_integration.py:
+  147,160,167 — 3 passed); (2) OHLC USD-normalized-spot-price semantics documented + cites this doc by name
+  (unified-api-contracts/unified_api_contracts/internal/schemas/_candle_contracts.py:401-409); (3) duplicate-column
+  cleanup done, volume_quote_usd dropped / swap_count kept on state candle only (_candle_contracts.py:130-142;
+  unified-api-contracts tests/internal/unit/test_mdps_candle_contracts.py:187-205 — 124 passed); (4) tz-naive/aware join
+  fix live (market-data-processing-service/market_data_processing_service/app/core/
+  canonical_writer_streaming.py:312-335, .dt.replace_time_zone("UTC")); (5) MDPS column-order fix live
+  (features-service/features_service/delta_one/app/core/data_loader.py:504-517, pl.concat(..., how="diagonal_relaxed"));
+  (6) filter-pushdown fix live (market-data-processing-service/
+  market_data_processing_service/app/core/orchestration_scanner.py:557-624, venue/instrument_ids filtered via `continue`
+  before files.append).'
+locked_by:
 master:
   defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §C0–C2 canonical-naming walk +
   §D features propagation resolve the DeFi slice. Asset-group slot split, 2026-06-03)
@@ -42,6 +56,10 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 RESOLVED 2026-07-26 (worker, slot 6).** Re-verified all 4 OPERATOR-decided items below + the 3 CeFi-pivot
+> cross-repo bugs against current code — all confirmed shipped and live, evidence in `resolved_by:` above. Archived here
+> (`defi_satellite_ao_dispatch_batch2_2026_07_26.md` todo).
 
 > **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** FINAL rulings on the 4 routed DeFi calls.
 > Execution: **slot 7**, recorded into `features_and_ml_master` (SSOT). **No legacy-bucket manifest rebuild** — that

@@ -145,17 +145,63 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
 
 ## Follow-up todos
 
-- [ ] [DATA] P2. Design + build a DeFi `expected_unattempted` seeder (mirrors `sentinels.py`'s
-      `record_expected_unattempted` pattern) keyed off UAC's `DEFI_VENUE_DATA_TYPE_CAPABILITIES` + `DEFI_VENUE_PHASE` —
-      **needs an operator/architecture decision first** (per
-      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § Dispatch-scope eligibility) on how to
-      reconcile capability-declared-but-not-actually-collectible venues (see FLUID finding #5 above) before this is
-      AO-dispatchable. (repo: market-tick-data-service)
-- [ ] [DATA] P3. Reconcile `lending_indices_handler.py:176` / `risk_params_handler.py:107` /
-      `liquidations_handler.py:149`'s three independent `_DEFAULT_PROTOCOLS` lists against each other and against
-      `SUBGRAPH_IDS` (`unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py:62-217`) —
-      report mismatches; do NOT add `fluid` to `lending_indices_handler.py` without also wiring a real collector (see
-      #5) or it will write dishonest zero-rows stamps. (repo: market-tick-data-service)
+- [ ] [DATA] P2. BLOCKED-OPERATOR-DECISION — Design + build a DeFi `expected_unattempted` seeder (mirrors
+      `sentinels.py`'s `record_expected_unattempted` pattern) keyed off UAC's `DEFI_VENUE_DATA_TYPE_CAPABILITIES` +
+      `DEFI_VENUE_PHASE` — **RULED 2026-07-26 (BLK-7c950d06: Option A)**: this is the correct direction, tracked now as
+      its own human plan `defi_expected_unattempted_seeder_design_2026_07_26.md` (assigned_vm: NA per BLK-3221d4b3 — the
+      capability-vs-collectibility reconciliation, see FLUID finding #5, is an open-ended per-venue judgment call, not
+      AO-dispatchable until an operator resolves it). This line stays non-dispatchable and superseded-by-tracking; do
+      the actual work in that plan, not here. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-10, data_engineering)** — Reconciled `lending_indices_handler.py:177` /
+      `risk_params_handler.py:111` / `liquidations_handler.py:149`'s three `_DEFAULT_PROTOCOLS` lists against each other
+      and against `SUBGRAPH_IDS`
+      (`unified-api-contracts/unified_api_contracts/registry/capability_declarations/     _defi.py:62-217`) +
+      `_risk_params_stage.py:23`'s `SOLANA_LENDING_PROTOCOLS`. Read-only — no code changed (per this todo's own
+      guardrail: do not add `fluid` to `lending_indices_handler.py` without a real collector).
+
+      | protocol | lending_indices | risk_params | liquidations | `SUBGRAPH_IDS` |
+          |---|---|---|---|---|
+          | `aave_v3` / `spark` / `compound_v3` / `morpho` | Y | Y | Y | Y |
+          | `fluid` | **N** (no `cascades` entry — confirmed real gap, already tracked as this doc's finding #5) | Y (`_CATALOGUE_ONLY_PROTOCOLS`, deliberate) | Y (dedicated `_FLUID_LIQUIDATIONS_QUERY`/`_parse_fluid_liquidations`) | Y |
+          | `kamino_lending` | Y (dedicated RPC fetcher) | Y | **N** (absent, no rationale found) | N (Solana, RPC-based) |
+          | `solend` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
+          | `marginfi` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
+
+          **Findings**:
+          1. `fluid`'s gap is lending_indices-ONLY, confirmed — `risk_params_handler.py` (`_CATALOGUE_ONLY_PROTOCOLS =
+             frozenset({"morpho", "fluid"})`, line 115) and `liquidations_handler.py` (dedicated fluid query, lines
+             588/724/739) both have REAL, working, deliberate `fluid` paths; only `lending_indices_handler.py`'s
+             `_query_and_parse` cascades dict lacks a `fluid` entry. No new work needed beyond what #5 already tracks.
+          2. **New, previously-unflagged gap**: `risk_params_handler.py`'s own imported `SOLANA_LENDING_PROTOCOLS`
+             constant (`_risk_params_stage.py:23`, `frozenset({"kamino_lending", "solend", "marginfi"})`) declares all 3
+             Solana lending protocols as catalogue-fallback-capable (the dispatch logic at lines 330/408 correctly
+             branches on `protocol in SOLANA_LENDING_PROTOCOLS`), but `_DEFAULT_PROTOCOLS` (the actual iteration list,
+             line 380) only includes `kamino_lending` — `solend`/`marginfi` risk_params are silently NEVER collected even
+             though the underlying mechanism already supports them. Unlike the documented `fluid`/`morpho`
+             `_CATALOGUE_ONLY_PROTOCOLS` reasoning, no comment justifies omitting `solend`/`marginfi` here — reads as an
+             unintentional oversight (the 3-Solana-protocol set exists as a real shared constant, just not fully wired
+             into this one handler's dispatch list), not a documented scope decision. Filed as a fresh, precisely-scoped
+             follow-up (P3) below rather than fixed inline (adding them changes runtime dispatch behavior, out of scope
+             for a read-only reconciliation todo).
+          3. `liquidations_handler.py` has ZERO Solana-protocol coverage (no `kamino_lending`/`solend`/`marginfi`, no
+             `SOLANA_LENDING_PROTOCOLS` import at all) — no comment either way; flagging as unconfirmed (may be an
+             intentional scope limit if Solana lending liquidations genuinely have no equivalent data source) rather than
+             asserting it's a bug.
+          4. The 4 core EVM protocols (`aave_v3`/`spark`/`compound_v3`/`morpho`) are fully consistent across all 3
+             handlers and `SUBGRAPH_IDS` — no mismatch.
+          (repo: market-tick-data-service)
+
+- [ ] [DATA] P3. **NEW (found while reconciling the todo above)** — `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS`
+      (line 111) omits `solend`/`marginfi` even though its own imported `SOLANA_LENDING_PROTOCOLS` constant
+      (`_risk_params_stage.py:23`) declares both as catalogue-fallback-capable and the dispatch logic (lines 330/408)
+      already branches correctly on membership in that set — the only missing piece is adding them to the line-380
+      iteration list. Confirm with the handler owner whether this is a genuine oversight (most likely, given no
+      rationale comment exists, unlike the documented `fluid`/`morpho` `_CATALOGUE_ONLY_PROTOCOLS` case) or an
+      intentional scope limit, then either add `"solend"`/`"marginfi"` to `_DEFAULT_PROTOCOLS` (if the IS catalogue
+      actually carries risk-param fields for these two Solana protocols — verify before flipping, don't assume) or
+      document why they're excluded. (repo: market-tick-data-service). Done when: the omission is confirmed deliberate
+      (documented) or fixed (protocols added + a regression test proves they now dispatch), with real IS-catalogue data
+      confirmed present before any dispatch-list change ships.
 - [ ] [DATA] P3. Confirm whether FRAX-ETHEREUM's `vault_share_price_handler.py` has actually run/been scheduled recently
       — if its manifest rows are genuinely absent, that's a scheduling gap, not an enumeration gap. (repo:
       market-tick-data-service)
@@ -163,6 +209,19 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       as of 2026-03" `SUBGRAPH_IDS` scoping decision (re-verify the underlying claim is still current) vs. needing an
       honest "not IS-producible" manifest stamp once/if the P2 seeder above exists. (repo: unified-api-contracts docs
       review + market-tick-data-service)
+- [x] ✅ [INFRA] P3. **DONE 2026-07-26 (slot-4)** — Close a gate gap in agent-orchestrator's `/done` M3 verification
+      found 2026-07-26 (slot-2, BLK-0222fc53 ruling): a `- [ ]` cross-repo todo that is genuinely re-scoped/superseded
+      (never flipped `[x]`, because there is nothing to complete against — see
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s C8 entry, converted to a non-checkbox `CANCELLED — SUPERSEDED`
+      bold marker) has no `/done` path: M3 hard-rejects (`cross_repo_pm_file_touched_no_checkbox_flip`) any commit
+      touching the plan file that doesn't flip `[ ]`→`[x]`, forcing a worker to `/skip-current-task` instead, with no
+      way to record real disposition on the task itself. Added the M3 exception: `verify.check_plan_flip`
+      (agent-orchestrator@c9f805c) now also recognizes a `- [ ] <brief>` line converted to a non-checkbox
+      CANCELLED/SUPERSEDED marker bullet (per `task_template.md`'s "remove a todo" convention) — in both single-repo and
+      cross-repo modes, via new helper `_diff_cancels_checkbox` — and accepts `/done` with
+      `reason="todo_cancelled_superseded"`, without requiring a `[x]` flip. Regression coverage:
+      `tests/test_done_gate_plan_flip_hard_reject.py` (+2 tests, single-repo + cross-repo modes); full
+      `quality-gates.sh` green (1755 passed, 1 skipped). (repo: agent-orchestrator)
 - [x] ✅ [DOCS] P3. **DONE 2026-07-26 (slot 9)** — Corrected `data_completion_defi_2026_07_15.md` item C8: dropped the
       stale "DRIFT-SOLANA... confirmed present" done-criterion (deliberately removed 2026-07-16, must never reappear)
       and the FRAX category-mismatch framing, with a pointer to this doc's full re-diagnosis. A `plans/active/` grep for
@@ -173,3 +232,40 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       stale framing verbatim in its body text, but that's intentional — it's the ORIGINAL task text being re-diagnosed
       by this doc's annotation immediately below it, not a separate uncorrected citation; left as-is as the historical
       record. (repo: unified-trading-pm)
+
+## Progress Log
+
+- 2026-07-26 (slot 2): Re-dispatch of `defi_satellite_ao_dispatch_batch2-001` (C8) hit this doc's already-filed
+  re-diagnosis. Escalated the two open decisions from § Recommended decision: (1) BLK-7c950d06 — ruled **Option A**
+  (build the real seeder; C8's checkbox cannot be completed as written and stays honestly unchecked). (2) BLK-3221d4b3 —
+  the seeder design/build work's plan destination ruled **human plan** (`assigned_vm: NA`), because the
+  capability-vs-collectibility reconciliation (FLUID finding #5) is an open-ended per-venue judgment call, not
+  AO-dispatchable. Created `defi_expected_unattempted_seeder_design_2026_07_26.md` to track the design + the gating P0
+  reconciliation todo; marked the P2 follow-up todo above `BLOCKED-OPERATOR-DECISION` + superseded-by-tracking so it
+  does not get picked up by a worker ahead of that plan. No code changes; this task's disposition is fully captured in
+  this doc + the new plan.
+- 2026-07-26 (slot 2): `/done` (unified-trading-pm@628324586) rejected with
+  `cross_repo_pm_file_touched_no_checkbox_flip` — M3 requires an actual `[ ]`→`[x]` flip, which the ruling above
+  forbids. Escalated as BLK-0222fc53; ruled **Option A**: self-`/skip-current-task` (no M3 run) + convert the C8 todo in
+  `defi_satellite_ao_dispatch_batch2_2026_07_26.md` from a `- [ ]` checkbox to a non-checkbox `CANCELLED — SUPERSEDED`
+  bold marker (per `task_template.md`'s "remove a todo" convention) so `regen_backlog_from_plan.py` drops it from the
+  dispatchable queue instead of re-deriving it. Done: batch2 plan's C8 entry converted; the M3 gate-gap itself filed as
+  a new P3 follow-up todo above (repo: agent-orchestrator) per the ruling's guardrail, not a blocker on closing this
+  task.
+- 2026-07-26 (slot 4): Closed the P3 `[INFRA]` gate-gap follow-up todo above. `server/verify.py`'s
+  `check_plan_flip`/`_diff_flips_checkbox` only ever recognized a `- [ ] <brief>` line turning into `- [x] ...`; added
+  `_ADDED_CANCELLED_LINE_RE` + a new `_diff_cancels_checkbox` helper so a `- [ ] <brief>` line converted to a
+  non-checkbox `CANCELLED`/`SUPERSEDED` marker bullet (the exact convention slot-2 used above) is ALSO accepted, in both
+  the single-repo and cross-repo (PM sibling-worktree log-walk) modes — `found_in_commit=True`,
+  `reason="todo_cancelled_superseded"`. Added 2 regression tests to `tests/test_done_gate_plan_flip_hard_reject.py`
+  mirroring the existing single-repo/cross-repo flip-acceptance tests but asserting the CANCELLED-marker path. Full
+  `quality-gates.sh` green (1755 passed, 1 skipped; dashboard tsc+vitest green). Shipped `agent-orchestrator@c9f805c`.
+  Session died mid-task after this work was complete but before shipping; the orchestrator's pre-spawn dirty-state gate
+  preserved the WIP on `wip-preserve/orchestrator-slot-4-f38f2db` (auto-committed, branch reset afterward), recovered
+  cleanly on resume since that commit's parent was exactly the resumed session's HEAD — no work lost.
+- 2026-07-26 (slot 10, `data_engineering`): Closed the P3 `_DEFAULT_PROTOCOLS`-reconciliation follow-up todo. Read-only
+  investigation (no code touched) confirmed `fluid`'s lending_indices gap is real + already tracked (finding #5), and
+  surfaced a NEW, previously-unflagged gap: `risk_params_handler.py`'s own `SOLANA_LENDING_PROTOCOLS` constant declares
+  `solend`/`marginfi` as catalogue-fallback-capable but `_DEFAULT_PROTOCOLS` never dispatches them — filed as a fresh,
+  precisely-scoped P3 follow-up todo (not fixed inline; a dispatch-list change needs the IS-catalogue data confirmed
+  present first).

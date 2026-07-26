@@ -204,7 +204,33 @@ its own private `_flap_backoff_until`/`_last_attempt_at`, and the kicker's `_RES
 (`_respawn.py:274-284`) is a **separate** dict on a **separate** object — neither loop knows the other just touched this
 slot.
 
-## Minimal fix (two parts — both are needed, each closes a different half of this one incident)
+## ✅ FIX SHIPPED 2026-07-25 — `agent-orchestrator@3e5de0e7b` (verified 2026-07-26, `/plan-reconcile ao`)
+
+> **Read this before the "Minimal fix" / "Files read … (no code changes made)" sections below** — both were written
+> during the investigation and predate the fix. The two-part fix specified below has LANDED; this section is the
+> measured verdict, added by `/plan-reconcile` because this doc carries no checkboxes and so had no flip surface.
+
+`agent-orchestrator@3e5de0e7b` (2026-07-25 15:09Z) — _"fix(worktree): shared realign cooldown +
+pre-existing-ahead-commit age guard in commit_and_push_dirty_repos (slot_double_reset_dataloss_race_2026_07_25)"_ —
+names this doc in its own subject line. Verified by reading the shipped source + tests, not by trusting the message:
+
+| Part                                        | Shipped as                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A** — shared per-slot realign cooldown    | New shared module `server/worktree_clean_check/_realign_guard.py` (`realign_cooldown_remaining` / `record_realign`), consumed by **BOTH** realign sites — `_orphan.py:405` and `_branch_state.py:511` — exactly the two call sites this doc named. Re-exported from `worktree_clean_check/__init__.py:117`.                                                                                                                                                                                       |
+| **B** — pre-existing-ahead-commit age guard | Hoisted into the previously-unguarded path: `_orphan.py:228-262` refuses the WHOLE operation for the repo (no commit, no push, no realign) on a sub-floor pre-existing ahead commit — the comment at `:257` labels it "(Part B pre-existing-ahead-commit age guard)".                                                                                                                                                                                                                             |
+| **Verification** (unit tests)               | `tests/test_dirty_state_resolution.py:639` opens a block headed `slot_double_reset_dataloss_race_2026_07_25 — Part A (shared realign cooldown)`; `::test_orphan_second_realign_within_cooldown_is_skipped` (first realign runs, second inside the window is skipped and HEAD is preserved) and `::test_realign_cooldown_primitive_blocks_then_expires` (blocks, expires, and is correctly scoped per-repo). `tests/conftest.py:76 _reset_realign_cooldown` isolates the shared map between tests. |
+
+**Residual (the one item NOT proven by this pass)** — captured as a todo below rather than left in prose.
+
+## Todos
+
+- [ ] [BACKEND] P3. Close this doc's "Verification once implemented" bullet 2: confirm `head_backward_canary.py` (the
+      reflog-signature detector/pager) still fires normally on a legitimate single realign after
+      `agent-orchestrator@3e5de0e7b`, and confirm it needed no modification. **Done when**: either a test or a live
+      observation shows the canary firing on one allowed realign post-fix, recorded here — after which this doc can be
+      closed and archived. (The fix itself is verified above; only this canary-regression check is outstanding.)
+
+## Minimal fix (two parts — both are needed, each closes a different half of this one incident) — SHIPPED, see the verdict section above
 
 ### Part A — shared per-slot realign cooldown (prevents "twice within 90s"; this is what stops Reset #2)
 
@@ -275,7 +301,7 @@ window on a single slot, not just once.
 Both discarded commit-sets were manually recovered this session via cherry-pick + a fresh quickmerge —
 `unified-api-contracts@71e75750`.
 
-## Files read during this investigation (no code changes made)
+## Files read during this investigation (no code changes made **at the time this section was written** — the fix has since shipped, see the ✅ verdict section above)
 
 - `server/worktree_clean_check/_orphan.py`
 - `server/worktree_clean_check/_branch_state.py`

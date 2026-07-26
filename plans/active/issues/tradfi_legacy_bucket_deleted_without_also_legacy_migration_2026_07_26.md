@@ -126,15 +126,13 @@ never assumed — an irreversible delete ran without its stated R1 precondition,
 data-pipeline-correctness HARD RULE + `gcs-and-manifest-delete-safety-protocol.md` exist to catch. Split into what a
 worker can do read-only now vs what is genuinely operator-gated:
 
-- [ ] [DATA] P0. **Canonical coverage-equivalence census (worker-doable, read-only, NOT a full-corpus GCS walk)** —
-      determine whether `market-data-tick-tradfi-prd`'s OWN Databento-sourced coverage already has equivalent fidelity
-      for the legacy bucket's date range, via a MANIFEST CENSUS (deployment-api axis census / direct manifest read),
-      never a whole-corpus GCS walk (heavy-I/O HARD RULE). Full canonical coverage of the same instrument × date range ⇒
-      net loss ~0 (close as procedural-miss WITH this census evidence cited); any uncovered slice (wider date range /
-      different source / higher-res ticks Databento can't reach) ⇒ that slice is the real, permanent loss. First bound
-      the legacy range from surviving pre-deletion inventory (a stale manifest snapshot, or the migrator's
-      pre-2026-06-29 dry-run planned-count ~3.8M processed_candles) — the deleted bucket itself can't be inspected, but
-      what it HELD can still be scoped. Repo: market-tick-data-service / instruments-service.
+- [x] ✅ [DATA] P0. **Canonical coverage-equivalence census (worker-doable, read-only, NOT a full-corpus GCS walk)** —
+      DONE 2026-07-26 (worker, slot 4) — **VERDICT: NOT a clean net-loss-~0 case.** Census evidence in the new section
+      below finds a real, structural uncovered slice (pre-2023 trade/tick-level + options/futures chain-snapshot tradfi
+      data) that canonical's own Databento source has essentially never captured. See "2026-07-26 census evidence"
+      section below for the full methodology + numbers. This does NOT resolve the parent finding — the two `[OPERATOR]`
+      todos below stay open and this evidence feeds their decision. Repo: market-tick-data-service / instruments-service
+      (read-only manifest census, no code changes).
 - [ ] [OPERATOR] P0. **TIME-CRITICAL — GCS soft-delete / Object-Versioning recovery-window check.** Needs
       `storage.buckets.get` / `gcloud storage buckets list --soft-deleted`, which no available worker credential has.
       The bucket was deleted 2026-07-06 = 20 days ago as of this writing; GCS bucket soft-delete DEFAULT retention is 7
@@ -145,12 +143,22 @@ worker can do read-only now vs what is genuinely operator-gated:
       evidence above) — prod-bucket-level infra, operator-only, gated on both items above.
 - [x] ✅ [SCRIPT] P2. Fix `data_completion_tradfi_2026_07_15.md` lines 298/304 (R1/R2 checkboxes) — DONE (same session):
       R1 stays open pending the operator decision above; R2 flipped done citing this doc's clean 3-target inventory.
-- [ ] [SCRIPT] P3. Add a pre-delete GATE to `launch-canonical-migration-vm.sh` (or the runbook that invokes it) so a
+- [x] ✅ [SCRIPT] P3. Add a pre-delete GATE to `launch-canonical-migration-vm.sh` (or the runbook that invokes it) so a
       legacy-bucket-decommission step structurally CANNOT proceed without first verifying `also_legacy=True` appeared in
       a completed, non-crashed migration run for the same asset_group — this exact silent-gap class (a documented
       runbook precondition that a LATER, different invocation quietly doesn't satisfy) shouldn't require a manual
       forensic audit to catch after the fact. **RE-SCOPE NEEDED (2026-07-26, see addendum below) — do not action as
-      currently worded; the addendum's Option B is the concrete replacement scope.**
+      currently worded; the addendum's Option B is the concrete replacement scope.** — DONE (slot 11, 2026-07-26) via
+      the addendum's Option B, not the literal wording: `market-tick-data-service@200db96d` adds
+      `scripts/one_offs/verify_legacy_bucket_decommission_precondition.py`, a standalone reusable CLI that
+      operationalizes the delete-safety protocol's Part 5 twin-coverage invariant as a runnable, asset_group-agnostic
+      check (manifest census, never a GCS walk) — exits non-zero with a gap report when canonical coverage is
+      incomplete, 0 when complete. Unit-tested per the addendum's stated done-when (incomplete-coverage case exits
+      non-zero with a clear report; fully-covered case exits 0) in
+      `tests/unit/scripts/test_verify_legacy_bucket_decommission_precondition.py`. Does NOT touch
+      `launch-canonical-migration-vm.sh` (confirmed dead for this purpose per the addendum) and does NOT itself gate any
+      delete — the tool is the durable artifact a human decommission step is expected to run and paste output from
+      first; the actual delete stays a human-only hard stop per `gcs-and-manifest-delete-safety-protocol.md` § 3.
 
 ## 2026-07-26 addendum — todo 5 investigated, needs re-scoping before it's AO-actionable
 
@@ -201,7 +209,111 @@ into this loosely-worded slot without that scoping — Option A is low-value on 
 that needs the same plan-authoring rigor (repo, done-when, estimate) as any other todo, not an ad-hoc implementation
 under an audit-finding's addendum.
 
+## 2026-07-26 census evidence (worker P0 todo, slot 4)
+
+**Method**: direct read of the LIVE manifest object
+`gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (5,866,066 rows, object
+`updated: 2026-07-26T03:35:45Z` — read via `blob.download_to_filename` + pandas, NOT a bucket/object walk — single
+81.8MB file, satisfies the manifest-census / no-full-corpus-walk requirement). The legacy no-env bucket itself cannot be
+inspected (deleted); this reads the CANONICAL bucket's own manifest to test whether its Databento-sourced content
+already has equivalent fidelity for the range the legacy bucket held.
+
+**Range bound (best-available, the deleted bucket can't be re-inspected)**: the canonical manifest's own `date` column
+spans **2018-01-01 → 2026-07-26** (today), i.e. it nominally covers (and pre-dates) the migrator's own
+`--start-date 2019-01-01` default and the "2,008-day" legacy-corpus figure from the 2026-06-08 drill-down
+(`tradfi_manifest_canonicalisation_2026_06_01.md`). Distinct dates in canonical `<2023` = **1,826** — same order of
+magnitude as the legacy bucket's 2,008 `day*` dirs, consistent with the legacy corpus being roughly the pre-2023 tradfi
+history. So the DATE RANGE itself is not the gap — what's captured WITHIN that range is.
+
+**Finding — captured_pct by year (source=databento for 5,813,461/5,866,066 = 99.1% of all rows; batch_yahoo/barchart are
+the daily-only slices, immaterial here):**
+
+| year | captured | empty_confirmed | attempted_failed | expected_unattempted | total   | captured % |
+| ---- | -------- | --------------- | ---------------- | -------------------- | ------- | ---------- |
+| 2018 | 0        | 27,964          | 0                | 35,316               | 63,280  | 0.0%       |
+| 2019 | 585      | 24,916          | 0                | 38,372               | 63,873  | 0.9%       |
+| 2020 | 5,841    | 33,690          | 29,954           | 37,034               | 106,519 | 5.5%       |
+| 2021 | 6,251    | 32,566          | 29,805           | 38,602               | 107,224 | 5.8%       |
+| 2022 | 6,066    | 29,695          | 29,372           | 39,762               | 104,895 | 5.8%       |
+| 2023 | 202,344  | 223,855         | 29,132           | 31,247               | 486,578 | 41.6%      |
+| 2024 | 305,343  | 342,042         | 29,634           | 27,172               | 704,191 | 43.4%      |
+
+**The content-type breakdown is the decisive evidence.** Of the `captured` rows in 2018-2022 (18,743 total), the
+`data_type` distribution is: `ohlcv_1s` 90,428 · `ohlcv_1m` 84,541 · `ohlcv_24h` 3,383 · **`trades` 11 · `tbbo` 2** ·
+`options_chain`/`futures_chain` **0**. Contrast 2023+: `options_chain` **114,251** · `tbbo` **12,765** · `trades` 12 ·
+plus the same candle families. i.e. canonical's own Databento source has genuine trade-tick and options/futures
+chain-snapshot coverage starting ~2023, and **essentially none for 2018-2022** — exactly the granularity the legacy
+bucket's `raw_tick_data` L-hive/L-hyphen layouts held (per `migrate_tradfi_to_v9_canonical.py`'s own docstring:
+trades/tbbo/`options_chain`/`futures_chain` are first-class content there, not just candles). This lines up with the
+already-documented Databento entitlement limit noted elsewhere in this corpus
+(`tradfi_consolidated_closeout_2026_07_18.md`: "the billing entitlement is 1-month L3 + 1-year L1") — Databento
+structurally cannot backfill tick-level history beyond its rolling entitlement window, so canonical's own source cannot
+reproduce this even on a fresh re-attempt.
+
+**Caveat (does not change the content-type verdict)**: of the 2018-2022 `attempted_failed` rows, ~87,881 (CME) carry
+`error_reason=WithinBoundsTradfiSourceZero`, a KNOWN, separately-tracked, still-**UNRESOLVED** manifest
+misclassification defect (`tradfi_backfill_throughput_followups_2026_07_24.md` — the NASDAQ/NYSE population of this same
+defect was retired `mtds@ccbac784`; the CME/CBOE/FX population, 202,172 rows corpus-wide, remains open, out-of-scope
+here). Equities (NASDAQ/NYSE) show 0 `attempted_failed` in this range but 167,093 `expected_unattempted` — i.e.
+genuinely never even tried, not confirmed-absent. Neither caveat changes the captured-content finding above
+(trades/tbbo/chain ≈ 0 either way for 2018-2022).
+
+**Verdict**: this is NOT the "procedural miss, no net loss" case main's ruling asked to guard against being assumed. The
+manifest census finds a real, structural uncovered slice — **pre-2023 tradfi trade-level ticks (`trades`/`tbbo`) and
+options/futures chain snapshots** — that canonical's own Databento source has not captured and, per the documented
+billing-entitlement window, likely cannot retroactively capture. Whether the deleted legacy bucket actually HELD real
+data of this shape for 2018-2022 can no longer be verified directly (bucket gone), but its own `raw_tick_data` layout
+being trades/tbbo/chain-snapshot-native makes it the most plausible holder of exactly this missing granularity. This
+raises the urgency of the still-open `[OPERATOR]` soft-delete recovery-window check below — every day narrows or closes
+the only remaining way to actually confirm/recover the content.
+
 ## Codex SSOTs
 
 `/codex/02-data/data-pipeline-correctness-hard-rule.md` (the rule this may violate),
 `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (the delete-safety procedure R1/E7 were supposed to follow).
+
+## 2026-07-26 addendum — the delete DATE in this doc is wrong by 8 days (MEASURED, audit log)
+
+**Appended by `/ag-closeout-audit tradfi` (autonomous pass, 2026-07-26). Append-only: no existing text, checkbox, or
+`[OPERATOR]` item above was edited — this section records a measurement that the two open `[OPERATOR]` P0 items should
+be re-read against before either is actioned.**
+
+This doc states throughout that the legacy bucket "was permanently deleted 2026-07-06", and the TIME-CRITICAL
+`[OPERATOR]` P0 above computes its recovery-window urgency from it ("deleted 2026-07-06 = 20 days ago as of this
+writing"). **A Cloud Audit Log read disproves that date.** Query (read-only, run this session):
+
+```
+gcloud logging read \
+  'protoPayload.resourceName:"buckets/market-data-tick-tradfi-central-element-323112" AND
+   (protoPayload.methodName="storage.buckets.delete" OR protoPayload.methodName="storage.buckets.create")' \
+  --project=central-element-323112 --freshness=120d --limit=10
+```
+
+Over a **120-day** window it returns **exactly ONE** event and no create:
+
+| timestamp                        | methodName               | principal                  |
+| -------------------------------- | ------------------------ | -------------------------- |
+| `2026-07-14T11:03:03.648128088Z` | `storage.buckets.delete` | `ikenna@odum-research.com` |
+
+**Three consequences for the items above:**
+
+1. **Elapsed time is 12 days, not 20.** At the GCS default 7-day bucket soft-delete retention the window is closed
+   either way, but any configured retention of 14 days or more (the setting range is 7-90) leaves it OPEN. The
+   `[OPERATOR]` soft-delete check above is therefore materially more likely to succeed than this doc currently implies —
+   it is worth running promptly, not writing off.
+2. **The delete was not part of the 2026-07-06 v9 apply.** It landed **3 minutes before** the 2026-07-14T11:06:16Z
+   consolidator pause that `/plans/active/tradfi_multisource_backfill_2026_06_22.md` records for the ICE non-24h purge —
+   i.e. it was a step in that day's operator session. The reconstruction in "What I found" items (3) and (5) above
+   (which infers the delete date from E7's 2026-07-06 apply) should be corrected to the audited date. It does NOT change
+   the substantive finding: the completing apply's launcher still never passed `--also-legacy`, and 8 more days of
+   separation between the apply and the delete does not supply the missing migration.
+3. **The credential gate above is REAL, confirmed by probe, and needs no re-attempt.**
+   `gcloud alpha storage buckets list --soft-deleted --project=central-element-323112` returns
+   `HTTPError 403: unified-trading-sa@... does not have storage.buckets.list access`. Separately,
+   `gcloud alpha storage buckets describe gs://market-data-tick-tradfi-central-element-323112 --soft-deleted` returns
+   `HTTPError 400: Bucket generation is required` — a 400, not a 403, so the only missing input is the soft-deleted
+   bucket's **generation**, which is obtainable solely from the 403-denied list call. A worker cannot close this loop;
+   an operator (or any principal with `storage.buckets.list`) can, in one command.
+
+Folding this correction into the doc's own summary and the `[OPERATOR]` P0's arithmetic is drafted as todo 1 of
+`/plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (`status: draft`, awaiting operator approval).

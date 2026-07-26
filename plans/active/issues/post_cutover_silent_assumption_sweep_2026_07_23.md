@@ -270,6 +270,41 @@ validated against UAC v1 can promote after UAC v2 lands.
 
 ## Option B — move version minting into the PM reconciler (OPERATOR DECISION 2026-07-23)
 
+> ## ⛔ SUPERSEDED 2026-07-25 — OPTION B WAS NEVER BUILT; THE SEMVER-AGENT RETARGET SHIPPED INSTEAD
+>
+> _(Recorded 2026-07-26 by `/plan-reconcile ci`. `/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4
+> already logged that "the codex `ci-cd-flow.md` § 'Release tag reconciler' **+ the Option-B doc** are now
+> stale/contradictory and need reconciliation" — the codex half landed 2026-07-25; this is the doc half.)_
+>
+> **Everything below this banner describes a decision that was reversed two days later.** Do not implement the
+> sub-steps.
+>
+> **What actually happened**, on an explicit operator directive 2026-07-25 (_"we are NOT gonna use staging right now
+> unless we flip the toggle, so under the ldr to main we need a full mechanism for that, all repos do it properly"_):
+>
+> - `semver-agent`'s trigger was retargeted `branches: [staging]` → **`push: branches: [main]`** in the fleet SSOT
+>   template — `unified-trading-pm@0b128a725` (verified ancestor of `origin/live-defi-rollout` this session).
+> - Rolled to **all 22** `ldr_main` + `version_source=git-tag` repos (per-repo shas in
+>   `/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4). Verified independently here by reading an
+>   installed copy: `unified-api-contracts/.github/workflows/semver-agent.yml` is `push: branches: [main]`.
+> - **Proven live end-to-end**: semver-agent fired on `unified-api-contracts` main 2026-07-25T20:01:24Z, and
+>   `unified-trading-library` **v0.57.0 was genuinely published to Artifact Registry** — the first real publish since
+>   2026-06-27.
+> - The centralized PM minter this section designs was found **DECIDED BUT NEVER BUILT and architecturally incoherent
+>   for git-tag repos**: `scripts/cicd/reconcile_release_tags.py` has **no `--mint` implementation** (grepped this
+>   session) and hard-refuses to mint for dynamic-versioned repos; its own STALL message names semver-agent as the
+>   minter.
+> - **Codex now rules the opposite of this section**: `/codex/08-workflows/ci-cd-flow.md:1004` § _"Release tag
+>   reconciler — a STALL DETECTOR, not the minter (corrected 2026-07-25)"_.
+>
+> **Corroborating measurement**: this section's premise was "no tags are minted and `versions` is NOT advancing". Ran
+> the gate command 2026-07-26 — `git log --grep='chore(manifest): update' -- workspace-manifest.json` shows **14 entries
+> since 2026-07-23**, newest `936a2e31a` (2026-07-26T01:11Z). Minting is live again.
+>
+> **The 6 `- [ ]` sub-steps below are left unticked on purpose** (they were superseded, not completed). Their retirement
+> — and whether the operator's original cost/noise objection to the retarget still stands — is parked as a planning
+> call.
+
 **Decision: adopt Option B. The per-repo `semver-agent` retarget is REVERTED and stays dead.**
 
 ### Why the obvious fix was rejected
@@ -376,9 +411,16 @@ codex, or a future staging re-entry gets a dead pipeline.
       **Re-entry gate: this item must be closed BEFORE execution-service handles live order flow** — the defect is
       invisible at runtime (204 reads as success), so it will not resurface on its own. Whoever picks up
       execution-service work owns this.
-- [ ] [INFRA] P1. **F2 — restore version minting via OPTION B (the PM reconciler), NOT the per-repo agent.** See §
-      "Option B" below for the full design, the evidence, and the sub-steps. The per-repo retarget was built, **proven
-      working**, and then **REVERTED on operator decision 2026-07-23** for cost + commit noise.
+- [ ] ⛔ [INFRA] P1. **SUPERSEDED 2026-07-25 — DO NOT IMPLEMENT AS WRITTEN.** ~~F2 — restore version minting via OPTION
+      B (the PM reconciler), NOT the per-repo agent.~~ **F2's OUTCOME (version minting restored) IS ACHIEVED — by the
+      opposite route.** On an operator directive 2026-07-25 the per-repo `semver-agent` was retargeted `staging` →
+      `push:[main]` (`unified-trading-pm@0b128a725`, ancestor-verified), fleet-rolled to all 22 `ldr_main`+git-tag
+      repos, and proven live (`unified-trading-library` v0.57.0 published to Artifact Registry, the first real publish
+      since 2026-06-27). The PM-reconciler minter was **never built** and is architecturally incoherent for git-tag
+      repos. See the ⛔ banner on § "Option B" below and
+      [/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md](/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
+      § Phase 4. Left unticked because the item as _worded_ must not be executed; its retirement is parked for the
+      operator.
 - [x] ✅ [INFRA] P1. **Fix F2 — make the BACKSTOP able to report the outage.** `scripts/cicd/reconcile_release_tags.py`
       now splits two populations: tag-derived repos (all 23 today) are **N/A for tag creation** — minting a tag from a
       version is circular when the tag defines the version — and are instead checked for the real invariant, that `main`

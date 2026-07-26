@@ -26,7 +26,7 @@ related:
   [
     "/codex/08-workflows/ci-cd-flow.md",
     "/codex/04-architecture/ci-alerting.md",
-    "plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md",
+    "/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md",
   ]
 created: 2026-07-17
 parent_epic: infrastructure_master

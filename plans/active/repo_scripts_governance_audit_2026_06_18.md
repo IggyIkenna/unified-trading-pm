@@ -151,10 +151,17 @@ a verdict). Heaviest:
   plans" — same lifecycle-declaration idea, now for scripts.
 
 - [ ] [SCRIPT] P2. Wire enforcement (ratcheted warn→block, like the 5.94/5.95 checks): a script-homes sweep / QG check
-      that (a) every `scripts/` file declares `Epic:` + `Lifecycle:` (+ `Delete-when:` for campaign/oneoff); (b) `Epic:`
-      ∈ the epic registry (reuse the `assigned_vm`-vs-registry `regen_vm_registry.py --check` pattern); (c) surfaces
-      every `campaign`/`oneoff` whose `Delete-when` looks satisfied OR whose `git` last-modified is stale (>N months) →
-      flagged for the **epic owner** to confirm + delete. Repo: unified-trading-pm.
+      that (a) every `scripts/` file declares `Epic:` + `Lifecycle:` + `Delete-when:` — **all three REQUIRED and PRESENT
+      on ALL scripts, `NA` for `permanent`** (was: "+ `Delete-when:` for campaign/oneoff", which implied `permanent`
+      omits it — corrected 2026-07-26, `/plan-reconcile` infra shard: this line was left behind by the 2026-07-14
+      verify-rerun-2 finding-97 correction that fixed Decision 5 and the Phase-0 code block above but not this todo; the
+      codex SSOT `/codex/06-coding-standards/script-homes.md:97` reads
+      "`# Delete-when: <condition> | NA   # REQUIRED + PRESENT on ALL scripts`" and `:100` "**All 3 fields are MANDATORY
+      and PRESENT on every script** (operator 2026-06-22)", and `:154-155` defines the enforced check as failing on a
+      missing `# Delete-when:` OR a non-`permanent` using `Delete-when: NA`); (b) `Epic:` ∈ the epic registry (reuse the
+      `assigned_vm`-vs-registry `regen_vm_registry.py --check` pattern); (c) surfaces every `campaign`/`oneoff` whose
+      `Delete-when` looks satisfied OR whose `git` last-modified is stale (>N months) → flagged for the **epic owner**
+      to confirm + delete. Repo: unified-trading-pm.
 
 - [x] ✅ [DESIGN] P2. **DECIDED 2026-06-18 — NO runtime last-run tracking.** Dropped the run-ledger / `log_script_run`
       idea entirely (operator): an auto-updated usage timestamp is commit-noise (unnecessary commits/PRs just to _run_ a
@@ -224,7 +231,8 @@ a verdict). Heaviest:
 
 ## Success criteria
 
-- Every `scripts/` file declares a valid lifecycle marker (`Epic:`+`Lifecycle:`[+`Delete-when:`]); the sweep flags
+- Every `scripts/` file declares a valid lifecycle marker (`Epic:` + `Lifecycle:` + `Delete-when:` — all three, `NA` for
+  `permanent`; was `[+Delete-when:]`, same 2026-07-26 correction as the Phase-0 enforcement todo above); the sweep flags
   satisfied-`Delete-when` / stale scripts to their epic owner.
 - Every service repo's `scripts/` audited; the delete/deprecate list executed (0 out-of-shape scripts left in-tree).
 - `scripts/` is ruff-linted fleet-wide (ratcheted); basedpyright + coverage remain excluded by design.

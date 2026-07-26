@@ -24,7 +24,7 @@ tags: [kalshi, execution, secret-manager, credential-wiring, prediction, config-
 related:
   [
     /plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
   ]
 created: 2026-07-26
 parent_epic: predictions_master

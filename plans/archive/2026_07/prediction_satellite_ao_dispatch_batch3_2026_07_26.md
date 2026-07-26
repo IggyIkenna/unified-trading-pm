@@ -15,7 +15,7 @@ summary: >-
   avoid duplicate dispatch. Phase 3 cleared only 2 of the remaining orphans into fresh AO-dispatch todos; left 7
   operator-gated, 1 time-gated, and 1 human-only item (plus the 2 already-covered-elsewhere notes) in the Deferred
   sections below.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -65,25 +65,34 @@ drift_direction: advance-code
 
 # Prediction satellite AO batch 3 — fresh triage extraction
 
+> **🟢 ARCHIVED 2026-07-26.** Both todos' dispatch-cycle work is done: todo 1's schema-drift half shipped
+> (`unified-api-contracts@c03161a1`) with its paper-order-flow half migrated to its own tracked issue doc
+> (`/plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`, `BLK-c2d1fff9`, human-only
+> credential decision); todo 2's `[OPERATOR]` residual close-out migrated to its own source doc
+> (`/plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`, now `assigned_vm: planning`) so
+> it stays dispatchable. Archived via `/plans/active/prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`
+> (archived alongside this doc, same commit).
+>
 > **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
 > ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
 > explicit operator review). Both todos below touch distinct files/docs — safe to dispatch concurrently.
 
 ## Todos
 
-- [ ] [DATA] P1. **PARTIAL 2026-07-26 (slot-7, `data_engineering`) — schema-drift half DONE, paper-order-flow half
-      BLOCKED-OPERATOR (BLK-c2d1fff9).** **Schema-drift chain (DONE)**: the "23 endpoints" turned out to be ONE weekly
-      auto-filed snapshot issue listing all currently-failing endpoints (only 2 of 23 are Kalshi), not 23 separate
-      per-endpoint issues — root-caused: NOT a live regression, `KalshiMarket` (schemas.py) + the endpoint registry
-      already correctly document the March-2026 dollar-field migration; only the 2 VCR cassette fixtures
-      (`markets.yaml`, `market_lookup.yaml`) used as the drift-diff baseline were stale (pre-migration shape / an
-      expired test ticker). Re-recorded both against live data; `validate_schemas.py` + all 4
-      `tests/vcr/test_kalshi_vcr.py` tests green. Shipped `unified-api-contracts@c03161a1`. Closed the 10 superseded
-      weekly snapshots (#45,#46,#47,#60,#102,#319,#416,#541,#555,#590) as duplicates of #673; commented on #673 with the
-      fix (the other 21 unrelated endpoint failures in that snapshot are untouched, out of scope). **Paper-order flow
-      (BLOCKED)**: found the REAL reason it "was never verified" — `execution_service/adapters/sports_factory.py` wires
-      the Kalshi adapter to secrets `kalshi-api-key-id`/`kalshi-private-key-pem`, NEITHER of which exists in Secret
-      Manager (confirmed `NOT_FOUND`); the actual credential lives under a differently-shaped bundled secret
+- [ ] [DATA] P1. BLOCKED-OPERATOR (BLK-c2d1fff9) — **PARTIAL 2026-07-26 (slot-7, `data_engineering`): schema-drift half
+      DONE, paper-order-flow half blocked on a human-only credential-wiring decision (see below).** **Schema-drift chain
+      (DONE)**: the "23 endpoints" turned out to be ONE weekly auto-filed snapshot issue listing all currently-failing
+      endpoints (only 2 of 23 are Kalshi), not 23 separate per-endpoint issues — root-caused: NOT a live regression,
+      `KalshiMarket` (schemas.py) + the endpoint registry already correctly document the March-2026 dollar-field
+      migration; only the 2 VCR cassette fixtures (`markets.yaml`, `market_lookup.yaml`) used as the drift-diff baseline
+      were stale (pre-migration shape / an expired test ticker). Re-recorded both against live data;
+      `validate_schemas.py` + all 4 `tests/vcr/test_kalshi_vcr.py` tests green. Shipped
+      `unified-api-contracts@c03161a1`. Closed the 10 superseded weekly snapshots
+      (#45,#46,#47,#60,#102,#319,#416,#541,#555,#590) as duplicates of #673; commented on #673 with the fix (the other
+      21 unrelated endpoint failures in that snapshot are untouched, out of scope). **Paper-order flow (BLOCKED)**:
+      found the REAL reason it "was never verified" — `execution_service/adapters/sports_factory.py` wires the Kalshi
+      adapter to secrets `kalshi-api-key-id`/`kalshi-private-key-pem`, NEITHER of which exists in Secret Manager
+      (confirmed `NOT_FOUND`); the actual credential lives under a differently-shaped bundled secret
       (`kalshi-api-credentials`). Any real order attempt fails immediately at secret-load time. This is a genuine
       architecture/ops call (re-provision vs. adapt the code) touching live trading-exchange credentials
       (wallet-key-adjacent, human-only per CLAUDE.md) — filed
@@ -138,7 +147,13 @@ drift_direction: advance-code
 - **`plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`**: Confirmed via
   full doc read: the doc is `status: open` (ROUND 7, 2026-07-24) with the operator-gate stated explicitly in its own
   text — "BLOCKED-OPERATOR-DECISION on scheduling that work... Do NOT re-attempt manifest remediation until it ships"
-  and "this needs operator sign-off before any code/job change, not an autonomous patch." Uncovered items:...
+  and "this needs operator sign-off before any code/job change, not an autonomous patch." Uncovered items:... **RE-CHECK
+  2026-07-26** (finalize todo 2): still open, but partially de-risked — the code fix todo 12 prescribes
+  (manifest-consolidator TOCTOU CAS fix in `_write_consolidated()`) has since shipped
+  (`unified-trading-library@14301571`, 2026-07-24) and was proven stable in production on a sibling bucket. Todo 13
+  (deploy confirmation to the `instruments-sports` consolidator specifically) and todo 14 (re-run + multi-cycle
+  hold-verify against THIS bucket) remain undone, and no operator sign-off authorizing a third remediation attempt on
+  this twice-reverted live index has been recorded. Still genuinely gated — leave deferred.
 - **`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`**: Conflict check (step 2): grepped every
   covering-set doc for the two uncovered items' target files/mechanisms (`EventTransport`,
   `AtomicLegExecutor`/`atomic_leg_executor`, `betfair.*lay`, `back+lay`, `CanonicalOdds`) — zero hits anywhere in the
@@ -150,7 +165,12 @@ drift_direction: advance-code
 - **`plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`**: Confirmed Phase-1
   finding: the doc's uncovered remainder is the 3-step sequence in todos 4-6 (design the extended canonical `trades`
   schema → update the MTDS Polymarket writer + migrate the 2,477 `prediction_trades` rows + shape-#4's 158+ objects →
-  register in the cutover/non-canonical inventories), all still `- [ ]` open despite the Q3 operator...
+  register in the cutover/non-canonical inventories), all still `- [ ]` open despite the Q3 operator... **GATE CLEARED
+  2026-07-26** (`prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` todo 2's re-check): the Q3 ruling
+  landed 2026-07-25 (`unified-trading-pm@7dfcfe0ee`) — extend the canonical `trades` schema, migrate without loss — one
+  day BEFORE this batch3 doc's own 2026-07-26 audit, so this was a same-day staleness gap, not a decision made during
+  the re-check. The now-unblocked migration work is extracted as a new dispatched todo in
+  `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` (still `status: draft`) instead of staying deferred here.
 - **`plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md`**: Confirmed via full read: the doc has
   exactly 2 remaining uncovered open items (item 3, the sentinel fan-out, is fully implemented+cited by
   prediction_satellite_ao_dispatch_batch2_2026_07_25.md, Source-cited back to this doc — not re-extracted here).
@@ -181,3 +201,15 @@ drift_direction: advance-code
   was already exhaustively re-triaged twice by the most recent prior batches
   (prediction_satellite_ao_dispatch_batch1_2026_07_25.md and batch2_2026_07_25.md, both dated 2026-07-25), each
   independently concluding "0 AO-eligible (21 human-only items unchanged), 3 conflicts logged against the doc...
+
+## Progress Log
+
+- 2026-07-26 (slot 2): Re-dispatched `prediction_satellite_ao_dispatch_batch3-003` (the Kalshi schema-drift +
+  paper-order-flow todo) — found no new work to do; `BLK-c2d1fff9` (the paper-order-flow half's human-only
+  credential-wiring decision, per `issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`) is still
+  unanswered. Root-caused WHY it got redispatched despite slot-7's `BLOCKED-OPERATOR` annotation: the token was on the
+  todo's SECOND physical line, invisible to `regen_backlog_from_plan.py`'s `_parse_open_todos` (which only scans line 1
+  — the exact word-wrap gotcha `task_template.md` warns about). Moved `BLOCKED-OPERATOR (BLK-c2d1fff9)` onto the todo's
+  first physical line so this stops re-dispatching while the credential decision is still open. No attempt made to rule
+  on the credential decision itself — it is wallet-key-adjacent (live trading-exchange credentials), a CLAUDE.md
+  human-only hard-stop, not something for a worker or `main` to resolve.

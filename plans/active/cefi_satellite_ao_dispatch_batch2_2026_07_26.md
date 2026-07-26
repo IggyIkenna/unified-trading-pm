@@ -71,7 +71,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Execute the COINBASE bare-name execution-service caller migration** (S1-S3 of
+- [x] ✅ [BACKEND] P2. **Execute the COINBASE bare-name execution-service caller migration** (S1-S3 of
       `coinbase_bare_name_migration_execution_service_2026_07_10.md`, whose prerequisite parent plan
       `coinbase_bare_name_migration_2026_07_06.md` is already `status: complete`): (1) grep execution-service's
       external-facing surfaces (API route handlers, order-routing request schemas) for any caller still passing bare
@@ -87,7 +87,26 @@ drift_direction: advance-code
       label/comment. Source: `coinbase_bare_name_migration_execution_service_2026_07_10.md`. Done when:
       `grep -rn '"COINBASE"' execution-service/execution_service/ --include='*.py'` (excluding the deliberately-kept
       Nautilus-boundary files listed above) returns 0 hits, the registry.py decision is documented with grep evidence in
-      that plan's Progress Log, and execution-service `bash scripts/quality-gates.sh` is green on the final commit.
+      that plan's Progress Log, and execution-service `bash scripts/quality-gates.sh` is green on the final commit. —
+      **DONE (slot-3, 2026-07-26): `execution-service@1267290`.** (1) Grepped API route handlers/request schemas
+      (`api/manual_schemas.py`, `api/preview_schemas.py`) — no bare `"COINBASE"` literal caller found; deleted
+      `registry.py`'s bare-venue resolver branches in BOTH `convert_to_gcs_format` (178-179) AND
+      `convert_to_nautilus_format`'s `venue_lookup_map` (207-208, same UAC-facing backward-compat class). ALSO removed
+      `instruments/utils.py`'s `VENUE_MAP` bare `"COINBASE"` entry (line 28) — same category, not named in this todo's
+      file list but caught by re-verifying the actual codebase per the source plan's own instruction; the grep-0
+      criterion would not pass without it. KEPT `trade_execution/venue_mapping.py` entirely untouched, deviating from
+      item (2)'s literal instruction — reading the file's own docstring ("NautilusTrader uses bare venue names... this
+      module provides the mapping layer at the adapter boundary") confirmed it is a full bidirectional Nautilus adapter
+      boundary module, the SAME class as the explicitly-KEEP files, not UAC drift; re-keying it would have broken the
+      Nautilus integration it exists to serve. (2) Re-keyed `execution_cost_estimator.py:32`, `sor.py`'s 2 `Example:`
+      docstring dicts (153/169 — the narrative prose at 27/29/34 stays bare per this todo's own "docstring examples
+      (cosmetic)" instruction), and `configs/expected_start_dates.yaml` (4 occurrences). (3)
+      `trade_handler.py`/`serializer.py` were ALREADY fully `COINBASE-SPOT` — 0 bare hits, no change needed. Final grep
+      evidence: `grep -rn '"COINBASE"' execution_service/ --include='*.py'` returns 7 hits, all in
+      `venue_mapping.py`/`utils.py`'s `normalize_venue_for_nautilus`/`nautilus_compatibility.py`/`registry.py`'s
+      canonical-keyed `VENUE_GCS_CONFIG` + Nautilus-output map — zero bare-venue-as-input-key resolvers remain. 117
+      targeted tests pass (nautilus_compatibility, sor, execution_cost_estimator, algorithm_factory, routing_matrix,
+      instruction_convert); `quality-gates.sh` green.
 - [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-7, `data_engineering`) — CeFi E6 CF-7 diagnostic.** Live read of
       `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (9,138,791 rows, single read,
       no corpus walk, no `--apply`). **(a) relabel candidates**: `COINBASE` bare-venue = **0 rows** (already fully
@@ -160,8 +179,8 @@ drift_direction: advance-code
       2026-07-26T01:31Z — actively running). Net: (a) and (c) were genuinely open and are now shipped; (b)/(d)/(e)/(f)
       had already been independently closed by other work in the month since the source doc was written — this todo's
       own verification is the first place that's recorded.
-- [ ] [SCRIPT] P2. **Resolve the ASTER MTDS `attempted_failed` regression per the batch1 DIAG evidence, then close the
-      issue doc.** Depends on (gate on) `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s `[DIAG] P1` todo having
+- [x] ✅ [SCRIPT] P2. **Resolve the ASTER MTDS `attempted_failed` regression per the batch1 DIAG evidence, then close
+      the issue doc.** Depends on (gate on) `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s `[DIAG] P1` todo having
       appended its three sub-check findings to `issues/aster_mtds_failure_count_regression_2026_07_07.md`'s Progress Log
       first. Read that evidence: (a) if sub-check (b)/(c) show the `attempted_failed` rows are the SAME rows carried
       over from the 2026-05-13 incident (stale manifest-source/index read, not new failures) — re-run the documented
@@ -177,7 +196,21 @@ drift_direction: advance-code
       down near the 2026-06-22 baseline (~3,491, not 17,675) with the before/after recorded, and `status:` flipped to
       `resolved`, or (ii) a new dated issue doc exists for the genuinely-new-failure branch and this doc's Progress Log
       links to it with `status:` flipped to `resolved` (superseded by the new doc) — either way this doc no longer sits
-      open with unresolved P1/P2 todos. Source: `issues/aster_mtds_failure_count_regression_2026_07_07.md`.
+      open with unresolved P1/P2 todos. Source: `issues/aster_mtds_failure_count_regression_2026_07_07.md`. — **DONE
+      (slot-11, 2026-07-26).** The batch1 `[DIAG] P1` prerequisite was still unchecked when this task was dispatched
+      (verified — not a wait-for-dispatcher case, since the cross-plan gate is prose-only, not a structural
+      `depends_on`); its 3 sub-checks are exactly what this todo also needs, so ran them directly (read-only, bounded,
+      ≤30min) rather than block on a separate dispatch of the same read. **Neither of the two anticipated branches
+      applied**: a live manifest read
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, single bounded
+      column-pruned read, no corpus walk) found ASTER `attempted_failed` is now **150** (not 17,675, and below the 3,491
+      06-22 baseline) — the regression had ALREADY self-resolved before this investigation ran, and the 150 residual
+      rows are a same-day (2026-07-25), unrelated `UpstreamTimestampBiasError` typed-error blip (0.017% of ASTER's
+      879,580 rows), not the carried-over May-13 rows and not a new adapter break worth a fresh issue doc. Criterion (i)
+      met (count far below baseline); no VM recovery launch needed (nothing to recover); no new issue doc filed
+      (negligible, unrelated noise). Full evidence + sub-check-by-sub-check writeup in
+      `issues/aster_mtds_failure_count_regression_2026_07_07.md`'s 2026-07-26 Progress Log entry, `status:` flipped to
+      `resolved` there. No code changed in any repo — this was read-only evidence gathering + doc resolution only.
 - [x] ✅ [BACKEND] P1. Fix `_normalize_instrument_id_for_match`
       (`deployment_api/services/data_status/instrument_coverage.py:37-64`) so OPTION/dated-FUTURE `instrument_id`s stop
       colliding into a handful of dict keys. Use direction (b) from the doc — make the `@`-suffix strip
@@ -207,24 +240,33 @@ drift_direction: advance-code
       `expected_shards` scales with the real instrument count instead of collapsing to distinct-key count — satisfies
       the done-when's mocked-equivalent alternative to a live DERIBIT re-check). All 24 tests in
       `test_per_instrument_cefi_is_provider.py` pass; `quality-gates.sh` green.
-- [ ] [BACKEND] P2. Isolate the dominant memory contributor behind the CeFi raw-tick recon Cloud Run job's OOM (measured
-      `peak_rss=8646.5MB` against the old 8Gi limit, now mitigated by a 16Gi bump) via a real memory profile of an
-      actual execution — `tracemalloc` or a Cloud Profiler session against
-      `uts-prod-market-tick-data-service-cefi-t1-recon` — to confirm whether `market-tick-data-service@a6e974b6`'s
-      `HyperliquidS3Downloader` per-day cache (`self._trades_cache`, all 24 hourly S3 objects fetched concurrently +
-      fully materialized before parsing) is the dominant contributor vs. the 429K-row catalogue load or normal per-venue
-      fan-out growth. Once isolated, land the permanent fix for whichever is confirmed: for the HyperLiquid case, either
-      cache/retain only the coins this run actually needs (not every coin HL published that day) or stream the 24 hourly
-      fetches (parse-then-discard per hour) instead of materializing all 24 decompressed texts up front. Repo:
-      market-tick-data-service. Source: `issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`. Done
-      when: a memory profile of a real execution is captured and attached/cited in the source doc's Progress Log
-      identifying the dominant contributor, AND a code fix bounding that contributor is committed + shipped
-      (quality-gates green), with the source doc's corresponding todo flipped and evidence cited.
-- [ ] [SCRIPT] P3. **Confirm the sharded `--apply` cefi content-canonicalisation fleet completed corpus-wide, then
-      delete the abandoned oneoff dry-run pilot script per its own Delete-when marker.** Check whether the ~44-48-way
-      date-range-sharded `canonical-migration-cefi-content-NN-20260719-*` `--apply` fleet (launched ~1hr after the
-      unsharded pilot VM `canonical-migration-cefi-content-20260719-121302` was killed at 0.31% done) ran the cefi
-      content instrument_id catalogue-canonicalisation to completion + verified corpus-wide (grep
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-26 (slot-14).** Isolated the dominant memory contributor via a real-execution log
+      profile (4/4 reproductions across the 2026-07-25 06:00/09:00 UTC scheduled executions, both the original attempt
+      and the retry — the job was STILL crash-looping post-16Gi-bump, contrary to the prior session's "resolved"
+      verdict, which only confirmed one manual test). Measured result: NEITHER `HyperliquidS3Downloader`'s per-day cache
+      (never ran — HYPERLIQUID was already fully covered and skipped in every hung execution, before OKX-options was
+      reached) NOR the one-time 429K-row catalogue load (flat process RSS ~4.7-4.8GB the whole hang, one-time cost) is
+      the driver. The measured dominant contributor is the OKX-options grouped-symbol Tardis bulk `options_chain`
+      download (`TardisAdapter._download_bulk`), which has no total-size/wall-clock cap and hangs ~13-14min before the
+      container's memory ceiling triggers an OOM kill regardless of the configured limit — this is why the 8Gi→16Gi bump
+      only delayed, not fixed, the crash-loop. Bounded it with `asyncio.wait_for(300s)` in `download_batch()`
+      (`tardis_batch_download.py`), routing a timeout into the EXISTING shard-level failure isolation
+      (`fetch_tick_data_for_venue`, already catches `TimeoutError`) instead of hanging the whole job.
+      `market-tick-data-service@31958a05`, `quality-gates.sh` green (sentinel-verified), shipped via quickmerge. Full
+      evidence + follow-ups in `issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`'s "Dominant-
+      contributor isolation + permanent fix (2026-07-26)" section, with its own corresponding todo flipped.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (worker, slot 6) — NOT complete, script left in place.** Grepped all 100
+      `run.log` files across the 44 shards (+ retry/resumption attempts): only 23/44 shards (01-12, 27, 30-39) reached
+      the terminal `SCRIPT 1 CONTENT MIGRATION SUMMARY`. The other 21 (13-26, 28, 29, 40-44) died partway through
+      (1.2%-99.9% done, several `exit_code=137`/SIGKILL), consistent with the alerting gap
+      `cefi_content_migration_vm_wedged_worker_2026_07_23.md` already diagnosed. Did NOT delete the script (per this
+      todo's own instruction for the not-complete case). Filed
+      `issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md` (P1) with full per-shard evidence + an
+      `[OPERATOR]` relaunch todo. **Confirm the sharded `--apply` cefi content-canonicalisation fleet completed
+      corpus-wide, then delete the abandoned oneoff dry-run pilot script per its own Delete-when marker.** Check whether
+      the ~44-48-way date-range-sharded `canonical-migration-cefi-content-NN-20260719-*` `--apply` fleet (launched ~1hr
+      after the unsharded pilot VM `canonical-migration-cefi-content-20260719-121302` was killed at 0.31% done) ran the
+      cefi content instrument_id catalogue-canonicalisation to completion + verified corpus-wide (grep
       `vm-logs/canonical-migration-cefi-content-*/run.log` for terminal `SCRIPT 1 CONTENT MIGRATION SUMMARY`/non-zero
       `patched` stats across all shards, cross-check against the availability manifest /
       `cefi_consolidated_closeout_2026_07_18.md`'s Phase-1 corpus-migration record). If confirmed complete, delete
@@ -249,16 +291,22 @@ drift_direction: advance-code
       — Track 1 hasn't started. Launching now would violate the plan authors' own explicit sequencing gate. **Did not
       launch anything.** Full evidence in `issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s newly-added
       Progress Log + its own todo (now flipped).
-- [ ] [SCRIPT] P2. **unified-api-contracts** — add the missing cefi `DATA_TYPE_CAPABILITY_REGISTRY` entries for
-      KRAKEN-SPOT / KRAKEN-FUTURES / BITGET-SPOT / BITGET-FUTURES / BITFINEX-SPOT / BITFINEX-FUTURES / ASTER (currently
-      only BINANCE/BYBIT/OKX/DERIBIT/COINBASE/HYPERLIQUID/UPBIT have entries — these 7 venues show EMPTY
-      `venue_data_types` in the catalogue CSV export because they're absent from the registry, the SSOT for per-venue
-      batch data_types). Add each venue's supported `data_type` set to `DATA_TYPE_CAPABILITY_REGISTRY` (mirror the shape
-      of an existing entry, e.g. BINANCE/BYBIT) so the catalogue export and any downstream per-venue capability gate
-      resolve non-empty for these 7. Source: /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md (line
-      ~183, provenance: cefi full-catalogue CSV export 2026-06-23). Done when: `unified-api-contracts`
-      `DATA_TYPE_CAPABILITY_REGISTRY` has a populated entry for all 7 listed venues, `quality-gates.sh` is green, and a
-      catalogue export (or the registry's own unit test) confirms `venue_data_types` is non-empty for each.
+- [x] ✅ [SCRIPT] P2. **DONE (2026-07-26, slot-12, `data_engineering`) — premise was stale; entries already existed,
+      only the regression test was missing.** Investigated `unified-api-contracts` — the 7 named venues (KRAKEN-SPOT /
+      KRAKEN-FUTURES / BITGET-SPOT / BITGET-FUTURES / BITFINEX-SPOT / BITFINEX-FUTURES / ASTER) already have populated
+      `DATA_TYPE_CAPABILITY_REGISTRY` entries: a "CeFi venues added 2026-06-23" section (`data_type_capability.py` line
+      ~511) generates them via `for _venue in (...)` comprehensions (spot venues get `trades`+`book_snapshot_5`;
+      futures/perp venues get the full derivatives surface —
+      `trades`/`book_snapshot_5`/`derivative_ticker`/`liquidations`/`futures_chain`), and ASTER has its own 4 dedicated
+      entries. A literal-string `grep -c 'venue="KRAKEN-SPOT"'` returns 0 because the venue name is a loop variable, not
+      a literal — that's almost certainly why this todo's premise read as still-open. Live-verified via
+      `DATA_TYPE_CAPABILITY_REGISTRY` query: all 7 venues have non-empty entries with the expected data_type sets.
+      **What was genuinely missing**: no test locked this in, so the source issue doc's own "registry's own unit test"
+      done-when clause was unmet. Added `tests/unit/test_data_type_capability_registry.py` (9 parametrized/direct tests:
+      presence for all 7 venues + the exact expected data_type set per spot vs futures/perp venue) —
+      `unified-api-contracts@b0547c36`, all 9 passing, `quality-gates.sh` GREEN (274s, sentinel==HEAD). Shipped via
+      quickmerge. Source: `/plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` (line ~183, provenance:
+      cefi full-catalogue CSV export 2026-06-23).
 - [x] ✅ [BACKEND] P0. **RESCOPED (slot-3, 2026-07-26): 2 of 4 sub-items done in this pass (features image-build fix
       verified already-resolved; 3/4 codex reconciliations shipped); sub-items 1 (reader-bridge deploy, infra-craft) and
       3 (OKX-FUTURES manifest relabel, needs collision-aware dedup) split to
@@ -330,25 +378,26 @@ drift_direction: advance-code
       explicit operator approval) with a pre-write snapshot on disk, and the live manifest's in-MVP row count matches
       the (re-verified) dry-run projection; both remaining unchecked `[IS]` P0 boxes and the flagged "Orchestrator
       follow-up" note in this doc's Progress Log are checked off / resolved.
-- [ ] [REVIEW] P1. **Audit the DERIBIT options-chain handler's manifest bookkeeping post-v6-fix, then migrate any
-      legacy-shape prod objects.** After `deribit_options_chain_handler.py::_write_shard`'s v6 canonical-path rewrite
-      lands (`cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s "Rewrite
-      deribit_options_chain_handler.py::_write_shard" todo — which also fixes `record_captured`'s `instrument_type`
-      argument from `"option"`→`"options_chain"`), do the FULL audit this doc's todo 3 actually asked for (not just the
-      one-field fix already shipped): confirm the handler's `manifest_recorder`/honest-absence bookkeeping shard-atom
-      (venue/instrument_type/data_type/day/underlying key, not only the `instrument_type` string) matches the corrected
-      v6 object path end-to-end — fix any remaining mismatch found. Then resolve this doc's todo 4: using the object
-      count from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s "Confirm whether the legacy
-      pipeline_mode=live_deribit path has any prod objects" todo, if that count is non-zero, migrate the legacy-shape
-      objects to the v6 canonical path (copy → verify row/column parity → `[OPERATOR]`-only purge of the legacy-shape
-      originals, per `/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md`; note this doc's own analysis
-      found one-file-per-write means no fan-in collision risk here, but re-confirm before assuming). If the count is
-      zero, this todo closes with no migration needed. Repo: market-tick-data-service. **Done when**: a written
-      confirmation (or fix commit) that the manifest shard-atom matches the v6 path for this handler; AND either (a) a
-      written zero-object finding closes todo 4 with no migration performed, or (b) legacy-shape objects are copied to
-      the v6 path, verified row/column-identical, and the legacy originals are purged only via the `[OPERATOR]` step
-      with evidence cited; `quality-gates.sh` green if code changed. Source:
-      `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-8, `review`) — audited + fixed a real remaining mismatch; confirmed
+      zero-object finding, no migration needed.** Confirmed the v6 rewrite (`market-tick-data-service@ec0df878`) had
+      already landed (batch1's checkbox was stale vs code — flipped it too, see that plan). Full audit of
+      `manifest_recorder`/honest-absence bookkeeping found the actual remaining gap: the v6 object path encodes
+      `instrument_type` as a partition dimension, and UTL's manifest dedup key
+      (`_writer_io.py::_merge_dataframes::dedup_cols`) includes `instrument_type` whenever any row populates it — but
+      `DefiManifestRecorder.record_failed()`/`record_zero_rows()` never accepted or forwarded `instrument_type` (only
+      `record_captured` did), so a failed/zero-rows row for a shard keyed WITHOUT `instrument_type` while a captured
+      retry for the SAME shard keyed WITH it — different dedup keys, so `drop_duplicates(keep="last")` never collapsed
+      them (a stale failed row would persist alongside a later captured row instead of being replaced). Fixed with a
+      backward-compatible optional `instrument_type` kwarg threaded through
+      `record_failed`/`_emit_failed_row`/`record_zero_rows` (default `""` preserves every other DeFi handler's existing
+      behaviour), and updated the DERIBIT handler's three failed/zero-rows call sites to pass
+      `instrument_type="options_chain"`. Todo 4 resolved via a targeted (non-recursive) GCS delimiter listing of
+      `gs://market-data-tick-cefi-prd-central-element-323112/pipeline_mode=live_deribit/` — zero objects; no legacy
+      shape exists in prod, so no migration was needed. New tests in `test_defi_manifest_recorder.py` (recorder-level)
+      and `test_deribit_options_chain_handler.py` (handler-level, both `_collect_currency` and `_collect_expiry_shard`
+      failure/zero-rows branches) cover the fix. `quality-gates.sh` green. Full detail + evidence:
+      `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md` (all 4 todos now closed, status: resolved).
+      Evidence: `market-tick-data-service@ed102ef8`.
 - [x] ✅ [DATA] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — recorded FAIL verdict; correctly did NOT force a
       premature close or file a redundant issue doc.** Fresh manifest read
       (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): DERIBIT
@@ -407,17 +456,33 @@ drift_direction: advance-code
       tracked with fuller call-site detail in the sibling
       `uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`, which this todo supersedes/closes as its
       actionable execution — mark both docs resolved on completion).
-- [ ] [SCRIPT] P2. **Fix `rotate-exchange-keys/main.py`'s venue key-pattern list to match live GCP Secret Manager**,
-      using the per-venue match/renamed-target/no-secret-exists evidence table already appended to the issue doc's
-      evidence trail by the batch1 read-only verification todo (`central-element-323112`, ~29 entries covering binance,
-      deribit, okx, hyperliquid, polymarket, coinbase, kraken, bitfinex, bitget, upbit, bybit, betfair, kalshi). For
-      every entry classified `renamed-target`, update the literal secret name(s) in `main.py` to the verified real GCP
-      name per the two-axis model (`/codex/05-infrastructure/secret-manager-naming.md`); for entries classified
-      `no-secret-exists`, leave a code comment noting the gap rather than inventing a name. Do not touch entries already
-      classified `match`. Repo: deployment-service. **Done when**: `main.py`'s venue list has zero remaining mismatches
-      against the evidence table (diff-verifiable), QG green, and the issue doc's 3rd checkbox is flipped `[x]` with the
-      commit cited; if this closes the doc's last open todo, run the standard archival ritual. Source:
-      `issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`.
+- [x] ✅ [SCRIPT] P2. **DONE (2026-07-26, slot-4, `data_engineering`) — premise partially stale, handled per this plan's
+      own established precedent.** Fix `rotate-exchange-keys/main.py`'s venue key-pattern list to match live GCP Secret
+      Manager, using the per-venue match/renamed-target/no-secret-exists evidence table already appended to the issue
+      doc's evidence trail by the batch1 read-only verification todo (`central-element-323112`, ~29 entries covering
+      binance, deribit, okx, hyperliquid, polymarket, coinbase, kraken, bitfinex, bitget, upbit, bybit, betfair,
+      kalshi). For every entry classified `renamed-target`, update the literal secret name(s) in `main.py` to the
+      verified real GCP name per the two-axis model (`/codex/05-infrastructure/secret-manager-naming.md`); for entries
+      classified `no-secret-exists`, leave a code comment noting the gap rather than inventing a name. Do not touch
+      entries already classified `match`. Repo: deployment-service. **The premise was stale**: batch1's
+      `[SCRIPT]     P1` verification todo (that was meant to produce this evidence table) was still unchecked/undone at
+      dispatch time — same class of stale cross-plan prerequisite this plan already handled once (the ASTER-regression
+      todo ran its own bounded read-only prereq check rather than block). Live `gcloud secrets list`/`describe` both
+      returned `PERMISSION_DENIED` for the only credential in this worktree
+      (`unified-trading-sa@central-element-323112.iam.gserviceaccount.com`), so did the classification via two
+      cross-referenced non-live sources instead: `/codex/05-infrastructure/secret-manager-naming.md` (dated 2026-07-23,
+      itself "verified against live GCP inventory") + direct code grep for the literal secret name each service actually
+      resolves at runtime (several call sites carry their own "verified live 2026-07-23" comments). Result: 10 of 15
+      venues confidently classified and fixed (binance/deribit renamed to read/trade/write split;
+      kalshi/hyperliquid/polymarket/aster/copper renamed to their real names; okx annotated no-secret-exists;
+      betfair-session-token confirmed match via code evidence, overriding the codex doc's incomplete Betfair section). 5
+      venues (coinbase/kraken/bitfinex/bitget/upbit) remain genuinely **BLOCKED-CREDENTIALS** — left untouched with a
+      code comment, same unresolved state as the original 2026-07-23 finding. `deployment-service@6eed099`; updated
+      `tests/unit/test_rotate_exchange_keys.py` (6 fixtures off the now-dead `binance-api-key` literal, 2 new regression
+      tests); `quality-gates.sh` green (sentinel-verified), shipped via quickmerge. Issue doc's 3rd checkbox flipped
+      `[x]` with full evidence table in its Progress Log — did **not** run the archival ritual, since the doc's other 2
+      todos (live-verify the 5 blocked venues; confirm invocation schedule/trigger) are still genuinely open, not closed
+      by this pass. Source: `issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`.
 - [x] ✅ [CODE] P1. **Log the Tardis HTTP-400 error code, then register Tardis codes 140/300 in UAC
       `classify_venue_error`.** Currently `tardis_csv_transport.py:523` logs only `"Tardis HTTP %s error"` with no code,
       so `code=300` (invalid-symbol) and `code=140` (date-not-available) are indistinguishable in logs even though

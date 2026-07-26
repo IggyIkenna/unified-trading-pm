@@ -11,7 +11,7 @@ summary: >-
   pilot-verified but never run to completion — its expected output shard (_index/per_vm/odds-restamp-20260717.parquet)
   does not exist. Same population (16,969 vs 16,970 — rounding/count- drift only), described two different ways by two
   docs that have drifted apart.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -23,6 +23,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
     /plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md,
+    /plans/active/issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md,
   ]
 created: 2026-07-25
 assigned_vm: NA
@@ -32,6 +33,9 @@ priority: P1
 estimate_class: infra
 source: sports_satellite_ao_dispatch_batch2_2026_07_24.md, league_id casing migration todo, batch_footystats sub-step
 resolved_by:
+  sports_satellite_ao_dispatch_batch5_2026_07_26.md (verification), corroborated by
+  sports_satellite_ao_dispatch_batch2_2026_07_24.md step-4 CORRECTED addendum + orphan-delete-staging doc's manifest
+  census
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -98,13 +102,41 @@ for this todo) and did not want to reconstruct an untracked days-file and run a 
 attention. The investigation above (read-only: `gcloud storage ls`, docstring/regex reading) is safe and narrows the
 next worker's path considerably — no re-investigation needed, go straight to step 1 above.
 
+## Resolution (2026-07-26, slot-6, `data_engineering`)
+
+**SUPERSEDED — the merge this doc calls for already happened, on the same day this doc was filed.** This doc's own "What
+still needs doing" section (above) was written 2026-07-25 without checking whether the merge had already run elsewhere;
+it had, one day earlier.
+
+- `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s step (4) "batch_footystats copy+swap" section carries a
+  "CORRECTED 2026-07-25 (slot 7)" addendum citing `market-tick-data-service@75f226e8` ("feat(sports): read-split-merge
+  the mis-stamped batch_footystats odds population into canonical") — 0 rows lost, acceptance-tested. **Verified here**:
+  `75f226e8` exists in `market-tick-data-service` history and its commit body matches this doc's exact "purpose-built
+  read-split-merge, `merge_migrated_odds_into_canonical_2026_07_17.py`" description (1,815 days probed, 199 genuine-gain
+  days merged, 1,336 pure-duplicate days, 280 add-keys-but-zero-derive days deferred).
+- `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` independently re-verified the
+  post-merge state via a full exhaustive re-census (2,139-day calendar superset, 0 missing days): the manifest carries
+  **zero** rows for `pipeline_mode=batch_footystats AND source(case-insens)=ODDS_API` — the mis-stamped population is
+  gone from the manifest; only orphaned GCS bytes remain (human-gated PROD delete, tracked there).
+- **Re-verified fresh here** (not just re-citing): (a) `75f226e8` confirmed present in `market-tick-data-service` git
+  history via `git log`/`git show`, touching exactly the merge path described. (b) Re-ran the manifest census directly
+  (`read_availability_index` on `market-data-tick-sports-prd-...`, live, 2026-07-26): 42,476 rows carry
+  `pipeline_mode=batch_footystats`, **0** of them have `source(case-insens)=ODDS_API` (all 42,476 now carry
+  `source=footystats`) — confirms the orphan-delete-staging doc's finding still holds today, not stale.
+
+This doc's 3 open todos are therefore moot: todo 1+2 (reconstruct days-file, run/apply the merge) are already done
+(`75f226e8`); todo 3 (correct batch2's todo text) is unnecessary because batch2's own "CORRECTED 2026-07-25" addendum
+already supersedes its original wording in place — editing it again would just be a duplicate touch on a file another
+slot already fixed. The sole remaining work is the human-gated orphan-object PROD delete tracked in
+`issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` — not script-extension work.
+
 ## Todos
 
-- [ ] [SCRIPT] P1. Reconstruct the `batch_footystats` days-file (list `pipeline_mode=batch_footystats/` days with a
-      `_migrated_` object) and run `merge_migrated_odds_into_canonical_2026_07_17.py` dry-run to re-verify its measured
-      invariants against current data. (repo: market-tick-data-service)
-- [ ] [SCRIPT] P1. If dry-run numbers are sane, `--apply` the merge (manifest-safe, per-day flush), then verify whether
-      the merged league_id values need a `migrate_sports_league_id_casing_2026_07_21.py` follow-up pass — check by
-      content, don't assume. (repo: market-tick-data-service)
-- [ ] [DOC] P2. Correct `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `batch_footystats` todo text once the
-      above lands, so it no longer says "extend the casing script". (repo: unified-trading-pm)
+- [x] ✅ SUPERSEDED 2026-07-26 (slot-6). Reconstruct the `batch_footystats` days-file and run
+      `merge_migrated_odds_into_canonical_2026_07_17.py` dry-run — already done as `market-tick-data-service@75f226e8`
+      (2026-07-17, re-applied/confirmed 2026-07-25). See Resolution above.
+- [x] ✅ SUPERSEDED 2026-07-26 (slot-6). `--apply` the merge + check league_id casing follow-up — already done in the
+      same commit; the orphan-delete-staging doc's fresh census confirms the post-merge manifest state holds. See
+      Resolution above.
+- [x] ✅ SUPERSEDED 2026-07-26 (slot-6). Correct batch2's todo text — unnecessary; batch2 already self-corrected via its
+      own "CORRECTED 2026-07-25" addendum. See Resolution above.

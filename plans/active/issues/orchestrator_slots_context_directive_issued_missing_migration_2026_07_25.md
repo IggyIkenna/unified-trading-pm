@@ -102,10 +102,23 @@ depends_on: []
       `context_directive_issued: "BOOLEAN NOT NULL DEFAULT 0"`. Additionally applied the same `ALTER TABLE` directly to
       the live `state.db` to unblock the fleet immediately (not just on next process start) — `/api/state` confirmed 200
       post-fix. Full `quality-gates.sh` green (1645 passed, 1 skipped).
-- [ ] [BACKEND] P2. Add a guard so this class can't recur silently: a startup/CI check that every `Mapped[...]` column
-      on each ORM table exists in the live table (compare `PRAGMA table_info` against the mapper columns) and loud-fails
-      (or auto-adds) on drift — i.e. make "model column without migration" a caught error, not a runtime 500 on the hot
-      read path. Cross-ref the existing `_migrate_*` convention in `server/bootstrap.py`.
+- [x] ✅ [BACKEND] P2. Add a guard so this class can't recur silently: a startup/CI check that every `Mapped[...]`
+      column on each ORM table exists in the live table (compare `PRAGMA table_info` against the mapper columns) and
+      loud-fails (or auto-adds) on drift — i.e. make "model column without migration" a caught error, not a runtime 500
+      on the hot read path. Cross-ref the existing `_migrate_*` convention in `server/bootstrap.py`. — **DONE**
+      `agent-orchestrator@d2baf7a3a` (2026-07-25 07:33:51Z, "test(migrations): add SlotRow/AgentRow
+      migration-completeness test"). **Verified 2026-07-26 (/plan-reconcile ao)** by reading
+      `tests/test_migration_completeness.py` in full: `test_every_slot_row_column_is_baseline_or_migrated` /
+      `test_every_agent_row_column_is_baseline_or_migrated` statically diff `SlotRow`/`AgentRow.__table__.columns`
+      against `bootstrap._SLOTS_MIGRATION_COLUMNS` / `_AGENTS_MIGRATION_COLUMNS` (both wired at
+      `server/bootstrap.py:320-321`), failing **by column name**; a named regression test pins
+      `context_directive_issued` + `context_directive_grace_reports` by name; two anti-shadow tests stop the baseline
+      set being grown to silence a failure. **Method note — deliberately NOT the `PRAGMA table_info` comparison this
+      todo suggested**: the test's own docstring argues a `create_all_tables()`-against-a-fresh-DB PRAGMA check
+      structurally _cannot_ catch this class (it builds the schema straight from the ORM, bypassing the ALTER-TABLE path
+      that actually broke), so it supersedes the suggested method while fully meeting the stated intent ("make
+      model-column-without-migration a caught error, not a runtime 500"). It is a CI check, not a startup check — the
+      todo asked for "startup/CI".
 
 ## Status update (2026-07-25 ~05:37Z, main agt-52bb99)
 

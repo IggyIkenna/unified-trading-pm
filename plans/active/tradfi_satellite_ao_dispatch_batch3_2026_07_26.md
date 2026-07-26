@@ -69,20 +69,18 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **Extend UAC's `build_leg()` with an opt-in venue-omission mode.** Currently TradFi combo-leg
-      construction bypasses UAC's real shared `build_leg()`
-      (`unified_api_contracts.internal.reference.canonical_id_builder`) and instead uses a local `_build_leg_key()`
-      helper, because `build_leg()` always includes a venue prefix and TradFi legs deliberately drop it (`TYPE:SYMBOL`
-      only, no `VENUE:` prefix — see the doc's shipped P1 "drop venue prefix" fix for the full rationale). Add an opt-in
-      parameter/flag to `build_leg()` (e.g. `include_venue: bool = True`) so venue-less-leg consumers (TradFi combos
-      today, any future venue-less-leg consumer) can route through the real shared builder instead of maintaining a
-      local duplicate helper. Cross-repo: unified-api-contracts (the builder change) + market-tick-data-service or
-      instruments-service (swap TradFi's `_build_leg_key()` call site over to `build_leg(include_venue=False)`, delete
-      the local helper once parity is proven). Done when: `build_leg()` supports the venue-omission mode with a unit
-      test proving byte-identical output to the current `_build_leg_key()` output for existing TradFi combo legs, the
-      TradFi call site is migrated to call `build_leg()` directly, the local `_build_leg_key()` helper is deleted, and
-      `quality-gates.sh` is green in both repos. Source:
-      canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot-10, data_engineering)** — Extended UAC's `build_leg()` with an opt-in
+      `include_venue: bool = True` parameter (`unified-api-contracts@e1023c80`): when `False`, strips the leading
+      `VENUE:` segment from the built leg key — safe unconditionally since every `build_instrument_id` dispatch path
+      formats as `{_venue_token(...)}:{itype.value}:{symbol...}` and `_venue_token` never itself contains a `:`. 4 new
+      unit tests, including one proving byte-identical output to the old `_build_leg_key()` convention
+      (`f"{InstrumentType.FUTURE}:SP500" == "FUTURE:SP500"`). Migrated all 3 TradFi combo-leg call sites
+      (`instruments-service@de870864`) — `_parse_cme_calendar_spread_legs`, `_parse_cboe_spread_legs`, and the
+      ICE-populated leg path in `adapter.py` — to call
+      `build_leg(venue, ..., passthrough=True,     include_venue=False)` directly; the local `_build_leg_key()` helper
+      deleted. Existing `test_g1c_xcbf_spreads_decompose_to_combo` regression suite (2-leg, 3-leg, unparseable-drops,
+      5-leg-drops, outright-unaffected) verified still green post-migration. `quality-gates.sh --no-fix` green in both
+      repos. Source: canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md.
 - [x] ✅ [DATA] P1. **Audit R1/R2 legacy-decommission safety after the completed 2026-07-06 v9 apply.**
       `data_completion_tradfi_2026_07_15.md` line 183 (E7) reports the no-env legacy `market-data-tick-tradfi` bucket
       was ALREADY permanently deleted 2026-07-06, but line 298's R1 runbook item requires that deletion to have been
@@ -160,16 +158,21 @@ drift_direction: advance-code
       Remediation section (all 3 items struck through/done, `resolved_by` populated), satisfying (d) —
       `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` (doc is `locked_by: live-defi-rollout`, so left
       status/lock/archival untouched). Repos: market-tick-data-service, unified-api-contracts.
-- [ ] [CODE] P2. Evaluate switching aiohttp sessions in market-tick-data-service's Databento/tradfi fetch paths to an
-      `aiodns`-backed `AsyncResolver` (in place of the default `ThreadedResolver`, which still runs `getaddrinfo` on the
-      shared default executor). If viable (check `aiodns` is already an available/addable dependency, no platform
-      blockers), implement it; if not viable, document the blocker inline in the issue doc. This removes DNS resolution
-      from the thread-pool executor entirely, making the whole DNS-starvation bug class structurally impossible rather
-      than relying on the dedicated-executor convention landed in `mtds@ac857`. Source:
-      `issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` ([CODE] P2 todo). Done when:
-      aiodns/AsyncResolver is either adopted (with the sessions switched + a quick smoke test confirming DNS resolution
-      still works) or a documented decision-not-to (with rationale) is appended to the issue doc, and the doc's [CODE]
-      P2 checkbox is flipped to `[x]` accordingly.
+- [x] ✅ [CODE] P2. **DONE (2026-07-26, slot-12, `data_engineering`) — `market-tick-data-service@889ff829`.** Evaluated:
+      `aiodns` was viable (already transitively resolved via `ccxt`, `pycares` working on this platform, no blockers) —
+      promoted to a direct dependency. Databento's own fetch path has no aiohttp session at all (its SDK is synchronous,
+      already wrapped in the dedicated executor from `mtds@ac857` — nothing to switch there). The real targets were the
+      shared Tardis clients (Tardis serves tradfi data too, via `tardis_adapter.py`): `tardis_stream_client.py` was
+      explicitly hardcoding `ThreadedResolver()` — switched to `AsyncResolver()`; `tardis_base_client.py` was relying on
+      aiohttp's implicit "DefaultResolver picks AsyncResolver if aiodns is importable" behavior (only true by accident
+      via ccxt's transitive dep) — made explicit. 2 new regression tests assert both clients' `TCPConnector` receives an
+      `AsyncResolver` instance; live-verified end-to-end outside the test suite (network-sandboxed in CI) against
+      `api.tardis.dev` — 200 OK, DNS resolved + fetched via `AsyncResolver`. `quality-gates.sh` green (271s,
+      sentinel==HEAD; a separate warn-only adapter-contract-count flag on `_defi_manifest.py`/`dex_pools_handler.py` is
+      pre-existing from a concurrent slot's `ff1b5d51` commit, not touched by this diff). CEFI-only live-venue clients
+      (`aster_base_client.py`/`hyperliquid_base_client.py`) share the identical `ThreadedResolver()` pattern but are out
+      of this tradfi-scoped todo — flagged as a same-pattern follow-up in the issue doc rather than scope-crept into
+      here.
 - [x] ✅ [BACKEND] P0. **RESCOPED (slot-3, 2026-07-26): Finding 1's write-path root cause fixed + verified; historical
       re-stamp, billing-guard confirmation, and all of Finding 2 (FX instrument_id) remain genuinely open — split to
       `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`'s Deferred-work table (2026-07-26 Progress Log
@@ -198,15 +201,23 @@ drift_direction: advance-code
       Original done-when: new captures for both write paths land with correct `source`/`pipeline_mode` and a populated
       `instrument_id`; the cited historical rows are re-stamped/backfilled with before/after evidence counts;
       `quality-gates.sh` green in market-tick-data-service.
-- [ ] [BACKEND] P1. Add a manifest-vs-disk consistency check in market-tick-data-service: for a sample/scheduled sweep
-      of `capture_status=="captured"` rows in the tradfi tick availability manifest, verify the corresponding GCS object
-      actually exists on disk and fail loudly (structured error/alert, not silent) when a captured row has zero backing
-      object. This closes the detection gap that let both the 16,389-row contaminated phantom candidate list and the
-      3,615 confirmed true-phantom rows accumulate undetected. Repo: market-tick-data-service. Source:
+- [x] ✅ [BACKEND] P1. Add a manifest-vs-disk consistency check in market-tick-data-service: for a sample/scheduled
+      sweep of `capture_status=="captured"` rows in the tradfi tick availability manifest, verify the corresponding GCS
+      object actually exists on disk and fail loudly (structured error/alert, not silent) when a captured row has zero
+      backing object. This closes the detection gap that let both the 16,389-row contaminated phantom candidate list and
+      the 3,615 confirmed true-phantom rows accumulate undetected. Repo: market-tick-data-service. Source:
       `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`. Done when: the check runs (CLI flag or
       scheduled job) against the live `market-data-tick-tradfi-prd` `_index`, correctly flags a synthetic
-      captured-row-with-no-object test case, and passes quality-gates.sh.
-- [ ] [DESIGN] P2. Give `deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py`'s
+      captured-row-with-no-object test case, and passes quality-gates.sh. — **DONE (slot-3, 2026-07-26):
+      `market-tick-data-service@ee3d636` (`check_tradfi_manifest_disk_consistency.py`).** Samples `captured` rows,
+      checks each has ≥1 backing object under its shard prefix (post-migration `pipeline_mode=` canonical + legacy
+      layout, mirroring `rebuild_tradfi_manifest.py`'s dual-matcher tolerance). Live-verified TWICE against the real
+      prod bucket: the first 30-row live run surfaced a genuine bug in the check itself (a casing mismatch —
+      `symbol_rules.py` writes `instrument_type=` lowercase to disk while the manifest column is UAC-canonical uppercase
+      — 26/30 false positives, NOT real phantoms), fixed by checking both castings per codex's C2a ruling (compare
+      instrument_type case-insensitively), then re-verified clean: a 100-row live sample all passed. 11 unit tests incl.
+      the exact synthetic captured-row-with-no-object case; `quality-gates.sh` green.
+- [x] ✅ [DESIGN] P2. Give `deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py`'s
       `check_high_attempted_failed` a "known-dead, expected-coverage-narrowed" marker so a deliberately-deferred
       stale-residue cell (whole-manifest-history, no-recency-window count) stops re-paging `DP_RUN_MOSTLY_EMPTY` every
       30 min without requiring an immediate data-purge. Source the marker from cells whose `expected_coverage.py`/UAC
@@ -219,7 +230,25 @@ drift_direction: advance-code
       `check_high_attempted_failed` (or its config) supports flagging a (venue, data_type) cell as known-dead
       post-coverage-narrowing, the CBOE `ohlcv_15m` cell is flagged as the first real instance and stops appearing in
       `DP_RUN_MOSTLY_EMPTY` pages, a regression test covers the new suppression path, and `quality-gates.sh` is green in
-      deployment-service.
+      deployment-service. — **DONE (slot-11, 2026-07-26): `deployment-service@01414fc`.** New
+      `known_dead_cells_registry.py` — a
+      `(asset_group, data_type) -> KnownDeadCell(narrowed_at, venue, narrowed_by,     note)` registry, consulted
+      per-cell in `_read_attempted_failed_cells` via the cell's MAX `attempted_at` among its current `attempted_failed`
+      rows (`is_known_dead_for_series`). A cell only suppresses while it has ZERO activity newer than its registered
+      `narrowed_at` — any new `attempted_at` clears `known_dead` and resumes paging automatically (verified by a
+      dedicated test: same cell + one row with a post-narrowing timestamp → `known_dead` flips False and the page
+      fires). Suppression keys on `(asset_group, data_type)` — matching `check_high_attempted_failed`'s EXISTING alert
+      granularity, which has no venue dimension today (the todo's own "(venue, data_type)" phrasing assumed a
+      granularity that doesn't exist in the checker; `venue` is stored on the registry entry as provenance/documentation
+      only, not as a second key). CBOE `ohlcv_15m` is the first populated instance (`narrowed_at=2026-07-15`, citing
+      `unified-api-contracts@78b9e899`); `mbp_10`/ `corporate_action_confirmed`/`earnings_result` are explicitly NOT
+      added — each needs its own narrowing-date + zero-new-activity verification before joining the registry (not done
+      here, noted in the registry module's own docstring as the follow-up). 3 integration tests (suppressed-despite-high
+      / new-activity-still-pages / unregistered-cell-unaffected) in `test_data_pipeline_monitors.py` + 7 pure unit tests
+      in the new `test_known_dead_cells_registry.py` (boundary date inclusive, empty/unparseable-timestamp fail-open,
+      unregistered cell never suppressed). `meta_watchers.py` stayed within its 900-line file-size cap (899 lines) by
+      moving the registry + dataclass to the new sibling module rather than growing the existing file. 2849 tests pass;
+      `quality-gates.sh` green (127s clean run, sentinel-verified before quickmerge).
 - [ ] [VERIFY] P3. Trace the manifest-write/orchestrator classification layer for TRADFI's
       `_DATABENTO_SUPPORTED_DATA_TYPES`-filtered-out cells (`mbp_10`, `ohlcv_15m`, `ohlcv_24h`) to confirm exactly how a
       requested-but-filtered data_type is recorded in the tick manifest — `attempted_failed` vs `empty_confirmed` — and
@@ -261,5 +290,9 @@ drift_direction: advance-code
 
 - **`plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`**: Not a genuine two-sided conflict (no
   covering-set doc claims this ground) but the doc's own premise is stale: the BLOCKED-OPERATOR-DECISION on the P0
-  MDPS/build-continuous item was actually resolved 2026-06-29 (Option B adopted, mdps@cc63d1b +
-  features-service@34a5d4ff + mdps@7d630a3, per the now-archived...
+  MDPS/build-continuous item was actually resolved 2026-06-29 (labeled "Option A" per the now-archived
+  `features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`'s own resolved_by/summary, `mdps@cc63d1b` +
+  `features-service@34a5d4ff` + `mdps@7d630a3` — CORRECTED 2026-07-26, was mislabeled "Option B" here; see
+  `/plans/archive/issues/tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md` (archived) for both the label-correction AND
+  a fresh re-diagnosis finding the archived doc's own "Option A" label is itself disputed by the shipped code, and that
+  the underlying pipeline is STILL not actually unblocked — no successful tradfi features run has ever landed).

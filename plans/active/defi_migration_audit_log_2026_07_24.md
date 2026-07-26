@@ -509,7 +509,8 @@ P1 redirect todo below.)
       LABEL is wrong for non-Hyperliquid perp DEXs. The accuracy fix is the same as Solana: add per-venue overrides
       (ASTER→`batch_aster`?, DRIFT→`batch_drift`/helius, PACIFICA→…) — needs the operator's per-venue source decision +
       the corresponding `BATCH*<VENUE>` enum members. Until then perp source is coarse-but-consistent. (GMX dropped from
-      this list — REMOVED 2026-07-25, see `defi_gmx_venue_removal_2026_07_25.md`; no `batch_gmx` override needed.)
+      this list — REMOVED 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; no `batch_gmx`
+      override needed.)
 
 **Note on the migrated-bucket residue (NOT orphans):** `dex-pools-prd`/`dex-swaps-prd` carry BOTH old-format
 `day=/category=defi/` AND partial prior-apply canonical objects (one sample showed `pipeline_mode=BATCH_ONCHAIN_RPC`

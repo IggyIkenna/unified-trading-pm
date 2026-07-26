@@ -47,8 +47,8 @@ tags:
   ]
 related:
   [
-    plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
-    plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
+    /plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
+    /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-17
@@ -68,6 +68,40 @@ depends_on: []
 ---
 
 # reconcile-release-tags: the D13 migration deleted its input, and it has said "0 tags" ever since
+
+> ## ⛔ VERDICT SUPERSEDED 2026-07-26 — DO NOT DELETE THE WORKFLOW OR THE SCRIPT
+>
+> The `## UPDATE 2026-07-17 — RECOMMENDATION CHANGED: **DELETE it, do not fix it**` section at the bottom of this doc is
+> **superseded**. `scripts/cicd/reconcile_release_tags.py` was **repurposed, not deleted**, and is now the fleet's
+> release-**stall alarm**. Deleting it today would remove the only detector for the 4-week fleet-wide tagging outage
+> this very doc describes.
+>
+> **Measured this session (`/plan-reconcile ci`, 2026-07-26) — ran the checks, did not infer:**
+>
+> | claim in this doc                               | measured now                                                                                                                                                                                      |
+> | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | "impossible as written (reads a deleted field)" | **FIXED** — `unified-trading-pm@6c4ee4d0c` (2026-07-23, `git merge-base --is-ancestor` ⇒ ancestor of `origin/live-defi-rollout`) split the script into two populations                            |
+> | "delete the workflow + the script"              | **REJECTED** — `scripts/cicd/reconcile_release_tags.py` + `.github/workflows/reconcile-release-tags.yml` both still present and are the sanctioned stall detector                                 |
+> | "its remedy inverts D13"                        | **AGREED, and that is exactly how it was fixed** — the script now _hard-refuses_ to mint for tag-derived repos and instead asserts "`main` must not accumulate commits past the newest `v*` tag"  |
+> | "redundant with `assert_version_coherence.py`"  | **NO** — coherence answers "does the tag for `versions{}` exist"; the stall alarm answers "has this repo stopped releasing", the question that went unanswered for 4 weeks. Different invariants. |
+>
+> **Codex is the SSOT and it has ruled**: `/codex/08-workflows/ci-cd-flow.md:1004` § _"Release tag reconciler — a STALL
+> DETECTOR, not the minter (corrected 2026-07-25)"_ — "the script **hard-refuses to mint** … It instead asserts the
+> invariant it exists to protect". CLAUDE.md carries the matching one-liner (_"`reconcile_release_tags.py` = stall
+> detector, not minter"_).
+>
+> **The real minter is `semver-agent` on `push:[main]`**, retargeted off the dormant `staging` branch 2026-07-25 —
+> `unified-trading-pm@0b128a725` (ancestor-verified), fleet-rolled to all 22 `ldr_main`+git-tag repos, and confirmed
+> live in `/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § "Phase 4". Verified independently here by
+> reading the installed copy: `unified-api-contracts/.github/workflows/semver-agent.yml` is `push: branches: [main]`.
+>
+> **Everything above the "Verdict" section is still accurate as the historical diagnosis** — it is what motivated the
+> repurpose, and the fixed script's own docstring quotes this doc's `created 0 tag(s); 24 repo(s) had no main version`
+> finding verbatim. Only the DELETE disposition is dead.
+>
+> The two remaining `- [ ] [INFRA] P0. DELETE reconcile-release-tags` todos carrying this dead verdict
+> (`/plans/active/github_actions_operator_gated_followups_2026_07_17.md`, and this doc's own Verdict) are annotated but
+> **left unticked** — retiring vs rewriting them is a planning call, parked for the operator.
 
 ## The contradiction, in one line
 
@@ -206,7 +240,12 @@ version exists. Independently compared manifest `versions{}` vs the highest real
 reconciler could ever act on — and per D13's model above, that one is a **cache split**, not a missing tag. The real
 drift is the opposite direction (9 repos lagging; see the sibling doc), which this workflow cannot address by design.
 
-### Verdict
+### Verdict — ⛔ SUPERSEDED 2026-07-26, see the banner at the top of this doc
+
+> **This verdict was NOT adopted.** The script was repurposed into the fleet's release-stall alarm
+> (`unified-trading-pm@6c4ee4d0c`, 2026-07-23) and that disposition is now the codex ruling
+> (`/codex/08-workflows/ci-cd-flow.md:1004`, corrected 2026-07-25). **Do not act on the paragraph below.** Kept verbatim
+> as the reasoning of record.
 
 `reconcile-release-tags` is (a) impossible as written (reads a field D13 deleted), (b) redundant with a migrated tool
 that performs the same check correctly, and (c) its remedy inverts D13's direction of truth. **Delete the workflow +

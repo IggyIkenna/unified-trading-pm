@@ -23,14 +23,15 @@ repos: [
   ] # corrected 2026-07-14, was: [agent-orchestrator, alerting-service, client-reporting-api, deployment-service, features-service, instruments-service] (didn't match this doc's own body — the 9 real Pattern-B target repos named in the "Fan out the normalization" todo, line ~87 — verify-rerun-2 finding 57)
 scope: [engineer, admin]
 tags: [infrastructure, execution, refactor, consolidation, uac, verification]
-related: [test_fleet_image_builds_from_current_code_2026_06_17]
+related: [/plans/archive/2026_07/test_fleet_image_builds_from_current_code_2026_06_17.md]
 created: 2026-06-17
 parent_epic: deployment_and_user_management_master
 priority: P2
 source:
   [
-    2026-06-17 fleet image-build validation (plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md) —
-    local amd64 sweep of all 15 Python service images surfaced two divergent Dockerfile build contracts,
+    2026-06-17 fleet image-build validation
+    (/plans/archive/2026_07/test_fleet_image_builds_from_current_code_2026_06_17.md) — local amd64 sweep of all 15
+    Python service images surfaced two divergent Dockerfile build contracts,
   ]
 assigned_vm:
 resolved_by:
@@ -112,6 +113,9 @@ Open questions for the owner:
 
 ## Composes with
 
-- Parent validation: `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` (findings log).
+- Parent validation: `/plans/archive/2026_07/test_fleet_image_builds_from_current_code_2026_06_17.md` (findings log).
+  (Was `plans/active/…` — repointed 2026-07-26, `/plan-reconcile` infra shard: the parent plan was archived; verified
+  `ls plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` → no such file, and
+  `find plans -name 'test_fleet_image_builds*'` → the single hit under `plans/archive/2026_07/`.)
 - Tier/import architecture (no service↔service imports): `/codex/04-architecture/tier-and-import-architecture.md`.
 - Canonical service cloudbuild template + STEP 5.22: `unified-trading-pm/scripts/...` / service `cloudbuild.yaml`.

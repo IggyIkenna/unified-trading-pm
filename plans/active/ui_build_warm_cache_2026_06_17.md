@@ -10,7 +10,7 @@ stage: [meta]
 repos: [deployment-ui, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [ui, build-cache, quality-gates, performance, incremental-build]
-related: [plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md]
+related: [/plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md]
 created: 2026-06-17
 parent_epic: infrastructure_master
 assigned_vm: NA

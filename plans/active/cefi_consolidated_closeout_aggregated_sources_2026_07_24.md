@@ -93,14 +93,8 @@ drift_direction: advance-code
     - 7. **[DATA] P1.** Re-sync the manifest / data-status render for the migrated cefi chain cells so all four
          canonical surfaces agree.
     - 8. **[REVIEW] P1.** On W1 ship, record the cefi chain-tail v6 cutover date in the canonical-cutover-register.
-  - [`plans/active/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`](/plans/active/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md)
-    - 1. **[DATA] P1.** Confirm via `gcloud storage ls`/manifest query whether `deribit-options-chain` has actually been
-         RUN in prod.
-    - 2. **[DATA] P1.** Rewrite `_write_shard` to build its path via UAC `build_cefi_partition_path` so this handler
-         lands on the SAME v6 canonical path W1/W2 do.
-    - 3. **[REVIEW] P1.** Audit `manifest_recorder`/honest-absence bookkeeping for this handler post-fix.
-    - 4. **[DATA] P2.** If prod objects exist under the legacy `pipeline_mode=live_deribit/...` shape, migrate them
-         (copy → verify → human-only purge).
+  - [`plans/archive/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`](/plans/archive/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md)
+    — 0 open todos (resolved/archived 2026-07-26, `market-tick-data-service@ec0df878`).
   - [`plans/archive/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`](/plans/archive/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`](/plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md)
@@ -123,10 +117,8 @@ drift_direction: advance-code
          separate gap.
     - 5. **[REVIEW] P2.** Once 2-4 ship, re-run MTDS's full `quality-gates.sh` to confirm this ripple is the only
          blocker.
-  - [`plans/active/coinbase_bare_name_migration_execution_service_2026_07_10.md`](/plans/active/coinbase_bare_name_migration_execution_service_2026_07_10.md)
-    (status: draft)
-    - **[BACKEND] P2.** Grep execution-service surfaces for bare "COINBASE" callers post S1-S6; delete or keep the
-      backward-compat branch per findings.
+  - [`plans/archive/2026_07/coinbase_bare_name_migration_execution_service_2026_07_10.md`](/plans/archive/2026_07/coinbase_bare_name_migration_execution_service_2026_07_10.md)
+    — 0 open todos (complete/archived 2026-07-26, `execution-service@1267290`).
     - **[BACKEND] P2.** Re-key bare "COINBASE" → "COINBASE-SPOT" in
       `execution_cost_estimator.py`/`sor.py`/`venue_mapping.py`/`expected_start_dates.yaml`.
     - **[BACKEND] P3.** Grep `trade_handler.py`/`serializer.py` for bare COINBASE usage; re-key if lookup, leave if
@@ -568,13 +560,9 @@ drift_direction: advance-code
     - **[VERIFY] P2.** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers.
     - **[DECISION] P2.** Once the AAVE_V3 pilot trace lands, decide the reconciliation cadence for the remaining 58
       findings.
-  - [`plans/active/issues/aster_mtds_failure_count_regression_2026_07_07.md`](/plans/active/issues/aster_mtds_failure_count_regression_2026_07_07.md)
-    - **[VERIFY] P1.** Re-run the exact live turbo query used in this audit to confirm the ASTER failure_pillars finding
-      is still reproducible.
-    - **[VERIFY] P1.** Pull the raw manifest rows behind ASTER's `attempted_failed` count and check
-      error_reason/timestamps.
-    - **[VERIFY] P1.** Check whether a manifest index rebuild ran on `market-data-tick-cefi` between 2026-06-22 and
-      2026-07-07 reading a stale snapshot.
+  - [`plans/archive/issues/aster_mtds_failure_count_regression_2026_07_07.md`](/plans/archive/issues/aster_mtds_failure_count_regression_2026_07_07.md)
+    — 0 open todos (resolved/archived 2026-07-26: count self-recovered to 150, well below the 06-22 baseline; see doc's
+    Progress Log for the full evidence trail).
     - **[SCRIPT] P2.** Once root-caused: re-run recovery or diagnose a new adapter break.
   - [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
     (exactly 8 open — all listed)

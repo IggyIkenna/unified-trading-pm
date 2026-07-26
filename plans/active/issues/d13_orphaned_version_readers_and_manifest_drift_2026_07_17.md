@@ -44,9 +44,9 @@ tags:
   ]
 related:
   [
-    plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
-    plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
-    plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
+    /plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
+    /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
+    /plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-17
@@ -159,7 +159,11 @@ indistinguishable from no detector — and costs more, because it looks like cov
    the inverse. `_highest_existing_tag()` already exists in `reconcile_release_tags.py` and could be salvaged for it.
 2. **Confirm why the versions-consolidator is not closing the 9-repo gap.**
 3. **Fix or delete `sync-manifest-versions.py`** — do not leave a manual tool that reads a deleted field.
-4. **Delete `reconcile-release-tags`** (own issue doc) — impossible as written, redundant, and inverted.
+4. ~~**Delete `reconcile-release-tags`**~~ — ⛔ **SUPERSEDED 2026-07-26**: the script was **repurposed, not deleted**
+   (`unified-trading-pm@6c4ee4d0c`, ancestor-verified) and is now the fleet's release-**stall alarm**; codex has ruled
+   it so (`/codex/08-workflows/ci-cd-flow.md:1004`, corrected 2026-07-25). Do not delete it. Full evidence in its own
+   issue doc's top banner:
+   [/plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md](/plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md).
 5. **Delete the vestigial `repositories{}.version` scalar**, per the checker's own remedy.
 6. **Make `assert_version_coherence.py` gate** once 1-5 land — otherwise this recurs silently.
 7. **Re-sweep for other D13 orphans** — the table above is a sample, not a census.
