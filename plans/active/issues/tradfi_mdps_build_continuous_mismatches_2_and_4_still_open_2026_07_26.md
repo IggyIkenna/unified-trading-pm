@@ -160,11 +160,24 @@ start without real tradfi/ES feature parquets.
       `orchestration_scheduling.py:184`, `orchestration_scanner.py:371`), which already applies the same
       `EXCHANGE_CODE_TO_NAME` mapping — so the process step correctly resolves root=ES/MES to raw `underlying=SP500`
       today; this is NOT a live bug, just a stale finding in the archived doc.
-- [ ] [AGENT] P0. After mismatches 2+4 (+3 if still real) are fixed, launch the MDPS build-continuous run for
+- [x] [AGENT] P0. After mismatches 2+4 (+3 if still real) are fixed, launch the MDPS build-continuous run for
       `--root ES`, verify output lands at the expected canonical path, THEN launch features-delta-one-tradfi for ES and
       confirm real feature parquets land (check the manifest actually gains rows -- not just "job exit 0"). This closes
       `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s P0 items per the "Plans run to actual completion"
-      HARD RULE. (repo: market-data-processing-service, features-service)
+      HARD RULE. (repo: market-data-processing-service, features-service) — ✅ DONE 2026-07-26: MDPS build-continuous
+      verified with real data (`market-data-processing-service@e9edb39`, ES 2020-01-01..2026-07-25, real `timeframe=1d`
+      continuous_future objects confirmed via GCS + parquet-content inspection). features-delta-one- tradfi launched for
+      real: `features-delta-one-tradfi-20260726-132027` (`--start-date/--end-date 2024-06-17`, `TIMEFRAME=1m`,
+      `FEATURE_GROUP=futures_basis`, `INSTRUMENTS=CME:FUTURE:ES`) — 4 of 5 output timeframes (1m/5m/ 15m/1h) succeeded
+      with REAL data: manifest per-VM shard gained 5 `capture_status=captured` rows (`row_count=1` each) at
+      `features-tradfi-prd-central-element-323112/_index/per_vm/...20260726-132027.parquet`, confirmed via direct GCS
+      listing of the real canonical objects
+      (`delta_one/by_date/day=2024-06-17/feature_group=futures_basis/     feature_group_version=1/timeframe={1m,5m,15m,1h}/CME:FUTURE:ES.parquet`)
+      and parquet-content inspection (the `1h` file: 23 real rows × 81 real feature columns, real hourly timestamps).
+      The `24h` sub-timeframe correctly recorded an honest `attempted_failed` row (sparse MDPS `1d` coverage — see the
+      investigated-and-closed P1 below for the actual root cause), not a silent drop. This satisfies the todo's literal
+      completion bar in full: real feature parquets landed, manifest gained real rows, verified directly (not just job
+      exit 0).
 - [x] [AGENT] P1. Investigate why MDPS build-continuous's `24h`/`1d` output has genuinely sparse real coverage
       (`total_rows=454` across `days=2398` on the shipped ES re-run, ~19% hit rate — a real single day near 2024-06-17
       only found 14/86 real prior days) even after the right-edge-timestamp date-filter fix
@@ -546,6 +559,11 @@ start without real tradfi/ES feature parquets.
 - 2026-07-26 (slot 4): Fixed the per-date abort-on-first-failure gap (this doc's last open P1 todo).
   `features-service@81ab1264`, full `quality-gates.sh` green. See the flipped checkbox above for the fix detail; removed
   the now-redundant "New P1 todo" deferred-work row (superseded by the checkbox, which already carries the same fix).
+- 2026-07-26 (slot 3): Flipped todo 4 (P0) — launched the real production features-delta-one-tradfi VM
+  (`features-delta-one-tradfi-20260726-132027`, ES, `2024-06-17`, `TIMEFRAME=1m`) and verified via direct GCS listing +
+  parquet-content inspection: 4 real feature parquet objects landed (1m/5m/15m/1h) and the manifest gained 5 real
+  `captured` rows. This closes the issue's original premise ("no tradfi features run has ever successfully landed") —
+  one now has, with first-hand verified evidence.
 - 2026-07-26 (slot 2, 24h/1d sparse-coverage investigation): Confirmed the todo's own leading hypothesis
   (`build_active_contracts_table`/`extract_roll_events` gap specific to daily granularity) is **DISPROVEN**, via three
   independent lines of live evidence, before touching any code — per the todo's own instruction to "confirm via direct
@@ -594,13 +612,12 @@ start without real tradfi/ES feature parquets.
 
 ## Deferred work after 2026-07-26
 
-| Item                                                                                              | State / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                  | Blocked on                                          |
-| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| Todo 4 (this file, P0) — real features-delta-one-tradfi production launch + manifest verification | Not done — all blocking code bugs are now fixed and shipped (9 real bugs across market-data-processing-service, features-service, deployment-service); next session should launch a REAL production VM for a realistic single-day/narrow-range window (avoid 2020-01-01 — a market holiday with zero data, which would hit the untracked-until-now per-date abort-on-first-failure gap) and verify real parquets + manifest rows land | Nobody — pick up directly, no external dependency   |
-| New P1 todo — MDPS `24h`/`1d` sparse coverage investigation                                       | ✅ DONE 2026-07-26 (slot 2) — root cause found (upstream per-contract processed-candle data gap, not a build-continuous code bug); see progress log for the 3-part evidence chain                                                                                                                                                                                                                                                     | N/A — closed                                        |
-| New P0 todo — backfill MDPS's per-contract "process" step for ES/MES full history                 | Not done — newly surfaced by the sparse-coverage investigation above; a real VM-launch-scale backfill (`launch-mdps-backfill-vm.sh`, default `process` operation), not a same-session fix                                                                                                                                                                                                                                             | Nobody — real work, needs its own VM-launch session |
+| Item                                                                                              | State / why deferred                                                                                                                                                                      | Blocked on                                          |
+| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Todo 4 (this file, P0) — real features-delta-one-tradfi production launch + manifest verification | ✅ DONE 2026-07-26 (slot 3) — real feature parquets + real manifest `captured` rows verified via direct GCS listing + parquet-content inspection                                          | N/A — closed                                        |
+| New P1 todo — MDPS `24h`/`1d` sparse coverage investigation                                       | ✅ DONE 2026-07-26 (slot 2) — root cause found (upstream per-contract processed-candle data gap, not a build-continuous code bug); see progress log for the 3-part evidence chain         | N/A — closed                                        |
+| New P0 todo — backfill MDPS's per-contract "process" step for ES/MES full history                 | Not done — newly surfaced by the sparse-coverage investigation above; a real VM-launch-scale backfill (`launch-mdps-backfill-vm.sh`, default `process` operation), not a same-session fix | Nobody — real work, needs its own VM-launch session |
 
-**Recommended next item**: todo 4 (P0) — launch the real production VM for a single realistic date (e.g. a 2024 weekday
-already confirmed to have real MDPS continuous data, such as `2024-06-17`) with `TIMEFRAME=1m` set on the launcher, then
-verify via direct GCS listing + manifest read that real feature parquet rows landed for at least the `1h` output. This
-is the last remaining step to close this issue's original premise.
+**Recommended next item**: the new P0 todo above — backfill MDPS's per-contract "process" step for ES/MES across the
+full 2020-01-01..2026-07-25 history via `launch-mdps-backfill-vm.sh`, then re-run build-continuous and re-verify the
+real `24h`/`1d` hit rate rises materially above the current ~19%. This is the last open item in this doc.
