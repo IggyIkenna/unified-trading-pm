@@ -21,7 +21,7 @@ tags: [cefi, asyncio, executor, dns, latent-risk, follow-up]
 related:
   [
     /plans/active/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md,
   ]
 created: 2026-07-26
 source:

@@ -8,7 +8,7 @@ summary: >-
   operator-gated/too-large-or-risky items for any that have since cleared — including re-checking whether the operator
   has ruled on `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08`'s DECISION per batch2_finalize's own live tracking),
   then archives batch3 via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [tradfi, ao-dispatch, close-out, batch-3, satellite-docs, archival]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -48,9 +48,10 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 3 — finalize
 
-> **Machine-gated on `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`** (`depends_on` + `gate_on_depends: true`) —
-> the dispatcher will not queue any todo below until all 9 tasks in that plan are `done`. `sequential: true` because
-> todo 2 (deferred re-check) needs todo 1's reconciliation done first, and todo 3 (archival) must run last.
+> **🟢 ARCHIVED 2026-07-26.** All 3 todos done: source-doc reconciliation (todo 1), Deferred re-check (todo 2, all 4
+> items confirmed still genuinely open — each independently tracked in its own live source doc, nothing orphaned), and
+> this archival itself (todo 3) — archived alongside `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` in the same
+> commit.
 
 ## Todos
 
@@ -106,11 +107,22 @@ drift_direction: advance-code
       `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` — still `status: active` +
       `locked_by: live-defi-rollout`; the 2026-07-26 archived re-diagnosis's own finding stands (no successful tradfi
       features run has landed) — still genuinely too-large-or-risky.
-- [ ] [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
-      should have already resolved or re-confirmed all 4 — verify none silently vanish) → add the archive banner → run
-      the codex-alignment check (no new durable contract from this batch, confirm still true) → grep the corpus for
-      every referrer of `tradfi_satellite_ao_dispatch_batch3_2026_07_26` and fix each path to point at the archived
-      location → clear `locked_by` (already empty here, confirm). **Done when**: the plan is moved to
-      `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself gets
-      archived alongside it in the same commit.
+- [x] ✅ [DOC] P1. **DONE 2026-07-26 (slot-11, data_engineering).** **Archived
+      `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per CLAUDE.md's
+      plan-archival rule): (1) confirmed none of the 4 Deferred items need a new tracked todo elsewhere — each already
+      has its own live, still-open source doc carrying the real work (`tradfi_multisource_backfill_2026_06_22.md`,
+      `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`,
+      `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`,
+      `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`,
+      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`) — nothing orphaned by archiving; (2) added the 🟢
+      ARCHIVED banner to both docs; (3) codex-alignment check: batch3 cites zero `/codex/` refs and introduces no new
+      durable contract, confirmed nothing to update; (4) grepped the corpus for every leading-slash `/plans/active/...`
+      referrer of batch3/batch3_finalize and fixed each to `/plans/archive/2026_07/...` (5 hits across
+      `issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md`,
+      `tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md` ×1,
+      `plans/archive/issues/tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md`,
+      `issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`,
+      `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` ×2 — bare-filename prose citations without a leading slash are
+      out of scope per `check_reference_paths.py`'s own leading-slash-only pattern, left as-is); (5) `locked_by`
+      confirmed empty on both docs; (6) both docs' `status` flipped to `complete` and `git mv`'d to
+      `plans/archive/2026_07/` in the same commit as this checkbox flip.
