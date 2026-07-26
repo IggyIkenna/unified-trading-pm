@@ -86,10 +86,14 @@ defect** — do not cite it as a known TradFi outage cause.
       targets: `tardis_stream_client.py` (was hardcoding `ThreadedResolver()`) and `tardis_base_client.py` (was relying
       on aiohttp's implicit resolver-picks-AsyncResolver-if-aiodns-importable behavior) — both now explicit
       `AsyncResolver()`. 2 new regression tests + a live DNS smoke test against `api.tardis.dev` (200 OK). Full
-      evidence: `plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s corresponding todo. **Same-pattern
-      follow-up (not done here, out of this tradfi-scoped todo)**: `aster_base_client.py` and
-      `hyperliquid_base_client.py` (CEFI-only live-venue clients) hardcode the identical `ThreadedResolver()` pattern —
-      a future CEFI-scoped todo could apply the same fix there.
+      evidence: `plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s corresponding todo.
+- [ ] [CODE] P3. **NEW (2026-07-26, slot-12) — CEFI same-pattern follow-up, out of this doc's tradfi scope.**
+      `market_tick_data_service/market_interface/clients/aster_base_client.py:201` and
+      `hyperliquid_base_client.py:241` both hardcode `resolver=ThreadedResolver()` in their `TCPConnector`
+      construction — the identical pattern just fixed for the Tardis clients in the todo above. Same fix: switch to
+      `resolver=AsyncResolver()` (aiodns already a direct dep as of `market-tick-data-service@889ff829`), add the same
+      shape of regression test (assert `TCPConnector` receives an `AsyncResolver` instance), live-verify DNS
+      resolution still works against each venue's real API. Repo: market-tick-data-service.
 
 ## Progress Log (append-only)
 
