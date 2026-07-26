@@ -173,11 +173,15 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       venue tail across both layouts (mirrors `_maintenance.py`'s pattern exactly); `load_pool_metadata_for_date` now
       resolves via that helper before downloading, instead of guessing an exact single-blob path. Todo 2 (the 3 sibling
       loaders) can reuse this same helper.
-- [ ] 2. [DATA] P1. Apply the same layout-tolerant fix to the other 3 loaders in the same file:
+- [x] 2. ✅ [DATA] P1. Apply the same layout-tolerant fix to the other 3 loaders in the same file:
       `load_oracle_feeds_for_date` (:397-469), `load_staking_url_for_protocol` (:472-551),
       `load_evm_lst_contract_addresses_for_date` (:554-647) — same blob_path construction, same bug. Reuse the
       `_resolve_instrument_availability_blob_path()` helper landed in todo 1 rather than re-deriving the pattern. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — market-tick-data-service@cd8ce74e2362d529323e7c4f0b3c06cc3dc6a101. All 3 loaders now
+      resolve via the shared helper (day-scoped `list_blobs` + venue-tail regex match) instead of guessing the exact
+      pre-cutover flat path; a `None` resolution now falls back to each loader's existing static/legacy path instead of
+      raising on a stale-path 404. Promoted to `main` (`promote/market-tick-data-service/cd8ce74e2362`,
+      `quality-gates-v2` GREEN).
 - [x] 3. ✅ [DATA] P1. Add missing `_PROTOCOL_TO_VENUE_PREFIX` entries (`_instruments_metadata.py:52-80`):
       `"kamino_lending": "KAMINO"`, `"solend": "SOLEND"`, `"marginfi": "MARGINFI"` — confirmed real IS venue prefixes
       via `instruments-service/instruments_service/engine/orchestrator/defi.py:160,168-169`. This is a separate,
@@ -229,3 +233,10 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   called it) + added 3 new regression tests (hive-layout resolution, venue-absent-from-day-listing no-match, and the 3
   new venue-prefix entries). 25/25 unit tests green locally. Todos 2/4/5/6 are separate follow-up tasks left for their
   own dispatch (todo 2 can now reuse the shared helper).
+- 2026-07-26 (slot 11, `data_engineering`): Shipped todo 2 — `market-tick-data-service@cd8ce74e` routed all 3 sibling
+  loaders through the shared `_resolve_instrument_availability_blob_path()` helper. Code merged to `live-defi-rollout`
+  and promoted to `main` (`quality-gates-v2` green), but the plan checkbox was never flipped in the same turn.
+- 2026-07-26 (slot 12, `data_engineering`, re-dispatched as `-002`): Found todo 2's code already shipped+green
+  (`market-tick-data-service@cd8ce74e2362d529323e7c4f0b3c06cc3dc6a101`, verified via `git show` + `quality-gates-v2`
+  promotion-PR history) — this was purely a dual-flip gap, not missing work. Flipped the checkbox, no code changes
+  needed.
