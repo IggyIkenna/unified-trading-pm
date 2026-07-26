@@ -439,35 +439,26 @@ drift_direction: advance-code
       uppercase `ODDS`-family entries are removed from the sports data_type registry,
       `test_sports_data_type_vocabulary.py` runs unskipped and green, and both repos' `quality-gates.sh` are green —
       with no manifest/GCS write performed.
-- [ ] [BACKEND] P2. **Close the T6.8 one-off-retirement residual (items 1 + 3 only — item 2's `include_legacy_archive`
-      knob retirement is ALREADY DONE per `sports_satellite_ao_dispatch_batch2_2026_07_24.md` T6.8,
-      `rg 'include_legacy_archive'` → 0 hits confirmed; do not redo it).** (a) Delete the
-      `migrate_sports_canonical_v9.py` cluster in market-tick-data-service — `migrate_sports_canonical_v9.py`,
-      `_migrate_mdps_reconcile.py`, `_migrate_sports_reconcile.py`,
-      `migrate_sports_instruments_legacy_gap_2026_07_13.py` — **coordinate with the batch's E8 todo below
-      (`sports_canonical_universe_and_apifootball_reference_expansion`'s `--drop-stale` implementation also targets this
-      exact file) — run this import-graph check FIRST and do not delete the file if the E8 todo has already landed a
-      `--drop-stale` implementation in it (that would itself be a live caller); if this todo's decision lands first and
-      the file is kept, the E8 todo can proceed normally** after a full workspace-wide import-graph confirm
-      (`rg -l "migrate_sports_canonical_v9|_migrate_mdps_reconcile|_migrate_sports_reconcile" --type py` across ALL
-      repos, not just market-tick-data-service) shows no live caller beyond this cluster; also individually evaluate the
-      2026-07-13 sibling cluster (`write_sports_instruments_legacy_gap_manifest_2026_07_13.py`,
-      `fix_sports_fixtures_venue_blank_2026_07_13.py`, `fix_sports_instrument_count_zero_anomaly_2026_07_13.py`,
-      `tests/unit/scripts/test_migrate_sports_reconcile_coverage.py`) against their own Delete-when/git-history before
-      deleting any of them. (b) For the 6 Delete-when-unverifiable instruments-service one-offs
-      (`purge_legacy_unsharded_manifest_rows.py`, `add_canonical_fixture_ids.py`, `backfill_weather.py`,
-      `backfill_sports_fixture_stats_manifest.py`, `migrate_bare_to_per_league.py`, `migrate_entity_paths.sh`), do a
-      live-manifest check against each file's own stated Delete-when condition (e.g. "manifest captured count climbed",
-      "purge confirmed in live consolidated _index") and delete-or-keep per file accordingly — note
-      `backfill_weather.py` and `backfill_sports_fixture_stats_manifest.py` are ALSO named in
-      `sports_consolidated_closeout_2026_07_19.md` Track E's stale `entity=fixtures`→`fixtures_schedule` repoint todo (a
-      different, orthogonal fix — repoint first if Track E lands first; if this todo lands first and a file is kept,
-      still needs the Track E repoint separately; if a file's Delete-when confirms deletion, the Track E repoint for
-      that file becomes moot, drop it from Track E's list). Source:
-      `sports_t6_8_oneoff_retirement_residual_2026_07_25.md`. Done when: the 4-file v9 cluster is deleted with
-      import-graph evidence cited (or kept with a stated blocking caller), the 4 siblings are each individually resolved
-      (deleted or kept with reason), and each of the 6 unverifiable one-offs has an explicit delete-or-keep verdict
-      backed by a cited live-manifest check.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-26 (slot-7, `backend_engineer`) — Close the T6.8 one-off-retirement residual
+      (items 1 + 3; item 2 already done).** (a) v9 cluster: workspace-wide import-graph (all repos) found only docstring
+      hits outside the cluster. **KEPT** `migrate_sports_canonical_v9.py` + its 2 imported helpers
+      (`_migrate_mdps_reconcile.py`/`_migrate_sports_reconcile.py`) + tests — E8 below still needs to implement
+      `--drop-stale` in this exact file (confirmed still a log-stub, E8 not landed). **DELETED** the self-consistent
+      2026-07-13 sub-cluster, each Delete-when re-verified against the archived canonicalisation plan's progress log:
+      `migrate_sports_instruments_legacy_gap_2026_07_13.py` (`written_captured=31301/31301`, IS L6-REAL residual=0),
+      `fix_sports_instrument_count_zero_anomaly_2026_07_13.py` (49/49 verified, 28/77 honest accepted-phantom),
+      `write_sports_instruments_legacy_gap_manifest_2026_07_13.py` (same L6=0 evidence, leaf), and
+      `fix_sports_fixtures_venue_blank_2026_07_13.py` (718 rows applied, audit-verified 0 FIXTURES legacy-only, leaf).
+      Shipped `market-tick-data-service@f1bfd991`. (b) All 6 instruments-service one-offs hardcode
+      `BUCKET_NAME="instruments-store-sports-central-element-323112"`, permanently deleted 2026-07-16 (T5.4) —
+      live-reconfirmed 404 this session, no `--bucket` override anywhere. **DELETED all 6** + orphaned test + 2 report
+      JSONs (same disposition as the already-deleted `verify_v1_archive_row_coverage_2026_06_27.py`). Shipped
+      `instruments-service@4987e465`. Dropped the 2 deleted files from `sports_consolidated_closeout_2026_07_19.md`
+      Track E's repoint list (moot). Tooling gap found + filed (not fixed, outside craft scope):
+      `quickmerge.sh --agent --files` errors on an already-fully-committed pure-deletion commit —
+      `plans/active/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`. Source:
+      `sports_t6_8_oneoff_retirement_residual_2026_07_25.md`.
+
 - [x] ✅ [SCRIPT] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — Understat bulk backfill — close out the full
       sequential chain (§4/§6/§8).** Discovery: every substantive step of this chain was ALREADY completed via the
       sibling/successor plan `plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md` (archived
