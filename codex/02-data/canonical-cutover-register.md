@@ -127,6 +127,14 @@ caller that omits the keyword will pass a path with no `pipeline_mode=` segment.
 post-2026-05-19 data MUST pass `require_pipeline_mode=True` explicitly. Which lanes do and do not is a separate open
 item (plan todo P1-10).
 
+**Known content-desync findings (row VALUE mismatch, not a path-structure violation).** This axis's invariant is
+SOURCE-AWARE `{mode}_{source}` (`pipeline-mode-partition.md`) — a row can carry a syntactically-valid `pipeline_mode=`
+segment that still disagrees with its own `source` column. Distinct from the path-structure violations §1/§5 track.
+
+| Finding | Severity | Description                                                                                                                                                                  | Delete-eligible | Source                                                    |
+| ------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------------------------------------------------- |
+| F10     | MEDIUM   | defi `YEARN_V3/ETHEREUM/yield_bearing/vault_share_price` row: `pipeline_mode=batch_onchain_rpc` but `source=onchain_subgraph` — breaks the `{mode}_{source}` invariant above | NO              | `data_pipeline_reconciliation_defi_2026_07_20.md` §4 / §9 |
+
 ---
 
 ## §3 — Axis: `instrument_type` case

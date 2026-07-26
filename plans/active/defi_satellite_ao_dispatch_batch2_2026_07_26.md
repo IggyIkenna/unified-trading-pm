@@ -361,15 +361,12 @@ drift_direction: advance-code
       (sentinel-verified), shipped via quickmerge. Source:
       `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md` (both follow-on todos flipped
       there too).
-- [ ] [DATA] P3. Append F10 (YEARN_V3/ETHEREUM/yield_bearing/vault_share_price pipeline_mode<->source desync, MEDIUM,
-      delete_elig=NO) to the DeFi reconciliation register as a defi-scoped row, per the audit's own Section 9
-      maintenance-contract note ("F10 ... not in the register as defi-scoped rows ... flagged as follow-up") -- add the
-      row under whichever register doc F10 belongs (/codex/02-data/non-canonical-path-inventory.md or the
-      canonical-cutover-register, matching the format of existing register entries) citing
-      data_pipeline_reconciliation_defi_2026_07_20.md Section 4/Section 9 as the source finding. Source:
-      defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md (todo 5). Done when: F10 has a row in the register doc
-      with the same fields (finding id, severity, description, delete_elig) as other register entries, and the register
-      doc's F10 row links back to data_pipeline_reconciliation_defi_2026_07_20.md.
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot 6), `unified-trading-pm@<pending-sha>`.** Appended F10
+      (YEARN_V3/ETHEREUM/yield_bearing/vault_share_price pipeline_mode<->source desync, MEDIUM, delete_elig=NO) to
+      `codex/02-data/canonical-cutover-register.md` §2 (`require_pipeline_mode` axis — F10 is a row-VALUE desync against
+      this exact axis's `{mode}_{source}` invariant, distinct from a path-structure violation) as a new "Known
+      content-desync findings" table with the finding id/severity/description/delete_elig fields, linking back to
+      `data_pipeline_reconciliation_defi_2026_07_20.md` §4/§9.
 - [x] ✅ [CODE] P2. Wire EULER_V2 lending-indices capture and resolve the UAC "Plasma" chain ambiguity — per
       `plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`'s two remaining unblocked open todos
       (items EULER_V2-capture-wiring and Plasma-chain-resolution; the doc's HYPERLIQUID/ASTER UAC-registry todo is
