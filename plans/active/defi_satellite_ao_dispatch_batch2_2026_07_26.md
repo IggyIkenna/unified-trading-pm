@@ -132,14 +132,24 @@ drift_direction: advance-code
       malformation; (c) `quality-gates.sh` green for instruments-service. Source:
       `defi_migration_audit_log_2026_07_24.md` (P1 "DeFi instruments-store `by_date` has a DOUBLED `day={D}/day={D}/`
       prefix" finding, slot-2 2026-06-07 G2 verify dry-run).
-- [ ] [DATA] P3. **Fold `lst-rates` into DeFi data-status + exclude orphan `VAULT` venue.** (1) Wire the `lst-rates`
-      availability_index (bucket `lst-rates-central-element-323112`) into the defi data-status aggregation / rollup
-      `manifest_source` read path (deployment-api `data_status` aggregation + the defi projection rebuild) so the 5 LST
-      venues (ANKR/STADER/STAKEWISE/SWELL/MANTLE + LIDO/ROCKETPOOL/ETHENA/...) stop reading as zero — this corpus
-      already reads only `market-data-tick-defi`, not the dedicated lst-rates bucket, even though the data is genuinely
-      captured (not a data gap). (2) Exclude/remap the orphan generic `VAULT` venue (1113 captured rows, not a real
-      protocol) out of `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES`. Do NOT touch the bare-`SUSHISWAP` classic-vs-V3
-      alias question in the same registries — that is explicitly out of scope here (conflict-gated, see note). Source:
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-2).** Both done-when conditions were ALREADY satisfied by prior, unrelated
+      work — this todo's premises were stale: the dedicated `lst-rates-central-element-323112` bucket no longer exists
+      (live-verified 404; migrated into the shared bucket + deleted 2026-07-13/14) and `VAULT` is already absent from
+      `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES` (test-guarded). Found + fixed the actual live residual instead: a
+      venue-PREFIX exclusion bug (`DEFI_NON_PROTOCOL_VENUE_PREFIXES` in deployment-api's
+      `rollup_cache.py`/`breakdowns_domain.py`) was silently stripping `ANKR-ETHEREUM` (real, capability-registered LST
+      venue) + 6 `ALCHEMY-<chain>` venues + `COINBASE-ETHEREUM` from the rollup venue list/breakdown — fixed to match
+      the full venue string, regression test added. Shipped `deployment-api@f919c87`. Full writeup + per-todo detail:
+      `plans/active/defi_venue_lst_rates_residual_2026_07_24.md`. `SUSHISWAP` classic-vs-V3 (a separate, genuinely-open
+      data-semantics call in that same source doc, already out of scope for this todo) remains open. Originally: **Fold
+      `lst-rates` into DeFi data-status + exclude orphan `VAULT` venue.** (1) Wire the `lst-rates` availability_index
+      (bucket `lst-rates-central-element-323112`) into the defi data-status aggregation / rollup `manifest_source` read
+      path (deployment-api `data_status` aggregation + the defi projection rebuild) so the 5 LST venues
+      (ANKR/STADER/STAKEWISE/SWELL/MANTLE + LIDO/ROCKETPOOL/ETHENA/...) stop reading as zero — this corpus already reads
+      only `market-data-tick-defi`, not the dedicated lst-rates bucket, even though the data is genuinely captured (not
+      a data gap). (2) Exclude/remap the orphan generic `VAULT` venue (1113 captured rows, not a real protocol) out of
+      `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES`. Do NOT touch the bare-`SUSHISWAP` classic-vs-V3 alias question in
+      the same registries — that is explicitly out of scope here (conflict-gated, see note). Source:
       `plans/active/defi_venue_lst_rates_residual_2026_07_24.md`. Done when: (a) the 5 LST venues' rows are visibly
       credited (non-zero) in the DeFi could-exist / data-status view, verified via the deployment-api `data_status`
       endpoint or UI; and (b) `VAULT` no longer appears as a live/uncategorized registered venue in

@@ -63,27 +63,50 @@ source: >-
 
 ## Todos
 
-- [ ] [DATA] P3. **NICE-TO-HAVE — fold the `lst-rates` corpus into the DeFi could-exist / data-status view.** The 5 LST
-      venues (ANKR/STADER/STAKEWISE/SWELL/MANTLE + LIDO/ROCKETPOOL/ETHENA/… already-live) have captured `lst_rates` data
-      in the dedicated `lst-rates-central-element-323112` bucket, but the defi projected index + the deployment-api
-      could-exist drilldown read only the `market-data-tick-defi` corpus → these venues' real rows are invisible in the
-      DeFi data-status (read as zero). Fold the `lst-rates` availability_index into the defi data-status aggregation
-      (the rollup/`manifest_source` read path) so their captured rows are credited. NOT a data gap (data exists) — a
-      data-status aggregation completeness item. Repos: deployment-api (data_status aggregation) + the defi projection
-      rebuild. Provenance: 2026-06-16 lst-rates bucket verification.
-- [ ] [DATA] P3. **Orphan / junk defi venues** — `VAULT` (generic, 1113 captured rows, not a protocol → exclude or map
-      to the real protocol) + `SUSHISWAP` classic-vs-`SUSHISWAP_V3` ambiguity (data-semantics call: is bare `SUSHISWAP`
-      the classic AMM = `SUSHISWAP-ARBITRUM`, or V3?). Reconcile `ALL_DEFI_VENUES` / `LEGACY_DEFI_VENUE_ALIASES` to
-      remove the residual orphans.
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-2) — stale premise, root cause found + fixed elsewhere.** The dedicated
+      `lst-rates-central-element-323112` bucket this todo names no longer exists — verified live
+      (`gcloud storage     buckets describe` → 404) — it was migrated into the shared `market-data-tick-defi` bucket and
+      deleted 2026-07-13/ 14 (`defi_dedicated_bucket_shared_migration_2026_07_13.md`, all todos `[x]`), and the 5 LST
+      venues' `lst_rates` capability-registry entries were fixed 2026-07-07/10
+      (`defi_turbo_api_hides_real_captured_data_2026_07_07.md`) — verified live: `ANKR-ETHEREUM`/`MANTLE-ETHEREUM`/
+      `STADER-ETHEREUM`/`STAKEWISE-ETHEREUM`/`SWELL-ETHEREUM` all carry `lst_rates` entries in
+      `unified_api_contracts/registry/defi_venue_capabilities.py`. deployment-api's own DeFi sub-bucket-fold machinery
+      (`_BUCKET_CATEGORY_OVERRIDES`/`_MTDS_DEFI_SUB_DIMENSIONS` in `services/data_status/defi.py`) is now empty — every
+      DeFi sub-bucket that ever existed (incl. `lst-rates`) has been consolidated into the single shared bucket, not
+      permanently multi-bucket-folded; there is nothing left to fold. **Found + fixed the actual live residual bug
+      instead**: `DEFI_NON_PROTOCOL_VENUE_PREFIXES` in
+      `deployment-api/services/data_status/{rollup_cache,     breakdowns_domain}.py` matched on venue PREFIX
+      (`v.split("-",1)[0]`), which silently stripped `ANKR-ETHEREUM` (a real, capability-registered LST protocol with
+      genuinely captured data) — plus every `ALCHEMY-<chain>` venue and `COINBASE-ETHEREUM` — from the rollup venue
+      list + per-chain breakdown, just for sharing a prefix with the bare noise strings
+      `"ANKR"`/`"ALCHEMY"`/`"COINBASE"` (confirmed real: `token_transfers_handler.py` reads a chainless
+      `venue="ALCHEMY"` instruments lookup). Fixed both call sites to match on the full venue string; regression test
+      added (`test_strip_defi_ghost_venues_keeps_real_prefix_sharing_venues`). Shipped: `deployment-api@f919c87`.
+- [x] ✅ [DATA] P3 (VAULT half only). **DONE 2026-07-26 (slot-2) — `VAULT` half of this todo was already resolved,
+      SUSHISWAP half stays open.** `VAULT` is NOT present in `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES` (grep-
+      verified 0 matches) — already excluded, guarded by a passing regression test
+      (`unified-api-contracts/tests/unit/test_mtds_venue_coverage.py::TestNewlyCapabilitiedDefiVenues::     test_vault_is_not_in_all_defi_venues`,
+      live-run confirmed green). The residual 1,113 `VAULT`-labeled captured rows (pre-attribution-window
+      `vault_share_price` rows the writer's per-vault `_VAULTS` protocol lookup never covered) are correctly
+      uncounted/invisible today, not incorrectly excluded — reattributing them to a real protocol would need a new
+      one-off manifest/GCS migration script (writer-side work, out of scope for a registry edit). **`SUSHISWAP`
+      classic-vs-`SUSHISWAP_V3` alias question stays explicitly open** — genuinely undecided data-semantics call, was
+      also explicitly out of scope for the dispatched todo that closed this
+      (`defi_satellite_ao_dispatch_batch2_2026_07_26.md` item 4: "Do NOT touch the bare-`SUSHISWAP` classic-vs-V3 alias
+      question in the same registries — that is explicitly out of scope here (conflict-gated)").
 
 ## Success criteria
 
-1. `lst-rates` captured rows are credited in the DeFi could-exist / data-status view (verified: the 5 LST venues no
-   longer read as zero).
-2. `VAULT` + `SUSHISWAP` classic-vs-V3 ambiguity resolved in `ALL_DEFI_VENUES` / `LEGACY_DEFI_VENUE_ALIASES` (data-
-   semantics call made + encoded).
+1. ✅ `lst-rates` captured rows are credited in the DeFi could-exist / data-status view — closed 2026-07-26 (stale
+   dedicated-bucket premise + capability-registry gap both already fixed elsewhere; the actual live residual, a
+   venue-prefix-exclusion bug, found + fixed this pass).
+2. ✅ `VAULT` resolved (already excluded, test-guarded) — closed 2026-07-26. `SUSHISWAP` classic-vs-V3 ambiguity
+   **remains open** — genuinely undecided data-semantics call, explicitly out of scope for the todo that closed the rest
+   of this criterion.
 
 ## Progress Log
 
 - 2026-07-24 — plan forked from `migration_verification_orphan_safety_2026_06_10.md` (line-cap remediation split); no
   further work done yet beyond what the parent's archived Progress Log already recorded.
+- 2026-07-26 (slot-2) — both todos closed per the per-todo detail above. `deployment-api@f919c87` (venue-prefix-
+  exclusion fix). `SUSHISWAP` classic-vs-V3 remains the one genuinely open item in this doc.
