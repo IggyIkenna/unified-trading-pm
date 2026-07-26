@@ -503,11 +503,37 @@ drift_direction: advance-code
     unregistered `processed_candles/` output for ASTER on disk (`timeframe=15s`/`1m` only, day=2026-07-20, no MDPS
     manifest rows) — no currently-running GCE VM is producing it (`gcloud compute instances list` at discovery time
     showed only unrelated `mdps-backfill-tradfi-*` VMs), so it's stray/orphaned, not a live collision risk.
-  - **Next step (not yet started)**: launch the SPOT VM backfill
-    (`deployment-service/scripts/vm/ launch-mdps-backfill-vm.sh`) for HYPERLIQUID / LIGHTER-ZKSYNC / EXTENDED-STARKNET
-    over their respective captured ranges above, verify `processed_candles/` objects land with non-zero `quote_volume` +
-    real manifest rows, then verify `features-service`'s `RollingAdvReader.compute_rolling_adv()` returns non-`NO_DATA`
-    for at least one probed instrument.
+  - **Dry-run validation (2026-07-26)**:
+    `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2024-01-01 2026-07-25 dry`
+    (VM `mdps-backfill-cefi-20260726-164248`, deleted after validation — no GCS writes in dry mode). Confirmed the happy
+    path: `trades`-data_type candle aggregation (15s→1m→5m→15m→1h→4h→24h chain, real `quote_volume`-bearing output) —
+    43/50 files succeeded on day 1 alone. **Found a real, separate gap**: `derivative_ticker` candle-building for
+    HYPERLIQUID hard-fails for every instrument sampled (8/8 — ADA/AVAX/BNB/DOGE/FIL/LTC/MATIC/SOL-PERP) with
+    `No SchemaContract registered for asset_group='cefi' instrument_type='UNKNOWN' data_type='deriv_ohlcv_1m' venue='HYPERLIQUID'`
+    plus a companion `SCHEMA_VALIDATION_FAILED` (NOT-NULLABLE OHLC columns getting NaN) at the 15s tier. This is
+    `derivative_ticker`-specific (funding-rate/mark-price candles) — it does NOT block the `trades`/`quote_volume` path
+    this todo's "Done when" bar needs (ADV reader only reads `trades`-derived 24h candles), so it's tracked as a
+    follow-up, not fixed inline here: **[DATA] P2 follow-up** — root-cause the `instrument_type='UNKNOWN'` resolution
+    (should resolve `perpetual`) for HYPERLIQUID `derivative_ticker` → `deriv_ohlcv_1m` candle-building, then either fix
+    the resolution or register the missing `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` entry —
+    repo: market-data-processing-service (+ unified-api-contracts if a new contract is needed).
+  - **Real backfill LAUNCHED (2026-07-26, in progress)**:
+    `bash deployment-service/scripts/vm/ launch-mdps-backfill-vm.sh --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2024-01-01 2026-07-25 full`
+    → VM `mdps-backfill-cefi-20260726-164955` (SPOT, e2-standard-8, asia-northeast1-c), confirmed STARTED (RUNNING at
+    launch +<60s). Code tarballs for market-data-processing-service + market-tick-data-service were fresh at launch;
+    unified-api-contracts/unified-trading-library/deployment-service tarballs were WARN-stale (unrelated peer-repo churn
+    from sibling slots during launch prep) — advisory only (`LC_TARBALL_FRESHNESS` not set to enforce), not expected to
+    affect candle-building correctness since MDPS/MTDS (the repos that actually matter for this job) were fresh.
+    Monitoring for completion; post-completion steps: (1) run the launcher's own reminder —
+    `rebuild_manifest_from_canonical_paths('market-data-tick-cefi-central-element- 323112', service_name='market-data-processing-service', prefix='processed_candles/by_date')`
+    — to consolidate the per-VM shard into the canonical index, (2) verify `processed_candles/` objects with non-zero
+    `quote_volume` exist for a recent day for each of the 3 venues, (3) verify `features-service`'s
+    `RollingAdvReader. compute_rolling_adv()` returns non-`NO_DATA` for at least one probed instrument. **Minor
+    housekeeping note**: the deleted dry-run VM's per-VM manifest shard
+    (`_index/per_vm/mdps-backfill-cefi-20260726-164248.parquet`, 50 entries, `process_final=False`) was written to the
+    prod cefi bucket before the VM was killed — a harmless orphaned per-VM shard (never consolidated, no candle data
+    actually landed since dry-run skips uploads); will be superseded/ignored by the next consolidation pass, not cleaned
+    up separately.
 
 ## Deferred
 
