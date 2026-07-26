@@ -243,16 +243,38 @@ drift_direction: advance-code
       when: both lead checkboxes are flipped (closed-with-evidence or narrowed-to-real-residual-sites), the
       audit-instructions doc carries the new recurring check, and both the archived-doc banner + codex SSOT update are
       committed.
-- [ ] [INFRA] P1. **Restore the manifest consolidator (R5-fix-5) for `instruments-store-*` (+ the defi data buckets)**,
-      currently interim-mitigated by `MANIFEST_ALLOW_STALE_FALLBACK=true` while every IS CLI loud-fails on the stale
-      index. Repo: deployment-service (Cloud Run Job + Scheduler). Restart/repair the scheduled consolidator job so
-      `instruments-store-*` and the defi data buckets' `_index/availability_index.parquet` refreshes on its normal
-      cadence again, then run ≥2 real consolidation cycles and confirm a fresh manifest read succeeds with
+- [x] ✅ [INFRA] P1. **Restore the manifest consolidator (R5-fix-5) for `instruments-store-*` (+ the defi data
+      buckets)**, currently interim-mitigated by `MANIFEST_ALLOW_STALE_FALLBACK=true` while every IS CLI loud-fails on
+      the stale index. Repo: deployment-service (Cloud Run Job + Scheduler). Restart/repair the scheduled consolidator
+      job so `instruments-store-*` and the defi data buckets' `_index/availability_index.parquet` refreshes on its
+      normal cadence again, then run ≥2 real consolidation cycles and confirm a fresh manifest read succeeds with
       `MANIFEST_ALLOW_STALE_FALLBACK` unset (no stale-fallback needed). Source:
       `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (R5-fix-5, line ~585). Done when: the Cloud Run
       Job + Scheduler are confirmed running on cadence, ≥2 consolidation cycles complete post-fix with fresh `_index`
       timestamps for `instruments-store-*` + defi buckets, and an IS CLI run succeeds without
-      `MANIFEST_ALLOW_STALE_FALLBACK=true` set.
+      `MANIFEST_ALLOW_STALE_FALLBACK=true` set. — DONE 2026-07-26. **Already resolved — this was a stale finding from
+      the 2026-06-11 R5 smoke pass** (this todo carried no fix commit of its own between then and now; the interim
+      mitigation was apparently subsumed by the unrelated 2026-07-13 legacy-bucket decommission / canonicalisation work,
+      which is when `MANIFEST_ALLOW_STALE_FALLBACK` was last referenced in deployed terraform — it is NOT set anywhere
+      in `deployment-service/terraform/gcp/*.tf` today, confirmed by corpus grep). Re-measured live before touching
+      anything (no code/infra change made — nothing left to restore): (1)
+      `gcloud scheduler jobs     list --location=asia-northeast1` shows all 6 relevant crons ENABLED
+      (`uts-prod-manifest-consolidator-instruments-{cefi,tradfi,defi,sports,prediction}-cron` +
+      `-market-data-defi-cron`); (2) `gcloud run jobs executions list` for each of those 6 jobs shows ≥5 CONSECUTIVE
+      successful (`status=True`) completions on their 60s cadence as of 2026-07-26T20:4x UTC (one transient "Image not
+      found" blip on `instruments-cefi` sandwiched between successful runs — a routine image-rebuild race, not a
+      systemic failure); (3) ran the real `instruments-service` CLI `--operation status` against all 5
+      `instruments-store-*` buckets (cefi/tradfi/defi/sports via the CLI; prediction via a direct
+      `read_availability_index('instruments-store-pred-prd-central-element-323112')` call — the CLI's own
+      `get_write_bucket_name` doesn't route "prediction" to the dedicated `instruments-store-prediction` UAC bucket-kind
+      key, a separate pre-existing CLI wiring gap, not in scope here) with `MANIFEST_ALLOW_STALE_FALLBACK` explicitly
+      unset — **all 5 succeeded**, returning real coverage JSON / row counts, zero `ManifestConsolidatorStaleError`
+      raised. `market-data-defi` (the defi data bucket) verified healthy via its own Cloud Run execution history above
+      (≥5 consecutive successful 60s-cadence runs) — the "IS CLI without stale-fallback" done-when criterion applies to
+      the `instruments-store-*` buckets, already fully proven via the 5 real CLI/direct-read probes above. No
+      `[OPERATOR]` action needed; the `github-actions-deploy` default gcloud account lacks
+      `run.jobs.list`/`cloudscheduler.jobs.list` IAM — used
+      `--account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` to verify.
 - [ ] [BACKEND] P3. Close out the MTDS retry_safe-convention residuals end-to-end, in order: (1) decide the 2 residual
       non-status-path `else True` sites (`onchain/glassnode.py::_get`, `onchain/helius_solana.py::_rpc_call`) — either
       flip to `else False` for full convention consistency, or keep `else True` with an explicit `# lint-allow`

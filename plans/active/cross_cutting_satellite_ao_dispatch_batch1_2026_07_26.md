@@ -328,24 +328,24 @@ drift_direction: advance-code
       `test_manifest_writer_record_empty_reason.py` for both signature changes.
 
       **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
-                  `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
-                  `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
-                  prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
-                  this is a genuine architect-level design call (not a mechanical copy) — filed as
-                  `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
-                  (merged via PR #1593), NOT executed here.
+                          `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                          `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                          prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                          this is a genuine architect-level design call (not a mechanical copy) — filed as
+                          `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                          (merged via PR #1593), NOT executed here.
 
-                  **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
-                  (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+                          **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                          (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
 
-                  **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
-                  items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
-                  flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
-                  re-verifies sports.
+                          **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                          items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                          flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                          re-verifies sports.
 
-                  Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
-                  `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
-                  of which are now the ONLY reds, exactly matching the filed issue doc's scope).
+                          Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                          `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                          of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the
@@ -425,6 +425,43 @@ drift_direction: advance-code
       doc filed if a gap is found), (b) the VM_TASK fallback change is committed + shipped, and (c) either the 3
       relaunched VMs (cefi/defi/prediction) reach a terminal RUNNING-to-completion state with day-frontier progressing
       in `run.log`, or the todo is left open with an explicit note that the Round-1 UAC workflow has not yet landed.
+
+## Progress Log
+
+- **2026-07-26 (slot-7, IN PROGRESS — checkpoint before a context-compact)**: Working the
+  `datapoint_validation_results_bucket_missing_2026_07_21.md` 3-item close-out todo.
+  - **(a) DONE — sibling gap REFUTED.** `alerting-service`'s bucket kind (`configs/cloud-providers.yaml` line 194,
+    `alerting-service-${GCP_PROJECT_ID}`) resolves to `gs://alerting-service-central-element-323112`, which
+    `gcloud storage buckets describe` confirms EXISTS (location ASIA-NORTHEAST1) and is actively written to (`_index/`,
+    `alerting/` prefixes present). No provisioning gap — no follow-up issue doc needed.
+  - **(b) DONE + shipped.** Added a guard at the top of `setup-data-pipeline-vm.sh`'s generic `elif [ -n "$VM_TASK" ]`
+    fallback: if `VM_BACKFILL_CMD` instance metadata is present (which, by construction, only happens when a launcher
+    expected a dedicated dispatch branch that doesn't exist), it now fails LOUD + immediately with a diagnostic naming
+    the missing branch and the exact fix, instead of silently building an unrelated `--operation` CLI call that crashes
+    minutes later deep in a different service's argparse (the same bug class hit 3 times: 2026-07-12
+    sports-v9-migration, 2026-07-13 defi-paper, 2026-07-21 datapoint-validation). `deployment-service@b0e158d`
+    (`bash -n` + `shellcheck -S error` clean, full `quality-gates.sh` green, sentinel `d6576d4`). Shipped via
+    quickmerge.
+  - **(c) IN PROGRESS.** Confirmed the Round-1 blocker cleared: both named UAC commits are ancestors of the current
+    `unified-api-contracts` HEAD — `9a92cf4f` (R3 cefi-v6 chain-tail canonicalisation) and `6329fc04` (oracle
+    `processed_candles/` extension) — and UAC/instruments-service/UTL are all clean (no dirty WIP). Republished the
+    instruments-service tarball on the clean tree (`instruments-service-code@4d6c2109be9a`, uploaded 2026-07-26T20:58
+    UTC — this needed (b) shipped FIRST since `create-code-tarballs.sh` also bundles deployment-service itself and
+    hard-blocks on ANY dirty repo in its set, not just the `--include` target). Checked the prior 2026-07-22 relaunch's
+    `run.log`s (cefi/defi/prediction) before relaunching: all three end mid-stream with no termination marker (classic
+    SPOT-preemption signature, not genuine completion) — cefi reached day 2021-02-05 (178k rows validated) after a ~16h
+    run, defi reached day 2021-06-26 (60.5k rows), prediction reached day 2025-01-04 (644k rows) — real forward
+    progress, just interrupted, and safe to resume via the launcher's presence-skip idempotency. **Relaunched all 3 at
+    2026-07-26 21:00-21:01 UTC**: `datapoint-validation-cefi-20260726-210047`,
+    `datapoint-validation-defi-20260726-210104`, `datapoint-validation-prediction-20260726-210124` (all confirmed
+    RUNNING, SPOT, e2-standard-4, zone asia-northeast1-c). A T+10min watchdog is armed (background wait, checks
+    `gcloud compute instances describe` liveness + `run.log` tail for day-frontier advancement on all 3). **Not yet
+    verified — resume here after the watchdog reports.** If this session is lost before that: re-check VM status with
+    `gcloud compute instances list --filter="name~'^datapoint-validation-'"` and
+    `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log | tail -20` for each of the
+    3 VM names above — a `[[VM_PROGRESS]]`/`day-frontier advanced` line within the last hour = healthy; SPOT preemption
+    is expected/acceptable (idempotent, safe to just relaunch the same asset_group again, which will resume via
+    presence-skip). Once confirmed, flip this todo's checkbox with the day-frontier evidence.
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 
