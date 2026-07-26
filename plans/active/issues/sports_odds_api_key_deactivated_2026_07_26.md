@@ -126,9 +126,9 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
       operational re-run blocked on the scoping bug too)
 
       **UNBLOCKED 2026-07-26 (slot 6)**: the P1 root-cause todo below is done — the scoping code was live-tested
-                  correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
-                  This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
-                  is needed first. Still blocked only on the operator's credential fix (todo above).
+                              correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
+                              This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
+                              is needed first. Still blocked only on the operator's credential fix (todo above).
 
 - [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 4)** — Confirmed via direct manifest query
       (`gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`): ZERO `odds_api`
@@ -220,3 +220,20 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
   the key (whoever does should also strip the marker so the todo re-enters the backlog). Declining to run the backfill
   or flip the checkbox; skipping this task (`reason_code: GATED`) rather than fabricating progress against a still-dead
   credential.
+- 2026-07-26 (slot 6): Dispatched `sports_satellite_ao_dispatch_batch5-014` a THIRD time (after slot-4's original find
+  and slot-10's re-dispatch above). Re-verified the credential myself, independent of the prior findings: pulled
+  `odds-api-key` fresh via `gcloud secrets versions access latest` and curled `the-odds-api.com/v4/sports` directly —
+  still `error_code=DEACTIVATED_KEY`, unchanged. Root-caused WHY this keeps happening: the parent plan's OWN checkbox
+  (`sports_satellite_ao_dispatch_batch5_2026_07_26.md` line 261) never carried the `BLOCKED-CREDENTIALS` marker on its
+  own physical line — slot-4 wrote the marker into a separate annotation paragraph BELOW the checkbox (line 270), but
+  `regen_backlog_from_plan.py`'s `_parse_open_todos` matches `_NON_DISPATCHABLE_RE` only against the single line
+  `_UNCHECKED_RE` matched (the checkbox's own first line), never the continuation/annotation text underneath it. So
+  every regen tick kept re-deriving this todo as dispatchable, even though slot-10 correctly applied the marker to the
+  P2 _sub-todo inside this issue doc_ — that fix only stopped the issue-doc's own derived task, not the original plan
+  checkbox that dispatched me. Fixed by moving the marker onto the checkbox's own line in the plan
+  (`unified-trading-pm@<pending>` — see commit). Also found this is a GENERAL fleet-wide pattern (grep across
+  `plans/active/*.md` found ~50 checkboxes where a `BLOCKED-*` marker exists only in continuation text, not on the
+  checkbox's own line) — filed a dedicated dispatcher-bug doc rather than mass-editing every occurrence myself (many are
+  already resolved/moot; blast radius needs its own scoped audit):
+  `plans/active/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`. Not running the backfill (still
+  BLOCKED-CREDENTIALS); skipping this task.
