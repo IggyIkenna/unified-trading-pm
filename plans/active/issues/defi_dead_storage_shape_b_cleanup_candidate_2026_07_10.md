@@ -198,3 +198,50 @@ inherited CF single-walk lineage child of `instruments_mtds_subset_consistency_r
 trimmed to a pure entry-point index + archived 2026-07-26 — this is now where that C0 single-walk scope lives), or
 abandoning/deleting the stale hive snapshot once (a) is resolved and flat is confirmed the sole reader target. No new
 plan needed for this — it folds into the already-active v9-remediation child plan once the operator decision lands.
+
+## 🟢 2026-07-26 — corrected null-aware reconciliation at scale CONFIRMS the artifact hypothesis: ~0% real divergence
+
+Ran the null-aware re-comparison the 2026-07-14 entry recommended, at scale (read-only; nothing written to or deleted
+from GCS). The original `run5.json`/`run100.json` scratchpad scripts were session-local and no longer exist, so this
+re-derives an equivalent stratified sample rather than reproducing the exact same 100 days: 100 calendar days evenly
+spread across the hive shape's full frozen range (`2020-01-20` .. `2026-06-29`), scoped per-day listings only (never a
+whole-corpus walk) — 3,045 venue-day pairs where both shapes had a comparable `instruments.parquet` file (vs the prior
+entry's 2,911-pair sample; same order of magnitude, satisfies the todo's "at minimum 2,911 pairs" bar).
+
+**Byte comparison**: 1,697/3,045 (55.7%) byte-identical, 1,348/3,045 (44.3%) byte-different — consistent with the
+2026-07-14 finding's ~45% figure at this larger scale (not an artifact of a small sample).
+
+**Null-aware field comparison of the 1,348 byte-different pairs**: initially flagged 189 (6.2% of total) as "real"
+diffs, but investigating the flagged set found a SECOND comparison-methodology bug on top of the already-identified
+None-vs-NaN one: naive pandas `.loc[key]` indexing on a duplicated `instrument_key` produces a multi-row slice, not a
+single row, and comparing that against the other shape's single row spuriously flags EVERY column as differing. 162 of
+the 189 flagged pairs had duplicate `instrument_key` rows in one or both shapes (almost entirely `PANCAKESWAP_V3-BSC`
+and `UNISWAP_V3-OPTIMISM/POLYGON` — pool-heavy DEX venues). Re-ran those 189 with a duplicate-safe comparator
+(de-duplicate on `instrument_key` keeping first, per-key equality, still null-aware): **only 52/3,045 (1.7%) still show
+a genuine field-level diff** — and 51 of those 52 are the SAME single day, `day=2026-06-29` (hive's last-ever write, the
+exact freeze boundary), with the differing column almost always `available_at` alone (a capture-timestamp/watermark
+field, not an instrument-definition field) — flat's copy of that day kept its watermark moving as later writes touched
+it, while hive's is frozen at whatever it was on the final write. Excluding that one boundary date, **real content
+divergence across the sampled population is 1/3,045 (0.03%)**: `PANCAKESWAP_V3-ETHEREUM` on `2026-06-29` also differs on
+`pool_address`/`quote_asset_contract_address`/`quote_asset_decimals`/`raw_symbol`/`available_from_datetime` (worth a
+closer look if anyone revisits this specific venue/day, but not evidence of a broader pattern — 1 pair out of 3,045).
+
+**Corrected verdict**: the original 45.2%/1,315-pair mismatch figure is confirmed to be almost entirely a
+comparison-methodology artifact (None-vs-NaN serialization + a duplicate-key indexing bug), NOT real content divergence.
+Real divergence is ~0% (1.7% including an explainable freeze-boundary watermark difference; 0.03% excluding it). This
+resolves the "does real divergence exist at scale" question the 2026-07-14 entry left open: **it does not, materially**.
+The reader-preference fix (`match_instruments_blob` prefers flat) already shipped 2026-07-14 remains the right call
+regardless. The "finish v9 migration vs delete stale hive" call is still an explicit operator decision (per this doc's
+existing NO-GO stance) — this reconciliation removes "is hive's content actually different/wrong" as a reason to rush
+that decision either way; it's now purely a migration-completion / storage-cost question, not a data-correctness one.
+
+**Separate discovery (out of this todo's scope, filed as its own follow-up)**: the flat shape carries duplicate
+`instrument_key` rows within a single (day, venue) shard for several pool-heavy DEX venues (`PANCAKESWAP_V3-BSC`,
+`UNISWAP_V3-OPTIMISM`, `UNISWAP_V3-POLYGON`, `UNISWAP_V4-ETHEREUM`, `PANCAKESWAP_V3-BASE`) — up to 23 duplicate rows
+observed in a single shard (`day=2023-11-22`, `UNISWAP_V3-OPTIMISM`, 289 rows / 23 dupes). This is a within-shape
+data-quality question independent of the flat-vs-hive divergence question this todo addresses; filed as
+`plans/active/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`.
+
+Investigation scripts (read-only, nothing written to GCS; session-local scratchpad, not committed, mirroring the prior
+entry's own pattern): `defi_shape_b_null_aware_reconcile.py` (initial 3,045-pair pass) +
+`defi_shape_b_recheck_flagged.py` (duplicate-key-safe recheck of the 189 flagged pairs).
