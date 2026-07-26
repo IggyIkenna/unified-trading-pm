@@ -137,13 +137,24 @@ drift_direction: advance-code
       `defi_dedicated_bucket_shared_migration_2026_07_13.md`. — strategy-service@4a7fbb17. Verified against the real
       `resolve_bucket_name()` calls in `canonical_perp_funding_provider.py`/`canonical_dex_pool_provider.py` (both
       `kind="tick-data"`); comment-only edit, no executable line changed; `quality-gates.sh` green (214s).
-- [ ] [CODE] P1. Implement Phoenix DEX radix-slab top-of-book decode in
+- [x] ✅ [CODE] P1. Implement Phoenix DEX radix-slab top-of-book decode in
       `market_tick_data_service/cli/handlers/phoenix_orderbook_handler.py` — parse the Phoenix market-account slab
       layout (RPC fetch already works) to populate `best_bid_price`/`best_ask_price`/sizes/`spread_bps`/`mid_price`;
       replace `record_failed(reason="SOURCE_HANDLER_TODO_PHOENIX_DECODE")` with `record_captured` once decoded; add 5+
       unit tests against known slab states. Repo: market-tick-data-service. **Done when**: a successful fetch calls
       `record_captured` (not `record_failed`) with all 5 fields populated; >=5 new unit tests pass; `quality-gates.sh`
-      green. Source: `data_completion_defi_2026_07_15.md`.
+      green. Source: `data_completion_defi_2026_07_15.md`. — market-tick-data-service@ee49a76d. Layout verified against
+      the on-chain `Ellipsis-Labs/phoenix-v1` + `sokoban` program source (MarketHeader, sokoban RedBlackTree slab,
+      free-list-aware node walk), cross-checked against the official `Ellipsis-Labs/phoenixpy` SDK's own decode. Decodes
+      bids/asks, aggregates size at the best price tick, excludes freed/tombstoned nodes and expired
+      (`last_valid_slot`/`last_valid_unix_timestamp_in_seconds`) orders, then populates `bid_price`/`bid_size`/
+      `ask_price`/`ask_size`/`mid_price`/`spread_bps` and routes via `record_captured`/`record_zero_rows` instead of the
+      stub's `record_failed`. Added per-sample-per-day looping (mirroring the Orca/Raydium ingesters) since the stub's
+      `samples_per_day` param was previously accepted but unused. 20 new unit tests
+      (`test_phoenix_orderbook_handler.py`) cover known slab states incl. a freed-node-exclusion case and an
+      expired-order-exclusion case. `quality-gates.sh` green (7092 tests). Hit and resolved a repo-blocker (RB-ef115f4a,
+      `pipelinemode_missing_batch_defillama_member_2026_07_26.md`, now archived) from an unrelated concurrent commit
+      before shipping.
 - [ ] [CODE] P1. Implement Orca Whirlpool tick-array binary decode in
       `market_tick_data_service/cli/handlers/orca_whirlpool_state_handler.py` — decode the 3 nearest tick arrays around
       the already-extracted `tick_current_index` (~150-200 LOC), captured per-snapshot alongside the existing pool-state
