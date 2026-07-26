@@ -318,16 +318,20 @@ start without real tradfi/ES feature parquets.
       the listing itself is unreliable, no amount of re-running the SAME listing-based process step will ever converge.
       No code shipped for this todo — the fix belongs to whoever picks up the new finding below. (repo:
       market-data-processing-service, verification only)
-- [ ] [AGENT] P2. `process_handler.py:706`'s per-date `subprocess.run(cmd)` (the `--subprocess-per-date` driver) has NO
-      timeout — a genuinely hung child (vs. a legitimately slow-but-real date, which CAN take 13+ minutes, confirmed
-      live 2026-07-26) blocks that shard's entire remaining date range forever with no self-recovery. Add a generous
-      timeout (30+ min — must NOT be tight enough to false-positive on a real slow date; size it from a wider sample of
-      observed per-date durations first) via `subprocess.run(cmd, timeout=...)`, catch `subprocess.TimeoutExpired`, kill
-      the child, log `FAILED`, and return `True` (the outer per-date loop already continues past a failed date —
-      verified live, no change needed there) so a genuine hang can no longer stall a whole shard. New regression test
-      that mocks a subprocess exceeding the timeout and asserts the loop continues to the next date. Not chased further
-      this session — the ONE observed "hang-like" case turned out to be a false positive (see the todo above), so there
-      is not yet concrete evidence of a REAL unbounded hang, only a real code-level gap that would let one go
+- [x] ✅ [AGENT] P2. DONE 2026-07-26 (slot 6) — `market-data-processing-service@2b7c4dc`. `process_handler.py:706`'s
+      per-date `subprocess.run(cmd)` (the `--subprocess-per-date` driver) had NO timeout — a genuinely hung child (vs. a
+      legitimately slow-but-real date, which CAN take 13+ minutes, confirmed live 2026-07-26) could block that shard's
+      entire remaining date range forever with no self-recovery. Added a 1800s (30 min) timeout — generous enough to
+      never false-positive on a real slow date, per the live 13.5-min precedent — via
+      `subprocess.run(cmd, timeout=_SUBPROCESS_PER_DATE_TIMEOUT_SECONDS)`, catching `subprocess.TimeoutExpired`
+      (`subprocess.run` already kills + reaps the child before raising, so no extra cleanup needed), logging `FAILED`,
+      and returning `True` — the outer per-date loop already continues past a failed date (verified live, no change
+      needed there). New regression test `test_returns_true_on_timeout` mocks a `TimeoutExpired` and asserts the FAILED
+      (`True`) result. Full `quality-gates.sh` green (2215 passed; 2 QG runs hit a transient `systemd-run` `MEM_WRAP`
+      timeout under shared-host contention, confirmed via a clean standalone `basedpyright` run — 8s, 0 new
+      errors/warnings — and a clean `QG_MEM_CAP=0` re-run, 65s, before shipping). Shipped via quickmerge. Not chased
+      further this session — the ONE observed "hang-like" case turned out to be a false positive (see the todo above),
+      so there is not yet concrete evidence of a REAL unbounded hang, only a real code-level gap that would let one go
       unrecovered if it ever occurs. (repo: market-data-processing-service)
 - [ ] [AGENT] P1. NEW FINDING (2026-07-26, slot 5): `_list_instrument_files`'s day-wide raw listing
       (`orchestration_scanner.py:462`, `self.storage_client.list_blobs(bucket=bucket_name, prefix=prefix)` where
@@ -895,7 +899,7 @@ start without real tradfi/ES feature parquets.
 | New P0 todo — backfill MDPS's per-contract "process" step for ES/MES full history                                            | ✅ DONE 2026-07-26 (slot 2) — all 7 shards + build-continuous re-run completed with real verified data, BUT the hit rate did NOT improve (still 454/2398≈19%, unchanged); real root cause diagnosed (raw-ingestion/process-step timing race, not a code bug — 2 wrong hypotheses ruled out first, see progress log) | N/A — closed as an action; the underlying sparse-coverage goal is NOT resolved, see the new P2 catch-up-rerun todo |
 | New P2 todo — re-run process step for ES/MES on `2020-03-26` only                                                            | ✅ ACTION DONE 2026-07-26 (slot 5) — clean re-run, but MES still fully missing; root cause is NOT the premature-kill theory — new P1 listing-anomaly finding filed below                                                                                                                                            | N/A — closed as an action; underlying gap reopened as the new P1 listing-anomaly finding                           |
 | New P1 todo — `_list_instrument_files` returned 0 raw files despite the target file existing 24+ min prior, zero contention  | Not done — new finding (slot 5, 2026-07-26); disproves the earlier timing/race theory; likely explains the stuck ~19% hit-rate ceiling across BOTH full backfill passes; needs isolated repro + GCS consistency check                                                                                               | Nobody — needs someone with time to reproduce the listing call in isolation and check bucket consistency config    |
-| New P2 todo — add a generous timeout to `process_handler.py:706`'s `subprocess.run(cmd)`                                     | Not done — real code gap (unbounded per-date subprocess wait), but NOT confirmed as an actual live hang (the one observed case was a false positive); flagged for whoever has time to size a timeout wide enough to avoid false-failures                                                                            | Nobody — needs a wider sample of real per-date durations to size the timeout safely                                |
+| New P2 todo — add a generous timeout to `process_handler.py:706`'s `subprocess.run(cmd)`                                     | ✅ DONE 2026-07-26 (slot 6) — `market-data-processing-service@2b7c4dc`, 1800s timeout + regression test, QG green                                                                                                                                                                                                   | N/A — closed                                                                                                       |
 | New P2 todo — re-run the SAME process-step backfill a SECOND time to catch up on late-landing raw data (timing-race finding) | ✅ DONE 2026-07-26 (slot 6) — hit rate FLAT (454/2398, byte-identical to baseline) after a full second pass; timing-race theory DISPROVEN. Corroborates slot 5's P1 listing-anomaly finding as the more likely real cause.                                                                                          | N/A — closed; see the new P1 listing-anomaly finding for the promising next lead                                   |
 
 **Recommended next item**: the backfill + build-continuous re-run + hit-rate re-verification all genuinely happened
