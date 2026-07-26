@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 81.47,
         "warn_file_count": 0,
         "large_file_count": 1,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "batch-live-reconciliation-service": {
@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 74.71,
-        "warn_file_count": 4,
         "large_file_count": 0,
-        "qg_red_reason": null
+        "warn_file_count": 4,
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "deployment-api": {
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 82.6,
-        "warn_file_count": 14,
         "large_file_count": 6,
-        "qg_red_reason": null
+        "warn_file_count": 14,
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "deployment-service": {
@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 20,
         "large_file_count": 0,
-        "coverage_pct": 84.45,
-        "qg_red_reason": null
+        "warn_file_count": 20,
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "features-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.91,
-        "warn_file_count": 9,
         "large_file_count": 8,
-        "qg_red_reason": null
+        "warn_file_count": 9,
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "market-data-processing-service": {
@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 88.83,
-        "warn_file_count": 7,
         "large_file_count": 4,
-        "qg_red_reason": null
+        "warn_file_count": 7,
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "market-tick-data-service": {
@@ -1165,10 +1165,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 73.53,
-        "warn_file_count": 0,
         "large_file_count": 0,
-        "qg_red_reason": null
+        "warn_file_count": 0,
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "unified-api-contracts": {
@@ -1212,10 +1212,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
         "warn_file_count": 29,
         "large_file_count": 28,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "coverage_pct": 96.4
       }
     },
     "unified-trading-library": {
@@ -1366,7 +1366,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
