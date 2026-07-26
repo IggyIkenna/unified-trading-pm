@@ -240,11 +240,11 @@ not lost; it is simply not discoverable through the manifest's own key.
 
 ### Deferred work after 2026-07-26 (slot-3)
 
-| Item                                                                                    | State                                                                                             | Blocked on                                                                         |
-| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Re-stamp historical ICE/KRX/FX `ohlcv_24h` rows (4+12+802, snapshot-first)              | ✅ Census DONE 2026-07-26 (slot 2) — see below; APPLY still `[OPERATOR]`-gated                    | operator CAS-apply per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` |
-| Finding 2 — FX `SPOT_PAIR` manifest `instrument_id` write-path fix + 4,310-row backfill | IN PROGRESS 2026-07-26 (slot 2) — write-path fix underway, historical backfill stays out of scope | nobody                                                                             |
-| Confirm/rule out an actual Databento billing-guard gap for the pre-fix window           | Not done — needs Databento request-log access, not just code reading                              | possibly operator (Databento account access)                                       |
+| Item                                                                                    | State                                                                                      | Blocked on                                                                         |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Re-stamp historical ICE/KRX/FX `ohlcv_24h` rows (4+12+802, snapshot-first)              | ✅ Census DONE 2026-07-26 (slot 2) — see below; APPLY still `[OPERATOR]`-gated             | operator CAS-apply per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` |
+| Finding 2 — FX `SPOT_PAIR` manifest `instrument_id` write-path fix + 4,310-row backfill | ✅ Write-path DONE 2026-07-26 (slot 2) — see below; historical backfill stays out of scope | nobody — backfill needs its own scoped design/apply plan                           |
+| Confirm/rule out an actual Databento billing-guard gap for the pre-fix window           | Not done — needs Databento request-log access, not just code reading                       | possibly operator (Databento account access)                                       |
 
 Recommended next: the historical re-stamp (bounded, mechanical, unblocks nothing else) before Finding 2 (a fresh
 investigation of similar depth to Finding 1's).
@@ -278,3 +278,35 @@ rows) is itself worth noting for whoever runs the apply — either a genuine gap
 FX simply had less overall `ohlcv_24h` capture volume in 2021; not investigated further here (out of this todo's
 read-only scope). This is the exact worklist the `[OPERATOR]` CAS re-stamp gate needs — the count itself is NOT applied
 here, per this todo's explicit scope boundary.
+
+### Finding 2 write-path fix — ALREADY SHIPPED before this todo was picked up (2026-07-26, slot 2)
+
+Dispatched a sub-agent to trace the exact call chain from `_umi_yahoo.py`'s `fetch_yahoo_fx` (which sets
+`rec["instrument_id"]` to the FULL canonical `FX:SPOT_PAIR:BASE-QUOTE` form) through to the manifest write, to find why
+the manifest ends up with a bare/blank id despite the row itself carrying the correct one. Finding: **the manifest
+instrument_id is NOT derived from the row's own already-canonical `instrument_id` field at all** — it is INDEPENDENTLY
+re-derived from the bare writer-key `symbol` (e.g. `"EUR-USD"`) inside `venue_fetch._record_venue_shard_counts` →
+`_canonicalize_manifest_instrument_id` → `_tradfi_manifest_canon.resolve_tradfi_manifest_shard`, a second
+canonicalization pass parallel to (not reusing) the one `fetch_yahoo_fx` already ran. **That second pass was itself
+already fixed** in an entirely unrelated, earlier effort: `market-tick-data-service@020b703e` (2026-07-25, the
+`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` scope extension) added `"spot_pair"`/`"spot"` to
+`_TRADFI_MANIFEST_ITYPE_CANONICAL` (`_tradfi_manifest_canon.py:75-76`) — the SAME map NASDAQ/NYSE equity already used
+(confirming FX and equity share one code path, so the fix that already made equity/etf/index 0.11-0.81% blank also
+silently fixed FX's write path a day later, without anyone connecting the two). A regression test already exists and
+passes: `test_fx_spot_pair_now_resolves_canonical`
+(`tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py:606-612`) asserts
+`_canonicalize_manifest_instrument_id("FX", "spot_pair", "EUR-USD") == "FX:SPOT_PAIR:EUR-USD"`.
+
+**What was actually still broken**: only a stale code comment in `_umi_yahoo.py` (lines ~93-97) that asserted the OLD
+(pre-020b703e) behavior — "the tradfi manifest instrument_id is derived from the bare symbol ... which returns it
+unchanged for non-Tardis FX" — as if it were permanent, intentional design. That file was last touched 2026-07-19, a
+week before the actual fix landed elsewhere, so the comment never got updated. **Fixed**:
+`market-tick-data-service@b0fedf91` corrects the comment to describe the CURRENT (fixed) behavior, cites the 020b703e
+commit + the existing regression test, and explicitly calls out the historical-rows caveat so a future reader doesn't
+re-discover this the hard way. `quality-gates.sh` green (sentinel-verified).
+
+**Net disposition**: Finding 2's write-path fix needed ZERO new code — it was a documentation-currency fix on top of an
+already-shipped, already-tested correctness fix that predates this issue doc's Progress Log even noticing it. The
+genuinely remaining work is unchanged: the ~4,310 historical rows written before 2026-07-25 still carry
+blank/bare/bundle-leaked manifest ids and need a one-time manifest-only backfill (not a GCS content rewrite) — that
+stays its own scoped, `[OPERATOR]`-adjacent follow-up, not attempted here.
