@@ -263,20 +263,20 @@ drift_direction: advance-code
       gap-dates, verified against the `_index` manifest (not a re-derived count).
 
       **BLOCKED-CREDENTIALS 2026-07-26 (slot-4)** — the actual backfill cannot run: the odds-api key is
-                          DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl
-                          against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This
-                          blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see
-                          `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos.
-                          Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to
-                          `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in
-                          `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped,
-                          full-population backfills). Also found + worked around a separate pre-existing bug in
-                          `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to
-                          `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date
-                          from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM
-                          (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox
-                          stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the
-                          operator fixes the key (exact command in the issue doc's follow-up todos).
+                              DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl
+                              against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This
+                              blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see
+                              `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos.
+                              Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to
+                              `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in
+                              `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped,
+                              full-population backfills). Also found + worked around a separate pre-existing bug in
+                              `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to
+                              `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date
+                              from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM
+                              (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox
+                              stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the
+                              operator fixes the key (exact command in the issue doc's follow-up todos).
 
 - [ ] [CODE] P1. **PARTIAL 2026-07-26 (slot-7, `data_engineering`) — (a)+(b) DONE (by a concurrent slot, verified by
       me), (c) thoroughly diagnosed, genuinely BLOCKED on a deeper pre-existing ml-service gap.** (a)+(b): a concurrent
@@ -356,19 +356,12 @@ drift_direction: advance-code
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`. **Resolution (2026-07-26, slot 8)**: all
       three closed (deliberate routing / same future-date-guard root cause, no longer reproducible / index left
       stale-by-design) — `unified-trading-pm@3d48c7a9b`.
-- [ ] [DATA] P3. Flip the still-unchecked "NEW compute: add per-bookmaker raw decimal-odds retention...
-      `decimal_odds_<outcome>_<venue>`" todo (`- [ ]` at line ~110-114) in
-      `plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md` to `[x]` with a SHIPPED annotation citing
-      `features-service@b03a6de4` (the commit that added `_pivot_bucketed_to_fixture()`'s per-bookmaker
-      `odds_decimal_<outcome>_<venue>` emission + the `export_odds_features()` merge-back fix, per
-      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s own SHIPPED ledger for this exact todo) — this is a
-      checkbox-drift-only fix on the PARENT plan (its own checkbox never got flipped even though the work shipped and
-      batch2's separate copy of the checklist did get marked SHIPPED there). Verify current repo state first (grep
-      `features_service/sports/calculators/odds_columns.py`/`odds_features_exporter.py` for `odds_decimal_` columns)
-      before flipping, in case of further drift since 2026-07-25T14:20Z. Source:
-      `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25` (issue doc's Recommended-next-step
-      item 1). Done when: the parent plan's line-110 todo reads `[x]` with a commit citation matching real repo state,
-      and `quality-gates.sh` (prek-only, doc change) is green on the plan-file edit.
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot 6).** Flipped `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s
+      line-110 "NEW compute: add per-bookmaker raw decimal-odds retention" todo to `[x]` with a SHIPPED annotation
+      citing `features-service@b03a6de4`. Re-verified current repo state before flipping (no further drift since
+      2026-07-25T14:20Z): `git merge-base --is-ancestor b03a6de4 HEAD` confirms it's merged, and
+      `odds_features_exporter.py`'s `_pivot_bucketed_to_fixture()` still emits the per-bookmaker
+      `odds_decimal_{outcome}_{venue}` columns live in the current file. Checkbox-drift-only fix — no code change.
 - [ ] [DATA] P2. **market-tick-data-service + market-data-processing-service + features-service: execute the zombie-tick
       purge/re-derive + close out ML-readiness verification, using batch4's sweep report as input.** Once
       `sports_satellite_ao_dispatch_batch4_2026_07_25.md`'s read-only P1 sweep todo (source: this doc) has produced its
