@@ -123,24 +123,19 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       and no `[OPERATOR]` item is closed by this todo. Source:
       `issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`.
 
-- [ ] [REVIEW] P1. **Reconcile `issues/tradfi_t1_no_working_mtds_job_2026_07_17.md` against the shipment that already
-      closed it.** The doc is `status: open` with ZERO checkboxes; its remaining work lives entirely in prose (a "Fix
-      (not done here — needs its own workstream)" section plus a 2026-07-25 status note saying "This doc's own
-      `status`/`resolved_by` frontmatter has not been reconciled against that shipment — left open here rather than
-      unilaterally flipped, since the SIGKILL follow-up suggests the job isn't yet fully stable"). Both stated blockers
-      are now closed on the OTHER side: `tradfi_backfill_throughput_followups_2026_07_24.md`'s "TradFi has NO working
-      T+1 forward-fill job" todo is `[x]` with `deployment-service@11bed3c` plus a live re-verification 2026-07-25, and
-      its SIGKILL follow-up todo is `[x]` ("no SIGKILL", 46m28.5s run). Re-verify LIVE rather than trusting either doc,
-      via
-      `gcloud run jobs executions list --job=uts-prod-market-tick-data-service-tradfi-databento-t1-recon     --region=asia-northeast1 --project=central-element-323112`
-      — confirm the most recent SCHEDULED (un-forced) executions succeed and write rows. Then either flip the doc to
-      `status: resolved` and populate `resolved_by`, or, if a scheduled execution is still failing, replace the prose
-      "Fix" section with a real unchecked todo naming the specific remaining failure so it stops being invisible to the
-      unchecked-checkbox digest. Repos: unified-trading-pm (doc), deployment-service (read-only verification). **Done
-      when**: the doc either reads `status: resolved` with a `resolved_by` citing the shipped commits and the live
-      execution evidence, or carries at least one canonical `- [ ] [TAG] P<N>.` todo for the residual — and in either
-      case the "0 open todos" claim for this doc in `tradfi_consolidated_closeout_2026_07_18.md`'s aggregated-source
-      digest is corrected in the same commit. Source: `issues/tradfi_t1_no_working_mtds_job_2026_07_17.md`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review)** — Reconciled
+      `issues/tradfi_t1_no_working_mtds_job_2026_07_17.md` against the shipment that already closed it. Re-verified LIVE
+      (not trusting either doc) via
+      `gcloud run jobs executions list --job=uts-prod-market-tick-data-service-tradfi-databento-t1-recon     --region=asia-northeast1 --project=central-element-323112`:
+      6 consecutive daily SCHEDULED (un-forced, ~00:35 UTC) executions 2026-07-21 through 2026-07-26, ALL
+      succeededCount=1/failedCount=0, zero SIGKILLs; the 07-26 run (processing Saturday 07-25) correctly logged an
+      honest non-trading-day skip, not a failure. Flipped the doc to `status: resolved` with a full `resolved_by`
+      citation (`deployment-service@11bed3c` + the SIGKILL fix + this live re-verification), added a "RESOLVED
+      2026-07-26" section, and corrected the stale in-doc status note. Also corrected
+      `tradfi_consolidated_closeout_2026_07_18.md`'s aggregated-source digest line for this doc (was "0 open todos
+      (closed/archived/record-only)" — inaccurate parenthetical for a doc that was `status: open`; now cites the actual
+      resolution + live re-verification) in the same commit. Source:
+      `issues/tradfi_t1_no_working_mtds_job_2026_07_17.md`.
 
 - [ ] [DATA] P1. **Re-measure tradfi manifest `instrument_id` canonicality now that the backfill fleet has actually
       drained.** `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md` carries ZERO checkboxes but its

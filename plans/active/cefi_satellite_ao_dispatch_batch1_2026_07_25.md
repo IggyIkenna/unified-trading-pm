@@ -470,6 +470,97 @@ drift_direction: advance-code
       recorded in the target issue doc's Progress Log; `--apply` never invoked. Source:
       `issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`.
 
+## Progress Log
+
+- **2026-07-26 (slot 6) — todo -001 scoping.** Dispatched the "Extend MDPS candle-building to the 4 on-chain-perp CeFi
+  venues + backfill" todo. Scoping investigation (before any code/infra change) found the todo's own premise partially
+  stale:
+  - **No MDPS code change is needed.** An Explore-agent pass over `market-data-processing-service` confirmed: the CeFi
+    venue list is UAC-owned (`VENUES_BY_ASSET_GROUP["cefi"]`,
+    `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:272-361`) and ASTER/HYPERLIQUID/
+    LIGHTER-ZKSYNC/EXTENDED-STARKNET are ALREADY present in it; MDPS's timeframe list (`config.py:419-421`,
+    `["15s","1m","5m","15m","1h","4h","24h"]`) is one flat default with no per-venue gating;
+    `resolve_pipeline_mode_from_source` (`app/core/canonical_writer_shaping.py:99-138`) generically resolves any
+    closed-set UAC `PipelineMode` member, and `BATCH_ASTER`/`BATCH_HYPERLIQUID`/`BATCH_LIGHTER_API`/`BATCH_EXTENDED`
+    already exist there. No hardcoded allowlist blocks these venues; there is no closed-list test to extend either
+    (grepped `tests/` for all 4 venue tokens — zero hits beyond HYPERLIQUID, which is already treated as supported). The
+    gap is purely OPERATIONAL: the backfill has never been run for these venues.
+  - **Manifest-verified healthy captured raw-trade ranges** (`read_availability_index` over
+    `market-data-tick-cefi-prd-central-element-323112`, filtered `service_name=='market-tick-data-service'`,
+    `capture_status=='captured'`): **HYPERLIQUID** 95,678 rows, 2024-01-01 → 2026-07-20. **LIGHTER-ZKSYNC** 475 rows,
+    2026-02-01 → 2026-05-06. **EXTENDED-STARKNET** 1,305 rows, 2024-10-19 → 2026-07-25. These 3 venues' raw-capture
+    foundation is solid — safe to backfill candles against.
+  - **ASTER carved OUT of this pass** — its manifest shows 486,890 `expected_unattempted` / 300 `attempted_failed` /
+    only 1 `captured` row despite real many-instrument raw-trade files physically present on GCS for a recent day
+    (2026-07-20/21) — a manifest-registration gap, not (necessarily) a real capture failure. This directly contradicts
+    the archived `aster_capture_broken_coverage_and_completeness_2026_07_20.md`'s "RESOLVED — verified with real data"
+    banner. Filed as a P0 big-finding issue doc: `issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md`
+    (`unified-trading-pm@580d1cdf7`). A manifest-scoped backfill range for ASTER would be wrong right now (it would
+    think almost nothing exists), so ASTER is deferred to that issue doc's own remediation, not re-attempted here blind.
+  - **CLI entrypoint confirmed** for the actual backfill:
+    `market-data-processing process --start-date <D> --end-date <D> --CEFI --venues ASTER HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET [--data-types trades ...] [--timeframes ...]`
+    (`market_data_processing_service.cli.main:run_cli`, flags in `cli/parser.py:114-155`). Also confirmed already-
+    unregistered `processed_candles/` output for ASTER on disk (`timeframe=15s`/`1m` only, day=2026-07-20, no MDPS
+    manifest rows) — no currently-running GCE VM is producing it (`gcloud compute instances list` at discovery time
+    showed only unrelated `mdps-backfill-tradfi-*` VMs), so it's stray/orphaned, not a live collision risk.
+  - **Dry-run validation (2026-07-26)**:
+    `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2024-01-01 2026-07-25 dry`
+    (VM `mdps-backfill-cefi-20260726-164248`, deleted after validation — no GCS writes in dry mode). Confirmed the happy
+    path: `trades`-data_type candle aggregation (15s→1m→5m→15m→1h→4h→24h chain, real `quote_volume`-bearing output) —
+    43/50 files succeeded on day 1 alone. **Found a real, separate gap**: `derivative_ticker` candle-building for
+    HYPERLIQUID hard-fails for every instrument sampled (8/8 — ADA/AVAX/BNB/DOGE/FIL/LTC/MATIC/SOL-PERP) with
+    `No SchemaContract registered for asset_group='cefi' instrument_type='UNKNOWN' data_type='deriv_ohlcv_1m' venue='HYPERLIQUID'`
+    plus a companion `SCHEMA_VALIDATION_FAILED` (NOT-NULLABLE OHLC columns getting NaN) at the 15s tier. This is
+    `derivative_ticker`-specific (funding-rate/mark-price candles) — it does NOT block the `trades`/`quote_volume` path
+    this todo's "Done when" bar needs (ADV reader only reads `trades`-derived 24h candles), so it's tracked as a
+    follow-up, not fixed inline here: **[DATA] P2 follow-up** — root-cause the `instrument_type='UNKNOWN'` resolution
+    (should resolve `perpetual`) for HYPERLIQUID `derivative_ticker` → `deriv_ohlcv_1m` candle-building, then either fix
+    the resolution or register the missing `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` entry —
+    repo: market-data-processing-service (+ unified-api-contracts if a new contract is needed).
+  - **Real backfill, live observation (2026-07-26 16:53 UTC, day 1 of 937)**: `trades` (the ADV-relevant data_type)
+    completed cleanly for day 2024-01-01 with real candles generated; the pipeline then hit a THIRD non-blocking,
+    orthogonal gap while processing `book_snapshot_5`:
+    `MDPS canonical_writer: empty_confirmed manifest write failed for HYPERLIQUID:PERPETUAL:AAVE-USD@LIN day=2024-01-01 tf=15s`
+    — the UTL Phase-1-KEYSTONE honest-absence gate (`record_empty(reason=SOURCE_RETURNED_ZERO)` requires
+    `FetchEvidence`) correctly REFUSED an unproven empty write. Root cause visible in the preceding
+    `WARNING Missing bid_price_0 or ask_price_0 columns` — HYPERLIQUID's raw book_snapshot_5 columns are named
+    `bid_px_00`/`ask_px_00` (not `bid_price_0`/`ask_price_0`), so MDPS's book-candle aggregator reads it as "no valid
+    rows" and (incorrectly) tries to record it as honest-absence rather than as a column-mapping bug. **[DATA] P2
+    follow-up** — fix the book_snapshot_5 column-name mapping for HYPERLIQUID (and check
+    LIGHTER-ZKSYNC/EXTENDED-STARKNET for the same `bid_px_NN`/`ask_px_NN` naming) in the MDPS book-candle aggregator,
+    repo: market-data-processing-service. Non-blocking for this todo's `trades`/24h bar — the gate correctly prevented a
+    silent bad write; this is a data-quality/schema-mapping fix, not urgent.
+  - **Real backfill LAUNCHED (2026-07-26, in progress)**:
+    `bash deployment-service/scripts/vm/ launch-mdps-backfill-vm.sh --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2024-01-01 2026-07-25 full`
+    → VM `mdps-backfill-cefi-20260726-164955` (SPOT, e2-standard-8, asia-northeast1-c), confirmed STARTED (RUNNING at
+    launch +<60s). Code tarballs for market-data-processing-service + market-tick-data-service were fresh at launch;
+    unified-api-contracts/unified-trading-library/deployment-service tarballs were WARN-stale (unrelated peer-repo churn
+    from sibling slots during launch prep) — advisory only (`LC_TARBALL_FRESHNESS` not set to enforce), not expected to
+    affect candle-building correctness since MDPS/MTDS (the repos that actually matter for this job) were fresh.
+    Monitoring for completion; post-completion steps: (1) run the launcher's own reminder —
+    `rebuild_manifest_from_canonical_paths('market-data-tick-cefi-central-element- 323112', service_name='market-data-processing-service', prefix='processed_candles/by_date')`
+    — to consolidate the per-VM shard into the canonical index, (2) verify `processed_candles/` objects with non-zero
+    `quote_volume` exist for a recent day for each of the 3 venues, (3) verify `features-service`'s
+    `RollingAdvReader. compute_rolling_adv()` returns non-`NO_DATA` for at least one probed instrument. **Minor
+    housekeeping note**: the deleted dry-run VM's per-VM manifest shard
+    (`_index/per_vm/mdps-backfill-cefi-20260726-164248.parquet`, 50 entries, `process_final=False`) was written to the
+    prod cefi bucket before the VM was killed — a harmless orphaned per-VM shard (never consolidated, no candle data
+    actually landed since dry-run skips uploads); will be superseded/ignored by the next consolidation pass, not cleaned
+    up separately.
+  - **Pivot to `--data-types trades` (2026-07-26 17:00 UTC)**: killed `mdps-backfill-cefi-20260726-164955` after
+    observing it was still stuck on day 1/937 after ~7 minutes — `book_snapshot_5` fails the honest-absence gate for
+    NEARLY EVERY HYPERLIQUID instrument/timeframe combination (the `bid_px_00` column-mapping bug above isn't a rare
+    edge case, it's near-universal for that data_type), and each failed attempt has real per-attempt overhead, so an
+    all-data_types run over 937 days was on track to take many hours-to-days just processing a data_type this todo's
+    "Done when" bar does not need. Relaunched narrowly:
+    `bash deployment-service/scripts/vm/ launch-mdps-backfill-vm.sh --data-types trades --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2024-01-01 2026-07-25 full`
+    → VM `mdps-backfill-cefi-20260726-165959` (SPOT), confirmed STARTED. This directly and efficiently targets the
+    `trades`→`quote_volume`→24h-candle path the ADV reader + this todo's bar actually need, skipping the slow/broken
+    `book_snapshot_5`/`derivative_ticker` paths entirely (both already tracked as P2 follow-ups above — this pivot does
+    not lose that tracking, it just doesn't block THIS todo's delivery on fixing them first). Monitoring this VM for
+    completion; same post-completion steps as above (manifest consolidation + quote_volume check + ADV-reader check),
+    now scoped to `trades` only.
+
 ## Deferred
 
 ### Excluded — doc flagged `doc_too_large_or_risky_for_batch: true` (3 of 29 docs)
