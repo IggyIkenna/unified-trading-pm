@@ -113,10 +113,10 @@ drift_direction: advance-code
       `migrate_lst_perp_shared_bucket_gap_2026_07_13.py` is deleted (or its deletion is confirmed already done with a
       cited commit), and each of the ~8 campaign scripts has been checked for dead bucket-name templates with either a
       repoint applied or a documented reason no fix is needed.
-- [ ] [DATA] P1. **Fix the doubled `day={D}/day={D}/` prefix bug in the DeFi instruments-store `by_date` tree (both the
-      writer regression AND the v9 migrator's malformed projection).** Two defects, both must be fixed before the gated
-      defi §H instruments-store object `--apply`: (1) an instruments-service `by_date` WRITER regression nests a second
-      `day=` segment for recent snapshots (`≥2026-05-05` onward -- confirmed doubled at `day=2026-05-05` and
+- [x] ✅ [DATA] P1. **Fix the doubled `day={D}/day={D}/` prefix bug in the DeFi instruments-store `by_date` tree (both
+      the writer regression AND the v9 migrator's malformed projection).** Two defects, both must be fixed before the
+      gated defi §H instruments-store object `--apply`: (1) an instruments-service `by_date` WRITER regression nests a
+      second `day=` segment for recent snapshots (`≥2026-05-05` onward -- confirmed doubled at `day=2026-05-05` and
       `day=2026-05-07`; `day=2026-05-03` and all earlier days are single, canonical
       `day={D}/venue={V}/instruments.parquet`) -- locate and fix the writer so it never emits
       `day={D}/day={D}/venue=.../instruments.parquet`; (2) `migrate_instruments_store_v9.py`'s `canonical_object_rel`
@@ -646,3 +646,21 @@ source issue doc directly as the successor reference.
 - `plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md` — all 5 todos checked with completion evidence
   (root-cause confirmed, fixes shipped market-tick-data-service@5a163d02/@56efdd7d, VM relaunch verified end-to-end).
   Ready for the standard 6-step archival ritual.
+
+## Progress Log
+
+- **2026-07-26 (slot-8)** — Shipped the `day={D}/day={D}/` doubled-prefix todo — `instruments-service@570ae059`.
+  Findings: (1) the WRITER side of this bug class is already fixed, structurally, by the operator R2 full-hive
+  canonicalisation refactor (`instruments-service@a9be6ce9`, 2026-07-22 — `day`/`pipeline_mode`/`asset_group`/`venue`
+  now baked once into the sink prefix, `partition={}` always, so a doubled `day=` is no longer constructible) — no
+  further writer code change was needed; added a regression test (`test_write_venue_never_doubles_day_segment` in
+  `tests/unit/test_orchestrator_process.py`) pinning that invariant so a future refactor can't reintroduce it. (2) The
+  real remaining defect was `migrate_instruments_store_v9.py`'s `canonical_object_rel`: its final
+  `rel.replace(f"day={day}/", ..., 1)` only patched the FIRST `day=` occurrence, so a pre-existing doubled
+  `day={D}/day={D}/` object got the `pipeline_mode=`/`asset_group=` insert wedged BETWEEN the two `day=` copies instead
+  of collapsed first — reproduced exactly per the bug report. Fixed with a new `_collapse_doubled_day()` helper called
+  before the insert on both the sports and non-sports branches; verified against both confirmed-doubled examples
+  (`day=2026-05-05`, `day=2026-05-07`) AND a pre-regression single-`day=` example (`day=2026-05-03`) to confirm no
+  regression on the already-correct path. New parametrized tests added to
+  `tests/unit/scripts/test_migrate_instruments_store_v9.py`. `quality-gates.sh` green on instruments-service (twice —
+  once per change). Done-criteria (a)/(b)/(c) all satisfied; (c) is the QG-green run itself.
