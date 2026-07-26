@@ -80,7 +80,7 @@ detection/remediation gap the ruling explicitly left open instead.
       (`notify_backlog_sibling_reset_guard_refused()` in `server/notifications/slack.py`, called from the guard branch
       in `sync_backlog_to_db` deduped via a seen-keys set at `dedup_state.backlog_sibling_reset_guard_alerted_path()`
       keyed by `f"{task_id}:{incoming_brief_hash}"`; QG green, 1752 passed).
-- [ ] [BACKEND] P2. **`POST /api/backlog/{task_id}/remint-collision` — safe one-click remediation endpoint.** Given a
+- [x] ✅ [BACKEND] P2. **`POST /api/backlog/{task_id}/remint-collision` — safe one-click remediation endpoint.** Given a
       task_id currently flagged (via todo 1's record) as an unresolved sibling-reset-guard collision: atomically mint a
       genuinely fresh task_id, checking uniqueness against BOTH `backlog.yaml`'s current ids AND the full historical
       `state.db` task_id space (the actual gap `_make_task_id`/`next_index` has today — it only checks yaml's current
@@ -91,7 +91,16 @@ detection/remediation gap the ruling explicitly left open instead.
       exact `slot_stale_spawn_base_role_stuck_task_less-004` scenario (a done+done_sha row, a colliding new brief),
       calls the endpoint, and asserts (a) a new task_id exists with the incoming content in a clean queued/blocked
       state, (b) the original task_id's terminal fields are byte-for-byte unchanged, (c) a 404 on a task_id with no
-      flagged collision.
+      flagged collision. — **DONE (slot-3, 2026-07-26): `agent-orchestrator@ffd0ab0`.** Reads the incoming
+      brief/title/tier/priority/operator_gated straight off `backlog.yaml`'s CURRENT entry at `task_id` (regen always
+      writes the new checkbox's content there positionally, even though `sync_backlog_to_db`'s guard refuses to reset
+      the DB row) — cross-checked against todo 1's activity record's `new_brief_hash` to confirm the collision is still
+      live (not already resolved/superseded) before acting. Mints via the SAME `_make_task_id` SSOT regen uses, checked
+      against yaml ids ∪ the full historical `tasks` table. Renames the yaml entry in place (old id removed, new id
+      added, content byte-identical) so future regen ticks stop re-deriving that position onto the collided id; never
+      touches the original TaskRow. 5 unit tests incl. the exact `slot_stale_spawn_base_role_stuck_task_     less-004`
+      scenario + a historical-DB-gap regression (a yaml-pruned-but-still-in-DB id at the next positional slot must not
+      be re-collided with by the remint itself); `quality-gates.sh` green (1746 passed).
 - [ ] [UI] P2. **Dashboard "Backlog Integrity" panel, pinned above the fold.** Lists every currently-unresolved
       collision from todo 1's activity records (task_id, incoming brief, old done_sha, first-detected timestamp), each
       row with a "Fix" button calling todo 3's endpoint; the row disappears from the panel on a successful response.
