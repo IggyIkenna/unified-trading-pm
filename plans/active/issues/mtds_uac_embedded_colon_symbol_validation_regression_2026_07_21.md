@@ -13,7 +13,7 @@ summary: >-
   regression from an already-landed UAC commit — not caused by any in-flight MTDS work. It currently fails `bash
   scripts/quality-gates.sh` for EVERY MTDS change, blocking unrelated ships (same class of problem as
   `mtds_rule11_shard_count_stale_baseline_2026_07_21.md`, now resolved).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -41,7 +41,7 @@ source:
     "hit while shipping defi_lending_writer_retire_prerequisite_2026_07_20 (todos 2-5/9/13) — pure MTDS DeFi lending
     handler changes, unrelated to CeFi/canonical-id-builder; blocked the full-tree quality-gates.sh for that commit",
   ]
-resolved_by:
+resolved_by: "slot-7 (data_engineering), 2026-07-26 — resolved via the sibling doc's todos, see below"
 locked_by:
 ---
 
@@ -107,3 +107,9 @@ adjudicated here:
 Whichever direction is right, it is NOT a DeFi-lending-writer concern and is out of
 `defi_lending_writer_retire_prerequisite_2026_07_20`'s scope — flagged here per workspace findings-triage ("outside
 every plan → `plans/active/issues/`").
+
+## Resolved 2026-07-26 (slot-7, `data_engineering`)
+
+Per this doc's own duplicate-discovery note, the actionable fix landed on the sibling doc
+(`uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`, all 5 todos now closed). Full
+`market-tick-data-service` `quality-gates.sh` confirmed green, sentinel matching HEAD (`f6ea0010`).

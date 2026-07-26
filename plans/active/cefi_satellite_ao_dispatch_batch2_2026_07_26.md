@@ -331,23 +331,24 @@ drift_direction: advance-code
       logic). Deeper byte-budget fix filed as a P2 follow-up (not required to unblock). Shipped
       `deployment-service@3d99865`. Full write-up: `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s
       2026-07-26 section.
-- [ ] [DATA] P1. **Fix the 3 MTDS tests broken by UAC's embedded-`:` `build_instrument_id` strictness (Bitfinex
-      `ADAF0:USTF0` perpetual + DeFi `WETH:USDC` pool).** Resolve the venue-native colon-bearing symbol against the
-      relevant catalogue/wire-map BEFORE calling `build_instrument_id`, or route the genuinely-unresolvable case through
-      the UAC quarantine model (`unified_api_contracts.canonical.quarantine`) per the new validator's own error message
-      — pick whichever direction fits each call site (do not leave the "sanitize-before-build vs validator-allowlist"
-      fork undecided; the quarantine/wire-map route is the one the UAC error message itself signals as intended). Fix
-      both call sites:
-      `market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py::derive_row_instrument_id`'s
-      disabled-by-default fallback (`ADAF0:USTF0`), and
-      `market_tick_data_service/market_interface/adapters/defi/canonical_write.py::write_defi_rows` (`WETH:USDC` POOL
-      case). Re-check `tests/unit/test_canonical_stem_live_batch_parity.py::test_slash_id_never_forges_a_path_segment`
-      separately — confirm whether it's the same fix or a distinct downstream defi-filename-canonical-stem gap. Repo:
-      market-tick-data-service. **Done when**: all 3 previously-failing tests
-      (`test_slash_id_never_forges_a_path_segment`, `test_decoded_leaf_equals_r1_forward_writer_leaf[WETH:USDC]`,
-      `test_disabled_by_default_output_is_byte_identical[BITFINEX-FUTURES-PERPETUAL-ADAF0:USTF0-...]`) pass; full
-      `bash scripts/quality-gates.sh` is green for market-tick-data-service (unblocking the fleet-wide MTDS quickmerge
-      blocker this regression currently causes); shipped via quickmerge. Source:
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-7, `data_engineering`) — ALREADY RESOLVED, no new code needed; verified +
+      closed both source issue docs.** All 3 originally-failing tests confirmed passing/no-longer-applicable
+      (`.venv/bin/python -m pytest` on all 3 files: 8 passed + 1 xpassed, 0 failed) — the underlying fix landed
+      `market-tick-data-service@08f15f26` (2026-07-21, same day the regression was found): it correctly removed the
+      `WETH:USDC`/`ADAF0:USTF0` parametrize cases and added `test_disabled_by_default_raises_on_embedded_colon_symbol`
+      documenting the REGISTERED path (`_SYNTHETIC_MAP`) already resolves `ADAF0:USTF0` correctly in production.
+      **Traced every real production caller of `write_defi_rows(instrument_type=POOL)`**
+      (`_dex_pools_subgraph.py`/`dex_swaps_handler.py` via `_dex_pool_symbol.py::resolve_pool_symbol` — dash-separated
+      `TOKEN0-TOKEN1[-FEE]` or honest bare-pool-address fallback; `orca_whirlpool_state_handler.py`/
+      `raydium_classic_amm_handler.py` via hardcoded underscore-joined `pool_label`) — **none produce a colon-bearing
+      symbol**; `WETH:USDC` was a synthetic test fixture, not a real wire format any live adapter emits. No quarantine
+      routing needed (the registry is narrowly scoped to one permanent exception, PACIFICA-SOLANA — would be a misuse
+      here). `test_slash_id_never_forges_a_path_segment` confirmed DISTINCT (separate `uac@502ef57e` ID_FORM-check
+      mechanism, tracked in `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` §7, currently
+      XPASS/`strict=False`, not blocking). Full `market-tick-data-service` `bash scripts/quality-gates.sh --no-fix`
+      green, sentinel matches HEAD (`f6ea0010`). Both source docs flipped to `status: resolved`:
+      `uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md` (all 5 todos),
+      `mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md`. Source:
       `mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md` (reproduction record; the same fix is also
       tracked with fuller call-site detail in the sibling
       `uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`, which this todo supersedes/closes as its
