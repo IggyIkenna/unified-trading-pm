@@ -104,30 +104,50 @@ it is currently the only thing that fires, so it absorbs every cause by accident
       candidate is kept at `/tmp/glue-runner-run.sh.broken-keepme` on the VM for post-mortem.
 
       **ROOT CAUSE FOUND (post-mortem, same day) — it was an APOSTROPHE, and the fix is one character.** The block's
-                                                                                                                          error text contained `${GCP_PROJECT:-<unset — no --project passed; relying on gcloud's ambient default>}`.
-                                                                                                                          Inside a `${VAR:-word}` expansion bash **re-parses quotes in the default word**, so the `'` in `gcloud's` opened
-                                                                                                                          a single-quoted region. In a ~200-line script full of apostrophes it silently **re-paired with a later one** —
-                                                                                                                          quotes balanced overall, so `bash -n` saw VALID syntax — while everything between them became a quoted STRING
-                                                                                                                          instead of code, swallowing the `GH_TOKEN="${_sm_out}"` assignment. Hence `line 200: GH_TOKEN: unbound variable`
-                                                                                                                          at the `generate-jitconfig` curl ~120 lines below the edited block. Verified in isolation: the same construct
-                                                                                                                          alone fails `bash -n` with ``unexpected EOF while looking for matching `'``.
-                                                                                                                          **Rule to carry forward: never put an apostrophe (or any unbalanced quote) inside a `${VAR:-...}` default word.**
-                                                                                                                          Write "gcloud" not "gcloud's", or build the message outside the expansion.
+                                                                                                                                                                      error text contained `${GCP_PROJECT:-<unset — no --project passed; relying on gcloud's ambient default>}`.
+                                                                                                                                                                      Inside a `${VAR:-word}` expansion bash **re-parses quotes in the default word**, so the `'` in `gcloud's` opened
+                                                                                                                                                                      a single-quoted region. In a ~200-line script full of apostrophes it silently **re-paired with a later one** —
+                                                                                                                                                                      quotes balanced overall, so `bash -n` saw VALID syntax — while everything between them became a quoted STRING
+                                                                                                                                                                      instead of code, swallowing the `GH_TOKEN="${_sm_out}"` assignment. Hence `line 200: GH_TOKEN: unbound variable`
+                                                                                                                                                                      at the `generate-jitconfig` curl ~120 lines below the edited block. Verified in isolation: the same construct
+                                                                                                                                                                      alone fails `bash -n` with ``unexpected EOF while looking for matching `'``.
+                                                                                                                                                                      **Rule to carry forward: never put an apostrophe (or any unbalanced quote) inside a `${VAR:-...}` default word.**
+                                                                                                                                                                      Write "gcloud" not "gcloud's", or build the message outside the expansion.
 
-                                                                                                                          **Why my tests missed it**: they exercised ONLY the changed block, in a SHORT file with no later apostrophe to
-                                                                                                                          re-pair against — so the toy either errored honestly or passed, and could never reproduce the swallow. `bash -n`
-                                                                                                                          validates syntax, not binding, and the syntax was genuinely valid. **Still do not retry without whole-script
-                                                                                                                          validation**: add a `--selfcheck` mode that runs everything short of exec'ing `Runner.Listener`, exercise it on a
-                                                                                                                          scratch slot, then roll ONE unit and confirm `Listening for Jobs` before the other four. (The canary was
-                                                                                                                          worthless last time because the same bad script had already been rolled to all five.)
+                                                                                                                                                                      **Why my tests missed it**: they exercised ONLY the changed block, in a SHORT file with no later apostrophe to
+                                                                                                                                                                      re-pair against — so the toy either errored honestly or passed, and could never reproduce the swallow. `bash -n`
+                                                                                                                                                                      validates syntax, not binding, and the syntax was genuinely valid. **Still do not retry without whole-script
+                                                                                                                                                                      validation**: add a `--selfcheck` mode that runs everything short of exec'ing `Runner.Listener`, exercise it on a
+                                                                                                                                                                      scratch slot, then roll ONE unit and confirm `Listening for Jobs` before the other four. (The canary was
+                                                                                                                                                                      worthless last time because the same bad script had already been rolled to all five.)
 
 - [ ] [DEVOPS] P1. **A self-hosted pool with 0 runners listening must page on its OWN cause.** Nothing watches runner
       liveness. Cheapest honest signal: alert when a `glue`-labelled job has been `queued` > N minutes while
       `in_progress == 0` — that is unambiguous and needs no VM access. (The `glue-writer` pool stayed healthy
       throughout, so a naive "is the host up" check would have said GREEN.)
-- [ ] [DEVOPS] P1. **Ban the `|| true` credential idiom.** Grep for `2>/dev/null || true` around
-      `gcloud secrets|aws secretsmanager|vault` in `scripts/`; a credential fetch must never degrade to empty-string.
-      Candidate QG check — a swallowed secret fetch is a silent-outage generator by construction.
+- [x] ✅ [DEVOPS] P1. **Ban the `|| true` credential idiom.** — unified-trading-pm. Delivered
+      `scripts/quality_gates/check_no_swallowed_credential_fetch.py` (standalone, deliberately NOT wired into
+      `scripts/quality-gates.sh` — that wiring is the gated finalize-plan todo) + a shrinking-ratchet baseline
+      (`no_swallowed_credential_fetch_baseline.yaml`) + `tests/unit/test_check_no_swallowed_credential_fetch.py` (22
+      cases: positive/negative/baseline-ratchet/synthetic-new-hit). `glue-runner-run.sh` was NOT edited — it is already
+      fixed on the live idiom (see the comment at its L64-66) and is operator-gated per the P0 above; the checker only
+      greps, it never mutates.
+
+      **Today's hits (2026-07-26, seeded baseline, 18 total across 3 repos)**:
+                                                  - `agent-orchestrator` (2): `scripts/fleet-git-health-guard.sh:101`, `scripts/fleet-git-health-guard.sh:105`
+                                                  - `deployment-service` (5): `scripts/signal-broadcast-live-smoke.sh:69`,
+                                                    `scripts/aws/replicate-secrets-to-aws.sh:158`, `scripts/vm/launch-api-football-backfill-vm.sh:325`,
+                                                    `scripts/vm/relaunch_staged_2026_05_29.sh:70`, `scripts/vm/launch-cefi-sharded-backfill.sh:188`
+                                                  - `unified-trading-pm` (11): `scripts/verify-slot-host-symmetry.sh:337`, `scripts/verify-slot-host-symmetry.sh:490`,
+                                                    `scripts/repo-management/run-audit-reflog-with-alert.sh:125`, `scripts/self-hosted-runners/setup-glue-runners.sh:86`,
+                                                    `scripts/self-hosted-runners/setup-glue-runners.sh:89`, `scripts/workspace/load-gh-token.sh:68`,
+                                                    `scripts/workspace/load-gh-token.sh:72`, `scripts/workspace/generate-act-secrets.sh:32`,
+                                                    `scripts/workspace/generate-act-secrets.sh:35`, `scripts/orchestrator/enable_slack_alerts.sh:59`,
+                                                    `scripts/orchestrator/enable_slack_alerts.sh:60`
+
+                                                  Fixing these 18 sites (surface the real error instead of `|| true`) is separate follow-up work, out of this
+                                                  todo's scope (delivering the checker + baseline); ratchet the baseline down as each is fixed.
+
 - [ ] [DEVOPS] P2. **Make the lag alert state a cause per line, or say it cannot.** It now distinguishes
       provenance-blocked; it should also distinguish (a) SIT-gated in-flight, (b) no promote PR exists, (c) promote PR
       BLOCKED/CONFLICTING, (d) cause unknown. A line that cannot name a cause should say so explicitly rather than imply

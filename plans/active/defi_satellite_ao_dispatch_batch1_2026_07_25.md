@@ -81,13 +81,17 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Repoint `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py`'s
+- [x] ✅ [SCRIPT] P1. Repoint `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py`'s
       `SubsetSpec.canonical_bucket_kind` off the invalid `"dex-pools"`/`"lst-rates"` values (falls through to a legacy
       fallback building now-404 flat bucket names) to `resolve_bucket_name(kind="tick-data",     asset_group="defi")`,
       mirroring the pattern already shipped in `canonical_dex_pool_provider.py` / `data_manifest_handler.py` in this
       same source plan. Repo: market-tick-data-service. **Done when**: neither kind resolves to the dead legacy
       fallback; the script's usage sites still import/parse cleanly; `quality-gates.sh` green. Source:
-      `defi_dedicated_bucket_shared_migration_2026_07_13.md`.
+      `defi_dedicated_bucket_shared_migration_2026_07_13.md`. — market-tick-data-service@ebaae6f43f69. Both
+      `get_write_bucket_name(spec.canonical_bucket_kind)` call sites now resolve via
+      `resolve_bucket_name(cloud="gcp", kind="tick-data", asset_group="defi")`; removed the now-vestigial
+      `canonical_bucket_kind` field from `SubsetSpec` and all 8 constructions (every subset writes to the same shared
+      bucket now, so the field no longer carried information). `quality-gates.sh` green (286s, sentinel written).
 - [ ] [SCRIPT] P1. Repoint `strategy-service/scripts/trace_carry_staked_basis.py`'s `_LST_RATES_BUCKET_TEMPLATE` /
       `_PERP_FUNDING_BUCKET_TEMPLATE` off the dead flat-bucket-name templates to
       `resolve_bucket_name(kind="tick-data",     asset_group="defi")`, mirroring the pattern already shipped for

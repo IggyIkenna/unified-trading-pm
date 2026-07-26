@@ -171,16 +171,12 @@ concurrent workers do not collide on this file.
       clean against today's tree with the intentional drift baselined, fails on a synthetic template-lags-repo case, and
       the api/ui/infra/sit template measurements are recorded in the source doc. Source:
       `issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` ([DEVOPS] P1 + P3).
-- [ ] [INFRA] P1. **Deliver a checker banning the swallowed-credential-fetch idiom.** `2>/dev/null || true` around a
-      `gcloud secrets` / `aws secretsmanager` / `vault` read discards both the exit code and the reason — that exact
-      idiom in `scripts/self-hosted-runners/glue-runner-run.sh` hid a `PERMISSION_DENIED` for 16 hours while 4,159
-      crash-loops produced ZERO alerts. Deliver a NEW standalone
-      `scripts/quality_gates/check_no_swallowed_credential_fetch.py` that greps `scripts/` for a credential fetch
-      degrading to empty-string, with a shrinking-ratchet baseline for today's hits. **Do NOT wire into
-      `scripts/quality-gates.sh`** (finalize-plan todo), and **do NOT edit `glue-runner-run.sh`** — that file's own fix
-      broke prod once and is operator-gated (`## Deferred` D14). **Done when**: the checker enumerates today's hits,
-      fails on a synthetic new one, and the hit list is recorded in the source doc. Source:
-      `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` ([DEVOPS] P1).
+- [x] ✅ [INFRA] P1. **Deliver a checker banning the swallowed-credential-fetch idiom.** —
+      unified-trading-pm@PENDING_SHA. Delivered `scripts/quality_gates/check_no_swallowed_credential_fetch.py`
+      (standalone, NOT wired into `scripts/quality-gates.sh` per the finalize-plan gate; `glue-runner-run.sh`
+      untouched) + a shrinking-ratchet baseline (`no_swallowed_credential_fetch_baseline.yaml`, seeded at 18 real hits
+      across 3 repos) + `tests/unit/test_check_no_swallowed_credential_fetch.py` (22 cases incl. a synthetic-new-hit
+      failure case). Hit list recorded in `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md`.
 - [ ] [INFRA] P1. **Self-hosted glue pool with 0 runners listening must page on its OWN cause.** Nothing watches runner
       liveness — a total pool collapse surfaced only as a generic `PROMOTION LAG > 60m` WARNING and was mis-read as
       "normal SIT latency" for 16 hours. Implement the source doc's own cheapest-honest-signal design as a NEW workflow:

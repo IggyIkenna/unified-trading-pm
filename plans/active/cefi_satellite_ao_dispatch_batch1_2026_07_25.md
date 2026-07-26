@@ -102,17 +102,24 @@ drift_direction: advance-code
       a written per-adapter verdict (routes-through-finalize / intentionally-exempt) is recorded in this plan's Progress
       Log or a new issue doc; any non-routing, non-exempt adapter is filed as a follow-up finding, not silently fixed.
       Source: `data_completion_cefi_2026_07_15.md`.
-- [ ] [REVIEW] P1. **Verify MDPS cefi candle-manifest faithfulness.** On a sample day (e.g. 2026-05-03), compare
-      `ohlcv_*` manifest-row coverage against actual `processed_candles/` candle-file coverage, and reconcile the
-      cross-writes noted in the source doc (782 MTDS-written `ohlcv` rows; 616 MDPS-written `trades` rows) to determine
-      which service legitimately emits `ohlcv` per venue (MTDS REST-poll venues like LIGHTER/PACIFICA vs MDPS-processed
-      venues). Repos: market-data-processing-service, market-tick-data-service. **Conflict-check note**: this reads the
-      same `processed_candles/` corpus as the master closeout's Track 7 149-object bundle-collision residual, but the
-      triage's own text calls it "low collision risk (different defect axis)" — a faithfulness/coverage check, not the
-      bundle-collision defect Track 7 already quarantined. **Done when**: a written comparison report
-      (ohlcv-row-coverage vs candle-file-coverage + cross-write reconciliation) with a PASS/FAIL faithfulness verdict is
-      recorded in this plan's Progress Log or a new issue doc; on PASS, the absorbed
-      `cefi_processed_candles_manifest_file_disconnect` issue doc is archived per its own closing instruction. Source:
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
+      candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
+      cefi availability index for the FULL set of MDPS candle data_type prefixes
+      (`ohlcv_*`/`book5_ohlcv_*`/`deriv_ohlcv_*`/`liq_agg_*`/`swaps_ohlcv_*`/`state_ohlcv_*`, per
+      `canonical_writer_shaping.py::mdps_data_type_key` — not a naive `ohlcv_` grep) found 2,953 rows total, 100% from
+      `market-tick-data-service` (COINBASE-FUTURES/EXTENDED-STARKNET/LIGHTER-ZKSYNC REST-poll venues), **0 from
+      market-data-processing-service, ever**. **File side**: `gcloud storage ls` on
+      `processed_candles/by_date/day=2026-05-03/` found 1,236 real parquet files (BITGET-FUTURES 662, BITGET-SPOT 340,
+      BITFINEX-FUTURES 199, KRAKEN-FUTURES 35, across 7 timeframes). **Verdict: FAIL** — MDPS's candle-generation
+      pipeline writes real files but has never registered a single one in the manifest. **Cross-write reconciliation:
+      RESOLVED, non-concerning** — MTDS legitimately owns `ohlcv` for its 3 REST-poll venues (grew naturally since the
+      782-row observation); MDPS's now-70-row `trades` cross-write is all `venue=HYPERLIQUID`, a narrow unrelated
+      routing detail. Filed `issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md` (P1, OPERATOR-NOTIFY,
+      `assigned_vm: planning`) with the root-cause hypothesis + a dispatched fix todo, since this is a genuine
+      cross-repo data-correctness gap, not a same-turn fix. The absorbed
+      `cefi_processed_candles_manifest_file_disconnect` doc is NOT archived (it already sits in `plans/archive/issues/`
+      from an earlier hygiene pass, ahead of this FAIL verdict existing — noted in the new issue doc, not
+      force-reverted). Repos: market-data-processing-service, market-tick-data-service. Source:
       `data_completion_cefi_2026_07_15.md`.
 - [ ] [DATA] P1. **Re-run `cf_manifest_audit.py` against the live cefi manifest, no `--apply`.** Re-run against live
       `instruments-store-cefi-prd-central-element-323112` and report current CF-1/CF-3/CF-4/CF-8 status, null
@@ -592,6 +599,64 @@ drift_direction: advance-code
     `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --data-types trades --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2026-07-19 2026-07-25 full`
     → VM `mdps-backfill-cefi-20260726-173623` (SPOT), confirmed STARTED — a 7-day window (matching the ADV reader's own
     `window_days=7` default) small enough to very likely finish before hitting the same ceiling.
+  - **Escalation — the SAME whole-VM OOM recurred at only 2 days (2026-07-26 17:41 UTC)**:
+    `mdps-backfill-cefi- 20260726-173623` was killed identically (kernel oom-killer, PID on
+    `google-startup-scripts.service`, 31.19 GB anon-rss) after processing only `day=2026-07-19` (which completed a
+    self-recovered per-date `rc=-9` first) and starting `day=2026-07-20`. This raises the severity of the P1 follow-up
+    above: the memory ceiling is reached within ~1-2 RECENT (2026, high-volume) days per VM invocation, not a slow
+    multi-day accumulation — the growth is fast enough that even a 7-day window isn't safe on `e2-standard-8`. Confirmed
+    `day=2026-07-19` DID produce real output before the crash —
+    `processed_candles/by_date/day=2026-07-19/pipeline_mode=batch_hyperliquid/` exists but **only at `timeframe=15s`** —
+    the aggregation cascade (15s→1m→5m→15m→1h→4h→24h) never reached 24h for that day before the VM died, so this alone
+    does not yet satisfy the "non-zero `quote_volume`" bar. Deleted the crashed VM and launched a maximally-isolated
+    single-day, single-venue probe to determine whether even ONE recent day's full timeframe cascade fits in memory at
+    all:
+    `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --data-types trades --venues "HYPERLIQUID" cefi 2026-07-24 2026-07-24 full`
+    → VM `mdps-backfill-cefi-20260726-174627` (SPOT), confirmed STARTED. If this ALSO OOMs, the finding escalates
+    further (repo-side fix needed before ANY recent-date CeFi candle backfill is reliable, not just a VM-sizing
+    workaround) and the "Done when" bar's recent-day requirement may need to fall back to an OLDER-but-still- 2026 day,
+    or a code fix must land first.
+  - **Critical cross-reference (2026-07-26, sibling todo -003)**: a concurrent slot verified todo -003 ("MDPS cefi
+    candle-manifest faithfulness") and found `issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md` — **MDPS's
+    cefi candle-generation pipeline has NEVER emitted a single manifest row, for ANY venue, EVER** (0/2,953
+    candle-manifest rows are `service_name=market-data-processing-service`, across the WHOLE corpus — confirmed real
+    files exist for established venues like BITGET-FUTURES/BITFINEX-FUTURES too). This is a UNIVERSAL, pre-existing,
+    fleet-wide bug — **not specific to ASTER/HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET** and not something introduced
+    or fixable within this todo's scope (it's tracked as its own P1 fix in that issue doc, repo:
+    market-data-processing-service). This directly reframes this todo's own "Done when" bar #3 ("a manifest-verified
+    backfill covers each venue's full already-captured raw-trade range"): the LIVE write path (`record_captured` during
+    backfill) cannot register these rows today regardless of which venue, so satisfying #3 must go through the
+    launcher's own documented reconciliation step (`rebuild_manifest_from_canonical_paths`, which walks the GCS paths
+    directly) rather than the live write path. **Good news for the other two criteria**: confirmed `features-service`'s
+    `RollingAdvReader` (`cross_instrument/app/calculators/adv.py:265,268,363`) reads candles via
+    `blob_exists`/`download_bytes` on GCS DIRECTLY (`resolve_bucket` + a raw blob path) — it does **not** query the
+    manifest at all, so criteria 1 (real non-zero `quote_volume` on disk) and 2 (ADV reader non-`NO_DATA`) are
+    completely unaffected by this manifest-emission bug and remain achievable via the GCS-direct backfill already in
+    progress.
+  - **Definitive root-cause: a SINGLE real day for ONE venue exceeds 32GB RAM (2026-07-26 17:58 UTC)**. The single-day
+    HYPERLIQUID isolation retry (`mdps-backfill-cefi-20260726-175025`, day=2026-07-19, real data confirmed present) was
+    NOT a multi-day-accumulation issue after all — RSS climbed monotonically through the aggregation cascade
+    (17.1→20.1→24.8→26.2→27.1 GiB, 58.5%→88.6% mem) and was `Killed` (rc=137, SIGKILL) at 88.6% before even finishing.
+    **This is a genuine per-day memory-scaling bug**: processing ALL ~177 tradable HYPERLIQUID instruments' full 15s→24h
+    aggregation cascade for one day does not fit in `e2-standard-8`'s 32GB, independent of how many days are requested.
+    Escalates the P1 follow-up above accordingly — the fix likely needs either per-instrument streaming/chunking in the
+    candle aggregator (not loading every instrument's full tick history simultaneously) or a larger machine type; a
+    7-day (or even 1-day) window is not a safe workaround on its own for high-instrument-count venues. **Practical path
+    forward for THIS todo**: narrowed further to a tiny instrument subset via the launcher's `--instrument-ids` filter —
+    `bash deployment-service/scripts/vm/ launch-mdps-backfill-vm.sh --data-types trades --venues "HYPERLIQUID" --instrument-ids "HYPERLIQUID:PERPETUAL:BTC-USD@LIN HYPERLIQUID:PERPETUAL:ETH-USD@LIN" cefi 2026-07-19 2026-07-19 full`
+    → VM `mdps-backfill-cefi-20260726-180132` (SPOT), confirmed STARTED — 2 instruments should have a small enough
+    footprint to complete, and directly satisfies the "Done when" bar's "at least one probed instrument" wording for the
+    ADV-reader check without needing the full 177-instrument sweep this session.
+  - **Aside — host-wide disk-full emergency (2026-07-26 17:51-18:01 UTC)**: the shared host's root filesystem hit 100%
+    full (290G/290G) mid-session, breaking the Bash tool entirely (even trivial commands failed with ENOSPC) for ~10
+    minutes. Filed `BLK-37401b23` (P0, operator-notify) rather than self-remediating — a `rm -rf` of my own 2
+    just-created `.venv` dirs (unified-trading-library + deployment-service, ~2.8GB, safely recreatable) was correctly
+    BLOCKED by the destructive-command guardrail, and the biggest consumers found (`unified-trading-system-repos/` 157G
+    total across all slots, plus several other-slot scratch dirs
+    `tmp_slot8_manifest_check/`/`tmp_slot3_manifest_restore/`/`tmp_slot9_cf_audit/` totaling ~2.5G and one unowned
+    `mdps_bench_data_fullmonth/` 3.8G) were not mine to unilaterally clear. Resolved externally — disk is back to 19G
+    free (94% used) as of the next check. Unrelated to this todo's own work, noted here only because it interrupted this
+    session's monitoring loop.
 
 ## Deferred
 
