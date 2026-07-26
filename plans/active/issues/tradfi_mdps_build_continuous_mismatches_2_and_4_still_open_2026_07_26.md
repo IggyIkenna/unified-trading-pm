@@ -284,3 +284,35 @@ start without real tradfi/ES feature parquets.
   in-flight; will verify output lands at the canonical path, then launch features-delta-one-tradfi (existing
   `launch-features-vm.sh --feature-family delta_one --asset-group TRADFI`, no code change needed there per slot-6's fix)
   and confirm manifest rows before flipping this todo.
+- 2026-07-26 (slot 3, todo 4 continued): THREE more real bugs found + fixed while actually landing the launch, each
+  caught by watching the live VM rather than trusting a green launch log:
+  1. **Tarball-SHA-pin race in the new launcher**: `launch-mdps-build-continuous-vm.sh` resolved
+     `MDPS_TARBALL_SHA`/`UAC_TARBALL_SHA`/`UTL_TARBALL_SHA` via `lc_resolve_tarball_sha` BEFORE calling
+     `lc_verify_tarball_freshness` (which auto-republishes a stale tarball) — so the VM metadata pinned whatever
+     "latest" WAS before the republish. The first real launch auto-republished MDPS, printed "tarball fresh @
+     4b9613400a54", but the VM downloaded and ran the STALE pre-fix code anyway (confirmed via
+     `process_instrument_file`/`tbbo_15s` errors in the log — the OLD `process_candles_handler` path, not
+     build-continuous). Killed the VM, fixed the ordering (resolve SHAs AFTER the freshness check) —
+     `deployment-service@1eafa51`.
+  2. **`record_captured` missing `source=`**: once dispatch was confirmed correct on relaunch, every REAL (non-dry-run)
+     write failed with `MissingSourceError` — `(tradfi, ohlcv_1m)` is a multi-source `SOURCE_PRIORITY` cell (this
+     validation only fires on real writes, which is why the earlier `--dry-run` local verification never caught it).
+     Fixed via the same `resolve_candle_source_from_pipeline_mode` resolution the eager/streaming candle writers already
+     use (`batch_databento` → `databento`) — `market-data-processing-service@9f615b4`.
+  3. **`CONTINUOUS_FUTURE_WRITTEN` log_event bad kwarg**: passed `metadata=` where `log_event`'s real parameter is
+     `details=` — this crashed AFTER `record_captured` had already written real data (confirmed: a genuine 72KB
+     `ticks.parquet`, 1439 rows, landed for 2020-02-05), so the outer `except` then ALSO called `record_failed()` for
+     the SAME shard, landing two conflicting manifest rows (`captured` row_count=1439 alongside `attempted_failed`
+     row_count=0) in the prod per-VM manifest shard. Fixed in the same commit (`market-data-processing-service@9f615b4`,
+     2 new regression tests, both confirmed failing pre-fix). The stale conflicting test-shard rows from the
+     mid-diagnosis local verification run (`_index/per_vm/local-1319037-3517.parquet`) were left in place rather than
+     deleted (prod-bucket deletes are human-only per codex) — they self-resolve because the manifest reader takes the
+     LATEST `attempted_at` per shard key, and the real full VM run (below) reprocesses this same date with a later
+     timestamp. Also hit and worked around a session-local issue (not a codebase bug): the `github-actions-deploy`
+     gcloud account's WIF token expired mid-session ("job is already completed"), which made
+     `gcloud compute instances describe` silently report `GONE` for a VM that was actually still `RUNNING` — switched
+     the active account to `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` and hardened the watchdog
+     to distinguish a real terminal VM state from an auth failure on the CHECKING side. Relaunched clean:
+     `mdps-backfill-tradfi-buildcontinuous-es-20260726-084944` (`--root ES 2020-01-01..2026-07-25`, tarball fresh @
+     `market-data-processing-service@4738ade8`) — in-flight as of this entry; next steps unchanged (verify output at the
+     canonical path, launch features-delta-one-tradfi, confirm manifest rows, then flip this todo).
