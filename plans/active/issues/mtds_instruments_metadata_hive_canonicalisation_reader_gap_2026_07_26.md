@@ -198,6 +198,16 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
 - [ ] 6. [REVIEW] P3. Add a regression test asserting `load_pool_metadata_for_date` resolves a blob written under EITHER
       the pre-cutover flat shape OR the post-cutover hive shape (two fixture cases), so a future path-grammar change
       can't silently reintroduce this class of bug. (repo: market-tick-data-service)
+- [ ] 7. [OPERATOR] P2. **Remediate the ~4 days (2026-07-23 onward) of already-written dishonest `record_zero_rows`
+      manifest stamps** — todo 4 only verifies the fix works GOING FORWARD; it does not repair the PAST corrupt stamps
+      this bug already produced. (a) Identify the exact affected rows via the availability manifest:
+      `data_type=risk_params`, `venue in [morpho, fluid, kamino_lending / KAMINO-SOLANA]`, `date >= 2026-07-23`,
+      `capture_status` reflecting the false zero-row stamp from this bug (i.e. `captured` with `row_count=0` on a date
+      this fix now resolves to non-zero rows). (b) Propose reclassify + re-run as the remediation — cite
+      prod-manifest-mutation delete-safety per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`.
+      **Human-gated — do NOT execute the reclassify/re-run yourself; propose only.** Distinct from todo 3 (the
+      `_PROTOCOL_TO_VENUE_PREFIX` gap, already shipped) and todo 4 (forward-looking verification only). (repo:
+      market-tick-data-service, unified-trading-pm)
 
 ## Progress Log
 
