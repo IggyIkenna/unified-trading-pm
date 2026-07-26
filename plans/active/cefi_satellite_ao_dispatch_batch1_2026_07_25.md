@@ -133,30 +133,30 @@ drift_direction: advance-code
       `_finalize_session_grid` routing:
 
       | Adapter | Verdict |
-                                              | --- | --- |
-                                              | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
-                                              | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
-                                              | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
-                                              | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
-                                              | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
-                                              | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
+                                                  | --- | --- |
+                                                  | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
+                                                  | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
+                                                  | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
+                                                  | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
+                                                  | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
+                                                  | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
 
-                                              **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
-                                              intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
-                                              **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
-                                              (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
-                                              `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
-                                              snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
-                                              absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
-                                              `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
-                                              non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
-                                              documented the OLD (reversed) behavior, contradicting the shipped code —
-                                              `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
-                                              `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
-                                              a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
-                                              provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
-                                              unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
-                                              (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
+                                                  **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
+                                                  intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
+                                                  **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
+                                                  (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
+                                                  `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
+                                                  snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
+                                                  absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
+                                                  `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
+                                                  non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
+                                                  documented the OLD (reversed) behavior, contradicting the shipped code —
+                                                  `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
+                                                  `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
+                                                  a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
+                                                  provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
+                                                  unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
+                                                  (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
 
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
       candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
@@ -402,7 +402,7 @@ drift_direction: advance-code
       `test_no_capture_reason_progress_content_migration_summary_banner` (the banner line), both asserting
       `NoCaptureReason.PROGRESS`. Full repo `quality-gates.sh` green (203/203 tests in
       `test_data_pipeline_monitors.py`). Shipped via quickmerge, confirmed on `origin/live-defi-rollout`.
-- [ ] [INFRA] P1. **Wire the already-built `DeploymentsRegistry.reap_stale()` into the exit-code fleet-monitor cron.**
+- [x] [INFRA] P1. **Wire the already-built `DeploymentsRegistry.reap_stale()` into the exit-code fleet-monitor cron.**
       `reap_stale()` (`unified-trading-library/.../deployment_registry.py`) is already implemented + unit-tested but has
       ZERO callers anywhere outside its own tests — wire it into deployment-service's `*/5 * * *     *` exit-code sweep
       (`cli.py`'s `mode == "exit-code"` branch), passing the running-VM-name set the sweep already computes via
@@ -412,7 +412,17 @@ drift_direction: advance-code
       exit-code mode calls `DeploymentsRegistry(bucket=...).reap_stale(running_vm_names=...)` once per sweep; a passing
       test in `test_data_pipeline_monitors_cli.py` proves a gone-VM `active/` entry gets archived after one
       `--mode exit-code` run; `quality-gates.sh` green. Source:
-      `issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md`.
+      `issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md`. — ✅ DONE 2026-07-26 (slot 3):
+      `deployment-service@3366610` — `cli.py`'s exit-code branch now calls
+      `DeploymentsRegistry().reap_stale(running_vm_names=...)` once per (non-dry-run) sweep, using the SAME
+      `_list_running_vms()` census the sweep already fetches (unfiltered by `_is_data_vm`, since registry entries aren't
+      limited to data VMs), gated behind `if not dry_run:` and wrapped best-effort so a reaper failure can never abort
+      the sweep. Added `test_main_exit_code_mode_reaps_gone_vm_registry_entry`, which registers a
+      `DeploymentRegistryEntry` (backed by UTL's `InMemoryStorageClient`) whose VM is absent from the running census,
+      runs one real (non-`--dry-run`) `cli.main(["--mode", "exit-code"])`, and asserts the entry is archived with
+      `extras["reap_reason"] == "vm_not_running"`. Full repo `quality-gates.sh` green (249/249 tests across
+      `test_data_pipeline_monitors.py` + `test_data_pipeline_monitors_cli.py`). Shipped via quickmerge, confirmed on
+      `origin/live-defi-rollout`.
 - [x] [BACKEND] P1. **Add `DP_VM_GONE_NO_CAPTURE` to alerting-service's recurring-alert cooldown map.**
       `_RECURRING_ALERT_COOLDOWNS` (`alerting-service/alerting_service/notifiers/router.py`) is missing this event,
       mirroring the exact pattern already shipped for `DP_RUN_MOSTLY_EMPTY` (`alerting-service@fe76ded3`) — use a
