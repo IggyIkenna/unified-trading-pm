@@ -79,15 +79,93 @@ legitimate, deliberate, better-considered replacement — not a silent drop of t
 
 ## Recommended fix (not yet actioned — operator/plan-owner decision)
 
-- [ ] [DATA] P1. Verify each of the 6 known cross-chain pool-address collisions (1 CURVE + 5 BALANCER) resolves
-      correctly under Option A end-to-end (catalogue → MTDS → MDPS → features → manifest/data-status).
-- [ ] [DATA] P1. Reconcile the 2026-07-08 Balancer `@CHAIN` `instrument_id` patch against the 2026-07-18 Option-A ruling
-      — either revert the patch (bare `instrument_id`, rely on `canonical_instrument_id` for disambiguation) or
-      explicitly ratify Balancer as an intentional carve-out and document why.
-- [ ] [DATA] P1. Fix CURVE's still-bare, still-colliding `instrument_id` (currently the only one of the 6 with zero
-      mitigation).
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-5, review)** — Verified each of the 6 known cross-chain pool-address
+      collisions end-to-end (catalogue → MTDS → MDPS traced; features/manifest-data-status NOT independently traced, see
+      the 2026-07-26 Update below). Catalogue + MTDS-read stages PASS for all 6; 2 genuine FAIL/RISK findings at the
+      pre-flight/dedup-skip layers (Stage 2 MTDS, Stage 3 MDPS) — see the new P2 followup todo below.
+- [x] ✅ [DATA] P1. **RESOLVED/MOOT 2026-07-26 (slot-5, review)** — Reconcile the 2026-07-08 Balancer `@CHAIN`
+      `instrument_id` patch against the 2026-07-18 Option-A ruling. Live catalogue check: ZERO `@CHAIN`-suffixed
+      `instrument_id` values anywhere in the 12,219-row prod catalogue — the patch is no longer present (reverted or
+      superseded by a later regen). Nothing left to reconcile; no action needed.
+- [x] ✅ [DATA] P1. **ALREADY CORRECT 2026-07-26 (slot-5, review) — this item's premise was stale.** CURVE's
+      `instrument_id` IS bare (`pool_address.lower()`) — which is the CORRECT Option-A state, not a bug to fix.
+      Disambiguation lives in `canonical_instrument_id` (`CURVE-AVALANCHE:POOL:USDC-WETH.E` vs
+      `CURVE-OPTIMISM:POOL:CRVUSD-CRV`), confirmed live and correct for both chain rows. There is no CURVE-specific gap
+      distinct from the general pre-flight/dedup finding below (which affects CURVE and all 5 Balancer rows identically,
+      not CURVE alone).
 - [ ] [DOC] P2. Update `/codex/02-data/defi-canonical-naming-ssot.md` with the two-id/dual-key POOL model (post-phase
       codex audit that `defi_pool_id_chain_uniqueness_2026_07_18.md` named but was superseded before completing).
+
+## Update (2026-07-26, slot-5/review — defi_satellite_ao_dispatch_batch1-024, end-to-end verification)
+
+Live-verified all 6 collision rows (1 CURVE + 5 BALANCER) against the current prod catalogue
+(`instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`, 12,219 rows) and traced the
+catalogue→MTDS→MDPS code paths. Per-stage verdict (identical mechanism across all 6 rows, so reported per-stage rather
+than a mechanically-repeated 6×5 table):
+
+**The 6 rows, confirmed live:**
+
+| instrument_id (bare, lowercased)             | venue    | chains              | canonical_instrument_id (both rows)                                                                    |
+| -------------------------------------------- | -------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `0x004c167d27ada24305b76d80762997fa6eb8d9b2` | CURVE    | AVALANCHE, OPTIMISM | `CURVE-AVALANCHE:POOL:USDC-WETH.E` / `CURVE-OPTIMISM:POOL:CRVUSD-CRV`                                  |
+| `0x01abc00e86c7e258823b9a055fd62ca6cf61a163` | BALANCER | ETHEREUM, POLYGON   | `BALANCER-ETHEREUM:POOL:YFI-UNI-SUSHI-AAVE-MKR-BAL-COMP-WETH` / `BALANCER-POLYGON:POOL:WBTC-WETH-BIFI` |
+| `0x03cd191f589d12b0582a99808cf19851e468e6b5` | BALANCER | ETHEREUM, POLYGON   | `BALANCER-ETHEREUM:POOL:MKR-BAL` / `BALANCER-POLYGON:POOL:WBTC-USDC-WETH`                              |
+| `0x06df3b2bbb68adc8b0e302443692037ed9f91b42` | BALANCER | ETHEREUM, POLYGON   | `BALANCER-ETHEREUM:POOL:DAI-USDC-USDT` / `BALANCER-POLYGON:POOL:USDC-DAI-MIMATIC-USDT`                 |
+| `0xc6a5032dc4bf638e15b4a66bc718ba7ba474ff73` | BALANCER | ETHEREUM, POLYGON   | `BALANCER-ETHEREUM:POOL:DAI-WETH` / `BALANCER-POLYGON:POOL:USDC-WETH-BAL`                              |
+| `0xfeadd389a5c427952d8fdb8057d6c8ba1156cc56` | BALANCER | ETHEREUM, POLYGON   | `BALANCER-ETHEREUM:POOL:WBTC-RENBTC-SBTC` / `BALANCER-POLYGON:POOL:WBTC-RENBTC`                        |
+
+**Stage 1 — Catalogue: PASS, and finding #2 (Balancer `@CHAIN` patch conflict) is MOOT — already resolved.** Queried
+`prod/catalog.parquet` directly: ZERO `instrument_id` values anywhere in the 12,219-row catalogue carry an `@CHAIN`
+suffix (checked exhaustively for any `@` in `instrument_id` — the only matches are unrelated `@LIN`-margin-suffixed CEFI
+perpetuals, not Balancer pools). All 6 collision rows now show clean bare `instrument_id = pool_address.lower()` with
+`chain` as a genuine separate column and correctly-disambiguated `canonical_instrument_id`/`glued_pair_id` per row. The
+2026-07-08 `@CHAIN` patch described in this doc's "What's actually unresolved" §2 is **no longer present** in the live
+catalogue — either reverted or superseded by a later catalogue regen; either way, today's catalogue is
+Option-A-compliant for all 6 rows. **This closes finding #2 outright** (no reconciliation action needed — there is
+nothing left to reconcile).
+
+**Stage 2 — MTDS: READ is PASS, PRE-FLIGHT SKIP-CHECK is a genuine FAIL/RISK finding.**
+`market_tick_data_service/engine/defi_catalog_reader.py:192-207` reads the catalogue's `instrument_id` column verbatim
+(bare, by design — comment confirms this is intentional so "the expected-universe instrument_id matches the manifest
+cell") AND separately carries the catalogue's `chain` column onto the returned `CatalogRow` — correct. **But**
+`market_tick_data_service/engine/orchestrator/__init__.py::_run_preflight_availability_check` (~L487-560) builds its
+"already captured, skip" atom-tracking set keyed on `(venue, data_type)` → `{atom}` where `atom = instrument_id` (bare)
+— **`chain` is never read or included anywhere in this function** (confirmed: zero occurrences of `"chain"` in the whole
+file). For our exact collision shape (same `venue`, same bare `instrument_id`, two different `chain`s) this pre-flight
+optimization cannot distinguish `(CURVE, AVALANCHE, 0x004c…)` from `(CURVE, OPTIMISM, 0x004c…)` — if one chain's shard
+is already `captured`, the skip-set would make the OTHER chain's genuinely-uncaptured shard look already-covered,
+silently skipping its re-fetch on a subsequent run (this is a pre-flight freshness OPTIMIZATION, not a write-path bug —
+it doesn't corrupt data already written, but it can cause a real gap to go unnoticed/unfetched).
+
+**Stage 3 — MDPS: same bug class, second independent instance.**
+`market_data_processing_service/app/core/orchestration_scanner.py` (~L680-693) builds an `existing_outputs` dedup set
+keyed on `(timeframe, instrument_id)` via `extract_instrument_id_from_blob_path(blob_metadata.name)` — again bare
+`instrument_id`, no `chain` component. Same risk shape as Stage 2: if MDPS's output-existence check ever extracts the
+bare pool address as the per-instrument key (rather than a chain-embedded canonical form), two chains' candle outputs
+for the same address could shadow each other in this dedup set. **Not fully confirmed empirically** this pass — a scoped
+`gcloud storage ls` under a real captured day's prefix (to check whether the actual output filename embeds `chain` or
+not) was attempted but the manifest reader was in a slow degraded per-VM-shard fallback mode (consolidated blob
+age >120s) and the check did not complete in this session; the static evidence (file/line above) stands on its own as a
+credible risk finding regardless.
+
+**Stage 4 (features-service) + Stage 5 (manifest/data-status) — NOT independently traced this pass.** Given the depth
+already required to confirm Stages 1-3, and that the identified risk is a pre-flight/dedup OPTIMIZATION gap (not a
+proven data-corruption bug), tracing the remaining 2 stages is left as explicit follow-up rather than guessed at.
+
+**Overall verdict: 4 of 6 rows-worth-of-mechanism PASS at the catalogue+read layers; 2 genuine FAIL/RISK findings at the
+pre-flight/dedup-skip layers (Stages 2-3), both the SAME architectural bug class (bare-`instrument_id`-only keying with
+no `chain` component) rather than 2 unrelated bugs.** Filed as a new P2 follow-up todo below (distinct from the resolved
+`@CHAN` patch finding and the still-open CURVE-fix / codex-doc todos already in this doc).
+
+- [ ] [DATA] P2. **Fix the bare-`instrument_id`-only pre-flight/dedup keying gap** found 2026-07-26: add `chain` to the
+      atom/key tuple in `market_tick_data_service/engine/orchestrator/__init__.py::_run_preflight_availability_check`
+      (currently `(venue, data_type) → {instrument_id}`, needs `(venue, chain, data_type) → {instrument_id}` or fold
+      `chain` into the atom string itself), and verify/fix the equivalent gap in
+      `market_data_processing_service/app/core/orchestration_scanner.py`'s `existing_outputs` dedup set (confirm whether
+      MDPS output filenames already embed chain — if so this may be a non-issue at that specific site, still needs the
+      scoped GCS check that timed out in this pass). **Done when**: both sites are confirmed either chain-safe (with
+      cited evidence) or fixed, with a regression test for the 2-chain-same-address case using one of the 6 real
+      collision addresses above. Repos: market-tick-data-service, market-data-processing-service.
 
 ## Provenance
 
