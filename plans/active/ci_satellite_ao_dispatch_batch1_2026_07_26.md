@@ -177,15 +177,22 @@ concurrent workers do not collide on this file.
       baseline (`no_swallowed_credential_fetch_baseline.yaml`, seeded at 18 real hits across 3 repos) +
       `tests/unit/test_check_no_swallowed_credential_fetch.py` (22 cases incl. a synthetic-new-hit failure case). Hit
       list recorded in `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md`.
-- [ ] [INFRA] P1. **Self-hosted glue pool with 0 runners listening must page on its OWN cause.** Nothing watches runner
-      liveness — a total pool collapse surfaced only as a generic `PROMOTION LAG > 60m` WARNING and was mis-read as
-      "normal SIT latency" for 16 hours. Implement the source doc's own cheapest-honest-signal design as a NEW workflow:
-      alert when a `glue`-labelled job has been `queued` longer than N minutes while `in_progress == 0` — unambiguous,
-      and it needs no VM access (a naive "is the host up" check would have said GREEN, since the `glue-writer` pool
-      stayed healthy). Route through the reusable `notify-slack.yml` carrier with a state-transition `dedup_key` per
-      `/codex/04-architecture/ci-alerting.md` (fire on change / RESOLVED / re-remind, never every tick). **Done when**:
-      the workflow exists, a synthetic starved-queue case fires exactly one alert, and a healthy pool fires none.
-      Source: `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` ([DEVOPS] P1).
+- [x] ✅ [INFRA] P1. **Self-hosted glue pool with 0 runners listening must page on its OWN cause.** Nothing watches
+      runner liveness — a total pool collapse surfaced only as a generic `PROMOTION LAG > 60m` WARNING and was mis-read
+      as "normal SIT latency" for 16 hours. Implement the source doc's own cheapest-honest-signal design as a NEW
+      workflow: alert when a `glue`-labelled job has been `queued` longer than N minutes while `in_progress == 0` —
+      unambiguous, and it needs no VM access (a naive "is the host up" check would have said GREEN, since the
+      `glue-writer` pool stayed healthy). Route through the reusable `notify-slack.yml` carrier with a state-transition
+      `dedup_key` per `/codex/04-architecture/ci-alerting.md` (fire on change / RESOLVED / re-remind, never every tick).
+      **Done when**: the workflow exists, a synthetic starved-queue case fires exactly one alert, and a healthy pool
+      fires none. Source: `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` ([DEVOPS] P1). —
+      unified-trading-pm@80f397278: new `.github/workflows/glue-pool-starvation-monitor.yml` (hosted runner, per
+      classify-glue-workflows.sh's failure-independence rule — never runs on `glue` itself) cron `*/15`, calling
+      `scripts/cicd/glue_pool_starvation_monitor.py` (pure decision logic + `gh api` queued/in_progress job scan, `glue`
+      vs `glue-writer` exact-label match) then `notify-slack.yml` with `dedup_key: glue-pool-starved`,
+      `cooldown_min: 60`. `tests/unit/test_glue_pool_starvation_monitor.py` (16 cases) proves the synthetic
+      starved-queue case (queued > threshold + 0 in-progress) fires and a healthy/busy/under-threshold pool fires none.
+      Full `bash scripts/quality-gates.sh` green.
 - [ ] [INFRA] P2. **`workspace-quickmerge-validation` logs `❌ Dependency alignment FAILED` yet concludes `success`.**
       Make the workflow exit non-zero when it emits a failure line. **Done when**: a run that logs the failure concludes
       `failure`, and a genuinely-aligned run still concludes `success`. Source:
