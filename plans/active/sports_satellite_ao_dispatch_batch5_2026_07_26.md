@@ -94,24 +94,21 @@ drift_direction: advance-code
       **DONE 2026-07-26 — 0 matches, no relabel needed** (the buggy code path fired live but its retry loop stalled
       before ever reaching the write step, so no bad rows landed). Full census + evidence:
       `issues/api_football_per_fixture_hard_failure_silently_recorded_empty_2026_07_25.md` (`status: resolved`).
-- [ ] [DATA] P2. **player_stats nested-schema normalization + 1,298 manifest/GCS-mismatch investigation (Finding-1
-      follow-ups)** — two items surfaced during the 2026-07-25 player_stats de-dup pass, not previously tracked as
-      remediation todos anywhere in the sports covering-plan set: (1) ~3,274/26,687 (~12%) canonical `player_stats`
-      cells carry a NESTED schema (`[team, players, fixture_id, available_at]`, `players` = list-of-dicts per team) that
-      the dedup script correctly skipped rather than guess at — normalize these into the flat one-row-per-player
-      canonical shape, mirroring the fixture_events schema-normalization approach already used for Finding 2/the
-      fixture_events re-fetch campaign (repo: instruments-service). (2) 1,298/26,687 (~4.9%) manifest-`captured`
-      `PLAYER_STATS` cells have NO corresponding GCS object, concentrated in the 2019 writer-generation era —
-      investigate root cause (read-only census: manifest row vs live GCS listing, cross-reference the 2019-era
-      writer-generation quirks already on file) and either reconcile the manifest entries to an honest status or
-      document why they're unrecoverable; do NOT silently re-mark them without evidence. Both are
-      read/investigate-then-fix passes over disjoint cell sets from the same follow-up note, safe to run as one combined
-      unit (no shared-file race). **Done when**: (1) a re-census of the 3,274 nested-schema cells shows 0 remaining
-      nested-schema `player_stats` objects (or a documented unrecoverable subset), full `quality-gates.sh` green on any
-      writer/normalization code touched; (2) the 1,298 missing-GCS cells have a written root-cause finding + manifest
-      reconciliation action (or explicit non-actionable ruling) landed as a follow-up note in this issue doc or a linked
-      issue doc. Source: `plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` (Finding 1 —
-      RESOLVED 2026-07-25 section, "Two things found during this pass").
+- [x] ✅ [DATA] P2. **DONE 2026-07-26 (slot-2) — player_stats nested-schema normalization + 1,298 manifest/GCS-mismatch
+      investigation (Finding-1 follow-ups).** (1) Flattened all 3,274 nested-schema `player_stats` cells via
+      `instruments-service@a22e371e` (`scripts/normalize_nested_player_stats_2026_07_26.py`, reusing the production
+      `normalize_api_football_player_stats` mapping function); an independent final census confirmed 0 remaining,
+      `quality-gates.sh` green. Hit + fully remediated a self-caused incident along the way (240 objects briefly written
+      empty during the first `--apply`, root-caused, live-refetch-remediated 240/240 with mandatory read-back
+      verification) — see `plans/active/issues/sports_player_stats_normalize_empty_write_incident_2026_07_26.md`. (2)
+      Root-caused the 1,298 missing-GCS cells: 1,210 (93%, dated 2018-2020) match the doc's own Defect-3
+      writer-generation quirk; 88 (7%, dated 2025) are a NEW anomaly not explained by that theory, filed as its own
+      follow-up todo rather than guessed at. No manifest reconciliation executed this pass (explicit non-actionable
+      ruling, filed as a follow-up todo) — findings landed in
+      `plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`'s Finding 1 section + new
+      "Follow-up todos" section. Source:
+      `plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` (Finding 1 — RESOLVED 2026-07-25
+      section, "Two things found during this pass").
 - [ ] [DIAG] P3. Escalate the confirmed 2026-06-21..24 odds_api raw-ingestion gap (MDPS `odds_horizon_bucket` shard4
       reprocess: all 4 dates have only `instrument_type=sport` meta-snapshot objects under
       `pipeline_mode={batch,live}_odds_api` in the raw bucket — zero real `instrument_type=odds` `data_type=trades`

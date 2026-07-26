@@ -28,7 +28,7 @@ related:
     ../../epics/sports_master.md,
   ]
 created: 2026-07-16
-last_updated: 2026-07-16
+last_updated: 2026-07-26
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
@@ -94,11 +94,30 @@ cleanly picked up by the idempotent re-run — 0 errors on the second pass).
   The dedup script correctly SKIPPED these (never guessed how to dedupe a schema it wasn't built for) — they are outside
   this finding's original scope (which measured 2,882,420 rows across 27,296 objects, implying the flat schema as the
   dominant/measured shape) and need their own schema-normalisation pass, mirroring Finding 2's fixture_events treatment.
-  Not filed as a separate issue doc — small enough to track here as a follow-up, same remediation shape as Finding 2.
+  Not filed as a separate issue doc — small enough to track here as a follow-up, same remediation shape as Finding 2. —
+  **RESOLVED 2026-07-26 (slot-2)**: flattened all 3,274 via `instruments-service@a22e371e`
+  (`scripts/normalize_nested_player_stats_2026_07_26.py`, reusing the production `normalize_api_football_player_stats`
+  mapping function). Hit + fixed a self-caused incident along the way (240 objects briefly written empty, fully
+  remediated) — full writeup: `issues/sports_player_stats_normalize_empty_write_incident_2026_07_26.md`. Independent
+  final census confirms 0 remaining nested-schema `player_stats` objects.
 - **1,298/26,687 (4.9%) manifest-`captured` cells have NO corresponding GCS object** — concentrated in 2019 (a
   known-drifted writer-generation era per this doc's own Defect 3). This is a manifest-vs-reality mismatch, not a
   duplicate-row issue; left untouched/logged (never guessed), and is a candidate for its own investigation but out of
-  this finding's scope.
+  this finding's scope. — **ROOT-CAUSE CENSUS 2026-07-26 (slot-2)**: re-measured (manifest-driven, single bounded read,
+  same methodology) — 1,298/26,701 confirmed, distribution by `day` year: `{2018: 3, 2019: 972, 2020: 235, 2025: 88}`,
+  100% `pipeline_mode=batch_api_football`. The 2018-2020 bulk (1,210/1,298, 93%) is consistent with this doc's own
+  Defect 3 (the 2019-era `instrument_count` semantic drift — same writer generation, same era, cross-referenced per this
+  finding's own instruction) — no NEW root cause investigated beyond confirming the era match; a manifest row from that
+  generation can be `captured` with no live object for the same reason that generation's `instrument_count` semantics
+  diverged from every later era (an early, less-hardened writer). **The 88/1,298 (6.8%) 2025 cells are DIFFERENT and NOT
+  explained by the 2019-era theory** — recent dates, current writer generation, so a genuinely live/current gap, not a
+  historical artifact. This is flagged as its own follow-up (below) rather than guessed at: determining whether these
+  are a live write-completion race, a later deletion, or something else needs its own targeted investigation (e.g.
+  checking whether a corresponding `attempted_failed`/error-log entry exists for the same cells, which this pass did not
+  check). **Disposition**: no manifest reconciliation action taken in this pass — relabeling a `captured` row to an
+  honest state (e.g. `attempted_failed`) is itself a manifest-mutation action broader than this todo's scope and risks
+  masking the live 2025 gap's real cause if done before that gap is understood; ruled non-actionable-in-this-todo per
+  the todo's own "or explicit non-actionable ruling" allowance.
 
 Evidence: `instruments-service@210d4567` (script commit).
 
@@ -167,3 +186,27 @@ Measured on **untouched** canonical `instruments-store-sports-prd` cells (`~/tmp
 eras in a single pass — or, if the 2019 `1` is intentional, document it and fix the _consumers_. Either way the decision
 belongs with the same de-dup/schema-normalisation sweep as defects (1) and (2). **Do not** let a per-plan agent correct
 its own touched subset piecemeal.
+
+## Follow-up todos (added 2026-07-26, slot-2)
+
+- [ ] [DATA] P2. Investigate the 88/1,298 (6.8%) `PLAYER_STATS` manifest-`captured`-but-no-GCS-object cells dated 2025
+      (current writer generation, NOT the 2019-era quirk the rest of the 1,298 population matches) — check for a
+      corresponding `attempted_failed`/error-log signal on the same (date, league, `batch_api_football`) cells, and
+      determine whether this is a live write-completion race, a later deletion, or another current-pipeline gap. Do NOT
+      relabel the manifest rows until the mechanism is understood. (repo: instruments-service /
+      market-tick-data-service)
+- [ ] [DATA] P3. Once the 2025 mechanism above is understood (and, separately, for the 1,210 2018-2020-era cells already
+      attributed to the Defect-3 writer-generation quirk), decide + execute the actual manifest reconciliation (relabel
+      to an honest `capture_status`, or document why `captured` with no object is the correct historical record for that
+      era) — this is the manifest-mutation action deferred from the 2026-07-26 root-cause census above. (repo:
+      instruments-service)
+
+## Progress Log
+
+- 2026-07-26 (slot-2): Both open follow-ups from the 2026-07-25 pass closed out: (1) the 3,274 nested-schema
+  `player_stats` cells flattened (`instruments-service@a22e371e`), 0 remaining on an independent census — see
+  `issues/sports_player_stats_normalize_empty_write_incident_2026_07_26.md` for a self-caused incident hit and fully
+  remediated along the way. (2) The 1,298 missing-GCS cells root-caused by era: 1,210 (93%) match the existing Defect-3
+  2019-2020 writer-generation quirk (no new investigation needed beyond confirming the era match); 88 (7%) are a 2025
+  anomaly NOT explained by that theory, filed as its own follow-up todo above rather than guessed at. No manifest
+  reconciliation action taken this pass (ruled non-actionable-in-this-todo, see the follow-up todos).
