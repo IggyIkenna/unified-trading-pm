@@ -201,17 +201,20 @@ drift_direction: advance-code
       `issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md` (Recommendation item 4). Done when: either the
       script is deleted with cited fleet-completion evidence (run.log grep + manifest check), or a documented finding
       explains why completion could not be confirmed and the script was left in place.
-- [ ] [OPS] P0. Confirm current live status of `cefi_consolidated_closeout_2026_07_18.md` Track-2's DERIBIT "Wave-3
-      DERIBIT LIGHT" backfill for `options_chain`/`futures_chain` (check `gcloud compute instances list` for a running
-      wave and the plan's Progress Log for a post-2026-07-20 entry). If it is NOT running or complete, launch it via the
-      existing Track-2 launcher, cap-1 `tardis-concurrency-guard.sh`-gated (SPOT, idempotent shard re-run — safe to
-      relaunch if a prior attempt stalled/was preempted; do not launch a second concurrent Tardis wave — verify fleet
-      count is 0 before launching, per the workspace's hard cap-1 Tardis rule). Source:
-      `issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`. Done when: the wave is confirmed running
-      (STARTED, ≥1 progress-checkpoint logged) or confirmed already complete with fresh manifest
-      `attempted_at`/`written_at` activity for options_chain/futures_chain newer than 2026-07-21, and the finding is
-      appended to this issue doc's Progress Log (or `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s, if
-      folded there) with the VM name and the verified manifest freshness.
+- [x] ✅ [OPS] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — confirmed NOT running; confirmed launching would be
+      WRONG right now, not just premature.** `gcloud compute instances list` (all zones, project
+      `central-element-323112`): no VM matching deribit/wave/tardis. Fresh manifest read
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): DERIBIT
+      `options_chain`/`futures_chain` still 113,615/112,728 `attempted_failed`, unchanged since 2026-07-23 apart from an
+      unrelated 56-row 404 tail on 2026-07-25 (not a Wave-3 run — a real wave touches tens of thousands of rows). **This
+      todo's premise is stale**: `cefi_consolidated_closeout_2026_07_18.md`'s Track 2 was forked 2026-07-25 to
+      `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` (subsumes the old per-venue "Wave-3 DERIBIT LIGHT"
+      concept into one consolidated resume-backfill todo) — that forked plan is `status: draft`, `gate_on_depends: true`
+      on `cefi_migration_cutover_and_track8_completion_2026_07_25.md` finishing, explicitly because launching early
+      "would fight the consolidator." The gating plan itself is `status: draft`, all 5 todos unchecked, no Progress Log
+      — Track 1 hasn't started. Launching now would violate the plan authors' own explicit sequencing gate. **Did not
+      launch anything.** Full evidence in `issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s newly-added
+      Progress Log + its own todo (now flipped).
 - [ ] [SCRIPT] P2. **unified-api-contracts** — add the missing cefi `DATA_TYPE_CAPABILITY_REGISTRY` entries for
       KRAKEN-SPOT / KRAKEN-FUTURES / BITGET-SPOT / BITGET-FUTURES / BITFINEX-SPOT / BITFINEX-FUTURES / ASTER (currently
       only BINANCE/BYBIT/OKX/DERIBIT/COINBASE/HYPERLIQUID/UPBIT have entries — these 7 venues show EMPTY
