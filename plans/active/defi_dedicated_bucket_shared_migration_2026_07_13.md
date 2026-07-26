@@ -405,6 +405,36 @@ readers still point at the dedicated buckets.
   reader-cutover" caution was warranted. Have not yet read `materialize_dex_pool_fees.py`'s path logic, nor located the
   lst-rates/perp-funding readers (Todos 3-4) — next steps.
 
+- **2026-07-26 (worker, slot 6, `defi_satellite_ao_dispatch_batch2-002`)** — Finished the 2 remaining housekeeping
+  sub-items. (1) Deleted `market-tick-data-service`
+  (`market_tick_data_service/scripts/ migrate_lst_perp_shared_bucket_gap_2026_07_13.py`) — re-verified live
+  (`gcloud storage buckets list`) that all 3 gating buckets (`dex-pools-prd`, `lst-rates-prd`, `perp-funding-prd`) are
+  still gone, matching this doc's own 2026-07-14 confirmation; its `Delete-when` condition is unambiguously satisfied.
+  Shipped `market-tick-data-service@5dadaae7`. (2) Audited the 10 `Lifecycle: campaign` scripts in
+  `market-tick-data-service/scripts/` (`defi_index_venue_canonicalise`, `defi_chain_genesis_relabel_migration`,
+  `defi_oracle_relabel_migration`, `defi_captured_pre_existence_fix`, `defi_phantom_captured_pre_genesis_fix`,
+  `defi_object_path_canonicalisation`, `defi_venue_launch_relabel_migration`, `defi_captured_vs_objects_walk` — all
+  `_2026_06_01.py`, plus `gate3_solana_manifest_reconcile.py` and
+  `backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py`). **Did NOT delete any of them** — documenting why instead,
+  per this todo's own accepted alternative:
+  - 9 of the 10 (all except the HL one) reference now-CONFIRMED-DEAD buckets (`dex-pools-prd`, `lst-rates`,
+    `perp-funding`, or `oracle-prices` — all zero matches in a live `gcloud storage buckets list`), and their
+    `Delete-when` condition's plan-archival half IS satisfied (`defi_manifest_canonicalisation_2026_06_01.md` /
+    `solana_defi_legacy_migration_2026_05_27.md`, both archived). BUT the condition's second half ("+ GCS orphan sweep =
+    0") is genuinely ambiguous: the archived `defi_manifest_canonicalisation_2026_06_01.md` itself still carries an
+    UNCHECKED `- [ ] C0-RD5b` orphan-sweep todo (legacy-form objects pre-seeded in `-prd`, a DIFFERENT and apparently
+    still-open sweep, not obviously the same "sweep" these scripts' markers refer to). Rather than guess which sweep the
+    marker means and risk deleting code whose formal gate isn't actually closed, left all 9 in place — they are
+    functionally dead (target buckets don't exist, so they cannot run) but not formally delete-eligible with full
+    confidence.
+  - The 10th (`backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py`) has its OWN, unrelated `Delete-when`
+    ("HyperLiquid mark-price backfill prod-run verified") — not plan-archival-gated at all. Its target bucket
+    (`perp-funding`) is also confirmed dead, so this script too cannot currently run, but its stated verification
+    milestone was not investigated here (out of scope for this chore pass).
+  - **Net**: all 10 are orphaned/non-functional right now (dead target buckets) but left in place pending an explicit
+    resolution of the ambiguous orphan-sweep condition (or a fresh operator call to just delete known-non-functional
+    code regardless).
+
 - **2026-07-13** — Filed after the operator questioned `dex-pools-prd-central-element-323112`'s internal structure
   directly (confirmed real: legacy `day=.../category=defi/` + canonical
   `raw_tick_data/.../asset_group=defi/.../instrument_type=pool/` trees both present, redundant with the bucket name +

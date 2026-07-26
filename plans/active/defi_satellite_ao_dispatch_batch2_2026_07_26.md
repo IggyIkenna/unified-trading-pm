@@ -92,9 +92,15 @@ drift_direction: advance-code
   capability-reconciliation decision). This entry is intentionally NOT a `- [ ]`/`- [x]` checkbox — it must never be
   faked `[x]` (no seeder exists to complete against) and must never re-enter the dispatchable queue; the superseding
   plan is the live tracking doc going forward. Source: /plans/active/data_completion_defi_2026_07_15.md (item C8).
-- [ ] [CHORE] P3. Finish the two housekeeping-cluster sub-items NOT already covered by
-      `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (which only covers the OPERATIONS dict fix and the
-      paper_run_handler stale comments): (1) delete
+- [x] ✅ [CHORE] P3. **DONE 2026-07-26 (worker, slot 6).** (1) Deleted, `market-tick-data-service@5dadaae7` — all 3
+      gating buckets re-verified live still deleted. (2) Audited all 10 campaign scripts: 9 reference now-confirmed-dead
+      buckets AND have their governing plan(s) archived, but did NOT delete them — the "GCS orphan sweep = 0" half of
+      their `Delete-when` is genuinely ambiguous (a different, still-open `C0-RD5b` sweep exists in the archived
+      governing plan); left in place pending clarification. The 10th
+      (`backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py`) has its own unrelated, unconfirmed condition. Full
+      per-script reasoning in `defi_dedicated_bucket_shared_migration_2026_07_13.md`'s Progress Log. Finish the two
+      housekeeping-cluster sub-items NOT already covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (which
+      only covers the OPERATIONS dict fix and the paper_run_handler stale comments): (1) delete
       `market-tick-data-service/scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` — its own documented
       `Delete-when: dex-pools-prd/lst-rates-prd/perp-funding-prd are deleted` condition is now satisfied (all 3 buckets
       confirmed deleted per the source doc's Progress Log); (2) audit the ~8
