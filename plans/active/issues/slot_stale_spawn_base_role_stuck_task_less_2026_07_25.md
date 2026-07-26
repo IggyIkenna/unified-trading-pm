@@ -91,17 +91,26 @@ code's own comments warn about (stale `spawn_base_role` surviving past its ownin
       `test_spawn_base_role_with_live_agentrow_still_held_working` + fixed the pre-existing
       `test_one_off_task_less_boot_holds_slot_working` to seed a realistic live AgentRow fixture, since it had been
       asserting SlotRow-only state that is actually the stale case this fixes)
-- [ ] [OPERATOR] P3. **The "reset manually until it ships" guidance below is now moot — P1/P2/P3 above have shipped.**
-      Live-checked 2026-07-25T23:47Z: no slot is currently in this defect's state (task-less, `status=working`, stale
-      `spawn_base_role`); the one `stale` slot at that moment (slot 1) was an unrelated dead-worker/ alive-tmux case for
-      the watchdog to reap, not this bug. Remaining ask is purely optional hardening: consider exposing a
-      `POST /api/slots/{id}/clear-spawn-role` escape hatch for the rarer case where the AgentRow legitimately still
-      exists but an operator wants to force a reset anyway. Not urgent — downgraded from P2. **Note 2026-07-26**: this
-      todo's first regen landed on task_id `-004`, which collided with the unrelated, already-`done` P3-addendum row
-      (`done_sha=41840c1`) — a positional-id reuse hitting the sibling-reset guard from
+- [x] ✅ [OPERATOR] P3. **The "reset manually until it ships" guidance below is now moot — P1/P2/P3 above have
+      shipped.** Live-checked 2026-07-25T23:47Z: no slot is currently in this defect's state (task-less,
+      `status=working`, stale `spawn_base_role`); the one `stale` slot at that moment (slot 1) was an unrelated
+      dead-worker/ alive-tmux case for the watchdog to reap, not this bug. Remaining ask is purely optional hardening:
+      consider exposing a `POST /api/slots/{id}/clear-spawn-role` escape hatch for the rarer case where the AgentRow
+      legitimately still exists but an operator wants to force a reset anyway. Not urgent — downgraded from P2. **Note
+      2026-07-26**: this todo's first regen landed on task_id `-004`, which collided with the unrelated, already-`done`
+      P3-addendum row (`done_sha=41840c1`) — a positional-id reuse hitting the sibling-reset guard from
       `backlog_regen_id_reuse_stale_status_2026_07_15`/`ao_backlog_regen_integrity_2026_07_20` (the guard correctly
       refuses to reset a done+done_sha row, so this todo silently read as already-done and would never dispatch). This
-      text edit is the known remedy — it forces a fresh, uncorrupted task_id on the next regen tick.
+      text edit is the known remedy — it forces a fresh, uncorrupted task_id on the next regen tick. **Shipped
+      2026-07-26**: implemented the optional hardening — `POST /api/slots/{id}/clear-spawn-role`
+      (`server/routes/slots_ops.py`), an idempotent operator escape hatch that force-clears a slot's `spawn_base_role`
+      even when a live `AgentRow` still resolves (the case `boot_slot`'s automatic self-heal deliberately leaves alone),
+      rests the slot to `idle` only when it has no `current_task`, and 404s on an unknown slot. Regression tests:
+      `test_clear_spawn_role_endpoint_forces_reset_with_live_agentrow`,
+      `test_clear_spawn_role_endpoint_idempotent_when_already_clear`,
+      `test_clear_spawn_role_endpoint_leaves_dispatched_task_alone`,
+      `test_clear_spawn_role_endpoint_404_on_unknown_slot` (`tests/test_boot_typed_role_gate.py`). —
+      agent-orchestrator@8ff20db
 
 ## Current slot-2 status (informational, not part of the fix)
 
