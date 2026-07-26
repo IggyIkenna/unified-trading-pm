@@ -55,12 +55,21 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile both distinct source docs' checkboxes.** For each of
+- [x] ✅ [REVIEW] P1. **Reconcile both distinct source docs' checkboxes.** For each of
       `prediction_satellite_ao_dispatch_batch3_2026_07_26.md`'s now-done todos: flip the corresponding checkbox/section
       in its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-3 commit(s) that
       shipped it. After flipping, re-check whether the source doc now has 0 open todos remaining (checkbox AND
       prose-form). Only flip `status` to `resolved` if it genuinely reaches 0 open todos. **Done when**: both source-doc
-      checkboxes/sections are flipped with verified evidence.
+      checkboxes/sections are flipped with verified evidence. **Done 2026-07-26**: of batch3's 2 todos, only todo 1's
+      schema-drift half is actually "now-done" (its paper-order-flow half is still `BLOCKED-OPERATOR`; todo 2 is a fully
+      un-started `[OPERATOR]` item, a/b/c/d all pending) — so only ONE of the two source docs had anything to reconcile.
+      Flipped item 3 ("Triage the... schema-drift GitHub issue chain") in
+      `plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`'s prose-form "Suggested next step"
+      list to ✅ RESOLVED, citing `unified-api-contracts@c03161a1` + the closed GH issue chain (#45→#590 as duplicates
+      of #673). That doc stays `status: open` — items 1 (live-stall triage) and 2 (e2e-testing host regression) are
+      still genuinely open, so it does not reach 0 open items. Checked
+      `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (todo 2's source doc) directly
+      — confirmed zero sub-items done, so correctly left untouched (nothing to flip).
 - [ ] [REVIEW] P1. **Re-check the 7 operator-gated + 1 time-gated + 1 human-only Deferred items, plus the 2
       already-covered-elsewhere notes**, now that time has passed. For the 2 already-covered-elsewhere notes
       specifically: check whether `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s ml-service odds-feature-naming
