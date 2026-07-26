@@ -130,6 +130,23 @@ is known-wrong is actively dangerous.
 
 ## Progress Log
 
+- 2026-07-26 (main agent, agt-52bb99, ~15:08Z): **Second occurrence corroborated — the false-kick cascade recurred at a
+  LOWER load peak (~11, vs 15.89 in the first incident).** Timeline (UTC): a spike peaked ~10.9 @15:00 drove a
+  `worker_kicked`→`killed` cascade across slots 1/4/5/8 (all four reached `status=killed`; slots 1/4/5/8 each went fully
+  dead `worker_alive=false AND tmux_alive=false` at peak) with their pings frozen at 14:58–15:00; load then briefly
+  drained to 4.19 @15:01 before climbing again 5.80→9.32→12.94 @15:05–15:08 coincident with a large backlog ingest
+  (`queued` 80→287 via `regen_backlog_from_plan.py`). `done` stayed pinned at 64 for ~16 min across the window even
+  though dispatch kept flowing (`dispatched` 5→8; queued drained then surged on ingest) and AutoSpawn recovered every
+  killed slot within ~4–6 min (slots 1/4/5/8 all back to working/idle by 15:07, slot 4 respawned onto a fresh task).
+  **No WIP lost / no governance-bypass**: `/api/fleet/git-health` showed `ahead=0` fleet-wide throughout, and no dead
+  slot's task sat behind an operator merge gate (slot 4's block was BLK-f28c0137, a _credentials_ gate with no commits;
+  slots 5/8 tasks had no blocked entry) — so `_sweep_unpushed_slots` had nothing to auto-push and the merge-gate bypass
+  path (see `watchdog_unpushed_sweep_defeats_operator_merge_gate`) did NOT fire. **Two reinforced fix signals**: (1) the
+  cascade triggering at load ~11 (not just ~16) shows `verify_window_s=10s` is hit more easily than the first incident
+  implied → strengthens the BACKEND two-window / load-aware-kick todo; (2) this load surge was ingest-driven (287-task
+  backlog burst), not only back-to-back QG → the DEVOPS admission gate should throttle on measured host load, not merely
+  concurrent-QG count. **Not operator-escalated**: self-healing (all slots recovered, no WIP at risk) and API responsive
+  throughout (no `/api/state` timeouts this window, unlike the 10:34Z load-15.89 spike).
 - 2026-07-26 (main agent, agt-52bb99, ~10:36Z): **New dimension — the timeout now reaches the DB/API layer, not just
   tmux pane reads.** Review role (msg 2145) reported load average 15.89/11.58/8.31 @10:34Z (climbing from 11.55 ten min
   prior) with DB-backed API endpoints (`POST /reviewed`, and `/api/state` for both of us) timing out at 25s+ while the
