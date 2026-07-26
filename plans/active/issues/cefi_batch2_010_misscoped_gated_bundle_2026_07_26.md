@@ -29,7 +29,7 @@ tags:
   [cefi, ao-dispatch, mis-scoped, gated, findings, reader-bridge, canonical-filename, manifest, codex-reconciliation]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
   ]
 created: 2026-07-26
@@ -57,9 +57,9 @@ resolved_by:
 ## What I found
 
 `cefi_satellite_ao_dispatch_batch2-010` was dispatched to slot-10 as `[BACKEND] P0` (plan
-`/plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md` line 228). Its own text calls the four sub-items
-"bounded, decision-free residuals … safe as one worker's sequential pass." On investigation that framing does not hold —
-the four are RE-DISPATCHES of four already-tracked todos in the source doc
+`/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md` line 228). Its own text calls the four
+sub-items "bounded, decision-free residuals … safe as one worker's sequential pass." On investigation that framing does
+not hold — the four are RE-DISPATCHES of four already-tracked todos in the source doc
 `/plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md`, which is deliberately
 `assigned_vm: NA` + `execution_scope: local-only` because the deploy/cutover/manifest work is drain- and operator-gated.
 They span four crafts and three gate-classes, and **none is closeable by an in-slot backend worker with the evidence the

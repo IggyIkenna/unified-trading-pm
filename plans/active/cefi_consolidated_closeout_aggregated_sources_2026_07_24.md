@@ -231,6 +231,13 @@ drift_direction: advance-code
       `_LIFECYCLE_CATALOGUE_JOBS`.
     - **[SCRIPT] P0.** G1 — instruments-service correct per-day: code right + deterministic + on LDR + QG-green; sample
       day audited cell-correct.
+  - [`plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md`](/plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md)
+    (status: open) — the 44-way sharded cefi content-canonicalisation `--apply` fleet did NOT complete corpus-wide (21
+    of 44 shards died partway through).
+    - **[OPERATOR] P1.** Relaunch the 21 dead/incomplete shards.
+    - **[SCRIPT] P2.** Re-run the corpus-wide `run.log` grep to confirm all 44/44 complete once relaunched.
+    - **[BACKEND] P2.** Cross-reference with `cefi_content_migration_vm_wedged_worker_2026_07_23.md`'s Recommendation
+      item 1.
 - **Manifest / data-status / honest-coverage**:
   - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
     - 1. **[DATA] P0.** VERIFY the prod projection before sizing the win — is `_publish_emission_check` actually firing

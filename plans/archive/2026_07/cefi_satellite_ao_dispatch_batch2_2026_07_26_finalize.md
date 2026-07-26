@@ -7,7 +7,7 @@ summary: >-
   doc's checkboxes independently once its batch-2 todo lands, then re-check the Deferred operator-gated/time-gated/
   human-only items for any that have since cleared), then archives batch2 via the standard 6-step ritual. Also carries
   the follow-up for batch2's 2 non-actioned findings (3 mistag retags + 1 archivable_now doc).
-status: active
+status: complete # (was: active) 2026-07-26 -- all 4 todos done, archived alongside its parent plan
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-2, satellite-docs, archival]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -46,9 +46,11 @@ drift_direction: advance-code
 
 # CeFi satellite AO batch 2 — finalize
 
-> **Machine-gated on `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`** (`depends_on` + `gate_on_depends: true`) — the
-> dispatcher will not queue any todo below until all 17 tasks in that plan are `done`. `sequential: true` because todo 2
-> (deferred re-check) needs todo 1's reconciliation done first, and todo 4 (archival) must run last.
+> **✅ ARCHIVED 2026-07-26 — all 4 todos DONE.** Reconciled all 17 source docs' checkboxes (2 genuine gaps found +
+> fixed), re-checked all 12 Deferred items from the parent plan (11 still genuinely open, 1 went MOOT), retagged the 3
+> mistagged docs to `cross-cutting` + archived the 1 archivable_now doc, and archived the parent plan
+> `cefi_satellite_ao_dispatch_batch2_2026_07_26.md` alongside this doc in the same commit. See the Progress Log (todo
+> evidence below) for the full closure trail.
 
 ## Todos
 
@@ -143,12 +145,28 @@ drift_direction: advance-code
       mentions correctly left alone per the batch1-finalize precedent) → `locked_by` confirmed empty. `git mv` to
       `plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`. `check_frontmatter_schema.py`
       (1794 docs, 0 violations) and `check_reference_paths.py` (existence: 947 ≤ baseline 956, shrinking) both green
-      post-change. — `unified-trading-pm@(this commit)`.
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`** via the standard 6-step ritual (per
+      post-change. — `unified-trading-pm@72249102f`.
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved or re-confirmed all 12 — verify none silently vanish) → add the archive banner → run
       the codex-alignment check (no new durable contract from this batch, confirm still true) → grep the corpus for
       every referrer of `cefi_satellite_ao_dispatch_batch2_2026_07_26` and fix each path to point at the archived
       location → clear `locked_by` (already empty here, confirm). **Done when**: the plan is moved to
       `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself gets
-      archived alongside it in the same commit.
+      archived alongside it in the same commit. — **DONE 2026-07-26 (slot-6, data_engineering).** (1) Verified: 0
+      remaining `- [ ]` in the parent plan; the 12 Deferred items count (10 operator-gated + 1 time-gated + 1
+      human-only) matches todo 2's own re-check exactly — nothing silently vanished. (2) Archive banner added +
+      `status: complete` on both this doc and the parent. (3) Codex-alignment: confirmed still true — batch2 was a pure
+      triage/dispatch plan; every dispatched todo's own code change already carries its own codex update in its source
+      doc, batch2 itself introduced no new durable contract. (4) No CLAUDE.md/codex update needed (consequence of (3)).
+      (5) 7 live corpus path-referrers fixed to the new archive path (`cefi_satellite_ao_dispatch_batch3_2026_07_26.md`
+      ×2 entries [batch2 + this finalize doc], `cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md`,
+      `cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`,
+      `cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` ×2 entries [related: + an inline path-shaped citation],
+      `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`, `cefi_hl_aster_batch_data_gaps_2026_06_22.md`'s
+      inline path-shaped citation, and this doc's own self-referencing `related:` entry); bare-filename prose citations
+      (no leading path) in ~10 other docs correctly left alone (never resolvable paths, same convention as the
+      batch1-finalize precedent); `active_plan_inventory_dashboard_2026_07_24.md` (auto-generated) and every
+      `plans/archive/**` mention also correctly left alone. (6) `locked_by` confirmed empty on both docs. `git mv` both
+      docs to `plans/archive/2026_07/` in this same commit. `check_frontmatter_schema.py` and
+      `check_ag_closeout_linkage.py` both green post-change. — `unified-trading-pm@(this commit)`.
