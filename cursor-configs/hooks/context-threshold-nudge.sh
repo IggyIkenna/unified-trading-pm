@@ -38,8 +38,15 @@ SENTINEL="$(dirname "$TRANSCRIPT_PATH")/.context-nudge-sent-${SESSION_ID}"
 TOTAL_BYTES=$(wc -c < "$TRANSCRIPT_PATH" | tr -d ' ')
 
 # Byte offset of the last compaction boundary, if any -- everything before it
-# is pre-compaction history no longer in the live context window.
-LAST_BOUNDARY_OFFSET=$(grep -abo '"subtype":"compact_boundary"' "$TRANSCRIPT_PATH" 2>/dev/null | tail -1 | cut -d: -f1)
+# is pre-compaction history no longer in the live context window. `grep` exits
+# 1 (not an error -- just "no match") for any session that hasn't compacted
+# yet, which is the common case; under `set -o pipefail` that non-zero status
+# propagates as the pipeline's exit code and `set -e` would abort the WHOLE
+# hook right here on every such prompt submission ("UserPromptSubmit hook
+# error", confirmed live 2026-07-26 -- reproduced standalone with a realistic
+# uncompacted-session transcript). `|| true` makes "no compaction boundary
+# found yet" the expected, non-fatal outcome it actually is.
+LAST_BOUNDARY_OFFSET=$(grep -abo '"subtype":"compact_boundary"' "$TRANSCRIPT_PATH" 2>/dev/null | tail -1 | cut -d: -f1 || true)
 
 if [ -n "$LAST_BOUNDARY_OFFSET" ]; then
   WINDOW_BYTES=$(( TOTAL_BYTES - LAST_BOUNDARY_OFFSET ))
