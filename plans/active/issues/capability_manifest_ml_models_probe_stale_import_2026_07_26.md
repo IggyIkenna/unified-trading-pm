@@ -66,12 +66,45 @@ currently ALWAYS gapped, identically in both the pre- and post-449d1b3d committe
 unrelated to the 449d1b3d fix, but that fix is what surfaced it clearly (by fixing the other two same-shaped gaps, this
 one now stands out as the only remaining `service_registry` gap).
 
+## Root cause + fix (2026-07-26, slot 6)
+
+`ml_service/training/ml/model_registry.py` was **deleted** in `ml-service@40f45d8` ("refactor(ml): delete local
+ModelRegistry, repoint to unified_trading_library") — its load-bearing controls were already carried into UTL's
+`ModelRegistry`, and `ModelVariantConfig` moved with it. Confirmed via
+`git log --all --diff-filter=D -- '**/model_registry.py'` and cross-checked against
+`ml-service/ml_service/training/ml/models.py`'s own current import
+(`from unified_trading_library import (... ModelVariantConfig ...)`). The probe's hardcoded import path was simply never
+updated after that repoint.
+
+Second, adjacent bug found in the same probe body: `ModelVariantConfig` used to be (apparently) a pydantic `BaseModel`
+(hence `getattr(ModelVariantConfig, 'model_fields', {})` worked); the UTL version is a plain `@dataclass` (confirmed:
+`ModelVariantConfig.__dataclass_fields__` has the real 4 fields, `model_fields` doesn't exist on it at all) — so
+`variant_fields` was silently always empty even once the import worked. Fixed both in the same edit.
+
+Verified live (not just read): built ml-service's `.venv` via `uv sync`, reproduced the exact
+`ModuleNotFoundError: No module named 'ml_service.training.ml.model_registry'` on the old path, confirmed the fixed
+probe body imports clean and `variant_fields` now populates (`instrument_id,target_params,target_type,timeframe`).
+Regenerated `capability-manifest.json` with a full execution-service/features-service/ml-service `.venv` environment (no
+regression to the 449d1b3d fix — `execution_algo`/`feature_group`/`param_schema` counts unchanged), confirmed
+deterministic (byte-identical on a second run). Recovers 8 real `ml_model` nodes (was a single
+`service_registry:ml_models` gap node) — new baseline 621 nodes / 2870 edges (prior 449d1b3d/3715d3ec baseline was
+614/2760).
+
+Shipped:
+
+- `unified-trading-pm@da5bf1591` — probe body fix in `_capability_gaps.py`.
+- `unified-api-contracts@c8029f80` — regenerated `capability-manifest.json` + orphan/readiness reports.
+- `unified-trading-system-ui@be08ce4eb` — re-synced bundled manifest + updated the hardcoded node/edge count assertions
+  in `tests/unit/wizard/graph.test.ts` / `tests/unit/wizard/parity-gates.test.ts` (614/2760 → 621/2870); ran the
+  affected test files locally, 113/113 passed; full repo `quality-gates.sh` green (199s).
+
 ## Recommended decision
 
-- [ ] [SCRIPT] P3. Find the correct current import path for ml-service's model registry (grep `ml-service/ml_service/`
-      for the actual registry module/function — likely renamed or moved since `_capability_gaps.py`'s probe body was
-      written) and update the probe body in `extract_service_registries()` to match; OR, if the registry genuinely no
-      longer exists, document that explicitly and consider whether the `ml_models` `gap_registry` node should be removed
-      from the manifest schema entirely rather than perpetually gapped. Regenerate + re-sync `capability-manifest.json`
-      into `unified-trading-system-ui` once fixed (mirroring the 449d1b3d/3715d3ec pattern). Repos: unified-trading-pm,
-      ml-service (read-only investigation), unified-api-contracts, unified-trading-system-ui.
+- [x] ✅ [SCRIPT] P3. Find the correct current import path for ml-service's model registry (grep
+      `ml-service/ml_service/` for the actual registry module/function — likely renamed or moved since
+      `_capability_gaps.py`'s probe body was written) and update the probe body in `extract_service_registries()` to
+      match; OR, if the registry genuinely no longer exists, document that explicitly and consider whether the
+      `ml_models` `gap_registry` node should be removed from the manifest schema entirely rather than perpetually
+      gapped. Regenerate + re-sync `capability-manifest.json` into `unified-trading-system-ui` once fixed (mirroring the
+      449d1b3d/3715d3ec pattern). Repos: unified-trading-pm, ml-service (read-only investigation),
+      unified-api-contracts, unified-trading-system-ui.
