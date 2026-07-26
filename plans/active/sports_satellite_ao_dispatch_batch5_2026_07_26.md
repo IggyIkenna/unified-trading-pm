@@ -73,7 +73,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P1. **Historical audit of api_football per-fixture `empty_confirmed` rows possibly mismasking hard fetch
+- [x] ✅ [DATA] P1. **Historical audit of api_football per-fixture `empty_confirmed` rows possibly mismasking hard fetch
       failures.** Now that the swallow-to-`[]` bug is fixed (`instruments-service@f31fb2e9` — the 4 per-fixture adapters
       `get_fixture_statistics`/`get_fixture_events`/`get_fixture_lineups`/`get_fixture_player_stats` re-raise hard
       failures instead of returning `[]`), scope a census (manifest-only, no new GCS walk) over
@@ -90,7 +90,10 @@ drift_direction: advance-code
       `issues/api_football_per_fixture_hard_failure_silently_recorded_empty_2026_07_25.md`. **Done when**: the census is
       run and its match count reported (0 matches → note the exposure window was smaller than feared, no relabel needed;
       N matches → each genuine false positive is relabeled `attempted_failed` with the relabel count and query cited in
-      a new dated section of this issue doc, and the doc's `status` is updated to reflect the audit's completion).
+      a new dated section of this issue doc, and the doc's `status` is updated to reflect the audit's completion). —
+      **DONE 2026-07-26 — 0 matches, no relabel needed** (the buggy code path fired live but its retry loop stalled
+      before ever reaching the write step, so no bad rows landed). Full census + evidence:
+      `issues/api_football_per_fixture_hard_failure_silently_recorded_empty_2026_07_25.md` (`status: resolved`).
 - [ ] [DATA] P2. **player_stats nested-schema normalization + 1,298 manifest/GCS-mismatch investigation (Finding-1
       follow-ups)** — two items surfaced during the 2026-07-25 player_stats de-dup pass, not previously tracked as
       remediation todos anywhere in the sports covering-plan set: (1) ~3,274/26,687 (~12%) canonical `player_stats`
