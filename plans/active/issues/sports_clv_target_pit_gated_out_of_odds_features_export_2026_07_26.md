@@ -134,13 +134,46 @@ Three candidate directions — genuinely a design decision, not something a sing
   and touches the leakage-safety contract that DOES matter (a real, already-fixed leakage bug lives in the same commit
   family — `ml-service@a14985bc`'s `_FT_REALIZED_COLUMNS` fix).
 
-- [ ] [DESIGN] P1. Operator/main-agent decision: pick (a), (b), or (c) above for how ml-service's CLV target sources
-      real T-0 closing-line data without leaking it into any pre-match INPUT feature. (repos: features-service,
-      ml-service)
-- [ ] [ML] P2. Once the decision above is implemented, re-attempt the CLV retrain and confirm the target class
-      distribution is non-degenerate before promoting/citing. Blocked on the `[DESIGN] P1` item above AND
-      `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md` both landing. (Supersedes the
-      identically- named `[ML] P2` in
+- [x] ✅ [DESIGN] P1. **DECIDED 2026-07-26 (operator via main-agent, answering BLK-8f8b862f) — Option (b).** NOT the
+      worker-recommended (a): (a) would have `ml-service`'s `CLVTargetGenerator` call `compute_clv_features`/
+      `compute_opening_odds` directly, which is a service→service CODE dependency — banned by
+      `/codex/04-architecture/tier-and-import-architecture.md` (T4 services depend only on
+      UTL/UAC/`unified-*-interface`, integrate by API/data contract + mocks). Making (a) tier-legal would require either
+      importing features-service internals (banned) or re-implementing the calculator in ml-service (divergence risk vs.
+      the SSOT calculator). (b) keeps the CLV calculator where it's owned (features-service = SSOT) and has ml-service
+      integrate the sanctioned way: consuming a published GCS data artifact. (b) also gives the strongest leakage
+      protection — a distinct, target-only artifact a model-input path cannot accidentally pick up — and leaves the
+      `odds_features` PIT leakage guard 100% untouched. Reading raw MDPS bucketed odds directly would itself have been
+      fine (a data contract); the disqualifier for (a) was specifically the cross-service COMPUTE coupling. **Guardrails
+      (binding on the implementation todos below):** (1) the new export MUST be namespace/`feature_group`-separated so
+      it can NEVER be wired in as a model INPUT feature — targets may see the closing line, inputs may not; keep that
+      boundary structural, not conventional; (2) do NOT relax or touch `_restrict_to_visible_horizons` /
+      `FEATURE_HORIZONS` on the `odds_features` (feature) side — the always-null CLV there is correct and must stay; (3)
+      after implementation, re-run the CLV retrain and confirm a NON-DEGENERATE target class distribution (not the
+      current 100%-flat) before promoting/citing. **⚠️ OPERATOR RATIFICATION REQUIRED BEFORE MERGE**: this direction is
+      confirmed, but final sign-off on the cross-repo implementation (below) — since it crosses
+      `features-service`+`ml-service` ownership and touches a leakage-safety contract — happens at merge time, not here.
+      Do NOT quickmerge either implementation todo below without an explicit operator go-ahead on the actual diff.
+- [ ] [DATA] P2. Add a new, explicitly-labeled target-only export in features-service — `feature_group=odds_targets` (or
+      a `clv_target` sidecar under the existing `sports_features/by_date/...` layout) — carrying
+      `odds_clv_home`/`odds_clv_draw`/`odds_clv_away` (+ sharp/direction variants) computed via the EXISTING
+      `compute_clv_features`/`compute_opening_odds` (`odds_velocity.py`) against the FULL (unrestricted) bucketed-odds
+      input for each fixture — i.e. explicitly NOT run through `_restrict_to_visible_horizons`. Back-fill for at least
+      the `2026-04-01..17` window already used in prior retrain attempts. Repo: features-service. **Done when**: the new
+      export exists, is schema-registered (`feature_expectations.py`/manifest-aware like every other `feature_group`), a
+      regression test proves it is NEVER reachable from the `odds_features` (feature) export path, a real backfilled
+      date's parquet shows non-null, sane CLV values for real fixtures (spot-checked against a direct in-process
+      `compute_clv_features` call, mirroring this doc's own verification method), and `quality-gates.sh` is green. ⚠️
+      Requires explicit operator sign-off on the diff before quickmerge (see `[DESIGN] P1` above) — do not merge
+      unilaterally.
+- [ ] [ML] P2. Repoint `CLVTargetGenerator._resolve_raw_drift`'s Path 1 (`sports_target_generator.py`) from reading
+      `odds_clv_home` off the `odds_features` (feature) export to reading it off the new `odds_targets` export from the
+      `[DATA] P2` todo above. Then re-attempt the 3 CLV model variant retrain (`training-period-2026-04`,
+      `pregame_clv_family`, `timeframes=fixture`) and confirm the target class distribution is non-degenerate before
+      promoting/citing. The 3 quarantined artifacts stay untouched. Blocked on the `[DATA] P2` todo above AND
+      `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md` both landing. Repo: ml-service. ⚠️
+      Requires explicit operator sign-off on the diff before quickmerge (see `[DESIGN] P1` above) — do not merge
+      unilaterally. (Supersedes the identically-named `[ML] P2` in
       `ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`, which now points
       here.)
 
@@ -152,3 +185,10 @@ Three candidate directions — genuinely a design decision, not something a sing
   is no export-side bug; the always-empty CLV is a deliberate, correct point-in-time leakage guard. Closed that todo as
   re-scoped here (see that doc's Progress Log). `[ML] P2` in that doc now blocks on THIS doc's architecture decision,
   not a code fix.
+- 2026-07-26 (slot-8, `data_engineering`): operator answered `BLK-8f8b862f` (via main-agent) — Option (b), NOT the
+  worker-recommended (a), because (a)'s direct cross-service calculator call is banned by
+  `/codex/04-architecture/tier-and-import-architecture.md`. Closed `[DESIGN] P1` with the ratified direction +
+  guardrails, converted it into 2 concrete, properly-scoped implementation todos (features-service: new `odds_targets`
+  export; ml-service: repoint the target generator) — both explicitly gated on operator sign-off before quickmerge, per
+  the interim guidance's disposition (partial — direction ratified, implementation still needs final operator
+  ratification at merge time). Did not implement either todo myself this turn.
