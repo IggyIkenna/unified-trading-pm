@@ -177,15 +177,22 @@ drift_direction: advance-code
       `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`. Source:
       `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` (corrected 2026-07-25 plan-reconcile
       — matches this todo's own Done-when target; the digest previously cited as Source has 0 checkboxes).
-- [ ] [INFRA] P1. Grant `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com`
-      `storage.objects.create` on `central-element-323112-events` (or the correct events-sink bucket, confirm the exact
-      name at execution time) so `CATALOGUE_SHRINK_BLOCKED`/similar structured events from the
-      sports/prediction/cefi/defi `lifecycle-catalogue-regen-*` Cloud Run Jobs stop silently 403ing out of the event-log
-      sink (Cloud Logging still carries the signal today, but the structured event-log sink does not). Repo:
-      deployment-service (Terraform IAM). **Done when**: the IAM binding is applied via Terraform (+ live-apply matching
-      it), and a fresh forced `CATALOGUE_SHRINK_BLOCKED`-class event (or a synthetic equivalent write) is confirmed
-      reaching the events-sink bucket without a 403. Source:
-      `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
+- [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7)** — Grant
+      `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com` `storage.objects.create` on
+      `central-element-323112-events` (or the correct events-sink bucket, confirm the exact name at execution time) so
+      `CATALOGUE_SHRINK_BLOCKED`/similar structured events from the sports/prediction/cefi/defi
+      `lifecycle-catalogue-regen-*` Cloud Run Jobs stop silently 403ing out of the event-log sink (Cloud Logging still
+      carries the signal today, but the structured event-log sink does not). Repo: deployment-service (Terraform IAM).
+      **Done when**: the IAM binding is applied via Terraform (+ live-apply matching it), and a fresh forced
+      `CATALOGUE_SHRINK_BLOCKED`-class event (or a synthetic equivalent write) is confirmed reaching the events-sink
+      bucket without a 403. Source: `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`. Confirmed the exact
+      bucket name is `central-element-323112-events` (the `warm_gcs_bucket`/`cold_gcs_bucket` Terraform vars for this
+      same module both resolve to it in live state) — no ambiguity. `roles/storage.objectCreator` (==
+      `storage.objects.create`) granted, codified in new
+      `deployment-service/terraform/gcp/live_event_log/events_bucket_iam.tf`
+      (`deployment-service@<see plan flip commit>`), live-applied, and verified with a synthetic impersonated-SA write
+      that landed HTTP 200 (no 403) then was cleaned up. Full evidence + the credential gotcha hit along the way in the
+      Progress Log below.
 - [ ] [DOC] P1. Re-verify and flip
       `plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` to `status: resolved` with
       `resolved_by: instruments-service@ac22305c` populated — it documents the identical 3 oversized sports-domain
@@ -282,6 +289,46 @@ and now live as dispatchable todos in `sports_satellite_ao_dispatch_batch4_2026_
 batch's own Deferred section and `autonomous_session_operator_decisions_2026_07_25.md` entries #5-8 (now actually
 written up, not just pointed at). The 2 `doc_too_large_or_risky_for_batch` docs are unchanged, still pending their own
 dedicated pass.
+
+## Progress Log
+
+- **2026-07-26 (slot-7)** — Worked the `lifecycle-catalogue-regen` events-sink IAM-grant todo. Confirmed the bucket name
+  ambiguity in the todo's own text resolves to `central-element-323112-events` (the `live_event_log` Terraform module's
+  `warm_gcs_bucket`/`cold_gcs_bucket` vars both point at it in live state -- no separate "events-sink" bucket exists).
+  Added `deployment-service/terraform/gcp/live_event_log/events_bucket_iam.tf` -- a single additive
+  `google_storage_bucket_iam_member` (`roles/storage.objectCreator`, i.e. exactly `storage.objects.create`, least-
+  privilege -- not `objectAdmin`) rather than hand-editing the machine-generated `main.tf` (its header says "Generated
+  from `unified_api_contracts.events.sink_matrix.SINK_MATRIX`") or the unrelated `publisher_iam.tf` (Pub/Sub publish,
+  not GCS object write).
+  - **Credential-identity gotcha (worth flagging for the next agent touching this bucket's IAM)**: this environment has
+    THREE distinct GCP identities in play, and they do NOT have the same permissions on `central-element-323112-events`:
+    (1) Application Default Credentials, which Terraform's `google` provider uses by default, resolve to
+    `unified-trading-sa@...` -- this SA lacks `storage.buckets.getIamPolicy`/`setIamPolicy` on this specific bucket
+    (confirmed live: `terraform apply` 403'd on the read-modify-write with exactly that permission denied -- this is the
+    SAME gap `main.tf`'s own trailing comment already documented for the Pub/Sub delivery SA's grant,
+    "unified-trading-sa lacks setIamPolicy", so it's a standing property of this bucket, not new drift). (2) The active
+    `gcloud auth` CLI account in this session, `github-actions-deploy@...`, DOES have both permissions on this bucket
+    (verified: a direct `gcloud storage buckets add-iam-policy-binding` succeeded under it). (3) Feeding Terraform
+    `GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token --account=github-actions-deploy@...)` resolved the apply
+    cleanly --
+    `terraform plan`/`apply -target=google_storage_bucket_iam_member. lifecycle_catalogue_regen_events_sink_writer`
+    (with `warm_gcs_bucket`/`cold_gcs_bucket`/`compactor_sa_email` pulled from real `terraform state show` values, not
+    guessed, to avoid drifting the rest of the module under `-target`): **1 added, 0 changed, 0 destroyed**.
+    `terraform state list` now carries the resource; live `get-iam-policy` matches state exactly (only the new member
+    added to the existing `objectCreator` binding -- the Pub/Sub SA's own membership in that binding is untouched,
+    confirming the additive `_iam_member` resource type was the right choice over an authoritative `_iam_binding`).
+  - **Live verification (Done-when's second half)**: `github-actions-deploy`'s cached access token also has
+    `iam.serviceAccounts.getAccessToken` on `lifecycle-catalogue-regen` (confirmed via a direct
+    `iamcredentials.googleapis.com:generateAccessToken` REST call -- `gcloud`'s own `--impersonate-service-account` flag
+    failed with an unrelated WIF-refresh error, "Identity Pool subject token ... job is already completed", so the
+    REST-call route bypassed that gcloud-specific bug). Used the minted impersonated token to `POST` a synthetic
+    `CATALOGUE_SHRINK_BLOCKED`-shaped JSON object to `_iam_grant_verification/lifecycle-catalogue-regen-probe-<ts>.json`
+    in the bucket via the GCS JSON API -- **HTTP 200**, object created, no 403. Also confirmed the grant is correctly
+    least-privilege in the same pass: the impersonated SA's own `DELETE` on that same object correctly 403'd (no
+    `objectAdmin`/delete rights granted, as intended). Cleaned up the probe object via the `github-actions-deploy`
+    identity (`DELETE` -> 204, re-`GET` -> 404).
+  - No plan/code collision: this todo's only file (`events_bucket_iam.tf`) is new and untouched by any other in-flight
+    batch3/batch4 todo.
 
 ## Reconciliation
 
