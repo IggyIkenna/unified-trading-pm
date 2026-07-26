@@ -328,24 +328,24 @@ drift_direction: advance-code
       `test_manifest_writer_record_empty_reason.py` for both signature changes.
 
       **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
-                                          `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
-                                          `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
-                                          prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
-                                          this is a genuine architect-level design call (not a mechanical copy) — filed as
-                                          `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
-                                          (merged via PR #1593), NOT executed here.
+                                                  `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                                                  `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                                                  prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                                                  this is a genuine architect-level design call (not a mechanical copy) — filed as
+                                                  `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                                                  (merged via PR #1593), NOT executed here.
 
-                                          **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
-                                          (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+                                                  **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                                                  (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
 
-                                          **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
-                                          items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
-                                          flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
-                                          re-verifies sports.
+                                                  **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                                                  items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                                                  flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                                                  re-verifies sports.
 
-                                          Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
-                                          `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
-                                          of which are now the ONLY reds, exactly matching the filed issue doc's scope).
+                                                  Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                                                  `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                                                  of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the
@@ -387,7 +387,7 @@ drift_direction: advance-code
       executions/schedules (mirrors the existing manifest-consolidator per-AG pattern; preferred over merely bumping the
       memory limit since it also gives per-AG failure isolation, per the doc's own recommendation) or bump the memory
       limit if a per-AG split proves infeasible; redeploy. Source:
-      `plans/active/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md`. Done when:
+      `plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md`. Done when:
       `gs://cf-manifest-audit-central-element-323112/cf_audit/` shows a fresh dated output object for all 5 asset_groups
       (cefi/defi/tradfi/sports/prediction) from a real green run, cited with `Evidence: cloudbuild=<id>` or the
       equivalent Cloud Run execution-success reference, and the source issue doc's 3 "Next steps" todos are flipped
