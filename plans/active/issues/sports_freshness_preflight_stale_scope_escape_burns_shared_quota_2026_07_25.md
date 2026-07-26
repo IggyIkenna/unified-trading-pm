@@ -120,7 +120,17 @@ depends_on: []
       post-launch showing the clean zero-leak pattern (`Entity-scoped mode: restricting to FIXTURES     only` on every
       date, no unscoped enrichment fetch lines) while fast-skipping already-captured 2020-08 dates. Terminal outcome not
       yet known — tracked to completion in the batch2 plan's curated-universe-backfill todo
-      (`/plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md`), not re-derived here.
+      (`/plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md`), not re-derived here. — **TERMINAL
+      2026-07-25T23:47:19Z: `exit_code=137` again** (`af-backfill-20260726-000946`), this time at `2026-04-24` —
+      **earlier** in the traversal than the prior 137 (`2026-06-02`) despite a shorter runtime (~32min vs ~56min). The
+      zero-leak entity-scoped pattern held for the full run (incl. a genuine re-fetch at `2026-04-18`, the original
+      scope-escape trigger date — `wrote 229 records across 334 venues`, correctly re-triggered and correctly scoped).
+      Dying after a similar WALL-CLOCK duration rather than at a fixed date, on the 2nd consecutive attempt at the same
+      machine tier, points more toward a memory leak accumulating over runtime than a data-size spike at one date — not
+      proven, but now 2-for-2 on e2-standard-8. **Escalated per this todo's own contingency**: re-relaunched as
+      `af-backfill-20260726-004904` with `MACHINE_TYPE=e2-highmem-8` (64GB, up from 32GB), same tarball SHA (`29b61775`,
+      still fix-safe), singleton lock re-verified clear, live quota 38,659/150,000 remaining. Confirmed `RUNNING`;
+      terminal outcome still pending.
 - [ ] [DATA] P2. Audit whether the earlier 08:12Z quota exhaustion and any other in-flight sports backfills hit the same
       stale-scope-escape (grep run logs for enrichment fetches on `--sports-entity`-scoped runs); if any already-running
       VM is escaping scope, stop it too. Cross-ref
