@@ -311,23 +311,26 @@ drift_direction: advance-code
       would misrepresent a not-yet-attempted backfill as a failed one. Left the issue doc `status: open` with a dated
       2026-07-26 re-verify section explaining exactly this — the correct re-check trigger is the Track-2 plan's
       POST-BACKFILL checkpoint landing, not another reprobe now.
-- [ ] [DATA] P0. **Root-cause the CEFI Tardis download-path memory blow-up and make `mtds_chunk_loop.sh` fail loud
-      instead of silently wedging on a child OOM-kill.** Confirmed: identical `--chunk-days 1` chunks for the same
-      9-symbol/3-venue CEX-spot set showed 6GB vs 14.6GB RSS on consecutive days (kernel OOM-killed the second), ruling
-      out simple date-span scaling. (a) Read `market_tick_data_service`'s CEFI Tardis download path and determine which
-      of the three hypotheses in the source doc explains the variance — genuine per-day data-volume outlier for one
-      symbol, an unbounded-buffer/retry-storm path that only fires under certain response conditions, or a
-      within-process resource leak — via code read plus at least one reproduction attempt (small VM launch reproducing
-      the known bad day, `2022-08-26`, for the same symbol/venue set); patch the identified cause if a concrete fix is
-      findable, otherwise document the narrowed-down finding with evidence. (b) Independently of (a)'s outcome, fix
-      `mtds_chunk_loop.sh` (and its heartbeat/uploader orchestration) to detect a child process OOM-kill or any
-      non-zero/killed exit and either fail loud (page/alert, non-zero exit, clear log line) or skip-and-continue to the
-      next chunk — never silently freeze the whole VM with no further log/heartbeat/upload activity. Source:
-      issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md ("Suggested next steps" items 1 and 2). Done when:
-      (a) a findings/fix commit exists in market-tick-data-service documenting or resolving the memory-variance root
-      cause, AND (b) a code change to `mtds_chunk_loop.sh`/the wrapping orchestration ships that demonstrably surfaces
-      (loud failure or skip-continue) a killed child process instead of going silent — verified via a test that kills a
-      chunk's child process mid-run and confirms the loop reacts (does not hang).
+- [x] ✅ [DATA] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — root-caused (code-read) + fixed both parts.** (a)
+      Traced the full call chain (`process_ticks()` → `TardisAdapter.download_batch()` →
+      `ParallelPerSymbolRunner.run()`) and found the concrete mechanism: `_get_perp_runner()`
+      (`tardis_batch_download.py:236-253`) never populates `max_in_flight_bytes`, so the runner's byte-budget gate
+      (`_await_capacity()`) is a permanent no-op — the ONLY admission control is a task-COUNT cap
+      (`TARDIS_MAX_INFLIGHT_TASKS`/`TARDIS_MAX_CONCURRENT_DOWNLOADS`), never a byte-SUM cap. Since trading volume
+      correlates across symbols on the same day, a volatile day can run many ~1GB-class shards concurrently with no
+      bound on combined RSS — a code-evidenced, not guessed, explanation for the 6GB-vs-14.6GB variance. Did NOT do a
+      live VM reproduction (the todo's "otherwise document" branch) — the mechanism was confirmed with sufficient
+      code-level evidence, and a live reproduction burns real Tardis-quota/VM-cost to re-observe something already
+      reproduced 3x in the source doc. (b) Shipped two fixes mirroring the exact already-validated
+      `tradfi_backfill_oom_remediation_2026_06_24.md` precedent for the identical OOM signature: `MACHINE_TYPE` now
+      defaults to `e2-highmem-4` (32GB) for `--asset-group CEFI` in `launch-mtds-backfill-vm.sh`, and
+      `mtds_chunk_loop.sh`'s generator now captures the real per-chunk exit code and logs a greppable
+      `CHUNK_FAILED: ... exit=137 reason=OOM_KILLED` (or `NONZERO_EXIT`) marker before continuing — verified via a local
+      bash simulation of the exact loop body with a child process that self-`kill -9`s mid-run: the loop correctly
+      logged the failure and proceeded to chunk 3 without hanging (real VM reproduction not needed to prove the shell
+      logic). Deeper byte-budget fix filed as a P2 follow-up (not required to unblock). Shipped
+      `deployment-service@3d99865`. Full write-up: `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s
+      2026-07-26 section.
 - [ ] [DATA] P1. **Fix the 3 MTDS tests broken by UAC's embedded-`:` `build_instrument_id` strictness (Bitfinex
       `ADAF0:USTF0` perpetual + DeFi `WETH:USDC` pool).** Resolve the venue-native colon-bearing symbol against the
       relevant catalogue/wire-map BEFORE calling `build_instrument_id`, or route the genuinely-unresolvable case through

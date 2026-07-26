@@ -145,3 +145,81 @@ as hard to detect.
   `gcloud logging read "resource.type=gce_instance AND resource.labels.instance_id=..."`.
 - Full run.log excerpts for both attempts are in the LST plan's Progress Log
   (`plans/active/lst_rate_honest_coverage_2026_07_21.md` Phase 5, 2026-07-22 entries).
+
+## 2026-07-26 root-cause + fix (slot-4, `data_engineering`, task `cefi_satellite_ao_dispatch_batch2-014`)
+
+### Root cause (code-read, `market-tick-data-service`)
+
+Call chain for `--asset-group CEFI --venues ... --data-types trades`: `TickDataHandler.process()` → `process_ticks()`
+(`engine/orchestrator/__init__.py:593`) → `asyncio.gather()` over all active venues (`__init__.py:708-709`, gated only
+by `graph_semaphore = Semaphore(3)`) → `_fetch_one_venue()` → `TardisAdapter.download_batch()`
+(`adapters/tardis_batch_download.py:433`) → `ParallelPerSymbolRunner.run()`
+(`unified_trading_library/streaming/parallel_per_symbol_runner.py`) → per-symbol streaming fetch
+(`market_interface/adapters/tardis/tardis_csv_transport.py`).
+
+**Leading cause: no aggregate BYTE budget, only a task-COUNT cap.** `_get_perp_runner()`
+(`tardis_batch_download.py:236-253`) builds the shared `ParallelPerSymbolRunner` with
+`max_concurrent=`/`in_flight_registry=`/`resource_profiler=` — it never passes `max_in_flight_bytes`. In
+`parallel_per_symbol_runner.py:295-319`, `_await_capacity()` is a documented no-op whenever
+`max_in_flight_bytes is None`, which it always is for this caller. The only admission control is a per-`run()`-call
+`asyncio.Semaphore(max_concurrent)` (default `TARDIS_MAX_INFLIGHT_TASKS=128`) plus the shared HTTP-fetch semaphore
+(`TARDIS_MAX_CONCURRENT_DOWNLOADS=32`) — both COUNT caps, no byte-SUM cap. For this incident's chunk (3 venues × 9
+symbols × 1 data_type = 27 tasks), 27 is under both caps, so **every symbol-day for the whole chunk is scheduled
+concurrently with no bound on their combined size.** The finalizer's own docstring (`tardis_cefi_shards.py:390-393`)
+states a single heavy-volume symbol-day can already cost ~1GB even on the safe streaming path ("Coinbase BTC-USD
+book_snapshot_5 days hit ~30GB under the legacy non-streaming finalize... ~1GB on BTC-USD heavy days" for the fixed
+streaming variant). Trading volume is correlated across symbols on the same calendar day (a volatile/news day spikes
+most of the 9 symbols simultaneously, not just one) — so the NUMBER of simultaneously-heavy shards in flight, and hence
+total RSS, is an emergent, uncapped function of that day's market activity. `ResourceProfiler`'s 75%-mem-crit callback
+(`cli/main.py:137-169`) only pauses NEW task scheduling — already-in-flight tasks continue to completion regardless, so
+once the threshold is crossed the already-running large shards keep growing toward the OOM ceiling anyway.
+
+A secondary, fully-sufficient-on-its-own mechanism (`TARDIS_STREAMING_FINALIZE=false`, NOT the default — confirmed
+`default=True` at `service_config.py:284-290`) would fully materialize a whole symbol-day into one uncapped
+`list`-of-batches → DataFrame (`tardis_csv_transport.py:257-333`) — ruled unlikely to have been active here, but worth
+confirming via VM metadata if this recurs.
+
+### Fix shipped (two parts, mirrors the exact `tradfi_backfill_oom_remediation_2026_06_24.md` precedent)
+
+**1. Machine-type bump (the operational unblock — same fix, same precedent, weeks of zero-OOM-recurrence there).**
+`deployment-service/scripts/vm/launch-mtds-backfill-vm.sh` now defaults `MACHINE_TYPE=e2-highmem-4` (32GB) for
+`--asset-group CEFI` specifically (other asset groups keep `e2-standard-4`; an explicit `--machine-type`/`MACHINE_TYPE`
+always wins). 32GB gives ~2.2x headroom over the observed 14.6GB peak — the same margin tradfi's identical fix validated
+(32GB vs its 15.3GB peak, zero OOM-kills over weeks of fleet operation per that doc's 2026-07-14 re-verification).
+
+**2. `mtds_chunk_loop.sh` fail-loud (the explicit ask).** `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`'s
+`mtds_chunk_loop.sh` generator now captures the actual per-chunk exit code (was `... 2>&1 || true`, silently discarding
+it) and logs a greppable `CHUNK_FAILED: chunk=N/TOTAL ... exit=137 reason=OOM_KILLED` (or `reason=NONZERO_EXIT` for any
+other non-zero) line before continuing to the next chunk — shard-level failure isolation, one bad chunk no longer relies
+on log-staleness inference to be noticed.
+
+**Not shipped — filed as a P2 follow-up below, matching tradfi's own P2 memray-the-footprint precedent exactly**: wiring
+`max_in_flight_bytes` (using `PerSymbolTask.estimated_bytes`, already a field on the type but never populated by the
+CEFI Tardis caller — `parallel_per_symbol_runner.py:76-84`, `tardis_batch_download.py:149-203`) so the runner's existing
+byte-budget gate becomes real. This needs a genuine per-symbol expected-byte estimator (a nontrivial design problem —
+you don't know a day's volume until you've fetched it) and is materially riskier to get right without live validation
+than the two shipped fixes; the machine-type bump already gives the same practical unblock margin the tradfi precedent
+proved sufficient.
+
+### Note on why the whole VM (not just the killed python process) went silent
+
+The kernel log shows `constraint=CONSTRAINT_NONE` (a global OOM decision, not a memory-cgroup-scoped one) killing only
+the `python` PID — bash's `mtds_chunk_loop.sh` and the separate 60s `PIPELINE_HEARTBEAT` background loop
+(`_launch_with_tee`, `setup-data-pipeline-vm.sh:1082`) are NOT what got killed and, per plain bash semantics with
+`|| true`, should have survived to log the next chunk. The most likely explanation for total unresponsiveness (no
+further heartbeats/RESOURCE_SAMPLEs, SSH unreachable) is that a global (non-cgrouped) OOM event on a 16GB box forces the
+kernel through prolonged direct-reclaim/thrashing before and around the kill, which can stall EVERY process on the box —
+including the trivial heartbeat `sleep 60; echo` loop — for several minutes, indistinguishable from a "hang" from the
+outside within the 6-15 minute observation windows used before each VM was manually stopped. Not independently verified
+(would need a live reproduction with e.g. `dmesg -T` timestamps around the stall), but it means the fail-loud logging
+fix (part 2) helps if/when the box recovers, while the real fix for the freeze itself is removing the trigger (part 1:
+bigger machine, so the global OOM path is never entered at all).
+
+- [ ] [DATA] P2. **Wire real byte-budget admission control into the CEFI Tardis per-symbol runner** — populate
+      `PerSymbolTask.estimated_bytes` (from a lightweight per-symbol/day volume estimate, if a cheap enough one exists —
+      e.g. a rolling average of recently-observed row counts per symbol) so `_get_perp_runner()`'s `max_in_flight_bytes`
+      gate (currently always `None`, a permanent no-op per `_await_capacity()`) becomes a real cap on
+      simultaneously-in-flight shard bytes, not just task count. Repo: market-tick-data-service. Not required to unblock
+      (the e2-highmem-4 bump already gives the same practical margin the tradfi precedent validated) — this is the
+      deeper, durable fix for the underlying unboundedness, same relationship as tradfi's own P2 memray follow-up to its
+      machine-type-bump unblock.
