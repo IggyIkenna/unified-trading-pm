@@ -660,7 +660,7 @@ drift_direction: none
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`](/plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`](/plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md)
+  - [`plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`](/plans/archive/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md)
     (5 open)
     - **1. [REVIEW] P1.** Confirm whether MTDS call-site updates for the UAC colon-strictness change were intended to
       land in the same wave — cross-link if already in flight.

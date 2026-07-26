@@ -162,7 +162,7 @@ drift_direction: advance-code
     - **[DATA] P1.** Re-calibrate `verify_ml_readiness.py`'s 95% non-NULL threshold against the honest matrix
     - **[DATA] P1.** Reconcile the market-data-sports manifest for the 2,436 deleted T-0 shards
     - **[ML] P2.** Retrain the CLV models after the ODDS_FEATURES recompute
-  - [`plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`](/plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
+  - [`plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`](/plans/archive/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
     (2 open, both P0):
     - **[DATA] P0.** T2.9 — MDT `(sports, odds, trades)` schema contract drifted from reality (BIG FINDING)
     - **[DATA] P0.** T2.10 — 47,253 phantom `api_football × trades` `captured` rows in the MDT canonical index
@@ -170,7 +170,7 @@ drift_direction: advance-code
     — 0 open todos.
   - [`plans/active/issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`](/plans/active/issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md)
     — 0 open todos.
-  - [`plans/active/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`](/plans/active/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md)
+  - [`plans/active/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`](/plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md)
     — 0 open todos.
 
 - **Live-mode / execution / arb readiness**:

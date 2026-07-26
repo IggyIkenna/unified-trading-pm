@@ -110,9 +110,9 @@ drift_direction: advance-code
     - **[BACKEND] P2.** Add unit test coverage for `_normalize_instrument_id_for_match` using real OPTION/dated-FUTURE
       instrument_id shapes.
     - **[REVIEW] P2.** Audit other `_normalize_instrument_id_for_match` call sites for the same collision.
-  - [`plans/active/issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md`](/plans/active/issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md)
+  - [`plans/active/issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md`](/plans/archive/issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`](/plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md)
+  - [`plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`](/plans/archive/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md)
     - 1. **[REVIEW] P1.** Confirm whether MTDS call-site updates for the UAC colon-strictness change were intended in
          the SAME wave.
     - 2. **[DATA] P1.** Fix `canonical_write.py::write_defi_rows` (WETH:USDC POOL case) — resolve via the DeFi pool

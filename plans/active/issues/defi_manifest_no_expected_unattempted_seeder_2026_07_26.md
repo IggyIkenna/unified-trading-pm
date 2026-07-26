@@ -123,7 +123,7 @@ against, UAC's `DEFI_VENUE_DATA_TYPE_CAPABILITIES`/`DEFI_VENUE_PHASE` registries
 capability declaration and STILL get zero manifest signal of any kind (not even an honest `expected_unattempted`/"not
 producible" row) if no handler's hardcoded list happens to include it — indistinguishable, from the manifest's point of
 view, from a venue nobody ever declared. This is a data-pipeline-correctness class finding
-(honest-absence-downstream-handling is the governing SSOT: `codex/02-data/honest-absence-downstream-handling.md`).
+(honest-absence-downstream-handling is the governing SSOT: `/codex/02-data/honest-absence-downstream-handling.md`).
 
 ## Recommended decision
 
@@ -148,7 +148,7 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
 - [ ] [DATA] P2. Design + build a DeFi `expected_unattempted` seeder (mirrors `sentinels.py`'s
       `record_expected_unattempted` pattern) keyed off UAC's `DEFI_VENUE_DATA_TYPE_CAPABILITIES` + `DEFI_VENUE_PHASE` —
       **needs an operator/architecture decision first** (per
-      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § Dispatch-scope eligibility) on how to
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § Dispatch-scope eligibility) on how to
       reconcile capability-declared-but-not-actually-collectible venues (see FLUID finding #5 above) before this is
       AO-dispatchable. (repo: market-tick-data-service)
 - [ ] [DATA] P3. Reconcile `lending_indices_handler.py:176` / `risk_params_handler.py:107` /

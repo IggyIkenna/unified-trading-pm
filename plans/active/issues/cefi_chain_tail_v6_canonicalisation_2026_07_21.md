@@ -23,7 +23,7 @@ related:
     /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
     /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
     /plans/active/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md,
-    /plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
+    /plans/archive/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /codex/02-data/canonical-cutover-register.md,
     /codex/02-data/non-canonical-path-inventory.md,
