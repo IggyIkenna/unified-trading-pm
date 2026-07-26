@@ -280,7 +280,9 @@ source: >-
       (held by `-031`'s fixture_events re-fetch); step 3 deferred. Live tracker: issue doc's final gated item. —
       **RE-VERIFIED 2026-07-25T12:56Z (slot 11): still unchecked** — lock cleared, backfill launched (this todo's
       "2019→" text is stale vs. the 2020-06-06 sports floor, corrected), step 2 in progress, step 3 untouched. Detail in
-      the issue doc (P0 blocker now fixed+shipped, instruments-service@08387531).
+      the issue doc (P0 blocker now fixed+shipped, instruments-service@08387531). — **RE-VERIFIED 2026-07-26: step 2
+      progressing** (was silently stuck — 2nd bug fixed, `af-backfill-20260726-013313` now IS step 2). Detail:
+      `issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 

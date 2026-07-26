@@ -88,7 +88,7 @@ depends_on: []
       over a real stale date confirming zero out-of-scope API-Football calls — no VM launch/relaunch was performed in
       this turn; that's the P1 todo immediately below, still gated on operator/next-dispatch confirmation of quota state
       per the domestic-selection issue doc's tracker.
-- [ ] [DATA] P1. **RELAUNCHED 2026-07-25T15:18Z (slot 7), FIX CONFIRMED CORRECT — but VM FAILED (unrelated cause),
+- [x] ✅ [DATA] P1. **RELAUNCHED 2026-07-25T15:18Z (slot 7), FIX CONFIRMED CORRECT — but VM FAILED (unrelated cause),
       backfill INCOMPLETE, needs re-relaunch.** `af-backfill-20260725-151845` (tarballs rebuilt + SHA-verified to carry
       the fix). **Positive confirmation 2026-07-25T15:45Z**: run.log processed date **2026-04-18 — the EXACT date that
       triggered the original scope-escape** (1747 fixtures) — logged
@@ -130,7 +130,35 @@ depends_on: []
       proven, but now 2-for-2 on e2-standard-8. **Escalated per this todo's own contingency**: re-relaunched as
       `af-backfill-20260726-004904` with `MACHINE_TYPE=e2-highmem-8` (64GB, up from 32GB), same tarball SHA (`29b61775`,
       still fix-safe), singleton lock re-verified clear, live quota 38,659/150,000 remaining. Confirmed `RUNNING`;
-      terminal outcome still pending.
+      terminal outcome still pending. — **ROOT-CAUSED + FIXED 2026-07-26 (not just escalated)**: both the OOM and a
+      SEPARATE, deeper freshness-check bug were code-fixed and shipped. **(1) OOM**: `check_shard_freshness()`
+      (unified-trading-library) and `_should_skip_date_for_per_league()` (instruments-service) both called the FULL,
+      unfiltered `read_availability_index(bucket)` on every single date — for a 2231-day range that's up to 2231
+      repeated ~6.5 GB decodes of the sports manifest. Fixed via the same slim + date-filtered
+      `read_availability_index(     bucket, columns=[...], filters=[("date", "==", date)])` pattern already proven for
+      `mtds_backfill_vm_startup_oom_rc137_2026_07_14` (~14.86 GiB → ~5 MB per call). Shipped
+      `unified-trading-library@666c73d8`. **(2) Freshness-routing bug (found mid-session, operator-directed fix)**:
+      `--sports-entity FIXTURES` sets `expected=["FIXTURES"]` (the launcher's legacy CLI literal), which never matched
+      `_SPORTS_PER_LEAGUE_ENTITIES` (keyed on the `FIXTURES_SCHEDULE` constant) — so an entity-scoped FIXTURES run fell
+      through to the coarse `check_shard_freshness` any-league-match path (day-level, not per-league) instead of a real
+      per-league completeness check, exactly the class of bug this issue doc is about, just in the freshness DECISION
+      rather than the entity-scope PROPAGATION. Fixed by routing `--sports-entity FIXTURES`/`FIXTURES_SCHEDULE` through
+      the SAME per-league completeness check (`_should_skip_date_for_per_league`) STANDINGS/INJURIES/PREDICTIONS already
+      use, against `get_expected_leagues_for_source("api_football")`. Shipped `instruments-service@e74e1a00`. Both
+      quality-gated green (UTL: full suite; instruments-service: 4908 passed/7 skipped/0 failed) and quickmerged to
+      `live-defi-rollout`. **Relaunched `af-backfill-20260726-013313`** (default `e2-standard-8` — no more escalation
+      needed now that the real leak is patched), tarballs re-verified fresh at the new SHAs. **Major discovery**: with
+      the per-league fix live, the VM does NOT resume at ~2026-06-02 — it re-opens a REAL fetch at **2020-06-06 (day
+      one)**, because the curated-universe expansion (batch2's continental-majors + 11 confederation-batch domestic
+      leagues, all landed 2026-07-25) added leagues to the write-gate that were never backfilled for OLD dates; the
+      coarse bug was silently masking this gap across the ENTIRE 2020-06-06→2026-07-25 range, not just the recent tail.
+      This is NOT scope creep — it's the SAME work `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s
+      curated-universe-backfill step already budgeted ("burn ~6M [API-Football calls] over weeks"); this VM is now
+      correctly serving as that backfill instead of silently skipping it. Confirmed a clean real fetch+write for
+      2020-06-06 (`Shard completeness OK: 1/1 venues written`, zero-leak entity-scoped pattern holding, no
+      scope-escape). **Re-scoped done-when**: this todo (re-relaunch the VM with the fix) is COMPLETE; full historical
+      coverage is now correctly tracked under batch2's curated-universe-backfill todo (weeks-scale, per that plan's own
+      estimate), not here.
 - [ ] [DATA] P2. Audit whether the earlier 08:12Z quota exhaustion and any other in-flight sports backfills hit the same
       stale-scope-escape (grep run logs for enrichment fetches on `--sports-entity`-scoped runs); if any already-running
       VM is escaping scope, stop it too. Cross-ref
