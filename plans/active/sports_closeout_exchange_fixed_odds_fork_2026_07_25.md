@@ -127,4 +127,4 @@ drift_direction: advance-code
 ## Codex SSOTs
 
 `/codex/02-data/availability-manifest-and-data-status.md`, `/codex/02-data/sports-data-types-catalog.md`,
-`/codex/02-data/gcs-object-operations.md`. Plan↔codex drift is review-blocking.
+`/codex/05-infrastructure/gcs-object-operations.md`. Plan↔codex drift is review-blocking.
