@@ -224,7 +224,7 @@ drift_direction: advance-code
       Done when: all 4 league_ids resolve in the origin curated universe, the sports structural-gap tests pass with
       counts adjusted by exactly +4, and slot-9's worktree is confirmed either still-live (skip reset, re-note) or reset
       to origin with no unique commits lost.
-- [ ] [OPERATOR] P2. Purge the always-empty manifest rows/shards left behind by the § A2 dead-dimension deletion
+- [x] [OPERATOR] P2. Purge the always-empty manifest rows/shards left behind by the § A2 dead-dimension deletion
       (features-service@d564bf6f already deleted `export_players`/`export_coaches`/`export_referees`/`export_rounds` and
       their column registrations — DONE, verified) for the four dimension groups PLAYERS / COACHES / REFEREES / ROUNDS
       (~4,216 `empty_confirmed` dates each, ~16,864 manifest rows total) so they stop inflating the sports coverage
@@ -234,7 +234,21 @@ drift_direction: advance-code
       these groups since they were structurally unpopulatable stubs, never real writes). Source:
       `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` § A2. Done when: a post-purge manifest
       census shows zero PLAYERS/COACHES/REFEREES/ROUNDS rows remaining for sports, and the sports coverage-denominator
-      calculation no longer counts them (confirm via the honest-coverage tooling / data-status view).
+      calculation no longer counts them (confirm via the honest-coverage tooling / data-status view). **DONE —
+      features-service@bf088de1 (2026-07-24T21:09Z, checkbox-drift-only fixup 2026-07-26).** The purge already ran to
+      completion 2 days before this batch was drafted; this todo had gone unflipped. Re-verified live 2026-07-26:
+      pre-purge backup
+      `gs://features-sports-prd-central-element-323112/_index/purge_backups/_index__availability_index.parquet.20260724-203626.bak.parquet`
+      confirms the exact pre-state — 16,864 rows across `feature_group` in `{players,coaches,referees,rounds}` (4,216
+      each), **100% `capture_status=empty_confirmed`, zero real captured rows** — matching this todo's predicate
+      exactly. Current live consolidated index (`_index/availability_index.parquet`, 242,065 rows) + the sole per-VM
+      shard (`_index/per_vm/legacy_seed.parquet`) both show **0** rows for all four `feature_group` values — the
+      coverage denominator (computed directly off this index) no longer counts them by construction. No further action
+      needed; not re-running `--apply` (would be a no-op against an already-empty target). **Note**: the source A2 issue
+      doc's own mirror checkbox was NOT flipped in this pass — `sports_features_layer_findings_sweep_2026_07_18.md` is
+      already 1,846 lines (pre-existing, over the plans/active/ 1,000L hard cap), and `check_line_caps.sh`'s prek gate
+      blocks staging ANY edit to an already-over-cap file, regardless of diff size — this is a pre-existing
+      corpus-hygiene debt unrelated to this todo, out of scope to fix here (would require splitting that doc).
 - [ ] [DATA] P1. Root-cause and resolve the 4,991 phantom `capture_status=captured` FIXTURE_EVENTS manifest rows
       (concentrated 2019-2020, instruments-service) that have NO backing GCS object at any candidate path (canonical,
       pipeline_mode-aware, or legacy `sports_reference_v1_archive`). Sample `written_at`/`enumerator_run_id` on the
