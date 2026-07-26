@@ -140,22 +140,26 @@ drift_direction: advance-code
       protected from the venue-level tool's blast radius), phantom sweep clean; also fixed a real Path-B path-resolution
       bug in the tombstone script itself (`instruments-service@8d03893b`). This doc's corresponding checkboxes (G1.g MVP
       tags, massive.py futures-endpoint, tombstone dropped Databento instruments) flipped in the same session.
-- [ ] [CODE] P1. **Root-cause the legacy writer that stamped numeric/empty `underlying=` on tradfi combo/chain objects
-      (12/13/23, garbled 2-4-char fragments) and add a write-time canonical guard rejecting the same on all NEW tradfi
-      chain writes.** Trace why the pre-`databento_classifier.py` extraction path (older writer/ingestion, ahead of
-      today's `market_tick_data_service/engine/orchestrator/symbol_rules.py::_extract_underlying` combo branch) emitted
-      a raw numeric/garbled value instead of the empty-string fallback current code uses for an unparseable symbol;
-      document the root cause inline as a code comment near the fix. Then extend the existing chain shard-atom
-      write-time canonical guard (see
-      `market-tick-data-service/tests/unit/test_partitioned_writer_tradfi_filename_canonical.py` for the current guard's
-      test surface) to REJECT a numeric-only or empty `underlying=` on any new tradfi chain write, raising/failing
-      loudly rather than writing a QUARANTINE-bound row. Repos: market-tick-data-service, unified-api-contracts. **Done
-      when**: (a) a code comment documenting the root cause is added at the legacy-writer call site or its replacement;
-      (b) the write-time guard is extended with a unit test proving a numeric (`"12"`) or empty `underlying=` on a
-      tradfi chain write is rejected (not silently written), while a valid root (`"ES"`) still passes; (c)
-      `market-tick-data-service`'s quality-gates.sh is green; (d) this doc's Remediation item 2 is struck through /
-      marked done with the commit sha as evidence. Source:
-      `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`.
+- [x] ✅ [CODE] P1. **Root-cause the legacy writer that stamped numeric/empty `underlying=` on tradfi combo/chain
+      objects (12/13/23, garbled 2-4-char fragments) and add a write-time canonical guard rejecting the same on all NEW
+      tradfi chain writes.** — **DONE 2026-07-26.** Investigation found the write-time guard + row-drop already shipped
+      2026-07-20 (`mtds@f645ea02` + `uac@7e179ae8`, one day after the issue was filed) —
+      `is_recognized_tradfi_underlying` gates `_classify_row` (drops unrecoverable COMBO rows) AND independently gates
+      the write-time `canonical_path_violations`/`_tradfi_path_violations` guard that `_get_writer`
+      (`market_tick_data_service/engine/orchestrator/partitioned_writer.py`) calls on every tradfi write — covering BOTH
+      chain and combo bundles, not chain-only. Existing tests already prove numeric/empty rejected + a real root passing
+      (`test_partitioned_writer_tradfi_filename_canonical.py::test_tradfi_chain_numeric_underlying_write_raises` +
+      `::test_assert_canonical_chain_path_rejects_numeric_and_empty_underlying`,
+      `test_partition_path_is_canonical.py::test_tradfi_chain_numeric_underlying_rejected` +
+      `::test_tradfi_combo_opaque_ud_underlying_rejected`) — satisfying done-criteria (b)+(c) with no new code needed.
+      Root-caused the historical mechanism via git archaeology: `classify_databento_symbol`'s CBOE `UD:1V:` regex was
+      widened `[A-Z]{2,4}`→`[A-Z0-9]{1,4}` (`mtds@c4dc28b4`, 2026-04-18) to accept numeric Globex codes with NO
+      downstream root validation — the exact 3-month gap (2026-04-18→2026-07-20) that produced the 189,830-object
+      garbage-underlying corpus. Documented this inline at the classifier call site (`uac@8080b645`) and
+      cross-referenced it at the enrichment call site (`mtds@377dd90c`), satisfying (a). Updated the issue doc's
+      Remediation section (all 3 items struck through/done, `resolved_by` populated), satisfying (d) —
+      `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` (doc is `locked_by: live-defi-rollout`, so left
+      status/lock/archival untouched). Repos: market-tick-data-service, unified-api-contracts.
 - [ ] [CODE] P2. Evaluate switching aiohttp sessions in market-tick-data-service's Databento/tradfi fetch paths to an
       `aiodns`-backed `AsyncResolver` (in place of the default `ThreadedResolver`, which still runs `getaddrinfo` on the
       shared default executor). If viable (check `aiodns` is already an available/addable dependency, no platform
