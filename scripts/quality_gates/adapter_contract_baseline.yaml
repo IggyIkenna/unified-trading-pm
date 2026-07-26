@@ -313,7 +313,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py:
     count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:
-    count: 43
+    count: 42
   market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py:
@@ -341,7 +341,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/cli/handlers/deribit_options_chain_handler.py:
     count: 12
   market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py:
-    count: 9
+    count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py:
     count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py:
@@ -367,7 +367,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/cli/handlers/liquidations_handler.py:
     count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py:
-    count: 9
+    count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/mev_events_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/native_staking_handler.py:
