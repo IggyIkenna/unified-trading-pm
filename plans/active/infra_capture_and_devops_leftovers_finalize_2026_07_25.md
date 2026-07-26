@@ -23,7 +23,7 @@ related:
     /plans/active/instruments_completion_tracker_2026_07_06.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-26"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,6 +53,32 @@ source: >-
 > done. Its other 4 open items are `BLOCKED-CREDENTIALS`/`BLOCKED-OPERATOR-DECISION` and are excluded from AO dispatch
 > by convention — this finalize plan does not wait on those to be individually cleared before re-checking; it
 > re-evaluates gate status whenever the ASTER item lands.
+
+> **🟡 RE-VERIFIED 2026-07-26 — genuinely done, but INTENTIONALLY NOT ARCHIVED; do not move this file.** This plan's own
+> (single) todo is correctly `[x]` and its confirmation that the parent's 4 remaining items stay genuinely blocked still
+> holds today: re-checked the live corpus and found no operator/credential resolution for the ASTER CeFi live-capture
+> cost-control freeze (`BLK-55d45a68` / `BLK-4f52080e`), the MANTLE paid-RPC key (still no Secret Manager grant —
+> restated 2026-07-24 in `defi_consolidated_closeout_aggregated_sources_2026_07_24.md` +
+> `data_completion_defi_2026_07_15.md`), the Live-ODDS quota decision (restated 2026-07-24/26 in
+> `sports_live_availability_and_source_latency_2026_07_24.md` + `sports_satellite_ao_dispatch_batch5_2026_07_26.md`), or
+> the rate-limit-probe VM sanction (restated in `instruments_completion_tracker_2026_07_06.md`) — all 4 remain genuinely
+> blocked, none silently stale.
+>
+> **But archiving THIS doc (moving it out of `plans/active/`) would immediately break a hard, shared QG** —
+> `scripts/quality_gates/check_finalize_plan_coverage.py` — **verified empirically by simulating the move**: the live
+> check currently reads exactly 1 violation (baseline 1, `deployment_registry_firestore_p0_unblock_2026_07_14.md`). With
+> this doc removed from `plans/active/`, the parent (`infra_capture_and_devops_leftovers_2026_07_06.md`,
+> `assigned_vm: planning`, 9 total todos — NOT exempt via the single-todo carve-out) loses its ONLY `depends_on` +
+> `gate_on_depends: true` coverage, and the check regresses to 2 violations > baseline 1 — a hard `exit 1` post-gate
+> failure in `quality-gates.sh` (`_post_gate_fail`, not a warn-only print — confirmed by reading the
+> `POST_GATE_FAILURES` accumulator and its terminal `exit 1`), blocking every future `unified-trading-pm` commit and
+> recreating the exact problem class this plan was authored to fix
+> (`/plans/archive/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md`). This doc correctly stays
+> `status: active` in `plans/active/` as the parent's standing gate + re-check pointer — its own todo already
+> anticipated exactly this ("this finalize todo itself becomes the standing pointer, re-run it later"). **Do not
+> re-attempt the archival ritual on this doc** until either the parent's remaining 4 items all clear (archive both
+> together at that point) or an operator decision changes how finalize-plan coverage should be satisfied for a
+> permanently-blocked parent.
 
 ## Todos
 
@@ -120,4 +146,17 @@ source: >-
       marked `status: superseded` + `superseded_by:` pointing here so a future doc-health sweep doesn't reactivate two
       finalize plans for one parent. Evidence: `unified-trading-pm@<pending-sha>`. Done per this todo's own
       done-definition: parent checkbox state now matches reality and is explicitly left `active` with a dated re-check
-      note — this finalize todo does not need to re-run until one of the 4 remaining blockers clears.
+      note — this finalize todo does not need to re-run until one of the 4 remaining blockers clears. — **🟡 RE-VERIFIED
+      2026-07-26 — still correctly `[x]`; parent's 4 items still genuinely blocked (no change found); THIS FINALIZE PLAN
+      MUST NOT BE ARCHIVED YET.** Full task-description re-check confirmed nothing regressed and no blocker cleared (see
+      the doc-level banner above for citations). Separately discovered: archiving this doc right now (moving it to
+      `plans/archive/`) would itself regress `scripts/quality_gates/check_finalize_plan_coverage.py` from baseline 1 to
+      2 — empirically verified by temporarily removing the file from `plans/active/` and re-running the checker, then
+      restoring it — because this doc is currently the parent's ONLY `depends_on`+`gate_on_depends: true` coverage and
+      the parent (9 total todos) is not exempt via the single-todo carve-out. That is a hard `quality-gates.sh`
+      post-gate failure (`exit 1`), not a soft warning, and would block every future `unified-trading-pm` plan-doc
+      commit. So per this task's own done-when clause ("archived if fully resolved, or left `active` with an explicit
+      note the remaining items are still genuinely blocked") the correct outcome this cycle is: leave this doc
+      `status: active`, un-archived, in `plans/active/`, with this note as the explicit record of why. No files moved,
+      no referrer paths touched (the doc did not move). Re-run only once the parent's remaining 4 items clear or the
+      coverage-gate design changes.
