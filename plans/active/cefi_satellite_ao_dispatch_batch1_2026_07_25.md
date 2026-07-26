@@ -547,6 +547,19 @@ drift_direction: advance-code
     prod cefi bucket before the VM was killed — a harmless orphaned per-VM shard (never consolidated, no candle data
     actually landed since dry-run skips uploads); will be superseded/ignored by the next consolidation pass, not cleaned
     up separately.
+  - **Pivot to `--data-types trades` (2026-07-26 17:00 UTC)**: killed `mdps-backfill-cefi-20260726-164955` after
+    observing it was still stuck on day 1/937 after ~7 minutes — `book_snapshot_5` fails the honest-absence gate for
+    NEARLY EVERY HYPERLIQUID instrument/timeframe combination (the `bid_px_00` column-mapping bug above isn't a rare
+    edge case, it's near-universal for that data_type), and each failed attempt has real per-attempt overhead, so an
+    all-data_types run over 937 days was on track to take many hours-to-days just processing a data_type this todo's
+    "Done when" bar does not need. Relaunched narrowly:
+    `bash deployment-service/scripts/vm/ launch-mdps-backfill-vm.sh --data-types trades --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2024-01-01 2026-07-25 full`
+    → VM `mdps-backfill-cefi-20260726-165959` (SPOT), confirmed STARTED. This directly and efficiently targets the
+    `trades`→`quote_volume`→24h-candle path the ADV reader + this todo's bar actually need, skipping the slow/broken
+    `book_snapshot_5`/`derivative_ticker` paths entirely (both already tracked as P2 follow-ups above — this pivot does
+    not lose that tracking, it just doesn't block THIS todo's delivery on fixing them first). Monitoring this VM for
+    completion; same post-completion steps as above (manifest consolidation + quote_volume check + ADV-reader check),
+    now scoped to `trades` only.
 
 ## Deferred
 
