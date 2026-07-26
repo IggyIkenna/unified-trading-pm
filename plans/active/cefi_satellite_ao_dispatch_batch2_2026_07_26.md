@@ -284,16 +284,22 @@ drift_direction: advance-code
       — Track 1 hasn't started. Launching now would violate the plan authors' own explicit sequencing gate. **Did not
       launch anything.** Full evidence in `issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s newly-added
       Progress Log + its own todo (now flipped).
-- [ ] [SCRIPT] P2. **unified-api-contracts** — add the missing cefi `DATA_TYPE_CAPABILITY_REGISTRY` entries for
-      KRAKEN-SPOT / KRAKEN-FUTURES / BITGET-SPOT / BITGET-FUTURES / BITFINEX-SPOT / BITFINEX-FUTURES / ASTER (currently
-      only BINANCE/BYBIT/OKX/DERIBIT/COINBASE/HYPERLIQUID/UPBIT have entries — these 7 venues show EMPTY
-      `venue_data_types` in the catalogue CSV export because they're absent from the registry, the SSOT for per-venue
-      batch data_types). Add each venue's supported `data_type` set to `DATA_TYPE_CAPABILITY_REGISTRY` (mirror the shape
-      of an existing entry, e.g. BINANCE/BYBIT) so the catalogue export and any downstream per-venue capability gate
-      resolve non-empty for these 7. Source: /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md (line
-      ~183, provenance: cefi full-catalogue CSV export 2026-06-23). Done when: `unified-api-contracts`
-      `DATA_TYPE_CAPABILITY_REGISTRY` has a populated entry for all 7 listed venues, `quality-gates.sh` is green, and a
-      catalogue export (or the registry's own unit test) confirms `venue_data_types` is non-empty for each.
+- [x] ✅ [SCRIPT] P2. **DONE (2026-07-26, slot-12, `data_engineering`) — premise was stale; entries already existed,
+      only the regression test was missing.** Investigated `unified-api-contracts` — the 7 named venues (KRAKEN-SPOT /
+      KRAKEN-FUTURES / BITGET-SPOT / BITGET-FUTURES / BITFINEX-SPOT / BITFINEX-FUTURES / ASTER) already have populated
+      `DATA_TYPE_CAPABILITY_REGISTRY` entries: a "CeFi venues added 2026-06-23" section (`data_type_capability.py` line
+      ~511) generates them via `for _venue in (...)` comprehensions (spot venues get `trades`+`book_snapshot_5`;
+      futures/perp venues get the full derivatives surface —
+      `trades`/`book_snapshot_5`/`derivative_ticker`/`liquidations`/`futures_chain`), and ASTER has its own 4 dedicated
+      entries. A literal-string `grep -c 'venue="KRAKEN-SPOT"'` returns 0 because the venue name is a loop variable, not
+      a literal — that's almost certainly why this todo's premise read as still-open. Live-verified via
+      `DATA_TYPE_CAPABILITY_REGISTRY` query: all 7 venues have non-empty entries with the expected data_type sets.
+      **What was genuinely missing**: no test locked this in, so the source issue doc's own "registry's own unit test"
+      done-when clause was unmet. Added `tests/unit/test_data_type_capability_registry.py` (9 parametrized/direct tests:
+      presence for all 7 venues + the exact expected data_type set per spot vs futures/perp venue) —
+      `unified-api-contracts@b0547c36`, all 9 passing, `quality-gates.sh` GREEN (274s, sentinel==HEAD). Shipped via
+      quickmerge. Source: `/plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` (line ~183, provenance:
+      cefi full-catalogue CSV export 2026-06-23).
 - [x] ✅ [BACKEND] P0. **RESCOPED (slot-3, 2026-07-26): 2 of 4 sub-items done in this pass (features image-build fix
       verified already-resolved; 3/4 codex reconciliations shipped); sub-items 1 (reader-bridge deploy, infra-craft) and
       3 (OKX-FUTURES manifest relabel, needs collision-aware dedup) split to

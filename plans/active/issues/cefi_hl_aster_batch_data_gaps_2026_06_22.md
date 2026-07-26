@@ -180,11 +180,10 @@ to today (a hardcoded date goes stale tomorrow).
       genesis verified (see FINAL REPORT).
 - [ ] [INFRA] P2. **Tomorrow-verify (2026-06-24)**: confirm both schedulers fired on the new day (02:00 + 06:00 UTC) +
       produced fresh shards + aggregate on the new code. Flip only after 100% confirmed.
-- [ ] [SCRIPT] P2. **unified-api-contracts** — add `DATA_TYPE_CAPABILITY_REGISTRY` cefi entries for KRAKEN-SPOT /
-      KRAKEN-FUTURES / BITGET-SPOT / BITGET-FUTURES / BITFINEX-SPOT / BITFINEX-FUTURES / ASTER (only BINANCE/BYBIT/OKX/
-      DERIBIT/COINBASE/HYPERLIQUID/UPBIT have entries today). Surfaced by this dispatch's CSV export — those venues show
-      EMPTY `venue_data_types` because they're absent from the registry (the SSOT for per-venue batch data_types).
-      Provenance: cefi full-catalogue CSV export 2026-06-23.
+- [x] ✅ [SCRIPT] P2. **DONE (2026-07-26, slot-12)**: entries already existed (added via a since-landed "CeFi venues
+      added 2026-06-23" for-loop section in `data_type_capability.py`, not a literal per-venue block — a literal-string
+      grep missed them). Locked in with a new regression test (`unified-api-contracts@b0547c36`, 9 tests). Full
+      evidence: `plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s corresponding todo.
 - [ ] [MTDS] P2. **MTDS run for all cefi/Tardis venues** — since-genesis batch + live, full catalogue-driven universe.
       (Tardis batch billing gate LIFTED — operator paid; access confirmed unlimited — confirmed by operator ruling
       2026-07-12, finding 228, `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2.)
