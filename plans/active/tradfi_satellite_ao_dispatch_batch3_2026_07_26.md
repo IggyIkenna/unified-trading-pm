@@ -214,7 +214,7 @@ drift_direction: advance-code
       — 26/30 false positives, NOT real phantoms), fixed by checking both castings per codex's C2a ruling (compare
       instrument_type case-insensitively), then re-verified clean: a 100-row live sample all passed. 11 unit tests incl.
       the exact synthetic captured-row-with-no-object case; `quality-gates.sh` green.
-- [ ] [DESIGN] P2. Give `deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py`'s
+- [x] ✅ [DESIGN] P2. Give `deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py`'s
       `check_high_attempted_failed` a "known-dead, expected-coverage-narrowed" marker so a deliberately-deferred
       stale-residue cell (whole-manifest-history, no-recency-window count) stops re-paging `DP_RUN_MOSTLY_EMPTY` every
       30 min without requiring an immediate data-purge. Source the marker from cells whose `expected_coverage.py`/UAC
@@ -227,7 +227,25 @@ drift_direction: advance-code
       `check_high_attempted_failed` (or its config) supports flagging a (venue, data_type) cell as known-dead
       post-coverage-narrowing, the CBOE `ohlcv_15m` cell is flagged as the first real instance and stops appearing in
       `DP_RUN_MOSTLY_EMPTY` pages, a regression test covers the new suppression path, and `quality-gates.sh` is green in
-      deployment-service.
+      deployment-service. — **DONE (slot-11, 2026-07-26): `deployment-service@01414fc`.** New
+      `known_dead_cells_registry.py` — a
+      `(asset_group, data_type) -> KnownDeadCell(narrowed_at, venue, narrowed_by,     note)` registry, consulted
+      per-cell in `_read_attempted_failed_cells` via the cell's MAX `attempted_at` among its current `attempted_failed`
+      rows (`is_known_dead_for_series`). A cell only suppresses while it has ZERO activity newer than its registered
+      `narrowed_at` — any new `attempted_at` clears `known_dead` and resumes paging automatically (verified by a
+      dedicated test: same cell + one row with a post-narrowing timestamp → `known_dead` flips False and the page
+      fires). Suppression keys on `(asset_group, data_type)` — matching `check_high_attempted_failed`'s EXISTING alert
+      granularity, which has no venue dimension today (the todo's own "(venue, data_type)" phrasing assumed a
+      granularity that doesn't exist in the checker; `venue` is stored on the registry entry as provenance/documentation
+      only, not as a second key). CBOE `ohlcv_15m` is the first populated instance (`narrowed_at=2026-07-15`, citing
+      `unified-api-contracts@78b9e899`); `mbp_10`/ `corporate_action_confirmed`/`earnings_result` are explicitly NOT
+      added — each needs its own narrowing-date + zero-new-activity verification before joining the registry (not done
+      here, noted in the registry module's own docstring as the follow-up). 3 integration tests (suppressed-despite-high
+      / new-activity-still-pages / unregistered-cell-unaffected) in `test_data_pipeline_monitors.py` + 7 pure unit tests
+      in the new `test_known_dead_cells_registry.py` (boundary date inclusive, empty/unparseable-timestamp fail-open,
+      unregistered cell never suppressed). `meta_watchers.py` stayed within its 900-line file-size cap (899 lines) by
+      moving the registry + dataclass to the new sibling module rather than growing the existing file. 2849 tests pass;
+      `quality-gates.sh` green (127s clean run, sentinel-verified before quickmerge).
 - [ ] [VERIFY] P3. Trace the manifest-write/orchestrator classification layer for TRADFI's
       `_DATABENTO_SUPPORTED_DATA_TYPES`-filtered-out cells (`mbp_10`, `ohlcv_15m`, `ohlcv_24h`) to confirm exactly how a
       requested-but-filtered data_type is recorded in the tick manifest — `attempted_failed` vs `empty_confirmed` — and
