@@ -76,16 +76,21 @@ drift_direction: advance-code
       docs' checkboxes/sections are flipped with verified evidence, the three special cases above are each explicitly
       confirmed, and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
 
-- [ ] [REVIEW] P1. **Re-check the 6 Deferred items from batch6's own doc** (2 conflict-gated + 4 operator-gated), now
-      that batch6's todos have landed — some may resolve a Deferred item's blocker as a side effect. Specifically: the §
-      Z matchday-recovery ordering conflict may be settled by whatever Track F's re-run status is at that point (re-read
-      the closeout's Track F rather than assuming); the reconcile-in-place-vs-archive-as-history question may be moot
-      once todos 1 and 2 have actually run and the surviving-open count is known (if it drops to ~4 items, the
-      archive-as-history option becomes concretely cheap to evaluate — state the measured number). For each of the 6: if
-      the blocker cleared, extract it as a new tracked todo in a follow-up `batch7` (do not draft it here — this plan's
-      scope is reconciliation, not fresh drafting); if still genuinely unresolved, leave it explicitly deferred and do
-      NOT re-ask an operator question that has already been asked, just record that the re-check happened. **Done
-      when**: each of the 6 Deferred items has either (a) a note that it is ready for `batch7` extraction because its
+- [ ] [REVIEW] P1. **Re-check the 8 Deferred items from batch6's own doc** — 2 conflict-gated + 6 operator-gated, the
+      latter being 4 doc-level items plus 2 meta-parks (generalise todo 7's finalize-plan fix workspace-wide; assign an
+      owning tranche to `sports_prediction_mvp_writetime_precompute_2026_07_24.md`). **Count the bullets in batch6's two
+      Deferred sections rather than trusting this number** — it drifted once already during authoring and a restated
+      count re-stales on every edit. Now that batch6's todos have landed, some blockers may have cleared as a side
+      effect. Specifically: the § Z matchday-recovery ordering conflict may be settled by whatever Track F's re-run
+      status is at that point (re-read the closeout's Track F rather than assuming); the
+      reconcile-in-place-vs-archive-as-history question may be moot once todos 1 and 2 have actually run and the
+      surviving-open count is known (if it drops to ~4 items, the archive-as-history option becomes concretely cheap to
+      evaluate — state the measured number); and the two meta-parks are pure operator rulings that no batch6 todo can
+      clear, so expect them to still be open unless the operator answered in the interim. For each item: if the blocker
+      cleared, extract it as a new tracked todo in a follow-up `batch7` (do not draft it here — this plan's scope is
+      reconciliation, not fresh drafting); if still genuinely unresolved, leave it explicitly deferred and do NOT re-ask
+      an operator question that has already been asked, just record that the re-check happened. **Done when**: every
+      bullet in batch6's Deferred sections has either (a) a note that it is ready for `batch7` extraction because its
       blocker cleared, or (b) an explicit re-verified confirmation the conflict/decision is still open.
 
 - [ ] [REVIEW] P1. **Verify batch6 todo 7's fix actually closed the loop it was written to close, and re-run the gate
