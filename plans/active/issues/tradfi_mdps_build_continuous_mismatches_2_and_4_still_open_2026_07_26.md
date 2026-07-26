@@ -52,6 +52,14 @@ locked_since:
 
 # TradFi MDPS build-continuous mismatches 2+4 still open; no successful run ever landed
 
+> **🟡 IN-FLIGHT (slot 3, 2026-07-26 14:02 UTC)**: `mdps-backfill-tradfi-20260726-140251` (SPOT) running the new P0
+> per-contract "process" backfill for `CME:FUTURE:ES CME:FUTURE:MES`, 2020-01-01..2026-07-25. Per-date progress
+> confirmed real (sequential `🏁 Date range complete` markers, ~15-20s/date); per-date dependency-check failures (e.g.
+> missing raw ingestion for a specific date) correctly SKIP that date rather than aborting. At this rate the full
+> ~2398-day range could take many hours — do not treat "still RUNNING" as stalled; check the VM's own heartbeat/manifest
+> progress before assuming a problem. Reminder: `rebuild_manifest_from_canonical_paths(...)` must run AFTER this
+> completes (see launcher's own printed reminder).
+
 ## What I found
 
 Re-checking `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s two P0 items that read
