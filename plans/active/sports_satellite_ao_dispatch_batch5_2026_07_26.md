@@ -10,7 +10,7 @@ summary: >-
   (`sports_trades_attempted_failed_2026_07_23.md`) already fully covered by two 2026-07-25-dated docs Phase-1's
   citation-grep had missed, and left 4 genuinely conflict-gated + 12 operator-gated items in the Deferred sections below
   for the next iteration or an explicit operator ruling, per the skill's non-batchable taxonomy.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -64,12 +64,12 @@ drift_direction: advance-code
 
 # Sports satellite AO batch 5 — fresh triage extraction
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
-> skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review. All 25 todos below are same-priority-independent and touch distinct files/docs EXCEPT the two todos
-> both citing `migrate_sports_canonical_v9.py` (the T6.8 retirement todo and the E8 `--drop-stale` implementation todo)
-> — both carry inline coordination text so a worker on either one checks the other's state first; do not strip that text
-> if editing before dispatch.
+> **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
+> ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
+> explicit operator review). All 25 todos below are same-priority-independent and touch distinct files/docs EXCEPT the
+> two todos both citing `migrate_sports_canonical_v9.py` (the T6.8 retirement todo and the E8 `--drop-stale`
+> implementation todo) — both carry inline coordination text so a worker on either one checks the other's state first;
+> do not strip that text if editing before dispatch.
 
 ## Todos
 

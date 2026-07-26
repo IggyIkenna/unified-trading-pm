@@ -6,7 +6,7 @@ summary: >-
   true until all 25 of that plan's todos are done. Mirrors batch3/batch4-finalize's pattern (reconcile each distinct
   source doc's checkboxes independently once its batch-5 todo lands, then re-check the Deferred conflict-gated +
   operator-gated items for any that have since cleared), then archives batch5 via the standard 6-step ritual.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
