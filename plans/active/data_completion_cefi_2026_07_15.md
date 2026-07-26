@@ -274,9 +274,17 @@ MTDS consolidation ruling.)**
       that gates L6 delete. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
 
-- [ ] [DATA] P1. E6 CF-7 relabel: `COINBASE`↔`COINBASE-SPOT`, blank venue/data_type → canonical (diagnose, don't bulk).
-      Investigate the 50% `attempted_failed` rows (1.33M) — flag to cefi AG owner (separate from canonicalisation).
-      **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ [DATA] P1. E6 CF-7 relabel: `COINBASE`↔`COINBASE-SPOT`, blank venue/data_type → canonical (diagnose, don't
+      bulk). Investigate the 50% `attempted_failed` rows (1.33M) — flag to cefi AG owner (separate from
+      canonicalisation). **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)** — **DONE 2026-07-26 (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -002, slot-7,
+      data_engineering)**: diagnosed via a single live read of
+      `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (9,138,791 rows, no
+      `--apply`, no corpus walk). `COINBASE` bare-venue = 0 rows (already fully canonical) — no relabel needed.
+      Blank-venue = 6 rows (negligible). Blank-`data_type` = 9,750 rows (new finding, filed as its own P3 follow-up).
+      The 1.33M/50% `attempted_failed` figure is **STALE** — current measurement is 11.61% (1,060,613 of 9,138,791),
+      75.2% of which is the already-tracked Tardis-403/DERIBIT population (no new mechanism). Full write-up:
+      `plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`.
 
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-cefi-prd-…` → CF-1…CF-12 GREEN on
       data-state; flip CF-coverage rows in `cefi_master_audit_instructions.md`. **(MIGRATED FROM:

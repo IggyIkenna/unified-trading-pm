@@ -52,14 +52,33 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 17 distinct source docs' checkboxes.** For each of
+- [x] ✅ [REVIEW] P1. **Reconcile all 17 distinct source docs' checkboxes.** For each of
       `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s now-done todos: flip the corresponding checkbox/section in its
       named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-2 commit(s) that shipped it —
       verify the actual shipped commit exists before citing it. For each source doc: after flipping, re-check whether it
       now has 0 open todos remaining (checkbox AND prose-form — do not trust checkbox count alone). Only flip a doc's
       `status` to `resolved` if it genuinely reaches 0 open todos. **Done when**: all 17 source-doc checkboxes/sections
       are flipped with verified evidence, and any doc that genuinely reaches 0 open todos is flipped to
-      `status: resolved`.
+      `status: resolved`. — **DONE 2026-07-26 (slot-2, review).** Audited all 17 todos' source docs against
+      `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`. **15 of 17 were already correctly reconciled** by the executing
+      workers as part of doing the work (checkboxes flipped in-line, commits verified to exist:
+      `execution-service@1267290`, `instruments-service@ee19f6f3`/`@d2796158`/`@81bf5e17` [via UAC],
+      `deployment-service@d5fde721`/`@54aa6f5`, `market-tick-data-service@ec0df878`/`@ed102ef8`/`@08f15f26`/`@31958a05`,
+      `unified-api-contracts@c144f975`/`@54325576`/`@b0547c36`, `deployment-service@3d99865`/`@6eed099`, and the
+      DERIBIT-gate re-verify re-confirming genuine FAIL). **2 genuine gaps found + fixed**: (1)
+      `data_completion_cefi_2026_07_15.md`'s "E6 CF-7 relabel" checkbox (item -002's source) was still `[ ]` — flipped
+      `[x]` with the diagnostic evidence citation
+      (`issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`). (2)
+      `cefi_residual_followups_after_honest_done_2026_07_17.md` (item -010's source, 4 sub-items) had ZERO of its 4
+      sub-items annotated: flipped sub-item 2 (features-service image build, `features-service@586a5cea`/`@8661a7af`
+      verified) and sub-item 4 (codex SSOT reconciliation, `unified-trading-pm@8e435b425` verified) to `[x]`; annotated
+      sub-items 1 and 3 as **STILL OPEN**, correctly NOT flipped (real remaining work, spun to
+      `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todos 1/3). **No doc reached 0 open todos** — every
+      source doc checked (17 distinct todos across 18 physical doc files, since item -015 cites 2 sibling docs) carries
+      genuine remaining prose or checkbox work (verified past checkbox-count alone — e.g.
+      `cefi_universe_capture_rule_2026_06_23.md` shows 0 unchecked boxes but has a real prose-form open TODO, a
+      scaffolded live-liquidity hook + an unactioned side-finding, so it correctly stays `status: open`, not flipped to
+      `resolved`) — so no `status: resolved` flips were made this pass.
 - [ ] [REVIEW] P1. **Re-check the 10 operator-gated + 1 time-gated + 1 human-only Deferred items from batch2's own
       doc**, now that time has passed and batch2's own todos have landed. For each of the 12 Deferred items: re-read the
       specific gating ground (operator decision, elapsed-time condition, or design-session need) to check if it has

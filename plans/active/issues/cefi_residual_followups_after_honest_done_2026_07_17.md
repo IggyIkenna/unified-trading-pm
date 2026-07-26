@@ -398,8 +398,12 @@ pairs stay honest-unresolved (reported, never guessed).
 - [ ] [BACKEND] P0. **DEPLOY the reader bridge to all 4 in-scope consumers** — the D4 GCS cutover cannot run until every
       one carries it (the drain stops WRITERS only; readers keep running against renamed/rewritten objects). Includes an
       **execution-service redeploy** even though it needs no code change. (repos: market-tick-data-service,
-      market-data-processing-service, features-service, execution-service)
-- [ ] [INFRA] P1. **Fix the features-service image build — stale base-image UAC (non-cutover-blocking).** features'
+      market-data-processing-service, features-service, execution-service) — **STILL OPEN
+      (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010 sub-item 1, slot-3, 2026-07-26)**: attempted from
+      this worktree — infra-craft work (Cloud Run deploy), out of `backend_engineer` scope, and no Cloud Run services
+      found for these 4 consumers from this worktree. Spun to a fresh dispatchable todo:
+      `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 1.
+- [x] ✅ [INFRA] P1. **Fix the features-service image build — stale base-image UAC (non-cutover-blocking).** features'
       `6ab22c6` main build FAILS: `cefi_wire_bridge.py:59 import CeFiWireCanonicalMap` → ImportError, because features
       uses `uv pip install --no-sources` and relies on the UAC baked into its pinned `BASE_IMAGE_DIGEST`
       (unified-trading-library base image predates the symbol) — whereas MTDS/MDPS/execution COPY fresh UAC source and
@@ -407,8 +411,11 @@ pairs stay honest-unresolved (reported, never guessed).
       COPY-fresh-UAC-source like its siblings. NOT a cutover blocker: features' cefi read is a filename-agnostic bulk
       day-scan, so the D2/D4 rename can't break it (found 2026-07-18, Phase-B deploy characterization; rebuild
       `5eb274fa` triggered to confirm). Adjacent: the UAC Artifact-Registry wheel is frozen at 0.72.0 (2026-06-27) —
-      irrelevant to these source/base-image consumers but a fleet-hygiene item for AR-wheel UAC consumers. (repo:
-      features-service)
+      **ALREADY RESOLVED (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010 sub-item 2, slot-3, 2026-07-26, no
+      code change needed)**: the automated `update-dependency-version.yml` digest-refresh fan-out bumped
+      `BASE_IMAGE_DIGEST` twice (`features-service@586a5cea`, `@8661a7af`); verified the latest `image-build-gate.yml`
+      run on `8661a7af` is `conclusion: success`. irrelevant to these source/base-image consumers but a fleet-hygiene
+      item for AR-wheel UAC consumers. (repo: features-service)
 - [x] ✅ [SCRIPT] P1. **Fix the one campaign script our rename breaks** — **`strategy-service@26b99c69`** (2026-07-18).
       NEW pure helper `_leaf_matches_asset(leaf, asset_upper)` accepts BOTH the pre-migration wire stem
       (`BTCUSDT.parquet` / `PI_BTCUSD.parquet`) AND the post-D4-rename canonical stem
@@ -444,7 +451,11 @@ pairs stay honest-unresolved (reported, never guessed).
       catalogue has them as `FUTURE`, so the 3-tuple honestly misses. Correcting the manifest itype PERPETUAL→FUTURE for
       dated symbols would recover most of them. Separate data-quality task, NOT a cutover blocker (leaving them raw is
       the correct never-guess behaviour; they are delisted historical). (found 2026-07-18 Phase-C honest-unresolved
-      audit.) (repo: instruments-service)
+      audit.) (repo: instruments-service) — **STILL OPEN (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010
+      sub-item 3, slot-3, 2026-07-26)**: the manifest row_key includes `instrument_type`, so a blind relabel can collide
+      with an already-existing FUTURE row for the same shard atom — needs the same collision-aware dedup logic as
+      `canonicalize_cefi_instrument_type_legacy_lowercase_2026_07_16.py`, not a blind in-place relabel. Spun to a fresh
+      dispatchable todo: `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3.
 - [ ] [SCRIPT] P0. **Filename rename (Tardis lane).** Rename single-instrument cefi objects wire→canonical, extending
       the proven `migrate_onchain_perp_perpetual_canonical_2026_07_08.py` pattern (GCS rename + manifest rewrite
       together). Snapshot-first; idempotent; per-day prefix batches (single-walk discipline). (repo:
@@ -466,11 +477,17 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Phase 2 — Docs + codex reconciliation
 
-- [ ] [DOCS] P1. **Resolve the codex↔plan SSOT contradictions** the audit surfaced: `chart-candle-delivery-flow.md:274`
-      ("Filename is the bare symbol") → canonical target + SUPERSEDED/forward-pointer banner;
-      `read-time-filter-pushdown.md` (filenames now canonical — update the substring-match assumption);
-      `availability-manifest-and-data-status.md` "immutable wire-form contract" (superseded for the manifest key);
-      `per-asset-group-bucket-layouts.md:135` (`ticks.parquet` vs per-instrument stem split). (repo: unified-trading-pm)
+- [x] ✅ [DOCS] P1. **Resolve the codex↔plan SSOT contradictions** the audit surfaced:
+      `chart-candle-delivery-flow.md:274` ("Filename is the bare symbol") → canonical target +
+      SUPERSEDED/forward-pointer banner; `read-time-filter-pushdown.md` (filenames now canonical — update the
+      substring-match assumption); `availability-manifest-and-data-status.md` "immutable wire-form contract" (superseded
+      for the manifest key); `per-asset-group-bucket-layouts.md:135` (`ticks.parquet` vs per-instrument stem split).
+      (repo: unified-trading-pm) — **DONE (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010 sub-item 4,
+      slot-3, 2026-07-26): `unified-trading-pm@8e435b425`** fixes `chart-candle-delivery-flow.md`,
+      `per-asset-group-bucket-layouts.md`, `read-time-filter-pushdown.md` with SUPERSEDED/forward-pointer banners
+      pointing at `cross-asset-canonical-target-ssot.md`. The 4th ("immutable wire-form contract") was not found
+      verbatim in the current `availability-manifest-and-data-status.md` — already resolved or a mischaracterization; no
+      edit needed.
 - [ ] [DOCS] P1. **Progress Log at every gate** — each `--apply` records measured before/after row counts + coverage
       delta as evidence (per the runtime-verification HARD RULE). (repo: unified-trading-pm)
 
