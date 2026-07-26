@@ -129,7 +129,7 @@ locked_since:
       `CAP EXCEEDED` log + skip — no silent truncation). Emits `DP_EMPTY_REPROBE_DISAGREEMENT` with `reclassified:true`
       on each flip. 7 new credential-free tests (mock GCS index read+write). QG: `quality-gates.sh --no-fix` exit 0
       (45s).
-- [ ] [INFRA] P1. **Schedule** the auto-flip on the daily reprobe cron — the `dp_reprobe_empty_job` terraform stanza
+- [x] ✅ [INFRA] P1. **Schedule** the auto-flip on the daily reprobe cron — the `dp_reprobe_empty_job` terraform stanza
       (`deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`) currently runs detect-only
       (`command=[python3, .../reprobe_new_empty_confirmed.py], args=[]`). Change `args = []` →
       `args = ["--reclassify-apply"]` so the 09:00-UTC job both DETECTS and FLIPS proven cells daily, then `tofu apply`
@@ -137,10 +137,14 @@ locked_since:
       `/ag-closeout-audit cross-cutting`)** — `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf:281`
       now reads `args = ["--reclassify-apply"]` on the `dp_reprobe_empty_job` stanza, so the stale "currently runs
       detect-only (`args=[]`)" premise and the **BLOCKED on peer-dirty deployment-service** note below are both
-      superseded — do NOT re-do this. Left `- [ ]` deliberately: the remaining half is confirming the 09:00-UTC job has
-      actually EXECUTED on the new arg (a `gcloud run jobs executions list` check), which this audit did not run. (was:
-      "BLOCKED on peer-dirty deployment-service — active foreign WIP `cloud_run_job_registry.py`/`escalation.py`/
-      `scripts/recovery/relaunch_*.py` + dirty UAC dep → no clean QG-green/quickmerge boundary".) — deployment-service
+      superseded — do NOT re-do this. (was: "BLOCKED on peer-dirty deployment-service — active foreign WIP
+      `cloud_run_job_registry.py`/`escalation.py`/`scripts/recovery/relaunch_*.py` + dirty UAC dep → no clean
+      QG-green/quickmerge boundary".) **✅ EXECUTION CONFIRMED 2026-07-26**
+      (`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` todo 5):
+      `gcloud run jobs executions describe uts-prod-dp-reprobe-empty-55rz8` (the 2026-07-26T09:00:03Z run) shows
+      `args: [--reclassify-apply]` live in the deployed spec — the arg has been executing daily since the `.tf` landed.
+      Also surfaced by the same check: every recent execution (2026-07-22..07-26) fails with "The configured memory
+      limit was reached" (OOM) — see the sibling OOM-fix todo below, now also shipped. — deployment-service
 - [x] ✅ [CODE] P1. DONE mtds@477de66. **Bucket-env parity preflight** (DP-ENV-001 — reader env-less vs writer
       env-short) as a generic gate. — market-tick-data-service
 - [x] ✅ [CODE] P1. DONE mtds@477de66. **429-aware key-pool rotation** + `DP_KEY_POOL_EXHAUSTED` alert (TheGraph 9-key
@@ -150,28 +154,38 @@ locked_since:
       data-pipeline). — unified-trading-pm
 - [ ] [CODE] P2. Flip `data-pipeline-alerts.registry.yaml` modes `verbose`→`active` as each `escalation:` tier is wired
       to plumbing. — unified-trading-pm
-- [ ] [INFRA] P1. **Ship the dp-audit OOM-fix + image-default terraform**
+- [x] ✅ [INFRA] P1. **Ship the dp-audit OOM-fix + image-default terraform**
       (`deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`): bump all 4 dp-audit Cloud Run jobs
       `4Gi/2cpu`→`16Gi/4cpu` (the digest/hygiene/reprobe scripts read the FULL per-AG `_index` with `columns=None` →
       tradfi/cefi OOM-killed at 4Gi, signal-9 "configured memory limit reached", verified 2026-06-22), AND fold in
-      `var.dp_audit_image` default → the `e2e-audit:latest` image (closes the IMAGE GAP).
+      `var.dp_audit_image` default → the `e2e-audit:latest` image (closes the IMAGE GAP). — DONE 2026-07-26
+      (`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` todo 5, deployment-service@f2d094e).
 
-      **⚠️ CORRECTED 2026-07-26 (`/ag-closeout-audit cross-cutting`) — the "already applied" claim below is MEASURABLY
-              FALSE; the OOM fix is NOT live.** Measured, not inferred: (1) `gcloud run jobs describe uts-prod-dp-daily-digest`
-              and `… uts-prod-dp-reprobe-empty` (region `asia-northeast1`, project `central-element-323112`) BOTH return
-              `cpu=2;memory=4Gi`; (2) the tracked `.tf` still reads `memory = "4Gi" / cpu = "2"` at :91-92, :148-149, :267-268.
-              So the 4 dp-audit jobs remain OOM-killable at 4Gi exactly as originally diagnosed — the digest/hygiene/reprobe
-              monitoring is still silently losing runs on tradfi/cefi. (was: "**Both changes ALREADY APPLIED to live prod state**
-              (`tofu apply` targeted, `0 add/4 change/0 destroy`, plan clean) + written to the deployment-service working tree —
-              **commit BLOCKED**: this clone has active foreign WIP (`cloud_run_job_registry.py`, `escalation.py`, untracked
-              `scripts/recovery/relaunch_*.py` with import-pattern QG violations) + a dirty UAC dep (`honest_coverage.py`) → no
-              clean QG-green / quickmerge boundary for a sibling agent's tree." Whether the apply never persisted or a later
-              blanket apply reverted it was not established.) **The image-default HALF of this todo DID land** —
-              `local.dp_audit_image_resolved` at :57 resolves `var.dp_audit_image` to `…/e2e-audit:latest`, so the IMAGE GAP is
-              genuinely closed; only the memory/cpu bump remains. A batch todo carrying this corrected scope, bundled with the
-              two sibling todos that edit the SAME `.tf` file, is drafted in
-              [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
-              (`status: draft`, pending operator approval). — deployment-service
+      **⚠️ CORRECTED 2026-07-26 (`/ag-closeout-audit cross-cutting`) — the "already applied" claim below was MEASURABLY
+                      FALSE; the OOM fix was NOT live at that point.** Measured, not inferred: (1) `gcloud run jobs describe uts-prod-dp-daily-digest`
+                      and `… uts-prod-dp-reprobe-empty` (region `asia-northeast1`, project `central-element-323112`) BOTH returned
+                      `cpu=2;memory=4Gi`; (2) the tracked `.tf` still read `memory = "4Gi" / cpu = "2"` at :91-92, :148-149, :267-268.
+                      So the 4 dp-audit jobs remained OOM-killable at 4Gi exactly as originally diagnosed — the digest/hygiene/reprobe
+                      monitoring was silently losing runs on tradfi/cefi. (was: "**Both changes ALREADY APPLIED to live prod state**
+                      (`tofu apply` targeted, `0 add/4 change/0 destroy`, plan clean) + written to the deployment-service working tree —
+                      **commit BLOCKED**: this clone has active foreign WIP (`cloud_run_job_registry.py`, `escalation.py`, untracked
+                      `scripts/recovery/relaunch_*.py` with import-pattern QG violations) + a dirty UAC dep (`honest_coverage.py`) → no
+                      clean QG-green / quickmerge boundary for a sibling agent's tree." Whether the apply never persisted or a later
+                      blanket apply reverted it was not established.) **The image-default HALF of this todo DID land** —
+                      `local.dp_audit_image_resolved` at :57 resolves `var.dp_audit_image` to `…/e2e-audit:latest`, so the IMAGE GAP is
+                      genuinely closed.
+
+              **✅ MEMORY/CPU BUMP NOW SHIPPED 2026-07-26.** Re-measured before touching anything: ALL 4 jobs were live
+                      OOM-killing on their most recent execution ("The configured memory limit was reached", confirmed via
+                      `gcloud run jobs executions describe` on `uts-prod-dp-daily-digest`, `-dp-manifest-hygiene-changed`,
+                      `-dp-manifest-hygiene-full`, and `-dp-reprobe-empty` — the last one OOM-killed on 5 consecutive daily runs
+                      2026-07-22..07-26). Bumped all 4 job modules in the `.tf` to `cpu="4"`/`memory="16Gi"`
+                      (`dp_daily_digest_job`, `dp_manifest_hygiene_changed_job`, `dp_manifest_hygiene_full_job`,
+                      `dp_reprobe_empty_job`). `ENV=prod ./tofu.sh plan -target=...` (all 4 modules) showed exactly
+                      `0 to add, 4 to change, 0 to destroy` — additive in-place resource-limit change only, no
+                      `[OPERATOR]` gate required per this todo's own scoping. Applied via `ENV=prod ./tofu.sh apply` (targeted).
+                      Post-apply `gcloud run jobs describe` confirms all 4: `cpu=4;memory=16Gi`. `.tf` committed +
+                      quickmerged — deployment-service@f2d094e, `quality-gates.sh` green (sentinel-verified). — deployment-service
 
 - [ ] [PERF] P2. **DeFi/observability: `data_pipeline_daily_digest.py` + `_dp_common.read_manifest_index` memory
       antipattern** — the digest reads the full index (`columns=None`) then count-EXPANDS into per-row Python lists
