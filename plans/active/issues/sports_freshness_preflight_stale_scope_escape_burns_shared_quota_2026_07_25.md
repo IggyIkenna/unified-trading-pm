@@ -164,6 +164,36 @@ depends_on: []
       VM is escaping scope, stop it too. Cross-ref
       `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`.
 
+## Progress Log — autonomous monitoring (2026-07-26, operator away ~6h, `/autonomous` armed)
+
+**Sanity-check requested by operator** ("I swear we captured api-football data before... check if it's a path/
+canonicalization/stale-manifest issue"): **verified NOT a bug** — cross-checked the CURRENT manifest against a genuinely
+pre-run snapshot
+(`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index. 20260725-002417.drop_14231_315.bak.parquet`,
+dated 2026-07-25, a full day before `af-backfill-20260726-013313` started). For date=2020-06-06: pre-run, exactly **94
+leagues** had a `FIXTURES_SCHEDULE` row (matches the original curated set precisely) and **288 of 382**
+currently-expected leagues had ZERO row at all — genuinely never captured, not stale/mis-keyed/path-drifted. Also
+confirmed the OTHER sports data types (PREDICTIONS/MATCHES/SFI_PROGRESSIVE_ STATS/PLAYER_VALUES via
+`_should_skip_date_for_per_league`; XG/XG_SHOTS via `_should_skip_shard` looped over its 6 leagues;
+FIXTURE_STATS/EVENTS/LINEUPS/PLAYER_STATS via per-fixture parquet content) all already do real per-league (or finer,
+per-fixture) completeness checks — none share the bug that was unique to FIXTURES' CLI-literal/constant naming mismatch.
+No further code changes needed.
+
+**VM status as of 2026-07-26T01:00Z**: `af-backfill-20260726-013313`, e2-standard-8, RUNNING, `PROGRESS.json` advancing
+monotonically (~1.3–1.5 min/date, zero coarse skips so far — every date genuinely needs a real fetch for the newly
+curated leagues). At this pace, full 2020-06-06→2026-07-25 completion is **~2–3 days of continuous runtime** (not
+"weeks" — that estimate was for the broader enrichment program, not this schedule-only VM).
+
+**Autonomous monitoring plan (operator away, `/autonomous` rules apply)**: watching `PROGRESS.json`'s
+`last_completed_date` as the real climbing metric (never heartbeat/log-line activity alone). On a genuine crash
+(`EXIT_STATUS` != 0) or a flat metric across a check window: diagnose via `run.log` tail + `EXIT_STATUS` +
+`gcloud compute operations list` (rule out SPOT preemption first), fix root cause if code-level, relaunch without asking
+(plain non-`--force` re-run — skip-if-fresh resumes correctly), escalate machine tier only if a NEW OOM signature
+appears (the known leak is patched, so a fresh 137 would need its own diagnosis, not a blind repeat of the old
+escalation). This log entry + this section is the resume point if context compresses mid-monitoring — check
+`gcloud compute instances describe af-backfill-20260726-013313 --zone=asia-northeast1-c` and the GCS
+`PROGRESS.json`/`run.log` first before assuming anything changed.
+
 ## Triage / charter note
 
 Filed per the big-finding triage rule (data-pipeline correctness + billing-waste + fleet-wide blast radius). Main
