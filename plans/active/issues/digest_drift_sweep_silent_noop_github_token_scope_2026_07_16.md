@@ -74,22 +74,30 @@ depends_on: []
 
 # digest-drift-sweep: green for 27 days, dispatched nothing
 
-> ## 🟡 PARTIALLY FIXED — the TOKEN half shipped 2026-07-18; the silent-failure + throttle halves did NOT
+> ## 🟢 3-of-4 FIXED (2026-07-26) — token + silent-failure hardening shipped; only the dormant-cascade question remains
 >
-> _(Measured 2026-07-26 by `/plan-reconcile ci` against the live `.github/workflows/digest-drift-sweep.yml` — every row
-> below was read out of the file this session, not inferred.)_
+> _(2b/2c/3 fixed 2026-07-26 per `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` todo 3, slot-5/infra.
+> Prior measurement 2026-07-26 by `/plan-reconcile ci` — rows below updated against the live file post-fix.)_
 >
 > This doc's root-cause section still reads present-tense (`digest-drift-sweep.yml:77` passes
 > `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`). **That is no longer true.** Scoring this doc's own § "Revised
 > recommendation" 1-4:
 >
-> | recommendation                                                                  | state now                                                                                                                                                                                                                          |
-> | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | 2a. token → `secrets.GH_PAT`, **both** the fetch and the dispatch POST          | ✅ **DONE** — `:82 GH_PAT: ${{ secrets.GH_PAT }}`, `:122 TOKEN="${GH_PAT}"` feeds both `:134` (fetch) and `:166` (dispatch). `unified-trading-pm@f6e98bbdd` (2026-07-18 11:51:54, verified ancestor of `origin/live-defi-rollout`) |
-> | 2b. capture the HTTP status on the FETCH (`404` benign · `401/403` fail loudly) | ❌ **STILL OPEN** — `:133` is still `CONTENT=$(curl -sf … \|\| echo "")` and `:145` still attributes an empty body to _"Dockerfile not found — skipping"_. (The DISPATCH side does capture `%{http_code}` at `:165`.)              |
-> | 2c. self-auditing assertion (`dispatched + fresh == 0` ⇒ exit non-zero)         | ❌ **STILL OPEN** — `:196-198` only emits a `WARNING:` to stderr when `ERRORS > 0`; there is no exit-non-zero on an all-empty sweep                                                                                                |
-> | 3. add a dispatch cap (`--max-dispatches`)                                      | ❌ **STILL OPEN** — no cap anywhere in the loop                                                                                                                                                                                    |
-> | 1. investigate the dormant primary cascade FIRST                                | ❔ unchanged by this note                                                                                                                                                                                                          |
+> | recommendation                                                                  | state now                                                                                                                                                                                                                                                                  |
+> | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | 2a. token → `secrets.GH_PAT`, **both** the fetch and the dispatch POST          | ✅ **DONE** — `:82 GH_PAT: ${{ secrets.GH_PAT }}`, `:122 TOKEN="${GH_PAT}"` feeds both `:134` (fetch) and `:166` (dispatch). `unified-trading-pm@f6e98bbdd` (2026-07-18 11:51:54, verified ancestor of `origin/live-defi-rollout`)                                         |
+> | 2b. capture the HTTP status on the FETCH (`404` benign · `401/403` fail loudly) | ✅ **DONE** — the fetch now uses `-o "$BODY_FILE" -w '%{http_code}'`; `200` parses, `404` on both branches is a benign skip (still counted in `SKIPPED_NO_ARG`), anything else (`401`/`403`/etc.) `exit 1`s the step loudly. `unified-trading-pm@6cb21eca3` (2026-07-26)   |
+> | 2c. self-auditing assertion (`dispatched + fresh == 0` ⇒ exit non-zero)         | ✅ **DONE** — the summary now asserts `Dispatched + Already fresh + Capped == 0` (over a non-empty `IMAGE_REPOS`) and `exit 1`s; `CAPPED` counts as "found and would have dispatched" so a cap-bound run is never mistaken for the failure. `unified-trading-pm@6cb21eca3` |
+> | 3. add a dispatch cap (`--max-dispatches`)                                      | ✅ **DONE** — `workflow_dispatch.inputs.max_dispatches` (default `5`) bounds real `/dispatches` POSTs per run; repos beyond the cap are deferred to the next tick and counted separately. `unified-trading-pm@6cb21eca3`                                                   |
+> | 1. investigate the dormant primary cascade FIRST                                | ❔ unchanged by this note — still open                                                                                                                                                                                                                                     |
+>
+> Proven via `scripts/quality-gates-base/tests/test-digest-drift-sweep-silent-failure-hardening.sh` (extracts the live
+> workflow's embedded bash and exercises all 8 cases: benign-absent-Dockerfile negative test, 401/403 loud-failure,
+> dispatch-cap bounding, and the self-audit assertion's positive/negative cases — all 8 pass against the fixed workflow,
+> the structural anchor fails against the pre-fix commit). The loud-failure path (401/403) was proven this way rather
+> than via a live `workflow_dispatch` run: forcing a real 401/403 would require deliberately de-scoping the shared
+> `GH_PAT` secret that other production dispatches also depend on, which is not an acceptable side effect for a routine
+> hardening change.
 >
 > **Independent corroboration that the token fix landed and changed behaviour**: the sibling doc
 > [/plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md](/plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md)
@@ -99,8 +107,9 @@ depends_on: []
 > `No ARG found: 16` proved it never did. F4 flags a **new** problem in its place (it never converges and fans out to
 > `ubuntu-latest`, so it now costs real money) — that non-convergence is tracked as an open todo there, not here.
 >
-> Net: this doc is **not** resolved; it is 1-of-4 done. The remaining three are the "green but wrong" hardening, which
-> is the part this doc argues is the deeper bug.
+> Net: this doc is **not** resolved; it is 3-of-4 done. The remaining open item is recommendation 1 — investigate why
+> the primary `update-dependency-version.yml` cascade has been dormant — which this doc itself said should be
+> investigated FIRST/alongside, and which is out of scope for the hardening todo that closed 2b/2c/3.
 
 ## What it was supposed to do
 
