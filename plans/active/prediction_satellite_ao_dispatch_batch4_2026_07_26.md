@@ -131,6 +131,31 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
       `canonical_question_group` catalogue rows (count cited), with the run's evidence recorded in the source doc's
       Progress Log.
 
+- [ ] [CODE] P1. **Extend the canonical `trades` schema for POLYMARKET metadata + migrate the legacy `prediction_trades`
+      population, now that the doc's Q3 operator-decision gate has cleared.** Operator ruling 2026-07-25
+      (`unified-trading-pm@7dfcfe0ee`,
+      `plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`): extend the
+      canonical `data_type=trades` schema (currently 5 columns) rather than drop the legacy metadata or permanently fork
+      a separate canonical shape. (1) unified-api-contracts: add `title`/`slug`/`event_slug`/`outcome`/ `outcome_index`
+      as first-class canonical `trades` fields — the operator-directed minimum set (market-question + resolution
+      metadata with no surviving copy elsewhere). Do NOT add the trader-identity fields (`proxy_wallet`/
+      `name`/`pseudonym`/`bio`/`profile_image`) — those are explicitly flagged PII-adjacent in the operator ruling and
+      need a SEPARATE operator call on whether they're genuinely needed downstream; leave them out of this pass. (2)
+      market-tick-data-service: update the Polymarket CLOB writer to emit the extended schema going forward. (3) Migrate
+      the 2,477 `data_type=prediction_trades` manifest rows + shape-#4's 158+ objects into the canonical
+      `data_type=trades` path/shape under the extended schema — copy+verify+delete per the standard delete-safety
+      protocol (content-verify before any delete, no data loss). (4) Register the extended schema + migration in
+      `canonical-cutover-register.md` + `non-canonical-path-inventory.md`. Repo: unified-api-contracts,
+      market-tick-data-service, unified-trading-pm. Source:
+      `prediction_polymarket_legacy_dual_write_trees_metadata_     loss_2026_07_24.md` todos 4-6 — batch3 deferred this
+      doc as operator-gated on Q3; the `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` re-check
+      (2026-07-26) confirmed Q3 cleared the SAME day batch3 was drafted (the ruling landed 2026-07-25, one day before
+      batch3's 2026-07-26 audit — a same-day staleness gap, not a new decision made during this re-check). **Done
+      when**: UAC's `trades` schema carries the 5 new fields (PII fields explicitly excluded, with the exclusion
+      recorded as a still-open separate decision); the writer emits them; the 2,477+158 legacy rows are migrated with a
+      verified 0-loss content-check; the cutover/non-canonical inventories are updated; `quality-gates.sh` is green
+      across all three repos.
+
 ## Deferred — gated on a sibling todo landing (NOT dispatched speculatively)
 
 - **[OPERATOR][DATA] Combined prediction `_index` manifest canonicalisation single-walk** (rides ONE prediction
@@ -186,17 +211,23 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
 Per the ag-closeout-audit iterative-drain rule (do not re-litigate a prior batch's Deferred section without new
 evidence), every other orphaned prediction doc from this run's Phase 1 was already classified by
 `prediction_satellite_ao_dispatch_batch3_2026_07_26.md` (a same-day audit output) into its operator/time/human-gated
-Deferred buckets, and none of those gates has demonstrably cleared since. Not re-drafted here (would duplicate batch3's
-disposition): `predictions_other_bucket_and_ui_drilldown` (operator-gated),
+Deferred buckets. **Update 2026-07-26 (`prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` todo 2's
+re-check)**: one of these gates has since cleared —
+`issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss`'s Q3 operator decision was ruled 2026-07-25 (one
+day before this batch's own audit, a same-day staleness gap); its now-unblocked migration work is extracted as a
+dispatched todo above instead of staying in this Deferred list. Every other gate re-checked the same day: none has
+demonstrably cleared. Not re-drafted here (would duplicate batch3's disposition):
+`predictions_other_bucket_and_ui_drilldown` (operator/infra-slot-availability-gated),
 `issues/prediction_arb_live_execution_bridge` (operator architectural transport-seam decision),
 `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue` (operator — historical re-backfill launch),
-`issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss` (operator — 3-step canonical `trades` schema
-design), `issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index` (operator sign-off),
-`sports_arb_decay_window_and_alpha_gate_design` / `sports_group_c_execution_backtest_harness` /
-`sports_predictions_live_mode_activation_readiness` / `sports_odds_feature_naming_canonicalization` (sports-master-owned
-/ design-gated / time-gated), `predictions_ml_walk_forward_and_arb` (time-gated on sports_master Group E),
-`data_completion_prediction_2026_07_15` (human-only — 3× independently re-triaged to 0 AO-eligible). The 4 forked Phase
-children (`prediction_phase_ab_residuals` Phase-B fixture-attribute backfill, `prediction_phase_c_data_status_ui`,
+`issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index` (operator sign-off — underlying library fix has
+shipped and proven stable on a sibling bucket, but sign-off for a third remediation attempt on this specific
+twice-reverted index is still outstanding), `sports_arb_decay_window_and_alpha_gate_design` /
+`sports_group_c_execution_backtest_harness` / `sports_predictions_live_mode_activation_readiness` /
+`sports_odds_feature_naming_canonicalization` (sports-master-owned / design-gated / time-gated),
+`predictions_ml_walk_forward_and_arb` (time-gated on sports_master Group E), `data_completion_prediction_2026_07_15`
+(human-only — 3× independently re-triaged to 0 AO-eligible). The 4 forked Phase children
+(`prediction_phase_ab_residuals` Phase-B fixture-attribute backfill, `prediction_phase_c_data_status_ui`,
 `prediction_phase_d_formal_smoke_and_backfill`, `prediction_phase_e_football_arb_live`) are `assigned_vm: NA`
 human-track plans whose residuals are dominated by the un-started Phase-B canonicalisation migration (time-gated) —
 Phase B itself is a large multi-repo migration that warrants its own dedicated plan, not a batch todo.

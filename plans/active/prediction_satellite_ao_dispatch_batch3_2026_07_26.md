@@ -139,7 +139,13 @@ drift_direction: advance-code
 - **`plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`**: Confirmed via
   full doc read: the doc is `status: open` (ROUND 7, 2026-07-24) with the operator-gate stated explicitly in its own
   text — "BLOCKED-OPERATOR-DECISION on scheduling that work... Do NOT re-attempt manifest remediation until it ships"
-  and "this needs operator sign-off before any code/job change, not an autonomous patch." Uncovered items:...
+  and "this needs operator sign-off before any code/job change, not an autonomous patch." Uncovered items:... **RE-CHECK
+  2026-07-26** (finalize todo 2): still open, but partially de-risked — the code fix todo 12 prescribes
+  (manifest-consolidator TOCTOU CAS fix in `_write_consolidated()`) has since shipped
+  (`unified-trading-library@14301571`, 2026-07-24) and was proven stable in production on a sibling bucket. Todo 13
+  (deploy confirmation to the `instruments-sports` consolidator specifically) and todo 14 (re-run + multi-cycle
+  hold-verify against THIS bucket) remain undone, and no operator sign-off authorizing a third remediation attempt on
+  this twice-reverted live index has been recorded. Still genuinely gated — leave deferred.
 - **`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`**: Conflict check (step 2): grepped every
   covering-set doc for the two uncovered items' target files/mechanisms (`EventTransport`,
   `AtomicLegExecutor`/`atomic_leg_executor`, `betfair.*lay`, `back+lay`, `CanonicalOdds`) — zero hits anywhere in the
@@ -151,7 +157,12 @@ drift_direction: advance-code
 - **`plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`**: Confirmed Phase-1
   finding: the doc's uncovered remainder is the 3-step sequence in todos 4-6 (design the extended canonical `trades`
   schema → update the MTDS Polymarket writer + migrate the 2,477 `prediction_trades` rows + shape-#4's 158+ objects →
-  register in the cutover/non-canonical inventories), all still `- [ ]` open despite the Q3 operator...
+  register in the cutover/non-canonical inventories), all still `- [ ]` open despite the Q3 operator... **GATE CLEARED
+  2026-07-26** (`prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` todo 2's re-check): the Q3 ruling
+  landed 2026-07-25 (`unified-trading-pm@7dfcfe0ee`) — extend the canonical `trades` schema, migrate without loss — one
+  day BEFORE this batch3 doc's own 2026-07-26 audit, so this was a same-day staleness gap, not a decision made during
+  the re-check. The now-unblocked migration work is extracted as a new dispatched todo in
+  `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` (still `status: draft`) instead of staying deferred here.
 - **`plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md`**: Confirmed via full read: the doc has
   exactly 2 remaining uncovered open items (item 3, the sentinel fan-out, is fully implemented+cited by
   prediction_satellite_ao_dispatch_batch2_2026_07_25.md, Source-cited back to this doc — not re-extracted here).

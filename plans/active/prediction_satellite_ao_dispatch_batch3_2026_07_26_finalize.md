@@ -70,7 +70,7 @@ drift_direction: advance-code
       still genuinely open, so it does not reach 0 open items. Checked
       `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (todo 2's source doc) directly
       — confirmed zero sub-items done, so correctly left untouched (nothing to flip).
-- [ ] [REVIEW] P1. **Re-check the 7 operator-gated + 1 time-gated + 1 human-only Deferred items, plus the 2
+- [x] ✅ [REVIEW] P1. **Re-check the 7 operator-gated + 1 time-gated + 1 human-only Deferred items, plus the 2
       already-covered-elsewhere notes**, now that time has passed. For the 2 already-covered-elsewhere notes
       specifically: check whether `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s ml-service odds-feature-naming
       migration todo has landed — if it has, `sports_odds_feature_naming_four_way_mismatch_2026_07_21.md` and
@@ -81,6 +81,51 @@ drift_direction: advance-code
       re-surface an already-asked operator question a second time. **Done when**: each of the 11 Deferred/note items has
       either (a) a note that it's ready for `batch4` extraction, (b) an explicit re-verified confirmation the gate is
       still open, or (c) confirmation the already-covered-elsewhere item resolved via the other batch's own mechanism.
+      **Done 2026-07-26.** Re-checked all 11 via 3 parallel investigation sub-agents + direct reads. Also discovered
+      `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` already exists (`status: draft`, drafted same day by this
+      same agent identity's earlier `ag_closeout_auditor` run) and independently corroborates most of these verdicts.
+
+      **Already-covered-elsewhere (2 notes) — (c):**
+          1. Four-way-mismatch + canonicalization docs (covered by batch5's ml-service migration todo): **still NOT
+             landed** — `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s `[DATA] P2` "Migrate 4 ml-service files"
+             todo remains `- [ ]` unchecked. Nothing to reconcile yet; re-check next iteration.
+          2. `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md`'s 3-item disposition:
+             item 1 (todo-2 checkbox flip) is still batch5's own unshipped `- [ ] [DATA] P3` todo — not yet done. Item 2
+             (todo-4 uncommitted diff) is now **fully confirmed resolved** —
+             `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s todo 4 is now `[x]` checked (features-service
+             ODDS_COLUMNS + exporter migration shipped). Item 3 (dispatch-track re-flag) is the same item as one of the 9
+             below — still open, no operator ruling recorded (`assigned_vm`/`execution_scope` unchanged).
+
+          **The other 9 (a/b) — one gate CLEARED, extracted into batch4; 8 confirmed still open:**
+          - `issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` — **(a) CLEARED, extracted.**
+            Its Q3 operator gate was ruled 2026-07-25 (`unified-trading-pm@7dfcfe0ee`, extend the canonical `trades`
+            schema, migrate without loss) — one day BEFORE batch3's own 2026-07-26 audit (a same-day staleness gap, not a
+            decision made during this re-check). Extracted the now-unblocked schema-extension + migration work as a new
+            `[CODE] P1` todo in `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` (still `status: draft`), with the
+            ruling's own PII carve-out (trader-identity fields excluded, flagged as a separate still-open call) preserved.
+            Both batch3 and batch4's own Deferred-bullet text updated to point at the extraction.
+          - `issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` — (b) still open, partially
+            de-risked: the code-fix precondition (`unified-trading-library@14301571`) has shipped and proven stable on a
+            sibling bucket, but operator sign-off for a third remediation attempt on this twice-reverted live index is
+            still outstanding.
+          - `issues/prediction_arb_live_execution_bridge_2026_07_20.md` — (b) still open, unchanged since filing.
+          - `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` — (b) still open,
+            unchanged since 2026-07-14; only the launch-decision todo remains, all other code fixes shipped.
+          - `plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md` — (b) still open: item A
+            (playwright/UI-capable-slot gate) is infra-resource-gated, not operator-decision-gated (its code prerequisite
+            already shipped, `deployment-ui@319075e`); item B (Phase 5 canonical-groups backfill remainder) is plain
+            unscheduled backlog with no blocking condition. Neither has cleared.
+          - `plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md` — (b) still open: all 8 `[DESIGN]`
+            todos unchecked, none of the 3 operator sign-off questions answered.
+          - `plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md` — (b) still open: `SportsMatchingEngine`
+            confirmed still zero callers, no design decision recorded for todos 3/5.
+          - `plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md` (time-gated) — (b) still open: gated on
+            `sports_master:Group E`'s FSS ≥95% non-NULL features threshold, still unchecked in `sports_master.md`; best
+            available honest-coverage figures (`data_completion_sports_2026_07_24.md`) are far below threshold
+            (FIXTURE_STATS 34%, ODDS 26%, WEATHER 17%).
+          - `plans/active/data_completion_prediction_2026_07_15.md` (human-only) — (b) confirmed still 0 AO-eligible / 21
+            human-only items unchanged, no commits against the doc since 2026-07-25.
+
 - [ ] [DOC] P1. **Archive `prediction_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved or re-confirmed all 11 — verify none silently vanish) → add the archive banner → run
