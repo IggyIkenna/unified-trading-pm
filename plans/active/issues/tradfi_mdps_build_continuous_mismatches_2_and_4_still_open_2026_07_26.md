@@ -52,6 +52,25 @@ locked_since:
 
 # TradFi MDPS build-continuous mismatches 2+4 still open; no successful run ever landed
 
+> **🟡 IN-FLIGHT (slot 6, 2026-07-26 19:48 UTC)**: relaunched the P2 "re-run the SAME ES/MES process-step backfill a
+> SECOND time" todo — 7 fresh per-year VMs (`mdps-backfill-tradfi-y{2020..2026}es-20260726-194454`, SPOT,
+> `MDPS_INSTRUMENT_IDS='CME:FUTURE:ES CME:FUTURE:MES'`, no `--force`), mirroring the exact pattern from slot 2's prior
+> successful launch below. Baseline re-confirmed fresh before launch: `continuous_future`/`underlying=ES`/`timeframe=1d`
+> = 454 captured / 1944 empty_confirmed (2398 total, ~18.9%) — matches the doc's stated baseline exactly, no drift since
+> the last measurement. First launch attempt caught a stale `unified-trading-library` tarball (non-blocking warning);
+> republished + killed/relaunched all 7 with `LC_TARBALL_FRESHNESS=enforce`. Second attempt hit the SAME
+> `market-tick-data-service` fleet-drift race this doc has documented twice already (2020/2021/2022 launched clean,
+> 2023-2026 blocked on stale MTDS) — republished MTDS, relaunched the remaining 4. All 7 now confirmed RUNNING with
+> verified-fresh tarballs (no VMs killed after this point). A `run_in_background` monitor watchdog is polling VM
+> presence every 5 min and heartbeating this slot; will re-run build-continuous for ES once all 7 self-delete, then
+> re-measure the `1d` hit rate against the 454/2398 baseline per the todo's own done-condition.
+>
+> **🔴 STALE (superseded, kept for history) — 2026-07-26 14:02-15:02 UTC's `140251`→`144837`→`150236` single-VM chain**:
+> the below banner describes an EARLIER attempt (P0 "backfill MDPS's per-contract process step" todo, now flipped `[x]`)
+> that was superseded by slot 2's 7-shard `y*es-*` launch (see Progress Log's 2026-07-26 slot-3/slot-2 reconciliation
+> entries) — that P0 todo is DONE; this banner is retained only as the historical record of how that backfill actually
+> landed. It is NOT describing currently-running VMs (none of `140251`/`144837`/`150236` still exist).
+>
 > **🟡 IN-FLIGHT (slot 3, 2026-07-26 14:02 UTC)**: `mdps-backfill-tradfi-20260726-140251` (SPOT) running the new P0
 > per-contract "process" backfill for `CME:FUTURE:ES CME:FUTURE:MES`, 2020-01-01..2026-07-25. Per-date progress
 > confirmed real (sequential `🏁 Date range complete` markers, ~15-20s/date); per-date dependency-check failures (e.g.
@@ -847,3 +866,25 @@ anyone, any time — none are blocking.
   hang risks falsely killing legitimately-slow-but-real dates like `y2026es`'s 13.5-minute one; flagging the
   missing-timeout gap here for whoever next has time to design a properly generous (30+ min) one with its own regression
   test, rather than rushing a fix under this same premature-judgment pressure.
+- 2026-07-26 (slot 6, the P2 "re-run the SAME ES/MES process-step backfill a second time" todo, IN PROGRESS): Re-read
+  baseline directly off the live manifest before launching (not trusting the doc's stated number blind):
+  `market-data-tick-tradfi-prd-central-element-323112`'s `continuous_future`/`underlying=ES` rows show, per timeframe,
+  identical `captured=454`/`empty_confirmed=1944` for `1m`/`5m`/`15m`/`1h`/`4h`/`1d`, and
+  `captured=0`/`empty_confirmed=2398` for the literal `24h`/`15s` tokens (expected — MDPS writes `1d`, not `24h`, per
+  this doc's own earlier finding) — confirms the 454/2398 (~18.9%) baseline is current, no drift since the last
+  measurement. Launched the 7 per-year `y*es-*` VMs exactly mirroring slot 2's established pattern
+  (`MDPS_INSTRUMENT_IDS='CME:FUTURE:ES CME:FUTURE:MES'`, no `--force`, no code change). Hit the SAME two tarball-drift
+  races this doc has now documented on every single launch attempt: (1) stale `unified-trading-library` on the first
+  pass (non-blocking warning, not caught by default `LC_TARBALL_FRESHNESS`) — killed all 7 (each <2 min old, negligible
+  lost work under idempotent skip-if-fresh) and relaunched with `LC_TARBALL_FRESHNESS=enforce`; (2) mid-batch,
+  `market-tick-data-service` drifted again (fleet activity moved its HEAD between my fresh-pull and the 2023-2026
+  launches), correctly BLOCKED by `enforce` this time rather than silently running stale code — republished MTDS,
+  relaunched the remaining 4. All 7 now confirmed RUNNING with every dependent tarball
+  (`market-data-processing-service`, `market-tick-data-service`, `unified-api-contracts`, `unified-trading-library`,
+  `deployment-service`) verified fresh at launch time — no VM in this batch ever ran stale code (unlike several of this
+  doc's earlier launches). Armed a `run_in_background` monitor watchdog (5-min poll interval, `/api/slots/6/progress`
+  heartbeat each tick, up to ~8.3h ceiling) rather than blind-waiting or polling the harness. Next: once all 7
+  self-delete, re-run `build-continuous` for ES (existing `launch-mdps-build-continuous-vm.sh`, no timeframe restriction
+  needed now that the 24h/1d normalisation fix is already shipped), then re-measure the `1d` hit rate against the
+  454/2398 baseline and record whether it rose (confirms the timing-race diagnosis) or held flat (reopens the
+  investigation, per this todo's own instruction).

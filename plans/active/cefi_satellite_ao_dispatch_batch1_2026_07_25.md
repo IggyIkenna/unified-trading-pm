@@ -133,30 +133,30 @@ drift_direction: advance-code
       `_finalize_session_grid` routing:
 
       | Adapter | Verdict |
-                                  | --- | --- |
-                                  | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
-                                  | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
-                                  | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
-                                  | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
-                                  | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
-                                  | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
+                                          | --- | --- |
+                                          | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
+                                          | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
+                                          | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
+                                          | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
+                                          | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
+                                          | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
 
-                                  **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
-                                  intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
-                                  **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
-                                  (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
-                                  `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
-                                  snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
-                                  absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
-                                  `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
-                                  non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
-                                  documented the OLD (reversed) behavior, contradicting the shipped code —
-                                  `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
-                                  `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
-                                  a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
-                                  provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
-                                  unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
-                                  (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
+                                          **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
+                                          intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
+                                          **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
+                                          (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
+                                          `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
+                                          snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
+                                          absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
+                                          `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
+                                          non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
+                                          documented the OLD (reversed) behavior, contradicting the shipped code —
+                                          `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
+                                          `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
+                                          a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
+                                          provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
+                                          unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
+                                          (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
 
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
       candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
@@ -377,7 +377,7 @@ drift_direction: advance-code
       run.log, not re-derived from the normalized manifest), the combo-symbol hypothesis is explicitly confirmed or
       ruled out with cited evidence, and a new/extended issue doc records the finding. Source:
       `issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`.
-- [ ] [BACKEND] P1. **Add a PROGRESS-equivalent classification for content-canonicalisation dry-run/audit scripts.**
+- [x] [BACKEND] P1. **Add a PROGRESS-equivalent classification for content-canonicalisation dry-run/audit scripts.**
       `classify_no_capture_reason()` (`deployment-service/deployment_service/data_pipeline_monitors/_gcs.py`)
       false-pages `DP_VM_GONE_NO_CAPTURE` for a task type that structurally never writes the availability manifest —
       extend `_PROGRESS_RE` to also match `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`'s own summary
@@ -386,7 +386,13 @@ drift_direction: advance-code
       `record_captured`/`CATALOGUE_PROMOTED`. Repo: deployment-service. **Done when**: `classify_no_capture_reason()`
       returns `NoCaptureReason.PROGRESS` (not `SILENT`) for a run.log fixture matching this script's vocabulary, backed
       by a passing unit test in `test_data_pipeline_monitors.py`; `quality-gates.sh` green. Source:
-      `issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md`.
+      `issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md`. — ✅ DONE 2026-07-26 (slot 3):
+      `deployment-service@559ca9a` — `_PROGRESS_RE` extended with
+      `would_patch`/`already_canonical_skipped`/`SCRIPT 1     CONTENT MIGRATION SUMMARY` alternatives; added
+      `test_no_capture_reason_progress_content_migration_stats_dict` (stats= dict vocabulary) and
+      `test_no_capture_reason_progress_content_migration_summary_banner` (the banner line), both asserting
+      `NoCaptureReason.PROGRESS`. Full repo `quality-gates.sh` green (203/203 tests in
+      `test_data_pipeline_monitors.py`). Shipped via quickmerge, confirmed on `origin/live-defi-rollout`.
 - [ ] [INFRA] P1. **Wire the already-built `DeploymentsRegistry.reap_stale()` into the exit-code fleet-monitor cron.**
       `reap_stale()` (`unified-trading-library/.../deployment_registry.py`) is already implemented + unit-tested but has
       ZERO callers anywhere outside its own tests — wire it into deployment-service's `*/5 * * *     *` exit-code sweep
@@ -435,7 +441,7 @@ drift_direction: advance-code
       to relabel the 1,277 HL phantom rows to their `@LIN` canonical path. Repo: instruments-service. **Done when**:
       phantom row count for HYPERLIQUID, measured by the script's own post-run count, is 0, verified against the live
       cefi manifest (not just exit code). Source: `issues/cefi_residual_followups_after_honest_done_2026_07_17.md`.
-- [ ] [BACKEND] P1. **Close the residual `cefi → BATCH_TARDIS` fabrication path.** In
+- [x] [BACKEND] P1. **Close the residual `cefi → BATCH_TARDIS` fabrication path.** In
       `unified_trading_library/pipeline_mode_resolver.py`'s `derive_pipeline_mode_for_row`, before the generic
       `_ASSET_GROUP_FALLBACKS['cefi']` branch returns `PipelineMode.BATCH_TARDIS` (reached only when the (asset_group,
       data_type) has no `SOURCE_PRIORITY` entry and the venue has no `_VENUE_OVERRIDES` entry), check
@@ -447,7 +453,17 @@ drift_direction: advance-code
       in this doc's conflicts. **Done when**: `quality-gates.sh` green; new unit tests prove (a) a synthetic cefi venue
       absent from both `_VENUE_OVERRIDES` and `VenueMapping.all_tardis_exchanges` now resolves to `None` for an unmapped
       data_type, and (b) a genuine Tardis-exchange cefi venue still resolves to `BATCH_TARDIS`. Source:
-      `issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md`.
+      `issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md`. — ✅ DONE 2026-07-26 (slot 3):
+      `unified-trading-library@ffce0fa6` — added the `VenueMapping().get_tardis_exchange_for_venue(venue)` guard right
+      before the cefi `BATCH_TARDIS` fallback (imported from top-level `unified_api_contracts`, not the deep `.registry`
+      path, to satisfy the codex deep-import check); added
+      `test_cefi_unmapped_venue_asset_group_fallback_is_none_not_fabricated_tardis` (synthetic venue → `None`) and
+      `test_cefi_genuine_tardis_venue_asset_group_fallback_still_tardis` (DERIBIT → still `BATCH_TARDIS`). **Finding**:
+      the pre-existing `test_unknown_data_type_falls_back_to_asset_group` used a bare `"BINANCE"` venue name that never
+      actually matched a real `tardis_to_venue` canonical value (those are suffixed — `BINANCE-SPOT`/`BINANCE-FUTURES`)
+      — it only ever passed because the fallback was previously unconditional; corrected to `"DERIBIT"` (a genuinely
+      Tardis-mapped, unsuffixed canonical venue) so the test asserts something real. Full repo `quality-gates.sh` green
+      (59/59 targeted tests, full suite green). Shipped via quickmerge, confirmed on `origin/live-defi-rollout`.
 - [ ] [DATA] P1. **Re-partition the pre-~2026-02 LIGHTER-ZKSYNC `ohlcv_1m` tail out of `batch_tardis`.** ~1,050 objects
       (2025-07-15→~2026-02-01) still mislabeled `pipeline_mode=batch_tardis` — Tardis never emits LIGHTER ohlcv_1m at
       all, so ALL of it under `batch_tardis` is native `lighter_api` data mislabeled. Use the existing idempotent

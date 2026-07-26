@@ -178,7 +178,7 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       `quality-gates.sh --no-fix` is green in instruments-service. Source:
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (the 2026-07-26 tombstone entry's closing paragraph).
 
-- [ ] [BACKEND] P1. **Close the two "Blocked on: nobody" items in
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-26 (slot 2)** — Close the two "Blocked on: nobody" items in
       `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`, combined into ONE todo because both write to
       that same doc** (mirrors batch2's same-source-doc combine discipline). (1) **Full-history census for the
       historical re-stamp** — the doc's own Deferred table says the re-stamp "needs a fresh full-history census first
@@ -208,7 +208,19 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       `SPOT_PAIR` write path populates `instrument_id` on new captures, with a regression test asserting it,
       `quality-gates.sh` green in market-tick-data-service, and the Deferred table's second row updated to name the
       remaining 4,310-row historical backfill as the only residual. Source:
-      `plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`.
+      `plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`. — **(a) Census DONE**: read the
+      live `availability_index.parquet` as a single object (5,825,023 rows scanned), found the corpus-wide count is
+      **1,141** mis-stamped rows (ICE=5, KRX=12, FX=1,124 across 2020-2026) — ~40% higher than the 818-row sample
+      estimate; recorded per-venue/per-year breakdown + snapshot path in the issue doc, Deferred table updated. **(b)
+      Write-path fix — surprising finding: it was ALREADY SHIPPED** in an unrelated earlier effort
+      (`market-tick-data-service@020b703e`, 2026-07-25, the
+      `cross_ag_instrument_type_casing_100pct_directive_2026_07_24` scope extension added `spot_pair`/`spot` to the SAME
+      canonical manifest-itype map NASDAQ/NYSE equity uses) — a regression test already existed and passes
+      (`test_fx_spot_pair_now_resolves_canonical`). The only genuine gap was a stale code comment in `_umi_yahoo.py`
+      asserting the OLD (pre-fix) "returns unchanged" behavior as permanent design — fixed at
+      `market-tick-data-service@b0fedf91` to describe the current (fixed) behavior and cite the prior fix + its test.
+      `quality-gates.sh` green (sentinel-verified). Deferred table's second row updated to name the 4,310-row historical
+      backfill as the only remaining residual.
 
 - [ ] [REVIEW] P1. **Re-scope `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s three stale BLOCKED-
       premises.** Three of its open P0 items are gated on a blocker that resolved a MONTH ago: they cite
