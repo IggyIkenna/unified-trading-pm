@@ -559,7 +559,18 @@ drift_direction: advance-code
     `book_snapshot_5`/`derivative_ticker` paths entirely (both already tracked as P2 follow-ups above — this pivot does
     not lose that tracking, it just doesn't block THIS todo's delivery on fixing them first). Monitoring this VM for
     completion; same post-completion steps as above (manifest consolidation + quote_volume check + ADV-reader check),
-    now scoped to `trades` only.
+    now scoped to `trades` only. Measured throughput ~30-35s/day, clean (0 errors) — full 937-day range ETA ≈9h.
+  - **Parallel recent-window verification VM (2026-07-26 17:14 UTC)**: since `mdps-backfill-cefi-20260726-165959`
+    processes chronologically from 2024-01-01 forward, the "Done when" bar's "recent day" + ADV-reader (needs trailing
+    real days) criteria won't be satisfiable from it for ~9h. Launched a SECOND, narrow VM in parallel:
+    `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --data-types trades --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2026-06-26 2026-07-25 full`
+    → VM `mdps-backfill-cefi-20260726-171422` (SPOT), confirmed STARTED, ~30-day window, ETA ≈15-20min. **Known,
+    accepted overlap**: this window is the TAIL of the full-range VM's own range, so both VMs will eventually write
+    candles for the same (venue, day, instrument) cells — low-risk (each VM writes its OWN per-VM shard file, keyed by
+    VM name; two independent runs computing candles from the SAME source raw data produce IDENTICAL output, so this is
+    redundant compute, not a correctness/collision risk) and worth it to unblock verification by ~15-20 minutes instead
+    of ~9 hours. The full-range VM keeps running independently to satisfy the "full already-captured raw-trade range"
+    criterion; only the recent-window VM's output is needed for the other two criteria.
 
 ## Deferred
 
