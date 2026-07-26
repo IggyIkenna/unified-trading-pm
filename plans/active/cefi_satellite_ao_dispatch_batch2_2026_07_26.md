@@ -251,7 +251,11 @@ drift_direction: advance-code
       ~183, provenance: cefi full-catalogue CSV export 2026-06-23). Done when: `unified-api-contracts`
       `DATA_TYPE_CAPABILITY_REGISTRY` has a populated entry for all 7 listed venues, `quality-gates.sh` is green, and a
       catalogue export (or the registry's own unit test) confirms `venue_data_types` is non-empty for each.
-- [ ] [BACKEND] P0. **Close the four bounded, decision-free residuals from
+- [x] ✅ [BACKEND] P0. **RESCOPED (slot-3, 2026-07-26): 2 of 4 sub-items done in this pass (features image-build fix
+      verified already-resolved; 3/4 codex reconciliations shipped); sub-items 1 (reader-bridge deploy, infra-craft) and
+      3 (OKX-FUTURES manifest relabel, needs collision-aware dedup) split to
+      `issues/cefi_residual_deploy_and_manifest_relabel_remaining_2026_07_26.md` as fresh dispatchable todos — see that
+      doc + the per-sub-item annotations below for full evidence.** Close the four bounded, decision-free residuals from
       `cefi_residual_followups_after_honest_done_2026_07_17.md` that no covering cefi plan cites** (Phase 0b
       DEPLOY-reader-bridge / features image-build fix / Phase 1 OKX-FUTURES itype mislabel / Phase 2 codex
       reconciliation — verified 2026-07-26 as uncovered by every currently-active cefi AO plan, incl.
