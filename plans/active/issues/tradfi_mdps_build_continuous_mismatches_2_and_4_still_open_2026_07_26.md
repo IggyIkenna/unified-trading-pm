@@ -758,3 +758,29 @@ the current ~19% baseline before flipping this todo's checkbox. This is the last
   2's/4's). The filter was never actually broken; I was comparing against stale, unrelated pre-existing data. The REAL
   scoping bug slot 2 found was in a DIFFERENT, earlier set of 7 shards (slot 4's, which omitted the filter entirely) —
   already killed before I looked into it.
+- 2026-07-26 (slot 2, self-correction on a premature kill): while monitoring the 7 `y*es-*` shards, `y2020es` and
+  `y2026es` both went ~12-13 min with zero visible log progress on the SAME calendar date (`2020-03-26` / `2026-03-06`),
+  which I initially read as a genuine hang — SSH-confirmed 0% incremental CPU over an 8s window plus several stale
+  `CLOSE-WAIT` TCP sockets on both, and confirmed (via `grep subprocess.run` in `process_handler.py:706`) that the
+  per-date driver's `subprocess.run(cmd)` call has NO timeout, so a truly hung child would block that shard's date-range
+  loop forever with no self-recovery. Killed `y2020es`'s subprocess (pid 25214, date `2020-03-26`) to unblock it.
+  **Turned out to be premature**: `y2026es`'s identical-looking "hang" self-resolved ~2 minutes later with a clean
+  `rc=0` and a genuine `Total Duration: 13.5m` completion (all-zero result — a real, fully-processed empty date, not a
+  crash) — proving a single date CAN legitimately take 13+ minutes under current conditions, most likely GCS API
+  contention from running 7 backfill shards concurrently PLUS my own repeated monitoring `gcloud storage cat`/SSH calls
+  hitting the same project simultaneously (a self-inflicted load factor I hadn't accounted for). Confirmed the outer
+  per-date loop correctly treats a killed/failed date as non-fatal (log `subprocess-per-date: date=%s rc=%d (FAILED)`,
+  loop continues — verified `y2020es` moved on to `2020-03-27`..`2020-03-30` normally after the kill), so no OTHER dates
+  were affected, but `2020-03-26` itself — a COVID-crash-era date that almost certainly has real, large trading volume,
+  not an empty one — is now recorded `attempted_failed` in that shard's manifest instead of a genuine result.
+  **Follow-up needed**: after this backfill's 7 shards all complete, a targeted single-date re-run of `2020-03-26` for
+  ES/MES
+  (`launch-mdps-backfill-vm.sh --instrument-ids "CME:FUTURE:ES CME:FUTURE:MES" tradfi 2020-03-26 2020-03-26 full`, no
+  `--force` needed — the failed manifest entry won't block a clean re-attempt) is needed to backfill this one real gap;
+  not urgent enough to interrupt the other 6 shards for. **Corrective action going forward**: raised my own
+  stall-investigation threshold from ~10min to ~20+ min of true flatness before SSH-diagnosing (this session's own
+  monitoring was adding to the exact GCS contention it was trying to diagnose) — not adding a code-level timeout to
+  `subprocess.run(cmd)` on the strength of this one instance alone, since a naive timeout short enough to catch a real
+  hang risks falsely killing legitimately-slow-but-real dates like `y2026es`'s 13.5-minute one; flagging the
+  missing-timeout gap here for whoever next has time to design a properly generous (30+ min) one with its own regression
+  test, rather than rushing a fix under this same premature-judgment pressure.
