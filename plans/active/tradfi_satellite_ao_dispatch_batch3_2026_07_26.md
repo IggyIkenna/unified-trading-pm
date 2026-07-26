@@ -198,14 +198,22 @@ drift_direction: advance-code
       Original done-when: new captures for both write paths land with correct `source`/`pipeline_mode` and a populated
       `instrument_id`; the cited historical rows are re-stamped/backfilled with before/after evidence counts;
       `quality-gates.sh` green in market-tick-data-service.
-- [ ] [BACKEND] P1. Add a manifest-vs-disk consistency check in market-tick-data-service: for a sample/scheduled sweep
-      of `capture_status=="captured"` rows in the tradfi tick availability manifest, verify the corresponding GCS object
-      actually exists on disk and fail loudly (structured error/alert, not silent) when a captured row has zero backing
-      object. This closes the detection gap that let both the 16,389-row contaminated phantom candidate list and the
-      3,615 confirmed true-phantom rows accumulate undetected. Repo: market-tick-data-service. Source:
+- [x] ✅ [BACKEND] P1. Add a manifest-vs-disk consistency check in market-tick-data-service: for a sample/scheduled
+      sweep of `capture_status=="captured"` rows in the tradfi tick availability manifest, verify the corresponding GCS
+      object actually exists on disk and fail loudly (structured error/alert, not silent) when a captured row has zero
+      backing object. This closes the detection gap that let both the 16,389-row contaminated phantom candidate list and
+      the 3,615 confirmed true-phantom rows accumulate undetected. Repo: market-tick-data-service. Source:
       `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`. Done when: the check runs (CLI flag or
       scheduled job) against the live `market-data-tick-tradfi-prd` `_index`, correctly flags a synthetic
-      captured-row-with-no-object test case, and passes quality-gates.sh.
+      captured-row-with-no-object test case, and passes quality-gates.sh. — **DONE (slot-3, 2026-07-26):
+      `market-tick-data-service@ee3d636` (`check_tradfi_manifest_disk_consistency.py`).** Samples `captured` rows,
+      checks each has ≥1 backing object under its shard prefix (post-migration `pipeline_mode=` canonical + legacy
+      layout, mirroring `rebuild_tradfi_manifest.py`'s dual-matcher tolerance). Live-verified TWICE against the real
+      prod bucket: the first 30-row live run surfaced a genuine bug in the check itself (a casing mismatch —
+      `symbol_rules.py` writes `instrument_type=` lowercase to disk while the manifest column is UAC-canonical uppercase
+      — 26/30 false positives, NOT real phantoms), fixed by checking both castings per codex's C2a ruling (compare
+      instrument_type case-insensitively), then re-verified clean: a 100-row live sample all passed. 11 unit tests incl.
+      the exact synthetic captured-row-with-no-object case; `quality-gates.sh` green.
 - [ ] [DESIGN] P2. Give `deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py`'s
       `check_high_attempted_failed` a "known-dead, expected-coverage-narrowed" marker so a deliberately-deferred
       stale-residue cell (whole-manifest-history, no-recency-window count) stops re-paging `DP_RUN_MOSTLY_EMPTY` every
