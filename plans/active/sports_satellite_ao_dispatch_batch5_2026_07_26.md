@@ -267,21 +267,7 @@ drift_direction: advance-code
       `attempted_failed`/gap-days across the golden window (2025-09-01..2025-11-30) and any other in-scope 2025-H2
       gap-dates, verified against the `_index` manifest (not a re-derived count).
 
-      **BLOCKED-CREDENTIALS 2026-07-26 (slot-4)** — the actual backfill cannot run: the odds-api key is
-                                      DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl
-                                      against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This
-                                      blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see
-                                      `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos.
-                                      Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to
-                                      `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in
-                                      `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped,
-                                      full-population backfills). Also found + worked around a separate pre-existing bug in
-                                      `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to
-                                      `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date
-                                      from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM
-                                      (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox
-                                      stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the
-                                      operator fixes the key (exact command in the issue doc's follow-up todos).
+      **BLOCKED-CREDENTIALS 2026-07-26 (slot-4)** — the actual backfill cannot run: the odds-api key is DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos. Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped, full-population backfills). Also found + worked around a separate pre-existing bug in `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the operator fixes the key (exact command in the issue doc's follow-up todos).
 
 - [ ] [CODE] P1. **PARTIAL 2026-07-26 (slot-7, `data_engineering`) — (a)+(b) DONE (by a concurrent slot, verified by
       me), (c) thoroughly diagnosed, genuinely BLOCKED on a deeper pre-existing ml-service gap.** (a)+(b): a concurrent
@@ -334,7 +320,12 @@ drift_direction: advance-code
       design, not by bug. Re-scoped as a features-service+ml-service architecture decision, filed as
       `issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md` with a `[DESIGN] P1` decision todo
       (3 candidate directions). (c) still ⏳ — now blocked on that architecture decision, not a code fix. NOTIFIED
-      OPERATOR per the cross-repo big-finding rule.
+      OPERATOR per the cross-repo big-finding rule. **UPDATE 2026-07-26 (slot-7)**: Option (b) ratified; `[DATA] P2`
+      built + (after a watchdog auto-push gap, see
+      `issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`) formally ratified via `BLK-ec018203`
+      "Approve as-is" — flipped in the design doc. `[ML] P2` implemented (`ml-service`
+      `training_targets.merge_clv_target_columns`, isolated `odds_targets` merge + regression test proving
+      leakage-shield isolation holds); retrain + its own sign-off still outstanding — (c) remains ⏳.
 - [x] ✅ [DATA] P1. Resolve the sports odds manifest-routing regression opened by the 2026-07-24 addendum to
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`: (1) grep+READ the manifest-write target
       resolution in the sports capture path in market-tick-data-service (same class of `_resolve_manifest_bucket()`
