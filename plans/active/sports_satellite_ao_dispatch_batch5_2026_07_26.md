@@ -512,9 +512,10 @@ drift_direction: advance-code
       history, 2019-01-01→present — no range-length limit)." Updated the vitest test + added a new pw:L2 spec
       (`tests/e2e/data-status-fixtures-browser-full-history-note.spec.ts`, verified passing 1/1). `quality-gates.sh`
       green (101 tests, 75.53% coverage).
-- [ ] [DATA] P0. **Close out `sports_mtds_odds_trades_index_correctness_followup_2026_07_24`'s two open findings (T2.9
-      schema-contract drift + T2.10 phantom-row disposition).** (1) **T2.9**: canonical's OWN native live-written
-      `(sports, odds, trades)` objects already fail the registered MDT schema contract
+- [x] [DATA] P0. ✅ 2026-07-26 — unified-api-contracts@82db8f8f + market-tick-data-service@f6ea0010. **Close out
+      `sports_mtds_odds_trades_index_correctness_followup_2026_07_24`'s two open findings (T2.9 schema-contract drift +
+      T2.10 phantom-row disposition).** (1) **T2.9**: canonical's OWN native live-written `(sports, odds, trades)`
+      objects already fail the registered MDT schema contract
       (`ts_event, fixture_id, market_type, outcome, odds_decimal, broker, client, data_source`) against the real emitted
       fields (`bm_time, market_key, outcome_name, price, fetch_utc, …`) — since the mismatch is on currently-correct
       native live writers (not a defect in moved/legacy objects), UPDATE the registered contract to match the real
