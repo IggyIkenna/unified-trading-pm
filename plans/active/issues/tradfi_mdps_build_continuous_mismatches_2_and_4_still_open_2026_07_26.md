@@ -333,21 +333,21 @@ start without real tradfi/ES feature parquets.
       further this session — the ONE observed "hang-like" case turned out to be a false positive (see the todo above),
       so there is not yet concrete evidence of a REAL unbounded hang, only a real code-level gap that would let one go
       unrecovered if it ever occurs. (repo: market-data-processing-service)
-- [ ] [AGENT] P1. NEW FINDING (2026-07-26, slot 5): `_list_instrument_files`'s day-wide raw listing
+- [x] [AGENT] P1. NEW FINDING (2026-07-26, slot 5): `_list_instrument_files`'s day-wide raw listing
       (`orchestration_scanner.py:462`, `self.storage_client.list_blobs(bucket=bucket_name, prefix=prefix)` where
       `prefix = f"raw_tick_data/by_date/day={date_str}/"`) returned 0 files for ES/MES's `2020-03-26` re-run across ALL
       6 checked data_types, even though the real raw
       `futures_chain/data_type=ohlcv_1m/underlying=SP500/.../ticks.parquet` file (74,823 bytes, confirmed via direct
       `gcloud storage ls -L`) had `Creation Time: 2026-07-26T22:10:12Z` — fully 24 minutes before the isolated,
       non-contended VM that ran this listing was even launched, and 27 minutes before the listing call itself. No other
-      TradFi raw-writer VM was running concurrently (verified via `gcloud compute instances     list` at launch time).
-      This is DIFFERENT from — and stronger evidence than — this doc's earlier "TIMING/RACE condition" theory
-      (2026-07-26, slot 2's `y2020es`/`y2026es` investigation): that theory assumed concurrent multi-shard GCS
-      contention as the cause, but this repro had zero contention and the file had already been sitting fully settled
-      for 24+ minutes. The prior sub-agent code read (this doc, 2026-07-26, "Backfill MDPS's per-contract process step"
-      todo) concluded the LISTING LOGIC ITSELF is correct as written — no caching, no per-date-varying scoping found in
-      the Python code. Traced the actual call chain to `unified_trading_library/cloud_interface/providers/gcp.py:303`'s
-      `list_blobs`, which is a thin passthrough to `google.cloud.storage`'s native
+      TradFi raw-writer VM was running concurrently (verified via `gcloud compute instances list` at launch time). This
+      is DIFFERENT from — and stronger evidence than — this doc's earlier "TIMING/RACE condition" theory (2026-07-26,
+      slot 2's `y2020es`/`y2026es` investigation): that theory assumed concurrent multi-shard GCS contention as the
+      cause, but this repro had zero contention and the file had already been sitting fully settled for 24+ minutes. The
+      prior sub-agent code read (this doc, 2026-07-26, "Backfill MDPS's per-contract process step" todo) concluded the
+      LISTING LOGIC ITSELF is correct as written — no caching, no per-date-varying scoping found in the Python code.
+      Traced the actual call chain to `unified_trading_library/cloud_interface/providers/gcp.py:303`'s `list_blobs`,
+      which is a thin passthrough to `google.cloud.storage`'s native
       `bucket.list_blobs(prefix=..., delimiter=None,     max_results=None)` — no application-level caching found there
       either. **This strongly suggests the real root cause is a GCS list-consistency edge case (not app code)** — worth
       checking whether this bucket has any non-standard consistency/replication configuration, or whether `list_blobs`
@@ -362,7 +362,15 @@ start without real tradfi/ES feature parquets.
       via `gcloud storage ls` which may use a different code path/consistency guarantee), (2) check GCS bucket
       consistency settings (`gcloud storage buckets describe market-data-tick-tradfi-prd-central-element-323112`), (3)
       if reproduced, escalate to whether a retry-with-backoff or a stronger consistency read is needed in
-      `_list_instrument_files`. (repo: market-data-processing-service, unified-trading-library, investigation)
+      `_list_instrument_files`. (repo: market-data-processing-service, unified-trading-library, investigation) — ✅
+      MITIGATED 2026-07-26 (slot 4): reproduced via the SAME `google-cloud-storage` client UTL's `gcp.py` uses — the
+      historical object is listable again now, and a live write-then-list PROBE on the sibling test bucket found zero
+      lag, so the gap could NOT be force-reproduced (app-caching + bucket-config also ruled out). Shipped
+      `_retry_empty_day_listing`: ONE bounded retry gated ONLY on the RAW whole-day listing coming back fully empty (NOT
+      the common "no data for this data_type" case, unretried). 3 new tests, QG green.
+      `market-data-processing-service@22b926c` — doesn't itself prove the hit rate moves, a re-run is a new deferred
+      item below. Also filed `plans/active/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md` (unrelated infra
+      finding).
 - [x] [AGENT] P1. `_TfClusterMixin._process_tf_clusters_date_range`'s per-date loop (`_process_one_date_for_cluster`
       returning `False` → `if not ok: return False`) aborts the ENTIRE multi-day range on the FIRST date that fails for
       ANY reason — including a genuine, expected absence (e.g. a market holiday). Any real multi-year backfill will
@@ -890,6 +898,10 @@ start without real tradfi/ES feature parquets.
   disproven hypothesis. **Next step**: pursue slot 5's P1 finding, not another timing-race re-run — this todo's own
   remediation mechanism (periodic re-run) is now empirically ruled out.
 
+- 2026-07-26 (slot 4): Closed the `_list_instrument_files` P1 finding — see the flipped checkbox above for the evidence
+  chain + `market-data-processing-service@22b926c`; also filed the unrelated
+  `qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md` infra finding.
+
 ## Deferred work after 2026-07-26
 
 | Item                                                                                                                         | State / why deferred                                                                                                                                                                                                                                                                                                | Blocked on                                                                                                         |
@@ -898,9 +910,10 @@ start without real tradfi/ES feature parquets.
 | New P1 todo — MDPS `24h`/`1d` sparse coverage investigation                                                                  | ✅ DONE 2026-07-26 (slot 2) — root cause found (upstream per-contract processed-candle data gap, not a build-continuous code bug); see progress log for the 3-part evidence chain                                                                                                                                   | N/A — closed                                                                                                       |
 | New P0 todo — backfill MDPS's per-contract "process" step for ES/MES full history                                            | ✅ DONE 2026-07-26 (slot 2) — all 7 shards + build-continuous re-run completed with real verified data, BUT the hit rate did NOT improve (still 454/2398≈19%, unchanged); real root cause diagnosed (raw-ingestion/process-step timing race, not a code bug — 2 wrong hypotheses ruled out first, see progress log) | N/A — closed as an action; the underlying sparse-coverage goal is NOT resolved, see the new P2 catch-up-rerun todo |
 | New P2 todo — re-run process step for ES/MES on `2020-03-26` only                                                            | ✅ ACTION DONE 2026-07-26 (slot 5) — clean re-run, but MES still fully missing; root cause is NOT the premature-kill theory — new P1 listing-anomaly finding filed below                                                                                                                                            | N/A — closed as an action; underlying gap reopened as the new P1 listing-anomaly finding                           |
-| New P1 todo — `_list_instrument_files` returned 0 raw files despite the target file existing 24+ min prior, zero contention  | Not done — new finding (slot 5, 2026-07-26); disproves the earlier timing/race theory; likely explains the stuck ~19% hit-rate ceiling across BOTH full backfill passes; needs isolated repro + GCS consistency check                                                                                               | Nobody — needs someone with time to reproduce the listing call in isolation and check bucket consistency config    |
+| New P1 todo — `_list_instrument_files` returned 0 raw files despite the target file existing 24+ min prior, zero contention  | ✅ MITIGATED 2026-07-26 (slot 4) — could not force-reproduce live; shipped a bounded 1-retry mitigation on the raw whole-day listing coming back fully empty (`market-data-processing-service@22b926c`). Doesn't itself prove the hit rate moves — see the re-run row below.                                        | N/A — closed as mitigated; a confirming backfill re-run is the new open item                                       |
 | New P2 todo — add a generous timeout to `process_handler.py:706`'s `subprocess.run(cmd)`                                     | ✅ DONE 2026-07-26 (slot 6) — `market-data-processing-service@2b7c4dc`, 1800s timeout + regression test, QG green                                                                                                                                                                                                   | N/A — closed                                                                                                       |
 | New P2 todo — re-run the SAME process-step backfill a SECOND time to catch up on late-landing raw data (timing-race finding) | ✅ DONE 2026-07-26 (slot 6) — hit rate FLAT (454/2398, byte-identical to baseline) after a full second pass; timing-race theory DISPROVEN. Corroborates slot 5's P1 listing-anomaly finding as the more likely real cause.                                                                                          | N/A — closed; see the new P1 listing-anomaly finding for the promising next lead                                   |
+| New P2 todo — re-run the ES/MES backfill a THIRD time now that the empty-day-listing retry mitigation is live                | Not done (slot 4, 2026-07-26) — the mitigation only helps if the root cause is a transient listing gap, unconfirmed; a real re-run is the only way to check if the hit rate moves                                                                                                                                   | Nobody — launch one more `launch-mdps-backfill-vm.sh` pass + re-measure the `1d` hit rate                          |
 
 **Recommended next item**: the backfill + build-continuous re-run + hit-rate re-verification all genuinely happened
 (2026-07-26) — the surprising result is that the hit rate did NOT move (still ~19%), and the real root cause turned out
