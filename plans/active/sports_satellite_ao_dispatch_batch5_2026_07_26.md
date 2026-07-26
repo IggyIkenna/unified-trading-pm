@@ -363,7 +363,8 @@ drift_direction: advance-code
       `odds_clv_home`, the export only ever carries an always-empty bare `clv_home`) rather than data absence — exact
       rename mechanism not fully traced, filed as a new `[DATA] P2` fix todo in that doc instead of guessing. (c) still
       ⏳ — a retrain today, in ANY window, would always produce a 100%-flat garbage target until that new `[DATA] P2`
-      lands; `unified-trading-pm@dfbcf678f`.
+      lands; `unified-trading-pm@dfbcf678f`. **UPDATE (slot 13)**: `ml-service@a14985b` fixed the same wrong-name bug in
+      the leakage-strip list too — real leakage, not just a bad target. (c) still ⏳.
 - [x] ✅ [DATA] P1. Resolve the sports odds manifest-routing regression opened by the 2026-07-24 addendum to
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`: (1) grep+READ the manifest-write target
       resolution in the sports capture path in market-tick-data-service (same class of `_resolve_manifest_bucket()`
