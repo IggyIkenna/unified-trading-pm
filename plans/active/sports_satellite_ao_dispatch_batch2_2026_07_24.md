@@ -115,131 +115,43 @@ source: >-
       `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`. — VERIFIED CLEAN 2026-07-25 (slot
       2): the dual-layout condition does not currently exist for any of the 15 `PER_DAY_PER_LEAGUE` entities — zero
       canonicalize/delete action needed. Full census in Progress Log.
-- [x] [DATA] P0. ✅ **RESOLVED-AS-INVESTIGATED 2026-07-25 (main-approved interim: leave day=all in place).** **Retention
-      floor = the EXISTING per-source genesis registry — NOT a blanket 2015 delete.** 2026-07-25 investigation
-      (`sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`): this todo's premise does not survive
-      contact with the real GCS objects — **(a) day=all fold is genuinely blocked**: UAC's SSOT only maps VENUES to a
-      FLAT layout (TEAMS is PER_DAY_PER_LEAGUE-only, so "fold into FLAT" is inapplicable to TEAMS as stated); the legacy
-      `day=all/entity=venues/venues.parquet` (3,445 rows, raw numeric api_football `venue_id` keys, e.g. `1456`) and the
-      live FLAT `sports_reference/venues/venues.parquet` (2,860 rows, slugified string keys, e.g. `OLD_TRAFFORD`) have
-      **zero key overlap** — verified directly, not assumed — so there is no join key to "dedup" against; no live reader
-      of `day=all` was found in any of the 6 core sports repos (looks like dead legacy data from an earlier writer
-      generation), but `instruments-store-sports-prd` has soft-delete=0 (irreversible) and the original plan author
-      explicitly flagged "would break team/venue resolution" as a delete risk — needs explicit operator sign-off (see
-      issue doc's Options A/B/C), not a unilateral fold-that-can't-work or an irreversible delete. **(b) pre-genesis
-      anomaly check is NOT new work**: the 131,306 TEAMS + 1,457 VENUES pre-floor rows found are a subset of the
-      ALREADY-TRACKED, already-deferred 944,776-row phantom-pre-floor-manifest-row issue in
-      `/codex/02-data/sports-2020-06-data-floor.md` (blocked on a GCS-walk manifest rebuild, explicitly NOT a hand-edit
-      target) — satisfied by reference, no separate script needed. Also: this todo's quoted per-source genesis dates
-      (understat 2014/api_football 2015/footystats etc. 2019) are **stale**, superseded 2026-07-21 by a uniform
-      2020-06-06 WIPE floor for all sports sources (see the floor doc). Full evidence, GCS byte/row counts, and
-      recommended option in the issue doc. **Disposition (main, 2026-07-25)**: the fold-as-described cannot mechanically
-      execute (no FLAT layout for TEAMS, zero join-key overlap for VENUES) — interim = leave `day=all` in place;
-      investigation itself IS the deliverable. Two items escalated to the operator, not this worker's call: (1)
-      authorize/decline the irreversible delete of the two day=all objects (soft-delete=0, no recovery net); (2) the
-      TEAMS FLAT-layout design decision (net-new UAC layout vs fold into per-day-per-league). The pre-genesis anomaly
-      half needs no new work (already tracked, consolidator-lock blocked). Source:
+- [x] [DATA] P0. ✅ **RESOLVED-AS-INVESTIGATED 2026-07-25 — interim: leave day=all in place, 2 items escalated to
+      operator.** Investigation found the premise doesn't survive contact with the real GCS objects: (a) the day=all
+      fold is mechanically blocked — TEAMS has no FLAT layout to fold into, and legacy vs live VENUES data have ZERO key
+      overlap (numeric ids vs slugified strings) — no join key exists to dedup against. (b) the pre-genesis anomaly
+      (131,306 TEAMS + 1,457 VENUES pre-floor rows) is already covered by the tracked
+      `/codex/02-data/sports-2020-06-data-floor.md` phantom-row issue — no separate work needed. Escalated to the
+      operator (not this worker's call): (1) authorize/decline the irreversible delete of the 2 day=all objects
+      (soft-delete=0); (2) the TEAMS FLAT-layout design decision. Full evidence:
+      `sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`. Source:
       `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
 - [x] ✅ [DATA] P0. **Odds-granularity watch-item check** — unified-api-contracts@a32ceb87. Checked whether pre-cutover
-      10-min odds snapshots would be evaluated against a 5-min expectation anywhere and misread as missing coverage.
-      **Result: not confirmed, documented as checked-no-issue** — no code path in UAC/instruments-service/MTDS/MDPS
-      computes an expected-snapshot-count from a fixed cadence constant; MDPS bucket assignment
-      (`bucket_assignment_adapter.py` `TIER1_HORIZONS`) matches snapshots to fixed pre-match offsets with a 30-90min
-      staleness tolerance, and the honest-coverage expected-universe key for odds is
-      `(date, league_id,     timeframe/horizon)` with no per-minute axis — the mislabeling scenario cannot occur today.
-      Recorded the investigation + a re-check pointer directly in `_endpoint_registry_data.py` (the one place the
-      cadence fact lived, previously as inert prose) so a future raw-tick-count completeness check for `odds_api`
-      re-reads it first; also fixed a stale comment referencing a never-built `v3_era_cutoff` field. Noted discrepancy:
-      the codebase's own documented cutover is **~2023** (v3→v4 endpoint version), not ~2024 as this todo's text states
-      — flagged for whoever eventually builds a cadence-derived check to confirm the correct date before relying on it.
+      10-min odds snapshots could be misread as missing coverage against a 5-min expectation. **Result: no issue** — no
+      code path computes an expected-snapshot-count from a fixed cadence; MDPS bucket assignment uses a 30-90min
+      staleness tolerance and the honest-coverage key has no per-minute axis. Recorded the investigation in
+      `_endpoint_registry_data.py` for future re-checks; noted the codebase's documented v3→v4 cutover is actually
+      ~2023, not ~2024 as this todo's text states. Source:
+      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
+- [x] ✅ [DATA] P0. **Drop 2 out-of-universe numeric `league=` dirs** (`14231`/`315`) — instruments-service@2c4fa059.
+      Scope was wider than the source doc's "2 in 2025" claim — 197 real GCS objects (175 in 2025, 22 in 2026) + 166
+      stale manifest rows. Snapshot-first (backed up to `sports_reference/_purge_backups/2026_07_25_drop_14231_315/`);
+      applied + verified twice: 0 remaining objects, 0 remaining manifest rows. Source:
+      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
+- [x] ✅ [DATA] P0. **94-league enrichment backfill — COMPLETE.** Fresh manifest re-measurement showed 6 of the 7 named
+      entities (FIXTURE_EVENTS/STATS/LINEUPS/PLAYER_STATS/MATCHES/XG/XG_SHOTS) already >99% honest-absence
+      (`empty_confirmed`, genuinely exhaustively attempted, not a backfill opportunity) — re-launching would burn API
+      quota for ~0% real gain. (The canonical closeout plan's own VM tracker citing "months-to-years from gate" was
+      STALE — both prior VMs had already completed cleanly by 2026-07-23.) **INJURIES was the one genuine gap** (10,502
+      captured / 10,219 `expected_unattempted`, 3.4%): launched targeted `af-backfill-20260725-002739`
+      (2018-01-01→2026-07-25, singleton-lock-verified-clear before launch), completed cleanly
+      (`exit_code=0`/`DEPLOYMENT_COMPLETED`) 2026-07-25T03:21:57Z. Post-run verification hit an apparent regression
+      (both captured + expected_unattempted counts LOWER than baseline) — root-caused as an apples-to-oranges
+      methodology artifact (baseline was unfiltered, re-measurement was 94-league-filtered), not a real one: re-ran both
+      filtered identically across 3 manifest snapshots, confirming the post-floor INJURIES gap closed 100% (1,745→0
+      `expected_unattempted`), with 3 independent signals (byte-identical pre-floor phantom count, monotonic row-count
+      growth, monotonic captured growth across all 3 reads) ruling out a lost-update/floor-clamp confound. Also flagged
+      (separate issue, not blocking): `create-code-tarballs.sh`'s gsutil upload fails under an expired WIF token.
       Source: `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
-- [x] ✅ [DATA] P0. **Drop 2 out-of-universe numeric `league=` dirs** (`14231`/`315`), snapshot-first,
-      twin/scope-verified. — instruments-service@2c4fa059. Live-reverified via `get_league_by_api_football_id()` that
-      neither id has a UAC registry entry (pure drop, no canonical twin possible). Scope was WIDER than the source doc's
-      "only 2 in 2025" claim — a bounded listing (day=2025-\* + day=2026-\* prefixes, not a whole-corpus walk) found 197
-      real GCS objects (175 in 2025, 22 more in 2026 the 2026-06-24 audit predates) and 166 stale
-      `_index/availability_index.parquet` rows. Deliberately excluded 2 bare `entity=injuries/injuries.parquet` fallback
-      objects that share other leagues' data (separate bare/legacy-layout todo, not this scope). Snapshot-first
-      throughout (GCS objects backed up to `sports_reference/_purge_backups/2026_07_25_drop_14231_315/`; manifest index
-      backed up via CAS-safe generation-preconditioned write). Applied in prod + verified twice: 0 remaining objects, 0
-      remaining manifest rows. (repo: instruments-service). Source:
-      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
-- [x] ✅ [DATA] P0. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
-      (XG_SHOTS 0% / XG 13% / PLAYER_STATS 21% / MATCHES 35% / INJURIES 37%), NOT a schema artifact. API-Football
-      fixtures (fast, already 100%) → enrichment for the 94, fix broken, be thorough → re-measure toward 100%. (Its
-      stated prerequisite — the tarball rebuild with the write-gate — is already DONE.) (repo: instruments-service).
-      **Done when**: enrichment coverage for the 94-league universe re-measured and materially improved toward 100% for
-      XG_SHOTS/XG/PLAYER_STATS/MATCHES/INJURIES, with any broken enrichment paths fixed. Source:
-      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`. — **🟡 IN PROGRESS (2026-07-25),
-      NOT complete — re-scoped after re-measurement, do not re-dispatch a duplicate.** This exact item is ALSO tracked
-      (with a much longer, multi-session history of stalls/relaunches) in the canonical
-      `/plans/active/sports_consolidated_closeout_2026_07_19.md` — its own archived predecessor
-      (`sports_p2_history_apifootball_2015_to_present_2026_06_27.md`) explicitly warns "check Todo 9 status before
-      dispatching"; that VM tracker (2 SPOT VMs, `af-backfill-20260721-033537`/`-20260722-033350`) was last recorded
-      there as "running, months-to-years from gate" — **STALE**: both actually completed cleanly (`exit_code=0`,
-      self-deleted) by 2026-07-23, confirmed via their `PROGRESS.json`/`run.log` in
-      `gs://deployment-scripts-central-element-323112/vm-logs/`. Fresh manifest re-measurement (94-league-filtered,
-      `_index/availability_index.parquet`, 2026-07-25) shows the raw "% captured" cited above reflects GENUINE upstream
-      absence (`empty_confirmed`), not a backfill opportunity: FIXTURE_EVENTS 19.2% captured / 0.66% still
-      `expected_unattempted`; FIXTURE_STATS 18.2%/0.66%; FIXTURE_LINEUPS 19.2%/0.74%; PLAYER_STATS 11.9%/0.74%; MATCHES
-      11.5%/0.18%; XG 2.5%/0%; XG_SHOTS 2.2%/0% — i.e. these 7 are already **exhaustively attempted** (>99% of the
-      residual is honest-absence, not a real gap); re-launching a backfill for them would burn API quota for ~0% real
-      gain. **INJURIES is the one genuine exception**: 10,502 captured / 10,219 `expected_unattempted` (3.4%) — a real,
-      un-attempted residual. Launched a targeted, singleton-lock-verified-clear
-      (`gcloud compute instances     list --filter='name~"^af-backfill-"'` → 0 running) INJURIES catch-up:
-      `af-backfill-20260725-002739` (2018-01-01→2026-07-25), verified `DEPLOYMENT_STARTED` + actively fetching within
-      ~3min of launch (no fire-and-forget). ETA a few hours at the historically-observed INJURIES rate (~1,404 EU/hr,
-      session 8d of the archived plan) — NOT completable within one AO task turn; tracked to completion across sessions
-      like the archived plan's own history. Also found + flagged (issue doc filed): the `create-code-tarballs.sh` upload
-      step fails via `gsutil` under the active `github-actions-deploy@…` gcloud account (expired Identity-Pool/WIF
-      token) — the tarballs happened to already be fresh (rebuilt by another process ~35min before this session's
-      launch) so the VM booted on valid code, but this auth gap will block the NEXT slot's tarball rebuild attempt until
-      fixed. Full evidence + the reconciliation note in the canonical closeout plan: see this todo's own re-measurement
-      above; re-run `_index/availability_index.parquet` INJURIES query after the VM's `EXIT_STATUS` appears to confirm
-      the gap actually closed before flipping this checkbox. — **Re-health-checked 4x (01:45Z slot 7 / 02:24Z slot 2 /
-      02:30Z slot 9 / 02:49Z slot 4), latest 2026-07-25T02:49Z**: `af-backfill-20260725-002739` still RUNNING,
-      `PROGRESS.json` monotonic-advancing (`last_completed_date=2025-05-30`, ~7.4/8.5yrs), rate ACCELERATING (ETA now
-      <1hr vs earlier "hours"), no error/stall signature. Each check released via `/skip-current-task`, NEVER
-      duplicate-launched. — **TERMINAL 2026-07-25T03:21:57Z (slot 4, data_engineering): completed cleanly**
-      (`exit_code=0`, `DEPLOYMENT_COMPLETED`, `last_completed_date=2026-07-25` — reached present day, self-deleted).
-      Re-ran the INJURIES gate-query the todo asks for, but **checkbox NOT flipped — the result doesn't cleanly show
-      closure and needs a fresh assessor, not a rubber-stamp**: consolidated-index re-measurement for the 94-league
-      universe now shows `captured=9,260 / expected_unattempted=8,568` — BOTH lower than this todo's own pre-backfill
-      baseline (`captured=10,502 / expected_unattempted=10,219`), the opposite of what a successful catch-up backfill
-      should show. Cross-checked against the VM's own per-VM shard directly (not just the consolidated index, in case of
-      a consolidation-lag artifact): shard has 9,251 real captured INJURIES rows, date range 2020-06-06→2026-07-25 —
-      consistent with the consolidated count, so this isn't a lag artifact, the counts are genuinely lower. **Likely
-      confound, not verified**: the 2020-06-06 uniform data-floor WIPE (`/codex/02-data/sports-2020-06-data-floor.md`)
-      landed 2026-07-21, AFTER this todo's baseline was measured — pre-floor rows previously counted as
-      `expected_unattempted` may have been deleted from the manifest entirely, which would lower both numbers
-      independent of the backfill's real contribution. Did not have time to confirm this confound explains the full
-      delta (would need the baseline's original exact query + a floor-aware re-run to isolate the backfill's true
-      effect) — flagging for whoever assesses this todo next rather than guessing either way. — **CONFOUND RESOLVED,
-      CHECKBOX FLIPPED 2026-07-25T04:20Z (slot 11, data_engineering): it was a methodology artifact, not a real
-      regression.** Downloaded 3 manifest snapshots directly (`availability_index.20260724-202648.bak.parquet` /
-      `availability_index.20260725-002417.drop_14231_315.bak.parquet` [the actual pre-backfill baseline] / current
-      `availability_index.parquet`) and re-ran the INJURIES query filtered consistently to the same 96-league canonical
-      set (`unified_api_contracts...mvp_scope_rules._mvp_football_league_ids()`) across all three. Root cause of the
-      apparent regression: the prior assessor's cited baseline (`captured=10,502 / expected_unattempted=10,219`) was
-      **unfiltered** (all leagues), while the cited "current" re-measurement
-      (`captured=9,260 / expected_unattempted=     8,568`) was 94-league-**filtered** — an apples-to-oranges comparison,
-      not a real decrease. Re-run with the SAME filter both times: baseline (00:24, post-drop_14231_315, i.e. the true
-      pre-backfill state) `captured=8,803 /     expected_unattempted=10,219` (pre-floor phantom 8,474 + post-floor real
-      gap 1,745) → current (04:12) `captured=     9,260 / expected_unattempted=8,474` (pre-floor phantom 8,474
-      UNCHANGED, post-floor gap 1,745→**0**, fully closed). Three independent signals rule out a lost-update/floor-clamp
-      confound: (1) the pre-floor phantom count is byte-identical (8,474) across all 3 snapshots spanning
-      before/during/after the backfill — the deferred manifest phantom-prune
-      (`/codex/02-data/sports-2020-06-data-floor.md`) genuinely has not touched these rows; (2) filtered row COUNT grew
-      (294,920→299,090), ruling out a row-collapse/lost-update explanation (a collapse loses rows, this gained them);
-      (3) captured is monotonically increasing across all 3 reads (8,800→8,803→9,260) both filtered and unfiltered
-      (10,499→10,502→10,920) — consistent with real, ongoing backfill progress, not noise. **Done-when met**: the 6
-      non-INJURIES entities were already confirmed exhaustively-attempted (>99% honest-absence) by the prior session's
-      re-measurement above; INJURIES — the one genuine exception — now shows its post-floor real gap closed 100%
-      (1,745→0 `expected_unattempted`). `af-backfill-20260725-002739` confirmed terminal
-      (`exit_code=0`/`DEPLOYMENT_COMPLETED`, self-deleted, per the prior session); the only `af-backfill-*` VM currently
-      running (`af-backfill-20260725-032253`) is an unrelated FIXTURE_EVENTS refetch-recovery job from a different task,
-      not a duplicate of this one. Source:
-      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
 - [x] ✅ [CODE] P1. **UAC canonical registry build/refine** — unified-api-contracts@ce18ff15. Audited every clause of
       the Architecture section against current code before touching anything (most of this program had already shipped):
       name/ids/country/season-start-end-per-year (`season_dates.get_season_start`/`get_season_end`, per-league-per-year)
@@ -283,7 +195,15 @@ source: >-
       the issue doc (P0 fixed+shipped, instruments-service@08387531; archived+resolved:
       `/plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`). **SPOT
       preemption recurring** (2x 2026-07-26: `-013313` @04:16Z undetected 5h20m, `-103202` @09:54Z caught in ~10min once
-      tightened) — each relaunch resumes cleanly, no data loss. Current: `af-backfill-20260726-110610`, healthy.
+      tightened) — each relaunch resumes cleanly, no data loss. **Enrichment MVP-scope leak found + fixed same-day**
+      (per-fixture enrichment was following the 383-league curated-universe denominator instead of the 96-league MVP set
+      — `unified-api-contracts@f674033f` + `instruments-service@b00e4433`; this VM is FIXTURES-only, unaffected, no
+      relaunch needed): `issues/sports_enrichment_mvp_scope_leak_2026_07_26.md`. **Monitoring-gap tolerance confirmed**:
+      a ~4.5hr gap in the monitoring cadence (missed/delayed wakeup) left the VM unwatched but it ran fine throughout —
+      no preemption, steady ~1.85min/date pace. One isolated `attempted_failed` cluster (383 rows, all
+      `date=2021-07-07`, all within an 8ms window — a single transient API-side blip) self-resolved with zero further
+      failures across 8+ subsequent days; not logged as an incident, monitor for recurrence. Current:
+      `af-backfill-20260726-110610`, healthy.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
@@ -787,118 +707,31 @@ source: >-
 ### From `issues/sports_league_id_namespace_migration_2026_07_20.md`
 
 - [x] ✅ [DATA] P0. **Fix the independent per-fixture league_id defect** — unified-api-contracts@d28da985 +
-      instruments-service@83b7952b. **Root cause was NOT the branch order** — the 2026-07-20 precedence flip
-      (`instruments-service@815ad06c3`) already put the numeric-id branch first, but `CanonicalLeague` never carried an
-      `api_football_id` attribute at all, so `getattr(fx.league, "api_football_id", None)` was always `None` and the
-      numeric branch silently no-opped for every fixture — every completed fixture kept resolving via the raw ambiguous
-      display name, the exact bug the flip was meant to eliminate. Fixed at the root: added
-      `api_football_id: int | None = None` to `CanonicalLeague` (UAC `canonical/domain/sports/__init__.py`) and
-      populated it from `raw.league.id` in `external/api_football/normalize.py` — confirmed safe via a dedicated
-      blast-radius check (no exhaustive-field tests, no parquet-schema enumeration of the new field;
-      `_af_id_from_canonical()` in instruments-service already expected this attribute as its primary lookup strategy,
-      falling back to logo-URL regex parsing — this was filling a gap other code already anticipated, not inventing a
-      new one). Extracted the resolution logic into a pure `_resolve_fixture_league_slug()` and added 3 regression tests
-      mirroring `mtds@ad4f1872`'s `TestOddsApiCanonicalLeagueId` (numeric resolves to canonical slug; the six known
-      ambiguous names — BUNDESLIGA/SERIE_A/SERIE_B/CHAMPIONSHIP/PRIMERA_DIVISION/SUPER_LEAGUE — each resolve to their
-      two distinct real leagues via numeric id; unregistered league falls back to raw name, honest absence) that
-      exercise the real function, not just facts about the UAC registry. The
-      `build_league_id()`-falls-back-to-bare-slug-when-country-empty behavior itself is unchanged (by design —
-      honest-absence fallback for genuinely unregistered leagues) but is now GATED away from ever reaching disk: the
-      write-universe gate (`_is_in_canonical_write_universe`, shipped 2026-06-24 per incident) already drops any
-      unresolved/non-canonical value before write, so the `.../entity=injuries/league=235/` leakage cited as evidence is
-      historical debris pre-dating that gate, not a live path — confirmed no more bare-numeric-id partitions can be
-      produced going forward. Source: `issues/sports_league_id_namespace_migration_2026_07_20.md`.
-- [x] ✅ **2026-07-25 (slot 7) — step-4 resolved: genuine-gain merged 2026-07-17, duplicate residual staged for human
-      purge — market-tick-data-service@75f226e8 (prior merge) + unified-trading-pm@2705cb4fd,@b5bf80d53 (this session's
-      execution + verification + correction).** [DATA] P0. **CREDENTIAL BLOCKER RESOLVED 2026-07-25**
-      (`deployment-service@3ba14ff` routes tarball uploads through ADC, not gsutil — re-verified end-to-end: full 5-repo
-      republish succeeded). The MDPS `odds_horizon_bucket` reprocess + `batch_footystats` copy+swap remain genuinely
-      un-executed (not a credential issue anymore, just not yet done) — pick up fresh via
-      `launch-mdps-sports-bucket-vm.sh`. Full detail:
-      `/plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md`. **League_id casing
-      migration — census→copy→reprocess→swap (4-step ordered sequence, one worker, execute in order — this is one
-      already-verified, ready-to-execute migration, not 4 independent jobs).** **Progress**: (a) found step (2)'s
-      manifest swap (raw `TRADES`/`batch_odds_api` shape) had silently reverted since its 2026-07-22 run (TOCTOU
-      consolidator race, closed by `unified-trading-library@14301571` on 2026-07-24 — 2 days after the swap ran).
-      Re-applied `manifest_swap_2026_07_22.py --apply-prod --confirm-prod-write` and verified STABLE across 5
-      consolidator cycles (~7.5 min) — the raw TRADES shape is now genuinely canonical, not just log-claimed. Full
-      detail: `/plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. (b)
-      **Coverage-registry refresh already satisfied** — ran `refresh_sports_bookmaker_league_coverage_2026_06_21.py`
-      (diff mode): "No drift vs committed coverage map"; directly confirmed the done-when criterion —
-      `is_bookmaker_league_covered("BETFAIR_EX_EU","EPL")` = `True`, `…("BETFAIR_EX_EU","PREMIER_LEAGUE")` = `False`.
-      **BLOCKED**: the remaining piece (MDPS `odds_horizon_bucket` reprocess, 109,312 objects, + `batch_footystats`
-      copy+swap, 16,970 objects) needs the sanctioned `launch-mdps-sports-bucket-vm.sh` VM launcher, which needs a fresh
-      code-tarball republish first (deployed tarballs predate the TOCTOU fix above, and the reprocess script's
-      `ManifestWriter` writes the canonical index directly — no per-VM-shard mode — so stale code would re-expose the
-      exact race just fixed). Tarball republish is blocked on a genuine `gsutil` credential failure on this host
-      (service-account federation token expired; human account needs interactive 2FA reauth) — confirmed
-      `gcloud storage`/`gcloud compute` work fine with ADC, only legacy `gsutil` is broken. Ping filed:
-      `ikenna_orchestrator/pings/slot_3.md` 2026-07-25 CREDENTIAL APPROVAL REQUEST. Full detail + dry-run validation of
-      the reprocess mechanism (clean on a sample day, no `--force` needed):
-      `/plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md`. Needs a human to
-      either run `gcloud auth login` interactively once, or refresh the service-account federation. **CASING CORRECTED
-      2026-07-25** (operator ruling — repoint to lower-case; executor hardcoded UPPER, needed a real code fix; see
-      `issues/sports_satellite_batch2_casing_direction_contradicts_k1k2_revert_2026_07_25.md`): shipped `mtds@fb51d86c`
-      — casing now lower-case, QG-green; dry-run baseline below remains valid. (1)
-      `migrate_sports_league_id_casing_2026_07_21.py --apply-prod` (no `--confirm-prod-write`, no `--index`) once, for
-      the live out-of-scope census + VM-guard + PLAN, using the now-corrected executor (`mtds@fb51d86c`) — expect
-      results consistent with the verified full-corpus dry-run baseline (266,408 objects / 34,228 units, 0 unknown raws,
-      0 unresolved league_ids). (2) `--apply-prod --confirm-prod-write --index scripts/.../raw_index.tsv` —
-      copies+CAS-verifies the raw `batch_odds_api/odds/trades` shape (~139,155 objects) to canonical paths
-      (`league_id=<CANON>/instrument_type=odds/data_type=trades/`), with the parquet's `league_id` CONTENT column
-      rewritten. COPY-ONLY: never deletes source objects; refuses while any `features-sports-sports-*` VM is
-      non-terminal. (3) THEN the deferred shapes (127,488 objects — `odds_horizon_bucket` 109,312 via MDPS
-      `reprocess_sports_odds.py`'s Step-7 procedure + `batch_footystats` 16,970 via the same casing-migration script
-      re-run/extended, using the already-verified classification map covering the full 267,614-object corpus) must be
-      handled before any bucket-wide delete or "complete" claim. (4) THEN the atomic manifest-swap (reuse
-      `deployment-service scripts/rebuild_sports_manifest.py::_clean_stale_league_entries` against
-      `_index/availability_index.parquet`), THEN MDPS reprocess of the processed surface, THEN the coverage-registry
-      refresh (`refresh_sports_bookmaker_league_coverage_2026_06_21.py` regenerating
-      `sports_bookmaker_league_coverage.json` — confirm exact owning repo at execution time). Snapshot/backup before
-      every write step; the whole sequence is designed to be restorable at every stage (per its own documented STOP
-      conditions) — halt and escalate if a stage's gate doesn't match expectations rather than proceeding. (repo:
-      market-tick-data-service `scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`;
-      market-data-processing-service `scripts/reprocess_sports_odds.py`; deployment-service
-      `scripts/rebuild_sports_manifest.py`; coverage-registry refresh script). **Done when**: all 4 steps complete in
-      order with each stage's own stated gate passing; post-swap `availability_index.parquet` shows zero
-      `league_id=<RAW>` rows for migrated shards with no consolidator double-count or row-count inflation; MDPS
-      processed surface regenerated under canonical partitions; `is_bookmaker_league_covered("BETFAIR_EX_EU","EPL")`
-      flips False→True after the coverage-registry refresh. Source:
-      `issues/sports_league_id_namespace_migration_2026_07_20.md`. — **Prep done 2026-07-25T02:42Z (slot 9), launch NOT
-      yet executed** — tarballs re-verified/re-fixed, TOCTOU fix confirmed included, mechanism dry-run-verified correct,
-      ready-to-execute command staged. Full detail + exact next step:
-      `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`. — **Step (3) MDPS `odds_horizon_bucket`
-      reprocess EXECUTED + VERIFIED 2026-07-25 (slot 7).** Re-verified tarball freshness (2 of 5 had drifted again in
-      the ~40min since the prep doc; republished), launched 4 sharded VMs
-      (`mdps-sports-bucket-20260725-{035949,040027,040053,040119}`, SPOT, `force` mode, confirmed clean start via SSH
-      each). All 4 completed: shard1 (2020-06-06→2021-12-31) 574/574 dates 0 failed; shard2 (2022-01-01→2023-06-30)
-      546/546 dates 0 failed; shard3 (2023-07-01→2024-12-31) 550/550 dates 0 failed; shard4 (2025-01-01→2026-07-25) 571
-      dates, 22 `attempted_failed` + 4 `LOSS_GUARD_BLOCKED` — investigated in full, all 26 are honest upstream gaps /
-      correct protective refusals, not script defects (18 known `ADAPTER_RETURNED_EMPTY_OUTPUT` pre-vetted in the prep
-      doc + 4 novel `RAW_ODDS_SHAPE_UNRECOGNIZED` dates confirmed via direct GCS read to have zero real odds data, only
-      `instrument_type=sport` meta-snapshots + 4 `LOSS_GUARD_BLOCKED` dates where re-deriving would have shrunk the
-      corpus, correctly refused). Total 166,751 shards / ~5.4M bucketed rows written. Manifest-verified STABLE across 2
-      consolidator-cycle-separated polls (~100s apart): `odds_horizon_bucket` = 408,815 rows / 130 distinct canonical
-      league_id values, identical both polls — no TOCTOU-style revert. Full detail + shard4 residual tracking (P2 retry
-      todo, does not block this checkbox): `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`.
-      **Step (4) `batch_footystats` copy+swap — CORRECTED 2026-07-25 (slot 7): this is NOT a casing-extension task, the
-      wording was stale.** Deterministic probe (writer-emission grep + manifest census, per BLK-b89f6ec3) found the
-      16,969-object population is not a footystats shape at all: 100% carries `source=ODDS_API`, mis-stamped
-      `pipeline_mode=batch_footystats` for what is really `batch_odds_api` data. This was ALREADY diagnosed AND largely
-      fixed by an archived investigation:
-      `plans/archive/issues/sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md` — the genuine-gain
-      199/1,815 days were merged into canonical `batch_odds_api` on 2026-07-17 (`market-tick-data-service@75f226e8`,
-      acceptance-tested against the real MDPS derive, 0 rows lost). Re-verified 2026-07-25 (BLK-8e3fdaff): the manifest
-      now carries ZERO rows for this population (already purged/pruned) but the raw GCS objects still exist as ORPHANS
-      for most sampled days; a fresh content-compare on `day=2022-06-15` reconfirms the archived doc's finding that the
-      remainder is a pure duplicate of already-canonical content (0 unique keys either side). **There is no remaining
-      copy+swap work — the copy already happened correctly.** What remains is the archived doc's own still-open,
-      human-gated PURGE of the now-redundant orphaned objects, staged (not executed) per the 5-part delete-safety proof:
-      `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md`. **This checkbox reflects
-      steps 1-4 as CORRECTLY resolved for all AO-executable work** — the remaining PURGE is human-only per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1 (prod-bucket delete hard stop), tracked in the
-      linked issue doc, not blocking. Full addendum on the original (now-superseded) footystats-shape spot-check:
-      `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`.
+      instruments-service@83b7952b. Root cause: `CanonicalLeague` never carried an `api_football_id` attribute, so the
+      2026-07-20 numeric-id-first precedence flip silently no-opped — every fixture kept resolving via the raw ambiguous
+      display name. Fixed at the root: added `api_football_id` to `CanonicalLeague`, populated from the raw API
+      response. 3 regression tests (numeric resolves correctly; 6 known ambiguous names disambiguate via numeric id;
+      unregistered league falls back honestly). Confirmed the write-universe gate (shipped 2026-06-24) already prevents
+      any unresolved value from reaching disk going forward. Source:
+      `issues/sports_league_id_namespace_migration_2026_07_20.md`.
+- [x] ✅ **League_id casing migration — steps 1-4 executed + verified; residual purge is human-only, not blocking.**
+      market-tick-data-service@{75f226e8,fb51d86c} + unified-trading-pm@{2705cb4fd,b5bf80d53}. **Casing corrected**
+      (operator ruling: lower-case, not the upper-case the executor originally shipped) and re-shipped clean. Along the
+      way: fixed a `gsutil`-credential blocker for tarball republish (`deployment-service@3ba14ff`, routes via ADC);
+      found + fixed a TOCTOU manifest-swap revert (`unified-trading-library@14301571`), re-applied and verified stable
+      across 5 consolidator cycles; confirmed the coverage-registry refresh has no drift
+      (`is_bookmaker_league_covered("BETFAIR_EX_EU","EPL")` = True as required). **Step 3 (MDPS `odds_horizon_bucket`
+      reprocess) EXECUTED + VERIFIED**: 4 sharded SPOT VMs, all completed cleanly — 166,751 shards / ~5.4M bucketed rows
+      written; manifest-verified stable across 2 consolidator cycles (408,815 rows / 130 distinct league_ids, no TOCTOU
+      revert). Shard4's 22 `attempted_failed` + 4 `LOSS_GUARD_BLOCKED` are honest upstream gaps, not defects (tracked,
+      non-blocking: `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`). **Step 4
+      (`batch_footystats` copy+swap) — CORRECTED: not a casing task.** The 16,969-object population was mis-stamped
+      `batch_odds_api` data, already merged to canonical on 2026-07-17 (`market-tick-data-service@75f226e8`) — no
+      copy+swap work remains. What's left is a human-gated orphan-object PURGE (5-part delete-safety proof, staged not
+      executed): `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md`. Full step detail +
+      dry-run baselines: `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`,
+      `issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. Source:
+      `issues/sports_league_id_namespace_migration_2026_07_20.md`.
 
 - **`sports_odds_feature_naming_canonicalization_2026_07_21.md`'s FSS↔ml-service↔strategy-service parity test** — gated
   on all 5 naming-migration todos above landing. Add as a new todo once confirmed shipped.
@@ -912,76 +745,16 @@ source: >-
 
 ## Progress Log
 
-- **2026-07-25 (slot 2, data_engineering) — "Curated-universe definition → backfill → residual drop" todo — step 1
-  substantially de-risked, NOT complete.** Full investigation (candidate-pool discovery from a pre-pruning backup
-  parquet, the `in_mvp_scope` architecture fix, the continental-majors slice shipped `unified-api-contracts@7b13196e`,
-  per-source-cap measurements, and the 2 near-miss error classes hit) moved to
-  `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md` to avoid this plan's line-cap growth — see
-  there for full detail; do not duplicate it here. Checkbox stays unchecked: steps 2-3 haven't started and step 1's
-  domestic-selection slice (145 countries) remains open, now decomposed into 11 confederation-batch todos in that issue
-  doc (backlog: 4 dispatched, 7 queued as of 2026-07-25T03:02Z). Released per main's BLK-7daa3e2a ruling
-  (correctly-parked research gap, not a stall) — `unified-trading-pm@7608a8ef3`.
-
-- **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
-  canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
-  implies before any investigation proceeded (see below for why that mattered). Full session:
-  - **Scope boundary clarified first**: this "bare/legacy dual-layout" work reads, on its surface, like the same
-    underlying action as the archived `sports_manifest_canonicalisation_2026_06_01.md`'s E3→E8 apply steps (superseded
-    into `sports_consolidated_closeout_2026_07_19.md`, which flags those as never having fired — gated on operator
-    sign-off + fleet drain + foundation gates, never given). The closeout doc separately carries an explicit **"DO NOT
-    EXECUTE, cross-reference only"** warning for the _legacy no-env bucket decommission_ (`instruments-store-sports` vs
-    `-prd-`, owned by `sports_legacy_bucket_cutover_2026_07_16.md`, `assigned_vm: NA` — never AO-dispatchable).
-    Confirmed these are DIFFERENT scopes: this todo is an intra-bucket path-LAYOUT cleanup (bare-path objects vs.
-    `league=`-partitioned objects, both inside the single canonical `instruments-store-sports-prd-*` bucket, per
-    `gcs_paths.py`'s `SportsPathLayout` enum) — not the whole-bucket decommission. The DO-NOT-EXECUTE boundary does not
-    cover this todo; the operator-sign-off gate does, and was obtained.
-  - **Real census, not an assumption**: got a working `.venv` (`scripts/setup.sh`, background — the interactive 2-min
-    timeout earlier was a tool-call limit, not a real failure) and ran
-    `instruments-service/scripts/migrate_sports_per_league.py --entity all --dry-run --workers 8` against
-    `instruments-store-sports-prd-central-element-323112` — covers `fixture_stats`/`fixture_events`/
-    `fixture_lineups`/`player_stats` (fixture-id join), `footystats_predictions`/`footystats_matches`
-    (canonical-fixture-id prefix), `injuries` (league_id column), `understat_xg` (league column): **all 8 entities, all
-    2322 scanned dates → `already_per_league=0`, `no_single_file=2322`, `migrated=0` — zero bare files found, zero
-    migration needed, for every single date.**
-  - **Extended coverage to the 7 `PER_DAY_PER_LEAGUE` entities the script doesn't handle** (`FIXTURES`,
-    `FIXTURES_SCHEDULE`, `FIXTURES_OUTCOMES`, `STANDINGS`, `TEAMS`, `ODDS`→`footystats_odds`,
-    `XG_SHOTS`→`understat_xg_shots`, `SFI_PROGRESSIVE_STATS`→`progressive_stats`) via a targeted, bounded spot-check (13
-    dates spanning 2018-01-01 → 2026-12-06 + `day=all`, direct `blob.exists()` point-checks — NOT a new whole-corpus
-    walk): **zero bare files found across all 13 dates × 7 entities, except ONE hit —
-    `day=all/entity=teams/teams.parquet`.** That single hit is the exact object another slot independently deep-dove the
-    same session (`sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`) and correctly parked as
-    `BLOCKED-OPERATOR-DECISION` under the sibling "Retention floor" todo below — it's the day=all
-    teams/venues-reference-data case explicitly called out as OUT OF SCOPE for this todo in the plan's own todo text
-    ("Distinguish from the by-design bare entities... which stay bare" — day=all is a distinct reference-snapshot
-    concern, not a per-date dual-layout defect). Confirmed this todo does not need to touch it.
-  - **Conclusion — all 15 `PER_DAY_PER_LEAGUE` entities checked, zero dual-layout instances found.** The condition this
-    todo describes ("per-league entities that have BOTH a per-league split AND bare files for older days") does not
-    currently exist in prod. Either it was already resolved by an earlier, unrelated cleanup between the source doc's
-    2026-06-24 authoring and now, or the original framing over-generalized from the day=all teams/venues case. Either
-    way, the "Done when" bar ("every ... entity ... canonicalised or deleted") is honestly satisfied — zero entities
-    meet the todo's own trigger condition, verified by a real census rather than assumed.
-  - No code shipped (nothing needed migrating). No snapshot/delete executed (nothing found to snapshot or delete).
-
-- **2026-07-25 (slot 7, data_engineering) — League_id casing migration, step (3) MDPS `odds_horizon_bucket` reprocess —
-  LAUNCHED, running.** Picked up from `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`'s
-  ready-to-execute recipe. Re-verified tarball freshness first (the prep doc's own claim was already 40min stale):
-  `market-tick-data-service` and `unified-api-contracts` tarballs had drifted from local HEAD again — republished via
-  `deployment-service/scripts/vm/create-code-tarballs.sh` (no flags, default CORE_REPOS covers UAC/UTL/MTDS/
-  deployment-service), re-verified all 5 repos byte-exact via `gcloud storage cat .../code/<tarball>.manifest.json` vs
-  local `git rev-parse HEAD` (not the launcher's own `lc_verify_tarball_freshness`, which reads via `gsutil` and is
-  still blind per the credential-blocker doc's residual gap — it printed false "MISSING" warnings on launch despite the
-  manual gcloud-storage check confirming all 5 fresh seconds earlier; this is a known gap, not a new defect). Launched
-  the 4-way sharded split per the launcher's own docstring example: `mdps-sports-bucket-20260725-035949`
-  (2020-06-06→2021-12-31), `-040027` (2022-01-01→2023-06-30), `-040053` (2023-07-01→2024-12-31), `-040119`
-  (2025-01-01→2026-07-25), all `mode=force`, SPOT. Confirmed clean start on all 4 via SSH (`ps aux` shows the
-  `reprocess_sports_odds.py` worker live + `/tmp/vm-exec-*.log` streaming `LOSS_GUARD_PASS`/bucketed-row lines, no
-  tracebacks) — no fire-and-forget. Throughput ~25-30 days/min per shard against 546-574 days/shard → each shard ETA
-  well under 1hr, matching the launcher's <1hr sharded target. Monitoring to completion (EXIT_STATUS + failure-
-  signature watch armed); once all 4 report `DEPLOYMENT_COMPLETED`, will poll `_index/availability_index.parquet`'s
-  `odds_horizon_bucket` league_id distribution across ≥2 consolidator cycles before flipping this todo, per
-  `sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`'s lesson (a prior manifest write on this exact
-  migration silently reverted due to a TOCTOU race — do not declare done from the VM's own completion log alone).
-  `batch_footystats` copy+swap (16,970 objects, separate step) not yet started.
+- **2026-07-25 — "Curated-universe definition → backfill → residual drop"**: step 1's domestic-selection slice (145
+  countries) decomposed into 11 confederation-batch todos, all now landed. Full investigation detail (not duplicated
+  here to protect this plan's line cap): `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md`.
+- **2026-07-25 — "Eliminate the bare/legacy dual-layout"**: verified via a real census (not assumption) across all 15
+  `PER_DAY_PER_LEAGUE` entities (2,322 dates + a 13-date/7-entity spot-check + `day=all`) — zero dual-layout instances
+  found; see the todo above for the result. Confirmed out of scope for the one `day=all/entity=teams` hit (that's the
+  separate "Retention floor" todo's concern).
+- **2026-07-25 (slot 7) — League_id casing migration, MDPS `odds_horizon_bucket` reprocess**: launched as a 4-way
+  sharded split (`mdps-sports-bucket-20260725-{035949,040027,040053,040119}`, SPOT), all completed cleanly — see the
+  casing-migration todo above for final numbers and manifest-stability verification.
 
 ## Reconciliation
 
