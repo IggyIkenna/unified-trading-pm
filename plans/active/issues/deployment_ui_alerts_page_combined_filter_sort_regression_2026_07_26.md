@@ -10,7 +10,7 @@ summary: >-
   surfaced: after applying the `kind=alert` filter + a date-range bound + a column sort together, the excluded `vm_down`
   row reappears. Filed rather than expanded into scope per this workspace's "pre-existing is not a triage criterion" +
   "do not absorb unplanned scope" rules.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -34,7 +34,7 @@ estimate_calibrated_ai_days: 0.12
 assigned_role: ui_developer
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: deployment-ui@f91217e
 locked_by:
 ---
 
@@ -102,12 +102,14 @@ filter's, and fix so sort composes ON TOP OF the already-filtered set. Do not we
 
 ## Todos
 
-- [ ] [UI] P2. Root-cause and fix the Alerts page combined kind-filter + date-range + column-sort regression:
+- [x] ✅ [UI] P2. Root-cause and fix the Alerts page combined kind-filter + date-range + column-sort regression:
       `npx playwright test --project=chromium tests/smoke/alerts-page.spec.ts -g "kind     filter, date range, and column sort compose correctly"`
       must pass — the `vm_down` row must stay excluded after a sort is applied on top of an active kind filter. Trace
       the filter/sort `useMemo` derivation chain in the Alerts page component (see
       `deployment_ui_alerts_page_rebuild_2026_07_20.md` for the original filter/sort design) rather than adjusting the
-      test's expectation. (repo: deployment-ui)
+      test's expectation. (repo: deployment-ui) — deployment-ui@f91217e. **Root cause is NOT a filter/sort clobbering
+      bug** — see Progress Log for the reproduction evidence that disproves this doc's own premise. Fixed by scoping the
+      test's assertion locator to `alert-timeline` (was page-wide `page.getByText(...)`).
 
 ## Progress Log
 
@@ -115,3 +117,31 @@ filter's, and fix so sort composes ON TOP OF the already-filtered set. Do not we
   deployment-ui smoke-failure todo. Confirmed reproducible (3/3 on `--repeat-each=3`), confirmed unrelated to the Daily
   Costs / mobile / nav fixes shipped in that todo (deployment-ui@2340c68). Not fixed here — out of the dispatched todo's
   named scope.
+- 2026-07-26 (slot 4, `ui_developer`): Root-caused. **The "Recommended decision" above's premise is falsified — there is
+  no filter/sort `useMemo` clobbering bug in `src/pages/Alerts.tsx`.** `sortedAlerts` correctly derives from
+  `filteredAlerts` (`Alerts.tsx:423-428`), which correctly derives from `data.alerts` filtered by every active filter
+  including `kindFilters` (`Alerts.tsx:410-421`). Verified by reproducing the exact test sequence with locator-scoped
+  counts instead of the test's unscoped `page.getByText(...)`:
+  - Immediately after `filter-kind-alert` + the date bound (**before any sort click**): page-wide count of the `vm_down`
+    text = 1, but a locator scoped to `getByTestId("alert-timeline")` = **0** and a locator scoped to
+    `getByTestId("alert-streams")` = 1. The Timeline (the filtered+sorted table) already correctly excludes the row with
+    zero sorting involved.
+  - After the Subject-column sort click: Timeline-scoped count stays **0**; Streams-scoped count stays 1; page-wide
+    count stays 1. Sorting changes nothing about which component contains the match.
+  - Conclusion: the single `page.getByText` match throughout is the **Streams summary strip**
+    (`data-testid="alert-streams"`), which is a documented, intentional exception — `Alerts.tsx` lines 540-544: "Streams
+    stays a visible SUMMARY (Layout/'proper view' todo, operator decision A, 2026-07-21)... a compact
+    single-line-per-stream strip" — it renders `data.streams` (current worst-state per (repo, workflow)) directly, with
+    NO filter applied, by design. The `deployment-service/vm-watchdog` stream's only ever-seen state IS the `vm_down`
+    message (see `mockRepoCiAlerts()` in `src/lib/mock-api.ts` — that (repo, workflow) pair has exactly one mock entry),
+    so that stream's current-state text is present on `/alerts` unconditionally, with or without any Timeline
+    filter/sort — even on initial page load with zero filters active (verified separately: page-wide count = 2 on load —
+    one in Streams, one in the initially-unfiltered Timeline).
+  - Fix: the test's own docstring says it exists to "prov[e] the independent `useMemo` layers (filter -> sort) compose
+    correctly" — i.e. it is specifically about the Timeline, not the page as a whole. Scoped the failing assertion to
+    `page.getByTestId("alert-timeline").getByText(...)`, mirroring the existing scoping convention already used at that
+    same spec file's line 147 for the same testid. This is not "weakening" the assertion per the Recommended Decision's
+    instruction — the excluded-row expectation is unchanged and unweakened; only the locator's scope was corrected to
+    match what the test is actually meant to verify, removing a false-positive caused by an unrelated,
+    by-design-unfiltered sibling component. Verified green: single run + `--repeat-each=3` (69/69 passed) +
+    `quality-gates.sh` full green (sentinel `bb5601d`). Shipped deployment-ui@f91217e.
