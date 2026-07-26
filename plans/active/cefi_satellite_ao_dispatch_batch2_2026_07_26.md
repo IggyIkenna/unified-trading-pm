@@ -449,17 +449,33 @@ drift_direction: advance-code
       tracked with fuller call-site detail in the sibling
       `uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`, which this todo supersedes/closes as its
       actionable execution — mark both docs resolved on completion).
-- [ ] [SCRIPT] P2. **Fix `rotate-exchange-keys/main.py`'s venue key-pattern list to match live GCP Secret Manager**,
-      using the per-venue match/renamed-target/no-secret-exists evidence table already appended to the issue doc's
-      evidence trail by the batch1 read-only verification todo (`central-element-323112`, ~29 entries covering binance,
-      deribit, okx, hyperliquid, polymarket, coinbase, kraken, bitfinex, bitget, upbit, bybit, betfair, kalshi). For
-      every entry classified `renamed-target`, update the literal secret name(s) in `main.py` to the verified real GCP
-      name per the two-axis model (`/codex/05-infrastructure/secret-manager-naming.md`); for entries classified
-      `no-secret-exists`, leave a code comment noting the gap rather than inventing a name. Do not touch entries already
-      classified `match`. Repo: deployment-service. **Done when**: `main.py`'s venue list has zero remaining mismatches
-      against the evidence table (diff-verifiable), QG green, and the issue doc's 3rd checkbox is flipped `[x]` with the
-      commit cited; if this closes the doc's last open todo, run the standard archival ritual. Source:
-      `issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`.
+- [x] ✅ [SCRIPT] P2. **DONE (2026-07-26, slot-4, `data_engineering`) — premise partially stale, handled per this plan's
+      own established precedent.** Fix `rotate-exchange-keys/main.py`'s venue key-pattern list to match live GCP Secret
+      Manager, using the per-venue match/renamed-target/no-secret-exists evidence table already appended to the issue
+      doc's evidence trail by the batch1 read-only verification todo (`central-element-323112`, ~29 entries covering
+      binance, deribit, okx, hyperliquid, polymarket, coinbase, kraken, bitfinex, bitget, upbit, bybit, betfair,
+      kalshi). For every entry classified `renamed-target`, update the literal secret name(s) in `main.py` to the
+      verified real GCP name per the two-axis model (`/codex/05-infrastructure/secret-manager-naming.md`); for entries
+      classified `no-secret-exists`, leave a code comment noting the gap rather than inventing a name. Do not touch
+      entries already classified `match`. Repo: deployment-service. **The premise was stale**: batch1's
+      `[SCRIPT]     P1` verification todo (that was meant to produce this evidence table) was still unchecked/undone at
+      dispatch time — same class of stale cross-plan prerequisite this plan already handled once (the ASTER-regression
+      todo ran its own bounded read-only prereq check rather than block). Live `gcloud secrets list`/`describe` both
+      returned `PERMISSION_DENIED` for the only credential in this worktree
+      (`unified-trading-sa@central-element-323112.iam.gserviceaccount.com`), so did the classification via two
+      cross-referenced non-live sources instead: `codex/05-infrastructure/secret-manager-naming.md` (dated 2026-07-23,
+      itself "verified against live GCP inventory") + direct code grep for the literal secret name each service actually
+      resolves at runtime (several call sites carry their own "verified live 2026-07-23" comments). Result: 10 of 15
+      venues confidently classified and fixed (binance/deribit renamed to read/trade/write split;
+      kalshi/hyperliquid/polymarket/aster/copper renamed to their real names; okx annotated no-secret-exists;
+      betfair-session-token confirmed match via code evidence, overriding the codex doc's incomplete Betfair section). 5
+      venues (coinbase/kraken/bitfinex/bitget/upbit) remain genuinely **BLOCKED-CREDENTIALS** — left untouched with a
+      code comment, same unresolved state as the original 2026-07-23 finding. `deployment-service@6eed099`; updated
+      `tests/unit/test_rotate_exchange_keys.py` (6 fixtures off the now-dead `binance-api-key` literal, 2 new regression
+      tests); `quality-gates.sh` green (sentinel-verified), shipped via quickmerge. Issue doc's 3rd checkbox flipped
+      `[x]` with full evidence table in its Progress Log — did **not** run the archival ritual, since the doc's other 2
+      todos (live-verify the 5 blocked venues; confirm invocation schedule/trigger) are still genuinely open, not closed
+      by this pass. Source: `issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`.
 - [x] ✅ [CODE] P1. **Log the Tardis HTTP-400 error code, then register Tardis codes 140/300 in UAC
       `classify_venue_error`.** Currently `tardis_csv_transport.py:523` logs only `"Tardis HTTP %s error"` with no code,
       so `code=300` (invalid-symbol) and `code=140` (date-not-available) are indistinguishable in logs even though
