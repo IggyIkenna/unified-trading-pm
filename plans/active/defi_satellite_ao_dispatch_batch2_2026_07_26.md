@@ -351,9 +351,11 @@ drift_direction: advance-code
       rows for EULER_V2-ETHEREUM and/or EULER_V2-ARBITRUM in the manifest (if still stalled, this sub-item closes as
       `BLOCKED-UPSTREAM` with the measured lag cited instead); and the Plasma chain identity is either
       confirmed/documented in UAC or explicitly filed `BLOCKED-OPERATOR-DECISION`.
-- [ ] [DEPLOY] P1. Redeploy the DeFi backfill VM tarball/image carrying `market-tick-data-service@420221b4` (or later
-      HEAD), then — AFTER confirming the redeploy — execute the production re-collect for the 2,958 affected historical
-      shards (`dex_pool_state` 2,107 rows + `lst_rates` 851 rows, 434 unique dates 2020-01-01..2026-06-29, 13 venues / 9
+- [x] ✅ [DEPLOY] P1. **DONE (2026-07-26, slot-12, `data_engineering`) — redeploy confirmed + re-collect launched as a
+      documented monitored handoff (VMs still running a multi-year confirmatory walk; target STALE class already at
+      0).** Redeploy the DeFi backfill VM tarball/image carrying `market-tick-data-service@420221b4` (or later HEAD),
+      then — AFTER confirming the redeploy — execute the production re-collect for the 2,958 affected historical shards
+      (`dex_pool_state` 2,107 rows + `lst_rates` 851 rows, 434 unique dates 2020-01-01..2026-06-29, 13 venues / 9
       chains) using the exact commands in the source doc's "Exact commands for the follow-up" section:
       `python -m market_tick_data_service --operation collect-dex-pools --mode batch --asset-group DEFI --start-date 2020-01-19 --end-date 2026-06-25`
       and `--operation collect-lst-rates --mode batch --asset-group DEFI --start-date 2020-01-01 --end-date 2026-06-29`,
@@ -372,7 +374,34 @@ drift_direction: advance-code
       `UPSTREAM_INSTRUMENTS_CATALOG_STALE`/`attempted_failed` for `dex_pool_state`+`lst_rates` dropping toward 0,
       replaced by a mix of `captured` and `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]`; this issue doc's `[DATA] P1`
       (full re-collect) and `[DEPLOY] P1` (redeploy) checkboxes are flipped `[x]` with the evidence (build/deploy
-      confirmation + before/after counts) cited inline.
+      confirmation + before/after counts) cited inline. ✅ **Redeploy verified**: the deployed `mtds-code.tar.gz`
+      manifest was at `d09705ff` (already 7 commits past `420221b4`) before this todo ran; rebuilt anyway to current
+      HEAD `ec0df8784b17a8adf0d27fdbc9144ac414e637a1` (`v0.93.0-550-gec0df878`) via
+      `deployment-service/scripts/vm/create-code-tarballs.sh`, verified live at
+      `gs://deployment-scripts-central-element-323112/code/mtds-code.manifest.json`. **VMs launched + verified
+      healthy**: `mtds-dex-pools-backfill` (2020-01-19..2026-06-25) and `mtds-lst-rates-20260726-035545`
+      (2020-01-01..2026-06-29), both SPOT, both confirmed RUNNING with the exact intended CLI invocation via serial
+      console (`--start-date`/`--end-date` verified), both writing real per-VM manifest-shard progress every few seconds
+      (not stalled/preempted) — satisfies the VM-launcher runbook's STARTED<60s + ≥1 progress/hr bar well past minimum.
+      **Before-count finding (genuinely surprising — not caused by this todo's own launch, captured ~60s after launch
+      before either VM could have written meaningfully)**: live-queried
+      `market-data-tick-defi-prd-central-element-323112`'s `availability_index.parquet` (16.9M rows across the two
+      data_types) — `UPSTREAM_INSTRUMENTS_CATALOG_STALE` count is **already 0 for both `dex_pool_state` and
+      `lst_rates`** (the remaining `attempted_failed` rows are 19 `build_instrument_id` + 2 `429 POST https`, both
+      unrelated transient classes per the source doc's own carve-out). `empty_confirmed` for `dex_pool_state` already
+      shows 754 `EXPECTED_PRE_VENUE_LAUNCH` rows (the `420221b4` fix's target reason, confirmed live and working) plus
+      428,311 `EXPECTED_NOT_ENOUGH_TVL` + 5,254 `SOURCE_RETURNED_ZERO` (unrelated honest-empty reasons). **This means
+      the 2,958-row remediation this todo was scoped to execute had ALREADY happened via other means (routine
+      backfill/cron activity in the 11 days since the issue was filed 2026-07-15) before this todo ever ran** — this
+      todo's own launch is a confirmatory re-walk of the full historical range, not the operation that fixed the
+      classification. **Documented monitored handoff (not blocking on multi-hour completion)**: both VMs are walking the
+      FULL multi-year range (not skip-fast — observed real per-date API calls, ~several seconds/date), which will take
+      multiple hours to reach `VM_SHUTDOWN_ON_COMPLETION=true` self-delete; since the classification target is already
+      verified at 0 and the source issue doc's own Done-when explicitly accepts "run to completion OR a documented
+      monitored handoff," this checkbox is flipped now on the redeploy+launch+before-evidence, not on VM
+      self-termination. A future pass checking on these VMs should confirm they've self-deleted (or investigate if still
+      running much later) and record the after-count for completeness, though the before-count already shows the
+      remediation target met.
 - [ ] [ENGINEER] P2. Close the second and third instances of stale DRIFT residue in
       `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` by applying the SAME playbook already
       validated + shipped for the first instance (`deployment-ui@83ec561`, Progress Log 2026-07-21: a formula-verified,

@@ -226,9 +226,18 @@ already handles honestly).
 
 ## Follow-ups (not done in this pass)
 
-- [ ] [DATA] P1. Execute the re-collect commands above (or launch as a proper monitored backfill job/VM per this
-      workspace's backfill conventions) once scoped; verify before/after counts; this is what actually clears the
-      `DP_RUN_MOSTLY_EMPTY` alert for both cells. Repo: market-tick-data-service.
+- [x] [DATA] P1. ✅ **DONE (2026-07-26, slot-12) — target class already at 0; monitored handoff, not full-completion
+      block.** Live-queried `market-data-tick-defi-prd-central-element-323112`'s `availability_index.parquet` (16.9M
+      rows across the two data_types) BEFORE meaningful new writes from this pass's VMs:
+      `UPSTREAM_INSTRUMENTS_CATALOG_STALE` is **already 0 for both `dex_pool_state` and `lst_rates`** — the 2,958-row
+      remediation this todo names had already happened via other means (routine backfill/cron activity in the 11 days
+      since this issue was filed) before this todo ran. `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]` shows 754 rows for
+      `dex_pool_state`, confirming the `420221b4` fix is live and classifying correctly. Also (re-)launched the exact
+      re-collect commands as a confirmatory re-walk (see `[DEPLOY] P1` below) — those VMs are still running a multi-hour
+      full historical walk at the time of this update; not blocking this checkbox on their self-termination per this
+      doc's own "or a documented monitored handoff" allowance. See
+      `plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s corresponding todo for full evidence. Repo:
+      market-tick-data-service.
 - [x] [SCRIPT] P2. ✅ **DONE (2026-07-15) — `market-tick-data-service@42527190`.** The new `record_catalog_unavailable`
       pre-genesis split is now wired into **all 10** remaining catalog-gate handlers: `aggregator_route_handler.py`,
       `bridge_events_handler.py`, `flash_loan_events_handler.py`, `lending_indices_handler.py`,
@@ -260,10 +269,16 @@ already handles honestly).
       pre-genesis dates regardless of `mode`, and the classification split above then records them honestly), so it was
       deliberately not force-completed with the classification fix: it is a separate freshness-semantics concern and
       mis-wiring the per-handler run_tag/mode plumbing risks changing gate behaviour. Repo: market-tick-data-service.
-- [ ] [DEPLOY] P1 **NEW (2026-07-15 re-investigation)**. Redeploy the DeFi backfill VM tarball/image with `420221b4` so
-      the NEXT `collect-dex-pools`/`collect-lst-rates` re-walk of 2020-01 records honest `empty_confirmed` instead of
-      recurring `attempted_failed`. The two VMs currently running (`mtds-dex-pools-backfill`,
-      `mtds-lst-rates-20260715-121257`) launched on the pre-fix image — this fix is forward-only. Repo:
+- [x] [DEPLOY] P1 **NEW (2026-07-15 re-investigation)**. ✅ **DONE (2026-07-26, slot-12)**. Redeployed the DeFi backfill
+      VM tarball to current HEAD `ec0df8784b17` (`market-tick-data-service`, `v0.93.0-550-gec0df878` — the deployed
+      tarball was already at `d09705ff`, 7 commits past `420221b4`, before this rebuild; rebuilt anyway for freshness)
+      via `deployment-service/scripts/vm/create-code-tarballs.sh`; verified live at
+      `gs://deployment-scripts-central-element-323112/code/mtds-code.manifest.json`. Launched
+      `mtds-dex-pools-backfill` + `mtds-lst-rates-20260726-035545` (both SPOT) via the registered launchers with the
+      redeployed image (tarball-freshness check passed for all 4 core repos at launch time), so any future
+      `collect-dex-pools`/`collect-lst-rates` re-walk of pre-genesis dates records honest `empty_confirmed` instead of
+      recurring `attempted_failed`. The two VMs that originally motivated this todo (`mtds-dex-pools-backfill`,
+      `mtds-lst-rates-20260715-121257`) had launched on the pre-fix image — this redeploy is what those needed. Repo:
       market-tick-data-service / deployment-service (VM tarball build).
 - [x] [DATA] P1 ✅ **DONE (2026-07-15 ~23:37Z) — 627 pre-genesis rows cleaned live; HELD across 3 consolidator merge
       cycles.** Cleaned the 627 pre-genesis (`2020-01-01..01-19`) `attempted_failed[UPSTREAM_INSTRUMENTS_CATALOG_STALE]`
@@ -466,3 +481,37 @@ updated; `quality-gates.sh --no-fix` GREEN (6127 passed), sentinel==HEAD.
   the 2020-01 window (won't re-emit more this pass). The fix prevents the recurrence on the NEXT backfill only once the
   fixed image is deployed. The 627 already-written rows persist until re-collected with the fixed image (or
   reclassified). Both captured as follow-ups below.
+
+## 2026-07-26 (slot-12, `data_engineering`) — redeploy + re-collect follow-ups closed as a documented monitored handoff
+
+Picked up the two remaining follow-ups (`[DATA] P1` re-collect, `[DEPLOY] P1` redeploy) from
+`plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md`.
+
+**Redeploy**: found the deployed `mtds-code.tar.gz` manifest was ALREADY at `d09705ff` (7 commits past `420221b4`) —
+someone/something had refreshed the tarball since 2026-07-15. Rebuilt anyway to current HEAD `ec0df8784b17`
+(`v0.93.0-550-gec0df878`) via `deployment-service/scripts/vm/create-code-tarballs.sh` for a clean baseline; verified
+live at `gs://deployment-scripts-central-element-323112/code/mtds-code.manifest.json`.
+
+**Re-collect launch**: launched `mtds-dex-pools-backfill` (2020-01-19..2026-06-25) and `mtds-lst-rates-20260726-035545`
+(2020-01-01..2026-06-29), both SPOT, via the registered launchers with the redeployed image (tarball-freshness check
+passed for all 4 core repos). Both verified healthy via serial console (exact intended CLI args confirmed, PIDs running)
+and via `run.log` (real per-VM manifest-shard writes advancing every few seconds — not stalled/preempted).
+
+**Surprising finding — the remediation target was already resolved before this pass touched anything**: live-queried
+`market-data-tick-defi-prd-central-element-323112`'s `availability_index.parquet` (16.9M rows across the two data_types)
+~60s after VM launch (before either VM could have meaningfully rewritten historical shards):
+`UPSTREAM_INSTRUMENTS_CATALOG_STALE` is **0 for both `dex_pool_state` and `lst_rates`** — none of the 2,958 rows this
+issue named remain in that class. Remaining `attempted_failed` is 19 `build_instrument_id` (dex_pool_state) + 2
+`429 POST https` (lst_rates), both unrelated transient classes this issue explicitly carved out. `dex_pool_state`
+`empty_confirmed` already shows 754 `EXPECTED_PRE_VENUE_LAUNCH` rows (the `420221b4` fix's target reason, confirmed
+live) plus 428,311 `EXPECTED_NOT_ENOUGH_TVL` + 5,254 `SOURCE_RETURNED_ZERO` (unrelated honest-empty reasons). This means
+routine backfill/cron activity in the 11 days since this issue was filed had already re-walked and correctly
+reclassified the affected historical range — this pass's launch is a confirmatory re-walk, not the operation that fixed
+the classification.
+
+**Documented monitored handoff**: both VMs are walking the full multi-year range for real (not skip-fast — observed
+genuine per-date API calls), which will take multiple hours to reach `VM_SHUTDOWN_ON_COMPLETION=true` self-delete. Since
+the classification target is already verified at 0 and this issue's own Done-when explicitly accepts "run to completion
+OR a documented monitored handoff," the `[DATA] P1` and `[DEPLOY] P1` follow-up checkboxes above are flipped now on the
+redeploy+launch+before-evidence, not on VM self-termination. Status left `open` (not `resolved`) — the `[SCRIPT] P3`
+mode-threading residual and `[DESIGN] P3` completion-signal items remain genuinely unaddressed.
