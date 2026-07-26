@@ -80,7 +80,7 @@
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.72.0",
     "unified-trading-library": "0.57.0",
-    "unified-trading-pm": "1.2.608",
+    "unified-trading-pm": "1.2.609",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
@@ -2005,7 +2005,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": "SIT failed — open for fixes",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2185,8 +2185,13 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.57.1.dev2+g390e3a01c",
-      "published_at": "2026-07-25T23:32:04Z",
+      "version": "0.57.1.dev3+g7768355cc",
+      "published_at": "2026-07-26T01:02:41Z",
+      "registry": "artifact-registry"
+    },
+    "unified-api-contracts": {
+      "version": "0.71.1.dev153+gcee7f7a7d",
+      "published_at": "2026-07-26T01:06:26Z",
       "registry": "artifact-registry"
     }
   }
