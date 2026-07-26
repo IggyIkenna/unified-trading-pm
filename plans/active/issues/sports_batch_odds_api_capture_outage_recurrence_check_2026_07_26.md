@@ -72,6 +72,54 @@ source:
 
 # batch_odds_api capture outage recurrence check — live bug found + fixed, backfill decision needed
 
+> # 🟡 CORRECTED IN PART 2026-07-26 (same session, follow-up task) — the § (b) DENSITY MEASUREMENT checked the WRONG
+>
+> > BUCKET for the most recent week; the CODE BUG + FIX below are UNCHANGED and still correct.
+>
+> While working the follow-up plan item on the same pipeline
+> (`sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md` todos 6/7/8), discovered that sports'
+> canonical availability MANIFEST is deliberately routed to `instruments-store-sports-prd`, not
+> `market-data-tick-sports-prd` (the 2026-06-07 sports-manifest-canonicalisation decision, code-enforced since
+> 2026-07-13 — see `market_tick_data_service/engine/orchestrator/_manifest_bucket.py::_resolve_manifest_bucket`). **§
+> (b)'s 90-day density table below reads `market-data-tick-sports-prd`, which is the architecturally non-authoritative
+> bucket for sports manifest since 2026-07-13** — it correctly shows near-zero because that IS the deliberate, expected
+> post-fix state, not evidence of a live capture blackout.
+>
+> **Re-checked against the correct bucket (`instruments-store-sports-prd`)**:
+>
+> - The 2026-06-27…2026-07-15 total gap (0 rows, confirmed in BOTH buckets) **is real** — independently corroborated by
+>   `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`, which found NO active scheduler/VM for
+>   sports odds capture as of 2026-07-23 (a genuine dormancy, root-caused separately, not this doc's future-date-guard
+>   bug).
+> - **2026-07-21 through 2026-07-26 (today) is NOT a blackout** — the correct bucket shows real, growing activity:
+>   captured rows 42 / 84 / 40 / 84 / 505 / 837 for 07-21..07-26 respectively (plus large `attempted_failed` /
+>   `empty_confirmed` counts from 07-23 onward — the pipeline is clearly running and evaluating real fixtures, not
+>   silent). Direct GCS listing confirms real parquet objects exist for every one of these dates.
+> - **The actual defect this bug produces, precisely stated**: each day's manifest rows + GCS objects are written in a
+>   SINGLE BATCH ~24-25h **after** the fixture date, just after UTC midnight of date+1 (measured `written_at`:
+>   `date=2026-07-21` written 2026-07-22T00:57Z; `date=2026-07-22` written 2026-07-23T01:02Z; `date=2026-07-23` written
+>   2026-07-24T00:53Z — a clean, consistent T+1 pattern, exactly the fingerprint of the future-date guard rejecting the
+>   date all day then clearing at midnight). **The real loss is NOT total data loss — it's the entire pre-match HORIZON
+>   GRID (T-24h, T-12h, T-6h, T-4h, T-2h, T-1h, T-10m, T-0) collapsing into one T+1-day-late historical re-fetch**,
+>   destroying the odds-TRAJECTORY signal (CLV, drift, steam-move features) the adapter's own docstring says the 8-point
+>   grid exists to capture, even though each day's data eventually arrives.
+> - **The fix (`market-tick-data-service@410d7569`) appears to have ALREADY reached production** — `date=2026-07-26`
+>   (today) has manifest rows `written_at` **2026-07-26T01:17Z, same-day**, not T+1 — the first same-day (non-delayed)
+>   write observed in this investigation, landing ~25 minutes after the fix was pushed to `live-defi-rollout` (00:52Z).
+>   This is a strong but INDIRECT signal (inferred from timing, not a confirmed image-digest check) that an auto-deploy
+>   pipeline picked up the fix quickly. Operator should still independently confirm via
+>   `gcloud run jobs describe uts-prod-market-tick-data-service-fast-t1-recon` image digest / build history — this
+>   observation is a "very likely already fixed" not a "confirmed fixed."
+>
+> **Revised backfill-decision framing for the open operator item**: the ~1-month "gap" is NOT one undifferentiated
+> blackout. Two distinct sub-questions: (1) the 2026-06-27…2026-07-15 true dormancy (~19 days, genuinely zero data,
+> cause separate from this doc — see the linked scheduling-status doc) — a real backfill candidate if it matters for
+> strategy training; (2) the 2026-07-16…2026-07-25 window, where daily coverage DOES exist but only as a single
+> late/compressed snapshot instead of the intended 8-point pre-match horizon grid — recovering the LOST GRANULARITY (not
+> lost days) would need historical re-fetches at the correct T-minus offsets, which the Odds-API historical endpoint can
+> still serve since it takes any past timestamp. Both are now operator credits/priority calls, not worker ones, per the
+> original disposition — this correction sharpens what's actually being decided.
+
 ## What I found
 
 **Task**: determine whether the canonical `batch_odds_api` sports capture pipeline is still susceptible to the confirmed
@@ -215,3 +263,19 @@ documented `"Sports/Prediction: immediate. DeFi: immediate"` as the intended des
 shipped (`market-tick-data-service@410d7569`, QG green, 7 new tests). Checked Prediction (not affected); DeFi check
 blocked by an unrelated stale-manifest-consolidator condition on that bucket (flagged as a follow-up, not chased further
 this session). Filed this issue doc + 3 follow-up todos; notifying operator now per the big-finding trigger.
+
+**2026-07-26 (later, same session) — CORRECTION while working the follow-up plan item on the same pipeline**
+(`sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md` todos 6/7/8). Discovered § (b)'s density table
+read `market-data-tick-sports-prd`, which has been the architecturally non-authoritative manifest bucket for sports
+since 2026-07-13 (`_resolve_manifest_bucket()` deliberately routes sports manifest to `instruments-store-sports-prd` — a
+documented 2026-06-07 decision, unrelated to this doc's bug). Re-checked against the correct bucket: the
+2026-06-27…2026-07-15 dormancy is real (independently corroborated); 2026-07-21…2026-07-26 is NOT a blackout — real,
+growing capture activity exists, but each day lands ~24-25h late in a single T+1 batch (measured via manifest
+`written_at`), consistent with the future-date guard rejecting the date all day and clearing at midnight — collapsing
+the intended 8-point pre-match horizon grid into one late historical re-fetch, not erasing the day's coverage entirely.
+`date=2026-07-26` (today) shows a same-day (non-delayed) write at 01:17Z, ~25 min after the fix shipped — a strong but
+indirect signal the fix already reached production (operator should still confirm via image digest, not just infer from
+timing). Added a correction banner + this log entry; did not retract the core finding (the future-date guard bug and its
+fix remain correct and necessary) — only the severity/framing of § (b)'s density argument for the most recent week.
+Backfill decision reframed into two distinct sub-questions (true 06-27…07-15 dormancy vs 07-16…07-25
+lost-granularity-not-lost-days) for the operator.
