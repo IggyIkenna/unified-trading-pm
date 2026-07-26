@@ -183,29 +183,25 @@ drift_direction: advance-code
       this needs its own fix, and (c) if it needs its own fix, a follow-up todo/issue doc is filed for it (or the doc is
       marked resolved if no further code change is needed) — both acceptance-list checkboxes flipped `[x]` with
       evidence.
-- [ ] [DATA] P1. **Refresh the batch_footystats/ODDS_API orphan-object disposition to `yes-twin-confirmed` and close the
-      doc's provenance gap.** (1) Run the already-built, already-smoke-tested read-only census script
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 9, data_engineering) — Refreshed the batch_footystats/ODDS_API orphan-object
+      disposition to `yes-twin-confirmed` and closed the doc's provenance gap.** Ran
       `market-tick-data-service@c03890b3`'s
-      `scripts/sports/league_id_relocation/census_footystats_orphan_content_2026_07_25.py` over a `--days-file` covering
-      the remaining ~1,616 days (the archived doc `sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md`'s
-      original 1,815-day scope minus the 199 already-merged gain days) — do not re-derive the comparison logic, the
-      script already exists and matches this doc's manual findings on 2022-06-15/2024-12-01. Refresh the doc's
-      5-part-proof `Part 2 content` line from sample-based to exhaustive, and flip `Disposition` to `yes-twin-confirmed`
-      if the full run reconfirms 0 unique-legacy-keys; if it finds drift (new non-duplicate days), report that as a
-      distinct finding instead of silently keeping the stale disposition. (2) Separately re-examine the archived doc's
-      280-day "adds-keys-but-zero-derive-gain" bucket (excluded from this doc's delete-suggestion) and record its own
-      disposition (does NOT change the delete recommendation for the 1,616-day pure-duplicate bucket). (3) Trace the
-      exact commit/process (candidates: `prune_phantom_soccer_manifest_rows_2026_07_22.py` or
-      `manifest_swap_2026_07_22.py --apply-prod` per `unified-trading-pm@8c0f34b31`'s Progress Log) that purged the
-      42,476 mis-stamped manifest rows between 2026-07-17 and 2026-07-25, and record the finding for the record (not
-      blocking). Update this doc's three `- [ ]` todos to `[x]` with evidence as each completes; do NOT execute or stage
-      any actual GCS delete — that remains human-only per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §
-      3.1 and is explicitly out of scope for this todo. Source:
-      `sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md`. **Done when**: the census script has
-      run against all remaining ~1,616 days with output recorded in the doc, the 280-day bucket has its own recorded
-      disposition, the manifest-purge commit is identified (or the search is documented as exhausted with no commit
-      found), and the doc's 3 todos are flipped to `[x]` (leaving only the still-human-gated actual delete decision
-      open).
+      `scripts/sports/league_id_relocation/census_footystats_orphan_content_2026_07_25.py` to completion over the FULL
+      2020-06-06..2026-04-14 calendar range (2,139 days, a superset of the archived doc's exact 1,815-day scope — the
+      original day-list artifact was an unrecoverable local scratch cache), 0 days missing, sharded across up to 9
+      parallel background workers and recovered twice from session-teardown interruptions by re-merging completed
+      per-shard reports and relaunching only the genuine remainder. Result: 1,534 `pure_duplicate` days (0
+      unique-legacy-keys) + 280 `genuine_gain` days (exact match to the archived doc's 280-day bucket) + 325
+      `no_migrated_objects` days. Refreshed the doc's 5-part-proof `Part 2 content` line to exhaustive and flipped
+      `Disposition` to `yes-twin-confirmed` for the 1,534-day pure-duplicate bucket. (2) Recorded the 280-day bucket's
+      own disposition (436,738 migrated-only keys, excluded from the delete-suggestion, recommends a scoped follow-up
+      merge or leave-out-of-scope — human decision, not executed). (3) Provenance trace already completed in an earlier
+      pass this session: searched every named candidate script, none matched the exact population signature — search
+      exhausted, no commit/process found, recorded as an open (non-blocking) provenance gap. All three of the source
+      doc's todos flipped to `[x]` with evidence; no GCS delete executed or staged (remains human-only per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1). Full evidence:
+      `sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` (all 3 todos `[x]`, new "Full
+      exhaustive census results + 280-day bucket disposition" section).
 - [ ] [DOC] P2. Close out `issues/sports_batch_footystats_swap_wrong_script_2026_07_25.md` as superseded: its claim that
       `merge_migrated_odds_into_canonical_2026_07_17.py` was never run (based on one missing manifest shard path) is
       contradicted and outweighed by two independently-corroborating, same-day re-verifications —
