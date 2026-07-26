@@ -316,7 +316,7 @@ This needs cross-actor coordination, not unilateral VM deletion:
       default, and the key stays oversubscribed (measured earlier: 153 false `attempted_failed` rows in ~30min).
 
 **Update 2026-07-26**: whoever/whatever relaunches this fleet, it is now MVP-scoped by construction — see
-`sports_enrichment_mvp_scope_leak_2026_07_26.md` (shipped `unified-api-contracts@f674033f` +
+`/plans/archive/issues/sports_enrichment_mvp_scope_leak_2026_07_26.md` (shipped `unified-api-contracts@f674033f` +
 `instruments-service@b00e4433`). The fleet's 4 entities (FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS) can
 no longer fan out past the 96-league MVP set even if URDI's fixture_ids span the wider 383-league curated universe. Does
 NOT resolve the ownership/control-conflict question above — only bounds its blast radius.
@@ -605,3 +605,22 @@ listing, not per-league re-walks), snapshots each parquet to `*.pre_round_backfi
 **Still partial, stated not hidden**: already-running VMs keep the budget they computed at their own launch, so the key
 stays oversubscribed until they drain. Launch-time division cannot fix a fleet that grows after launch — the remaining
 fix is runtime re-division / leasing shares from a central budget (§ M todo).
+
+## O. Carried from `sports_enrichment_mvp_scope_leak_2026_07_26.md` (archived 2026-07-26) — honest-absence denominator still wrong for MVP-scoped per-fixture enrichment
+
+That issue's own per-fixture-enrichment MVP-scope leak was fixed and archived (`unified-api-contracts@f674033f`,
+`instruments-service@b00e4433`), but it deliberately deferred one narrower, riskier sub-concern rather than bundle it
+into the same fix — carried forward here so it isn't lost with the archive:
+
+- [ ] [DATA] P2. **`emit_empty_gaps_for_entity`** (`instruments-service/.../sports_reference_core.py`) — the
+      honest-absence gap emitter for FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS — still hardcodes
+      `get_expected_leagues_for_source("api_football")` (383 leagues) as its "expected" denominator, independent of the
+      now-MVP-scoped `SPORTS_ENTITY_LEAGUE_COVERAGE`. This means completeness/coverage tracking for these 4 entities
+      will show the ~287 non-MVP widened leagues as permanently `expected_unattempted` (since capture now deliberately
+      never touches them) rather than an honest "out of scope by policy" absence. This is a coverage/reporting-accuracy
+      concern, NOT a call-volume bug (the archived fix already stops the API calls) — deliberately NOT touched in that
+      session because `emit_empty_gaps_for_entity` is a shared function whose honest-absence semantics have been the
+      subject of multiple past incidents (several "RETRACTED" analyses elsewhere in this doc's family). **Done when**:
+      either `emit_empty_gaps_for_entity` branches its expected-denominator by data_type (MVP set for the 4 enrichment
+      entities, full set otherwise), or an operator decision accepts the wider denominator as intentional for these
+      entities and documents why.
