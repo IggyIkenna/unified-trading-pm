@@ -359,6 +359,19 @@ changelog/docstring comment describing the historical removal itself (never insi
      ones. Todo-8 flipped above. This was the plan's last open todo -- ready for the archival ritual whenever an
      operator or agent picks that up (not done here -- out of this session's stated scope).
 
+- **2026-07-26 (this session, reconciling with the concurrent peer-slot entry above)**: the peer's `no_op_lock=True`
+  DEFI restamp attempt they cross-checked at 01:17-01:18Z was in fact the SAME stale lock this session's own restamp
+  tool hit at ~01:20Z (`started_at: 2026-07-26T01:16:12Z`, 300s TTL) -- neither agent's restamp attempt at that point
+  did real work. This session's retry at 01:33Z correctly self-healed it
+  (`ManifestConsolidator: clearing stale lock ... age=317.3s > TTL=300.0s`) and ran a GENUINE full merge
+  (`shards_scanned=9, rows_in=24,975,091, rows_out=24,798,952, dedup_dropped=176,139, no_op_lock=False`, ~950MB index
+  rewrite, `MANIFEST_CONSOLIDATED` event fired, completed 2026-07-26T01:44:43Z) -- the consolidator marker is now
+  confirmed ACTUALLY re-stamped, not just a cron-healthy/no-error observation. Combined with the peer's independent
+  5-cycle 0-GMX-rows confirmation (01:14- 01:27Z, pre-dating this genuine restamp) and this session's own post-restamp
+  verification, the DEFI side of this incident is now doubly-confirmed durable by two independent agents. No further
+  action needed on this plan; archival remains explicitly out of scope for both sessions (a separate, deliberate
+  plan-hygiene step, not a deferred completion gap).
+
 ## Codex SSOTs
 
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- governs the GCS-purge todo.
