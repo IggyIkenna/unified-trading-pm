@@ -218,4 +218,36 @@ Three candidate directions — genuinely a design decision, not something a sing
   `uac@5b57f6d2`/`features-service@332ea5d5` are still present on `origin/live-defi-rollout` (not reverted in the
   interim). Flipped `[DATA] P2` to done on that basis. Proceeding to `[ML] P2` next — that todo carries its OWN separate
   operator sign-off requirement per the `[DESIGN] P1` guardrail, so it will be built and held for its own explicit
-  go-ahead rather than assumed covered by this ratification. actual disposition of `BLK-ec018203`/`BLK-eccd3383`.
+  go-ahead rather than assumed covered by this ratification.
+- 2026-07-26 (slot-7, `data_engineering`): built `[ML] P2` — `ml-service@65f2d2d`
+  (`training_targets.merge_clv_target_columns`, fetches the isolated `odds_targets` group via the existing
+  `feature_groups=` override, merges real CLV values in for target extraction only; `apply_sports_leakage_shield`'s
+  existing `_FT_REALIZED_COLUMNS` strip still removes them before the model-input matrix). Full `ml-service`
+  `quality-gates.sh` green (150s). New regression test `tests/training/unit/test_merge_clv_target_columns.py` proves
+  both the merge and the post-shield isolation. Filed `BLK-fb01cd29` requesting this todo's own required sign-off
+  (explicitly not assuming `BLK-ec018203`'s ratification covers it — main-agent confirmed this read is correct).
+  **Committed locally, NOT pushed** — held pending that sign-off. Also found, while tracing the target-routing to
+  confirm scope, that `CLVTargetBuilder` (the family-routed `pregame.market.*_clv_bps` path, separate from the legacy
+  `"clv"` string path this fix covers) reads a different-but-related set of T-0 closing-odds columns and may share the
+  same PIT-gate-emptiness problem — not verified against real data this session, filed as its own follow-up:
+  `issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md`.
+
+## Deferred work after 2026-07-26 (pre-compact checkpoint, slot-7)
+
+| Item                                                                                  | State / why deferred                                                                                                                                          | Blocked on                                                                                                           |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `[ML] P2` quickmerge (`ml-service@65f2d2d`)                                           | Committed locally, QG-green, content confirmed correct by main-agent — NOT pushed. Operator-owned: do not push without the sign-off.                          | `BLK-fb01cd29` (operator decision)                                                                                   |
+| 3-variant CLV retrain + non-degenerate-distribution check (`[ML] P2`'s own done-when) | Not started — genuinely blocked on the above landing first, not extra work                                                                                    | `[ML] P2` quickmerge above                                                                                           |
+| Watchdog `_sweep_unpushed_slots` gate-aware fix (`[BACKEND] P1`)                      | Not done by me — tracked in main-agent's canonical doc `issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`, open for anyone to pick up | Nobody — real work, unclaimed                                                                                        |
+| `CLVTargetBuilder` family-route PIT-gap verification (`[DATA] P3`)                    | New finding, not yet verified against real data                                                                                                               | Nobody — real work, unclaimed; see `issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` |
+
+**Recommended next item once `BLK-fb01cd29` resolves**: quickmerge `ml-service@65f2d2d` (scoped `--files`), then run the
+3-variant CLV retrain (`training-period-2026-04`, `pregame_clv_family` — verify this actually invokes the legacy `"clv"`
+target_type per variant, not the family-routed builder — `timeframes=fixture`) against the now-real
+`odds_targets`-sourced target, confirm non-degenerate class distribution, and flip `[ML] P2`.
+
+**Lesson carried forward**: a session holding a commit behind an operator-only merge gate MUST self-heartbeat well under
+the ~25-min worker-staleness threshold (not the 30-min interval this session initially used) — the
+`WorkerLivenessWatchdog`'s unpushed-commits sweep has no awareness of an open sign-off-gating `/blocked` question and
+will auto-push a held commit the moment it reclaims a session it considers dead (this happened once already, to
+`[DATA] P2`, in this exact chain).
