@@ -274,3 +274,29 @@ someone else, or the manifest shape may have shifted.
   prereq syntax -- prereqs come only from sequential/gate_on_depends"). Not filing a separate issue doc for this -- it's
   a known modeling limit of the sequential-chain feature, not a bug, and the practical mitigation (skip back to queue
   with reason_code=BLOCKED once the true dependency is discovered) worked as intended.
+
+- **2026-07-25/26 (operator-run `--smoke`/`--apply` via VM, then `/autonomous`-authorized agent completion)**: todo 3's
+  script was fixed same-day (dropped the stale `instrument_type==""` guard -- mtds@87004c5b, see the module docstring's
+  2026-07-25 note) and hardened to VM-launcher parity with the GMX purge script (consolidator-pause hard-abort +
+  automated force-consolidate re-stamp -- mtds@d5c07559; new `cefi-bybit-spot-purge` category on
+  `launch-canonical-migration-vm.sh` -- deployment-service@0dd6de9). Operator paused
+  `uts-prod-manifest-consolidator-market-data-cefi-cron` and ran `--apply` via VM
+  (`canonical-migration-cefi-bybit-spot-purge-20260726-010028`).
+
+  **Result: the actual delete succeeded and is independently verified** -- `by_data_type` for BYBIT-SPOT after apply
+  shows ONLY `{trades: 86,201, book_snapshot_5: 86,184}`, all 53,934 spot-nonsense rows gone, "APPLY COMPLETE" gate
+  satisfied. Todo 3's real Done-when condition is met.
+
+  **But the force-consolidate re-stamp step failed on this same run** -- the exact same bug class as the GMX purge hit
+  the same day (see `defi_gmx_venue_removal_2026_07_25.md`'s Progress Log for the full 3-bug chain: missing
+  `setup_events()` bootstrap -> fixed -> hit `PermissionDenied: pubsub.topics.publish` IAM gap on the canonical-
+  migration VM's service account -> fixed via `mode="local"` event logging + a dedicated
+  `restamp_manifest_consolidator_2026_07_26.py` remediation tool -> a real `check-import-patterns.py` deep-import
+  violation this checker doesn't recognize `noqa` for -> fixed). **CEFI consolidator cron remains PAUSED** as of this
+  entry -- do not resume until this Progress Log records a confirmed successful restamp (rebuilding the tarball +
+  relaunching the CEFI restamp VM next).
+
+  **Todo 4 (re-measure cefi Layer-1) and todo 5 (close the loop) remain open** -- both are non-operator-gated
+  (`[DATA]`/`[PM]`), genuinely AO-eligible, and per the `/autonomous` completion contract (rule 1: finish completely, no
+  partial states) will be completed in this same session once the restamp+resume+durability-watch closes out, rather
+  than left for a future dispatch.

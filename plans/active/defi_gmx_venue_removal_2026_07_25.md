@@ -271,6 +271,63 @@ changelog/docstring comment describing the historical removal itself (never insi
   done
   ```
 
+- **2026-07-25/26 (operator-run `--apply`, then `/autonomous`-authorized agent completion)**: operator ran the 3-command
+  sequence above. **Result: real prod mutation, verified correct, but in TWO pieces because of a transient infra hiccup
+  - two code bugs found only by actually running it.**
+  1. **First `--apply` attempt** (VM `canonical-migration-defi-gmx-purge-20260725-231458`): got to 19,500/31,997 GCS
+     objects backed-up+deleted, then died on a transient `google.api_core.exceptions.ServiceUnavailable: 503` on the
+     backup-copy step for one object (`day=2024-11-23/.../data_type=perp_funding/...`). Confirmed via
+     `gcloud compute operations list` this was NOT a SPOT preemption (only `insert`+`delete` ops, no preempt event) -- a
+     genuine one-off GCS API hiccup, not a bug. Manifest-purge phase never reached (runs after GCS purge). Cron remained
+     correctly PAUSED throughout.
+  2. **Relaunch** (VM `canonical-migration-defi-gmx-purge-20260726-003241`, same command, same script): resumed
+     correctly at the remaining 12,263 objects (already-deleted objects self-skip via the script's own
+     `if src_meta is None: skip` idempotency) -- **confirms the idempotent-resume design worked exactly as intended**.
+     Finished all 31,997 GCS objects, then the manifest CAS-rewrite: dropped exactly 5,374 rows (24,742,605 ->
+     24,737,231), generation 1785017644156181 -> 1785024274939483. **The actual delete is DONE and independently
+     verified** (script's own fresh re-read: 0 remaining GCS objects, 0 remaining manifest rows).
+  3. **Bug found live #1**: the script's own `_force_consolidate_restamp()` (calls
+     `manifest_consolidator.consolidate(bucket, force=True)` directly) crashed with
+     `RuntimeError: Event logging not initialized. Call setup_events() first.` -- `consolidate()` emits lifecycle events
+     via `log_event()`, which requires `setup_events()` to have already run; the scheduled cron's own CLI `main()` does
+     this bootstrap, but this script's direct call skipped it (so did the sibling bybit purge script's identical direct
+     call -- same bug, found the same day). Caught internally by `consolidate()`, returned as a `success=False` report
+     (`shards_scanned=0` -- the merge never ran at all) instead of raising, so the script printed "APPLY complete" and
+     exited 0 even though the re-stamp had silently done nothing. **Fixed**: added a `_bootstrap_consolidator_events()`
+     helper mirroring `manifest_consolidator.main()`'s exact bootstrap, and made `_force_consolidate_restamp()` check
+     `report.success` and hard-abort (`SystemExit(4)`) instead of logging a failed report and continuing.
+  4. **Bug found live #2** (same day, after fixing #1): the "correct" bootstrap (mirroring the cron's own
+     `PubSubEventSink` on the `lifecycle-events` topic) then hit `PermissionDenied: 403 ... pubsub.topics.publish` --
+     the canonical-migration VM's service account has never needed that IAM permission before (nothing ran this code
+     path from a one-off VM prior to today). **Fixed**: switched to `setup_events(..., mode="local")` (no sink, no IAM
+     dependency, `log_event()` just logs locally) -- losing Pub/Sub-routed alerting for a one-off remediation run is an
+     acceptable trade for not depending on a permission grant. Built a small dedicated remediation script,
+     `market-tick-data-service/scripts/one_offs/restamp_manifest_consolidator_2026_07_26.py`, rather than inlining a
+     `python -c` one-liner into the VM launcher (avoids nested-quoting fragility). Added a new `manifest-restamp`
+     category to `launch-canonical-migration-vm.sh` (`RESTAMP_BUCKET=<bucket>` env-driven, `$MODE` ignored) so this is a
+     reusable tool, not a one-shot hack.
+  5. **Bug found live #3**: shipping the above hit a REAL `check-import-patterns.py` violation --
+     `from unified_trading_library.manifest_consolidator import (consolidator_cycle_in_flight,)` in this script had
+     carried a `# noqa: qg-deep-import` comment since its original commit, but **this specific checker does not
+     recognize `noqa` comments at all** (confirmed by reading its source -- no `noqa` handling anywhere) and had
+     apparently just never been exercised against this exact line in a quickmerge run before. Fixed properly: dropped
+     the deep-symbol import, access `_manifest_consolidator_mod.consolidator_cycle_in_flight(...)` as a module attribute
+     instead (same pattern already used for `.consolidate(...)`).
+  6. **Also found + resolved**: a genuine (not transient) `UU` git merge conflict in
+     `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` -- a concurrent commit
+     (`market-tick-data-service@9150bc9f`'s sibling deployment-service change) added a `defi-lst-rates-fold` category to
+     the exact same usage-string/dispatch-case lines this session's `cefi-bybit-spot-purge` + `manifest-restamp`
+     additions touched. Resolved by hand-merging both sides' additions (never blind take-mine/take-theirs, per rule 4)
+     -- both category sets are present and working in the final file.
+  7. **Restamp status as of this entry**: shipped fixes for all of the above; rebuilding the tarball and relaunching the
+     DEFI restamp VM next (this entry will be updated with the final `success=True` confirmation once verified, followed
+     by the cron resume + >=4-cycle durability watch). **DEFI consolidator cron remains PAUSED** -- do not resume until
+     this Progress Log records a confirmed successful restamp.
+  8. **Commits**: `market-tick-data-service@87004c5b`(unrelated, bybit) ... GMX-specific: safety-parity/bootstrap fixes
+     landing this session (see commit log for exact shas, multiple retries needed due to this being an unusually busy
+     shared branch tonight -- every retry failure was genuine branch drift from other concurrent slots, not a stuck
+     condition, resolved each time via `git pull --rebase --autostash`).
+
 ## Codex SSOTs
 
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- governs the GCS-purge todo.
