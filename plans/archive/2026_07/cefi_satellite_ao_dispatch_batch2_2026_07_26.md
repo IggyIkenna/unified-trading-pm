@@ -318,7 +318,7 @@ drift_direction: advance-code
       3 (OKX-FUTURES manifest relabel, needs collision-aware dedup) split to
       `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` as fresh dispatchable todos — see that doc + the
       per-sub-item annotations below for full evidence.** Close the four bounded, decision-free residuals from
-      `cefi_residual_followups_after_honest_done_2026_07_17.md` that no covering cefi plan cites** (Phase 0b
+      `cefi_residual_followups_after_honest_done_2026_07_17.md` that no covering cefi plan cites\*\* (Phase 0b
       DEPLOY-reader-bridge / features image-build fix / Phase 1 OKX-FUTURES itype mislabel / Phase 2 codex
       reconciliation — verified 2026-07-26 as uncovered by every currently-active cefi AO plan, incl.
       `cefi_migration_cutover_and_track8_completion_2026_07_25.md` which only covers the Phase-1
@@ -528,12 +528,12 @@ drift_direction: advance-code
 - **`plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md`**: Read the target doc to confirm Phase-1 evidence:
   Phase 1 (ADV consumer scaffold) is fully shipped (features-service@8608ea5d, 3/3 todos [x]). Phase 2 (extend MDPS
   candle coverage to ASTER/HYPERLIQUID/LIGHTER/EXTENDED + backfill) is covered by
-  cefi_satellite_ao_dispatch_batch1_2026_07_25.md's explicit-source todo (line 93-95,
+  cefi*satellite_ao_dispatch_batch1_2026_07_25.md's explicit-source todo (line 93-95,
   `Source: aster_and_cefi_rolling_adv_feature_2026_07_21.md`). Phase 3 has two remaining items, both still [ ]: 1.
   [BACKEND] P2 — "Design + implement the strategy-side consumption of the ADV signal: position-size cap as a % of ADV,
-  and the min-7-day-history-to-trade gate" — the doc's own text flags this "_(Left intentionally light — needs a design
+  and the min-7-day-history-to-trade gate" — the doc's own text flags this "*(Left intentionally light — needs a design
   conversation on where in the strategy pipeline this cap applies and what the % ceiling should be; not yet scoped in
-  detail.)_" 2. [DATA] P3 (stretch, optional) — wire `book_depth.py`'s unfilled `adv_30d_usd` input to the same Phase-1
+  detail.)\_" 2. [DATA] P3 (stretch, optional) — wire `book_depth.py`'s unfilled `adv_30d_usd` input to the same Phase-1
   utility with `window_days=30` — doc text: "out of scope for this plan, a candidate follow-up once Phase 1 ships" (i.e.
   speculative, not yet committed scope either). CONFLICT CHECK: grepped all 17 covering-set docs (consolidated closeout,
   aggregated-sources index, satellite batch1+finalize, migration-cutover, track2, track7, misc-audits (+finalize),
@@ -557,9 +557,18 @@ drift_direction: advance-code
   with a concrete "done when."
 - **`plans/active/crypto_alpha_research_2026_07_24.md`**: Conflict check: grepped
   cefi_consolidated_closeout_2026_07_18.md + every batch1/migration-cutover/track2/track7/misc-audits doc (+finalize)
-  for the target file paths and mechanism names involved (paper_trading, _ledgers.py, _exec_optimize, R8/short gate,
-  tsmom/TS-momentum, basis carry, VWAP-walk, momdaily/_mom_tb, HYPE universe, liquidity_scan, maker-WIDTH, RFQ combo,
-  $1M column) — zero hits anywhere in the covering set. No duplicate or competing claim exists; the orphan verdict stands clean, no genuine conflict found. Eligibility verdict: the doc's own §C section explicitly self-classifies its 16 core remaining items as "BLOCKED-OPERATOR-DECISION class ... alpha-research + book-SIZING DECISIONS (which legs, what weights, whether to ship the short sleeve) — they need operator trading judgment, not just code." That framing covers the large majority of the ~20 open items: whether/how to weight the short sleeve, whether to wire R8 into production, whether to ship the de-risk overlay+12% short, basis sizing raw-vs-vol-normed, adding the TS-momentum leg, the deployable capital allocator, and universe expansion (HYPE). These are "which legs/what weights/whether to ship" capital-allocation decisions on a live paper/production book requiring operator sign-off before a worker could execute them. A few items are pure bounded bug fixes with no judgment content (P3 _mom_tb.py MOMDAILY_TAG date-gate bug; P3 audit-script $1M-vs-$250k
+  for the target file paths and mechanism names involved (paper_trading, \_ledgers.py, \_exec_optimize, R8/short gate,
+  tsmom/TS-momentum, basis carry, VWAP-walk, momdaily/\_mom_tb, HYPE universe, liquidity_scan, maker-WIDTH, RFQ combo,
+  $1M column) — zero hits anywhere in the covering set. No duplicate or competing claim exists; the orphan verdict
+  stands clean, no genuine conflict found. Eligibility verdict: the doc's own §C section explicitly self-classifies its
+  16 core remaining items as "BLOCKED-OPERATOR-DECISION class ... alpha-research + book-SIZING DECISIONS (which legs,
+  what weights, whether to ship the short sleeve) — they need operator trading judgment, not just code." That framing
+  covers the large majority of the ~20 open items: whether/how to weight the short sleeve, whether to wire R8 into
+  production, whether to ship the de-risk overlay+12% short, basis sizing raw-vs-vol-normed, adding the TS-momentum leg,
+  the deployable capital allocator, and universe expansion (HYPE). These are "which legs/what weights/whether to ship"
+  capital-allocation decisions on a live paper/production book requiring operator sign-off before a worker could execute
+  them. A few items are pure bounded bug fixes with no judgment content (P3 \_mom_tb.py MOMDAILY_TAG date-gate bug; P3
+  audit-script $1M-vs-$250k
   column bug), but they are minor, tightly coupled to the surrounding judgment-gated track, and fracturing them off
   without operator triage risks committing effort to code whose relevance is itself gated on undecided trading
   decisions. Recommend an operator triage pass on this doc (which items to greenlight vs shelve) before any AO todo is
@@ -580,7 +589,7 @@ drift_direction: advance-code
   worth building. Until that ruling lands, this doc stays correctly excluded from AO dispatch, consistent with batch1's
   own triage.
 - **`plans/active/issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`**: Conflict check: grepped
-  all cefi covering-set plans for any claim on _candle_contracts.py CEFI future registration or
+  all cefi covering-set plans for any claim on \_candle_contracts.py CEFI future registration or
   CEFI_CHAIN_INSTRUMENT_TYPES routing; only batch1's already-dispatched todo (corpus-wide scan, cited from this doc)
   touches it, covering only todo 2. No competing claim on todos 1/3. Todo 1 is a genuine two-option policy fork
   requiring human ruling (register a standalone future candle contract vs. confirm/fix chain-bundle-only routing) --
@@ -689,8 +698,8 @@ drift_direction: advance-code
   issues/cefi_available_at_wallclock_despite_deterministic_row_timestamp_2026_07_24.md), orthogonal to both remaining
   items here. No genuine overlap — proceeded to the eligibility test. Both remaining items fail the batchable bar, for
   different reasons, so this doc as a whole is operator_gated (the more binding of the two blocks): - Todo 5
-  (features-service extractor surfacing queue_position/depth_levels__): this is NOT an open technical gap — it was
-  already fully resolved 2026-07-14 (operator confirmed Option C via BLK-e5571ccf): leave queue_position/depth_levels__
+  (features-service extractor surfacing queue_position/depth_levels**): this is NOT an open technical gap — it was
+  already fully resolved 2026-07-14 (operator confirmed Option C via BLK-e5571ccf): leave queue_position/depth_levels**
   as MTDS-only, no features-service consumer for now; Option A (MDPS column-pipeline extension) is agreed as the
   long-term path but explicitly NOT authorized as its own plan until todo 7's engine-backtest gate is picked up. There
   is nothing here for a worker to execute — the checkbox is deliberately left unflipped to represent

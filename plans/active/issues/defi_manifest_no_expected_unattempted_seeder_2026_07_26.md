@@ -161,36 +161,36 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       guardrail: do not add `fluid` to `lending_indices_handler.py` without a real collector).
 
       | protocol | lending_indices | risk_params | liquidations | `SUBGRAPH_IDS` |
-                                              |---|---|---|---|---|
-                                              | `aave_v3` / `spark` / `compound_v3` / `morpho` | Y | Y | Y | Y |
-                                              | `fluid` | **N** (no `cascades` entry — confirmed real gap, already tracked as this doc's finding #5) | Y (`_CATALOGUE_ONLY_PROTOCOLS`, deliberate) | Y (dedicated `_FLUID_LIQUIDATIONS_QUERY`/`_parse_fluid_liquidations`) | Y |
-                                              | `kamino_lending` | Y (dedicated RPC fetcher) | Y | **N** (absent, no rationale found) | N (Solana, RPC-based) |
-                                              | `solend` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
-                                              | `marginfi` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
+                                                                                                      |---|---|---|---|---|
+                                                                                                      | `aave_v3` / `spark` / `compound_v3` / `morpho` | Y | Y | Y | Y |
+                                                                                                      | `fluid` | **N** (no `cascades` entry — confirmed real gap, already tracked as this doc's finding #5) | Y (`_CATALOGUE_ONLY_PROTOCOLS`, deliberate) | Y (dedicated `_FLUID_LIQUIDATIONS_QUERY`/`_parse_fluid_liquidations`) | Y |
+                                                                                                      | `kamino_lending` | Y (dedicated RPC fetcher) | Y | **N** (absent, no rationale found) | N (Solana, RPC-based) |
+                                                                                                      | `solend` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
+                                                                                                      | `marginfi` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
 
-                                              **Findings**:
-                                              1. `fluid`'s gap is lending_indices-ONLY, confirmed — `risk_params_handler.py` (`_CATALOGUE_ONLY_PROTOCOLS =
-                                                 frozenset({"morpho", "fluid"})`, line 115) and `liquidations_handler.py` (dedicated fluid query, lines
-                                                 588/724/739) both have REAL, working, deliberate `fluid` paths; only `lending_indices_handler.py`'s
-                                                 `_query_and_parse` cascades dict lacks a `fluid` entry. No new work needed beyond what #5 already tracks.
-                                              2. **New, previously-unflagged gap**: `risk_params_handler.py`'s own imported `SOLANA_LENDING_PROTOCOLS`
-                                                 constant (`_risk_params_stage.py:23`, `frozenset({"kamino_lending", "solend", "marginfi"})`) declares all 3
-                                                 Solana lending protocols as catalogue-fallback-capable (the dispatch logic at lines 330/408 correctly
-                                                 branches on `protocol in SOLANA_LENDING_PROTOCOLS`), but `_DEFAULT_PROTOCOLS` (the actual iteration list,
-                                                 line 380) only includes `kamino_lending` — `solend`/`marginfi` risk_params are silently NEVER collected even
-                                                 though the underlying mechanism already supports them. Unlike the documented `fluid`/`morpho`
-                                                 `_CATALOGUE_ONLY_PROTOCOLS` reasoning, no comment justifies omitting `solend`/`marginfi` here — reads as an
-                                                 unintentional oversight (the 3-Solana-protocol set exists as a real shared constant, just not fully wired
-                                                 into this one handler's dispatch list), not a documented scope decision. Filed as a fresh, precisely-scoped
-                                                 follow-up (P3) below rather than fixed inline (adding them changes runtime dispatch behavior, out of scope
-                                                 for a read-only reconciliation todo).
-                                              3. `liquidations_handler.py` has ZERO Solana-protocol coverage (no `kamino_lending`/`solend`/`marginfi`, no
-                                                 `SOLANA_LENDING_PROTOCOLS` import at all) — no comment either way; flagging as unconfirmed (may be an
-                                                 intentional scope limit if Solana lending liquidations genuinely have no equivalent data source) rather than
-                                                 asserting it's a bug.
-                                              4. The 4 core EVM protocols (`aave_v3`/`spark`/`compound_v3`/`morpho`) are fully consistent across all 3
-                                                 handlers and `SUBGRAPH_IDS` — no mismatch.
-                                              (repo: market-tick-data-service)
+                                                                                                      **Findings**:
+                                                                                                      1. `fluid`'s gap is lending_indices-ONLY, confirmed — `risk_params_handler.py` (`_CATALOGUE_ONLY_PROTOCOLS =
+                                                                                                         frozenset({"morpho", "fluid"})`, line 115) and `liquidations_handler.py` (dedicated fluid query, lines
+                                                                                                         588/724/739) both have REAL, working, deliberate `fluid` paths; only `lending_indices_handler.py`'s
+                                                                                                         `_query_and_parse` cascades dict lacks a `fluid` entry. No new work needed beyond what #5 already tracks.
+                                                                                                      2. **New, previously-unflagged gap**: `risk_params_handler.py`'s own imported `SOLANA_LENDING_PROTOCOLS`
+                                                                                                         constant (`_risk_params_stage.py:23`, `frozenset({"kamino_lending", "solend", "marginfi"})`) declares all 3
+                                                                                                         Solana lending protocols as catalogue-fallback-capable (the dispatch logic at lines 330/408 correctly
+                                                                                                         branches on `protocol in SOLANA_LENDING_PROTOCOLS`), but `_DEFAULT_PROTOCOLS` (the actual iteration list,
+                                                                                                         line 380) only includes `kamino_lending` — `solend`/`marginfi` risk_params are silently NEVER collected even
+                                                                                                         though the underlying mechanism already supports them. Unlike the documented `fluid`/`morpho`
+                                                                                                         `_CATALOGUE_ONLY_PROTOCOLS` reasoning, no comment justifies omitting `solend`/`marginfi` here — reads as an
+                                                                                                         unintentional oversight (the 3-Solana-protocol set exists as a real shared constant, just not fully wired
+                                                                                                         into this one handler's dispatch list), not a documented scope decision. Filed as a fresh, precisely-scoped
+                                                                                                         follow-up (P3) below rather than fixed inline (adding them changes runtime dispatch behavior, out of scope
+                                                                                                         for a read-only reconciliation todo).
+                                                                                                      3. `liquidations_handler.py` has ZERO Solana-protocol coverage (no `kamino_lending`/`solend`/`marginfi`, no
+                                                                                                         `SOLANA_LENDING_PROTOCOLS` import at all) — no comment either way; flagging as unconfirmed (may be an
+                                                                                                         intentional scope limit if Solana lending liquidations genuinely have no equivalent data source) rather than
+                                                                                                         asserting it's a bug.
+                                                                                                      4. The 4 core EVM protocols (`aave_v3`/`spark`/`compound_v3`/`morpho`) are fully consistent across all 3
+                                                                                                         handlers and `SUBGRAPH_IDS` — no mismatch.
+                                                                                                      (repo: market-tick-data-service)
 
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-5, `data_engineering`) — BLOCKED-BY-DEEPER-BUG, not fixed inline, not a
       simple oversight/deliberate-exclusion question.** Traced the mechanism `solend`/`marginfi` would dispatch through
@@ -261,16 +261,14 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       (ARBITRUM/OPTIMISM/POLYGON) using the adapter's real `_MARKETS_QUERY` shape. Result: the "0 major-asset markets as
       of 2026-03" claim no longer holds on any of the 3 chains — - **ARBITRUM**: 92 total markets, 74 major-asset (per
       `DEFI_MAJOR_ASSET_SYMBOLS`), 16 with
-      supply >$1,000 —
-        unambiguous: the top market (`USDC`/`K`) alone carries **~$3.0B supplied /
-      ~$3.0B borrowed**, not a rounding
-        artifact.
-      - **OPTIMISM**: 6 total, 5 major-asset, 3 with supply >$1,000
+      supply >$1,000 — unambiguous: the top market (`USDC`/`K`) alone carries
+      **~$3.0B supplied /
+      ~$3.0B borrowed**, not a rounding artifact. - **OPTIMISM**: 6 total, 5 major-asset, 3 with
+      supply >$1,000
       (top: `WETH`/`wstETH` at
-      ~$117k) — modest but
-        real.
-      - **POLYGON**: 202 total, 134 major-asset, but only 2 with supply >$1,000,
-      and both are single-sided "idle" markets (`collateralAsset: null`, i.e. not a genuine lending pair) — still
+      ~$117k) — modest but real. - **POLYGON**: 202 total, 134 major-asset, but
+      only 2 with supply >$1,000, and
+      both are single-sided "idle" markets (`collateralAsset: null`, i.e. not a genuine lending pair) — still
       effectively negligible; genuinely-paired major-asset liquidity has NOT materialized here yet. Mechanism check (so
       a follow-up fix is a safe, generic extension, not a FLUID-class landmine): the adapter's `MVP_LOAN_TOKENS` filter
       (`morpho_adapter.py:61`) matches on bare token SYMBOL only (`"USDC" in MVP_LOAN_TOKENS`) — the dict's Ethereum
@@ -287,20 +285,20 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       update `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py`'s
       `SUBGRAPH_IDS["morpho"]` comment (drop the stale "0 major-asset markets as of 2026-03" line; the declaration-only
       dict itself doesn't need a real subgraph ID added since the adapter queries `blue-api.morpho.org` directly, not
-      The Graph, but the comment must stop asserting a now-false claim). Do NOT add OPTIMISM/POLYGON in the same
-      change — OPTIMISM has only ~$117k
+      The Graph, but the comment must stop asserting a now-false claim). Do NOT add OPTIMISM/POLYGON in the same change
+      — OPTIMISM has only ~$117k
       max single-market liquidity and POLYGON's
-      only >$1k entries are single-sided
-      idle markets (no real collateral-paired liquidity yet); re-check both again in a future pass rather than wiring
-      in what may still be noise. Repo: market-tick-data-service, unified-api-contracts. Done when: `_CHAIN_ID_BY_CHAIN`
-      includes ARBITRUM, a live smoke-fetch confirms real ARBITRUM Morpho instruments get discovered, the stale
-      comment is corrected, and `quality-gates.sh` is green in both repos. **Evidence**: `_CHAIN_ID_BY_CHAIN` now
+      only >$1k entries are single-sided idle
+      markets (no real collateral-paired liquidity yet); re-check both again in a future pass rather than wiring in what
+      may still be noise. Repo: market-tick-data-service, unified-api-contracts. Done when: `_CHAIN_ID_BY_CHAIN`
+      includes ARBITRUM, a live smoke-fetch confirms real ARBITRUM Morpho instruments get discovered, the stale comment
+      is corrected, and `quality-gates.sh` is green in both repos. **Evidence**: `_CHAIN_ID_BY_CHAIN` now
       `{"ETHEREUM": 1, "BASE": 8453, "ARBITRUM": 42161}`. **Found + fixed an extra bug along the way**: live
       smoke-fetching ARBITRUM crashed `_convert_market_to_instrument` on `market["collateralAsset"]["symbol"]` —
-      ARBITRUM has many single-sided "idle" markets (`collateralAsset: null`), unguarded in the existing code;
-      filtered these out in `_parse_markets_response` before conversion (not genuine lending pairs anyway). Live
-      smoke-fetch post-fix: **50 real ARBITRUM instruments discovered**, including `K-USDC` at
-      `total_supply=2999125223832587` raw units (÷1e6 USDC decimals ≈ **$2.999B**,
+      ARBITRUM has many single-sided "idle" markets (`collateralAsset: null`), unguarded in the existing code; filtered
+      these out in `_parse_markets_response` before conversion (not genuine lending pairs anyway). Live smoke-fetch
+      post-fix: **50 real ARBITRUM instruments discovered**, including `K-USDC` at `total_supply=2999125223832587` raw
+      units (÷1e6 USDC decimals ≈ **$2.999B**,
       matching the earlier ~$3.0B finding). Both repos' `quality-gates.sh` green (mtds: 6999 passed/17 skipped/1
       xpassed; uac: sentinel written). Shipped `market-tick-data-service@7d90c119`, `unified-api-contracts@2ceae9e9`.
 - [x] ✅ [INFRA] P3. **DONE 2026-07-26 (slot-4)** — Close a gate gap in agent-orchestrator's `/done` M3 verification
@@ -366,8 +364,10 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
 - 2026-07-26 (slot 2): Closed the P3 MORPHO-ARBITRUM/OPTIMISM/POLYGON confirmation todo. Live-queried
   `blue-api.morpho.org` (the adapter's real data source) directly for the 3 chains using the adapter's own query shape —
   the "0 major-asset markets as of 2026-03" claim is DEFINITIVELY STALE: ARBITRUM alone now carries a
-  ~~$3.0B `USDC`/`K` market (74 total major-asset markets, 16 with >$1k liquidity); OPTIMISM has modest real liquidity
-  (~~$117k max); POLYGON's >$1k entries are single-sided idle markets only, not genuine paired liquidity. Mechanism
+  ~~$3.0B `USDC`/`K`
+  market (74 total major-asset markets, 16 with >$1k liquidity); OPTIMISM has modest real liquidity
+  (~~$117k max);
+  POLYGON's >$1k entries are single-sided idle markets only, not genuine paired liquidity. Mechanism
   check confirmed a fix would be a safe, generic extension (not FLUID-class): `MVP_LOAN_TOKENS` filters by bare symbol
   only, chain-agnostic; the actual gate is `_CHAIN_ID_BY_CHAIN` in `morpho_adapter.py`, which simply omits the 3 chains.
   Filed a new, precisely-scoped P2 follow-up (ARBITRUM only, unambiguous) rather than fixing inline — OPTIMISM/POLYGON's
