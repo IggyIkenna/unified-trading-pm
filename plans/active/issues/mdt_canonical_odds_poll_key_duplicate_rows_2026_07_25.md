@@ -92,16 +92,54 @@ dedup-on-write mechanism named anywhere in the investigation, and it will never 
    abandoned — recommend a new `[DATA]` fix todo be picked up against this doc rather than assuming it is covered
    elsewhere.
 
-- [ ] [DATA] P3. **Root-cause + measure the population-wide rate** of poll-key duplicate rows in canonical sports MDT
-      odds objects (repo: market-tick-data-service). **Done when**: a fresh reproducible sample (or manifest-driven
-      population measurement) confirms the duplication mechanism and reports the true affected-object rate/count.
-- [ ] [DATA] P3. **De-dup canonical sports MDT odds objects on the poll key**
-      `(event, market, outcome, bm_time, price,     fetch_utc)`, if the population-wide measurement above shows material
-      scope (repo: market-tick-data-service — new one-off script mirroring
-      `instruments-service/scripts/dedup_canonical_player_stats_2026_07_25.py`'s safe-no-op-on-clean-objects pattern).
-      **Done when**: a re-run over the affected population confirms 0 poll-key duplicates remain.
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-8, `data_engineering`) — measured rate is 10-50x LOWER than the original
+      30/200 sample, and the mechanism is NOT a writer-side retry.** Built + live-tested (2 independent random samples,
+      seeds 42 and 777, n=300 each, against real prod objects — no fresh corpus walk, single bounded
+      `read_availability_index` read) `scripts/measure_odds_api_poll_key_duplicates_2026_07_26.py`. **Rate: 1/300 (0.3%)
+      and 3/300 (1.0%)** affected objects across the two independent samples — 4 total affected objects out of 600
+      sampled (~0.67%), NOT the originally-reported 15%. The real column names are `event_id`/`market_key`/
+      `outcome_name` (the doc's `event`/`market`/`outcome` was shorthand); GCS path is
+      `raw_tick_data/by_date/day={D}/pipeline_mode=batch_odds_api/asset_group=sports/venue={V}/league_id={L}/     instrument_type={ODDS|odds}/data_type={TRADES|trades}/ticks.parquet`
+      (empirically verified via `gcloud storage     ls`, no existing SSOT path builder for this domain — unlike
+      `sports_reference/`'s `candidate_parquet_paths`). **Root cause (all 4 affected objects, not just one spot-check):
+      NOT a writer-side retry/multi-write — every duplicate-key group (0/11 fully byte-identical across ALL columns)
+      differs specifically in `instrument_id`.** Direct inspection of the first affected object
+      (`2022-09-04/BETONLINEAG/K_LEAGUE_1`) shows the SAME real price observation (`event_id`, `market_key`,
+      `outcome_name`, `bm_time`, `price`, `fetch_utc` all identical) recorded under TWO different `instrument_id`
+      strings — `FOOTBALL:BETONLINEAG:MATCH_ODDS:K_LEAGUE_1:2022-23:SEONGNAM-ULSAN_HYUNDAI_FC::{sel}` vs.
+      `FOOTBALL:BETONLINEAG:MATCH_ODDS:K_LEAGUE_1:2022-23:SEONGNAM_FC-ULSAN_HYUNDAI_FC::{sel}` — a team-name resolution
+      split ("SEONGNAM" vs "SEONGNAM_FC" for the same real team), not a poll-key collision from a genuine re-fetch.
+      UAC's `build_instrument_id` (`unified_api_contracts/canonical/domain/sports/canonical_ids.py:214`) takes
+      `home_team_id`/`away_team_id` as caller-supplied inputs — it's the UPSTREAM team-name→team_id resolution (in
+      `market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py` or whatever calls this builder)
+      that's producing two different id strings for one real team across different polls; not traced to the exact
+      resolution line this pass (flagging with the confirmed evidence rather than guessing further). **This changes the
+      Step-2 remediation**: a blind `drop_duplicates(subset=poll_key, keep="first")` (the player_stats precedent's
+      pattern) would be WRONG here — it would arbitrarily keep whichever spelling happens to sort/appear first, silently
+      discarding rows under the OTHER (possibly-canonical) `instrument_id` without ever checking which spelling is
+      actually correct. Re-scoped the fix todo below accordingly.
+- [ ] [DATA] P3. **Fix the team-name resolution split causing duplicate `instrument_id`s (repo:
+      market-tick-data-service)** — NOT a blind poll-key de-dup (see the finding above for why that would be wrong
+      here). Step (a): trace the exact home/away team-name→team_id resolution feeding `build_instrument_id`'s calls in
+      the odds-api sports write path and confirm why the SAME real team resolves to two different id fragments (e.g.
+      "SEONGNAM" vs "SEONGNAM_FC") on different polls — likely a missing/incomplete team-name alias table entry,
+      mirroring `unified_api_contracts/external/api_football/team_mappings.py`'s pattern but for whatever odds-api's own
+      team-name source is. Step (b): once the CURRENT canonical spelling is confirmed, re-run this doc's measurement
+      script (`measure_odds_api_poll_key_duplicates_2026_07_26.py`) against the FULL population (not a sample) to get
+      the exact affected-object count, then write a scoped rewrite that keeps the rows under the confirmed-canonical
+      `instrument_id` and drops the stale-spelling rows (not a bare `keep="first"`). **Done when**: the team-name
+      resolution root cause is confirmed with the exact code location, the full-population affected-object count is
+      measured, and a re-run over the affected population confirms 0 poll-key duplicates remain under the canonical
+      spelling.
 
 ## Progress Log
 
 **2026-07-25 (slot 9)** — Filed per `sports_satellite_ao_dispatch_batch2-013` (this todo is documentation-only; the fix
 todos above are new, standalone work, not yet dispatched or claimed by any other plan).
+
+**2026-07-26 (slot-8, `data_engineering`)** — closed the root-cause + measure todo. Real population-wide rate (0.3%-1.0%
+across 2 independent 300-object samples) is materially lower than the original 30/200 (15%) figure, and the mechanism is
+a team-name/`instrument_id` resolution split, not a writer-side retry. Re-scoped the remediation todo away from the
+player_stats-style blind poll-key de-dup (which would have been actively wrong here — it would silently pick an
+arbitrary spelling rather than the canonical one). Did not attempt the team-name-resolution fix itself this pass (needs
+its own trace + a canonical-spelling decision).

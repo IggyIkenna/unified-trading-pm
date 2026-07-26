@@ -119,19 +119,16 @@ drift_direction: advance-code
       `related:` cites the source doc; source doc's `related:` + its own P3 todo updated
       (`issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`). No backfill/re-derivation attempted.
       Source: `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md` (P3 item).
-- [ ] [DATA] P3. **Root-cause, measure, and (if material) de-dup canonical sports MDT odds poll-key duplicate rows**
-      (repo: market-tick-data-service). Step 1: on a fresh reproducible sample (or manifest-driven population
-      measurement — single-walk discipline, do not re-walk the corpus ad hoc), confirm the duplication mechanism
-      (writer-side retry/multi-write vs. merge-time artifact) and the true affected-object rate/count for canonical
-      `market-data-tick-sports-prd-central-element-323112` odds objects on poll key
-      `(event, market, outcome, bm_time, price, fetch_utc)`. Step 2: if the measured scope is material, run a scoped
-      one-off de-dup rewrite mirroring the already-shipped `player_stats` fix pattern (`instruments-service@210d4567`,
-      `scripts/dedup_canonical_player_stats_2026_07_25.py` — safe no-op on already-clean objects), reading affected
-      objects, de-duping on the poll key, re-writing, and verifying by content. If step 1 finds the scope immaterial,
-      stop there and record the measured rate as the resolution (no rewrite needed). Source:
-      `mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`. **Done when**: the population-wide duplication
-      rate/mechanism is measured and reported, AND either (a) scope was immaterial and that's recorded as the closing
-      rationale, or (b) a re-run over the affected population confirms 0 poll-key duplicates remain.
+- [ ] [DATA] P3. **PARTIAL 2026-07-26 (slot-8) — Step 1 DONE, Step 2 re-scoped.** Root-cause + measure poll-key
+      `(event, market, outcome, bm_time, price, fetch_utc)` duplicates in canonical
+      `market-data-tick-sports-prd-central-element-323112` odds objects (repo: market-tick-data-service); if material,
+      de-dup mirroring `instruments-service@210d4567`'s `player_stats` pattern. Source:
+      `mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`. **Step 1 (`mtds@2a324b75`)**: 2 independent 300-object
+      samples on real prod data — rate 0.3%/1.0% (~0.67%), 10-50x LOWER than the original 15% claim. Root cause is NOT a
+      writer retry: every affected group differs only in `instrument_id` (a team-name resolution split, e.g. "SEONGNAM"
+      vs "SEONGNAM_FC"). **Step 2 blocked**: the planned blind `drop_duplicates(keep="first")` would be wrong here
+      (arbitrary spelling kept, not the canonical one) — re-scoped in the issue doc to trace team-name resolution first.
+      Full detail + evidence in the issue doc, not duplicated here.
 - [ ] [SCRIPT] P3. Root-cause WHY `quality-gates.sh`'s function/class/method SIZE CHECK (phase 5) didn't block the
       2026-07-16 sports-orchestrator function-size regression at commit time (candidate commits `a66fc295`, `493393c8`,
       `86cc71ff`, all instruments-service, same day) — determine whether it was the green-content SENTINEL SKIP
@@ -261,20 +258,20 @@ drift_direction: advance-code
       gap-dates, verified against the `_index` manifest (not a re-derived count).
 
       **BLOCKED-CREDENTIALS 2026-07-26 (slot-4)** — the actual backfill cannot run: the odds-api key is
-              DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl
-              against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This
-              blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see
-              `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos.
-              Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to
-              `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in
-              `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped,
-              full-population backfills). Also found + worked around a separate pre-existing bug in
-              `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to
-              `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date
-              from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM
-              (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox
-              stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the
-              operator fixes the key (exact command in the issue doc's follow-up todos).
+                      DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl
+                      against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This
+                      blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see
+                      `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos.
+                      Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to
+                      `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in
+                      `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped,
+                      full-population backfills). Also found + worked around a separate pre-existing bug in
+                      `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to
+                      `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date
+                      from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM
+                      (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox
+                      stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the
+                      operator fixes the key (exact command in the issue doc's follow-up todos).
 
 - [ ] [CODE] P1. **PARTIAL 2026-07-26 (slot-7, `data_engineering`) — (a)+(b) DONE (by a concurrent slot, verified by
       me), (c) thoroughly diagnosed, genuinely BLOCKED on a deeper pre-existing ml-service gap.** (a)+(b): a concurrent
