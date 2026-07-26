@@ -873,11 +873,11 @@ start without real tradfi/ES feature parquets.
   stalled).
 
   Hit the SAME ENOSPC a third time (`cf_manifest_audit._read_index()` returned an unexpected 9-column tuple, filed
-  separately as `issues/cf_manifest_audit_read_index_inconsistent_return_shape_2026_07_26.md`; a direct
-  `gcloud storage cp` also failed). **Root cause found**: `/tmp` is a SEPARATE, tiny 2GB tmpfs (100% full, shared
-  host-wide), distinct from `/home` (78G free the whole time) — `gcloud storage cp`'s default staging path lands in
-  `/tmp` regardless of `/home`'s real headroom. Fix: an explicit `/home`-rooted destination — downloaded cleanly at 485
-  MiB/s on the first retry.
+  separately as `/plans/archive/issues/cf_manifest_audit_read_index_inconsistent_return_shape_2026_07_26.md` (resolved
+  2026-07-26 — confirmed intentional, not a bug); a direct `gcloud storage cp` also failed). **Root cause found**:
+  `/tmp` is a SEPARATE, tiny 2GB tmpfs (100% full, shared host-wide), distinct from `/home` (78G free the whole time) —
+  `gcloud storage cp`'s default staging path lands in `/tmp` regardless of `/home`'s real headroom. Fix: an explicit
+  `/home`-rooted destination — downloaded cleanly at 485 MiB/s on the first retry.
 
   **RESULT: `1d` hit rate = `captured=454`/`empty_confirmed=1944` (2398 total, ~18.9%) — BYTE-IDENTICAL to baseline.**
   Verified against a FRESH read (consolidated index `Update Time: 22:58:44Z`, after the build-continuous VM's own

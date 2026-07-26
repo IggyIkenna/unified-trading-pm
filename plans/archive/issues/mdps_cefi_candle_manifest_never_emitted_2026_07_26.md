@@ -40,6 +40,13 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **🟢 RESOLVED 2026-07-26** — live end-to-end trace confirmed MDPS's candle-manifest emission logic is correct today
+> (both `batch_hyperliquid` and `batch_tardis` paths); the original "0 rows, ever" verdict was a
+> verification-methodology mistake, not a code defect (see "Root cause" below). The one genuine, still-open follow-up
+> (reconciling candle files orphaned by past OOM crashes before the fix landed) was extracted to its own tracked doc at
+> archival time so it doesn't get buried in a resolved issue:
+> `/plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`.
+
 # MDPS cefi candle-manifest emission: 0 rows, ever
 
 > **🟥 OPERATOR-NOTIFY (data-correctness, cross-repo).** This is a genuine, systemic gap distinct from the earlier
@@ -177,26 +184,10 @@ real trace, not further manifest-query guessing):
       MDPS DOES faithfully register manifest rows for the candle files it writes (under the `data_type=<SOURCE type>`
       axis, by design). Repos touched: none (verification-only; the sibling OOM fix that incidentally resolved the PAST
       batch_tardis gap already shipped as `market-data-processing-service@335e9cc` under a separate issue).
-- [ ] [DATA] P2. **Reconcile the manifest for candle files orphaned by PAST OOM crashes (before the
-      `market-data-processing-service@335e9cc` OOM fix landed).** An unknown-but-potentially-large set of existing
-      `processed_candles/` parquet files across the corpus (any date/venue processed by a backfill VM that OOM'd mid-run
-      before 2026-07-26) may have zero manifest rows despite real file content on disk — the SAME class of gap confirmed
-      for BITGET-FUTURES/BITFINEX-FUTURES/KRAKEN-FUTURES `day=2026-05-03` above. Scope this as its OWN
-      single-walk-compliant plan (do NOT re-walk the whole corpus ad hoc): (1) use the launcher's own documented
-      reconciliation helper,
-      `unified_trading_library.manifest_writer.rebuild_manifest_from_canonical_paths(bucket,     service_name="market-data-processing-service", prefix="processed_candles/by_date")`
-      (printed by `launch-mdps-backfill-vm.sh` itself as the post-backfill reminder), which walks canonical GCS paths
-      and backfills missing manifest rows without re-deriving data; (2) run it on a Tier-2 SPOT VM per the workspace's
-      heavy-I/O rule, never in-session; (3) verify before/after row counts for a sample of known-orphaned shards (e.g.
-      the BITGET-FUTURES `day=2026-05-03` shard above) to confirm the walk actually closes the gap. Repo:
-      market-data-processing-service (consumer of the UTL helper) + unified-trading-library (the helper itself, if it
-      needs any fixes). **Done when**: `rebuild_manifest_from_canonical_paths` run completes over the CEFI candle
-      corpus, a sample of previously-orphaned shards (including the `day=2026-05-03` BITGET/BITFINEX/KRAKEN ones) show
-      real manifest rows, and the launch is evidenced (VM name + log). **Safe-idempotent justification (VM-launch
-      gating)**: `rebuild_manifest_from_canonical_paths` only ADDS missing `captured` manifest rows derived from objects
-      that already exist on disk — it never deletes/mutates GCS objects and never re-derives/rewrites candle data, so
-      re-running it is a no-op on shards that already have a manifest row. No `[OPERATOR]` tag needed per
-      `task_template.md` finding O's safe-idempotent carve-out.
+- [x] ✅ [DATA] P2. Reconcile the manifest for candle files orphaned by PAST OOM crashes (before the
+      `market-data-processing-service@335e9cc` OOM fix landed). — EXTRACTED 2026-07-26 (cicd plan_health wall-clear) to
+      its own tracked doc rather than left open inside this now-resolved doc:
+      `/plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`.
 
 ## Progress Log
 

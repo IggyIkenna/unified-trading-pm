@@ -19,7 +19,7 @@ tags: [mdps, candle, ohlcv, memory, oom, schema-contract, book-snapshot, backfil
 related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md,
+    /plans/archive/issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md,
   ]
 created: "2026-07-26"
 last_updated: "2026-07-26"

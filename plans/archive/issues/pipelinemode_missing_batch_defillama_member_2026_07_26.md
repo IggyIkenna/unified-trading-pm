@@ -42,6 +42,9 @@ resolved_by: >-
   it up immediately, no dependency-bump PR needed. Both todos below are already satisfied, do not re-implement.
 ---
 
+> **🟢 RESOLVED 2026-07-26** — `unified-api-contracts@f7019ffb` added the missing `BATCH_DEFILLAMA` member;
+> `market-tick-data-service@45a9fe69`'s test suite confirmed green against it. Both todos below are shipped.
+
 # What I found
 
 `tests/unit/test_lst_rates_handler_coverage.py::TestPipelineModeDerivation::test_tier4_solana_row_gets_distinct_pipeline_mode`
