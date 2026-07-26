@@ -844,7 +844,7 @@ questions when a decision is needed. Ran it. Findings:
   (per-symbol grouping, contract-vs-combo classification, canonical path construction per `_canonical_chain_path`-style
   logic but for FLAT per-contract futures/options, not chain bundles, manifest registration) — deferred as its own P2
   todo below rather than rushed in this session alongside the higher-priority P1 manifest-recovery pass.
-  - `- [ ] [DATA] P2. Design + build the CME monolith migration tool: for each of the ~30 day=*/venue=CME/ticks.parquet objects, group rows by (instrument_id, symbol), classify combo (spread, e.g. NQH6-NQM6) vs single-contract symbols, translate to canonical futures/option instrument_ids + canonical Hive paths, write per-contract canonical objects, register manifest rows, THEN delete the monolith source (migrate-first, never blind-delete — this is an only-copy per the 2026-07-21 reconciliation report).`
+  - `[x] ✅ [DATA] P2. Design + build the CME monolith migration tool — TOOL DONE 2026-07-26 (`mtds@02284f8e`). Execution tracked separately: `/plans/active/issues/cme_monolith_migration_execution_2026_07_26.md`.`
 
 ### 2026-07-22 continuation — the chain-manifest recovery script (P1), PA-2021 progress check
 
