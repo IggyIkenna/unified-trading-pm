@@ -106,16 +106,16 @@ drift_direction: advance-code
       `bucket.exists() == False`). R2's 3 checked targets are all 0-objects/clean. Full write-up + operator decision
       request: `issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`. R1/R2 checkboxes in
       the source doc updated to reflect this (R1 stays open P0 pending operator; R2 flipped done).
-- [ ] [SCRIPT] P1. **Tradfi instruments-foundation residual cleanup pass — 4 independent, conflict-clear candidates from
-      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, bundled into ONE todo because all 4 would otherwise edit
-      the SAME doc file concurrently** (mirrors batch2's 7-item combine on this doc): (1) **G1.g MVP tags** — add MVP
-      tags to the tradfi MVP universe (VX futures + basis tickers) per the doc's G1.g bullet, repo instruments-service.
-      (2) **by_date capture-freeze diagnosis** — root-cause the tradfi `by_date` capture anomaly (fleet-wide freeze
-      ~2026-05-21, tradfi degraded from ~2026-05-04, 16K→2/day writes) and add a coverage-horizon staleness check to the
-      producer/audit path so a future freeze surfaces loudly instead of silently. (3) **MTDS massive.py futures-endpoint
-      fix** — `massive_tradfi_rest_connector.py` maps futures to `/v3/reference/futures/contracts` (404s); repoint to
-      the working `/futures/vX/contracts` (+ `/futures/vX/products` for contract size), repo market-tick-data-service.
-      (4) **Tombstone dropped Databento instruments** — run
+- [x] ✅ [SCRIPT] P1. **Tradfi instruments-foundation residual cleanup pass — 4 independent, conflict-clear candidates
+      from `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, bundled into ONE todo because all 4 would otherwise
+      edit the SAME doc file concurrently** (mirrors batch2's 7-item combine on this doc): (1) **G1.g MVP tags** — add
+      MVP tags to the tradfi MVP universe (VX futures + basis tickers) per the doc's G1.g bullet, repo
+      instruments-service. (2) **by_date capture-freeze diagnosis** — root-cause the tradfi `by_date` capture anomaly
+      (fleet-wide freeze ~2026-05-21, tradfi degraded from ~2026-05-04, 16K→2/day writes) and add a coverage-horizon
+      staleness check to the producer/audit path so a future freeze surfaces loudly instead of silently. (3) **MTDS
+      massive.py futures-endpoint fix** — `massive_tradfi_rest_connector.py` maps futures to
+      `/v3/reference/futures/contracts` (404s); repoint to the working `/futures/vX/contracts` (+ `/futures/vX/products`
+      for contract size), repo market-tick-data-service. (4) **Tombstone dropped Databento instruments** — run
       `reconcile_manifest_after_entity_change.py --mode remove --asset-group tradfi` for the dropped ICE roots
       (BRN/G/DX, softs CT/CC/KC/SB/OJ; datasets IFEU.IMPACT/IFUS.IMPACT): dry-run → audit CSV → apply, then a phantom
       sweep, repo instruments-service. **Excluded from this bundle (stay deferred/gated, do not fold in)**: the G1
@@ -129,7 +129,17 @@ drift_direction: advance-code
       market-tick-data-service; (4) the tombstone dry-run/audit/apply completes with a recorded before/after row count
       and a clean phantom sweep — AND this doc's corresponding checkboxes (G1.g bullet, the by_date/massive.py/tombstone
       rows in the "Folded-in tradfi residuals" section) are flipped in the SAME commit. Source:
-      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
+      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`. — **DONE 2026-07-26.** (1) VERIFIED already done — the
+      UAC tradfi `underliers` set already includes VX + the 7 basis-commodity roots; live catalogue query confirms
+      `mvp=True` at 100% for all of them. (2) root cause already documented in the source doc (Massive removal broke
+      `by_date`; Databento re-feed not yet run — reconfirmed still degraded, ~10-15 writes/day vs the historical
+      16-18K); the coverage-horizon staleness check (`_warn_coverage_horizon` / `CATALOGUE_STALE_BY_DATE`) already
+      shipped `instruments-service@5d31994a` (2026-07-03), applies per-AG generically incl. tradfi, QG-green in
+      production. (3) MOOT — `massive_tradfi_rest_connector.py` no longer exists; Massive was removed entirely as a
+      tradfi source 2026-07-19, superseding this fix. (4) shipped — 390,799 rows tombstoned (BRN+G, DXY explicitly
+      protected from the venue-level tool's blast radius), phantom sweep clean; also fixed a real Path-B path-resolution
+      bug in the tombstone script itself (`instruments-service@8d03893b`). This doc's corresponding checkboxes (G1.g MVP
+      tags, massive.py futures-endpoint, tombstone dropped Databento instruments) flipped in the same session.
 - [ ] [CODE] P1. **Root-cause the legacy writer that stamped numeric/empty `underlying=` on tradfi combo/chain objects
       (12/13/23, garbled 2-4-char fragments) and add a write-time canonical guard rejecting the same on all NEW tradfi
       chain writes.** Trace why the pre-`databento_classifier.py` extraction path (older writer/ingestion, ahead of

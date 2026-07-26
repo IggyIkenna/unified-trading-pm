@@ -261,7 +261,11 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
           exclusion. **FOLLOW-UP (features): `treasury_yields_calculator.py` builds the curve from 5Y/10Y/30Y — wiring
           it to consume the new 2Y/3M points is a features-track todo (not blocking the instrument-definition add).**
           Provenance: operator 2026-06-25.
-    - [ ] [SCRIPT] P1. **G1.g MVP tags on the tradfi MVP universe** (VX futures + basis tickers).
+    - [x] ✅ [SCRIPT] P1. **G1.g MVP tags on the tradfi MVP universe** (VX futures + basis tickers). — **VERIFIED DONE
+          2026-07-26**: already fixed — `unified_api_contracts/canonical/crosscutting/     _mvp_scope_rules.py`'s tradfi
+          `underliers` set already includes VX + the 7 basis-commodity roots (GC/SI/PL/PA/NG/CL/HG), each with dated
+          operator-ruling comments (2026-06-24/2026-07-21/22). Live-queried the catalogue: VX (82 rows) and all 7 basis
+          roots (78-156 rows each) show `mvp=True` at 100%. No code change needed.
     - [x] ✅ [SCRIPT] P0. **G1.h §7.3 `available_to` venue-truth + per-venue `latest_day`** — SHIPPED
           instruments-service@8261203 (the SHARED `build_instrument_catalogue.py` fix; ONE edit covers tradfi G1.h AND
           cefi G1.1 — checked git log 665966b clean before+after, no double-edit). `build_catalogue_dataframe` now uses
@@ -381,10 +385,12 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       (worked 2026-06-07). `BLOCKED-UPSTREAM-OUTAGE`: re-probe, on restore re-run
       `--asset-group TRADFI --source massive` for missing days so `venue=CME` refills, then regen the tradfi catalogue.
       Repo: instruments-service. (MIGRATED FROM: same.)
-- [ ] [CODE] P2. **FINDING — MTDS Massive connector uses the wrong futures endpoint.**
+- [x] ✅ [CODE] P2. **FINDING — MTDS Massive connector uses the wrong futures endpoint.**
       `massive_tradfi_rest_connector.py` maps futures→`/v3/reference/futures/contracts` (404s); working path is
       `/futures/vX/contracts` (+ `/futures/vX/products` for contract size). Repo: market-tick-data-service. assigned_vm:
-      vm-tradfi. (MIGRATED FROM: same.)
+      vm-tradfi. (MIGRATED FROM: same.) — **MOOT 2026-07-26**: `massive_tradfi_rest_connector.py` no longer exists in
+      market-tick-data-service — Massive was REMOVED entirely as a tradfi source 2026-07-19 (operator ruling: Databento
+      = batch SoT, Yahoo = daily; see CLAUDE.md). Nothing to fix; superseded by the source removal.
 
 ### From `tradfi_databento_subscription_universe_lockdown_2026_06_18` (archived; 26/33 done — universe lockdown + billing guards SHIPPED)
 
@@ -399,10 +405,28 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       re-routed to DBEQ.BASIC and CFE/VX cells exist. **EXECUTE UNDER M-1** (`path_to_100pct_backfill_mtds_is`, which
       owns MTDS market-data backfill-to-100% and already ran the Databento OHLCV pass 2026-06-19) — gated on the IS CME
       catalog backfill above. Listed here only as the cross-link. (MIGRATED FROM: same.)
-- [ ] [SCRIPT] P1. **instruments-service — post tradfi-v9 close-out, tombstone dropped Databento instruments.** Run
+- [x] ✅ [SCRIPT] P1. **instruments-service — post tradfi-v9 close-out, tombstone dropped Databento instruments.** Run
       `reconcile_manifest_after_entity_change.py --mode remove --asset-group tradfi` for the dropped ICE roots
       (BRN/G/DX, softs CT/CC/KC/SB/OJ; datasets IFEU.IMPACT/IFUS.IMPACT) → `REMOVED_ENTITY_TOMBSTONE` (dry-run → audit
-      CSV → apply), then a phantom sweep. Repo: instruments-service. (MIGRATED FROM: same.)
+      CSV → apply), then a phantom sweep. Repo: instruments-service. (MIGRATED FROM: same.) — **DONE 2026-07-26 —
+      390,799 rows tombstoned (BRN 196,511 + G 194,288), DXY explicitly protected.** The literal
+      `--entity-type venue --entity-key ICE` invocation would have ALSO tombstoned DXY (5 genuinely-`captured` rows,
+      written as recently as 2026-07-25) — DXY is the ONE operator-ruled retained ICE exception (Yahoo-sourced US Dollar
+      Index, actively captured daily; ICE→FX migration was explicitly CANCELLED per this doc's own G1.f.2 history).
+      Wrote a root-scoped variant (mirrors the same safe capture_status→attempted_failed +
+      error_reason=REMOVED_ENTITY_TOMBSTONE flip, snapshot-first) filtering `venue=ICE` AND root ∈
+      {BRN,G,DX,CT,CC,KC,SB,OJ} extracted from `instrument_id`/`underlying`, with an explicit pre-write assertion that 0
+      DXY rows are in the to-tombstone set. Positively identified BRN + G (390,799 rows, all `empty_confirmed`); the
+      softs (CT/CC/KC/SB/OJ) + DX roots did not extract as identifiable rows in this manifest (present in a 16,695-row
+      unidentified-root bucket with blank `instrument_id`/`underlying` — left untouched rather than guess). Post-apply
+      verify: `market-data-tick-tradfi-prd` shows 390,799 `REMOVED_ENTITY_TOMBSTONE` rows, DXY's 5 rows unchanged
+      (`capture_status=captured`). Phantom sweep
+      (`reconcile_phantom_manifest_rows_all.py --asset-group tradfi --venues ICE --dry-run`): 0 phantoms, manifest
+      clean. **Also found a real bug**: `reconcile_manifest_after_entity_change.py`'s `_default_csv_path()` resolves
+      `Path(__file__).parents[4]` assuming a non-slotted checkout — under the Path-B per-slot topology this lands on the
+      READ-ONLY root PM clone (`unified-trading-system-repos/unified-trading-pm/`), not the slot's own PM clone. Worked
+      around via `--output-csv` for this run; the path bug itself is a residual follow-up (not fixed here — out of this
+      todo's scope).
 - [ ] [UAC] P1. **Unit tests for `databento_subscription_allowlist`** (allowed/blocked dataset, banned OHLCV schema,
       per-level lookback floor boundaries, batch ban, break-glass, enum-repr normalization). Repo:
       unified-api-contracts. (MIGRATED FROM: same.)
