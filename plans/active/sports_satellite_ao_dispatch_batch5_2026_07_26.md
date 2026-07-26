@@ -357,7 +357,13 @@ drift_direction: advance-code
       shipped that doc's `[CODE] P2` fix (`ml-service@5a9e3050`); (c) still ⏳, 3 other todos remain — see that doc.
       **UPDATE (slot-11)**: shipped `[DATA] P2` (`features-service@c54f9eaf`, `pd.NA`→`np.nan` at the source); spun off
       `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md` (design/scoping, not fixed here). (c)
-      still ⏳ — `[DATA] P3`/`[ML] P2` remain open in that doc.
+      still ⏳ — `[DATA] P3`/`[ML] P2` remain open in that doc. **UPDATE 2026-07-26 (slot-2)**: closed `[DATA] P3` —
+      directly read real `odds_features` parquet across 7 dates (2024-2026): `clv_home` is 0/N non-null on EVERY date,
+      never a window-specific gap. Root-caused to a naming mismatch (features-service's calculator produces
+      `odds_clv_home`, the export only ever carries an always-empty bare `clv_home`) rather than data absence — exact
+      rename mechanism not fully traced, filed as a new `[DATA] P2` fix todo in that doc instead of guessing. (c) still
+      ⏳ — a retrain today, in ANY window, would always produce a 100%-flat garbage target until that new `[DATA] P2`
+      lands; `unified-trading-pm@dfbcf678f`.
 - [x] ✅ [DATA] P1. Resolve the sports odds manifest-routing regression opened by the 2026-07-24 addendum to
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`: (1) grep+READ the manifest-write target
       resolution in the sports capture path in market-tick-data-service (same class of `_resolve_manifest_bucket()`
