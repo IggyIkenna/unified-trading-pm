@@ -85,8 +85,8 @@ drift_direction: advance-code
 - **Venue-specific canonicalisation residuals**:
   - [`plans/active/issues/bybit_futures_chain_write_shape_2026_07_13.md`](/plans/active/issues/bybit_futures_chain_write_shape_2026_07_13.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`](/plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md)
-    — 0 open todos (closed/archived/record-only).
+  - [`plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`](/plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md)
+    — 0 open todos (archived 2026-07-26, record-only).
   - [`plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](/plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md)
     - 5. **[DATA] P1.** PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip).
     - 6. **[DATA] P1.** Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5).

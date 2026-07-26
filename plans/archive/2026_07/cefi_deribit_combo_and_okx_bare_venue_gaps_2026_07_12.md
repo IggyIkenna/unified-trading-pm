@@ -15,7 +15,7 @@ summary:
   coincidentally works today (all its itypes map to one exchange, "deribit"). Neither is fixable by a plain backfill VM
   launch or a denominator correction (unlike the BITFINEX-FUTURES fix shipped today, unified-api-contracts@5b57c2b2) —
   both need real capture-routing code changes.'
-status: open
+status: resolved # (was: open) 2026-07-26 -- both gaps confirmed closed end-to-end, archived per batch2's finding
 nature: notes
 asset_group: [cefi]
 stage: [data]
@@ -35,7 +35,7 @@ parent_epic: cefi_master
 priority: P1
 source: mvp_backfill_cefi_tick_v10_2026_06_27.md G4 re-verification, 2026-07-12T07:20-08:05Z session
 assigned_vm: NA
-resolved_by:
+resolved_by: slot-6 (data_engineering), cefi_satellite_ao_dispatch_batch2_2026_07_26_finalize-003, 2026-07-26
 locked_by:
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
@@ -44,6 +44,17 @@ thinking_tier: high
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **✅ ARCHIVED 2026-07-26 — both original gaps confirmed closed end-to-end.** OKX `options_chain` routing shipped and
+> real captured rows confirmed 2026-07-13; the DERIBIT-COMBO combo/spread instrument-catalogue gap that blocked
+> `trades`/`book_snapshot_5` capture was closed 2026-07-14 (instruments-service backfill, 68,847 rows populated) and its
+> MVP-scope decision shipped as `unified-api-contracts@bd442418` (`MVP_SCOPE_CONFIG_VERSION` 16, documented in
+> `/codex/02-data/mvp-scope-canonical.md`). Codex-alignment check: no update needed — the durable contract this doc's
+> history produced is already correctly reflected in `/codex/02-data/mvp-scope-canonical.md` (v16 entry) and
+> `/codex/02-data/honest-absence-downstream-handling.md`'s DERIBIT-COMBO section (both cite the separate SSOT
+> `cefi_layer1_denominator_gaps_2026_07_03.md`, unaffected by this archival). Archived per
+> `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s "Note — 1 doc found archivable_now". See the doc's own history
+> below for the full investigation + closure evidence.
 
 ## What I found
 
@@ -186,42 +197,42 @@ slug for a bulk `options_chain`/`futures_chain` request. DERIBIT is the only ven
       was already shipped by prior sessions; this closure is a documentation-accuracy correction only.
 
       **🚧 PARTIAL PROGRESS 2026-07-12 (slot-3)** —
-                                                                                              `unified-api-contracts@f0dc61a2` (shipped — see the ship-blocker note below for the full trail) adds the
-                                                                                              `("DERIBIT-COMBO", "OPTION"): "deribit"` dict entry + 2 regression tests. **Important correction to this todo's
-                                                                                              own premise**: empirically confirmed (not assumed) that `get_tardis_exchange_for_venue("DERIBIT-COMBO")` ALREADY
-                                                                                              returns `"deribit"` — via `_get_suffixed_tardis_match`'s generic base-venue fallback
-                                                                                              (`return self._get_direct_tardis_match(base_venue)`), which catches ANY `"X-<suffix>"` venue whose base `X` has a
-                                                                                              direct `tardis_to_venue` entry, regardless of the suffix's semantic meaning. This was true BEFORE my dict-entry
-                                                                                              addition too — so **exchange-name resolution was never actually the blocker for DERIBIT-COMBO**, contradicting
-                                                                                              this todo's framing ("zero routing entry ... has no way to map"). The real remaining gaps are exactly the OTHER
-                                                                                              two items this todo already lists and I did NOT resolve: (a) filtering the Tardis fetch to `type=='combo'` symbols
-                                                                                              only (not yet touched — no code found that distinguishes combo from bare-Deribit symbols at the fetch layer), and
-                                                                                              (b) whether `build_instrument_catalogue.py` currently tags catalogue rows `venue=DERIBIT-COMBO` — found a directly
-                                                                                              relevant comment (`_incremental_merge_keys` docstring, `build_instrument_catalogue.py` ~L2458) stating the `venue`
-                                                                                              FIELD carries "era-specific raw spelling (`DERIBIT-COMBO` in old rows vs `DERIBIT` in the window for the SAME
-                                                                                              `instrument_id`)" — i.e. CURRENT/recent catalogue ingestion normalizes combo instruments to `venue=DERIBIT`, not
-                                                                                              `DERIBIT-COMBO`. If true end-to-end, a venue-field-keyed catalogue lookup for `DERIBIT-COMBO` on RECENT dates
-                                                                                              would find nothing regardless of exchange routing — the closure likely needs querying catalogue rows under
-                                                                                              `venue=DERIBIT` and filtering to combo instrument_ids by pattern (Tardis combo symbols look like
-                                                                                              `BTC-CS-28AUG26-72000_76000` / `BTC-FS-11JUL26_PERP` — distinctive `-CS-`/`-FS-` infixes) rather than relying on a
-                                                                                              `venue=DERIBIT-COMBO` catalogue tag. NOT independently confirmed by tracing the full catalogue-write code path
-                                                                                              (only the comment) — flagging as the next investigation step, not a verified fact. Did not attempt the backfill
-                                                                                              re-run (blocked on the above being resolved first). Left unchecked — genuine remaining scope.
+                                                                                                                      `unified-api-contracts@f0dc61a2` (shipped — see the ship-blocker note below for the full trail) adds the
+                                                                                                                      `("DERIBIT-COMBO", "OPTION"): "deribit"` dict entry + 2 regression tests. **Important correction to this todo's
+                                                                                                                      own premise**: empirically confirmed (not assumed) that `get_tardis_exchange_for_venue("DERIBIT-COMBO")` ALREADY
+                                                                                                                      returns `"deribit"` — via `_get_suffixed_tardis_match`'s generic base-venue fallback
+                                                                                                                      (`return self._get_direct_tardis_match(base_venue)`), which catches ANY `"X-<suffix>"` venue whose base `X` has a
+                                                                                                                      direct `tardis_to_venue` entry, regardless of the suffix's semantic meaning. This was true BEFORE my dict-entry
+                                                                                                                      addition too — so **exchange-name resolution was never actually the blocker for DERIBIT-COMBO**, contradicting
+                                                                                                                      this todo's framing ("zero routing entry ... has no way to map"). The real remaining gaps are exactly the OTHER
+                                                                                                                      two items this todo already lists and I did NOT resolve: (a) filtering the Tardis fetch to `type=='combo'` symbols
+                                                                                                                      only (not yet touched — no code found that distinguishes combo from bare-Deribit symbols at the fetch layer), and
+                                                                                                                      (b) whether `build_instrument_catalogue.py` currently tags catalogue rows `venue=DERIBIT-COMBO` — found a directly
+                                                                                                                      relevant comment (`_incremental_merge_keys` docstring, `build_instrument_catalogue.py` ~L2458) stating the `venue`
+                                                                                                                      FIELD carries "era-specific raw spelling (`DERIBIT-COMBO` in old rows vs `DERIBIT` in the window for the SAME
+                                                                                                                      `instrument_id`)" — i.e. CURRENT/recent catalogue ingestion normalizes combo instruments to `venue=DERIBIT`, not
+                                                                                                                      `DERIBIT-COMBO`. If true end-to-end, a venue-field-keyed catalogue lookup for `DERIBIT-COMBO` on RECENT dates
+                                                                                                                      would find nothing regardless of exchange routing — the closure likely needs querying catalogue rows under
+                                                                                                                      `venue=DERIBIT` and filtering to combo instrument_ids by pattern (Tardis combo symbols look like
+                                                                                                                      `BTC-CS-28AUG26-72000_76000` / `BTC-FS-11JUL26_PERP` — distinctive `-CS-`/`-FS-` infixes) rather than relying on a
+                                                                                                                      `venue=DERIBIT-COMBO` catalogue tag. NOT independently confirmed by tracing the full catalogue-write code path
+                                                                                                                      (only the comment) — flagging as the next investigation step, not a verified fact. Did not attempt the backfill
+                                                                                                                      re-run (blocked on the above being resolved first). Left unchecked — genuine remaining scope.
 
-                                                                                              **Update 2026-07-13 (slot-2): part (a) was shipped later the same session (this note predates it) — checkbox is
-                                                                                                                                              stale.** `_filter_bulk_rows_for_deribit_split` (`tardis_bulk_download.py:246`, wired into
-                                                                                                                                              `_stream_finalise_chain_bulk` at line 329) isolates combo-vs-bare-option rows within Deribit's grouped OPTIONS
-                                                                                                                                              bulk stream by symbol shape (combo symbols use `-CS-`/`-FS-` infixes that never match the bare-option regex) —
-                                                                                                                                              exactly the "type=='combo' filtering" this todo asks for, just not keyed off Tardis's own `type` field (Tardis's
-                                                                                                                                              grouped stream doesn't expose one). Not a static claim: I live-verified this TODAY via a real `opt-deribit-combo-2024`
-                                                                                                                                              relaunch (see the OOM todo above) — day 1 (2024-01-01) correctly filtered to 0 kept combo rows (honest absence,
-                                                                                                                                              matches the earlier-corroborated finding that 2024-01-01 had zero real combo trades), and the process reached
-                                                                                                                                              day 2's real stream without any filtering-related error. **Part (a): effectively closed, just never flipped
-                                                                                                                                              here.** Part (b) (catalogue `venue=` tagging) is unconfirmed either way, but is now lower-stakes than this todo
-                                                                                                                                              assumed — my live verify shows the MTDS capture path itself does NOT depend on a catalogue `venue=DERIBIT-COMBO`
-                                                                                                                                              lookup (it filters directly off the Tardis symbol stream, not a catalogue-driven instrument list), so a stale
-                                                                                                                                              catalogue tag would not block real row capture the way this todo's framing implied. Leaving this checkbox open
-                                                                                                                                              only for part (b), now correctly scoped as a catalogue-hygiene question, not a capture-blocking one.
+                                                                                                                      **Update 2026-07-13 (slot-2): part (a) was shipped later the same session (this note predates it) — checkbox is
+                                                                                                                                                                      stale.** `_filter_bulk_rows_for_deribit_split` (`tardis_bulk_download.py:246`, wired into
+                                                                                                                                                                      `_stream_finalise_chain_bulk` at line 329) isolates combo-vs-bare-option rows within Deribit's grouped OPTIONS
+                                                                                                                                                                      bulk stream by symbol shape (combo symbols use `-CS-`/`-FS-` infixes that never match the bare-option regex) —
+                                                                                                                                                                      exactly the "type=='combo' filtering" this todo asks for, just not keyed off Tardis's own `type` field (Tardis's
+                                                                                                                                                                      grouped stream doesn't expose one). Not a static claim: I live-verified this TODAY via a real `opt-deribit-combo-2024`
+                                                                                                                                                                      relaunch (see the OOM todo above) — day 1 (2024-01-01) correctly filtered to 0 kept combo rows (honest absence,
+                                                                                                                                                                      matches the earlier-corroborated finding that 2024-01-01 had zero real combo trades), and the process reached
+                                                                                                                                                                      day 2's real stream without any filtering-related error. **Part (a): effectively closed, just never flipped
+                                                                                                                                                                      here.** Part (b) (catalogue `venue=` tagging) is unconfirmed either way, but is now lower-stakes than this todo
+                                                                                                                                                                      assumed — my live verify shows the MTDS capture path itself does NOT depend on a catalogue `venue=DERIBIT-COMBO`
+                                                                                                                                                                      lookup (it filters directly off the Tardis symbol stream, not a catalogue-driven instrument list), so a stale
+                                                                                                                                                                      catalogue tag would not block real row capture the way this todo's framing implied. Leaving this checkbox open
+                                                                                                                                                                      only for part (b), now correctly scoped as a catalogue-hygiene question, not a capture-blocking one.
 
 - [x] ✅ [SCRIPT] P2. Trace `get_tardis_exchange_for_venue`'s current return value for venue="OKX" (likely `okex` or
       `okex-swap`, not checked this session) and make the options_chain/futures_chain bulk-download exchange resolution
@@ -873,39 +884,39 @@ materially bigger, separate scope than this todo's "rebuild tarball, relaunch, c
       so each combo lands in at least one by_date snapshot inside its real listing window.
 
       **What I ran** (real production infra, `central-element-323112`, no mocks):
-                                                                                                  1. `python -m instruments_service --operation instruments --mode batch --asset-group cefi --venues
-                                                                                                     DERIBIT-COMBO --start-date 2022-08-23 --end-date 2026-07-14 --force` — 1,422 dates processed in ~45 min
-                                                                                                     (single local process; the adapter's 24h Tardis-fetch cache made every date after the first a cheap
-                                                                                                     in-memory re-filter, no VM needed). Zero errors, zero empty-record dates across the full run — confirmed via
-                                                                                                     grep of the full run log (18,966 lines, 0 ERROR/Traceback/Exception hits).
-                                                                                                  2. `python scripts/build_instrument_catalogue.py --asset-group cefi --mode full` (dry-run first, then
-                                                                                                     promoted) — `--mode full` was required since the default `incremental` mode only re-reads a trailing window
-                                                                                                     and would never reach back to 2022. Rolled up the FULL cefi `by_date` corpus (53,040 parquet files) into
-                                                                                                     427,496 catalogue rows (up from 358,455), monotonic guard `ACCEPT` (new >= current), promoted to
-                                                                                                     `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`.
+                                                                                                                          1. `python -m instruments_service --operation instruments --mode batch --asset-group cefi --venues
+                                                                                                                             DERIBIT-COMBO --start-date 2022-08-23 --end-date 2026-07-14 --force` — 1,422 dates processed in ~45 min
+                                                                                                                             (single local process; the adapter's 24h Tardis-fetch cache made every date after the first a cheap
+                                                                                                                             in-memory re-filter, no VM needed). Zero errors, zero empty-record dates across the full run — confirmed via
+                                                                                                                             grep of the full run log (18,966 lines, 0 ERROR/Traceback/Exception hits).
+                                                                                                                          2. `python scripts/build_instrument_catalogue.py --asset-group cefi --mode full` (dry-run first, then
+                                                                                                                             promoted) — `--mode full` was required since the default `incremental` mode only re-reads a trailing window
+                                                                                                                             and would never reach back to 2022. Rolled up the FULL cefi `by_date` corpus (53,040 parquet files) into
+                                                                                                                             427,496 catalogue rows (up from 358,455), monotonic guard `ACCEPT` (new >= current), promoted to
+                                                                                                                             `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`.
 
-                                                                                                  **Verified result** (direct pyarrow read of the promoted catalogue): DERIBIT-COMBO now has **68,847 rows** (up
-                                                                                                  from 4) — an EXACT match to Tardis's live-confirmed combo-symbol count — spanning `available_from` 2022-08-23 to
-                                                                                                  2026-07-13, e.g. `DERIBIT-COMBO:COMBO:BTC-FS-30SEP22_PERP` (available_from=2022-08-23,
-                                                                                                  available_to=2022-10-01) through live-today combo spreads with `available_to=None`. `mvp` is `False` for all
-                                                                                                  68,847 rows — this is CORRECT and UNCHANGED behaviour, not a bug: UAC's `CeFiMvpRule.instrument_types`
-                                                                                                  (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py` ~line 415-431) does
-                                                                                                  not include `"COMBO"`, so `is_mvp(...)` was already returning `False` for the 4 pre-existing rows too —
-                                                                                                  populating `available_from`/`available_to` correctly does not and should not change that predicate's output.
+                                                                                                                          **Verified result** (direct pyarrow read of the promoted catalogue): DERIBIT-COMBO now has **68,847 rows** (up
+                                                                                                                          from 4) — an EXACT match to Tardis's live-confirmed combo-symbol count — spanning `available_from` 2022-08-23 to
+                                                                                                                          2026-07-13, e.g. `DERIBIT-COMBO:COMBO:BTC-FS-30SEP22_PERP` (available_from=2022-08-23,
+                                                                                                                          available_to=2022-10-01) through live-today combo spreads with `available_to=None`. `mvp` is `False` for all
+                                                                                                                          68,847 rows — this is CORRECT and UNCHANGED behaviour, not a bug: UAC's `CeFiMvpRule.instrument_types`
+                                                                                                                          (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py` ~line 415-431) does
+                                                                                                                          not include `"COMBO"`, so `is_mvp(...)` was already returning `False` for the 4 pre-existing rows too —
+                                                                                                                          populating `available_from`/`available_to` correctly does not and should not change that predicate's output.
 
-                                                                                                  **Downstream verification** (read-only, via a fresh sub-agent, no code changes): confirmed
-                                                                                                  `market_tick_data_service/market_interface/adapters/tradfi/tardis_symbol_resolution.py::_catalogue_symbols_for_venue_date`
-                                                                                                  (lines 209-301) correctly reads the new catalogue data — calling it live for `DERIBIT-COMBO`/`2026-07-11` with
-                                                                                                  `MTDS_CEFI_INCLUDE_NON_MVP=true` set resolves **387 real symbols** (e.g. `BTC-CCAL-17JUL26_10JUL26-63000`),
-                                                                                                  proving the backfilled data is genuinely capture-ready. **Without** that env var (the function's unconditional
-                                                                                                  `mvp==True` gate, lines 273-281) it still resolves to 0 symbols — this is the SAME already-identified, separate,
-                                                                                                  cross-repo gap (UAC's `CeFiMvpRule.instrument_types` missing `"COMBO"`) this doc's earlier 2026-07-14T10:55Z
-                                                                                                  entry already named; NOT something this backfill task should or can silently fix (changes MTDS
-                                                                                                  capture-universe denominator behaviour for a decision the operator hasn't ruled on — see the new follow-up todo
-                                                                                                  below). The manifest-relabel script `scripts/relabel_deribit_combo_historical_to_empty_2026_06_27.py`
-                                                                                                  (`empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]`, ~22-day + long-tail window) is now stale given
-                                                                                                  both this backfill AND the adapter's own 2026-07-14 docstring fix — flagged as a companion cleanup, not fixed
-                                                                                                  here (out of this task's scope; the manifest and the catalogue are different GCS objects/buckets).
+                                                                                                                          **Downstream verification** (read-only, via a fresh sub-agent, no code changes): confirmed
+                                                                                                                          `market_tick_data_service/market_interface/adapters/tradfi/tardis_symbol_resolution.py::_catalogue_symbols_for_venue_date`
+                                                                                                                          (lines 209-301) correctly reads the new catalogue data — calling it live for `DERIBIT-COMBO`/`2026-07-11` with
+                                                                                                                          `MTDS_CEFI_INCLUDE_NON_MVP=true` set resolves **387 real symbols** (e.g. `BTC-CCAL-17JUL26_10JUL26-63000`),
+                                                                                                                          proving the backfilled data is genuinely capture-ready. **Without** that env var (the function's unconditional
+                                                                                                                          `mvp==True` gate, lines 273-281) it still resolves to 0 symbols — this is the SAME already-identified, separate,
+                                                                                                                          cross-repo gap (UAC's `CeFiMvpRule.instrument_types` missing `"COMBO"`) this doc's earlier 2026-07-14T10:55Z
+                                                                                                                          entry already named; NOT something this backfill task should or can silently fix (changes MTDS
+                                                                                                                          capture-universe denominator behaviour for a decision the operator hasn't ruled on — see the new follow-up todo
+                                                                                                                          below). The manifest-relabel script `scripts/relabel_deribit_combo_historical_to_empty_2026_06_27.py`
+                                                                                                                          (`empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]`, ~22-day + long-tail window) is now stale given
+                                                                                                                          both this backfill AND the adapter's own 2026-07-14 docstring fix — flagged as a companion cleanup, not fixed
+                                                                                                                          here (out of this task's scope; the manifest and the catalogue are different GCS objects/buckets).
 
 - [x] ✅ [SCRIPT] P2. **Operator decision needed** (new, slot-15 2026-07-14): `unified-api-contracts`'s
       `CeFiMvpRule.instrument_types` (`unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py` ~line 415-431)

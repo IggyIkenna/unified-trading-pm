@@ -8,7 +8,7 @@ summary:
   fixing those 40 first.
 status: open
 nature: issue
-asset_group: [cefi]
+asset_group: [cross-cutting]
 stage: [meta]
 repos:
   - market-tick-data-service

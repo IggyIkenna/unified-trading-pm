@@ -114,8 +114,8 @@ drift_direction: advance-code
       outcome by construction. Annotated a `⛔ MOOT` banner in that doc rather than drafting a batch3 todo, since there
       is no work to extract (the decision evaporated, it wasn't answered). That doc's OTHER item (1, BLOCKED-CREDENTIALS
       Tardis-lighter entitlement) remains genuinely open, unaffected.
-- [ ] [DOC] P2. **Action batch2's 2 non-batched findings.** (1) Retag the 3 mistagged docs named in batch2's "Note — 3
-      mistags found" section (`breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`,
+- [x] ✅ [DOC] P2. **Action batch2's 2 non-batched findings.** (1) Retag the 3 mistagged docs named in batch2's "Note —
+      3 mistags found" section (`breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`,
       `mtds_ungated_test_families_2026_07_17.md`, `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`)
       — read each doc's real content to decide the correct `asset_group` (likely `cross-cutting` or `meta` for all 3,
       confirm per-doc, do not assume), fix the frontmatter, and re-run
@@ -124,7 +124,26 @@ drift_direction: advance-code
       digest if so). (2) Archive `cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md` (batch2's "Note — 1 doc
       found archivable_now") via the standard 6-step ritual. **Done when**: all 3 mistagged docs carry a corrected
       `asset_group` with `check_ag_closeout_linkage.py` passing 0 new orphans, and the archivable_now doc is moved to
-      `plans/archive/2026_07/` with every corpus referrer fixed.
+      `plans/archive/2026_07/` with every corpus referrer fixed. — **DONE 2026-07-26 (slot-6, data_engineering).** (1)
+      All 3 retagged `asset_group: [cross-cutting]` (per the ag-closeout-audit skill's own ruling that ao/ci/infra-class
+      content — CI/tooling breaking-change-differ + MTDS test-gating hygiene + multi-agent worktree-collision — stays
+      tagged `cross-cutting`, no dedicated ao/ci/infra enum value exists; verified per-doc, not assumed: all 3 are
+      generic CI/multi-agent-safety concerns, not cefi-specific despite cefi-triggering incidents).
+      `check_ag_closeout_linkage.py` confirms 0 orphans (baseline 0) — `cross-cutting` is EXEMPT by construction from
+      this check (docspec: multi-value/cross-cutting/meta/infrastructure asset_group is exempt), so no digest-link
+      needed. (2) `cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md` — verified all todos genuinely `[x]` closed
+      (0 remaining `- [ ]`), both original gaps (OKX options_chain real rows 2026-07-13; DERIBIT-COMBO catalogue
+      backfill + MVP-scope decision 2026-07-14/16) confirmed shipped. 6-step ritual: no genuine open DEFERRED prose →
+      archive banner added + `status: resolved` (`resolved_by` stamped) → codex-alignment check confirmed
+      `/codex/02-data/mvp-scope-canonical.md` (v16 entry) + `/codex/02-data/honest-absence-downstream-handling.md`
+      already correctly reflect this doc's shipped contract, no update needed → no new durable contract to add → 3 live
+      corpus referrers fixed to the new path (`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
+      `mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`, `tardis_concurrent_ip_lockout_2026_07_12.md`; 1 frozen
+      historical note in `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s own "Note" section + `plans/archive/**`
+      mentions correctly left alone per the batch1-finalize precedent) → `locked_by` confirmed empty. `git mv` to
+      `plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`. `check_frontmatter_schema.py`
+      (1794 docs, 0 violations) and `check_reference_paths.py` (existence: 947 ≤ baseline 956, shrinking) both green
+      post-change. — `unified-trading-pm@(this commit)`.
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved or re-confirmed all 12 — verify none silently vanish) → add the archive banner → run

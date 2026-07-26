@@ -9,7 +9,7 @@ summary:
   session halted or explicit file ownership; the red IS tree needs the fec3f110 fallout fixed.
 status: open
 nature: process
-asset_group: [cefi]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts, instruments-service, unified-trading-pm]
 scope: [engineer, admin]
