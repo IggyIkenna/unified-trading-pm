@@ -240,19 +240,21 @@ drift_direction: advance-code
       `expected_shards` scales with the real instrument count instead of collapsing to distinct-key count — satisfies
       the done-when's mocked-equivalent alternative to a live DERIBIT re-check). All 24 tests in
       `test_per_instrument_cefi_is_provider.py` pass; `quality-gates.sh` green.
-- [ ] [BACKEND] P2. Isolate the dominant memory contributor behind the CeFi raw-tick recon Cloud Run job's OOM (measured
-      `peak_rss=8646.5MB` against the old 8Gi limit, now mitigated by a 16Gi bump) via a real memory profile of an
-      actual execution — `tracemalloc` or a Cloud Profiler session against
-      `uts-prod-market-tick-data-service-cefi-t1-recon` — to confirm whether `market-tick-data-service@a6e974b6`'s
-      `HyperliquidS3Downloader` per-day cache (`self._trades_cache`, all 24 hourly S3 objects fetched concurrently +
-      fully materialized before parsing) is the dominant contributor vs. the 429K-row catalogue load or normal per-venue
-      fan-out growth. Once isolated, land the permanent fix for whichever is confirmed: for the HyperLiquid case, either
-      cache/retain only the coins this run actually needs (not every coin HL published that day) or stream the 24 hourly
-      fetches (parse-then-discard per hour) instead of materializing all 24 decompressed texts up front. Repo:
-      market-tick-data-service. Source: `issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`. Done
-      when: a memory profile of a real execution is captured and attached/cited in the source doc's Progress Log
-      identifying the dominant contributor, AND a code fix bounding that contributor is committed + shipped
-      (quality-gates green), with the source doc's corresponding todo flipped and evidence cited.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-26 (slot-14).** Isolated the dominant memory contributor via a real-execution log
+      profile (4/4 reproductions across the 2026-07-25 06:00/09:00 UTC scheduled executions, both the original attempt
+      and the retry — the job was STILL crash-looping post-16Gi-bump, contrary to the prior session's "resolved"
+      verdict, which only confirmed one manual test). Measured result: NEITHER `HyperliquidS3Downloader`'s per-day cache
+      (never ran — HYPERLIQUID was already fully covered and skipped in every hung execution, before OKX-options was
+      reached) NOR the one-time 429K-row catalogue load (flat process RSS ~4.7-4.8GB the whole hang, one-time cost) is
+      the driver. The measured dominant contributor is the OKX-options grouped-symbol Tardis bulk `options_chain`
+      download (`TardisAdapter._download_bulk`), which has no total-size/wall-clock cap and hangs ~13-14min before the
+      container's memory ceiling triggers an OOM kill regardless of the configured limit — this is why the 8Gi→16Gi bump
+      only delayed, not fixed, the crash-loop. Bounded it with `asyncio.wait_for(300s)` in `download_batch()`
+      (`tardis_batch_download.py`), routing a timeout into the EXISTING shard-level failure isolation
+      (`fetch_tick_data_for_venue`, already catches `TimeoutError`) instead of hanging the whole job.
+      `market-tick-data-service@31958a05`, `quality-gates.sh` green (sentinel-verified), shipped via quickmerge. Full
+      evidence + follow-ups in `issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`'s "Dominant-
+      contributor isolation + permanent fix (2026-07-26)" section, with its own corresponding todo flipped.
 - [ ] [SCRIPT] P3. **Confirm the sharded `--apply` cefi content-canonicalisation fleet completed corpus-wide, then
       delete the abandoned oneoff dry-run pilot script per its own Delete-when marker.** Check whether the ~44-48-way
       date-range-sharded `canonical-migration-cefi-content-NN-20260719-*` `--apply` fleet (launched ~1hr after the

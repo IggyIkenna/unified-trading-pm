@@ -245,6 +245,56 @@ every execution since 07-23. Direct log evidence (`gcloud logging read`, full tr
 will now run against the 16Gi limit going forward. The underlying root-cause attribution (which specific code path
 drives the ~8.6GB peak) and a permanent code-level fix remain open follow-ups, not blockers to capture resuming.
 
+## Dominant-contributor isolation + permanent fix (2026-07-26, slot-14)
+
+**The 16Gi bump did NOT fully resolve the outage — the job is still crash-looping.** Pulled the real
+`gcloud run jobs executions list` history for `uts-prod-market-tick-data-service-cefi-t1-recon`: the 2026-07-25 06:00
+and 09:00 UTC scheduled executions (`v26b6`, `7lx79`) both show `status.conditions[type=Completed].status=False`,
+`retriedCount=1`, and (via `executions describe`) the terminal message **"Task ... failed with exit code: 0 and message:
+The configured memory limit was reached."** — i.e. still OOM-killed at 16Gi.
+
+**Measured evidence isolates the contributor — it is NEITHER of the two originally-hypothesized candidates.** Full (not
+severity-filtered) Cloud Logging read of all 4 real attempts (both retries × both 06:00/09:00 executions):
+
+- Every single attempt hangs with **ZERO further log output** immediately after issuing
+  `TardisAdapter: bulk download okex-options/options_chain using grouped 'OPTIONS' symbol` /
+  `Tardis streaming request: exchange=okex-options, symbol=OPTIONS, data_type=options_chain -> /tmp/tmp*.parquet` — for
+  **~13-14 minutes**, before `Container terminated on signal 9.` Reproduced identically in all 4/4 attempts checked
+  (06:00 attempt 1 @ 06:02:16, retry @ 06:17:23; 09:00 attempt 1 @ 09:02:05, retry @ 09:16:17).
+- **HyperLiquid's per-day trades cache did NOT run in any of these executions** —
+  `Pre-flight: venue=HYPERLIQUID ... fully covered, skipping` fires BEFORE OKX-options is reached every time, so
+  `HyperliquidS3Downloader._trades_cache` is conclusively ruled out as the cause of THIS recurring OOM (it was the right
+  code-read hypothesis for the ORIGINAL 07-23/24 die-within-10-40s signature, but that is a different failure mode than
+  this one).
+- The service's own `ResourceProfiler` (`RESOURCE_SAMPLE` log line, backed by `psutil.Process().memory_info().rss` —
+  this process's own heap, which WOULD show the 429K-row `CeFiCatalogReader` catalogue DataFrame and any HL cache
+  growth) stayed **flat at ~4.7-4.8GB for the entire ~13min hang**, ruling out per-venue-fan-out pandas heap growth and
+  the one-time catalogue load (which happens once at the start, ~4.3GB, and does not grow further) as the ONGOING
+  driver. Meanwhile `psutil.virtual_memory().percent` (host-level, includes page cache) and local disk usage
+  (`disk=/tmp:X%`) climbed together in lockstep from ~37% to ~100% over the same window — consistent with an unbounded
+  single-request download/decompress to local disk with no size or time cap, not a Python-heap leak.
+- **Conclusion: the dominant, measured contributor is the OKX-options grouped-symbol Tardis bulk `options_chain`
+  download** (`TardisAdapter._download_bulk` → `download_csv_streaming`, `tardis_bulk_download.py`) — either a genuinely
+  oversized file for this exchange/day or an unbounded stream, with no total-size or wall-clock cap, so it runs until
+  the CONTAINER's memory ceiling is hit regardless of what that ceiling is (this is why bumping 8Gi→16Gi only delayed,
+  not fixed, the failure).
+
+**Fix shipped**: wrapped the bulk chain download in `download_batch()` (`tardis_batch_download.py`) with
+`asyncio.wait_for(..., timeout=300s)`. A timeout raises `TimeoutError`, which the EXISTING shard-level failure isolation
+(`fetch_tick_data_for_venue` in `market-tick-data-service/market_tick_data_service/engine/orchestrator/ __init__.py`,
+`except (OSError, ConnectionError, TimeoutError)`) already catches and records as a retryable failed shard — so a
+runaway bulk download now fails fast and isolated (this one venue/data_type marked `attempted_failed`, retriable next
+run) instead of hanging the whole job for ~13min until Cloud Run's OOM killer intervenes.
+`market-tick-data-service@31958a05`. `quality-gates.sh` green on the committed HEAD (sentinel-verified), shipped via
+quickmerge.
+
+**Not yet done (follow-up, not blocking this todo's close)**: confirm on the NEXT scheduled 06:00/09:00 UTC execution
+that the job now completes (or fails ONLY the OKX-options shard, isolated) rather than crash-looping; if 300s proves too
+tight for a legitimately large OKX-options day, the constant (`_BULK_CHAIN_DOWNLOAD_TIMEOUT_SEC` in
+`tardis_batch_download.py`) is a one-line tune. Whether the OKX-options download is oversized vs. simply
+unbounded/hanging (no total-size logging exists yet) is unresolved — a future pass could add byte-count logging to the
+streaming download to distinguish "genuinely huge legitimate file" from "runaway/never-terminating stream".
+
 ### Todos
 
 - [x] ✅ [BACKEND] P1. Confirm (via a memory profile / Cloud Monitoring container-memory graph of an actual execution,
@@ -253,11 +303,14 @@ drives the ~8.6GB peak) and a permanent code-level fix remain open follow-ups, n
       limit, fits the new 16Gi). **NOT yet isolated**: whether `market-tick-data-service@a6e974b6`'s HyperLiquid
       day-cache specifically is the dominant contributor vs. other factors (catalogue load, normal fan-out growth) — see
       the next todo.
-- [ ] [BACKEND] P2. Isolate the dominant memory contributor (HyperLiquid day-cache vs. catalogue load vs. per-venue
-      fan-out) via a proper memory profile (e.g. `tracemalloc` or a Cloud Profiler session on a real execution), then
-      bound whichever is confirmed: for the HyperLiquid case, either only cache/retain the coins this run actually needs
-      (not every coin HL published that day), or stream the 24 hourly fetches (parse-then-discard per hour) instead of
-      materializing all 24 decompressed texts before parsing any. Repo: market-tick-data-service.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-26 (slot-14).** Isolated via a real-execution log profile (4/4 reproductions, see
+      "Dominant-contributor isolation" section above): NEITHER HyperLiquid day-cache (never ran — HL was skipped, fully
+      covered, in every hung execution) NOR the one-time catalogue load (flat RSS, one-time cost) is the driver. The
+      measured dominant contributor is the OKX-options grouped-symbol Tardis bulk `options_chain` download, which has no
+      total-size/wall-clock cap and runs until the container's memory ceiling is hit. Bounded it with
+      `asyncio.wait_for(300s)` in `download_batch()` (`tardis_batch_download.py`), routing a timeout into the existing
+      shard-level failure isolation instead of hanging the whole job. `market-tick-data-service@31958a05`,
+      `quality-gates.sh` green, shipped via quickmerge.
 - [ ] [OPERATOR] P2. Decide whether to keep the Cloud Run job at 16Gi permanently (small ongoing cost increase) once the
       root cause is confirmed/fixed, or revert to 8Gi after a code fix lands.
 - [ ] [DATA] P2. Once the regular 06:00/09:00 UTC crons have run a few times on the new 16Gi limit, re-verify
