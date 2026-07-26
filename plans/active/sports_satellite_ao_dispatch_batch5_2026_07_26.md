@@ -141,7 +141,7 @@ drift_direction: advance-code
       `mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`. **Done when**: the population-wide duplication
       rate/mechanism is measured and reported, AND either (a) scope was immaterial and that's recorded as the closing
       rationale, or (b) a re-run over the affected population confirms 0 poll-key duplicates remain.
-- [ ] [DATA] P1. Determine whether the canonical `batch_odds_api` sports capture pipeline is STILL susceptible to the
+- [x] ✅ [DATA] P1. Determine whether the canonical `batch_odds_api` sports capture pipeline is STILL susceptible to the
       confirmed 2022-09-07…2022-10-01 capture-outage pattern (the doc's own re-measurement superseded the original "92%
       under-capture over 2022-03-07…2023-04-30" headline — the real, re-measured gap is 550,062 legacy-only keys on 32
       of 1,837 days, dominated by that contiguous outage). The legacy `market-data-tick-sports` bucket that held the
@@ -159,7 +159,16 @@ drift_direction: advance-code
       days / 550,062 keys) as ground truth, not the original 92%/14-month headline. Source:
       `mdt_legacy_canonical_row_gap_2026_07_16.md` (Loose ends #1, "BIG FINDING → operator + own issue doc"). Done when:
       the new issue doc exists with a stated verdict on whether the outage mechanism is still live, and — if it is — the
-      operator has been notified per the data-pipeline-correctness-hard-rule big-finding trigger.
+      operator has been notified per the data-pipeline-correctness-hard-rule big-finding trigger. **Resolution
+      (2026-07-26, slot 8)**: NOT the same 2022 mechanism (that one — the swallowed per-timestamp fetch error in
+      `odds_api_adapter.py` — was traced and found largely mitigated by an independent sentinel safeguard) — a
+      DIFFERENT, currently-live, more severe bug was found and fixed: `TickDataHandler._check_early_exit`'s future-date
+      guard blocked 100% of same-day sports odds capture, unconditionally, since ≥2026-06-11 (live-verified via GCP
+      logs: every dispatch today logged `DATA_NOT_AVAILABLE: date=2026-07-26 is in the future`). 90-day manifest density
+      confirmed a ~94% collapse vs the same calendar window in 2024/2025. Fixed + tested + shipped
+      `market-tick-data-service@410d7569`. Full writeup + operator-decision items (deploy confirmation + historical-gap
+      backfill call) in `plans/active/issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` —
+      `unified-trading-pm@7c94a8d14`.
 - [ ] [SCRIPT] P3. Root-cause WHY `quality-gates.sh`'s function/class/method SIZE CHECK (phase 5) didn't block the
       2026-07-16 sports-orchestrator function-size regression at commit time (candidate commits `a66fc295`, `493393c8`,
       `86cc71ff`, all instruments-service, same day) — determine whether it was the green-content SENTINEL SKIP
