@@ -160,6 +160,34 @@ Hard stop:           prod-bucket delete (codex § 3.1) -- human-only, always.
    remains is the archived doc's own still-open PURGE todo (delete the now-redundant, now-orphaned duplicate objects),
    which is human-gated and tracked here + there, not a new script-extension task.
 
+## Provenance trace (2026-07-26, slot 9, data_engineering)
+
+Traced every candidate the "most likely" hedge above named, plus adjacent same-window scripts, against the exact
+population signature (`pipeline_mode=batch_footystats`, `venue=ODDS_API`, `source=ODDS_API`, `instrument_type=` empty,
+`data_type=odds`, 42,476 manifest rows, 2020-06-06..2026-04-14). None match:
+
+- `prune_phantom_soccer_manifest_rows_2026_07_22.py` (mtds@f9f012cb) — own commit message + docstring scope this to a
+  DIFFERENT, much smaller population: 6,110 rows keyed on raw lowercase `soccer_*` league_id
+  (`data_type=trades`/`instrument_type=odds`), dated 2025-07-31..2025-12-31 only. Wrong pipeline_mode, wrong shape,
+  wrong date range, wrong count.
+- `manifest_swap_2026_07_22.py --apply-prod --confirm-prod-write` (re-applied 2026-07-25 per
+  `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s step-4 progress log) — targets the league_id-relocation raw
+  `TRADES`/`batch_odds_api` shape (ADD 275,136 canonical / REMOVE 260,298 stale raw rows). The sibling doc
+  `plans/archive/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md` explicitly states: _"Deferred
+  shapes (`odds_horizon_bucket`, `batch_footystats`) were never in this swap's scope and remain genuinely un-migrated —
+  do not read this fix as covering them."_ Rules this out directly, in the source's own words.
+- `reconcile_phantom_manifest_rows_all.py` (instruments-service) — flips `capture_status` to `attempted_failed` for rows
+  that claim `captured` but have NO backing GCS object (the phantom direction is object-missing/row-present). Our
+  population is the OPPOSITE direction (object-present/row-missing) and this script never deletes rows outright, only
+  flips a status column — cannot produce a row disappearing from the manifest entirely.
+- `migrate_sports_casing_2026_07_22.py` / `migrate_sports_league_id_casing_2026_07_21.py` — the latter is confirmed (via
+  the batch2 plan's own progress log) to be a pure GCS object COPY with zero `ManifestWriter`/`record_captured` calls;
+  the former only resyncs/overwrites stale twins, never deletes rows outright.
+
+**Verdict: search exhausted, no commit/process found.** The purge remains an open provenance gap — flagged for the
+record per the todo's own "not blocking" framing, not escalated as a data-correctness incident (the manifest-absence
+itself is not in dispute, and no downstream consumer reads this shape, per Part 4 of the disposition checklist above).
+
 ## Todos
 
 - [ ] [DATA] P1. Run a fresh exhaustive content-verify census (all remaining days in the archived doc's original
@@ -170,8 +198,18 @@ Hard stop:           prod-bucket delete (codex § 3.1) -- human-only, always.
       `pure_duplicate`/`genuine_gain`/`no_migrated_objects` classification via the same family-agnostic key; smoke-
       tested against `2022-06-15` + `2024-12-01`, matches this doc's manual findings exactly). Build a `--days-file`
       covering the remaining ~1,616 days (the archived doc's original day list minus the 199 merged gain days) and run
-      it — do not re-derive the comparison logic from scratch. (repo: market-tick-data-service)
+      it — do not re-derive the comparison logic from scratch. (repo: market-tick-data-service) **IN PROGRESS 2026-07-26
+      (slot 9)**: running the census over the full 2020-06-06..2026-04-14 calendar range (2,139 days — a superset of the
+      exact 1,815/1,616-day scope, since the exact day-list artifact from the archived doc's 2026-07-17 run was a local,
+      non-committed scratch cache (`~/tmp-or5b/`) and is unrecoverable; the census script's own empty-prefix
+      short-circuit makes the ~324 non-migrated calendar days in the superset cheap, so this is the safer exhaustive
+      superset rather than an approximate subset) via background process, ETA ~5-6h at the observed ~10-11s/migrated-day
+      rate; report streaming to a per-day JSONL.
 - [ ] [DATA] P2. Separately re-examine the archived doc's 280-day "adds keys, zero derive gain" bucket — excluded from
-      this doc's delete-suggestion; needs its own disposition. (repo: market-tick-data-service)
-- [ ] [DOCS] P3. Trace the exact commit/process that purged the 42,476 mis-stamped manifest rows between 2026-07-17 and
-      2026-07-25 (provenance gap noted above) — for the record, not blocking. (repo: unified-trading-pm)
+      this doc's delete-suggestion; needs its own disposition. (repo: market-tick-data-service) **NOTE 2026-07-26**: the
+      P1 census run above will surface this bucket as a byproduct (its `genuine_gain` days, once the 199 already-merged
+      gain days are excluded/cross-checked, should correspond to this 280-day population) — recording its own
+      disposition here once P1 completes rather than running a second separate census.
+- [x] ✅ [DOCS] P3. Trace the exact commit/process that purged the 42,476 mis-stamped manifest rows between 2026-07-17
+      and 2026-07-25 — DONE 2026-07-26 (slot 9). Search exhausted across every named candidate + adjacent scripts; none
+      match. See "Provenance trace" section above. (repo: unified-trading-pm)
