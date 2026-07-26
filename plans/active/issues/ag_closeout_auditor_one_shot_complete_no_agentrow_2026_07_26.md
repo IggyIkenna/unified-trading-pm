@@ -83,17 +83,15 @@ cosmetic error message.
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. In `server/routes/slots_worker.py` (`_done_one_off`, ~line 718) and/or the `/boot` handler, when a
-      slot boots with a `role`/`slot_role` matching a known `plan_health`-family one-shot role (or when the boot payload
-      includes a `tranche`/`dispatch_id` shape matching that family) but `find_active_agent_for_session` finds no
-      matching `AgentRow`, either (a) lazily construct the missing `AgentRow` with `lifecycle="one_shot"` at boot time
-      so `one_shot_complete` has something to archive later, or (b) have `/boot` itself call the same registration logic
-      `POST /api/plan-health/dispatch` uses, so any entry path converges on one correctly-registered state. Add a
-      regression test: boot a slot directly via `/api/slots/{N}/boot` with a one-shot role and no prior
-      `/plan-health/dispatch` call, do real work, then confirm `POST /done {one_shot_complete: true}` succeeds instead
-      of 400ing. Repo: agent-orchestrator. Done when: the reproduction above (boot a one-shot role slot directly, skip
-      `/plan-health/dispatch`, call `one_shot_complete` after work is done) succeeds, and the new regression test passes
-      plus `quality-gates.sh` is green.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-26 (slot-14).** Option (a): `boot_slot()` now lazily constructs the missing
+      `AgentRow` with `lifecycle="one_shot"` when a slot boots with `slot_role` matching a known `plan_health`-family
+      role (`PLAN_HEALTH_FAMILY_ROLES`, newly exported from `plan_health.py`) and `spawn_base_role` isn't already a
+      typed role — via the same `register_agent()` helper `plan_health.dispatch()` uses, then persists `spawn_base_role`
+      so a subsequent `/boot` takes the existing (already-tested) resume branch instead of re-registering. 3 new
+      regression tests in `test_boot_typed_role_gate.py`: the lazy-create fires + holds the slot `working`,
+      `one_shot_complete` succeeds afterward (the exact live rejection this doc reproduced), and a second `/boot`
+      doesn't double-register. `agent-orchestrator@a01aeae`, `quality-gates.sh` green (1749 backend + 137 dashboard
+      tests).
 - [ ] [OPERATOR] P3. Confirm whether slot 8's `ag_closeout_auditor` dispatch (dispatch_id `agt-9ddfc3`, 2026-07-26) was
       intentionally spawned outside the normal `/api/plan-health/dispatch` → daily-systemd-timer path (e.g. a manual
       test/dev invocation) — if so this may be a one-off rather than a live production gap; if the daily timer itself is
