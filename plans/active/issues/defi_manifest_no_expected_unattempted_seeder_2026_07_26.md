@@ -160,36 +160,36 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       guardrail: do not add `fluid` to `lending_indices_handler.py` without a real collector).
 
       | protocol | lending_indices | risk_params | liquidations | `SUBGRAPH_IDS` |
-                          |---|---|---|---|---|
-                          | `aave_v3` / `spark` / `compound_v3` / `morpho` | Y | Y | Y | Y |
-                          | `fluid` | **N** (no `cascades` entry — confirmed real gap, already tracked as this doc's finding #5) | Y (`_CATALOGUE_ONLY_PROTOCOLS`, deliberate) | Y (dedicated `_FLUID_LIQUIDATIONS_QUERY`/`_parse_fluid_liquidations`) | Y |
-                          | `kamino_lending` | Y (dedicated RPC fetcher) | Y | **N** (absent, no rationale found) | N (Solana, RPC-based) |
-                          | `solend` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
-                          | `marginfi` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
+                              |---|---|---|---|---|
+                              | `aave_v3` / `spark` / `compound_v3` / `morpho` | Y | Y | Y | Y |
+                              | `fluid` | **N** (no `cascades` entry — confirmed real gap, already tracked as this doc's finding #5) | Y (`_CATALOGUE_ONLY_PROTOCOLS`, deliberate) | Y (dedicated `_FLUID_LIQUIDATIONS_QUERY`/`_parse_fluid_liquidations`) | Y |
+                              | `kamino_lending` | Y (dedicated RPC fetcher) | Y | **N** (absent, no rationale found) | N (Solana, RPC-based) |
+                              | `solend` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
+                              | `marginfi` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
 
-                          **Findings**:
-                          1. `fluid`'s gap is lending_indices-ONLY, confirmed — `risk_params_handler.py` (`_CATALOGUE_ONLY_PROTOCOLS =
-                             frozenset({"morpho", "fluid"})`, line 115) and `liquidations_handler.py` (dedicated fluid query, lines
-                             588/724/739) both have REAL, working, deliberate `fluid` paths; only `lending_indices_handler.py`'s
-                             `_query_and_parse` cascades dict lacks a `fluid` entry. No new work needed beyond what #5 already tracks.
-                          2. **New, previously-unflagged gap**: `risk_params_handler.py`'s own imported `SOLANA_LENDING_PROTOCOLS`
-                             constant (`_risk_params_stage.py:23`, `frozenset({"kamino_lending", "solend", "marginfi"})`) declares all 3
-                             Solana lending protocols as catalogue-fallback-capable (the dispatch logic at lines 330/408 correctly
-                             branches on `protocol in SOLANA_LENDING_PROTOCOLS`), but `_DEFAULT_PROTOCOLS` (the actual iteration list,
-                             line 380) only includes `kamino_lending` — `solend`/`marginfi` risk_params are silently NEVER collected even
-                             though the underlying mechanism already supports them. Unlike the documented `fluid`/`morpho`
-                             `_CATALOGUE_ONLY_PROTOCOLS` reasoning, no comment justifies omitting `solend`/`marginfi` here — reads as an
-                             unintentional oversight (the 3-Solana-protocol set exists as a real shared constant, just not fully wired
-                             into this one handler's dispatch list), not a documented scope decision. Filed as a fresh, precisely-scoped
-                             follow-up (P3) below rather than fixed inline (adding them changes runtime dispatch behavior, out of scope
-                             for a read-only reconciliation todo).
-                          3. `liquidations_handler.py` has ZERO Solana-protocol coverage (no `kamino_lending`/`solend`/`marginfi`, no
-                             `SOLANA_LENDING_PROTOCOLS` import at all) — no comment either way; flagging as unconfirmed (may be an
-                             intentional scope limit if Solana lending liquidations genuinely have no equivalent data source) rather than
-                             asserting it's a bug.
-                          4. The 4 core EVM protocols (`aave_v3`/`spark`/`compound_v3`/`morpho`) are fully consistent across all 3
-                             handlers and `SUBGRAPH_IDS` — no mismatch.
-                          (repo: market-tick-data-service)
+                              **Findings**:
+                              1. `fluid`'s gap is lending_indices-ONLY, confirmed — `risk_params_handler.py` (`_CATALOGUE_ONLY_PROTOCOLS =
+                                 frozenset({"morpho", "fluid"})`, line 115) and `liquidations_handler.py` (dedicated fluid query, lines
+                                 588/724/739) both have REAL, working, deliberate `fluid` paths; only `lending_indices_handler.py`'s
+                                 `_query_and_parse` cascades dict lacks a `fluid` entry. No new work needed beyond what #5 already tracks.
+                              2. **New, previously-unflagged gap**: `risk_params_handler.py`'s own imported `SOLANA_LENDING_PROTOCOLS`
+                                 constant (`_risk_params_stage.py:23`, `frozenset({"kamino_lending", "solend", "marginfi"})`) declares all 3
+                                 Solana lending protocols as catalogue-fallback-capable (the dispatch logic at lines 330/408 correctly
+                                 branches on `protocol in SOLANA_LENDING_PROTOCOLS`), but `_DEFAULT_PROTOCOLS` (the actual iteration list,
+                                 line 380) only includes `kamino_lending` — `solend`/`marginfi` risk_params are silently NEVER collected even
+                                 though the underlying mechanism already supports them. Unlike the documented `fluid`/`morpho`
+                                 `_CATALOGUE_ONLY_PROTOCOLS` reasoning, no comment justifies omitting `solend`/`marginfi` here — reads as an
+                                 unintentional oversight (the 3-Solana-protocol set exists as a real shared constant, just not fully wired
+                                 into this one handler's dispatch list), not a documented scope decision. Filed as a fresh, precisely-scoped
+                                 follow-up (P3) below rather than fixed inline (adding them changes runtime dispatch behavior, out of scope
+                                 for a read-only reconciliation todo).
+                              3. `liquidations_handler.py` has ZERO Solana-protocol coverage (no `kamino_lending`/`solend`/`marginfi`, no
+                                 `SOLANA_LENDING_PROTOCOLS` import at all) — no comment either way; flagging as unconfirmed (may be an
+                                 intentional scope limit if Solana lending liquidations genuinely have no equivalent data source) rather than
+                                 asserting it's a bug.
+                              4. The 4 core EVM protocols (`aave_v3`/`spark`/`compound_v3`/`morpho`) are fully consistent across all 3
+                                 handlers and `SUBGRAPH_IDS` — no mismatch.
+                              (repo: market-tick-data-service)
 
 - [ ] [DATA] P3. **NEW (found while reconciling the todo above)** — `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS`
       (line 111) omits `solend`/`marginfi` even though its own imported `SOLANA_LENDING_PROTOCOLS` constant
@@ -224,18 +224,20 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       FRAX/MORPHO_VAULTS), not a FRAX-specific issue. No code changed (read-only per this todo's scope; a fix requires
       an operator call on whether/how to backfill + whether to add it to the forward-poll set — see new P1 follow-up
       below). (repo: market-tick-data-service)
-- [ ] [DATA] P1. **NEW (found while confirming the FRAX-ETHEREUM todo above)** — the entire `vault_share_price`
-      data_type has zero production data across all 8 vaults/5 protocols despite `VaultSharePriceHandler` being
-      code-complete + unit-tested + CLI-registered since 2026-05-03 (`market-tick-data-service@9475e66b`) — it has
-      simply never been invoked: not in `launch-defi-forward-poll.sh`'s recurring closed set, and no evidence its
-      one-off backfill launcher (`launch-mtds-vault-share-price-backfill-vm.sh`) was ever run. This is a genuine
-      data-pipeline-correctness gap (an entire built data_type silently producing nothing, indistinguishable from "never
-      declared" per `honest-absence-downstream-handling.md`), needing an operator decision before an AO worker acts: (a)
-      verify the 8 vault configs (`_VAULTS` dict — addresses/chains/decimals) are still current before any real capture,
-      (b) run the one-off backfill for historical coverage, (c) decide whether to add `collect-vault-share-price` to the
-      forward-poll closed set for ongoing daily capture (or explain why it's intentionally backfill-only). Done when: an
-      operator ruling is recorded and either (i) the backfill has run + manifest rows exist for all 8 vaults, or (ii)
-      the gap is ruled intentional/deferred with a reason. (repo: market-tick-data-service, deployment-service)
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-8, `data_engineering`) — RESOLVED between slot-11's finding and now; not by
+      this task, but genuinely closed.** Re-verified against the SAME manifest slot-11 checked
+      (`market-data-tick-defi-prd-central-element-323112`'s consolidated index, sanctioned columns+filters pushdown read
+      — the naive full-schema read this bucket needs is ~15GB and times out, see the measurement-trap note already in
+      `mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`): **7,321 `vault_share_price` rows now exist, 7,225
+      `captured` + 96 honest `empty_confirmed`, across exactly all 8 vault instances**
+      (`sDAI`/`sFRAX`/`sUSDe`/`steakUSDC`/`yvUSDC-1`/`yvWETH-1`/`yvDAI-1`/`GTUSDCP`, matching this todo's own "8
+      vaults/5 protocols" framing exactly) — zero venues with zero coverage. `written_at` distribution shows a real bulk
+      backfill ran **2026-07-23 13:00-16:00 UTC** (5,791 of 7,321 rows, spanning historical dates 2023-01-18 through
+      2026-07-25) plus a small ~5-row daily trickle at ~01:00 UTC every day since (07-23 through 07-26), confirming
+      forward-poll is now ALSO wired in — both (b) and (c) from this todo's own ask are independently satisfied. This
+      directly resolves Done-when branch (i). Did not identify WHO/WHAT ran the backfill or wired the forward-poll (not
+      necessary to close this todo — the manifest state itself is the proof) — if the operator wants that provenance for
+      the record, it's a separate, optional question. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-2) — claim is STALE, live-verified.** Queried Morpho Blue's live GraphQL API
       (`blue-api.morpho.org`, the actual data source `morpho_adapter.py` uses — `SUBGRAPH_IDS["morpho"]`'s per-chain
       entries are declaration-only, per its own comment) directly for `chainId_in: [42161, 10, 137]`
@@ -364,3 +366,10 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
   confirming the todo's own hypothesis. Filed a new P1 follow-up (broader scope: the whole data_type, not just FRAX)
   recommending an operator decision on backfill + forward-poll inclusion, since acting on it (verifying 8 vault
   configs + launching a real capture) is a production data action beyond a confirm-only todo's scope.
+- 2026-07-26 (slot-8, `data_engineering`): closed the P1 vault_share_price-zero-data follow-up — re-verified the same
+  manifest and found it's no longer zero: 7,321 rows across exactly all 8 vault instances, a real bulk backfill
+  (2026-07-23 13:00-16:00 UTC) plus an active daily forward-poll trickle since. The gap this todo tracked was resolved
+  by something between slot-11's finding and this check; verified via the manifest itself rather than assuming the prior
+  finding was wrong. Naive full-schema reads against this bucket time out even at 550s (confirmed twice) — always use
+  `read_availability_index(..., columns=[...], filters=[...])` together (both required to activate the pushdown path) or
+  a locally-cached file with `pd.read_parquet(..., filters=...)`.
