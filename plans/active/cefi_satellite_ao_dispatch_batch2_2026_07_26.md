@@ -365,25 +365,26 @@ drift_direction: advance-code
       explicit operator approval) with a pre-write snapshot on disk, and the live manifest's in-MVP row count matches
       the (re-verified) dry-run projection; both remaining unchecked `[IS]` P0 boxes and the flagged "Orchestrator
       follow-up" note in this doc's Progress Log are checked off / resolved.
-- [ ] [REVIEW] P1. **Audit the DERIBIT options-chain handler's manifest bookkeeping post-v6-fix, then migrate any
-      legacy-shape prod objects.** After `deribit_options_chain_handler.py::_write_shard`'s v6 canonical-path rewrite
-      lands (`cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s "Rewrite
-      deribit_options_chain_handler.py::_write_shard" todo — which also fixes `record_captured`'s `instrument_type`
-      argument from `"option"`→`"options_chain"`), do the FULL audit this doc's todo 3 actually asked for (not just the
-      one-field fix already shipped): confirm the handler's `manifest_recorder`/honest-absence bookkeeping shard-atom
-      (venue/instrument_type/data_type/day/underlying key, not only the `instrument_type` string) matches the corrected
-      v6 object path end-to-end — fix any remaining mismatch found. Then resolve this doc's todo 4: using the object
-      count from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s "Confirm whether the legacy
-      pipeline_mode=live_deribit path has any prod objects" todo, if that count is non-zero, migrate the legacy-shape
-      objects to the v6 canonical path (copy → verify row/column parity → `[OPERATOR]`-only purge of the legacy-shape
-      originals, per `/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md`; note this doc's own analysis
-      found one-file-per-write means no fan-in collision risk here, but re-confirm before assuming). If the count is
-      zero, this todo closes with no migration needed. Repo: market-tick-data-service. **Done when**: a written
-      confirmation (or fix commit) that the manifest shard-atom matches the v6 path for this handler; AND either (a) a
-      written zero-object finding closes todo 4 with no migration performed, or (b) legacy-shape objects are copied to
-      the v6 path, verified row/column-identical, and the legacy originals are purged only via the `[OPERATOR]` step
-      with evidence cited; `quality-gates.sh` green if code changed. Source:
-      `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-8, `review`) — audited + fixed a real remaining mismatch; confirmed
+      zero-object finding, no migration needed.** Confirmed the v6 rewrite (`market-tick-data-service@ec0df878`) had
+      already landed (batch1's checkbox was stale vs code — flipped it too, see that plan). Full audit of
+      `manifest_recorder`/honest-absence bookkeeping found the actual remaining gap: the v6 object path encodes
+      `instrument_type` as a partition dimension, and UTL's manifest dedup key
+      (`_writer_io.py::_merge_dataframes::dedup_cols`) includes `instrument_type` whenever any row populates it — but
+      `DefiManifestRecorder.record_failed()`/`record_zero_rows()` never accepted or forwarded `instrument_type` (only
+      `record_captured` did), so a failed/zero-rows row for a shard keyed WITHOUT `instrument_type` while a captured
+      retry for the SAME shard keyed WITH it — different dedup keys, so `drop_duplicates(keep="last")` never collapsed
+      them (a stale failed row would persist alongside a later captured row instead of being replaced). Fixed with a
+      backward-compatible optional `instrument_type` kwarg threaded through
+      `record_failed`/`_emit_failed_row`/`record_zero_rows` (default `""` preserves every other DeFi handler's existing
+      behaviour), and updated the DERIBIT handler's three failed/zero-rows call sites to pass
+      `instrument_type="options_chain"`. Todo 4 resolved via a targeted (non-recursive) GCS delimiter listing of
+      `gs://market-data-tick-cefi-prd-central-element-323112/pipeline_mode=live_deribit/` — zero objects; no legacy
+      shape exists in prod, so no migration was needed. New tests in `test_defi_manifest_recorder.py` (recorder-level)
+      and `test_deribit_options_chain_handler.py` (handler-level, both `_collect_currency` and `_collect_expiry_shard`
+      failure/zero-rows branches) cover the fix. `quality-gates.sh` green. Full detail + evidence:
+      `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md` (all 4 todos now closed, status: resolved).
+      Evidence: `market-tick-data-service@ed102ef8`.
 - [x] ✅ [DATA] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — recorded FAIL verdict; correctly did NOT force a
       premature close or file a redundant issue doc.** Fresh manifest read
       (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): DERIBIT

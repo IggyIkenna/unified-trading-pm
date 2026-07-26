@@ -399,25 +399,23 @@ drift_direction: advance-code
       cell. Repo: unified-api-contracts. **Done when**: `"volatility_index"` is present in the dict; `quality-gates.sh`
       green; grep confirms no parallel hardcoded cefi data-type list needs a matching edit. Source:
       `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`.
-- [ ] [DATA] P1. **Confirm whether the legacy `pipeline_mode=live_deribit` path has any prod objects.** Via
-      `gcloud     storage ls` or a manifest query, check whether `DeribitOptionsChainHandler` has actually written any
-      objects under the legacy inline path prefix
-      `pipeline_mode=live_deribit/asset_group=cefi/venue=DERIBIT/instrument_type=option/data_type=<DT>/...`. Repo:
-      market-tick-data-service (read-only). **Done when**: a written count (possibly zero) of objects under this prefix
-      in the prod cefi raw-tick bucket is recorded, with sample paths if any exist. Source:
-      `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`.
-- [ ] [DATA] P1. **Rewrite `deribit_options_chain_handler.py::_write_shard` to build the v6 canonical path.** Replace
-      the hand-built `f"pipeline_mode=live_deribit/.../underlying={C}/expiry={E}/{C}_{E}_{TS}.parquet"` path with UAC
-      `build_cefi_partition_path` (`instrument_type="options_chain"`, `quote_asset`/`margin_type` via
-      `derive_settlement_dimensions`), mirroring the existing call pattern in
-      `partitioned_writer.py::_cefi_chain_partition_dims` so this handler lands on the same v6 path with chain fan-in
-      into `ticks.parquet`. In the same change, fix the adjacent `recorder.record_captured(...)` call in
-      `_collect_expiry_shard` (currently passes `instrument_type="option"`, singular) to pass `"options_chain"` so the
-      manifest shard-atom matches. Repo: market-tick-data-service. **Done when**: `_write_shard` builds its path
-      exclusively via `build_cefi_partition_path`, producing the v6 shape with fan-in across writes for the same
-      day/underlying; `record_captured`'s `instrument_type` argument matches; existing/new unit tests assert the v6
-      shape and pass; `quality-gates.sh` green. Source:
-      `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`.
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-8, `review`/`data_engineering`) — count is ZERO, plan checkbox was stale vs
+      actual state.** Targeted (non-recursive) delimiter listing of
+      `gs://market-data-tick-cefi-prd-central-element-323112/pipeline_mode=live_deribit/` returned "matched no objects";
+      the bucket's top-level listing (`_index/`, `_migration_backup/`, `_migration_backups/`, `_quarantine/`,
+      `_remediation_backups/`, `backfill-logs/`, `processed_candles/`, `raw_tick_data/`, `_vm_staging/`) confirms no
+      `pipeline_mode=live_deribit/` prefix exists at all. `DeribitOptionsChainHandler` never wrote (or wrote nothing)
+      under the legacy shape — zero blast radius. Full detail:
+      `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md` todo 1.
+- [x] ✅ [DATA] P1. **DONE — shipped `market-tick-data-service@ec0df878`; plan checkbox was stale vs actual code state
+      (this rewrite already landed before this checkbox was flipped).** `_write_shard` builds its path exclusively via
+      UAC `build_cefi_partition_path` (`instrument_type="options_chain"`, `quote_asset`/`margin_type` via
+      `derive_settlement_dimensions`), mirroring `partitioned_writer.py::_cefi_chain_partition_dims`; the adjacent
+      `record_captured(...)` call in `_collect_expiry_shard` passes `instrument_type="options_chain"` (not the legacy
+      singular `"option"`); `test_write_shard_produces_v6_canonical_chain_path` +
+      `test_write_shard_fans_in_across_calls_same_day_underlying` +
+      `test_collect_expiry_shard_records_options_chain_instrument_type` assert the v6 shape + fan-in + manifest match;
+      `quality-gates.sh` green. Source: `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`.
 - [ ] [DATA] P1. **Audit recent CEFI Tardis backfill VM launches for actual vs claimed completion.** Enumerate recent
       `mtds-backfill-cefi-*` launches via `gcloud compute operations list` / the `vm-logs/{vm}/` GCS prefix, and
       cross-check each run's claimed-complete signal (VM self-delete + the "mtds-backfill loop complete" log line)
