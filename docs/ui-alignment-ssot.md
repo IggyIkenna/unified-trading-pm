@@ -20,14 +20,15 @@ reference only.
 These generators are **repeatable**: run them again whenever their **inputs** change. There is no separate “migration”
 mode.
 
-| Trigger (examples)                                                                           | Regenerate                          |
-| -------------------------------------------------------------------------------------------- | ----------------------------------- |
-| UAC registry or enum changes, new venues, `VALID_*` constants                                | §1 `generate_ui_reference_data.py`  |
-| `unified_api_contracts.internal` enums / presets used by the script                          | §1                                  |
-| `UnifiedCloudConfig` or config schema extraction in the script                               | §1                                  |
-| `unified-trading-pm/scripts/dev/ui-api-mapping.json` stacks                                  | §1                                  |
-| `workspace-manifest.json`, `strategy-manifest.json`, data-flow manifest, deployment topology | §2 `generate_system_topology.py`    |
-| UIC OpenAPI or HTTP contract surface for the UI                                              | §3 OpenAPI / `uic-openapi-sync.yml` |
+| Trigger (examples)                                                                           | Regenerate                                                                                                           |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| UAC registry or enum changes, new venues, `VALID_*` constants                                | §1 `generate_ui_reference_data.py`                                                                                   |
+| `unified_api_contracts.internal` enums / presets used by the script                          | §1                                                                                                                   |
+| `UnifiedCloudConfig` or config schema extraction in the script                               | §1                                                                                                                   |
+| `unified-trading-pm/scripts/dev/ui-api-mapping.json` stacks                                  | §1                                                                                                                   |
+| `workspace-manifest.json`, `strategy-manifest.json`, data-flow manifest, deployment topology | §2 `generate_system_topology.py`                                                                                     |
+| UIC OpenAPI or HTTP contract surface for the UI                                              | §3 OpenAPI / `uic-openapi-sync.yml`                                                                                  |
+| `ARCHETYPE_CAPABILITY_REGISTRY`, venue/gap registries, capability graph nodes/edges          | §1a `generate_capability_manifest.py` + `generate_capability_verdict_matrix.py` — **MANUAL sync, no CI auto-PR yet** |
 
 **CI automation (2026-03-23):** The `uac-registry-sync.yml` and `uic-openapi-sync.yml` workflow templates auto-create
 PRs when UAC/UIC merge to main/staging. File paths corrected from `src/generated/` to `lib/registry/` and `lib/types/`.
@@ -97,6 +98,44 @@ the same registry/enum extraction for the UI.
 **Requires:** Workspace checkout with `unified-api-contracts` and `unified-trading-library` importable (typically
 workspace venv). Internal contracts are at `unified_api_contracts.internal`, config interface is at
 `unified_trading_library.config_interface`.
+
+### 1a — `capability-manifest.json` / `capability-verdict-matrix.json` — MANUAL sync, gap identified 2026-07-26
+
+Unlike `ui-reference-data.json` (§1, automated via `uac-registry-sync.yml`) and `archetype_capability_manifest.json` →
+`coverage.ts` (automated via `scripts/propagation/sync-archetype-capability-to-ui.sh`, wired into the UI's own
+`quality-gates.sh`), these two files have **no automated propagation path**:
+
+| Output                           | Generator (UAC-side canonical copy)                                                                                                         | UI bundled copy                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `capability-manifest.json`       | `unified-trading-pm/scripts/openapi/generate_capability_manifest.py` → `unified-api-contracts/openapi/capability-manifest.json`             | `unified-trading-system-ui/lib/registry/capability-manifest.json` |
+| `capability-verdict-matrix.json` | `unified-trading-pm/scripts/openapi/generate_capability_verdict_matrix.py` → `unified-api-contracts/openapi/capability-verdict-matrix.json` | `unified-trading-system-ui/public/capability-verdict-matrix.json` |
+
+**Current mechanism (manual only):** after regenerating in UAC, someone hand-copies both files into the UI repo and
+commits (`chore(registry): sync capability-manifest + verdict-matrix — ...`). There is no `repository_dispatch` workflow
+like `uac-registry-sync.yml` that opens this PR automatically.
+
+**Drift detection exists but is weaker than it looks:**
+`unified-trading-system-ui/tests/unit/wizard/parity-gates.test.ts` sha256-compares the bundled copies against
+`../unified-api-contracts/openapi/...` — but it only fires when that sibling repo is actually checked out next to the UI
+repo. That's true for an agent's `.tabs/<slot>/` workspace (so `quality-gates.sh` catches drift there) and would be true
+of a future fleet-wide CI that checks out both repos, but is **NOT true of `unified-trading-system-ui`'s own standalone
+GitHub Actions CI** (`.github/workflows/ci.yml`'s `test` job does a single-repo `actions/checkout` — no UAC sibling) —
+so a stale bundled manifest can merge to `main` via ordinary UI CI undetected. The `registry-drift` job in that same
+`ci.yml` only regenerates + diffs `ui-reference-data.json`; it does not cover `capability-manifest.json` /
+`capability-verdict-matrix.json`.
+
+**Confirmed live** (found while investigating
+`plans/active/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md` finding 2): at the time of that
+investigation the UI's bundled `capability-manifest.json` was stale by a full UAC regen
+(`unified-api-contracts@13266bf8` vs the UI's last sync `a0105d9f`, six minutes older — 574/2428 vs the fresh 582/2762
+nodes/edges) — i.e. the exact "a fix landing in UAC does not automatically reach the wizard UI" scenario. Manually
+re-synced via `unified-trading-system-ui@bd527d83`.
+
+**Follow-up (not done here — bigger than a UI-craft P3, needs a Python generator + GHA workflow change):** either build
+real automation mirroring `sync-archetype-capability-to-ui.sh`'s pattern (a `sync_capability_manifest_to_ui.py` +
+`uac-registry-sync.yml`-style `repository_dispatch` workflow), or at minimum extend the `registry-drift` `ci.yml` job to
+also regenerate + diff these two files the way it already does for `ui-reference-data.json`. Tracked as a follow-up todo
+in the same issue doc.
 
 ---
 
