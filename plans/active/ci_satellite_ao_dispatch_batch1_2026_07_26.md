@@ -97,8 +97,8 @@ concurrent workers do not collide on this file.
       quickmerge.sh; verified it fails 2/4 against the pre-fix commit and passes 4/4 against the fix) —
       `unified-trading-pm@3ddd1a4f2`, PM `quality-gates.sh` green. Also flipped the tracking-home P0 in
       `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` and closed
-      `issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md` (`status: resolved`) so both stop duplicate-
-      tracking this bug.
+      `/plans/archive/issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md` (`status: resolved`) so both stop
+      duplicate- tracking this bug.
 - [ ] [INFRA] P1. **Deliver a static dispatch-delivery checker: every `repository_dispatch` `event_type` emitted
       anywhere must have a listener for that type in the resolved TARGET repo.** A 204 cannot distinguish "delivered"
       from "nobody subscribed", so this can only be caught statically. The source doc names the concrete population it

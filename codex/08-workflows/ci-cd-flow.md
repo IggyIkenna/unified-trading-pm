@@ -324,12 +324,14 @@ Pass 2 — Quickmerge (--agent fast-path)
     dormant-path break-glass). --to-staging is a no-op for ldr_main repos.
 ```
 
-> **KNOWN BUG (tracked, MVP plan Phase 2 P0): `quickmerge` silently no-ops on a new-file-only ship.**
-> `quickmerge --agent --files '<newfile>'` where every `--files` path is untracked prints "No differences from main —
-> nothing to merge" and exits 0 without staging/committing, because the no-diff guard (`git diff origin/main`,
-> worktree-vs-commit) does not see untracked files. Full repro + fix:
-> `plans/active/issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md`. Fix not yet implemented — `git add` a
-> brand-new file to the index before shipping it, or verify `git show --stat HEAD` that it landed.
+> **FIXED 2026-07-26 (was tracked, MVP plan Phase 2 P0): `quickmerge` no longer silently no-ops on a new-file-only
+> ship.** Previously, `quickmerge --agent --files '<newfile>'` where every `--files` path was untracked printed "No
+> differences from main — nothing to merge" and exited 0 without staging/committing, because the no-diff guard
+> (`git diff origin/main`, worktree-vs-commit) did not see untracked files. Fix landed at `unified-trading-pm@04c0eef0e`
+> — the guard now ALSO checks `git status --porcelain -- $FILES_ARG` (scoped to the supplied `--files`), consistent with
+> the existing clean-tree guard. Regression test:
+> `scripts/quality-gates-base/tests/test-quickmerge-untracked-new-file-guard.sh`. Full repro + fix history:
+> `/plans/archive/issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md`.
 
 > **`--files` scope is re-asserted on the prek commit-retry, and the pre-stage prettier is `--files`-scoped (foot-gun
 > fix 2026-06-03).** Two places leaked foreign files into a scoped `--files` ship: (1) the commit-retry did `git add -A`
