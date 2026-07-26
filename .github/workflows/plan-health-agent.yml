@@ -149,6 +149,7 @@ jobs:
 
     outputs:
       summary: ${{ steps.report.outputs.summary }}
+      recovery: ${{ steps.recovery.outputs.recovery }}
 
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -376,6 +377,46 @@ jobs:
           done
           echo "agentic-resolution dispatch complete."
 
+      # ── RECOVERY TRACKING — notify-slack.yml suppresses a routine INFO/success post unless
+      # `recovery: true` is explicitly passed (found 2026-07-26, same gap class as
+      # publish-package.yml/cloud-build-failure-watcher.yml earlier this session): without this,
+      # a daily run that fails (script/API error, NOT finding-count) then succeeds the next day
+      # posts nothing — the "it's fixed now" signal never reaches Slack. Read the PRIOR tick's
+      # conclusion from a per-workflow GCS marker (mirrors cloud-build-failure-watcher.yml's
+      # exact pattern), compare to THIS run's job.status (steps so far — this is placed after
+      # every step that can fail, so it reflects the real final conclusion), and flag recovery.
+      - name: Check plan-health recovery state
+        id: recovery
+        if: always()
+        env:
+          CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET }}
+        run: |
+          set -uo pipefail
+          THIS_CONCLUSION="${{ job.status }}"
+          PREV_CONCLUSION="unknown"
+          if [ -n "${CICD_EVENTS_BUCKET:-}" ]; then
+            if gsutil cp "gs://${CICD_EVENTS_BUCKET}/cicd/watchers/plan-health-agent/state.json" /tmp/ph_prev_state.json 2>/dev/null; then
+              PREV_CONCLUSION=$(python3 -c "import json; print(json.load(open('/tmp/ph_prev_state.json')).get('conclusion','unknown'))" 2>/dev/null || echo "unknown")
+            fi
+          fi
+          RECOVERY="false"
+          if [ "$PREV_CONCLUSION" = "failure" ] && [ "$THIS_CONCLUSION" = "success" ]; then
+            RECOVERY="true"
+          fi
+          echo "recovery=${RECOVERY}" >> "$GITHUB_OUTPUT"
+          echo "Previous plan-health conclusion: ${PREV_CONCLUSION}; this run: ${THIS_CONCLUSION}; recovery=${RECOVERY}"
+
+      - name: Persist plan-health state
+        if: always()
+        env:
+          CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET }}
+        run: |
+          if [ -n "${CICD_EVENTS_BUCKET:-}" ]; then
+            printf '{"conclusion": "%s"}' "${{ job.status }}" \
+              | gsutil cp - "gs://${CICD_EVENTS_BUCKET}/cicd/watchers/plan-health-agent/state.json" \
+              || echo "::warning::failed to persist plan-health recovery marker"
+          fi
+
       - name: Persist CI/CD event
         # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
         # persist-cicd-event.yml reusable. The old job's non-PR scoping is inherited structurally:
@@ -413,6 +454,7 @@ jobs:
       message: "plan-health-agent (daily) | ${{ needs.plan-health.outputs.summary || 'run failed — see logs' }}"
       severity: "INFO"
       conclusion: ${{ needs.plan-health.result }}
+      recovery: ${{ needs.plan-health.outputs.recovery == 'true' }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
