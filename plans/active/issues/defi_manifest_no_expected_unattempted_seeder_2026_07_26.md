@@ -41,8 +41,7 @@ priority: P2
 drift_direction: advance-code
 depends_on: []
 resolved_by:
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
 ---
 
 # C8 re-diagnosis: no DeFi expected_unattempted seeder exists
