@@ -327,7 +327,7 @@ drift_direction: advance-code
       (features-service, manifest/data-status): NOT independently traced** (time-bounded; filed as follow-up scope, not
       guessed at). Filed a new P2 fix todo in the issue doc + flipped 3 stale/resolved checklist items there
       (verify-6-collisions, reconcile-Balancer-patch — now moot, fix-CURVE — premise was stale, CURVE was already
-      correct). unified-trading-pm@<pending>. Repos: instruments-service, market-tick-data-service,
+      correct). unified-trading-pm@00e073836. Repos: instruments-service, market-tick-data-service,
       market-data-processing-service, unified-trading-pm (read-only audit, no code changed). Source:
       `issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
 - [ ] [DOC] P1. Port the already-decided two-id/dual-key POOL model into `/codex/02-data/defi-canonical-naming-ssot.md`
