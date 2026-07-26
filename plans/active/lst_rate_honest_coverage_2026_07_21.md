@@ -992,3 +992,8 @@ tarball once; always check the launcher's own freshness warning output, and if s
   not the already-known dead-shard overhead (common to all 3, doesn't explain `-2`'s extra gap). Not root-caused or
   acted on (out of this todo's verify/relaunch scope) — flagging for next check-in / an operator kill+relaunch call on
   `-2` once understood. Realistic remaining runway: multi-day-to-multi-week, not hours — re-check later, not stalled.
+- **2026-07-26 07:56 UTC (corroborating re-check, same task re-dispatched post-compaction)** — all 3 VMs still
+  `RUNNING`, `run.log` fresh (VM3 actively writing as of 07:56), no `EXIT_STATUS` on any, none vanished. Manifest entry
+  counts climbing (`-1` 79,541, `-2` 3,936, `-3` 196,930 as of this check). Nothing materially changed in the ~19
+  minutes since the prior check — confirms it, does not supersede it. Not re-doing the fuller day-count analysis above
+  (would be duplicated effort with no new signal this soon). Same verdict stands: not yet closeable.

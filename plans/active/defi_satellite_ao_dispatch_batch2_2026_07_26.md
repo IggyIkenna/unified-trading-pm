@@ -579,14 +579,22 @@ drift_direction: advance-code
       successful parquet write (with exact code-line citations), and either confirms the phantom-recreation risk is
       closed across all of them or files a new dated issue doc under `plans/active/issues/` for any handler found still
       vulnerable.
-- [ ] [SCRIPT] P2. **Confirm/close Phase 5 #2 `dex_pool_swaps` DEX-fill 3-VM fleet** (`mtds-dex-swaps-backfill-1/2/3`,
-      date-sharded on-demand, covering the measured gap `2024-10-07→2026-07-21`) — verify via
-      `gcloud compute instances list --filter="name~mtds-dex-swaps-backfill"` (confirmed still all 3 `RUNNING` as of
-      2026-07-26, well past the doc's original ~20-30h estimate). For each VM: read `run.log` + per-VM manifest shard
-      count (`time_created`, not log activity) to confirm genuine climbing progress, not a silent stall. If any VM has
-      vanished/terminated without reaching its assigned date-range end, relaunch that exact chunk's command again
-      (idempotent by design per the doc's own Deferred-work table) rather than restarting from the original start date.
-      Once all 3 VMs report `process_final=True`/`exit_code=0` for their assigned ranges, flip
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-26 (worker, slot 6) — verified, correctly NOT closeable yet, no false-completion
+      claim.** Already investigated in full by an earlier pass this session (`unified-trading-pm@170ba61fb`, 07:37 UTC):
+      all 3 VMs `RUNNING`, none vanished, real per-VM day-count measured (`-1` 23/217d, `-2` only 2/217d — a genuine
+      anomaly, `-3` 35/219d) — none near `process_final=True`, realistic runway multi-day-to-multi-week. Corroborated
+      with a fresh check at 07:56 UTC (all 3 still running, manifest entries still climbing, nothing material changed in
+      19 min) — added as a brief confirming note rather than repeating the fuller analysis. Correctly did NOT flip
+      `lst_rate_honest_coverage_2026_07_21.md`'s own Phase 5 #2 checkbox (backfill genuinely not done) — this todo's own
+      verification-and-decline-to-force-completion IS the deliverable, matching this plan's own established precedent
+      for premature/not-yet-ready confirmations. **Confirm/close Phase 5 #2 `dex_pool_swaps` DEX-fill 3-VM fleet**
+      (`mtds-dex-swaps-backfill-1/2/3`, date-sharded on-demand, covering the measured gap `2024-10-07→2026-07-21`) —
+      verify via `gcloud compute instances list --filter="name~mtds-dex-swaps-backfill"` (confirmed still all 3
+      `RUNNING` as of 2026-07-26, well past the doc's original ~20-30h estimate). For each VM: read `run.log` + per-VM
+      manifest shard count (`time_created`, not log activity) to confirm genuine climbing progress, not a silent stall.
+      If any VM has vanished/terminated without reaching its assigned date-range end, relaunch that exact chunk's
+      command again (idempotent by design per the doc's own Deferred-work table) rather than restarting from the
+      original start date. Once all 3 VMs report `process_final=True`/`exit_code=0` for their assigned ranges, flip
       `lst_rate_honest_coverage_2026_07_21.md`'s Phase 5 `#2 DEX fill` todo with the manifest-count evidence and append
       a Progress Log entry. Source: `lst_rate_honest_coverage_2026_07_21.md` (Phase 5, "#2 DEX fill" todo + RESUME POINT
       deferred-work table row "Phase 5 #2 dex_pool_swaps backfill"). Done when: all 3 VMs are confirmed terminated with
