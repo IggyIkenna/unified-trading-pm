@@ -45,6 +45,11 @@ source: cutover T6.10
 
 # TradFi T+1 has no working MTDS collection job
 
+> **🟢 RESOLVED 2026-07-26.** TradFi T+1 forward-fill job shipped (`deployment-service@11bed3c`) and live-reverified via
+> 6 consecutive daily succeeded Cloud Run executions 2026-07-21 through 2026-07-26 — see `resolved_by` above and §
+> "RESOLVED 2026-07-26" below. Archived here (plan_health hygiene-sweep hard-gate fix, escalation `agt-91b1f7`) per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 ## What was measured (2026-07-17, `[slot-3·laptop]`)
 
 Fixing sports cutover **T6.10** (the broken `fast-t1-recon` job) surfaced this. The chain:
