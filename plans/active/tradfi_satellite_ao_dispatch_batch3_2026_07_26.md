@@ -83,7 +83,7 @@ drift_direction: advance-code
       TradFi call site is migrated to call `build_leg()` directly, the local `_build_leg_key()` helper is deleted, and
       `quality-gates.sh` is green in both repos. Source:
       canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md.
-- [ ] [DATA] P1. **Audit R1/R2 legacy-decommission safety after the completed 2026-07-06 v9 apply.**
+- [x] ✅ [DATA] P1. **Audit R1/R2 legacy-decommission safety after the completed 2026-07-06 v9 apply.**
       `data_completion_tradfi_2026_07_15.md` line 183 (E7) reports the no-env legacy `market-data-tick-tradfi` bucket
       was ALREADY permanently deleted 2026-07-06, but line 298's R1 runbook item requires that deletion to have been
       preceded by an `--also-legacy` migrator run covering the bucket's 2,008-day corpus — and that flag's use was never
@@ -98,7 +98,14 @@ drift_direction: advance-code
       (read-only GCS listing only — no deletes in this todo). **Done when**: the `--also-legacy` verdict (confirmed-safe
       or data-loss-flagged) is recorded with its evidence citation, the R1/R2 checkboxes (lines 298, 304) are updated to
       reflect the audited state, and any R2 target still present gets a counted-object inventory appended for operator
-      sign-off. Source: `data_completion_tradfi_2026_07_15.md`.
+      sign-off. Source: `data_completion_tradfi_2026_07_15.md`. — **DONE 2026-07-26 — R1 DATA-LOSS FLAGGED (P0,
+      escalated), R2 CLEAN.** Code-verified the completing 2026-07-06 apply's launcher
+      (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh`@`77cfcda`) never passes `--also-legacy`; the one
+      attempt that did (`canonical-migration-tradfi-20260629-053023`) OOM-crashed after copying only ~1% (37k/3.8M) and
+      was never resumed with the flag; the legacy bucket is confirmed permanently deleted (ADC
+      `bucket.exists() == False`). R2's 3 checked targets are all 0-objects/clean. Full write-up + operator decision
+      request: `issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`. R1/R2 checkboxes in
+      the source doc updated to reflect this (R1 stays open P0 pending operator; R2 flipped done).
 - [ ] [SCRIPT] P1. **Tradfi instruments-foundation residual cleanup pass — 4 independent, conflict-clear candidates from
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, bundled into ONE todo because all 4 would otherwise edit
       the SAME doc file concurrently** (mirrors batch2's 7-item combine on this doc): (1) **G1.g MVP tags** — add MVP
