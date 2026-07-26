@@ -314,6 +314,28 @@ serialise all 9): todo 3 (P2) flips a checkbox inside part3, which todo 2 (P1) a
   fix"_. Its sibling `[ML] P2` retrain is NOT deferred here — it is already tracked by batch5's open `[CODE] P1` PARTIAL
   todo, which carries the whole `(c)` chain.
 
+- **Should todo 7's finalize-plan fix be generalised workspace-wide?** Todo 7 is deliberately scoped to the 5 EXISTING
+  sports `*_finalize` plans. The same omission exists in every other AG's finalize plans, and the durable fix is to add
+  the source-doc-archival step to `plans/active/task_template.md` § 4's finalize-plan-coverage rule (and its codex
+  reflection) so future finalize plans are authored with it. That is a change to a workspace-wide AUTHORING RULE
+  affecting every AG, which is the operator's call, not a worker's — so it is parked rather than folded into todo 7.
+  **Recommended**: approve the generalisation; the sports-only fix leaves 4 other AGs reproducing the same
+  CI-gate-escalation loop.
+
+- **Which tranche owns `plans/active/sports_prediction_mvp_writetime_precompute_2026_07_24.md`? It currently falls
+  through every tranche's audit.** Its `asset_group` is bare `[cross-cutting]`, which on filename alone (`sports_`
+  prefix) looks like the skill's Phase-0.3 "pattern 3" fork-inherited mistag — but a full content read says the tag is
+  CORRECT: the work is a `MANIFEST_SCHEMA_VERSION` 9→10 bump on UTL's `AvailabilityRecord`, the ONE manifest-row
+  dataclass every asset_group and every producer service writes, needing a full-fleet redeploy. So it is genuinely
+  cross-AG and must NOT be retagged `[sports]`. **But it is invisible to every tranche**: zero sports covering plans
+  cite it (verified across all 17), and its `parent_epic: deployment_and_user_management_master` is not in the
+  `cross-cutting` tranche's own membership rule (that rule admits only `infrastructure_master`'s data subset,
+  `instruments_master`, `mtds_mdps_master`, `manifest_master`, `features_and_ml_master`), so `cross-cutting`'s audit
+  will not pick it up either. Its 1 open P2 todo therefore has no owning tranche at all. This is a
+  tranche-classification/authority call spanning `cross-cutting`/`ci`/`infra`, outside a sports batch's scope.
+  **Recommended**: assign it to the `infra` tranche (which already splits `deployment_and_user_management_master`
+  content per the skill's own membership note) and add it to that tranche's consolidated-closeout Sources list.
+
 ## Not re-surfaced here (already owned — checked, not assumed)
 
 - **batch5's own 16 Deferred items** (4 conflict-gated + 12 operator-gated). `batch5_finalize` todo 2 owns their
