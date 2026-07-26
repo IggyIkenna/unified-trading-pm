@@ -106,5 +106,4 @@ auto-dispatch). Struck here to prevent a duplicate backlog derivation from this 
 ## Codex SSOTs
 
 `/codex/02-data/cross-asset-canonical-target-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
-`/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md`,
-`/codex/05-infrastructure/vm-tarball-deployment.md`.
+`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, `/codex/05-infrastructure/vm-tarball-deployment.md`.

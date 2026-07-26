@@ -155,7 +155,7 @@ items explicitly "FENCED" to another named agent/live process).
       HL/LIGHTER/ASTER perpetuals write `instrument_type=PERPETUAL` (never the `PERP` shorthand), proven by a
       new/extended unit test; `quality-gates.sh` green. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 8,
       `:PERP:` → `:PERPETUAL:` rewrite item — writer-side half only).
-- [ ] [BACKEND] P1. **Enumerate every caller of `get_expected_instruments_for_venue` fleet-wide (audit only — the
+- [x] ✅ [BACKEND] P1. **Enumerate every caller of `get_expected_instruments_for_venue` fleet-wide (audit only — the
       removal decision itself stays a separate `[OPERATOR]` todo in the parent doc).**
       `unified_api_contracts.registry.market_data_categories.get_expected_instruments_for_venue`
       (`market_data_categories.py`) still falls back to the per-venue MVP seed
@@ -165,7 +165,12 @@ items explicitly "FENCED" to another named agent/live process).
       unified-api-contracts. **Done when**: a written caller list with a safe-to-remove/blocks-removal verdict per
       caller is recorded in this plan's Progress Log or a new issue doc — the actual removal decision is explicitly NOT
       this todo's job (that stays the parent doc's `[OPERATOR]` todo). Source:
-      `cefi_consolidated_closeout_2026_07_18.md` (Operator dispositions, UAC per-venue seed fallback audit).
+      `cefi_consolidated_closeout_2026_07_18.md` (Operator dispositions, UAC per-venue seed fallback audit). ✅ — this
+      todo had never actually run despite the `[OPERATOR]` todo waiting on it; performed 2026-07-26 directly against the
+      operator ruling instead of waiting further. 3 real production callers found, all blocking removal today (2 by
+      explicit design). Full caller list + verdict recorded in
+      `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`; the parent `[OPERATOR]` todo in
+      `cefi_misc_audits_and_hygiene_2026_07_25.md` is closed with ruling "KEEP, deferred."
 - [ ] [DATA] P1. **Build + run a dry-run + apply script to rename LIGHTER-ZKSYNC's ~11,283 bare-numeric-market-index GCS
       object stems to their resolved symbol form**, using the already-shipped `resolve_market_index()`
       (`instruments-service/instruments_service/reference_data/adapters/cefi/lighter.py`). Follow the established safe

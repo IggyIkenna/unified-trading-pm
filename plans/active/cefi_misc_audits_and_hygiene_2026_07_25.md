@@ -24,6 +24,7 @@ related:
     /plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
     /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     /plans/active/cefi_misc_audits_and_hygiene_finalize_2026_07_25.md,
+    /plans/active/issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"
@@ -62,7 +63,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Decide whether to remove the UAC per-venue seed fallback**
+- [x] ✅ [OPERATOR] P1. **Decide whether to remove the UAC per-venue seed fallback**
       (`unified_api_contracts.registry.market_data_categories.get_expected_instruments_for_venue`'s fallback to the
       per-venue MVP seed when a present catalogue lacks a venue), using the blast-radius caller list produced by
       `cefi_consolidated_native_ao_extract_2026_07_25.md`'s own UAC-fallback-audit candidate (once it ships). The
@@ -70,7 +71,21 @@ drift_direction: advance-code
       points toward removal, but this is a UAC change with fleet-wide blast radius — an operator/interactive call on
       acceptable risk, not a background-dispatchable decision. Non-dispatchable (`[OPERATOR]`, per `task_template.md`
       §3) — stays visible for the operator to act on directly. Repo: unified-api-contracts. **Done when**: the ruling is
-      recorded in this plan's Progress Log, then executed as a follow-up todo if the ruling is "remove."
+      recorded in this plan's Progress Log, then executed as a follow-up todo if the ruling is "remove." ✅ **RULING
+      (2026-07-26): KEEP the fallback, do not remove — deferred, not declined.** The gating candidate-9 audit had never
+      actually run (still `[ ]` in the sibling plan); a fresh blast-radius audit was performed here instead of waiting
+      further. Verdict: all 3 real production callers currently depend on the fallback firing, 2 of them by explicit
+      documented design — MTDS `_resolve_instrument_provider`'s case-5 resolution order
+      (`market-tick-data-service/.../orchestrator/sentinels.py:461-506`), and deployment-api's `venue_resolution.py`,
+      which builds a live catalogue provider for CEFI only — DEFI/TRADFI/PREDICTION pass `instruments_provider=None`
+      unconditionally today, making this fallback the sole source of the Tier-3 honest-coverage denominator on the
+      data-status UI for those 3 asset groups. Removing it now would reproduce, for DEFI/TRADFI/PREDICTION, exactly the
+      silent-coverage-loss regression the operator's 2026-07-18 ruling (`mtds@3253cae3`) eliminated for CEFI — that
+      commit covered a narrower "catalogue read fails" case, not this "venue not yet catalog-wired" case. CEFI's own
+      G1-G5 gates are also still open (G4 OPEN; 211-row measured catalogue gap, `instruments-service@f6f16785`). Full
+      audit + revisit trigger recorded in `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md` (new doc)
+      — re-open once (a) deployment-api gets live DEFI/TRADFI/PREDICTION catalogue-provider wiring, and (b) CEFI +
+      TRADFI G1-G5 gates close.
 - [ ] [VERIFY] P2. **Spot-check the next 3 unverified findings in
       `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md` across GCS/manifest/UI**
       (the bounded half only — re-scoped from the source todo's open-ended "decide the reconciliation cadence" half,
