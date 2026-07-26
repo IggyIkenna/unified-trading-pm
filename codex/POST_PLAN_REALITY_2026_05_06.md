@@ -149,7 +149,7 @@ Read these before any doc edit + before any code change in the affected scopes:
 - **`category=defi` legacy on disk**: preserved per CLAUDE.md asset-group section; readers try canonical
   `asset_group=defi` first, fall back to legacy. Do NOT rekey on-disk data.
 - **GMX multi-chain**: currently `chain=""`; per-chain Tier-2 fan-out per writegate Phase 2.B. (GMX removed 2026-07-25 —
-  see `plans/active/defi_gmx_venue_removal_2026_07_25.md`; this line is now moot.)
+  see `plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; this line is now moot.)
 - **Empty-output handling**: same A/B/C decision tree as CeFi for any DEX adapter.
 
 ### Sports (per-fixture)
@@ -229,19 +229,19 @@ before believing anything specific in the linked doc.
 
 ## Stale per-service docs — banner-pointer added
 
-| Doc                                                                                             | Stale because                                                                                                                                   |
-| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `instruments-service/docs/PREDICTION_INSTRUMENTS.md` (renamed from `POLYMARKET_PREDICTION.md`)  | **RESOLVED 2026-07-08** — fully rewritten as part of the 17→7 docs consolidation, no longer stale                                               |
-| `instruments-service/docs/SPORTS_INSTRUMENTS.md`                                                | **RESOLVED 2026-07-08** — fully rewritten as part of the 17→7 docs consolidation, no longer stale                                               |
-| `market-tick-data-service/docs/ARCHITECTURE.md`                                                 | Pre-3-category empty-output + pre-cluster-validation-mandatory                                                                                  |
-| `market-tick-data-service/docs/DATA_TYPE_DECISIONS.md`                                          | Pre-`SOURCE_PRIORITY` + missing per-fixture sharding for sports adapter                                                                         |
-| `market-tick-data-service/docs/DATABENTO_FUTURES_DOWNLOAD.md` + `DATABENTO_OPTIONS_DOWNLOAD.md` | Missing `DatabentoClassification.root_cluster` weekly-series cluster note                                                                       |
-| `market-tick-data-service/docs/DEFI_DOWNLOAD_STRATEGY.md`                                       | Missing GMX multi-chain Tier-2 fan-out (moot — GMX removed 2026-07-25, see `defi_gmx_venue_removal_2026_07_25.md`); pre-3-category empty-output |
-| `market-data-processing-service/docs/ARCHITECTURE.md`                                           | Describes `_create_empty_output` flow that's being deleted                                                                                      |
-| `market-data-processing-service/docs/ERROR_HANDLING.md`                                         | Pre-3-category empty-output decision tree                                                                                                       |
-| `features-service (sports family)/docs/ARCHITECTURE.md`                                         | Missing 4 stub-export wiring + `_FETCH_COMPLETED_AT` cache + per-table `available_at` semantics                                                 |
-| `features-service (sports family)/docs/SCHEMA_VALIDATION.md`                                    | Missing `available_at` column required + per-row stamping rules                                                                                 |
-| `deployment-service/docs/ARCHITECTURE.md`                                                       | Missing per-VM shard isolation rule (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`) for concurrent backfills                                 |
+| Doc                                                                                             | Stale because                                                                                                                                                          |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `instruments-service/docs/PREDICTION_INSTRUMENTS.md` (renamed from `POLYMARKET_PREDICTION.md`)  | **RESOLVED 2026-07-08** — fully rewritten as part of the 17→7 docs consolidation, no longer stale                                                                      |
+| `instruments-service/docs/SPORTS_INSTRUMENTS.md`                                                | **RESOLVED 2026-07-08** — fully rewritten as part of the 17→7 docs consolidation, no longer stale                                                                      |
+| `market-tick-data-service/docs/ARCHITECTURE.md`                                                 | Pre-3-category empty-output + pre-cluster-validation-mandatory                                                                                                         |
+| `market-tick-data-service/docs/DATA_TYPE_DECISIONS.md`                                          | Pre-`SOURCE_PRIORITY` + missing per-fixture sharding for sports adapter                                                                                                |
+| `market-tick-data-service/docs/DATABENTO_FUTURES_DOWNLOAD.md` + `DATABENTO_OPTIONS_DOWNLOAD.md` | Missing `DatabentoClassification.root_cluster` weekly-series cluster note                                                                                              |
+| `market-tick-data-service/docs/DEFI_DOWNLOAD_STRATEGY.md`                                       | Missing GMX multi-chain Tier-2 fan-out (moot — GMX removed 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`); pre-3-category empty-output |
+| `market-data-processing-service/docs/ARCHITECTURE.md`                                           | Describes `_create_empty_output` flow that's being deleted                                                                                                             |
+| `market-data-processing-service/docs/ERROR_HANDLING.md`                                         | Pre-3-category empty-output decision tree                                                                                                                              |
+| `features-service (sports family)/docs/ARCHITECTURE.md`                                         | Missing 4 stub-export wiring + `_FETCH_COMPLETED_AT` cache + per-table `available_at` semantics                                                                        |
+| `features-service (sports family)/docs/SCHEMA_VALIDATION.md`                                    | Missing `available_at` column required + per-row stamping rules                                                                                                        |
+| `deployment-service/docs/ARCHITECTURE.md`                                                       | Missing per-VM shard isolation rule (`MANIFEST_PER_VM_SHARDS=true` + unique `VM_NAME`) for concurrent backfills                                                        |
 
 ---
 

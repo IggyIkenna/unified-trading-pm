@@ -519,9 +519,9 @@ live API keys + the HTTP client injection). Not a wizard/manifest defect — the
 alnum-stripped form is NOT in `KNOWN_VENUE_TOKENS`** (`unified_api_contracts.internal.architecture_v2.venue_tokens`):
 `balancer_v2`, `balancer_v3`, `betfair_direct`, `gmx_v2`, `jupiter`, `pancakeswap_v3`, `smarkets_direct`, `sommelier`,
 `sushiswap_v3` (11 of 43 AVAILABLE venues fail the alnum-strip token test; the 9 above were the ones sampled; `gmx_v2`'s
-entry is now MOOT — GMX REMOVED 2026-07-25, see `defi_gmx_venue_removal_2026_07_25.md`, so it should drop out of the
-verdict matrix rather than need a token-registry fix). When the fuzzer compiles such a cell to a v2 slot label
-(`{archetype}@{venue}-{instr}-usdt-prod`) the strategy-service parser `split_scope_tokens` raises
+entry is now MOOT — GMX REMOVED 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`, so it
+should drop out of the verdict matrix rather than need a token-registry fix). When the fuzzer compiles such a cell to a
+v2 slot label (`{archetype}@{venue}-{instr}-usdt-prod`) the strategy-service parser `split_scope_tokens` raises
 `ValueError: scope tokens (…) start with a non-venue token` — so **no v2 strategy slot can be constructed for those
 venues at all**, even though the wizard would offer them as reachable. **Why it matters**: the capability wizard can
 present a config (venue × archetype) the strategy engine literally cannot instantiate — a mechanical dead-end between

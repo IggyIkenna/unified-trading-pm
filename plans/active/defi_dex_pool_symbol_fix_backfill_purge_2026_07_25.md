@@ -56,8 +56,8 @@ Two independent findings from the 2026-07-25 FLAGGED-marker investigation, both 
 bad/orphaned data, keep only what's canonical going forward):
 
 1. **dex_pools_handler.py's `messari_basic` query** (used by curve/sushiswap/velodrome_v2/trader_joe_v2 -- gmx is
-   excluded here, it is being removed entirely by `defi_gmx_venue_removal_2026_07_25.md`) never requests
-   `inputTokens { symbol }` from the subgraph -- full analysis in
+   excluded here, it is being removed entirely by `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`) never
+   requests `inputTokens { symbol }` from the subgraph -- full analysis in
    `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`. This produced years of unattributed
    (address-keyed) `dex_pool_state` data for these venues, both the old `_migrated_*` markers AND (for CURVE
    specifically, confirmed live) still-current address-keyed leaves.
@@ -99,18 +99,18 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-          | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-          | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-          | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-          | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-          | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                  | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                  | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                  | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                  | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                  | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-          "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-          the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-          genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-          for the PURGE half of this todo. **The purge itself remains un-executed and un-checked** (prod-bucket delete,
-          human-gated, per this doc's own hard scope -- an agent folds, a human deletes). Full detail (VM name/zone/mode,
-          resume-log caveat, 12-leaf spot-check): this plan's Progress Log below.
+                  "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                  the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                  genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                  for the PURGE half of this todo. **The purge itself remains un-executed and un-checked** (prod-bucket delete,
+                  human-gated, per this doc's own hard scope -- an agent folds, a human deletes). Full detail (VM name/zone/mode,
+                  resume-log caveat, 12-leaf spot-check): this plan's Progress Log below.
 
 - [ ] [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and

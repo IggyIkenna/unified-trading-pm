@@ -293,9 +293,9 @@ someone else, or the manifest shape may have shifted.
   satisfied. Todo 3's real Done-when condition is met.
 
   **But the force-consolidate re-stamp step failed on this same run** -- the exact same bug class as the GMX purge hit
-  the same day (see `defi_gmx_venue_removal_2026_07_25.md`'s Progress Log for the full 3-bug chain: missing
-  `setup_events()` bootstrap -> fixed -> hit `PermissionDenied: pubsub.topics.publish` IAM gap on the canonical-
-  migration VM's service account -> fixed via `mode="local"` event logging + a dedicated
+  the same day (see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`'s Progress Log for the full 3-bug
+  chain: missing `setup_events()` bootstrap -> fixed -> hit `PermissionDenied: pubsub.topics.publish` IAM gap on the
+  canonical- migration VM's service account -> fixed via `mode="local"` event logging + a dedicated
   `restamp_manifest_consolidator_2026_07_26.py` remediation tool -> a real `check-import-patterns.py` deep-import
   violation this checker doesn't recognize `noqa` for -> fixed). **CEFI consolidator cron remains PAUSED** as of this
   entry -- do not resume until this Progress Log records a confirmed successful restamp (rebuilding the tarball +

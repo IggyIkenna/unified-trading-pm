@@ -275,16 +275,16 @@ CULLED; GMX moved to the defi axis, its `perp_funding` is in the DEFI table belo
 
 ### DEFI (data_types by category)
 
-| category       | data_types                                                                        | venues                                                                                                |
-| -------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| DEX            | dex_swaps, dex_pools                                                              | UNISWAP V2/V3/V4, CURVE, BALANCER, ORCA, RAYDIUM (per chains in §1)                                   |
-| Lending        | lending_indices, oracle_prices, rewards, risk_params                              | AAVE_V3, COMPOUND_V3, MORPHO, FLUID, KAMINO                                                           |
-| Lending events | liquidation_events, flash_loan_events, position_data                              | AAVE_V3-{ETH,ARB,POLY}, MORPHO-ETH, UNISWAP_V3-ETH                                                    |
-| LST/Yield      | lst_rates, oracle_prices, staking_yields                                          | LIDO, ETHERFI, ETHENA, JITO                                                                           |
-| Perp DEX       | perp_funding                                                                      | HYPERLIQUID, ASTER (GMX-ARB, GMX-AVAX REMOVED 2026-07-25, see `defi_gmx_venue_removal_2026_07_25.md`) |
-| Gas            | gas_fees                                                                          | ALCHEMY-{ETH, OPT, BSC, POLY, BASE, ARB, AVAX, LINEA, FANTOM, CELO, MANTLE, AURORA}                   |
-| Vault          | vault_share_price                                                                 | ETHEREUM (Yearn V3, sUSDe, Morpho MetaMorpho, Pendle)                                                 |
-| Phase-1 events | token_transfers, bridge_events, governance_events, eigenlayer_rewards, mev_events | ALCHEMY, ACROSS, STARGATE, COMPOUND, AAVE, UNISWAP, EIGENLAYER, FLASHBOTS                             |
+| category       | data_types                                                                        | venues                                                                                                                       |
+| -------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| DEX            | dex_swaps, dex_pools                                                              | UNISWAP V2/V3/V4, CURVE, BALANCER, ORCA, RAYDIUM (per chains in §1)                                                          |
+| Lending        | lending_indices, oracle_prices, rewards, risk_params                              | AAVE_V3, COMPOUND_V3, MORPHO, FLUID, KAMINO                                                                                  |
+| Lending events | liquidation_events, flash_loan_events, position_data                              | AAVE_V3-{ETH,ARB,POLY}, MORPHO-ETH, UNISWAP_V3-ETH                                                                           |
+| LST/Yield      | lst_rates, oracle_prices, staking_yields                                          | LIDO, ETHERFI, ETHENA, JITO                                                                                                  |
+| Perp DEX       | perp_funding                                                                      | HYPERLIQUID, ASTER (GMX-ARB, GMX-AVAX REMOVED 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`) |
+| Gas            | gas_fees                                                                          | ALCHEMY-{ETH, OPT, BSC, POLY, BASE, ARB, AVAX, LINEA, FANTOM, CELO, MANTLE, AURORA}                                          |
+| Vault          | vault_share_price                                                                 | ETHEREUM (Yearn V3, sUSDe, Morpho MetaMorpho, Pendle)                                                                        |
+| Phase-1 events | token_transfers, bridge_events, governance_events, eigenlayer_rewards, mev_events | ALCHEMY, ACROSS, STARGATE, COMPOUND, AAVE, UNISWAP, EIGENLAYER, FLASHBOTS                                                    |
 
 ### TRADFI
 

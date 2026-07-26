@@ -8,17 +8,17 @@ summary: >-
   that quality-gates.sh fails 2 tests on a clean live-defi-rollout tree at HEAD=fd96e5a2:
   test_expected_universe_golden.py::test_expected_matches_golden[defi] (golden=234 actual=226, 8 missing GMX cells) and
   test_pipeline_e2e_prediction.py::test_rule11_per_ag_dedup_target_counts_byte_unchanged (DEFI 94 != 96). Root cause:
-  plans/active/defi_gmx_venue_removal_2026_07_25.md's todo "Remove GMX from instruments-service reference data / MVP
-  instrument universe" (scripts/enumerate_expected_universe.py) is still unchecked — the golden fixture has not been
-  regenerated. RepoHealthWatcher resolved the blocker as GREEN and resumed me TWICE (RB-f599540b then RB-a8013c16) with
-  zero new commits landing on live-defi-rollout between each resolution (HEAD stayed fd96e5a2 throughout) — both times a
-  fresh local quality-gates.sh re-run at the SAME HEAD reproduced the SAME 2 failures byte-identical. This is the exact
-  symptom the archived repo_health_watcher_false_positive_green_2026_07_21.md issue already diagnosed and supposedly
-  fixed (agent-orchestrator@5bf0ccf, the `failing_run_is_current` stale-green gate) — but it recurred here with HEAD
-  provably unchanged across both false "green" verdicts, which the existing gate's own logic (`run.head_sha == branch
-  HEAD`) should have caught. Filed rather than silently re-declaring the blocker forever; worked around it this time by
-  self-verifying with a real local QG run before trusting each green signal (as the archived doc's own recommendation
-  says a waiter always should).
+  plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md's todo "Remove GMX from instruments-service reference data
+  / MVP instrument universe" (scripts/enumerate_expected_universe.py) is still unchecked — the golden fixture has not
+  been regenerated. RepoHealthWatcher resolved the blocker as GREEN and resumed me TWICE (RB-f599540b then RB-a8013c16)
+  with zero new commits landing on live-defi-rollout between each resolution (HEAD stayed fd96e5a2 throughout) — both
+  times a fresh local quality-gates.sh re-run at the SAME HEAD reproduced the SAME 2 failures byte-identical. This is
+  the exact symptom the archived repo_health_watcher_false_positive_green_2026_07_21.md issue already diagnosed and
+  supposedly fixed (agent-orchestrator@5bf0ccf, the `failing_run_is_current` stale-green gate) — but it recurred here
+  with HEAD provably unchanged across both false "green" verdicts, which the existing gate's own logic (`run.head_sha ==
+  branch HEAD`) should have caught. Filed rather than silently re-declaring the blocker forever; worked around it this
+  time by self-verifying with a real local QG run before trusting each green signal (as the archived doc's own
+  recommendation says a waiter always should).
 status: open
 nature: issue
 asset_group: [meta]
@@ -29,7 +29,7 @@ tags: [agent-orchestrator, repo-health-watcher, false-positive, coordination, qu
 related:
   [
     /plans/archive/issues/repo_health_watcher_false_positive_green_2026_07_21.md,
-    /plans/active/defi_gmx_venue_removal_2026_07_25.md,
+    /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
     /plans/archive/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md,
   ]
 created: "2026-07-25"
@@ -58,7 +58,7 @@ Timeline (all against instruments-service `live-defi-rollout`, HEAD=`fd96e5a2` t
 4. Re-declare `RB-a8013c16` with this exact finding in the detail field. `RepoHealthWatcher` resolves it green AGAIN —
    `curl /api/repo-blockers` shows `{"open": []}` within the same short window, again with zero new commits (HEAD still
    `fd96e5a2`). Fresh local re-run — SAME 2 failures, byte-identical, third time.
-5. Root-caused the ACTUAL fix state: `plans/active/defi_gmx_venue_removal_2026_07_25.md` line 112,
+5. Root-caused the ACTUAL fix state: `plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md` line 112,
    `- [ ] [DATA] P2. Remove GMX from instruments-service reference data / MVP instrument universe`, is still unchecked.
    This is a real, in-flight, not-yet-landed fix — not CI flakiness on my end.
 

@@ -57,8 +57,8 @@ related:
     /plans/active/defi_strategy_pnl_axis_index_2026_07_24.md,
     /plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md,
-    /plans/active/defi_gmx_venue_removal_2026_07_25.md,
-    /plans/active/defi_gmx_venue_removal_finalize_2026_07_25.md,
+    /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
+    /plans/archive/2026_07/defi_gmx_venue_removal_finalize_2026_07_25.md,
     /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
     /plans/active/defi_consolidated_native_ao_extract_2026_07_25.md,
@@ -106,8 +106,8 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: 2026-06-27
-  2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+last_updated:
+  2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"
@@ -243,14 +243,14 @@ confirm it — `per-asset-group-bucket-layouts.md` and `GCS_PATHS.md` are STALE 
 Base = `VENUE-CHAIN:TYPE:SYMBOL` (DeFi is the only AG whose venue segment carries a `-CHAIN` suffix; on-chain token case
 is preserved — `aUSDC`, `stETH`).
 
-| type                                                                                                                              | grammar                                                                                                        | example                                                                         |
-| --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `SPOT_ASSET`                                                                                                                      | `VENUE-CHAIN:SPOT_ASSET:SYM`                                                                                   | `UNISWAP_V3-ETHEREUM:SPOT_ASSET:WETH`                                           |
-| `POOL`                                                                                                                            | `VENUE-CHAIN:POOL:TOKEN0-TOKEN1[-FEE_BPS]` — **3-segment, fee INSIDE the symbol (operator ruling 2026-07-18)** | `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500`                                        |
-| `A_TOKEN` / `DEBT_TOKEN`                                                                                                          | supply / borrow leg (isolated markets append `marketId[:8]`)                                                   | `AAVE_V3-ETHEREUM:A_TOKEN:aUSDC` · `MORPHO-BASE:A_TOKEN:AUSDC-EURC-<marketId8>` |
-| `LST` / `YIELD_BEARING` / `STAKING`                                                                                               | staking token / vault share                                                                                    | `LIDO-ETHEREUM:LST:stETH` · `ETHENA-ETHEREUM:YIELD_BEARING:sUSDe`               |
-| `PERPETUAL` (on-chain, DeFi lane — GMX was the example venue, **REMOVED 2026-07-25**, see `defi_gmx_venue_removal_2026_07_25.md`) | `VENUE:PERPETUAL:SYM` — **NO chain suffix** (routes cefi-simple branch)                                        | `GMX:PERPETUAL:BTC-USD` (historical example; venue removed)                     |
-| `SOLANA_AMM_POOL` / `SOLANA_LENDING`                                                                                              | Solana grains                                                                                                  | `ORCA-SOLANA:SOLANA_AMM_POOL:SOL-USDC`                                          |
+| type                                                                                                                                                     | grammar                                                                                                        | example                                                                         |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `SPOT_ASSET`                                                                                                                                             | `VENUE-CHAIN:SPOT_ASSET:SYM`                                                                                   | `UNISWAP_V3-ETHEREUM:SPOT_ASSET:WETH`                                           |
+| `POOL`                                                                                                                                                   | `VENUE-CHAIN:POOL:TOKEN0-TOKEN1[-FEE_BPS]` — **3-segment, fee INSIDE the symbol (operator ruling 2026-07-18)** | `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500`                                        |
+| `A_TOKEN` / `DEBT_TOKEN`                                                                                                                                 | supply / borrow leg (isolated markets append `marketId[:8]`)                                                   | `AAVE_V3-ETHEREUM:A_TOKEN:aUSDC` · `MORPHO-BASE:A_TOKEN:AUSDC-EURC-<marketId8>` |
+| `LST` / `YIELD_BEARING` / `STAKING`                                                                                                                      | staking token / vault share                                                                                    | `LIDO-ETHEREUM:LST:stETH` · `ETHENA-ETHEREUM:YIELD_BEARING:sUSDe`               |
+| `PERPETUAL` (on-chain, DeFi lane — GMX was the example venue, **REMOVED 2026-07-25**, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`) | `VENUE:PERPETUAL:SYM` — **NO chain suffix** (routes cefi-simple branch)                                        | `GMX:PERPETUAL:BTC-USD` (historical example; venue removed)                     |
+| `SOLANA_AMM_POOL` / `SOLANA_LENDING`                                                                                                                     | Solana grains                                                                                                  | `ORCA-SOLANA:SOLANA_AMM_POOL:SOL-USDC`                                          |
 
 ### The two-id model (operator ruling 2026-07-18 — "that's fine as long as downstream uses what it needs the right way")
 
@@ -563,14 +563,15 @@ file, not here.
       (`funding_rate_long == -funding_rate_short` exactly, `market="all"`), not real captured funding data — the native
       subgraph query never worked for this venue's whole history. Combined with GMX's narrow/unverified usage in
       strategy-service (`staked_basis.py`'s own "GMX-V2 rows pending verification" comment), **operator decided: remove
-      GMX entirely** — `defi_gmx_venue_removal_2026_07_25.md`'s all 8 todos SHIPPED (2026-07-25/26):
-      `unified-api-contracts@18d53d63`, `market-tick-data-service@68407ae5`, `instruments-service@0214bb3c` (+`2de3418e`
-      residual cleanup), `execution-service@09a828ed`, `strategy-service@ca818ff8`, `unified-trading-library@f22e516f`,
-      the `[OPERATOR]`-run prod-bucket GCS+manifest purge (5,374 `venue=GMX` manifest rows dropped, zero objects
-      remain), and the docs update (`unified-trading-pm@bfda5df5b`). - **TRADER_JOE_V2/VELODROME_V2/CURVE
-      dex_pool_state** (~944+ markers) — root-caused to a real, ACTIVE code bug: `dex_pools_handler.py`'s
-      `messari_basic` subgraph query never requests `inputTokens { symbol }` (verified byte-for-byte against the working
-      sibling query), starving symbol resolution for these venues even in CURRENT/live captures (see
+      GMX entirely** — `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`'s all 8 todos SHIPPED
+      (2026-07-25/26): `unified-api-contracts@18d53d63`, `market-tick-data-service@68407ae5`,
+      `instruments-service@0214bb3c` (+`2de3418e` residual cleanup), `execution-service@09a828ed`,
+      `strategy-service@ca818ff8`, `unified-trading-library@f22e516f`, the `[OPERATOR]`-run prod-bucket GCS+manifest
+      purge (5,374 `venue=GMX` manifest rows dropped, zero objects remain), and the docs update
+      (`unified-trading-pm@bfda5df5b`). - **TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state** (~944+ markers) —
+      root-caused to a real, ACTIVE code bug: `dex_pools_handler.py`'s `messari_basic` subgraph query never requests
+      `inputTokens { symbol }` (verified byte-for-byte against the working sibling query), starving symbol resolution
+      for these venues even in CURRENT/live captures (see
       `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`). **Operator decided: delete the bad
       data, fix the query, re-backfill** — `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (5 todos, sequential:
       fix → live-test recoverability → backfill → purge superseded data). - **lst_rates** (COINBASE/MAKER/SWELL/ETHENA)

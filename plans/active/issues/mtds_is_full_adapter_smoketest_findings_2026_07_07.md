@@ -271,9 +271,9 @@ the todos already promised.
   capture stays scoped to the V1 vault; the real V2 coverage gap remains open (P1 above), tracked as a known, accepted
   gap rather than a silently-missed one.
 
-> **NOTE (2026-07-25): GMX removed platform-wide** — see `defi_gmx_venue_removal_2026_07_25.md`. The V2 do-not-integrate
-> decision above and every `[GMX_DRIFT]`-tagged finding in the bug list below are now moot: the entire GMX capture path
-> (V1 and V2) is being deleted, not fixed or extended.
+> **NOTE (2026-07-25): GMX removed platform-wide** — see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`.
+> The V2 do-not-integrate decision above and every `[GMX_DRIFT]`-tagged finding in the bug list below are now moot: the
+> entire GMX capture path (V1 and V2) is being deleted, not fixed or extended.
 
 ## 4. Open questions (not fully resolved by this pass)
 

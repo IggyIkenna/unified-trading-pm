@@ -74,7 +74,7 @@ SAFE marker is wrongly classified. The finding is about what "fix the FLAGGED on
    migration" — it's whether these 1-row aggregates are even meant to go through the per-instrument split at all, or
    whether they should have a different retirement/keep policy from the start. **Design question, not a migration bug.**
    (NOTE 2026-07-25, later same day: this design question is now MOOT — the operator decided to remove GMX platform-wide
-   rather than fix/retire its data in place; see `plans/active/defi_gmx_venue_removal_2026_07_25.md`.)
+   rather than fix/retire its data in place; see `plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`.)
 2. **TRADER_JOE_V2 (and likely the other dex_pool_state SHORTFALL clusters)** — this is a genuine upstream gap: pools
    have a real identity (`pool_id`) but no symbol resolution. The FIX (if pursued) is a symbol/pool metadata backfill
    for these specific pools — likely an instruments-service / URDI concern, NOT something
@@ -89,9 +89,9 @@ SAFE marker is wrongly classified. The finding is about what "fix the FLAGGED on
   at all.
 - The FLAGGED markers should stay exactly as-is (never deleted) until each cluster gets its own scoped decision:
   accept-as-permanently-orphaned (GMX 1-row aggregates — RULED 2026-07-25: GMX removed platform-wide, see
-  `defi_gmx_venue_removal_2026_07_25.md`, so this cluster is accept-as-orphaned by construction, not a live decision), a
-  symbol/pool-metadata backfill (TRADER_JOE_V2 + likely other dex_pool_state venues), or further investigation
-  (lst_rates).
+  `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`, so this cluster is accept-as-orphaned by construction,
+  not a live decision), a symbol/pool-metadata backfill (TRADER_JOE_V2 + likely other dex_pool_state venues), or further
+  investigation (lst_rates).
 - This is exactly what the delete_migrated_defi_markers_2026_07_23.py dry-run is FOR — it correctly refuses to touch any
   of this. No corrective action needed on that script; this issue is about what comes after, once its report is final.
 
@@ -161,11 +161,12 @@ Full detail on the active bug: `issues/defi_dex_pools_subgraph_query_missing_inp
 
 ## Update (2026-07-26 — GMX cluster confirmed CLOSED; overall `status` stays `open`)
 
-`defi_gmx_venue_removal_2026_07_25.md`'s all 8 todos are now `- [x]` done, including the `[OPERATOR]` GCS+manifest
-purge: verified live — zero `venue=GMX` objects remain in `market-data-tick-defi-prd-central-element-323112`, 5,374
-`venue=GMX` manifest rows dropped (24,742,605 → 24,737,231). This closes the **GMX perp_funding cluster (~1,896
-markers)** row above by construction, per the accept-as-orphaned disposition already recorded in this doc (line 91-92) —
-the venue no longer exists, so the FLAGGED markers are moot rather than needing any further remediation decision.
+`/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`'s all 8 todos are now `- [x]` done, including the
+`[OPERATOR]` GCS+manifest purge: verified live — zero `venue=GMX` objects remain in
+`market-data-tick-defi-prd-central-element-323112`, 5,374 `venue=GMX` manifest rows dropped (24,742,605 → 24,737,231).
+This closes the **GMX perp_funding cluster (~1,896 markers)** row above by construction, per the accept-as-orphaned
+disposition already recorded in this doc (line 91-92) — the venue no longer exists, so the FLAGGED markers are moot
+rather than needing any further remediation decision.
 
 **Not flipping this doc's top-level `status` to `resolved`** — the sibling **TRADER_JOE_V2/VELODROME_V2/CURVE
 dex_pool_state cluster (~944+421 markers)** and the **lst_rates cluster's MAKER/ETHENA half** are both owned by

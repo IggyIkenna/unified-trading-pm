@@ -246,11 +246,12 @@ drift_direction: advance-code
       `canonical/crosscutting/honest_coverage.py`, plus `factory_address_by_chain: Mapping[str, str]` (default empty
       dict) on UAC `_ProtocolCapability`, populated for the top-10 DEX protocols (uniswap_v2/v3/v4, sushiswap_v3,
       balancer, curve, pancakeswap_v3, aerodrome_v3, velodrome_v2, camelot_v3 — NOT gmx, removed 2026-07-25 per
-      `defi_gmx_venue_removal_2026_07_25.md`). Unit tests exercise the semantic table in the codex doc's §1. Repo:
-      unified-api-contracts. Done when: `CompletenessProbe`/`CompletenessProbeStatus`/`CompletenessProbeKind` types
-      exist and are QG-green with passing unit tests, and `factory_address_by_chain` is populated for the 9 listed
-      protocols on `_ProtocolCapability` — this is schema-only (no probe implementations, no `--use-defi-oracle`
-      wiring), matching exactly the design doc's own P0 rollout step.
+      `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`). Unit tests exercise the semantic table in the
+      codex doc's §1. Repo: unified-api-contracts. Done when:
+      `CompletenessProbe`/`CompletenessProbeStatus`/`CompletenessProbeKind` types exist and are QG-green with passing
+      unit tests, and `factory_address_by_chain` is populated for the 9 listed protocols on `_ProtocolCapability` — this
+      is schema-only (no probe implementations, no `--use-defi-oracle` wiring), matching exactly the design doc's own P0
+      rollout step.
 - [ ] [AUDIT] P1. **Reconcile GATE 0's 10 Phase-0 cross-cutting checklist items against what cefi/tradfi child plans
       already shipped, then flip only what's genuinely done.** Phase-1 orphan evidence confirmed all 10 items in
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md` §"Phase 0 — cross-cutting foundations" still read

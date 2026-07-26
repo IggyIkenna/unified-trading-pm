@@ -300,7 +300,8 @@ discoveries, NOT this todo, flagged for a future ruling:** (a) `position_data` a
 `instrument_type=LENDING` — a pre-existing LP-vs-lending semantic mismatch, should be `POOL`; (b) `liquidations`' `gmx`
 protocol is a DeFi perp (naming SSOT: GMX is `instrument_type=perpetual`), arguably not `LENDING`/`A_TOKEN` at all —
 kept on `LENDING` in todo 4's fix to match the value already live in GCS, not re-ruled here. **(b) is now MOOT — GMX
-REMOVED 2026-07-25, see `defi_gmx_venue_removal_2026_07_25.md`; no future ruling needed for this protocol.**
+REMOVED 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; no future ruling needed for this
+protocol.**
 
 **Code-complete + individually verified** (market-tick-data-service, uncommitted — see below): todos 2 (writers 1-3
 collapsed), 3 (writers 5+7 collapsed, branch-traced), 4 (`liquidations_handler` manifest/GCS desync closed — manifest
@@ -408,14 +409,14 @@ migration wave (step 2) is the safe one-line change per handler it was always me
 executes — NOT shipped here).** For the EVM market/event lending data_types the eventual split is (relabel = one output
 row; fan-out = one input row → two output rows):
 
-| data_type            | A_TOKEN / DEBT_TOKEN            | shape   | per-row source (the writer already fetches this)                                                                                                                                                           |
-| -------------------- | ------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lending_indices`    | **BOTH** (A_TOKEN + DEBT_TOKEN) | FAN-OUT | one reserve row carries supply idx (`liquidityIndex`/`liquidityRate`) + borrow idx (`variableBorrowIndex`/`…Rate`) + `aToken.id` + `variableDebtToken.id` → A_TOKEN row (supply) + DEBT_TOKEN row (borrow) |
-| `position_data`      | **BOTH** (A_TOKEN + DEBT_TOKEN) | FAN-OUT | positions carry a supplied/collateral leg + a borrowed leg → A_TOKEN (supply) + DEBT_TOKEN (borrow) keyed to the reserve                                                                                   |
-| `liquidation_events` | **A_TOKEN** only                | relabel | primary identity = seized collateral reserve; the repaid debt is an informational column                                                                                                                   |
-| `flash_loan_events`  | **A_TOKEN** only                | relabel | supply-side against the reserve; no persistent debt leg                                                                                                                                                    |
-| `risk_params`        | **A_TOKEN** only                | relabel | risk config is a collateral-side reserve property                                                                                                                                                          |
-| `liquidations`       | **A_TOKEN** only                | relabel | seized collateral (NB: `gmx` here is a DeFi perp arguably `perpetual` — separate flagged discovery, not re-ruled; MOOT — GMX REMOVED 2026-07-25, see `defi_gmx_venue_removal_2026_07_25.md`)               |
+| data_type            | A_TOKEN / DEBT_TOKEN            | shape   | per-row source (the writer already fetches this)                                                                                                                                                                    |
+| -------------------- | ------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lending_indices`    | **BOTH** (A_TOKEN + DEBT_TOKEN) | FAN-OUT | one reserve row carries supply idx (`liquidityIndex`/`liquidityRate`) + borrow idx (`variableBorrowIndex`/`…Rate`) + `aToken.id` + `variableDebtToken.id` → A_TOKEN row (supply) + DEBT_TOKEN row (borrow)          |
+| `position_data`      | **BOTH** (A_TOKEN + DEBT_TOKEN) | FAN-OUT | positions carry a supplied/collateral leg + a borrowed leg → A_TOKEN (supply) + DEBT_TOKEN (borrow) keyed to the reserve                                                                                            |
+| `liquidation_events` | **A_TOKEN** only                | relabel | primary identity = seized collateral reserve; the repaid debt is an informational column                                                                                                                            |
+| `flash_loan_events`  | **A_TOKEN** only                | relabel | supply-side against the reserve; no persistent debt leg                                                                                                                                                             |
+| `risk_params`        | **A_TOKEN** only                | relabel | risk config is a collateral-side reserve property                                                                                                                                                                   |
+| `liquidations`       | **A_TOKEN** only                | relabel | seized collateral (NB: `gmx` here is a DeFi perp arguably `perpetual` — separate flagged discovery, not re-ruled; MOOT — GMX REMOVED 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`) |
 
 A blanket `→ A_TOKEN` is the failure mode the reversal warned about — two of the six are genuinely two-sided and need a
 real per-row FAN-OUT, not a relabel. `SOLANA_LENDING` data_types are OUT of scope (todo 6) and keep `SOLANA_LENDING`.
