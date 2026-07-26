@@ -104,6 +104,12 @@ uncommitted or committed-unpushed WIP is one host hiccup away from the dead-sess
 
 ## Recommended decision
 
+**Priority ruling 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #21, option A):
+this fix goes FIRST, ahead of `issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`'s
+hard-kill-escalation todo (that todo is now explicitly gated on this one landing) — the false-positive side has measured
+active harm right now, the harden side's evidence is a single 5-day-old stuck slot, and hardening while the classifier
+is known-wrong is actively dangerous.
+
 - [ ] [BACKEND] P1. **Make the liveness kick host-load-aware / require two-window confirmation.** Before firing
       `worker_kicked`, require the ping/pane to be stale across TWO consecutive verify windows (not one), OR widen
       `verify_window_s` adaptively when host load average / swap pressure is high, OR gate the kick on a progress marker

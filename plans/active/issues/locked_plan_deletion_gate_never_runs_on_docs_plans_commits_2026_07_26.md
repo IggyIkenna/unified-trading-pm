@@ -94,19 +94,32 @@ lesson, and it silently erodes the one guardrail that is supposed to be un-autom
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Rule on the direction before any mechanism changes** — either (a) the lock is genuinely mandatory
+- [x] [OPERATOR] P1. **Rule on the direction before any mechanism changes** — either (a) the lock is genuinely mandatory
       and the gate must move somewhere every plan-touching commit passes through, or (b) archiving a resolved+terminal
       locked doc is acceptable autonomously and CLAUDE.md's "ASK, never autonomous" wording should be narrowed to say
       what it really means. **Done when**: an operator answer is recorded in
       `/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` § 11. Not AO-eligible — this is a
-      governance/authority call, not a determinable fact.
-- [ ] [SCRIPT] P1. **If (a): move the locked-plan check into the pre-commit path** — add it to
-      `scripts/plan-hygiene/run_hygiene_sweep.sh --precommit` (which already reads the staged set and already runs on
-      every plan-touching commit via prek), reading the message from `.git/COMMIT_EDITMSG`/the `commit-msg` hook stage
-      rather than `git log -1`, and covering `plans/active/**` including `issues/`. Keep the `quality-gates.sh` copy or
-      delete it, but do not leave two divergent implementations. **Done when**: a test commit that deletes a fixture doc
-      carrying `locked_by:` is BLOCKED without `[unlock-plan]` and PASSES with it, both demonstrated in the doc's
-      Progress Log with the real hook output pasted.
+      governance/authority call, not a determinable fact. **RULED (a) 2026-07-26** — mandatory; CLAUDE.md's own text is
+      unambiguous ("ASK, never autonomous"), this isn't really a policy choice up for grabs, just an enforcement gap to
+      close. See entry #11 for the recorded ruling.
+- [ ] [SCRIPT] P1. **Move the locked-plan check to the `commit-msg` prek stage, NOT `pre-commit`** — sharpened
+      2026-07-26: `run_hygiene_sweep.sh --precommit` fires at the `pre-commit` stage (`.pre-commit-config.yaml` default
+      stages `[pre-commit, commit-msg]`), which for a `git commit -m "..."` invocation runs BEFORE `.git/COMMIT_EDITMSG`
+      is reliably populated with the message-to-be (that file is written at `prepare-commit-msg`, validated at
+      `commit-msg` — `pre-commit` structurally cannot see it). The existing `conventional-pre-commit` hook already runs
+      at `stages: [commit-msg]` for exactly this reason (see its entry in `.pre-commit-config.yaml`) — model the new
+      check on THAT hook's stage, not on `run_hygiene_sweep.sh --precommit`. Add a `commit-msg`-stage check (new script
+      or a new mode on an existing one) that: reads staged deletions via
+      `git diff --cached --diff-filter=D --name-only -- 'plans/active/**/*.md'` (recursive — the current
+      `quality-gates.sh` glob `'plans/active/*.md'` misses `issues/**` entirely, a second independent bug), reads
+      `locked_by` from `HEAD:$file`, and reads the message from the `commit-msg` hook's own argument (`$1`, the path
+      prek passes to a commit-msg hook — NOT `git log -1`, which reads the PREVIOUS already-made commit, a third bug).
+      `.pre-commit-config.yaml` is templated (`scripts/pre-commit-templates/` + `rollout-pre-commit-configs.sh`) — check
+      whether `plans/active/` is PM-specific enough that this hook only needs adding to PM's own copy (likely, since no
+      other repo has a `plans/` tree) before deciding whether a fleet-wide rollout is needed. Keep the
+      `quality-gates.sh` copy or delete it, but do not leave two divergent implementations. **Done when**: a test commit
+      that deletes a fixture doc carrying `locked_by:` is BLOCKED without `[unlock-plan]` and PASSES with it,
+      demonstrated with the real hook output pasted into this doc's Progress Log.
 - [ ] [SCRIPT] P2. **Fix the `git log -1` commit-message read** in `scripts/quality-gates.sh:410` regardless of which
       direction (a)/(b) is chosen, or delete the block if it moves. **Done when**: the check reads the message of the
       commit being created, proven by a pre-commit run that sees a `[unlock-plan]` tag typed for THAT commit.

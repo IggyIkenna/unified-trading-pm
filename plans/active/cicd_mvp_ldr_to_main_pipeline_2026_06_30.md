@@ -221,14 +221,17 @@ Phase 1:
       (best-effort, drops ticks). Ikenna to decide when faster draining is needed. Options: (A) self-hosted VM heartbeat
       dispatching the promoter every 15 min via `gh workflow run` [recommended — deterministic]; (B) event-driven
       dispatch from quickmerge when content lands on a repo's LDR. The fleet still drains, just on a 30–90 min cadence.
-- [ ] [CICD] P0. **Now-tracked here (added 2026-07-14, findings 107/201):** `scripts/quickmerge.sh` silently no-ops on a
-      new-file-only ship — `quickmerge --agent --files '<newfile>'` where every `--files` path is untracked prints "No
-      differences from main — nothing to merge" and exits 0 without staging/committing anything, because the no-diff
+- [x] [CICD] P0. ✅ **Now-tracked here (added 2026-07-14, findings 107/201):** `scripts/quickmerge.sh` silently no-ops
+      on a new-file-only ship — `quickmerge --agent --files '<newfile>'` where every `--files` path is untracked prints
+      "No differences from main — nothing to merge" and exits 0 without staging/committing anything, because the no-diff
       guard (`git diff origin/main`, worktree-vs-commit) does not see untracked files (unlike the clean-tree guard
       elsewhere, which correctly uses `git status --porcelain`). Full repro + root cause + recommended fix:
       `issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md` (re-verified still-live 2026-07-12, current
-      `quickmerge.sh` ~line 1188). This plan claims sole SSOT status for the pipeline/quickmerge area, so this bug is
-      recorded here as the tracking home; fix not yet implemented.
+      `quickmerge.sh` ~line 1188). **Fixed** `unified-trading-pm@04c0eef0e` — the guard also checks
+      `git status --porcelain -- $FILES_ARG` scoped to the supplied `--files`. Regression test:
+      `scripts/quality-gates-base/tests/test-quickmerge-untracked-new-file-guard.sh` (extracts the real guard; verified
+      it fails against the pre-fix commit and passes against the fix). Closed via
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` todo 1.
 - [x] [CICD] P1. ✅ **YAML-valid gate now fleet-wide, single-source** — moved the invocation from PM's repo-specific
       `quality-gates.sh` into the shared `base-service.sh` (referencing the ONE PM-hosted checker via `WORKSPACE_ROOT`),
       so every repo validates its own `.github/workflows` with zero per-repo copies. PM@`44280bb3` (LDR; live for all

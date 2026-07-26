@@ -16,7 +16,7 @@ tags: [prediction, kalshi, polymarket, clob, live-data, websocket, capture, book
 related:
   [
     plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20,
-    plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24,
+    plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24,
     plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24,
     plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06,
     plans/active/prediction_capture_incident_remediation_2026_07_06,
@@ -53,8 +53,8 @@ drift_direction: advance-code
 > `locked_by: live-defi-rollout` and a 3-way clean-partition. **This file carries the PREDICTION (Kalshi/Polymarket
 > YES-NO market) live+batch data-capture pipeline track verbatim** — every todo and Progress Log entry below was moved
 > unchanged (never summarized or rewritten). Siblings from the same split:
-> `plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (the separate, parked crypto-PERPS venue track
-> — do not confuse the two; KALSHI/POLYMARKET here are the prediction YES/NO markets) and
+> `plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (the separate, parked crypto-PERPS
+> venue track — do not confuse the two; KALSHI/POLYMARKET here are the prediction YES/NO markets) and
 > `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` (the downstream cross-venue arb detector +
 > honest-coverage correctness work that consumes this capture pipeline's output). The original plan is retained, frozen,
 > at `plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`.

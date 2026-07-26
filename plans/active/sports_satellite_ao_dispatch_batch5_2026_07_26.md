@@ -330,7 +330,18 @@ drift_direction: advance-code
       `issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md`) formally ratified via `BLK-ec018203`
       "Approve as-is" — flipped in the design doc. `[ML] P2` implemented (`ml-service`
       `training_targets.merge_clv_target_columns`, isolated `odds_targets` merge + regression test proving
-      leakage-shield isolation holds); retrain + its own sign-off still outstanding — (c) remains ⏳.
+      leakage-shield isolation holds); retrain + its own sign-off still outstanding — (c) remains ⏳. **UPDATE
+      2026-07-26 (slot-7, same session)**: `[ML] P2` ratified (`BLK-fb01cd29` "Approve as-is") and shipped
+      (`ml-service@f107176`). Direct real-data verification (2026-04-01..17, the exact window the 3 quarantined
+      artifacts used) then surfaced + fixed 2 more real bugs same-session: `odds_targets` had never been backfilled for
+      this window (ran the real features-service backfill), and the isolated `odds_targets` query dropped every row
+      because it's event_id-keyed and needs a `derived_features` sibling to resolve fixture_id (fixed,
+      `ml-service@655b87e`). Re-verified: CLV target class distribution is now genuinely non-degenerate
+      (`flat=2370/94.4%, up=80/3.2%, down=61/2.4%`, vs 100%-flat before this whole chain) — full evidence in
+      `issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`. (c) still ⏳ only for the literal
+      3-variant model retrain (producing new trained artifacts) — the underlying target-generation fix is now proven
+      correct against real production data; the retrain command itself is specified in that doc's `[ML] P2` todo as an
+      explicit, scoped follow-up.
 - [x] ✅ [DATA] P1. Resolve the sports odds manifest-routing regression opened by the 2026-07-24 addendum to
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`: (1) grep+READ the manifest-write target
       resolution in the sports capture path in market-tick-data-service (same class of `_resolve_manifest_bucket()`

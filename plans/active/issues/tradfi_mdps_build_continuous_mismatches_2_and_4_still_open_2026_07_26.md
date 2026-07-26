@@ -52,6 +52,23 @@ locked_since:
 
 # TradFi MDPS build-continuous mismatches 2+4 still open; no successful run ever landed
 
+> **🟡 IN-FLIGHT (slot 3, 2026-07-26 14:02 UTC)**: `mdps-backfill-tradfi-20260726-140251` (SPOT) running the new P0
+> per-contract "process" backfill for `CME:FUTURE:ES CME:FUTURE:MES`, 2020-01-01..2026-07-25. Per-date progress
+> confirmed real (sequential `🏁 Date range complete` markers, ~15-20s/date); per-date dependency-check failures (e.g.
+> missing raw ingestion for a specific date) correctly SKIP that date rather than aborting. At this rate the full
+> ~2398-day range could take many hours — do not treat "still RUNNING" as stalled; check the VM's own heartbeat/manifest
+> progress before assuming a problem. Reminder: `rebuild_manifest_from_canonical_paths(...)` must run AFTER this
+> completes (see launcher's own printed reminder). **A 10th real bug found+fixed while this VM was already running**
+> (`market-data-processing-service@d531eb9`): `get_instruments_for_date`'s multi-venue concat used
+> `pl.concat(how="vertical_relaxed")`, which cannot tolerate CBOE's 11-column legacy instrument schema alongside
+> CME/FX/ICE's 51-column canonical schema — raised `polars.exceptions.ComputeError` on ~50% of dates, uncaught by any
+> local except clause, silently swallowed by the `@_sync_storage_errors` retry decorator (returns `None`). Confirmed
+> BENIGN for this specific backfill (the resulting `tradable_keys` is dead code — captured as `_tradable_keys` at
+> `orchestration_service.py:166` and never used), so the CURRENTLY-RUNNING VM (pre-fix code) was NOT killed/relaunched —
+> this fix only benefits future runs + any other real caller of `get_instruments_for_date`. Regression test:
+> `tests/unit/test_cloud_data_provider.py::test_get_instruments_by_venue_tolerates_schema_drift_across_venues`
+> (confirmed failing pre-fix). Full `quality-gates.sh` green; `quickmerge` landed clean.
+
 ## What I found
 
 Re-checking `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s two P0 items that read
@@ -609,6 +626,44 @@ start without real tradfi/ES feature parquets.
      processed-candle layer this todo's new follow-up todo targets. Net conclusion: no code fix belongs in
      build-continuous for this todo (verification-only close, mirroring slot-8's todo-3 MOOT-precedent); the real next
      action is a genuine per-contract "process" step backfill, captured as a new P0 todo above.
+- 2026-07-26 (slot 4, the "backfill MDPS's per-contract process step" P0 todo, IN PROGRESS): Launched
+  `launch-mdps-backfill-vm.sh tradfi 2020-01-01 2026-07-25 full` (default `--operation process`, no override needed —
+  confirmed). First launch attempt caught the tarball-pin race again (all 5 dependent repos had drifted past their
+  published tarballs) — republished + relaunched with `LC_TARBALL_FRESHNESS=enforce`; a SECOND drift hit mid-relaunch
+  (fleet activity moved `market-tick-data-service`/`unified-api-contracts` again between my fresh-pull and the enforce
+  check) — re-synced + republished those two, relaunch landed with all 5 tarballs verified fresh
+  (`mdps-backfill-tradfi-20260726-140301`). **Live confirmation of this doc's own open finding**: watched the VM's
+  per-VM manifest shard in real time — `market-data-processing-service` has written **zero** `instrument_type=FUTURE`
+  manifest rows in the ENTIRE prod tradfi manifest (checked directly: `availability_index.parquet`, 5,887,069 rows,
+  403,493 `instrument_type=FUTURE` rows total, but `service_name` on every non-blank-id FUTURE row is
+  `instruments-service` or `market-tick-data-service` — NEVER `market-data-processing-service`). The synthetic
+  `CME:FUTURE:{root}-USD@LIN- {expiry}` id scheme this doc previously flagged as "unrelated" is now IDENTIFIED: it's
+  written by `instruments-service`/MTDS as reference-data/empty_confirmed placeholder rows (broad —
+  GBP/NATGAS/BRL/SILVER/COPPER/ DOW/JPY/LIVECATTLE/etc, not SP500-specific), NOT an MDPS artifact. **Root cause is NOT a
+  silent `record_captured` swallow** — `write_candle_parquet` (canonical_writer.py:528) unconditionally calls
+  `record_captured` for every non-empty write; confirmed via the live per-VM shard that manifest writes DO land
+  (`ManifestWriter: per-VM shard updated`). The REAL reason MDPS has never produced a `FUTURE` row: this launched VM's
+  per-VM shard rows are so far 100% `attempted_failed`/`instrument_type=UNKNOWN` — raw MTDS tick data for 2020-01-01
+  carries a large volume of malformed `{symbol}_migrated_{timestamp}` instrument_ids (options strikes AND at least one
+  bare future, `ESM0_migrated_20260418T131054Z`) that `_infer_instrument_type` correctly can't classify, so every one of
+  these rows gets rejected pre-write (honest `attempted_failed`, not silently dropped) rather than ever reaching a
+  `FUTURE`-tagged `record_captured` call. **This is an ALREADY-TRACKED corpus, not a new bug**: the `_migrated_`
+  suffix + garbage ids are the exact target of the existing
+  `market-tick-data-service/market_tick_data_service/scripts/recover_tradfi_garbage_underlying_2026_07.py` one-off
+  recovery tool (see `plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`) — not duplicating that
+  workstream here; noting the connection so whoever runs that recovery next understands it should also reduce this
+  backfill's per-day malformed-id churn. **Efficiency finding + correction**: the first single-VM full-range launch
+  (2020-01-01..2026-07-25, 2,398 days) took ~7 minutes to clear ONLY day 2020-01-01 (dominated by malformed-id churn,
+  ~175ms/instrument × thousands of garbage strikes) before its `subprocess-per-date` driver correctly moved on to day 2
+  — SSH-verified the process was NOT stuck, just slow (a `gcloud storage cat` read of the GCS-teed `run.log` lagged real
+  execution by minutes, causing a false "stalled" read before I checked `ps` on the VM directly). At that rate the full
+  2,398-day range would take on the order of a week on one VM (impractical for a single SPOT VM + this todo's scope).
+  Re-sharded as 7 parallel per-year VMs instead (the sanctioned "per-VM shards" pattern, zero code changes,
+  `mdps-backfill-tradfi-y2020-20260726-141819` .. `mdps-backfill-tradfi-y2026-20260726-142028`, each its own
+  `_index/per_vm/<vm>.parquet` shard) — cuts expected wall-clock roughly 7×. All 7 launched clean (tarballs verified
+  fresh on the retry), confirmed RUNNING. A 60-hour background watchdog is tracking real per-VM manifest row growth (not
+  log activity) across all 7 shards; this todo stays open/in-progress pending real completion + a re-verified hit-rate
+  improvement (todo 1's ~19% baseline) per the "plans run to actual completion" HARD RULE.
 
 ## Deferred work after 2026-07-26
 

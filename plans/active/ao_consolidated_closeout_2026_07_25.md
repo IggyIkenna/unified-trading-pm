@@ -180,9 +180,13 @@ posts; dead code refs restored or removed cleanly; Playwright port-collision fix
 [ao_issue_docs_consolidated_remediation_2026_07_23.md](/plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md)
 (held/blocked residual todos from an AO-scope remediation sweep) ·
 [issues/ao_recovery_audit_layer1_deleted_2026_07_15.md](/plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md)
-(AO custom recovery-audit-signoff role/agent deleted as cleanup collateral).
+(AO custom recovery-audit-signoff role/agent deleted as cleanup collateral) ·
+[ao_open_issues_consolidated_close_out_2026_07_17.md](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
+(9 open/32 done — added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #25, option A/C
+combined: this doc was the single most-important covering plan actually tracking real AO-tranche work and had been
+missing from Sources entirely).
 
-**Close-out criterion**: both docs' residual items closed or explicitly re-deferred with a named owner.
+**Close-out criterion**: all three docs' residual items closed or explicitly re-deferred with a named owner.
 
 ## Codex SSOTs (read before touching a track)
 

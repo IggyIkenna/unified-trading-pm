@@ -13,7 +13,7 @@ summary: >-
   batch). Phase 3's conflict check cleared 17 of the 29 into fresh AO-dispatch todos (zero cross-todo file collisions,
   zero duplicate-ground conflicts found); left 10 operator-gated, 1 time-gated, and 1 human-only item in the Deferred
   sections below for the next iteration or an explicit operator ruling, per the skill's non-batchable taxonomy.
-status: active
+status: complete # (was: active) 2026-07-26 -- all 17 todos done, finalized + archived
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -64,10 +64,16 @@ drift_direction: advance-code
 
 # CeFi satellite AO batch 2 — fresh triage extraction
 
-> **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
+> **✅ ARCHIVED 2026-07-26 — all 17 todos DONE, finalized via
+> `cefi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md`.** Dispatched per CLAUDE.md's plan-destination rule and the
 > ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
-> explicit operator review). All 17 todos below are same-priority-independent and touch distinct files/docs (verified —
-> zero cross-todo file overlap found beyond the shared `quality-gates.sh` command, which is not a collision).
+> explicit operator review). All 17 todos were same-priority-independent and touched distinct files/docs (verified —
+> zero cross-todo file overlap found beyond the shared `quality-gates.sh` command, which is not a collision). The 12
+> Deferred items below (10 operator-gated + 1 time-gated + 1 human-only) were re-checked by the finalize plan's own todo
+> 2 — 11 remain genuinely open (no gate cleared), 1 (`cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`'s
+> PACIFICA-SOLANA fork) went MOOT via a venue cull that predated this batch; none were silently dropped. The 2
+> non-batched findings (3 mistags + 1 archivable_now doc) were actioned by the finalize plan's own todo 3. See
+> `cefi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md` for the full closure evidence.
 
 ## Todos
 

@@ -36,7 +36,7 @@ related:
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
-    /plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
+    /plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
@@ -92,20 +92,29 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
       (today both NULL → 0/25); apply the SAME check for KALSHI (the adapter sets `market_created_at`/`resolution_time`
       on `MarketLifecycle` — verify those flow onto the `InstrumentRecord`'s `available_from/to_datetime`). (2)
       market-tick-data-service / UTL honest-absence emission: only emit a cell (captured/empty/failed) for dates WITHIN
-      `[available_from, available_to]`; outside the market's life = honest BLANK / `expected_unattempted`, NEVER
-      `empty_confirmed`. (3) unified-api-contracts: per the operator's stated direction ("better to have the blanks
-      where we expected data", empty_confirmed drill-down 2026-06-23), evaluate whether
-      `EXPECTED_INSTRUMENT_NOT_LISTED`/`PRE_VENUE_LAUNCH`/`DELISTED` should be REMOVED from `EMPTY_CONFIRMED_REASONS` so
-      out-of-lifecycle dates read as absence, not empty_confirmed. This is the bounded CODE leg only — the historical
-      manifest re-walk to reclassify already-written rows is the SEPARATE `[OPERATOR]` walk in the Deferred section
-      (gated on this todo landing). Repo: instruments-service + market-tick-data-service + unified-api-contracts.
-      Source: `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (P0 lifecycle/empty-emission item, "BIG finding —
+      `[available_from, available_to]`; outside the market's life = honest
+      `empty_confirmed[EXPECTED_INSTRUMENT_NOT_LISTED|DELISTED]` (out-of-window-classified — see leg (3)), NEVER a
+      bare/unqualified `empty_confirmed`. (3) unified-api-contracts: **do NOT remove**
+      `EXPECTED_INSTRUMENT_NOT_LISTED`/`PRE_VENUE_LAUNCH`/`DELISTED` from `EMPTY_CONFIRMED_REASONS` — resolved
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #13 (option A, 2026-07-26): all three are already
+      members of `OUT_OF_COVERAGE_WINDOW_REASONS`
+      (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py:590-616`),
+      the operator-directed coverage-denominator partition (2026-06-12, extended 2026-07-17) that already clips them
+      from numerator AND denominator while keeping the raw rows honestly `empty_confirmed` + a visible reason badge —
+      the "blanks where we expected data" goal this leg was chasing is already delivered by that mechanism, and removing
+      the enum members would break `record_empty(reason=...)` validation (`UnknownEmptyConfirmedReasonError`) for every
+      asset group that emits them. This leg is now: **verify** `OUT_OF_COVERAGE_WINDOW_REASONS` actually excludes
+      prediction's out-of-lifecycle cells from the numerator/ denominator (no code change expected — a confirming unit
+      test / manifest spot-check only). This is the bounded CODE leg only — the historical manifest re-walk to
+      reclassify already-written rows is the SEPARATE `[OPERATOR]` walk in the Deferred section (gated on this todo
+      landing). Repo: instruments-service + market-tick-data-service + unified-api-contracts. Source:
+      `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (P0 lifecycle/empty- emission item, "BIG finding —
       data-correctness, honest-coverage semantics"). **Done when**: the POLYMARKET + KALSHI write paths populate
       `available_from/to_datetime` (proven by a new/extended unit test asserting non-NULL bounds from a fixture
       gamma/kalshi market), the emission path bounds captured/empty/failed cells to the lifecycle window (unit test: an
-      out-of-lifecycle date yields absence/`expected_unattempted`, not `empty_confirmed`), the UAC
-      `EMPTY_CONFIRMED_REASONS` decision is landed with rationale, and `quality-gates.sh` is green across all three
-      repos.
+      out-of-lifecycle date yields `empty_confirmed[EXPECTED_INSTRUMENT_NOT_LISTED|DELISTED]`, never a bare
+      `empty_confirmed`), a test/spot-check confirms `OUT_OF_COVERAGE_WINDOW_REASONS` already excludes these from the
+      denominator (no `EMPTY_CONFIRMED_REASONS` enum change), and `quality-gates.sh` is green across all three repos.
 
 - [ ] [DATA] P2. **Verify END-TO-END MDPS prediction depth-history retention.** The raw live prediction book store is a
       rolling-latest-window (does not retain multi-hour history by itself). Confirm (a) MDPS's prediction live-scan

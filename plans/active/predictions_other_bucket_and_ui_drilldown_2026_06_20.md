@@ -67,7 +67,13 @@ after each backfill VM run and recurring patterns promoted to first-class groups
       unified-api-contracts@306923a
 - [x] [SCRIPT] P0. Classifier emits an `INFO`-level event `OTHER_BUCKET_MEMBER_ADDED` whenever it routes a `conditionId`
       to `OTHER`. Operator periodically queries the event stream to find candidate groups for promotion. ✅ —
-      unified-api-contracts@306923a
+      unified-api-contracts@306923a. **Superseded 2026-07-26** (`unified-api-contracts@d4523602`, re-verified against
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #14): downgraded `INFO`→`DEBUG` — this is a per-row
+      hot-path call over the full catalogue on every cache-miss sweep (hundreds of thousands of calls/sweep), so `INFO`
+      was log-volume/latency noise, not a useful signal. The promotion-audit loop this todo describes is effectively off
+      by default today (opt-in via `DEBUG`) — if the operator still wants a standing INFO-level promotion-candidate
+      signal, that needs a purpose-built low-cardinality metric (e.g. a periodic aggregate count per residual bucket),
+      not the raw per-row log restored to INFO.
 - [x] [SCRIPT] P0. Confirm the writer rebundles `OTHER`-routed rows into the
       `data_type=prediction_canonical_question_group` bundle for `OTHER` coverage (so `OTHER` appears in the manifest
       denominator like any curated group). NOTE: the writer-rebundling code path itself is owned by

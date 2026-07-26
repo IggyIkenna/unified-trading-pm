@@ -1,12 +1,18 @@
 ---
 doc_type: plan
 title: /data-pipeline-reconciliation — per-asset-group four-surface canonicalisation reconciliation skill
-summary:
+summary: >-
   Build the SSOT-backed `/data-pipeline-reconciliation` skill that, per asset_group, reconciles the FOUR canonical
   surfaces — GCS object path, parquet content columns, manifest shard-atom key, and the catalogue/data-status render —
   across PROD buckets only, and emits typed findings plus proof-gated delete SUGGESTIONS. Phase A first closes the
   documented-understanding gap the audit exposed — 33 codex/plan contradictions (4 BLOCKING) and 12 missing codex SSOTs
   — because a skill that encodes its own canonical definition is unauditable by the workspace's own SSOT rule.
+  **Standing reference surface, not an archival candidate** (resolved
+  `autonomous_session_operator_decisions_2026_07_25.md` entry #10, 2026-07-26, option A) — 0 open / 42 done as of
+  `unified-trading-pm@7ae64f4c2` is expected here, not a lifecycle signal, per
+  `cross_cutting_consolidated_closeout_2026_07_25.md` Track 13, which keeps this "as a pure cross-reference, not
+  something to close" — it is also the cited home of the D1/D2 rulings `cursor-configs/CLAUDE.md`'s reconciliation
+  section leans on. Keep `status: active` in `plans/active/`.
 status: active
 nature: process
 asset_group: [cross-cutting]

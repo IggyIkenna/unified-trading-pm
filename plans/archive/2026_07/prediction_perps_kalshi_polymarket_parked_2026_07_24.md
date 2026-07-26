@@ -5,8 +5,9 @@ summary: >-
   The KALSHI_PERP/POLYMARKET_PERP crypto-perpetuals venue build (universe registration, reference-data enumerators,
   batch trades+funding, live CLOB connectors, strategy-archetype wiring) — parked per the 2026-07-14 operator ruling
   pending venue access; split out of prediction_venue_perps_and_live_clob_depth_2026_06_20.md (plan line-cap
-  remediation, 2026-07-24).
-status: active
+  remediation, 2026-07-24). ARCHIVED 2026-07-26 — sole remaining open item (Polymarket-perp enumerator,
+  BLOCKED-UPSTREAM) folded into prediction_phase_ab_residuals_2026_07_24.md § A3; all other 10 todos already shipped.
+status: complete
 nature: process
 asset_group: [prediction, cefi]
 stage: [meta]
@@ -35,7 +36,7 @@ last_updated: "2026-07-24"
 locked_by:
 locked_since:
 supersedes: [prediction_venue_perps_and_live_clob_depth_2026_06_20]
-superseded_by:
+superseded_by: prediction_phase_ab_residuals_2026_07_24
 depends_on:
 source: >-
   Split from prediction_venue_perps_and_live_clob_depth_2026_06_20.md (2354 lines / 87 todos, HARD over the 1000L
@@ -126,9 +127,10 @@ in P0 research — confirmed separate API infra and product lines.
       `PolymarketPerpReferenceDataAdapter` scaffold (22 unit tests); wired into `factory.py`/`router.py`; QG green (cov
       88.29%). Kalshi live endpoint verified. **Polymarket-perp live endpoint BLOCKED-UPSTREAM** — see next item.
 
-- [ ] [SCRIPT] P1. **Polymarket-perp enumerator — BLOCKED-UPSTREAM (no public perps API exists yet — CONFIRMED
-      2026-06-22)**: the perps are LIVE (CFTC-DCM-approved, launched 2026-04-21, beta to restricted users 2026-05-28, up
-      to 20x, S&P500/NVDA/NFLX/HOOD) but **web-UI beta only**;
+- [x] [SCRIPT] P1. ✅ FOLDED 2026-07-26 into `prediction_phase_ab_residuals_2026_07_24.md` § A3 (still BLOCKED-UPSTREAM
+      there — this is a fold, not a resolution). **Polymarket-perp enumerator — BLOCKED-UPSTREAM (no public perps API
+      exists yet — CONFIRMED 2026-06-22)**: the perps are LIVE (CFTC-DCM-approved, launched 2026-04-21, beta to
+      restricted users 2026-05-28, up to 20x, S&P500/NVDA/NFLX/HOOD) but **web-UI beta only**;
       `perps-api.polymarket.com`/`perps.polymarket.com`/`perp.polymarket.com` are ALL NXDOMAIN on Google+Cloudflare (not
       region, not auth — the host doesn't exist), and the official docs (docs.polymarket.com + llms.txt) have ZERO
       perps/perpetual/funding entries. So there is NO public REST/WS perps endpoint to build against. Scaffold

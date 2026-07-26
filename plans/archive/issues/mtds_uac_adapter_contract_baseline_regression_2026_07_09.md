@@ -25,8 +25,8 @@ priority: P2
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
+locked_since:
 ---
 
 ## RESOLVED 2026-07-25 — all 4 originally-flagged files confirmed non-regressions; no code change needed
@@ -41,6 +41,15 @@ listed as open (`perp_funding_handler.py`, `honest_coverage.py`, `source_priorit
 file contents (not just trusting the 2026-07-13 commit message), and (c) confirmed
 `check_adapter_contract_regression.py --workspace-root <ws>` exits 0/OK for all three today. No code change needed in
 any repo.
+
+**2026-07-26 — `locked_by:` cleared.** This doc's archival (`unified-trading-pm@57ed9271c`) landed without an
+`[unlock-plan]` tag, surfacing a real gate gap (see
+`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`, resolved
+`autonomous_session_operator_decisions_2026_07_25.md` entry #11, ruled (a) — the lock is mandatory, the gate mechanism
+was broken, not the policy). Retro-cleaning the lock here because the archival ITSELF is independently verified correct
+— the RESOLVED section above was written by this same session with direct first-hand confirmation (re-verified against
+live baseline + file contents, not just trusting the auto-remediation commit message), matching option A's "retro-clean"
+step rather than C's "treat as premature and restore."
 
 **Archival status — BLOCKED on operator `[unlock-plan]` approval, not done this pass**: per
 `/codex/11-project-management/issue-doc-lifecycle.md` trigger 2, a resolved issue should archive immediately

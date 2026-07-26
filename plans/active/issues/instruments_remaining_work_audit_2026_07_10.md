@@ -660,12 +660,12 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
 
 11. **prediction_venue_perps_and_live_clob_depth** — 12 unchecked + 2 partial of 85
     `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` — **split + archived 2026-07-24** (plan
-    line-cap remediation) into `plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (perps-venue
-    residuals below), `plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (live capture residuals), and
-    `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` (honest-absence + manifest residuals below).
-    Highest-priority live item: POLYMARKET instrument lifecycle `available_from`/`available_to` never populated →
-    manifest emits `empty_confirmed` outside a market's real life instead of honest blank (P0 honest-absence bug). Also
-    open: Polymarket-perp reference-data adapter BLOCKED-UPSTREAM (no public perps API), residual
+    line-cap remediation) into `plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`
+    (perps-venue residuals below), `plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (live capture
+    residuals), and `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` (honest-absence + manifest
+    residuals below). Highest-priority live item: POLYMARKET instrument lifecycle `available_from`/`available_to` never
+    populated → manifest emits `empty_confirmed` outside a market's real life instead of honest blank (P0 honest-absence
+    bug). Also open: Polymarket-perp reference-data adapter BLOCKED-UPSTREAM (no public perps API), residual
     lowercase/blank/UNKNOWN `venue` rows splitting the Kalshi denominator, 1,454-row v4 schema tail, UAC politics/geo
     cross-venue canonicalization + same-event arb-pairing design gaps.
 

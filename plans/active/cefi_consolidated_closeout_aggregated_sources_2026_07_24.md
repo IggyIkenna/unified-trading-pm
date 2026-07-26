@@ -85,8 +85,8 @@ drift_direction: advance-code
 - **Venue-specific canonicalisation residuals**:
   - [`plans/active/issues/bybit_futures_chain_write_shape_2026_07_13.md`](/plans/active/issues/bybit_futures_chain_write_shape_2026_07_13.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`](/plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md)
-    — 0 open todos (closed/archived/record-only).
+  - [`plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`](/plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md)
+    — 0 open todos (archived 2026-07-26, record-only).
   - [`plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](/plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md)
     - 5. **[DATA] P1.** PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip).
     - 6. **[DATA] P1.** Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5).
@@ -231,6 +231,13 @@ drift_direction: advance-code
       `_LIFECYCLE_CATALOGUE_JOBS`.
     - **[SCRIPT] P0.** G1 — instruments-service correct per-day: code right + deterministic + on LDR + QG-green; sample
       day audited cell-correct.
+  - [`plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md`](/plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md)
+    (status: open) — the 44-way sharded cefi content-canonicalisation `--apply` fleet did NOT complete corpus-wide (21
+    of 44 shards died partway through).
+    - **[OPERATOR] P1.** Relaunch the 21 dead/incomplete shards.
+    - **[SCRIPT] P2.** Re-run the corpus-wide `run.log` grep to confirm all 44/44 complete once relaunched.
+    - **[BACKEND] P2.** Cross-reference with `cefi_content_migration_vm_wedged_worker_2026_07_23.md`'s Recommendation
+      item 1.
 - **Manifest / data-status / honest-coverage**:
   - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
     - 1. **[DATA] P0.** VERIFY the prod projection before sizing the win — is `_publish_emission_check` actually firing
@@ -481,7 +488,7 @@ drift_direction: advance-code
     (status: active, 1 open)
     - **[DATA] P2.** Verify END-TO-END depth-history retention — the RAW live book store is rolling-latest-window per
       instrument, not a multi-hour archive.
-  - [`plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`](/plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
+  - [`plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`](/plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
     (status: active, 1 open)
     - **[SCRIPT] P1.** Polymarket-perp enumerator — BLOCKED-UPSTREAM (no public perps API exists yet, confirmed
       2026-06-22); scaffold shipped, auto-flows on endpoint availability.

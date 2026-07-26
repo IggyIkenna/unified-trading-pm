@@ -81,9 +81,16 @@ it never reaches `origin/live-defi-rollout` on its own.
 
 ## Proposed fixes
 
-- [ ] [INFRA] P2. Escalate the watchdog from soft-kick to hard-kill + respawn after N consecutive
-      `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min) instead of soft-kicking indefinitely; the
-      daily hard-kill budget (50) is ample. SSOT: `/codex/04-architecture/autonomous-recovery-matrix.md`.
+- [ ] [INFRA] P2. **Gated 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #21, option
+      A — soften first): do NOT land this hard-kill-escalation ahead of
+      `issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s two-window/completion-signal
+      fix. That doc has MEASURED evidence the current classifier already fires falsely on live, progressing workers
+      (zero fleet completions for over an hour, 2026-07-26) — landing faster hard-kill escalation on top of a
+      known-wrong classifier turns false kicks into false hard-kills, strictly worse. Re-scope N/timing against the
+      CORRECTED classifier once that fix lands, not before. Escalate the watchdog from soft-kick to hard-kill + respawn
+      after N consecutive `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min) instead of soft-kicking
+      indefinitely; the daily hard-kill budget (50) is ample. SSOT:
+      `/codex/04-architecture/autonomous-recovery-matrix.md`.
 - [ ] [INFRA] P2. Add a reclaim-and-push (or inherit) path for a killed/idle slot that git-health reports as
       ahead/diverged with `unpushed_plans`: either (a) AutoSpawn prioritises re-occupying a slot with a standing
       `drift_violation` even when the backlog is otherwise gated, tasking the fresh worker to rebase (if diverged) +

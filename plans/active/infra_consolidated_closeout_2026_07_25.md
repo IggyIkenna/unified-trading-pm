@@ -157,6 +157,23 @@ phases ship.
 
 `/codex/06-coding-standards/` (README + quality-gates.md), `/codex/11-project-management/`.
 
+## Todos
+
+> Verification-only — measures whether the tranche is actually done, not new work to dispatch (`assigned_vm: NA`, not
+> itself AO-eligible). Added per `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #38, so the next
+> infra audit measures a real covering set instead of re-deriving the same orphan verdict from a zero-todo hub.
+
+- [ ] [REVIEW] P2. Track 1 close-out: all CVE remediations landed (aiohttp/vcrpy, setuptools PYSEC-2026-3447,
+      execution-service aioresponses migration); codex-violation ratchet green; `scripts/` governance sweep complete; uv
+      pin re-synced fleet-wide; PM typecheck debt cleared; UTL/UAC dedup shipped; Dockerfile pattern normalized.
+- [ ] [REVIEW] P2. Track 2 close-out: org migration verified fleet-wide (no stale `IggyIkenna` refs); terraform drift
+      reconciled + applied; VM startup scripts auto-roll to GCS; `managed-by` label convention adopted; billing-waste
+      pre-flight gate designed + shipped.
+- [ ] [REVIEW] P2. Track 3 close-out: each tooling doc's own open todos closed; the zero-checkbox sweep's findings
+      triaged; the reference-path convention rollout complete corpus-wide.
+- [ ] [REVIEW] P2. Track 4 close-out: the 8 deployment-ui smoke failures fixed + pw:L2 regression specs added; the
+      artifact-lineage UI's remaining phases ship.
+
 ## Progress Log
 
 - **2026-07-25** — Doc authored from the same corpus-wide classification pass as
@@ -209,3 +226,7 @@ phases ship.
   `unified_trading_library/deployment_registry.py` existing and being exported at `__init__.py:695`. Exit gate
   `run_hygiene_sweep.sh --ci --no-regen` = **0 hard / 1 soft**, and the drafts themselves are clean of the
   delete/VM-launch signal.
+- **2026-07-26** — Resolved `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #38: flipped
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md` to `active` (finalize stays `draft`, gated by
+  `gate_on_depends: true`), and added the 4 Track close-out criteria above as verification todos so a future audit has a
+  real covering set to measure against instead of a zero-todo hub.

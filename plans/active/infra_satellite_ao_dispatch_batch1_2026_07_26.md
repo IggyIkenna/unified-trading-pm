@@ -16,7 +16,7 @@ summary: >-
   all 93 existing batch/finalize/closeout plans AND against the other 24 todos here — 14 further AO-eligible items were
   DEFERRED for a named conflict rather than drafted (see `## Deferred`), and 3 were resolved by logic (the competing
   side had already shipped or an operator had already ruled) rather than re-drafted as a competing claim.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -676,3 +676,9 @@ dispatched (`plans/PLAN_FORMAT.md` — `status: draft` is not ingested). Before 
   conflict check against all 93 existing batch/finalize/closeout plans plus pairwise across these 25 todos before
   drafting: 25 drafted, 10 deferred conflict-gated, 3 resolved by logic, the rest operator-gated / human-only /
   too-large. Left `status: draft` deliberately — the flip to `active` is the operator's call.
+- **2026-07-26** — Flipped `status: active` per resolution of
+  `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #38 (option A: flip both — give the hub real todos
+  next so future audits measure a real covering set instead of re-deriving the same 29-orphan verdict). Flipped batch1
+  only here; finalize stays `draft` (already `gate_on_depends: true`, self-activates once this batch's todos land — same
+  reasoning as entries #22/#26). Todo 19 stays gated by its own `[OPERATOR]` tag regardless of this flip (deletes a live
+  prod Cloud Run job + scheduler + terraform) — not touched.

@@ -105,7 +105,7 @@ CeFi/DeFi-venue churn around `c280e1ff`'s timestamp — nothing touching `ODDS_A
 (BITGET, KALSHI-PERP, POLYMARKET-PERP match exactly — added together by the same recent operator ruling, per the shared
 comment referencing `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` in both files — that plan
 was split + archived 2026-07-24 per the plan line-cap remediation; the KALSHI-PERP/POLYMARKET-PERP venue-add content now
-lives in `plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`.)
+lives in `plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`.)
 
 TradFi: **CME** = 2010-01-01 (`# TODO verify`) in registry 1 vs 2020-01-01 (no TODO, i.e. verified) in registry 2 — a
 decade apart. Prediction: **POLYMARKET** = 2022-11-21 (CLOB launch) in registry 1 vs 2025-03-14 (first actual

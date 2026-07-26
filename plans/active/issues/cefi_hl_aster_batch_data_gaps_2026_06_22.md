@@ -183,7 +183,7 @@ to today (a hardcoded date goes stale tomorrow).
 - [x] ✅ [SCRIPT] P2. **DONE (2026-07-26, slot-12)**: entries already existed (added via a since-landed "CeFi venues
       added 2026-06-23" for-loop section in `data_type_capability.py`, not a literal per-venue block — a literal-string
       grep missed them). Locked in with a new regression test (`unified-api-contracts@b0547c36`, 9 tests). Full
-      evidence: `plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s corresponding todo.
+      evidence: `plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s corresponding todo.
 - [ ] [MTDS] P2. **MTDS run for all cefi/Tardis venues** — since-genesis batch + live, full catalogue-driven universe.
       (Tardis batch billing gate LIFTED — operator paid; access confirmed unlimited — confirmed by operator ruling
       2026-07-12, finding 228, `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2.)

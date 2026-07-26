@@ -12,7 +12,7 @@ summary: >-
   exactly one quickmerge.sh todo is dispatched here and all new-QG-checker wire-ins are pushed to the gated finalize
   plan. 33 items stayed Deferred (conflict-gated / operator-gated / time-gated / human-only) and 8 went to the operator
   as parked questions.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -90,15 +90,15 @@ concurrent workers do not collide on this file.
 
 ## Todos
 
-- [ ] [INFRA] P1. **quickmerge silently no-ops a new-file-only ship.** `scripts/quickmerge.sh` (~L1188) gates on
-      `git diff origin/main` (worktree-vs-commit), which cannot see untracked files, so
-      `quickmerge --agent --files '<newfile>'` where every `--files` path is brand-new prints "No differences from main
-      — nothing to merge" and exits 0 having staged/committed/pushed NOTHING. Fix per the source doc's recommended
-      decision: gate on `git status --porcelain` (consistent with the clean-tree guard at ~L508), or stage the supplied
-      `--files` before the guard. **Done when**: a new-file-only `quickmerge --agent --files <newfile>` produces a real
-      commit, a regression test covers it, and PM `quality-gates.sh` is green. Source:
-      `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (its own open [CICD] P0, the declared tracking home) +
-      `issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md`.
+- [x] [INFRA] P1. ✅ **quickmerge silently no-ops a new-file-only ship.** Fix already landed same-day at
+      `unified-trading-pm@04c0eef0e` (guard now ALSO checks `git status --porcelain -- $FILES_ARG`, consistent with the
+      clean-tree guard). This todo closes the remaining gap: added the regression test the source doc called for —
+      `scripts/quality-gates-base/tests/test-quickmerge-untracked-new-file-guard.sh` (extracts the real guard from
+      quickmerge.sh; verified it fails 2/4 against the pre-fix commit and passes 4/4 against the fix) —
+      `unified-trading-pm@3ddd1a4f2`, PM `quality-gates.sh` green. Also flipped the tracking-home P0 in
+      `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` and closed
+      `issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md` (`status: resolved`) so both stop duplicate-
+      tracking this bug.
 - [ ] [INFRA] P1. **Deliver a static dispatch-delivery checker: every `repository_dispatch` `event_type` emitted
       anywhere must have a listener for that type in the resolved TARGET repo.** A 204 cannot distinguish "delivered"
       from "nobody subscribed", so this can only be caught statically. The source doc names the concrete population it
@@ -471,3 +471,9 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
   documented traps bit repeatedly: 12 of the 30 orphans express ALL their remaining work as numbered prose with zero
   checkboxes). Phase 3: conflict-check run first; it is what produced the same-file rationing above and the 6
   conflict-gated deferrals. Nothing shipped, nothing flipped to `active`.
+- **2026-07-26** — Flipped `status: active` per resolution of
+  `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #26 (option A: leave the closeout hub a pure digest
+  — matches the documented digest/dispatch split architecture). Flipped batch1 only, not the finalize sibling: the
+  finalize plan already carries `gate_on_depends: true` (task_template.md's draft-gated pattern), so it self-activates
+  once this batch's todos land — flipping it now, ahead of that, would be premature (nothing to reconcile yet). Same
+  reasoning applied consistently to entries #22 (ao) and #38 (infra).

@@ -91,6 +91,9 @@ relaunch of that VM was needed for this fix.
 
 ## Deferred follow-up (NOT fixed this session — separate, riskier concern)
 
+**Carried forward to `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md` § O on
+archive of this doc (2026-07-26)** — tracked there, not lost with this archive.
+
 - [ ] [DATA] P2. **`emit_empty_gaps_for_entity`** (`instruments-service/.../sports_reference_core.py`) — the
       honest-absence gap emitter for these same 4 per-fixture entities — still hardcodes
       `get_expected_leagues_for_source("api_football")` (383 leagues) as its "expected" denominator, independent of
