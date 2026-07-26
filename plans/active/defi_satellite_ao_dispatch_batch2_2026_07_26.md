@@ -99,6 +99,9 @@ drift_direction: advance-code
       (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md`). Full re-diagnosis + properly-scoped follow-up todos:
       `/plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`. This checkbox stays unchecked
       pending an operator/architecture decision on that doc's Option A/B — not AO-completable as originally written.
+      **RULED 2026-07-26 (slot-2)**: Option A (build a real seeder) — tracked now as human plan
+      `/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md`; this checkbox flips only once that plan's
+      seeder ships + a manifest census confirms coverage (its own P3 todo).
 - [ ] [CHORE] P3. Finish the two housekeeping-cluster sub-items NOT already covered by
       `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (which only covers the OPERATIONS dict fix and the
       paper_run_handler stale comments): (1) delete

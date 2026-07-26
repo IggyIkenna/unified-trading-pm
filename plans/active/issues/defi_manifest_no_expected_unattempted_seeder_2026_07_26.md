@@ -145,12 +145,13 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
 
 ## Follow-up todos
 
-- [ ] [DATA] P2. Design + build a DeFi `expected_unattempted` seeder (mirrors `sentinels.py`'s
-      `record_expected_unattempted` pattern) keyed off UAC's `DEFI_VENUE_DATA_TYPE_CAPABILITIES` + `DEFI_VENUE_PHASE` —
-      **needs an operator/architecture decision first** (per
-      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § Dispatch-scope eligibility) on how to
-      reconcile capability-declared-but-not-actually-collectible venues (see FLUID finding #5 above) before this is
-      AO-dispatchable. (repo: market-tick-data-service)
+- [ ] [DATA] P2. BLOCKED-OPERATOR-DECISION — Design + build a DeFi `expected_unattempted` seeder (mirrors
+      `sentinels.py`'s `record_expected_unattempted` pattern) keyed off UAC's `DEFI_VENUE_DATA_TYPE_CAPABILITIES` +
+      `DEFI_VENUE_PHASE` — **RULED 2026-07-26 (BLK-7c950d06: Option A)**: this is the correct direction, tracked now as
+      its own human plan `defi_expected_unattempted_seeder_design_2026_07_26.md` (assigned_vm: NA per BLK-3221d4b3 — the
+      capability-vs-collectibility reconciliation, see FLUID finding #5, is an open-ended per-venue judgment call, not
+      AO-dispatchable until an operator resolves it). This line stays non-dispatchable and superseded-by-tracking; do
+      the actual work in that plan, not here. (repo: market-tick-data-service)
 - [ ] [DATA] P3. Reconcile `lending_indices_handler.py:176` / `risk_params_handler.py:107` /
       `liquidations_handler.py:149`'s three independent `_DEFAULT_PROTOCOLS` lists against each other and against
       `SUBGRAPH_IDS` (`unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py:62-217`) —
@@ -173,3 +174,15 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       stale framing verbatim in its body text, but that's intentional — it's the ORIGINAL task text being re-diagnosed
       by this doc's annotation immediately below it, not a separate uncorrected citation; left as-is as the historical
       record. (repo: unified-trading-pm)
+
+## Progress Log
+
+- 2026-07-26 (slot 2): Re-dispatch of `defi_satellite_ao_dispatch_batch2-001` (C8) hit this doc's already-filed
+  re-diagnosis. Escalated the two open decisions from § Recommended decision: (1) BLK-7c950d06 — ruled **Option A**
+  (build the real seeder; C8's checkbox cannot be completed as written and stays honestly unchecked). (2) BLK-3221d4b3 —
+  the seeder design/build work's plan destination ruled **human plan** (`assigned_vm: NA`), because the
+  capability-vs-collectibility reconciliation (FLUID finding #5) is an open-ended per-venue judgment call, not
+  AO-dispatchable. Created `defi_expected_unattempted_seeder_design_2026_07_26.md` to track the design + the gating P0
+  reconciliation todo; marked the P2 follow-up todo above `BLOCKED-OPERATOR-DECISION` + superseded-by-tracking so it
+  does not get picked up by a worker ahead of that plan. No code changes; this task's disposition is fully captured in
+  this doc + the new plan.
