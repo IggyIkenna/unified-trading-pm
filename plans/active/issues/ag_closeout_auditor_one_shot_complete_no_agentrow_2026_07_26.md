@@ -104,7 +104,8 @@ cosmetic error message.
 
 This session's assigned mandate (the tradfi closeout audit) is fully complete: covering-plan set discovered and
 cross-checked, 4 genuine non-batchable residual orphans identified (matching the taxonomy, no new batch drafted since
-nothing would convert), one new finding filed and shipped (`issues/tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md`,
+nothing would convert), one new finding filed and shipped (now-archived
+`issues/tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md`,
 `unified-trading-pm@77c9330fb`). `git rev-list --count HEAD ^origin/live-defi-rollout` = 0 (fully pushed). Unable to
 formally signal `/done` due to the gap above; ending this turn with a clear final status heartbeat instead so the
 dashboard reflects real state.

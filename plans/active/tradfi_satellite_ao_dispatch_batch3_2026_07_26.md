@@ -295,6 +295,7 @@ drift_direction: advance-code
   MDPS/build-continuous item was actually resolved 2026-06-29 (labeled "Option A" per the now-archived
   `features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`'s own resolved_by/summary, `mdps@cc63d1b` +
   `features-service@34a5d4ff` + `mdps@7d630a3` — CORRECTED 2026-07-26, was mislabeled "Option B" here; see
-  `tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md` for both the label-correction AND a fresh re-diagnosis finding the
+  the now-archived `tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md` for both the label-correction AND a fresh
+  re-diagnosis finding the
   archived doc's own "Option A" label is itself disputed by the shipped code, and that the underlying pipeline is STILL
   not actually unblocked — no successful tradfi features run has ever landed).

@@ -57,6 +57,10 @@ resolved_by: "slot-5, 2026-07-26, pm docs-only + new follow-up issue doc filed"
 drift_direction: advance-code
 ---
 
+> **🟢 RESOLVED 2026-07-26** — re-diagnosis complete; the doc's own P2 todo is done and the new blocker it found is
+> tracked in `/plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`. Archived
+> per the terminal-status-archived rule. No further action needed on this doc.
+
 ## What I found
 
 `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` (P0, `status: active`, `locked_by: live-defi-rollout`,

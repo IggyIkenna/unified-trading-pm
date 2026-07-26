@@ -6,8 +6,8 @@ title:
   "Option A" label doesn't match what actually shipped
 summary: >-
   Re-diagnosed `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s stale BLOCKED-OPERATOR-DECISION P0 items
-  (2026-07-26, via /ag-closeout-audit follow-up tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md). The archived
-  features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md diagnosed 4 format mismatches blocking the MDPS
+  (2026-07-26, via /ag-closeout-audit follow-up, now-archived, tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md). The
+  archived features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md diagnosed 4 format mismatches blocking the MDPS
   process→build-continuous→features-service pipeline for tradfi/ES and claims "RESOLVED 2026-06-29 via Option A (direct
   raw-MTDS read, bypass MDPS)" (mdps@cc63d1b + features-service@34a5d4ff + mdps@7d630a3). Live re-verification found:
   (1) mismatch 1 (data_type=trades vs ohlcv_1m) IS fixed (cc63d1b); the blank-instrument_id manifest bug IS fixed
@@ -33,7 +33,7 @@ tags: [tradfi, mdps, features, build-continuous, es, pipeline-mismatch, plan-hyg
 related:
   [
     /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
-    /plans/active/issues/tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md,
+    /plans/archive/issues/tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md,
     /plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md,
   ]
 created: 2026-07-26

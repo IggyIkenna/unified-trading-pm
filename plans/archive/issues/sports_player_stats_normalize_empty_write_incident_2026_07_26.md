@@ -46,6 +46,11 @@ source:
   ]
 ---
 
+> **🟢 RESOLVED 2026-07-26** — all 240 objects remediated + independently re-verified clean (0 remaining empty
+> objects); root cause fixed so the bug class cannot reproduce. Archived per the terminal-status-archived rule. The
+> 2 follow-up todos below (GCS versioning, audit sibling scripts) remain open tracked work — see referrers for
+> pickup. No further action needed on this doc itself.
+
 # Self-caused incident: nested player_stats normalization wrote 240 objects empty
 
 ## What happened

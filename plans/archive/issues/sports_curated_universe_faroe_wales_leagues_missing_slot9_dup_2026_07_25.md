@@ -39,6 +39,10 @@ locked_by:
 depends_on: []
 ---
 
+> **🟢 RESOLVED 2026-07-26** — the one genuinely-missing league (`WALES_FAW_CHAMPIONSHIP`) was added
+> (`uac@40d2dd8f750a96ff0a811b6b56f0ab5401d8ed87`); the other 3 named leagues turned out to already exist under
+> different keys. Archived per the terminal-status-archived rule. No further action needed on this doc.
+
 # 4 Faroe/Wales curated leagues live only in slot-9's diverged unpushed commit (rest is duplicate of origin)
 
 ## Evidence (read-only, 2026-07-25 ~06:26Z, main agt-52bb99)
