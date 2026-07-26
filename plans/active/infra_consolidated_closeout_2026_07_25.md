@@ -169,10 +169,12 @@ phases ship.
   `ACTIVE_INDEX.md`) and codex stayed in scope per the skill's sharding rule. Entry sweep
   `run_hygiene_sweep.sh --ci --no-regen` = **0 hard / 1 soft**; `check_delete_vm_launch_gating.sh` flagged **0**
   candidates inside this tranche (all its hits are cefi/defi/tradfi/sports batch docs); `check_archive_candidates.sh`'s
-  4 candidates are all **outside** this tranche, so no archival was performed here. **8 auto-fixes applied** across 8
-  docs (dangling archived-plan ref · stale `Delete-when` restatement vs the codex SSOT · 2 starlette todos voided by
-  this doc's own later supersession + a measured pin check · a "line 2 is live" claim contradicted by a re-run grep · 2
+  4 candidates are all **outside** this tranche, so no archival was performed here. **9 auto-fixes applied across 9
+  docs** (dangling archived-plan ref · stale `Delete-when` restatement vs the codex SSOT · 2 starlette todos voided by
+  their own doc's later supersession + a measured pin check · a "line 2 is live" claim contradicted by a re-run grep · 2
   residual "confirmed double-fetch" references the same doc already retracted · 3 stale INDEX.md facts incl. a moved
-  AUTO-INVENTORY host · a retired `>200k ctx` opus trigger · 2 zero-checkbox issue docs given real todos). **6 items
-  parked** as `BLOCKED-OPERATOR-DECISION` — see
-  `/plans/active/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md`.
+  AUTO-INVENTORY host · a retired `>200k ctx` opus trigger · and 2 separate zero-checkbox issue docs each given real
+  todos). **6 items parked** as `BLOCKED-OPERATOR-DECISION` — see
+  `/plans/active/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md`. Exit gate re-run after rebasing onto
+  current origin: `run_hygiene_sweep.sh --ci` = **0 hard / 1 soft** (the soft warning is the same pre-existing
+  delete/VM-launch candidate signal, all of it outside this tranche). Shipped `unified-trading-pm@79f892f40`.
