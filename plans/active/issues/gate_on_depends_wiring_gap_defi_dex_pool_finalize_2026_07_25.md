@@ -237,3 +237,18 @@ Applying the same disposition as every defi_dex_pool bounce above: declining to 
 skipping this task rather than `/blocked`-ing on an already-answered question. Recommend the same hand-park stopgap
 (populate `prereqs.completed_tasks` with `prediction_satellite_ao_dispatch_batch3-00{1,2}` + `priority_override: true`)
 be applied to this task pair too if it starts bouncing across multiple slots the way the defi_dex_pool pair did.
+
+## 2026-07-26 recurrence note (slot 8, second bounce on the prediction pair)
+
+Slot 8 was freshly dispatched `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize-001` immediately after
+completing an unrelated tradfi task — no prior history on this plan pair this session. Independently re-verified from
+the doc source before finding this issue: `prediction_satellite_ao_dispatch_batch3_2026_07_26.md` still has BOTH its
+todos `- [ ]` unchecked — todo 1 (`[DATA] P1`, Kalshi schema-drift) is annotated "PARTIAL... schema-drift half DONE,
+paper-order-flow half BLOCKED-OPERATOR (BLK-c2d1fff9)" (a genuinely still-open human-gated half); todo 2
+(`[OPERATOR] P1`, prediction-manifest residual purge) is entirely untouched. Confirms the same wiring gap two dispatches
+in a row for this plan pair (was: slot 4 on the first dispatch, now slot 8). No local file-level access to the live
+`agent-orchestrator/data/config/backlog.yaml` from this slot's worktree to apply the hand-park stopgap myself (that file
+is server-side state, not present in the dev clone — only `backlog.test.yaml` is checked in) — flagging so main/operator
+can apply the hand-park (or fix root cause item 1) before a third bounce. Declining to author any reconciliation content
+on the false premise that batch3's work has shipped; skipping this task rather than re-filing/re-blocking on an
+already-answered question.
