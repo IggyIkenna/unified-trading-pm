@@ -60,18 +60,14 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. Exhaustively diff `EXCHANGE_CODE_TO_NAME` between
-      `unified_api_contracts/registry/tradfi_instrument_universe.py` and
-      `unified_api_contracts/registry/tradfi_symbology.py` — enumerate EVERY key present in only one dict and every key
-      whose value disagrees between the two (the doc's own banner names only 2 spot-checked entries, `HO` and `NG` — the
-      full disagreement set is not yet enumerated), and append the complete comparison table to this issue doc's
-      evidence trail for operator review. This is a pure enumeration/audit task — it does NOT decide which dict is
-      authoritative or merge them (that decision is human-only). Repo: unified-api-contracts. **Done when**: a
-      key-by-key comparison covering the full union of keys in both dicts is produced and committed (either a small
-      comparison script under unified-api-contracts plus its printed/saved output, or a markdown table appended directly
-      to the issue doc's evidence trail) — every key in either dict is accounted for as match / value-mismatch /
-      present-in-only-one, 0 keys skipped or sampled. No dict is edited and no authoritative choice is made by this
-      todo. Source: `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review)** — Exhaustively diffed `EXCHANGE_CODE_TO_NAME` between
+      `unified_api_contracts/registry/tradfi_instrument_universe.py` (96 keys) and
+      `unified_api_contracts/registry/tradfi_symbology.py` (61 keys), union 107 keys, 0 skipped/sampled: 33 match, 17
+      value-mismatch, 46 universe-only, 11 symbology-only (33+17+46+11=107, asserted programmatically via
+      `uv run     python` importing both dicts directly). Found the original banner's `NG` disagreement claim was a
+      **false positive** (both agree `NATGAS`); `HO` disagreement confirmed real, plus 15 more not previously
+      enumerated. Full table appended to the issue doc's evidence trail — no dict edited, no authoritative choice made
+      (human-only per the todo's own scope). Source: `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`.
 - [ ] [REVIEW] P1. **Close out the two non-blocked remaining todos in
       `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` in one pass** (combined into one todo because both edit
       the SAME doc file and would collide if dispatched as two concurrent AO todos): (1) Verify or correct the doc's

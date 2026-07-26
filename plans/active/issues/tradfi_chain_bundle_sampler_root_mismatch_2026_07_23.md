@@ -70,12 +70,14 @@ resolved_by:
 # TradFi chain-bundle sampler: canonical-root mismatch, garbage-underlying data, and a disagreeing SSOT
 
 > **🟡 OPERATOR-NOTIFY (SSOT-contradiction sub-finding).** Two files in `unified-api-contracts` both define a module-
-> level `EXCHANGE_CODE_TO_NAME: dict[str, str]` and disagree on at least two entries:
-> `unified_api_contracts/registry/tradfi_instrument_universe.py:552` has `"HO": "HEATING_OIL"` / `"NG": "NATGAS"` while
-> `unified_api_contracts/registry/tradfi_symbology.py:166` has `"HO": "HEATINGOIL"` (no underscore) / `"NG": "NATGAS"` —
-> spot-checked, not exhaustively diffed. Whichever one is authoritative should absorb the other (or both should delegate
-> to one real SSOT) before either is used to build a reverse mapping, or a reverse translation will silently pick the
-> wrong dict's convention depending on which import path a caller happens to use.
+> level `EXCHANGE_CODE_TO_NAME: dict[str, str]` and disagree. **Now exhaustively diffed (2026-07-26, full table in §
+> "Exhaustive `EXCHANGE_CODE_TO_NAME` diff" below)**: `tradfi_instrument_universe.py` has 96 keys, `tradfi_symbology.py`
+> has 61 keys, union 107 — of which 33 match, **17 disagree in value** (includes the originally spot-checked `HO`; `NG`
+> was a spot-check FALSE POSITIVE — both files actually agree it's `NATGAS`), 46 exist only in
+> `tradfi_instrument_universe.py`, and 11 exist only in `tradfi_symbology.py`. Whichever one is authoritative should
+> absorb the other (or both should delegate to one real SSOT) before either is used to build a reverse mapping, or a
+> reverse translation will silently pick the wrong dict's convention depending on which import path a caller happens to
+> use. This todo is enumeration-only — it does NOT decide which dict wins; that decision stays with the operator.
 
 ## 1. This is NOT a day-selection bug
 
@@ -153,12 +155,99 @@ the reverse-translation step deliberately (probably scoped inside
 (non-micro) contract code) rather than a blind dict inversion. Not attempted in this session — flagged for operator
 input on which registry wins and which contract family the checker should prefer.
 
+## Exhaustive `EXCHANGE_CODE_TO_NAME` diff (2026-07-26)
+
+Enumeration-only (no dict edited, no authoritative choice made). Produced by importing both dicts directly
+(`unified_api_contracts.registry.tradfi_instrument_universe.EXCHANGE_CODE_TO_NAME` as UNIVERSE,
+`unified_api_contracts.registry.tradfi_symbology.EXCHANGE_CODE_TO_NAME` as SYMBOLOGY via `uv run python`) and computing
+the full union — every key in either dict is accounted for as match / value-mismatch / present-in-only-one, 0 keys
+skipped or sampled. Totals: UNIVERSE 96 keys, SYMBOLOGY 61 keys, union 107 — 33 match, 17 mismatch, 46 universe-only, 11
+symbology-only (33+17+46+11=107, asserted in the script).
+
+### Mismatches (value disagrees, 17)
+
+| code  | `tradfi_instrument_universe.py` | `tradfi_symbology.py` |
+| ----- | ------------------------------- | --------------------- |
+| `HO`  | `HEATING_OIL`                   | `HEATINGOIL`          |
+| `MES` | `SP500`                         | `MICRO-SP500`         |
+| `XAB` | `MATERIALS_SECTOR`              | `XAB`                 |
+| `XAF` | `ENERGY_SECTOR`                 | `XAF`                 |
+| `XAI` | `INDUSTRIALS_SECTOR`            | `XAI`                 |
+| `XAK` | `TECH_SECTOR`                   | `XAK`                 |
+| `XAP` | `CONSUMER_STAPLES_SECTOR`       | `XAP`                 |
+| `XAU` | `UTILITIES_SECTOR`              | `XAU`                 |
+| `XAV` | `HEALTHCARE_SECTOR`             | `XAV`                 |
+| `XAY` | `CONSUMER_DISC_SECTOR`          | `XAY`                 |
+| `ZB`  | `TREASURY_30Y`                  | `TBOND`               |
+| `ZF`  | `TREASURY_5Y`                   | `TNOTE5Y`             |
+| `ZL`  | `SOYBEAN_OIL`                   | `SOYOIL`              |
+| `ZM`  | `SOYBEAN_MEAL`                  | `SOYMEAL`             |
+| `ZN`  | `TREASURY_10Y`                  | `TNOTE10Y`            |
+| `ZS`  | `SOYBEANS`                      | `SOYBEAN`             |
+| `ZT`  | `TREASURY_2Y`                   | `TNOTE2Y`             |
+
+Note: the original spot-check banner also named `NG` as disagreeing — that was a **false positive**; both dicts agree
+`NG` → `NATGAS` (see Matches below). The XAB/XAF/XAI/XAK/XAP/XAU/XAV/XAY block is a real but different-shaped mismatch:
+`tradfi_symbology.py` identity-maps them (`"XAB": "XAB"`, deliberately, per its own inline comment — "real
+`instrument_type=futures_chain` root... Mapped to themselves (identity)... Replace the value with the human product name
+once confirmed with Databento") while `tradfi_instrument_universe.py` already carries the human sector names.
+
+### Present ONLY in `tradfi_instrument_universe.py` (46)
+
+| code    | value         | code  | value         | code  | value         |
+| ------- | ------------- | ----- | ------------- | ----- | ------------- |
+| `ARKB`  | `BTC_ETF`     | `M2K` | `RUSSELL2000` | `MYM` | `DOW`         |
+| `E1A`   | `SP500`       | `M6A` | `AUD`         | `NKD` | `NIKKEI225`   |
+| `E2A`   | `SP500`       | `M6B` | `GBP`         | `OB`  | `GASOLINE`    |
+| `E3A`   | `SP500`       | `M6C` | `CAD`         | `OG`  | `GOLD`        |
+| `E4A`   | `SP500`       | `M6E` | `EUR`         | `OH`  | `HEATING_OIL` |
+| `E5A`   | `SP500`       | `M6J` | `JPY`         | `ON`  | `NATGAS`      |
+| `EC6E`  | `EUR`         | `M6N` | `NZD`         | `PAO` | `PALLADIUM`   |
+| `ECBTC` | `BTC`         | `M6S` | `CHF`         | `PO`  | `PLATINUM`    |
+| `ECCL`  | `CRUDE`       | `MCL` | `CRUDE`       | `SO`  | `SILVER`      |
+| `ECES`  | `SP500`       | `MGC` | `GOLD`        | `SPX` | `SP500`       |
+| `ECGC`  | `GOLD`        | `MHG` | `COPPER`      |       |               |
+| `ECNG`  | `NATGAS`      | `MNG` | `NATGAS`      |       |               |
+| `ECNQ`  | `NASDAQ100`   | `MNQ` | `NASDAQ100`   |       |               |
+| `ECRTY` | `RUSSELL2000` | `MSI` | `SILVER`      |       |               |
+| `ECYM`  | `DOW`         |       |               |       |               |
+| `EOM`   | `SP500`       |       |               |       |               |
+| `EW`    | `SP500`       |       |               |       |               |
+| `EW5`   | `SP500`       |       |               |       |               |
+| `FBTC`  | `BTC_ETF`     |       |               |       |               |
+| `HXE`   | `COPPER`      |       |               |       |               |
+| `IBIT`  | `BTC_ETF`     |       |               |       |               |
+| `LO`    | `CRUDE`       |       |               |       |               |
+
+### Present ONLY in `tradfi_symbology.py` (11)
+
+| code  | value         |
+| ----- | ------------- |
+| `BRN` | `BRENT`       |
+| `CC`  | `COCOA`       |
+| `CT`  | `COTTON`      |
+| `DX`  | `DOLLARINDEX` |
+| `G`   | `GASOIL`      |
+| `KC`  | `COFFEE`      |
+| `MBT` | `MBT`         |
+| `MET` | `MET`         |
+| `OJ`  | `ORANGEJUICE` |
+| `SB`  | `SUGAR`       |
+| `T`   | `WTI`         |
+
+### Matches (agree in both, 33)
+
+`6A`/`AUD`, `6B`/`GBP`, `6C`/`CAD`, `6E`/`EUR`, `6J`/`JPY`, `6L`/`BRL`, `6M`/`MXN`, `6N`/`NZD`, `6S`/`CHF`, `6Z`/`ZAR`,
+`BTC`/`BTC`, `CL`/`CRUDE`, `ES`/`SP500`, `ETH`/`ETH`, `EW1`/`SP500`, `EW2`/`SP500`, `EW3`/`SP500`, `EW4`/`SP500`,
+`GC`/`GOLD`, `HE`/`LEANHOGS`, `HG`/`COPPER`, `LE`/`LIVECATTLE`, `NG`/`NATGAS`, `NQ`/`NASDAQ100`, `PA`/`PALLADIUM`,
+`PL`/`PLATINUM`, `RB`/`GASOLINE`, `RTY`/`RUSSELL2000`, `SI`/`SILVER`, `VX`/`VIX`, `YM`/`DOW`, `ZC`/`CORN`, `ZW`/`WHEAT`.
+
 ## Evidence trail
 
 - Full-surface MTDS report: `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_13.json` (results for
   `TRADFI:CME:futures_chain`, `TRADFI:CME:options_chain`, `TRADFI:ICE:futures_chain`).
 - Recovery script's own COCOA/AUD real-GCS-data note:
   `market-tick-data-service/market_tick_data_service/scripts/recover_tradfi_chain_manifest_registration_2026_07_22.py`.
-- `EXCHANGE_CODE_TO_NAME` disagreement:
+- `EXCHANGE_CODE_TO_NAME` disagreement — full exhaustive diff in § "Exhaustive `EXCHANGE_CODE_TO_NAME` diff" above:
   `unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:552` vs
   `unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py:166`.
