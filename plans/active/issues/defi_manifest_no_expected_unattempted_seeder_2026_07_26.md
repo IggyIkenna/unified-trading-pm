@@ -164,15 +164,19 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       as of 2026-03" `SUBGRAPH_IDS` scoping decision (re-verify the underlying claim is still current) vs. needing an
       honest "not IS-producible" manifest stamp once/if the P2 seeder above exists. (repo: unified-api-contracts docs
       review + market-tick-data-service)
-- [ ] [INFRA] P3. Close a gate gap in agent-orchestrator's `/done` M3 verification found 2026-07-26 (slot-2,
-      BLK-0222fc53 ruling): a `- [ ]` cross-repo todo that is genuinely re-scoped/superseded (never flipped `[x]`,
-      because there is nothing to complete against — see `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s C8 entry,
-      converted to a non-checkbox `CANCELLED — SUPERSEDED` bold marker) has no `/done` path: M3 hard-rejects
-      (`cross_repo_pm_file_touched_no_checkbox_flip`) any commit touching the plan file that doesn't flip `[ ]`→`[x]`,
-      forcing a worker to `/skip-current-task` instead, with no way to record real disposition on the task itself. Add
-      an M3 exception: if the referenced todo line was converted from `- [ ]` to a non-checkbox CANCELLED/SUPERSEDED
-      marker (per `task_template.md`'s "remove a todo" convention) in the verification window, accept `/done` (or an
-      equivalent explicit-cancellation close) without requiring a `[x]` flip. (repo: agent-orchestrator)
+- [x] ✅ [INFRA] P3. **DONE 2026-07-26 (slot-4)** — Close a gate gap in agent-orchestrator's `/done` M3 verification
+      found 2026-07-26 (slot-2, BLK-0222fc53 ruling): a `- [ ]` cross-repo todo that is genuinely re-scoped/superseded
+      (never flipped `[x]`, because there is nothing to complete against — see
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s C8 entry, converted to a non-checkbox `CANCELLED — SUPERSEDED`
+      bold marker) has no `/done` path: M3 hard-rejects (`cross_repo_pm_file_touched_no_checkbox_flip`) any commit
+      touching the plan file that doesn't flip `[ ]`→`[x]`, forcing a worker to `/skip-current-task` instead, with no
+      way to record real disposition on the task itself. Added the M3 exception: `verify.check_plan_flip`
+      (agent-orchestrator@c9f805c) now also recognizes a `- [ ] <brief>` line converted to a non-checkbox
+      CANCELLED/SUPERSEDED marker bullet (per `task_template.md`'s "remove a todo" convention) — in both single-repo and
+      cross-repo modes, via new helper `_diff_cancels_checkbox` — and accepts `/done` with
+      `reason="todo_cancelled_superseded"`, without requiring a `[x]` flip. Regression coverage:
+      `tests/test_done_gate_plan_flip_hard_reject.py` (+2 tests, single-repo + cross-repo modes); full
+      `quality-gates.sh` green (1755 passed, 1 skipped). (repo: agent-orchestrator)
 - [x] ✅ [DOCS] P3. **DONE 2026-07-26 (slot 9)** — Corrected `data_completion_defi_2026_07_15.md` item C8: dropped the
       stale "DRIFT-SOLANA... confirmed present" done-criterion (deliberately removed 2026-07-16, must never reappear)
       and the FRAX category-mismatch framing, with a pointer to this doc's full re-diagnosis. A `plans/active/` grep for
@@ -203,3 +207,14 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
   dispatchable queue instead of re-deriving it. Done: batch2 plan's C8 entry converted; the M3 gate-gap itself filed as
   a new P3 follow-up todo above (repo: agent-orchestrator) per the ruling's guardrail, not a blocker on closing this
   task.
+- 2026-07-26 (slot 4): Closed the P3 `[INFRA]` gate-gap follow-up todo above. `server/verify.py`'s
+  `check_plan_flip`/`_diff_flips_checkbox` only ever recognized a `- [ ] <brief>` line turning into `- [x] ...`; added
+  `_ADDED_CANCELLED_LINE_RE` + a new `_diff_cancels_checkbox` helper so a `- [ ] <brief>` line converted to a
+  non-checkbox `CANCELLED`/`SUPERSEDED` marker bullet (the exact convention slot-2 used above) is ALSO accepted, in both
+  the single-repo and cross-repo (PM sibling-worktree log-walk) modes — `found_in_commit=True`,
+  `reason="todo_cancelled_superseded"`. Added 2 regression tests to `tests/test_done_gate_plan_flip_hard_reject.py`
+  mirroring the existing single-repo/cross-repo flip-acceptance tests but asserting the CANCELLED-marker path. Full
+  `quality-gates.sh` green (1755 passed, 1 skipped; dashboard tsc+vitest green). Shipped `agent-orchestrator@c9f805c`.
+  Session died mid-task after this work was complete but before shipping; the orchestrator's pre-spawn dirty-state gate
+  preserved the WIP on `wip-preserve/orchestrator-slot-4-f38f2db` (auto-committed, branch reset afterward), recovered
+  cleanly on resume since that commit's parent was exactly the resumed session's HEAD — no work lost.
