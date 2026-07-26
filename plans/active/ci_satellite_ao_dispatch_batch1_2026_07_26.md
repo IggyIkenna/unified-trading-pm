@@ -12,7 +12,7 @@ summary: >-
   exactly one quickmerge.sh todo is dispatched here and all new-QG-checker wire-ins are pushed to the gated finalize
   plan. 33 items stayed Deferred (conflict-gated / operator-gated / time-gated / human-only) and 8 went to the operator
   as parked questions.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -471,3 +471,9 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
   documented traps bit repeatedly: 12 of the 30 orphans express ALL their remaining work as numbered prose with zero
   checkboxes). Phase 3: conflict-check run first; it is what produced the same-file rationing above and the 6
   conflict-gated deferrals. Nothing shipped, nothing flipped to `active`.
+- **2026-07-26** — Flipped `status: active` per resolution of
+  `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #26 (option A: leave the closeout hub a pure digest
+  — matches the documented digest/dispatch split architecture). Flipped batch1 only, not the finalize sibling: the
+  finalize plan already carries `gate_on_depends: true` (task_template.md's draft-gated pattern), so it self-activates
+  once this batch's todos land — flipping it now, ahead of that, would be premature (nothing to reconcile yet). Same
+  reasoning applied consistently to entries #22 (ao) and #38 (infra).

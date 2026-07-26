@@ -216,7 +216,13 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       validated live this session, read-only via SSM — reproduced the exact 46/65%/33%/2% figures on a live re-run).
       **Target date**: ~2026-07-27. **Gate**: re-run recorded with the new percentages; if
       NEVER_FOUND_ROOT_CAUSE/FOUND_ROOT_CAUSE_THEN_SILENT haven't dropped meaningfully, the boot-prompt-too-shallow root
-      cause was wrong or incomplete — reopen the AF-1a analysis rather than assuming the fix worked.
+      cause was wrong or incomplete — reopen the AF-1a analysis rather than assuming the fix worked. **AO-eligibility
+      ruling 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #24, option A): this
+      specific re-measure is a bounded, pure numeric re-run against a named validated script — nothing here needs a
+      human. Not extracted into a separate AO batch though: the target date (~2026-07-27) is only a day out and this is
+      the LAST open item in an otherwise-shipped LOCAL plan, so the natural trigger is simply the date arriving, not a
+      dispatch-mechanism change. Whoever picks this doc up on/after 2026-07-27 can flip just this todo's execution to an
+      AO batch at that point if it's still sitting unstarted.
 
 ## Safeguards
 

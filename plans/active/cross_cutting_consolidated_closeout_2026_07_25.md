@@ -139,8 +139,8 @@ silently double-tracked).
 21. **Data-pipeline alert/monitoring bugs** → Track 21 (added 2026-07-25)
 22. **Manifest-hygiene / phantom-capture monitor instances** → Track 22 (added 2026-07-25)
 23. **Manifest schema bump: write-time MVP precompute** → Track 23 (added 2026-07-25)
-24. **Strategy/execution cross-AG determinism + capability-registry** → Track 24 (added 2026-07-25, different angle —
-    flag as the first extraction candidate if this doc ever needs a line-cap split)
+24. **Strategy/execution cross-AG determinism + capability-registry** → EXTRACTED 2026-07-26, see
+    [cross_cutting_strategy_execution_determinism_2026_07_26.md](/plans/active/cross_cutting_strategy_execution_determinism_2026_07_26.md)
 
 ## Track 1 — Coordinator + gate DAG (entry point) · P0
 
@@ -619,6 +619,18 @@ both from `manifest_hygiene_daily.py`;
 **Close-out criterion**: each candidate CSV triaged (real gap → backfill, code bug → fix adapter/writer, intentional new
 venue → extend the UAC oracle); the prediction/tradfi phantom rows reconciled via `--apply` flips to `attempted_failed`.
 
+**Ownership note (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #20, 2026-07-26)**: these 4 docs
+are tagged `[cross-cutting]` because the underlying MONITOR (`manifest_hygiene_daily.py` /
+`reconcile_phantom_manifest_rows_all.py`) is shared fleet-wide, even though each instance's content/fix is single-AG
+(defi/cefi/prediction/tradfi respectively). **Kept `[cross-cutting]` deliberately, NOT retagged** — retagging
+mid-rollout while other agents concurrently audit those same AG tranches is the greater hazard (a doc disappearing from
+this tranche's Sources mid-audit vs. reappearing in another tranche's is exactly the kind of race this rollout has
+repeatedly hit). `phantom_captures_tradfi_2026_06_28.md` is double-claimed (also named in tradfi's own batch2 Deferred
+section) — that duplication is intentional pending a real merge, not a bug.
+`phantom_captures_prediction_2026_06_28.md`'s 1 open todo has no dispatch owner anywhere except this Track's own digest
+citation — it is now added to this Track explicitly (it already was, via the Sources list above) as its tracked home
+until reconciled.
+
 ## Track 23 — Manifest schema bump: write-time MVP precompute · P2
 
 **Source**:
@@ -632,36 +644,12 @@ manifest-consolidator schema-evolution handling verified, historical rows backfi
 
 ## Track 24 — Strategy/execution cross-AG determinism + capability-registry · P1/P2
 
-> **A different angle than Tracks 1-23** — these 10 docs are cross-cutting from a STRATEGY/EXECUTION/capability-
-> registry angle (spanning multiple AGs' strategy archetypes or the paper=batch=live determinism guarantee), not a
-> data-pipeline angle. Kept in this same doc (one asset_group = one consolidated closeout, matching the other 5 AGs'
-> pattern) rather than forking a second competing "primary" doc — but flagged distinctly since a future split (if this
-> doc nears the line-cap) should extract this Track as its own child first, being the most thematically separable.
-
-**Sources**:
-[carry_staked_basis_funding_scan_experiment_2026_06_16.md](/plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md)
-
-- [carry_strategy_ensemble_productionization_2026_07_24.md](/plans/active/carry_strategy_ensemble_productionization_2026_07_24.md)
-- [cross_venue_funding_reversion_research_2026_07_24.md](/plans/active/cross_venue_funding_reversion_research_2026_07_24.md)
-  (the carry_staked_basis family — combines DeFi LST staking with CeFi perp funding across venues; open: live/broad-
-  universe coverage-completion work) ·
-  [citadel_paper_batch_live_reconciliation_2026_06_19.md](/plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md)
-- [issues/batch_live_reconciliation_service_audit_2026_05_27.md](/plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md)
-- [issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md](/plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md)
-  (the paper==batch-rerun==live determinism-spine family — finishing the ε=0 proof machinery + BLRS audit remediation
-- the 4-AG smoke-harness discrepancy set) ·
-  [defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md](/plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
-- [issues/capability_wizard_analysis_findings_2026_06_11.md](/plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md)
-- [issues/capability_wizard_gap_discovery_2026_06_11.md](/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)
-  (the capability-wizard family — full-taxonomy coverage across the 53-57 archetype registry, spans DeFi/CeFi treasury
-  splits + options/vol) · [v2_engine_venue_buildout_2026_06_15.md](/plans/active/v2_engine_venue_buildout_2026_06_15.md)
-  (confirmed multi-AG: CeFi venues, DeFi/GMX, sports/betfair-smarkets, TradFi/CME options, prediction/ML_LEAN engines,
-  one buildout).
-
-**Close-out criterion**: the carry_staked_basis ensemble ships live coverage; the determinism-spine ε=0 proof lands
-
-- BLRS audit items close; the capability-wizard's drift-check/gap-tracker items close across the full taxonomy;
-  v2_engine_venue_buildout's per-venue items close.
+**EXTRACTED 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #19, option A) into its
+own child plan:
+[cross_cutting_strategy_execution_determinism_2026_07_26.md](/plans/active/cross_cutting_strategy_execution_determinism_2026_07_26.md)
+— ~121 open todos across 8 docs, a genuinely different (strategy/execution/capability-registry) angle from this doc's
+other 23 data-pipeline Tracks, too large to drain in one closeout pass. See that doc for the Sources + close-out
+criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this Track's audit flagged.
 
 ## Codex SSOTs (read before touching a track)
 

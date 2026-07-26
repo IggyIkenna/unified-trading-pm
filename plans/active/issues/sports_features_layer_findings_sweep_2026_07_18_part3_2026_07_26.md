@@ -777,8 +777,12 @@ suppresses the matchday NaN rejection; `validate_feature_output` logs the budget
       which is likely why this survived unnoticed. Next step: instrument the real exporter end-to-end for one day and
       bisect between the season_context merge and the parquet write. Note a dtype smell worth checking there:
       season_context emits `fixture_id` as `object` while the result spine is `Int64`.
-- [ ] [DATA] P3. Once root-caused, recover `matchday` from the persisted `round_name` (regex) rather than re-running the
-      whole features corpus.
+- [x] [DATA] P3. ~~Once root-caused, recover `matchday` from the persisted `round_name` (regex) rather than re-running
+      the whole features corpus.~~ **SUPERSEDED 2026-07-26** (resolved
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #15): the P0 corpus-wide `derived_features` re-run
+      above is happening anyway for independent reasons (the fabricated-value bug) and recomputes `matchday` as part of
+      that re-run — a second, earlier live recovery mechanism only creates a write race against a P0 data-correctness
+      pass for no benefit once the re-run lands. Deleted as redundant, not executed.
 
 ### AA (2026-07-19) — the § Y monitoring lesson, generalised: a metric must be able to MOVE for the operation you are running
 

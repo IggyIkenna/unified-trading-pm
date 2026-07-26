@@ -57,7 +57,7 @@ related:
     /plans/active/data_completion_prediction_2026_07_15.md,
     /plans/archive/2026_07/prediction_canonical_identity_migration_2026_07_08.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
-    /plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
+    /plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
@@ -393,7 +393,7 @@ fixture-linked before MVP backfill.
     - **[DATA] P1.** Regenerate/backfill `prod/catalog.parquet` for Prediction after the `raw_symbol`/`base_asset` fix
 - **Venue-perps / CLOB depth**: split + archived 2026-07-24 (was
   `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`) into:
-  - [`plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`](/plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
+  - [`plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`](/plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
     - **[SCRIPT] P1.** Polymarket-perp enumerator — BLOCKED-UPSTREAM (no public perps API exists yet — CONFIRMED)
   - [`plans/active/prediction_live_clob_depth_capture_2026_07_24.md`](/plans/active/prediction_live_clob_depth_capture_2026_07_24.md)
     - **[DATA] P2.** Verify END-TO-END depth-history retention — the RAW live book store is rolling-latest-window

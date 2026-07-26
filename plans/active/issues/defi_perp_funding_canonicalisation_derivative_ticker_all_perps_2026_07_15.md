@@ -184,7 +184,16 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
       implications must be worked through, not hand-waved (honest-coverage model: a retired data_type's historical rows
       stay, they don't vanish); (c) stop capturing perp_funding raw once (a)+(b) land. If parity FAILS, this todo closes
       as "keep both — parity report explains why". Repos: market-tick-data-service, features-service,
-      unified-api-contracts.
+      unified-api-contracts. **Gated on the new re-scoped parity todo directly below (resolved
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #4, option A) — do not execute until it reports.**
+- [ ] [VERIFY] P2. **Re-scoped cross-source funding-parity check** (replaces the original todo-4 parity check, which
+      closed MOOT 2026-07-16 with no data collected). Surviving venue set per the 2026-07-25 removals: HYPERLIQUID,
+      ASTER only (GMX removed 2026-07-25 — `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; DRIFT/PACIFICA
+      already removed prior). Per (venue, market, funding interval): compare `perp_funding.funding_rate` against the
+      `derivative_ticker` settlement row within ε; append an honest report here (match %, divergence distribution, worst
+      offenders). This is the sole gate for the DESIGN todo above — resolves it whichever way the evidence points
+      (parity holds → proceed with the demote scope; parity fails → close DESIGN as "keep both", explain why). Repo:
+      market-tick-data-service (read-only analysis script with lifecycle marker).
 - [x] ✅ [OPERATOR-DECISION] P2. MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA are half-onboarded (IS reference-data
       adapters + factory registration + tests exist; zero MTDS capture; not in the venues list /
       `VENUES_BY_ASSET_GROUP`). Decide: (A) complete onboarding, or (B) delete the whole vertical slice. — **RULED (B)

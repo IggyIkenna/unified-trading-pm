@@ -12,6 +12,11 @@ summary: >-
   plan (most already exist; a few are new codex docs or a new skill). Companion to
   plan_quality_four_line_defense_architecture_2026_07_23.md (that doc owns PLAN-FORMAT/AO-dispatch-readiness quality;
   this doc owns DATA-PIPELINE-CONTENT correctness) and plan_line_cap_remediation_2026_07_23.md (line-cap hygiene).
+  **Standing reference surface, not an archival candidate** (resolved
+  `autonomous_session_operator_decisions_2026_07_25.md` entry #10, 2026-07-26, option A) — 0 open todos is expected here
+  even when fully "done": this doc's own todos read `✅ DONE — target: <file>`, meaning distributed, not shipped, and it
+  is the cited reference surface for `/plan-reconcile`'s hunter 6 ("for each AG closeout, confirm every todo tagged for
+  it has actually landed there"), an ongoing duty. Keep `status: active` in `plans/active/`.
 status: active
 nature: process
 asset_group: [cross-cutting]

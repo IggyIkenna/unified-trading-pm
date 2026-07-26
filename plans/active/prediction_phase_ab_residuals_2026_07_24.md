@@ -46,7 +46,7 @@ related:
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /plans/active/prediction_phase_e_football_arb_live_2026_07_24.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
-    /plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
+    /plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
@@ -125,7 +125,11 @@ source: >-
       `SOURCE_RETURNED_ZERO` instead of an honest `EXPECTED_*`, and the CLOB catalogue scoped to `end_date_iso==day` can
       cap backfills to the resolution day.
       `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`. (repos:
-      market-tick-data-service)
+      market-tick-data-service). **Reconciled 2026-07-26** (resolved
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #13, option A) against
+      `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 1's overlapping lifecycle-bounds legs — this todo's
+      `EXPECTED_*` target state is the ratified contract (already an `OUT_OF_COVERAGE_WINDOW_REASONS` member, clipped
+      from the denominator); batch4 todo 1 leg (3) was rewritten to match instead of removing the enum members.
 
 ### A2 — Instrument-id / underlying / CQG writers converge (fold: canonical-identity migration)
 
@@ -187,6 +191,17 @@ source: >-
       `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (9 open + 2 in-progress); the residual-fold above should
       now target those 3 successors, not the archived original. (repos: market-tick-data-service, unified-api-contracts,
       features-service)
+
+      **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
+                      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                      **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                      `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                      2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                      either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                      launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                      operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                      availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                      see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 

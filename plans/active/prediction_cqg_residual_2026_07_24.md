@@ -66,25 +66,31 @@ source: >-
 
 ## Todos
 
-- [ ] [DATA] P1. **Prediction cqg classifier coverage decision BEFORE the pred G4 apply**: 542,169/573,536 objects
-      (94.5%) route to `attempted_failed[ClassifierConfidenceLow]` under the operator-corrected contract (None → NOT
-      bundled, no "OTHER" fallback), and captured cqg bundles END 2026-04-14 (the 4 trail dates 2026-04-26..29 have real
-      trades objects but ZERO classifiable bundles → honest captured→failed downgrade at the canonical grain). Either
-      EXTEND the UAC `canonical_question_group` registry coverage (most Polymarket markets are
-      sports/politics/entertainment outside the MVP crypto set) or operator-ratify that out-of-registry markets stay
-      failed-for-retry. Repos: unified-api-contracts (+ rebuild re-run). Provenance: /tmp/r7_proj/prediction2.log
-      2026-06-11.
-- [ ] [DATA] P2. **249-b — prediction cqg grain (`prediction_canonical_question_group`) — GATED on operator
-      decision 338.** The cqg grain needs deriving the canonical-question-group per conditionId, which is the
-      operator-gated cqg-classifier coverage decision (338: 94.5% of objects route to `ClassifierConfidenceLow`). The
-      rollup already materialises the cqg grain when `cqg_str` is non-empty (the loader yields `cqg=""` today) — once
-      338 resolves the cqg-classifier coverage, wire the cqg into the loader (from the classifier or a
+- [ ] [DATA] P1. **STALE PREMISE, re-scoped 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md`
+      entry #14): the 94.5%/`ClassifierConfidenceLow` measurement below is from 2026-06-11, BEFORE
+      `unified-api-contracts@d4523602`/the OTHER-catch-all classifier change — read from current HEAD 2026-07-26, both
+      `classify_polymarket_to_canonical_group` and `classify_kalshi_to_canonical_group` are non-Optional (never return
+      `None`) and route every unmatched market to `OTHER`, not `attempted_failed[ClassifierConfidenceLow]`. The "extend
+      registry vs ratify out-of-registry-stays-failed" decision this todo poses is now MOOT — there is no
+      out-of-registry-stays-failed path left to ratify. **Re-scoped to**: (1) re-run the coverage measurement against
+      current HEAD (expect ~0% `ClassifierConfidenceLow`, ~94.5% `OTHER` instead — confirm, don't assume); (2) verify
+      `market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py`'s `compute_object_atom`
+      (its `None`-branch dead code + stale "the rebuild follows the [None→failed] contract" docstring/comment, ~lines
+      329-354, 411-429) matches the now-unreachable-`None` reality — clean up the dead branches and the comment, don't
+      leave them describing an impossible path. Repos: unified-api-contracts, market-tick-data-service. Original
+      provenance: /tmp/r7_proj/prediction2.log 2026-06-11 (now superseded).
+- [ ] [DATA] P2. **249-b — prediction cqg grain (`prediction_canonical_question_group`) — re-scoped 2026-07-26, decision
+      338 resolved (OTHER for all).** The cqg grain needs deriving the canonical-question-group per conditionId; per the
+      re-scoped todo above, virtually every object now classifies (to a real group or `OTHER`, never unclassified), so
+      this is no longer gated on an open operator decision. The rollup already materialises the cqg grain when `cqg_str`
+      is non-empty (the loader yields `cqg=""` today) — wire the cqg into the loader (from the classifier or a
       `_canonical_group` write-back) and the cqg-grain rows emit automatically. Repo: instruments-service +
-      unified-api-contracts. Blocked-on: 338.
+      unified-api-contracts.
 
 ## Success criteria
 
-1. Operator decision recorded on cqg-classifier registry coverage (extend vs ratify out-of-registry-stays-failed).
+1. Coverage re-measured against current HEAD (OTHER-catch-all contract confirmed live for both venues, ~0% residual
+   `ClassifierConfidenceLow`), `rebuild_prediction_manifest.py`'s dead `None`-handling cleaned up to match.
 2. `prediction_canonical_question_group` cqg-grain rows emit from the catalogue rollup once item 1 resolves; verified by
    re-running `build_instrument_catalogue --asset-group prediction` and reading the promoted `catalog.parquet` back.
 

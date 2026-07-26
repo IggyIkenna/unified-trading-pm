@@ -481,7 +481,7 @@ drift_direction: advance-code
     (status: active, 1 open)
     - **[DATA] P2.** Verify END-TO-END depth-history retention — the RAW live book store is rolling-latest-window per
       instrument, not a multi-hour archive.
-  - [`plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`](/plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
+  - [`plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`](/plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
     (status: active, 1 open)
     - **[SCRIPT] P1.** Polymarket-perp enumerator — BLOCKED-UPSTREAM (no public perps API exists yet, confirmed
       2026-06-22); scaffold shipped, auto-flows on endpoint availability.

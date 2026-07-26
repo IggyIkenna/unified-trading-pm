@@ -9,7 +9,7 @@ summary: >-
   combined todo citing both — and left the rest in the Deferred sections below, dominated by one large
   worker-liveness/watchdog cluster where two docs prescribe OPPOSITE directions on the same kick/escalation mechanism.
   Every todo below targets files disjoint from every sibling todo, so the plan needs no `sequential` gate.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -187,6 +187,16 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       (BACKEND P3). Note for the worker:
       `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` is an explicitly-parked decision
       that also names `bootstrap.py`/regen ids — do not touch task-id derivation here.
+- [ ] [REVIEW] P3. **Redefine the ao tranche's membership rule from a hand-maintained Sources list to an epic-based
+      rule, then triage the delta.** Added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md`
+      entry #25 (option C — do both; A already done, this is the B follow-on). The hand-maintained Sources list lost
+      `ao_open_issues_consolidated_close_out_2026_07_17.md` (9 open/32 done, real tracked work) for its first 24 hours
+      of existence, undetected — a hand list is the wrong mechanism for a corpus this size. Measured:
+      `parent_epic ∈ {orchestrator_master,     agent_operating_framework_master}` matches ~75 docs vs. the current
+      ~35-doc Sources total. **Done when**: the ~40-doc delta is explicitly triaged (genuinely ao-tranche vs. mistagged
+      epic vs. belongs elsewhere), the membership rule in `ao_consolidated_closeout_2026_07_25.md`'s own text is
+      switched from "Sources list" to "epic query", and the Sources lists across all 5 Tracks are reconciled against the
+      query's actual output.
 
 ## Deferred — conflict-gated (do NOT draft competing todos; re-check in batch 2)
 
@@ -311,3 +321,7 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
   cause is still unfixed at HEAD, the 7 `tab/rootm/*` branches no longer exist anywhere, `867b1731e` is on LDR but not
   on `main`, and the PM empty-string-fallback ratchet is back at baseline. **Left `status: draft` deliberately** —
   flipping to `active` is the operator's call.
+- **2026-07-26** — Flipped `status: active` per resolution of
+  `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #22 (option B: flip batch, hold finalize —
+  `gate_on_depends: true` on the finalize sibling already reconciles once this batch's todos land, nothing to reconcile
+  yet).

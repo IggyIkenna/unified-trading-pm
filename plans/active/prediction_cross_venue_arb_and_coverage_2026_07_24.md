@@ -17,7 +17,7 @@ tags: [prediction, kalshi, polymarket, arb, cross-venue, honest-coverage, cqg, b
 related:
   [
     plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20,
-    plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24,
+    plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24,
     plans/active/prediction_live_clob_depth_capture_2026_07_24,
     plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06,
     plans/active/prediction_capture_incident_remediation_2026_07_06,
@@ -55,9 +55,9 @@ drift_direction: advance-code
 > `locked_by: live-defi-rollout` and a 3-way clean-partition. **This file carries the cross-venue arb detection +
 > honest-coverage correctness track verbatim** — every todo and Progress Log entry below was moved unchanged (never
 > summarized or rewritten). Siblings from the same split:
-> `plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (the parked crypto-PERPS venue track) and
-> `plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (the live+batch capture pipeline this arb detector and
-> coverage math consume as input). The original plan is retained, frozen, at
+> `plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (the parked crypto-PERPS venue track)
+> and `plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (the live+batch capture pipeline this arb detector
+> and coverage math consume as input). The original plan is retained, frozen, at
 > `plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`.
 
 ## Progress Log
@@ -316,13 +316,13 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
         `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row).
 
         (3c) the arb-layer consumer (features/strategy) groups the two venues' instruments by
-        `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
-        Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
-        extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
-        REAL paired samples (no false pairs — operator). Repos:
-        unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
-        enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
-        (residual after parser UAC@3effe2fc).
+                        `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
+                        Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
+                        extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
+                        REAL paired samples (no false pairs — operator). Repos:
+                        unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
+                        enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
+                        (residual after parser UAC@3effe2fc).
 
 ### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
 

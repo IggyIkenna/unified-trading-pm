@@ -36,7 +36,7 @@ related_plans:
   - ../active/prediction_consolidated_closeout_2026_07_18.md
   - ../active/prediction_cross_venue_arb_and_coverage_2026_07_24.md
   - ../active/prediction_live_clob_depth_capture_2026_07_24.md
-  - ../active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md
+  - ../archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md
   - ../active/prediction_phase_ab_residuals_2026_07_24.md
   - ../active/prediction_phase_c_data_status_ui_2026_07_24.md
   - ../active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md
@@ -954,7 +954,7 @@ arb detection + honest-coverage correctness
 **status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Prediction (Kalshi/Polymarket) live +
 batch CLOB depth & trades capture infrastructure
 
-### [`prediction_perps_kalshi_polymarket_parked_2026_07_24`](../active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
+### [`prediction_perps_kalshi_polymarket_parked_2026_07_24`](../archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
 
 **status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Kalshi + Polymarket perpetual futures —
 PARKED crypto-perp venue track
