@@ -266,7 +266,21 @@ drift_direction: advance-code
       perp_funding now has a manifest row under the correct classification, `quality-gates.sh` green, and
       `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`'s status flips to resolved. Source:
       `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`.
-- [ ] [SCRIPT] P1. **Implement the MTDS DeFi perf bundle (knobs + async fan-out + executor-offload) as ONE combined
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-26 (slot-5) — mtds@ff1b5d51e6c43d7fa3aa52b924a32a01a5438fb4.** All 3 pieces shipped
+      in ONE commit: (a) the 3 knobs added to `service_config.py`; (b) `_run_solana_protocol_loop` +
+      `dex_pools_handler._run_process` fan out via `ParallelPerSymbolRunner` (`manifest_writer=None`), sequential
+      manifest-write/heartbeat apply pass afterward in original order (the dex_pools shard-build/apply logic extracted
+      into new `_dex_pools_subgraph.build_dex_pools_shard_tasks`/`apply_dex_pools_shard_results` to keep
+      `dex_pools_handler.py` under the codex 900-line file cap post-fan-out); (c) every blocking parquet-serialize +
+      `upload_bytes` call routed through a new dedicated `_defi_upload_executor.py` `ThreadPoolExecutor` via
+      `loop.run_in_executor`. New/updated tests prove shard-level isolation (one protocol/shard failing doesn't abort
+      siblings), `record_captured` grain unchanged, no result reorder/drop across concurrently-completing shards, the
+      fan-out sized from the configured knob (not hardcoded), and the upload executor dedicated/singleton/
+      sized-from-config — 184 targeted tests green, full `quality-gates.sh` ALL QUALITY GATES PASSED (sentinel = shipped
+      SHA). No VM launch, no canary run (operator-owned per the source doc). Filed
+      `issues/mtds_dex_pools_adapter_contract_baseline_stale_2026_07_26.md` (P3, non-blocking QG WARN) for the warn-only
+      adapter-contract-baseline ratchet drift the file split caused (verified pure code-motion, zero calls lost).
+      Originally: **Implement the MTDS DeFi perf bundle (knobs + async fan-out + executor-offload) as ONE combined
       commit** — code-only, no VM launch, no canary. (a) Add `defi_max_concurrent_fetches` (32),
       `defi_max_inflight_tasks` (128), `defi_max_concurrent_uploads` (64) to
       `market_tick_data_service/config/service_config.py`, mirroring the existing Tardis 3-knob block (verified: none of
