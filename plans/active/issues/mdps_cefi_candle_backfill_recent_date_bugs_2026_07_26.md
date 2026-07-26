@@ -103,7 +103,7 @@ on-chain-CLOB wire format.
 
 ## Recommended decision
 
-- [ ] [DATA] P1. **Fix MDPS's per-date candle-aggregation memory scaling.** Root-cause why a single CeFi venue/date
+- [x] [DATA] P1. **Fix MDPS's per-date candle-aggregation memory scaling.** Root-cause why a single CeFi venue/date
       invocation exceeds 32GB RAM even when `--instrument-ids` narrows the actual work to 2 instruments — the memory
       growth appears tied to a fixed per-date catalogue/universe load (13,601 instruments loaded, 177 tradable), NOT the
       instrument scope requested, so narrowing scope is not a viable workaround on its own. Find and fix whatever
@@ -113,8 +113,15 @@ on-chain-CLOB wire format.
       2-instrument) HYPERLIQUID `trades` candle backfill for one high-volume recent day completes on the STANDARD
       `e2-standard-8` launcher without OOM (confirming the fix actually scopes memory to the requested work), with a
       regression test/benchmark recorded. A full (all-177-instrument) run completing is a stretch goal, not required for
-      this item's own done-when. — **CODE FIX SHIPPED 2026-07-26, live-VM done-when proof still OUTSTANDING** (see
-      Progress Log — NOT flipped `[x]` since the actual gate, a real backfill completing without OOM, hasn't been run).
+      this item's own done-when. — ✅ **DONE 2026-07-26** — `market-data-processing-service@335e9cc`. Live-VM proof:
+      `mdps-backfill-cefi-20260726-225028` (SPOT `e2-standard-8`, HYPERLIQUID `trades`, `--instrument-ids` narrowed to
+      BTC-USD@LIN+ETH-USD@LIN, day=2026-07-19) completed `exit_code=0` in 29.5s, RSS peaked ~1.3GB (vs the prior 27+GiB
+      OOM trajectory), 2/2 instruments succeeded, 0 failed, 15,230 candles produced and verified landed in GCS
+      (`processed_candles/by_date/day=2026-07-19/pipeline_mode=batch_hyperliquid/timeframe={15s..1d}/.../BTC-USD@LIN.parquet` +
+      `ETH-USD@LIN.parquet`). See Progress Log for the SECOND bug this verification run caught and fixed (the first
+      code-fix pass silently found 0 files due to a missed `pipeline_mode=` hive segment — commit
+      `market-data-processing-service@2ff7a16` fixes it; `335e9cc` above is the pushed/promoted SHA on
+      `live-defi-rollout`).
 - [ ] [DATA] P2. **Fix HYPERLIQUID `derivative_ticker`→`deriv_ohlcv_1m` candle building.** Root-cause the
       `instrument_type='UNKNOWN'` resolution (should resolve `perpetual`) for HYPERLIQUID `derivative_ticker` rows, then
       either fix the resolution or register the missing
@@ -170,3 +177,41 @@ on-chain-CLOB wire format.
   high-volume recent day (e.g. `2026-07-19`, the day originally OOM'd), confirm it completes without OOM, then flip this
   todo `[x]` with the run's evidence (VM name + log tail showing completion). Todos 2/3 (bugs 2/3,
   `derivative_ticker`/`book_snapshot_5`) are untouched — separate, smaller fixes, not started.
+
+- 2026-07-26 (slot-12, `data_engineering`): **Live-VM done-when proof — caught + fixed a SECOND, more severe bug in the
+  first fix, then re-verified successfully. Todo 1 now genuinely DONE.** Launched `mdps-backfill-cefi-20260726-220640`
+  (SPOT `e2-standard-8`) against HYPERLIQUID `trades`, `--instrument-ids` narrowed to
+  `HYPERLIQUID:PERPETUAL:BTC-USD@LIN HYPERLIQUID:PERPETUAL:ETH-USD@LIN`, day `2026-07-19` — confirmed the pinned code
+  tarball genuinely included `86a16239c3` (`git merge-base --is-ancestor`). Run completed `exit_code=0` in 16.5s with
+  **zero OOM, but also zero candles**: `Listed 0 files ... No files found for cefi/trades on 2026-07-19` — a SILENT
+  FALSE NEGATIVE, not proof of correctness. Root cause: every current CEFI raw-tick object carries a `pipeline_mode=`
+  hive segment BETWEEN `day=` and `asset_group=`
+  (`day=2026-07-19/pipeline_mode=batch_hyperliquid/asset_group=cefi/venue=HYPERLIQUID/...`, confirmed via
+  `gcloud storage ls` against the prod bucket — the file genuinely exists), but the first fix's venue-scoped prefix
+  (`day={D}/{hive_key}={ag}/venue={V}/`) omitted that segment entirely and so never matched a single real object. This
+  is worse than the OOM it replaced — it would have silently zeroed out CEFI candle coverage for every
+  venue/instrument-narrowed backfill going forward. Per the data-pipeline-correctness HARD RULE ("in your file → fix in
+  same commit"), fixed it in the same session rather than deferring: added `_candidate_pipeline_mode_values(category)`,
+  which derives the asset_group's registered `batch_`/`live_` `pipeline_mode` values from the UAC source registry
+  (`external_batch_sources_for_asset_group` + `pipeline_mode_for_source` — never hand-listed, mirrors UAC's own
+  `possible_manifest._canonical_pipeline_mode_prefixes` derivation), and `_list_blobs_scoped_by_venue` now tries each
+  `pipeline_mode=`-prefixed variant alongside the legacy no-pipeline_mode fallback, per (venue, hive-key) pair. Added a
+  new regression test (`test_pipeline_mode_nested_objects_are_found`) using a REALISTIC pipeline_mode-nested blob
+  fixture (`_ALL_CEFI_BLOBS_PIPELINE_MODE_NESTED`) — the prior 6 tests all used a flat, no-pipeline_mode fixture that
+  never exercised the real on-disk shape, which is exactly why this gap shipped undetected the first time. All 7 tests
+  green; `quality-gates.sh` green (basedpyright clean on the touched file; one transient QG-run basedpyright timeout on
+  retry, confirmed non-reproducing on a second full run). Shipped:
+  `market-data-processing-service@335e9cc9ab004c2aa24707813ad10f956aec29b9` (quickmerge-amended from local `2ff7a16`,
+  landed on `live-defi-rollout`, 0 commits ahead of origin post-push). **Re-verified live**: the code tarball was
+  initially stale (pinned manifest predated the new commit) — deleted the stale-code VM
+  (`mdps-backfill-cefi-20260726-224619`) before it could produce a misleading result, republished the tarball
+  (`bash scripts/vm/create-code-tarballs.sh --include market-data-processing-service`, required a one-time `uv sync` in
+  `deployment-service` since no `.venv` existed yet), confirmed `lc_verify_tarball_freshness: all 5 tarball(s) current`,
+  then relaunched as `mdps-backfill-cefi-20260726-225028`. Result: `exit_code=0` in 29.5s,
+  `Listed 2 files ... (venue-scoped: ['HYPERLIQUID'])`, 2/2 instruments succeeded, 0 failed, 15,230 candles produced,
+  RSS at cleanup boundary 1352MB (peak sample 1296MiB) — vs. the original bug's 27+GiB OOM trajectory on the SAME
+  venue/day. Verified the candles genuinely landed in GCS: `gcloud storage ls -r` on
+  `processed_candles/by_date/day=2026-07-19/pipeline_mode=batch_hyperliquid/` shows both
+  `HYPERLIQUID:PERPETUAL:BTC-USD@LIN.parquet` and `HYPERLIQUID:PERPETUAL:ETH-USD@LIN.parquet` under every timeframe
+  (`15s`/`1m`/`5m`/`15m`/`1h`/`4h`/`1d`). Todo 1 flipped `[x]`. Todos 2/3 (bugs 2/3,
+  `derivative_ticker`/`book_snapshot_5`) remain untouched — separate, smaller fixes, not started this session.
