@@ -15,7 +15,7 @@ summary: >-
   re-drafted), and 9 non-batchable orphans in the Deferred sections for the next iteration or an operator ruling.
   **status: draft — NOT dispatched. Flipping to active is an operator decision (per CLAUDE.md "Plan destination" HARD
   RULE); this batch was drafted autonomously by the scheduled ag_closeout_auditor and awaits operator approval.**
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]

@@ -13,7 +13,7 @@ summary: >-
   was excluded as genuinely conflict-adjacent — see Deferred). Two internally-related items (4 and 5, both append
   findings to the SAME sibling issue doc) were combined into one todo to avoid a same-priority file collision. All other
   conflict-gated candidates across the remaining 12 docs are preserved and queued for the operator, not dropped.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]

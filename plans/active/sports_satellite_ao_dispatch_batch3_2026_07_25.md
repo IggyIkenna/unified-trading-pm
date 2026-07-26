@@ -11,7 +11,7 @@ summary: >-
   zero flagged conflict, or a flagged conflict whose topic provably does not overlap the specific extracted item). The
   23 conflict-gated candidates are NOT dropped — they're preserved with full detail in the Deferred section below and
   queued for the operator in `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]

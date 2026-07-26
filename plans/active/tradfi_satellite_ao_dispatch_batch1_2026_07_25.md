@@ -12,7 +12,7 @@ summary: >-
   this batch contains ONLY the 5 todos that survived review (zero-conflict docs, plus one item whose flagged "conflicts"
   were themselves confirmed non-blocking by the triage agent's own text — see each todo's provenance). The remaining 38
   conflict-gated candidates are preserved and queued for the operator, not dropped.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]

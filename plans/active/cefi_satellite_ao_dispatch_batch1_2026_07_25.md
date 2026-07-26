@@ -13,7 +13,7 @@ summary: >-
   on cross-doc evidence it is already actively executing via a separate live session. 3 same-doc groups (8 sub-items)
   were combined into 3 todos to avoid an in-batch same-file collision, so the 38 surviving candidates ship here as 33
   todo bullets.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]

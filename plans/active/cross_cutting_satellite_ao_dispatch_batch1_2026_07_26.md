@@ -18,7 +18,7 @@ summary: >-
   confirmed failure mode from this session's defi batch2 draft). Left 4 conflict-gated, 13 operator-gated, and 2
   time-gated items in the Deferred sections below (this doc only — batch1b defers to this doc's sections, not a
   duplicate) for the next iteration or an explicit operator ruling.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]

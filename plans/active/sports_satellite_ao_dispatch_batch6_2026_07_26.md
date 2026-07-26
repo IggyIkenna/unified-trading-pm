@@ -11,7 +11,7 @@ summary: >-
   check cleared 9 into todos below, refuted 1 as a verbatim duplicate of an existing draft todo, and left 4 items in the
   Deferred sections. The 16 items batch5 itself deferred are NOT re-surfaced here — `batch5_finalize` todo 2 already
   owns their re-check and explicitly names `batch6` as the destination for any that clear.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]

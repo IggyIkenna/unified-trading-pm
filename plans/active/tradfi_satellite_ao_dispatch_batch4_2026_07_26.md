@@ -12,7 +12,7 @@ summary: >-
   measurably CLEARED (the tradfi-bf fleet fully drained 2026-07-21, unblocking a post-drain canonical re-measure; the
   features/MDPS dependency gap resolved 2026-06-29, making the sp500 plan's three BLOCKED- premises stale). Phase 3's
   conflict check cleared 8 todos (zero intra-batch file collisions); 2 conflicts are parked in the Deferred section.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]

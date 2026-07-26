@@ -58,6 +58,18 @@ Verbatim from operator note to Harsh ahead of meet, 2026-05-21:
 5. This doesn't stop us splitting work; it just focuses splits on Opus 4.7 1M-context human work. Handover also becomes
    much easier — no "take Harsh's work he's left" because background continues either way + the pool itself is shared.
 
+> **Justification partially retired, 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry
+> #37, option A): point 5's "Opus 4.7 1M-context human work" framing is explicitly retired by CLAUDE.md's own 2026-07-23
+> operator ruling — Sonnet 5 also has 1M context, so context-size alone no longer justifies human-only routing
+> (`/codex/06-coding-standards/model-tier-selection.md`). The CURRENT qualitative rule is dispatch-scope eligibility: a
+> row is AO-eligible only if its outcome is DETERMINABLE by the worker alone (a checkable fact, a scoped change, an
+> audit with a stated done-when) — an open-ended judgment/design call still stays human regardless of context size. **9
+> weeks at 12/14 rows still unstarted is the shape of work that is not going to happen while it waits for a human** —
+> the 12 unstarted rows below should each be re-tested against this qualitative rule (not re-litigated against the
+> retired context-size framing) before assuming they must stay human-only; genuinely open-ended rows stay human on THAT
+> ground, not the old one. This note flags the ruling; it does not itself re-triage the 12 rows — that re-test is the
+> next step for whoever picks this doc up.
+
 ## The mechanic — how a row in this doc becomes background-agent work
 
 ```

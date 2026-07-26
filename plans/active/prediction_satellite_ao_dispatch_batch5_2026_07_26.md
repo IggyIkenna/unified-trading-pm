@@ -19,7 +19,7 @@ summary: >-
   orphan is non-batchable (operator-gated / upstream-blocked / time-gated / human-only / UI-slot-gated) and is cited in
   the Deferred sections, not re-litigated. `status: draft` — a skill-drafted AO batch is never auto-shipped; flipping to
   `active` to dispatch is an operator decision (CLAUDE.md "Plan destination — ASK BEFORE CREATING").
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]

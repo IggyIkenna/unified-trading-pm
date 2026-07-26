@@ -11,7 +11,7 @@ summary: >-
   batch3, already dispositioned by it, or non-batchable. Also records three findings batch3 does not carry — a
   duplicate-resolution lesson on the glued-instrument-id doc, an under-report correction, and the residual orphan count
   (21) after batch3 is counted as covering.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [meta]

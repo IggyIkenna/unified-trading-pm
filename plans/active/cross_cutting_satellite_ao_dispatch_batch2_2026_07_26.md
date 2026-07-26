@@ -15,7 +15,7 @@ summary: >-
   Run jobs (still 4Gi, not the claimed 16Gi) and one doc was found existing in `plans/active/issues/` AND
   `plans/archive/2026_07/` simultaneously. Everything not conflict-cleared is in the Deferred sections with its
   non-batchable category named.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]

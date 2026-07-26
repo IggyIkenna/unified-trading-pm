@@ -541,7 +541,12 @@ side ships or is superseded; this is the ONLY category a batch2 can convert):
    `scripts/quality-gates-base/base-service.sh` and/or `base-library.sh`.
    `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3) evaluates adding a lint step to
    `base-service.sh`, and `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` touches `base-library.sh`. Those two files
-   are a multi-tranche hotspot with no serialisation rule — parked.
+   are a multi-tranche hotspot with no serialisation rule — parked. **Ruled 2026-07-26** (resolved
+   `autonomous_session_operator_decisions_2026_07_25.md` entry #36, option A): declare
+   `scripts/quality-gates-base/base-service.sh` + `base-library.sh` a serialized resource — one owning plan at a time.
+   Batch these 4 deferred infra items (domain-client retarget, pip floor bump, cryptography/idna re-check, uv
+   drift-guard) into one unit in the NEXT infra batch (`sequential: true`, since they share these 2 files), rather than
+   continuing to park them individually batch over batch.
 3. **Moving the `0.10.8` constant into `resolve-canonical-versions.py`** — same `base-service.sh`/`base-library.sh`
    contention (the constant lives in 3 hardcoded sites, 2 of them there).
 4. **deployment-ui `DATA_PIPELINE_SERVICES` (GAP G-UI).** Stale `features-cefi/defi/tradfi/prediction-service` names +

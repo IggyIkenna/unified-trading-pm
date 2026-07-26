@@ -9,7 +9,7 @@ summary: >-
   conflict-gated/operator-gated/time-gated sections (not duplicated here), and the 7 mistags/2 archivable_now notes.
   This doc carries the remaining 15 of the 31 conflict-cleared todos, split purely to stay under the workspace's
   1000-line hard cap after prettier reformatting.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]

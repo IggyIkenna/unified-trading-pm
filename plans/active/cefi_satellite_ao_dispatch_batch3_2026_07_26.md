@@ -10,7 +10,7 @@ summary: >-
   Phase-1/Phase-3 pass over the residual, including two docs batch2 could not have seen because its own work created
   them. 5 items cleared the conflict-check into todos below; everything else is held in Deferred with its blocking class
   named. One genuine cross-tranche conflict was found and is PARKED for the operator rather than guessed at.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]

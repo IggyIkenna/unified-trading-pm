@@ -140,7 +140,13 @@ Both readings are defensible and the operator should pick — they lead to diffe
       two `market-tick-data-service` cases, which are demonstrably NOT fixed — they were still failing intermittently as
       late as 2026-07-24 per
       [/plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md](/plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md)
-      (5 consecutive quickmerge re-gate hits, `1/1 worker` serial).
+      (5 consecutive quickmerge re-gate hits, `1/1 worker` serial). **Sequencing ruled 2026-07-26** (resolved
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #29, option A): hold the MTDS half specifically until
+      that doc's own next step (instrument quickmerge's cascade/pull step, diffing `os.environ` before/after
+      `STAGE 0: Cascade`) actually runs — those 2 tests are the ONLY known reproducer of a real leak, and fixing them
+      first (silencing the symptom) risks making the leak permanently invisible before its cause is confirmed.
+      `deployment-api`/`strategy-service` are NOT the reproducer and are not gated by this — proceed on those two
+      independently whenever convenient.
 - [ ] [DOC] P2. Correct the "re-run quality-gates.sh --no-fix then retry" guidance wherever it is taught (agent prompts,
       runbooks): as written it is a sentinel-laundering step, not a fix. It is only safe once the sentinel binds
       configuration.
