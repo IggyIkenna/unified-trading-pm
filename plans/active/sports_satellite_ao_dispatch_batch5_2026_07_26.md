@@ -216,19 +216,15 @@ drift_direction: advance-code
       self-corrected via its own "CORRECTED 2026-07-25" addendum. Source:
       `sports_batch_footystats_swap_wrong_script_2026_07_25`. **DONE 2026-07-26**: re-verified fresh, doc flipped
       `resolved`, 3 todos struck as superseded, both corroborating docs cited.
-- [ ] [DATA] P2. Add the 4 leagues unique to slot-9's diverged unpushed commit (71d6a787) that origin's current
-      `unified_api_contracts/canonical/domain/sports/league_data_other.py` still lacks — `FAROE_ISLANDS_PREMIER_LEAGUE`,
-      `FAROE_ISLANDS_CUP`, `WALES_PREMIER_LEAGUE`, `WALES_FAW_CHAMPIONSHIP` — following the existing curated-universe
-      entry pattern (same top-flight/below/cup WebSearch-verification rigor slot-9 used); bump the two sports
-      structural-gap test counts (`tests/unit/sports/test_sports_structural_gaps.py`, `tests/unit/test_mvp_scope.py`) by
-      +4 (not +43 — do NOT rebase+push 71d6a787 wholesale, it would duplicate the 23 league_ids origin already has via
-      a04996fd). Ship via quickmerge to unified-api-contracts. Then, liveness-gate slot-9's worktree
-      (`.tabs/9/unified-api-contracts`, dead worker last_ping 2026-07-25T04:15Z) to confirm it is still dead, and if so
-      reset it to origin/live-defi-rollout (its committed work is now fully superseded: 23 dup + 4 re-added properly, so
-      nothing unique is lost). Source: `sports_curated_universe_faroe_wales_leagues_missing_slot9_dup_2026_07_25.md`.
-      Done when: all 4 league_ids resolve in the origin curated universe, the sports structural-gap tests pass with
-      counts adjusted by exactly +4, and slot-9's worktree is confirmed either still-live (skip reset, re-note) or reset
-      to origin with no unique commits lost.
+- [x] ✅ [DATA] P2. **DONE 2026-07-26 (slot-5) — uac@40d2dd8f750a96ff0a811b6b56f0ab5401d8ed87.** RE-DIAGNOSED: only 1 of
+      the 4 named leagues (`WALES_FAW_CHAMPIONSHIP`) was genuinely missing — the other 3 already existed in origin under
+      different key names with matching `api_football_id` (`FAROE_ISLANDS_MEISTARADEILDIN`=367,
+      `FAROE_ISLANDS_LOGMANSSTEYPID`=491, `WALES_CYMRU_PREMIER`=110), so adding slot-9's names for them would have
+      duplicated one real league each. Added the 1 real entry, bumped both structural-gap test counts by +1 (not +4).
+      `.tabs/9/unified-api-contracts` was already self-reset to origin cleanly (0 ahead/0 behind) before this session —
+      the reset sub-step was moot. Full detail + resolution:
+      `issues/sports_curated_universe_faroe_wales_leagues_missing_slot9_dup_2026_07_25.md` (flipped to
+      `status:     resolved`). 1271 sports/league tests green, `quality-gates.sh` PASSED.
 - [x] [OPERATOR] P2. Purge the always-empty manifest rows/shards left behind by the § A2 dead-dimension deletion
       (features-service@d564bf6f already deleted `export_players`/`export_coaches`/`export_referees`/`export_rounds` and
       their column registrations — DONE, verified) for the four dimension groups PLAYERS / COACHES / REFEREES / ROUNDS

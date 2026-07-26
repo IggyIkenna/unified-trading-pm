@@ -17,7 +17,7 @@ summary: >-
   curated leagues) still lacks (verified 0 occurrences each): FAROE_ISLANDS_PREMIER_LEAGUE, FAROE_ISLANDS_CUP,
   WALES_PREMIER_LEAGUE, WALES_FAW_CHAMPIONSHIP. So neither a blind push (dup corruption) nor a wholesale discard (loses
   the 4) is correct. Filed so the 4-league coverage is not lost if slot-9's dead worktree is reset to origin.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [sports, curated-universe, league-data, unified-api-contracts, duplicate-work, worktree, dead-worker]
 related: [/codex/05-infrastructure/per-tab-worktrees.md, /plans/active/sports_consolidated_closeout_2026_07_19.md]
 created: 2026-07-25
-last_updated: 2026-07-25
+last_updated: 2026-07-26
 priority: P2
 parent_epic: sports_master
 source: "main orchestrator (agt-52bb99) read-only content compare during poll loop, 2026-07-25 ~06:26"
@@ -34,7 +34,7 @@ assigned_vm: NA
 execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
-resolved_by:
+resolved_by: "slot-5, 2026-07-26, uac@40d2dd8f750a96ff0a811b6b56f0ab5401d8ed87"
 locked_by:
 depends_on: []
 ---
@@ -59,17 +59,21 @@ depends_on: []
 
 ## Recommended resolution (neither blind-push nor wholesale-discard)
 
-- [ ] [DATA] P2. Add ONLY the 4 missing leagues on top of origin's CURRENT `league_data_other.py` —
-      `FAROE_ISLANDS_     PREMIER_LEAGUE`, `FAROE_ISLANDS_CUP`, `WALES_PREMIER_LEAGUE`, `WALES_FAW_CHAMPIONSHIP` —
-      following the existing entry pattern (and the same top-flight/below/cup WebSearch-verification rigor slot-9 used),
-      ship via quickmerge to unified-api-contracts. Do NOT rebase+push 71d6a787 wholesale (would duplicate the 23 shared
-      leagues). **Done when**: the 4 league_ids resolve in the origin curated universe and the sports structural-gap
-      tests pass. Cross-ref the two test edits in both commits (structural_gaps + mvp_scope counts) — bump those counts
-      by +4, not +43.
-- [ ] [INFRA] P3. After the 4-league add lands, slot-9's diverged worktree (`.tabs/9/unified-api-contracts`, dead worker
-      last_ping 04:15Z) can be safely reset to origin/live-defi-rollout per the inherited-dirty-WIP rule (dead claim →
-      inherit; here the committed work is fully superseded — 23 dup + 4 re-added properly — so nothing unique is lost,
-      no violation of "never discard uncommitted work"). Liveness-gate first (confirm the slot-9 worker is still dead).
+- [x] ✅ [DATA] P2. **DONE 2026-07-26 (slot-5) — uac@40d2dd8f750a96ff0a811b6b56f0ab5401d8ed87. CORRECTION: only 1 of the
+      4 named leagues was actually missing.** This doc's "verified 0 occurrences each" check (Evidence section above)
+      matched on exact `league_id` KEY STRINGS only — it did not check whether the same real-world league already
+      existed under a DIFFERENT key. Re-checked via `api_football_id` (the source-catalog identity) against the current
+      origin tip: `FAROE_ISLANDS_PREMIER_LEAGUE` (id=367) is the SAME league as origin's existing
+      `FAROE_ISLANDS_MEISTARADEILDIN`; `FAROE_ISLANDS_CUP` (id=491) is the SAME as origin's existing
+      `FAROE_ISLANDS_LOGMANSSTEYPID`; `WALES_PREMIER_LEAGUE` (id=110) is the SAME as origin's existing
+      `WALES_CYMRU_PREMIER`. Adding any of these 3 under slot-9's key names would have created true `api_football_id`
+      duplicates for one real league. Only `WALES_FAW_CHAMPIONSHIP` (id=111) was genuinely absent — confirmed by the
+      clean 110/111/112 id progression bracketing it between origin's existing tier-1 and cup Wales entries. Added that
+      one entry (slot-9's WebSearch-verified field values), bumped both structural-gap test counts by +1 (not +4). 1271
+      sports/league tests green, full `quality-gates.sh` PASSED.
+- [x] ✅ [INFRA] P3. **CONFIRMED MOOT 2026-07-26 (slot-5).** `.tabs/9/unified-api-contracts` was ALREADY reset to
+      origin/live-defi-rollout cleanly (0 ahead/0 behind, no dirty working tree, HEAD=`b0547c36`) before this session
+      started — no reset action was needed.
 
 ## Triage / charter note
 
