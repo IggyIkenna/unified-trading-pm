@@ -62,14 +62,12 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [CODE] P1. Fix the dead Kalshi host reintroduced into the live smoke matrix + add the missing regression check.
-      Swap `https://trading-api.kalshi.com/trade-api/v2/markets` in
-      `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py:552` (confirmed still present live,
-      2026-07-25) back to the elections-subdomain host, and add the `predictions_master` regression check that
-      `kalshi_api_migration_to_elections_subdomain_2026_05_20.md` Phase 4 never built, so this can't silently reappear a
-      third time. Repo: e2e-testing. **Done when**: `validate_batch_live_smoke_matrix.py` no longer references
-      `trading-api.kalshi.com`; a new regression test/assertion exists that fails if that host string reappears anywhere
-      in the smoke matrix; the smoke matrix runs green. Source: `prediction_phase_ab_residuals_2026_07_24.md`.
+- [x] ✅ [CODE] P1. Fix the dead Kalshi host reintroduced into the live smoke matrix + add the missing regression check.
+      — `e2e-testing@371ac1b`. `_fetch_kalshi_instruments()` in `validate_batch_live_smoke_matrix.py` now points at
+      `api.elections.kalshi.com` (was `trading-api.kalshi.com`, 401s since the 2026-05-20 migration). New
+      `tests/unit/test_validate_batch_live_smoke_matrix.py` scans the module's own source for the dead host string (not
+      just the one call site) so a third reintroduction anywhere in the file fails the build — wired via a new
+      `scripts/validation/` sys.path entry in `tests/unit/conftest.py`. `quality-gates.sh` green.
 - [ ] [DIAG] P1. Quantify the prediction-store event-capture gap the cefi KALSHI-PERP purge surfaced — diff the
       PREDICTION store's KALSHI/POLYMARKET instrument set against the live Kalshi `/markets` (events host) and
       Polymarket CLOB universe to determine whether event markets (`KXMVESPORTSMULTIGAMEEXTENDED`, `KXMVECROSSCATEGORY`,

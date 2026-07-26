@@ -308,28 +308,44 @@ drift_direction: advance-code
       **Done when**: each of the 5 sub-items has a recorded disposition
       (recovered/reclassified/confirmed-spurious/verified-present) with cited evidence (object path or index diff), and
       the corresponding checkboxes in the source doc are flipped.
-- [ ] [DATA] P0. **Instruments-store CF-1…CF-12 single-walk (C0→E3→E4→E5→E6), sequential.** Run the bundled non-sports
-      instruments-bucket single-walk: `category=`→`asset_group=` (CF-2) + `pipeline_mode=` partition (CF-3) + v9
-      re-version (CF-1) + env-split (CF-9) + canonical names (CF-7) + `available_at` preserve (CF-8) + phantom relabel
-      (CF-10), server-side `gcs_copy_object`, layout-aware. [OPERATOR] the VM-launch step
-      (`VM_TASK=canonical-migration`) needs the standard VM-launcher runbook sign-off — the prior L0 tarball-prune
-      blocker gating this is RESOLVED (`plans/archive/issues/pinned_tarball_prune_breaks_vm_deploys_2026_06_01.md`), so
-      this is unblocked now. Then, in order: confirm instruments writer drained + snapshot each `_index` (E3); dry-VM →
-      measure timing → tune → run for real on the small row counts (30k/20k/493), no fire-and-forget (E4); manifest
-      rebuild per bucket via `ManifestWriter` stamping `source`+`pipeline_mode`+`available_at`+typed reasons, folding
-      the C-source (CF-4) source-column re-consolidation and C-reasons (CF-5) typed `EmptyConfirmedReason` writer fix
-      (E5); run `cf_manifest_audit_2026_06_01.py` per bucket to confirm CF-1…CF-12 GREEN and flip CF-coverage in
-      `instruments_master_audit_instructions.md` (E6). [OPERATOR] **STOP at GREEN — do NOT execute the legacy-bucket
-      delete.** That terminal hop (hand C-GREEN to L6 `bucket_name_ssot…` for permanent deletion) is IRREVERSIBLE and
-      stays a separate human-gated decision per the GCS delete-safety protocol; this todo's done-when is CF-GREEN +
-      audit-instructions flipped, not the delete. Before starting, re-check against this doc's own earlier
-      "INSTRUMENTS-STORE buckets" section (COMPLETE 2026-06-18) — v9/asset_group/pipeline_mode column population is
-      ALREADY applied for cefi/defi/prediction (tradfi deferred pending DBEQ/CBOE backfill completion) via
-      `populate_is_index_v9_2026_06_19.py`, which may make parts of C0 redundant; reconcile scope before running, don't
-      blindly re-walk already-canonical AGs. Source: `instruments_store_cf_canonicalization_single_walk_2026_07_24.md`.
-      Done when: `cf_manifest_audit_2026_06_01.py` reports CF-1…CF-12 GREEN with 0 legacy-only cells vs canonical for
-      every non-sports instruments-store bucket, CF-coverage is flipped in `instruments_master_audit_instructions.md`,
-      and the delete decision is explicitly left to the operator (not executed).
+- [x] ✅ [DATA] P0. **Instruments-store CF-1…CF-12 single-walk (C0→E3→E4→E5→E6), sequential.** RECONCILED + CLOSED
+      2026-07-26 — the VM-launched bulk single-walk this todo assumed was NOT needed. Live re-audit
+      (`cf_manifest_audit_2026_06_01.py`, read-only, no whole-corpus walk) against all 4 non-sports instruments-store
+      prod buckets showed cefi/defi/tradfi were ALREADY CF-1/CF-2/CF-3/CF-6/CF-9/CF-13 GREEN (the C0 path/partition
+      migration this todo describes already landed for those 3 AGs via the doc's own earlier
+      `populate_is_index_v9_     2026_06_19.py` work — the todo's own "reconcile scope before running" caution was
+      correct). The ONLY real residual was CF-4 (blank `source`, 134 rows total across the 4 buckets) + CF-8 (null
+      `available_at`, 1,884 rows total) — an ACTIVE writer gap, not a migration gap:
+      `record_expected_empty`/`record_expected_unattempted` (unified-trading-library
+      `manifest_writer/_writer_record.py`) never threaded an `available_at` parameter at all. Fixed at the root —
+      unified-trading-library@03cfa0ac (added `available_at` to both, forwarded through `record_expected_empty`'s
+      internal `record_empty` call) + instruments-service@9c203ce1 (threaded `available_at` at the 2 tradfi
+      non-trading-day callsites + the cefi/defi/tradfi venue-pre-launch + expected_unattempted EU-seed callsites in
+      `process_write.py`, plus a new CAS-safe manifest-backfill script
+      `scripts/backfill_is_source_blank_and_available_at_null_2026_07_26.py` for the rows already written before the
+      fix). Backfill applied (`--apply`) against all 4 prod buckets same session; **re-audit confirms cefi/defi/tradfi
+      now fully GREEN, pred GREEN on CF-4/CF-8** (see below). New unit tests added in
+      `test_manifest_writer_record_empty_reason.py` for both signature changes.
+
+      **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
+                  `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                  `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                  prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                  this is a genuine architect-level design call (not a mechanical copy) — filed as
+                  `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                  (merged via PR #1593), NOT executed here.
+
+                  **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                  (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+
+                  **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                  items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                  flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                  re-verifies sports.
+
+                  Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                  `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                  of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the
