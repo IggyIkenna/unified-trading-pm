@@ -173,11 +173,14 @@ not currently a live self-heal path until that breaker clears.
       squash-commit chain (repo: unified-api-contracts) — unified-trading-pm@\<SHA\>. See "Root cause diagnosed" section
       above: manual D13-bootstrap tag placed on an LDR-side `_backmerge` commit instead of the corresponding `main`-side
       squash commit (`b52aea5d`, same tree, ~2h later); not a `semver-agent` bug.
-- [ ] [DEVOPS] P2. Once root-caused, decide the fix direction: (a) always tag on `main`'s own HEAD right after each
+- [x] ✅ [DEVOPS] P2. Once root-caused, decide the fix direction: (a) always tag on `main`'s own HEAD right after each
       squash-promote lands (never on an LDR-only commit), or (b) reconcile the existing gap by re-tagging `v0.72.0` (or
       a corrected release tag) onto current `main` HEAD if the tag is meant to represent "what's actually released on
       main" — do NOT silently move an existing tag without checking downstream consumers that may have already resolved
-      a wheel against the old tag sha.
+      a wheel against the old tag sha. — unified-trading-pm (this doc), see `## Decision` section below (slot 8,
+      2026-07-26, **REVISED** after the (a)-only conclusion proved wrong): **(b) — force-retag `v0.72.0` onto `b52aea5d`
+      — is the actual required fix; blocked on operator/main authorization for the shared-ref force-push, see `/blocked`
+      question.**
 - [ ] [SCRIPT] P3. Once the tag-ancestry gap is fixed, re-run the `registry-drift` job on unified-trading-system-ui's
       `main`/next promote PR and confirm
       `pip install -e     _deps/unified-api-contracts -e _deps/unified-trading-library` succeeds (both the
@@ -187,6 +190,61 @@ not currently a live self-heal path until that breaker clears.
       `promotion_lag_alert_hides_provenance_block_2026_07_17.md` — same hatch-vcs/git-tag subsystem, adjacent failure
       modes, worth a shared "known rough edges" note so the next diagnosis doesn't restart from zero. —
       unified-trading-pm@pending (both docs' `related:` frontmatter + a "Known rough edge" body note added).
+
+## Decision (2026-07-26, slot 8 — resolves todo 2)
+
+Independently re-verified the root cause while making this call (parallel to -001's own diagnosis; corroborating, not
+superseding it) — same evidence slot 6's "Root cause diagnosed" section above documents (manual D13-baseline tag on
+LDR-only commit `4ac8be3f`, byte-identical to `main`-side squash `b52aea5d`, never reachable from `main`).
+
+**First pass concluded (a) and is WRONG — corrected below after reading the actual semver-agent run log, not just the
+workflow source.** My first read of `semver-agent.yml` (trigger `push:[main]` + checkout `ref: github.sha` + tag-mint
+from that ref) is real and does mean every _future_ mint is ancestor-safe — but reading the source alone missed that the
+mechanism is **currently wedged**, and will stay wedged indefinitely. Direction (a) alone does not fix this issue;
+concrete evidence below.
+
+**The self-heal does NOT happen — proven from the actual run, not inferred:** pulled the full log of the most recent
+semver-agent run on `main` (`gh run view 30197445904 --log`, 2026-07-26T09:59:29Z, `completed/success` — NOT the
+"circuit breaker tripped" the "Root cause diagnosed" section above reports; the literal log lines are
+`Dynamic repo (version_source=git-tag): counted 0 v* tag mint(s) in the last hour` →
+`Circuit breaker clear — proceeding.`, so that part of the adjacent finding is itself incorrect and should not be relied
+on). What the log actually shows:
+
+```
+Baseline (latest git tag) for unified-api-contracts: 0.71.0      # main's own describe — the gap, live
+Current version: 0.71.0
+Resolved bump category: breaking
+Label matches API diff ... breaking bump confirmed.
+...
+NEW_VERSION="0.72.0"   CURRENT="0.71.0"        # pre-1.0.0 override: breaking -> MINOR -> 0.72.0
+version_source=git-tag — minting tag v0.72.0 (no pyproject commit)
+Tag v0.72.0 already exists — idempotent, nothing to do.          # <- exit 0, SILENT no-op
+```
+
+This is the actual mechanism: because `main`'s baseline is pinned at `v0.71.0` (the ancestry gap), every future
+breaking/minor-worthy promote computes the SAME `NEW_VERSION=0.72.0` forever — and the tag-mint step's idempotency guard
+(`git rev-parse "v${NEW_VERSION}"`, workflow §721-724) checks tag _existence_, not _ancestry_. Since the stale,
+unreachable `v0.72.0` object already exists in the repo's global ref namespace, every run hits the idempotent-skip
+branch and exits 0 — a **green run that silently did nothing**, the exact "healthy no-op vs. broken lookup" failure
+class `reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md` already names for a sibling workflow.
+**There is no future promote, however qualifying, that breaks this loop** — waiting is not a fix.
+
+**Direction (b) is therefore the correct, necessary fix — but as a ref-correction, not a version invention.** Move the
+existing `v0.72.0` tag from `4ac8be3f` (LDR-only) to `b52aea5d237153ba74568b5cb195934cd255b361` (the `main`-side squash
+commit slot 6 identified, confirmed **byte-identical tree** to the original — `9c2d88022f10f9a8d4929bbfdfb5bdc593391763`
+both sides). This changes zero content, only the ref target, and directly answers the original todo's own downstream-
+consumer caution: no GitHub release exists for `v0.72.0` (`gh release view v0.72.0` → not found), and
+`publish-package.yml` is _also_ `push:[main]`-only, so no wheel was ever published under a clean `0.72.0` version string
+(`main` never had the tag reachable to resolve it) — nothing downstream is pinned to the current tag sha. Once
+re-pointed: `main`'s baseline immediately reads `0.72.0` (unblocking `pip install` today), and the NEXT qualifying
+promote computes `0.72.1`/`0.73.0` against a live, correctly-anchored baseline — no idempotency collision, no manual
+version invention, self-healing resumes exactly as (a) describes for everything after this one correction.
+
+**Not executed in this task.** Force-moving a published tag on a shared upstream ref is exactly the kind of
+consequential, git-push-adjacent action `RULES.md`/CLAUDE.md gate to human/main-agent authorization (same family as
+"never force-push a shared branch") — filed as a `/blocked` question with this evidence + recommendation rather than run
+`git push --force origin v0.72.0` unilaterally. -003 (re-run `registry-drift`) stays correctly blocked until the retag
+lands.
 
 ## Provenance
 
