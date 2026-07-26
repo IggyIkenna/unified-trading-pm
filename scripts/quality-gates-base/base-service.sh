@@ -951,7 +951,12 @@ if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; 
     # Trap: kill only OUR basedpyright on Ctrl+C (avoids killing parallel QG runs in other repos)
     BP_PID=""
     trap '''[[ -n "$BP_PID" ]] && kill -9 $BP_PID 2>/dev/null''' INT TERM
-    _bp_out="/tmp/bp_out.$$"
+    # TMPDIR-aware (matches BASEDPYRIGHT_CACHE_DIR above) — a hardcoded /tmp path here made
+    # this capture file's own write fail with ENOSPC whenever the host's /tmp tmpfs was full
+    # (shared_host_tmp_tmpfs_exhaustion_2026_07_08.md / …_2026_07_26.md class), producing a
+    # generic "Type check FAILED/timeout" with 0 errors/0 warnings extracted — indistinguishable
+    # from a real basedpyright failure until someone reads $PYRIGHT_OUT and finds it's empty.
+    _bp_out="${TMPDIR:-/tmp}/bp_out.$$"
     # [OOM MITIGATION 2026-05-15] MEM_WRAP wraps basedpyright in cgroup mem cap (Linux only).
     # OLD: run_timeout "${PYRIGHT_TIMEOUT:-120}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
     # TO REVERT: drop the `"${MEM_WRAP[@]}"` prefix below.
@@ -1127,11 +1132,11 @@ IMPORT_INSIDE_EXTRA_ARGS=()
 for g in ${IMPORT_INSIDE_EXCLUDE_GLOBS[@]+"${IMPORT_INSIDE_EXCLUDE_GLOBS[@]}"}; do
     IMPORT_INSIDE_EXTRA_ARGS+=(--exclude-glob "$g")
 done
-if python3 "$_AST_CHECKER" --source-dir "$SOURCE_DIR" "${IMPORT_INSIDE_EXTRA_ARGS[@]}" 2>/tmp/_inside_imports_qg.err; then
+if python3 "$_AST_CHECKER" --source-dir "$SOURCE_DIR" "${IMPORT_INSIDE_EXTRA_ARGS[@]}" 2>${TMPDIR:-/tmp}/_inside_imports_qg.err; then
     log_success "No imports inside functions"
 else
     log_fail "Imports inside functions — move to top (AST-detected)"
-    head -10 /tmp/_inside_imports_qg.err 2>/dev/null
+    head -10 ${TMPDIR:-/tmp}/_inside_imports_qg.err 2>/dev/null
     V=$(( V + 1 ))
 fi
 
@@ -1444,7 +1449,7 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
         # run_timeout 180: OSV API can stall indefinitely in Cloud Build (no connection-level timeout
         # in pip-audit itself). Exit 124 = timeout → warn-only; image still passes (advisory gate).
         _pa_rc=0
-        run_timeout 180 "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null || _pa_rc=$?
+        run_timeout 180 "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o ${TMPDIR:-/tmp}/pip-audit-output.json 2>/dev/null || _pa_rc=$?
         # Classify the pip-audit outcome by WHAT IT PRODUCED, not just the exit code:
         #   rc 0                      → clean
         #   rc 124                    → OSV timeout → advisory (network, not a vuln)
@@ -1457,10 +1462,10 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
         # freshness still catch a real advisory on the next reachable run). Does NOT mask real vulns:
         # a genuine finding always writes the json and still fails here.
         _pa_has_vulns() {
-            [[ -s /tmp/pip-audit-output.json ]] && python3 -c "
+            [[ -s ${TMPDIR:-/tmp}/pip-audit-output.json ]] && python3 -c "
 import json, sys
 try:
-    data = json.load(open('/tmp/pip-audit-output.json'))
+    data = json.load(open('${TMPDIR:-/tmp}/pip-audit-output.json'))
     sys.exit(0 if any(d.get('vulns') for d in data.get('dependencies', [])) else 1)
 except Exception:
     sys.exit(1)
@@ -1476,7 +1481,7 @@ except Exception:
             python3 -c "
 import json, sys
 try:
-    data = json.load(open('/tmp/pip-audit-output.json'))
+    data = json.load(open('${TMPDIR:-/tmp}/pip-audit-output.json'))
     deps = [d for d in data.get('dependencies', []) if d.get('vulns')]
     for d in deps:
         for v in d['vulns']:
@@ -1491,7 +1496,7 @@ except Exception as e:
         # Store SBOM audit trail in GCS (non-blocking — upload failure does not fail the build).
         # Inside the cache-miss branch: on a cache hit /tmp holds another repo's stale output.
         SERVICE_NAME="$SERVICE_NAME" python3 "$REPO_ROOT/unified-trading-pm/scripts/sbom-store.py" \
-            /tmp/pip-audit-output.json 2>/dev/null || :
+            ${TMPDIR:-/tmp}/pip-audit-output.json 2>/dev/null || :
     fi
     # Internal advisory check (BLOCKING — checks unified-trading-pm/security/internal-advisories.yaml)
     if [[ -f "$REPO_ROOT/unified-trading-pm/scripts/validation/check-internal-advisories.sh" ]]; then
@@ -1799,11 +1804,11 @@ fi
 if [ -f "cloudbuild.yaml" ]; then
     _CB_SUBST_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_cloudbuild_substitutions.py"
     if [ -f "$_CB_SUBST_CHECKER" ]; then
-        if run_timeout 30 "$PYTHON_CMD" "$_CB_SUBST_CHECKER" cloudbuild.yaml >/tmp/cloudbuild_subst_qg.log 2>&1; then
+        if run_timeout 30 "$PYTHON_CMD" "$_CB_SUBST_CHECKER" cloudbuild.yaml >${TMPDIR:-/tmp}/cloudbuild_subst_qg.log 2>&1; then
             log_success "STEP 5.19: cloudbuild.yaml substitutions OK (no unescaped \$VAR / \$( — \$\$-escape honored)"
         else
             log_fail "STEP 5.19: cloudbuild.yaml has unescaped substitution(s) — Cloud Build will SILENTLY reject this config (file:step-id:varname):"
-            cat /tmp/cloudbuild_subst_qg.log
+            cat ${TMPDIR:-/tmp}/cloudbuild_subst_qg.log
             log_fail "         Remedy: shell vars in cloudbuild bash blocks need \$\$; even COMMENT lines are scanned by the validator"
             V=$(( V + 1 ))
         fi
@@ -2358,11 +2363,11 @@ if [ -f "$_REMOVED_SYMBOLS_CHECKER" ]; then
     if python "$_REMOVED_SYMBOLS_CHECKER" \
             --workspace-root "$_WORKSPACE_ROOT" \
             --scope "$_REPO_REL_TO_WORKSPACE" \
-            --workers 1 >/tmp/removed_symbols_qg.log 2>&1; then
+            --workers 1 >${TMPDIR:-/tmp}/removed_symbols_qg.log 2>&1; then
         log_success "STEP 5.65: No references to removed symbols (Citadel § 6 EXTENDED)"
     else
         log_fail "STEP 5.65: Repo references symbols listed as 'removed' in unified-trading-pm/scripts/quality_gates/removed_symbols_manifest.yaml. Update consumers per the documented successor:"
-        cat /tmp/removed_symbols_qg.log
+        cat ${TMPDIR:-/tmp}/removed_symbols_qg.log
         log_fail "         Manifest: unified-trading-pm/scripts/quality_gates/removed_symbols_manifest.yaml"
         log_fail "         Recheck: python unified-trading-pm/scripts/quality_gates/check_removed_symbols.py --scope $_REPO_REL_TO_WORKSPACE"
         V=$(( V + 1 ))
@@ -2410,16 +2415,16 @@ if [ -f "$_BANNED_PLACEHOLDER_CHECKER" ]; then
     _BPM_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BPM_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_BANNED_PLACEHOLDER_CHECKER" \
-            --workspace-root "$_BPM_WS" --scope "$_BPM_REPO" "${_BPM_SRC_ARG[@]}" >/tmp/banned_placeholder_qg.log 2>&1; then
+            --workspace-root "$_BPM_WS" --scope "$_BPM_REPO" "${_BPM_SRC_ARG[@]}" >${TMPDIR:-/tmp}/banned_placeholder_qg.log 2>&1; then
         # exit 0 — either no occurrences, or only baselined (pending_removal) ones.
-        if grep -q '^\[WARN\]' /tmp/banned_placeholder_qg.log 2>/dev/null; then
-            log_warn "STEP 5.67: $(grep -c '^\[WARN\]' /tmp/banned_placeholder_qg.log) baselined NaN-placeholder occurrence(s) (pending_removal — writegate Phase 2.A backlog); 0 new"
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/banned_placeholder_qg.log 2>/dev/null; then
+            log_warn "STEP 5.67: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/banned_placeholder_qg.log) baselined NaN-placeholder occurrence(s) (pending_removal — writegate Phase 2.A backlog); 0 new"
         else
             log_success "STEP 5.67: No banned NaN-placeholder / bypass-record_captured methods"
         fi
     else
         log_fail "STEP 5.67: NEW banned NaN-placeholder / bypass-record_captured pattern (not in unified-trading-pm/scripts/quality_gates/banned_placeholder_methods_baseline.yaml). Delete it — emit record_empty(reason=...) / record_captured() instead (CLAUDE.md 'Honest absence vs fake placeholders'):"
-        cat /tmp/banned_placeholder_qg.log
+        cat ${TMPDIR:-/tmp}/banned_placeholder_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_banned_placeholder_methods.py --workspace-root $_BPM_WS --scope $_BPM_REPO"
         V=$(( V + 1 ))
     fi
@@ -2466,15 +2471,15 @@ if [ -f "$_INLINE_URI_CHECKER" ]; then
     _IU_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _IU_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_INLINE_URI_CHECKER" \
-            --workspace-root "$_IU_WS" --scope "$_IU_REPO" "${_IU_SRC_ARG[@]}" >/tmp/inline_bucket_uri_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/inline_bucket_uri_qg.log 2>/dev/null; then
-            log_warn "STEP 5.69: $(grep -c '^\[WARN\]' /tmp/inline_bucket_uri_qg.log) repo(s) BELOW the inline-URI baseline — ratchet inline_bucket_uri_baseline.yaml DOWN (re-run --update-baseline)"
+            --workspace-root "$_IU_WS" --scope "$_IU_REPO" "${_IU_SRC_ARG[@]}" >${TMPDIR:-/tmp}/inline_bucket_uri_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/inline_bucket_uri_qg.log 2>/dev/null; then
+            log_warn "STEP 5.69: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/inline_bucket_uri_qg.log) repo(s) BELOW the inline-URI baseline — ratchet inline_bucket_uri_baseline.yaml DOWN (re-run --update-baseline)"
         else
             log_success "STEP 5.69: No new inline gs://|s3:// f-string URI formatters (baseline-ratchet, bucket-name SSOT (b+))"
         fi
     else
         log_fail "STEP 5.69: NEW inline f\"gs://...\" / f\"s3://...\" cloud-URI formatter(s) above the per-repo baseline. Route through unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_uri(...) / resolve_bucket_name(...), or add '# noqa: gs-uri' with a one-line reason (CLAUDE.md 'Bucket-name SSOT (b+)'):"
-        cat /tmp/inline_bucket_uri_qg.log
+        cat ${TMPDIR:-/tmp}/inline_bucket_uri_qg.log
         log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/inline_bucket_uri_baseline.yaml (NEVER raise a count)"
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_inline_bucket_uri.py --workspace-root $_IU_WS --scope $_IU_REPO"
         V=$(( V + 1 ))
@@ -2501,11 +2506,11 @@ if [ -f "$_NOCAT_CHECKER" ]; then
     _NC_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _NC_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_NOCAT_CHECKER" \
-            --workspace-root "$_NC_WS" --scope "$_NC_REPO" "${_NC_SRC_ARG[@]}" >/tmp/no_category_kwarg_qg.log 2>&1; then
+            --workspace-root "$_NC_WS" --scope "$_NC_REPO" "${_NC_SRC_ARG[@]}" >${TMPDIR:-/tmp}/no_category_kwarg_qg.log 2>&1; then
         log_success "STEP 5.98: No legacy category= kwarg at ManifestWriter writes (asset_group= is v9 canonical)"
     else
         log_fail "STEP 5.98: Legacy category= kwarg(s) at ManifestWriter writes — rename to asset_group= (UTL contract, v9 canonical):"
-        cat /tmp/no_category_kwarg_qg.log
+        cat ${TMPDIR:-/tmp}/no_category_kwarg_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_category_kwarg_at_manifest_write.py --workspace-root $_NC_WS --scope $_NC_REPO"
         V=$(( V + 1 ))
     fi
@@ -2529,11 +2534,11 @@ if [ -f "$_NOPID_CHECKER" ]; then
     _NP_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _NP_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_NOPID_CHECKER" \
-            --workspace-root "$_NP_WS" --scope "$_NP_REPO" "${_NP_SRC_ARG[@]}" >/tmp/no_explicit_project_id_bucket_qg.log 2>&1; then
+            --workspace-root "$_NP_WS" --scope "$_NP_REPO" "${_NP_SRC_ARG[@]}" >${TMPDIR:-/tmp}/no_explicit_project_id_bucket_qg.log 2>&1; then
         log_success "STEP 5.93: No explicit project_id on asset-group bucket builders (delegates to yaml SSOT → -prd- canonical)"
     else
         log_fail "STEP 5.93: Explicit project_id on asset-group bucket builder(s) → legacy no-env bucket. Drop project_id or use resolve_bucket_name(...):"
-        cat /tmp/no_explicit_project_id_bucket_qg.log
+        cat ${TMPDIR:-/tmp}/no_explicit_project_id_bucket_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_explicit_project_id_bucket.py --workspace-root $_NP_WS --scope $_NP_REPO"
         V=$(( V + 1 ))
     fi
@@ -2556,15 +2561,15 @@ if [ -f "$_NOFB_CHECKER" ]; then
     _FB_REPO=$(basename "$PROJECT_ROOT")
     _FB_WS="$REPO_ROOT"
     if $PYTHON_CMD "$_NOFB_CHECKER" \
-            --workspace-root "$_FB_WS" --scope "$_FB_REPO" >/tmp/no_fallback_imports_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/no_fallback_imports_qg.log 2>/dev/null; then
+            --workspace-root "$_FB_WS" --scope "$_FB_REPO" >${TMPDIR:-/tmp}/no_fallback_imports_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/no_fallback_imports_qg.log 2>/dev/null; then
             log_warn "STEP 5.94: below the fallback-import baseline — ratchet no_fallback_imports_baseline.yaml DOWN (re-run --update-baseline)"
         else
             log_success "STEP 5.94: No new try/except-ImportError fallback-import shims (baseline-ratchet, no-empty-fallbacks)"
         fi
     else
         log_fail "STEP 5.94: NEW try/except-ImportError fallback-import shim(s) above the per-repo baseline. Import directly + declare the dep in pyproject, or add '# noqa: fallback-import' with a one-line reason (no-empty-fallbacks.mdc):"
-        cat /tmp/no_fallback_imports_qg.log
+        cat ${TMPDIR:-/tmp}/no_fallback_imports_qg.log
         log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/no_fallback_imports_baseline.yaml (NEVER raise a count)"
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_fallback_imports.py --workspace-root $_FB_WS --scope $_FB_REPO"
         V=$(( V + 1 ))
@@ -2590,15 +2595,15 @@ if [ -f "$_RUFFRR_CHECKER" ]; then
     _RR_REPO=$(basename "$PROJECT_ROOT")
     _RR_WS="$REPO_ROOT"
     if $PYTHON_CMD "$_RUFFRR_CHECKER" \
-            --workspace-root "$_RR_WS" --scope "$_RR_REPO" >/tmp/ruff_rule_ratchet_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/ruff_rule_ratchet_qg.log 2>/dev/null; then
+            --workspace-root "$_RR_WS" --scope "$_RR_REPO" >${TMPDIR:-/tmp}/ruff_rule_ratchet_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/ruff_rule_ratchet_qg.log 2>/dev/null; then
             log_warn "STEP 5.95: below the DTZ/TID251 baseline — ratchet ruff_rule_ratchet_baseline.yaml DOWN (re-run --update-baseline)"
         else
             log_success "STEP 5.95: No new naive-datetime (DTZ) / direct cloud-SDK (TID251) sites (baseline-ratchet)"
         fi
     else
         log_fail "STEP 5.95: NEW naive-datetime (DTZ) / direct cloud-SDK (TID251) site(s) above the per-repo baseline. Use datetime.now(timezone.utc) / get_storage_client()/get_secret_client(), or add a ruff '# noqa: <code>' with a one-line reason:"
-        cat /tmp/ruff_rule_ratchet_qg.log
+        cat ${TMPDIR:-/tmp}/ruff_rule_ratchet_qg.log
         log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/ruff_rule_ratchet_baseline.yaml (NEVER raise a count)"
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_ruff_rule_ratchet.py --workspace-root $_RR_WS --scope $_RR_REPO"
         V=$(( V + 1 ))
@@ -2626,11 +2631,11 @@ if [ -f "$_LEGACY_BUCKET_CHECKER" ]; then
     _LB_REPO=$(basename "$PROJECT_ROOT")
     _LB_WS="$REPO_ROOT"
     if $PYTHON_CMD "$_LEGACY_BUCKET_CHECKER" \
-            --workspace-root "$_LB_WS" --scope "$_LB_REPO" >/tmp/no_legacy_bucket_concat_qg.log 2>&1; then
+            --workspace-root "$_LB_WS" --scope "$_LB_REPO" >${TMPDIR:-/tmp}/no_legacy_bucket_concat_qg.log 2>&1; then
         log_success "STEP 5.96: No legacy-bucket string-concat constructions (market-data-tick-/instruments-store- via resolve_bucket_name)"
     else
         log_fail "STEP 5.96: Legacy bucket name built by string-concat / f-string interpolation — use resolve_bucket_name(kind='market-data'|'instruments-store', asset_group=...) instead:"
-        cat /tmp/no_legacy_bucket_concat_qg.log
+        cat ${TMPDIR:-/tmp}/no_legacy_bucket_concat_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_legacy_bucket_string_concat.py --workspace-root $_LB_WS --scope $_LB_REPO"
         V=$(( V + 1 ))
     fi
@@ -2657,15 +2662,15 @@ if [ -f "$_DEFI_CITE_CHECKER" ]; then
     _DC_REPO=$(basename "$PROJECT_ROOT")
     _DC_WS="$REPO_ROOT"
     if $PYTHON_CMD "$_DEFI_CITE_CHECKER" \
-            --workspace-root "$_DC_WS" --scope "$_DC_REPO" >/tmp/defi_address_citations_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/defi_address_citations_qg.log 2>/dev/null; then
-            log_warn "STEP 5.97: $(grep -c '^\[WARN\]' /tmp/defi_address_citations_qg.log) baselined uncited DeFi address(es); 0 new (ratchet down when citations are back-filled)"
+            --workspace-root "$_DC_WS" --scope "$_DC_REPO" >${TMPDIR:-/tmp}/defi_address_citations_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/defi_address_citations_qg.log 2>/dev/null; then
+            log_warn "STEP 5.97: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/defi_address_citations_qg.log) baselined uncited DeFi address(es); 0 new (ratchet down when citations are back-filled)"
         else
             log_success "STEP 5.97: No new uncited DeFi contract addresses in unified_api_contracts/registry/ (citation ratchet)"
         fi
     else
         log_fail "STEP 5.97: NEW uncited Ethereum contract address in unified_api_contracts/registry/ (not in defi_address_citation_baseline.yaml). Add \`# DERIVED <YYYY-MM-DD> from <chain> <source>\` on the same line, or \`# QG-allow: defi-citation — <reason>\` for auto-deployed pool addresses:"
-        cat /tmp/defi_address_citations_qg.log
+        cat ${TMPDIR:-/tmp}/defi_address_citations_qg.log
         log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/defi_address_citation_baseline.yaml (NEVER raise a count)"
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_defi_address_citations.py --workspace-root $_DC_WS --scope $_DC_REPO"
         V=$(( V + 1 ))
@@ -2713,16 +2718,16 @@ if [ -f "$_PIPELINE_MODE_CHECKER" ]; then
     _PM_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _PM_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_PIPELINE_MODE_CHECKER" \
-            --workspace-root "$_PM_WS" --scope "$_PM_REPO" "${_PM_SRC_ARG[@]}" >/tmp/pipeline_mode_explicit_qg.log 2>&1; then
+            --workspace-root "$_PM_WS" --scope "$_PM_REPO" "${_PM_SRC_ARG[@]}" >${TMPDIR:-/tmp}/pipeline_mode_explicit_qg.log 2>&1; then
         # exit 0 — either no occurrences, or only baselined (pending Phase 4 sweep) ones.
-        if grep -q '^\[WARN\]' /tmp/pipeline_mode_explicit_qg.log 2>/dev/null; then
-            log_warn "STEP 5.70: $(grep -c '^\[WARN\]' /tmp/pipeline_mode_explicit_qg.log) baselined record_*() call(s) missing explicit pipeline_mode= (pending Phase 4 sweep); 0 new"
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/pipeline_mode_explicit_qg.log 2>/dev/null; then
+            log_warn "STEP 5.70: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/pipeline_mode_explicit_qg.log) baselined record_*() call(s) missing explicit pipeline_mode= (pending Phase 4 sweep); 0 new"
         else
             log_success "STEP 5.70: Every ManifestWriter.record_*() call passes explicit pipeline_mode= kwarg"
         fi
     else
         log_fail "STEP 5.70: NEW ManifestWriter.record_*() call missing explicit pipeline_mode= kwarg (not in unified-trading-pm/scripts/quality_gates/pipeline_mode_explicit_baseline.yaml). Pass pipeline_mode=PipelineMode.<source> per UAC SOURCE_PRIORITY top entry, or add inline '# QG-allow: pipeline-mode-not-applicable' (manifest_schema_final_gate Phase 4 explicit-or-fail contract):"
-        cat /tmp/pipeline_mode_explicit_qg.log
+        cat ${TMPDIR:-/tmp}/pipeline_mode_explicit_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py --workspace-root $_PM_WS --scope $_PM_REPO"
         V=$(( V + 1 ))
     fi
@@ -2755,10 +2760,10 @@ if [ -f "$_EMISSION_POLICY_CHECKER" ]; then
     _EP_BASELINE_ARG=()
     [ -f "$_EP_BASELINE" ] && _EP_BASELINE_ARG=(--baseline "$_EP_BASELINE")
     if $PYTHON_CMD "$_EMISSION_POLICY_CHECKER" \
-            --workspace-root "$_EP_WS" --scope "$_EP_REPO" "${_EP_BASELINE_ARG[@]}" >/tmp/emission_policy_paired_qg.log 2>&1; then
+            --workspace-root "$_EP_WS" --scope "$_EP_REPO" "${_EP_BASELINE_ARG[@]}" >${TMPDIR:-/tmp}/emission_policy_paired_qg.log 2>&1; then
         # exit 0 — either no violations, or only baselined ones.
-        if grep -q '^\[STEP 5.71\] OK' /tmp/emission_policy_paired_qg.log 2>/dev/null; then
-            _ep_baselined_count=$(grep -c '^\[WARN\]' /tmp/emission_policy_paired_qg.log 2>/dev/null || echo 0)
+        if grep -q '^\[STEP 5.71\] OK' ${TMPDIR:-/tmp}/emission_policy_paired_qg.log 2>/dev/null; then
+            _ep_baselined_count=$(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/emission_policy_paired_qg.log 2>/dev/null || echo 0)
             if [ "$_ep_baselined_count" -gt 0 ]; then
                 log_warn "STEP 5.71: ${_ep_baselined_count} baselined record_captured() callsite(s) missing publish_with_policy() (grandfathered pending Phase 6.3-6.8 rollout); 0 new"
             else
@@ -2767,7 +2772,7 @@ if [ -f "$_EMISSION_POLICY_CHECKER" ]; then
         fi
     else
         log_fail "STEP 5.71: NEW record_captured() callsite(s) without paired publish_with_policy() / publish_with_manifest_lookup(). Wire the emission-policy helper or add '# QG-allow: emission-policy-not-applicable' on each input-data record_captured() line:"
-        cat /tmp/emission_policy_paired_qg.log
+        cat ${TMPDIR:-/tmp}/emission_policy_paired_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_emission_policy_paired_callsites.py --workspace-root $_EP_WS --scope $_EP_REPO"
         V=$(( V + 1 ))
     fi
@@ -2786,11 +2791,11 @@ fi
 # carry-forward (cross_asset Phase 6A).
 _CHAIN_INCLUSION_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_chain_set_inclusion.py"
 if [ -f "$_CHAIN_INCLUSION_CHECKER" ]; then
-    if $PYTHON_CMD "$_CHAIN_INCLUSION_CHECKER" >/tmp/chain_set_inclusion_qg.log 2>&1; then
+    if $PYTHON_CMD "$_CHAIN_INCLUSION_CHECKER" >${TMPDIR:-/tmp}/chain_set_inclusion_qg.log 2>&1; then
         log_success "STEP 5.72: UAC chain_env MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES"
     else
         log_fail "STEP 5.72: UAC chain_env inclusion invariant violated (DF-7). Output:"
-        cat /tmp/chain_set_inclusion_qg.log
+        cat ${TMPDIR:-/tmp}/chain_set_inclusion_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_chain_set_inclusion.py"
         V=$(( V + 1 ))
     fi
@@ -3211,10 +3216,10 @@ if [ -f "$_UAC_HARD_FIELD_CHECKER" ]; then
     _UHF_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _UHF_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_UAC_HARD_FIELD_CHECKER" \
-            --workspace-root "$_UHF_WS" --scope "$_UHF_REPO" "${_UHF_SRC_ARG[@]}" >/tmp/uac_hard_required_fields_qg.log 2>&1; then
-        if grep -q '^\[FAIL\]' /tmp/uac_hard_required_fields_qg.log 2>/dev/null; then
+            --workspace-root "$_UHF_WS" --scope "$_UHF_REPO" "${_UHF_SRC_ARG[@]}" >${TMPDIR:-/tmp}/uac_hard_required_fields_qg.log 2>&1; then
+        if grep -q '^\[FAIL\]' ${TMPDIR:-/tmp}/uac_hard_required_fields_qg.log 2>/dev/null; then
             log_fail "STEP 5.83: UAC hard-required field regression or bundled-shard key kwarg missing:"
-            cat /tmp/uac_hard_required_fields_qg.log
+            cat ${TMPDIR:-/tmp}/uac_hard_required_fields_qg.log
             log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_uac_hard_required_fields.py --workspace-root $_UHF_WS --scope $_UHF_REPO"
             V=$(( V + 1 ))
         else
@@ -3222,7 +3227,7 @@ if [ -f "$_UAC_HARD_FIELD_CHECKER" ]; then
         fi
     else
         log_fail "STEP 5.83: UAC hard-required field check FAILED (validation regression or bundled-shard key kwarg missing):"
-        cat /tmp/uac_hard_required_fields_qg.log
+        cat ${TMPDIR:-/tmp}/uac_hard_required_fields_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_uac_hard_required_fields.py --workspace-root $_UHF_WS --scope $_UHF_REPO"
         V=$(( V + 1 ))
     fi
@@ -3238,11 +3243,11 @@ fi
 # Script: unified-trading-pm/scripts/qg/no_inline_coverage_formula.sh
 _INLINE_COVERAGE_LINTER="${REPO_ROOT}/unified-trading-pm/scripts/qg/no_inline_coverage_formula.sh"
 if [ -f "$_INLINE_COVERAGE_LINTER" ] && [ -n "${SOURCE_DIR:-}" ]; then
-    if bash "$_INLINE_COVERAGE_LINTER" "$REPO_ROOT" 2>/tmp/inline_coverage_qg.log; then
+    if bash "$_INLINE_COVERAGE_LINTER" "$REPO_ROOT" 2>${TMPDIR:-/tmp}/inline_coverage_qg.log; then
         log_success "STEP 5.84: no-inline-coverage-formula — no bespoke coverage formula re-implementations"
     else
         log_fail "STEP 5.84: no-inline-coverage-formula — bespoke coverage formula detected (use compute_honest_coverage() from UAC):"
-        cat /tmp/inline_coverage_qg.log
+        cat ${TMPDIR:-/tmp}/inline_coverage_qg.log
         V=$(( V + 1 ))
     fi
 else
@@ -3315,15 +3320,15 @@ if [ -f "$_SRZ_CHECKER" ]; then
     # qg-common.sh). Same shape as STEP 5.70.
     _SRZ_REPO=$(basename "$PROJECT_ROOT")
     if $PYTHON_CMD "$_SRZ_CHECKER" \
-            --workspace-root "$REPO_ROOT" --scope "$_SRZ_REPO" >/tmp/unrouted_srz_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/unrouted_srz_qg.log 2>/dev/null; then
-            log_warn "STEP 5.86: $(grep -c '^\[WARN\]' /tmp/unrouted_srz_qg.log) baselined unrouted SOURCE_RETURNED_ZERO callsite(s) pending A10c-fleet migration; 0 new"
+            --workspace-root "$REPO_ROOT" --scope "$_SRZ_REPO" >${TMPDIR:-/tmp}/unrouted_srz_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/unrouted_srz_qg.log 2>/dev/null; then
+            log_warn "STEP 5.86: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/unrouted_srz_qg.log) baselined unrouted SOURCE_RETURNED_ZERO callsite(s) pending A10c-fleet migration; 0 new"
         else
             log_success "STEP 5.86: every zero-rows shard routes through record_zero_rows (or carries # QG-allow:)"
         fi
     else
         log_fail "STEP 5.86: NEW unrouted record_empty(SOURCE_RETURNED_ZERO) callsite — route via ManifestWriter.record_zero_rows(was_expected=<oracle>, ...) or add inline '# QG-allow: <reason>' (A10c-fleet):"
-        cat /tmp/unrouted_srz_qg.log
+        cat ${TMPDIR:-/tmp}/unrouted_srz_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_unrouted_source_returned_zero.py --workspace-root $REPO_ROOT --scope $_SRZ_REPO"
         V=$(( V + 1 ))
     fi
@@ -3352,15 +3357,15 @@ _SRZE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_sourc
 if [ -f "$_SRZE_CHECKER" ]; then
     _SRZE_REPO=$(basename "$PROJECT_ROOT")
     if $PYTHON_CMD "$_SRZE_CHECKER" \
-            --workspace-root "$REPO_ROOT" --scope "$_SRZE_REPO" >/tmp/srz_needs_evidence_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/srz_needs_evidence_qg.log 2>/dev/null; then
-            log_warn "STEP 5.99: $(grep -c '^\[WARN\]' /tmp/srz_needs_evidence_qg.log) baselined unproven SOURCE_RETURNED_ZERO callsite(s) pending fetch_evidence threading; 0 new"
+            --workspace-root "$REPO_ROOT" --scope "$_SRZE_REPO" >${TMPDIR:-/tmp}/srz_needs_evidence_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/srz_needs_evidence_qg.log 2>/dev/null; then
+            log_warn "STEP 5.99: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/srz_needs_evidence_qg.log) baselined unproven SOURCE_RETURNED_ZERO callsite(s) pending fetch_evidence threading; 0 new"
         else
             log_success "STEP 5.99: every except-reachable SOURCE_RETURNED_ZERO write carries fetch_evidence (or # QG-allow:)"
         fi
     else
         log_fail "STEP 5.99: NEW except-reachable record_empty/record_zero_rows(SOURCE_RETURNED_ZERO) without fetch_evidence= — an error path is NOT honest absence (route to record_failed) or thread a proving FetchEvidence (Phase-1 keystone):"
-        cat /tmp/srz_needs_evidence_qg.log
+        cat ${TMPDIR:-/tmp}/srz_needs_evidence_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_source_returned_zero_needs_fetch_evidence.py --workspace-root $REPO_ROOT --scope $_SRZE_REPO"
         V=$(( V + 1 ))
     fi
@@ -3382,12 +3387,17 @@ fi
 _ARCH_RATCHETS_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_architectural_ratchets.py"
 if [ -f "$_ARCH_RATCHETS_CHECKER" ]; then
     _AR_REPO=$(basename "$PROJECT_ROOT")
+    # TMPDIR-aware (same fix class as the [4] TYPE CHECK _bp_out capture above) — a hardcoded
+    # /tmp path here made THIS redirect itself fail with ENOSPC on a full /tmp tmpfs, so the
+    # `if` construct's exit status reflected the failed redirect, not the checker (confirmed:
+    # the identical checker invocation passes standalone with 0 violations while this in-pipeline
+    # site reported a violation, twice in a row, on a host with /tmp at 100%).
     if $PYTHON_CMD "$_ARCH_RATCHETS_CHECKER" \
-            --workspace-root "$REPO_ROOT" >/tmp/arch_ratchets_qg.log 2>&1; then
+            --workspace-root "$REPO_ROOT" >"${TMPDIR:-/tmp}/arch_ratchets_qg.log" 2>&1; then
         log_success "STEP 5.100: Architectural ratchets OK (${_AR_REPO})"
     else
         log_fail "STEP 5.100: Architectural ratchet violation in ${_AR_REPO} — fix before commit:"
-        cat /tmp/arch_ratchets_qg.log
+        cat "${TMPDIR:-/tmp}/arch_ratchets_qg.log"
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_architectural_ratchets.py --workspace-root $REPO_ROOT"
         V=$(( V + 1 ))
     fi
@@ -3412,15 +3422,15 @@ if [ -f "$_ESF_CHECKER" ]; then
     _ESF_REPO=$(basename "$PROJECT_ROOT")
     _ESF_WS="$REPO_ROOT"
     if $PYTHON_CMD "$_ESF_CHECKER" \
-            --workspace-root "$_ESF_WS" --scope "$_ESF_REPO" >/tmp/no_empty_string_fallback_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/no_empty_string_fallback_qg.log 2>/dev/null; then
+            --workspace-root "$_ESF_WS" --scope "$_ESF_REPO" >${TMPDIR:-/tmp}/no_empty_string_fallback_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/no_empty_string_fallback_qg.log 2>/dev/null; then
             log_warn "STEP 5.101: below the empty-string-fallback baseline — ratchet no_empty_string_fallback_baseline.yaml DOWN (re-run --update-baseline)"
         else
             log_success "STEP 5.101: No new .get(\"key\", \"\") empty-string-fallback sites (baseline-ratchet)"
         fi
     else
         log_fail "STEP 5.101: NEW .get(\"key\", \"\") empty-string-fallback site(s) above the per-repo baseline. Rewrite to fail fast (raise, or return None and let the caller decide), or add '# noqa: qg-empty-fallback' with a one-line reason:"
-        cat /tmp/no_empty_string_fallback_qg.log
+        cat ${TMPDIR:-/tmp}/no_empty_string_fallback_qg.log
         log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/no_empty_string_fallback_baseline.yaml (NEVER raise a count)"
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_empty_string_fallback.py --workspace-root $_ESF_WS --scope $_ESF_REPO"
         V=$(( V + 1 ))
@@ -3452,15 +3462,15 @@ if [ -f "$_MW_MISSING_WRITE_CHECKER" ]; then
     _MWW_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _MWW_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_MW_MISSING_WRITE_CHECKER" \
-            --workspace-root "$_MWW_WS" --scope "$_MWW_REPO" "${_MWW_SRC_ARG[@]}" >/tmp/manifest_writer_missing_write_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/manifest_writer_missing_write_qg.log 2>/dev/null; then
-            log_warn "STEP 5.102: $(grep -c '^\[WARN\]' /tmp/manifest_writer_missing_write_qg.log) baselined ManifestWriter missing-.write() occurrence(s); 0 new"
+            --workspace-root "$_MWW_WS" --scope "$_MWW_REPO" "${_MWW_SRC_ARG[@]}" >${TMPDIR:-/tmp}/manifest_writer_missing_write_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/manifest_writer_missing_write_qg.log 2>/dev/null; then
+            log_warn "STEP 5.102: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/manifest_writer_missing_write_qg.log) baselined ManifestWriter missing-.write() occurrence(s); 0 new"
         else
             log_success "STEP 5.102: No ManifestWriter record_*() early-return missing .write()/.flush() sites"
         fi
     else
         log_fail "STEP 5.102: NEW ManifestWriter record_*() call followed by a return with no .write()/.flush(), while another exit path in the same function DOES call it (manifest_early_return_missing_write_loss_2026_07_09):"
-        cat /tmp/manifest_writer_missing_write_qg.log
+        cat ${TMPDIR:-/tmp}/manifest_writer_missing_write_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_manifest_writer_missing_write_before_return.py --workspace-root $_MWW_WS --scope $_MWW_REPO"
         V=$(( V + 1 ))
     fi
@@ -3488,15 +3498,15 @@ if [ -f "$_ASYNCIO_DRAIN_CHECKER" ]; then
     _AD_REPO=$(basename "$PROJECT_ROOT")
     _AD_WS="$REPO_ROOT"
     if $PYTHON_CMD "$_ASYNCIO_DRAIN_CHECKER" \
-            --workspace-root "$_AD_WS" --scope "$_AD_REPO" >/tmp/asyncio_manifest_explicit_drain_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/asyncio_manifest_explicit_drain_qg.log 2>/dev/null; then
+            --workspace-root "$_AD_WS" --scope "$_AD_REPO" >${TMPDIR:-/tmp}/asyncio_manifest_explicit_drain_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/asyncio_manifest_explicit_drain_qg.log 2>/dev/null; then
             log_warn "STEP 5.103: below the asyncio-manifest-drain baseline — ratchet asyncio_manifest_explicit_drain_baseline.yaml DOWN (re-run --update-baseline)"
         else
             log_success "STEP 5.103: No new asyncio.run(+MANIFEST_PER_VM_SHARDS scripts missing an explicit flush_all_pending_buckets() drain (baseline-ratchet)"
         fi
     else
         log_fail "STEP 5.103: NEW asyncio.run(+MANIFEST_PER_VM_SHARDS script missing explicit flush_all_pending_buckets() above the per-repo baseline. Add an explicit _mw.flush_all_pending_buckets() call before asyncio.run() returns, or add '# noqa: qg-asyncio-manifest-drain' with a one-line reason:"
-        cat /tmp/asyncio_manifest_explicit_drain_qg.log
+        cat ${TMPDIR:-/tmp}/asyncio_manifest_explicit_drain_qg.log
         log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/asyncio_manifest_explicit_drain_baseline.yaml (NEVER raise a count)"
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_asyncio_manifest_explicit_drain.py --workspace-root $_AD_WS --scope $_AD_REPO"
         V=$(( V + 1 ))
@@ -3568,11 +3578,11 @@ if [ -f "$_RECORD_EMPTY_REASON_CHECKER" ]; then
     _RER_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _RER_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_RECORD_EMPTY_REASON_CHECKER" \
-            --workspace-root "$_RER_WS" --scope "$_RER_REPO" "${_RER_SRC_ARG[@]}" >/tmp/record_empty_reason_qg.log 2>&1; then
+            --workspace-root "$_RER_WS" --scope "$_RER_REPO" "${_RER_SRC_ARG[@]}" >${TMPDIR:-/tmp}/record_empty_reason_qg.log 2>&1; then
         log_success "STEP 5.89: All record_empty/record_expected_empty literal reasons are in EMPTY_CONFIRMED_REASONS"
     else
         log_fail "STEP 5.89: record_empty/record_expected_empty called with unknown/blank literal reason. Use EmptyConfirmedReason enum member or a known string from EMPTY_CONFIRMED_REASONS (writegate Phase 2.E.1):"
-        cat /tmp/record_empty_reason_qg.log
+        cat ${TMPDIR:-/tmp}/record_empty_reason_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_record_empty_reason_closed_set.py --workspace-root $_RER_WS --scope $_RER_REPO"
         V=$(( V + 1 ))
     fi
@@ -3590,11 +3600,11 @@ fi
 # SSOT: honest_coverage_formula_consolidation_2026_05_19.md Phase 1 P1 / STEP 5.90.
 _DS_CANONICAL_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_data_status_endpoint_canonical.sh"
 if [ -f "$_DS_CANONICAL_CHECKER" ] && [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ]; then
-    if bash "$_DS_CANONICAL_CHECKER" "$SOURCE_DIR" >/tmp/data_status_canonical_qg.log 2>&1; then
+    if bash "$_DS_CANONICAL_CHECKER" "$SOURCE_DIR" >${TMPDIR:-/tmp}/data_status_canonical_qg.log 2>&1; then
         log_success "STEP 5.90: GET /data-status endpoint uses compute_coverage_for_bucket or compute_honest_coverage"
     else
         log_fail "STEP 5.90: GET /data-status route file does not use canonical coverage helper (see codex/06-coding-standards/data-status-endpoint-contract.md):"
-        cat /tmp/data_status_canonical_qg.log
+        cat ${TMPDIR:-/tmp}/data_status_canonical_qg.log
         V=$(( V + 1 ))
     fi
 else
@@ -3613,12 +3623,12 @@ fi
 # Script: scripts/lifecycle/entity-lifecycle-cleanup.sh
 _ENTITY_REGISTRY_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_entity_registry_cleanup.py"
 if [ -f "$_ENTITY_REGISTRY_CHECKER" ] && [ -n "${REPO_ROOT:-}" ] && [ -d "${REPO_ROOT}" ]; then
-    if python3 "$_ENTITY_REGISTRY_CHECKER" "$REPO_ROOT" >/tmp/entity_registry_qg.log 2>&1; then
-        cat /tmp/entity_registry_qg.log
+    if python3 "$_ENTITY_REGISTRY_CHECKER" "$REPO_ROOT" >${TMPDIR:-/tmp}/entity_registry_qg.log 2>&1; then
+        cat ${TMPDIR:-/tmp}/entity_registry_qg.log
         log_success "STEP 5.91: Entity-registry cleanup evidence check passed"
     else
         log_fail "STEP 5.91: Entity-registry change without cleanup evidence — see instructions:"
-        cat /tmp/entity_registry_qg.log
+        cat ${TMPDIR:-/tmp}/entity_registry_qg.log
         V=$(( V + 1 ))
     fi
 else
@@ -3646,15 +3656,15 @@ if [ -f "$_BAR_EDGE_CHECKER" ]; then
     _BE_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BE_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_BAR_EDGE_CHECKER" \
-            --workspace-root "$_BE_WS" --scope "$_BE_REPO" "${_BE_SRC_ARG[@]}" >/tmp/bar_edge_open_ingestion_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/bar_edge_open_ingestion_qg.log 2>/dev/null; then
-            log_warn "STEP 5.92: $(grep -c '^\[WARN\]' /tmp/bar_edge_open_ingestion_qg.log) baselined latent open-edge ingestion site(s); 0 new"
+            --workspace-root "$_BE_WS" --scope "$_BE_REPO" "${_BE_SRC_ARG[@]}" >${TMPDIR:-/tmp}/bar_edge_open_ingestion_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/bar_edge_open_ingestion_qg.log 2>/dev/null; then
+            log_warn "STEP 5.92: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/bar_edge_open_ingestion_qg.log) baselined latent open-edge ingestion site(s); 0 new"
         else
             log_success "STEP 5.92: No open-edge (left) bar ingestion — closed candles stamped on the right/close edge"
         fi
     else
         log_fail "STEP 5.92: NEW open-edge (left) bar ingestion site (not in unified-trading-pm/scripts/quality_gates/bar_edge_open_ingestion_baseline.yaml). Use the vendor close field or compute_bar_close_boundary(open_ts, timeframe) → t_close (bar_edge_left_vs_right_remediation_2026_06_08.md):"
-        cat /tmp/bar_edge_open_ingestion_qg.log
+        cat ${TMPDIR:-/tmp}/bar_edge_open_ingestion_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_bar_edge_open_ingestion.py --workspace-root $_BE_WS --scope $_BE_REPO"
         V=$(( V + 1 ))
     fi
@@ -3685,15 +3695,15 @@ if [ -f "$_CANON_MODEL_CHECKER" ]; then
     _CM_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _CM_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if $PYTHON_CMD "$_CANON_MODEL_CHECKER" \
-            --workspace-root "$_CM_WS" --scope "$_CM_REPO" "${_CM_SRC_ARG[@]}" >/tmp/canonical_model_regressions_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/canonical_model_regressions_qg.log 2>/dev/null; then
-            log_warn "STEP 5.93: $(grep -c '^\[WARN\]' /tmp/canonical_model_regressions_qg.log) baselined canonical-model occurrence(s); 0 new"
+            --workspace-root "$_CM_WS" --scope "$_CM_REPO" "${_CM_SRC_ARG[@]}" >${TMPDIR:-/tmp}/canonical_model_regressions_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/canonical_model_regressions_qg.log 2>/dev/null; then
+            log_warn "STEP 5.93: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/canonical_model_regressions_qg.log) baselined canonical-model occurrence(s); 0 new"
         else
             log_success "STEP 5.93: No coarse pipeline_mode / exact-coarse reader / Era-A chain-write regressions"
         fi
     else
         log_fail "STEP 5.93: NEW canonical-model regression (not in unified-trading-pm/scripts/quality_gates/canonical_model_regressions_baseline.yaml). Use source-aware batch_<source> / prefix-match readers / Era-B data_type=trades for chains:"
-        cat /tmp/canonical_model_regressions_qg.log
+        cat ${TMPDIR:-/tmp}/canonical_model_regressions_qg.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_canonical_model_regressions.py --workspace-root $_CM_WS --scope $_CM_REPO"
         V=$(( V + 1 ))
     fi
@@ -3751,7 +3761,7 @@ if [ "$ACT_MODE" = true ]; then
     for _sp in "${ACT_SECRETS_FILE:-}" "${REPO_ROOT}/.act-secrets" "${HOME}/.secrets"; do
         [ -n "$_sp" ] && [ -f "$_sp" ] && { ACT_SECRETS_ARG="--secret-file $_sp"; break; }
     done
-    _ACT_LOG="$(mktemp /tmp/act-output.XXXXXX)"
+    _ACT_LOG="$(mktemp ${TMPDIR:-/tmp}/act-output.XXXXXX)"
     if act -j quality-gates -W .github/workflows/quality-gates.yml --container-architecture linux/amd64 ${ACT_SECRETS_ARG} 2>&1 | tee "$_ACT_LOG"; then
         log_ok "Act simulation PASSED"
     else
