@@ -93,15 +93,36 @@ drift_direction: advance-code
       features-service's `RollingAdvReader.compute_rolling_adv()` returns a non-`NO_DATA` `AdvStatus` for at least one
       probed instrument on one venue; a manifest-verified backfill covers each venue's full already-captured raw-trade
       range. Source: `aster_and_cefi_rolling_adv_feature_2026_07_21.md`.
-- [ ] [REVIEW] P1. **Audit cefi MDPS state adapters for leading-NaN routing.** Confirm every cefi state adapter
-      (`trades_adapter.py`, `book_snapshot_adapter.py`, `derivative_adapter.py`, `futures_chain_adapter.py`,
-      `options_chain_adapter.py`) in market-data-processing-service routes through `_finalize_session_grid`
-      (`base_adapter.py:36-624`) so no adapter emits leading-NaN before its first real observation, and confirm
-      `liquidations_adapter.py`'s no-grid event-count design is the sole intentional exception (per
-      `issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`). Repo: market-data-processing-service. **Done when**:
-      a written per-adapter verdict (routes-through-finalize / intentionally-exempt) is recorded in this plan's Progress
-      Log or a new issue doc; any non-routing, non-exempt adapter is filed as a follow-up finding, not silently fixed.
-      Source: `data_completion_cefi_2026_07_15.md`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — 1 non-exempt-per-task-premise finding, corrected as
+      codex-drift, not a code bug.** Audited all 5 named cefi MDPS state adapters + `liquidations_adapter.py` for
+      `_finalize_session_grid` routing:
+
+      | Adapter | Verdict |
+          | --- | --- |
+          | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
+          | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
+          | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
+          | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
+          | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
+          | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
+
+          **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
+          intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
+          **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
+          (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
+          `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
+          snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
+          absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
+          `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
+          non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
+          documented the OLD (reversed) behavior, contradicting the shipped code —
+          `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
+          `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
+          a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
+          provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
+          unified-trading-pm@<pending>. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
+          (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
+
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
       candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
       cefi availability index for the FULL set of MDPS candle data_type prefixes
