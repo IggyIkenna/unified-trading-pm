@@ -235,14 +235,26 @@ drift_direction: advance-code
       Source: `instruments_completion_tracker_2026_07_06.md`. Done when every Stage 1–5 checkbox reflects its archived
       child's actual shipped state (with citations) and the doc's own Snapshot/open-count is no longer stale relative to
       those 5 archived plans.
-- [ ] [SCHEMA] P0. **Land the DeFi completeness-oracle `CompletenessProbe` schema in UAC (first implementation slice of
-      the already-designed oracle).** The design SSOT (`/codex/02-data/defi-completeness-oracle.md`, status: current,
-      2026-07-06) fully specifies the on-chain `poolCount`-cross-check oracle answering "do we have ALL DeFi
-      instruments?" (Source: instruments_foundation_completeness_2026_06_24.md P0 DeFi-completeness-oracle item, lines
-      190-201) — its §9 rollout section was never actually filed as a plan todo anywhere in the active corpus (confirmed
-      via grep: zero hits for `CompletenessProbe`/`probe_registry`/`use-defi-oracle` across `plans/active/`, including
-      the named landing plan `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md`). Implement the §9 P0 schema step
-      only: add `CompletenessProbe` + `CompletenessProbeStatus` + `CompletenessProbeKind` to `unified-api-contracts`
+- [x] ✅ [SCHEMA] P0. **DONE 2026-07-26 (slot-7) — `unified-api-contracts@1407b7f`.** Landed
+      `CompletenessProbe`/`CompletenessProbeStatus`/`CompletenessProbeKind` in
+      `canonical/crosscutting/honest_coverage.py` per design doc §2, plus `factory_address_by_chain` on
+      `_ProtocolCapability` populated with WEB-VERIFIED on-chain addresses (cross-referenced against 2+ block explorers
+      each) for all 10 listed DEX protocols — uniswap_v2 (ETHEREUM), uniswap_v3 (ETHEREUM/ARBITRUM/
+      BASE/OPTIMISM/POLYGON, same address per Uniswap's deterministic deployment), uniswap_v4 (ETHEREUM PoolManager),
+      balancer (6 chains, single Vault), curve (AddressProvider, 3 chains), pancakeswap_v3 (BSC/ ETHEREUM/BASE),
+      sushiswap_v3 (ETHEREUM/BASE — AVALANCHE honestly omitted, unverified this pass), aerodrome_v3 (BASE), velodrome_v2
+      (OPTIMISM), camelot_v3 (ARBITRUM). New `tests/unit/test_completeness_probe.py` exercises the §1 semantic table
+      (complete/gap/over_enumerated/undefined/probe_failed) via direct dataclass construction + asserts factory-address
+      population/shape. QG green (exit 0, 411s). Schema-only per scope — no probe implementations, no
+      `--use-defi-oracle` wiring. **Land the DeFi completeness-oracle `CompletenessProbe` schema in UAC (first
+      implementation slice of the already-designed oracle).** The design SSOT
+      (`/codex/02-data/defi-completeness-oracle.md`, status: current, 2026-07-06) fully specifies the on-chain
+      `poolCount`-cross-check oracle answering "do we have ALL DeFi instruments?" (Source:
+      instruments_foundation_completeness_2026_06_24.md P0 DeFi-completeness-oracle item, lines 190-201) — its §9
+      rollout section was never actually filed as a plan todo anywhere in the active corpus (confirmed via grep: zero
+      hits for `CompletenessProbe`/`probe_registry`/`use-defi-oracle` across `plans/active/`, including the named
+      landing plan `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md`). Implement the §9 P0 schema step only: add
+      `CompletenessProbe` + `CompletenessProbeStatus` + `CompletenessProbeKind` to `unified-api-contracts`
       `canonical/crosscutting/honest_coverage.py`, plus `factory_address_by_chain: Mapping[str, str]` (default empty
       dict) on UAC `_ProtocolCapability`, populated for the top-10 DEX protocols (uniswap_v2/v3/v4, sushiswap_v3,
       balancer, curve, pancakeswap_v3, aerodrome_v3, velodrome_v2, camelot_v3 — NOT gmx, removed 2026-07-25 per

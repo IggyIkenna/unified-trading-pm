@@ -89,11 +89,15 @@ locked_since:
 
 ## Phase 4 — Writer-side path + state invariants (defence-in-depth, closes residual C3/C7)
 
-- [ ] [CODE] P0. `record_captured`/`record_empty` assert the resolved GCS path `is_canonical()` (Phase 3 validator)
-      before write — a non-canonical write fails loudly at the writer, not days later in an audit. —
-      **unified-trading-library**
-- [ ] [CODE] P0. Live==batch schema invariant assert at the live `record_captured` boundary (C7: `asset_group`
-      kwarg-not-column class). — **unified-trading-library**
+- [x] ✅ [CODE] P0. `record_captured`/`record_empty` assert the resolved GCS path `is_canonical()` (Phase 3 validator)
+      before write — a non-canonical write fails loudly at the writer, not days later in an audit. — DONE
+      unified-trading-library@d7b3ed7d (`_assert_canonical_write_path` in `manifest_writer/_rows.py`, wired into both
+      `record_captured` + `record_empty`; STRUCTURAL-only, scoped to the 4 UAC-covered asset_groups with resolvable
+      dimensions — every other write shape is a resolution skip, never a false block; `NonCanonicalWritePathError`)
+- [x] ✅ [CODE] P0. Live==batch schema invariant assert at the live `record_captured` boundary (C7: `asset_group`
+      kwarg-not-column class). — DONE unified-trading-library@d7b3ed7d (`LiveCapturedAssetGroupInvariantError` raised
+      when `record_captured(validate=False)` — the live bookkeeping boundary — resolves no `asset_group` for a
+      market-data cell; scoped to that boundary only, fleet-wide self-heal-else-blank behaviour unchanged elsewhere)
 
 ## Residual from Phase 6 (Alert enrichment, Tier 1)
 
@@ -102,8 +106,8 @@ locked_since:
 - [x] ✅ [CODE] P1. alerting-service: add `deployment_ui_base_url` (+ `deployment_scripts_log_bucket`) config, SM/env
       hot-reloaded (none exists today). — alerting-service@868872c (config.py fields + config_reloaders.py SM keys
       DEPLOYMENT_UI_BASE_URL/DEPLOYMENT_SCRIPTS_LOG_BUCKET + get_paging_credentials; default "" → links omitted)
-- [ ] [CODE] P0. UTL writer-gate `_emit_unproven_honest_absence`: add `venue`/`data_type`/`day` (from `row_key`) + an
-      `error_message` to the DP_UNPROVEN_HONEST_ABSENCE `details`. — unified-trading-library
+- [x] ✅ [CODE] P0. UTL writer-gate `_emit_unproven_honest_absence`: add `venue`/`data_type`/`day` (from `row_key`) + an
+      `error_message` to the DP_UNPROVEN_HONEST_ABSENCE `details`. — DONE unified-trading-library@d7b3ed7d
 - [x] ✅ [CODE] P1. `data_pipeline_slack.py::_build_blocks`: append a fenced-code trace block
       (evidence/exit_code/run_log_tail, ≤3000 chars) + an actions block with deep-link buttons — data-status
       `{base}/service/{svc}/data-status`, VM logs `{base}/ops/vms/{vm}`, GCS `run.log` console link. Thread

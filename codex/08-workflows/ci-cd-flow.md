@@ -165,6 +165,39 @@ again. The gates are UNCHANGED on both paths — SIT (re-homed onto a frozen LDR
 `quality-gates-v2` + quickmerge-provenance; a staging-routed repo just adds the staging hop. Do not describe staging as
 the default path; it is the dormant exception.
 
+#### Staging re-entry procedure (when a repo is routed back through staging)
+
+The 2026-07-23 shutdown (`plans/archive/issues/staging_workflow_shutdown_2026_07_23.md`) disabled six workflows'
+staging-facing triggers rather than deleting them, specifically so re-entry is possible — but **re-entry is MANUAL by
+construction**: nothing writes `promotion_model` programmatically, and nothing auto-uncomments a disabled trigger. Both
+steps below are required when flipping a repo off `ldr_main`:
+
+1. **Flip the manifest.** Set that repo's `promotion_model` off `ldr_main` (and clear `staging_dormant_mode` if this is
+   a fleet-wide re-entry, not a single repo) in `workspace-manifest.json`.
+2. **Uncomment the disabled triggers.** Every one carries a dated inline comment naming exactly what to restore and
+   citing the shutdown SSOT. Two are fleet TEMPLATES rendered into every repo's `.github/workflows/` — edit the
+   TEMPLATE + re-run `rollout-workflow-templates.sh` (never hand-edit a per-repo rendered copy), then ship each affected
+   repo via its own `quickmerge.sh --agent --files`. The other four are PM-only drivers, edited directly:
+
+   | File                                                       | Owner                     | Uncomment                                                                                  |
+   | ---------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
+   | `scripts/workflow-templates/staging-backmerge-to-ldr.yml`  | fleet template (24 repos) | `schedule: - cron: "10 * * * *"` (hourly convergence safety-net)                           |
+   | `scripts/workflow-templates/staging-lock-check.yml`        | fleet template (24 repos) | `repository_dispatch: types: [staging-locked, staging-unlocked]`                           |
+   | `.github/workflows/staging-to-main.yml`                    | PM                        | `schedule: - cron: "0 * * * *"` (hourly drain)                                             |
+   | `.github/workflows/staging-conflict-ldr-main-fallback.yml` | PM                        | `schedule: - cron: "47 * * * *"`                                                           |
+   | `.github/workflows/reconcile-staging-versions.yml`         | PM                        | `schedule: - cron: "35 * * * *"`                                                           |
+   | `.github/workflows/ldr-to-staging-promote.yml`             | PM                        | `schedule: - cron: "2,17,32,47 * * * *"` AND `repository_dispatch: types: [tier-ab-green]` |
+
+**Default-branch gotcha**: a `schedule:` trigger fires only from the DEFAULT branch (`main`) — landing the uncomment on
+LDR alone does NOT restart a cron; it takes effect only once promoted to `main`.
+
+**Verify re-entry by measurement, not by reading the diff.** The 2026-07-23 shutdown was itself confirmed stopped only
+by measuring fleet-wide run counts before/after the promote landed on `main` (a green diff on LDR was not sufficient —
+the same check run before the promote correctly still showed the crons firing). Re-entry gets the same treatment: after
+promoting, confirm scheduled runs actually resume for the re-entered repo
+(`gh run list --workflow <wf>.yml -R IggyIkenna/<repo>`). Regenerate `docs/repo-management/CICD-WORKFLOW-CATALOG.md`
+(`scripts/generate-workflow-catalog.py`) so the catalog reflects the restored triggers.
+
 **Never** push CODE directly to `main`/`staging`/LDR — always via `quickmerge` (the only sanctioned path: it runs the
 two-pass QG, stamps the `Quickmerge:` provenance trailer, and the promote bots gate on it). The closed carve-out for
 direct LDR pushes is narrow: `docs(plans):` flips, PM `scripts/**` + any `.github/**`, dirty-deps, and the FF-pull-in.
@@ -625,8 +658,9 @@ Everything else is HARD-blocked. **Enforcement — the machine guard is LIVE**: 
 `Quickmerge: agent|human` lineage trailer on every commit it ships; `scripts/cicd/check_strict_quickmerge.py` flags a
 CODE-source commit (`*.py`/`*.ts` outside scripts/tests/.github) reaching the integration branch without that trailer
 that is not a carve-out. It runs as a `pre-push` hook (`scripts/dev/hooks/pre-push-strict-quickmerge.sh`, installed in
-all Path-B clones + wired into `setup-tab-worktrees.sh`); WARN-default, `STRICT_QUICKMERGE_BLOCK=1` to hard-block; the
-promote-PR `quality-gates-v2` is the server backstop (LDR has no remote CI).
+all Path-B clones + wired into `setup-tab-worktrees.sh`); **BLOCKS by default** (operator policy 2026-06-26 — every code
+push goes via quickmerge, no direct-push bypass), bypassable only with `git push --no-verify`; the promote-PR
+`quality-gates-v2` is the server backstop (LDR has no remote CI).
 
 ## Local ↔ CI QG parity matrix (the confidence model; codified 2026-06-08)
 
