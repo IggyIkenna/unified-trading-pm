@@ -171,13 +171,28 @@ start without real tradfi/ES feature parquets.
       (`market-data-processing-service@e9edb39`). Likely a `build_active_contracts_table`/`extract_roll_events` gap
       specific to daily granularity's single-bar-per-contract-per-day nature (no redundancy the way 1440 intraday bars
       provide) — confirm via direct GCS gap analysis before assuming a code fix. (repo: market-data-processing-service)
-- [ ] [AGENT] P1. `_TfClusterMixin._process_tf_clusters_date_range`'s per-date loop (`_process_one_date_for_cluster`
+- [x] [AGENT] P1. `_TfClusterMixin._process_tf_clusters_date_range`'s per-date loop (`_process_one_date_for_cluster`
       returning `False` → `if not ok: return False`) aborts the ENTIRE multi-day range on the FIRST date that fails for
       ANY reason — including a genuine, expected absence (e.g. a market holiday). Any real multi-year backfill will
       eventually hit one. Needs per-date shard-level isolation (skip + record_empty/record_failed for that date,
       continue) per `codex/04-architecture/shard-level-failure-isolation.md`'s own stated principle, rather than today's
       fail-fast semantics. Not roll-sensitive-specific — affects any feature-group batch run over a real range. (repo:
-      features-service)
+      features-service) — ✅ FIXED 2026-07-26 (`features-service@81ab1264`): confirmed `record_empty`/`record_failed`
+      manifest recording ALREADY happens per-date, unconditionally, inside
+      `process_feature_group_with_preloaded_candles` → `_run_feature_group_lifecycle` (every call writes an honest
+      captured/empty_confirmed manifest row via `_write_feature_group_manifest`, success or not) — so the only real bug
+      was the CONTROL FLOW: `if not ok: return False` inside the per-date `while` loop threw away every LATER date's
+      chance to even be attempted, not just the failed one. Fixed by extracting the per-date iteration into
+      `_process_one_date_tracked` (logs + reports `ok` without aborting) and changing the outer loop to track
+      `any_attempted`/`any_succeeded` across the whole range instead of early-returning — mirrors the same isolation
+      contract `_process_groups` already uses one level up (`delta_one/cli/handlers/batch_handler.py`: "return True if
+      ANY unit succeeded"; only returns False if EVERY date across EVERY cluster failed). Extracted the helper to keep
+      `_process_tf_clusters_date_range` under the 50-line method cap (QG 5.68). 2 new/rewritten regression tests in
+      `tests/delta_one/unit/test_tf_cluster_helper.py` (`test_continues_past_a_failed_date` — 5-date range with one
+      failing date now processes all 5 and returns `True`, replacing the old `test_stops_early_on_failure` which
+      asserted the buggy abort-after-2 behavior; `test_returns_false_when_every_date_fails` — every date attempted, only
+      returns `False` when none succeed). Full `quality-gates.sh` green (17,864 passed, 209 pre-existing skips, sentinel
+      SHA-verified); `quickmerge --agent` landed clean on `live-defi-rollout`.
 
 ## Progress log
 
@@ -503,6 +518,9 @@ start without real tradfi/ES feature parquets.
   DISTINCT remaining gaps (24h/1d sparse coverage; per-date abort-on-first- failure) as tracked P1 todos above rather
   than leaving them as un-tracked prose, per the workspace rule that every deferral in a summary must already be a
   `- [ ]` todo.
+- 2026-07-26 (slot 4): Fixed the per-date abort-on-first-failure gap (this doc's last open P1 todo).
+  `features-service@81ab1264`, full `quality-gates.sh` green. See the flipped checkbox above for the fix detail; removed
+  the now-redundant "New P1 todo" deferred-work row (superseded by the checkbox, which already carries the same fix).
 
 ## Deferred work after 2026-07-26
 
@@ -510,7 +528,6 @@ start without real tradfi/ES feature parquets.
 | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | Todo 4 (this file, P0) — real features-delta-one-tradfi production launch + manifest verification | Not done — all blocking code bugs are now fixed and shipped (9 real bugs across market-data-processing-service, features-service, deployment-service); next session should launch a REAL production VM for a realistic single-day/narrow-range window (avoid 2020-01-01 — a market holiday with zero data, which would hit the untracked-until-now per-date abort-on-first-failure gap) and verify real parquets + manifest rows land | Nobody — pick up directly, no external dependency |
 | New P1 todo — MDPS `24h`/`1d` sparse coverage investigation                                       | Not done — needs a dedicated GCS gap analysis, not chased this session (time-boxed per the "big finding" triage rule)                                                                                                                                                                                                                                                                                                                 | Nobody — real work, needs its own session         |
-| New P1 todo — per-date shard-level isolation in `_process_tf_clusters_date_range`                 | Not done — a genuine, separate, non-roll-sensitive-specific architecture gap; not fixed this session to keep scope bounded                                                                                                                                                                                                                                                                                                            | Nobody — real work, needs its own session         |
 
 **Recommended next item**: todo 4 (P0) — launch the real production VM for a single realistic date (e.g. a 2024 weekday
 already confirmed to have real MDPS continuous data, such as `2024-06-17`) with `TIMEFRAME=1m` set on the launcher, then
