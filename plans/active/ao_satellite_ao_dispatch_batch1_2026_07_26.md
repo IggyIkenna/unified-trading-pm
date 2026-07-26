@@ -96,15 +96,20 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       Full `agent-orchestrator` `quality-gates.sh` green (1760 passed, 1 skipped, 49.83s). Did NOT raise
       `pool_size`/`max_overflow` per the source doc's own occurrence #6/#7 evidence. Source:
       `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (BACKEND P1 ×2 + P2 timeout
-      alignment).
-- [ ] [BACKEND] P2. **Add a zero/collapse circuit-breaker to the PlanRegenLoop prune path** in
-      `agent-orchestrator/server/regen_backlog_from_plan.py`: when a regen tick derives `total=0`, or the derived total
-      collapses by more than ~75% versus the last successful tick while `scanned` is non-trivial, skip `prune_stale`
-      entirely, keep the prior backlog, log a loud WARNING and cancel nothing; and make the tick abort WITHOUT pruning
-      when the derivation could not complete because DB reads were failing. **Done when**: one test proves a simulated
-      empty derivation leaves the existing backlog intact and cancels zero in-flight tasks, a second proves a simulated
-      collapse is likewise skipped, a third proves a DB-read failure aborts before the prune, and `quality-gates.sh` is
-      green. Source:
+      alignment). Do NOT also raise `pool_size`/`max_overflow` — that doc's own occurrence #6/#7 evidence supersedes the
+      resize direction.
+- [x] ✅ [BACKEND] P2. **Add a zero/collapse circuit-breaker to the PlanRegenLoop prune path** —
+      agent-orchestrator@d66fbf2. Added to `_prune_stale()` in `agent-orchestrator/server/regen_backlog_from_plan.py`: a
+      scan of `>= _PRUNE_NONTRIVIAL_SCAN_THRESHOLD` (20) plans that derives zero open todos, or fewer than
+      `_PRUNE_COLLAPSE_FRACTION` (0.25) of the already-recorded prunable backlog, now skips `prune_stale` entirely, logs
+      a loud WARNING, and cancels nothing (compared against the current backlog.yaml content, which by construction only
+      ever reflects the last successful/kept-safe tick — no extra cross-tick state needed). A state.db health probe
+      (`SELECT 1 FROM tasks LIMIT 1`) runs before any mutation; a real read failure (not the pre-existing "missing
+      `tasks` table" misconfiguration case) aborts the WHOLE prune (yaml + db), not just the db leg. Evidence: 3 new
+      tests (`test_prune_stale_circuit_breaker_skips_on_zero_derivation`,
+      `test_prune_stale_circuit_breaker_skips_on_collapse`,
+      `test_prune_stale_aborts_before_any_prune_on_db_read_failure`) + full `quality-gates.sh` green (1763 passed, 1
+      skipped; ruff/basedpyright clean). Source:
       `/plans/active/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md`
       (BACKEND P2 ×2 — combined here because both change the same prune path in the same file). That doc's third todo
       (positional task-ids) is NOT in scope — see this plan's Deferred section.
