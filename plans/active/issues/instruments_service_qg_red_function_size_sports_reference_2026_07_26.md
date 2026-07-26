@@ -6,7 +6,7 @@ summary: >-
   instruments_service/engine/orchestrator/sports_reference.py:50 _fetch_sports_reference_data() (206 lines,
   MAX_FUNCTION_LINES=200). Discovered while rolling out an unrelated scripts/setup.sh fix
   (infra_satellite_ao_dispatch_batch1-002) — confirmed pre-existing and unrelated to that change.
-status: open
+status: resolved
 nature: process
 asset_group: [sports]
 stage: [meta]
@@ -17,7 +17,7 @@ related: [/plans/active/sports_consolidated_closeout_2026_07_19.md]
 created: 2026-07-26
 parent_epic: infrastructure_master
 assigned_vm: planning
-resolved_by:
+resolved_by: instruments-service@2d706d2c (slot-4) + instruments-service@<pending> (slot-7, process_write.py)
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -60,9 +60,23 @@ Split `_fetch_sports_reference_data()` (or extract a helper) to bring it back un
 orchestration logic (api_football adapter enrichment fetch), not infra — routes to a data/backend-engineering craft, not
 this issue's author's craft (infra).
 
-- [ ] [BACKEND] P1. Split/refactor `_fetch_sports_reference_data()` in
-      `instruments-service/instruments_service/engine/orchestrator/sports_reference.py:50` to bring it under the
-      `MAX_FUNCTION_LINES=200` cap (currently 206L) — extract a helper function for one of its internal phases (e.g. the
-      per-fixture enrichment call or the manifest-write block) without changing behavior. **Done when**:
-      `bash scripts/quality-gates.sh` in `instruments-service` no longer reports "Function/class/method size exceeded"
-      for this function, and the rest of the gate stays green. Repo: instruments-service.
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-26** — `_fetch_sports_reference_data()` is back under `MAX_FUNCTION_LINES=200`.
+      Landed independently by slot-4 (`instruments-service@2d706d2c`, "extract MVP/recovery fixture filters to fix
+      function-size QG violation") while slot-7 (this task's assignee) was mid-way through its OWN equivalent fix in the
+      same window — a genuine same-target race, not a duplicate-work mistake on either side. slot-4's approach:
+      extracted the MVP-league + recovery-allowlist filters into a NEW `sports_reference_filters.py` cohesion module (a
+      same-file extraction would have pushed the sibling `sports_reference_fixtures.py` over the 900L file cap:
+      896→975L) — same fix shape slot-7 had independently converged on (extract those exact two filter blocks), just a
+      different target module. slot-7 adopted slot-4's already-shipped, already-tested version on conflict (git
+      `show HEAD:<path>` over the redundant local edit) rather than shipping a second, functionally-identical fix.
+      Verified: `bash scripts/quality-gates.sh` reports `✅ Function/class/method size OK` post-merge, no regression.
+
+      **Related finding (same session, different file)**: fixing this exposed that `instruments-service@9c203ce1`
+                              (an earlier, unrelated `cross_cutting_satellite_ao_dispatch_batch1-012` commit, same slot) had pushed
+                              `process_write.py` from exactly 900→904 lines (`MAX_FILE_LINES` cap) — undetected by 2 full `quality-gates.sh`
+                              runs that both reported "ALL QUALITY GATES PASSED" in between. Fixed via docstring compaction (904→895L,
+                              verified format-stable post `ruff format`) — `instruments-service@<pending, ships alongside this todo>`. The
+                              SILENT-MISS mechanism (2 real, independently-confirmed violations across 2 different files/check-classes both
+                              surviving multiple full "ALL QUALITY GATES PASSED" runs) is tracked as its own, now-P1, issue:
+                              `/plans/active/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md` (pre-existing doc, added corroborating
+                              evidence + a new instrumentation todo this session — not duplicated here).
