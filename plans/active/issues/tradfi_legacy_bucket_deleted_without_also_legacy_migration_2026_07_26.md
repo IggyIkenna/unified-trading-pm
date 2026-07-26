@@ -120,18 +120,31 @@ todo I can close myself.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P0. **Decide whether this needs remediation and how**, informed by: (a) does the canonical
-      `market-data-tick-tradfi-prd` bucket's OWN Databento-sourced coverage for the legacy bucket's date range (2,008
-      days — likely ~2018-2023 given the v9 apply covered "2020-2025 + 2026" separately, but the exact legacy range
-      needs confirming from whatever pre-deletion inventory exists, e.g. a stale manifest snapshot or the migrator's own
-      dry-run planned-count from BEFORE 2026-06-29) already have equivalent fidelity — if yes, this is a
-      procedural-miss-with-no-net-loss and can close as such with that evidence cited; if the legacy bucket held
-      anything genuinely unique (a different source, a wider date range, or higher-resolution ticks Databento's backfill
-      doesn't reach), that data is gone. (b) Check whether GCS soft-delete / Object Versioning was enabled on this
-      bucket (a short recovery window may still be open depending on how recently "permanent" deletion actually ran — I
-      could not check this without `storage.buckets.get`, which none of my available credentials have).
-- [ ] [SCRIPT] P2. Fix `data_completion_tradfi_2026_07_15.md` lines 298/304 (R1/R2 checkboxes) — R1 stays open pending
-      the operator decision above (do not flip to done); R2 flips to done citing this doc's clean 3-target inventory.
+**Main's ruling on BLK-fd0758fb (2026-07-26): Option A — treat as a confirmed data-loss RISK, do NOT accept "procedural
+miss, no net loss" unverified.** "Procedural miss, no net loss" is a claim that must be PROVEN with coverage evidence,
+never assumed — an irreversible delete ran without its stated R1 precondition, exactly the class the
+data-pipeline-correctness HARD RULE + `gcs-and-manifest-delete-safety-protocol.md` exist to catch. Split into what a
+worker can do read-only now vs what is genuinely operator-gated:
+
+- [ ] [DATA] P0. **Canonical coverage-equivalence census (worker-doable, read-only, NOT a full-corpus GCS walk)** —
+      determine whether `market-data-tick-tradfi-prd`'s OWN Databento-sourced coverage already has equivalent fidelity
+      for the legacy bucket's date range, via a MANIFEST CENSUS (deployment-api axis census / direct manifest read),
+      never a whole-corpus GCS walk (heavy-I/O HARD RULE). Full canonical coverage of the same instrument × date range ⇒
+      net loss ~0 (close as procedural-miss WITH this census evidence cited); any uncovered slice (wider date range /
+      different source / higher-res ticks Databento can't reach) ⇒ that slice is the real, permanent loss. First bound
+      the legacy range from surviving pre-deletion inventory (a stale manifest snapshot, or the migrator's
+      pre-2026-06-29 dry-run planned-count ~3.8M processed_candles) — the deleted bucket itself can't be inspected, but
+      what it HELD can still be scoped. Repo: market-tick-data-service / instruments-service.
+- [ ] [OPERATOR] P0. **TIME-CRITICAL — GCS soft-delete / Object-Versioning recovery-window check.** Needs
+      `storage.buckets.get` / `gcloud storage buckets list --soft-deleted`, which no available worker credential has.
+      The bucket was deleted 2026-07-06 = 20 days ago as of this writing; GCS bucket soft-delete DEFAULT retention is 7
+      days (configurable 7-90). If default, the restore window is ALREADY CLOSED; if a longer retention was configured,
+      a SHRINKING window may remain. Check immediately — every day may close it permanently.
+- [ ] [OPERATOR] P0. **The remediation decision itself** (restore the soft-deleted bucket if recoverable / re-run
+      `migrate_tradfi_to_v9_canonical --apply --also-legacy` from a restored copy / accept the loss with the census
+      evidence above) — prod-bucket-level infra, operator-only, gated on both items above.
+- [x] ✅ [SCRIPT] P2. Fix `data_completion_tradfi_2026_07_15.md` lines 298/304 (R1/R2 checkboxes) — DONE (same session):
+      R1 stays open pending the operator decision above; R2 flipped done citing this doc's clean 3-target inventory.
 - [ ] [SCRIPT] P3. Add a pre-delete GATE to `launch-canonical-migration-vm.sh` (or the runbook that invokes it) so a
       legacy-bucket-decommission step structurally CANNOT proceed without first verifying `also_legacy=True` appeared in
       a completed, non-crashed migration run for the same asset_group — this exact silent-gap class (a documented
