@@ -29,6 +29,7 @@ related:
   [
     /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    /plans/active/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
   ]
 created: 2026-07-26
 parent_epic: sports_master
@@ -142,16 +143,41 @@ same CLI path would hit the identical wall.
 
 ## Recommended decision
 
-- [ ] [CODE] P2. Fix `pipeline_handler.py::_build_pipeline_config` to fall back `target_type` to `target_types[0]` when
-      `--target-type` is omitted, matching the CLI help's documented behavior. (repo: ml-service)
+- [x] ✅ [CODE] P2. Fix `pipeline_handler.py::_build_pipeline_config` to fall back `target_type` to `target_types[0]`
+      when `--target-type` is omitted, matching the CLI help's documented behavior. (repo: ml-service) — **DONE
+      2026-07-26** (slot-6, `data_engineering`): `ml-service@7cccb236` — fixed in both `execute()` and
+      `_build_pipeline_config()` (same `getattr(..., None) or default` gotcha in each). Live-verified: the exact repro
+      command from this doc (`--target-types clv`, `--target-type` omitted) no longer crashes with
+      `'None' is not a valid TargetType`.
 - [ ] [CODE] P3. Either wire `--family` to actually scope SPORTS training (leagues/target-types per family) or drop the
       required-argument validation if it's intentionally vestigial — currently it validates but does nothing. (repo:
-      ml-service)
-- [ ] [CODE] P2. Add a SPORTS branch to `cloud_feature_provider.py`'s feature dispatcher (mirroring
+      ml-service) — **EXPLICITLY DEFERRED 2026-07-26** (slot-6, `data_engineering`): confirmed still true
+      (`grep -rn family ml_service/training/cli/handlers/*.py` returns zero hits outside `parser.py`'s validation gate).
+      Not fixed this session — this doc's own framing ("either wire it or drop it") is a genuine design decision, not a
+      mechanical fix, and P3/non-blocking per this doc's own priority. Left open for whoever picks up the design call.
+- [x] ✅ [CODE] P2. Add a SPORTS branch to `cloud_feature_provider.py`'s feature dispatcher (mirroring
       `_query_defi_features`'s non-instrument-id pattern) that reads
       `sports_features/by_date/day={D}/     feature_group={G}/` by fixture/league instead of by `instrument_ids`. This
-      is the real blocker for the CLV retrain (and any other sports target). (repo: ml-service)
+      is the real blocker for the CLV retrain (and any other sports target). (repo: ml-service) — **DONE 2026-07-26**
+      (slot-6, `data_engineering`): `ml-service@7cccb236`. On closer inspection a SPORTS branch already existed in
+      `query_features()` (since 2026-05-01) but was UNREACHABLE — the asset-group dispatch derived from
+      `_get_asset_group(instrument_ids[0])` always falls back to `"CEFI"` when `instrument_ids` is empty (the correct
+      calling shape for sports), so the existing SPORTS branch could never fire. Fix: added an explicit
+      `asset_group: str | None = None` override param to `query_features()`, threaded from
+      `pipeline_handler.py::_load_features()`'s `args.asset_group`. **Live-verified end-to-end** against real prod
+      `features-sports-prd`: the exact repro command now loads **2,383 fixtures x 956 features across the full
+      2026-04-01..17 window** (previously: zero features, every time). `quality-gates.sh` green on ml-service (2103
+      passed, 4 skipped, coverage 80.00%).
 - [ ] [ML] P2. Once the above ships, retrain the 3 CLV model variants (`training-period-2026-04`, `pregame_clv_family`,
       `timeframes=fixture`, date range matching the original 2026-04-17 training run if recoverable) and independently
       re-verify against real prod features-sports-prd data before promoting/citing. The 3 quarantined artifacts stay in
       place, untouched, as the leak reference. Source: `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` Open Todo #5.
+      — **ATTEMPTED 2026-07-26, genuinely BLOCKED one layer deeper** (slot-6, `data_engineering`): with Bugs 1+3 fixed,
+      the retrain got past feature loading for the first time ever, then crashed in the pipeline's `feature_selection`
+      phase — `GradientBoostingClassifier.fit()` received 32 non-numeric (object-dtype) columns from the SPORTS feature
+      frame (identity columns like `fixture_id`/`event_id` plus several `xg_*` columns mis-typed upstream). A second,
+      independent finding surfaced in the same run: the CLV target resolves 100% "flat" for this exact date window
+      (`pinnacle_closing_odds_home`/`odds_home_avg` missing), so even a dtype-fixed retrain of this specific window may
+      not produce a meaningful model. Both filed with full diagnostic evidence in
+      `/plans/active/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`.
+      The 3 quarantined artifacts remain untouched/unpromoted. This todo stays open, now blocked on that new doc.
