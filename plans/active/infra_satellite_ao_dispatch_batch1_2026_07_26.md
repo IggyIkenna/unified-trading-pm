@@ -215,9 +215,9 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       on `--repeat-each=3`), pre-existing-as-of-2026-07-26 regression unrelated to (a)/(b)/(c) and outside this todo's
       named scope (also outside the original 2026-07-21 8-failure count — the suite grew from 404→419 total tests since
       then, making the todo's literal "404/404" done-when stale); filed as
-      `issues/deployment_ui_alerts_page_combined_filter_sort_regression_2026_07_26.md` per the findings-closure rule
-      rather than absorbed into this dispatch. tsc/ESLint/Vitest (101 tests) all green; `DataStatusTab.tsx` untouched
-      per the scope guard. Repo: deployment-ui. Source:
+      `/plans/archive/issues/deployment_ui_alerts_page_combined_filter_sort_regression_2026_07_26.md` (resolved +
+      archived) per the findings-closure rule rather than absorbed into this dispatch. tsc/ESLint/Vitest (101 tests) all
+      green; `DataStatusTab.tsx` untouched per the scope guard. Repo: deployment-ui. Source:
       `issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`.
 
 - [ ] [BACKEND] P2. **Wire `PROGRESS.json` checkpoint emission into the no-checkpoint launcher families** (the source

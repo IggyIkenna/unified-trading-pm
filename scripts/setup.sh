@@ -399,9 +399,14 @@ elif [ "$CHECK_ONLY" = true ]; then
 # this constant into resolve-canonical-versions.py so it is read, not hardcoded in 3 places).
 elif command -v uv &>/dev/null && uv --version 2>&1 | grep -q '0\.10\.8'; then
     log_skip "uv 0.10.8 already installed (pinned)"
+elif command -v curl &>/dev/null; then
+    # uv-managed CPython has no pip; a pip-installed uv wouldn't replace the active binary either.
+    curl -LsSf "https://astral.sh/uv/0.10.8/install.sh" | env UV_UNMANAGED_INSTALL="$HOME/.local/bin" sh >/dev/null 2>&1
+    hash -r
+    log_ok "Installed/realigned uv 0.10.8 (pinned, astral installer)"
 else
-    "$PYTHON_CMD" -m pip install "uv==0.10.8" --quiet 2>/dev/null
-    log_ok "Installed uv 0.10.8 (pinned)"
+    "$PYTHON_CMD" -m pip install "uv==0.10.8" --quiet 2>/dev/null || pip install "uv==0.10.8" --quiet 2>/dev/null
+    log_ok "Installed uv 0.10.8 (pinned, pip fallback)"
 fi
 
 # ── [4] VENV CREATION ──────────────────────────────────────────────────────

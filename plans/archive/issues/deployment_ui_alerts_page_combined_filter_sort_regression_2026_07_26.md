@@ -38,6 +38,9 @@ resolved_by: deployment-ui@f91217e
 locked_by:
 ---
 
+> **🟢 RESOLVED** — root-caused + fixed, `deployment-ui@f91217e`, `quality-gates.sh` green. Archived per
+> terminal-status-archived hygiene gate.
+
 # Alerts page — combined filter+sort spec fails (vm_down row reappears)
 
 ## What I found
