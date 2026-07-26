@@ -10,7 +10,7 @@ summary: >-
   are deliberately NOT duplicated here. What remains is 4 todos: 2 orphan-satellite-plan reconciliations (rescoped per
   task_template.md finding S / operator ruling to drop open-ended judgment), 1 root-cause+fix+migrate data-correctness
   item, and 1 ship-2-already-verified-changes item.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]

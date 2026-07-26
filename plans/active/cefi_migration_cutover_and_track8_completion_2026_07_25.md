@@ -13,7 +13,7 @@ summary: >-
   cefi_consolidated_native_ao_extract_2026_07_25.md (drafted by a parallel sibling triage of this same parent's native
   todos): the MTDS writer-side `:PERP:` fix (that plan's own todo 7, ships alone, no data motion) and the `_DRYRUN_COLS`
   chain-drop blind-spot fix (that plan's own todo 12).
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]

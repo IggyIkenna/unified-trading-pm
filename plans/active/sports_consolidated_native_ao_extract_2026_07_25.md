@@ -12,7 +12,7 @@ summary: >-
   "manual review" sub-part) to make them genuinely bounded; 2 required an added live-probe first-step because the source
   todo's own prerequisite state is ambiguous or self-contradictory. 1 candidate (venue vocabulary re-stamp) explicitly
   EXCLUDES a sub-item already covered by `sports_satellite_ao_dispatch_batch3_2026_07_25.md`.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]

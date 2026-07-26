@@ -16,7 +16,7 @@ summary: >-
   (`instruments-service@52d8b3ef`) — this directly un-blocks one of the drafted todos below (see its provenance note)
   and is flagged as a standalone finding for the operator/session, not silently corrected in the parent doc by this
   extraction.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]

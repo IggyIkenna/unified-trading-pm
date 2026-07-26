@@ -11,7 +11,7 @@ summary: >-
   todo would hold it — it won't, since a non-dispatchable todo first in a `sequential: true` chain does not count as
   "the predecessor." Splits that step into an immediately-dispatchable pass for the 5 already-unambiguous venues plus a
   separate `[OPERATOR]`-gated follow-on for the 3 still-ambiguous ones.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]

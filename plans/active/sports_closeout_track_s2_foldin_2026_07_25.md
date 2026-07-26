@@ -16,7 +16,7 @@ summary: >-
   exit_code_fleet_monitor misclassification fix, the api_football gate-reader fix, and the WEATHER layout fix — the last
   resolved literally today, 2026-07-25) — those are carried forward as closed digests, not re-manufactured as open
   todos.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]

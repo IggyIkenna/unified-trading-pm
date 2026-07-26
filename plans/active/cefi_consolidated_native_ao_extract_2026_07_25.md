@@ -13,7 +13,7 @@ summary: >-
   cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md Finding 5, but the parent's checkboxes were never
   flipped. 2 of the 12 AO-eligible candidates (BITGET-FUTURES catalogue rollup, _DRYRUN_COLS fix) are net-new scoped
   tasks derived from that staleness finding, not literal re-drafts of a stale line.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
