@@ -143,12 +143,22 @@ worker can do read-only now vs what is genuinely operator-gated:
       evidence above) — prod-bucket-level infra, operator-only, gated on both items above.
 - [x] ✅ [SCRIPT] P2. Fix `data_completion_tradfi_2026_07_15.md` lines 298/304 (R1/R2 checkboxes) — DONE (same session):
       R1 stays open pending the operator decision above; R2 flipped done citing this doc's clean 3-target inventory.
-- [ ] [SCRIPT] P3. Add a pre-delete GATE to `launch-canonical-migration-vm.sh` (or the runbook that invokes it) so a
+- [x] ✅ [SCRIPT] P3. Add a pre-delete GATE to `launch-canonical-migration-vm.sh` (or the runbook that invokes it) so a
       legacy-bucket-decommission step structurally CANNOT proceed without first verifying `also_legacy=True` appeared in
       a completed, non-crashed migration run for the same asset_group — this exact silent-gap class (a documented
       runbook precondition that a LATER, different invocation quietly doesn't satisfy) shouldn't require a manual
       forensic audit to catch after the fact. **RE-SCOPE NEEDED (2026-07-26, see addendum below) — do not action as
-      currently worded; the addendum's Option B is the concrete replacement scope.**
+      currently worded; the addendum's Option B is the concrete replacement scope.** — DONE (slot 11, 2026-07-26) via
+      the addendum's Option B, not the literal wording: `market-tick-data-service@200db96d` adds
+      `scripts/one_offs/verify_legacy_bucket_decommission_precondition.py`, a standalone reusable CLI that
+      operationalizes the delete-safety protocol's Part 5 twin-coverage invariant as a runnable, asset_group-agnostic
+      check (manifest census, never a GCS walk) — exits non-zero with a gap report when canonical coverage is
+      incomplete, 0 when complete. Unit-tested per the addendum's stated done-when (incomplete-coverage case exits
+      non-zero with a clear report; fully-covered case exits 0) in
+      `tests/unit/scripts/test_verify_legacy_bucket_decommission_precondition.py`. Does NOT touch
+      `launch-canonical-migration-vm.sh` (confirmed dead for this purpose per the addendum) and does NOT itself gate any
+      delete — the tool is the durable artifact a human decommission step is expected to run and paste output from
+      first; the actual delete stays a human-only hard stop per `gcs-and-manifest-delete-safety-protocol.md` § 3.
 
 ## 2026-07-26 addendum — todo 5 investigated, needs re-scoping before it's AO-actionable
 
