@@ -146,12 +146,22 @@ not a labelling choice.
       `instruments-service@a516bd01` (prospective enumerator seeding, `_enumerate_v2_defi`),
       `instruments-service@2967cf5f` (retroactive reconciliation script), `deployment-api@8691f29`/`@ea56fff` (dashboard
       parity), `deployment-ui@183cfc3` (badge wiring).
-- [ ] [BACKEND] P1. **Generalise `catalogue_pool_ids_for_shard`** (`_catalogue_filter.py:77`) beyond
-      `instrument_type=='pool'` — the prerequisite for ANY non-pool residual reconciliation.
-- [ ] [BACKEND] P1. **Add a per-instrument residual emitter** to the capturable non-POOL handlers
-      (`lending_indices_handler`, `risk_params_handler`, `lst_rates_handler`, `evm_defi_collectors`) so their IS-seeded
-      per-instrument EU cells can reconcile. `lst_rates_handler` additionally needs a per-instrument grain at all (it
-      currently records `instrument_type='lst'` with no `instrument_id`).
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-26 (slot-14).** Generalised `catalogue_pool_ids_for_shard`
+      (`_catalogue_filter.py:77`) beyond `instrument_type=='pool'` — added an `instrument_type=` param (default
+      `"pool"`, byte-for-byte unchanged), any other type filters on that `instrument_type` and builds ids from the
+      catalogue's general `instrument_id` column. `market-tick-data-service@9d796b0e`, `quality-gates.sh` green; 2 new
+      unit tests. See `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s corresponding todo.
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-26 (slot-14).** Added a per-instrument residual emitter
+      (`record_catalogue_residual_empty_typed`, `_catalogue_filter.py`, `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` —
+      NOT `EXPECTED_NOT_ENOUGH_TVL`, per THE TRAP above) to all 4 capturable non-POOL handlers
+      (`lending_indices_handler`, `risk_params_handler`, `lst_rates_handler`, `evm_defi_collectors`).
+      `lst_rates_handler` additionally needed the per-instrument grain built first (it recorded `instrument_type='lst'`
+      with no `instrument_id` at all) — fixed via a per-shard loop over `write_defi_rows`'s already-per-instrument
+      shards (see `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s combined `lst_rates_handler.py` todo, sub-item
+      (b)). One new/extended unit test per handler proves the residual emitter fires with a real, non-blank
+      `instrument_id`. `market-tick-data-service@9d796b0e` (risk_params/evm_defi/lst_rates) + `@eae703b0`
+      (lending_indices), `quality-gates.sh` green both commits. See `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s
+      corresponding todo for full evidence.
 - [x] [DATA] P2. **Measure the per-instrument_type split of the 215,864 re-seeded cells** in the live prod `_index` (the
       instrument-level split 1,389/473/469 is verified from the catalogue; the CELL-level split is not). **Measured
       2026-07-21 (3 independent pyarrow queries against the live `_index/availability_index.parquet`, 52,290,207 total

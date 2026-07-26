@@ -306,32 +306,27 @@ drift_direction: advance-code
       `bash scripts/quality-gates.sh` is green on `market-tick-data-service`; change is committed via
       `quickmerge.sh --agent` (no VM launch, no canary run) and this doc's perf-bundle checkbox is flipped with the
       commit SHA as evidence.
-- [ ] [BACKEND] P1. **Add a per-instrument residual emitter to the capturable non-POOL DeFi handlers**
-      (`lending_indices_handler`, `risk_params_handler`, `lst_rates_handler`, `evm_defi_collectors` in
-      market-tick-data-service) so their IS-seeded per-instrument `expected_unattempted` cells can reconcile — mirror
-      the existing DEX pattern (`record_catalogue_residual_empty` / `EmptyConfirmedReason.EXPECTED_NOT_ENOUGH_TVL`,
-      `_dex_swaps_queries.py:157`, `residual = catalogue_pool_ids - captured_pool_ids`) but reusing the now-generalised
-      `catalogue_pool_ids_for_shard` (`_catalogue_filter.py:77`, tracked as its own prerequisite todo in
-      `defi_satellite_ao_dispatch_batch1_2026_07_25.md`) so each handler diffs its OWN captured-instrument set against
-      the IS catalogue subset for its `instrument_type`(s) and emits a per-instrument empty-confirmed row for the
-      residual, instead of today's VENUE/CHAIN-grain blank-`instrument_id` `record_zero_rows`/`record_empty`.
-      `lst_rates_handler` additionally needs the per-instrument `instrument_id` grain added to its residual/empty path
-      specifically — NOTE: `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s combined `lst_rates_handler.py` todo
-      already fixed the CAPTURED-path per-instrument `record_captured` grain but explicitly excludes the empty/residual
-      path ("do not touch the empty/residual path") — this todo is the remaining, un-duplicated residual-side half for
-      `lst_rates_handler` plus the wholly-untouched residual emitters for
-      `lending_indices_handler`/`risk_params_handler`/`evm_defi_collectors`. Do NOT reuse `EXPECTED_NOT_ENOUGH_TVL` (it
-      sits in `OUT_OF_COVERAGE_WINDOW_REASONS` and would re-create the denominator-exclusion bug this doc exists to
-      avoid) — use the doc's already-shipped `EmptyConfirmedReason.EXPECTED_REFERENCE_ONLY_NO_CAPTURE_PATH`-adjacent
-      terminal-reason machinery only for the genuinely-unsatisfiable reference-only class (already resolved separately);
-      for these 4 genuinely-capturable handlers, emit ordinary per-instrument empty-confirmed rows so cells can flip to
-      `captured` on a real re-capture. Repo: market-tick-data-service. **Done when**: all 4 handlers call a
-      per-instrument residual emitter (new shared helper or per-handler call mirroring the DEX pattern) after their
-      capture pass, one new/extended unit test per handler asserts a per-instrument empty-confirmed row is written for
-      an uncaptured-but-in-catalogue instrument (with a real `instrument_id`, not blank), the existing
-      `lst_rates_handler` CAPTURED-path grain fix from batch1 is left untouched/still green, and
-      `bash scripts/quality-gates.sh --no-fix` is green in market-tick-data-service. Source:
-      `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-26 (slot-14).** Added the per-instrument catalogue residual emitter to all 4
+      capturable non-POOL DeFi handlers. **Premise correction**: this todo's own text assumed
+      `catalogue_pool_ids_for_shard` was "now-generalised" via a batch1 prerequisite todo — verified that prerequisite
+      was STILL `- [ ]` unshipped (`_catalogue_filter.py:97` was still hardcoded `instrument_type=='pool'`), so
+      generalised it first (added an `instrument_type=` param, default `"pool"`, byte-for-byte unchanged for DEX; any
+      other type filters on that `instrument_type` and builds ids from the catalogue's general `instrument_id` column).
+      Also verified `lst_rates_handler`'s claimed-already-fixed CAPTURED-path per-instrument grain was ALSO still
+      unshipped (batch1's own combined-todo sub-item (b) was `- [ ]`) — fixed that too (`_write_single_lst_group` now
+      loops `write_defi_rows`'s per-instrument shards instead of one aggregate `record_captured`; split into a new
+      `_lst_rates_write.py` sibling module, codex 900-line ratchet). Added `record_catalogue_residual_empty_typed()`
+      (`_catalogue_filter.py`) — `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` (WITHIN-denominator), never
+      `EXPECTED_NOT_ENOUGH_TVL`, per THE TRAP; normalises captured-id casing before diffing (EVM DeFi's `instrument_id`
+      preserves `build_instrument_id`'s mixed-case venue prefix — caught by a test that would otherwise under-count the
+      residual). Wired into `risk_params_handler.py`, `evm_defi_collectors.py`, `lst_rates_handler.py`
+      (`market-tick-data-service@9d796b0e`) and `lending_indices_handler.py` (via a thin `_lending_grain.py` wrapper,
+      `market-tick-data-service@eae703b0`). One new/extended unit test per handler (4 total) proves the emitter fires
+      with a real, non-blank `instrument_id` + `SOURCE_RETURNED_ZERO`; the `lst_rates_handler` CAPTURED-path grain test
+      extended (not replaced) with an `instrument_id` assertion. `quality-gates.sh --no-fix` green both commits
+      (sentinel-verified), shipped via quickmerge. Source:
+      `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md` (both follow-on todos flipped
+      there too).
 - [ ] [DATA] P3. Append F10 (YEARN_V3/ETHEREUM/yield_bearing/vault_share_price pipeline_mode<->source desync, MEDIUM,
       delete_elig=NO) to the DeFi reconciliation register as a defi-scoped row, per the audit's own Section 9
       maintenance-contract note ("F10 ... not in the register as defi-scoped rows ... flagged as follow-up") -- add the

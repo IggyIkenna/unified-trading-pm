@@ -136,27 +136,31 @@ drift_direction: advance-code
       the tz-comparison `TypeError` and reports a final candidate count; `quality-gates.sh` green in
       instruments-service. Source: `data_completion_defi_2026_07_15.md`,
       `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`.
-- [ ] [BACKEND] P1. **Combined `market-tick-data-service/.../lst_rates_handler.py` fix (3 sub-items merged into one todo
-      — all 3 would EDIT the same file, and the first 2 are literal duplicates of the same underlying bug):** (a) both
-      `pipeline_mode_for_source("onchain_subgraph", ...)` call sites (~line 351 and ~447) hardcode the source string for
-      EVERY Solana LST row regardless of which tier actually produced it — the per-row `method` field (written by
-      `solana_lst_archival.py`) already tracks `alchemy_get_account_info` / `thegraph_subgraph` / `rest_api` /
-      `defillama_historical_ratio`, so Tier-4 `defillama_historical_ratio` rows (a market-price proxy, NOT genuine
-      on-chain data) get the same `batch_onchain_subgraph` label as genuine Tier 1-3 rows — derive the source argument
-      from each row's own `method`/tier instead (at minimum add a distinct source value for the Tier-4 path); the EVM
-      LST path has no tier-fallback system and must stay byte-identical (do not touch it); (b)
-      `_write_single_lst_group()` (~lines 713-721) makes ONE aggregate `record_captured` call per (protocol, chain) with
-      NO `instrument_id`, even though `write_defi_rows()` already returns per-instrument
-      `shards: list[tuple[shard_df, shard_path]]` — loop `shards` and call
-      `record_captured(instrument_id=...,     row_count=...)` once per shard instead, mirroring the identical pattern
-      already shipped in
-      `record_swap_pool_map()`/`record_market_captures()`/`_record_shard_result()`/`_record_manifest_result()`; do not
-      touch the empty/residual path. Repo: market-tick-data-service. **Done when**: (a) a distinct pipeline_mode/source
-      label is written for Tier-4-sourced rows vs Tier 1-3 rows (new/updated assertion in
-      `tests/unit/test_lst_rates_handler.py` or `test_lst_rates_handler_coverage.py`), EVM LST pipeline_mode unchanged
-      (pinned by a regression assertion); (b) a successful capture emits one `record_captured` per distinct
-      `instrument_id` shard, proven by a new/extended unit test; `quality-gates.sh` green. Source:
-      `defi_strategy_pnl_axis_index_2026_07_24.md`, `lst_rate_honest_coverage_2026_07_21.md`,
+- [ ] [BACKEND] P1. **Combined `market-tick-data-service/.../lst_rates_handler.py` fix — sub-item (b) DONE 2026-07-26
+      (slot-14), sub-item (a) still OPEN.** (a) both `pipeline_mode_for_source("onchain_subgraph", ...)` call sites
+      (~line 351 and ~447) hardcode the source string for EVERY Solana LST row regardless of which tier actually
+      produced it — the per-row `method` field (written by `solana_lst_archival.py`) already tracks
+      `alchemy_get_account_info` / `thegraph_subgraph` / `rest_api` / `defillama_historical_ratio`, so Tier-4
+      `defillama_historical_ratio` rows (a market-price proxy, NOT genuine on-chain data) get the same
+      `batch_onchain_subgraph` label as genuine Tier 1-3 rows — derive the source argument from each row's own
+      `method`/tier instead (at minimum add a distinct source value for the Tier-4 path); the EVM LST path has no
+      tier-fallback system and must stay byte-identical (do not touch it). **Still open — the remaining unit of work on
+      this todo.** (b) ✅ **DONE 2026-07-26 (slot-14, done as a prerequisite of
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s residual-emitter todo, which discovered this was still
+      unshipped despite that plan's premise that it was already fixed excluding the residual path).**
+      `_write_single_lst_group()` now loops `write_defi_rows()`'s per-instrument `shards` and calls
+      `record_captured(instrument_id=..., row_count=...)` once per shard instead of one (protocol, chain) aggregate with
+      no `instrument_id` — mirrors `record_swap_pool_map()`/`record_market_captures()`/`_record_manifest_result()`. The
+      residual/empty path (originally out of THIS todo's scope, per its "do not touch" framing — it belongs to
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s residual-emitter todo) was wired in the SAME session/commit
+      since batch2's todo genuinely depends on this fix landing first. Split the write functions into a new
+      `_lst_rates_write.py` sibling module (codex 900-line ratchet). Extended the existing captured-path test with an
+      `instrument_id` assertion. `market-tick-data-service@9d796b0e`, `quality-gates.sh` green. **Repo:
+      market-tick-data-service. Remaining done when (sub-item (a) only)**: a distinct pipeline_mode/source label is
+      written for Tier-4-sourced rows vs Tier 1-3 rows (new/updated assertion in `tests/unit/test_lst_rates_handler.py`
+      or `test_lst_rates_handler_coverage.py`), EVM LST pipeline_mode unchanged (pinned by a regression assertion);
+      `quality-gates.sh` green. Source: `defi_strategy_pnl_axis_index_2026_07_24.md`,
+      `lst_rate_honest_coverage_2026_07_21.md`,
       `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
 - [ ] [BACKEND] P1. Fix `_perp_funding_kalshi_polymarket.py`'s KALSHI_PERP/POLYMARKET_PERP routing in
       market-tick-data-service: route both venues through a cefi-classified write path (mirroring
@@ -271,15 +275,16 @@ drift_direction: advance-code
       absent) instances is produced across the full observed date range and recorded in the issue doc's "Not yet done"
       section, replacing the current single-day framing. Source:
       `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`.
-- [ ] [BACKEND] P1. Generalise `catalogue_pool_ids_for_shard()` (`_catalogue_filter.py`) beyond the hardcoded
-      `instrument_type=='pool'` filter and `pool_address`-only column requirement — add an `instrument_type` parameter
-      (default `"pool"`, byte-for-byte preserving today's DEX behavior), and for any other requested type filter the
-      cached catalogue on that `instrument_type` and build the id set from the catalogue's general `instrument_id`
-      column (lowercased, matching every non-pool handler's own convention). Repo: market-tick-data-service. **Done
-      when**: `catalogue_pool_ids_for_shard(instrument_type="pool", ...)` is unchanged (existing pool-path tests stay
-      green unmodified) AND a new/extended unit test proves `instrument_type="lending"` (or another non-pool type)
-      returns the correct in-window id set from a synthetic non-pool catalogue fixture; `quality-gates.sh` green.
-      Source: `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-26 (slot-14, done as a prerequisite of
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s residual-emitter todo, which discovered this was still
+      unshipped despite that plan's premise).** Generalised `catalogue_pool_ids_for_shard()` (`_catalogue_filter.py`)
+      beyond the hardcoded `instrument_type=='pool'` filter — added an `instrument_type` parameter (default `"pool"`,
+      byte-for-byte unchanged), any other type filters the cached catalogue on that `instrument_type` and builds the id
+      set from the catalogue's general `instrument_id` column (lowercased). `instrument_type="pool"` path unchanged
+      (existing pool tests green unmodified); 2 new unit tests prove `instrument_type="lending"` returns the correct
+      in-window id set (+ respects the chain filter) from a synthetic non-pool catalogue fixture.
+      `market-tick-data-service@9d796b0e`, `quality-gates.sh` green. Source:
+      `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
 - [ ] [DATA] P1. **Combined `vault_share_price_handler.py` investigation + fix (3 sub-items merged into one todo, all
       from the same doc, naturally sequenced confirm→measure→fix, 1 of the 3 EDITS the file):** (a) confirm the
       YEARN_V3/ETHEREUM/yield_bearing/vault_share_price pipeline_mode↔source desync stale-row hypothesis — read the live
