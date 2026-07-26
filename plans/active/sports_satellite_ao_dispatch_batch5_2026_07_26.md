@@ -249,21 +249,22 @@ drift_direction: advance-code
       already 1,846 lines (pre-existing, over the plans/active/ 1,000L hard cap), and `check_line_caps.sh`'s prek gate
       blocks staging ANY edit to an already-over-cap file, regardless of diff size — this is a pre-existing
       corpus-hygiene debt unrelated to this todo, out of scope to fix here (would require splitting that doc).
-- [ ] [DATA] P1. Root-cause and resolve the 4,991 phantom `capture_status=captured` FIXTURE_EVENTS manifest rows
-      (concentrated 2019-2020, instruments-service) that have NO backing GCS object at any candidate path (canonical,
-      pipeline_mode-aware, or legacy `sports_reference_v1_archive`). Sample `written_at`/`enumerator_run_id` on the
-      affected rows against deploy history for that era to determine whether the 2019-2020 writer ever persisted these
-      objects or marked `captured` without a write. Then, per row: (a) if the fixture is recoverable, genuinely re-fetch
-      from api-football via the same `--recovery-fixture-ids` mechanism used by the fixture_events schema-heterogeneity
-      re-fetch campaign (coordinate scheduling with any then-active fixture_events re-fetch VM to avoid launch
-      contention / quota collision — see `issues/sports_fixture_events_refetch_progress_2026_07_25.md` for that
-      campaign's live state), or (b) if genuinely unrecoverable, flip `capture_status` to
-      `attempted_failed`/`expected_unattempted` (honest-absence, CAS-safe write) — never leave a row silently mis-marked
-      `captured`. Also note whether the same era's writer-generation bug explains the related `instrument_count`
-      semantic-drift finding in `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`. (repo:
-      instruments-service). Source: `sports_fixture_events_phantom_manifest_rows_2026_07_25.md`. **Done when**: root
-      cause is documented, and every one of the 4,991 rows either has a real backing object or an honest non-`captured`
-      status, confirmed via a re-census.
+- [x] [DATA] P1. ✅ 2026-07-26 — `instruments-service@e0b48bc2`. Root-cause and resolve the 4,991 phantom
+      `capture_status=captured` FIXTURE_EVENTS manifest rows (concentrated 2019-2020, instruments-service) that have NO
+      backing GCS object at any candidate path (canonical, pipeline_mode-aware, or legacy
+      `sports_reference_v1_archive`). Sample `written_at`/`enumerator_run_id` on the affected rows against deploy
+      history for that era to determine whether the 2019-2020 writer ever persisted these objects or marked `captured`
+      without a write. Then, per row: (a) if the fixture is recoverable, genuinely re-fetch from api-football via the
+      same `--recovery-fixture-ids` mechanism used by the fixture_events schema-heterogeneity re-fetch campaign
+      (coordinate scheduling with any then-active fixture_events re-fetch VM to avoid launch contention / quota
+      collision — see `issues/sports_fixture_events_refetch_progress_2026_07_25.md` for that campaign's live state), or
+      (b) if genuinely unrecoverable, flip `capture_status` to `attempted_failed`/`expected_unattempted`
+      (honest-absence, CAS-safe write) — never leave a row silently mis-marked `captured`. Also note whether the same
+      era's writer-generation bug explains the related `instrument_count` semantic-drift finding in
+      `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`. (repo: instruments-service). Source:
+      `sports_fixture_events_phantom_manifest_rows_2026_07_25.md`. **Done when**: root cause is documented, and every
+      one of the 4,991 rows either has a real backing object or an honest non-`captured` status, confirmed via a
+      re-census.
 - [x] [OPERATOR] P2. Fold the sibling `entity=fixtures` and `entity=fixtures_outcomes` non-canonical
       `league=169`/`league=235` GCS objects (21 rows: 12 `FIXTURES` + 9 `FIXTURES_OUTCOMES`, same 12-date/2-league
       cohort already folded for `entity=fixtures_schedule` in `instruments-service@4412e576`) into their canonical
