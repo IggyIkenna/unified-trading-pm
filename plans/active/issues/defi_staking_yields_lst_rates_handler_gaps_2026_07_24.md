@@ -225,13 +225,20 @@ issue doc. No functional code changed; `quality-gates.sh` run scoped to these tw
 
 ## 6. Residual / open follow-up work
 
-- [ ] [SERVICE] P2. Add a `"staking-yields"` entry to
+- [x] ✅ [SERVICE] P2. Add a `"staking-yields"` entry to
       `deployment-service/terraform/gcp/     defi_collection_scheduler.tf`'s `defi_collect_operations` map (schedule
       ~`50 1 * * *`, between `eigenlayer-rewards` 01:45 and `evm-defi` 01:55; CPU/memory tier ≈ `eigenlayer-rewards`'s,
       since both are light single-region public-API/RPC fetches) so `collect-staking-yields` actually runs. This is a
       real Cloud Run Job + Cloud Scheduler provisioning change against production — out of scope for this filing pass;
       apply + verify (`STARTED` within a run, ≥1 manifest row written, no fire-and-forget) as its own tracked infra
-      change.
+      change. — DONE 2026-07-26, deployment-service@bd46bf2 (`defi_satellite_ao_dispatch_batch1_2026_07_25.md`). Full
+      evidence there: `tofu plan` showed a clean additive `2 to add, 0 to change, 0 to destroy`; applied; manually
+      triggered a real execution (not fire-and-forget — watched to `Completed True`); confirmed 1 manifest row
+      (`instrument_type=staking`, `venue=EIGENLAYER`, `capture_status=captured`) in the per-VM shard. Also surfaced +
+      fixed a real bug from that live run: LIDO/EtherFi DNS failures were being silently miscategorized as
+      `record_zero_rows` instead of `record_failed` — fixed market-tick-data-service@2b6d9e6b (see § 6.2 below, whose
+      own "once § 6.1 lands" precondition is now met for the leaf-name verification, though the classification bug found
+      here was a different, more urgent defect than what § 6.2 anticipated).
 - [ ] [SERVICE] P3. Once § 6.1 lands and the handler actually runs, verify the real per-venue shard leaf names match
       expectation (`stETH.parquet` / `weETH.parquet` / `EIGEN.parquet` via the sanitized-symbol path) and either wire
       the `file_name="ticks.parquet"` argument to do something real or remove the dead parameter at

@@ -360,14 +360,35 @@ drift_direction: advance-code
       `instruments-service/docs/DEFI_INSTRUMENTS.md`, and the closeout plan's "The two-id model" section. Repo:
       unified-trading-pm. **Done when**: the codex doc contains a section documenting the two-id model consistent with
       those 3 sources. Source: `issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
-- [ ] [INFRA] P1. Add a `staking-yields` entry to `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s
+- [x] ✅ [INFRA] P1. Add a `staking-yields` entry to `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s
       `defi_collect_operations` map (cron `50 1 * * *`, the free slot between `eigenlayer-rewards` at 01:45 and
       `evm-defi` at 01:55; tier mirroring `eigenlayer-rewards`), apply via the same single-PR flow every other job in
       the file uses. Repo: deployment-service. **Done when**: `gcloud scheduler jobs list` shows a
       `staking-yields`-named job ENABLED and `gcloud run jobs list` shows the matching Cloud Run Job; after its first
       run, at least 1 manifest row exists for `instrument_type=staking` (verify STARTED + the manifest row per
       no-fire-and-forget — do not mark done on terraform-apply alone). Source:
-      `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
+      `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`. — DONE 2026-07-26, deployment-service@bd46bf2.
+      Added the map entry exactly as specified; `ENV=prod ./tofu.sh plan -target=...` showed
+      `2 to add, 0 to change, 0 to destroy` (a new Cloud Run Job + Cloud Scheduler cron — purely additive, no
+      `[OPERATOR]` gate applies); applied. Verified
+      `gcloud scheduler jobs describe uts-prod-mtds-collect-staking-yields-cron` ENABLED and
+      `gcloud run jobs describe uts-prod-mtds-collect-staking-yields` exists. **Did not wait for the 01:50 UTC cron**
+      (many hours away) — manually triggered a real execution (`gcloud run jobs execute`), watched it to a genuine
+      terminal status (`Completed True`, 47s), then read the per-VM manifest shard it wrote and confirmed **1 row:
+      `instrument_type=staking`, `data_type=staking_yields`, `venue=EIGENLAYER`, `capture_status=captured`** — the
+      done-when criterion is satisfied. **Bonus finding from the live run, fixed in the same pass**: the execution's
+      logs showed LIDO and EtherFi both failing with DNS resolution errors
+      (`Cannot connect to host api.lido.fi/api.etherfi.id: Name or service not known`), and the manifest shard had ZERO
+      rows for either venue — not even `attempted_failed`. Root cause: each `_fetch_*_apy` helper caught its own
+      exceptions internally and returned an empty list on failure, so the caller's `if rows:` branch treated a genuine
+      fetch failure identically to "source legitimately returned nothing" and called `record_zero_rows` instead of
+      `record_failed` — silently miscategorizing failures. Fixed by letting the fetch helpers' exceptions propagate to
+      `_process_venue`'s existing (already-correct) classify-and-record `try/except`, which now correctly calls
+      `record_failed`. Regression test updated (`test_client_error_propagates_for_correct_record_failed_classification`,
+      the old test asserted the buggy swallow behavior) + full 23-test suite green. market-tick-data-service@2b6d9e6b.
+      **Not yet re-verified against a rebuilt image** — the fix is source + test only; the next scheduled/manual
+      execution (after the image rebuild lands) will exercise it for real, tracked as a follow-up below rather than
+      blocking this todo (the terraform-wiring done-when criterion was about the manifest row existing, which it does).
 - [ ] [DATA] P1. Correct `/codex/02-data/defi-data-types-catalog.md` § 7's `staking_yields` row: remove the
       `Status:     Production (2026-04-24)` label — live-verified FALSE (zero scheduler jobs, zero Cloud Run Job, zero
       GCS objects across 6 sampled days, confirmed 2026-07-24) — and restate as `Status: Implemented, unscheduled`. Do
