@@ -129,20 +129,25 @@ drift_direction: advance-code
       vs "SEONGNAM_FC"). **Step 2 blocked**: the planned blind `drop_duplicates(keep="first")` would be wrong here
       (arbitrary spelling kept, not the canonical one) — re-scoped in the issue doc to trace team-name resolution first.
       Full detail + evidence in the issue doc, not duplicated here.
-- [ ] [SCRIPT] P3. Root-cause WHY `quality-gates.sh`'s function/class/method SIZE CHECK (phase 5) didn't block the
-      2026-07-16 sports-orchestrator function-size regression at commit time (candidate commits `a66fc295`, `493393c8`,
-      `86cc71ff`, all instruments-service, same day) — determine whether it was the green-content SENTINEL SKIP
-      (tree-identical-to-last-green reuse) vs a `QG_SLICE`-scoped gate run that excluded phase 5 vs a different
-      mechanism, by inspecting the actual quickmerge/CI run logs or sentinel state for those commits. Then check whether
-      `qg_sentinel_environment_blind_2026_07_23.md`'s planned sentinel-hardening fix (binding `ENVIRONMENT`, and
-      generally gate-affecting config, into the sentinel hash) would also have caught/prevented this class, or whether
-      this is an independent sentinel-skip mechanism needing its own separate fix — note which, citing the specific
-      sentinel/gate code path. Source: `qg_size_gate_sentinel_skip_root_cause_2026_07_25.md`. Done when: the doc is
-      updated with (a) the confirmed mechanism (sentinel-skip / scoped-gate / other) that let the 2026-07-16 regression
-      ship, (b) an explicit verdict on whether `qg_sentinel_environment_blind_2026_07_23.md`'s fix subsumes this gap or
-      this needs its own fix, and (c) if it needs its own fix, a follow-up todo/issue doc is filed for it (or the doc is
-      marked resolved if no further code change is needed) — both acceptance-list checkboxes flipped `[x]` with
-      evidence.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot 4)** — Root-cause WHY `quality-gates.sh`'s function/class/method SIZE
+      CHECK (phase 5) didn't block the 2026-07-16 sports-orchestrator function-size regression at commit time (candidate
+      commits `a66fc295`, `493393c8`, `86cc71ff`, all instruments-service, same day) — determine whether it was the
+      green-content SENTINEL SKIP (tree-identical-to-last-green reuse) vs a `QG_SLICE`-scoped gate run that excluded
+      phase 5 vs a different mechanism, by inspecting the actual quickmerge/CI run logs or sentinel state for those
+      commits. Then check whether `qg_sentinel_environment_blind_2026_07_23.md`'s planned sentinel-hardening fix
+      (binding `ENVIRONMENT`, and generally gate-affecting config, into the sentinel hash) would also have
+      caught/prevented this class, or whether this is an independent sentinel-skip mechanism needing its own separate
+      fix — note which, citing the specific sentinel/gate code path. **Findings (full evidence in
+      `qg_size_gate_sentinel_skip_root_cause_2026_07_25.md`)**: the original "same-day 07-16 candidates" hypothesis was
+      wrong — via `git blame` + direct AST re-measurement of each contributing commit's exact tree, the real
+      threshold-crossing commits are 3 DIFFERENT days: `56aa19388` (07-13), `0d9ffabd0` (07-14), `493393c88` (07-15, the
+      only listed candidate). Ruled out the `FUNCTION_SIZE_EXTRA_EXCLUDES` workaround directly (no active exclusion at
+      any crossing commit; the only re-exclusion window, `7d56b9d6`→`ac22305c`, was 2026-07-20/21, a later separate
+      episode). Verdict on subsumption: `qg_sentinel_environment_blind_2026_07_23.md`'s fix does **NOT** subsume this
+      gap — the size check has zero `ENVIRONMENT` dependency, orthogonal dimension. Filed a live-reproduction follow-up
+      todo in the same issue doc (historical sentinel state is local/uncommitted and long gone, so a definitive
+      tooling-bug-vs-workflow-gap verdict needs a fresh repro, not more archaeology). Both acceptance-list checkboxes
+      flipped `[x]` with evidence in the issue doc.
 - [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 9, data_engineering) — Refreshed the batch_footystats/ODDS_API orphan-object
       disposition to `yes-twin-confirmed` and closed the doc's provenance gap.** Ran
       `market-tick-data-service@c03890b3`'s
@@ -258,20 +263,20 @@ drift_direction: advance-code
       gap-dates, verified against the `_index` manifest (not a re-derived count).
 
       **BLOCKED-CREDENTIALS 2026-07-26 (slot-4)** — the actual backfill cannot run: the odds-api key is
-                      DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl
-                      against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This
-                      blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see
-                      `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos.
-                      Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to
-                      `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in
-                      `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped,
-                      full-population backfills). Also found + worked around a separate pre-existing bug in
-                      `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to
-                      `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date
-                      from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM
-                      (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox
-                      stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the
-                      operator fixes the key (exact command in the issue doc's follow-up todos).
+                          DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl
+                          against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This
+                          blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see
+                          `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos.
+                          Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to
+                          `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in
+                          `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped,
+                          full-population backfills). Also found + worked around a separate pre-existing bug in
+                          `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to
+                          `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date
+                          from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM
+                          (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox
+                          stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the
+                          operator fixes the key (exact command in the issue doc's follow-up todos).
 
 - [ ] [CODE] P1. **PARTIAL 2026-07-26 (slot-7, `data_engineering`) — (a)+(b) DONE (by a concurrent slot, verified by
       me), (c) thoroughly diagnosed, genuinely BLOCKED on a deeper pre-existing ml-service gap.** (a)+(b): a concurrent
