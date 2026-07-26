@@ -200,6 +200,6 @@ census twice more — once right after the restamp, once after ≥2 consolidator
       single legacy `FIXTURES` row for a date (of which there are still ~337k per this doc) kept the WHOLE date "fresh"
       even when curated leagues added later were never captured. Patched narrowly via a
       `_FIXTURES_ENTITY_ALIASES = {"FIXTURES", FIXTURES_SCHEDULE}` routing fix (not a data restamp) — see
-      `/plans/active/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`. This P0
+      `/plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`. This P0
       restamp is still the right long-term fix (retires the need for the alias set entirely); the routing patch is a
       stopgap that works correctly either way.

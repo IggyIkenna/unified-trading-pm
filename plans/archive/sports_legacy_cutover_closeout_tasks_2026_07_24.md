@@ -23,7 +23,7 @@ tags: [migration, cutover, sports, codex-audit, cleanup, plan-hygiene]
 related:
   [
     /plans/active/sports_legacy_bucket_cutover_2026_07_16.md,
-    /plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md,
+    /plans/archive/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
@@ -115,5 +115,5 @@ source:
 ## Sibling plan
 
 Forked alongside
-[`sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`](/plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
+[`sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`](/plans/archive/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
 (the other disjoint open-item group carved out of the same parent in the same remediation pass).
