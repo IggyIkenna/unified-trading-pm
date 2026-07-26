@@ -21,6 +21,18 @@
 #   ORCH_TOKEN_FILE      — $HOME/.orch_token (operator) or .tabs/<N>/.orch_token (per-slot)
 #   INTEGRATION_BRANCH   — live-defi-rollout
 #
+# Loopback preference (git_status_reporter_stale_public_url_token_expiry_2026_07_24.md +
+# orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md): when
+# ORCH_URL is left at its default (no --orch-url flag, no ORCH_URL env var), this script
+# probes LOOPBACK_ORCH_URL (default http://localhost:8765) first. If it answers
+# /api/healthz, every POST in this run goes there instead — the orchestrator's own
+# auth.py::_is_trusted_loopback lets a genuine same-box caller through with NO bearer
+# token at all, so a rotated/expired ~/.orch_token can no longer silence this host's
+# git-health view. An EXPLICIT --orch-url or ORCH_URL env var always wins (off-VM operator
+# laptops keep using the public URL + token — loopback only helps a caller that is
+# actually on the orchestrator box). Override the probed loopback address with
+# LOOPBACK_ORCH_URL if the local port ever changes.
+#
 # Cron install (5-min cadence, after slot-cron-ff-pull's :05 boundary):
 #   2,7,12,17,22,27,32,37,42,47,52,57 * * * * \
 #     bash unified-trading-pm/scripts/dev/slot-git-status-report.sh --quiet \
@@ -41,7 +53,14 @@ if [[ -z "${HOME:-}" ]]; then
 fi
 
 INTEGRATION_BRANCH="${INTEGRATION_BRANCH:-live-defi-rollout}"
+# _ORCH_URL_EXPLICIT tracks whether ORCH_URL was chosen by the caller (env var here, or
+# --orch-url below) rather than left at its public-URL default — an explicit choice always
+# wins over the loopback auto-probe (see header comment).
+_ORCH_URL_EXPLICIT=0
+[[ -n "${ORCH_URL:-}" ]] && _ORCH_URL_EXPLICIT=1
 ORCH_URL="${ORCH_URL:-https://api.agent-orchestrator.odum-research.com}"
+LOOPBACK_ORCH_URL="${LOOPBACK_ORCH_URL:-http://localhost:8765}"
+IS_LOOPBACK=0
 WORKSPACE_PATH="${WORKSPACE_PATH:-}"
 TOKEN_FILE="${ORCH_TOKEN_FILE:-}"
 SLOTS_FILTER="${SLOTS_FILTER:-}"   # comma-separated slot ids; empty = all numeric slots under .tabs/
@@ -57,7 +76,7 @@ STARVE_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/ff-starvation-detect.sh"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --workspace)          WORKSPACE_PATH="$2"; shift 2;;
-        --orch-url)           ORCH_URL="$2"; shift 2;;
+        --orch-url)           ORCH_URL="$2"; _ORCH_URL_EXPLICIT=1; shift 2;;
         --token-file)         TOKEN_FILE="$2"; shift 2;;
         --integration-branch) INTEGRATION_BRANCH="$2"; shift 2;;
         --slots)              SLOTS_FILTER="$2"; shift 2;;
@@ -81,6 +100,19 @@ slot_in_filter() {
 
 log()       { printf '[%s] %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
 log_quiet() { [[ "${QUIET}" -eq 0 ]] && log "$@" || true; }
+
+# Loopback auto-probe (skipped entirely when the caller explicitly chose a URL — see
+# header comment + _ORCH_URL_EXPLICIT above). Short timeouts so an off-VM host where
+# :8765 is unreachable/firewalled doesn't stall the cron tick.
+if [[ "${_ORCH_URL_EXPLICIT}" -eq 0 ]]; then
+    _loopback_code=$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 1 --max-time 2 \
+        "${LOOPBACK_ORCH_URL}/api/healthz" 2>/dev/null || echo "000")
+    if [[ "${_loopback_code}" == "200" ]]; then
+        ORCH_URL="${LOOPBACK_ORCH_URL}"
+        IS_LOOPBACK=1
+        log_quiet "[loopback] ${LOOPBACK_ORCH_URL} reachable — reporting trusted-local, no bearer token required"
+    fi
+fi
 
 # Resolve workspace.
 if [[ -z "${WORKSPACE_PATH}" ]]; then
@@ -213,7 +245,7 @@ classify_repo() {
 
     if [[ "${branch}" == "DETACHED" || "${branch}" == "HEAD" || -z "${local_sha}" ]]; then
         printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}"
-        popd >/dev/null
+        popd >/dev/null || return 0
         return 0
     fi
 
@@ -296,7 +328,7 @@ classify_repo() {
             state="no-remote-ref"
             printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
                 "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
-            popd >/dev/null
+            popd >/dev/null || return 0
             return 0
         fi
     fi
@@ -316,10 +348,15 @@ classify_repo() {
 
     printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
         "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
-    popd >/dev/null
+    popd >/dev/null || return 0
 }
 
 # Resolve token for a slot. Per-slot token preferred; fall back to global token.
+# In loopback mode (IS_LOOPBACK=1) a missing/unreadable token is NOT fatal — prints
+# nothing and returns 0 (success, empty token) so post_snapshot/post_starve_ping send
+# the request with no Authorization header at all; the orchestrator's own
+# auth.py::_is_trusted_loopback accepts a genuine same-box caller anonymously. The
+# off-VM path (IS_LOOPBACK=0) is unchanged: no token found → return 1 (skip + log).
 resolve_token_for_slot() {
     local slot_id="$1"
     local per_slot="${TABS_DIR}/${slot_id}/.orch_token"
@@ -337,6 +374,9 @@ resolve_token_for_slot() {
     fi
     if [[ -r "/tmp/orch_token" ]]; then
         cat "/tmp/orch_token"
+        return 0
+    fi
+    if [[ "${IS_LOOPBACK}" -eq 1 ]]; then
         return 0
     fi
     return 1
@@ -403,12 +443,22 @@ print(json.dumps(out))
         return 0
     fi
 
+    # No Authorization header at all when token is empty (loopback, no token found) —
+    # not "Bearer " with an empty value — so the request qualifies for the server's
+    # trusted-loopback anonymous fallback rather than a bad-token rejection.
     local http_status
-    http_status=$(curl -sS -o /tmp/.git-status-resp.$$ -w '%{http_code}' \
-        -X POST "${ORCH_URL}/api/slots/${slot_id}/git-status" \
-        -H "Authorization: Bearer ${token}" \
-        -H "Content-Type: application/json" \
-        -d "${payload}" 2>/dev/null || echo "000")
+    if [[ -n "${token}" ]]; then
+        http_status=$(curl -sS -o /tmp/.git-status-resp.$$ -w '%{http_code}' \
+            -X POST "${ORCH_URL}/api/slots/${slot_id}/git-status" \
+            -H "Authorization: Bearer ${token}" \
+            -H "Content-Type: application/json" \
+            -d "${payload}" 2>/dev/null || echo "000")
+    else
+        http_status=$(curl -sS -o /tmp/.git-status-resp.$$ -w '%{http_code}' \
+            -X POST "${ORCH_URL}/api/slots/${slot_id}/git-status" \
+            -H "Content-Type: application/json" \
+            -d "${payload}" 2>/dev/null || echo "000")
+    fi
     if [[ "${http_status}" == "200" ]]; then
         local repo_count
         repo_count=$(printf '%s\n' "${payload}" | python3 -c 'import json,sys; print(len(json.load(sys.stdin).get("repos",[])))' 2>/dev/null || echo "?")
@@ -440,11 +490,18 @@ import json, sys
 print(json.dumps({"text": sys.stdin.read(), "from_role": "main"}))
 ')
     [[ -n "${body}" ]] || return 0
-    http_status=$(curl -sS -o /dev/null -w '%{http_code}' \
-        -X POST "${ORCH_URL}/api/slots/${slot_id}/message" \
-        -H "Authorization: Bearer ${token}" \
-        -H "Content-Type: application/json" \
-        -d "${body}" 2>/dev/null || echo "000")
+    if [[ -n "${token}" ]]; then
+        http_status=$(curl -sS -o /dev/null -w '%{http_code}' \
+            -X POST "${ORCH_URL}/api/slots/${slot_id}/message" \
+            -H "Authorization: Bearer ${token}" \
+            -H "Content-Type: application/json" \
+            -d "${body}" 2>/dev/null || echo "000")
+    else
+        http_status=$(curl -sS -o /dev/null -w '%{http_code}' \
+            -X POST "${ORCH_URL}/api/slots/${slot_id}/message" \
+            -H "Content-Type: application/json" \
+            -d "${body}" 2>/dev/null || echo "000")
+    fi
     if [[ "${http_status}" == "200" ]]; then
         log "[starve-ping] slot ${slot_id}/${repo_name} — FF-pull starvation signalled"
         return 0
