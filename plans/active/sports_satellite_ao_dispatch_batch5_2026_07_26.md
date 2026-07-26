@@ -264,7 +264,7 @@ drift_direction: advance-code
       instruments-service). Source: `sports_fixture_events_phantom_manifest_rows_2026_07_25.md`. **Done when**: root
       cause is documented, and every one of the 4,991 rows either has a real backing object or an honest non-`captured`
       status, confirmed via a re-census.
-- [ ] [OPERATOR] P2. Fold the sibling `entity=fixtures` and `entity=fixtures_outcomes` non-canonical
+- [x] [OPERATOR] P2. Fold the sibling `entity=fixtures` and `entity=fixtures_outcomes` non-canonical
       `league=169`/`league=235` GCS objects (21 rows: 12 `FIXTURES` + 9 `FIXTURES_OUTCOMES`, same 12-date/2-league
       cohort already folded for `entity=fixtures_schedule` in `instruments-service@4412e576`) into their canonical
       `league=CHINA_SUPER_LEAGUE`/`league=RUSSIA_PREMIER_LEAGUE` counterparts (repo: instruments-service). The fold
@@ -283,7 +283,19 @@ drift_direction: advance-code
       (`league=169`/`league=235`) originals for `entity IN (fixtures, fixtures_outcomes)` are gone, 21 backup snapshots
       exist under `_purge_backups/`, and the manifest carries 21 `captured` rows for the canonical
       `(date, entity, league)` keys — independently verified via a fresh GCS listing, not just the script's own internal
-      checks. Source: `sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24`.
+      checks. Source: `sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24`. **DONE 2026-07-26T01:54Z
+      — `--apply` executed (operator-authorized in-session; the plan's own `[OPERATOR]` justification only covered
+      skipping a consolidator-cron pause, not the delete-safety codex's independent prod-bucket-delete hard stop —
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1 — so this required an explicit same-turn
+      operator authorization naming that specific stop, obtained before `--apply` ran).** Fresh dry-run re-verify
+      immediately prior to `--apply` reconfirmed 21/21 sources present, 21/21 canonical targets absent, 0 aborts.
+      `--apply` output: `FOLD COMPLETE — 21/21 shard(s) copied+recorded+deleted, 0 remaining raw-id     objects.`
+      **Independent fresh-listing verification (not the script's own internal checks)**: 21/21 canonical objects
+      present; 21/21 raw-id (`league=169`/`league=235`) originals confirmed gone; 21/21 backup snapshots under
+      `sports_reference/_purge_backups/2026_07_24_league_fold_fixtures_siblings/` present with size+crc32c parity vs.
+      the canonical objects; the per-VM manifest shard (`_index/per_vm/league-fold-fixtures-siblings-20260724.parquet`)
+      carries exactly 21 rows, all `capture_status=captured`, keyed to the canonical `(date, data_type, league_id)`
+      triples.
 - [ ] [DATA] P1. **Close out the freshness-preflight stale-scope-escape issue doc's two remaining todos (P0 code fix
       already shipped @instruments-service 08387531).** (1) Monitor the already-running relaunch VM
       `af-backfill-20260726-000946` (asia-northeast1-c, SPOT e2-standard-8, `--sports-entity FIXTURES` over
