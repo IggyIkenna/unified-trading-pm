@@ -14,7 +14,7 @@ summary:
   fire-and-forget a doomed launch. A possible SIBLING gap was also observed on `alerting-service` (a bucket-kind added
   to cloud-providers.yaml the same week without the physical bucket provisioned) but this was NOT independently verified
   — flagged for follow-up, not asserted as fact.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -37,7 +37,7 @@ related:
     /codex/05-infrastructure/bucket-isolation-model.md,
   ]
 created: 2026-07-21
-last_updated: 2026-07-21
+last_updated: 2026-07-26
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -51,7 +51,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: deployment-service@b0e158d
 source: agent attempt to execute plan todo 32 (Tier-2 VM real launch-run), 2026-07-21
 depends_on: []
 ---
@@ -132,16 +132,24 @@ nothing currently catches that at review/QG time.
       a concurrent Round-1 writer-fix workflow is actively committing to those repos; the validator's core logic (UAC
       `build_canonical_instrument_id` / `validate_dataframe` / contract lookup) is not part of what that workflow is
       changing, so proceeding was judged safe, not verified byte-for-byte.
-- [ ] 3. [REVIEW] P2. Verify (or refute) the suspected sibling gap on `alerting-service` — check whether its declared
-      bucket kind in `cloud-providers.yaml` has a physically-provisioned GCS bucket. If real, consider a QG check that a
-      new `kind:` row is paired with bucket-existence verification (or an explicit provisioning todo) so this class of
-      gap cannot recur silently.
-- [ ] 4. [CODE] P2. Consider whether `setup-data-pipeline-vm.sh`'s generic `elif [ -n "$VM_TASK" ]` fallback should fail
-      LOUDER/EARLIER for an unrecognized `VM_TASK` (e.g. detect that `VM_BACKFILL_CMD` metadata is present but unused,
-      and prefer it, or at minimum log a WARNING) — this is now the THIRD time (2026-07-12 sports-v9-migration,
-      2026-07-13 defi-paper, 2026-07-21 datapoint-validation) a new launcher's `VM_TASK` fell through to this same
-      fallback and crashed on `--operation` before anyone caught it in review. A generic guard would catch class-4
-      instances before the next new launcher hits it.
+- [x] 3. ✅ [REVIEW] P2. **DONE 2026-07-26 (slot-7) — REFUTED, no gap.** Verify (or refute) the suspected sibling gap on
+      `alerting-service` — check whether its declared bucket kind in `cloud-providers.yaml` has a physically-provisioned
+      GCS bucket. `cloud-providers.yaml:194` declares `alerting-service: "alerting-service-${GCP_PROJECT_ID}"`;
+      `gcloud storage buckets describe gs://alerting-service-central-element-323112` succeeds (location ASIA-NORTHEAST1)
+      and the bucket carries real data (`_index/`, `alerting/` prefixes populated). No provisioning gap — the suspected
+      sibling issue does not exist. The "consider a QG check" suggestion is left as a P3 nice-to-have (not implemented —
+      no gap was found to motivate it now; revisit if a future `kind:` row addition repeats this class of scare).
+- [x] 4. ✅ [CODE] P2. **DONE 2026-07-26 (slot-7).** Consider whether `setup-data-pipeline-vm.sh`'s generic
+      `elif [ -n "$VM_TASK" ]` fallback should fail LOUDER/EARLIER for an unrecognized `VM_TASK` (e.g. detect that
+      `VM_BACKFILL_CMD` metadata is present but unused, and prefer it, or at minimum log a WARNING) — this is now the
+      THIRD time (2026-07-12 sports-v9-migration, 2026-07-13 defi-paper, 2026-07-21 datapoint-validation) a new
+      launcher's `VM_TASK` fell through to this same fallback and crashed on `--operation` before anyone caught it in
+      review. A generic guard would catch class-4 instances before the next new launcher hits it. **Fixed**: the generic
+      fallback now detects `VM_BACKFILL_CMD` metadata present (which, by construction, only occurs when a launcher
+      expected a dedicated dispatch branch that doesn't exist) and fails immediately with a diagnostic naming the
+      missing branch, instead of silently building an unrelated `--operation` CLI call that crashes deep in a different
+      service's argparse — `deployment-service@b0e158d` (`bash -n` + `shellcheck -S error` clean, full
+      `quality-gates.sh` green).
 
 ## Update 2026-07-21 (later same session) — two MORE bugs found on the same first launch-run
 
@@ -168,8 +176,8 @@ before:
       `canonicalize_prediction_manifest_2026_07_18.py:952` — a call-site convention this validator simply never picked
       up when it was authored). **Fixed**: special-cased `asset_group.lower() == "prediction"` to resolve via
       `kind="market-data-tick-prediction"` (no `asset_group` kwarg) — same commit `instruments-service@f9942725`.
-- [ ] 7. [INFRA] P1. **Relaunch cefi/defi/prediction is BLOCKED on a dirty-deps tarball-republish gap** (distinct from
-      the code-commit dirty-deps carve-out above).
+- [x] 7. ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7).** Relaunch cefi/defi/prediction is BLOCKED on a dirty-deps
+      tarball-republish gap (distinct from the code-commit dirty-deps carve-out above).
       `deployment-service/scripts/vm/create-code-tarballs.sh     --include instruments-service` refuses to build (and,
       critically, `tar czf`s the raw WORKING TREE, not `git archive` — so `--allow-dirty-tarball` would bundle a
       concurrent workflow's uncommitted `unified-api-contracts` edits into the deployed tarball, not just
@@ -177,4 +185,15 @@ before:
       tradfi/sports do not need a re-tarball (their VMs already picked up a fresh-enough copy). **Wait for the
       concurrent Round-1 writer-fix workflow to land its `unified-api-contracts` changes** (R3 cefi-v6 + the UAC oracle
       candle-extension), THEN republish (`bash scripts/vm/create-code-tarballs.sh --include instruments-service`) and
-      relaunch cefi/defi/prediction. Do NOT `--allow-dirty-tarball` while a peer's WIP is mid-flight.
+      relaunch cefi/defi/prediction. Do NOT `--allow-dirty-tarball` while a peer's WIP is mid-flight. **Confirmed
+      landed**: `unified-api-contracts` HEAD contains both `9a92cf4f` (R3 cefi-v6) and `6329fc04` (UAC oracle
+      candle-extension) as ancestors, tree clean. Republished `instruments-service-code@4d6c2109be9a` (clean tree, no
+      `--allow-dirty-tarball` needed — todo 4's fix (b) had to ship first since `create-code-tarballs.sh` also bundles
+      deployment-service itself). Before relaunching, read the prior 2026-07-22 run's `run.log`s: all 3
+      (cefi/defi/prediction) ended mid-stream with no termination marker — SPOT preemption, not completion — after real
+      forward progress (cefi 178k rows to day 2021-02-05, defi 60.5k rows to day 2021-06-26, prediction 644k rows to day
+      2025-01-04); safe to resume via the launcher's presence-skip idempotency. Relaunched all 3 2026-07-26 21:00-21:01
+      UTC: `datapoint-validation-cefi-20260726-210047`, `datapoint-validation-defi-20260726-210104`,
+      `datapoint-validation-prediction-20260726-210124`. T+10min check (2026-07-26 21:10-21:11 UTC): all 3 RUNNING,
+      `run.log` shows active day-frontier advancement (cefi → 2020-01-02, defi → 2020-10-07, prediction → 2021-10-02) —
+      no fire-and-forget, genuine forward progress confirmed.
