@@ -88,18 +88,21 @@ drift_direction: advance-code
       `grep -rn '"COINBASE"' execution-service/execution_service/ --include='*.py'` (excluding the deliberately-kept
       Nautilus-boundary files listed above) returns 0 hits, the registry.py decision is documented with grep evidence in
       that plan's Progress Log, and execution-service `bash scripts/quality-gates.sh` is green on the final commit.
-- [ ] [DATA] P1. **CeFi E6 CF-7 diagnostic — venue/data_type relabel candidates + re-measure the ~50% `attempted_failed`
-      anomaly (diagnose only, do NOT bulk-apply).** Query the live cefi `_index` read-only to (a) enumerate the exact
-      relabel-candidate rows needing canonicalisation — `COINBASE`↔`COINBASE-SPOT` mismatches and
-      blank-venue/blank-data_type rows — with per-category counts (diagnose, don't bulk-relabel); (b) re-measure whether
-      the historically-cited "~50% `attempted_failed` rows (1.33M)" figure is still current against today's `_index`,
-      and if so break down its root cause(s) — note this is a DISTINCT figure/investigation from the already-tracked
-      ASTER regression (3,491→17,675), the futures_chain 122,585 aggregation-bug DEBUNKED finding, and the
-      Tardis-impossible-combination reclass script, all covered elsewhere in the cefi corpus — confirm no overlap before
-      writing conclusions. Source: `data_completion_cefi_2026_07_15.md`. Done when: a written diagnostic (issue doc or
-      Progress Log entry) reports the exact relabel-candidate counts by category and either
-      reproduces-with-root-cause-breakdown or retires-as-stale the 1.33M `attempted_failed` figure, with no
-      relabel/reclassify `--apply` executed.
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-7, `data_engineering`) — CeFi E6 CF-7 diagnostic.** Live read of
+      `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (9,138,791 rows, single read,
+      no corpus walk, no `--apply`). **(a) relabel candidates**: `COINBASE` bare-venue = **0 rows** (already fully
+      canonical: COINBASE-SPOT/FUTURES/CDE all in use) — no relabel needed. Blank-venue = 6 rows (negligible).
+      Blank-`data_type` = **9,750 rows**, all `capture_status=captured`, all `market-tick-data-service`, spanning
+      2019-2026 — genuinely new, not previously tracked, filed as a P3 follow-up. **(b) 1.33M/50% figure RETIRED AS
+      STALE** — current measurement is **11.61% (1,060,613 rows)** of 9,138,791 total (denominator grew ~3.5x from the
+      ~2.64M cited elsewhere while the numerator dropped modestly). Root-cause: 75.2% is the Tardis-403 family, DERIBIT
+      alone = 54.7% of all cefi attempted_failed — confirmed via exact-match cross-reference against
+      `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s 2026-07-23 numbers (113,593/112,600 DERIBIT
+      options_chain/futures_chain, essentially unchanged) that this is the SAME already-open P0 population
+      (`tardis_concurrent_ip_lockout_2026_07_12.md`, `deribit_options_chain_af_g4_blocker_2026_07_03.md`) — no new
+      mechanism, confirmed no overlap with the ASTER regression / futures_chain-122,585-debunked /
+      Tardis-impossible-combo items per the todo's own instruction. Full write-up + the P3 follow-ups:
+      `plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`.
 - [ ] [SCRIPT] P1. **cefi instruments-pipeline hygiene sweep — 6 bounded fixes from the closed-out G1→G5 gate-execution
       doc.** Execute each sub-item (independent files, run sequentially in one todo to avoid a same-doc worker
       collision): (a) **Disable/update the dead-CLI legacy daily Workflow** — `services/instruments-service/gcp/main.tf`
