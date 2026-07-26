@@ -133,30 +133,30 @@ drift_direction: advance-code
       `_finalize_session_grid` routing:
 
       | Adapter | Verdict |
-                                          | --- | --- |
-                                          | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
-                                          | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
-                                          | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
-                                          | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
-                                          | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
-                                          | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
+                                              | --- | --- |
+                                              | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
+                                              | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
+                                              | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
+                                              | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
+                                              | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
+                                              | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
 
-                                          **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
-                                          intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
-                                          **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
-                                          (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
-                                          `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
-                                          snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
-                                          absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
-                                          `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
-                                          non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
-                                          documented the OLD (reversed) behavior, contradicting the shipped code —
-                                          `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
-                                          `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
-                                          a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
-                                          provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
-                                          unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
-                                          (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
+                                              **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
+                                              intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
+                                              **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
+                                              (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
+                                              `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
+                                              snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
+                                              absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
+                                              `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
+                                              non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
+                                              documented the OLD (reversed) behavior, contradicting the shipped code —
+                                              `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
+                                              `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
+                                              a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
+                                              provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
+                                              unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
+                                              (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
 
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
       candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
@@ -240,21 +240,30 @@ drift_direction: advance-code
       error class `UpstreamTimestampBiasError`, same-day 2026-07-25 timestamps); (c) multiple manifest rebuild/snapshot
       events found in the 06-22→07-07-adjacent window (plausible mechanism, not conclusively pinned — noted as moot
       since the count already recovered). Doc's `status:` flipped to `resolved` in that same session.
-- [ ] [REVIEW] P1. **Audit every remaining `_normalize_instrument_id_for_match` call site for the same collision.** In
-      `deployment_api/services/data_status/instrument_coverage.py` — the `missing_instruments` computation,
+- [x] ✅ [REVIEW] P1. **Audit every remaining `_normalize_instrument_id_for_match` call site for the same collision.**
+      In `deployment_api/services/data_status/instrument_coverage.py` — the `missing_instruments` computation,
       `normalized_iid_counts`, and the `per_instrument` breakdown block — for the same `@`-suffix normalization
       collision on DERIBIT OPTION, DERIBIT dated-FUTURE, and OKX-FUTURES dated-FUTURE instrument_ids already proven to
       corrupt `per_instrument_coverage`. Reuse the issue's own measured methodology (query
       `instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`, compare raw-unique vs
-      normalized-unique-key counts per venue/instrument_type). Read-only — no code change. Repo: deployment-api.
-      **Conflict-check note**: the one flagged conflict (master closeout's OPEN DERIBIT quote-before-`@` P0 item) is
-      explicitly code-orthogonal per the triage's own text — different repo (instruments-service) and different
-      function, fixing content BEFORE `@` while this bug is driven by everything AFTER `@` being stripped — "do not race
-      on the same file." Sequencing awareness only: the master's rebuild will change the raw DERIBIT instrument_id
-      strings this audit measures against, so re-run this audit if the master's rebuild lands first. **Done when**: each
-      of the 3 named call sites has a recorded PASS/FAIL collision-ratio verdict for at least DERIBIT OPTION and DERIBIT
-      dated-FUTURE, citing measured counts, written into this issue doc or a new dated issue doc. Source:
-      `issues/bug_c_normalize_id_collision_options_futures_2026_07_22.md`.
+      normalized-unique-key counts per venue/instrument_type). Read-only — no code change. Repo: deployment-api. **DONE
+      (slot-4, 2026-07-26)**: confirmed structurally first — grepped `instrument_coverage.py` and verified all 3 named
+      call sites (lines 574/577 `normalized_iid_counts`/`missing_instruments`, 606/608 `per_instrument` breakdown, plus
+      the 527/545/551 denominator dict) call the SAME shared `_normalize_instrument_id_for_match`
+      (`deployment-api@1fb94dce7`, the bug-C P1 fix) — no separate normalization implementation exists at any of these
+      sites to diverge. Then live-measured the shared function against the real
+      `instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` (429,129 rows,
+      `GCP_PROJECT_ID=central-element-323112`, imported `_normalize_instrument_id_for_match` directly from the post-fix
+      module — not re-implemented): **DERIBIT OPTION** raw_unique=264,550 normalized_unique=264,550 ratio=1.00x
+      **PASS**; **DERIBIT FUTURE** raw_unique=1,631 normalized_unique=1,631 ratio=1.00x **PASS**; **OKX-FUTURES FUTURE**
+      raw_unique=5,604 normalized_unique=5,604 ratio=1.00x **PASS** (previously 66,137x / 135.9x / 45.6x pre-fix per the
+      source issue). Since all 3 call sites are the same shared function, this single measurement is the PASS verdict
+      for all 3. No code change needed; no new findings. **Conflict-check note**: the one flagged conflict (master
+      closeout's OPEN DERIBIT quote-before-`@` P0 item) is explicitly code-orthogonal per the triage's own text —
+      different repo (instruments-service) and different function, fixing content BEFORE `@` while this bug is driven by
+      everything AFTER `@` being stripped — "do not race on the same file." Sequencing awareness only: the master's
+      rebuild will change the raw DERIBIT instrument_id strings this audit measures against, so re-run this audit if the
+      master's rebuild lands first. Source: `issues/bug_c_normalize_id_collision_options_futures_2026_07_22.md`.
 - [ ] [DATA] P1. **Purge orphaned CeFi on-chain-perp reference-data blobs left under the DEFI bucket.** For
       EXTENDED-STARKNET/PACIFICA-SOLANA/LIGHTER-ZKSYNC, written before the 2026-06-25 defi→cefi venue reclassification
       (~3 objects/day across history, un-enumerated since Phase 1 of that reclassification) — via a snapshot-first purge
