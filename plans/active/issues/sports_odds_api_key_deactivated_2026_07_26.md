@@ -108,17 +108,47 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
       rotate the `odds-api-key` secret in GCP Secret Manager (project `central-element-323112`) to a working key.
       BLOCKED-OPERATOR-DECISION / credential fix — no worker action possible. (repo: N/A, GCP Secret Manager +
       the-odds-api.com account)
-- [ ] [DATA] P2. Once the key is fixed, re-run the 3-league golden-window backfill using the now-shipped `--league`
-      flag:
+- [ ] [DATA] P2. **PREREQUISITE UPDATED (see new P1 todo below) — do NOT re-run blind.** Once the key is fixed, re-run
+      the 3-league golden-window backfill using the now-shipped `--league` flag:
       `bash deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --vm-name     mtds-backfill-odds-ucl-gap --league UCL,CHINA_SUPER_LEAGUE,RUSSIA_PREMIER_LEAGUE --start 2025-09-01 --end     2025-11-30 --force`.
       Verify `_index/availability_index.parquet` shows 0 `attempted_failed` for these 3 leagues across the golden window
       afterward (baseline before this fix: only 11/91 days per league captured, all via non-`--league`-scoped organic
       data; 0 `attempted_failed` anywhere for these leagues, confirming no prior code path had ever actually attempted
-      the missing ~80 days). (repo: market-tick-data-service / deployment-service, no code — operational re-run)
-- [ ] [DATA] P1. Confirm whether the 2026-07-26 daily/forward sports odds-api job also hit this outage (check
-      `_index/availability_index.parquet` for `source=odds_api` `attempted_failed` rows dated 2026-07-26 across ALL
-      leagues, not just the 3 in this doc) and whether the `attempted_failed` Slack alert (`deployment-service@cb330f7`)
-      actually fired — if it didn't, that's a second, separate finding. (repo: market-tick-data-service)
+      the missing ~80 days). **Correction 2026-07-26**: my own run's per-VM shard
+      (`gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/mtds-backfill-odds-ucl-gap2.parquet`)
+      shows the VM actually fetched 33 DEFAULT Prediction-tier leagues (EPL/LA_LIGA/BUNDESLIGA/MLS/etc.) — NOT the 3
+      requested leagues at all, despite `VM_LEAGUE` metadata being correctly set on the instance (verified via
+      `gcloud compute instances describe`). The 401s masked this: every league failed identically so the wrong scope
+      wasn't visually obvious in the log. This means `--league` may not actually be reaching `_candidate_leagues()`
+      end-to-end — see the new P1 todo. Do not re-run at scale until that's root-caused; the fix might not be "just
+      re-run" after the credential is fixed. (repo: market-tick-data-service / deployment-service, no code yet —
+      operational re-run blocked on the scoping bug too)
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 4)** — Confirmed via direct manifest query
+      (`gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`): ZERO `odds_api`
+      rows of ANY `capture_status` (captured or `attempted_failed`) are dated OR written 2026-07-26 in the consolidated
+      index, across ALL leagues — vs 275,136 `captured` rows written 2026-07-25. Could not find a dedicated scheduled
+      forward-poll launcher for sports odds-api specifically (unlike backfill, which has
+      `launch-mtds-sports-odds-backfill-vm.sh`) to confirm whether one has even run today yet. Since the key is
+      deactivated at the ACCOUNT level (not per-request/per-VM), this is a logical certainty rather than something that
+      needs re-confirming per-job: ANY odds-api call today or any day will 401 identically until the operator fixes it —
+      confirmed directly via `curl https://api.the-odds-api.com/v4/sports?apiKey=...` returning `DEACTIVATED_KEY` (see
+      above). **Could NOT confirm whether the `attempted_failed` Slack alert fired** — no Slack access from this
+      session; that half of the todo needs an operator/dashboard check, not a worker one.
+- [ ] [DATA] P1. **NEW 2026-07-26 (slot 4)** — Root-cause why `--league` scoping doesn't reach the odds-api adapter's
+      league loop end-to-end. `VM_LEAGUE` metadata IS set correctly on the instance (confirmed via
+      `gcloud compute instances describe mtds-backfill-odds-ucl-gap2 ... --format="value(metadata.items)"` →
+      `VM_LEAGUE=UCL;CHINA_SUPER_LEAGUE;RUSSIA_PREMIER_LEAGUE`), and `setup-data-pipeline-vm.sh` (deployed tarball,
+      confirmed same commit) correctly reads it and appends `--league UCL,CHINA_SUPER_LEAGUE,RUSSIA_PREMIER_LEAGUE` to
+      the CLI invocation. `tick_data_handler.py`'s `_resolve_filter_args` (same deployed commit, `47b19985e84e`) also
+      correctly reads `args.league` and splits it. Yet the VM's own per-VM manifest shard shows it fetched the DEFAULT
+      33-league Prediction-tier pool (`_candidate_leagues()`'s `leagues=None` branch), not the 3 requested leagues —
+      meaning the parsed `--league` value never reached
+      `_fetch_all_leagues(date_str, leagues)`/`_candidate_leagues(registry, leagues)` somewhere between CLI parsing and
+      the adapter call. Needs tracing through `process_ticks()` → `venue_fetch.py` →
+      `OddsApiAdapter.download_batch(leagues=...)` to find where the value is dropped (or possibly the deployed
+      tarball's actual bytes don't match its claimed manifest sha — worth diffing the live tarball content against
+      `git show 47b19985e84e` directly as a sanity check before assuming it's a code bug). This blocks todo P2 above
+      from being a simple "re-run once the key works". (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -128,3 +158,13 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
   (`deployment-service@281426e7`) is real, shipped, tested work — independent of this credential blocker; only the
   actual data-fetch step is blocked. Returning `sports_satellite_ao_dispatch_batch5-014`'s checkbox unchecked with a
   `BLOCKED-CREDENTIALS` annotation pointing here, per the credential-defer carve-out.
+- 2026-07-26 (slot 4): Picked up the auto-derived P1 follow-up todo (confirm forward-job blast radius). Confirmed zero
+  odds_api activity of any kind dated/written 2026-07-26 in the consolidated manifest. While investigating the per-VM
+  shard for evidence, discovered my OWN backfill run never actually respected `--league` — it silently fetched the
+  33-league Prediction-tier default instead of the 3 requested leagues, a SEPARATE bug from the credential outage that
+  the 401s had masked (every league failed identically, so the wrong scope wasn't visible in the log). Corrected todo P2
+  above to not blindly re-run once the key is fixed, and added a new P1 todo to root-cause the scoping gap. This walks
+  back my earlier (incorrect) claim in this doc + in `sports_satellite_ao_dispatch_batch5_2026_07_26.md` that the
+  `--league` capability was "already shipped and tested" — it is shipped (the metadata/CLI-arg plumbing is real and
+  independently useful) but NOT yet proven to actually scope the fetch; that needs the new root-cause todo before it can
+  be trusted.
