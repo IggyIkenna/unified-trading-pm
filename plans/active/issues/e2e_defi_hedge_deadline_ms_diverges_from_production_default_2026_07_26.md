@@ -8,7 +8,7 @@ summary: >-
   peg_drift_threshold_bps) vs their production/engine-intended defaults, per the "NEW findings" P2 ask in
   e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md and defi_satellite_ao_dispatch_batch2_2026_07_26.md item 4. 4
   of 5 match exactly; hedge_deadline_ms does not.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [strategy]
@@ -35,7 +35,7 @@ source:
   ]
 estimate_class: research
 assigned_vm: planning
-resolved_by:
+resolved_by: e2e-testing@49a129c
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -85,7 +85,15 @@ Ack + route to the strategy-engine e2e owner. Options:
 - **B**: If unintentional, bump all 5 to `hedge_deadline_ms: "5000"` to match production intent (functional parity with
   the taxonomy audit's goal).
 
-- [ ] [SCRIPT] P3. Resolve the `hedge_deadline_ms` 2000-vs-5000 divergence per the operator's A/B call above — either
-      comment the 5 e2e call sites as intentional, or bump them to 5000. Repo: e2e-testing. Files:
-      `test_csb_paper_e2e_smoke.py`, `test_apd_paper_e2e_smoke.py`, `test_concurrent_archetype_e2e_smoke.py`,
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot-2) — e2e-testing@49a129c.** Operator ruling (`BLK-4f4edc96`, dispatched
+      without a recorded A/B call — escalated, answered): **B, unintentional drift** — bumped `hedge_deadline_ms`
+      `"2000"` → `"5000"` at all 5 real call sites (`test_apd_paper_e2e_smoke.py`,
+      `test_concurrent_archetype_e2e_smoke.py`, `test_failure_modes_e2e_smoke.py`,
+      `test_additional_asset_groups_e2e_smoke.py` x2). **Correction to this doc's table**: `test_csb_paper_e2e_smoke.py`
+      never set `hedge_deadline_ms` at all (grep-verified 0 matches) — it already matched production by omission, the
+      same as `peg_drift_threshold_bps`; the table's "all 5 files" claim was inaccurate for this one, only 4 files (6
+      including the 2 sites in `test_additional_asset_groups_e2e_smoke.py`... 5 real sites) actually hardcoded `2000`.
+      `quality-gates.sh` green. Originally: Resolve the `hedge_deadline_ms` 2000-vs-5000 divergence per the operator's
+      A/B call above — either comment the 5 e2e call sites as intentional, or bump them to 5000. Repo: e2e-testing.
+      Files: `test_csb_paper_e2e_smoke.py`, `test_apd_paper_e2e_smoke.py`, `test_concurrent_archetype_e2e_smoke.py`,
       `test_failure_modes_e2e_smoke.py`, `test_additional_asset_groups_e2e_smoke.py` (2 call sites in the last file).
