@@ -55,6 +55,10 @@ drift_direction: advance-code
 
 # TradFi legacy bucket deleted without the required --also-legacy migration — potential historical data loss
 
+> **🟢 RESOLVED 2026-07-26** — recovery window confirmed CLOSED (soft-delete restore unavailable); operator decision:
+> accept the loss. All P0 todos + the durable safeguard (`verify_legacy_bucket_decommission_precondition.py`) shipped.
+> See "2026-07-26 operator recovery-window verdict" section below for the full evidence trail.
+
 ## What I found
 
 **R1's requirement (line 298 of `data_completion_tradfi_2026_07_15.md`):** the v9 canonical `--apply` MUST include

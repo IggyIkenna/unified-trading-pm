@@ -175,10 +175,10 @@ start without real tradfi/ES feature parquets.
       returning `False` → `if not ok: return False`) aborts the ENTIRE multi-day range on the FIRST date that fails for
       ANY reason — including a genuine, expected absence (e.g. a market holiday). Any real multi-year backfill will
       eventually hit one. Needs per-date shard-level isolation (skip + record_empty/record_failed for that date,
-      continue) per `codex/04-architecture/shard-level-failure-isolation.md`'s own stated principle, rather than today's
-      fail-fast semantics. Not roll-sensitive-specific — affects any feature-group batch run over a real range. (repo:
-      features-service) — ✅ FIXED 2026-07-26 (`features-service@81ab1264`): confirmed `record_empty`/`record_failed`
-      manifest recording ALREADY happens per-date, unconditionally, inside
+      continue) per `/codex/04-architecture/shard-level-failure-isolation.md`'s own stated principle, rather than
+      today's fail-fast semantics. Not roll-sensitive-specific — affects any feature-group batch run over a real range.
+      (repo: features-service) — ✅ FIXED 2026-07-26 (`features-service@81ab1264`): confirmed
+      `record_empty`/`record_failed` manifest recording ALREADY happens per-date, unconditionally, inside
       `process_feature_group_with_preloaded_candles` → `_run_feature_group_lifecycle` (every call writes an honest
       captured/empty_confirmed manifest row via `_write_feature_group_manifest`, success or not) — so the only real bug
       was the CONTROL FLOW: `if not ok: return False` inside the per-date `while` loop threw away every LATER date's
@@ -498,7 +498,7 @@ start without real tradfi/ES feature parquets.
     including a genuine, expected absence (e.g. 2020-01-01 is New Year's Day, a market holiday with zero real
     per-contract data). This is not roll-sensitive-specific; it affects any feature-group batch run. A real multi-year
     backfill will always eventually hit a holiday/weekend gap, so this needs shard-level (per-date) isolation — matching
-    the codebase's own stated `codex/04-architecture/shard-level-failure-isolation.md` principle — rather than today's
+    the codebase's own stated `/codex/04-architecture/shard-level-failure-isolation.md` principle — rather than today's
     fail-fast semantics. Not fixed this session (a real, separate, non-roll-sensitive-specific gap); worked around for
     verification by targeting a single known-good date instead of a multi-year range. **Running tally: NINE real,
     previously-undiscovered bugs found and fixed while landing this ONE todo** (MDPS: CLI operation bridge, 2× manifest
