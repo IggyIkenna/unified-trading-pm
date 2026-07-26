@@ -120,23 +120,86 @@ todo I can close myself.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P0. **Decide whether this needs remediation and how**, informed by: (a) does the canonical
-      `market-data-tick-tradfi-prd` bucket's OWN Databento-sourced coverage for the legacy bucket's date range (2,008
-      days — likely ~2018-2023 given the v9 apply covered "2020-2025 + 2026" separately, but the exact legacy range
-      needs confirming from whatever pre-deletion inventory exists, e.g. a stale manifest snapshot or the migrator's own
-      dry-run planned-count from BEFORE 2026-06-29) already have equivalent fidelity — if yes, this is a
-      procedural-miss-with-no-net-loss and can close as such with that evidence cited; if the legacy bucket held
-      anything genuinely unique (a different source, a wider date range, or higher-resolution ticks Databento's backfill
-      doesn't reach), that data is gone. (b) Check whether GCS soft-delete / Object Versioning was enabled on this
-      bucket (a short recovery window may still be open depending on how recently "permanent" deletion actually ran — I
-      could not check this without `storage.buckets.get`, which none of my available credentials have).
-- [ ] [SCRIPT] P2. Fix `data_completion_tradfi_2026_07_15.md` lines 298/304 (R1/R2 checkboxes) — R1 stays open pending
-      the operator decision above (do not flip to done); R2 flips to done citing this doc's clean 3-target inventory.
+**Main's ruling on BLK-fd0758fb (2026-07-26): Option A — treat as a confirmed data-loss RISK, do NOT accept "procedural
+miss, no net loss" unverified.** "Procedural miss, no net loss" is a claim that must be PROVEN with coverage evidence,
+never assumed — an irreversible delete ran without its stated R1 precondition, exactly the class the
+data-pipeline-correctness HARD RULE + `gcs-and-manifest-delete-safety-protocol.md` exist to catch. Split into what a
+worker can do read-only now vs what is genuinely operator-gated:
+
+- [ ] [DATA] P0. **Canonical coverage-equivalence census (worker-doable, read-only, NOT a full-corpus GCS walk)** —
+      determine whether `market-data-tick-tradfi-prd`'s OWN Databento-sourced coverage already has equivalent fidelity
+      for the legacy bucket's date range, via a MANIFEST CENSUS (deployment-api axis census / direct manifest read),
+      never a whole-corpus GCS walk (heavy-I/O HARD RULE). Full canonical coverage of the same instrument × date range ⇒
+      net loss ~0 (close as procedural-miss WITH this census evidence cited); any uncovered slice (wider date range /
+      different source / higher-res ticks Databento can't reach) ⇒ that slice is the real, permanent loss. First bound
+      the legacy range from surviving pre-deletion inventory (a stale manifest snapshot, or the migrator's
+      pre-2026-06-29 dry-run planned-count ~3.8M processed_candles) — the deleted bucket itself can't be inspected, but
+      what it HELD can still be scoped. Repo: market-tick-data-service / instruments-service.
+- [ ] [OPERATOR] P0. **TIME-CRITICAL — GCS soft-delete / Object-Versioning recovery-window check.** Needs
+      `storage.buckets.get` / `gcloud storage buckets list --soft-deleted`, which no available worker credential has.
+      The bucket was deleted 2026-07-06 = 20 days ago as of this writing; GCS bucket soft-delete DEFAULT retention is 7
+      days (configurable 7-90). If default, the restore window is ALREADY CLOSED; if a longer retention was configured,
+      a SHRINKING window may remain. Check immediately — every day may close it permanently.
+- [ ] [OPERATOR] P0. **The remediation decision itself** (restore the soft-deleted bucket if recoverable / re-run
+      `migrate_tradfi_to_v9_canonical --apply --also-legacy` from a restored copy / accept the loss with the census
+      evidence above) — prod-bucket-level infra, operator-only, gated on both items above.
+- [x] ✅ [SCRIPT] P2. Fix `data_completion_tradfi_2026_07_15.md` lines 298/304 (R1/R2 checkboxes) — DONE (same session):
+      R1 stays open pending the operator decision above; R2 flipped done citing this doc's clean 3-target inventory.
 - [ ] [SCRIPT] P3. Add a pre-delete GATE to `launch-canonical-migration-vm.sh` (or the runbook that invokes it) so a
       legacy-bucket-decommission step structurally CANNOT proceed without first verifying `also_legacy=True` appeared in
       a completed, non-crashed migration run for the same asset_group — this exact silent-gap class (a documented
       runbook precondition that a LATER, different invocation quietly doesn't satisfy) shouldn't require a manual
-      forensic audit to catch after the fact.
+      forensic audit to catch after the fact. **RE-SCOPE NEEDED (2026-07-26, see addendum below) — do not action as
+      currently worded; the addendum's Option B is the concrete replacement scope.**
+
+## 2026-07-26 addendum — todo 5 investigated, needs re-scoping before it's AO-actionable
+
+Investigated where a "pre-delete gate" could concretely attach, per this todo's own two suggested locations
+(`launch-canonical-migration-vm.sh` or "the runbook that invokes it"). Neither exists in the form the todo assumes:
+
+1. **The named tool's launcher path is gone.** `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` no
+   longer invokes `migrate_tradfi_to_v9_canonical.py` at all — `_script_for()`'s `tradfi` case was REPOINTED 2026-07-19
+   to the newer orphan-proof content-migration chain (`migrate_tradfi_canonical_2026_07` →
+   `rebundle_tradfi_chains_2026_07` → `recover_tradfi_garbage_underlying_2026_07`, built by
+   `_tradfi_content_migration_cmd()`), per the launcher's own comment: "The old day-walking
+   `migrate_tradfi_to_v9_canonical` is superseded." `migrate_tradfi_to_v9_canonical.py` still exists as a file but has
+   no live launcher category pointing at it — adding a gate to the launcher's tradfi path would gate a code path that
+   can no longer run, giving false confidence.
+2. **The actual bucket decommission is a human-only hard stop, not a script's code path.** Per
+   `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3 hard stop #2 ("Any legacy-object delete after copy")
+   - § 1 Part 5 (the legacy-COPIED-not-MOVED invariant, requiring 100% canonical-twin coverage before an asset_group's
+     delete list executes), a legacy-bucket delete is NEVER agent-executed at any confidence level — E7's own text
+     ("operator directly, interactive session") confirms the 2026-07-06 delete was a human running the delete outside
+     any script's `--apply` path. There is no `--apply`/CLI invocation for THIS specific action to intercept — a code
+     "gate" inside a launcher cannot structurally block a human typing a `gcloud storage buckets delete` command.
+3. **No "runbook that invokes it" doc was found** as a distinct, editable target —
+   `data_completion_tradfi_2026_07_15.md` states the R1 requirement in prose but isn't itself an executable gate, and no
+   other runbook doc names a decommission-invoking script for the legacy tradfi bucket specifically.
+
+**This makes the todo as literally worded not directly actionable** — it names a code location that can't enforce the
+intended invariant. Recommending two options for whoever picks this up next (operator/main to choose, not decided here):
+
+- **Option A (narrow, low-value)**: add a loud, structured warning to `migrate_tradfi_to_v9_canonical.py`'s own log
+  output when `--apply` runs without `--also-legacy` (it already logs `also_legacy=%s` at the top, but that's a log
+  line, not a durable artifact, and the tool isn't reachable via any current launcher — low value since nothing invokes
+  it anymore).
+- **Option B (general, actually closes the class this todo describes)**: build a small, STANDALONE, reusable
+  pre-decommission verification CLI (e.g. `scripts/one_offs/verify_legacy_bucket_decommission_precondition.py` in
+  market-tick-data-service) that operationalizes the ALREADY-DOCUMENTED Part 5 twin-coverage check from
+  `gcs-and-manifest-delete-safety-protocol.md` as a runnable tool: given `--asset-group`/`--legacy-bucket`, it verifies
+  canonical-twin coverage (via manifest census, not a full-corpus walk) for the legacy bucket's date range and exits
+  non-zero with a clear failure report if coverage is incomplete. This becomes the "structural gate" a human
+  decommission step is expected to run and paste evidence from FIRST — durable, greppable, reusable across asset_groups
+  (not tradfi-specific, not dependent on which launcher/tool happens to be wired up this month). This is genuinely new
+  tooling (not a location to bolt a check onto), so it deserves its own scoped follow-up plan/todo with a stated
+  done-when, rather than continuing to live as this loosely-worded item.
+
+**Recommendation: re-file this as a properly-scoped follow-up todo (Option B) in a new or existing plan, with an
+explicit done-when** (e.g. "a unit test constructs a legacy bucket with a date range NOT fully covered in canonical and
+asserts the tool exits non-zero with a clear report; a fully-covered case exits 0"). Declining to force either option
+into this loosely-worded slot without that scoping — Option A is low-value on its own, and Option B is a real feature
+that needs the same plan-authoring rigor (repo, done-when, estimate) as any other todo, not an ad-hoc implementation
+under an audit-finding's addendum.
 
 ## Codex SSOTs
 

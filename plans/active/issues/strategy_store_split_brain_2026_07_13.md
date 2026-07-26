@@ -85,3 +85,55 @@ blocks state-rm'd. **Remaining (why this stays open)**: the READER-code legs —
 (`deployment_api_config.py:617-635`) + UAC `enumerate_envelope.py:1053` cefi hardcode — are still open, tracked as
 closeout loose-ends 4c (deployment-api C+D-display WIP, `stash@{0}`) + 4d (UAC WIP) in
 [[bucket_fold_closeout_2026_07_17]]. Close this issue when those two reader legs land.
+
+## Re-verification 2026-07-26 (`/plan-reconcile cross-cutting`) — both reader legs LANDED; one NEW Terraform leg found
+
+> **Why this pass happened**: the tracker this doc named — `bucket_fold_closeout_2026_07_17.md` — has since been
+> **archived** to [`plans/archive/2026_07/`](/plans/archive/2026_07/bucket_fold_closeout_2026_07_17.md) (folded by
+> `unified-trading-pm@58801d799`), and that fold moved only its `_KIND_ALIASES` checkbox, not the 4c/4d Progress-Log
+> loose ends. So this doc's stated closure condition pointed at a doc that no longer tracks it. Re-verified directly
+> instead of re-implementing, per `cross_cutting_consolidated_closeout_2026_07_25.md` Track 13's own criterion.
+
+**✅ Reader leg 4c — deployment-api per-AG defaults: LANDED.** `deployment-api/deployment_api/deployment_api_config.py`
+now defines `effective_strategy_store_{cefi,tradfi,defi}_bucket` as three properties that each
+`return resolve_bucket_name(cloud=…, kind="strategy-store")` — the FLAT yaml kind — with an inline comment citing the D6
+Phase 4 operator decision. The `STRATEGY_STORE_{CEFI,TRADFI,DEFI}_BUCKET` env aliases survive only as override hooks and
+resolve to the same flat bucket when empty.
+
+**✅ Reader leg 4d — UAC `enumerate_envelope.py` cefi hardcode: LANDED.**
+`unified-api-contracts/scripts/enumerate_envelope.py` now sets `GCS_BUCKET = f"strategy-store-prd-{_PROJECT_ID}"` (flat
+
+- Fold-D env-tiered). The string `strategy-store-cefi-…` survives at :1053 only inside the explanatory comment that
+  records the old drift and links back to this doc.
+
+**✅ Bucket retirement CONFIRMED (live probe, not a doc claim).** `gcloud storage ls` (2026-07-26): all three per-AG
+buckets return **404 not found** — `strategy-store-cefi-central-element-323112`,
+`strategy-store-tradfi-central-element-323112`, `strategy-store-defi-central-element-323112`. The flat
+`strategy-store-prd-central-element-323112` exists and holds real content (`_index/`, `backtests/`, `catalogue/`,
+`configs/`, `hedge_ratio_snapshots/`).
+
+**✅ Root Terraform: clean.** `rg 'strategy-store' deployment-service/terraform/main.tf` → zero hits; the five per-AG
+resource blocks this doc's fix-direction §3 named are gone.
+
+**❌ NEW — one Terraform leg still points at the DELETED buckets (this is why the doc stays open).** The _per-service_
+stack was missed by the root-level state-rm:
+
+- `deployment-service/terraform/services/strategy-service/gcp/terraform.tfvars:19-21` still sets
+  `strategy_bucket_cefi/tradfi/defi = "strategy-store-{ag}-${PROJECT_ID}"` — all three 404 per the probe above.
+- `deployment-service/terraform/services/strategy-service/gcp/main.tf:234-236` wires those same variables into the
+  strategy-service Cloud Run job's **GCSFuse mount list** (`read_only = false`) and into
+  `STRATEGY_BUCKET_{CEFI,TRADFI, DEFI}` env vars (`main.tf:202-204`).
+- Blast radius, measured not assumed: `rg 'STRATEGY_BUCKET_(CEFI|TRADFI|DEFI)' strategy-service/` returns **zero hits**,
+  so the env vars are dead config (strategy-service resolves the flat kind via `resolve_bucket_name`). The live risk is
+  the **mount list**: a `terraform apply` of this stack either fails on three non-existent buckets or re-creates them —
+  resurrecting exactly the split-brain the Wave-3 fold retired.
+
+- [ ] [INFRA] P1. **Drop the 3 dead per-AG `strategy-store` legs from the strategy-service Terraform stack** — remove
+      `strategy_bucket_{cefi,tradfi,defi}` from
+      `deployment-service/terraform/services/strategy-service/gcp/{terraform.tfvars,terraform.tfvars.example,main.tf}`
+      (and the AWS `terraform.tfvars.example` equivalents), including the 3 GCSFuse mount entries at `main.tf:234-236`
+      and the 3 env vars at `main.tf:202-204`; if the job needs the strategy store mounted at all, mount the flat
+      `strategy-store-prd-${PROJECT_ID}` once instead of three per-AG names. **Done when**:
+      `rg     'strategy_bucket_(cefi|tradfi|defi)' deployment-service/terraform/` returns zero hits, `terraform plan` on
+      the strategy-service stack is clean, and no plan output proposes creating a `strategy-store-{cefi,tradfi,defi}-*`
+      bucket.

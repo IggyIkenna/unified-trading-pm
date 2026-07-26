@@ -11,7 +11,7 @@ summary: >-
   banner, not a real fix. This regressed PM's `plan-discipline` post-gate (baseline 0 → 1), blocking `quality-gates.sh`
   for anyone touching unrelated `plans/active/*.md` files (worked around this session via the CLAUDE.md `pure
   doc/plan-flip → prek only` carve-out, which does not run this corpus-wide check).
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -32,7 +32,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-pm (check_plan_discipline.py _has_live_deferred_marker fix, 2026-07-26)
 drift_direction: advance-code
 ---
 
@@ -56,12 +56,22 @@ doesn't help an agent that genuinely needs the full `quality-gates.sh` green (e.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P3. Extend `_DEFERRED_RE`'s exclusion set (or add a companion "quoted" filter) so a DEFERRED token inside
-      a markdown-quoted span (`"..."` immediately following "annotated ... as") doesn't count as a live in-doc marker.
-      Mirror the precision fixes already applied to `_ARCHIVE_OK_TOKENS_RE` (2026-07-25) — same philosophy, new pattern.
-      Alternatively: don't over-engineer the regex — just re-baseline this ONE genuine false-positive after confirming
-      (via the same reasoning above) that no real deferred work is being masked, citing this issue doc as the sign-off
-      note. Either resolves the current 0→1 regression. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P3. Extend `_DEFERRED_RE`'s exclusion set (or add a companion "quoted" filter) so a DEFERRED token
+      inside a markdown-quoted span (`"..."` immediately following "annotated ... as") doesn't count as a live in-doc
+      marker. Mirror the precision fixes already applied to `_ARCHIVE_OK_TOKENS_RE` (2026-07-25) — same philosophy, new
+      pattern. Alternatively: don't over-engineer the regex — just re-baseline this ONE genuine false-positive after
+      confirming (via the same reasoning above) that no real deferred work is being masked, citing this issue doc as the
+      sign-off note. Either resolves the current 0→1 regression. (repo: unified-trading-pm) — unified-trading-pm (this
+      commit). Added `_has_live_deferred_marker()`: a `_DEFERRED_RE` match immediately preceded by an opening quote
+      character (`"`/`'`/curly variants) is treated as a quoted reference to ANOTHER doc's own annotation, not a live
+      in-doc marker — used by both rule A (`_check_rule_a`) and rule C (`_check_rule_c`). 7 new unit tests
+      (`tests/unit/test_check_plan_discipline.py`) cover bold/bracket/bare-dash live markers (still detected), the two
+      exact quoted shapes from `defi_satellite_ao_dispatch_batch2_2026_07_26.md` (now excluded), a mixed case where a
+      quoted reference co-exists with a REAL live marker (still detected, not masked), and no-token text. Live corpus
+      scan confirms `check_plan_discipline.py` still reports 0 violations (unchanged from before the fix — this doc's
+      own pre-existing "## Deferred work — migrated to: N/A" banner had already masked the symptom for THIS one file;
+      the regex fix is the durable, general prevention for future docs quoting another doc's DEFERRED annotation).
+      `bash scripts/quality-gates.sh` green.
 
 ## Codex SSOTs
 

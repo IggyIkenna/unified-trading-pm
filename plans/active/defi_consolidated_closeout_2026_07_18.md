@@ -107,7 +107,7 @@ related:
   ]
 created: 2026-07-18
 last_updated: 2026-06-27
-  "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+  2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"
@@ -563,18 +563,21 @@ file, not here.
       (`funding_rate_long == -funding_rate_short` exactly, `market="all"`), not real captured funding data — the native
       subgraph query never worked for this venue's whole history. Combined with GMX's narrow/unverified usage in
       strategy-service (`staked_basis.py`'s own "GMX-V2 rows pending verification" comment), **operator decided: remove
-      GMX entirely** — `defi_gmx_venue_removal_2026_07_25.md` (8 todos, AO-dispatched, across
-      UAC/MTDS/IS/execution-service/strategy-service/UTL + prod-bucket purge + docs). -
-      **TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state** (~944+ markers) — root-caused to a real, ACTIVE code bug:
-      `dex_pools_handler.py`'s `messari_basic` subgraph query never requests `inputTokens { symbol }` (verified
-      byte-for-byte against the working sibling query), starving symbol resolution for these venues even in CURRENT/live
-      captures (see `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`). **Operator decided:
-      delete the bad data, fix the query, re-backfill** — `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (5
-      todos, sequential: fix → live-test recoverability → backfill → purge superseded data). - **lst_rates**
-      (COINBASE/MAKER/SWELL/ETHENA) — root-caused: legitimate single-row/day snapshots, re-derivable on demand from the
-      current canonical RPC-based `lst_rates_handler.py` (queries a historical block number directly, so nothing is
-      actually lost by deleting the old copy); MAKER/ETHENA additionally obsolete (sDAI/sUSDe already reclassified out
-      of `lst_rates` by a 2026-07-23 fix). **Operator decided: purge as orphaned artifacts** — folded into
+      GMX entirely** — `defi_gmx_venue_removal_2026_07_25.md`'s all 8 todos SHIPPED (2026-07-25/26):
+      `unified-api-contracts@18d53d63`, `market-tick-data-service@68407ae5`, `instruments-service@0214bb3c` (+`2de3418e`
+      residual cleanup), `execution-service@09a828ed`, `strategy-service@ca818ff8`, `unified-trading-library@f22e516f`,
+      the `[OPERATOR]`-run prod-bucket GCS+manifest purge (5,374 `venue=GMX` manifest rows dropped, zero objects
+      remain), and the docs update (`unified-trading-pm@bfda5df5b`). - **TRADER_JOE_V2/VELODROME_V2/CURVE
+      dex_pool_state** (~944+ markers) — root-caused to a real, ACTIVE code bug: `dex_pools_handler.py`'s
+      `messari_basic` subgraph query never requests `inputTokens { symbol }` (verified byte-for-byte against the working
+      sibling query), starving symbol resolution for these venues even in CURRENT/live captures (see
+      `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`). **Operator decided: delete the bad
+      data, fix the query, re-backfill** — `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (5 todos, sequential:
+      fix → live-test recoverability → backfill → purge superseded data). - **lst_rates** (COINBASE/MAKER/SWELL/ETHENA)
+      — root-caused: legitimate single-row/day snapshots, re-derivable on demand from the current canonical RPC-based
+      `lst_rates_handler.py` (queries a historical block number directly, so nothing is actually lost by deleting the
+      old copy); MAKER/ETHENA additionally obsolete (sDAI/sUSDe already reclassified out of `lst_rates` by a 2026-07-23
+      fix). **Operator decided: purge as orphaned artifacts** — folded into
       `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s first todo. Evidence: `unified-trading-pm@83c31fc87`
       (refined root-cause), `@184387872` (GMX removal plan), `@781b98eea` (fix+backfill+purge plan). The underlying
       dry-run (banner above) continues independently — once it completes, re-run it to confirm these clusters clear per

@@ -68,11 +68,12 @@ drift_direction: advance-code
 ## Todos
 
 - [ ] [DATA] P1. **Build the alias→canonical league_id mapping for the 85 contaminated
-      `day=2026-04-14     entity=fixtures_schedule` league folders and check GCS for existing canonical-folder fixtures
-      data (read-only, no PROD write/delete).** For each of the 85 raw folder names (e.g. `ARGENTINA_RESERVE_LEAGUE`,
-      `ENGLAND_CHAMPIONSHIP`, `ITALY_SERIE_B`, `SAUDI_ARABIA_PRO_LEAGUE`, ... — full list re-derivable via a bounded
-      listing of `sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule/`
-      and identifying the instrument-catalogue-shaped shards, same method the issue doc used), compute the UAC
+      `day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule` league folders and check GCS for
+      existing canonical-folder fixtures data (read-only, no PROD write/delete).** For each of the 85 raw folder names
+      (e.g. `ARGENTINA_RESERVE_LEAGUE`, `ENGLAND_CHAMPIONSHIP`, `ITALY_SERIE_B`, `SAUDI_ARABIA_PRO_LEAGUE`, ... — full
+      list re-derivable via a bounded listing of
+      `sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule/` and
+      identifying the instrument-catalogue-shaped shards, same method the issue doc used), compute the UAC
       prediction-tier league registry's own `build_league_id(country, league_name)` value for every registered league
       entry (`unified-api-contracts/.../league_data_prediction.py` + `canonical_ids.py`) and match against the 85 target
       strings to find each one's abbreviated canonical league_id (or record "no canonical match found" if none matches).

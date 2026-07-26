@@ -20,7 +20,7 @@ related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
-    /plans/active/issues/sports_fixture_events_phantom_manifest_rows_2026_07_25.md,
+    /plans/archive/issues/sports_fixture_events_phantom_manifest_rows_2026_07_25.md,
   ]
 created: 2026-07-25
 priority: P1

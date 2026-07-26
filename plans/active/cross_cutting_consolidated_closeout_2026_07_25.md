@@ -19,9 +19,11 @@ summary: >-
   (CI/CD, ~33 docs), `infra` (generic repo/dependency/terraform/org hygiene, ~29 docs) — so the full partition (5 AGs +
   cross-cutting + ao + ci + infra) covers the entire plans/issues corpus with zero unaccounted docs. Now organizes 24
   Tracks with a Reachability map, mirroring the structure of the 5 existing `<ag>_consolidated_closeout_*.md` docs. A
-  same-day light-residual-closeout workflow is executing ~12 bounded fixes + an archival sweep against named items below
-  — Tracks affected carry an `[IN FLIGHT 2026-07-25]` marker; re-verify those specific items before trusting this doc's
-  status prose without a fresh check.
+  same-day light-residual-closeout workflow executed ~12 bounded fixes + an archival sweep against named items below;
+  every one of its `[IN FLIGHT 2026-07-25]` markers was then re-verified against reality on 2026-07-26 by a
+  `/plan-reconcile cross-cutting` pass and replaced with its measured outcome, so no unresolved in-flight prose remains
+  below — the per-marker breakdown is in the Progress Log, deliberately not re-tallied here (a hardcoded count re-stales
+  on the next pass). Keep doing that: re-verify a dated marker before trusting it.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -69,7 +71,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-07-25"
+last_updated: "2026-07-26"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -164,7 +166,10 @@ anywhere in this corpus; flag to the operator whether it needs its own per-AG pl
 - **G2/M-1** → `data_completion_to_100_all_ag_2026_06_21.md` (mostly historical shell, AG-specific work moved to 5
   per-AG siblings; residual: VM-launcher canon-gate check, CeFi Extended-Starknet backfill, oracle-prices launcher run
   [BLOCKED-OPERATOR pyth ack], manifest_consolidator CAST hardening, CF-2/CF-3 ~703-date gap,
-  `uts-prod-cf- manifest-audit` never-succeeded [**IN FLIGHT 2026-07-25** — see Track 14], bybit-futures delete
+  `uts-prod-cf- manifest-audit` never-succeeded (**NOT started — see Track 14**; was: "[IN FLIGHT 2026-07-25]", which
+  contradicted Track 14's own "fully open, unresolved" and is not borne out by history: the owning doc
+  `issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` still reads 3 open / 0 done and its last content
+  commit is `unified-trading-pm@98090f60a`, 2026-07-23, a corpus-wide reference-path migration), bybit-futures delete
   [BLOCKED-OPERATOR]) → forks `data_source_provenance_enforcement_2026_07_24.md` (~17 open todos: source-column
   backfills, cefi empty/failed-path forwarding, 23 remaining MTDS handlers needing DeFi-catalog preflight, prod
   source-distribution audit, a dedup-key decision needing human sequencing) and
@@ -202,8 +207,15 @@ human-hard-stop; tradfi 13,971-row v4 tail is fleet-drain-gated) +
 **Sources**: `infra_capture_and_devops_leftovers_2026_07_06.md` (5/9 done; 4 remain, ALL credential/operator-gated —
 ASTER live VM cost-freeze hold, MANTLE gas-fees RPC key, live ODDS quota + 2nd source, rate-limit-probe VM sanction)
 
-- `infra_capture_and_devops_leftovers_finalize_2026_07_25.md` (**[IN FLIGHT 2026-07-25]** — its own 1 todo already
-  closed; a workflow is re-verifying + archiving it now since the parent correctly stays open).
+- [`infra_capture_and_devops_leftovers_finalize_2026_07_25.md`](/plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md)
+  (**DONE but DELIBERATELY NOT ARCHIVED — do not move this file**; was: "[IN FLIGHT 2026-07-25] … a workflow is
+  re-verifying + archiving it now"). Its own single todo is `[x]` and the 2026-07-26 re-verification confirmed the
+  parent's 4 blockers all still genuinely hold. **Archiving it would break a hard shared gate**: it is the parent's ONLY
+  `depends_on`+`gate_on_depends: true` coverage, so removing it from `plans/active/` regresses
+  `scripts/quality_gates/check_finalize_plan_coverage.py` from baseline 1 to 2 — a post-gate `exit 1` blocking every
+  future `unified-trading-pm` commit (empirically verified by simulating the move; see that doc's own 🟡 banner).
+  Re-attempt archival only once the parent's 4 blockers clear (archive both together) or the coverage-gate design
+  changes.
 
 **Close-out criterion**: not AO-eligible as a whole — every remaining item needs a human credential/decision; this Track
 stays a pointer until the operator resolves at least one of the 4 gates.
@@ -227,17 +239,21 @@ pending an operator ruling.
 2026-07-18/19, now pure historical reference) → `bucket_fold_ml_2026_07_17.md` (~90% done; open: delete legacy sources +
 TF/yaml removal, a real unresolved **32-item TF plan drift finding** — pre-existing IAM-member/ scheduler DESTROYs
 unrelated to the fold, blocking a clean `apply`, still unresolved and worth flagging to whoever owns Track 6's IAM
-work), `bucket_fold_features_2026_07_17.md` (~95% done; **[IN FLIGHT 2026-07-25]** — the redeploy+verify citation is the
-one open item, being run now), `bucket_fold_execution_strategy_2026_07_17.md` (done 2026-07-18, byte-parity +
-adversarial-verify evidence), `bucket_fold_portfolio_state_2026_07_17.md` (done; open: an operator retention-window
-decision — live-trading snapshots may need longer than the default 60-day STANDARD-before-COLDLINE) →
-`bucket_estate_consolidation_closeout_2026_07_24.md` (6 open todos: **[IN FLIGHT 2026-07-25]** ml-legacy-bucket delete +
-11-alias `_KIND_ALIASES` hard-removal + cosmetic asset-group-parity drift are being closed now; recon-bucket E2E
+work), `bucket_fold_features_2026_07_17.md` (**post-cutover redeploy+verify DONE 2026-07-26**,
+`unified-trading-pm@e3a1174aa` — was: "[IN FLIGHT 2026-07-25] … being run now"; the fold cutover itself is complete, 2
+lower-priority items remain: a P2 IAM+lifecycle join and a P3 alias sunset),
+`bucket_fold_execution_strategy_2026_07_17.md` (done 2026-07-18, byte-parity + adversarial-verify evidence),
+`bucket_fold_portfolio_state_2026_07_17.md` (done; open: an operator retention-window decision — live-trading snapshots
+may need longer than the default 60-day STANDARD-before-COLDLINE) → `bucket_estate_consolidation_closeout_2026_07_24.md`
+(**2 of the 3 in-flight items landed 2026-07-26**, `unified-trading-pm@a9b57d752` — the 11-alias `_KIND_ALIASES`
+hard-removal re-verified already-shipped and the cosmetic asset-group-parity drift cleaned up; the ml-legacy-bucket
+delete stays OPEN as a prod-bucket operator hard stop [re-verified safe, deliberately not executed]; recon-bucket E2E
 producer-chain stand-up stays explicitly descoped, cross-plan-deletion checkpoint stays tracking-only, 3 audit-issue
 docs need re-confirm).
 
-**Close-out criterion**: the closeout doc's 6 todos all closed or re-deferred with a named owner; the ml-fold's 32-item
-TF/IAM drift finding handed to Track 6; the portfolio-state retention question ruled by the operator.
+**Close-out criterion**: the closeout doc's remaining todos all closed or re-deferred with a named owner (count
+deliberately not restated here — read the doc); the ml-fold's 32-item TF/IAM drift finding handed to Track 6; the
+portfolio-state retention question ruled by the operator.
 
 ## Track 6 — Bucket IAM / credential-gated hygiene · P1 — **✅ both credential blockers cleared 2026-07-25**
 
@@ -299,23 +315,33 @@ sibling, `instruments_store_cf_canonicalization_single_walk_2026_07_24.md`, is a
 **Close-out criterion**: both children's AO-eligible residuals (mostly bounded scripted diffs) close; the legacy-GCS
 delete stays `[OPERATOR]`-gated per this workspace's delete-safety protocol.
 
-## Track 9 — WSFeedConnector + cutover-sequencing hazards + small IS hygiene · P1 (one item URGENT)
+## Track 9 — WSFeedConnector + cutover-sequencing hazards + small IS hygiene · P1 — **✅ the URGENT cutover-sequencing hazard is CLEARED (2026-07-25/26)**
 
 **Sources**: `issues/wsfeedconnector_phase35_gap_2026_07_06.md` (16/17 done — only ICE WSFeedConnector remains,
 BLOCKED-CREDENTIALS on a Databento Real-Time key; near-closeable once that key arrives) +
-`issues/honest_coverage_ harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` (**⚠️ URGENT, [IN FLIGHT
-2026-07-25]** — the Honest-Coverage v2 harness reads `instrument_type` lowercase, but the already-ratified D1 UPPERCASE
-migration is drain-gated under the CeFi migration-cutover critical path in
-`cefi_migration_cutover_and_track8_completion_2026_07_ 25.md` — once that cutover fires, coverage silently craters for
-every migrated AG unless this lands FIRST; a workflow is fixing it now, re-verify before assuming the cutover is safe) +
+[`honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`](/plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md)
+(**✅ RESOLVED + ARCHIVED** — was: "⚠️ URGENT, [IN FLIGHT 2026-07-25] … a workflow is fixing it now, re-verify before
+assuming the cutover is safe". The hazard was: the Honest-Coverage v2 harness read `instrument_type` case-sensitively,
+so the already-ratified D1 UPPERCASE migration — drain-gated under the CeFi migration-cutover critical path in
+`cefi_migration_cutover_and_track8_completion_2026_07_ 25.md` — would have silently cratered coverage for every migrated
+AG. **The re-verification is now done, so nobody needs to re-run it**: the doc is `status: resolved`
+(`resolved_by: instruments-service@867b68f6`) and archived to `plans/archive/issues/` by `unified-trading-pm@4c42f71b7`.
+Both its todos are `[x]` with evidence — the Layer-1 normaliser and the cefi Layer-2 MVP read gate were already
+case-robust, and the one genuinely case-sensitive site,
+`instruments-service/scripts/measure_honest_coverage.py::_compute_coverage`'s `by_venue_instrument_type` /
+`by_venue_instrument_type_data_type` `groupby`, now case-folds the grouping key, with regression tests
+`TestInstrumentTypeCaseInsensitivity::{test_lowercase_and_uppercase_rows_merge_into_one_shard,test_uppercase_only_shard_counts_as_covered_same_as_lowercase}`.
+**The CeFi cutover is no longer blocked on this item.**) +
 `instrument_record_schema_completeness_ extra_forbid_2026_07_18.md` (0/6 done, fully open — get authoritative
 `extra='forbid'` violation list, per-field disposition, schema/caller fixes, flip the forbid flag, codex audit) +
-`mtds_retry_safe_default_audit_2026_07_14.md` (**[IN FLIGHT 2026-07-25]** — 5 small self-contained P3 residuals, being
-closed now).
+`mtds_retry_safe_default_audit_2026_07_14.md` (**NOT started** — was: "[IN FLIGHT 2026-07-25] … being closed now", which
+never happened: the doc still reads 5 open / 0 done and its last content commit is `unified-trading-pm@98090f60a`,
+2026-07-23, a corpus-wide reference-path migration. 5 small self-contained P3 residuals, genuinely still open and
+AO-eligible).
 
-**Close-out criterion**: ICE connector lands once credentialed; the honest-coverage case-fix VERIFIED landed before the
-D1 cutover fires (this is the one hard sequencing dependency in this whole Track — do not let the cutover proceed
-without re-checking this specific item); `instrument_record_schema_completeness`'s 6 todos closed;
+**Close-out criterion**: ICE connector lands once credentialed; **the honest-coverage case-fix is VERIFIED landed
+(2026-07-25, evidence above) — this Track's one hard sequencing dependency on the CeFi cutover is DISCHARGED, no
+re-check needed before the cutover fires**; `instrument_record_schema_completeness`'s 6 todos closed;
 `mtds_retry_safe_default`'s 5 residuals closed.
 
 ## Track 10 — Cross-AG features/ML pipeline + fleet monitoring/health · P2
@@ -367,36 +393,55 @@ GAP4 lands first, then the perp-funding items ship in dependency order.
 ## Track 12 — Silent-wrong-answer class + distinct-values census · P0/P1
 
 **Sources**: `issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md` (root cause fixed + shipped, 5 confirmed
-instances fixed; **[IN FLIGHT 2026-07-25]** — the `aave_rate_impact` backfill run + 23 sports-cell UAC registration are
-being closed now; a stray empty-test-bucket delete stays human-only, deferred to
+instances fixed; **both in-flight items now settled 2026-07-26**, was: "[IN FLIGHT 2026-07-25] … being closed now" — the
+`aave_rate_impact` backfill RAN (`unified-trading-pm@b6ab05bd5`, data-only) and spun out a new structural-zero finding
+`issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`; the 23 sports-cell UAC registration was
+deliberately **NOT actioned — its premise is superseded by a later operator ruling** and is left unflipped on purpose,
+do not re-dispatch it as if it were pending work; a stray empty-test-bucket delete stays human-only, deferred to
 `bucket_estate_consolidation_to_sub100`) + `issues/silent_wrong_answer_audit_candidates_2026_07_20.md` (a broader
 10-lens follow-up spinoff, NOT duplicate of the above — 7/24 candidates survived adversarial review, 4 shipped, 2
 deferred [blocked on reconciling a peer's concurrent commit], 1 needs a schema-contract decision; **one residual is a
 direct deepening of the other doc's finding #1**: the bucket-NAME fix landed, but the gas-fee PATH within that bucket
 still resolves nowhere — unfixed, needs a data-pipeline research answer on where gas-fee data actually lives) +
-`distinct_values_noncanonical_audit_2026_07_20.md` (mostly done, PURGE worklist verified EMPTY; **[IN FLIGHT
-2026-07-25]** — the stale 5-AG census refresh is running now).
+`distinct_values_noncanonical_audit_2026_07_20.md` (mostly done, PURGE worklist verified EMPTY; **census refresh DONE
+2026-07-25**, `unified-trading-pm@b2b170cd6` — 175 → 45 non-canonical distinct values, plus a rollup-overwrite gotcha
+filed; was: "[IN FLIGHT 2026-07-25] … running now". 2 unrelated todos remain open: reconcile every drift cluster to an
+owning plan, and the MDPS `canonical_writer_shaping.py::_type_token_from_canonical_id` bug).
 
-**Close-out criterion**: the 3 residual items in the bucket-resolution doc closed (2 via the in-flight workflow, 1
-operator-gated); the audit-candidates doc's 2 deferred stash-fixes recovered, the gas-fee-data-location question
-answered, the schema-contract decision made; the census table refreshed.
+**Close-out criterion**: the bucket-resolution doc's residuals settled (`aave_rate_impact` ✅ run; sports-cells ✅
+superseded-not-actioned; empty-test-bucket delete still operator-gated); the audit-candidates doc's 2 deferred
+stash-fixes recovered, the gas-fee-data-location question answered, the schema-contract decision made; **the census
+table is refreshed ✅** — what remains in `distinct_values_noncanonical_audit` is the drift-cluster reconcile + the MDPS
+`_type_token_from_canonical_id` fix.
 
 ## Track 13 — Reconciliation-skill follow-through + bucket split-brain/missing buckets · P0/P1
 
 **Sources**: `data_pipeline_reconciliation_skill_2026_07_20.md` (the `/data-pipeline-reconciliation` skill itself is
-DONE — kept as a pure cross-reference, not something to close; **[IN FLIGHT 2026-07-25]** — its only 2 open plan todos,
-filing the candle GCS-object↔manifest disconnect as its own MDPS plan + running the per-AG candle audit, are being
-executed now) + `issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md` (the narrow bug — missing recon
-bucket, stale digest — is fixed+verified; the broader goal, a real green nightly batch-live recon, needs NEW multi-repo
-feature work across 4 services and is **explicitly NOT AO-eligible as-is** — needs an operator ASK for a properly-scoped
-new plan first) + `issues/strategy_store_split_brain_2026_07_13.md` (bucket side resolved via the Wave-3 fold; stays
-open only because the 2 remaining reader-code legs — deployment-api per-AG defaults + a UAC `enumerate_envelope.py` cefi
-hardcode — are tracked in `bucket_fold_closeout_2026_07_17.md`, outside this corpus; this doc closes automatically once
-that other plan's items land, nothing to do here directly).
+DONE — kept as a pure cross-reference, not something to close; **its last 2 plan todos CLOSED 2026-07-26**,
+`unified-trading-pm@7ae64f4c2` — the candle GCS-object↔manifest disconnect filed as its own MDPS plan and the per-AG
+candle audit run, outputs under `plans/audit/results/data_pipeline_reconciliation_candles_*`; was: "[IN FLIGHT
+2026-07-25] … being executed now". The doc now reads **0 open / 42 done** — see the archival question in the Progress
+Log) + `issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md` (the narrow bug — missing recon bucket, stale
+digest — is fixed+verified; the broader goal, a real green nightly batch-live recon, needs NEW multi-repo feature work
+across 4 services and is **explicitly NOT AO-eligible as-is** — needs an operator ASK for a properly-scoped new plan
+first) + `issues/strategy_store_split_brain_2026_07_13.md` (bucket side resolved via the Wave-3 fold; **both remaining
+reader-code legs are now VERIFIED LANDED (code read 2026-07-26)** — `deployment-api`'s `deployment_api_config.py`
+`effective_strategy_store_{cefi,tradfi,defi}_bucket` all now return `resolve_bucket_name(kind="strategy-store")` (the
+FLAT kind), and UAC `scripts/enumerate_envelope.py` now writes `strategy-store-prd-{project_id}` with the old per-AG
+name surviving only in an explanatory comment. Was: "tracked in `bucket_fold_closeout_2026_07_17.md`, outside this
+corpus" — **that tracker has since been archived** (`plans/archive/2026_07/`, folded by `unified-trading-pm@58801d799`)
+and it folded only its `_KIND_ALIASES` checkbox, not these two Progress-Log loose ends, so the legs were briefly
+untracked; the code read above discharges them directly. Live `gcloud storage ls` probes 2026-07-26 also confirm all 3
+per-AG buckets are **404 / retired** and the flat `strategy-store-prd-*` holds the real content. **The doc still stays
+OPEN for a newly-found leg**: the _per-service_ Terraform stack
+`deployment-service/terraform/services/strategy-service/gcp/{terraform.tfvars:19-21,main.tf:202-204,234-236}` still
+mounts the three DELETED per-AG buckets via GCSFuse — a `terraform apply` there would fail or re-create them. Captured
+as a new P1 `[INFRA]` todo in that doc).
 
-**Close-out criterion**: the reconciliation-skill's 2 todos close (workflow above); the recon-bucket doc's broader goal
-gets an operator-scoped new plan (not worked in place); the split-brain doc closes via the external plan landing —
-verify, don't re-implement.
+**Close-out criterion**: the reconciliation-skill's 2 todos ✅ closed; the recon-bucket doc's broader goal gets an
+operator-scoped new plan (not worked in place); **the split-brain doc's ORIGINAL closure condition is MET** (both reader
+legs verified in code + all 3 per-AG buckets probed 404, not re-implemented) — it now closes on its one new P1 Terraform
+todo instead.
 
 ## Track 14 — Scheduled-job reliability + concurrency/OOM defects + manifest reprocessing tooling · P1/P2
 
@@ -420,32 +465,42 @@ designed+implemented+wired.
 
 ## Track 15 — Test/CI hygiene + closed/retriage-only · P2/P3
 
-**Sources (hygiene, all [IN FLIGHT 2026-07-25])**:
-`issues/local_storage_provider_shared_tempdir_test_state_leak_ 2026_07_20.md` (bind to pytest `tmp_path`, being fixed
-now) + `issues/pytest_posixpath_str_drv_attributeerror_flake_ 2026_07_17.md` (repro-and-fix or documented won't-fix,
-being attempted now) — plus `issues/instruments_service_ codex_compliance_ceiling_drift_2026_07_20.md` (also **[IN
-FLIGHT 2026-07-25]**, a small residual audit, folded here for brevity since it's a single-file hygiene item).
+**Sources (hygiene — ✅ all 3 RESOLVED + ARCHIVED 2026-07-25, nothing left in flight)**: was "(hygiene, all [IN FLIGHT
+2026-07-25])"; verified 2026-07-26 that every one of the three has landed in `plans/archive/issues/` —
+[`local_storage_provider_shared_tempdir_test_state_leak_2026_07_20.md`](/plans/archive/issues/local_storage_provider_shared_tempdir_test_state_leak_2026_07_20.md)
+(bind to pytest `tmp_path`; archived `unified-trading-pm@e1580ac0a`) +
+[`pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md`](/plans/archive/issues/pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md)
+(archived `unified-trading-pm@74df80162`) +
+[`instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`](/plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md)
+(archived `unified-trading-pm@e1580ac0a`).
 
-**Sources (closed or needs-retriage only, no active work)**: `issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md`
-(ARCHIVED — `plans/archive/issues/`) (**[IN FLIGHT 2026-07-25]** — DONE, a workflow is re-verifying + archiving it
-now) + `issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` — **RESOLVED-IN-PLACE 2026-07-25**: all 4
-originally-flagged files (book_microstructure_handler.py / perp_funding_handler.py / honest_coverage.py /
-source_priority.py) confirmed non-regressions (baseline already regenerated by `unified-trading-pm@ba098a7cc`,
-re-verified this pass) — `status: resolved`, all 4 todos closed, no code change needed. **Archival to
-`plans/archive/issues/` deliberately NOT done this pass**: the doc carries `locked_by: live-defi-rollout`, and
-`quality-gates.sh`'s locked-plan-deletion gate requires an operator-approved `[unlock-plan]` commit tag to delete a
-locked file from `plans/active/` (CLAUDE.md: that tag is ask-first, never autonomous) — flagged as a named follow-up in
-the doc itself + `issues/empty_reprobe_ disagreement_2026_06_22.md` (stale — auto-filed over a month ago, `locked_by`
-looks like an abandoned lock; likely much of its scope superseded by Track 12's audits; recommend a fresh re-probe or
-archive rather than direct dispatch)
+**Sources (closed or needs-retriage only, no active work)**:
 
+- [`cross_ag_never_seeded_backlog_scan_2026_07_06.md`](/plans/archive/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md)
+  — **DONE + ARCHIVED** (`unified-trading-pm@b5805e7aa`, all 7 markers closed). Was self-contradictory here, reading
+  both "(ARCHIVED)" and "a workflow is … archiving it now" in the same sentence; the archival is finished.
+- `issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` — **RESOLVED-IN-PLACE 2026-07-25**: all 4
+  originally-flagged files (book_microstructure_handler.py / perp_funding_handler.py / honest_coverage.py /
+  source_priority.py) confirmed non-regressions (baseline already regenerated by `unified-trading-pm@ba098a7cc`,
+  re-verified this pass) — `status: resolved`, all 4 todos closed, no code change needed. **ARCHIVED 2026-07-26 to
+  [`plans/archive/issues/`](/plans/archive/issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md) by
+  `unified-trading-pm@57ed9271c` — but WITHOUT the `[unlock-plan]` approval the doc's own `locked_by: live-defi-rollout`
+  is supposed to require, and the archived copy still carries that lock (ritual step 6 skipped).** This pass had
+  deliberately parked the archival for exactly that approval; a concurrent escalation-driven remediation archived it
+  anyway. Root cause filed as
+  [`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`](/plans/active/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md)
+  — the gate lives only in `quality-gates.sh`, which `docs(plans):` commits are explicitly routed away from.
+- `issues/empty_reprobe_ disagreement_2026_06_22.md` (stale — auto-filed over a month ago, `locked_by` looks like an
+  abandoned lock; likely much of its scope superseded by Track 12's audits; recommend a fresh re-probe or archive rather
+  than direct dispatch).
 - `issues/instruments_remaining_work_audit_2026_07_10.md` (a CeFi-consolidated-closeout-style discoverability index, now
   15 days stale relative to 2026-07-25 — several docs it indexed have since split/archived; valuable as a structural
   template for THIS doc, but needs a "historical snapshot" banner, not treated as current inventory).
 
-**Close-out criterion**: the 3 in-flight hygiene items close (`mtds_uac_adapter_contract_baseline_regression` already
-resolved 2026-07-25, archival pending operator `[unlock-plan]` approval); `empty_reprobe_disagreement` re-triaged or
-archived; `instruments_remaining_work_audit` gets a historical-snapshot banner.
+**Close-out criterion**: **the hygiene items are all closed ✅ (3 archived 2026-07-25)**;
+`mtds_uac_adapter_contract_baseline_regression` ✅ resolved + archived, with the un-cleared lock retro-fix tracked in
+the gate issue doc above; `empty_reprobe_disagreement` re-triaged or archived; `instruments_remaining_work_audit` gets a
+historical-snapshot banner.
 
 ## Track 16 — UAC/manifest/catalogue schema-wide audits · P1/P2
 
@@ -618,6 +673,29 @@ manifest-consolidator schema-evolution handling verified, historical rows backfi
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-26** — `/plan-reconcile cross-cutting` (autonomous, topic-scoped shard; 104 tranche docs inventoried).
+  **Every `[IN FLIGHT 2026-07-25]` marker in this doc was re-verified against the filesystem + git and replaced with its
+  measured outcome** — the doc's own frontmatter asked for exactly this re-check. Measured: **5 landed** (Track 5
+  `bucket_fold_features` redeploy+verify `@e3a1174aa`; Track 5 `bucket_estate_consolidation_closeout` 2 of 3
+  `@a9b57d752`; Track 12 census refresh `@b2b170cd6`; Track 12 `aave_rate_impact` backfill `@b6ab05bd5`; Track 13
+  recon-skill's last 2 todos `@7ae64f4c2`); **1 RESOLVED+ARCHIVED** (Track 9's ⚠️ URGENT honest-coverage
+  `instrument_type`-case hazard — `resolved_by: instruments-service@867b68f6`, archived `@4c42f71b7` — **the CeFi
+  migration cutover is no longer blocked on it**, which the stale prose was still warning about); **3 archived hygiene
+  docs** in Track 15 (`@e1580ac0a` ×2, `@74df80162`) plus `cross_ag_never_seeded_backlog_scan` (`@b5805e7aa`), whose
+  entry had been self-contradictory ("(ARCHIVED)" and "archiving it now" in one sentence); **2 never started** (Track
+  1's `uts-prod-cf-manifest-audit`, which also contradicted Track 14's own "fully open, unresolved"; Track 9's
+  `mtds_retry_safe_default_audit`, untouched since `@98090f60a` 2026-07-23 — both were advertising work nobody did); **1
+  deliberately NOT archived** (Track 3's `infra_capture_and_devops_leftovers_finalize` — archiving it regresses
+  `check_finalize_plan_coverage.py` 1→2 and hard-fails PM `quality-gates.sh` for everyone; the old prose said a workflow
+  was archiving it _now_); **1 superseded-not-actioned** (Track 12's 23 sports-cell UAC registration). Track 13
+  side-finding, verified not assumed: `issues/strategy_store_split_brain_2026_07_13.md`'s named tracker archived without
+  carrying its 4c/4d loose ends — both reader legs are in fact LANDED (deployment-api + UAC `enumerate_envelope.py` code
+  reads) and all 3 per-AG buckets probe **404**, but the per-service Terraform stack still GCSFuse-mounts those deleted
+  buckets; captured as a new P1 `[INFRA]` todo in that doc. **2 decisions parked** (not auto-applied) in
+  `issues/autonomous_session_operator_decisions_2026_07_25.md` #10-#11: archiving the 2 fully-done-but-soft-evidenced
+  docs (`data_pipeline_e2e_milestones_gate_2026_07_24.md`, `data_pipeline_reconciliation_skill_2026_07_20.md`), and the
+  `[unlock-plan]` needed to archive `issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md`.
 
 - **2026-07-25** — Doc authored from a 5-agent parallel triage (Agent tool, not Workflow — this session's ultracode flag
   was off at triage time) of the 68-doc epic-filtered candidate corpus. Scoping itself surfaced + fixed 7 real

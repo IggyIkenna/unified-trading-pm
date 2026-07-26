@@ -71,19 +71,28 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P1. Triage the Kalshi schema-drift GitHub issue chain (#45→#590, `unified-api-contracts`
-      `weekly-validation.yml`, grown from 11 to 23 failing endpoints since May) AND verify the Kalshi execution-service
-      paper-order flow end-to-end (never actually verified post the elections-subdomain URL swap — only the URL change
-      shipped, no test/log/commit exists). For the schema-drift chain: pull the current `weekly-validation.yml` run
-      output, confirm live `kalshi/markets` field drift (missing `subtitle`/`liquidity`/`yes_bid`/`yes_ask`/`no_bid`,
-      `result` null→string) and `kalshi/market_lookup` HTTP 404 against Kalshi's live elections-subdomain API
-      docs/responses, and for each open issue in the chain either (a) file/update a UAC schema-bump PR reflecting the
-      real current shape, or (b) close the issue as endpoint-retired with cited evidence — do not leave any of the 23
-      open un-triaged. For the paper-order flow: place a real Kalshi paper order through execution-service end-to-end
-      (order submit → fill/ack → position update) against the elections-subdomain host and capture logs/commit evidence
-      it works. Source: `plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`. Done when: every
-      open issue in the #45→#590 chain has a filed schema-bump PR or a closed-with-evidence resolution, AND a
-      paper-order-flow run's logs/evidence are committed/linked proving the Kalshi execution path works end-to-end.
+- [ ] [DATA] P1. **PARTIAL 2026-07-26 (slot-7, `data_engineering`) — schema-drift half DONE, paper-order-flow half
+      BLOCKED-OPERATOR (BLK-c2d1fff9).** **Schema-drift chain (DONE)**: the "23 endpoints" turned out to be ONE weekly
+      auto-filed snapshot issue listing all currently-failing endpoints (only 2 of 23 are Kalshi), not 23 separate
+      per-endpoint issues — root-caused: NOT a live regression, `KalshiMarket` (schemas.py) + the endpoint registry
+      already correctly document the March-2026 dollar-field migration; only the 2 VCR cassette fixtures
+      (`markets.yaml`, `market_lookup.yaml`) used as the drift-diff baseline were stale (pre-migration shape / an
+      expired test ticker). Re-recorded both against live data; `validate_schemas.py` + all 4
+      `tests/vcr/test_kalshi_vcr.py` tests green. Shipped `unified-api-contracts@c03161a1`. Closed the 10 superseded
+      weekly snapshots (#45,#46,#47,#60,#102,#319,#416,#541,#555,#590) as duplicates of #673; commented on #673 with the
+      fix (the other 21 unrelated endpoint failures in that snapshot are untouched, out of scope). **Paper-order flow
+      (BLOCKED)**: found the REAL reason it "was never verified" — `execution_service/adapters/sports_factory.py` wires
+      the Kalshi adapter to secrets `kalshi-api-key-id`/`kalshi-private-key-pem`, NEITHER of which exists in Secret
+      Manager (confirmed `NOT_FOUND`); the actual credential lives under a differently-shaped bundled secret
+      (`kalshi-api-credentials`). Any real order attempt fails immediately at secret-load time. This is a genuine
+      architecture/ops call (re-provision vs. adapt the code) touching live trading-exchange credentials
+      (wallet-key-adjacent, human-only per CLAUDE.md) — filed
+      `plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md` + escalated `BLK-c2d1fff9`,
+      did not touch/re-provision the credential myself. Source:
+      `plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`. Done when: every open issue in the
+      #45→#590 chain has a filed schema-bump PR or a closed-with-evidence resolution (✅ DONE), AND a paper-order-flow
+      run's logs/evidence are committed/linked proving the Kalshi execution path works end-to-end (⏳ gated on
+      BLK-c2d1fff9's answer).
 - [ ] [OPERATOR] P1. **Combined residual close-out for `prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`'s
       remaining 4 uncovered items (batch2's OPERATOR todo covered only 2 of the doc's 4 residual sets; these are the
       other 2, all against the SAME prediction manifest `_index` — merged into one todo to avoid a concurrent-write

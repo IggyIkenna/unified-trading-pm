@@ -24,7 +24,7 @@ related:
   [
     /plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
     /codex/04-architecture/tier-and-import-architecture.md,
-    /plans/active/issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md,
+    /plans/archive/issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21
@@ -52,7 +52,7 @@ depends_on: []
 
 > **Duplicate-discovery note (added 2026-07-25, /plan-reconcile apply pass):** the identical regression (same UAC
 > commit, same 3 failing tests) was independently discovered and written up the same day as
-> [`mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md`](/plans/active/issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md)
+> [`mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md`](/plans/archive/issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md)
 > (narrative-only, no tracked todos). This doc carries the actionable todos below — track the fix here.
 
 ## What happened

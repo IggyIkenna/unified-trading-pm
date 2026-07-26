@@ -172,8 +172,8 @@ drift_direction: advance-code
       `strategy-service/pnl/engine/orchestrator.py` reads `feature_group="rate_impact"` (not `aave_rate_impact`); both
       repos' `quality-gates.sh` green. Source:
       `issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`.
-- [ ] [ENGINEER] P1. Triage the 9 `unified-api-contracts/unified_api_contracts/internal/architecture_v2/` files flagged
-      by the original `rg -l -i 'drift|pacifica'` sweep but never individually confirmed fixed by the 2026-07-16
+- [x] ✅ [ENGINEER] P1. Triage the 9 `unified-api-contracts/unified_api_contracts/internal/architecture_v2/` files
+      flagged by the original `rg -l -i 'drift|pacifica'` sweep but never individually confirmed fixed by the 2026-07-16
       follow-up dispatch — `perp_hedge_sizer.py`, `capability_manifest.py`, `archetype_config.py`,
       `backtest_scenarios.py`, `flash_loan_receiver.py`, `algo_compatibility.py`, `liquidation_bonus_schedule.py`,
       `benchmark_fill_pricing.py`, `archetype_capability.py`. For each: re-run `rg -n -i 'drift|pacifica'` scoped to
@@ -191,7 +191,10 @@ drift_direction: advance-code
       `plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`. Done when: all 9 files
       have either a documented false-positive verdict (no code change) or a genuine-hit fix with the standard removal
       comment marker, `unified-api-contracts` full `quality-gates.sh` is green, and the change ships via scoped
-      `quickmerge.sh --agent --files`.
+      `quickmerge.sh --agent --files`. ✅ 2026-07-26: all 9 files individually re-triaged — zero genuine Drift/Pacifica
+      venue residue found (all hits are generic "delta drift"/"schema drift"/"config drift" prose unrelated to the
+      Solana Drift venue; zero pacifica hits). No `unified-api-contracts` code change needed. Verdict documented in
+      `plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md` § "UPDATE 2026-07-26".
 - [ ] [DOCS] P3. Document the three MEV archetypes (`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, `ARBITRAGE_MEV_JIT_LIQUIDITY`,
       `ARBITRAGE_MEV_BACKRUN`) as explicitly OUT of the paper-replay tick-builder-wiring scope. Add a short note (in the
       relevant strategy-service archetype/catalog doc or module-level docstring near `_ENGINE_DRIVABLE_ARCHETYPES` in

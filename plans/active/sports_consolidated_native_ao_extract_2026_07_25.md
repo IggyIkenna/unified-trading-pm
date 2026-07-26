@@ -284,9 +284,9 @@ drift_direction: advance-code
       delete (Track V), stays human/deferred to a follow-up once that delete lands. (repo: deployment-service, doc
       edit). **Done when**: the runbook note is added. Source: `sports_consolidated_closeout_2026_07_19.md:951-955`.
 
-## Classification notes — why every OTHER open native todo stays human (not exhaustive here, full table in the
+## Classification notes — why every OTHER open native todo stays human
 
-## dispatching session's report)
+_Not exhaustive here — the full table is in the dispatching session's report._
 
 The 26 todos above are a genuine minority of the parent doc's ~65 open top-level / 78 total open todos. The rest split
 into: (a) explicit `[OPERATOR]`/`BLOCKED-<TOKEN>`-tagged items (structurally non-dispatchable already); (b) irreversible

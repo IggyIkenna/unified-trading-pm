@@ -158,3 +158,19 @@ analysis above:
   attribution/classification issues.
 
 Full detail on the active bug: `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`.
+
+## Update (2026-07-26 — GMX cluster confirmed CLOSED; overall `status` stays `open`)
+
+`defi_gmx_venue_removal_2026_07_25.md`'s all 8 todos are now `- [x]` done, including the `[OPERATOR]` GCS+manifest
+purge: verified live — zero `venue=GMX` objects remain in `market-data-tick-defi-prd-central-element-323112`, 5,374
+`venue=GMX` manifest rows dropped (24,742,605 → 24,737,231). This closes the **GMX perp_funding cluster (~1,896
+markers)** row above by construction, per the accept-as-orphaned disposition already recorded in this doc (line 91-92) —
+the venue no longer exists, so the FLAGGED markers are moot rather than needing any further remediation decision.
+
+**Not flipping this doc's top-level `status` to `resolved`** — the sibling **TRADER_JOE_V2/VELODROME_V2/CURVE
+dex_pool_state cluster (~944+421 markers)** and the **lst_rates cluster's MAKER/ETHENA half** are both owned by
+`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`, re-verified still 0/5 todos done (all `- [ ]`) as of this
+update — the query-fix, live-test, re-backfill, and both `[OPERATOR]` purges (lst_rates + dex_pool_state) remain
+unshipped. Per this plan's own gated finalize doc
+(`plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`), this issue's overall status should be
+re-checked once that plan completes.

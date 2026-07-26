@@ -25,7 +25,7 @@ tags: [migration, bucket-canonicalisation, cutover, gcs, terraform, manifest, sp
 related:
   [
     /plans/active/sports_legacy_bucket_cutover_2026_07_16.md,
-    /plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md,
+    /plans/archive/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md,
     /plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
   ]
 created: "2026-07-24"
@@ -59,7 +59,7 @@ source:
 > analysis onward), moved here **unedited** on 2026-07-24 purely to bring that parent plan's line count under its
 > hygiene cap. Every todo below is already `- [x]` checked and done — there is nothing open in this file. The parent's 4
 > open items (T2.9, T2.10 — data-correctness; T6.7, T6.8 — admin closeout) were forked earlier the same day into
-> [`sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`](/plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
+> [`sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`](/plans/archive/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
 > and
 > [`sports_legacy_cutover_closeout_tasks_2026_07_24.md`](/plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md)
 > respectively — this file does not duplicate them; where the text below still shows the fork-notice blockquote in place
@@ -766,7 +766,7 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
 
 > **T2.9 + T2.10 (open) forked out 2026-07-24** — the MDT `(sports, odds, trades)` schema-drift finding and the
 > phantom-trades-rows purge decision (plus the 2026-07-17 SLOT-3 investigation note), moved **verbatim** to
-> [`sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`](/plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
+> [`sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`](/plans/archive/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
 > per the plan-hygiene line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 24,
 > bucket (c)). Nothing was deleted — see that plan for the full text.
 

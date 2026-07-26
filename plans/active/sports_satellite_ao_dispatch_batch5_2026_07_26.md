@@ -328,39 +328,39 @@ drift_direction: advance-code
       RE-TRIAGE 2026-07-23 confirms still open). Done when: `batch_odds_api` manifest rows for all 3 leagues show 0
       `attempted_failed`/gap-days across the golden window (2025-09-01..2025-11-30) and any other in-scope 2025-H2
       gap-dates, verified against the `_index` manifest (not a re-derived count).
-- [ ] [CODE] P1. **Close the 3 non-blocked, non-superseded open items from
-      `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`'s RE-TRIAGE ("Open Todos" section, re-verified 2026-07-25).**
-      Three independent fixes, different files/services, safe as one combined todo (do NOT further fan out): (a)
-      **`_apply_ht_odds_pit_gate` default-cutoff branch unreachable in prod** —
-      `features_service/sports/exporters/odds_features_exporter.py` guards the only call site with
-      `if ht_break_minutes:`, so the `if not ht_break_minutes:` default `-55` branch never runs, meaning post-kickoff
-      odds flow into HT features completely ungated whenever HT-break times are unknown (measured: 12,463 T-0 rows at
-      `bm < -55`, worst -374.6 min). Either call `_apply_ht_odds_pit_gate` unconditionally (letting its documented
-      default apply) or delete the dead default branch — pick whichever preserves existing gate behavior for the
-      `ht_break_minutes`-known case, add/extend a regression test proving the gate now fires when `ht_break_minutes` is
-      falsy. (b) **Re-calibrate `verify_ml_readiness.py`'s flat 95% non-NULL threshold**
-      (`features_service/sports/compute/ml_readiness_check.py:29`, `NON_NULL_THRESHOLD: float = 0.95`) — post-purge,
-      T-24h rows legitimately carry NULL for all closing-derived columns
-      (`clv_*`/`odds_movement_*`/`velocity_*_1h_to_0`/`steam_*`), so the flat threshold is now structurally unmeetable
-      (currently fails 1,683/1,860 dates at ~69-80%) and measures the wrong thing. Re-base the gate per-horizon on the
-      columns each horizon can honestly know (`FEATURE_HORIZONS[h]` / the `min_horizon` registry) — do NOT just lower
-      the number, that's the anti-pattern this todo explicitly forbids. (c) **Retrain the CLV models** (ml-service) now
-      that their stated prerequisite — the ODDS_FEATURES recompute (1,524/1,861 dates purged, 2026-07-17) — is confirmed
-      done. The 3 currently-quarantined artifacts (`ml-service@c0603cb`) stay in place as the reference for what the
-      leak produced; do not promote or cite them until the retrain lands and is independently verified. Explicitly OUT
-      OF SCOPE for this todo (do not touch): the doc's item (2) blank-`fixture_id` upstream-writer fix — very likely
-      ALREADY FIXED by `market-tick-data-service@3401c0ab` (batch2, `_build_fixture_rows()` now stamps `fixture_id`
-      alongside `af_fixture_id` at the exact write path the doc names) even though the doc's own re-triage text (same
-      day, order ambiguous) still calls it open — verify against `market-tick-data-service@3401c0ab` before doing any
-      further work here, do not duplicate; and the doc's item (4) T-0 shard manifest reconciliation — structurally
-      blocked on the sports legacy-bucket-cutover's T6.1 merge of `_index/per_vm/cutover-move-20260716.parquet`,
-      confirmed still unmerged as of the cutover's own 2026-07-24 history doc — not eligible for dispatch until that
-      merge lands. Source: `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`. **Done when**: (a) a regression test
-      proves the PIT gate fires on the `ht_break_minutes`-unknown path and the chosen fix (unconditional call vs.
-      dead-branch delete) is committed; (b) `ml_readiness_check.py` computes its non-NULL threshold per-horizon against
-      the honest matrix (not a flat 0.95) and the gate's pass/fail on the current corpus is re-measured and reported;
-      (c) a CLV retrain run completes post-ODDS_FEATURES-recompute, is independently re-verified (not just claimed), and
-      the 3 quarantined artifacts remain untouched/unpromoted; `quality-gates.sh` green on every touched repo.
+- [ ] [CODE] P1. **PARTIAL 2026-07-26 (slot-7, `data_engineering`) — (a)+(b) DONE (by a concurrent slot, verified by
+      me), (c) thoroughly diagnosed, genuinely BLOCKED on a deeper pre-existing ml-service gap.** (a)+(b): a concurrent
+      slot shipped `features-service@4f365d23` ("fix(sports): unconditional HT-odds PIT gate + per-horizon ml-readiness
+      rebasing") literally minutes before I picked this up, citing this exact doc's Open Todos #1+#3 as source —
+      `_apply_ht_odds_pit_gate` is now called unconditionally with a regression test proving it fires on the
+      `ht_break_minutes`-unknown path, and `ml_readiness_check.py`'s threshold is rebased per-horizon (re-run against
+      real prod features-sports-prd 2026-04-15..2026-05-15: 29/31 dates PASS at 100%, gate_met=YES). Independently
+      re-ran both regression test files (103 passed, 0 failed) — confirmed, not just claimed. (c): attempted the CLV
+      retrain, found the 3 exact quarantined artifacts
+      (`ml-store-prd-.../models/models/     CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260417{154715,164033,201036}/`) and hit
+      3 STACKED, pre-existing ml-service training-CLI bugs while trying to reproduce their training scope: (1)
+      `--target-type` singular has no fallback to `--target-types`, crashes `'None' is not a valid TargetType`; (2)
+      `--family` is required+validated for `--asset-group SPORTS` but never consumed anywhere in `ml_service/training/`
+      — dead wiring; (3) the REAL blocker — `cloud_feature_provider.py`'s feature dispatcher has a DEFI-specific
+      non-instrument-id branch (`_query_defi_features`) but NO equivalent SPORTS branch, so sports falls through to the
+      generic instrument-id GCS query (trivially empty, `instruments=[]`), then a BigQuery fallback that also returns
+      nothing. Live-verified real `feature_group=odds_features` data DOES exist at the exact date probed (rules out
+      data-absence) — **ml-service has likely never trained on real SPORTS features at all**, not CLV-specific. Filed
+      `plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md` with all 3 bugs + a
+      fix direction (mirror `_query_defi_features` for sports); did not attempt the architectural fix myself (out of
+      scope for a P2 sub-item, needs dedicated work). The 3 quarantined artifacts remain untouched/unpromoted.
+      Explicitly OUT OF SCOPE for this todo (do not touch): the doc's item (2) blank-`fixture_id` upstream-writer fix —
+      very likely ALREADY FIXED by `market-tick-data-service@3401c0ab` (batch2, `_build_fixture_rows()` now stamps
+      `fixture_id` alongside `af_fixture_id` at the exact write path the doc names) even though the doc's own re-triage
+      text (same day, order ambiguous) still calls it open — verify against `market-tick-data-service@3401c0ab` before
+      doing any further work here, do not duplicate; and the doc's item (4) T-0 shard manifest reconciliation —
+      structurally blocked on the sports legacy-bucket-cutover's T6.1 merge of
+      `_index/per_vm/cutover-move-20260716.parquet`, confirmed still unmerged as of the cutover's own 2026-07-24 history
+      doc. Source: `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`. **Done when**: (a) ✅ regression test proves the
+      PIT gate fires on the `ht_break_minutes`-unknown path; (b) ✅ `ml_readiness_check.py` rebased per-horizon,
+      re-measured; (c) ⏳ gated on `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s fix
+      landing first — CLV retrain completes + independently re-verified, 3 quarantined artifacts untouched;
+      `quality-gates.sh` green on every touched repo.
 - [x] ✅ [DATA] P1. Resolve the sports odds manifest-routing regression opened by the 2026-07-24 addendum to
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`: (1) grep+READ the manifest-write target
       resolution in the sports capture path in market-tick-data-service (same class of `_resolve_manifest_bucket()`

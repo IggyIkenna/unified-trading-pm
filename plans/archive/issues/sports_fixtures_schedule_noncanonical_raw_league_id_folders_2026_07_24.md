@@ -189,18 +189,18 @@ todo below.
       the enumerated list again.
 
       **🔴 CORRECTS the prior "registry-growth timing lag" root cause — that mechanism accounts for <0.4% of this
-                                                                              population, not the bulk.** Cross-checked all 485 affected league_ids against
-                                                                              `get_league_by_api_football_id()` LIVE (the exact function the writer calls): only **2 of 485** ids
-                                                                              (25 of 6,678 rows) are NOW resolvable in the registry — consistent with the CHINA_SUPER_LEAGUE
-                                                                              timing-lag story (a league added to the registry after writes had already occurred, self-healing on the next
-                                                                              write). The other **483 league_ids (6,653 rows, 99.6%) are STILL unresolvable today** — these are not a
-                                                                              registry catching up, they are af_league_ids that were fetched and WRITTEN despite never being registered at
-                                                                              all. This means the writer (or something upstream of it) is fetching fixtures for leagues far outside the
-                                                                              ~100 PREDICTION-tier registry scope this workspace is supposed to track — a fetch-side scoping gap, not (only)
-                                                                              a write-side canonicalization timing bug. **This is a bigger, different, and more actionable finding than the
-                                                                              todo's own done-when asked for** — filed as a new follow-up todo below rather than silently folded into the
-                                                                              "fix the writer" todo, since the fix for THAT todo (fail loud on lookup-miss) would not address why these 483
-                                                                              leagues are being fetched in the first place.
+                                                                                  population, not the bulk.** Cross-checked all 485 affected league_ids against
+                                                                                  `get_league_by_api_football_id()` LIVE (the exact function the writer calls): only **2 of 485** ids
+                                                                                  (25 of 6,678 rows) are NOW resolvable in the registry — consistent with the CHINA_SUPER_LEAGUE
+                                                                                  timing-lag story (a league added to the registry after writes had already occurred, self-healing on the next
+                                                                                  write). The other **483 league_ids (6,653 rows, 99.6%) are STILL unresolvable today** — these are not a
+                                                                                  registry catching up, they are af_league_ids that were fetched and WRITTEN despite never being registered at
+                                                                                  all. This means the writer (or something upstream of it) is fetching fixtures for leagues far outside the
+                                                                                  ~100 PREDICTION-tier registry scope this workspace is supposed to track — a fetch-side scoping gap, not (only)
+                                                                                  a write-side canonicalization timing bug. **This is a bigger, different, and more actionable finding than the
+                                                                                  todo's own done-when asked for** — filed as a new follow-up todo below rather than silently folded into the
+                                                                                  "fix the writer" todo, since the fix for THAT todo (fail loud on lookup-miss) would not address why these 483
+                                                                                  leagues are being fetched in the first place.
 
 - [x] ✅ [DIAG] P1. **NEW (2026-07-24, slot-6)** — investigate why fixtures_schedule fetches are happening for 483
       af_league_ids that are NOT in the UAC sports league registry at all (confirmed live via
@@ -214,43 +214,43 @@ todo below.
       something else — with the reasoning, not a guess. (repo: instruments-service)
 
       **Conclusion (2026-07-24, slot 5): answer is (iii) — a now-closed write-side leak, not a fetch-scoping problem
-                                                          needing a change today. Candidate (a) confirmed as the mechanism, with a precise fix date.**
+                                                              needing a change today. Candidate (a) confirmed as the mechanism, with a precise fix date.**
 
-                                                          The FETCH itself is deliberately unscoped by design: the "ensure canonical fixtures" path
-                                                          (`sports_reference_fixtures.py:160`, `await _adapter.get_fixtures_with_raw(date)`) calls the api_football
-                                                          adapter with NO `league_ids` filter — it fetches every league the vendor API returns for that date. This is
-                                                          intentional: this path builds the canonical `entity=fixtures/` SSOT that other entities (fixture_stats,
-                                                          standings, etc.) derive their league mapping FROM, so it must see the full vendor universe, not just the
-                                                          ~100-league PREDICTION-tier registry subset. This is candidate (a)'s "broader league set than the registry
-                                                          scopes" — confirmed, and correct/by-design, not a bug.
+                                                              The FETCH itself is deliberately unscoped by design: the "ensure canonical fixtures" path
+                                                              (`sports_reference_fixtures.py:160`, `await _adapter.get_fixtures_with_raw(date)`) calls the api_football
+                                                              adapter with NO `league_ids` filter — it fetches every league the vendor API returns for that date. This is
+                                                              intentional: this path builds the canonical `entity=fixtures/` SSOT that other entities (fixture_stats,
+                                                              standings, etc.) derive their league mapping FROM, so it must see the full vendor universe, not just the
+                                                              ~100-league PREDICTION-tier registry subset. This is candidate (a)'s "broader league set than the registry
+                                                              scopes" — confirmed, and correct/by-design, not a bug.
 
-                                                          The actual gap was on the WRITE side: `_write_fixtures_per_league()` (`sports_fixtures.py:354`), which splits
-                                                          the broad fetch's rows into per-league partitions (including `entity=fixtures_schedule/league=<L>/`), has a
-                                                          `_is_in_canonical_write_universe()` gate (line ~429) meant to drop any league outside the tracked registry
-                                                          before writing — but **`git log -L` on that exact gate shows it was added in
-                                                          `instruments-service@acfd5acf` ("fix(sports): add canonical write-universe gate to all per-league write paths
-                                                          (G1)"), dated 2026-06-27.** Before that date, this write path had no such filter at all: every league the
-                                                          broad fetch returned — registered or not — got a per-league partition written, which is exactly how 483
-                                                          never-registered af_league_ids accumulated 6,653 rows.
+                                                              The actual gap was on the WRITE side: `_write_fixtures_per_league()` (`sports_fixtures.py:354`), which splits
+                                                              the broad fetch's rows into per-league partitions (including `entity=fixtures_schedule/league=<L>/`), has a
+                                                              `_is_in_canonical_write_universe()` gate (line ~429) meant to drop any league outside the tracked registry
+                                                              before writing — but **`git log -L` on that exact gate shows it was added in
+                                                              `instruments-service@acfd5acf` ("fix(sports): add canonical write-universe gate to all per-league write paths
+                                                              (G1)"), dated 2026-06-27.** Before that date, this write path had no such filter at all: every league the
+                                                              broad fetch returned — registered or not — got a per-league partition written, which is exactly how 483
+                                                              never-registered af_league_ids accumulated 6,653 rows.
 
-                                                          **Live-verified the gate is effective TODAY** (not just trusting manifest metadata — the census's
-                                                          `attempted_at` column turned out to be unusable for pre/post-gate dating: all 6,678 affected rows show
-                                                          `attempted_at` clustered around 2026-07-22, which is a later bulk manifest re-consolidation touch, not the
-                                                          original write time, so it can't date-order these writes against the 2026-06-27 gate commit). Direct test
-                                                          instead: called the real `_write_fixtures_per_league()` with a 2-row DataFrame — one row `af_league_id=999999`
-                                                          (deliberately unregistered) and one `af_league_id=39` (EPL, registered) — and confirmed exactly ONE write
-                                                          occurred, for `league=EPL`; nothing was written for the bogus id. The gate correctly filters unregistered
-                                                          leagues today.
+                                                              **Live-verified the gate is effective TODAY** (not just trusting manifest metadata — the census's
+                                                              `attempted_at` column turned out to be unusable for pre/post-gate dating: all 6,678 affected rows show
+                                                              `attempted_at` clustered around 2026-07-22, which is a later bulk manifest re-consolidation touch, not the
+                                                              original write time, so it can't date-order these writes against the 2026-06-27 gate commit). Direct test
+                                                              instead: called the real `_write_fixtures_per_league()` with a 2-row DataFrame — one row `af_league_id=999999`
+                                                              (deliberately unregistered) and one `af_league_id=39` (EPL, registered) — and confirmed exactly ONE write
+                                                              occurred, for `league=EPL`; nothing was written for the bogus id. The gate correctly filters unregistered
+                                                              leagues today.
 
-                                                          **Disposition**: (i) NOT added to the registry — nothing suggests these 483 leagues are genuinely in scope,
-                                                          they were never deliberately curated; (ii) fetches are NOT stopped — the broad fetch is correct/necessary for
-                                                          the canonical fixtures SSOT and is unrelated to the leak; (iii) **the fix already shipped** (the 2026-06-27
-                                                          write-universe gate) — the only remaining work is DATA cleanup of the pre-gate historical residue, already
-                                                          tracked as the `[DATA] P2` fold/purge todo below. No new CODE todo needed here. **Unblocks the `[DATA] P2` todo's
-                                                          own gating question below**: the 483 leagues are confirmed out-of-scope, so their shards should be (ii)
-                                                          confirmed-out-of-scope-and-deleted, NOT folded (there is no canonical folder for them and none should be
-                                                          created) — only the 2 registry-growth-timing-lag leagues (`CHINA_SUPER_LEAGUE`, `RUSSIA_PREMIER_LEAGUE`) have a
-                                                          real canonical fold target.
+                                                              **Disposition**: (i) NOT added to the registry — nothing suggests these 483 leagues are genuinely in scope,
+                                                              they were never deliberately curated; (ii) fetches are NOT stopped — the broad fetch is correct/necessary for
+                                                              the canonical fixtures SSOT and is unrelated to the leak; (iii) **the fix already shipped** (the 2026-06-27
+                                                              write-universe gate) — the only remaining work is DATA cleanup of the pre-gate historical residue, already
+                                                              tracked as the `[DATA] P2` fold/purge todo below. No new CODE todo needed here. **Unblocks the `[DATA] P2` todo's
+                                                              own gating question below**: the 483 leagues are confirmed out-of-scope, so their shards should be (ii)
+                                                              confirmed-out-of-scope-and-deleted, NOT folded (there is no canonical folder for them and none should be
+                                                              created) — only the 2 registry-growth-timing-lag leagues (`CHINA_SUPER_LEAGUE`, `RUSSIA_PREMIER_LEAGUE`) have a
+                                                              real canonical fold target.
 
 - [x] ✅ [CODE] P1. Fix the writer so it never falls back to writing under a raw-id folder — fail loud (or resolve via a
       documented, tested fallback) instead (repo: instruments-service). **Done when**: a regression test reproduces the
@@ -273,38 +273,38 @@ todo below.
       remains correctly NOT executable (unchanged — see below); the narrow, verified-safe 12-shard portion is done.
 
       **Correction to this todo's own prior count**: re-verified live before executing — the FIXTURES_SCHEDULE-specific
-                                                  GCS objects (this todo's actual scope; `entity=fixtures_schedule` only, not the sibling `entity=fixtures`/
-                                                  `entity=fixtures_outcomes`) number **12** (date, league) pairs, not 13: `af_id=169` → `CHINA_SUPER_LEAGUE` across
-                                                  11 dates (`2026-05-05, 05-06, 05-19, 05-20, 05-29, 05-30, 06-26, 06-27, 06-28, 07-03, 07-04`) + `af_id=235` →
-                                                  `RUSSIA_PREMIER_LEAGUE` on 1 date (`2026-05-20`). The manifest carries a `FIXTURES` (not `FIXTURES_SCHEDULE`) row
-                                                  for `day=2026-07-05`/`league_id=169` with no matching GCS object under `entity=fixtures_schedule/league=169/` for
-                                                  that date — the prior "23 rows"/"13 pairs" count evidently summed across the FIXTURES-family data_types
-                                                  (FIXTURES + FIXTURES_OUTCOMES + FIXTURES_SCHEDULE share the same league resolution bug and likely have their own
-                                                  analogous non-canonical shards — NOT folded here, out of this todo's stated `entity=fixtures_schedule` scope;
-                                                  flagging as a new adjacent-scope todo below rather than silently expanding this one's blast radius).
+                                                      GCS objects (this todo's actual scope; `entity=fixtures_schedule` only, not the sibling `entity=fixtures`/
+                                                      `entity=fixtures_outcomes`) number **12** (date, league) pairs, not 13: `af_id=169` → `CHINA_SUPER_LEAGUE` across
+                                                      11 dates (`2026-05-05, 05-06, 05-19, 05-20, 05-29, 05-30, 06-26, 06-27, 06-28, 07-03, 07-04`) + `af_id=235` →
+                                                      `RUSSIA_PREMIER_LEAGUE` on 1 date (`2026-05-20`). The manifest carries a `FIXTURES` (not `FIXTURES_SCHEDULE`) row
+                                                      for `day=2026-07-05`/`league_id=169` with no matching GCS object under `entity=fixtures_schedule/league=169/` for
+                                                      that date — the prior "23 rows"/"13 pairs" count evidently summed across the FIXTURES-family data_types
+                                                      (FIXTURES + FIXTURES_OUTCOMES + FIXTURES_SCHEDULE share the same league resolution bug and likely have their own
+                                                      analogous non-canonical shards — NOT folded here, out of this todo's stated `entity=fixtures_schedule` scope;
+                                                      flagging as a new adjacent-scope todo below rather than silently expanding this one's blast radius).
 
-                                                  **Executed via** `instruments-service/scripts/fold_china_russia_league_raw_id_folders_2026_07_24.py` (dry-run
-                                                  validated against live GCS first — confirmed 0 aborts, no canonical sibling existed for any of the 12 pairs —
-                                                  then `--apply`d). Recipe per shard (this bucket has **NO soft-delete**,
-                                                  `retentionDurationSeconds=0` confirmed live via `bucket.soft_delete_policy` — unlike the market-data-tick bucket
-                                                  precedent this todo cited, so an explicit backup copy is the real safety net, not soft-delete): describe source →
-                                                  describe canonical target (absent, confirmed) → `gcs_copy_object` to canonical path → verify size+crc32c parity →
-                                                  download+parse canonical object (non-empty, confirmed) → `ManifestWriter.record_captured()` per canonical
-                                                  `(date, FIXTURES_SCHEDULE, league_id=<CANONICAL_ID>)` row_key via a single shared per-VM-shard writer → backup-copy
-                                                  the raw-id original to `sports_reference/_purge_backups/2026_07_24_league_fold/` → verify backup parity →
-                                                  `gcs_delete_object` the raw-id original → verify it's gone.
+                                                      **Executed via** `instruments-service/scripts/fold_china_russia_league_raw_id_folders_2026_07_24.py` (dry-run
+                                                      validated against live GCS first — confirmed 0 aborts, no canonical sibling existed for any of the 12 pairs —
+                                                      then `--apply`d). Recipe per shard (this bucket has **NO soft-delete**,
+                                                      `retentionDurationSeconds=0` confirmed live via `bucket.soft_delete_policy` — unlike the market-data-tick bucket
+                                                      precedent this todo cited, so an explicit backup copy is the real safety net, not soft-delete): describe source →
+                                                      describe canonical target (absent, confirmed) → `gcs_copy_object` to canonical path → verify size+crc32c parity →
+                                                      download+parse canonical object (non-empty, confirmed) → `ManifestWriter.record_captured()` per canonical
+                                                      `(date, FIXTURES_SCHEDULE, league_id=<CANONICAL_ID>)` row_key via a single shared per-VM-shard writer → backup-copy
+                                                      the raw-id original to `sports_reference/_purge_backups/2026_07_24_league_fold/` → verify backup parity →
+                                                      `gcs_delete_object` the raw-id original → verify it's gone.
 
-                                                  **Independently verified post-run** (separate ad-hoc GCS listing, not just the script's own internal checks): all
-                                                  12 canonical objects present (`league=CHINA_SUPER_LEAGUE`/`league=RUSSIA_PREMIER_LEAGUE`), all 12 raw-id objects
-                                                  (`league=169`/`league=235`) gone across every affected date, 12 backup snapshots present under
-                                                  `_purge_backups/2026_07_24_league_fold/`. The per-VM manifest shard (`_index/per_vm/league-fold-20260724.parquet`)
-                                                  carries all 12 `captured` rows.
+                                                      **Independently verified post-run** (separate ad-hoc GCS listing, not just the script's own internal checks): all
+                                                      12 canonical objects present (`league=CHINA_SUPER_LEAGUE`/`league=RUSSIA_PREMIER_LEAGUE`), all 12 raw-id objects
+                                                      (`league=169`/`league=235`) gone across every affected date, 12 backup snapshots present under
+                                                      `_purge_backups/2026_07_24_league_fold/`. The per-VM manifest shard (`_index/per_vm/league-fold-20260724.parquet`)
+                                                      carries all 12 `captured` rows.
 
-                                                  **The 483-league portion remains correctly NOT executed** — the P1 DIAG above already concluded (2026-07-24,
-                                                  slot 5/6) that those leagues are out-of-scope residue from a write-side leak closed by the 2026-06-27
-                                                  `_is_in_canonical_write_universe()` gate, with NO canonical fold target to create; this todo's done-when for that
-                                                  portion is `(ii) confirmed-out-of-scope`, tracked as its own disposition in that DIAG conclusion — not re-opened
-                                                  or re-litigated here.
+                                                      **The 483-league portion remains correctly NOT executed** — the P1 DIAG above already concluded (2026-07-24,
+                                                      slot 5/6) that those leagues are out-of-scope residue from a write-side leak closed by the 2026-06-27
+                                                      `_is_in_canonical_write_universe()` gate, with NO canonical fold target to create; this todo's done-when for that
+                                                      portion is `(ii) confirmed-out-of-scope`, tracked as its own disposition in that DIAG conclusion — not re-opened
+                                                      or re-litigated here.
 
 - [x] [DATA] P2. BLOCKED-OPERATOR-DECISION — the sibling `entity=fixtures` and `entity=fixtures_outcomes` GCS objects
       for the SAME 2 leagues (af_id=169/235) also sit under non-canonical `league=169`/`league=235` folders for at least
@@ -336,18 +336,18 @@ todo below.
       `BLK-4c0c944b` in the dashboard for the full exchange.
 
       **RESOLVED 2026-07-26T01:54Z — unblocked and executed.** The blocked question (whether a consolidator cron pause
-          was needed) is answered exactly as the prior worker's follow-up research concluded: no pause needed. The
-          remaining gate was a separate, broader one the prior worker hadn't hit yet — the delete-safety codex's
-          unconditional "any prod-bucket delete" human-only hard stop
-          (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1), which requires an operator to name that
-          specific stop in the same turn (not crossable under a bare `/autonomous` instruction). Obtained that explicit
-          same-turn authorization, then ran `--apply`. Fresh dry-run immediately prior reconfirmed 21/21 sources present,
-          21/21 canonical targets absent, 0 aborts. `--apply` output: `FOLD COMPLETE — 21/21 shard(s)
-          copied+recorded+deleted, 0 remaining raw-id objects.` Independently re-verified via a fresh GCS listing (not the
-          script's own internal checks): 21/21 canonical objects present; 21/21 raw-id (`league=169`/`league=235`)
-          originals for `entity IN (fixtures, fixtures_outcomes)` confirmed gone; 21/21 backup snapshots present under
-          `sports_reference/_purge_backups/2026_07_24_league_fold_fixtures_siblings/` with size+crc32c parity vs. canonical;
-          the per-VM manifest shard (`_index/per_vm/league-fold-fixtures-siblings-20260724.parquet`) carries exactly 21
-          `captured` rows for the canonical `(date, entity, league)` keys. `BLK-4c0c944b` closed — reply posted. Evidence
-          also recorded in `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s mirrored todo,
-          `unified-trading-pm@554be628c`.
+              was needed) is answered exactly as the prior worker's follow-up research concluded: no pause needed. The
+              remaining gate was a separate, broader one the prior worker hadn't hit yet — the delete-safety codex's
+              unconditional "any prod-bucket delete" human-only hard stop
+              (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1), which requires an operator to name that
+              specific stop in the same turn (not crossable under a bare `/autonomous` instruction). Obtained that explicit
+              same-turn authorization, then ran `--apply`. Fresh dry-run immediately prior reconfirmed 21/21 sources present,
+              21/21 canonical targets absent, 0 aborts. `--apply` output: `FOLD COMPLETE — 21/21 shard(s)
+              copied+recorded+deleted, 0 remaining raw-id objects.` Independently re-verified via a fresh GCS listing (not the
+              script's own internal checks): 21/21 canonical objects present; 21/21 raw-id (`league=169`/`league=235`)
+              originals for `entity IN (fixtures, fixtures_outcomes)` confirmed gone; 21/21 backup snapshots present under
+              `sports_reference/_purge_backups/2026_07_24_league_fold_fixtures_siblings/` with size+crc32c parity vs. canonical;
+              the per-VM manifest shard (`_index/per_vm/league-fold-fixtures-siblings-20260724.parquet`) carries exactly 21
+              `captured` rows for the canonical `(date, entity, league)` keys. `BLK-4c0c944b` closed — reply posted. Evidence
+              also recorded in `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s mirrored todo,
+              `unified-trading-pm@554be628c`.

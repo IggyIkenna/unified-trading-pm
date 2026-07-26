@@ -28,7 +28,8 @@ depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 assigned_vm:
-resolved_by:
+resolved_by: mtds@f645ea02+uac@7e179ae8 (recovery+guard, 2026-07-20); root-cause doc uac@8080b645+mtds@377dd90c
+  (2026-07-26) # all 3 Remediation items now struck through/done; locked_by blocks archival — leave status/lock as-is
 ---
 
 # CME combo/chain `underlying=` garbage — pre-existing extraction defect
@@ -72,15 +73,38 @@ bucket). But they remain uncanonicalized until the root can be recovered.
 
 ## Remediation (needs its own work — NOT fixed by the migration or the Massive purge)
 
-1. **Recover the real root from CONTENT** where possible: the per-row leg symbols / instrument metadata inside the
+1. ~~**Recover the real root from CONTENT** where possible: the per-row leg symbols / instrument metadata inside the
    parquet may carry a resolvable human ticker (e.g. `ESM4-ESU4` → `ES` → `SP500`). Re-derive via
    `unified_api_contracts/external/databento/databento_classifier.py` combo logic; rewrite `underlying=` + populate
-   `instrument_id`.
-2. **Root-cause the older writer/ingestion path** that stamped numeric `underlying` so no NEW data reproduces it (the
+   `instrument_id`.~~ **DONE 2026-07-20** —
+   `market-tick-data-service/scripts/recover_tradfi_garbage_underlying_2026_07.py` (mtds@f645ea02):
+   content-authoritative recovery pass — categories B/C (named-spread + newly-recognised real roots) kept in place,
+   category D (options `underlying=E` / root-qualified UD) rebundled under the CONTENT-recovered real root, category A
+   (numeric/opaque UD with no recoverable root) quarantined + `attempted_failed`.
+2. ~~**Root-cause the older writer/ingestion path** that stamped numeric `underlying` so no NEW data reproduces it (the
    write-time canonical guard added in the chain shard-atom change should REJECT a numeric/empty `underlying=` on a
-   tradfi chain write — fold that rule in).
+   tradfi chain write — fold that rule in).~~ **DONE 2026-07-26** (root-caused + verified guard already covers combo,
+   not just chain). Root cause: `classify_databento_symbol`'s CBOE `UD:1V:` regex was widened (`mtds@c4dc28b4451da`,
+   2026-04-18) from `[A-Z]{2,4}` to `[A-Z0-9]{1,4}` to accept CBOE's numeric Globex strategy codes — with NO downstream
+   check that the captured code resolved to a real product root, so every numeric (`12`/`13`/`23`) or opaque-alpha
+   (`GN`/`VT`/`3W`) UD combo was stamped verbatim as `underlying=` for ~3 months until the fix below. That fix
+   (2026-07-20, `mtds@f645ea02` + `uac@7e179ae8`) already closed the gap at BOTH layers: `_classify_row`
+   (`market-tick-data-service/.../databento_enrichment.py`) drops the row when
+   `is_recognized_tradfi_underlying(underlying)` is `False`, AND the write-time
+   `canonical_path_violations`/`_tradfi_path_violations` guard (`unified-api-contracts/.../partition_paths.py`)
+   independently rejects any leftover/future numeric-or-empty `underlying=` at the GCS-path level — covering BOTH chain
+   (`futures_chain`/`options_chain`) and `combo` bundles (verified: `_get_writer` in
+   `market_tick_data_service/engine/orchestrator/partitioned_writer.py` calls the guard unconditionally for every tradfi
+   write, not just chain types). Existing regression tests already prove numeric/empty rejected + a valid root passing:
+   `tests/unit/test_partitioned_writer_tradfi_filename_canonical.py::test_tradfi_chain_numeric_underlying_write_raises`
+   - `::test_assert_canonical_chain_path_rejects_numeric_and_empty_underlying` (MTDS),
+     `tests/unit/test_partition_path_is_canonical.py::test_tradfi_chain_numeric_underlying_rejected` +
+     `::test_tradfi_combo_opaque_ud_underlying_rejected` (UAC). Dated root-cause comments added at the classifier call
+     site (`uac@8080b645`) and the enrichment call site (`mtds@377dd90c`) documenting this history in place, per
+     `plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` item 4.
 3. **Truly-unrecoverable rows** (numeric ID with no resolvable content) → keep in `_quarantine/` + record
-   `attempted_failed` in the manifest (honest absence), never silently dropped.
+   `attempted_failed` in the manifest (honest absence), never silently dropped. **DONE** — same 2026-07-20 recovery pass
+   (item 1) quarantines category A (genuinely unrecoverable) with `attempted_failed`.
 
 ## Cross-refs
 

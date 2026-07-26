@@ -36,7 +36,7 @@ scope: [engineer, admin]
 tags: [drift-solana-cull, architecture-v2, leg-specs, strategy-archetype, venue-residue, ui-reference-data]
 related: []
 created: 2026-07-16
-last_updated: 2026-07-16
+last_updated: 2026-07-26
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -168,6 +168,38 @@ tag `assigned_role: engineer`, likely a `unified-trading-system-ui` + `unified-a
 the same strategy-instance ID as `archetype_capability_manifest.json` line 690. Left untouched this session for the same
 reason: whether it's deleted or re-legged onto Jupiter is a strategy-domain call that should follow the UAC-side
 decision, not precede it (an E2E fixture referencing an ID the backend still serves is not itself a bug).
+
+## UPDATE 2026-07-26 — full triage of the remaining 9 never-individually-confirmed files (RESOLVED — all false positive)
+
+The 9 files listed in Fact #3 but never individually re-confirmed by the 2026-07-16 follow-up dispatch —
+`perp_hedge_sizer.py`, `capability_manifest.py`, `archetype_config.py`, `backtest_scenarios.py`,
+`flash_loan_receiver.py`, `algo_compatibility.py`, `liquidation_bonus_schedule.py`, `benchmark_fill_pricing.py`,
+`archetype_capability.py` — were each individually re-run through `rg -n -i 'drift|pacifica'` scoped to that file.
+Verdict: **all false positive, zero code changes needed.**
+
+- `perp_hedge_sizer.py` (3 hits) — `DRIFT_BAND_BREACH` enum member + "Drift within/as fraction of band" docstrings:
+  position-exposure drift (deviation from target) within a rebalance band, unrelated to the Drift DEX venue.
+- `capability_manifest.py` (2 hits) — "JSON drift detection" / "deterministic serialisation for drift detection":
+  schema/content drift (change-tracking), not a venue reference.
+- `archetype_config.py` (1 hit) — "cross-venue delta-drift risk surfaces" (line 286, `CARRY_BASIS_PERP_INV` comment): a
+  risk-surface description of hedge-ratio delta drift across venues generically, not a Drift-venue mention — the venue
+  actually named nearby is Bybit (perp hedge venue), not Drift.
+- `flash_loan_receiver.py` (1 hit), `algo_compatibility.py` (1 hit), `liquidation_bonus_schedule.py` (1 hit),
+  `benchmark_fill_pricing.py` (1 hit), `archetype_capability.py` (1 hit) — each a single generic "config/behavioral
+  drift" mention (e.g. "flash-loan borrow if drift detected", "no drift" between registries, "backtest engine could
+  drift from live", "cannot drift between batch and paper", "push catches drift") — none reference a venue at all.
+- **Zero `pacifica` hits** in any of the 9 files (checked separately, case-insensitive).
+
+No comment markers were added since there was no dead venue entry to mark — the standard
+`# DRIFT/PACIFICA (Solana) removed 2026-07-16 (operator ruling: ...)` pattern applies only where a genuine live venue
+reference existed to replace, which none of these 9 files had. No `unified-api-contracts` code changed, so no QG run was
+needed for this sub-task. This closes out Fact #3's "not all individually confirmed" gap — combined with the 2026-07-16
+UPDATE above (which resolved the genuine-hit files), **all files originally flagged by the `rg -l -i 'drift|pacifica'`
+sweep are now individually triaged** (either fixed with a marker, or confirmed false-positive).
+
+Still open (unchanged): the UI resync (`venue_set_variants`/`archetype_capability_registry`/
+`strategy_instance_catalogue`), the `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod` delete-vs-re-leg strategy call,
+and the generator/UI structural-skew investigation — see "Recommended next steps" below, items 2-4.
 
 ## Recommended next steps
 

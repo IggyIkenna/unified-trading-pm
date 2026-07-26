@@ -49,6 +49,23 @@ DEFAULT_BASELINE_PATH = Path(__file__).parent / "plan_discipline_baseline.yaml"
 # "no DEFERRED-without-successor" (uppercase DEFERRED, but the word after the hyphen
 # is lowercase — not a real qualifier tag, just prose describing the absence of one).
 _DEFERRED_RE = re.compile(r"\*\*DEFERRED\*\*|\[DEFERRED\]|\bDEFERRED-[A-Z][A-Z0-9-]*\b|\bDEFERRED\b\s+[—-]")
+# A DEFERRED token immediately preceded by an opening quote character is a QUOTED
+# REFERENCE to another document's own annotation ("...annotated in the doc itself as
+# \"DEFERRED — ...\""), not a live in-doc marker for THIS document — the same
+# precision philosophy as _ARCHIVE_OK_TOKENS_RE below. Confirmed 2026-07-26
+# (plan_discipline_quoted_deferred_false_positive_2026_07_26.md):
+# defi_satellite_ao_dispatch_batch2_2026_07_26.md quotes
+# e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md's own "DEFERRED — ..."
+# annotation while reporting a Phase-1 finding — the checker demanded a migration
+# banner for a doc with no actual deferred work of its own.
+_QUOTE_CHARS = "\"'“‘"  # noqa: RUF001 — curly quote variants are real prose punctuation, not lookalike typos
+
+
+def _has_live_deferred_marker(text: str) -> bool:
+    """True if `_DEFERRED_RE` matches a token NOT immediately preceded by an opening quote."""
+    return any(m.start() == 0 or text[m.start() - 1] not in _QUOTE_CHARS for m in _DEFERRED_RE.finditer(text))
+
+
 _BANNER_RE = re.compile(r"##\s+Deferred work\s+—\s+migrated to", re.IGNORECASE)
 _SUCCESSOR_RE = re.compile(
     r"MIGRATED TO:|successor:|→\s+plans/active/|See:\s+plans/active/|see\s+plans/active/",
@@ -98,7 +115,7 @@ def _check_rule_a(active_dir: Path) -> list[DisciplineViolation]:
             text = p.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        if _DEFERRED_RE.search(text) and not _BANNER_RE.search(text):
+        if _has_live_deferred_marker(text) and not _BANNER_RE.search(text):
             out.append(
                 DisciplineViolation(
                     rule="A-deferred-no-banner",
@@ -144,7 +161,7 @@ def _check_rule_c(archive_dir: Path) -> list[DisciplineViolation]:
             text = p.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        if (_ARCHIVE_OK_TOKENS_RE.search(text) or _DEFERRED_RE.search(text)) and not _SUCCESSOR_RE.search(text):
+        if (_ARCHIVE_OK_TOKENS_RE.search(text) or _has_live_deferred_marker(text)) and not _SUCCESSOR_RE.search(text):
             out.append(
                 DisciplineViolation(
                     rule="C-archive-no-successor",

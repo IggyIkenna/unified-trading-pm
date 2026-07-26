@@ -178,7 +178,7 @@ drift_direction: advance-code
       `resolved`, or (ii) a new dated issue doc exists for the genuinely-new-failure branch and this doc's Progress Log
       links to it with `status:` flipped to `resolved` (superseded by the new doc) — either way this doc no longer sits
       open with unresolved P1/P2 todos. Source: `issues/aster_mtds_failure_count_regression_2026_07_07.md`.
-- [ ] [BACKEND] P1. Fix `_normalize_instrument_id_for_match`
+- [x] ✅ [BACKEND] P1. Fix `_normalize_instrument_id_for_match`
       (`deployment_api/services/data_status/instrument_coverage.py:37-64`) so OPTION/dated-FUTURE `instrument_id`s stop
       colliding into a handful of dict keys. Use direction (b) from the doc — make the `@`-suffix strip
       instrument_type-aware: keep stripping for instrument_types confirmed suffix-divergent-only
@@ -198,7 +198,15 @@ drift_direction: advance-code
       `_normalize_instrument_id_for_match` is instrument_type-aware per direction (b), new OPTION/dated-FUTURE unit
       tests pass, the doc's two P1/P2 fix+test todos are checked off, and a live re-check of DERIBIT `options_chain`
       `completion_pct` (or a mocked-equivalent regression test asserting the corrected denominator math) confirms the
-      false-100% clamp is gone.
+      false-100% clamp is gone. — **DONE (slot-3, 2026-07-26): `deployment-api@1fb94dce7`.** Implemented direction (b)
+      via a structural parse of the canonical `VENUE:TYPE:SYMBOL` grammar (`build_instrument_id`'s own format) — a
+      deny-list (OPTION/FUTURE keep their full id) rather than an allow-list, since the existing test fixtures use an
+      older `VENUE::SYMBOL` shape with no derivable type segment and an allow-list would have silently broken
+      `test_settlement_suffix_divergence_still_matches`. 4 new regression tests added (OPTION/dated-FUTURE distinctness,
+      PERPETUAL no-regression, and a mocked-equivalent `_per_instrument_coverage` integration test proving
+      `expected_shards` scales with the real instrument count instead of collapsing to distinct-key count — satisfies
+      the done-when's mocked-equivalent alternative to a live DERIBIT re-check). All 24 tests in
+      `test_per_instrument_cefi_is_provider.py` pass; `quality-gates.sh` green.
 - [ ] [BACKEND] P2. Isolate the dominant memory contributor behind the CeFi raw-tick recon Cloud Run job's OOM (measured
       `peak_rss=8646.5MB` against the old 8Gi limit, now mitigated by a 16Gi bump) via a real memory profile of an
       actual execution — `tracemalloc` or a Cloud Profiler session against
@@ -410,7 +418,7 @@ drift_direction: advance-code
       against the evidence table (diff-verifiable), QG green, and the issue doc's 3rd checkbox is flipped `[x]` with the
       commit cited; if this closes the doc's last open todo, run the standard archival ritual. Source:
       `issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`.
-- [ ] [CODE] P1. **Log the Tardis HTTP-400 error code, then register Tardis codes 140/300 in UAC
+- [x] ✅ [CODE] P1. **Log the Tardis HTTP-400 error code, then register Tardis codes 140/300 in UAC
       `classify_venue_error`.** Currently `tardis_csv_transport.py:523` logs only `"Tardis HTTP %s error"` with no code,
       so `code=300` (invalid-symbol) and `code=140` (date-not-available) are indistinguishable in logs even though
       `market-tick-data-service@a7569298` already classifies both as structural-absence in the transport's
@@ -426,7 +434,13 @@ drift_direction: advance-code
       resolving to structural-absence/honest-absence (not `attempted_failed`); a unit test in unified-api-contracts
       covers both codes; QG green in both repos; the two now-covered checkboxes ([CODE] P1 "Log the Tardis error code"
       and [CONTRACT] P2 "Register Tardis error codes in UAC") are flipped in the source issue doc with commit-sha
-      evidence.
+      evidence. — **DONE 2026-07-26**: (a) VERIFIED already done — the SAME commit that added the structural-absence
+      classification (`market-tick-data-service@a7569298`, 2026-07-18) already logs `code=%s` on both 400-path log lines
+      (streaming + non-streaming). (b) shipped `unified-api-contracts@c144f975` — registered Tardis `140`/`300` in
+      `classify_venue_error` as `ErrorAction.SKIP` (honest absence, matching the MTDS-side
+      `STRUCTURAL_ABSENCE_400_CODES` behavior); 2 new unit tests (57/57 pass); generic tardis `400`/5xx/429/274 stay
+      untouched. QG green in unified-api-contracts (278s full run). Source issue doc checkboxes flipped same commit
+      range.
 
 ## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION, not batchable)
 

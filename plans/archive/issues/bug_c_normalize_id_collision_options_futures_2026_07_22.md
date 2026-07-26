@@ -30,7 +30,7 @@ summary: >-
   `is_per_instrument_shard_data_type` currently live+unseeded for DERIBIT `options_chain` and `futures_chain` (confirmed
   via the real manifest — F4's `expected_unattempted` seed-guard does NOT cover these two dt's for DERIBIT today), so
   this is an ACTIVE production code path, not dormant.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -59,7 +59,7 @@ source: >-
   dedicated read-only verification pass calling deployment-api's real per_instrument_coverage() against the live CEFI
   manifest + IS catalogue, 2026-07-22. Not caused by that verification task; a pre-existing property of
   _normalize_instrument_id_for_match newly exposed by Bug C's `89e31a0` refactor.
-resolved_by:
+resolved_by: deployment-api@1fb94dce7 (slot-3, 2026-07-26)
 ---
 
 # Bug C's existence-window fix has a real `@`-suffix normalization collision for OPTIONS/dated-FUTURES
@@ -184,13 +184,21 @@ clears.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `_normalize_instrument_id_for_match` so OPTION/dated-FUTURE instrument_ids don't collide
+- [x] ✅ [BACKEND] P1. Fix `_normalize_instrument_id_for_match` so OPTION/dated-FUTURE instrument_ids don't collide
       (direction (a) or (b) above) — re-verify DERIBIT `options_chain` completion_pct moves off the false 100.0% clamp
-      against real data.
-- [ ] [BACKEND] P2. Add unit test coverage for `per_instrument_coverage`/`_normalize_instrument_id_for_match` using at
-      least one real OPTION and one real dated-FUTURE instrument_id shape — the 8 tests added in `89e31a0` all use
-      PERPETUAL/SPOT-shaped ids, which is why this collision wasn't caught pre-ship.
-- [ ] [REVIEW] P2. Audit other `_normalize_instrument_id_for_match` call sites (`missing_instruments`,
+      against real data. — **DONE (slot-3, 2026-07-26): `deployment-api@1fb94dce7`, direction (b)** — see
+      `plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s corresponding todo for the full evidence
+      (structural `VENUE:TYPE:SYMBOL` parse, deny-list on OPTION/FUTURE, mocked-equivalent regression test in place of a
+      live re-check).
+- [x] ✅ [BACKEND] P2. Add unit test coverage for `per_instrument_coverage`/`_normalize_instrument_id_for_match` using
+      at least one real OPTION and one real dated-FUTURE instrument_id shape — the 8 tests added in `89e31a0` all use
+      PERPETUAL/SPOT-shaped ids, which is why this collision wasn't caught pre-ship. — **DONE alongside the P1 fix
+      above, same commit.**
+- [x] ✅ [REVIEW] P2. Audit other `_normalize_instrument_id_for_match` call sites (`missing_instruments`,
       `normalized_iid_counts`, the `per_instrument` breakdown block) for the same collision on OPTION/dated-FUTURE
       venues — this issue only traced the `expected_shards`/`completion_pct` headline numbers Bug C's fix touches; the
-      pre-existing display-only call sites may already have a milder version of the same problem.
+      pre-existing display-only call sites may already have a milder version of the same problem. — **RESOLVED BY
+      CONSTRUCTION (slot-3, 2026-07-26): the fix lives INSIDE `_normalize_instrument_id_for_match` itself, which every
+      listed call site (`missing_instruments`, `normalized_iid_counts`, the `per_instrument` breakdown) already routes
+      through — there is no separate normalization implementation at any of those sites to audit independently; all
+      inherit the fix from the one shared function.**

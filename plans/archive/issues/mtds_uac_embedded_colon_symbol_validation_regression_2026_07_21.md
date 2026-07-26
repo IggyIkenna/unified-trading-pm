@@ -23,7 +23,7 @@ tags: [test-baseline-drift, quality-gates-blocker, cefi, canonical-id, cross-rep
 related:
   [
     /plans/archive/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md,
-    /plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
+    /plans/archive/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
   ]
 created: "2026-07-21"
 parent_epic: infrastructure_master
@@ -49,7 +49,7 @@ locked_by:
 
 > **Duplicate-discovery note (added 2026-07-25, /plan-reconcile apply pass):** this is the SAME regression (same UAC
 > commit, same 3 failing tests) independently discovered and written up the same day as
-> [`uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`](/plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md),
+> [`uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`](/plans/archive/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md),
 > which carries the actionable, tracked-todo version (5 open todos vs this doc's 0 — this one is narrative-only). Track
 > the fix there to avoid duplicated/uncoordinated work; this doc stays open as the reproduction record until that one
 > resolves.
