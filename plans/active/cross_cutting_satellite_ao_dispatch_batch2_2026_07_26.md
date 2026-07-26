@@ -196,53 +196,23 @@ drift_direction: advance-code
       todo above (or re-verify against whatever limit is live) so a memory regression is not masked by the raised
       ceiling. **Done when**: the column-restricted read + non-expanding aggregation land with a test, a real digest run
       completes inside the reduced limit with the memory figure cited, and the source checkbox is flipped.
-- [ ] [SCRIPT] P0. **Close the two remaining `audit_criteria_automation` honest-SKIPs and add the v9-readiness gate.**
-      (a) Wire CF-10 (phantom) and CF-14 (catalogue ⊇ present-set) from SKIP to real checks inside
-      `cf_manifest_audit_all.py` — repo `market-tick-data-service`. (b) Add a v9-readiness gate to the daily digest:
-      surface the `schema_version` distribution per asset_group (read the ACTUAL rows, never the constant — per
-      `/codex/02-data/availability-manifest-and-data-status.md`'s "trust the actual distribution") and alert on any AG
-      below 100% at v9, reusing `audit_canonical_form.py` CF-1 — repo `e2e-testing`. Source:
-      `data_pipeline_alert_substrate_residual_2026_07_24.md`. **Done when**: CF-10/CF-14 return real verdicts (not SKIP)
-      with tests, the digest emits the per-AG `schema_version` distribution and alerts below 100%, both repos'
-      `quality-gates.sh` are green, and both source checkboxes are flipped. **RESEARCH+DESIGN CAPTURED 2026-07-26
-      (slot-8) — a prior attempt at this exact todo IMPLEMENTED the design below and passed UTL's full
-      `quality-gates.sh` green, but the tmux session died before `quickmerge`/commit and the worktree came back clean on
-      resume (nothing landed) — re-implement from this design rather than re-researching: (1) **Location correction**:
-      `cf_manifest_audit_all.py` does NOT exist in `market-tick-data-service` — the real, shipped module is
-      `unified-trading-library/unified_trading_library/cf_manifest_audit.py` (moved there 2026-07-10; MTDS's image just
-      bundles/deploys it). Edit that file, not a market-tick-data-service path. (2) **CF-10 design**: add a
-      `--mode {changed,full}` CLI flag to `cf_manifest_audit.py` (mirrors e2e-testing's `manifest_hygiene_daily.py`'s
-      already-shipped `--mode changed|full` split — the operator-established pattern for cost-scoping GCS-walk checks).
-      `--mode full` invokes `reconcile_phantom_manifest_rows_all.py --dry-run` for the asset_group derived from the
-      bucket name (add `_ag_from_bucket()`, the reverse of `AG_BUCKET_TOKENS`/`_bucket()`), parses its deterministic
-      "Phantom captures: N" line (mirror `manifest_hygiene_daily.py._check_phantom`'s exact rc/parse handling incl. the
-      harness-error and no-summary-line honest-SKIP branches), and caches the verdict per asset_group across
-      `run_all()`'s market-data-tick + instruments-store loop so the reconciler runs once per AG, not twice. The default
-      daily `--mode changed` keeps CF-10 an honest, documented SKIP (walking objects per captured cell is expensive) —
-      this is a legitimate, cost-aware "real check path exists" close of the SKIP, not a forced always-GREEN. Needs a
-      new `unified-trading-library/tests/unit/test_cf_manifest_audit.py` (no test file exists for this module today).
-      (3) **CF-14 finding**: `_check_cf14_catalogue()` in the same file ALREADY computes a real GREEN/RED whenever
-      `_catalogue/instrument_catalogue.parquet` is readable — it only SKIPs when the catalogue genuinely isn't
-      materialised yet (G1 gate) or a `cp` fails, which is the correct "honest SKIP beats a fake GREEN" behaviour per
-      the module's own docstring and must NOT be forced. The real work here is just adding tests proving the GREEN/RED
-      path (present-set ⊆ catalogue → GREEN; a present cell missing from the catalogue → RED; catalogue absent / cp
-      failure → the two distinct SKIP variants) — no behaviour change needed. (4) **Digest v9-readiness design**: add a
-      shared `schema_version_readiness(df) -> SchemaVersionReadiness` (dataclass:
-      total/non_v9/missing/legacy/contaminated/dist) to `e2e-testing/scripts/audit/_dp_common.py`, carrying the exact
-      corrected string-normalization already proven in `manifest_hygiene_daily.py._check_v9` (the 2026-06-27 `DP_NOT_V9`
-      false-positive fix — `schema_version` is a STRING column, `'9' != 9` int-compare falsely flagged 100%). Refactor
-      `_check_v9` to call the shared helper (behavior-preserving — verified against
-      `e2e-testing/tests/unit/test_dp_audit.py`'s existing v9 tests, which only assert `count`/message content, not dist
-      formatting). Then have `data_pipeline_daily_digest.py._digest_for_ag()` call the SAME helper on its already-loaded
-      manifest `df` (no second GCS read) and add a `v9_readiness: {v9_pct, total, non_v9, dist}` key to its per-AG
-      digest dict — this is genuine reuse (not a third re-derived variant), and avoids double-alerting alongside the
-      already-shipped `DP_NOT_V9` WARN by keeping the digest's v9 surfacing informational (embedded in the existing
-      single `DP_DAILY_DIGEST` INFO event) rather than minting a second registered alert event. (5) **Source-doc
-      checkbox location correction**: the two real `- [ ]` items to flip live in
-      `data_pipeline_alert_substrate_residual_2026_07_24.md` around lines 72-79 (NOT under `plans/active/issues/` or
-      `plans/archive/`) — flip BOTH there plus this batch2 todo (3 total checkboxes). (6) **Ship order**: implement →
-      `bash scripts/quality-gates.sh` green in `unified-trading-library` AND `e2e-testing` → `quickmerge --agent` both →
-      flip all 3 checkboxes in the same turn.**
+- [x] ✅ [SCRIPT] P0. **Close the two remaining `audit_criteria_automation` honest-SKIPs and add the v9-readiness
+      gate.** — `unified-trading-library@fb63477a` + `e2e-testing@98d499a`. CF-10 (phantom) now runs a real GREEN/RED
+      via `--mode full` (reuses `reconcile_phantom_manifest_rows_all.py --dry-run`, cached per asset_group), staying an
+      honest cost-scoped SKIP in the default daily `--mode changed` (mirrors `manifest_hygiene_daily.py`'s own
+      changed/full split) — real edit location was
+      `unified-trading-library/unified_trading_library/cf_manifest_audit.py` (the plan's named
+      `cf_manifest_audit_all.py` in `market-tick-data-service` was stale — moved to UTL 2026-07-10). CF-14 (catalogue ⊇
+      present-set) already computed real GREEN/RED when the catalogue artifact is readable; added test coverage proving
+      the GREEN/RED/two-SKIP-variant paths (no behavior change — an honest SKIP when G1's catalogue isn't materialised
+      is correct, not forced). New `unified-trading-library/tests/unit/test_cf_manifest_audit.py` (13 tests). Digest:
+      added shared `_dp_common.schema_version_readiness()` (the corrected 2026-06-27 string-normalization, REUSED —
+      `manifest_hygiene_daily.py._check_v9` refactored onto it, not re-derived a third time),
+      `data_pipeline_daily_digest.py._digest_for_ag()` embeds `v9_readiness`/`v9_ready` per AG from its already-loaded
+      manifest df (no second GCS read), and `run()`'s message/details flag any AG below 100% v9 (informational, no
+      duplicate alert alongside the existing `DP_NOT_V9` WARN). Both source checkboxes in
+      `data_pipeline_alert_substrate_residual_2026_07_24.md` flipped in the same turn. Both repos' `quality-gates.sh`
+      green.
 - [ ] [CODE] P2. **Add the two missing UTL event-string constants and the per-source rate-limit health event.** (a) UTL
       `events/event_types.py` + `events/__init__` export: add `DP_DAILY_DIGEST` and `DP_HYGIENE_SUMMARY` (verified
       absent 2026-07-26 — the routing already works via the UAC rule matching the event string, so this is cleanliness,
