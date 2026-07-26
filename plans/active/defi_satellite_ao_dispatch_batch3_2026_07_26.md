@@ -93,12 +93,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
 ## Todos
 
 - [ ] [DATA] P1. D1 DeFi features backfill — run the features-service compute over the captured DeFi raw window
-      (features read canonical raw; C0 done) to populate `features-onchain-defi` (currently ~3 rows),
-      `features-delta-one-defi` and `features-volatility-defi` (currently no index), materialising
-      `staking_apy_bps`/`funding_rate_apy_bps`/`basis_bps`/`realized_vol_*` for the in-scope DeFi instruments.
-      Safe-idempotent justification: idempotent feature compute, no GCS delete. Repo: features-service. Done when: all
-      three feature indexes exist and are non-empty over the full captured window (features-onchain-defi row count ≫ 3;
-      delta-one + volatility indexes present and populated). Source: `data_completion_defi_2026_07_15.md`
+      (features read canonical raw; C0 done) to populate `features-onchain-defi` (currently ~3 rows) and
+      `features-delta-one-defi` (currently no index), materialising `staking_apy_bps`/`funding_rate_apy_bps` (onchain)
+      and `basis_bps`/`realized_vol_*` (delta_one, via the `funding_oi` and `returns` feature-groups respectively) for
+      the in-scope DeFi instruments. **`features-volatility-defi` DROPPED from this todo's scope 2026-07-26** (slot-8
+      finding, main-ruling-confirmed): the volatility feature family's `--asset-group DEFI` choice was REMOVED
+      2026-07-17 (operator ruling — no DeFi options products exist, so implied-vol/skew/term-structure surfaces cannot
+      be computed for DeFi; `features_service/volatility/cli/parser.py` now hard-rejects it, the corresponding bucket
+      was deleted, and a unit test (`test_asset_group_choices`) enforces `ASSET_GROUP_CHOICES == ["CEFI", "TRADFI"]`).
+      The original done-when's "features-volatility-defi... present and populated" leg predates that ruling and is
+      structurally unsatisfiable by design — NOT a gap to chase. Safe-idempotent justification: idempotent feature
+      compute, no GCS delete. Repo: features-service. Done when: `features-onchain-defi` row count ≫ 3 AND
+      `features-delta-one-defi` has a populated index, both over the full captured window (2 legs, not 3). Source:
+      `data_completion_defi_2026_07_15.md`
 
 - [ ] [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
