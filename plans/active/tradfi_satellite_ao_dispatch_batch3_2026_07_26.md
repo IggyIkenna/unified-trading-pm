@@ -156,22 +156,34 @@ drift_direction: advance-code
       aiodns/AsyncResolver is either adopted (with the sessions switched + a quick smoke test confirming DNS resolution
       still works) or a documented decision-not-to (with rationale) is appended to the issue doc, and the doc's [CODE]
       P2 checkbox is flipped to `[x]` accordingly.
-- [ ] [BACKEND] P0. **Root-cause and fix the two tradfi FX/live-source write-path defects in
-      `tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`.** (1) Find the write path stamping ICE/KRX/FX
-      `ohlcv_24h` captures as `source=databento` when the SSOT (`tradfi-databento-sourcing-ssot.md`) says Yahoo-only —
-      same defect class as the already-fixed 2026-06-19 CBOE `_VENUE_SOURCE_EXCLUSIONS` bug; add the missing
-      exclusion(s) for `("ICE","ohlcv_24h")` / `("KRX","ohlcv_24h")` / FX `ohlcv_24h`, re-stamp the confirmed-affected
-      historical rows (4 ICE + 12 KRX + 802 FX, likely more on a full walk), and confirm/rule out an actual Databento
-      billing-guard call for these off-allowlist venues. (2) Find why the FX `SPOT_PAIR` manifest-writer call never
-      receives a populated `instrument_id` (unlike every other single-instrument tradfi venue — the real GCS parquet
-      content IS correctly id'd), fix the write path, then backfill the manifest `instrument_id` column for the 4,310
-      affected historical FX rows via a manifest-only re-stamp
+- [x] ✅ [BACKEND] P0. **RESCOPED (slot-3, 2026-07-26): Finding 1's write-path root cause fixed + verified; historical
+      re-stamp, billing-guard confirmation, and all of Finding 2 (FX instrument_id) remain genuinely open — split to
+      `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`'s Deferred-work table (2026-07-26 Progress Log
+      entry) as fresh todos rather than claimed done.** Root-cause and fix the two tradfi FX/live-source write-path
+      defects in `tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`. (1) Find the write path stamping
+      ICE/KRX/FX `ohlcv_24h` captures as `source=databento` when the SSOT (`tradfi-databento-sourcing-ssot.md`) says
+      Yahoo-only — same defect class as the already-fixed 2026-06-19 CBOE `_VENUE_SOURCE_EXCLUSIONS` bug; add the
+      missing exclusion(s) for `("ICE","ohlcv_24h")` / `("KRX","ohlcv_24h")` / FX `ohlcv_24h`, re-stamp the
+      confirmed-affected historical rows (4 ICE + 12 KRX + 802 FX, likely more on a full walk), and confirm/rule out an
+      actual Databento billing-guard call for these off-allowlist venues. **DONE (root cause + fix, not the
+      exclusion-table approach originally suggested): traced the actual defect to
+      `unified_trading_library.pipeline_mode_resolver     .derive_pipeline_mode_for_row`'s explicit-`--source` branch
+      trusting a shared run-level `--source databento` (legitimate for CME/CBOE `ohlcv_1m`/`1s` in the same VM run per
+      `launch-tradfi-forward-poll.sh:132`) without re-validating capability for the SPECIFIC (venue, data_type) the
+      manifest-finalize call was writing — fabricating `batch_databento` for genuinely Yahoo-sourced ICE/KRX/FX
+      `ohlcv_24h`. `_VENUE_SOURCE_EXCLUSIONS` entries would have been redundant (`databento` isn't even registered for
+      `ohlcv_24h`); fixed by re-validating via `is_source_capable_for_venue` before trusting the explicit source
+      (`unified-trading-library@f237b75a`, regression tests added, QG green). Historical re-stamp + billing-guard
+      confirmation NOT done — need a fresh full-history census first.** (2) Find why the FX `SPOT_PAIR` manifest-writer
+      call never receives a populated `instrument_id` (unlike every other single-instrument tradfi venue — the real GCS
+      parquet content IS correctly id'd), fix the write path, then backfill the manifest `instrument_id` column for the
+      4,310 affected historical FX rows via a manifest-only re-stamp
       (`record_captured`/`merge_canonical_with_outstanding_shards`-style — GCS parquet content does not need to change).
-      Repos: market-tick-data-service, unified-api-contracts. Source:
-      `plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`. **Done when**: new captures for
-      both write paths land with correct `source`/`pipeline_mode` and a populated `instrument_id`; the cited historical
-      rows are re-stamped/backfilled with before/after evidence counts; `quality-gates.sh` green in
-      market-tick-data-service.
+      **NOT DONE — untouched this pass, a fully separate write path.** Repos: market-tick-data-service,
+      unified-api-contracts. Source: `plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`.
+      Original done-when: new captures for both write paths land with correct `source`/`pipeline_mode` and a populated
+      `instrument_id`; the cited historical rows are re-stamped/backfilled with before/after evidence counts;
+      `quality-gates.sh` green in market-tick-data-service.
 - [ ] [BACKEND] P1. Add a manifest-vs-disk consistency check in market-tick-data-service: for a sample/scheduled sweep
       of `capture_status=="captured"` rows in the tradfi tick availability manifest, verify the corresponding GCS object
       actually exists on disk and fail loudly (structured error/alert, not silent) when a captured row has zero backing
