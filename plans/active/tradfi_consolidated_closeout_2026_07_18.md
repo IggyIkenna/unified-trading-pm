@@ -463,7 +463,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[BACKEND] P1.** Per-run output-production verdict endpoint (the seam deployments links to)
     - **[REVIEW] P1.** QG both repos green + LOCAL verify the seam resolves live
   - [`plans/active/issues/tradfi_t1_no_working_mtds_job_2026_07_17.md`](/plans/active/issues/tradfi_t1_no_working_mtds_job_2026_07_17.md)
-    — 0 open todos (closed/archived/record-only)
+    — 0 open todos; `status: resolved` 2026-07-26 (live-reverified: 6 consecutive scheduled T+1 executions succeeded,
+    2026-07-21 through 2026-07-26)
   - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
     - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI
 

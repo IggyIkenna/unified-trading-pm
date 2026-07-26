@@ -9,7 +9,7 @@ summary:
   the same job. The job has been firing daily at 00:30 into a guaranteed failure since before the sports freeze; the
   full Cloud Run job list carries no TradFi-source-scoped MTDS job at all. TradFi T+1 tick data (Databento CFE/CME-1s,
   Massive equities/CME-1m) is therefore NOT being collected on the T+1 batch path.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [tradfi, databento, massive, mtds, t1-batch, cron, data-correctness, sourcing]
 related: [../sports_legacy_bucket_cutover_2026_07_16.md]
 created: 2026-07-17
-last_updated: 2026-07-25
+last_updated: 2026-07-26
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -32,6 +32,14 @@ depends_on:
 locked_by:
 locked_since:
 resolved_by:
+  "deployment-service@11bed3c (tradfi_backfill_throughput_followups_2026_07_24.md — added source-scoped
+  `uts-prod-market-tick-data-service-tradfi-databento-t1-recon` Cloud Run job + its scheduler, both ENABLED) plus its
+  SIGKILL-hardening follow-up (2026-07-25, 46m28.5s run, no SIGKILL). LIVE re-verified 2026-07-26 (this todo,
+  slot-5/review): `gcloud run jobs executions list --job=uts-prod-market-tick-data-service-tradfi-databento-t1-recon
+  --region=asia-northeast1 --project=central-element-323112` shows 6 consecutive daily SCHEDULED (un-forced, ~00:35 UTC)
+  executions 2026-07-21 through 2026-07-26, ALL succeededCount=1/failedCount=0, zero SIGKILLs. The 2026-07-26 run
+  (processing 2026-07-25, a Saturday) correctly logged `No active venues ... known non-trading day` — honest-absence,
+  not a failure. TradFi T+1 tick collection IS now running on the batch path."
 source: cutover T6.10
 ---
 
@@ -61,7 +69,17 @@ Fixing sports cutover **T6.10** (the broken `fast-t1-recon` job) surfaced this. 
 TradFi T+1 tick collection (Databento CFE / CME-1s, Massive equities / CME-1m) is **not running on the batch path**. If
 a TradFi corpus exists it was backfilled some other way; the daily T+1 forward-fill is absent.
 
-## Fix (not done here — needs its own workstream)
+## RESOLVED 2026-07-26
+
+Both blockers this doc's own frontmatter was waiting on are now closed on the other side
+(`tradfi_backfill_throughput_followups_2026_07_24.md`): the T+1 forward-fill job shipped (`deployment-service@11bed3c`)
+and its SIGKILL follow-up is fixed (46m28.5s clean run, no SIGKILL). Re-verified LIVE here (not by trusting either doc)
+via `gcloud run jobs executions list` against the real Cloud Run job — 6 consecutive daily SCHEDULED executions
+2026-07-21 through 2026-07-26 all succeeded (0 failures, 0 SIGKILLs); see `resolved_by` in the frontmatter for the full
+citation. TradFi T+1 tick collection is no longer absent from the batch path — the original defect this doc reported is
+fixed and confirmed live.
+
+## Fix (historical — already delivered, kept for record)
 
 Add TradFi-source-scoped T+1 MTDS job(s) alongside `mtds_fast_t1_recon_job` / `mtds_cefi_t1_recon_job` in
 `deployment-service/terraform/gcp/audit03_cron_provisioning.tf` + `t1_batch_scheduler.tf`:
@@ -77,6 +95,5 @@ writes rows, per the T6.10 "run it, don't read it" gate. **Status note (2026-07-
 above shipped — `uts-prod-market-tick-data-service-tradfi-databento-t1-recon` Cloud Run job +
 `uts-prod-market-tick-data-tradfi-databento-t1-schedule` scheduler, both ENABLED — per
 `/plans/active/tradfi_backfill_throughput_followups_2026_07_24.md` (which also tracks a live SIGKILL-at-2cpu/8Gi
-follow-up on that same job). This doc's own `status`/`resolved_by` frontmatter has not been reconciled against that
-shipment — left open here rather than unilaterally flipped, since the SIGKILL follow-up suggests the job isn't yet fully
-stable.
+follow-up on that same job, since fixed). **Reconciled 2026-07-26** — see § "RESOLVED 2026-07-26" above and the
+frontmatter's `status`/`resolved_by`.
