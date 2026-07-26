@@ -133,30 +133,30 @@ drift_direction: advance-code
       `_finalize_session_grid` routing:
 
       | Adapter | Verdict |
-                          | --- | --- |
-                          | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
-                          | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
-                          | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
-                          | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
-                          | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
-                          | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
+                              | --- | --- |
+                              | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
+                              | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
+                              | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
+                              | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
+                              | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
+                              | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
 
-                          **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
-                          intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
-                          **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
-                          (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
-                          `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
-                          snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
-                          absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
-                          `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
-                          non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
-                          documented the OLD (reversed) behavior, contradicting the shipped code —
-                          `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
-                          `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
-                          a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
-                          provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
-                          unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
-                          (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
+                              **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
+                              intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
+                              **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
+                              (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
+                              `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
+                              snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
+                              absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
+                              `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
+                              non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
+                              documented the OLD (reversed) behavior, contradicting the shipped code —
+                              `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
+                              `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
+                              a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
+                              provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
+                              unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
+                              (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
 
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
       candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
@@ -279,14 +279,19 @@ drift_direction: advance-code
       across two independent runs over the same candles; full repo `quality-gates.sh` green (7016 passed, type-check
       clean against the 792-error pre-existing ratchet baseline — zero new errors from this diff); shipped via
       quickmerge, confirmed on `origin/live-defi-rollout`.
-- [ ] [BACKEND] P1. **Fix `book_microstructure_handler.py`'s `available_at` wall-clock bug.** `_rows_to_dataframe`
-      (market-tick-data-service) should use the already-computed deterministic day-representative `as_of` timestamp
-      instead of the BATCH-run wall-clock `attempted_at` — thread `as_of` (already computed at line ~227, passed into
-      `derive_microstructure_rows`) into `_rows_to_dataframe` and change
-      `df.assign(available_at=attempted_at.isoformat(),     source=_SOURCE)` (line ~175) to use `as_of`. Repo:
-      market-tick-data-service. **Done when**: `_rows_to_dataframe` stamps `available_at` from `as_of`; a regression
-      test in `tests/unit/test_book_microstructure_handler.py` proves a same-day re-run yields byte-identical
-      `available_at`, consistent with the handler's documented ε=0 BATCH==LIVE goal; `quality-gates.sh` green. Source:
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-26 (slot 2)** — Fix `book_microstructure_handler.py`'s `available_at` wall-clock
+      bug. `_rows_to_dataframe` (market-tick-data-service) now stamps `available_at` from the already-computed
+      deterministic day-representative `as_of` timestamp instead of the BATCH-run wall-clock `attempted_at` —
+      `_rows_to_dataframe`'s second parameter renamed `attempted_at` → `as_of`,
+      `df.assign(available_at=as_of.isoformat(),     source=_SOURCE)`, and the `_process_one_instrument` call site
+      updated to pass `as_of` (already computed at line ~227) instead of `attempted_at` — mirrors the same fix already
+      shipped for `deribit_volatility_index_handler.py` in this same plan. Two regression tests added to
+      `tests/unit/test_book_microstructure_handler.py`:
+      `test_rows_to_dataframe_available_at_derived_from_as_of_not_wallclock` (direct unit test on the fixed function)
+      and `test_process_one_instrument_available_at_stable_across_reruns` (end-to-end — two separate calls with
+      genuinely different internal wall-clock `attempted_at` values still yield byte-identical `available_at` for the
+      same `target_day`), consistent with the handler's documented ε=0 BATCH==LIVE goal. Full `quality-gates.sh` green
+      (sentinel-verified against HEAD). Repo: market-tick-data-service@5b9ff8d2. Source:
       `issues/cefi_available_at_wallclock_despite_deterministic_row_timestamp_2026_07_24.md`.
 - [ ] [DATA] P1. **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Extend the
       archived migration plan's 5-day sample to every day the existing Phase-1 scope-audit output
