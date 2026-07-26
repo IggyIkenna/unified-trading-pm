@@ -6,7 +6,7 @@ summary: >-
   rolling out an unrelated scripts/setup.sh fix (infra_satellite_ao_dispatch_batch1-002) — confirmed pre-existing and
   unrelated to that change (pip-audit runs against the repo's declared/locked Python deps, untouched by a bash
   bootstrap-script sync).
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,7 +17,7 @@ related: []
 created: 2026-07-26
 parent_epic: infrastructure_master
 assigned_vm: planning
-resolved_by:
+resolved_by: cicd-agent (slot-10)
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -51,5 +51,21 @@ under the green-tree rule until the dependency is bumped.
 Bump `pyasn1` to >=0.6.4 (fixes all 3 CVEs) in this repo's `pyproject.toml`/`uv.lock`, re-lock, and verify pip-audit is
 clean.
 
-- [ ] [SCRIPT] P2. Bump `pyasn1` to `>=0.6.4` in `ibkr-gateway-infra/pyproject.toml`, re-lock (`uv lock`), and confirm
-      `bash scripts/quality-gates.sh` no longer reports PYSEC-2026-3455/3456/3457. Repo: ibkr-gateway-infra.
+- [x] [SCRIPT] P2. Bump `pyasn1` to `>=0.6.4` in `ibkr-gateway-infra/pyproject.toml`, re-lock (`uv lock`), and confirm
+      `bash scripts/quality-gates.sh` no longer reports PYSEC-2026-3455/3456/3457. Repo: ibkr-gateway-infra. —
+      `ibkr-gateway-infra@133a78f`.
+
+## Resolution (2026-07-26, cicd-agent slot-10)
+
+Root cause was one level deeper than the initial diagnosis: `pyasn1` is not a direct dependency of
+`ibkr-gateway-infra/pyproject.toml` — the `>=0.6.3,<0.7.0` floor comes transitively from
+`unified-trading-library/pyproject.toml` (pulled in as an editable local path dependency). Rather than bump the shared
+UTL constraint (broader blast radius, cross-repo), added a direct `pyasn1>=0.6.4,<0.7.0` pin to
+`ibkr-gateway-infra/pyproject.toml` — the resolver intersects it with UTL's `>=0.6.3,<0.7.0` floor, landing on 0.6.4+.
+Re-locked (`uv lock`: pyasn1 0.6.3 → 0.6.4) and `bash scripts/quality-gates.sh` now reports `✅ pip-audit clean` and
+`✅ ALL QUALITY GATES PASSED (129s)`. Shipped via quickmerge to `live-defi-rollout` @ `133a78f`.
+
+Note for future occurrences: if pip-audit reddens again on a package NOT in a repo's own `pyproject.toml` dependencies
+list, check whether the floor is inherited from `unified-trading-library`'s own `pyproject.toml` first — bumping UTL's
+own pin directly would fix it fleet-wide instead of per-repo, at the cost of touching a shared repo. Left as a per-repo
+override here since only this one repo-blocker was reported.
