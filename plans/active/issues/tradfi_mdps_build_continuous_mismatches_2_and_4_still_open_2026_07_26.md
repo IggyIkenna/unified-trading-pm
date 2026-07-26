@@ -33,7 +33,7 @@ tags: [tradfi, mdps, features, build-continuous, es, pipeline-mismatch, plan-hyg
 related:
   [
     /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
-    /plans/active/issues/tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md,
+    /plans/archive/issues/tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md,
     /plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md,
   ]
 created: 2026-07-26

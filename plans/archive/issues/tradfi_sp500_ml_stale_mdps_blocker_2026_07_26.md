@@ -57,6 +57,12 @@ resolved_by: "slot-5, 2026-07-26, pm docs-only + new follow-up issue doc filed"
 drift_direction: advance-code
 ---
 
+> **🟢 RESOLVED 2026-07-26 (slot-5).** Updated the stale P0 checkboxes + corrected batch3's Deferred-note citation; the
+> underlying pipeline is still blocked but by a different, now-documented issue —
+> `/plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`. Archived here
+> (plan_health hygiene-sweep hard-gate fix, escalation `agt-d65e83`) per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s ACKED-INTO-PLAN trigger.
+
 ## What I found
 
 `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` (P0, `status: active`, `locked_by: live-defi-rollout`,

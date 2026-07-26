@@ -223,9 +223,8 @@ drift_direction: advance-code
       `FAROE_ISLANDS_LOGMANSSTEYPID`=491, `WALES_CYMRU_PREMIER`=110), so adding slot-9's names for them would have
       duplicated one real league each. Added the 1 real entry, bumped both structural-gap test counts by +1 (not +4).
       `.tabs/9/unified-api-contracts` was already self-reset to origin cleanly (0 ahead/0 behind) before this session —
-      the reset sub-step was moot. Full detail:
-      `/plans/archive/issues/sports_curated_universe_faroe_wales_leagues_missing_slot9_dup_2026_07_25.md` (archived).
-      1271 sports/league tests green, `quality-gates.sh` PASSED.
+      the reset sub-step was moot. 1271 sports/league tests green, `quality-gates.sh` PASSED. Full detail (archived):
+      `/plans/archive/issues/sports_curated_universe_faroe_wales_leagues_missing_slot9_dup_2026_07_25.md`.
 - [x] [OPERATOR] P2. Purge the always-empty manifest rows/shards left behind by the § A2 dead-dimension deletion
       (features-service@d564bf6f already deleted `export_players`/`export_coaches`/`export_referees`/`export_rounds` and
       their column registrations — DONE, verified) for the four dimension groups PLAYERS / COACHES / REFEREES / ROUNDS
