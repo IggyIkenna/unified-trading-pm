@@ -5,7 +5,7 @@ summary: >-
   unified-api-contracts's quality-gates.sh fails "Codex compliance FAILED: 3 violations (max allowed: 2)". Discovered
   while rolling out an unrelated scripts/setup.sh fix (infra_satellite_ao_dispatch_batch1-002) — confirmed pre-existing
   and unrelated to that change.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -16,7 +16,7 @@ related: []
 created: 2026-07-26
 parent_epic: infrastructure_master
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-api-contracts@da76afe1
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -64,8 +64,10 @@ Split `unified_api_contracts/canonical/partition_paths.py` (1297L) under the 900
 `max allowed` codex-compliance ceiling by 1 if the maintainer judges the pip-fallback line acceptable long-term (it's
 the documented last-resort branch, not a first-choice call site).
 
-- [ ] [SCRIPT] P2. Split `unified_api_contracts/canonical/partition_paths.py` (1297L) into cohesive sub-modules to bring
-      it under the 900-line file cap, OR explicitly raise this repo's codex-compliance violation ceiling by 1 to account
-      for the setup.sh pip-fallback line (last-resort branch, same pattern already present pre-fix). **Done when**:
-      `bash scripts/quality-gates.sh` in `unified-api-contracts` no longer fails the codex-compliance ceiling check.
-      Repo: unified-api-contracts.
+- [x] ✅ [SCRIPT] P2. Split `unified_api_contracts/canonical/partition_paths.py` (1297L) into cohesive sub-modules to
+      bring it under the 900-line file cap, OR explicitly raise this repo's codex-compliance violation ceiling by 1 to
+      account for the setup.sh pip-fallback line (last-resort branch, same pattern already present pre-fix). **Done
+      when**: `bash scripts/quality-gates.sh` in `unified-api-contracts` no longer fails the codex-compliance ceiling
+      check. Repo: unified-api-contracts. — unified-api-contracts@da76afe1 (split into `partition_paths.py` 626L +
+      `_partition_path_canonicality.py`); verified 2026-07-26: `bash scripts/quality-gates.sh` → "✅ Codex compliance
+      PASSED" + "✅ ALL QUALITY GATES PASSED (308s)".

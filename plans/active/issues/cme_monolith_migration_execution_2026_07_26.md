@@ -57,7 +57,7 @@ drift_direction: advance-code
 ## What's NOT done (this doc's actual scope)
 
 - [ ] [DATA] P2. Run the migrate phase for real against all 30 objects on a VM (per
-      `codex/05-infrastructure/vm-launcher-runbook.md`'s heavy-I/O rule — not from a laptop), via
+      `/codex/05-infrastructure/vm-launcher-runbook.md`'s heavy-I/O rule — not from a laptop), via
       `launch-canonical-migration-vm.sh` (either add a new category mirroring `tradfi-manifest-cas`'s pattern, or a
       generic VM exec wrapping
       `python -m market_tick_data_service.scripts.migrate_cme_monolith_trades_2026_07_26     --all-days --apply --stamp <ts>`).
