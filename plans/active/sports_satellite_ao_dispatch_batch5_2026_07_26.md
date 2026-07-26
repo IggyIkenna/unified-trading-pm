@@ -274,9 +274,11 @@ drift_direction: advance-code
 
       **BLOCKED-CREDENTIALS 2026-07-26 (slot-4)** — the actual backfill cannot run: the odds-api key is DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos. Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped, full-population backfills). Also found + worked around a separate pre-existing bug in `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the operator fixes the key (exact command in the issue doc's follow-up todos).
 
-- [ ] [CODE] P1. **PARTIAL 2026-07-26 (slot-7, `data_engineering`) — (a)+(b) DONE (by a concurrent slot, verified by
-      me), (c) thoroughly diagnosed, genuinely BLOCKED on a deeper pre-existing ml-service gap.** (a)+(b): a concurrent
-      slot shipped `features-service@4f365d23` ("fix(sports): unconditional HT-odds PIT gate + per-horizon ml-readiness
+- [x] ✅ [CODE] P1. **DONE-FOR-CODE 2026-07-26 (slot-7, `data_engineering`) — (a)+(b)+(c)'s target-generation fix all
+      shipped + real-data verified; only the literal 3-variant model retrain (new trained artifacts) remains as an
+      explicit follow-up (see (c)'s final UPDATE below).** PARTIAL (a)+(b) DONE (by a concurrent slot, verified by me),
+      (c) thoroughly diagnosed, genuinely BLOCKED on a deeper pre-existing ml-service gap.** (a)+(b): a concurrent slot
+      shipped `features-service@4f365d23` ("fix(sports): unconditional HT-odds PIT gate + per-horizon ml-readiness
       rebasing") literally minutes before I picked this up, citing this exact doc's Open Todos #1+#3 as source —
       `_apply_ht_odds_pit_gate` is now called unconditionally with a regression test proving it fires on the
       `ht_break_minutes`-unknown path, and `ml_readiness_check.py`'s threshold is rebased per-horizon (re-run against
