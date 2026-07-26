@@ -111,11 +111,28 @@ start without real tradfi/ES feature parquets.
       branch) so `_build_blob_path` can locate build-continuous's
       `processed_candles/.../instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet` output. (repo:
       features-service)
-- [ ] [AGENT] P1. Re-verify mismatch 3 (ES absent from Databento raw `ohlcv_1m`) is still accurate against the CURRENT
+- [x] [AGENT] P1. Re-verify mismatch 3 (ES absent from Databento raw `ohlcv_1m`) is still accurate against the CURRENT
       raw MTDS bucket state
       (`raw_tick_data/.../pipeline_mode=batch_databento/.../futures_chain/data_type=ohlcv_1m/underlying=ES/`) -- the
       archived doc's finding is from 2026-06-24, over a month stale; TradFi data coverage moves fast. If ES ohlcv_1m now
-      exists, this mismatch may already be moot. (repo: market-data-processing-service, verification only)
+      exists, this mismatch may already be moot. (repo: market-data-processing-service, verification only) — ✅ MOOT,
+      not real: live `gcloud storage ls` on `market-data-tick-tradfi-prd-central-element-323112` shows ES/MES ohlcv_1m
+      data DOES exist, but under `underlying=SP500` (a real non-trivial parquet file, e.g. 53,629 bytes at
+      `raw_tick_data/by_date/day=2026-01-02/pipeline_mode=batch_databento/asset_group=tradfi/venue=CME/instrument_type=futures_chain/data_type=ohlcv_1m/underlying=SP500/quote=USD/margin=linear/ticks.parquet`),
+      spot-confirmed present on 2020-01-02, 2022-06-15, 2024-03-01, 2026-01-02, and 2026-07-01 (consistent with the
+      archived doc's own "8,997 captured rows for ES, 2020-01-01→2026-06-22" manifest claim). The archived doc's "ES
+      absent" finding was itself a vocabulary-probe miss, not a real absence: UAC's `EXCHANGE_CODE_TO_NAME` registry
+      (`unified_api_contracts/registry/tradfi_instrument_universe.py:600-601`, `"ES": "SP500", "MES": "SP500"`) is the
+      live mapping the MTDS writer actually uses for the `underlying=` path segment (consumed by
+      `market_tick_data_service/engine/orchestrator/partitioned_writer.py`,
+      `.../adapters/tradfi/databento_enrichment.py`, `.../reader.py`) — this root-code→descriptive-underlying-name
+      convention was introduced 2026-03-26 (`uac@e19b231d`), three months BEFORE the archived doc's 2026-06-24 check, so
+      probing literal `underlying=ES`/`underlying=MES` was checking a path the writer has never emitted. No code change
+      needed here: confirmed MDPS's process-step adapters (`app/adapters/tradfi/trades_adapter.py` et al.) delegate
+      raw-candle reads to `market_tick_data_service/reader.py` (the documented SSOT per
+      `orchestration_scheduling.py:184`, `orchestration_scanner.py:371`), which already applies the same
+      `EXCHANGE_CODE_TO_NAME` mapping — so the process step correctly resolves root=ES/MES to raw `underlying=SP500`
+      today; this is NOT a live bug, just a stale finding in the archived doc.
 - [ ] [AGENT] P0. After mismatches 2+4 (+3 if still real) are fixed, launch the MDPS build-continuous run for
       `--root ES`, verify output lands at the expected canonical path, THEN launch features-delta-one-tradfi for ES and
       confirm real feature parquets land (check the manifest actually gains rows -- not just "job exit 0"). This closes
@@ -163,3 +180,16 @@ start without real tradfi/ES feature parquets.
   against `panama_core.contract_id_for_expiry`'s output to settle whether mismatch 2 is real or already moot, (4) only
   then decide whether todo 1 (fix mismatch 2) is still needed, or whether the todo should instead be closed as "already
   resolved by the renormalization layer, doc was stale."
+- 2026-07-26 (slot-8, todo 3 of this doc): Re-verified mismatch 3 against live GCS state on
+  `market-data-tick-tradfi-prd-central-element-323112`. **MOOT** — ES/MES ohlcv_1m raw Databento data DOES exist; the
+  archived doc's 2026-06-24 "ES absent" finding was a vocabulary-probe miss, not a real absence. The writer emits the
+  `underlying=` path segment via UAC's `EXCHANGE_CODE_TO_NAME` registry (`"ES": "SP500", "MES": "SP500"`,
+  `tradfi_instrument_universe.py:600-601`, live since `uac@e19b231d` 2026-03-26 — three months before the archived doc's
+  check), so the real path is `underlying=SP500`, not `underlying=ES`. Spot-confirmed real parquet files (e.g. 53,629
+  bytes) present on 2020-01-02, 2022-06-15, 2024-03-01, 2026-01-02, 2026-07-01 — consistent with the archived doc's own
+  manifest-row date range. Also traced MDPS's process-step adapters (`app/adapters/tradfi/trades_adapter.py`) and
+  confirmed they delegate raw-candle reads to `market_tick_data_service/reader.py` (documented SSOT), which already
+  applies the same `EXCHANGE_CODE_TO_NAME` mapping — so no NEW mismatch was introduced by this naming convention; the
+  process step already resolves root=ES to raw `underlying=SP500` correctly. Net effect on todo 4's blocker: it is now
+  gated on mismatches 2+4 ONLY (3 is closed, not real). Verification-only todo — no code shipped, checkbox flipped in
+  this doc.
