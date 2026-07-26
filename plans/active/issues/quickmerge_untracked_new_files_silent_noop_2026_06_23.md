@@ -4,7 +4,7 @@ title: quickmerge silently no-ops on a new-file-only ship (untracked --files inv
 summary:
   "`scripts/quickmerge.sh:1175` short-circuits with **`No differences from main — nothing to merge`** when the unit
   being shipped is composed **entirely of NEW (untracked) files**:"
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,12 +21,12 @@ source:
     "data_completion_to_100_all_ag_2026_06_21.md (B2 IntraClientRebalanceCoordinator ship, 2026-06-23)",
   ]
 assigned_vm: NA
-resolved_by:
+resolved_by: unified-trading-pm@04c0eef0e (fix) + unified-trading-pm@<pending> (regression test)
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-26
 ---
 
 ## What I found
@@ -91,3 +91,13 @@ behaviour, so it wants a deliberate test, not a hot-patch under time pressure.
 > todo in `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` Phase 2 (its pipeline/quickmerge health-work section), so it is
 > no longer untracked by any live plan. Fix itself is still NOT implemented — this only closes the tracking/ownership
 > gap, not the underlying bug.
+
+> **[2026-07-26 RESOLVED]**: the fix landed in `unified-trading-pm@04c0eef0e` — the guard at (now) `quickmerge.sh`
+> ~L1237 ALSO checks `git status --porcelain -- $FILES_ARG` (scoped to the supplied `--files`, mirroring the existing
+> `git status --porcelain` clean-tree guard) so a brand-new untracked `--files` path falls through instead of
+> early-exiting as "No differences from main". The deliberate regression test called for above is
+> `scripts/quality-gates-base/tests/test-quickmerge-untracked-new-file-guard.sh` (extracts the real guard from
+> `quickmerge.sh`, not a replica; 4 fixture cases — confirmed it fails 2/4 against the pre-fix commit and passes 4/4
+> against the fix, so it actually reproduces this bug rather than trivially passing). Tracking-home P0 in
+> `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` flipped to done in the same batch. Closed via AO batch
+> `ci_satellite_ao_dispatch_batch1_2026_07_26.md` todo 1.
