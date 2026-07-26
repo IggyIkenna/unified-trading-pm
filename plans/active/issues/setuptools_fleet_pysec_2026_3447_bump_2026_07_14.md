@@ -94,3 +94,32 @@ Bump setuptools 82.0.1 → 83.0.0 across the affected repos:
 - No repo's `uv.lock` pins setuptools < 83.0.0.
 - pip-audit is clean for PYSEC-2026-3447 fleet-wide with **no** `--ignore-vuln` entry for it.
 - The temporary e2e-testing ignore + comment are removed.
+
+## Todos
+
+> Added 2026-07-26 by `/plan-reconcile` (infra shard). This doc was `status: open` with **zero checkboxes** —
+> prose-only, so none of its work was visible to the hygiene/dispatch surface (the class
+> `/plans/active/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` todo 3 exists to sweep). No decision was invented:
+> the todos below are the doc's own "The proper fix" 3 steps, with the current per-repo state MEASURED this turn so a
+> worker starts from facts rather than the 2026-07-14 snapshot.
+>
+> **Measured 2026-07-26** (`grep -A1 '^name = "setuptools"' <repo>/uv.lock`): e2e-testing → **83.0.0** (already fixed);
+> instruments-service → **82.0.1** (still vulnerable); market-tick-data-service → **82.0.1** (still vulnerable). And
+> `grep -n PYSEC-2026-3447 e2e-testing/scripts/quality-gates.sh` → still present at **line 26** (`PIP_AUDIT_EXTRA_ARGS`)
+> with its TEMPORARY comment at **line 36** — i.e. **the ignore has already outlived the fix in the one repo that is
+> fixed**, which is precisely the failure mode this doc's Acceptance forbids ("the ignore must not outlive the fix").
+
+- [ ] [SCRIPT] P2. Sweep every repo's `uv.lock` for a setuptools pin `< 83.0.0`
+      (`grep -A1 '^name = "setuptools"' */uv.lock`), then for each hit add a `setuptools>=83.0.0` constraint (or
+      equivalent) so the transitive resolve picks the fixed version and `uv lock` that repo. Known-affected as of
+      2026-07-26: **instruments-service** (82.0.1) and **market-tick-data-service** (82.0.1); e2e-testing is already at
+      83.0.0. **Done when**: the sweep command returns no version below 83.0.0 in any repo. Repo: per-repo (+
+      unified-trading-pm if a canonical constraint is added).
+- [ ] [SCRIPT] P2. Re-run each bumped repo's `bash scripts/quality-gates.sh` and confirm pip-audit is clean for
+      PYSEC-2026-3447 **without** any `--ignore-vuln` entry for it. **Done when**: each touched repo's QG is green with
+      the codex-compliance step reporting 0 violations. Repo: per-repo.
+- [ ] [SCRIPT] P2. Remove the TEMPORARY `--ignore-vuln PYSEC-2026-3447` from `e2e-testing/scripts/quality-gates.sh`'s
+      `PIP_AUDIT_EXTRA_ARGS` (line 26) **and** its explanatory comment (line 36). This one is already actionable on its
+      own — e2e-testing's lock is at 83.0.0, so the ignore is currently masking nothing. **Done when**:
+      `grep -n PYSEC-2026-3447 e2e-testing/scripts/quality-gates.sh` returns nothing and e2e-testing's QG is green.
+      Repo: e2e-testing.

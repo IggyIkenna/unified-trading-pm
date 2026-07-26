@@ -280,12 +280,17 @@ depends_on: []
     `relaunch_backfill_vm.py`'s own severity classification: a "successful" relaunch (the launcher subprocess ran
     without error) self-emits `DP_VM_PREEMPTED` at **INFO** severity ("the routine, benign case") — no page. Only
     `DP_VM_PREEMPTED_NO_RELAUNCH` (no launcher binding / relaunch-budget exceeded / launcher subprocess failure /
-    `force_run_not_replayable`) is **CRITICAL** and pages. **Finding: the `tradfi-bf-*` double-fetch confirmed above
-    would NOT have paged** — from the actuator's point of view the relaunch "succeeded" (VM launched, ran, eventually
-    either completed or was preempted again), which is indistinguishable at the INFO-severity level from a relaunch that
-    correctly resumed from a checkpoint. **The current alerting has no mechanism to distinguish "resumed correctly" from
-    "wastefully re-did already-captured work"** — both look identical (a non-erroring subprocess exit) to the actuator.
-    This is a genuine alerting-hardening gap, not just an unmonitored condition — filed as a follow-up todo below.
+    `force_run_not_replayable`) is **CRITICAL** and pages. **Finding: a `tradfi-bf-*`-shaped blind START_DATE replay
+    would NOT have paged** (was: "the `tradfi-bf-\*` double-fetch confirmed above" — corrected 2026-07-26,
+    `/plan-reconcile` infra shard: this doc's own ⚠️→✅ adversarial-verification banner (3/3 refuters, 2026-07-25)
+    RETRACTED the "confirmed double-fetch" framing for both cited shards, so no confirmed double-fetch exists to
+    reference here; the alerting gap below stands on its own as a structural blind spot, independent of whether that
+    particular instance was real) — from the actuator's point of view the relaunch "succeeded" (VM launched, ran,
+    eventually either completed or was preempted again), which is indistinguishable at the INFO-severity level from a
+    relaunch that correctly resumed from a checkpoint. **The current alerting has no mechanism to distinguish "resumed
+    correctly" from "wastefully re-did already-captured work"** — both look identical (a non-erroring subprocess exit)
+    to the actuator. This is a genuine alerting-hardening gap, not just an unmonitored condition — filed as a follow-up
+    todo below.
 
 ### New follow-up todos from this session
 
@@ -325,10 +330,13 @@ depends_on: []
 - [ ] [BACKEND] P3. **Harden the preemption-relaunch alert to distinguish "resumed correctly" from "wastefully
       replayed"** — `relaunch_backfill_vm.py` emits the same quiet `DP_VM_PREEMPTED` (INFO, no page) for both a
       genuinely-successful checkpoint-resumed relaunch and a blind START_DATE replay that re-does already-captured work
-      (the confirmed `tradfi-bf-*` case above). A future wave of the SAME bug would page just as silently as this one
-      did. Candidate approach: compare the relaunched VM's per-VM manifest shard row-count growth against its wall-clock
-      runtime/expected shard size, or downgrade `DP_VM_PREEMPTED` to WARN-and-flag whenever `launch_env` had no usable
-      checkpoint AND the run was not `--force` (the exact silent-gap condition). Repo: deployment-service.
+      (the `tradfi-bf-*`-shaped case above — note its "confirmed" label was RETRACTED by this doc's own 2026-07-25
+      adversarial-verification banner; corrected 2026-07-26, `/plan-reconcile` infra shard. The gap is structural and
+      real regardless: the actuator genuinely cannot tell the two apart, so a REAL instance would be just as silent). A
+      future wave of such a replay would page just as silently. Candidate approach: compare the relaunched VM's per-VM
+      manifest shard row-count growth against its wall-clock runtime/expected shard size, or downgrade `DP_VM_PREEMPTED`
+      to WARN-and-flag whenever `launch_env` had no usable checkpoint AND the run was not `--force` (the exact
+      silent-gap condition). Repo: deployment-service.
 - [ ] [BACKEND] P3. **`canonical-migration-defi-pi-range` and `canonical-migration-defi-per-instrument` write no
       checkpoint at all** (not even the manifest-shard-only pattern `canonical-migration-defi-rebuild` uses) and
       produced this audit's largest observed `run.log`s (731 MB / 79 MB) — fold into the P2 `PROGRESS.json` rollout

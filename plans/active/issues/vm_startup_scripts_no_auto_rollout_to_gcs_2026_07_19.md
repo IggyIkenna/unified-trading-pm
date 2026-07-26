@@ -93,3 +93,24 @@ scripts, which have no equivalent freshness check.
 All GCS-hosted `vm/` scripts were re-synced to git HEAD on 2026-07-19 during the audit (`setup-data-pipeline-vm.sh`,
 `vm-exec-with-gcs-tee.sh`, `deployment_heartbeat.py`, `heartbeat_daemon.py`, `setup-cefi-live-consolidated-vm.sh` all
 verified FRESH). So the fleet is currently in sync; the open work is the DURABLE fix so it stays in sync automatically.
+
+## Todos
+
+> Added 2026-07-26 by `/plan-reconcile` (infra shard). This doc was `priority: P1`, `status: open`, with **zero
+> checkboxes** — its work existed only as prose under "Fix options (for operator decision)", so nothing here was visible
+> to the hygiene/dispatch surface (the sweep class is
+> `/plans/active/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` todo 3). **No option was chosen** — picking
+> between the doc's own three fix shapes is an authority call with real blast-radius differences (ship-path change vs
+> per-launcher freshness check vs process-only), so it is captured below as an `[OPERATOR]`-gated decision exactly per
+> `task_template.md`'s bounded-outcome rule, and raised as a `/plan-reconcile` operator question in the same pass.
+
+- [ ] [OPERATOR] P1. **Rule on which durable fix shape to build** for "a committed change to a GCS-hosted
+      `deployment-service/scripts/vm/` startup/helper script must reach `gs://deployment-scripts-<project>/vm/`
+      automatically". The three options are stated verbatim in § "Fix options (for operator decision)" above: **(1)** a
+      CI job triggered on changes under `deployment-service/scripts/vm/` that `gsutil cp`s the changed files (smallest
+      blast radius); **(2)** a per-launcher freshness check mirroring `lc_verify_tarball_freshness` (more robust, more
+      code); **(3)** interim/process-only — document the manual `bash scripts/vm/create-code-tarballs.sh` step as a HARD
+      post-change requirement in the ship checklist (the doc itself calls this "the minimum until (1) or (2) lands", not
+      a substitute for them). **Done when**: one option is recorded in this doc with a dated operator line, and the
+      chosen option is written up as its own bounded implementation todo here. Repo: deployment-service (+
+      unified-trading-pm if (3) adds a checklist/codex step).
