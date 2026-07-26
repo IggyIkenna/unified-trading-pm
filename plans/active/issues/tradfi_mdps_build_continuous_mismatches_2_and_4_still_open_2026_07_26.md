@@ -52,18 +52,13 @@ locked_since:
 
 # TradFi MDPS build-continuous mismatches 2+4 still open; no successful run ever landed
 
-> **🟡 IN-FLIGHT (slot 6, 2026-07-26 19:48 UTC)**: relaunched the P2 "re-run the SAME ES/MES process-step backfill a
-> SECOND time" todo — 7 fresh per-year VMs (`mdps-backfill-tradfi-y{2020..2026}es-20260726-194454`, SPOT,
-> `MDPS_INSTRUMENT_IDS='CME:FUTURE:ES CME:FUTURE:MES'`, no `--force`), mirroring the exact pattern from slot 2's prior
-> successful launch below. Baseline re-confirmed fresh before launch: `continuous_future`/`underlying=ES`/`timeframe=1d`
-> = 454 captured / 1944 empty_confirmed (2398 total, ~18.9%) — matches the doc's stated baseline exactly, no drift since
-> the last measurement. First launch attempt caught a stale `unified-trading-library` tarball (non-blocking warning);
-> republished + killed/relaunched all 7 with `LC_TARBALL_FRESHNESS=enforce`. Second attempt hit the SAME
-> `market-tick-data-service` fleet-drift race this doc has documented twice already (2020/2021/2022 launched clean,
-> 2023-2026 blocked on stale MTDS) — republished MTDS, relaunched the remaining 4. All 7 now confirmed RUNNING with
-> verified-fresh tarballs (no VMs killed after this point). A `run_in_background` monitor watchdog is polling VM
-> presence every 5 min and heartbeating this slot; will re-run build-continuous for ES once all 7 self-delete, then
-> re-measure the `1d` hit rate against the 454/2398 baseline per the todo's own done-condition.
+> **✅ RESOLVED (slot 6, 2026-07-26 23:05 UTC) — P2 todo DONE, timing-race theory DISPROVEN.** Re-ran the P2 ES/MES
+> process-step backfill (7 per-year VMs, no `--force`) then `build-continuous` for ES full-range — both phases genuinely
+> completed, independently `gcloud`-verified. Re-measured `1d` hit rate against the fresh (post-consolidator,
+> `Update Time: 22:58:44Z`) manifest: `captured=454`/`empty_confirmed=1944` (2398 total, ~18.9%) — **byte-identical to
+> the pre-re-run baseline**. The hit rate did NOT rise after a full second pass, disproving the timing-race hypothesis
+> this todo was testing — see the flipped checkbox + Progress Log for full evidence and next-step pointers (incl.
+> cross-reference to slot 5's independent P1 listing-anomaly finding, which may be the real explanation).
 >
 > **🔴 STALE (superseded, kept for history) — 2026-07-26 14:02-15:02 UTC's `140251`→`144837`→`150236` single-VM chain**:
 > the below banner describes an EARLIER attempt (P0 "backfill MDPS's per-contract process step" todo, now flipped `[x]`)
@@ -284,14 +279,12 @@ start without real tradfi/ES feature parquets.
       process step's writer even calls `record_captured`/`record_empty` for TradFi FUTURE candles, since right now this
       gap is invisible to the manifest/dashboard. (repo: market-data-processing-service, deployment-service,
       market-tick-data-service)
-- [ ] [AGENT] P2. Re-run the SAME ES/MES process-step backfill a SECOND time (no `--force`, no code change — a plain
-      idempotent re-run) to pick up raw data that landed AFTER the first pass's per-date subprocess already ran and
-      logged "no upstream data" for that date (the timing/race finding above). Per-contract output is only skipped when
-      the EXACT contract file already exists, so any date that failed the first time will genuinely be re-attempted, not
-      silently skipped. Re-measure the `1d`/`24h` hit rate afterward; if it rises, this confirms the race-condition
-      diagnosis and a periodic re-run policy (not a code fix) is the right long-term remediation. If it does NOT rise
-      even after a second full pass, that disproves the timing theory and reopens the investigation — check that finding
-      against this doc before assuming timing again. (repo: market-data-processing-service)
+- [x] ✅ [AGENT] P2. DONE 2026-07-26 (slot 6) — **hit rate FLAT, timing-race theory DISPROVEN.** Re-ran the process-step
+      backfill a second time (no `--force`) then re-measured: `continuous_future`/`underlying=ES`/`timeframe=1d` =
+      `captured=454`/`empty_confirmed=1944` (2398 total, ~18.9%) — byte-identical to baseline, confirmed against a
+      post-rerun-fresh manifest (`Update Time: 22:58:44Z`, after the build-continuous VM's `22:48:07Z` completion). Did
+      NOT rise, disproving the timing theory per this todo's own done-condition. Repo: market-data-processing-service.
+      Full evidence in the 2026-07-26 slot-6 Progress Log entries.
 - [x] [AGENT] P2. Re-run the process step for ES/MES on `2020-03-26` only
       (`launch-mdps-backfill-vm.sh --instrument-ids "CME:FUTURE:ES CME:FUTURE:MES" tradfi 2020-03-26 2020-03-26 full`,
       no `--force` needed). This one date was recorded `attempted_failed` in the `y2020es` per-VM shard because slot 2
@@ -861,6 +854,37 @@ start without real tradfi/ES feature parquets.
   `144837` to avoid two concurrent efforts covering the identical range — the 7-way split is strictly faster for the
   same correct scope, so no work/coverage is lost, only the redundant single-VM compute. If slot 3's session finds its
   `144837` VM gone, this is why: superseded by the `y*es-*` shards, not a preemption or an untracked deletion.
+- 2026-07-26 (slot 6, P2 "re-run the SAME ES/MES process-step backfill a second time" todo, BOTH VM PHASES DONE,
+  measurement BLOCKED): Re-confirmed the 454/2398 (~18.9%) `1d` baseline live before launching. Launched the 7 per-year
+  `y{2020..2026}es` VMs (no `--force`), fixed 2 tarball-drift races before all 7 ran with verified-fresh code — **all 7
+  confirmed self-deleted 22:24:37Z**, independently `gcloud`-verified (not just trusting the monitor). Hit the
+  fleet-wide disk-full condition (`BLK-37401b23`-class ENOSPC) TWICE mid-session; the monitor process itself stayed
+  alive and its readings were re-verified accurate once disk cleared each time — no false-completion signal. Also
+  resolved an unrelated `unified-trading-pm` dirty-repo alert (`workspace-manifest.json` locally regenerated to a state
+  matching 3 already-pushed origin commits; `git restore` + `git pull --ff-only`, no work lost).
+
+  Re-ran `build-continuous` for ES over `2020-01-01..2026-07-25` (one more MDPS tarball-drift race fixed) — **confirmed
+  self-deleted 22:48:07Z**, independently `gcloud describe`'d NOT_FOUND, ~15 min (slower than the doc's ~2 min
+  precedent, likely more per-contract data to stitch post-backfill; real `[[VM_PROGRESS]]` advancing mid-run, not
+  stalled).
+
+  Hit the SAME ENOSPC a third time (`cf_manifest_audit._read_index()` returned an unexpected 9-column tuple, filed
+  separately as `issues/cf_manifest_audit_read_index_inconsistent_return_shape_2026_07_26.md`; a direct
+  `gcloud storage cp` also failed). **Root cause found**: `/tmp` is a SEPARATE, tiny 2GB tmpfs (100% full, shared
+  host-wide), distinct from `/home` (78G free the whole time) — `gcloud storage cp`'s default staging path lands in
+  `/tmp` regardless of `/home`'s real headroom. Fix: an explicit `/home`-rooted destination — downloaded cleanly at 485
+  MiB/s on the first retry.
+
+  **RESULT: `1d` hit rate = `captured=454`/`empty_confirmed=1944` (2398 total, ~18.9%) — BYTE-IDENTICAL to baseline.**
+  Verified against a FRESH read (consolidated index `Update Time: 22:58:44Z`, after the build-continuous VM's own
+  22:48:07Z completion — not stale). A full second pass of BOTH phases produced ZERO net change in the hit rate — **this
+  disproves the timing-race theory**: raw data landing late does NOT explain the stuck ~19% ceiling, since a second full
+  pass had every chance to catch it and didn't move the number. Corroborates slot 5's separate P1 finding
+  (`_list_instrument_files` returning 0 despite the target existing 24+ min prior, zero contention) — the real cause is
+  more likely a listing/consistency issue than a timing race. Checkbox flipped `[x]` — the done-condition (re-measure +
+  interpret) is satisfied by this negative result, mirroring this doc's precedent for closing an investigation on a
+  disproven hypothesis. **Next step**: pursue slot 5's P1 finding, not another timing-race re-run — this todo's own
+  remediation mechanism (periodic re-run) is now empirically ruled out.
 
 ## Deferred work after 2026-07-26
 
@@ -872,7 +896,7 @@ start without real tradfi/ES feature parquets.
 | New P2 todo — re-run process step for ES/MES on `2020-03-26` only                                                            | ✅ ACTION DONE 2026-07-26 (slot 5) — clean re-run, but MES still fully missing; root cause is NOT the premature-kill theory — new P1 listing-anomaly finding filed below                                                                                                                                            | N/A — closed as an action; underlying gap reopened as the new P1 listing-anomaly finding                           |
 | New P1 todo — `_list_instrument_files` returned 0 raw files despite the target file existing 24+ min prior, zero contention  | Not done — new finding (slot 5, 2026-07-26); disproves the earlier timing/race theory; likely explains the stuck ~19% hit-rate ceiling across BOTH full backfill passes; needs isolated repro + GCS consistency check                                                                                               | Nobody — needs someone with time to reproduce the listing call in isolation and check bucket consistency config    |
 | New P2 todo — add a generous timeout to `process_handler.py:706`'s `subprocess.run(cmd)`                                     | Not done — real code gap (unbounded per-date subprocess wait), but NOT confirmed as an actual live hang (the one observed case was a false positive); flagged for whoever has time to size a timeout wide enough to avoid false-failures                                                                            | Nobody — needs a wider sample of real per-date durations to size the timeout safely                                |
-| New P2 todo — re-run the SAME process-step backfill a SECOND time to catch up on late-landing raw data (timing-race finding) | IN PROGRESS 2026-07-26 (slot 6) — 7 fresh per-year VMs relaunched; per the new P1 finding above, this pass may hit the SAME ~19% ceiling for a listing-consistency reason rather than a timing-race reason — worth re-checking against the P1 finding once slot 6's re-measurement lands                            | Slot 6's in-flight re-run; re-measure hit rate, then cross-check against the new P1 listing finding                |
+| New P2 todo — re-run the SAME process-step backfill a SECOND time to catch up on late-landing raw data (timing-race finding) | ✅ DONE 2026-07-26 (slot 6) — hit rate FLAT (454/2398, byte-identical to baseline) after a full second pass; timing-race theory DISPROVEN. Corroborates slot 5's P1 listing-anomaly finding as the more likely real cause.                                                                                          | N/A — closed; see the new P1 listing-anomaly finding for the promising next lead                                   |
 
 **Recommended next item**: the backfill + build-continuous re-run + hit-rate re-verification all genuinely happened
 (2026-07-26) — the surprising result is that the hit rate did NOT move (still ~19%), and the real root cause turned out
