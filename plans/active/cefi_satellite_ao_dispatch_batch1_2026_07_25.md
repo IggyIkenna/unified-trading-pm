@@ -121,8 +121,8 @@ drift_direction: advance-code
       re-confirmation. Repo: unified-trading-library (script) / instruments-service (target data). Do NOT run any
       `--apply`. **Done when**: a fresh CF-1/CF-3/CF-4/CF-8 GREEN/RED verdict with counts, measured against live data,
       is recorded in this plan's Progress Log. Source: `data_completion_cefi_2026_07_15.md`.
-- [ ] [BACKEND] P1. **Add a cefi parity regression test for deployment-api's pipeline_mode dedup.** Mirror the existing
-      `test_pipeline_mode_rows_do_not_double_count_shards`
+- [x] ✅ [BACKEND] P1. **Add a cefi parity regression test for deployment-api's pipeline_mode dedup.** Mirror the
+      existing `test_pipeline_mode_rows_do_not_double_count_shards`
       (`deployment-api/tests/unit/test_chain_breakdown_shards_vs_dates.py`, which today only guards the DeFi
       chain-breakdown builder) — assert multiple `pipeline_mode=` rows for one cefi
       `(venue, data_type,     instrument_type, instrument_id, day)` shard atom collapse to ONE counted shard via
@@ -130,7 +130,15 @@ drift_direction: advance-code
       half only — the separate `pipeline_mode` drilldown-filter UI feature-add is out of scope. **Done when**: a new
       passing test asserting cefi venue-breakdown pipeline_mode dedup exists in
       `deployment-api/tests/unit/test_venue_breakdown_shards_cefi_dedup.py` (new file); `quality-gates.sh` green.
-      Source: `data_completion_cefi_2026_07_15.md`.
+      Source: `data_completion_cefi_2026_07_15.md`. — deployment-api@51890b3. The cefi shard atom
+      `(venue, data_type, instrument_type, instrument_id, day)` is counted in
+      `deployment_api/services/data_status/instrument_coverage.py::per_instrument_coverage` via a Python
+      `set[tuple[instrument_id, date]]` (`found_pairs`), which already collapses duplicate `pipeline_mode` rows for free
+      — unlike the DeFi chain-breakdown builder this needed no `_shard_atom_cols`/`drop_duplicates` fix, only the
+      missing regression test. New test
+      `TestPerInstrumentCoverageDoesNotDoubleCountPipelineModeRows::test_pipeline_mode_rows_do_not_double_count_shards`
+      asserts 2 instruments x 5 dates x 2 pipeline_modes (`batch_binance`/`live_binance`) = 20 raw rows collapse to
+      `found_shards == 10` distinct shard atoms. `quality-gates.sh` green (sentinel `cc1403d`), shipped via quickmerge.
 - [ ] [DATA] P1. **Re-run the IS cefi reference-data backfill to close the KRAKEN-SPOT/KRAKEN-FUTURES/BITFINEX-SPOT
       gap.** Now that `_DEFAULT_EXCHANGES` derives from the canonical `VenueMapping.all_tardis_exchanges` SSOT (shipped
       `is@a6bc4d48`), re-run `instrument_availability/by_date/` so the IS catalogue's captured-venue set becomes ⊇ the

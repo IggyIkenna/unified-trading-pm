@@ -17,12 +17,17 @@ outside scripts/tests/.github) without that trailer, and is not a carve-out, is 
   - CI/infra: `.github/**`, `scripts/**`  (PM scripts + any repo's workflow files — the
     chicken-and-egg: a corrected gate can't pass through the gate it is fixing)
   - merge/reconcile commits + `[skip ci]` automation (ci_status / manifest writes) + bot authors
+    (this covers `_backmerge` merges too — e.g. "Merge remote-tracking branch 'origin/main' into
+    _backmerge" is a genuine 2-parent merge commit and needs no separate special-casing; see
+    `test_backmerge_merge_commit_is_exempt`)
   - already-promoted content (reachable from `origin/main`/`origin/staging`): a backmerged
     `promote(...)` squash / drift-tick merge that already cleared the v2 gate — exempt so the
     promote bot stops perpetually re-flagging it (provenance_gate_backmerge_already_promoted_2026_06_24)
 
 WARN by default; set `STRICT_QUICKMERGE_BLOCK=1` (or `--block`) to hard-fail (exit 1). Intended
-as a `pre-push` hook on the integration branch + an ad-hoc audit tool.
+as a `pre-push` hook on the integration branch + an ad-hoc audit tool. An unresolvable/invalid
+`--range` is a DIFFERENT, always-hard-fail case (fail CLOSED, unconditional of --block): it means
+the scan could not run at all, so it must never be reported as "0 bypassed code commits".
 
 Usage:
     check_strict_quickmerge.py --range origin/live-defi-rollout..HEAD [--block]
@@ -56,8 +61,12 @@ NONSOURCE_DIR = ("scripts/", "tests/", "test/", ".github/")
 PROMOTED_REFS = ("origin/main", "origin/staging")
 
 
+def _run_git(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["git", *args], capture_output=True, text=True)
+
+
 def _git(*args: str) -> str:
-    return subprocess.run(["git", *args], capture_output=True, text=True).stdout
+    return _run_git(*args).stdout
 
 
 def _on_promoted_tip(sha: str) -> bool:
@@ -180,7 +189,18 @@ def main() -> int:
     rng = cast(str, args.range)
     block = cast(bool, args.block) or os.environ.get("STRICT_QUICKMERGE_BLOCK") == "1"
 
-    shas = [s for s in _git("rev-list", rng).splitlines() if s.strip()]
+    rev_list = _run_git("rev-list", rng)
+    if rev_list.returncode != 0:
+        # FAIL CLOSED (2026-07-26): an unresolvable/invalid --range (typo'd ref, unfetched branch)
+        # must never read as "0 bypassed code commits" — `git rev-list` on a bad range prints an
+        # error to stderr and empty stdout, which previously fell straight through to the ✅ path.
+        # This is a hard usage/config error, not a "no violations found" verdict, so it exits
+        # non-zero UNCONDITIONALLY (independent of --block / STRICT_QUICKMERGE_BLOCK — those only
+        # gate the warn-vs-block choice for a REAL scan result, not "the scan could not run").
+        print(f"❌ strict-quickmerge: could not resolve range {rng!r} — git rev-list failed:")
+        print(f"   {rev_list.stderr.strip()}")
+        return 1
+    shas = [s for s in rev_list.stdout.splitlines() if s.strip()]
     reprovenanced = _collect_reprovenanced(shas)
     violations: list[str] = []
     for sha in shas:
