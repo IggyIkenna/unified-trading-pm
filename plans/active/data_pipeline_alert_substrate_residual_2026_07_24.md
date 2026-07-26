@@ -69,12 +69,16 @@ locked_since:
 
 ## Residual from Phase 3 (Daily per-AG completion summary + hygiene audit) + Wave 4b out-of-repo wiring
 
-- [ ] [SCRIPT] P0. Close the `audit_criteria_automation` honest-SKIPs: wire CF-10 (phantom) and CF-14 (catalogue ⊇
-      present-set) from SKIP to real checks inside `cf_manifest_audit_all.py`. — **market-tick-data-service**
+- [x] ✅ [SCRIPT] P0. Close the `audit_criteria_automation` honest-SKIPs: wire CF-10 (phantom) and CF-14 (catalogue ⊇
+      present-set) from SKIP to real checks. — `unified-trading-library@fb63477a` (the real edit location; the module
+      moved out of `market-tick-data-service`'s `cf_manifest_audit_all.py` 2026-07-10). CF-10 real GREEN/RED via
+      `--mode full` (cost-scoped, honest SKIP by default); CF-14 already computed real verdicts, now with test coverage.
+      See `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` for full detail.
 
-- [ ] [SCRIPT] P0. **v9-readiness gate** in the daily digest: surface `schema_version` distribution per AG (target
-      100%==9, read actual rows not the constant) and alert on any AG <100%. Reuse `audit_canonical_form.py` CF-1. —
-      **e2e-testing**
+- [x] ✅ [SCRIPT] P0. **v9-readiness gate** in the daily digest: surface `schema_version` distribution per AG (target
+      100%==9, read actual rows not the constant) and alert on any AG <100%. — `e2e-testing@98d499a`. Reused (not
+      re-derived) via a new shared `_dp_common.schema_version_readiness()`, also backing `manifest_hygiene_daily.py`'s
+      CF-1/`DP_NOT_V9` check.
 
 - [ ] [INFRA] P0. **Apply the data-pipeline-audit terraform** (the crons run only once deployed): after the var-change
       lands, targeted `terraform apply -target=...` the 4 `dp-audit` Cloud Run Jobs + 4 schedulers (NOT a blanket apply

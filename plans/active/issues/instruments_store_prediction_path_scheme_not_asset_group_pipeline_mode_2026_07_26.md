@@ -29,6 +29,7 @@ related:
   [
     /plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/pipeline-mode-partition.md,
   ]
