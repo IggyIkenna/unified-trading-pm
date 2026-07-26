@@ -55,6 +55,7 @@ estimate_calibrated_ai_days: 0.24
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+sequential: true
 resolved_by:
 locked_by:
 ---
@@ -200,3 +201,7 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   their 13 handler consumers, cross-reference against `instrument_availability_hive_canonicalisation_2026_07_21.md`'s
   own todo 6 (reader list) and `expected_coverage.py`'s `_DEFI` scope dict (confirms MORPHO/FLUID/KAMINO-SOLANA
   `risk_params` are genuinely in-scope, so this is an in-scope-cell corruption, not a skip).
+- 2026-07-26 (slot 6, `data_engineering`): Skipped `-002` (todo 2) — dispatched to me while `-001` (todo 1) was
+  CURRENTLY in-flight to slot 4, both on the same file (`_instruments_metadata.py`); todo 2's own text requires
+  mirroring todo 1's pattern, which didn't exist yet. Added `sequential: true` (was missing) so the dispatcher
+  serializes todos 1-3 (all same-file) going forward instead of re-offering this same collision.
