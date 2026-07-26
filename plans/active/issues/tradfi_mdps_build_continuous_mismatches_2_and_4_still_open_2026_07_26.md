@@ -165,6 +165,19 @@ start without real tradfi/ES feature parquets.
       confirm real feature parquets land (check the manifest actually gains rows -- not just "job exit 0"). This closes
       `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s P0 items per the "Plans run to actual completion"
       HARD RULE. (repo: market-data-processing-service, features-service)
+- [ ] [AGENT] P1. Investigate why MDPS build-continuous's `24h`/`1d` output has genuinely sparse real coverage
+      (`total_rows=454` across `days=2398` on the shipped ES re-run, ~19% hit rate — a real single day near 2024-06-17
+      only found 14/86 real prior days) even after the right-edge-timestamp date-filter fix
+      (`market-data-processing-service@e9edb39`). Likely a `build_active_contracts_table`/`extract_roll_events` gap
+      specific to daily granularity's single-bar-per-contract-per-day nature (no redundancy the way 1440 intraday bars
+      provide) — confirm via direct GCS gap analysis before assuming a code fix. (repo: market-data-processing-service)
+- [ ] [AGENT] P1. `_TfClusterMixin._process_tf_clusters_date_range`'s per-date loop (`_process_one_date_for_cluster`
+      returning `False` → `if not ok: return False`) aborts the ENTIRE multi-day range on the FIRST date that fails for
+      ANY reason — including a genuine, expected absence (e.g. a market holiday). Any real multi-year backfill will
+      eventually hit one. Needs per-date shard-level isolation (skip + record_empty/record_failed for that date,
+      continue) per `codex/04-architecture/shard-level-failure-isolation.md`'s own stated principle, rather than today's
+      fail-fast semantics. Not roll-sensitive-specific — affects any feature-group batch run over a real range. (repo:
+      features-service)
 
 ## Progress log
 
@@ -334,3 +347,172 @@ start without real tradfi/ES feature parquets.
   by the code's own test suite before this session; each was found by actually running the real pipeline against real
   prod data and watching it fail. Next steps unchanged (verify output at the canonical path, launch
   features-delta-one-tradfi, confirm manifest rows, then flip this todo).
+- 2026-07-26 (slot 3, todo 4 continued): the relaunched VM (`...091215`) completed clean —
+  `total_rows=1219168 days=2398 shards=16786`, zero errors, verified via direct GCS listing (2,222 real `ticks.parquet`
+  objects at the canonical `instrument_type=continuous_future` path + the roll-schedule sidecar). Moved to the second
+  half of this todo (launch features-delta-one-tradfi, confirm real feature parquets). Local `--dry-run` verification
+  against real GCS data before committing to a full VM launch surfaced TWO MORE real, previously-undiscovered bugs —
+  both in the same "24h vs 1d" timeframe-token family, one on the read side, one on the write side:
+  1. **Features-service read side**: `OrchestrationService._load_continuous_series` passed delta_one's own timeframe
+     vocabulary (`ALL_TIMEFRAMES`/`DEFAULT_TIMEFRAMES` use `"24h"` for daily bars) straight into
+     `build_canonical_candle_path` with no normalisation, even though that function's own docstring (UTL
+     `paths/registry.py`) requires the CALLER to pass `"1d"` ("timeframe is normalised (24h->1d) by the caller").
+     `futures_basis` (a `TRADFI_ROLL_SENSITIVE_FEATURE_GROUPS` member) always needs a `"24h"` continuous read regardless
+     of the CLI's `--timeframe` flag, so this fired on literally the first non-trivial test — a real, present shard read
+     as absent because the read asked for `timeframe=24h` and MDPS writes daily bars under `timeframe=1d`. Fixed by
+     normalising once at the top of `_load_continuous_series` (`features-service` — 1 new regression test in
+     `test_orchestrator_continuous_read_path.py`, confirmed failing pre-fix).
+  2. **MDPS write side — the deeper bug**: fixing #1 didn't resolve the absence, because MDPS build-continuous never
+     actually wrote a `1d` (or `24h`) continuous shard for ES at all — confirmed via direct GCS listing:
+     `instrument_type=continuous_future` exists at `timeframe∈{1m,5m,15m,1h}` for every checked day but at NEITHER
+     `timeframe=1d` NOR `timeframe=24h`, even though `DEFAULT_TIMEFRAMES` includes `"24h"`. Root cause:
+     `_process_day_shard`'s per-contract candle READ (`_load_per_contract_candles_for_day` → `candle_read_prefixes`)
+     uses the SAME unnormalised `timeframe` value as the continuous-output WRITE (`_continuous_output_path`) — but the
+     per-contract candle WRITER already normalises daily bars to `timeframe=1d`. So every `"24h"` shard's per-contract
+     read found zero rows (0 objects under the literal `timeframe=24h` token) and silently wrote nothing via the
+     existing empty-input handling, for every single day, for the entire already-completed ES production run. Fixed at
+     the single funnel point in `run_build_continuous` (`market-data-processing-service`) — normalise the whole
+     `_timeframes` list once, immediately after resolving `DEFAULT_TIMEFRAMES`, so every downstream use (read AND write)
+     agrees with what the per-contract writer already persists under. 2 new regression tests in
+     `test_build_continuous_engine.py` (`TestRunBuildContinuousTimeframeNormalisation`) confirm `"24h"` → `"1d"` before
+     `_process_day_shard` is ever called, both failing pre-fix. `quality-gates.sh` running full-green verification on
+     both repos before shipping. **Follow-up required after shipping**: the completed ES production build-continuous run
+     needs a RE-LAUNCH (or a targeted `"1d"`-only re-run) to actually backfill the daily continuous shards this bug
+     silently skipped for the whole 2020-2026 range — captured as this todo's next concrete action, not deferred to a
+     separate issue since it's the direct blocker for `futures_basis`/verifying feature parquets land.
+- 2026-07-26 (slot 3, todo 4 continued): shipped both fixes (`market-data-processing-service@3d26d7e`,
+  `features-service@4d16023f`) and launched the targeted re-run
+  (`launch-mdps-build-continuous-vm.sh --timeframes "24h" ES 2020-01-01 2026-07-25 full`). First launch attempt caught a
+  REPEAT of the tarball-pin race (finding #1 above still applies to freshness-vs-resolve ordering at the CALLER level,
+  not just inside the launcher) — the launcher printed "STALE tarball" warnings for both
+  `market-data-processing-service` and `unified-api-contracts` but launched anyway (permissive default, no
+  `LC_TARBALL_FRESHNESS` env set); killed the VM before it could run stale pre-fix code, republished both tarballs
+  (`create-code-tarballs.sh`), relaunched with `LC_TARBALL_FRESHNESS=enforce` (confirmed
+  `market-data-processing-service@3d26d7e12b30` fresh) — `mdps-backfill-tradfi-buildcontinuous-es-20260726-110048`. This
+  run completed in ~2 minutes (`rc=0`) but with **`total_rows=0` across all 2398 days** — a FIFTH, deeper,
+  previously-undiscovered bug, distinct from the timeframe-token normalisation just shipped:
+  `panama_core.apply_panama_canal_backadjust` (+ `_close_on`, used by `extract_roll_events`) filtered per-contract rows
+  via a naive `ts.dt.date() == active_date` comparison, but every MDPS candle is written
+  `closed="right"`/`label="right"` (`fast_candle_aggregation.py`, deliberate + documented) — a bar's `timestamp` is its
+  bin's END, not start. For a `"1d"` bar covering calendar day D this is ALWAYS midnight of `D+1` (confirmed on real
+  prod data: the `day=2024-06-17` per-contract `1d` bundle's rows all carry `timestamp=2024-06-18`), so the
+  date-equality check never matched a single-row-per-day daily bar, silently emptying `per_contract_today`'s
+  date-filtered slice → `continuous.empty` → `record_empty(NO_INPUT_AVAILABLE)` for literally every shard. Sub-daily
+  timeframes were never visibly broken by this because their far larger per-day row count means only the session's LAST
+  bar hits the same edge (immaterial in a 1440-row day). Root-caused via direct real-data reproduction: confirmed the
+  real `1d` per-contract candle file for `day=2024-06-17` legitimately contains 3 real ES contracts' rows (not a data
+  gap), confirmed `_load_per_contract_candles_for_day` correctly finds/returns them (2 real contracts matched against
+  the real `needed_contracts` set), then isolated the failure to `apply_panama_canal_backadjust`'s per-row date filter
+  via a traced `_process_day_shard` call showing `per_contract_today` non-empty but `continuous.empty=True`. Fixed via a
+  shared `_covered_date()` helper (`ts - 1 microsecond`, then `.dt.date()`) used by both `_close_on` and
+  `apply_panama_canal_backadjust`'s date filter — correctly attributes a midnight-exact right-edge timestamp to the day
+  it closes out. `market-data-processing-service`'s `tests/unit/test_panama_core.py`: fixed 2 pre-existing tests whose
+  synthetic fixtures used same-day-midnight timestamps (the WRONG, pre-bug mental model) to instead use the real
+  next-day-midnight convention (`_make_daily_candles` helper + 2 hand-rolled fixtures), added 1 new regression test
+  pinned to the exact live-reproduced scenario; full `test_panama_core.py` + `test_build_continuous_engine.py` green (30
+  passed). Locally re-verified via direct `_process_day_shard` call against real prod GCS data (`day=2024-06-17`,
+  `timeframe=1d`): now returns 1 real row (was 0). `quality-gates.sh` running before shipping. **This is the SIXTH real,
+  previously-undiscovered bug found while landing this one launch** (CLI operation bridge unreachable, 2× manifest
+  honest-absence signature mismatches, a launcher tarball-pin race, missing `source=`, a `log_event` bad kwarg, an
+  `available_at` gap, a 24h/1d timeframe-token mismatch on both read+write sides, and now this right-edge-timestamp
+  date-filter bug) — underscoring that `build-continuous` had genuinely never produced a single correct row of ANY kind
+  before this session, on ANY timeframe, until each of these was found by actually running the real pipeline against
+  real prod data rather than trusting a passing test suite. Next: ship this fix, re-launch the targeted `"1d"` re-run,
+  verify real continuous rows land, then proceed to the features-delta-one-tradfi launch this todo has been blocked on
+  throughout.
+- 2026-07-26 (slot 3, todo 4 continued): shipped `market-data-processing-service@e9edb39` and re-launched the targeted
+  `"24h"` re-run — `mdps-backfill-tradfi-buildcontinuous-es-20260726-112134` completed clean,
+  `total_rows=454 days=2398 shards=2398`, verified via direct GCS listing (287 real `timeframe=1d` continuous_future
+  files for `2024-0*` alone) and parquet-content inspection (`close=5552.25` for `2024-06-18`-stamped ES-20240920,
+  correctly matching the raw per-contract candle and carrying `active_contract_id`). MDPS's half of this todo is now
+  genuinely, fully verified with real data. Moved to the features-delta-one-tradfi half. Launching the REAL production
+  VM
+  (`launch-features-vm.sh --feature-family delta_one --asset-group TRADFI --start-date 2020-01-01 --end-date 2026-07-25`)
+  surfaced THREE MORE real, previously-undiscovered bugs, the last of which is arguably the actual root cause of this
+  whole issue's original premise ("features-delta-one-tradfi has never successfully run"):
+  1. **`--timeframe` CLI default is CEFI-only ("15s")**: `delta_one/cli/parser.py` defaults `--timeframe` to `"15s"`
+     unconditionally — TradFi has no tick-level candle data at all (MDPS never writes it), so every TradFi launch
+     without an explicit override tried "15s" first and the WHOLE feature group aborted on that single failure before
+     any real timeframe was ever attempted. `launch-features-vm.sh` had no passthrough for this at all. Fixed by adding
+     a `TIMEFRAME` env override to the launcher (`deployment-service@ca06015`, mirrors the existing
+     `FEATURE_GROUP`/`INSTRUMENTS` pattern) plus using it (`TIMEFRAME=1m`).
+  2. **`output_timeframes` also silently defaults to a CEFI-shaped ladder**: even with `--timeframe 1m` set, the BATCH
+     loop separately iterates `output_timeframes` (config.py's `DEFAULT_TIMEFRAMES` — `15s/1m/5m/15m/1h/4h/24h` — since
+     no `--output-timeframes` CLI flag is wired up anywhere in the codebase, `getattr(args, "output_timeframes", None)`
+     is always `None`), so "15s" was STILL attempted first and STILL aborted the whole group. Fixed by adding
+     `TRADFI_SUPPORTED_TIMEFRAMES = ["1m","5m","15m","1h","24h"]` (mirroring MDPS's `DEFAULT_TIMEFRAMES`) to
+     `constants.py` and using it as the TRADFI-specific fallback in `_tf_cluster_helper.py._process_feature_group` —
+     `features-service` (this + #3 below, same commit).
+  3. **THE ROOT CAUSE — `buffer_days` never reaches the roll-sensitive short-circuit**: with #1+#2 fixed, every date
+     STILL failed with "insufficient data" / NaN-threshold rejection, even for dates with hundreds of real prior days in
+     GCS. Traced via a live-reproduced isolation: `process_feature_group_with_preloaded_candles` — the ONLY entry point
+     the real batch pipeline ever calls (`_tf_cluster_helper.py`, both the single-date and date-range code paths) — had
+     **no `buffer_days` parameter at all**, silently defaulting to `0` inside `_run_feature_group_lifecycle`.
+     `TRADFI_ROLL_SENSITIVE_FEATURE_GROUPS`'s short-circuit in `_process_instrument` ignores `preloaded_candles`
+     entirely and re-reads the persisted continuous series directly via `_load_continuous_series(..., buffer_days)`, so
+     it ALWAYS read exactly 1 day of continuous history — regardless of the real, correctly-computed `max_buf` the
+     TF-cluster mixin resolves for candle-LOADING purposes, and regardless of any `--lookback-buffer-days` CLI override
+     (verified: passing 500 made zero difference to the observed "1/1 buffer day(s)" log line). This is the actual
+     reason `futures_basis` (and by the same code path, `technical_indicators`/`momentum`) could never compute a real
+     feature in this session until now, independent of every MDPS-side fix above. Fixed by adding `buffer_days: int = 0`
+     to `process_feature_group_with_preloaded_candles` (threaded to `_run_feature_group_lifecycle`) and passing the
+     already-computed `max_buf` at both `_tf_cluster_helper.py` call sites (`_process_tf_cluster` and
+     `_process_one_date_for_cluster` — the latter needed a new `buffer_days` parameter threaded from
+     `_process_tf_clusters_date_range`). Locally re-verified against real prod GCS data (`--skip-dependency-check`,
+     `2024-06-17`): the `1h`-cluster output now genuinely succeeds —
+     `Loaded persisted continuous series for ES/2024-06-17/1h: 259 rows from 14/86 buffer day(s)` (was 1/1), real
+     features computed, "Wrote 1/1 daily partitions", a real manifest write logged. 5 new regression tests across
+     `test_tf_cluster_helper.py` (3) and `test_orchestrator_continuous_read_path.py` (1) + `constants.py` fallback
+     coverage; full `test_tf_cluster_helper.py`
+     - `test_orchestrator_continuous_read_path.py` green (69 passed), full `tests/delta_one/` green modulo one confirmed
+       PRE-EXISTING, unrelated failure (`test_get_output_bucket_formats_correctly`, fails identically on a clean
+       `git stash` — DEFI bucket-naming, nothing to do with this fix). `quality-gates.sh` running before shipping. **Two
+       remaining, DISTINCT, NOT-yet-fixed gaps found along the way — documented here for operator visibility rather than
+       chased further in this already-large session (per the "big finding" triage rule)**:
+  - **`24h`/`1d` sub-timeframe still has sparse real coverage**: even with buffer_days correctly threaded, the
+    `1d`-continuous read for the SAME 86-day window only found 14/86 real days (vs. 1h's 259 rows/14 real days — same 14
+    real days, just far fewer bars each). The just-shipped MDPS re-run only produced `total_rows=454` across `days=2398`
+    (a ~19% hit rate) — genuinely sparse, not an artifact of this session's fixes. Given `futures_basis`'s rolling
+    features need real CONSECUTIVE daily history, this sparsity means the `24h` output specifically may keep failing its
+    NaN-threshold check even now, while `1h` (and likely `1m`/`5m`/`15m`) succeed cleanly. Root cause not yet
+    investigated — likely a `build_active_contracts_table`/`extract_roll_events` gap specific to daily granularity's
+    single-bar-per-contract-per-day nature (no redundancy the way 1440 intraday bars provide). Needs a dedicated
+    investigation, not a same-session patch.
+  - **Per-day loop aborts on the FIRST date's failure, not just-that-day**: `_process_tf_clusters_date_range`'s per-date
+    loop (`if not ok: return False`) stops the ENTIRE multi-day range on the first day that fails for ANY reason —
+    including a genuine, expected absence (e.g. 2020-01-01 is New Year's Day, a market holiday with zero real
+    per-contract data). This is not roll-sensitive-specific; it affects any feature-group batch run. A real multi-year
+    backfill will always eventually hit a holiday/weekend gap, so this needs shard-level (per-date) isolation — matching
+    the codebase's own stated `codex/04-architecture/shard-level-failure-isolation.md` principle — rather than today's
+    fail-fast semantics. Not fixed this session (a real, separate, non-roll-sensitive-specific gap); worked around for
+    verification by targeting a single known-good date instead of a multi-year range. **Running tally: NINE real,
+    previously-undiscovered bugs found and fixed while landing this ONE todo** (MDPS: CLI operation bridge, 2× manifest
+    signature mismatches, launcher tarball-pin race, missing `source=`, `log_event` bad kwarg, `available_at` gap,
+    24h/1d write-side token mismatch, right-edge date-filter; features-service/deployment- service: 24h/1d read-side
+    token mismatch, CLI `--timeframe` CEFI default, `output_timeframes` CEFI default, `buffer_days` never threaded to
+    the roll-sensitive short-circuit) — none caught by the existing test suite before this session; every one found by
+    actually running the real pipeline against real prod data. Next: ship, then launch one more real production VM for a
+    realistic single-day/date window, verify real feature parquets + manifest rows land for at least the working
+    timeframes (1h et al.), and flip this todo's checkbox with full evidence.
+- 2026-07-26 (slot 3, todo 4 continued): shipped `features-service@2e7c2ca1` (buffer_days threading — the root-cause
+  fix; also folds in the `--timeframe`/`output_timeframes` CEFI-default fixes, same commit) after fixing a function-size
+  QG violation (extracted `_default_output_timeframes()` as a module-level helper in `_tf_cluster_helper.py`). Full
+  `quality-gates.sh` green (exit 0; a transient interleaved `[FAIL]` block for an UNRELATED repo —
+  `market-tick-data-service` contract-call baseline — appeared in one run's tail output but did not affect this repo's
+  exit code, confirmed by a clean standalone re-run). `quickmerge` landed clean: `094a8b43..2e7c2ca1`. Added the two
+  DISTINCT remaining gaps (24h/1d sparse coverage; per-date abort-on-first- failure) as tracked P1 todos above rather
+  than leaving them as un-tracked prose, per the workspace rule that every deferral in a summary must already be a
+  `- [ ]` todo.
+
+## Deferred work after 2026-07-26
+
+| Item                                                                                              | State / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                  | Blocked on                                        |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Todo 4 (this file, P0) — real features-delta-one-tradfi production launch + manifest verification | Not done — all blocking code bugs are now fixed and shipped (9 real bugs across market-data-processing-service, features-service, deployment-service); next session should launch a REAL production VM for a realistic single-day/narrow-range window (avoid 2020-01-01 — a market holiday with zero data, which would hit the untracked-until-now per-date abort-on-first-failure gap) and verify real parquets + manifest rows land | Nobody — pick up directly, no external dependency |
+| New P1 todo — MDPS `24h`/`1d` sparse coverage investigation                                       | Not done — needs a dedicated GCS gap analysis, not chased this session (time-boxed per the "big finding" triage rule)                                                                                                                                                                                                                                                                                                                 | Nobody — real work, needs its own session         |
+| New P1 todo — per-date shard-level isolation in `_process_tf_clusters_date_range`                 | Not done — a genuine, separate, non-roll-sensitive-specific architecture gap; not fixed this session to keep scope bounded                                                                                                                                                                                                                                                                                                            | Nobody — real work, needs its own session         |
+
+**Recommended next item**: todo 4 (P0) — launch the real production VM for a single realistic date (e.g. a 2024 weekday
+already confirmed to have real MDPS continuous data, such as `2024-06-17`) with `TIMEFRAME=1m` set on the launcher, then
+verify via direct GCS listing + manifest read that real feature parquet rows landed for at least the `1h` output. This
+is the last remaining step to close this issue's original premise.
