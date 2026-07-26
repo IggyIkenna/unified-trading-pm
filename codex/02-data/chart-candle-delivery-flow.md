@@ -284,7 +284,14 @@ gs://market-data-tick-{cefi|tradfi|defi}-{[test-]project_id}/
             {SYMBOL}.parquet
 ```
 
-**Filename is the bare symbol**, not the canonical `venue:type:symbol` instrument-key. Per-category divergence:
+**⛔ SUPERSEDED 2026-07-26 (cefi_residual_followups_after_honest_done_2026_07_17.md Phase 2):** ~~Filename is the bare
+symbol, not the canonical `venue:type:symbol` instrument-key.~~ Post the D3/D4 wire→canonical cutover, the leaf is
+`{instrument_id}.parquet` where `instrument_id` IS the canonical id (`market-data-processing-service`
+`output_path_helpers.py::candle_leaf_filename`) — a bare-wire-symbol filename is the legacy pre-migration form, not the
+current writer output. The one exception: chain-bundle types (`options_chain`/`futures_chain`) write a single
+`underlying={U}/ticks.parquet` per (date, root) instead of per-instrument. Tie-breaker SSOT:
+[`cross-asset-canonical-target-ssot.md`](cross-asset-canonical-target-ssot.md) §0/§1. Per-category divergence (data_type
+segment, unaffected by the leaf-naming correction above):
 
 | Category | `data_type` segment value used by MDPS                   |
 | -------- | -------------------------------------------------------- |

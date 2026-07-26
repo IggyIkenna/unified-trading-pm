@@ -214,14 +214,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ### MVP cells — proven wired (backfill=paper=live) vs. declared in-scope only
 
-| MVP cell                                      | Declared in-scope                | Backfill proven (this plan's Phase-D condensed summary above)                                                            | Paper/live wiring proven  |
-| --------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
-| S&P index futures (ES)                        | yes                              | partial — `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` shows the ohlcv 1s+1m backfill IN FLIGHT, not complete | NOT VERIFIED IN THIS PASS |
-| S&P index options                             | yes                              | not launched — singleton Databento lock held by the futures fleet (same doc)                                             | NOT VERIFIED IN THIS PASS |
-| Delta-one single-stock equities               | yes                              | filenames already canonical; id-column verification still open (Phase A2)                                                | NOT VERIFIED IN THIS PASS |
-| CME BTC/ETH/MBT/MET futures                   | yes (+409 expansion, 2026-07-21) | backfill fleet launched at scale (2026-07-21 Progress Log); completion not re-confirmed                                  | NOT VERIFIED IN THIS PASS |
-| Daily Treasuries + daily KRW (Yahoo)          | yes                              | KRX equities gap closed 2026-07-22 (new Yahoo-daily launcher); Treasuries backfill status not re-confirmed               | NOT VERIFIED IN THIS PASS |
-| VIX FUTURE (CBOE) + CBOE yield INDEX + FX KRW | yes (+409 expansion)             | part of the same 2026-07-21 backfill fleet launch; completion not re-confirmed                                           | NOT VERIFIED IN THIS PASS |
+| MVP cell                                      | Declared in-scope                | Backfill proven (this plan's Phase-D condensed summary above)                                                                                             | Paper/live wiring proven  |
+| --------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| S&P index futures (ES)                        | yes                              | fleet finished, not yet manifest-verified — MEASURED 2026-07-26: all 7 `es-{2020..2026}` shards ran + self-deleted by 2026-07-21T09:48Z, zero preemptions | NOT VERIFIED IN THIS PASS |
+| S&P index options                             | yes                              | not launched — but the singleton-Databento-lock blocker CLEARED (MEASURED 2026-07-26: futures fleet gone since 2026-07-21)                                | NOT VERIFIED IN THIS PASS |
+| Delta-one single-stock equities               | yes                              | filenames already canonical; id-column verification still open (Phase A2)                                                                                 | NOT VERIFIED IN THIS PASS |
+| CME BTC/ETH/MBT/MET futures                   | yes (+409 expansion, 2026-07-21) | backfill fleet launched at scale (2026-07-21 Progress Log); completion not re-confirmed                                                                   | NOT VERIFIED IN THIS PASS |
+| Daily Treasuries + daily KRW (Yahoo)          | yes                              | KRX equities gap closed 2026-07-22 (new Yahoo-daily launcher); Treasuries backfill status not re-confirmed                                                | NOT VERIFIED IN THIS PASS |
+| VIX FUTURE (CBOE) + CBOE yield INDEX + FX KRW | yes (+409 expansion)             | part of the same 2026-07-21 backfill fleet launch; completion not re-confirmed                                                                            | NOT VERIFIED IN THIS PASS |
 
 > **Honest finding (this pass, 2026-07-24)**: every "Backfill proven" cell above is sourced from this plan's own
 > Progress Log / child-plan digests — none is a fresh re-verification. The "Paper/live wiring proven" column is entirely
@@ -533,9 +533,12 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       sign-off gates this
   - [`plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`](/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md)
     (15 open — capped)
-    - **[DATA] P0.** ES CME futures ohlcv 1s+1m — IN FLIGHT (`tradfi-bf-cme-ohlcv-1m-es-{2020,2025,2026}` RUNNING)
-    - **[DATA] P0.** ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched (singleton Databento lock held by futures
-      fleet)
+    - **[DATA] P0.** ES CME futures ohlcv 1s+1m — fleet FINISHED, manifest-verify still owed (MEASURED 2026-07-26: all 7
+      `tradfi-bf-cme-ohlcv-1m-es-{2020..2026}` shards inserted 2026-07-21T03:42Z and self-deleted by 2026-07-21T09:48Z,
+      zero preemptions)
+    - **[DATA] P0.** ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched, but the stated blocker has CLEARED (the
+      singleton-Databento-lock-holding futures fleet is gone; zero `tradfi-bf-*` instances exist as of
+      2026-07-26T02:20Z)
     - **[INFRA] P1.** tradfi — same gates; Databento universe (GLBX/DBEQ/XCBF) + Yahoo (KRX/FX)
     - **[DATA] P1.** FINDING — IS `by_date` capture frozen ~2026-05-21 fleet-wide; tradfi degraded from ~2026-05-04
     - **[DATA] P1.** FINDING — ICE futures + CME futures-options not on Massive → BLOCKED-CREDENTIALS

@@ -23,7 +23,7 @@ summary: >-
   never stamp a failure as zero"), and it directly undermines this task's own OR-1 fixture_events canonical-schema
   re-fetch campaign: dates processed by the VM from 08:12Z onward risk being marked done/empty when they were never
   actually fetched.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -58,7 +58,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "slot 6, data_engineering, 2026-07-26 (historical census, task sports_satellite_ao_dispatch_batch5-001)"
 source: ["sports_satellite_ao_dispatch_batch2-011 health-check, slot 7, data_engineering, 2026-07-25T08:34Z"]
 drift_direction: advance-code
 ---
@@ -133,37 +133,94 @@ todo (`sports_satellite_ao_dispatch_batch2-011`) is tracking to completion.
 
 ## Recommended decision
 
-1. **[OPS] P0 — VM disposition (operator/main call, not mine to make unilaterally):** `af-backfill-20260725-032253` has
-   been in the zero-progress daily-quota-exhausted state since 08:12Z with no sign of self-resolving (unlike the
-   per-minute `rateLimit` case, there's no in-adapter retry/backoff for this error class — it will keep silently
-   `empty_confirmed`-ing every remaining date until either the daily quota resets or someone stops it). Recommend:
-   **stop the VM now** (SPOT, idempotent — safe to stop/relaunch) to cap further silent corruption, rather than letting
-   it grind through the remaining ~2053 dates in this broken state. Relaunch once todo 3 (adapter fix) ships AND the
-   API-Football daily quota has reset (unknown reset time — check `https://dashboard.api-football.com` account status or
-   retry a lightweight `/status` call).
-2. **[CODE] P0. Fix the 4 per-fixture adapter methods** (`get_fixture_statistics`, `get_fixture_events`,
-   `get_fixture_lineups`, `get_fixture_player_stats` in
-   `instruments_service/reference_data/adapters/sports/adapters/api_football.py`) so a HARD failure (anything that
-   reaches their `except Exception` after `_fetch_and_extract` — i.e. `is_rate_limit=False` cases, already re-raised
-   immediately by `_fetch_and_extract`) re-raises to the caller instead of swallowing to `[]`, restoring the shard-level
-   failure-isolation contract `_gather_per_fixture_rows._fetch_one` / `entity_failures` / `_handle_empty_fixture_entity`
-   already assumes exists. Keep `_emit_fetch_failed` (observability) but do not `return []` after it for this class —
-   either re-raise or return a distinguishable sentinel `_fetch_one` treats as a forced entity_failures increment. Add
-   regression tests: one hard-failure-class error (e.g. mock the "requests" daily quota JSON envelope) must result in
-   `entity_failures[entity]` incrementing and `_handle_empty_fixture_entity` taking the `record_failed` branch, not the
-   empty-gap branch. (repo: instruments-service)
-3. **[DATA] P1. Historical audit** — once the fix ships, scope a census (manifest, not a new GCS walk) for
-   `capture_status=empty_confirmed` / `EXPECTED_NO_FIXTURE` / `EXPECTED_NO_PROVIDER_COVERAGE` rows on
-   `FIXTURE_STATS`/`FIXTURE_EVENTS`/`FIXTURE_LINEUPS`/`PLAYER_STATS` whose `attempted_at` falls inside a window
-   correlatable to a known api_football hard-failure event (cross-reference `ADAPTER_FETCH_FAILED` log/event history if
-   retained, or re-probe a sample against the live API to see if data actually exists there now) — re-flag genuine false
-   positives to `attempted_failed` for re-fetch. Likely overlaps/extends
-   `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`'s scope; coordinate rather than
-   duplicate. (repo: instruments-service)
-4. **[DATA] P1. Re-verify `af-backfill-20260725-032253`'s own output** once it's stopped/resumed/completed: any date
-   processed in the 08:12Z-onward window before the stop must be excluded from "done" until re-fetched under the fixed
-   adapter — do not let the OR-1 re-census (this plan's own "Done when" step) trust `empty_confirmed` cells from that
-   window at face value.
+1. [x] ✅ **[OPS] P0 — VM disposition (operator/main call, not mine to make unilaterally):**
+       `af-backfill-20260725-032253` has been in the zero-progress daily-quota-exhausted state since 08:12Z with no sign
+       of self-resolving (unlike the per-minute `rateLimit` case, there's no in-adapter retry/backoff for this error
+       class — it will keep silently `empty_confirmed`-ing every remaining date until either the daily quota resets or
+       someone stops it). Recommend: **stop the VM now** (SPOT, idempotent — safe to stop/relaunch) to cap further
+       silent corruption, rather than letting it grind through the remaining ~2053 dates in this broken state. Relaunch
+       once todo 3 (adapter fix) ships AND the API-Football daily quota has reset (unknown reset time — check
+       `https://dashboard.api-football.com` account status or retry a lightweight `/status` call). — **DONE**: main
+       ruled A (stop now); VM stopped, `gcloud compute instances describe` confirms `TERMINATED`, `lastStopTimestamp`
+       `2026-07-25T10:38:34Z`.
+2. [x] ✅ **[CODE] P0. Fix the 4 per-fixture adapter methods** (`get_fixture_statistics`, `get_fixture_events`,
+       `get_fixture_lineups`, `get_fixture_player_stats` in
+       `instruments_service/reference_data/adapters/sports/adapters/api_football.py`) so a HARD failure (anything that
+       reaches their `except Exception` after `_fetch_and_extract` — i.e. `is_rate_limit=False` cases, already re-raised
+       immediately by `_fetch_and_extract`) re-raises to the caller instead of swallowing to `[]`, restoring the
+       shard-level failure-isolation contract `_gather_per_fixture_rows._fetch_one` / `entity_failures` /
+       `_handle_empty_fixture_entity` already assumes exists. Keep `_emit_fetch_failed` (observability) but do not
+       `return []` after it for this class — either re-raise or return a distinguishable sentinel `_fetch_one` treats as
+       a forced entity_failures increment. Add regression tests: one hard-failure-class error (e.g. mock the "requests"
+       daily quota JSON envelope) must result in `entity_failures[entity]` incrementing and
+       `_handle_empty_fixture_entity` taking the `record_failed` branch, not the empty-gap branch. (repo:
+       instruments-service) — **DONE**: `instruments-service@f31fb2e9`, 4 adapters re-raise after `_emit_fetch_failed`,
+       4 regression tests updated to `*_error_propagates` (pytest.raises), QG green.
+3. [x] ✅ **[DATA] P1. Historical audit** — once the fix ships, scope a census (manifest, not a new GCS walk) for
+       `capture_status=empty_confirmed` / `EXPECTED_NO_FIXTURE` / `EXPECTED_NO_PROVIDER_COVERAGE` rows on
+       `FIXTURE_STATS`/`FIXTURE_EVENTS`/`FIXTURE_LINEUPS`/`PLAYER_STATS` whose `attempted_at` falls inside a window
+       correlatable to a known api_football hard-failure event (cross-reference `ADAPTER_FETCH_FAILED` log/event history
+       if retained, or re-probe a sample against the live API to see if data actually exists there now) — re-flag
+       genuine false positives to `attempted_failed` for re-fetch. Likely overlaps/extends
+       `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`'s scope; coordinate rather than
+       duplicate. (repo: instruments-service) — **DONE 2026-07-26, 0 matches, no relabel needed** — see "Update
+       2026-07-26 — historical census" below.
+4. [x] ✅ **[DATA] P1. Re-verify `af-backfill-20260725-032253`'s own output** once it's stopped/resumed/completed: any
+       date processed in the 08:12Z-onward window before the stop must be excluded from "done" until re-fetched under
+       the fixed adapter — do not let the OR-1 re-census (this plan's own "Done when" step) trust `empty_confirmed`
+       cells from that window at face value. — **Effectively resolved by the same census**: the manifest shows
+       essentially nothing was ever committed for these 4 entities during the 08:12Z-10:38Z window in the first place
+       (see below), so there is no suspect `empty_confirmed` data from that window sitting in the canonical index to
+       exclude.
+
+## Update 2026-07-26 — historical census (todo 3), 0 matches
+
+**Scope**: manifest-only census (no new GCS walk) against the canonical
+`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` (5,584,073 rows). No leftover
+per-VM shard exists for `af-backfill-20260725-032253` in `_index/per_vm/` (only `af-backfill-20260726-013313`,
+`_legacy_seed`, `sports-enrichment-footystats`, `sports-fixtures-job` are present) — the canonical index is confirmed
+authoritative for this VM's writes, not stale relative to an unconsolidated shard.
+
+**Incident window, precisely bounded**: `af-backfill-20260725-032253` (asia-northeast1-c) hit the daily-quota error at
+`2026-07-25T08:12:00Z` (per `run.log`) and was `gcloud compute instances stop`'d at `2026-07-25T10:38:34Z`
+(`lastStopTimestamp`, `gcloud compute instances describe`) — so the exposure window is
+`[2026-07-25T08:12:00Z, 2026-07-25T10:38:34Z]`, wider than the originally-observed 22-minute burst (08:12-08:34Z) since
+the VM kept running (stuck) until the manual stop ~2h4m later.
+
+**Query 1 (the todo's literal spec)**: `source=api_football`,
+`data_type ∈ {FIXTURE_STATS, FIXTURE_EVENTS, FIXTURE_LINEUPS, PLAYER_STATS}`, `capture_status=empty_confirmed`,
+`error_reason ∈ {EXPECTED_NO_FIXTURE, EXPECTED_NO_PROVIDER_COVERAGE}`, `attempted_at ∈ [08:12:00Z, 10:38:34Z]` on
+2026-07-25 → **0 rows**.
+
+**Query 2 (sanity check, widened + unfiltered on capture_status)**: same source/entity filter, `attempted_at` widened to
+`[07:30:00Z, 11:00:00Z]` (a ~3.5h buffer around the incident), ANY `capture_status` → only **2 rows total**, both
+`captured` (2020-03-19 FIXTURE_EVENTS @ 08:03:02Z — before the 08:12Z quota hit; 2020-03-22 FIXTURE_EVENTS @ 08:52:00Z —
+inside the window but a genuine successful capture, not empty). Narrowed strictly to `[08:12:00Z, 10:38:34Z]`: still
+just the 1 `captured` row.
+
+**Interpretation**: the swallow-to-`[]` code path was definitely exercised live (8,534 `ADAPTER_FETCH_FAILED` log lines
+08:12-08:34Z per the original write-up), but almost no manifest writes of ANY kind landed for these 4 entities during
+the incident — consistent with the health-check's own observation that the `date=` boundary was **stuck** (zero forward
+progress), i.e. the per-fixture retry loop kept re-hitting the same date without ever reaching the
+`_handle_empty_fixture_entity` write step that would have committed the bad `empty_confirmed` rows. Main's decision to
+stop the VM (rather than let it grind through the remaining ~2053 dates) appears to have caught this before the
+mis-write actually landed in the canonical index, not merely before it was _discovered_.
+
+**Scope boundary (documented, not a cut)**: this census is bounded to the one concretely-dated, log-evidenced incident
+this issue doc describes. A broader "any api_football hard failure ever" sweep isn't derivable from the manifest alone —
+`ADAPTER_FETCH_FAILED` is a `log_event()`/PubSub emission (routed to `#data-pipeline-alerts`), not a durably queryable
+historical store, and `attempted_at` reflects only the most recent write per cell, so an older masked failure that was
+later legitimately re-fetched would already read `captured` today and isn't a currently-outstanding defect to relabel.
+No other api_football hard-failure incident with a stated window is on record in the sports issue-doc corpus as of this
+audit (checked `plans/active/issues/` for `api_football`/`api-football` docs mentioning quota/`FORBIDDEN`/
+`INVALID_API_KEY`; the only other hit, `sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`,
+is a DIFFERENT bug — a `--sports-entity` scope-escape, not the swallow-to-`[]` bug — already tracked with its own todos,
+including its own P2 follow-up audit; not duplicated here).
+
+**Verdict**: 0 matches. No relabeling performed — the exposure window turned out smaller than feared (the retry-stall
+appears to have prevented the bad writes from landing at all, not just from being caught quickly). This todo and todo 4
+are both closed by this finding. `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`'s scope
+(rows already correctly `attempted_failed`) is unaffected and not touched by this census.
 
 ## Codex SSOTs
 

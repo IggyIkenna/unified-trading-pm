@@ -70,7 +70,13 @@ files.append(blob_name)
 ```
 
 The `instrument_ids` check is **its own gate**, applied unconditionally when set. Substring match against the blob path
-is sufficient when filenames carry the instrument id (`.../BTCUSDT.parquet` matches `instrument_ids=["BTCUSDT"]`).
+is sufficient when filenames carry the instrument id. **⛔ Example corrected 2026-07-26
+(cefi_residual_followups_after_honest_done_2026_07_17.md Phase 2):** the bare-wire-ticker example (`.../BTCUSDT.parquet`
+matching `instrument_ids=["BTCUSDT"]`) described the PRE-D3/D4-migration filename form; the mechanism (substring match)
+is unchanged, but post-cutover filenames carry the CANONICAL stem, e.g. `.../BINANCE-FUTURES:PERPETUAL:BTC-USDT.parquet`
+matches `instrument_ids=["BINANCE-FUTURES:PERPETUAL:BTC-USDT"]`. A caller still passing bare wire tickers as
+`instrument_ids` will silently match zero canonical-form blobs. Tie-breaker SSOT:
+[`cross-asset-canonical-target-ssot.md`](../02-data/cross-asset-canonical-target-ssot.md) §0/§1.
 
 ## Why "list, then write-time check" is not defence-in-depth
 

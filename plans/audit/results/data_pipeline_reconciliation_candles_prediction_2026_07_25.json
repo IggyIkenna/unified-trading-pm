@@ -1,0 +1,77 @@
+{
+  "doc_type": "audit-result",
+  "asset_group": "prediction",
+  "layer": "candles",
+  "run_date": "2026-07-25",
+  "generated_at": "2026-07-25T23:35:00+00:00",
+  "auditor": "/data-pipeline-reconciliation --layer candles",
+  "read_only": true,
+  "bucket": {
+    "kind": "market-data-tick-prediction",
+    "resolved_name": "market-data-tick-pred-prd-central-element-323112",
+    "reachable": true,
+    "probe_method": "delimiter descent of processed_candles/by_date/ -> 247 day prefixes, 2025-03-14..2026-01-14"
+  },
+  "phase0_index_state": {
+    "consolidator_lock_held": false,
+    "latest_run": {
+      "last_run_at": "2026-07-25T23:48:36.277638+00:00",
+      "verdict": "empty",
+      "success": true,
+      "shards_scanned": 1,
+      "shards_changed": 0
+    }
+  },
+  "s1_path_oracle": {
+    "sampled_objects": 5,
+    "sample_day": "2026-01-14",
+    "violations_migration_window_mode": 0,
+    "violations_fully_migrated_mode": 0,
+    "verdict": "CANONICAL (sample-based)",
+    "note": "on-disk objects still carry venue=POLYMARKET though the LOCKED target drops venue= for prediction; oracle raised 0 violations either way"
+  },
+  "s2_content_schema": {
+    "sampled": false,
+    "note": "declared gap; reused P0/P8 census NEEDS_CONTENT_* = 0 for prediction as of 2026-07-23"
+  },
+  "s3_manifest": {
+    "manifest_total_rows": 763436,
+    "mdps_service_rows": 168,
+    "max_written_at": "2026-05-05T16:25:51.944166+00:00",
+    "written_after_writer_fix_2026_07_21": 0,
+    "verdict": "missing_row for effectively 100% of the live corpus"
+  },
+  "s4_catalogue": {
+    "status": "UNAVAILABLE_BY_CONSTRUCTION",
+    "reported_once": true
+  },
+  "corpus_scale_reused": {
+    "source": "P8 candle reconcile 2026-07-23, read not re-run",
+    "total_objects": 583228,
+    "classes": {
+      "CANONICAL_NOOP": { "count": 583228, "pct": 100.0 },
+      "ORPHAN": { "count": 0, "pct": 0.0 }
+    }
+  },
+  "findings": [
+    {
+      "type": "missing_row",
+      "scope_count": 583228,
+      "headline": true,
+      "suppressed": false
+    },
+    {
+      "type": "unclassified_observation",
+      "note": "most recent candle day-partition on disk is 2026-01-14, stalest of the 4 measured AGs; not root-caused this run",
+      "suppressed": false
+    },
+    {
+      "type": "coverage_gap",
+      "surface": "S4",
+      "scope": "whole candle layer",
+      "reported_once": true
+    }
+  ],
+  "delete_suggestions": [],
+  "resulting_plan": "mdps_candle_manifest_population_disconnect_2026_07_25"
+}

@@ -25,7 +25,7 @@ tags: [data-correctness, schema-contract, candles, cefi, deribit, futures]
 related:
   [
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
-    ../data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21

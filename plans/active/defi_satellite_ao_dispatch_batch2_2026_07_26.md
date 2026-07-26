@@ -1,0 +1,666 @@
+---
+doc_type: plan
+title: DeFi satellite AO batch 2 — fresh Phase-1/Phase-3 triage of the defi closeout-orphan corpus
+summary: >-
+  Second AO-dispatch batch for defi, produced by the `/ag-closeout-audit` skill's full Phase-1 (per-doc classify) +
+  Phase-3 (conflict-check + draft) triage over all 56 defi AG-primary docs not already covered by the consolidated
+  closeout, aggregated-sources index, batch1 (+finalize), and the forked children (track01-per-instrument-and-canon-id,
+  lending-writer-retire-prerequisite, gmx-venue-removal+finalize, dex-pool-symbol-fix-backfill-purge+finalize,
+  track5-coverage-mvp-backfill, native-ao-extract+finalize) (2026-07-26). 44 docs came back orphaned (25 partial
+  coverage, 19 never touched); 1 was a mistag whose real content is fleet-wide CI/QG infra, not defi-specific
+  (excluded); 1 was fully closed already (`mtds_perp_funding_backfill_hang_2026_07_14.md`, archive candidate, not
+  actioned by this batch). Phase 3's conflict check cleared 24 candidates from the 44 orphaned docs into fresh
+  AO-dispatch todos, then found 1 genuine duplicate pair (both docs independently drafted the identical "90-day
+  lst-rates backfill for 6 venues" ask) and merged them into a single combined todo citing both sources — 23 todos ship
+  here. Left 3 conflict-gated, 11 operator-gated, 3 time-gated, 1 too-large-or-risky, and 2 human-only items in the
+  Deferred sections below (kept concise — a fresh re-read is expected before acting on any of them, per the skill's
+  re-check methodology) for the next iteration or an explicit operator ruling. Also flags a separate mistag found during
+  Phase-0 discovery (`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`, tagged bare
+  `[cross-cutting]` despite its defi-prefixed title — `locked_by: live-defi-rollout` so not retagged here, flagged for
+  the finalize plan).
+status: active
+nature: process
+asset_group: [defi]
+stage: [data]
+repos:
+  [
+    unified-trading-pm,
+    instruments-service,
+    market-tick-data-service,
+    market-data-processing-service,
+    features-service,
+    ml-service,
+    execution-service,
+    unified-api-contracts,
+    unified-trading-library,
+    deployment-api,
+  ]
+scope: [engineer]
+tags: [defi, ao-dispatch, close-out, batch-2, satellite-docs, fresh-triage]
+related:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
+created: "2026-07-26"
+last_updated: "2026-07-26"
+parent_epic: defi_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 2.8
+estimate_calibrated_ai_days: 2.2
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: []
+source: >-
+  /ag-closeout-audit skill run 2026-07-26 (interactive, operator-approved scope) — Phase 1 classified all 56 defi
+  AG-primary docs not already in the covering-plan set via a Workflow fan-out (56 agents), Phase 3 ran a conflict-check
+  + candidate-todo draft over the 44 orphaned docs via a second Workflow fan-out (44 agents, resumed once after a
+  session interruption via cached-agent replay), per the skill's documented methodology.
+assigned_role: data_engineering
+sequential: false
+drift_direction: advance-code
+---
+
+# DeFi satellite AO batch 2 — fresh triage extraction
+
+> **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
+> ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
+> explicit operator review). All 23 todos below are same-priority-independent and touch distinct files/docs (verified —
+> the one confirmed duplicate pair was merged into a single todo before this doc was authored, not left as two colliding
+> entries).
+
+## Todos
+
+- [ ] [DATA] P1. Fill DeFi manifest venue-key under-enumeration (C8): UAC's `defi_venue_capabilities.py` declares 90
+      defi venue-keys, but the `_index/availability_index.parquet` manifest currently enumerates only a partial subset
+      per instrument_type family — lst 14/22, lending 6/21, perp 5/8 — leaving genuine absentee venues with NO manifest
+      row at all (not even `expected_unattempted`): DRIFT-SOLANA (Solana MVP), FRAX, MORPHO, FLUID. Audit the
+      enumeration path that seeds `expected_unattempted` rows for defi (the same enumerator touched by the 2026-06-22
+      blank-`asset_group`/blank-`chain` fixes referenced in this plan's Progress Log) and confirm it is being driven off
+      the full UAC venue-capability registry rather than a stale/partial venue list; re-run (or extend) the seeding pass
+      so every one of the 90 UAC-declared venue-keys gets a manifest row (captured or honest `expected_unattempted`) for
+      its declared instrument_type family, with DRIFT-SOLANA/FRAX/MORPHO/FLUID confirmed present. Source:
+      /plans/active/data_completion_defi_2026_07_15.md (item C8). Done when: a manifest census (deployment-api
+      `_axis_census.py` or equivalent) shows lst/lending/perp venue-key counts matching UAC's 90-key registry (100%
+      enumerated, not just 14/22, 6/21, 5/8), with DRIFT-SOLANA, FRAX, MORPHO, and FLUID each carrying at least one
+      manifest row; quality-gates.sh green. **RE-DIAGNOSED 2026-07-26 (slot-4)**: premise was wrong — no DeFi
+      `expected_unattempted` seeder exists at all (DeFi is explicitly excluded from the sentinel fan-out every other
+      asset_group uses); there is no seeding pass to "re-run or extend." DRIFT-SOLANA's absence is CORRECT (deliberately
+      removed 2026-07-16) — that done-criterion is unsatisfiable-by-design and must be dropped. FLUID's gap is not
+      list-drift; it's the already-tracked "adapter built, never wired to the manifest-writing CLI handler" class
+      (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md`). Full re-diagnosis + properly-scoped follow-up todos:
+      `/plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`. This checkbox stays unchecked
+      pending an operator/architecture decision on that doc's Option A/B — not AO-completable as originally written.
+- [ ] [CHORE] P3. Finish the two housekeeping-cluster sub-items NOT already covered by
+      `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (which only covers the OPERATIONS dict fix and the
+      paper_run_handler stale comments): (1) delete
+      `market-tick-data-service/scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` — its own documented
+      `Delete-when: dex-pools-prd/lst-rates-prd/perp-funding-prd are deleted` condition is now satisfied (all 3 buckets
+      confirmed deleted per the source doc's Progress Log); (2) audit the ~8
+      `market-tick-data-service/scripts/defi_*_2026_06_01.py` / `gate3_solana_manifest_reconcile.py` /
+      `backfill_hl_*_2026_06_17.py` scripts (all tagged `Lifecycle: campaign`) for hardcoded dead bucket-name templates
+      tied to earlier, already-completed migrations — repoint or mark for deletion per each script's own Lifecycle
+      marker; not urgent but currently orphaned. Source:
+      plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md. Done when:
+      `migrate_lst_perp_shared_bucket_gap_2026_07_13.py` is deleted (or its deletion is confirmed already done with a
+      cited commit), and each of the ~8 campaign scripts has been checked for dead bucket-name templates with either a
+      repoint applied or a documented reason no fix is needed.
+- [x] ✅ [DATA] P1. **Fix the doubled `day={D}/day={D}/` prefix bug in the DeFi instruments-store `by_date` tree (both
+      the writer regression AND the v9 migrator's malformed projection).** Two defects, both must be fixed before the
+      gated defi §H instruments-store object `--apply`: (1) an instruments-service `by_date` WRITER regression nests a
+      second `day=` segment for recent snapshots (`≥2026-05-05` onward -- confirmed doubled at `day=2026-05-05` and
+      `day=2026-05-07`; `day=2026-05-03` and all earlier days are single, canonical
+      `day={D}/venue={V}/instruments.parquet`) -- locate and fix the writer so it never emits
+      `day={D}/day={D}/venue=.../instruments.parquet`; (2) `migrate_instruments_store_v9.py`'s `canonical_object_rel`
+      inserts `pipeline_mode=/asset_group=` after the FIRST `day=` but does not normalize a pre-existing doubled `day=`
+      segment, producing a malformed projected path
+      (`day=2026-05-07/pipeline_mode=batch_instruments_service/asset_group=defi/day=2026-05-07/venue=...`) -- add a
+      `day=.../day=...` collapse (or a pre-flight reject that surfaces the malformed rows instead of silently migrating
+      them) to `canonical_object_rel`. Repo: instruments-service. Note: the catalogue/enumerate read path
+      (`build_instrument_catalogue`, via `_DAY_RE.search`/`_VENUE_RE.search`) already resolves the correct day+venue
+      regardless, so this is a G4 object-migration correctness gate, not a CF-14/catalogue blocker. **Done when**: (a) a
+      fresh `by_date` snapshot write for any day after the fix contains a single `day={D}/` segment (verified on a live
+      or dry-run write); (b) `migrate_instruments_store_v9.py --asset-group defi --dry-run` over the previously-doubled
+      date range (`2026-05-05`..`2026-05-07`+) projects single-`day=` canonical paths with no `day=.../day=...`
+      malformation; (c) `quality-gates.sh` green for instruments-service. Source:
+      `defi_migration_audit_log_2026_07_24.md` (P1 "DeFi instruments-store `by_date` has a DOUBLED `day={D}/day={D}/`
+      prefix" finding, slot-2 2026-06-07 G2 verify dry-run).
+- [ ] [DATA] P3. **Fold `lst-rates` into DeFi data-status + exclude orphan `VAULT` venue.** (1) Wire the `lst-rates`
+      availability_index (bucket `lst-rates-central-element-323112`) into the defi data-status aggregation / rollup
+      `manifest_source` read path (deployment-api `data_status` aggregation + the defi projection rebuild) so the 5 LST
+      venues (ANKR/STADER/STAKEWISE/SWELL/MANTLE + LIDO/ROCKETPOOL/ETHENA/...) stop reading as zero — this corpus
+      already reads only `market-data-tick-defi`, not the dedicated lst-rates bucket, even though the data is genuinely
+      captured (not a data gap). (2) Exclude/remap the orphan generic `VAULT` venue (1113 captured rows, not a real
+      protocol) out of `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES`. Do NOT touch the bare-`SUSHISWAP` classic-vs-V3
+      alias question in the same registries — that is explicitly out of scope here (conflict-gated, see note). Source:
+      `plans/active/defi_venue_lst_rates_residual_2026_07_24.md`. Done when: (a) the 5 LST venues' rows are visibly
+      credited (non-zero) in the DeFi could-exist / data-status view, verified via the deployment-api `data_status`
+      endpoint or UI; and (b) `VAULT` no longer appears as a live/uncategorized registered venue in
+      `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES` (excluded or mapped to its real protocol), with its
+      previously-orphaned rows now attributable to a real protocol or explicitly documented as excluded. (repos:
+      deployment-api, unified-api-contracts)
+- [ ] [BACKEND] P1. **Migrate `AaveRateImpactCalculator` off the structurally-zero DefiLlama Yields borrow field onto
+      MTDS `lending_indices`, then re-point strategy-service's P&L reader to the writer's actual feature_group name.**
+      (1) In features-service, change `AaveRateImpactCalculator.fetch_data()`
+      (`features_service/onchain/app/calculators/aave_rate_impact_calculator.py`) to source
+      `total_borrow_usd`/borrow-APY-equivalent fields from the MTDS `lending_indices` parquet (per-block Aave subgraph
+      capture, `market-tick-data-service/.../aave_lending.py`) instead of DefiLlama Yields' `/pools` endpoint — that
+      endpoint returns `totalBorrowUsd=None` for all 16,092 pools it serves (confirmed, not sampled), which
+      `pool_float()` defaults to `0.0`, making utilization (`total_borrow/total_supply`) and therefore every rate-model
+      output column (`projected_supply_apy`, `projected_borrow_apy`, `rate_impact_supply_bps`, `rate_impact_borrow_bps`)
+      a deterministic zero for every symbol, every day, structurally, regardless of when it runs. This is the
+      previously-identified but never-executed tail item from
+      `plans/archive/issues/aave_irm_slope_capture_dropped_2026_05_12.md` Step 4 ("~1 cal AI-day; the override path is
+      dormant until then") — do not re-litigate the data-source choice, MTDS `lending_indices` is the already-identified
+      internal SSOT replacement, no new vendor search needed. (2) Once the calculator produces real, non-degenerate
+      utilization/borrow-side values, update `strategy-service/pnl/engine/orchestrator.py:144` (currently reads
+      `feature_group="aave_rate_impact"`) to read `feature_group="rate_impact"` — the writer's actual, UAC-ratified name
+      since the 2026-07-21 vocabulary rename (`unified-api-contracts@e9faf32e`) — so the P&L engine stops silently
+      swallowing the feature lookup (`→ {}` → unadjusted P&L presented as adjusted). Repos: features-service,
+      strategy-service. **Done when**: re-running the onchain `rate_impact` backfill for a recent date
+      (`--feature-group rate_impact --mode batch`) produces non-zero `total_borrow_usd`, non-zero utilization, and
+      non-zero `rate_impact_supply_bps`/`rate_impact_borrow_bps` for Aave-v3-Ethereum pools with known nonzero
+      real-world borrow activity (spot-check against the MTDS `lending_indices` source rows for the same pools/date);
+      `strategy-service/pnl/engine/orchestrator.py` reads `feature_group="rate_impact"` (not `aave_rate_impact`); both
+      repos' `quality-gates.sh` green. Source:
+      `issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`.
+- [ ] [ENGINEER] P1. Triage the 9 `unified-api-contracts/unified_api_contracts/internal/architecture_v2/` files flagged
+      by the original `rg -l -i 'drift|pacifica'` sweep but never individually confirmed fixed by the 2026-07-16
+      follow-up dispatch — `perp_hedge_sizer.py`, `capability_manifest.py`, `archetype_config.py`,
+      `backtest_scenarios.py`, `flash_loan_receiver.py`, `algo_compatibility.py`, `liquidation_bonus_schedule.py`,
+      `benchmark_fill_pricing.py`, `archetype_capability.py`. For each: re-run `rg -n -i 'drift|pacifica'` scoped to
+      that file, classify every hit as genuine live Solana-perp-DEX venue residue (Drift/Pacifica venue id, leg spec,
+      capability entry) vs a false positive (e.g. "schema/numeric drift", unrelated prose). For genuine hits, apply the
+      SAME fix pattern already used on the resolved files in this issue (`archetype_capability_manifest.json`,
+      `archetype_leg_spec_seeds.py`, `collateral_registry.py`, `simulation_assumptions.py`, `jurisdiction_overlay.py`,
+      `order_semantics.py`, `venue_tokens.py`, `archetype_leg_spec.py`): remove/repoint the dead venue entry and leave a
+      `# DRIFT/PACIFICA (Solana) removed 2026-07-16 (operator ruling: ...)` comment marker, matching the marker
+      convention already applied workspace-wide. Do NOT touch `unified-trading-system-ui`'s
+      `venue_set_variants`/`archetype_capability_registry`/`strategy_instance_catalogue` or
+      `tests/e2e/_shared/strategy-registry.ts` in this todo — those are separately gated on an undecided strategy-domain
+      call (delete vs re-leg `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod` onto Jupiter) and on the stale UI/UAC
+      registry-sync generator (see this doc's Secondary finding) being fixed first; out of scope here. Source:
+      `plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`. Done when: all 9 files
+      have either a documented false-positive verdict (no code change) or a genuine-hit fix with the standard removal
+      comment marker, `unified-api-contracts` full `quality-gates.sh` is green, and the change ships via scoped
+      `quickmerge.sh --agent --files`.
+- [ ] [DOCS] P3. Document the three MEV archetypes (`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, `ARBITRAGE_MEV_JIT_LIQUIDITY`,
+      `ARBITRAGE_MEV_BACKRUN`) as explicitly OUT of the paper-replay tick-builder-wiring scope. Add a short note (in the
+      relevant strategy-service archetype/catalog doc or module-level docstring near `_ENGINE_DRIVABLE_ARCHETYPES` in
+      `paper_universe.py`, plus a one-line cross-reference from
+      `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`'s own DOCS todo) stating: these three are
+      architecturally opportunistic/runtime-mempool-driven with no catalog-declared currency universe, so no
+      day-partition tick loader can be built against them; a currency constraint for them would require new logic inside
+      the engines themselves — a materially different, separately-scoped piece of work, not attempted here. Source:
+      `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md` (DOCS P3 todo, line ~606). Done when: the
+      out-of-scope rationale for these 3 archetypes is written down in a discoverable, permanent location (codex or
+      in-repo docstring/comment) rather than living only in this issue doc, and the issue doc's own DOCS todo is checked
+      off with a citation to where it now lives.
+- [ ] [CODE] P3. Fix wrong catalog-builder import alias in `tests/integration/test_recursive_borrow_scenarios.py`:
+      `FAMILY_2_CELL_IDS` is built by importing `_build_carry_recursive_staked` (the **plain** `CARRY_RECURSIVE_STAKED`
+      archetype's catalog builder) aliased as `_build_carry_recursive_borrow_perp_hedged`, instead of importing the real
+      `build_carry_basis_perp_inv` (the `CARRY_BASIS_PERP_INV` archetype's actual catalog builder). Today this is
+      harmless (both builders happen to satisfy the same `len(...) >= 5` row-count assertion) but the Family-2 test cell
+      IDs are silently sourced from the wrong archetype's catalog rows. Fix: import and alias
+      `build_carry_basis_perp_inv` correctly, re-run the file's tests, confirm `FAMILY_2_CELL_IDS` now reflects
+      `CARRY_BASIS_PERP_INV`'s real 10-row catalog and the existing assertions still pass (adjust the row-count
+      assertion only if the real count differs from 5+). Ship via quickmerge scoped to this one test file. Source:
+      plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md ("Minor incidental finding" under
+      the `CARRY_RECURSIVE_BORROW_LENDING_ONLY` / `CARRY_BASIS_PERP_INV` orchestrator-stub section, 2026-07-24). Done
+      when: `tests/integration/test_recursive_borrow_scenarios.py` imports `build_carry_basis_perp_inv` (not the
+      plain-archetype builder) for its Family-2 registry, `bash scripts/quality-gates.sh --no-fix` is green, and the fix
+      is shipped + the plan checkbox flipped.
+- [ ] [DESIGN] P3. Evaluate wiring the existing `curve_adapter.py`/`api.curve.fi` REST path
+      (`market_tick_data_service/market_interface/adapters/defi/curve_adapter.py`) into the batch `dex_pool_swaps`
+      collection cascade for CURVE/OPTIMISM (mirroring the "ARB/POLY only on hosted service (deprecated) — use
+      api.curve.fi instead" precedent already documented in UAC `_defi.py`), as an alternative to leaving this cell as a
+      permanent honest `EXPECTED_SUBGRAPH_DEINDEXED` absence. Repo: market-tick-data-service. Not urgent — every other
+      `dex_pool_swaps` (venue, chain) cell is unaffected and the ~144-952 CURVE/OPTIMISM rows are a small fraction of
+      the asset_group's total gap; do NOT implement the wiring itself in this todo — only produce the evaluation. **Done
+      when**: a written, evidence-cited verdict is appended to the source issue doc stating whether `curve_adapter.py`'s
+      REST integration can realistically be wired into the `dex_swaps_handler.py` batch cascade for this (venue, chain)
+      pair (covering: does the REST response shape map onto the existing `dex_pool_swaps` schema/writer contract; what
+      integration point would the call live at; rough effort), with an explicit go/no-go recommendation for a follow-up
+      implementation todo. Source: `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
+- [ ] [DATA] P2. **Re-run the DeFi `instrument_availability` shape-B ("hive") vs flat reconciliation with a null-aware
+      comparator, full population.** The 2026-07-14 corrected-comparison pass found the original 45.2% (1,315/2,911)
+      byte-mismatch figure is very likely inflated/entirely explained by a `None`-vs-`NaN` serialization artifact
+      (Python `object`-dtype `None` on the flat writer vs `float64`-dtype `NaN` on the hive writer, only in columns
+      `pool_fee_tier`/`quote_asset_decimals`) — a null-aware re-comparison on a 70-pair stratified spot-check (10 venues
+      × 7 dates) found **0 real field-level diffs**, but that was only 70 pairs, not the original 2,911. Re-run the full
+      reconciliation (all 2,353 real day-partitions, or at minimum the original 2,911 venue-day pairs where both shapes
+      have a comparable file) with a null-aware field comparator (treat `None`==`NaN` as equal). Reuse/adapt the
+      read-only investigation approach cited in Source (scratchpad `defi_shape_b_reconcile.py` pattern,
+      `run5.json`/`run100.json`) — this is READ-ONLY, nothing is written to or deleted from GCS. Record the corrected
+      mismatch percentage and a final verdict (real divergence confirmed at scale vs artifact-only, effectively 0% real
+      divergence) as a new dated section in Source. Do NOT run any delete, backup, or migration step, and do NOT make
+      the "finish v9 hive migration vs delete the stale frozen hive snapshot" call — that remains an explicit operator
+      decision that folds into `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (cross-cutting
+      instruments-service scope, out of bounds for this todo).
+
+  Source: `defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md`
+
+  Done when: the null-aware reconciliation has run across the full 2,911-pair (or full 2,353-day-partition) population
+  and a corrected mismatch percentage + closing verdict is recorded in Source as a new dated section, definitively
+  resolving whether the original 45.2% figure was a comparison-methodology artifact or real divergence at scale.
+
+- [ ] [DATA] P2. Once `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s P1 [BACKEND]
+      `_perp_funding_kalshi_polymarket.py` cefi-routing fix (sourced from
+      `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s 2026-07-24 root-cause resolution) has landed AND its P1
+      [DATA] corpus-wide KALSHI_PERP scope audit has produced its per-day/per-symbol GCS-present/manifest-absent count,
+      re-run manifest rebuilds for every affected historical day/symbol identified by the scope audit so the
+      previously-silently-dropped KALSHI_PERP/POLYMARKET_PERP perp_funding rows (originally rejected because
+      `source='kalshi_perp'`/`'polymarket_perp'` was not a registered `SOURCE_PRIORITY[("defi","perp_funding")]` source)
+      get correctly re-emitted under the now-fixed cefi-classified write path. Repo: market-tick-data-service. **Done
+      when**: every day/symbol the scope audit flagged as GCS-present/manifest-absent for KALSHI_PERP/POLYMARKET_PERP
+      perp_funding now has a manifest row under the correct classification, `quality-gates.sh` green, and
+      `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`'s status flips to resolved. Source:
+      `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`.
+- [ ] [SCRIPT] P1. **Implement the MTDS DeFi perf bundle (knobs + async fan-out + executor-offload) as ONE combined
+      commit** — code-only, no VM launch, no canary. (a) Add `defi_max_concurrent_fetches` (32),
+      `defi_max_inflight_tasks` (128), `defi_max_concurrent_uploads` (64) to
+      `market_tick_data_service/config/service_config.py`, mirroring the existing Tardis 3-knob block (verified: none of
+      the 3 currently exist — grep-confirmed). (b) Replace the sequential `for protocol in protocols` loop(s) in
+      `market_tick_data_service/cli/handlers/solana_defi_handler.py` and the sequential shard loop in
+      `dex_pools_handler.py` with a bounded fan-out reusing UTL's `ParallelPerSymbolRunner` (call with
+      `manifest_writer=None` during fan-out; apply `record_captured`/`record_zero_rows`/`record_failed` + the heartbeat
+      SEQUENTIALLY afterward, in original iteration order, to preserve today's manifest-write/heartbeat semantics
+      exactly). (c) Route the blocking `_upload_parquet`/`storage.upload_bytes` calls through `loop.run_in_executor` on
+      a DEDICATED `ThreadPoolExecutor` (never the default pool — the cefi DNS-starvation wedge). Ship as ONE commit —
+      the 3 knobs are proven inert alone (0% gain) unless bundled with the fan-out; do not split. Add/extend unit tests
+      proving: shard-level failure isolation preserved (no `raise` in per-shard loops), `record_captured` grain
+      unchanged, no upload reorder/drop. Explicitly do NOT launch the 2-VM TheGraph canary or any wide SPOT wave — that
+      validation step is operator-owned ("ship code + I run the canary", per
+      `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s own deferral to this doc) and is separately gated on the
+      auth-blocked `gcloud compute` access noted in this doc's § Auth block; this todo covers the code + unit-test
+      portion only, which the source doc states is safe to implement without live infra. Source:
+      `plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md` § "Optimization — the perf bundle" (P1
+      item). Done when: the 3 new knobs exist in `service_config.py`; `solana_defi_handler.py` and
+      `dex_pools_handler.py` fan out fetch+upload via `ParallelPerSymbolRunner` with sequential post-loop
+      manifest-write/heartbeat application; blocking upload calls run on a dedicated `ThreadPoolExecutor`; new/updated
+      unit tests pass proving shard isolation, unchanged `record_captured` grain, and no upload reorder/drop;
+      `bash scripts/quality-gates.sh` is green on `market-tick-data-service`; change is committed via
+      `quickmerge.sh --agent` (no VM launch, no canary run) and this doc's perf-bundle checkbox is flipped with the
+      commit SHA as evidence.
+- [ ] [BACKEND] P1. **Add a per-instrument residual emitter to the capturable non-POOL DeFi handlers**
+      (`lending_indices_handler`, `risk_params_handler`, `lst_rates_handler`, `evm_defi_collectors` in
+      market-tick-data-service) so their IS-seeded per-instrument `expected_unattempted` cells can reconcile — mirror
+      the existing DEX pattern (`record_catalogue_residual_empty` / `EmptyConfirmedReason.EXPECTED_NOT_ENOUGH_TVL`,
+      `_dex_swaps_queries.py:157`, `residual = catalogue_pool_ids - captured_pool_ids`) but reusing the now-generalised
+      `catalogue_pool_ids_for_shard` (`_catalogue_filter.py:77`, tracked as its own prerequisite todo in
+      `defi_satellite_ao_dispatch_batch1_2026_07_25.md`) so each handler diffs its OWN captured-instrument set against
+      the IS catalogue subset for its `instrument_type`(s) and emits a per-instrument empty-confirmed row for the
+      residual, instead of today's VENUE/CHAIN-grain blank-`instrument_id` `record_zero_rows`/`record_empty`.
+      `lst_rates_handler` additionally needs the per-instrument `instrument_id` grain added to its residual/empty path
+      specifically — NOTE: `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s combined `lst_rates_handler.py` todo
+      already fixed the CAPTURED-path per-instrument `record_captured` grain but explicitly excludes the empty/residual
+      path ("do not touch the empty/residual path") — this todo is the remaining, un-duplicated residual-side half for
+      `lst_rates_handler` plus the wholly-untouched residual emitters for
+      `lending_indices_handler`/`risk_params_handler`/`evm_defi_collectors`. Do NOT reuse `EXPECTED_NOT_ENOUGH_TVL` (it
+      sits in `OUT_OF_COVERAGE_WINDOW_REASONS` and would re-create the denominator-exclusion bug this doc exists to
+      avoid) — use the doc's already-shipped `EmptyConfirmedReason.EXPECTED_REFERENCE_ONLY_NO_CAPTURE_PATH`-adjacent
+      terminal-reason machinery only for the genuinely-unsatisfiable reference-only class (already resolved separately);
+      for these 4 genuinely-capturable handlers, emit ordinary per-instrument empty-confirmed rows so cells can flip to
+      `captured` on a real re-capture. Repo: market-tick-data-service. **Done when**: all 4 handlers call a
+      per-instrument residual emitter (new shared helper or per-handler call mirroring the DEX pattern) after their
+      capture pass, one new/extended unit test per handler asserts a per-instrument empty-confirmed row is written for
+      an uncaptured-but-in-catalogue instrument (with a real `instrument_id`, not blank), the existing
+      `lst_rates_handler` CAPTURED-path grain fix from batch1 is left untouched/still green, and
+      `bash scripts/quality-gates.sh --no-fix` is green in market-tick-data-service. Source:
+      `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
+- [ ] [DATA] P3. Append F10 (YEARN_V3/ETHEREUM/yield_bearing/vault_share_price pipeline_mode<->source desync, MEDIUM,
+      delete_elig=NO) to the DeFi reconciliation register as a defi-scoped row, per the audit's own Section 9
+      maintenance-contract note ("F10 ... not in the register as defi-scoped rows ... flagged as follow-up") -- add the
+      row under whichever register doc F10 belongs (/codex/02-data/non-canonical-path-inventory.md or the
+      canonical-cutover-register, matching the format of existing register entries) citing
+      data_pipeline_reconciliation_defi_2026_07_20.md Section 4/Section 9 as the source finding. Source:
+      defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md (todo 5). Done when: F10 has a row in the register doc
+      with the same fields (finding id, severity, description, delete_elig) as other register entries, and the register
+      doc's F10 row links back to data_pipeline_reconciliation_defi_2026_07_20.md.
+- [ ] [CODE] P2. Wire EULER_V2 lending-indices capture and resolve the UAC "Plasma" chain ambiguity — per
+      `plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`'s two remaining unblocked open todos
+      (items EULER_V2-capture-wiring and Plasma-chain-resolution; the doc's HYPERLIQUID/ASTER UAC-registry todo is
+      intentionally excluded — see note): (1) Re-verify the EULER_V2 Goldsky subgraph's current sync lag (measured ~38
+      days / ~271K blocks behind Ethereum mainnet as of 2026-07-10, `defi_venue_capabilities.py:150-153`) — do NOT wire
+      capture if it is still stalled; if stalled, stop here and record the measured lag. (2) If caught up: fix the
+      `mtds_operations` mismatch on the `euler_v2` `_ProtocolCapability` (`capability_declarations/_defi.py:476`,
+      currently `["collect-lending-indices","collect-liquidations"]`) by repointing it to `collect-evm-defi` (the CLI
+      operation that actually implements the EULER_V2 collector,
+      `market_tick_data_service/cli/handlers/evm_defi_handler.py`/`evm_defi_collectors.py`), OR add real EULER_V2
+      handling to MTDS's `LendingIndicesHandler`/`LiquidationsHandler` defaults — pick whichever matches how
+      `collect-evm-defi` is actually meant to be invoked; the existing `DEFI_VENUE_DATA_TYPE_CAPABILITIES` entries for
+      EULER_V2-ETHEREUM/ARBITRUM (`defi_venue_capabilities.py:155-156`) already exist but have zero real captured rows —
+      trigger/verify a real capture run afterward. (3) Separately, resolve which "Plasma" chain UAC's
+      `FLUID-PLASMA`/`AAVE-PLASMA` placeholder chain entries are meant to refer to (the 2025 Tether-backed Plasma L1,
+      vs. the unrelated pre-2020 Polygon Plasma bridge) by investigating chain-config provenance/commit history/any
+      on-chain references before touching those entries — if genuinely unresolvable from evidence alone, close this
+      sub-item as `BLOCKED-OPERATOR-DECISION` with the ambiguity documented rather than guessing. Source:
+      `plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`. Done when: the subgraph lag is
+      re-verified and documented either way; if caught up, `mtds_operations` is repointed (or handler wired)
+      consistently with the collector actually used and a capture run demonstrably produces >0 real `lending_indices`
+      rows for EULER_V2-ETHEREUM and/or EULER_V2-ARBITRUM in the manifest (if still stalled, this sub-item closes as
+      `BLOCKED-UPSTREAM` with the measured lag cited instead); and the Plasma chain identity is either
+      confirmed/documented in UAC or explicitly filed `BLOCKED-OPERATOR-DECISION`.
+- [ ] [DEPLOY] P1. Redeploy the DeFi backfill VM tarball/image carrying `market-tick-data-service@420221b4` (or later
+      HEAD), then — AFTER confirming the redeploy — execute the production re-collect for the 2,958 affected historical
+      shards (`dex_pool_state` 2,107 rows + `lst_rates` 851 rows, 434 unique dates 2020-01-01..2026-06-29, 13 venues / 9
+      chains) using the exact commands in the source doc's "Exact commands for the follow-up" section:
+      `python -m market_tick_data_service --operation collect-dex-pools --mode batch --asset-group DEFI --start-date 2020-01-19 --end-date 2026-06-25`
+      and `--operation collect-lst-rates --mode batch --asset-group DEFI --start-date 2020-01-01 --end-date 2026-06-29`,
+      launched via the registered `launch-mtds-dex-pools-backfill-vm.sh` (and the lst-rates equivalent) so the run
+      carries the redeployed fixed image. **[OPERATOR] VM-launch note**: this is a production launch against live
+      subgraph/RPC endpoints consuming real API quota; justified safe-idempotent per the source doc's own scoping —
+      `ManifestFreshnessCache`'s skip-if-fresh means the ~99.99% already-good shards near-instant-skip and only the
+      2,958 actually-stale ones do real work. The deploy step is a HARD PREREQUISITE to the re-collect step (sequential,
+      not parallel) — launching the re-collect on the still-pre-fix image would reproduce the exact
+      `UPSTREAM_INSTRUMENTS_CATALOG_STALE` mislabeling this issue's `420221b4` fix already corrected once (the
+      2026-07-15 ~12:16-12:22Z recurrence). Repo: market-tick-data-service / deployment-service (VM tarball build).
+      Source: `issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`. **Done when**: the backfill image build is
+      verified to carry `420221b4`+; the re-collect VM(s) launch successfully (STARTED <60s, ≥1 progress/hr per the
+      VM-launcher runbook) and run to completion or a documented monitored handoff; a before/after live-count query
+      against `market-data-tick-defi-prd-central-element-323112`'s canonical `availability_index.parquet` shows
+      `UPSTREAM_INSTRUMENTS_CATALOG_STALE`/`attempted_failed` for `dex_pool_state`+`lst_rates` dropping toward 0,
+      replaced by a mix of `captured` and `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]`; this issue doc's `[DATA] P1`
+      (full re-collect) and `[DEPLOY] P1` (redeploy) checkboxes are flipped `[x]` with the evidence (build/deploy
+      confirmation + before/after counts) cited inline.
+- [ ] [ENGINEER] P2. Close the second and third instances of stale DRIFT residue in
+      `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` by applying the SAME playbook already
+      validated + shipped for the first instance (`deployment-ui@83ec561`, Progress Log 2026-07-21: a formula-verified,
+      referential-integrity-checked SURGICAL PRUNE — not a blind regen, since no recoverable generator exists for any of
+      these files):
+  - `unified-trading-system-ui/lib/registry/ui-reference-data.json` — remove the ~40 lines of lowercase `"drift"`
+    residue in generated archetype/capability data: `venue_ids` array entries (`"drift"` inside e.g.
+    `["drift","gmx_v2","hyperliquid"]` / `["drift","gmx_v2","hyperliquid","lido","uniswap_v3"]`), the archetype id
+    `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod`, and the free-text `notes` describing the Jito/Marinade +
+    Kamino + Drift hedge leg. Recompute/verify any dependent summary counts the file carries; confirm zero NEW dangling
+    references.
+  - `unified-api-contracts/openapi/capability-manifest.json` (`venue:drift` + `collateral:drift` nodes, 22 edges),
+    `unified-api-contracts/openapi/capability-verdict-matrix.json` (~70 `"venue": "drift"` rows, recompute
+    per-archetype + top-level `available_count`/`blocked_count`/`cell_count` summaries exactly as done for
+    deployment-ui's verdict-matrix), `unified-api-contracts/openapi/capability-unlock-report.json` (3
+    `"to_node_id": "venue:drift"` refs in `impossible`/`roadmap` sections). For every file: reverse-engineer + preserve
+    its existing pretty-printing/formatting before editing (as instance 1 required), leave
+    `generated_from_commit`/`manifest_commit` provenance fields UNCHANGED (this is a documented delta on a stale base,
+    not a freshness claim — matches instance 1's precedent), run each repo's existing consumer/loader test suites to
+    confirm no breakage, and quickmerge scoped to only the touched files. OUT OF SCOPE for this todo (do not touch): the
+    fourth instance, `unified-api-contracts/openapi/prospectus/*.md` (57 files) — its generator
+    (`unified-trading-pm/scripts/openapi/generate_strategy_prospectus.py`) has drifted from the committed copies on many
+    axes UNRELATED to drift removal (venue-category classification, execution-algorithm lists, diagnostic strings,
+    formatting, 2 archetypes missing from the committed set), so blind regeneration risks a large unrelated diff — that
+    needs a human design decision on how to reconcile the generator drift before anyone dispatches a fix there. Done
+    when:
+    `rg -in '"venue:drift"|"collateral:drift"|"venue":\s*"drift"' unified-trading-system-ui/lib/registry/ui-reference-data.json unified-api-contracts/openapi/capability-manifest.json unified-api-contracts/openapi/capability-verdict-matrix.json unified-api-contracts/openapi/capability-unlock-report.json`
+    returns zero matches (plus a manual check that no other lowercase `"drift"` venue-id residue remains per the
+    case-insensitive-sweep lesson already recorded in this doc); each repo's existing test suite is green; changes
+    shipped via quickmerge with real commit shas; and this issue doc's Progress Log is updated to record instances 2+3
+    closed while instance 4 (prospectus) stays explicitly open. Source:
+    `plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`
+- [ ] [REGISTRY] P2. Close 4 leftover DeFi wizard/taxonomy gaps from
+      `e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`: (1) **D3** — `backtest_solana_basis.py` exercises a
+      drift-perp / Orca(Raydium) SOL-DEX-spot basis that has NO cell in `CARRY_BASIS_PERP` (spot venues are
+      CEX/`uniswap_v3` only, `orca`/`raydium`/`whirlpool` absent) — add the Solana-DEX spot venues to the
+      `CARRY_BASIS_PERP` leg-spec + verdict-matrix (unified-api-contracts) + wizard `leg:CARRY_BASIS_PERP:spot` option
+      tree (unified-trading-system-ui), OR (if Solana-DEX-spot basis is determined to be data-only / not a deployable
+      cell) document that explicitly in the leg-spec instead of the current silent omission; (2) delete or wire the dead
+      `per_venue_margin_buffer_pct: 0.20` key in `strategy-service/.../configs/arbitrage_price_dispersion.yaml`
+      (currently zero Python references) into the collateral-aware down-size branch already shipped in
+      `staked_basis.py::_derive_structure`; (3) make `spot_venue` a first-class selectable axis for staked-basis —
+      currently hardcoded per-LST (ETH-LST→UNISWAP_V3, SOL-LST→JUPITER, `catalog_staked_basis.py:30-35`) with no
+      Binance-spot/orca/raydium alternative, even though the engine already accepts a `spot_venue` param and APD already
+      exposes an equivalent via `venue_universe` — in unified-api-contracts (leg-spec/manifest) + strategy-service
+      (catalog); (4) audit the e2e DeFi catalog's 5 behavioural params left at engine defaults
+      (`entry_bps`/`exit_bps`/`min_health_factor`/`hedge_deadline_ms`/`peg_drift_threshold_bps`) against the
+      production/paper-run intended values for functional (not just nominal) alignment, per the doc's "NEW findings" P2
+      ask. Source: e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md. Done when: (1) CARRY_BASIS_PERP either has
+      orca/raydium spot cells wired end-to-end (leg-spec + verdict-matrix + wizard option tree) with a wizard-buildable
+      drift-perp/orca-spot config, OR the leg-spec explicitly documents Solana-DEX-spot basis as non-deployable; (2)
+      `per_venue_margin_buffer_pct` is either removed from the YAML or has a live code path consuming it; (3)
+      `spot_venue` is a selectable axis for staked-basis in both the leg-spec/manifest and the wizard, mirroring APD's
+      `venue_universe` pattern; (4) a written comparison of the 5 behavioural e2e defaults vs production/paper intent is
+      committed, with any mismatch either fixed in-repo or filed as a new `plans/active/issues/` doc.
+- [ ] [DOCS] P2. **Close out `features_service_defi_data_loading_blockers_2026_05_29.md` (status still `open`, no
+      `resolved_by`) — verify + flip, do not re-implement.** Direct code inspection (this audit pass) already confirms
+      every substantive item in the doc is SHIPPED: (1)
+      `DEFI_DATA_TYPE_OVERRIDES`/`volume_analysis`/`vwap`/`microstructure` now route through UAC
+      `resolve_data_type_for_feature_group()` → `dex_pool_swaps`, proven by
+      `tests/delta_one/integration/test_delta_one_integration.py::test_defi_{volume_analysis,vwap,microstructure}_resolves_dex_pool_swaps`
+      (features-service); (2) the OHLC-semantics investigation (Issue 5 / decision #3) is answered and documented in
+      `unified-api-contracts/unified_api_contracts/internal/schemas/_candle_contracts.py` lines ~400-408, which
+      explicitly cites this issue doc by name ("features_service_defi_data_loading_blockers_2026_05_29 #3") and explains
+      the USD-normalized-spot-price semantics; (3) the duplicate-column UAC cleanup (decision #4,
+      `swap_count`/`volume_quote_usd`) is done — `_candle_contracts.py` drops `volume_quote_usd` as a duplicate and
+      keeps `swap_count` only on the state candle, verified by
+      `unified-api-contracts/tests/internal/unit/test_mdps_candle_contracts.py`; (4) the EOD-handoff's three CeFi-pivot
+      cross-repo bugs are ALSO fixed — tz-naive/aware join fixed in
+      `market-data-processing-service/market_data_processing_service/app/core/canonical_writer_streaming.py`
+      (`.dt.replace_time_zone("UTC")`, comment quotes the exact original error), MDPS column-order drift fixed via
+      `pl.concat(..., how="diagonal_relaxed")` in
+      `features-service/features_service/delta_one/app/core/data_loader.py::_concat_and_sort` (comment dated "Surfaced
+      2026-06-01 by the CeFi features smoke"), and the filter-pushdown queue-time fix is live in
+      `market-data-processing-service/.../orchestration_scanner.py::_collect_matching_parquet_blobs` (filters on
+      `venues`/`instrument_ids` before adding to `files`). Worker action: re-verify these five citations still hold on
+      current `main` (re-run the cited tests / re-grep the cited lines), then flip this doc's frontmatter `status: open`
+      → `status: resolved`, fill `resolved_by:` with the confirming commit SHAs/citations, and remove
+      `locked_by: live-defi-rollout` if no longer needed. **Done when**: frontmatter shows `status: resolved` +
+      populated `resolved_by:` with evidence citations for all 4 original decisions + the 3 CeFi-pivot bugs, committed
+      via `docs(plans):`. Source: plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md
+- [ ] [SCRIPT] P3. Regenerate the stale `adapter_contract_baseline.yaml` entries for the 2026-07-14 Solana-Drift/Helius
+      split: in `unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml`, first confirm the split
+      (commit 7a8bc43c, moving Helius batch-resolve retry/rate-limit mechanics from
+      `market_tick_data_service/cli/handlers/solana_defi_drift.py` into the new sibling `solana_defi_drift_helius.py`)
+      did not actually DROP any tracked contract calls
+      (`classify_venue_error`/`ADAPTER_FETCH_FAILED`/`record_captured`/`record_empty`/`record_zero_rows`/`record_failed`)
+      — verify via `git log -p` / `git show` around 7a8bc43c that the calls now counted in `solana_defi_drift_helius.py`
+      (9 today) are the same calls formerly counted under `solana_defi_drift.py` (was baselined at 12, now 10), i.e. the
+      split moved calls rather than silently losing them. If confirmed intentional (no real regression), run
+      `check_adapter_contract_regression --regenerate-baseline` (or the equivalent quality-gates.sh 5.70/6
+      baseline-regen flow) scoped to `market-tick-data-service` to update the `solana_defi_drift.py` baseline count to
+      10 and add a fresh baseline entry for `solana_defi_drift_helius.py` at 9. If instead calls were actually lost (a
+      real regression), do NOT regenerate — file a new P1/P2 issue doc describing the lost contract calls and leave the
+      WARN in place. Source: `plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
+      Done when: `quality-gates.sh --no-fix` on `market-tick-data-service` no longer prints the "Adapter contract-call
+      regression" ⚠️ for `solana_defi_drift.py`, the updated `adapter_contract_baseline.yaml` diff is committed, and the
+      source issue doc's status is flipped to resolved (or a new regression issue doc is filed instead, per the above
+      branch).
+- [ ] [SCRIPT] P2. Confirm defi OHLCV/DEX writers no longer reproduce the 2026-06-28 phantom-capture pattern (manifest
+      `capture_status=captured` rows with no backing GCS parquet — 219,529 rows, dominant in
+      `swaps_ohlcv_*`/`dex_pool_swaps`/`gas_fees`). The original capture-BATCH OHLCV writer implicated in the 2026-06-28
+      finding was RETIRED 2026-07-18/19 for the per-instrument writer re-architecture (SHIPPED
+      `market-tick-data-service@4ca2640d`, R1 in `defi_track01_per_instrument_and_canon_id_2026_07_24.md`), so this is a
+      fresh verification against the CURRENT writer path, not a re-check of retired code. Read `write_defi_rows`
+      (`market_interface/adapters/defi/canonical_write.py`) + `_write_and_upload`
+      (`cli/handlers/evm_defi_collectors.py`) and every active defi OHLCV/dex_pool_swaps/gas_fees handler, and verify
+      `record_captured` is invoked only AFTER a confirmed-successful parquet upload for that instrument
+      (write-then-record ordering) — never before or independent of the flush, which is the exact ordering bug the
+      2026-06-28 batch writer is suspected of. Repo: market-tick-data-service (read-only code review; no live backfill
+      run required — do not attempt a code fix in this todo). Source: `issues/phantom_captures_defi_2026_06_28.md`.
+      **Done when**: a finding is appended to the issue doc's Progress Log stating, per active defi
+      OHLCV/dex_pool_swaps/gas_fees writer handler, whether `record_captured` happens strictly after a verified
+      successful parquet write (with exact code-line citations), and either confirms the phantom-recreation risk is
+      closed across all of them or files a new dated issue doc under `plans/active/issues/` for any handler found still
+      vulnerable.
+- [ ] [SCRIPT] P2. **Confirm/close Phase 5 #2 `dex_pool_swaps` DEX-fill 3-VM fleet** (`mtds-dex-swaps-backfill-1/2/3`,
+      date-sharded on-demand, covering the measured gap `2024-10-07→2026-07-21`) — verify via
+      `gcloud compute instances list --filter="name~mtds-dex-swaps-backfill"` (confirmed still all 3 `RUNNING` as of
+      2026-07-26, well past the doc's original ~20-30h estimate). For each VM: read `run.log` + per-VM manifest shard
+      count (`time_created`, not log activity) to confirm genuine climbing progress, not a silent stall. If any VM has
+      vanished/terminated without reaching its assigned date-range end, relaunch that exact chunk's command again
+      (idempotent by design per the doc's own Deferred-work table) rather than restarting from the original start date.
+      Once all 3 VMs report `process_final=True`/`exit_code=0` for their assigned ranges, flip
+      `lst_rate_honest_coverage_2026_07_21.md`'s Phase 5 `#2 DEX fill` todo with the manifest-count evidence and append
+      a Progress Log entry. Source: `lst_rate_honest_coverage_2026_07_21.md` (Phase 5, "#2 DEX fill" todo + RESUME POINT
+      deferred-work table row "Phase 5 #2 dex_pool_swaps backfill"). Done when: all 3 VMs are confirmed terminated with
+      a completed date-range (or successfully relaunched to reach that state), the doc's Phase 5 #2 todo is checked off
+      with cited manifest evidence, and the RESUME POINT table row is updated to reflect the closed state.
+- [ ] [SCRIPT] P2. **Run the designed 90-day lst-rates backfill for the 6 already-shipped, accuracy-verified DeFi venues
+      (ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER) — first re-verify the shared LST-rates cron is no longer
+      crash-looping.** `defi_five_never_captured_venues_fix_2026_07_22.md` asserts the blocking gas-fees crash-loop bug
+      is already fixed (mtds@522185a6); `defi_venue_phase_live_definition_contradiction_2026_07_22.md` (same underlying
+      ask, filed independently) requires a live re-check before trusting that — do the re-check first since it is cheap
+      and the two docs disagree on whether it is still needed. Verify `uts-prod-mtds-collect-lst-rates` (Cloud Scheduler
+      job `uts-prod-mtds-collect-lst-rates-cron`, `asia-northeast1`, project `central-element-323112`) is healthy on its
+      most recent run(s) —
+      `gcloud scheduler jobs describe uts-prod-mtds-collect-lst-rates-cron --location=asia-northeast1` +
+      `gcloud run jobs executions list --job=<the corresponding Cloud Run Job> --region=asia-northeast1` (or equivalent
+      log check) confirming no OOM/timeout crash-loop in the last several scheduled runs. **If healthy**: run the local,
+      no-VM, ~2,340-call 90-day RPC backfill for the 6 venues via the current canonical `lst_rates_handler.py` RPC-based
+      path (queries historical block numbers directly), then manifest-verify new rows landed across the full 90-day
+      window for each of the 6 venues (`instruments-service/scripts/measure_honest_coverage.py` or a direct manifest
+      read against the prod `lst-rates-central-element-323112` bucket / `market-data-tick-defi` corpus, whichever the
+      handler writes to) — `record_captured` (not `attempted_failed`) for all 6 venues, any gap either backfilled or
+      explicitly logged as a real per-day upstream absence, never silently skipped. **If still crash-looping**: do NOT
+      run the backfill — instead file a new tracked issue doc
+      (`plans/active/issues/defi_lst_rates_cron_crash_loop_<date>.md`) documenting the health-check evidence and the
+      specific crash-loop symptom, and explicitly leave the backfill deferred pending that fix. Source:
+      `issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`,
+      `issues/defi_five_never_captured_venues_fix_2026_07_22.md`. **Done when**: either (a) the 90-day backfill is
+      complete and manifest-verified for all 6 venues with cited cron-health evidence, or (b) a new issue doc exists
+      citing the crash-loop evidence and explicitly defers the backfill.
+
+## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
+
+- **`plans/active/issues/defi_code_codex_drift_2026_05_27.md`**: D15 ("HYPERLIQUID + ASTER are DEFI_VENUE_PHASE=pipeline
+  but perp_funding_handler actively collects them; reconcile the phase label (→ live, or confirm cefi-axis
+  classification)") is a DUPLICATE of already-tracked-but-undispatched ground, not genuinely orphaned. Live-code check
+  confirms D15's own premise is stale:...
+- **`plans/active/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`**: The one remaining open item in
+  this doc — the unchecked `- [ ] [FEATURE] P2 delta_one funding_oi venue-aware annualisation` todo (features-service,
+  thread venue through the delta_one calculator interface so non-8h venues like Hyperliquid annualise correctly) — is
+  explicitly annotated in the doc itself as "DEFERRED —...
+- **`plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md`**: Phase-1's "orphaned_never_touched"
+  verdict is a false positive produced by the narrow covering-set grep — the target doc is NOT actually orphaned.
+  Grepping the covering set for the mechanism names (lst_yields, lst_rates, aave_oracle/AaveOracle, dex_pool_swaps,
+  Curve, Orca/Raydium/Meteora) surfaced...
+
+## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION, not batchable)
+
+- **`plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md`**: Conflict check (clean, no overlap): grepped all
+  13 covering-plan-set docs for every file/mechanism name in the 4 uncovered §6 items (`jupiter.py`,
+  `governance_params_event_poller`, `onchain_event_poller`, `alchemy_adapter`, `thegraph_ws_adapter`, `helius_solana`,
+  `native_staking_handler`). Only one hit:...
+- **`plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`**: Confirmed the Phase-1 finding: lines
+  325-332 carry an unchecked
+  `- [ ] [DATA] P2. Reconcile _INSTRUMENT_TYPE_ALIASES ... against the legacy venue_mapping.DataTypeConfig table` item,
+  and grepping the exact mechanism name `_INSTRUMENT_TYPE_ALIASES` across the full covering-plan set (consolidated
+  closeout,...
+- **`plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`**: Confirmed via direct read:
+  the doc's Todos list has 4 items. Todos 1 ([DATA] P1 scale measurement) and 2 ([DIAG] P1 content-sample/distribution)
+  are cited and dispatched in defi_satellite_ao_dispatch_batch1_2026_07_25.md (matching Phase-1's "(2 todos)" tally).
+  Todos 3 and 4 are NOT dispatched anywhere. Conflict check:...
+- **`plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`**: Read the target doc and
+  confirmed Phase-1's evidence exactly. Of the 3 open todos, the VERIFY (P2) is dispatched by
+  defi_satellite_ao_dispatch_batch1_2026_07_25.md (line ~546-549); the other two are explicitly excluded there (lines
+  ~578-592) with detailed reasoning I independently re-verified against the source doc's...
+- **`plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`**: Confirmed uncovered: todo-2
+  (reconcile the 2026-07-08 Balancer `@CHAIN` instrument_id patch against the 2026-07-18 Option-A ruling — revert vs
+  ratify) and todo-3 (fix CURVE's still-bare colliding instrument_id) are not cited by any doc in the covering set. Only
+  todo-1 (read-only audit/verify, explicitly told to flag...
+- **`plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`**: Confirmed via full read: the
+  target doc's 4 open todos split as (1) VERIFY completeness_pct impact and (4) VERIFY the swaps_ohlcv_4h timeframe
+  discrepancy — both explicitly covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 341-355
+  (verbatim-matching "Source:" citations, confirmed by batch1_finalize.md...
+- **`plans/active/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`**:
+  Conflict check: grepped the consolidated closeout plan's own todos plus every
+  batch1/track01/lending-writer-retire/gmx-venue-removal/dex-pool-symbol-fix/track5(+finalize) doc for overlap on this
+  doc's remaining ground. The 4 todos in defi_satellite_ao_dispatch_batch1_2026_07_25.md (lines ~386-419: [DATA] P1...
+- **`plans/active/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`**: No conflict with any
+  covering-set doc (grep for test_collateral_validation.py, funding_ensemble_engine.py, CollateralValidationMixin,
+  defi_enhancements across the full defi covering set returned zero hits — nothing else claims this ground). The blocker
+  is a genuine three-way operator decision baked into the source doc...
+- **`plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`**: Confirmed via read: the doc's
+  "Tracked follow-ups" section (lines 334-365) has 5 items. Item (1) HYPERLIQUID trades backfill re-run and item (3)
+  delete retired perp_funding DeFi-routing residue ARE covered — item (3) verbatim in
+  defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 462-471 (cites this doc as Source,...
+- **`plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`**: Confirmed via Read of
+  the target doc's final section ("Needs an explicit operator ruling", lines 720-733) plus the 2026-07-23 reconciliation
+  note (lines 738-749): the sole genuinely-open remaining item is a two-part semantic fork requiring an OPERATOR
+  decision, not worker-executable bounded work -- (1) whether...
+- **`plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`**: Read the target
+  doc and confirmed the Phase-1 evidence exactly: todos 1-3 (measure scope, build the restamp script with dry-run/tests,
+  ship via quickmerge — explicitly "Do NOT run --apply") are covered verbatim by
+  defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 172-181, which cites this doc by name as Source....
+
+## Deferred — time-gated (re-check on the next batch iteration)
+
+- **`plans/active/issues/defi_morpho_lending_indices_never_wired_2026_07_12.md`**: Not batchable now: this doc's own
+  scope (Morpho adapter wiring + calendar-window backfill) is fully complete per the 2026-07-17 re-check #14 — the sole
+  remaining item (re-run the G2 gate) is blocked purely on an external condition,
+  `defi_onchain_v10_universe_v2_seed_or_backfill_progressed`, owned by...
+- **`plans/active/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`**: Confirmed via direct read of § 6:
+  the doc has 4 open items. Items (1) [terraform/scheduler wiring for staking-yields, doc's own "§ 6.1"] and (4) [codex
+  defi-data-types-catalog.md § 7 Production-label fix] ARE covered — verbatim-matching todos exist in
+  defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 326-333...
+- **`plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`**: Confirmed the two uncovered items
+  are Todo3 (P2 spot-check dex_pool_state/dex_pool_swaps coverage for all 4 protocols — UNISWAP_V2, UNISWAP_V4,
+  TRADER_JOE_V2, VELODROME_V2 — across 2026-03→today, gated on "once the relaunched mtds-dex-pools-backfill VM (this
+  session) + the running mtds-dex-swaps-backfill-1/2/3 fleet...
+
+## Deferred — too-large-or-risky (needs its own dedicated plan, not a batch todo)
+
+- **`plans/active/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`**: Confirmed via Read: Item 2
+  (4 zero-capture protocols) is closed per the doc's own 2026-07-25 update (wired 2026-07-14, verified 2026-07-24,
+  residual TRADER_JOE_V2/VELODROME_V2 gaps already dispatched in defi_satellite_ao_dispatch_batch1_2026_07_25.md). Item
+  1 (batch_onchain_subgraph bare-0x-address.parquet second...
+
+## Deferred — human-only (needs a dedicated engineering/design session, not an AO todo)
+
+- **`plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`**: Confirmed via full read: the
+  doc's 4-step fix chain is only partially covered. defi_satellite_ao_dispatch_batch1_2026_07_25.md's 2 cited todos
+  cover (a) a DIAGNOSTIC-only pass on the frozen onchain consolidator (fixes only if trivial; otherwise "remediation
+  stays open pending a human design decision" — so step 1 does...
+- **`plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`**: Conflict check found no genuine conflict:
+  defi_consolidated_native_ao_extract_2026_07_25.md (line 170) already independently classified this exact doc as
+  human-only for the same reasons. No plan in the covering set attempts to build the indexer, generalize the sig-index
+  script, or author the implementation plan. The...
+
+## Note — 1 mistag found, not actioned here (flag for a follow-up retag)
+
+- `plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged
+  `asset_group: [defi]` only incidentally; real content is a fleet-wide QG STEP 5.101 infra/CI issue, not defi-specific.
+  Should be retagged (likely `cross-cutting` or `infra`), not folded into a defi batch.
+
+## Note — a second mistag found during Phase-0 discovery (locked, not retagged here)
+
+- `plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md` is tagged bare `[cross-cutting]`
+  despite its `defi_`-prefixed title. Content is ambiguous (defi/staked-basis-specific sizing vs. possibly-generic
+  wizard tooling) and the doc is `locked_by: live-defi-rollout` — flagged for the finalize plan's follow-up rather than
+  retagged unilaterally here.
+
+## Deferred work — migrated to: N/A (this plan itself is not deferred/migrated)
+
+Fixes a `check_plan_discipline.py` false positive (the "## Deferred — operator decision needed" section above quotes
+`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`'s own "DEFERRED — ..." annotation of ONE of its items —
+not a claim that this plan was migrated elsewhere). This plan's own "## Deferred — ..." sections each already cite their
+source issue doc directly as the successor reference.
+
+## Note — 1 doc found archivable_now (not actioned here — a separate archival todo, not a batch candidate)
+
+- `plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md` — all 5 todos checked with completion evidence
+  (root-cause confirmed, fixes shipped market-tick-data-service@5a163d02/@56efdd7d, VM relaunch verified end-to-end).
+  Ready for the standard 6-step archival ritual.
+
+## Progress Log
+
+- **2026-07-26 (slot-8)** — Shipped the `day={D}/day={D}/` doubled-prefix todo — `instruments-service@570ae059`.
+  Findings: (1) the WRITER side of this bug class is already fixed, structurally, by the operator R2 full-hive
+  canonicalisation refactor (`instruments-service@a9be6ce9`, 2026-07-22 — `day`/`pipeline_mode`/`asset_group`/`venue`
+  now baked once into the sink prefix, `partition={}` always, so a doubled `day=` is no longer constructible) — no
+  further writer code change was needed; added a regression test (`test_write_venue_never_doubles_day_segment` in
+  `tests/unit/test_orchestrator_process.py`) pinning that invariant so a future refactor can't reintroduce it. (2) The
+  real remaining defect was `migrate_instruments_store_v9.py`'s `canonical_object_rel`: its final
+  `rel.replace(f"day={day}/", ..., 1)` only patched the FIRST `day=` occurrence, so a pre-existing doubled
+  `day={D}/day={D}/` object got the `pipeline_mode=`/`asset_group=` insert wedged BETWEEN the two `day=` copies instead
+  of collapsed first — reproduced exactly per the bug report. Fixed with a new `_collapse_doubled_day()` helper called
+  before the insert on both the sports and non-sports branches; verified against both confirmed-doubled examples
+  (`day=2026-05-05`, `day=2026-05-07`) AND a pre-regression single-`day=` example (`day=2026-05-03`) to confirm no
+  regression on the already-correct path. New parametrized tests added to
+  `tests/unit/scripts/test_migrate_instruments_store_v9.py`. `quality-gates.sh` green on instruments-service (twice —
+  once per change). Done-criteria (a)/(b)/(c) all satisfied; (c) is the QG-green run itself.

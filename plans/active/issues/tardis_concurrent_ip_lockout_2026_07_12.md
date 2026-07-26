@@ -487,9 +487,7 @@ actioned further here (outside this issue's assigned scope) — flagging as an a
 via (b)/(c)) is likely to restore a large volume of currently-completely-missing recent CeFi capture, not just reduce
 noise in historical `attempted_failed` counts.
 
-### 2026-07-13 — CEFI cluster of the 452-shard clean re-sweep, FORCE-leg failures (data_pipeline_e2e_check_2026_07_10.md
-
-todo 25 triage, 8-venue assigned slice)
+### 2026-07-13 — CEFI cluster of the 452-shard clean re-sweep, FORCE-leg failures (data_pipeline_e2e_check_2026_07_10.md todo 25 triage, 8-venue assigned slice)
 
 Triaging the 2026-07-13 clean re-sweep's remaining CEFI genuine failures (`BINANCE-DELIVERY` all 7 data_types, `OKX`
 liquidations, `BYBIT-SPOT` trades, `COINBASE-FUTURES` derivative_ticker/liquidations, `BITFINEX-SPOT` trades,

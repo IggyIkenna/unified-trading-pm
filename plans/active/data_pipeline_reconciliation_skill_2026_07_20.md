@@ -28,7 +28,7 @@ related:
     issues/tradfi_canonical_path_migration_design_2026_07_19.md,
   ]
 created: 2026-07-20
-last_updated: 2026-07-20
+last_updated: 2026-07-25
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -566,19 +566,31 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       by default, never suppresses genuine defects (empty stem, malformed values, missing day/timeframe/data_type). 16
       recovered spec tests + 85 pre-existing raw-tick tests pass; full QG green — `unified-api-contracts@6329fc04`.
       Skill §3h re-pointed at the oracle (see below).
-- [ ] 40. [DATA] P0. **Fix the candle object↔manifest disconnect (candle-manifest population)** — the candle write path
-      is not calling `record_captured` per shard, so S3 holds ~6 degenerate candle rows corpus-wide vs 20,734 objects on
-      one measured day. Until this is fixed the candle audit is necessarily GCS-object-driven and the disconnect is its
-      headline `missing_row` finding; prod skip-if-fresh re-derives everything and honest coverage reports candles
-      absent. This is candle_feature issue todo 7 — scope the writer fix as its own MDPS-owned plan (this plan does not
-      own MDPS writer work).
-- [ ] 41. [DATA] P1. **Run the MDPS candle audit per-AG against the Option-A target** —
-      `/data-pipeline-reconciliation     --asset-group <ag> --layer candles`, sequenced defi → prediction → cefi →
-      tradfi (the migration order). Confirm it (a) drives off GCS objects not the empty manifest, (b) suppresses the
-      ruled migration deltas as `migration_pending` (does NOT flag migration-incomplete as a defect), (c) reports
-      S4-UNAVAILABLE once as a coverage gap, and (d) surfaces only the genuine defects (empty stems, TradFi
-      migration-artifact leaf ids, the object↔manifest disconnect). Read-only; prod deletes stay human-only. Depends
-      on 38.
+- [x] 40. ✅ [DATA] P0. **Fix the candle object↔manifest disconnect (candle-manifest population)** — filed as its own
+      MDPS-owned plan, `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md` (`status: draft`,
+      `assigned_vm: NA` per the ask-before-creating default; the doc itself recommends the operator consider AO-dispatch
+      for its todo-1 diagnostic, without deciding it). Scoping found the original framing stale: a `record_captured`
+      call now EXISTS in the writer (`market-data-processing-service@752eaff` + same-day `@2d720b4`, 2026-07-21) and was
+      proven working against `-test-`, yet a fresh 2026-07-25 re-measurement shows the PROD manifest is still unchanged
+      (defi 0 / cefi 6 / tradfi 73 / prediction 168 rows, byte-identical to 2026-07-20/2026-07-23) — **and, newly
+      measured this pass, zero rows on any of the 4 asset_groups carry a `written_at` after the fix's 2026-07-21 17:01
+      UTC+1 landing time.** The new plan scopes root-causing this (3 undistinguished hypotheses) ahead of the fix +
+      historical backfill — `unified-trading-pm` (this batch).
+- [x] 41. ✅ [DATA] P1. **Ran the MDPS candle audit per-AG against the Option-A target** —
+      `/data-pipeline-reconciliation --asset-group <ag> --layer candles`, sequenced defi → prediction → cefi → tradfi. 4
+      reports (+ JSON siblings) at
+      `plans/audit/results/data_pipeline_reconciliation_candles_{defi,prediction,cefi,     tradfi}_2026_07_25.md` (the
+      pre-existing same-named 2026-07-23 docs were NOT this skill — they were the candle-path migration's own P8
+      verification via the migration script's dry-run classifier; this is the first real run of the reconciliation skill
+      itself against the candle layer, re-pointed at the UAC oracle per todo 39). Confirmed (a) driven off GCS objects +
+      a fresh manifest re-read, not the stale prior numbers; (b) 0 `migration_pending` suppressions needed — every
+      sampled object (5 per AG) already carries the fully-migrated LOCKED shape, zero oracle violations under both
+      `require_candle_migration_complete=False` and `=True`, independently reconfirming the Option-A migration's P7/P8
+      "CLEAN" verdict via a different tool; (c) S4-UNAVAILABLE reported once per AG; (d) surfaced only already-tracked
+      genuine defects (tradfi's ~7.1M-object quarantine residual, cefi's 149-object residual) plus the **headline
+      `missing_row` finding, now confirmed campaign-wide**: 0 candle manifest rows written since the 2026-07-21 fix, on
+      all 4 asset_groups. Read-only throughout; 0 delete suggestions. Depended on 38 (done). — `unified-trading-pm`
+      (this batch).
 - [x] 42. ✅ [DATA] P2. `timeframe` added to `AXIS_CENSUS_COLUMNS`, `service_name=="market-data-processing-service"`
       filter added, `data_type` badged against SOURCE `DATA_TYPES_BY_ASSET_GROUP` (not the aggregated
       `mdps_data_type_key` — corrected per the 2026-07-21-evening ruling) — `deployment-api@5564c52c`. The census does

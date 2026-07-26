@@ -12,7 +12,10 @@ summary: |
   unseeded; prediction has an intentional decision-338 exclusion (per-conditionId) PLUS a genuine gap (the token-id
   `instrument_availability` lane whose `lifecycle-catalogue-regen-prediction-daily` regen job is PAUSED) PLUS a Kalshi
   launcher gap. No seeding performed by this scan.
-status: open
+status:
+  resolved # (was: open) 2026-07-26 re-verify: scan-only contract fully closed -- all 7 cross-reference markers
+  # verified CLOSED, no seeding of its own performed or owed; downstream work confirmed tracked (open or since
+  # resolved) in each finding's owning plan, not orphaned here -- archived per the 6-step ritual
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -32,7 +35,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-06
-last_updated: "2026-07-14"
+last_updated: 2026-07-26
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -66,6 +69,29 @@ resolved_by:
 
 # Cross-AG never-seeded backlog scan (cefi / tradfi / prediction) — 2026-07-06
 
+> **🟢 COMPLETE 2026-07-26 — ARCHIVED.** Re-verified: this doc's OWN contract (scan-only — find + cross-reference, never
+> seed) is 100% closed — all 7 actionable todos below carry a "CROSS-REFERENCE MARKER CLOSED" verification and none of
+> the actual downstream seeding work is tracked as an open item of this doc's own; it lives in each finding's owning
+> plan. Re-checked all 7 cross-references against the CURRENT corpus (the owning-plan line-number citations below are
+> stale — `data_completion_to_100_all_ag_2026_06_21.md` shrank from ~3,283 to 952 lines across the 2026-07-15 and
+> 2026-07-24 line-cap splits — but every finding's content is still live and traceable): (1) cefi Kraken ~6yr IS-store
+> backfill — still open, `data_completion_to_100_all_ag_2026_06_21.md:782` ("Step 2"); (2) cefi sub-bucket blank-chain
+> phantom audit — the durable writer fix (`instruments-service@24c0dd5`) this doc already verified is corroborated as
+> landed+stable by `instruments_cefi_g1_g5_gate_execution_2026_07_24.md` (G1.3); the exact tracking line was folded away
+> in the M-1 splits as already-resolved, not silently dropped as still-open; (3) tradfi credential-gated EU-seed
+> scaffolds — still open, `data_completion_to_100_all_ag_2026_06_21.md:786` ("Step 4", `BLOCKED-CREDENTIALS`); (4)
+> tradfi ohlcv_15m/24h conversion 4-part diagnosis — still open, now at `data_completion_tradfi_2026_07_15.md:629`
+> (moved there in the 2026-07-15 split); (5) prediction token-id `instrument_availability` lane — the blocking
+> `is-daily-enum-prediction` failure this doc HANDED-OFF is now `status: resolved`
+> (`plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`, OOM fix 2026-07-13, both
+> jobs green); `instrument_availability/by_date/` now shows day partitions through mid-July per
+> `plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md:267`, so the lane is materialising
+> again — a fresher completeness read is that doc's job, not this one's; (6) prediction Kalshi launcher gap — CLOSED,
+> confirmed also flipped `[x]` in the owning plan at the same commit (`data_completion_to_100_all_ag_2026_06_21.md:768`,
+> `deployment-service@0a7c3f8`); (7) prediction decision-338 documentation-only affirmation — CLOSED, the docstring +
+> filter are still in place unchanged in `enumerate_expected_universe.py`. Nothing of this doc's own is open; archived
+> per the 6-step ritual (referrer paths fixed corpus-wide below; no DEFERRED items; no codex contradiction found).
+>
 > **Scope**: scan-only follow-on to the DeFi 2e seeding that landed ~+1.38M `expected_unattempted` cells
 > (`instruments-service@38cec01` canonical venue-key fix + `b34416e`/`0e08237`/`1539772`/`e98a5f3` follow-ups —
 > collectively repointed the DeFi enumerator to emit `venue=PROTOCOL`, `chain=X`, canonical per-pool `instrument_id`,

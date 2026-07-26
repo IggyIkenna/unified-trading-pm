@@ -88,52 +88,78 @@ drift_direction: advance-code
       `grep -rn '"COINBASE"' execution-service/execution_service/ --include='*.py'` (excluding the deliberately-kept
       Nautilus-boundary files listed above) returns 0 hits, the registry.py decision is documented with grep evidence in
       that plan's Progress Log, and execution-service `bash scripts/quality-gates.sh` is green on the final commit.
-- [ ] [DATA] P1. **CeFi E6 CF-7 diagnostic — venue/data_type relabel candidates + re-measure the ~50% `attempted_failed`
-      anomaly (diagnose only, do NOT bulk-apply).** Query the live cefi `_index` read-only to (a) enumerate the exact
-      relabel-candidate rows needing canonicalisation — `COINBASE`↔`COINBASE-SPOT` mismatches and
-      blank-venue/blank-data_type rows — with per-category counts (diagnose, don't bulk-relabel); (b) re-measure whether
-      the historically-cited "~50% `attempted_failed` rows (1.33M)" figure is still current against today's `_index`,
-      and if so break down its root cause(s) — note this is a DISTINCT figure/investigation from the already-tracked
-      ASTER regression (3,491→17,675), the futures_chain 122,585 aggregation-bug DEBUNKED finding, and the
-      Tardis-impossible-combination reclass script, all covered elsewhere in the cefi corpus — confirm no overlap before
-      writing conclusions. Source: `data_completion_cefi_2026_07_15.md`. Done when: a written diagnostic (issue doc or
-      Progress Log entry) reports the exact relabel-candidate counts by category and either
-      reproduces-with-root-cause-breakdown or retires-as-stale the 1.33M `attempted_failed` figure, with no
-      relabel/reclassify `--apply` executed.
-- [ ] [SCRIPT] P1. **cefi instruments-pipeline hygiene sweep — 6 bounded fixes from the closed-out G1→G5 gate-execution
-      doc.** Execute each sub-item (independent files, run sequentially in one todo to avoid a same-doc worker
-      collision): (a) **Disable/update the dead-CLI legacy daily Workflow** — `services/instruments-service/gcp/main.tf`
-      `instruments-service-daily` (09:00 UTC) still invokes the retired `--operation instrument --CEFI/--TRADFI/--DEFI`
-      CLI form (current CLI is `--operation instruments --asset-group <ag>`); either update its args to the current CLI
-      or disable/remove the dead schedule. Repo: instruments-service / deployment-service. (b) **Fix the all-AG (no
-      `--asset-group`) t1-recon producer crash** — the `is_all` branch in `instruments_handler.py` (~line 367,
-      SPORTS/CEFI/DEFI/TRADFI) exits 1 within ~1 min with no traceback when `--asset-group` is omitted; root-cause and
-      fix so one 00:00 job can capture all AGs. Repo: instruments-service. (c) **Codify the t1-recon Cloud Run JOB specs
-      in IaC** — only the schedulers are terraformed (`t1_batch_scheduler.tf`); the JOB definitions (image/args) are
-      imperative, which is how the cefi date-drift and the missing all-AG job went invisible previously. Add the job
-      specs to terraform (or a tracked deploy script referenced from terraform) so they can't silently rot. Repo:
-      deployment-service. (d) **Reconcile `lifecycle-catalogue-regen-prediction` registry gap** — it is present in the
-      terraform `for_each` (5 AGs) but absent from `cloud_run_job_registry.py::_LIFECYCLE_CATALOGUE_JOBS` (4 AGs); add
-      the missing entry (or remove the TF instance if prediction genuinely has no catalogue-regen job) so the
-      drift-guard test stops flagging it. Repo: deployment-service. (e) **Align the on-chain-cefi-perp venue form
-      (LIGHTER-ZKSYNC/EXTENDED-STARKNET)** — currently GLUED in the by_date PATH (the SoT) but SPLIT
-      (`venue=LIGHTER chain=ZKSYNC`) in `_index` + `prod/catalog.parquet`, which will desync as new captures land glued.
-      Per the doc's own recommendation, standardize on GLUED (matching `_CEFI_VENUES` + the by_date path): stop
-      `build_instrument_catalogue.py::build_catalogue_dataframe` from splitting these two venues, and one-time re-glue
-      the existing `_index` rows (snapshot-first). Repo: instruments-service. NOTE: PACIFICA-SOLANA was culled
-      2026-07-16 — do not include it. (f) **Build MTDS-cefi market-data capability for LIGHTER** — only EXTENDED has a
-      UAC cefi `SourceCapability` (`_cefi.py`); LIGHTER has none, so its cefi market-data capture is unbuilt (IS
-      instrument-reference side is already cefi-correct). Add the LIGHTER `SourceCapability` + adapter wiring so
-      LIGHTER-ZKSYNC market data can be captured under cefi. Repo: market-tick-data-service. NOTE: PACIFICA is culled,
-      do not build for it. Source: instruments_cefi_g1_g5_gate_execution_2026_07_24.md (items: dead-CLI legacy Workflow
-      / all-AG producer crash / t1-recon IaC gap / lifecycle-catalogue-regen-prediction registry gap /
-      on-chain-cefi-perp venue-form FINDING / MTDS-cefi capability gap — none cited or dispatched in any other cefi
-      covering-set doc). Done when: (a) the daily Workflow either runs the current CLI or is disabled — no more silent
-      daily failure; (b) the all-AG t1-recon path runs successfully end-to-end for at least one day across all 5 AGs;
-      (c) the t1-recon job specs are terraform-managed (or scripted+tracked) with a verifying re-apply; (d) the registry
-      drift-guard test passes with prediction reconciled; (e) `_index` + catalogue both show GLUED form for
-      LIGHTER/EXTENDED with 0 residual SPLIT rows, and a fresh capture writes glued; (f) LIGHTER cefi market-data
-      capture runs and writes at least one verified shard. QG-green on every touched repo.
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-7, `data_engineering`) — CeFi E6 CF-7 diagnostic.** Live read of
+      `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (9,138,791 rows, single read,
+      no corpus walk, no `--apply`). **(a) relabel candidates**: `COINBASE` bare-venue = **0 rows** (already fully
+      canonical: COINBASE-SPOT/FUTURES/CDE all in use) — no relabel needed. Blank-venue = 6 rows (negligible).
+      Blank-`data_type` = **9,750 rows**, all `capture_status=captured`, all `market-tick-data-service`, spanning
+      2019-2026 — genuinely new, not previously tracked, filed as a P3 follow-up. **(b) 1.33M/50% figure RETIRED AS
+      STALE** — current measurement is **11.61% (1,060,613 rows)** of 9,138,791 total (denominator grew ~3.5x from the
+      ~2.64M cited elsewhere while the numerator dropped modestly). Root-cause: 75.2% is the Tardis-403 family, DERIBIT
+      alone = 54.7% of all cefi attempted_failed — confirmed via exact-match cross-reference against
+      `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s 2026-07-23 numbers (113,593/112,600 DERIBIT
+      options_chain/futures_chain, essentially unchanged) that this is the SAME already-open P0 population
+      (`tardis_concurrent_ip_lockout_2026_07_12.md`, `deribit_options_chain_af_g4_blocker_2026_07_03.md`) — no new
+      mechanism, confirmed no overlap with the ASTER regression / futures_chain-122,585-debunked /
+      Tardis-impossible-combo items per the todo's own instruction. Full write-up + the P3 follow-ups:
+      `plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`.
+- [x] ✅ [SCRIPT] P1. **cefi instruments-pipeline hygiene sweep — 6 bounded fixes from the closed-out G1→G5
+      gate-execution doc.** Execute each sub-item (independent files, run sequentially in one todo to avoid a same-doc
+      worker collision): (a) **Disable/update the dead-CLI legacy daily Workflow** —
+      `services/instruments-service/gcp/main.tf` `instruments-service-daily` (09:00 UTC) still invokes the retired
+      `--operation instrument --CEFI/--TRADFI/--DEFI` CLI form (current CLI is
+      `--operation instruments --asset-group <ag>`); either update its args to the current CLI or disable/remove the
+      dead schedule. Repo: instruments-service / deployment-service. (b) **Fix the all-AG (no `--asset-group`) t1-recon
+      producer crash** — the `is_all` branch in `instruments_handler.py` (~line 367, SPORTS/CEFI/DEFI/TRADFI) exits 1
+      within ~1 min with no traceback when `--asset-group` is omitted; root-cause and fix so one 00:00 job can capture
+      all AGs. Repo: instruments-service. (c) **Codify the t1-recon Cloud Run JOB specs in IaC** — only the schedulers
+      are terraformed (`t1_batch_scheduler.tf`); the JOB definitions (image/args) are imperative, which is how the cefi
+      date-drift and the missing all-AG job went invisible previously. Add the job specs to terraform (or a tracked
+      deploy script referenced from terraform) so they can't silently rot. Repo: deployment-service. (d) **Reconcile
+      `lifecycle-catalogue-regen-prediction` registry gap** — it is present in the terraform `for_each` (5 AGs) but
+      absent from `cloud_run_job_registry.py::_LIFECYCLE_CATALOGUE_JOBS` (4 AGs); add the missing entry (or remove the
+      TF instance if prediction genuinely has no catalogue-regen job) so the drift-guard test stops flagging it. Repo:
+      deployment-service. (e) **Align the on-chain-cefi-perp venue form (LIGHTER-ZKSYNC/EXTENDED-STARKNET)** — currently
+      GLUED in the by_date PATH (the SoT) but SPLIT (`venue=LIGHTER chain=ZKSYNC`) in `_index` + `prod/catalog.parquet`,
+      which will desync as new captures land glued. Per the doc's own recommendation, standardize on GLUED (matching
+      `_CEFI_VENUES` + the by_date path): stop `build_instrument_catalogue.py::build_catalogue_dataframe` from splitting
+      these two venues, and one-time re-glue the existing `_index` rows (snapshot-first). Repo: instruments-service.
+      NOTE: PACIFICA-SOLANA was culled 2026-07-16 — do not include it. (f) **Build MTDS-cefi market-data capability for
+      LIGHTER** — only EXTENDED has a UAC cefi `SourceCapability` (`_cefi.py`); LIGHTER has none, so its cefi
+      market-data capture is unbuilt (IS instrument-reference side is already cefi-correct). Add the LIGHTER
+      `SourceCapability` + adapter wiring so LIGHTER-ZKSYNC market data can be captured under cefi. Repo:
+      market-tick-data-service. NOTE: PACIFICA is culled, do not build for it. Source:
+      instruments_cefi_g1_g5_gate_execution_2026_07_24.md (items: dead-CLI legacy Workflow / all-AG producer crash /
+      t1-recon IaC gap / lifecycle-catalogue-regen-prediction registry gap / on-chain-cefi-perp venue-form FINDING /
+      MTDS-cefi capability gap — none cited or dispatched in any other cefi covering-set doc). Done when: (a) the daily
+      Workflow either runs the current CLI or is disabled — no more silent daily failure; (b) the all-AG t1-recon path
+      runs successfully end-to-end for at least one day across all 5 AGs; (c) the t1-recon job specs are
+      terraform-managed (or scripted+tracked) with a verifying re-apply; (d) the registry drift-guard test passes with
+      prediction reconciled; (e) `_index` + catalogue both show GLUED form for LIGHTER/EXTENDED with 0 residual SPLIT
+      rows, and a fresh capture writes glued; (f) LIGHTER cefi market-data capture runs and writes at least one verified
+      shard. QG-green on every touched repo. — **DONE 2026-07-26**: (a) shipped `deployment-service@d5fde721` — the
+      2026-06-26 disable landed but left `outputs.tf` referencing the commented-out modules, so `tofu plan` failed
+      outright ever since; fixed, plan now resolves structurally (1 destroy: the scheduler trigger). Actually destroying
+      the live dead Workflow+Scheduler is **BLOCKED-CREDENTIALS** (no available account has
+      `workflows.workflows.get`/admin) — flagged in the commit, not mine to unblock. (b) VERIFIED already fixed by
+      `instruments-service@d2796158` (2026-06-26, same day as the finding) — live-reproduced a real all-AG run
+      (`--operation instruments`, no `--asset-group`) for 150s in dev env with zero crash, real fetches across
+      cefi/defi/tradfi/sports/prediction. (c) shipped `deployment-service@54aa6f5` — added `google_cloud_run_v2_job`
+      specs (via the existing `container-job/gcp` module) for the 4 instruments-service t1-recon jobs, read verbatim off
+      live (`gcloud run jobs describe`), imported into the shared prod tofu state, verified with a re-apply (0 add / 4
+      change [labels + `deletion_protection` metadata only, matching every other job's convention in this state] / 0
+      destroy) — re-plan after apply shows "No changes." (d) VERIFIED already fixed — `_LIFECYCLE_CATALOGUE_JOBS`
+      already derives from the 5-entry `_ASSET_GROUPS` tuple incl. prediction; `test_cloud_run_job_registry_guard.py`
+      10/10 pass. (e) VERIFIED already fixed by `instruments-service@ee19f6f3` (2026-07-18) —
+      `_canonical_bare_venue_chain()` now checks `VENUE_TO_ASSET_GROUP=="cefi"` and passes LIGHTER-
+      ZKSYNC/EXTENDED-STARKNET through glued; live-queried both `_index` (6,327 rows) and the catalogue (322 rows) —
+      100% glued, 0 residual split rows on either surface. (f) VERIFIED already built — `unified-api-contracts@81bf5e17`
+      (2026-07-18) added the `_LIGHTER` `SourceCapability`; MTDS already routes LIGHTER-ZKSYNC through
+      `onchain_perp_batch_handler.py` (Tardis-delegated `derivative_ticker`) + a live WS connector; manifest shows
+      88,166 rows for venue=LIGHTER-ZKSYNC in `market-data-tick-cefi-prd` (781 `captured`, `attempted_at` through
+      2026-07-26T01:31Z — actively running). Net: (a) and (c) were genuinely open and are now shipped; (b)/(d)/(e)/(f)
+      had already been independently closed by other work in the month since the source doc was written — this todo's
+      own verification is the first place that's recorded.
 - [ ] [SCRIPT] P2. **Resolve the ASTER MTDS `attempted_failed` regression per the batch1 DIAG evidence, then close the
       issue doc.** Depends on (gate on) `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s `[DIAG] P1` todo having
       appended its three sub-check findings to `issues/aster_mtds_failure_count_regression_2026_07_07.md`'s Progress Log
@@ -201,17 +227,20 @@ drift_direction: advance-code
       `issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md` (Recommendation item 4). Done when: either the
       script is deleted with cited fleet-completion evidence (run.log grep + manifest check), or a documented finding
       explains why completion could not be confirmed and the script was left in place.
-- [ ] [OPS] P0. Confirm current live status of `cefi_consolidated_closeout_2026_07_18.md` Track-2's DERIBIT "Wave-3
-      DERIBIT LIGHT" backfill for `options_chain`/`futures_chain` (check `gcloud compute instances list` for a running
-      wave and the plan's Progress Log for a post-2026-07-20 entry). If it is NOT running or complete, launch it via the
-      existing Track-2 launcher, cap-1 `tardis-concurrency-guard.sh`-gated (SPOT, idempotent shard re-run — safe to
-      relaunch if a prior attempt stalled/was preempted; do not launch a second concurrent Tardis wave — verify fleet
-      count is 0 before launching, per the workspace's hard cap-1 Tardis rule). Source:
-      `issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`. Done when: the wave is confirmed running
-      (STARTED, ≥1 progress-checkpoint logged) or confirmed already complete with fresh manifest
-      `attempted_at`/`written_at` activity for options_chain/futures_chain newer than 2026-07-21, and the finding is
-      appended to this issue doc's Progress Log (or `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s, if
-      folded there) with the VM name and the verified manifest freshness.
+- [x] ✅ [OPS] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — confirmed NOT running; confirmed launching would be
+      WRONG right now, not just premature.** `gcloud compute instances list` (all zones, project
+      `central-element-323112`): no VM matching deribit/wave/tardis. Fresh manifest read
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): DERIBIT
+      `options_chain`/`futures_chain` still 113,615/112,728 `attempted_failed`, unchanged since 2026-07-23 apart from an
+      unrelated 56-row 404 tail on 2026-07-25 (not a Wave-3 run — a real wave touches tens of thousands of rows). **This
+      todo's premise is stale**: `cefi_consolidated_closeout_2026_07_18.md`'s Track 2 was forked 2026-07-25 to
+      `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` (subsumes the old per-venue "Wave-3 DERIBIT LIGHT"
+      concept into one consolidated resume-backfill todo) — that forked plan is `status: draft`, `gate_on_depends: true`
+      on `cefi_migration_cutover_and_track8_completion_2026_07_25.md` finishing, explicitly because launching early
+      "would fight the consolidator." The gating plan itself is `status: draft`, all 5 todos unchecked, no Progress Log
+      — Track 1 hasn't started. Launching now would violate the plan authors' own explicit sequencing gate. **Did not
+      launch anything.** Full evidence in `issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s newly-added
+      Progress Log + its own todo (now flipped).
 - [ ] [SCRIPT] P2. **unified-api-contracts** — add the missing cefi `DATA_TYPE_CAPABILITY_REGISTRY` entries for
       KRAKEN-SPOT / KRAKEN-FUTURES / BITGET-SPOT / BITGET-FUTURES / BITFINEX-SPOT / BITFINEX-FUTURES / ASTER (currently
       only BINANCE/BYBIT/OKX/DERIBIT/COINBASE/HYPERLIQUID/UPBIT have entries — these 7 venues show EMPTY
@@ -222,37 +251,60 @@ drift_direction: advance-code
       ~183, provenance: cefi full-catalogue CSV export 2026-06-23). Done when: `unified-api-contracts`
       `DATA_TYPE_CAPABILITY_REGISTRY` has a populated entry for all 7 listed venues, `quality-gates.sh` is green, and a
       catalogue export (or the registry's own unit test) confirms `venue_data_types` is non-empty for each.
-- [ ] [BACKEND] P0. **Close the four bounded, decision-free residuals from
+- [x] ✅ [BACKEND] P0. **RESCOPED (slot-3, 2026-07-26): 2 of 4 sub-items done in this pass (features image-build fix
+      verified already-resolved; 3/4 codex reconciliations shipped); sub-items 1 (reader-bridge deploy, infra-craft) and
+      3 (OKX-FUTURES manifest relabel, needs collision-aware dedup) split to
+      `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` as fresh dispatchable todos — see that doc + the
+      per-sub-item annotations below for full evidence.** Close the four bounded, decision-free residuals from
       `cefi_residual_followups_after_honest_done_2026_07_17.md` that no covering cefi plan cites** (Phase 0b
       DEPLOY-reader-bridge / features image-build fix / Phase 1 OKX-FUTURES itype mislabel / Phase 2 codex
       reconciliation — verified 2026-07-26 as uncovered by every currently-active cefi AO plan, incl.
       `cefi_migration_cutover_and_track8_completion_2026_07_25.md` which only covers the Phase-1
       parquet-content-backfill/rename/manifest-completion/residual-#3/drain items). Do all four (independent files, safe
       as one worker's sequential pass):
-  1. **DEPLOY the D3 reader-bridge build to the 4 in-scope narrow-read consumers** (MTDS `reader.py`, MDPS,
+  1. ⬜ **DEPLOY the D3 reader-bridge build to the 4 in-scope narrow-read consumers** (MTDS `reader.py`, MDPS,
      features-service `raw_data_loader.py`/`batch_handler.py`, execution-service `algo_library/mtds_book_provider.py` —
      the last needs only a redeploy, no code change). The bridge code is already shipped on `origin/main` per the doc's
      2026-07-18 Progress Log ("Reader-bridge VERIFIED READY") — this is the deploy/redeploy step, not new development.
-     (repos: market-tick-data-service, market-data-processing-service, features-service, execution-service)
-  2. **Fix the features-service image build** — `cefi_wire_bridge.py:59 import CeFiWireCanonicalMap` ImportError because
-     the pinned `BASE_IMAGE_DIGEST` predates the UAC symbol. Bump `BASE_IMAGE_DIGEST` to a base image with fresh UAC, OR
-     switch features to COPY-fresh-UAC-source like its MTDS/MDPS/execution siblings (worker's engineering choice, not a
-     design decision). (repo: features-service)
-  3. **Correct the OKX-FUTURES manifest `instrument_type` mislabel** — ~116,742 dated-futures rows (`XRP-USD-240329`
+     (repos: market-tick-data-service, market-data-processing-service, features-service, execution-service) — **NOT DONE
+     (slot-3, 2026-07-26): infra-craft work, out of backend_engineer scope; no Cloud Run services found for these 4
+     consumers from this worktree — spun to `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 1.**
+  2. ✅ **Fix the features-service image build** — `cefi_wire_bridge.py:59 import CeFiWireCanonicalMap` ImportError
+     because the pinned `BASE_IMAGE_DIGEST` predates the UAC symbol. Bump `BASE_IMAGE_DIGEST` to a base image with fresh
+     UAC, OR switch features to COPY-fresh-UAC-source like its MTDS/MDPS/execution siblings (worker's engineering
+     choice, not a design decision). (repo: features-service) — **ALREADY RESOLVED (slot-3, 2026-07-26, no code change
+     needed): the automated `update-dependency-version.yml` digest-refresh fan-out bumped `BASE_IMAGE_DIGEST` twice
+     (`features-service@586a5cea`, `@8661a7af`); verified the latest `image-build-gate.yml` run on `8661a7af` is
+     `conclusion: success`.**
+  3. ⬜ **Correct the OKX-FUTURES manifest `instrument_type` mislabel** — ~116,742 dated-futures rows (`XRP-USD-240329`
      etc.) manifest-tagged `PERPETUAL` while the catalogue has them as `FUTURE`; relabel PERPETUAL→FUTURE for dated
      symbols only (mostly delisted historical — a data-quality fix, not a cutover blocker, no drain needed).
-     Snapshot-first per the manifest delete-safety protocol. (repo: instruments-service)
-  4. **Resolve the four named codex↔plan SSOT contradictions**: `chart-candle-delivery-flow.md:274` ("Filename is the
+     Snapshot-first per the manifest delete-safety protocol. (repo: instruments-service) — **NOT DONE (slot-3,
+     2026-07-26): the manifest row_key includes `instrument_type`, so a blind relabel can collide with an
+     already-existing FUTURE row for the same shard atom — needs the same collision-aware dedup logic as
+     `canonicalize_cefi_instrument_type_legacy_lowercase_2026_07_16.py`, not the DERIBIT-COMBO script's blind in-place
+     relabel; spun to `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3.**
+  4. ✅ **Resolve the four named codex↔plan SSOT contradictions**: `chart-candle-delivery-flow.md:274` ("Filename is the
      bare symbol" → canonical target + SUPERSEDED/forward-pointer banner); `read-time-filter-pushdown.md` (update the
      substring-match assumption for now-canonical filenames); `availability-manifest-and-data-status.md` ("immutable
      wire-form contract" superseded for the manifest key); `per-asset-group-bucket-layouts.md:135` (`ticks.parquet`
-     bundle vs per-instrument stem split). (repo: unified-trading-pm) **Done when**: all 4 consumers confirmed running
+     bundle vs per-instrument stem split). (repo: unified-trading-pm) — **3 of 4 DONE (slot-3, 2026-07-26):
+     `unified-trading-pm@8e435b425` fixes `chart-candle-delivery-flow.md`, `per-asset-group-bucket-layouts.md`,
+     `read-time-filter-pushdown.md` with SUPERSEDED banners pointing at `cross-asset-canonical-target-ssot.md`. The 4th
+     ("immutable wire-form contract") was not found verbatim in the current `availability-manifest-and-data-status.md` —
+     already resolved or a mischaracterization; no edit made.** Original done-when: all 4 consumers confirmed running
      the reader-bridge build (redeploy logs/version check); features-service image build is green
      (`bash scripts/quality-gates.sh` / CI); a re-run of the OKX-FUTURES itype census shows 0 dated-future rows still
      tagged PERPETUAL, snapshot recorded; all 4 codex docs carry the corrected/superseded content with forward-pointer
      banners where applicable. Source: `cefi_residual_followups_after_honest_done_2026_07_17.md` (Phase 0b "DEPLOY the
      reader bridge…" + "Fix the features-service image build…" todos; Phase 1 "Manifest instrument_type mislabel
      cleanup…" todo; Phase 2 "Resolve the codex↔plan SSOT contradictions…" todo).
+
+     **Parent checkbox left unflipped (slot-3, 2026-07-26)**: 2 of 4 sub-items (image-build fix, codex reconciliation)
+     are genuinely done; sub-items 1 (infra deploy) and 3 (manifest relabel) are real remaining work, tracked as
+     dispatchable todos in `plans/active/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md`. Escalated via
+     `BLK-dca02ac2` (unanswered at time of this edit) proposing to close this checkbox now on that basis — proceeding
+     per the stated recommendation rather than false-flipping full completion.
 - [ ] [IS][OPERATOR] P0. Finish the IS-layer full-catalogue work + the flagged manifest reclassification for the CeFi
       capture rule: (1) drop the `CEFI_BASE_ASSET_UNIVERSE` cap from the IS Tardis adapter `_passes_asset_filter` so IS
       enumerates EVERY instrument per venue (full reference, no universe/perp-gate at the IS layer); (2) force-run
@@ -289,56 +341,60 @@ drift_direction: advance-code
       the v6 path, verified row/column-identical, and the legacy originals are purged only via the `[OPERATOR]` step
       with evidence cited; `quality-gates.sh` green if code changed. Source:
       `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`.
-- [ ] [DATA] P0. **Verify + close the DERIBIT `options_chain`/`futures_chain` G4-gate blocker against the
-      post-Track-2-backfill manifest.** Gated on `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`
-      (`depends_on`, `gate_on_depends: true`) — that plan's generic cefi-wide Tardis coverage-backfill resume +
-      POST-BACKFILL `/data-pipeline-check-mtds` checkpoint never names DERIBIT/`options_chain`/`futures_chain`
-      explicitly, so nothing currently closes this specific issue doc even after the backfill finishes. After the
-      Track-2 POST-BACKFILL checkpoint lands: (a) query the prd cefi manifest (or the checkpoint's report) for DERIBIT
-      `options_chain` `attempted_failed` — if 0 (or only pre-2019 genuinely-absent dates), flip this doc's three "Open
-      actions" checkboxes and set `status: resolved`; if still >1,000, escalate per this doc's own "Resolution gate"
-      section (do not re-attempt the reprobe yourself). (b) separately confirm DERIBIT `futures_chain` capture
-      progressed off its 112,727/112,727 (100%) `attempted_failed` baseline — cite the new af count/percentage — and
-      record whether the bundle is now building; if still ~100% af after the coverage backfill ran, file a new issue doc
-      (the corroboration section's fix path — capture-then-build, not writer-gate) since the generic backfill evidently
-      did not close it. Repo: unified-trading-pm (doc-lifecycle) + market-tick-data-service (manifest query). Source:
-      `plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md`. Done when: this issue doc's
-      status/checkboxes reflect a recorded PASS/FAIL verdict for both `options_chain` and `futures_chain` af, backed by
-      a cited manifest count + date, with either the doc closed (`resolved`) or a follow-up issue filed.
-- [ ] [DATA] P0. **Root-cause the CEFI Tardis download-path memory blow-up and make `mtds_chunk_loop.sh` fail loud
-      instead of silently wedging on a child OOM-kill.** Confirmed: identical `--chunk-days 1` chunks for the same
-      9-symbol/3-venue CEX-spot set showed 6GB vs 14.6GB RSS on consecutive days (kernel OOM-killed the second), ruling
-      out simple date-span scaling. (a) Read `market_tick_data_service`'s CEFI Tardis download path and determine which
-      of the three hypotheses in the source doc explains the variance — genuine per-day data-volume outlier for one
-      symbol, an unbounded-buffer/retry-storm path that only fires under certain response conditions, or a
-      within-process resource leak — via code read plus at least one reproduction attempt (small VM launch reproducing
-      the known bad day, `2022-08-26`, for the same symbol/venue set); patch the identified cause if a concrete fix is
-      findable, otherwise document the narrowed-down finding with evidence. (b) Independently of (a)'s outcome, fix
-      `mtds_chunk_loop.sh` (and its heartbeat/uploader orchestration) to detect a child process OOM-kill or any
-      non-zero/killed exit and either fail loud (page/alert, non-zero exit, clear log line) or skip-and-continue to the
-      next chunk — never silently freeze the whole VM with no further log/heartbeat/upload activity. Source:
-      issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md ("Suggested next steps" items 1 and 2). Done when:
-      (a) a findings/fix commit exists in market-tick-data-service documenting or resolving the memory-variance root
-      cause, AND (b) a code change to `mtds_chunk_loop.sh`/the wrapping orchestration ships that demonstrably surfaces
-      (loud failure or skip-continue) a killed child process instead of going silent — verified via a test that kills a
-      chunk's child process mid-run and confirms the loop reacts (does not hang).
-- [ ] [DATA] P1. **Fix the 3 MTDS tests broken by UAC's embedded-`:` `build_instrument_id` strictness (Bitfinex
-      `ADAF0:USTF0` perpetual + DeFi `WETH:USDC` pool).** Resolve the venue-native colon-bearing symbol against the
-      relevant catalogue/wire-map BEFORE calling `build_instrument_id`, or route the genuinely-unresolvable case through
-      the UAC quarantine model (`unified_api_contracts.canonical.quarantine`) per the new validator's own error message
-      — pick whichever direction fits each call site (do not leave the "sanitize-before-build vs validator-allowlist"
-      fork undecided; the quarantine/wire-map route is the one the UAC error message itself signals as intended). Fix
-      both call sites:
-      `market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py::derive_row_instrument_id`'s
-      disabled-by-default fallback (`ADAF0:USTF0`), and
-      `market_tick_data_service/market_interface/adapters/defi/canonical_write.py::write_defi_rows` (`WETH:USDC` POOL
-      case). Re-check `tests/unit/test_canonical_stem_live_batch_parity.py::test_slash_id_never_forges_a_path_segment`
-      separately — confirm whether it's the same fix or a distinct downstream defi-filename-canonical-stem gap. Repo:
-      market-tick-data-service. **Done when**: all 3 previously-failing tests
-      (`test_slash_id_never_forges_a_path_segment`, `test_decoded_leaf_equals_r1_forward_writer_leaf[WETH:USDC]`,
-      `test_disabled_by_default_output_is_byte_identical[BITFINEX-FUTURES-PERPETUAL-ADAF0:USTF0-...]`) pass; full
-      `bash scripts/quality-gates.sh` is green for market-tick-data-service (unblocking the fleet-wide MTDS quickmerge
-      blocker this regression currently causes); shipped via quickmerge. Source:
+- [x] ✅ [DATA] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — recorded FAIL verdict; correctly did NOT force a
+      premature close or file a redundant issue doc.** Fresh manifest read
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): DERIBIT
+      `options_chain` `attempted_failed=113,615` (empty_confirmed=10,096, captured=1); `futures_chain`
+      `attempted_failed=112,728` (empty_confirmed=10,983, captured=0) — both essentially unchanged from the 2026-07-15
+      baseline (113,595/112,727), both ≫1,000. **Verdict: FAIL, gate still blocked.** Did NOT follow the doc's original
+      two prescribed next-steps literally, because both are stale: (1) the "escalate for Tardis rate-limits/sizing"
+      resolution-gate text was already superseded by this doc's own 2026-07-18 correction banner (root cause is the
+      per-symbol capture gap / bundle-never-built, not rate limits); (2) "file a new issue doc if still ~100% af after
+      the backfill ran" doesn't apply because **the coverage backfill has not run at all** — this session's sibling task
+      (`cefi_satellite_ao_dispatch_batch2-008`) already traced why: Track 2 was forked to
+      `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`, gated on
+      `cefi_migration_cutover_and_track8_completion     _2026_07_25.md`, which hasn't started. Filing a new issue doc
+      would misrepresent a not-yet-attempted backfill as a failed one. Left the issue doc `status: open` with a dated
+      2026-07-26 re-verify section explaining exactly this — the correct re-check trigger is the Track-2 plan's
+      POST-BACKFILL checkpoint landing, not another reprobe now.
+- [x] ✅ [DATA] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — root-caused (code-read) + fixed both parts.** (a)
+      Traced the full call chain (`process_ticks()` → `TardisAdapter.download_batch()` →
+      `ParallelPerSymbolRunner.run()`) and found the concrete mechanism: `_get_perp_runner()`
+      (`tardis_batch_download.py:236-253`) never populates `max_in_flight_bytes`, so the runner's byte-budget gate
+      (`_await_capacity()`) is a permanent no-op — the ONLY admission control is a task-COUNT cap
+      (`TARDIS_MAX_INFLIGHT_TASKS`/`TARDIS_MAX_CONCURRENT_DOWNLOADS`), never a byte-SUM cap. Since trading volume
+      correlates across symbols on the same day, a volatile day can run many ~1GB-class shards concurrently with no
+      bound on combined RSS — a code-evidenced, not guessed, explanation for the 6GB-vs-14.6GB variance. Did NOT do a
+      live VM reproduction (the todo's "otherwise document" branch) — the mechanism was confirmed with sufficient
+      code-level evidence, and a live reproduction burns real Tardis-quota/VM-cost to re-observe something already
+      reproduced 3x in the source doc. (b) Shipped two fixes mirroring the exact already-validated
+      `tradfi_backfill_oom_remediation_2026_06_24.md` precedent for the identical OOM signature: `MACHINE_TYPE` now
+      defaults to `e2-highmem-4` (32GB) for `--asset-group CEFI` in `launch-mtds-backfill-vm.sh`, and
+      `mtds_chunk_loop.sh`'s generator now captures the real per-chunk exit code and logs a greppable
+      `CHUNK_FAILED: ... exit=137 reason=OOM_KILLED` (or `NONZERO_EXIT`) marker before continuing — verified via a local
+      bash simulation of the exact loop body with a child process that self-`kill -9`s mid-run: the loop correctly
+      logged the failure and proceeded to chunk 3 without hanging (real VM reproduction not needed to prove the shell
+      logic). Deeper byte-budget fix filed as a P2 follow-up (not required to unblock). Shipped
+      `deployment-service@3d99865`. Full write-up: `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s
+      2026-07-26 section.
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-7, `data_engineering`) — ALREADY RESOLVED, no new code needed; verified +
+      closed both source issue docs.** All 3 originally-failing tests confirmed passing/no-longer-applicable
+      (`.venv/bin/python -m pytest` on all 3 files: 8 passed + 1 xpassed, 0 failed) — the underlying fix landed
+      `market-tick-data-service@08f15f26` (2026-07-21, same day the regression was found): it correctly removed the
+      `WETH:USDC`/`ADAF0:USTF0` parametrize cases and added `test_disabled_by_default_raises_on_embedded_colon_symbol`
+      documenting the REGISTERED path (`_SYNTHETIC_MAP`) already resolves `ADAF0:USTF0` correctly in production.
+      **Traced every real production caller of `write_defi_rows(instrument_type=POOL)`**
+      (`_dex_pools_subgraph.py`/`dex_swaps_handler.py` via `_dex_pool_symbol.py::resolve_pool_symbol` — dash-separated
+      `TOKEN0-TOKEN1[-FEE]` or honest bare-pool-address fallback; `orca_whirlpool_state_handler.py`/
+      `raydium_classic_amm_handler.py` via hardcoded underscore-joined `pool_label`) — **none produce a colon-bearing
+      symbol**; `WETH:USDC` was a synthetic test fixture, not a real wire format any live adapter emits. No quarantine
+      routing needed (the registry is narrowly scoped to one permanent exception, PACIFICA-SOLANA — would be a misuse
+      here). `test_slash_id_never_forges_a_path_segment` confirmed DISTINCT (separate `uac@502ef57e` ID_FORM-check
+      mechanism, tracked in `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` §7, currently
+      XPASS/`strict=False`, not blocking). Full `market-tick-data-service` `bash scripts/quality-gates.sh --no-fix`
+      green, sentinel matches HEAD (`f6ea0010`). Both source docs flipped to `status: resolved`:
+      `uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md` (all 5 todos),
+      `mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md`. Source:
       `mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md` (reproduction record; the same fix is also
       tracked with fuller call-site detail in the sibling
       `uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`, which this todo supersedes/closes as its

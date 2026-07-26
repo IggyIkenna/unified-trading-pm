@@ -13,7 +13,7 @@ summary: >-
   strictness took effect immediately in MTDS's OWN test run without any MTDS-side commit — three MTDS tests that pass a
   raw wire symbol containing `:` (a Bitfinex-style `ADAF0:USTF0`, a DeFi pool `WETH:USDC`) now fail where they
   previously exercised the pre-quarantine passthrough behavior.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi]
 stage: [data]
@@ -41,7 +41,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "slot-7 (data_engineering), 2026-07-26 — all 5 todos closed, see todos section"
 source:
   discovered blocking an unrelated MTDS quickmerge attempt (cefi_chain_tail_v6_canonicalisation_2026_07_21.md),
   2026-07-21
@@ -103,21 +103,31 @@ quarantine vs which needs a catalogue/wire-map resolution fix), and touching `wr
 
 ## Todos
 
-- [ ] 1. [REVIEW] P1. Confirm with whoever landed the UAC `canonical_id_builder` colon-strictness change (or via
-      `git log`/`git blame` on `unified_api_contracts/internal/reference/canonical_id_builder.py`) whether MTDS
-      call-site updates were intended to land in the SAME wave — if a companion MTDS fix is already in flight,
-      cross-link it here instead of duplicating.
-- [ ] 2. [DATA] P1. Fix `market_tick_data_service/market_interface/adapters/defi/canonical_write.py::write_defi_rows`
-      (the `WETH:USDC` POOL case) — resolve the symbol against the DeFi pool catalogue/wire-map before calling
-      `build_instrument_id`, or route genuinely-unresolvable pool symbols through
-      `unified_api_contracts.canonical.quarantine` per the new UAC contract.
-- [ ] 3. [DATA] P1. Fix
-      `market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py::     derive_row_instrument_id`'s
-      disabled-by-default fallback (the `ADAF0:USTF0` case) the same way — either resolve via the wire-map first or
-      quarantine.
-- [ ] 4. [REVIEW] P2. Re-check `test_canonical_stem_live_batch_parity.py::test_slash_id_never_forges_a_path_segment` —
-      it fails on a DIFFERENT, downstream defi-filename-canonical-stem check once the `build_instrument_id` call no
-      longer silently passes through; confirm whether this is the SAME fix as todo 2 or a separate defi-oracle-price
-      naming gap.
-- [ ] 5. [REVIEW] P2. Once 2-4 ship, re-run MTDS's full `quality-gates.sh` to confirm this ripple is the only blocker
-      (no other UAC-contract-change fallout) before the NEXT agent tries to quickmerge into MTDS.
+- [x] ✅ 1. [REVIEW] P1. **DONE 2026-07-26 (slot-7, `data_engineering`).** `git log` confirms the companion MTDS fix
+      landed the SAME day: `market-tick-data-service@08f15f26` ("fix(tests): update 2 stale regression-guard tests for
+      uac@502ef57e's fail-loud-on-embedded-colon build_instrument_id ruling"), 2026-07-21. Cross-linked here, not
+      duplicated.
+- [x] ✅ 2. [DATA] P1. **DONE 2026-07-26 (slot-7, `data_engineering`) — VERIFIED NO CODE FIX NEEDED.** Traced every real
+      production caller of `write_defi_rows` with `instrument_type=POOL`
+      (`_dex_pools_subgraph.py`/`dex_swaps_handler.py` via `_dex_pool_symbol.py::resolve_pool_symbol` — catalogue +
+      row-level token_a/token_b resolution, dash-separated `TOKEN0-TOKEN1[-FEE]`, honest bare-pool-address fallback;
+      `orca_whirlpool_state_handler.py`/`raydium_classic_amm_handler.py` via hardcoded underscore-joined `pool_label`,
+      e.g. `Whirlpool_SOL_USDC`) — NONE produce a colon-bearing symbol. `WETH:USDC` was a synthetic test fixture
+      exercising a hypothetical, not a real wire-format symbol any live adapter emits. `08f15f26` correctly removed the
+      unrealistic parametrize case rather than leaving a live gap. No quarantine routing needed (the quarantine registry
+      is explicitly narrow-scoped to ONE permanent exception, PACIFICA-SOLANA — using it for a non-existent case would
+      be a misuse of that mechanism).
+- [x] ✅ 3. [DATA] P1. **DONE — same verification.** `tardis_shared.py::derive_row_instrument_id`'s disabled-by-default
+      fallback: `08f15f26` added `test_disabled_by_default_raises_on_embedded_colon_symbol`, explicitly documenting that
+      the REGISTERED path (`_SYNTHETIC_MAP`) already resolves `ADAF0:USTF0` → `ADA-USDT@LIN` correctly in production;
+      the disabled fallback correctly fails loud now for a genuinely-unresolved symbol (the intended new contract),
+      which only matters for the synthetic no-catalogue test scenario, not live traffic.
+- [x] ✅ 4. [REVIEW] P2. **DONE — confirmed DISTINCT, not the same fix.** `test_slash_id_never_forges_a_path_segment`
+      now carries its own
+      `@pytest.mark.xfail(reason="uac@502ef57e widened _ID_FORM_CHECKED_ASSET_GROUPS...",     strict=False)` — a
+      separate mechanism (bare oracle pair-id `eth_usd` failing the ID_FORM check), tracked in
+      `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` §7. Currently XPASSes (the assertions hold); not a
+      blocker (`strict=False`).
+- [x] ✅ 5. [REVIEW] P2. **DONE 2026-07-26** — full `market-tick-data-service` `bash scripts/quality-gates.sh --no-fix`
+      run clean, sentinel matches HEAD (`f6ea0010`). All 3 originally-failing tests pass/no-longer-apply; no other
+      fallout found. Setting `status: resolved`.

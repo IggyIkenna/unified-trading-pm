@@ -708,3 +708,138 @@ poll); if so, review + commit its results (including the new issue doc), re-run 
 `check_terminal_status_archived.py` corpus-wide to confirm no fresh orphans, then continue waiting on the operator's
 gate above. Do NOT execute the mass flip without the operator's explicit confirmation that they've run the audits
 themselves.
+
+## Round 6 (2026-07-26, `/autonomous`, operator away 6h) — sharded ag-closeout-audit dispatch + `wf_1290040b-63e` landed
+
+**Context**: operator asked to force-run today's daily `/ag-closeout-audit`+`/plan-reconcile` as a live validation,
+which surfaced that `ag-closeout-auditor.timer`'s daily worker (`agents/ag_closeout_auditor.md`) was hardcoded to the
+OLD 5-asset-group loop — fixed first (commits `85d445fc2`/`423d4ee90`, already covered in the prior compaction). The
+operator then asked for real per-tranche parallelism (one worker per tranche, not one worker doing all 9
+sequentially/internally) plus wider 2h gaps between the 3 nightly jobs "just in case." Entered plan mode given the scope
+(new dispatch mechanism + production systemd changes); plan approved; then `/autonomous` was invoked mid-implementation
+(operator away 6h, "don't stop till the end of your work").
+
+### Shipped
+
+- **Sharded dispatch mechanism** (agent-orchestrator): added an optional `tranche` field to `PlanHealthDispatchRequest`
+  (`server/models/escalation.py`), threaded through `plan_health.dispatch()` into `extra_vars` only when set
+  (`server/plan_health.py`, `server/routes/agents.py`), added 3 new unit tests
+  (`test_dispatch_ag_closeout_mode_forces_smart_tier`, `..._with_tranche_threads_extra_var`,
+  `..._without_tranche_omits_extra_var`). Full `quality-gates.sh` green (1738 backend + 131 dashboard tests). Shipped
+  via quickmerge `afe2635` (agent-orchestrator).
+- **`agents/ag_closeout_auditor.md`** (unified-trading-pm): STEP 1 now runs `/ag-closeout-audit $TRANCHE` (one tranche)
+  when the boot message sets `$TRANCHE`, else the `all` default — never hardcodes the 9-tranche list. Shipped
+  `01ed47f6c`.
+- **Retimed all 3 nightly jobs to 2h gaps**: `install-docs-reconcile-timer.sh` 02:00→03:00 UTC,
+  `install-ag-closeout-auditor-timer.sh` 03:00→05:00 UTC (`plan-reconciler.timer` stays 01:00, unchanged) — deployed
+  live on the orchestrator VM (`i-0c9b283b31d6b5ca7`, ap-northeast-1) via SSM; confirmed via `systemctl list-timers`:
+  docs-reconciler next-fires "03:00 UTC", ag-closeout-auditor next-fires "05:00 UTC" (3h40min out at deploy time),
+  plan-reconciler unaffected (already fired ~01:04 UTC today, on schedule).
+- **`ag-closeout-auditor-dispatch.sh` rewritten**: now fires all 9 tranche dispatches CONCURRENTLY (backgrounded +
+  `wait`), each POSTing `{"mode":"ag_closeout","tranche":"<name>"}` — deployed live (re-ran
+  `install-ag-closeout-auditor-timer.sh` on the VM). Bounded by the slowest single tranche instead of the sum of 9, per
+  the operator's actual ask.
+- **A real, incident-driven hard rule discovered and honored**: `agent-orchestrator/docs/WORKER_SPAWN_PREREQUISITES.md`
+  documents a 2026-05-20 incident where an agent's `systemctl restart` to deploy a fix nuked all 6 live workers
+  (`KillMode=mixed` put tmux workers in the service's cgroup); the fix (`KillMode=process`) is believed installed but
+  the doc's own corollary is explicit: **"agents must never bounce the live backend to deploy a change — push + let the
+  main agent review/deploy."** Did NOT restart `orchestrator.service` myself, per this rule — verified via
+  `systemctl is-active orchestrator.service` = `active` (untouched). Confirmed (Pydantic v2, no `extra="forbid"`
+  anywhere in `server/models/`) that the OLD running server silently ignores the new `tranche` field rather than 422ing,
+  so deploying the new dispatch script ahead of a restart is non-breaking.
+  - **Known, bounded, self-resolving cost this creates**: until a supervised restart happens, EACH scheduled
+    ag-closeout-auditor fire (next: today 05:00 UTC) will fire up to 9 concurrent dispatch calls against the OLD server
+    code, which ignores `tranche` and falls through to `agents/ag_closeout_auditor.md`'s `all` default — meaning up to 9
+    slots could each spin up a FULL redundant 9-tranche audit instead of 1 tranche each (bounded by however many slots
+    are actually free at 05:00 UTC; `_pick_free_slot` 503s gracefully per call if none are). Not destructive, not
+    silently wrong — just wasted opus/max spend for however many nights pass before a restart. **Flagging for the
+    operator/main-agent: a supervised `orchestrator.service` restart is the one remaining step to make the sharding take
+    effect** — nothing else is pending on it.
+
+### `wf_1290040b-63e` (light-residual-closeout, 20 agents, ~3.5h) — landed, digested via sub-agent
+
+Completed mid-session. Given its size, delegated full-result digestion to a sub-agent rather than reading the raw
+transcript. Findings processed:
+
+- **`cefi_bybit_spot_manifest_remediation_2026_07_25.md`'s missing finalize-plan gate** (which one sub-agent hit as a
+  live corpus-wide `check_finalize_plan_coverage.py` regression, 2>baseline 1) — **already self-resolved** by another
+  concurrent agent/commit by the time I checked (`gate_on_depends: true` + `depends_on` confirmed present on the
+  finalize plan; `check_finalize_plan_coverage.py` now reports exactly 1 violation, the pre-existing unrelated
+  `deployment_registry_firestore_p0_unblock_2026_07_14.md`). No action needed.
+- **Rescued agent #9's real, fully-worked, never-committed output** (its own ship attempt hit the same tmpfs ENOSPC wall
+  documented below) — a new plan `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md` (status: draft,
+  assigned_vm: NA, correctly filed per ask-before-creating) root-causing a real data-correctness finding: MDPS's candle
+  writer fix (`mdps@752eaff`/`@2d720b4`, 2026-07-21) is proven working against `-test-` but **zero candle-manifest rows
+  have been written in PROD across all 4 asset_groups since it landed** — plus 4 audit report pairs and the parent
+  plan's (`data_pipeline_reconciliation_skill_2026_07_20.md`) todos 40/41 flip (all 42 of that plan's todos now `[x]` —
+  archival-eligible, not yet actioned, low priority). Verified content was genuinely stale/untouched (mtime ~70min, no
+  live claim) before committing. Shipped `7ae64f4c2`.
+- **Agent #7's work** (`mtds_uac_adapter_contract_baseline_regression_2026_07_09.md`) — not independently re-verified
+  this round; its own digest said a backgrounded quickmerge may not have confirmed landing. Follow-up: check `git log`
+  for a matching commit; if absent, re-stage and re-quickmerge (files named in the digest). **[NOT YET DONE — see
+  Deferred below.]**
+  - Two new issue docs filed by the workflow, not yet read by me:
+    `issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`,
+    `issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`. **[NOT YET READ — see Deferred.]**
+  - `issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md` — one agent (#16) returned a thin/anomalous report; worth
+    a manual read. **[NOT YET DONE.]**
+  - Several genuinely operator-gated asks parked by the workflow itself (an `[unlock-plan]` ask, an `ml-models-store`
+    prod-bucket delete with a ready command, a policy question on finalize-plan exemptions, a harmless leftover GCS
+    marker object) — correctly left parked, not autonomous-mode business (these are authority/preference calls, not
+    provable facts).
+
+### New finding — shared host `/tmp` tmpfs (2GB) exhaustion
+
+Hit this twice this round (once via agent-orchestrator's own `quality-gates.sh`, once directly blocking my own Bash tool
+calls at 0MB free). Root cause + workaround (`TMPDIR=/var/tmp/claude-agent-scratch`) filed as
+`issues/shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` (shipped `01ed47f6c`) — this is almost certainly why agent #9
+(and others in the same workflow) failed to ship despite finishing their work. Not fixed at the host-config level
+(operator judgment call on tmpfs sizing vs RAM headroom — parked in the issue doc, not urgent).
+
+### Deferred work after 2026-07-26 (Round 6)
+
+| Item                                                                                                                     | State / why deferred                                             | Blocked on                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Supervised `orchestrator.service` restart to activate sharded dispatch                                                   | Not done — explicitly not my call per WORKER_SPAWN_PREREQUISITES | Operator / "the main agent" — flagged, not urgent (bounded cost, see above)          |
+| Verify/re-ship agent #7's mtds_uac_adapter_contract work (`mtds_uac_adapter_contract_baseline_regression_2026_07_09.md`) | Not done yet this round                                          | Nothing — next actionable item                                                       |
+| Read + triage 2 new issue docs (honest_coverage_rollup_scoped_rerun, aave_rate_impact_structural_zero)                   | Not done yet this round                                          | Nothing                                                                              |
+| Read `cross_ag_never_seeded_backlog_scan_2026_07_06.md` (thin agent #16 report)                                          | Not done yet this round                                          | Nothing                                                                              |
+| Archive `data_pipeline_reconciliation_skill_2026_07_20.md` (all 42 todos now `[x]`, unlocked)                            | Not done — low priority, correctness not at risk                 | Nothing urgent                                                                       |
+| Mass flip + everything gated on it                                                                                       | Operator-owned — do not start                                    | Same standing GATE — operator personally runs `/ag-closeout-audit`+`/plan-reconcile` |
+
+**Recommended next item**: verify agent #7's work, then triage the 2 new issue docs + the thin report, in that order —
+all bounded, non-blocking, no operator input needed. Loop continues per `/autonomous` (operator away ~6h from
+~2026-07-26 00:57 UTC).
+
+## Round 6b (2026-07-26, same session) — operator explicitly lifted 2 standing constraints mid-session
+
+Both items below were EXPLICIT, present-tense operator instructions in this same chat session (not a re-interpretation
+of `/autonomous`'s general authority) — recorded here verbatim-in-spirit because they supersede this doc's own earlier
+"GATE UPDATE"/"do not self-restart" language for tonight specifically.
+
+1. **"yeah do that whenevr you can please. you have permiison hence /autonomous"** (re: the orchestrator.service restart
+   I had explicitly declined to do myself, citing `WORKER_SPAWN_PREREQUISITES.md`'s no-self-restart rule) — verified
+   `KillMode=process` was genuinely deployed on the live unit FIRST, then restarted via SSM (`i-0c9b283b31d6b5ca7`).
+   Confirmed safe: pre-restart cgroup already showed live `orch-slot-*` tmux/claude workers; service came back
+   `active (running)` within ~30s, ALL prior worker PIDs still alive in the cgroup post-restart (`Tasks: 332`, 15 slots
+   re-seeded from `.tabs/`), zero workers lost. The sharded `tranche`-aware dispatch code is now live server-side.
+2. **"actaully you can run it s workflows please here... run triage in full fix issues only leave really tough once to
+   ask me at the end whenn i wake up"** (re: the standing GATE requiring the operator to personally run
+   `/ag-closeout-audit`+`/plan-reconcile` before any mass-flip) — this explicitly authorizes ME to run BOTH skills, per
+   tranche, across all 9, via the `Workflow` tool, tonight, in lieu of the operator doing it personally. Launched
+   `wf_e4b32d17-dcf` ("nightly-tranche-triage"): a `pipeline()` over the 9 tranches, each running
+   `/plan-reconcile <tranche>` then `/ag-closeout-audit <tranche>` (reconcile-before-audit per tranche, tranches
+   otherwise independent/concurrent), both skills' full documented Autonomous/AO-dispatched procedure, `opus`/`max`,
+   `isolation: 'worktree'` (18 concurrent-capable agents all committing to the shared PM repo). Contract given to every
+   spawned agent: auto-fix per each skill's own calibration (provable facts, not vibes), PARK (never ask; nobody
+   reachable) any genuine judgment/authority call as structured
+   `{question, quotes_and_locations, options, recommendation}`, draft-only for any new AO batch (`status: draft`, never
+   flip to `active`). **The mass-flip ITSELF stays gated** — the operator's own words were "leave really tough ones to
+   ask me... when i wake up i'll answer and we can do the mass flip" — i.e. audit/reconcile now unblocked for tonight,
+   but the actual draft→active / NA→planning flip still waits for the operator's answers on waking.
+
+**Do NOT re-launch a duplicate tranche-triage workflow** if resuming this session — check for `wf_e4b32d17-dcf`'s
+completion notification first (`/workflows` or the task list). When it completes: aggregate every tranche's `parked`
+array from both stages into ONE consolidated batched Q&A (options + recommendation each, per
+`SUB_AGENT_MANDATORY_RULES.md`'s escalation format) — do not present 18 separate scattered questions. Only after the
+operator answers that batched Q&A does the mass-flip proceed.

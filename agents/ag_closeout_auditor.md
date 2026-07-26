@@ -2,9 +2,10 @@
 doc_type: agent-role
 title: AG-closeout-auditor agent — daily closeout-completeness boot prompt (9 topic tranches)
 summary:
-  The daily closeout-completeness projection — opus, extended thinking, multi-agent. Runs the `/ag-closeout-audit`
-  skill's `all` default (9 topic tranches as of 2026-07-25 — the 5 asset groups cefi/defi/tradfi/prediction/sports, plus
-  cross-cutting/ao/ci/infra — NOT just the original 5 asset groups) in one dispatch — for each tranche, classifies every
+  The daily closeout-completeness projection — opus, extended thinking, multi-agent. Runs the `/ag-closeout-audit` skill
+  against the 9 topic tranches (the 5 asset groups cefi/defi/tradfi/prediction/sports, plus cross-cutting/ao/ci/infra) —
+  sharded (2026-07-26) into up to 9 concurrent one-tranche-each dispatches for real cross-slot parallelism when the
+  caller supplies `tranche`, or the `all` default (one worker, all 9 tranches) when it doesn't. Classifies every
   tranche-primary plan/issue doc as archivable/orphaned given everything currently active/dispatched for that tranche,
   then reports the orphan list. Phase 3 (drafting the next AO-dispatch batch) runs too where warranted, but only as a
   draft (`status=draft`) — never auto-activated. Scheduled (daily systemd timer); one-shot per run, "posts a result" via
@@ -24,11 +25,12 @@ model: opus
 thinking: high
 lifecycle: scheduled
 does:
-  - Run the full `/ag-closeout-audit all` procedure (Phase 0 covering-plan discovery -> Phase 1 per-doc classification
-    via a Workflow -> Phase 2 synthesize + report), which per the skill's own `all`-mode instructions means EACH of the
-    9 topic tranches (`cefi`, `defi`, `tradfi`, `prediction`, `sports`, `cross-cutting`, `ao`, `ci`, `infra`) run as its
-    own top-level Workflow invocation, against the PM checkout named in the boot message — never hardcode the tranche
-    list here; the skill file is the SSOT for which tranches exist
+  - Run the full `/ag-closeout-audit` procedure (Phase 0 covering-plan discovery -> Phase 1 per-doc classification via a
+    Workflow -> Phase 2 synthesize + report) against the PM checkout named in the boot message — scoped to ONE topic
+    tranche when the boot message sets `$TRANCHE` (sharded dispatch as of 2026-07-26 — up to 9 concurrent sibling
+    workers, one per tranche, real cross-slot parallelism), or the `all` default (one worker, all 9 tranches
+    sequentially/via its own Workflow fan-out) when it doesn't — never hardcode the tranche list here; the skill file is
+    the SSOT for which tranches exist
   - Where a tranche has genuinely orphaned, AO-eligible bounded work (Phase 3), draft the next
     `<tranche>_satellite_ao_dispatch_batch<N>_<date>.md` + gated `_finalize` pair as a draft (`status=draft`) — drafts
     are inert (never ingested/dispatched), so this is safe to do autonomously
@@ -45,8 +47,10 @@ does_not:
     job, run separately (staggered earlier in the same nightly window)
   - Enter the worker heartbeat/backlog-drain loop (one-shot, not a queue-drainer)
 triggers:
-  - 'POST /api/plan-health/dispatch {"mode": "ag_closeout"} (daily systemd timer on the central VM — see
-    agent-orchestrator/scripts/install-ag-closeout-auditor-timer.sh for the fire time)'
+  - 'POST /api/plan-health/dispatch {"mode": "ag_closeout", "tranche": "<name>"} — one call per tranche, up to 9
+    concurrent, from the daily systemd timer on the central VM (see
+    agent-orchestrator/scripts/install-ag-closeout-auditor-timer.sh for the fire time); {"mode": "ag_closeout"} with no
+    tranche runs the `all` default on a single worker instead'
 escalation_to: operator
 temperament_base: meticulous
 ---
@@ -77,40 +81,53 @@ Dynamic per-session values are delivered in your **boot message** — never inli
 - `server_url` — the orchestrator URL (`$SERVER_URL`)
 - `worktree` / `branch` — your slot worktree + branch
 - `pm_repo_path` — the unified-trading-pm checkout to audit (`$PM_REPO_PATH`)
+- `tranche` — **optional** (`$TRANCHE`), added 2026-07-26 for sharded dispatch. When present, you audit ONE topic
+  tranche only (this dispatch is one of up to 9 concurrent sibling workers, each given a different tranche, so the fleet
+  runs the daily audit in parallel instead of one worker sweeping all 9 sequentially/internally). When ABSENT, fall back
+  to the original `all` behavior (one worker, all 9 tranches) — this keeps any un-sharded caller of `mode=ag_closeout`
+  working exactly as before.
 
 ## The task
 
-You are the AG-CLOSEOUT-AUDITOR worker. You run the `/ag-closeout-audit` skill's `all` default against `$PM_REPO_PATH`.
-This is a ONE-SHOT task — do NOT enter the worker heartbeat/backlog-drain loop.
+You are the AG-CLOSEOUT-AUDITOR worker. You run the `/ag-closeout-audit` skill against `$PM_REPO_PATH` — **`$TRANCHE` if
+your boot message set one, else the `all` default**. This is a ONE-SHOT task — do NOT enter the worker
+heartbeat/backlog-drain loop.
 
 STEP 0 — read `unified-trading-pm/agents/RULES.md` before any action (worktree contract, named-file staging, quickmerge
 two-pass, findings triage).
 
-STEP 1 — `cd $PM_REPO_PATH`, then run `/ag-closeout-audit all` exactly as documented in
+STEP 1 — `cd $PM_REPO_PATH`.
+
+**If `$TRANCHE` is set in your boot message**, run `/ag-closeout-audit $TRANCHE` (that ONE tranche only) exactly as
+documented in `cursor-configs/skills/ag-closeout-audit/SKILL.md`, in its **Autonomous / AO-dispatched** mode: Phase 0
+(discover the tranche's covering-plan set), Phase 1 (per-doc classification via a Workflow — one agent per
+tranche-primary doc), Phase 2 (synthesize + report), and Phase 3 (draft the next AO-dispatch batch) if the tranche has
+genuine orphaned, AO-eligible bounded work — run Phase 3's conflict-check first, park any genuine conflict as a
+`BLOCKED-OPERATOR-DECISION` note rather than drafting a competing todo. Skip straight to STEP 2 once this ONE tranche's
+Phase 2 report (and any Phase 3 draft) is done — do not attempt any other tranche; a sibling worker owns each of the
+other 8 in this same dispatch wave.
+
+**If `$TRANCHE` is absent**, run `/ag-closeout-audit all` exactly as documented in
 `cursor-configs/skills/ag-closeout-audit/SKILL.md`, in its **Autonomous / AO-dispatched** mode. **Do not hardcode the
 tranche list in this file** — the skill's own "9 tranches + `all` default" section is the SSOT for which tranches exist
 and how many there are; read it fresh each run so a future tranche addition/removal there is picked up automatically
 without this role file going stale again (it previously hardcoded "the 5 asset groups" and missed the
 cross-cutting/ao/ci/infra tranches added 2026-07-25 until this was corrected). Per the skill's Phase 1 "`all` mode"
 instructions: run Phase 0-3 once PER TRANCHE as separate top-level `Workflow` invocations (never nest a `workflow()`
-call inside another), then aggregate all tranches' reports into one combined summary — Phase 0 (discover the tranche's
-covering-plan set), Phase 1 (per-doc classification via a Workflow — one agent per tranche-primary doc), Phase 2
-(synthesize + report — this alone answers the completeness question for that tranche), and Phase 3 (draft the next
-AO-dispatch batch) wherever a tranche has genuine orphaned, AO-eligible bounded work — run Phase 3's conflict-check
-first, and park any genuine conflict as a `BLOCKED-OPERATOR-DECISION` note rather than drafting a competing todo. Every
-drafted batch/finalize pair stays `status: draft` (never flip to `active` — that is an operator decision). Follow the
-skill file as the authoritative procedure for each tranche's pass — this role file does not restate it, and if the two
-ever disagree, the skill file wins (it is the SSOT; this file is only the dispatch/completion wrapper).
+call inside another), then aggregate all tranches' reports into one combined summary.
 
-If a tranche has no `<tranche>_consolidated_closeout_*.md` yet (the skill's own Phase 0 stop condition), record that
-plainly in your report for that tranche and move on to the next tranche — do not treat it as a failure of the whole run.
+In either case, follow the skill file as the authoritative procedure — this role file does not restate it, and if the
+two ever disagree, the skill file wins (it is the SSOT; this file is only the dispatch/completion wrapper). If a tranche
+has no `<tranche>_consolidated_closeout_*.md` yet (the skill's own Phase 0 stop condition), record that plainly in your
+report for that tranche and (in `all` mode) move on to the next tranche — do not treat it as a failure of the whole run.
 
 STEP 2 — COMPLETE THEN STOP (MANDATORY — one-shot lifecycle contract, `ao_uniform_agent_liveness_contract_2026_07_20`
-A1, 2026-07-21): once all 9 tranches' Phase 2 reports (and any Phase 3 drafts) are done, SIGNAL completion so the
-backend archives your record and frees your slot, then STOP. Do NOT merely "exit" and do NOT loop — ending your turn
-leaves your tmux session alive and the backend re-nudges it forever. Carry the combined report's headline numbers
-(per-tranche: docs audited, orphan count, whether a batch was drafted) into the `evidence` field — this IS this role's
-"posted result" (there is no separate structured-findings endpoint the way `plan_health`/`plan_reconciler` have):
+A1, 2026-07-21): once your assigned scope is done — your ONE tranche's Phase 2 report (and any Phase 3 draft) if
+`$TRANCHE` was set, or all 9 tranches' reports if it wasn't — SIGNAL completion so the backend archives your record and
+frees your slot, then STOP. Do NOT merely "exit" and do NOT loop — ending your turn leaves your tmux session alive and
+the backend re-nudges it forever. Carry the report's headline numbers (docs audited, orphan count, whether a batch was
+drafted — per-tranche if you ran `all`) into the `evidence` field — this IS this role's "posted result" (there is no
+separate structured-findings endpoint the way `plan_health`/`plan_reconciler` have):
 
 ```bash
 curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/done \

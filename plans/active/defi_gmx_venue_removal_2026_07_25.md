@@ -159,21 +159,17 @@ changelog/docstring comment describing the historical removal itself (never insi
       (`pipeline_mode_resolver.py`), the `gmx` APY seed (`core/mock_defi_dynamics.py`), and `GMX` from the DeFi venue
       frozenset (`ml/models.py`). `grep -rli "\bgmx\b" . --include="*.py"` returns zero hits repo-wide (incl. tests).
       `quality-gates.sh` green (146s, exit 0).
-- [ ] [OPERATOR] P1. **🟢 AUTHORIZED 2026-07-25 (operator, in-session)** -- all 7 code-removal prerequisites above are
-      landed + verified clean, so this is cleared for execution, not blocked on a decision anymore. **Purge GMX GCS
-      objects + manifest rows** -- delete every `raw_tick_data/**/venue=GMX/**` object (all chains, all data_types:
-      `perp_funding`, `derivative_ticker`, any `dex_pool_state` entries from the `gmx` protocol table) in
-      `market-data-tick-defi-prd-central-element-323112`, and the corresponding manifest rows. Prod-bucket delete,
-      human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- no agent runs this; still requires
-      a human with bucket-delete access to actually execute it. Done-when: zero `venue=GMX` objects remain in the
-      bucket, manifest shows zero rows for venue=gmx. (repo: market-tick-data-service) **READY 2026-07-25, tooling
-      superseded same-day (see Progress Log)**: the manifest-row count (5,374, corroborating the 7 code-removal todos'
-      zero-hit grep) undercounts the real GCS-object scope by ~6x -- a live in-region dry-run found the true figure is
-      **31,997 objects across 1,771 days**. A purpose-built, snapshot-first, CAS-safe one-off
-      (`market-tick-data-service/scripts/one_offs/purge_gmx_venue_removal_2026_07_25.py`) plus a new `defi-gmx-purge`
-      `launch-canonical-migration-vm.sh` category replace the earlier raw-`gsutil rm` recipe below (kept for history,
-      superseded -- do not run it, it skips the backup/parity-verify/CAS-manifest-rewrite steps the real script does).
-      3-command operator sequence in the Progress Log.
+- [x] ✅ [OPERATOR] P1. **Purge GMX GCS objects + manifest rows** -- deleted every `raw_tick_data/**/venue=GMX/**`
+      object (all chains, all data_types) in `market-data-tick-defi-prd-central-element-323112`, and the corresponding
+      manifest rows. Prod-bucket delete, human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` --
+      executed by the operator directly (interactive session, 2026-07-25 23:35Z-00:11Z first attempt + relaunch to
+      00:03Z-00:11Z on 07-26, see Progress Log), not by an agent. Done-when MET: zero `venue=GMX` objects remain in the
+      bucket, manifest shows zero rows for venue=gmx -- verified at execution time AND independently re-verified across
+      5 live discovery cycles spanning the post-cron-resume window (see Progress Log). (repo: market-tick-data-service)
+      -- mtds@9b8bf0c0 (tooling) + operator-run `--apply` (data, two VM runs). Confirmed the original **31,997 objects
+      across 1,771 days** dry-run estimate was correct: the first attempt backed-up+deleted 19,500/31,997 before a
+      transient GCS 503 killed it, the idempotent relaunch found+finished the remaining objects. Manifest: 5,374
+      `venue=GMX` rows dropped (24,742,605 -> 24,737,231), matching the pre-authorized census exactly.
 - [x] ✅ [DOC] P2. **Update documentation referencing GMX** -- any codex docs, this plan's parent
       (`defi_consolidated_closeout_2026_07_18.md`), and related issue docs that describe GMX as active/supported.
       Done-when: a grep across `codex/` + `plans/active/` for "GMX" shows only historical/changelog-style references
@@ -270,6 +266,111 @@ changelog/docstring comment describing the historical removal itself (never insi
     cd deployment-service && bash scripts/vm/launch-canonical-migration-vm.sh defi-gmx-purge 2026-07-25 2026-07-25 dry  # or --verify-only directly on a VM
   done
   ```
+
+- **2026-07-25/26 (operator-run `--apply`, then `/autonomous`-authorized agent completion)**: operator ran the 3-command
+  sequence above. **Result: real prod mutation, verified correct, but in TWO pieces because of a transient infra hiccup
+  - two code bugs found only by actually running it.**
+  1. **First `--apply` attempt** (VM `canonical-migration-defi-gmx-purge-20260725-231458`): got to 19,500/31,997 GCS
+     objects backed-up+deleted, then died on a transient `google.api_core.exceptions.ServiceUnavailable: 503` on the
+     backup-copy step for one object (`day=2024-11-23/.../data_type=perp_funding/...`). Confirmed via
+     `gcloud compute operations list` this was NOT a SPOT preemption (only `insert`+`delete` ops, no preempt event) -- a
+     genuine one-off GCS API hiccup, not a bug. Manifest-purge phase never reached (runs after GCS purge). Cron remained
+     correctly PAUSED throughout.
+  2. **Relaunch** (VM `canonical-migration-defi-gmx-purge-20260726-003241`, same command, same script): resumed
+     correctly at the remaining 12,263 objects (already-deleted objects self-skip via the script's own
+     `if src_meta is None: skip` idempotency) -- **confirms the idempotent-resume design worked exactly as intended**.
+     Finished all 31,997 GCS objects, then the manifest CAS-rewrite: dropped exactly 5,374 rows (24,742,605 ->
+     24,737,231), generation 1785017644156181 -> 1785024274939483. **The actual delete is DONE and independently
+     verified** (script's own fresh re-read: 0 remaining GCS objects, 0 remaining manifest rows).
+  3. **Bug found live #1**: the script's own `_force_consolidate_restamp()` (calls
+     `manifest_consolidator.consolidate(bucket, force=True)` directly) crashed with
+     `RuntimeError: Event logging not initialized. Call setup_events() first.` -- `consolidate()` emits lifecycle events
+     via `log_event()`, which requires `setup_events()` to have already run; the scheduled cron's own CLI `main()` does
+     this bootstrap, but this script's direct call skipped it (so did the sibling bybit purge script's identical direct
+     call -- same bug, found the same day). Caught internally by `consolidate()`, returned as a `success=False` report
+     (`shards_scanned=0` -- the merge never ran at all) instead of raising, so the script printed "APPLY complete" and
+     exited 0 even though the re-stamp had silently done nothing. **Fixed**: added a `_bootstrap_consolidator_events()`
+     helper mirroring `manifest_consolidator.main()`'s exact bootstrap, and made `_force_consolidate_restamp()` check
+     `report.success` and hard-abort (`SystemExit(4)`) instead of logging a failed report and continuing.
+  4. **Bug found live #2** (same day, after fixing #1): the "correct" bootstrap (mirroring the cron's own
+     `PubSubEventSink` on the `lifecycle-events` topic) then hit `PermissionDenied: 403 ... pubsub.topics.publish` --
+     the canonical-migration VM's service account has never needed that IAM permission before (nothing ran this code
+     path from a one-off VM prior to today). **Fixed**: switched to `setup_events(..., mode="local")` (no sink, no IAM
+     dependency, `log_event()` just logs locally) -- losing Pub/Sub-routed alerting for a one-off remediation run is an
+     acceptable trade for not depending on a permission grant. Built a small dedicated remediation script,
+     `market-tick-data-service/scripts/one_offs/restamp_manifest_consolidator_2026_07_26.py`, rather than inlining a
+     `python -c` one-liner into the VM launcher (avoids nested-quoting fragility). Added a new `manifest-restamp`
+     category to `launch-canonical-migration-vm.sh` (`RESTAMP_BUCKET=<bucket>` env-driven, `$MODE` ignored) so this is a
+     reusable tool, not a one-shot hack.
+  5. **Bug found live #3**: shipping the above hit a REAL `check-import-patterns.py` violation --
+     `from unified_trading_library.manifest_consolidator import (consolidator_cycle_in_flight,)` in this script had
+     carried a `# noqa: qg-deep-import` comment since its original commit, but **this specific checker does not
+     recognize `noqa` comments at all** (confirmed by reading its source -- no `noqa` handling anywhere) and had
+     apparently just never been exercised against this exact line in a quickmerge run before. Fixed properly: dropped
+     the deep-symbol import, access `_manifest_consolidator_mod.consolidator_cycle_in_flight(...)` as a module attribute
+     instead (same pattern already used for `.consolidate(...)`).
+  6. **Also found + resolved**: a genuine (not transient) `UU` git merge conflict in
+     `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` -- a concurrent commit
+     (`market-tick-data-service@9150bc9f`'s sibling deployment-service change) added a `defi-lst-rates-fold` category to
+     the exact same usage-string/dispatch-case lines this session's `cefi-bybit-spot-purge` + `manifest-restamp`
+     additions touched. Resolved by hand-merging both sides' additions (never blind take-mine/take-theirs, per rule 4)
+     -- both category sets are present and working in the final file.
+  7. **Restamp status as of this entry**: shipped fixes for all of the above; rebuilding the tarball and relaunching the
+     DEFI restamp VM next (this entry will be updated with the final `success=True` confirmation once verified, followed
+     by the cron resume + >=4-cycle durability watch). **DEFI consolidator cron remains PAUSED** -- do not resume until
+     this Progress Log records a confirmed successful restamp.
+  8. **Commits**: `market-tick-data-service@87004c5b`(unrelated, bybit) ... GMX-specific: safety-parity/bootstrap fixes
+     landing this session (see commit log for exact shas, multiple retries needed due to this being an unusually busy
+     shared branch tonight -- every retry failure was genuine branch drift from other concurrent slots, not a stuck
+     condition, resolved each time via `git pull --rebase --autostash`).
+
+- **2026-07-26 (concurrent `/autonomous` agent, different slot -- cron resume + durability watch + fix
+  reconciliation)**: picked up from the operator's "its finished including manifest and gcs purges" report (both VM runs
+  above, mtds@9b8bf0c0 vintage) and drove steps 3-4 to completion.
+  1. **Independently found bug #1** (same `RuntimeError: Event logging not initialized` as point 3 above) from this
+     session's own read of the completed apply run's `run.log` before reading this Progress Log entry. Authored a
+     minimal fix (`setup_events()` at top of `main()`) and attempted to ship it via quickmerge -- **hit branch drift**:
+     the peer slot's more complete fix (bugs #1+#2+#3 above, mtds@d09705ff) had already landed. Reconciled per the
+     multi-agent merge rule: diffed my stashed change against theirs, confirmed zero unique content
+     (`git stash show -p`), pulled their commit, left the now-empty-value stash in place rather than `git stash drop`
+     (blocked by this workspace's destructive-command guardrail for autonomous workers -- harmless, safe for the
+     operator to clear later). Did not re-ship a duplicate/conflicting commit.
+  2. **Resumed the cron** (`gcloud scheduler jobs resume ... --location asia-northeast1`, confirmed `state: ENABLED`).
+  3. **Republished the `market-tick-data-service` code tarball**
+     (`create-code-tarballs.sh --include market-tick-data-service`) -- the launcher warned the first 2 dry-run verify
+     cycles would otherwise fetch the pre-fix tarball (`mtds-code manifest=d09705ff9bcb but repo=410d75694ecb`);
+     harmless for `--dry-run` specifically (it returns before the affected force-consolidate code path) but real hygiene
+     debt for any future run of this tarball class. Cycles 3-5 confirmed `tarball fresh`.
+  4. **Ran the documented 5-cycle `--dry-run` durability watch**
+     (`launch-canonical-migration-vm.sh defi-gmx-purge ... dry`, ~2min apart via VM boot+65s sleep) spanning
+     01:14Z-01:27Z. All 5 VMs exit 0; all 5 independently re-derived the manifest index live and found **0 day(s) carry
+     venue=GMX rows** -- the drop holds under the resumed cron, no resurrection. Cron's own
+     `lastAttemptTime: 2026-07-26T01:27:01Z` with empty `status` (no error) confirms it is executing cleanly
+     post-resume.
+  5. **Cross-checked the peer slot's restamp effort wasn't broken by this resume**:
+     `restamp_manifest_consolidator_ 2026_07_26.py` has no consolidator-paused precondition (non-destructive, unlike the
+     purge script) -- its first 2 attempts (00:21Z, 00:24Z, both pre-resume) failed on the bugs being fixed at the time;
+     both post-resume attempts (01:17Z, 01:18Z) succeeded, one via a genuine restamp and one via `no_op_lock=True`
+     (found the cron's own already-resumed cycle holding a fresh lock and doing the work itself) -- the cron running
+     normally post-fix self-heals the marker; the dedicated restamp tool is a no-op once that's true. No conflict, no
+     re-pause needed.
+  6. **Net**: GCS+manifest purge complete and durability-confirmed; cron healthy; both code bugs (this session's minimal
+     fix + the peer's more complete #1/#2/#3 fixes) landed as ONE reconciled commit (mtds@d09705ff), not two competing
+     ones. Todo-8 flipped above. This was the plan's last open todo -- ready for the archival ritual whenever an
+     operator or agent picks that up (not done here -- out of this session's stated scope).
+
+- **2026-07-26 (this session, reconciling with the concurrent peer-slot entry above)**: the peer's `no_op_lock=True`
+  DEFI restamp attempt they cross-checked at 01:17-01:18Z was in fact the SAME stale lock this session's own restamp
+  tool hit at ~01:20Z (`started_at: 2026-07-26T01:16:12Z`, 300s TTL) -- neither agent's restamp attempt at that point
+  did real work. This session's retry at 01:33Z correctly self-healed it
+  (`ManifestConsolidator: clearing stale lock ... age=317.3s > TTL=300.0s`) and ran a GENUINE full merge
+  (`shards_scanned=9, rows_in=24,975,091, rows_out=24,798,952, dedup_dropped=176,139, no_op_lock=False`, ~950MB index
+  rewrite, `MANIFEST_CONSOLIDATED` event fired, completed 2026-07-26T01:44:43Z) -- the consolidator marker is now
+  confirmed ACTUALLY re-stamped, not just a cron-healthy/no-error observation. Combined with the peer's independent
+  5-cycle 0-GMX-rows confirmation (01:14- 01:27Z, pre-dating this genuine restamp) and this session's own post-restamp
+  verification, the DEFI side of this incident is now doubly-confirmed durable by two independent agents. No further
+  action needed on this plan; archival remains explicitly out of scope for both sessions (a separate, deliberate
+  plan-hygiene step, not a deferred completion gap).
 
 ## Codex SSOTs
 

@@ -74,20 +74,20 @@ drift_direction: advance-code
       `day=/category=defi/venue={FLAT}/chain=/…` form.
 
       The C0/**v9** step is a NEW, separate read+rewrite tool —
-                                                                                                                                                          `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (**WRITTEN + launcher-wired
-                                                                                                                                                          2026-06-01**, proper home beside the other `migrate_*.py`; dry-run-able; ruff+parse clean; helpers verified) —
-                                                                                                                                                          that takes the flat objects to FULL canonical: `category=defi`→`asset_group=defi` + `pipeline_mode={MODE}`
-                                                                                                                                                          partition + schema_version=9 + `source` column (UAC SOURCE_PRIORITY) + canonical `_V{N}` venue (UAC SSOT,
-                                                                                                                                                          complete incl TraderJoe/Velodrome post-C12-UAC) + ~~`available_at` preserve-or-backfill~~ (preserve where
-                                                                                                                                                          present; backfill only missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split
-                                                                                                                                                          `{kind}-prd-{project}` bucket. **⚠️ CORRECTED 2026-07-25**: the `available_at` preserve-or-backfill clause above
-                                                                                                                                                          was never shipped — `migrate_defi_full_v9_canonical.py`'s actual code (verified via grep, 2026-07-25) has ZERO
-                                                                                                                                                          `available_at` handling, consistent with `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s live measurement
-                                                                                                                                                          of **0.0% available_at fill** on this exact bucket's 3,010,913 captured rows a month after C0d ran. The gap is
-                                                                                                                                                          real, unresolved, and tracked as its own not-yet-scoped fix in that plan's defi section — do not treat it as
-                                                                                                                                                          covered by C0. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f
-                                                                                                                                                          VM-cutover sub-todos below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit
-                                                                                                                                                          sub-todos C0a–C0f below.**
+                                                                                                                                                                      `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (**WRITTEN + launcher-wired
+                                                                                                                                                                      2026-06-01**, proper home beside the other `migrate_*.py`; dry-run-able; ruff+parse clean; helpers verified) —
+                                                                                                                                                                      that takes the flat objects to FULL canonical: `category=defi`→`asset_group=defi` + `pipeline_mode={MODE}`
+                                                                                                                                                                      partition + schema_version=9 + `source` column (UAC SOURCE_PRIORITY) + canonical `_V{N}` venue (UAC SSOT,
+                                                                                                                                                                      complete incl TraderJoe/Velodrome post-C12-UAC) + ~~`available_at` preserve-or-backfill~~ (preserve where
+                                                                                                                                                                      present; backfill only missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split
+                                                                                                                                                                      `{kind}-prd-{project}` bucket. **⚠️ CORRECTED 2026-07-25**: the `available_at` preserve-or-backfill clause above
+                                                                                                                                                                      was never shipped — `migrate_defi_full_v9_canonical.py`'s actual code (verified via grep, 2026-07-25) has ZERO
+                                                                                                                                                                      `available_at` handling, consistent with `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s live measurement
+                                                                                                                                                                      of **0.0% available_at fill** on this exact bucket's 3,010,913 captured rows a month after C0d ran. The gap is
+                                                                                                                                                                      real, unresolved, and tracked as its own not-yet-scoped fix in that plan's defi section — do not treat it as
+                                                                                                                                                                      covered by C0. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f
+                                                                                                                                                                      VM-cutover sub-todos below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit
+                                                                                                                                                                      sub-todos C0a–C0f below.**
 
   - [x] ✅ [SCRIPT] P0. C0-PROVISION — **5 dedicated DeFi `-prd` buckets PROVISIONED** (operator-authorized 2026-06-03,
         supersedes the "no new buckets/VMs" pause): `oracle-prices-prd`, `lst-rates-prd`, `lending-indices-prd`,
@@ -155,9 +155,20 @@ drift_direction: advance-code
       `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P1. C8 fill manifest under-enumeration: UAC declares 90 defi venue-keys but manifest enumerated only lst
-      14/22, lending 6/21, perp 5/8; genuine absentees DRIFT-SOLANA (Solana MVP), FRAX, MORPHO, FLUID. parent_epic:
-      defi_master. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation
-      ruling.)**
+      14/22, lending 6/21, perp 5/8. parent_epic: defi_master. **(MIGRATED FROM:
+      `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)** **CORRECTED
+      2026-07-26 (slot 9, data_engineering)** — the original "genuine absentees DRIFT-SOLANA (Solana MVP), FRAX, MORPHO,
+      FLUID" framing is stale/wrong on two counts, per
+      `plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`'s full re-diagnosis: (1)
+      DRIFT-SOLANA's manifest absence is CORRECT — it was deliberately, comprehensively removed from every UAC registry
+      2026-07-16 (all Solana perp DEXes dropped except Jupiter); "confirmed present" must never be a done-criterion for
+      this item again. (2) FRAX-ETHEREUM's UAC capability is `vault_share_price`, not `lst_rates`/`lending_indices` — it
+      was never actually in scope for the lst/lending family counts cited above; if its manifest rows are genuinely
+      absent that's a separate `vault_share_price_handler.py` scheduling question, not an enumeration gap. Deeper
+      finding also on file: DeFi has **no `expected_unattempted` seeder at all** (unlike CeFi/TradFi/Sports/Prediction)
+      — this item cannot be resolved by "re-running a seeding pass" since none exists; a real fix needs a dedicated
+      design+build plan gated on an operator/architecture decision (Option A/B in the linked issue doc). This checkbox
+      stays unchecked pending that decision.
 
 - [ ] [DATA] P1. C9 legacy DeFi bucket object paths are pre-canonical —
       `day=/category=defi/venue=/chain=/instrument_type=/data_type=/file.parquet`: **`category=` not `asset_group=`**
@@ -234,14 +245,14 @@ drift_direction: advance-code
       `asset_group=defi`).
 
       Verification (per CLAUDE.md "Plans Run To Actual Completion"):
-                                                                                                                                                          `gsutil ls gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode=batch_*/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
-                                                                                                                                                          returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty
-                                                                                                                                                          `funding_rate`, `oracle_price_twap`, `mark_price_twap` columns; manifest-verified row count > 0 per day-shard;
-                                                                                                                                                          equivalent checks for `perp_trades` (active days only; allow `empty_confirmed[SOURCE_RETURNED_ZERO]` on quiet
-                                                                                                                                                          days) + `dex_pool_state` for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed
-                                                                                                                                                          `empty_confirmed` reason (not `attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched (long
-                                                                                                                                                          wall-clock; not a dispatch).** **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
-                                                                                                                                                          2026-07-13 per MTDS consolidation ruling.)**
+                                                                                                                                                                      `gsutil ls gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode=batch_*/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
+                                                                                                                                                                      returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty
+                                                                                                                                                                      `funding_rate`, `oracle_price_twap`, `mark_price_twap` columns; manifest-verified row count > 0 per day-shard;
+                                                                                                                                                                      equivalent checks for `perp_trades` (active days only; allow `empty_confirmed[SOURCE_RETURNED_ZERO]` on quiet
+                                                                                                                                                                      days) + `dex_pool_state` for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed
+                                                                                                                                                                      `empty_confirmed` reason (not `attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched (long
+                                                                                                                                                                      wall-clock; not a dispatch).** **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
+                                                                                                                                                                      2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P0. G2 Launch live-mode snapshotters via `--live --continuous` (mtds@1d35c7f2 unified live/batch path).
       Terminal A:
@@ -425,30 +436,30 @@ arguably daily-OK.
       price-sensitive ops (gated by `enable_defi_forward_poll`, default true; slow ops stay daily). **REMAINING:**
 
       (a) ✅ **mtds live pipeline_mode fix + DeFi-live heartbeat LANDED 2026-06-22 —
-                                                                                                                          `market-tick-data-service@3f5c61f9`** (on origin/live-defi-rollout, full QG `--no-fix` exit-0 + content sentinel
-                                                                                                                          verified). Folds `runtime.mode` into `_run_tag` so `--mode live` writes `pipeline_mode=live_*`
-                                                                                                                          (dex_pools/dex_swaps/oracle_prices) AND emits a per-shard `emit_pipeline_heartbeat` on the live forward-poll
-                                                                                                                          path (subsumes (c)). **NOTE on the prior "blocker": the local QG was NOT a coverage mis-root** — that
-                                                                                                                          `rootdir: unified-trading-pm, collected 6` line is the intentional `PM_INT_TEST` integration check (a red
-                                                                                                                          herring); the real failures were a missing `# noqa: qg-deep-import` on the new
-                                                                                                                          `from unified_trading_library.events import emit_pipeline_heartbeat` lines (events helper, not top-level
-                                                                                                                          re-exported) + a method-size trim on `oracle_prices_handler.process()` (53→48L). Python service repos
-                                                                                                                          quickmerge locally fine.
+                                                                                                                                      `market-tick-data-service@3f5c61f9`** (on origin/live-defi-rollout, full QG `--no-fix` exit-0 + content sentinel
+                                                                                                                                      verified). Folds `runtime.mode` into `_run_tag` so `--mode live` writes `pipeline_mode=live_*`
+                                                                                                                                      (dex_pools/dex_swaps/oracle_prices) AND emits a per-shard `emit_pipeline_heartbeat` on the live forward-poll
+                                                                                                                                      path (subsumes (c)). **NOTE on the prior "blocker": the local QG was NOT a coverage mis-root** — that
+                                                                                                                                      `rootdir: unified-trading-pm, collected 6` line is the intentional `PM_INT_TEST` integration check (a red
+                                                                                                                                      herring); the real failures were a missing `# noqa: qg-deep-import` on the new
+                                                                                                                                      `from unified_trading_library.events import emit_pipeline_heartbeat` lines (events helper, not top-level
+                                                                                                                                      re-exported) + a method-size trim on `oracle_prices_handler.process()` (53→48L). Python service repos
+                                                                                                                                      quickmerge locally fine.
 
-                                                                                                                          (b) **`terraform apply`** the scheduler (operator/CI infra op — broad apply blast-radius in a live project;
-                                                                                                                          use `-target` for the new scheduler) + a `create-code-tarballs.sh` rebuild so the live-tag fix reaches the
-                                                                                                                          launched VMs. (c) ✅ **heartbeat** (`emit_pipeline_heartbeat`) — DONE, landed with (a) above. Manual verify
-                                                                                                                          when applied: `bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices`
-                                                                                                                          → T+10min check rows at
-                                                                                                                          `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`.
+                                                                                                                                      (b) **`terraform apply`** the scheduler (operator/CI infra op — broad apply blast-radius in a live project;
+                                                                                                                                      use `-target` for the new scheduler) + a `create-code-tarballs.sh` rebuild so the live-tag fix reaches the
+                                                                                                                                      launched VMs. (c) ✅ **heartbeat** (`emit_pipeline_heartbeat`) — DONE, landed with (a) above. Manual verify
+                                                                                                                                      when applied: `bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices`
+                                                                                                                                      → T+10min check rows at
+                                                                                                                                      `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live_*/asset_group=defi/`.
 
-                                                                                                                          Orig intent: stand up a persistent/high-frequency DEX-price + oracle-price capture for the live-trading
-                                                                                                                          archetypes (per-block or near-real-time), not the once-daily batch. Either a persistent live VM (mirror the
-                                                                                                                          CeFi `mtds-live-*` pattern, polling DEX/oracle every block/few-sec) or a frequent Cloud Run cron (e.g. \*/1)
-                                                                                                                          for the price-sensitive operations (dex-swaps/pools, oracle-prices) while leaving the slow ones (lst-rates,
-                                                                                                                          lending-indices) daily. Wire it through the same live==batch schema + the hardening heartbeat. Repo:
-                                                                                                                          market-tick-data-service + deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi arb
-                                                                                                                          archetype going live.
+                                                                                                                                      Orig intent: stand up a persistent/high-frequency DEX-price + oracle-price capture for the live-trading
+                                                                                                                                      archetypes (per-block or near-real-time), not the once-daily batch. Either a persistent live VM (mirror the
+                                                                                                                                      CeFi `mtds-live-*` pattern, polling DEX/oracle every block/few-sec) or a frequent Cloud Run cron (e.g. \*/1)
+                                                                                                                                      for the price-sensitive operations (dex-swaps/pools, oracle-prices) while leaving the slow ones (lst-rates,
+                                                                                                                                      lending-indices) daily. Wire it through the same live==batch schema + the hardening heartbeat. Repo:
+                                                                                                                                      market-tick-data-service + deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi arb
+                                                                                                                                      archetype going live.
 
 ### 2026-06-22 (DEFI lane, PM-driven backfill-everything dispatch) — PHASE A: enumerator IAM root-caused + fixed (expected_unattempted=0 → seeding)
 

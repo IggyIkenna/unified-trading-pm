@@ -42,7 +42,7 @@ related:
     /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
     /plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
-    ../cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
   ]
@@ -365,9 +365,26 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
 
 ## Todos
 
-- [ ] [OPS] P0. Confirm current status of `cefi_consolidated_closeout_2026_07_18.md` Track-2's DERIBIT Wave-3 backfill
-      (launched? completed? still queued behind another wave?) and, if not running, launch it (cap-1
-      `tardis-concurrency-guard.sh`-gated) to start clearing the options_chain/futures_chain backlog.
+- [x] ✅ [OPS] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — confirmed NOT running, and confirmed it should NOT
+      be launched right now (design has changed since this todo was written).** `gcloud compute instances list` (project
+      `central-element-323112`, all zones): no VM matching `deribit`/`wave`/`tardis` in name — nothing running. Fresh
+      manifest read (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`): DERIBIT
+      `options_chain` is still 113,615 `attempted_failed` / 10,096 `empty_confirmed` / 1 `captured`; `futures_chain` is
+      112,728 `attempted_failed` / 10,983 `empty_confirmed` — essentially unchanged from this doc's own numbers. The
+      only 2026-07-25 activity is a small unrelated 56-row (`28+28`) `404 GET https` tail, not a Wave-3 run (a real wave
+      would touch tens of thousands of rows). **Root cause this todo missed (written 2026-07-23, superseded
+      2026-07-25):** `cefi_consolidated_closeout_2026_07_18.md`'s Track 2 was **forked** 2026-07-25 to
+      `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`, which subsumes the old per-venue "Wave-3 DERIBIT LIGHT"
+      concept into one consolidated resume-backfill todo — and that forked plan is `status: draft` with
+      `depends_on: [cefi_migration_cutover_and_track8_completion_2026_07_25]` + `gate_on_depends: true`, explicitly
+      because "launching before the Track-1 drain re-enables would fight the consolidator." Checked the gating plan
+      (`cefi_migration_cutover_and_track8_completion_2026_07_25.md`): also `status: draft`, all 5 of its own todos
+      unchecked, **no Progress Log section at all** — Track 1 has not started. So launching DERIBIT Wave-3 (or any
+      Track-2 backfill) right now would violate the plan authors' own explicit sequencing gate, not just be premature.
+      **Correct action: do not launch.** This is now tracked as a machine-gated dependency
+      (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s first todo, "Resume the cefi Tardis COVERAGE
+      backfill") that will dispatch automatically once Track 1 completes — no separate DERIBIT-specific launch is needed
+      or correct to force now.
 - [ ] [REVIEW] P1. Close `tardis_concurrent_ip_lockout_2026_07_12.md`'s open post-fix G4 re-measurement todo once a
       genuine post-cap-1 production wave has accumulated enough fresh cefi history.
 - [ ] [DATA] P1. Trace the fresh (2026-07-21) `"FUTURE/OPTION row requires 'expiry_date'"` recurrence
@@ -378,3 +395,19 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
 - [ ] [DATA] P3. If pursued, a targeted historical run.log pull to attribute the `VENUE_FETCH_FAILED` bucket's original
       leaked-text sub-causes (aiohttp/CSV-decode/streaming-writer/expiry_date) proportionally, rather than leaving it as
       one un-attributed bucket.
+
+## Progress Log
+
+- **2026-07-26 (slot-4, `data_engineering`, task `cefi_satellite_ao_dispatch_batch2-008`):** Investigated the OPS P0
+  todo above. No DERIBIT/Wave-3 VM is running (`gcloud compute instances list`, all zones, project
+  `central-element-323112`). Fresh manifest read confirms the options_chain/futures_chain backlog is essentially
+  unchanged from this doc's original 2026-07-23 numbers (113,615/112,728 `attempted_failed`), with only a small 56-row
+  unrelated 404 tail from 2026-07-25 — no Wave-3 run has happened. Traced why:
+  `cefi_consolidated_closeout _2026_07_18.md`'s Track 2 was forked 2026-07-25 into
+  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`, which is machine-gated
+  (`depends_on`/`gate_on_depends: true`) on `cefi_migration_cutover_and_track8_completion _2026_07_25.md` — and that
+  gating plan hasn't started (draft, all 5 todos unchecked, no Progress Log). Launching DERIBIT Wave-3 (or any Track-2
+  backfill) right now would violate the plan authors' own explicit anti-race sequencing ("would fight the
+  consolidator"), so the correct action is NOT to launch — this todo's original "launch it if not running" instruction
+  is stale relative to the 2026-07-25 fork+gate redesign. No VM launched, no manifest/GCS write. Todo flipped with this
+  finding.

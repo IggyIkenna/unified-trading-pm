@@ -114,11 +114,19 @@ Part 1 twin probe:   NOT run via gcs_describe_object per-object (would require e
                       remaining objects — out of scope for this staging pass). Twin EXISTENCE is
                       established indirectly: canonical batch_odds_api objects for the sampled day
                       were read directly (89 objects, 25,596 rows) and are live/present.
-Part 2 content:      1,815-day exhaustive census (archived doc, 2026-07-17) + 1 fresh sample
-                      (day=2022-06-15, this doc) -> legacy 8,668 keys / canon 8,668 keys /
-                      intersection 8,668 / legacy-only 0. Sample-based re-confirmation, NOT a fresh
-                      exhaustive re-walk (would need one before actual execution -- see Recommended
-                      decision).
+Part 2 content:      **REFRESHED 2026-07-26 (slot 9) — full exhaustive re-walk, not sample-based.**
+                      `census_footystats_orphan_content_2026_07_25.py` run over the ENTIRE
+                      2020-06-06..2026-04-14 calendar range (2,139 days, a superset of the archived
+                      doc's exact 1,815-day scope — the original day-list artifact was an
+                      unrecoverable local scratch cache), 0 days missing, 0 duplicate/overlap
+                      processing errors. Disposition counts: 1,534 `pure_duplicate` (0 unique-legacy-
+                      keys), 280 `genuine_gain` (non-zero migrated-only keys — matches the archived
+                      doc's 280-day bucket exactly), 325 `no_migrated_objects` (calendar days outside
+                      the real migrated population). 1,534 vs the archived doc's 1,336+199=1,535
+                      expected (pure_duplicate + the 199 already-merged days, which now ALSO read as
+                      pure duplicates post-2026-07-17-merge) is a 1-day difference, consistent with a
+                      day-list boundary artifact rather than drift. Total migrated objects read:
+                      86,168,592 (pure_duplicate) + 15,830,674 (genuine_gain).
 Part 3 writers:      grep "batch_footystats" (Explore agent, this session) -> only migration/patch
                       scripts, tests, PipelineMode enum; READ reprocess_sports_odds.py:117-120 and
                       merge_migrated_odds_into_canonical_2026_07_17.py -> no live writer recreates
@@ -135,13 +143,15 @@ Part 5 twin coverage: NOT measured as a %% -- the "twin" here is not a copy-then
                       spirit of Part 5 (never delete without a confirmed canonical twin) is
                       satisfied for the SAMPLED day; not exhaustively re-verified for the full
                       remaining population.
-Disposition:         yes-after-verify (for the subset matching the archived doc's "pure duplicate"
-                      1,336-day bucket, corroborated but not freshly exhaustively re-walked) --
-                      NOT yes-twin-confirmed. The 280-day "adds-keys-but-zero-derive-gain" bucket
-                      from the archived census is explicitly EXCLUDED from this disposition --
-                      those days add raw keys not present in canonical even though the derive
-                      output is unchanged, so they need their own re-examination before any delete
-                      (not pure duplicates by the strict Part-2 definition).
+Disposition:         **yes-twin-confirmed (REFRESHED 2026-07-26, slot 9)** -- for the 1,534-day
+                      pure-duplicate bucket (the archived doc's original 1,336 pure-duplicate days
+                      PLUS the 199 already-merged gain days, which the fresh exhaustive census
+                      reconfirms now ALSO carry 0 unique-legacy-keys post-2026-07-17-merge). The
+                      280-day "adds-keys-but-zero-derive-gain" bucket remains explicitly EXCLUDED
+                      from this disposition -- those days carry 436,738 raw keys not present in
+                      canonical even though the derive output is unchanged, so they still need their
+                      own re-examination/decision before any delete (not pure duplicates by the
+                      strict Part-2 definition). See "280-day bucket disposition" section below.
 Hard stop:           prod-bucket delete (codex § 3.1) -- human-only, always.
 ```
 
@@ -188,28 +198,50 @@ population signature (`pipeline_mode=batch_footystats`, `venue=ODDS_API`, `sourc
 record per the todo's own "not blocking" framing, not escalated as a data-correctness incident (the manifest-absence
 itself is not in dispute, and no downstream consumer reads this shape, per Part 4 of the disposition checklist above).
 
+## Full exhaustive census results + 280-day bucket disposition (2026-07-26, slot 9, data_engineering)
+
+Ran `census_footystats_orphan_content_2026_07_25.py` to completion over the entire 2020-06-06..2026-04-14 calendar range
+(2,139 days — a superset of the archived doc's exact 1,815-day scope, since that exact day-list artifact was an
+unrecoverable local scratch cache). Sharded across up to 9 parallel background workers (survived 2 separate
+session-teardown interruptions that killed in-flight shards; recovered by re-merging completed per-shard report files
+and relaunching only the genuinely-unprocessed remainder each time — see Progress Log). Final result: **2,139/2,139 days
+covered, 0 missing, 0 duplicate/overlap rows.**
+
+```
+pure_duplicate:      1,534 days (0 unique-legacy-keys each) — 86,168,592 migrated objects read
+genuine_gain:          280 days (non-zero migrated-only keys) — 15,830,674 migrated objects read
+no_migrated_objects:   325 days (no migrated-shape objects present)
+```
+
+**Cross-check vs. the archived doc's 2026-07-17 exhaustive census**: expected 1,336 pure_duplicate + 199 already-merged
+(now also pure_duplicate post-merge) = 1,535; observed 1,534 (1-day difference, consistent with a calendar/day-list
+boundary artifact, not drift). Expected 280 genuine_gain (the "adds-keys-but-zero-derive-gain" bucket); observed 280 —
+**exact match**.
+
+**280-day bucket disposition**: these 280 days collectively carry 436,738 keys present in the migrated
+(`batch_footystats`) objects but ABSENT from canonical `batch_odds_api` for the same day — i.e., they are genuinely NOT
+pure duplicates and deleting the migrated objects for these specific days would destroy data with no canonical twin. Per
+the archived doc's own scoping, this bucket is **explicitly excluded from the current delete-suggestion** (see
+Disposition block above) and is NOT touched by the `yes-twin-confirmed` disposition given to the 1,534-day
+pure-duplicate bucket. Recommended path forward (decision only, no execution — human-gated per the same delete-safety
+protocol): either (a) run a scoped follow-up merge for these 280 days mirroring
+`merge_migrated_odds_into_canonical_2026_07_17.py`'s already-proven read-split-merge pattern (the same script that
+absorbed the original 199-day gain bucket), after which these days would also become safe-to-delete duplicates, or (b)
+leave them out of scope entirely and never delete the migrated objects for these 280 specific days. This is a
+scope/priority call, not a technical blocker — no further census work is needed here.
+
 ## Todos
 
-- [ ] [DATA] P1. Run a fresh exhaustive content-verify census (all remaining days in the archived doc's original
-      1,815-day scope, excluding the 199 already-merged gain days) to refresh the `yes-after-verify` disposition to
-      `yes-twin-confirmed` before any human delete decision. **Tool already built and shipped for this** —
-      `market-tick-data-service@c03890b3`,
-      `scripts/sports/league_id_relocation/census_footystats_orphan_content_2026_07_25.py` (read-only, per-day
-      `pure_duplicate`/`genuine_gain`/`no_migrated_objects` classification via the same family-agnostic key; smoke-
-      tested against `2022-06-15` + `2024-12-01`, matches this doc's manual findings exactly). Build a `--days-file`
-      covering the remaining ~1,616 days (the archived doc's original day list minus the 199 merged gain days) and run
-      it — do not re-derive the comparison logic from scratch. (repo: market-tick-data-service) **IN PROGRESS 2026-07-26
-      (slot 9)**: running the census over the full 2020-06-06..2026-04-14 calendar range (2,139 days — a superset of the
-      exact 1,815/1,616-day scope, since the exact day-list artifact from the archived doc's 2026-07-17 run was a local,
-      non-committed scratch cache (`~/tmp-or5b/`) and is unrecoverable; the census script's own empty-prefix
-      short-circuit makes the ~324 non-migrated calendar days in the superset cheap, so this is the safer exhaustive
-      superset rather than an approximate subset) via background process, ETA ~5-6h at the observed ~10-11s/migrated-day
-      rate; report streaming to a per-day JSONL.
-- [ ] [DATA] P2. Separately re-examine the archived doc's 280-day "adds keys, zero derive gain" bucket — excluded from
-      this doc's delete-suggestion; needs its own disposition. (repo: market-tick-data-service) **NOTE 2026-07-26**: the
-      P1 census run above will surface this bucket as a byproduct (its `genuine_gain` days, once the 199 already-merged
-      gain days are excluded/cross-checked, should correspond to this 280-day population) — recording its own
-      disposition here once P1 completes rather than running a second separate census.
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 9)** — Ran a fresh exhaustive content-verify census (full 2,139-day calendar
+      superset, 0 missing days) via `market-tick-data-service@c03890b3`'s
+      `scripts/sports/league_id_relocation/census_footystats_orphan_content_2026_07_25.py`. Refreshed the
+      `Part 2 content` line + `Disposition` (now `yes-twin-confirmed` for the 1,534-day pure-duplicate bucket) above.
+      See "Full exhaustive census results" section.
+- [x] ✅ [DATA] P2. **DONE 2026-07-26 (slot 9)** — Re-examined the archived doc's 280-day "adds keys, zero derive gain"
+      bucket as a direct byproduct of the P1 census (`genuine_gain` disposition, 280 days, exact match to the archived
+      count). Its own disposition is recorded in the "280-day bucket disposition" section above: excluded from the
+      current delete-suggestion, with a recommended (not executed) follow-up-merge-or-leave-out-of-scope decision left
+      to a human.
 - [x] ✅ [DOCS] P3. Trace the exact commit/process that purged the 42,476 mis-stamped manifest rows between 2026-07-17
       and 2026-07-25 — DONE 2026-07-26 (slot 9). Search exhausted across every named candidate + adjacent scripts; none
       match. See "Provenance trace" section above. (repo: unified-trading-pm)

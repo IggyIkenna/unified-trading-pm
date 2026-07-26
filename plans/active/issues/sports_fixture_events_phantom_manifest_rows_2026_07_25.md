@@ -10,7 +10,7 @@ summary: >-
   in 2019-2020 (~58% of that 2-year window's manifest volume). This is a manifest-integrity defect distinct from the
   schema-heterogeneity defect the parent todo targets — a consumer trusting `capture_status=captured` for these rows
   reads a false-positive "data exists" for ~5k cells that are actually empty.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -37,7 +37,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: instruments-service@e0b48bc2 (2026-07-26, sports_satellite_ao_dispatch_batch5-011)
 source: ["sports_satellite_ao_dispatch_batch2-031 full census, slot 2, 2026-07-25"]
 ---
 
@@ -100,12 +100,55 @@ ONLY to the rows with literally zero backing object.
 
 ## Todos
 
-- [ ] [DATA] P1. Root-cause the 4,991 phantom `capture_status=captured` FIXTURE_EVENTS rows (2019-2020 concentrated) —
+- [x] [DATA] P1. Root-cause the 4,991 phantom `capture_status=captured` FIXTURE_EVENTS rows (2019-2020 concentrated) —
       determine whether the writer ever persisted these objects, then either re-fetch or honestly re-mark
       `capture_status`. (repo: instruments-service). **Done when**: root cause documented, and every one of the 4,991
-      rows either has a real backing object or an honest non-`captured` status.
+      rows either has a real backing object or an honest non-`captured` status. ✅ 2026-07-26 —
+      `instruments-service@e0b48bc2` (see RESOLVED section below).
+
+## RESOLVED 2026-07-26
+
+**Re-derived count**: an exhaustive re-census (3-retry existence check across all 3 candidate paths — canonical,
+pipeline_mode-aware, legacy `sports_reference_v1_archive` — per row,
+`scripts/census_fixture_events_phantom_missing_2026_07_26.py`) found **4,996** captured rows with no backing object (the
+original 4,991 was a close undercount from the earlier pilot census; this run is exhaustive with 0 read errors). Year
+concentration confirmed: 2018=4, 2019=3,865, 2020=1,127.
+
+**Root cause — NOT the hypothesized 2019-era writer bug.** All 4,996 rows' `written_at` timestamps fall in a narrow
+2026-07-15..2026-07-25 window, with **ZERO overlap** against the `written_at` values of the 38,264 genuinely-backed
+FIXTURE_EVENTS captured rows for the same data_type. This proves the phantom rows were never touched by the original
+per-fixture capture writer at all — they are a manifest-only artifact of a 2026-07 sports manifest
+migration/reconciliation pass (candidate: the CF11 api_football reconcile, `instruments-service@87d1a353`, timestamped
+2026-07-15 18:52 UTC — matches the lower bound of the phantom rows' written_at range) that recorded a plausible non-zero
+`instrument_count` (e.g. 10, 12, 20) for these (date, league_id) cells without a paired successful GCS write. No
+archived process log or source dataframe ties the recorded count back to a real object, and this task's own exhaustive
+existence check independently reconfirms absence at every candidate path for all 4,996 rows — so recovery via direct
+verification is not possible with what's on disk today.
+
+**Resolution — honest-absence reflip (not a re-fetch in this task).** Per
+`/codex/02-data/honest-absence-downstream-handling.md` and this doc's own remediation option (b), flipped all 4,996
+rows' `capture_status` from `captured` → `attempted_failed` (error_reason
+`fixture_events_phantom_manifest_reflip_2026_07_26`, `attempted_at` re-stamped to now), via
+`scripts/reflip_fixture_events_phantom_rows_2026_07_26.py` — backup-then-write CAS-safe manifest mutation targeting the
+exact (date, league_id) key set from the census (not a heuristic re-derivation), mirroring the sibling precedent
+`flip_phantom_to_attempted_failed.py`. This re-opens all 4,996 cells to the standard api_football per-fixture
+orchestrator's normal re-fetch path — no manual re-fetch campaign was run in this task (out of scope for a
+single-session data-engineering todo: a live re-fetch campaign needs credentialed VM dispatch, not this doc's remit).
+
+**Verification**: manifest backup retained at
+`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.20260726-004618.bak.parquet`.
+Post-apply state: 38,264 FIXTURE_EVENTS rows remain `capture_status=captured` (spot-checked 100/100 sampled rows
+confirmed a real backing object — no full re-walk, per single-walk discipline) and exactly 4,996 rows now carry
+`capture_status=attempted_failed` + the reflip error_reason (spot-checked 20/20 sampled rows confirmed still genuinely
+absent, as expected). 0 rows remain silently mis-marked `captured` with no backing object.
+
+**Cross-reference to `instrument_count` semantic drift**: this defect is NOT the same era/mechanism as the
+`canonical_player_stats_fixture_events_quality_2026_07_16.md` defect-3 finding (that finding is about the ORIGINAL
+2019-era writer generation; this one is a 2026-07 migration-era manifest artifact) — no shared root cause established;
+noting this explicitly so a future reader doesn't conflate the two eras.
 
 ## Codex SSOTs
 
-No new durable contract. Executes the same manifest-integrity principle already codified in
-`/codex/02-data/availability-manifest-and-data-status.md` (4-state `capture_status`, no silent placeholders).
+Executes the same manifest-integrity principle already codified in
+`/codex/02-data/availability-manifest-and-data-status.md` (4-state `capture_status`, no silent placeholders) +
+`/codex/02-data/honest-absence-downstream-handling.md`.

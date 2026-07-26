@@ -416,10 +416,13 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
     `plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` 3 of 4 shipped; 1 remains (re-run
     `run_live_verify_tradfi.py` once `tradfi_v9_stage1_finish` tasks 2-11 land) — self-parked after 4 dispatch bounces.
 
-12. **manifest_consolidator_dtype_at_source_fix** (`status: draft`)
-    `plans/active/manifest_consolidator_dtype_at_source_fix_2026_07_07.md` Both todos open: trace + fix the DuckDB merge
-    that persists numeric columns as utf8 in the canonical `_index` (root cause of the prediction+sports capture-death
-    incident). Not urgent (reader-side coercion crash-proofs it) but canonical index still dishonestly typed.
+12. **manifest_consolidator_dtype_at_source_fix — RESOLVED + ARCHIVED 2026-07-25** (was: `status: draft`, "Both todos
+    open" — corrected, stale relative to this doc's 2026-07-10 vintage)
+    [`plans/archive/2026_07/manifest_consolidator_dtype_at_source_fix_2026_07_07.md`](/plans/archive/2026_07/manifest_consolidator_dtype_at_source_fix_2026_07_07.md)
+    Both todos done — the generalized `_TYPED_MANIFEST_COLUMNS`/`_typed_col_projection` dtype-at-source guard had
+    already shipped under `unified-trading-library@02fc4661` (2026-07-21); verified live 2026-07-25 against both
+    previously-poisoned buckets (sports + prediction) reading real `int64`/`bool`/`double` columns off the canonical
+    `_index`. No longer open.
 
 13. **e2e DeFi strategy configs — taxonomy/wizard round-trip fidelity gaps**
     `plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md` 9 unchecked: D2 (wizard can't

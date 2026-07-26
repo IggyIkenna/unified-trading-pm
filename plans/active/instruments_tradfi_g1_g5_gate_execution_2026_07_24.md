@@ -98,13 +98,23 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
 - [x] [INFRA] P0. ✅ **tradfi instrument-definition backfill LAUNCHED** — `launch-tradfi-is-defs-sharded.sh` 9-shard
       fleet RUNNING (`instr-backfill-tradfi-{cboe,nasdaq,…}-*`), covers CME + all tradfi venue defs (current: 14,192
       captured, CME 3,532 rows 2020→06-24).
-- [ ] [DATA] P0. **ES CME futures ohlcv 1s+1m — IN FLIGHT** (`tradfi-bf-cme-ohlcv-1m-es-{2020,2025,2026}` RUNNING;
-      launcher lib defaults to BOTH `ohlcv_1m;ohlcv_1s`). REMAINING: confirm ALL years 2020-2026 covered (only
-      2020/25/26 VMs seen — verify 2021-24 done or launch), manifest-verify per-year. Billing-fail-closed (Databento
-      PAYG, shared singleton lock).
-- [ ] [DATA] P0. **ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched** (singleton Databento lock held by the
-      futures fleet). Launch `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root ES_OPT` once the lock frees (11-cluster
-      ES_OPT_PARENTS set).
+- [ ] [DATA] P0. **ES CME futures ohlcv 1s+1m — fleet FINISHED, manifest-verify still owed** (launcher lib defaults to
+      BOTH `ohlcv_1m;ohlcv_1s`). **MEASURED 2026-07-26 (plan-reconcile, tradfi tranche)** —
+      `gcloud compute operations list` on project `central-element-323112`, filtered
+      `targetLink~tradfi-bf-cme-ohlcv-1m-es`: **all 7 year-shards `es-{2020,2021,2022,2023,2024,2025,2026}` were
+      inserted 2026-07-21T03:42:58Z–03:44:47Z and all 7 self-deleted by 2026-07-21T09:48:13Z, with ZERO
+      `compute.instances.preempted` operations on any `es-` shard.** This SUPERSEDES the earlier "IN FLIGHT … RUNNING;
+      only 2020/25/26 VMs seen — verify 2021-24 done or launch" note: 2021-2024 WERE launched (insert ops at 03:43:24Z /
+      03:43:42Z / 03:43:58Z / 03:44:15Z) and completed without preemption, so there is nothing left to launch.
+      REMAINING: manifest-verify per-year only (VM completion is not row-capture proof — per
+      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`, count TARGET artifacts, not activity).
+      Billing-fail-closed (Databento PAYG, shared singleton lock).
+- [ ] [DATA] P0. **ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched; the stated blocker has CLEARED.** The
+      singleton Databento lock was held by the ES futures fleet — **MEASURED 2026-07-26 (plan-reconcile): that fleet is
+      gone** (all 7 `tradfi-bf-cme-ohlcv-1m-es-*` VMs deleted by 2026-07-21T09:48:13Z; zero `tradfi-bf-*` instances
+      exist in `central-element-323112` in ANY state as of 2026-07-26T02:20Z), so "once the lock frees" is satisfied.
+      Launch `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root ES_OPT` (11-cluster ES_OPT_PARENTS set) — SPOT per the
+      backfill-VM HARD RULE.
 - [x] [DATA] P1. ✅ **Yahoo FX / Treasuries / DXY instruments — universe COMPLETE.** Treasuries (all 5 tenors:
       US3M/US2Y/US5Y/US10Y/US30Y → ^IRX/2YY=F/^FVX/^TNX/^TYX) + DXY (DX-Y.NYB) were ALREADY enumerated in UAC
       `YAHOO_INDICES`. Gap was FX (only KRW/USD) → added the **10 G10 FX majors** (EUR/GBP/JPY/AUD/CAD/CHF/NZD crosses +

@@ -149,7 +149,11 @@ drift_direction: none
     - **[DATA] P1.** C5 — phantom-grid delete: remove the cartesian `data_type × venue` empty grid in
       `market-data-tick-defi`.
     - **[DATA] P1.** C8 — fill manifest under-enumeration: UAC declares 90 defi venue-keys but manifest enumerated only
-      a fraction (lst 14/22, lending 6/21, perp 5/8); genuine absentees DRIFT-SOLANA/FRAX/MORPHO/FLUID.
+      a fraction (lst 14/22, lending 6/21, perp 5/8). **CORRECTED 2026-07-26**: the "genuine absentees
+      DRIFT-SOLANA/FRAX/MORPHO/FLUID" framing is stale — DRIFT-SOLANA's absence is correct-by-design (removed
+      2026-07-16) and FRAX-ETHEREUM was never in scope (its UAC capability is `vault_share_price`, not lst/lending).
+      Deeper finding: DeFi has no `expected_unattempted` seeder at all, gated on an operator/architecture decision — see
+      `plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`.
     - **[DATA] P1.** C9 — legacy DeFi bucket object paths are pre-canonical (`category=` not `asset_group=`, no
       `pipeline_mode=`); normalise in the same single-walk as C2-C4.
     - **[DATA] P1.** D2 — MDPS swaps_ohlcv reprocess for the stale chain-column `attempted_failed` rows (28,634

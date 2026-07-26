@@ -194,11 +194,16 @@ drift_direction: advance-code
       equity/ETF backfill is RUNNING (SPOT) — NASDAQ g01-g05 + NYSE g01-g05, `ohlcv_1m`+`ohlcv_1s`, window 2023-2026
       (XNAS/XNYS Databento discovery floor 2023-04-15); launched-and-healthy tranche measured 449M+ records, 0 real
       errors, 0 quarantine (`tradfi_consolidated_closeout_2026_07_18.md`). Equities/ETF are being ingested via Databento
-      — Massive is NOT the ingest path (removed/purged); drop the `tradfi_massive_dual_source` cross-link. Track
-      remaining coverage against this running backfill's completion + manifest verification, not as a never-ingested
-      gap. Until fully backfilled, the manifest must still show not-yet-covered cells as
-      MISSING/`attempted_unattempted`, never `empty_confirmed` (CF-11). **(MIGRATED FROM:
-      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      — Massive is NOT the ingest path (removed/purged); drop the `tradfi_massive_dual_source` cross-link. **UPDATE
+      2026-07-26 (plan-reconcile, MEASURED)**: that equity/ETF fleet is no longer running —
+      `gcloud compute operations list` on project `central-element-323112`, filtered
+      `targetLink~tradfi-bf-nasdaq OR targetLink~tradfi-bf-nyse`, shows the last `tradfi-bf-{nasdaq,nyse}-ohlcv-1m-g0*`
+      shard deleted 2026-07-21T17:34:04Z, and zero `tradfi-bf-*` instances exist in `central-element-323112` in ANY
+      state as of 2026-07-26T02:20Z. So this item is no longer "track against a running backfill" — it is now purely
+      **manifest-verify the 2023-2026 NASDAQ/NYSE window** (VM completion is not row-capture proof). Track remaining
+      coverage against that manifest verification, not as a never-ingested gap. Until fully backfilled, the manifest
+      must still show not-yet-covered cells as MISSING/`attempted_unattempted`, never `empty_confirmed` (CF-11).
+      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [CODE] P1. ⑦ tradfi could-exist denominator seed — build the `--catalog-path` parquet from the tradfi IS catalog
       (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
@@ -295,19 +300,32 @@ drift_direction: advance-code
       manifest_master. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
 
-- [ ] [DATA] P1. **R1 RUNBOOK — the tradfi `migrate_tradfi_to_v9_canonical --apply` MUST include `--also-legacy`** to
+- [ ] [DATA] P0. **R1 RUNBOOK — the tradfi `migrate_tradfi_to_v9_canonical --apply` MUST include `--also-legacy`** to
       cover the 2,008-day no-env `market-data-tick-tradfi` corpus, then decommission that legacy bucket after the
       canonical copy is G7-verified. Without the flag, 2,008 legacy days orphan. Repo: market-tick-data-service.
       parent_epic: mtds_mdps_master. Provenance: orphan-coverage drill-down, slot-6 2026-06-08. **(MIGRATED FROM:
-      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)** — **AUDITED
+      2026-07-26, VIOLATION CONFIRMED, DATA-LOSS FINDING FILED — checkbox stays OPEN pending operator decision.**
+      Code-verified (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh`@`77cfcda`, the commit live at
+      apply time) that the 2026-07-06 completing apply's launcher NEVER passes `--also-legacy`. The one attempt that did
+      use the flag (`canonical-migration-tradfi-20260629-053023`) OOM-crashed after copying only ~1% (37k/3.8M
+      processed_candles) and was never resumed with the flag. The legacy bucket
+      (`market-data-tick-tradfi-central-element-323112`) is confirmed permanently deleted (ADC
+      `bucket.exists() ==     False`). Full evidence + recommended decision:
+      `issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`.
 
-- [ ] [DATA] P1. **R2 DELETE-AFTER sweep — after the tradfi v9 `--apply` + G7 byte-verify, run the gated delete of the
-      old-format source paths** (every **DELETE-AFTER=YES** row in the drill-down: bare `day=*/asset_group=tradfi/`
+- [x] ✅ [DATA] P1. **R2 DELETE-AFTER sweep — after the tradfi v9 `--apply` + G7 byte-verify, run the gated delete of
+      the old-format source paths** (every **DELETE-AFTER=YES** row in the drill-down: bare `day=*/asset_group=tradfi/`
       without `pipeline_mode=`, the 12 `day-*` hyphen dirs, old processed_candles, the whole legacy bucket, the
       instruments-store E6 bare paths). Capture the migrator dry-run's planned-copy counts per source/branch into a G7
       ledger so the delete set == the verified copy set (no orphan, no premature delete). Repos:
       market-tick-data-service + instruments-service. parent_epic: mtds_mdps_master. Provenance: orphan-coverage
-      drill-down, slot-6 2026-06-08.
+      drill-down, slot-6 2026-06-08. — **AUDITED 2026-07-26**: read-only GCS listing (ADC) of the 3 still-open targets —
+      bare `day=*` without `pipeline_mode=` (0 objects), old-shape `processed_candles/` (0 non-canonical in a
+      50,000-object sample), instruments-store E6 bare `day=` paths (0 objects) — all CLEAN, nothing further to delete.
+      The 4th target ("the whole legacy bucket") was already destroyed via E7, separately audited above as the R1
+      violation — not a clean R2 outcome, tracked there instead. Full evidence:
+      `issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`.
 
 **Chain data_types beyond `trades` (operator's tardis/implied-vol question, 2026-06-08):** the migrator is **path-only —
 it copies EVERY object under a day regardless of `data_type`** (`_list_day` lists all `.parquet`; `_canon_rel` preserves

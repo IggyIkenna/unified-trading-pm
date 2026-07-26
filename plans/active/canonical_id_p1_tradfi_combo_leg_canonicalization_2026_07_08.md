@@ -164,11 +164,11 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
       only — it does not, by itself, rewrite the historical raw-tick-parquet/manifest `instrument_id` COLUMN content for
       single-leg rows already on disk; that content-level migration is tracked separately under the TradFi
       canonical-path migration effort (`plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`).
-- [ ] [SCRIPT] P2 (NEW, filed 2026-07-09). **Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing
+- [ ] [SCRIPT] P2. (NEW, filed 2026-07-09) **Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing
       combo builders** (`cefi/deribit_combo_adapter.py`, `cefi/tardis/combos.py`) — the operator spec (2026-07-09)
       explicitly made this cross-asset-group, not TradFi-only. Not attempted in this pass (untouched by this commit's
       diff; needs fresh investigation of those adapters).
-- [ ] [SCRIPT] P3 (NEW, filed 2026-07-09). **Extend UAC's `build_leg()` with an opt-in venue-omission mode** so TradFi
+- [ ] [SCRIPT] P3. (NEW, filed 2026-07-09) **Extend UAC's `build_leg()` with an opt-in venue-omission mode** so TradFi
       combo legs (and any other future venue-less-leg consumer) can route through the real shared builder instead of the
       local `_build_leg_key()` helper — cross-repo (`unified-api-contracts`), deliberately deferred out of this fix's
       scope (see the P1 "drop venue prefix" todo above for the full rationale).

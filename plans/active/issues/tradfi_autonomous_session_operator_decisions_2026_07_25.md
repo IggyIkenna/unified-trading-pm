@@ -118,7 +118,139 @@ unless you want to move on it; just confirming this session didn't touch it.
   `EXPECTED_SOURCE_DELIVERY_LAG` per the already-fixed live emitter's own convention (BLK-d385496b answer B, 2026-06-28)
   — no new taxonomy decision, just applying the existing one to historical residue.
 
+---
+
+# Appended 2026-07-26 — `/plan-reconcile` (tradfi tranche, autonomous) parked decisions
+
+> Added by an autonomous `/plan-reconcile` run scoped to the tradfi tranche (68 tradfi-tagged docs; 37 tradfi-PRIMARY,
+> `asset_group: [tradfi]`). Everything that run could prove from git / gcloud / grep it fixed directly (see
+> `unified-trading-pm@c78e4a596`). The 5 items below are the ones evidence genuinely cannot settle — they are authority,
+> preference, or blast-radius calls, exactly the class the skill's Phase-4 routing table reserves for a ruling. Same
+> format as items 1-4 above: options with the recommendation marked.
+
+## 5. Eight tradfi AO plans (49 open todos) are `status: draft` while batch3 is `active` — flip, or keep staged? [RECOMMEND OPTION B]
+
+**The two sides.** `plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md:16` is `status: active` +
+`assigned_vm: planning` (dispatched). But every earlier tradfi AO plan is still `status: draft` — therefore NOT
+ingested, NOT dispatched, nothing working them: `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md:15` (5 todos),
+`…batch1_finalize_2026_07_25.md:10` (3), `…batch2_2026_07_25.md:16` (11), `…batch2_finalize_2026_07_25.md:12` (3),
+`tradfi_registry_coverage_and_ao_readiness_2026_07_25.md:20` (11), `…_finalize.md:18` (3),
+`tradfi_consolidated_native_ao_extract_2026_07_25.md:19` (10), `…_finalize.md:12` (3) = **49 open todos, zero
+dispatched.**
+
+**Why it matters (not cosmetic).** batch3's own Deferred section defers
+`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` on the grounds that batch2_finalize "already owns the job of
+re-checking" it. That is only true if batch2_finalize is live. It is draft — so that deferral currently has **no live
+owner** (this run corrected the "(active)" mislabel in batch3 itself; the ownership gap is the residue).
+
+**Options:**
+
+- A: Flip all 8 (batch1/batch1_finalize/batch2/batch2_finalize + the 4 forked children) to `status: active` now — the
+  fastest drain, but 49 todos land on the fleet at once alongside batch3's 9.
+- **B [WORKER REC]: Flip only `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` + its finalize to `active`** (batch2
+  is the one batch3 structurally depends on for the mvp_mode re-check ownership), leave batch1 and the 4 forked children
+  draft until batch2+batch3 drain. Restores the broken ownership chain with the smallest blast radius.
+- C: Keep all 8 draft deliberately (they are a staged backlog, not a queue) — but then batch3's mvp_mode deferral needs
+  a different owner named explicitly.
+- Other: your call.
+
+## 6. `phantom_captures_tradfi_2026_06_28.md` — tagged `cross-cutting`, content is 100% tradfi [RECOMMEND OPTION A]
+
+**The two sides.** `plans/active/issues/phantom_captures_tradfi_2026_06_28.md:7` declares
+`asset_group: [cross-cutting]`, yet every fact in the doc is tradfi-only — its own summary names
+`gcp://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, its provenance line is
+`reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, and its venue table is CBOE/NYSE/CME/ICE/
+NASDAQ/FX. Against that, `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md:561` deliberately claims it as
+a Track-22 source: "— both from the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py`)", grouped with
+`phantom_captures_prediction_2026_06_28.md`.
+
+**Why it needs you.** Both classifications are dated and deliberate, so this is ownership, not a typo. It is also the
+exact mistag class `/ag-closeout-audit` warns creates an invisible orphan. Retagging has a mechanical side effect:
+`check_ag_closeout_linkage.py` is at **0 orphans (baseline 0)** and must stay there, so any retag must land together
+with its linkage line. (Tradfi's side already holds — `tradfi_consolidated_closeout_2026_07_18.md:380` links it.)
+
+**Options:**
+
+- **A [WORKER REC]: Retag `asset_group: [tradfi]`** and convert the cross-cutting Track-22 bullet into a cross-reference
+  ("tradfi-owned; listed here because it shares the G3 monitor with the prediction instance"), then re-run
+  `check_ag_closeout_linkage.py` and confirm 0 orphans before shipping.
+- B: Keep `[cross-cutting]` — Track 22 is "outputs of the standing G3 phantom monitor", a genuinely cross-AG grouping,
+  and the per-AG instances are just its rows.
+- C: Dual-tag `[tradfi, cross-cutting]` — rejected by the orthogonality rule (falls out of BOTH audits), listed only so
+  the option is explicitly ruled out.
+- Other: your call.
+
+## 7. An AO todo that launches a billed VM with neither `[OPERATOR]` nor a stated justification [RECOMMEND OPTION A]
+
+**The two sides.** `plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147` (`assigned_vm: planning`)
+reads: "(1) Verify instruments-service CME (GLBX.MDP3) instrument-definition catalog manifest coverage … **launch a
+backfill shard for any real gap** (never copy definitions between dates — CME futures expire daily)." Against that,
+`cursor-configs/CLAUDE.md` § Plans: "**every AO todo with a GCS delete/`--apply` or VM launch needs
+`[OPERATOR]`+delete-safety-cite OR a stated safe-idempotent justification**". The todo is tagged `[REVIEW] P1` and
+carries neither. (The mechanical pre-filter `check_delete_vm_launch_gating.sh` DID flag this doc — adjudicating it is
+this skill's job, and the adjudication is: real, not a false positive. The other two tradfi flags in that run ARE false
+positives: batch1's `[DOC] P1` launcher-naming todo is self-declared "doc-only scoping addition", and batch2's
+`[DATA] P1` consolidator-SSOT todo matched only on a historical narrative's `--apply`.)
+
+**Options:**
+
+- **A [WORKER REC]: Add the stated safe-idempotent justification** rather than an operator gate — cite
+  `/codex/05-infrastructure/spot-vms-for-backfill.md` (SPOT default, idempotent shards re-run on preemption) and name
+  the launcher + a shard-count bound. Routine backfill shards are the established autonomous pattern; requiring sign-off
+  per shard would stall the AG.
+- B: Re-tag the sub-item `[OPERATOR]` and require explicit approval before any launch.
+- C: Split sub-item (1) out of the 7-item bundle into its own todo so the gate applies only to the launching half.
+- Other: your call.
+
+## 8. `tradfi_consolidated_closeout_2026_07_18.md` is near-complete (1 open todo) — fold + archive, or keep as the index? [RECOMMEND OPTION B]
+
+**The two sides.** The plan is `status: active`, `locked_by:` empty, and has exactly **1** open todo —
+`plans/active/tradfi_consolidated_closeout_2026_07_18.md:234`: "[DATA] P2. Determine, per MVP cell in the table above,
+whether it has actually been proven wired through backfill=paper=live…". An AO-dispatchable derivative of that same todo
+already exists at `plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md:104`. Against archiving: the doc's
+own frontmatter calls it a "Coordination index (umbrella) that AGGREGATES (references, does not duplicate) every open
+tradfi + tradfi-touching" plan, it is the linkage anchor for the whole tranche, and it `depends_on` two still-active
+children. Per the skill's Phase 4, where a near-complete remnant folds is operator-gated and never autonomous.
+
+**Options:**
+
+- A: Fold the remnant into `tradfi_consolidated_native_ao_extract_2026_07_25.md` (where its derivative already lives)
+  and archive the shell via the 6-step ritual.
+- **B [WORKER REC]: Keep it as the tranche coordination index** — it is explicitly an umbrella, its aggregated-source
+  list is what `check_ag_closeout_linkage.py` resolves against, and archiving it would orphan that. Instead mark the one
+  open todo as tracked-elsewhere (pointing at the native-extract derivative) so the doc reads as an index, not a
+  work-holder.
+- C: Archive now and re-home the linkage anchor onto a new `tradfi_consolidated_closeout_aggregated_sources_*.md` (the
+  pattern cefi/defi already use).
+- Other: your call.
+
+## 9. Three Deferred entries in the ACTIVE batch3 plan are truncated mid-sentence [RECOMMEND OPTION A]
+
+**The two sides.** `plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` lines 208, 215 and 232 each end in a
+literal `...` mid-sentence — e.g. line 208: "…which is STILL OPEN (verified live:
+`status:...", line 232 (the file's last line): "…features-service@34a5d4ff + mdps@7d630a3, per the now-archived...". Against that, the `/ag-closeout-audit`
+methodology this doc was produced by states that the NEXT batch re-reads exactly these entries first: "Before fresh
+Phase-1 triage, re-check the PRIOR batch's own Deferred section first. Every conflict-gated item there names the
+specific competing claim it collided with." A truncated entry cannot be re-checked — the competing claim is the part cut
+off.
+
+**Why it needs you.** The truncation is provable; the missing text is not derivable — only the authoring session knows
+what each sentence was going to say, and rewriting another session's just-committed reasoning is not a mechanical fix.
+
+**Options:**
+
+- **A [WORKER REC]: Have the batch3 authoring session (or a fresh `/ag-closeout-audit tradfi` pass) re-emit the 3
+  Deferred entries in full**, before batch3_finalize's deferred-re-check todo runs against them.
+- B: Accept as-is and let batch3_finalize's re-check todo re-derive each conflict from scratch (costs a full re-triage
+  of those 3 docs).
+- C: Delete the 3 truncated entries and re-triage those docs into batch4 as if never deferred.
+- Other: your call.
+
 ## Open todo
 
 - [ ] [PM] P2. Once you've answered items 1-3 above, record the decision inline in this doc (flip to resolved) and
       propagate into the relevant plan doc(s)' todos per the standing "plan references, doesn't duplicate" rule.
+- [ ] [PM] P2. Same for items 5-9 (appended 2026-07-26 by `/plan-reconcile`, tradfi tranche): record each decision
+      inline here and propagate into the named plan doc(s). Items 5 and 7 additionally need their target plans'
+      frontmatter / todo tags edited to match the ruling; item 6 must re-run
+      `scripts/plan-hygiene/check_ag_closeout_linkage.py` and confirm 0 orphans in the SAME commit as any retag.
