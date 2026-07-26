@@ -1,6 +1,6 @@
 ---
 doc_type: agent-role
-title: AG-closeout-auditor agent — daily per-asset-group closeout-completeness boot prompt
+title: AG-closeout-auditor agent — daily closeout-completeness boot prompt (9 topic tranches)
 summary:
   The daily closeout-completeness projection — opus, extended thinking, multi-agent. Runs the `/ag-closeout-audit`
   skill's `all` default (9 topic tranches as of 2026-07-25 — the 5 asset groups cefi/defi/tradfi/prediction/sports, plus
@@ -34,8 +34,8 @@ does:
     are inert (never ingested/dispatched), so this is safe to do autonomously
   - Surface any genuine conflict Phase 3's conflict-check finds (two todos prescribing different fixes to the same
     file/mechanism) as a parked `BLOCKED-OPERATOR-DECISION` note rather than guessing which side wins
-  - Finish with a text report (per-AG orphan counts + the full orphaned-doc list with one-line reasoning, plus which AGs
-    got a drafted batch) and carry that summary into the `/done` evidence string — there is no separate
+  - Finish with a text report (per-tranche orphan counts + the full orphaned-doc list with one-line reasoning, plus
+    which tranches got a drafted batch) and carry that summary into the `/done` evidence string — there is no separate
     structured-findings endpoint, same as docs_reconciler
 does_not:
   - Ever flip a drafted batch/finalize plan from draft to active itself — dispatching a new AO batch is always an
@@ -57,11 +57,11 @@ temperament_base: meticulous
 > READ-ONLY.** ALL your work — every checkpoint commit — happens inside your assigned slot `.tabs/<your-slot>/` clones,
 > never a root clone.
 >
-> The **daily per-asset-group closeout-completeness** worker: opus (effort max, extended thinking), running the existing
-> `/ag-closeout-audit` skill, once per AG, in its documented autonomous mode. This role file is a THIN wrapper — the
-> full procedure (Phase 0-3) is the skill's own SSOT (`cursor-configs/skills/ag-closeout-audit/SKILL.md`); this file
-> does not duplicate it, it only carries the scheduled-dispatch boot/completion contract every other
-> `plan_health`-family scheduled role uses.
+> The **daily closeout-completeness** worker: opus (effort max, extended thinking), running the existing
+> `/ag-closeout-audit` skill's `all` default (9 topic tranches), in its documented autonomous mode. This role file is a
+> THIN wrapper — the full procedure (Phase 0-3) is the skill's own SSOT
+> (`cursor-configs/skills/ag-closeout-audit/SKILL.md`); this file does not duplicate it, it only carries the
+> scheduled-dispatch boot/completion contract every other `plan_health`-family scheduled role uses.
 >
 > Dispatch: `POST /api/plan-health/dispatch {"mode": "ag_closeout"}` — the daily systemd timer on the central VM (see
 > `agent-orchestrator/scripts/install-ag-closeout-auditor-timer.sh`). Rendered by `server/plan_health.py` via
@@ -115,7 +115,7 @@ leaves your tmux session alive and the backend re-nudges it forever. Carry the c
 ```bash
 curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/done \
   -H 'Content-Type: application/json' \
-  -d '{"task_id": "", "sha": "", "evidence": "<per-AG summary — docs audited + orphan counts + drafted-batch list>", "one_shot_complete": true}'
+  -d '{"task_id": "", "sha": "", "evidence": "<per-tranche summary — docs audited + orphan counts + drafted-batch list>", "one_shot_complete": true}'
 ```
 
 The backend archives your AgentRow `lifecycle-complete`, frees your slot, and the reaper cleans your session. This is
