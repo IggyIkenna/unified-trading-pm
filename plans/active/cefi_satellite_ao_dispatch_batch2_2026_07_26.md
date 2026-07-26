@@ -103,40 +103,63 @@ drift_direction: advance-code
       mechanism, confirmed no overlap with the ASTER regression / futures_chain-122,585-debunked /
       Tardis-impossible-combo items per the todo's own instruction. Full write-up + the P3 follow-ups:
       `plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`.
-- [ ] [SCRIPT] P1. **cefi instruments-pipeline hygiene sweep — 6 bounded fixes from the closed-out G1→G5 gate-execution
-      doc.** Execute each sub-item (independent files, run sequentially in one todo to avoid a same-doc worker
-      collision): (a) **Disable/update the dead-CLI legacy daily Workflow** — `services/instruments-service/gcp/main.tf`
-      `instruments-service-daily` (09:00 UTC) still invokes the retired `--operation instrument --CEFI/--TRADFI/--DEFI`
-      CLI form (current CLI is `--operation instruments --asset-group <ag>`); either update its args to the current CLI
-      or disable/remove the dead schedule. Repo: instruments-service / deployment-service. (b) **Fix the all-AG (no
-      `--asset-group`) t1-recon producer crash** — the `is_all` branch in `instruments_handler.py` (~line 367,
-      SPORTS/CEFI/DEFI/TRADFI) exits 1 within ~1 min with no traceback when `--asset-group` is omitted; root-cause and
-      fix so one 00:00 job can capture all AGs. Repo: instruments-service. (c) **Codify the t1-recon Cloud Run JOB specs
-      in IaC** — only the schedulers are terraformed (`t1_batch_scheduler.tf`); the JOB definitions (image/args) are
-      imperative, which is how the cefi date-drift and the missing all-AG job went invisible previously. Add the job
-      specs to terraform (or a tracked deploy script referenced from terraform) so they can't silently rot. Repo:
-      deployment-service. (d) **Reconcile `lifecycle-catalogue-regen-prediction` registry gap** — it is present in the
-      terraform `for_each` (5 AGs) but absent from `cloud_run_job_registry.py::_LIFECYCLE_CATALOGUE_JOBS` (4 AGs); add
-      the missing entry (or remove the TF instance if prediction genuinely has no catalogue-regen job) so the
-      drift-guard test stops flagging it. Repo: deployment-service. (e) **Align the on-chain-cefi-perp venue form
-      (LIGHTER-ZKSYNC/EXTENDED-STARKNET)** — currently GLUED in the by_date PATH (the SoT) but SPLIT
-      (`venue=LIGHTER chain=ZKSYNC`) in `_index` + `prod/catalog.parquet`, which will desync as new captures land glued.
-      Per the doc's own recommendation, standardize on GLUED (matching `_CEFI_VENUES` + the by_date path): stop
-      `build_instrument_catalogue.py::build_catalogue_dataframe` from splitting these two venues, and one-time re-glue
-      the existing `_index` rows (snapshot-first). Repo: instruments-service. NOTE: PACIFICA-SOLANA was culled
-      2026-07-16 — do not include it. (f) **Build MTDS-cefi market-data capability for LIGHTER** — only EXTENDED has a
-      UAC cefi `SourceCapability` (`_cefi.py`); LIGHTER has none, so its cefi market-data capture is unbuilt (IS
-      instrument-reference side is already cefi-correct). Add the LIGHTER `SourceCapability` + adapter wiring so
-      LIGHTER-ZKSYNC market data can be captured under cefi. Repo: market-tick-data-service. NOTE: PACIFICA is culled,
-      do not build for it. Source: instruments_cefi_g1_g5_gate_execution_2026_07_24.md (items: dead-CLI legacy Workflow
-      / all-AG producer crash / t1-recon IaC gap / lifecycle-catalogue-regen-prediction registry gap /
-      on-chain-cefi-perp venue-form FINDING / MTDS-cefi capability gap — none cited or dispatched in any other cefi
-      covering-set doc). Done when: (a) the daily Workflow either runs the current CLI or is disabled — no more silent
-      daily failure; (b) the all-AG t1-recon path runs successfully end-to-end for at least one day across all 5 AGs;
-      (c) the t1-recon job specs are terraform-managed (or scripted+tracked) with a verifying re-apply; (d) the registry
-      drift-guard test passes with prediction reconciled; (e) `_index` + catalogue both show GLUED form for
-      LIGHTER/EXTENDED with 0 residual SPLIT rows, and a fresh capture writes glued; (f) LIGHTER cefi market-data
-      capture runs and writes at least one verified shard. QG-green on every touched repo.
+- [x] ✅ [SCRIPT] P1. **cefi instruments-pipeline hygiene sweep — 6 bounded fixes from the closed-out G1→G5
+      gate-execution doc.** Execute each sub-item (independent files, run sequentially in one todo to avoid a same-doc
+      worker collision): (a) **Disable/update the dead-CLI legacy daily Workflow** —
+      `services/instruments-service/gcp/main.tf` `instruments-service-daily` (09:00 UTC) still invokes the retired
+      `--operation instrument --CEFI/--TRADFI/--DEFI` CLI form (current CLI is
+      `--operation instruments --asset-group <ag>`); either update its args to the current CLI or disable/remove the
+      dead schedule. Repo: instruments-service / deployment-service. (b) **Fix the all-AG (no `--asset-group`) t1-recon
+      producer crash** — the `is_all` branch in `instruments_handler.py` (~line 367, SPORTS/CEFI/DEFI/TRADFI) exits 1
+      within ~1 min with no traceback when `--asset-group` is omitted; root-cause and fix so one 00:00 job can capture
+      all AGs. Repo: instruments-service. (c) **Codify the t1-recon Cloud Run JOB specs in IaC** — only the schedulers
+      are terraformed (`t1_batch_scheduler.tf`); the JOB definitions (image/args) are imperative, which is how the cefi
+      date-drift and the missing all-AG job went invisible previously. Add the job specs to terraform (or a tracked
+      deploy script referenced from terraform) so they can't silently rot. Repo: deployment-service. (d) **Reconcile
+      `lifecycle-catalogue-regen-prediction` registry gap** — it is present in the terraform `for_each` (5 AGs) but
+      absent from `cloud_run_job_registry.py::_LIFECYCLE_CATALOGUE_JOBS` (4 AGs); add the missing entry (or remove the
+      TF instance if prediction genuinely has no catalogue-regen job) so the drift-guard test stops flagging it. Repo:
+      deployment-service. (e) **Align the on-chain-cefi-perp venue form (LIGHTER-ZKSYNC/EXTENDED-STARKNET)** — currently
+      GLUED in the by_date PATH (the SoT) but SPLIT (`venue=LIGHTER chain=ZKSYNC`) in `_index` + `prod/catalog.parquet`,
+      which will desync as new captures land glued. Per the doc's own recommendation, standardize on GLUED (matching
+      `_CEFI_VENUES` + the by_date path): stop `build_instrument_catalogue.py::build_catalogue_dataframe` from splitting
+      these two venues, and one-time re-glue the existing `_index` rows (snapshot-first). Repo: instruments-service.
+      NOTE: PACIFICA-SOLANA was culled 2026-07-16 — do not include it. (f) **Build MTDS-cefi market-data capability for
+      LIGHTER** — only EXTENDED has a UAC cefi `SourceCapability` (`_cefi.py`); LIGHTER has none, so its cefi
+      market-data capture is unbuilt (IS instrument-reference side is already cefi-correct). Add the LIGHTER
+      `SourceCapability` + adapter wiring so LIGHTER-ZKSYNC market data can be captured under cefi. Repo:
+      market-tick-data-service. NOTE: PACIFICA is culled, do not build for it. Source:
+      instruments_cefi_g1_g5_gate_execution_2026_07_24.md (items: dead-CLI legacy Workflow / all-AG producer crash /
+      t1-recon IaC gap / lifecycle-catalogue-regen-prediction registry gap / on-chain-cefi-perp venue-form FINDING /
+      MTDS-cefi capability gap — none cited or dispatched in any other cefi covering-set doc). Done when: (a) the daily
+      Workflow either runs the current CLI or is disabled — no more silent daily failure; (b) the all-AG t1-recon path
+      runs successfully end-to-end for at least one day across all 5 AGs; (c) the t1-recon job specs are
+      terraform-managed (or scripted+tracked) with a verifying re-apply; (d) the registry drift-guard test passes with
+      prediction reconciled; (e) `_index` + catalogue both show GLUED form for LIGHTER/EXTENDED with 0 residual SPLIT
+      rows, and a fresh capture writes glued; (f) LIGHTER cefi market-data capture runs and writes at least one verified
+      shard. QG-green on every touched repo. — **DONE 2026-07-26**: (a) shipped `deployment-service@d5fde721` — the
+      2026-06-26 disable landed but left `outputs.tf` referencing the commented-out modules, so `tofu plan` failed
+      outright ever since; fixed, plan now resolves structurally (1 destroy: the scheduler trigger). Actually destroying
+      the live dead Workflow+Scheduler is **BLOCKED-CREDENTIALS** (no available account has
+      `workflows.workflows.get`/admin) — flagged in the commit, not mine to unblock. (b) VERIFIED already fixed by
+      `instruments-service@d2796158` (2026-06-26, same day as the finding) — live-reproduced a real all-AG run
+      (`--operation instruments`, no `--asset-group`) for 150s in dev env with zero crash, real fetches across
+      cefi/defi/tradfi/sports/prediction. (c) shipped `deployment-service@54aa6f5` — added `google_cloud_run_v2_job`
+      specs (via the existing `container-job/gcp` module) for the 4 instruments-service t1-recon jobs, read verbatim off
+      live (`gcloud run jobs describe`), imported into the shared prod tofu state, verified with a re-apply (0 add / 4
+      change [labels + `deletion_protection` metadata only, matching every other job's convention in this state] / 0
+      destroy) — re-plan after apply shows "No changes." (d) VERIFIED already fixed — `_LIFECYCLE_CATALOGUE_JOBS`
+      already derives from the 5-entry `_ASSET_GROUPS` tuple incl. prediction; `test_cloud_run_job_registry_guard.py`
+      10/10 pass. (e) VERIFIED already fixed by `instruments-service@ee19f6f3` (2026-07-18) —
+      `_canonical_bare_venue_chain()` now checks `VENUE_TO_ASSET_GROUP=="cefi"` and passes LIGHTER-
+      ZKSYNC/EXTENDED-STARKNET through glued; live-queried both `_index` (6,327 rows) and the catalogue (322 rows) —
+      100% glued, 0 residual split rows on either surface. (f) VERIFIED already built — `unified-api-contracts@81bf5e17`
+      (2026-07-18) added the `_LIGHTER` `SourceCapability`; MTDS already routes LIGHTER-ZKSYNC through
+      `onchain_perp_batch_handler.py` (Tardis-delegated `derivative_ticker`) + a live WS connector; manifest shows
+      88,166 rows for venue=LIGHTER-ZKSYNC in `market-data-tick-cefi-prd` (781 `captured`, `attempted_at` through
+      2026-07-26T01:31Z — actively running). Net: (a) and (c) were genuinely open and are now shipped; (b)/(d)/(e)/(f)
+      had already been independently closed by other work in the month since the source doc was written — this todo's
+      own verification is the first place that's recorded.
 - [ ] [SCRIPT] P2. **Resolve the ASTER MTDS `attempted_failed` regression per the batch1 DIAG evidence, then close the
       issue doc.** Depends on (gate on) `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s `[DIAG] P1` todo having
       appended its three sub-check findings to `issues/aster_mtds_failure_count_regression_2026_07_07.md`'s Progress Log
