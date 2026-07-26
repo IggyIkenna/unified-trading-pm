@@ -80,7 +80,7 @@
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.72.0",
     "unified-trading-library": "0.57.0",
-    "unified-trading-pm": "1.2.609",
+    "unified-trading-pm": "1.2.610",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
@@ -1298,7 +1298,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
         "large_file_count": 0,
@@ -2185,8 +2185,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.57.1.dev3+g7768355cc",
-      "published_at": "2026-07-26T01:02:41Z",
+      "version": "0.57.1.dev5+gc2ce80145",
+      "published_at": "2026-07-26T04:16:58Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
