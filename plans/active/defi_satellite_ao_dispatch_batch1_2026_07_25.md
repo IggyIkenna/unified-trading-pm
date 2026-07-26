@@ -130,11 +130,13 @@ drift_direction: advance-code
       (registered `volatility_index` for cefi, +26 shards = 234) — root-caused via git-stash reproduction on a clean
       HEAD (fails identically without my change), bumped the pin with a dated comment. `quality-gates.sh` green (247s,
       sentinel written).
-- [ ] [CHORE] P1. Fix the 2 stale comments in `strategy-service/strategy_service/cli/handlers/paper_run_handler.py` that
-      describe classes as "kind `perp-funding`"/"kind `dex-pools`" when the code already resolves `kind="tick-data"` —
-      comment-only, no behavior change. Repo: strategy-service. **Done when**: both comments accurately describe the
-      current resolution; no executable line changed; `quality-gates.sh` green. Source:
-      `defi_dedicated_bucket_shared_migration_2026_07_13.md`.
+- [x] ✅ [CHORE] P1. Fix the 2 stale comments in `strategy-service/strategy_service/cli/handlers/paper_run_handler.py`
+      that describe classes as "kind `perp-funding`"/"kind `dex-pools`" when the code already resolves
+      `kind="tick-data"` — comment-only, no behavior change. Repo: strategy-service. **Done when**: both comments
+      accurately describe the current resolution; no executable line changed; `quality-gates.sh` green. Source:
+      `defi_dedicated_bucket_shared_migration_2026_07_13.md`. — strategy-service@4a7fbb17. Verified against the real
+      `resolve_bucket_name()` calls in `canonical_perp_funding_provider.py`/`canonical_dex_pool_provider.py` (both
+      `kind="tick-data"`); comment-only edit, no executable line changed; `quality-gates.sh` green (214s).
 - [ ] [CODE] P1. Implement Phoenix DEX radix-slab top-of-book decode in
       `market_tick_data_service/cli/handlers/phoenix_orderbook_handler.py` — parse the Phoenix market-account slab
       layout (RPC fetch already works) to populate `best_bid_price`/`best_ask_price`/sizes/`spread_bps`/`mid_price`;
@@ -358,14 +360,35 @@ drift_direction: advance-code
       `instruments-service/docs/DEFI_INSTRUMENTS.md`, and the closeout plan's "The two-id model" section. Repo:
       unified-trading-pm. **Done when**: the codex doc contains a section documenting the two-id model consistent with
       those 3 sources. Source: `issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
-- [ ] [INFRA] P1. Add a `staking-yields` entry to `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s
+- [x] ✅ [INFRA] P1. Add a `staking-yields` entry to `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s
       `defi_collect_operations` map (cron `50 1 * * *`, the free slot between `eigenlayer-rewards` at 01:45 and
       `evm-defi` at 01:55; tier mirroring `eigenlayer-rewards`), apply via the same single-PR flow every other job in
       the file uses. Repo: deployment-service. **Done when**: `gcloud scheduler jobs list` shows a
       `staking-yields`-named job ENABLED and `gcloud run jobs list` shows the matching Cloud Run Job; after its first
       run, at least 1 manifest row exists for `instrument_type=staking` (verify STARTED + the manifest row per
       no-fire-and-forget — do not mark done on terraform-apply alone). Source:
-      `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
+      `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`. — DONE 2026-07-26, deployment-service@bd46bf2.
+      Added the map entry exactly as specified; `ENV=prod ./tofu.sh plan -target=...` showed
+      `2 to add, 0 to change, 0 to destroy` (a new Cloud Run Job + Cloud Scheduler cron — purely additive, no
+      `[OPERATOR]` gate applies); applied. Verified
+      `gcloud scheduler jobs describe uts-prod-mtds-collect-staking-yields-cron` ENABLED and
+      `gcloud run jobs describe uts-prod-mtds-collect-staking-yields` exists. **Did not wait for the 01:50 UTC cron**
+      (many hours away) — manually triggered a real execution (`gcloud run jobs execute`), watched it to a genuine
+      terminal status (`Completed True`, 47s), then read the per-VM manifest shard it wrote and confirmed **1 row:
+      `instrument_type=staking`, `data_type=staking_yields`, `venue=EIGENLAYER`, `capture_status=captured`** — the
+      done-when criterion is satisfied. **Bonus finding from the live run, fixed in the same pass**: the execution's
+      logs showed LIDO and EtherFi both failing with DNS resolution errors
+      (`Cannot connect to host api.lido.fi/api.etherfi.id: Name or service not known`), and the manifest shard had ZERO
+      rows for either venue — not even `attempted_failed`. Root cause: each `_fetch_*_apy` helper caught its own
+      exceptions internally and returned an empty list on failure, so the caller's `if rows:` branch treated a genuine
+      fetch failure identically to "source legitimately returned nothing" and called `record_zero_rows` instead of
+      `record_failed` — silently miscategorizing failures. Fixed by letting the fetch helpers' exceptions propagate to
+      `_process_venue`'s existing (already-correct) classify-and-record `try/except`, which now correctly calls
+      `record_failed`. Regression test updated (`test_client_error_propagates_for_correct_record_failed_classification`,
+      the old test asserted the buggy swallow behavior) + full 23-test suite green. market-tick-data-service@2b6d9e6b.
+      **Not yet re-verified against a rebuilt image** — the fix is source + test only; the next scheduled/manual
+      execution (after the image rebuild lands) will exercise it for real, tracked as a follow-up below rather than
+      blocking this todo (the terraform-wiring done-when criterion was about the manifest row existing, which it does).
 - [ ] [DATA] P1. Correct `/codex/02-data/defi-data-types-catalog.md` § 7's `staking_yields` row: remove the
       `Status:     Production (2026-04-24)` label — live-verified FALSE (zero scheduler jobs, zero Cloud Run Job, zero
       GCS objects across 6 sampled days, confirmed 2026-07-24) — and restate as `Status: Implemented, unscheduled`. Do
@@ -407,7 +430,8 @@ drift_direction: advance-code
       untouched — comment-text-only fix. Repo: unified-api-contracts. **Done when**: the comment no longer claims "no
       UAC subgraph_id registered" and states the real Ethereum-only-adapter reason instead; `quality-gates.sh` green; no
       other lines changed. Source: `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`.
-- [ ] [INFRA] P1. Diagnose and, if still broken, fix the `uts-prod-data-status-rollup` Cloud Run Job — as of 2026-07-10
+- [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7) — original symptom NOT recurring; job healthy in the sense that
+      matters.** Diagnose and, if still broken, fix the `uts-prod-data-status-rollup` Cloud Run Job — as of 2026-07-10
       Cloud Scheduler had been firing into `UNAVAILABLE` (gRPC 14) since 2026-07-05T15:53Z. FIRST check current job
       health (`gcloud run jobs executions list`, blob `last_modified` on
       `gs://{pid}-data-status-rollups/market-tick-data-service/full.json.gz`) — a separate active plan
@@ -417,7 +441,13 @@ drift_direction: advance-code
       deployment-service. **Done when**: either (a) the most recent execution succeeded and the rollup blob's
       `last_modified` is within ~10 min, confirming resolution, OR (b) the issue doc's Progress Log records the job was
       already healthy and only the separate image-staleness item remains open. Source:
-      `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`.
+      `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`. **Note (2026-07-26 correction)**: the job is
+      actually the Cloud Run SERVICE `uts-prod-data-status-rollup-svc` + scheduler `uts-prod-data-status-rollup-cron`
+      (there is no Cloud Run JOB by this name — `gcloud run jobs executions list` returns nothing because it's the wrong
+      resource type; the todo's own command was mis-specified). Full diagnosis in the Progress Log below — original
+      UNAVAILABLE/gRPC14 is gone; current DEADLINE_EXCEEDED/gRPC4 on the scheduler's own client-side wait is cosmetic
+      (the backend keeps running past it and completes for ~12/14 services every cycle); the one real pre-existing gap
+      (market-tick-data-service) is a KNOWN, already-tracked limitation, not new breakage.
 - [ ] [DATA] P1. Measure the scale of bare-symbol-leaf DeFi batch writes since 2026-07-20 — run a bounded per-day GCS
       delimiter descent (not a corpus walk) over
       `raw_tick_data/by_date/day={YYYY-MM-DD}/pipeline_mode=batch_*/asset_group=defi/` for every day from 2026-07-20
@@ -596,6 +626,38 @@ drift_direction: advance-code
       sampled for real KAMINO/SOLEND objects (uri + timestamp-vs-day= check, same method as items 4/5 in the source
       doc), the 47-object Track-2 population is accounted for, and a definitive verdict (clean / same fabrication bug as
       the dex_pools class / a different issue) is recorded in the source doc.
+
+## Progress Log
+
+- **2026-07-26 (slot-7)** — Diagnosed the `uts-prod-data-status-rollup` todo. **Resource-type correction**: it's a Cloud
+  Run SERVICE (`uts-prod-data-status-rollup-svc`) fronted by Cloud Scheduler (`uts-prod-data-status-rollup-cron`,
+  `*/20 * * * *`), not a Cloud Run JOB — `gcloud run jobs executions list` (the todo's own suggested command) returns
+  nothing because it's the wrong API surface; `gcloud scheduler jobs describe` + `gcloud run services describe` are the
+  right tools.
+  - **Original symptom (UNAVAILABLE / gRPC 14, since 2026-07-05) is NOT recurring.** Current scheduler `status.code: 4`
+    (DEADLINE_EXCEEDED) is a DIFFERENT code — the scheduler's own client-side HTTP wait (`attemptDeadline: 900s`,
+    matching the Cloud Run `timeoutSeconds: 900`) times out, but Cloud Run does not kill the backend request just
+    because the caller stopped waiting — confirmed by reading live `Creation Time` timestamps on
+    `gs://central-element-323112-data-status-rollups/{service}/full.json.gz`: 12 of 14 `_DEFAULT_SERVICES` got a FRESH
+    rollup within the same ~40min cycle (20:43–21:20 UTC), including `strategy-service` and `execution-service` (the
+    LAST two in the worker's sequential processing list) — direct proof the backend keeps running to completion for the
+    achievable set regardless of what the scheduler's own status field reports.
+  - **market-tick-data-service is the one persistent gap — and it's a KNOWN, already-tracked limitation, not new
+    breakage.** `plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md` already documents
+    MTDS's full-2018-today manifest build as exceeding any sane per-child memory ceiling ("no RAM tier through 64GB
+    survives it") — the per-service child-process isolation fix from that plan (`RLIMIT_AS` 24Gi) stops MTDS's failure
+    from blocking OTHER services (confirmed here: MDPS, right after MTDS in the processing order, DOES succeed — direct
+    evidence the isolation fix still holds), but MTDS's own rollup was never expected to succeed until the real fix
+    (`/plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md`, still active) lands. This matches the todo's
+    own "Done when (b)" branch: the job is healthy for what it can do; the remaining gap is a separately-owned,
+    already-tracked item, not this todo's to fix.
+  - **New finding along the way (filed, not fixed here)**: `ml-service`'s `full.json.gz` is ALSO missing (only
+    `coverage.json.gz` exists), but unlike MTDS this is NOT explained by the known OOM class — both services processed
+    AFTER ml-service in the sequential list (strategy-service, execution-service) succeeded in the same cycle, ruling
+    out a simple "loop got cut off here" explanation. Filed
+    `issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md` (P2, `assigned_vm: planning`, 2 scoped todos:
+    re-confirm across more cycles, then root-cause the coverage-vs-full divergence) rather than open-ended debugging
+    with only 16 log entries/2h to go on from this vantage point.
 
 ## Deferred
 

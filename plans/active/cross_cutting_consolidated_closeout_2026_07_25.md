@@ -266,8 +266,8 @@ yet done) +
 (**DONE, archived** — operator removed the `DATA_WRITE` `auditConfigs` entry via ADC `setIamPolicy` with an explicit
 `updateMask` — the API's default mask is `bindings,etag` only and would have silently no-opped on `auditConfigs`
 otherwise; verified via an independent re-read) +
-[`issues/datapoint_validation_results_bucket_missing_2026_07_21.md`](/plans/active/issues/datapoint_validation_results_bucket_missing_2026_07_21.md)
-(~85% resolved; 3 small residual verify/hardening items, not credential-blocked, unaffected by the above).
+[`issues/datapoint_validation_results_bucket_missing_2026_07_21.md`](/plans/archive/issues/datapoint_validation_results_bucket_missing_2026_07_21.md)
+(**DONE, archived 2026-07-26** — all 7 todos closed, `status: resolved`).
 
 **Close-out criterion (updated)**: `bucket_iam_write_protection_per_tier`'s Phase 1 SA design re-derived against the
 real `-test-`/`-prd-` naming, then P1.1-P1.3 terraform authored + applied;

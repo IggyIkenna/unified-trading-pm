@@ -328,24 +328,24 @@ drift_direction: advance-code
       `test_manifest_writer_record_empty_reason.py` for both signature changes.
 
       **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
-                                  `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
-                                  `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
-                                  prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
-                                  this is a genuine architect-level design call (not a mechanical copy) — filed as
-                                  `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
-                                  (merged via PR #1593), NOT executed here.
+                                      `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                                      `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                                      prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                                      this is a genuine architect-level design call (not a mechanical copy) — filed as
+                                      `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                                      (merged via PR #1593), NOT executed here.
 
-                                  **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
-                                  (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+                                      **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                                      (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
 
-                                  **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
-                                  items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
-                                  flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
-                                  re-verifies sports.
+                                      **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                                      items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                                      flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                                      re-verifies sports.
 
-                                  Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
-                                  `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
-                                  of which are now the ONLY reds, exactly matching the filed issue doc's scope).
+                                      Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                                      `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                                      of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the
@@ -422,11 +422,12 @@ drift_direction: advance-code
       has, republish the instruments-service code tarball
       (`bash scripts/vm/create-code-tarballs.sh --include instruments-service`, NOT `--allow-dirty-tarball`) and
       relaunch the cefi/defi/prediction `datapoint-validation-{ag}-*` VMs (tradfi/sports already ran to completion
-      2026-07-21 and need no relaunch). Source: `issues/datapoint_validation_results_bucket_missing_2026_07_21.md`. Done
-      when: (a) alerting-service bucket-provisioning status is confirmed one way or the other (with a follow-up issue
-      doc filed if a gap is found), (b) the VM_TASK fallback change is committed + shipped, and (c) either the 3
-      relaunched VMs (cefi/defi/prediction) reach a terminal RUNNING-to-completion state with day-frontier progressing
-      in `run.log`, or the todo is left open with an explicit note that the Round-1 UAC workflow has not yet landed.
+      2026-07-21 and need no relaunch). Source:
+      `/plans/archive/issues/datapoint_validation_results_bucket_missing_2026_07_21.md`. Done when: (a) alerting-service
+      bucket-provisioning status is confirmed one way or the other (with a follow-up issue doc filed if a gap is found),
+      (b) the VM_TASK fallback change is committed + shipped, and (c) either the 3 relaunched VMs (cefi/defi/prediction)
+      reach a terminal RUNNING-to-completion state with day-frontier progressing in `run.log`, or the todo is left open
+      with an explicit note that the Round-1 UAC workflow has not yet landed.
 
 ## Progress Log
 
