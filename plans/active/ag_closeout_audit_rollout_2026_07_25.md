@@ -810,3 +810,36 @@ calls at 0MB free). Root cause + workaround (`TMPDIR=/var/tmp/claude-agent-scrat
 **Recommended next item**: verify agent #7's work, then triage the 2 new issue docs + the thin report, in that order —
 all bounded, non-blocking, no operator input needed. Loop continues per `/autonomous` (operator away ~6h from
 ~2026-07-26 00:57 UTC).
+
+## Round 6b (2026-07-26, same session) — operator explicitly lifted 2 standing constraints mid-session
+
+Both items below were EXPLICIT, present-tense operator instructions in this same chat session (not a re-interpretation
+of `/autonomous`'s general authority) — recorded here verbatim-in-spirit because they supersede this doc's own earlier
+"GATE UPDATE"/"do not self-restart" language for tonight specifically.
+
+1. **"yeah do that whenevr you can please. you have permiison hence /autonomous"** (re: the orchestrator.service restart
+   I had explicitly declined to do myself, citing `WORKER_SPAWN_PREREQUISITES.md`'s no-self-restart rule) — verified
+   `KillMode=process` was genuinely deployed on the live unit FIRST, then restarted via SSM (`i-0c9b283b31d6b5ca7`).
+   Confirmed safe: pre-restart cgroup already showed live `orch-slot-*` tmux/claude workers; service came back
+   `active (running)` within ~30s, ALL prior worker PIDs still alive in the cgroup post-restart (`Tasks: 332`, 15 slots
+   re-seeded from `.tabs/`), zero workers lost. The sharded `tranche`-aware dispatch code is now live server-side.
+2. **"actaully you can run it s workflows please here... run triage in full fix issues only leave really tough once to
+   ask me at the end whenn i wake up"** (re: the standing GATE requiring the operator to personally run
+   `/ag-closeout-audit`+`/plan-reconcile` before any mass-flip) — this explicitly authorizes ME to run BOTH skills, per
+   tranche, across all 9, via the `Workflow` tool, tonight, in lieu of the operator doing it personally. Launched
+   `wf_e4b32d17-dcf` ("nightly-tranche-triage"): a `pipeline()` over the 9 tranches, each running
+   `/plan-reconcile <tranche>` then `/ag-closeout-audit <tranche>` (reconcile-before-audit per tranche, tranches
+   otherwise independent/concurrent), both skills' full documented Autonomous/AO-dispatched procedure, `opus`/`max`,
+   `isolation: 'worktree'` (18 concurrent-capable agents all committing to the shared PM repo). Contract given to every
+   spawned agent: auto-fix per each skill's own calibration (provable facts, not vibes), PARK (never ask; nobody
+   reachable) any genuine judgment/authority call as structured
+   `{question, quotes_and_locations, options, recommendation}`, draft-only for any new AO batch (`status: draft`, never
+   flip to `active`). **The mass-flip ITSELF stays gated** — the operator's own words were "leave really tough ones to
+   ask me... when i wake up i'll answer and we can do the mass flip" — i.e. audit/reconcile now unblocked for tonight,
+   but the actual draft→active / NA→planning flip still waits for the operator's answers on waking.
+
+**Do NOT re-launch a duplicate tranche-triage workflow** if resuming this session — check for `wf_e4b32d17-dcf`'s
+completion notification first (`/workflows` or the task list). When it completes: aggregate every tranche's `parked`
+array from both stages into ONE consolidated batched Q&A (options + recommendation each, per
+`SUB_AGENT_MANDATORY_RULES.md`'s escalation format) — do not present 18 separate scattered questions. Only after the
+operator answers that batched Q&A does the mass-flip proceed.
