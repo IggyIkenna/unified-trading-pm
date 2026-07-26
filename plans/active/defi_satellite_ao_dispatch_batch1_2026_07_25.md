@@ -116,12 +116,20 @@ drift_direction: advance-code
       `asset_group="cefi"` for the tick bucket) — `_DEFAULT_PERP_FUNDING_BUCKET_TEMPLATE`/
       `_DEFAULT_TICK_DATA_BUCKET_TEMPLATE` were removed in the same `strategy-service@c09785a8` commit above. Verified
       by reading the current file; nothing to ship.
-- [ ] [CHORE] P1. Correct (or remove) the stale `"bucket_type": "dex-pools"`/`"perp-funding"` values in the module-level
-      `OPERATIONS` constant in `market-tick-data-service/cli/handlers/data_manifest_handler.py` (confirmed unused
-      elsewhere, contradicting the same file's own correct `_build_operations_dict()`, already `kind="tick-data"`).
-      Repo: market-tick-data-service. **Done when**: `OPERATIONS`'s values no longer contradict
+- [x] ✅ [CHORE] P1. Correct (or remove) the stale `"bucket_type": "dex-pools"`/`"perp-funding"` values in the
+      module-level `OPERATIONS` constant in `market-tick-data-service/cli/handlers/data_manifest_handler.py` (confirmed
+      unused elsewhere, contradicting the same file's own correct `_build_operations_dict()`, already
+      `kind="tick-data"`). Repo: market-tick-data-service. **Done when**: `OPERATIONS`'s values no longer contradict
       `_build_operations_dict()`; a workspace grep confirms no other reader of the stale values; `quality-gates.sh`
-      green. Source: `defi_dedicated_bucket_shared_migration_2026_07_13.md`.
+      green. Source: `defi_dedicated_bucket_shared_migration_2026_07_13.md`. — market-tick-data-service@2bee1811. Both
+      entries changed `"dex-pools"`/`"perp-funding"` → `"tick-data"`, matching the `kind="tick-data"` actually passed to
+      `resolve_bucket_name()` by both real scanner call sites; workspace grep confirmed no reader of the old literals
+      inside this constant (other repos' `"dex-pools"`/`"perp-funding"` hits are unrelated pre-2026-07-13 one-off
+      migration scripts with their own local literals). Also fixed a pre-existing, unrelated QG blocker found along the
+      way: `test_rule11_per_ag_shard_counts_byte_unchanged`'s CEFI pin (208) was stale against `uac@dfecc787`
+      (registered `volatility_index` for cefi, +26 shards = 234) — root-caused via git-stash reproduction on a clean
+      HEAD (fails identically without my change), bumped the pin with a dated comment. `quality-gates.sh` green (247s,
+      sentinel written).
 - [ ] [CHORE] P1. Fix the 2 stale comments in `strategy-service/strategy_service/cli/handlers/paper_run_handler.py` that
       describe classes as "kind `perp-funding`"/"kind `dex-pools`" when the code already resolves `kind="tick-data"` —
       comment-only, no behavior change. Repo: strategy-service. **Done when**: both comments accurately describe the

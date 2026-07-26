@@ -328,24 +328,24 @@ drift_direction: advance-code
       `test_manifest_writer_record_empty_reason.py` for both signature changes.
 
       **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
-                          `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
-                          `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
-                          prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
-                          this is a genuine architect-level design call (not a mechanical copy) — filed as
-                          `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
-                          (merged via PR #1593), NOT executed here.
+                                  `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                                  `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                                  prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                                  this is a genuine architect-level design call (not a mechanical copy) — filed as
+                                  `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                                  (merged via PR #1593), NOT executed here.
 
-                          **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
-                          (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+                                  **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                                  (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
 
-                          **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
-                          items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
-                          flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
-                          re-verifies sports.
+                                  **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                                  items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                                  flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                                  re-verifies sports.
 
-                          Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
-                          `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
-                          of which are now the ONLY reds, exactly matching the filed issue doc's scope).
+                                  Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                                  `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                                  of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the
@@ -407,17 +407,19 @@ drift_direction: advance-code
       `issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`. **Done when**: a fresh CF-audit Progress
       Log entry shows cefi's CF-1/CF-4/CF-5/Era-B GREEN (or an explicitly documented residual with root cause), reaching
       parity with prediction/sports/tradfi/defi's already-confirmed state.
-- [ ] [INFRA] P1. Close the 3 residual items on `datapoint_validation_results_bucket_missing_2026_07_21.md`: **(a)**
-      verify or refute the suspected `alerting-service` sibling gap — check whether its declared bucket `kind:` row in
-      `configs/cloud-providers.yaml` has a physically-provisioned GCS bucket (`gcloud storage buckets describe`); if
-      confirmed missing, provision it (or file the provisioning as its own P1 issue doc) and consider a QG check pairing
-      a new `kind:` row with bucket-existence verification. **(b)** Harden
-      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`'s generic `elif [ -n "$VM_TASK" ]` fallback to fail
-      loud/early on an unrecognized `VM_TASK` (this is the 3rd silent-fallthrough crash: 2026-07-12 sports-v9-migration,
-      2026-07-13 defi-paper, 2026-07-21 datapoint-validation) — detect `VM_BACKFILL_CMD` metadata present-but-unused and
-      prefer it, or at minimum WARN loudly instead of crashing deep in a task-specific `--operation` argparse. **(c)**
-      Check whether the concurrent Round-1 `unified-api-contracts` writer-fix workflow (R3 cefi-v6 + UAC oracle
-      candle-extension) has landed cleanly; once it has, republish the instruments-service code tarball
+- [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7) — all 3 items closed, evidence in the Progress Log below + the source
+      issue doc (now `status: resolved`).** Close the 3 residual items on
+      `datapoint_validation_results_bucket_missing_2026_07_21.md`: **(a)** verify or refute the suspected
+      `alerting-service` sibling gap — check whether its declared bucket `kind:` row in `configs/cloud-providers.yaml`
+      has a physically-provisioned GCS bucket (`gcloud storage buckets describe`); if confirmed missing, provision it
+      (or file the provisioning as its own P1 issue doc) and consider a QG check pairing a new `kind:` row with
+      bucket-existence verification. **(b)** Harden `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`'s generic
+      `elif [ -n "$VM_TASK" ]` fallback to fail loud/early on an unrecognized `VM_TASK` (this is the 3rd
+      silent-fallthrough crash: 2026-07-12 sports-v9-migration, 2026-07-13 defi-paper, 2026-07-21 datapoint-validation)
+      — detect `VM_BACKFILL_CMD` metadata present-but-unused and prefer it, or at minimum WARN loudly instead of
+      crashing deep in a task-specific `--operation` argparse. **(c)** Check whether the concurrent Round-1
+      `unified-api-contracts` writer-fix workflow (R3 cefi-v6 + UAC oracle candle-extension) has landed cleanly; once it
+      has, republish the instruments-service code tarball
       (`bash scripts/vm/create-code-tarballs.sh --include instruments-service`, NOT `--allow-dirty-tarball`) and
       relaunch the cefi/defi/prediction `datapoint-validation-{ag}-*` VMs (tradfi/sports already ran to completion
       2026-07-21 and need no relaunch). Source: `issues/datapoint_validation_results_bucket_missing_2026_07_21.md`. Done
@@ -428,8 +430,9 @@ drift_direction: advance-code
 
 ## Progress Log
 
-- **2026-07-26 (slot-7, IN PROGRESS — checkpoint before a context-compact)**: Working the
-  `datapoint_validation_results_bucket_missing_2026_07_21.md` 3-item close-out todo.
+- **2026-07-26 (slot-7) — DONE, all 3 items closed.** Worked the
+  `datapoint_validation_results_bucket_missing_2026_07_21.md` 3-item close-out todo (source issue doc flipped to
+  `status: resolved`, `resolved_by: deployment-service@b0e158d`, all 7 of its own todos now `[x]`).
   - **(a) DONE — sibling gap REFUTED.** `alerting-service`'s bucket kind (`configs/cloud-providers.yaml` line 194,
     `alerting-service-${GCP_PROJECT_ID}`) resolves to `gs://alerting-service-central-element-323112`, which
     `gcloud storage buckets describe` confirms EXISTS (location ASIA-NORTHEAST1) and is actively written to (`_index/`,
@@ -442,7 +445,7 @@ drift_direction: advance-code
     sports-v9-migration, 2026-07-13 defi-paper, 2026-07-21 datapoint-validation). `deployment-service@b0e158d`
     (`bash -n` + `shellcheck -S error` clean, full `quality-gates.sh` green, sentinel `d6576d4`). Shipped via
     quickmerge.
-  - **(c) IN PROGRESS.** Confirmed the Round-1 blocker cleared: both named UAC commits are ancestors of the current
+  - **(c) DONE.** Confirmed the Round-1 blocker cleared: both named UAC commits are ancestors of the current
     `unified-api-contracts` HEAD — `9a92cf4f` (R3 cefi-v6 chain-tail canonicalisation) and `6329fc04` (oracle
     `processed_candles/` extension) — and UAC/instruments-service/UTL are all clean (no dirty WIP). Republished the
     instruments-service tarball on the clean tree (`instruments-service-code@4d6c2109be9a`, uploaded 2026-07-26T20:58
@@ -454,14 +457,12 @@ drift_direction: advance-code
     progress, just interrupted, and safe to resume via the launcher's presence-skip idempotency. **Relaunched all 3 at
     2026-07-26 21:00-21:01 UTC**: `datapoint-validation-cefi-20260726-210047`,
     `datapoint-validation-defi-20260726-210104`, `datapoint-validation-prediction-20260726-210124` (all confirmed
-    RUNNING, SPOT, e2-standard-4, zone asia-northeast1-c). A T+10min watchdog is armed (background wait, checks
-    `gcloud compute instances describe` liveness + `run.log` tail for day-frontier advancement on all 3). **Not yet
-    verified — resume here after the watchdog reports.** If this session is lost before that: re-check VM status with
-    `gcloud compute instances list --filter="name~'^datapoint-validation-'"` and
-    `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log | tail -20` for each of the
-    3 VM names above — a `[[VM_PROGRESS]]`/`day-frontier advanced` line within the last hour = healthy; SPOT preemption
-    is expected/acceptable (idempotent, safe to just relaunch the same asset_group again, which will resume via
-    presence-skip). Once confirmed, flip this todo's checkbox with the day-frontier evidence.
+    RUNNING, SPOT, e2-standard-4, zone asia-northeast1-c). **T+10min watchdog verified (2026-07-26 21:10-21:11 UTC)**:
+    all 3 still RUNNING with active day-frontier advancement in `run.log` — cefi → 2020-01-02 (2000 validated), defi →
+    2020-10-07 (5889 validated), prediction → 2021-10-02 (5313 validated). No fire-and-forget; genuine forward progress
+    confirmed, matching the same bar todo 2 in the source issue doc was accepted against (tradfi/sports). SPOT
+    preemption is expected/acceptable (idempotent, safe to just relaunch the same asset_group again, which will resume
+    via presence-skip). Once confirmed, flip this todo's checkbox with the day-frontier evidence.
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 
