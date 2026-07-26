@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 0,
-        "large_file_count": 1,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 81.47,
+        "large_file_count": 1,
+        "warn_file_count": 0
       }
     },
     "batch-live-reconciliation-service": {
@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 0,
-        "warn_file_count": 4,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 74.71,
+        "large_file_count": 0,
+        "warn_file_count": 4
       }
     },
     "deployment-api": {
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 6,
-        "warn_file_count": 14,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 82.61,
+        "warn_file_count": 14,
+        "large_file_count": 6
       }
     },
     "deployment-service": {
@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 2,
-        "warn_file_count": 11,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 73.11,
+        "warn_file_count": 11,
+        "large_file_count": 2
       }
     },
     "execution-service": {
@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "warn_file_count": 20,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 84.45,
+        "large_file_count": 0,
+        "warn_file_count": 20
       }
     },
     "features-service": {
@@ -529,10 +529,10 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "large_file_count": 1,
-        "warn_file_count": 13,
         "qg_red_reason": null,
-        "coverage_pct": 85.62
+        "coverage_pct": 85.63,
+        "warn_file_count": 13,
+        "large_file_count": 1
       },
       "ldr_ci_status": "GREEN"
     },
@@ -698,10 +698,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 0,
         "qg_red_reason": null,
+        "coverage_pct": 88.24,
         "large_file_count": 0,
-        "coverage_pct": null
+        "warn_file_count": 0
       },
       "breaking_scan_dir": "ibkr_gateway_client"
     },
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
+        "coverage_pct": 90.89,
         "large_file_count": 8,
-        "warn_file_count": 9,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "warn_file_count": 9
       }
     },
     "market-data-processing-service": {
@@ -822,9 +822,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
-        "warn_file_count": 7,
+        "coverage_pct": 89.54,
         "large_file_count": 4,
-        "coverage_pct": null
+        "warn_file_count": 7
       }
     },
     "market-tick-data-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "warn_file_count": 40,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 83.56,
+        "warn_file_count": 40,
+        "large_file_count": 0
       }
     },
     "ml-service": {
@@ -947,10 +947,10 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "large_file_count": 0,
+        "qg_red_reason": null,
+        "coverage_pct": 82.62,
         "warn_file_count": 6,
-        "coverage_pct": 82.61,
-        "qg_red_reason": null
+        "large_file_count": 0
       },
       "ldr_ci_status": "GREEN"
     },
@@ -1011,10 +1011,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 5,
-        "warn_file_count": 10,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 85.82,
+        "warn_file_count": 10,
+        "large_file_count": 5
       }
     },
     "system-integration-tests": {
@@ -1103,10 +1103,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 0,
+        "qg_red_reason": null,
+        "coverage_pct": 9.54,
         "warn_file_count": 0,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "large_file_count": 0
       }
     },
     "trading-agent-service": {
@@ -1165,10 +1165,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "warn_file_count": 0,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 73.53,
+        "large_file_count": 0,
+        "warn_file_count": 0
       }
     },
     "unified-api-contracts": {
@@ -1212,10 +1212,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 29,
-        "large_file_count": 28,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 96.42,
+        "large_file_count": 28,
+        "warn_file_count": 29
       }
     },
     "unified-trading-library": {
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
+        "coverage_pct": 88.32,
         "warn_file_count": 21,
-        "large_file_count": 6,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "large_file_count": 6
       }
     },
     "unified-trading-pm": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 0,
-        "large_file_count": 0,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 72.57,
+        "large_file_count": 0,
+        "warn_file_count": 0
       }
     },
     "unified-trading-api": {
