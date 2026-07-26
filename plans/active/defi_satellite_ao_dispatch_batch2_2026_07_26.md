@@ -431,11 +431,20 @@ drift_direction: advance-code
       self-termination. A future pass checking on these VMs should confirm they've self-deleted (or investigate if still
       running much later) and record the after-count for completeness, though the before-count already shows the
       remediation target met.
-- [ ] [ENGINEER] P2. Close the second and third instances of stale DRIFT residue in
-      `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` by applying the SAME playbook already
-      validated + shipped for the first instance (`deployment-ui@83ec561`, Progress Log 2026-07-21: a formula-verified,
-      referential-integrity-checked SURGICAL PRUNE — not a blind regen, since no recoverable generator exists for any of
-      these files):
+- [x] ✅ [ENGINEER] P2. **DONE 2026-07-26 (slot-2).** Closed the second and third instances of stale DRIFT residue in
+      `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` via the same formula-verified surgical-prune
+      playbook as the first instance, plus 2 undocumented "md5-parity with UAC" copies discovered along the way in
+      `unified-trading-system-ui`. Zero remaining `"venue:drift"|"collateral:drift"|"venue":\s*"drift"` matches verified
+      via the exact done-when grep below. Shipped: `unified-trading-system-ui@80bb6a9c` (instance 2, second instance),
+      `unified-trading-system-ui@a0105d9f` (the discovered UI parity-copy sync + 8 stale hardcoded count-assertion
+      fixes), `unified-api-contracts@6af1b966` (instance 3, third instance — 2 of 3 files superseded by a concurrent
+      slot-7 regen, `capability-unlock-report.json` fixed directly). Full writeup:
+      `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` Progress Log 2026-07-26 entry. Instance 4
+      (prospectus) remains explicitly open, unowned, per that doc. Originally: Close the second and third instances of
+      stale DRIFT residue in `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` by applying the SAME
+      playbook already validated + shipped for the first instance (`deployment-ui@83ec561`, Progress Log 2026-07-21: a
+      formula-verified, referential-integrity-checked SURGICAL PRUNE — not a blind regen, since no recoverable generator
+      exists for any of these files):
   - `unified-trading-system-ui/lib/registry/ui-reference-data.json` — remove the ~40 lines of lowercase `"drift"`
     residue in generated archetype/capability data: `venue_ids` array entries (`"drift"` inside e.g.
     `["drift","gmx_v2","hyperliquid"]` / `["drift","gmx_v2","hyperliquid","lido","uniswap_v3"]`), the archetype id

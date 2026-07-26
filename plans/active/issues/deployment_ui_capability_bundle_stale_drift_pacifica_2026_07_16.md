@@ -246,3 +246,39 @@ prospectus-generator/committed-copy resync.
   `capability_tab.spec.ts` cases, incl. a real browser render confirming DRIFT no longer shown) all green. Shipped:
   `deployment-ui@83ec561`. The second/third/fourth instances in this doc (unified-trading-system-ui, UAC `openapi/`,
   prospectus generator) are UNCHANGED by this pass — out of this dispatch's deployment-api/deployment-ui scope.
+
+- **2026-07-26 (slot-2) — SECOND + THIRD instances CLOSED** (`defi_satellite_ao_dispatch_batch2_2026_07_26.md` P2
+  `[ENGINEER]` todo). Same class, same formula-verified surgical-prune playbook as the first instance.
+  - **Second instance** (`unified-trading-system-ui/lib/registry/ui-reference-data.json`): 24 changes — 7 `venue_ids`
+    array elements, 1 free-text `notes` mention, 1 `representative_slot_labels` entry, 1 `strategy_registry.families`
+    entry, 1 whole `strategy_registry.strategies` object, and 13 `venue_set_variants` entries with their
+    `"(N venues)"`/`"(N DEFI)"` labels formula-recomputed. Zero dangling refs to the removed strategy id (verified via a
+    full-tree walk). Custom pretty-printer (dicts expand; scalar lists inline under a 120-col-incl.-prefix width budget)
+    round-trip-verified byte-identical against the whole 15,726-line file before editing. `vitest` 286 files/3286 tests
+    green, `tsc` clean. Shipped `unified-trading-system-ui@80bb6a9c`.
+  - **Third instance** (UAC `openapi/{capability-manifest,capability-verdict-matrix,capability-unlock-report}.json`):
+    checked whether `unified-trading-pm/scripts/openapi/generate_capability_*.py` (real generators exist — this doc's
+    "no generator found" only checked inside UAC's own `scripts/`, not the sibling PM repo) could just be re-run
+    instead; a live test regen showed UAC has drifted enough since the last full regen that blind re-run pulls in a
+    large unrelated diff (capability-manifest 576→583 nodes / 2449→2763 edges from unrelated changes) — same
+    blast-radius risk already flagged for the prospectus generator (fourth instance below). Formula-verified surgical
+    prune stayed the right call: removed `venue:drift`/`collateral:drift` (2 nodes, 21 edges) from
+    `capability-manifest.json` (zero NEW dangling refs — the only dangling refs left are the pre-existing unrelated
+    `venue:ibkr` gap, confirmed present in the baseline before this edit too; `check_capability_regression.py` PASS);
+    removed 69 `(archetype, venue=drift)` cells across 9 archetypes from `capability-verdict-matrix.json` with
+    `available_count`/`blocked_count`/`cell_count` + top-level `summary` formula-recomputed and re-verified
+    (`cell_count = available_count + blocked_count`); removed 3 `venue:drift` roadmap entries from
+    `capability-unlock-report.json` with `missing_piece_counts`/`unlock_distance_histogram`/`roadmap_edges`/
+    `blocked_edges_total` recomputed. A concurrent slot-7 commit (`13266bf8`, unrelated D3 CARRY_BASIS_PERP scope work)
+    regenerated `capability-manifest.json`/`capability-verdict-matrix.json` for real mid-flight and, as a side effect,
+    already dropped the drift residue from those two (plus legitimate additions my hand-prune didn't have) — resolved
+    via rebase by keeping their fresher regen for those two files and landing only the `capability-unlock-report.json`
+    prune (untouched by their regen) on top. Shipped `unified-api-contracts@6af1b966`. Also discovered + fixed two
+    UNDOCUMENTED byte-identical "md5-parity with UAC" copies in `unified-trading-system-ui`
+    (`lib/registry/capability-manifest.json`, `public/capability-verdict-matrix.json`) that this doc's original audit
+    never found (it only checked UAC's own `scripts/`, not this repo) — re-synced from the fixed UAC originals + fixed 8
+    hardcoded node/edge/cell/venue-count assertions in `tests/unit/wizard/{graph,parity-gates}.test.ts` that had baked
+    in the stale (drift-including) totals. Shipped `unified-trading-system-ui@a0105d9f`.
+  - Net across both instances: zero remaining `venue:drift`/`collateral:drift`/`"drift"`-venue references anywhere
+    checked this pass. The fourth instance (`openapi/prospectus/*.md`, 57 files) remains explicitly open — same
+    generator-drift blast-radius risk, unowned, per this doc's existing note above.

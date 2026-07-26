@@ -175,7 +175,7 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
   POLYMARKET IS enumeration path with todo #1 so it should sequence AFTER #1 lands (else it re-enumerates against the
   old write path), and (b) launches a backfill VM → `[OPERATOR]` per the VM-launch gating rule (safe-idempotent
   justification: the shard re-runs cleanly on preemption). Source: `prediction_live_clob_depth_capture_2026_07_24.md`
-  (the DEFERRED-CROSS-DEP `book_snapshot_5` row-proof item).
+  (the "DEFERRED-CROSS-DEP" `book_snapshot_5` row-proof item).
 
 ## Deferred — operator / design-gated (BLOCKED-OPERATOR-DECISION, not a bounded worker outcome)
 
