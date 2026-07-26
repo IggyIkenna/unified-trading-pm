@@ -743,3 +743,18 @@ start without real tradfi/ES feature parquets.
 **Recommended next item**: monitor the 7 running `y*es-*` shard VMs to real completion (per-VM manifest row growth, not
 log activity), then re-run `build-continuous` for ES and re-verify the real `24h`/`1d` hit rate rises materially above
 the current ~19% baseline before flipping this todo's checkbox. This is the last open item in this doc.
+
+- 2026-07-26 (slot 3, reconciliation): confirmed via the operations log that my `140251`→`144837` resume chain was
+  genuinely KILLED by slot 2 (not SPOT-preempted as I'd diagnosed from an empty `gcloud describe` alone — a real gap in
+  my own monitoring: I should have checked `operations list`'s `user` field sooner, which showed the same
+  `github-actions-deploy` service account both slots share, not a GCE-internal preemption actor). Relaunched a THIRD
+  single-VM attempt (`...150236`, resuming from `2020-02-21`) before spotting slot 2's 7 `y*es-*` shards already running
+  the identical correctly-scoped range — killed my own redundant VM immediately on discovering the overlap. Net effect:
+  zero real work lost (idempotent skip-if-fresh + slot 2's shards already cover this scope), but ~15 min of my own
+  avoidable relaunch churn. Deferring fully to slot 2's 7-shard effort from here — not launching further VMs against
+  this todo myself. **Correction to my own earlier reasoning**: I had briefly suspected the `--instrument-ids` filter
+  itself was silently failing to scope output (based on seeing non-ES/MES underlyings' files under `day=2020-02-13`) —
+  those files carried `Creation Time: 2026-07-23`, i.e. 3 days old, predating EVERY VM launched today (mine and slot
+  2's/4's). The filter was never actually broken; I was comparing against stale, unrelated pre-existing data. The REAL
+  scoping bug slot 2 found was in a DIFFERENT, earlier set of 7 shards (slot 4's, which omitted the filter entirely) —
+  already killed before I looked into it.
