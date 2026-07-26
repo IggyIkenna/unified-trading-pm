@@ -133,10 +133,14 @@ locked_since:
       (`deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`) currently runs detect-only
       (`command=[python3, .../reprobe_new_empty_confirmed.py], args=[]`). Change `args = []` →
       `args = ["--reclassify-apply"]` so the 09:00-UTC job both DETECTS and FLIPS proven cells daily, then `tofu apply`
-      the single targeted change. **BLOCKED on peer-dirty deployment-service** (Phase-6 INFRA item above: active foreign
-      WIP `cloud_run_job_registry.py`/`escalation.py`/`scripts/recovery/relaunch_*.py` + dirty UAC dep → no clean
-      QG-green/quickmerge boundary). Ship the single-line `.tf` arg change once that foreign WIP clears (pure-terraform,
-      cannot affect Python QG). — deployment-service
+      the single targeted change. **✅ THE `.tf` CHANGE HAS LANDED (re-verified 2026-07-26,
+      `/ag-closeout-audit cross-cutting`)** — `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf:281`
+      now reads `args = ["--reclassify-apply"]` on the `dp_reprobe_empty_job` stanza, so the stale "currently runs
+      detect-only (`args=[]`)" premise and the **BLOCKED on peer-dirty deployment-service** note below are both
+      superseded — do NOT re-do this. Left `- [ ]` deliberately: the remaining half is confirming the 09:00-UTC job has
+      actually EXECUTED on the new arg (a `gcloud run jobs executions list` check), which this audit did not run. (was:
+      "BLOCKED on peer-dirty deployment-service — active foreign WIP `cloud_run_job_registry.py`/`escalation.py`/
+      `scripts/recovery/relaunch_*.py` + dirty UAC dep → no clean QG-green/quickmerge boundary".) — deployment-service
 - [x] ✅ [CODE] P1. DONE mtds@477de66. **Bucket-env parity preflight** (DP-ENV-001 — reader env-less vs writer
       env-short) as a generic gate. — market-tick-data-service
 - [x] ✅ [CODE] P1. DONE mtds@477de66. **429-aware key-pool rotation** + `DP_KEY_POOL_EXHAUSTED` alert (TheGraph 9-key
@@ -150,13 +154,25 @@ locked_since:
       (`deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`): bump all 4 dp-audit Cloud Run jobs
       `4Gi/2cpu`→`16Gi/4cpu` (the digest/hygiene/reprobe scripts read the FULL per-AG `_index` with `columns=None` →
       tradfi/cefi OOM-killed at 4Gi, signal-9 "configured memory limit reached", verified 2026-06-22), AND fold in
-      `var.dp_audit_image` default → the `e2e-audit:latest` image (closes the IMAGE GAP). **Both changes ALREADY APPLIED
-      to live prod state** (`tofu apply` targeted, `0 add/4 change/0 destroy`, plan clean) + written to the
-      deployment-service working tree — **commit BLOCKED**: this clone has active foreign WIP
-      (`cloud_run_job_registry.py`, `escalation.py`, untracked `scripts/recovery/relaunch_*.py` with import-pattern QG
-      violations) + a dirty UAC dep (`honest_coverage.py`) → no clean QG-green / quickmerge boundary for a sibling
-      agent's tree. Ship the single `.tf` file once the foreign WIP clears (it is a pure-terraform change, cannot affect
-      Python QG). — deployment-service
+      `var.dp_audit_image` default → the `e2e-audit:latest` image (closes the IMAGE GAP).
+
+      **⚠️ CORRECTED 2026-07-26 (`/ag-closeout-audit cross-cutting`) — the "already applied" claim below is MEASURABLY
+              FALSE; the OOM fix is NOT live.** Measured, not inferred: (1) `gcloud run jobs describe uts-prod-dp-daily-digest`
+              and `… uts-prod-dp-reprobe-empty` (region `asia-northeast1`, project `central-element-323112`) BOTH return
+              `cpu=2;memory=4Gi`; (2) the tracked `.tf` still reads `memory = "4Gi" / cpu = "2"` at :91-92, :148-149, :267-268.
+              So the 4 dp-audit jobs remain OOM-killable at 4Gi exactly as originally diagnosed — the digest/hygiene/reprobe
+              monitoring is still silently losing runs on tradfi/cefi. (was: "**Both changes ALREADY APPLIED to live prod state**
+              (`tofu apply` targeted, `0 add/4 change/0 destroy`, plan clean) + written to the deployment-service working tree —
+              **commit BLOCKED**: this clone has active foreign WIP (`cloud_run_job_registry.py`, `escalation.py`, untracked
+              `scripts/recovery/relaunch_*.py` with import-pattern QG violations) + a dirty UAC dep (`honest_coverage.py`) → no
+              clean QG-green / quickmerge boundary for a sibling agent's tree." Whether the apply never persisted or a later
+              blanket apply reverted it was not established.) **The image-default HALF of this todo DID land** —
+              `local.dp_audit_image_resolved` at :57 resolves `var.dp_audit_image` to `…/e2e-audit:latest`, so the IMAGE GAP is
+              genuinely closed; only the memory/cpu bump remains. A batch todo carrying this corrected scope, bundled with the
+              two sibling todos that edit the SAME `.tf` file, is drafted in
+              [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
+              (`status: draft`, pending operator approval). — deployment-service
+
 - [ ] [PERF] P2. **DeFi/observability: `data_pipeline_daily_digest.py` + `_dp_common.read_manifest_index` memory
       antipattern** — the digest reads the full index (`columns=None`) then count-EXPANDS into per-row Python lists
       (`["captured"]*N` for millions of rows) → the actual OOM driver (16Gi is a band-aid). Restrict

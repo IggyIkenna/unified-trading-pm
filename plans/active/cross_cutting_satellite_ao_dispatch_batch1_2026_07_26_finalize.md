@@ -80,10 +80,23 @@ drift_direction: advance-code
       `infra_consolidated_closeout_2026_07_25.md`'s Sources list per that doc's own convention) — read each doc's real
       content first to confirm before retagging (do not blind-apply), then re-run
       `scripts/plan-hygiene/check_ag_closeout_linkage.py` after each retag. (2) Archive
-      `plans/active/bucket_estate_fold_design_2026_07_13.md` and
-      `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md` (both `archivable_now`) via the standard 6-step
-      ritual. **Done when**: all 6 retags are applied with `check_ag_closeout_linkage.py` passing 0 new orphans, and
-      both archivable_now docs are moved to `plans/archive/2026_07/` with every corpus referrer fixed.
+      `plans/active/bucket_estate_fold_design_2026_07_13.md` via the standard 6-step ritual. (3) **⚠️ CORRECTED
+      2026-07-26 (`/ag-closeout-audit cross-cutting` re-invocation) — do NOT run the archival ritual on
+      `gcs_data_access_audit_log_cost_2026_07_24.md`; DELETE the stale active duplicate instead.** Measured: that
+      filename exists in BOTH `plans/active/issues/` (364L, `status: open`, 1 open `[DEVOPS] P2`) AND
+      `plans/archive/2026_07/` (368L, `status: resolved`,
+      `resolved_by: operator (ikenna@odum-research.com, 2026-07-25)`, **0 open todos**) — the archived copy is the
+      later, authoritative one, and the cross-cutting closeout's own Track 6 already records the operator completing the
+      `setIamPolicy` `auditConfigs` removal on 2026-07-25. Running the ritual on the active copy would overwrite that
+      resolved archived copy with the stale open one. Correct action: delete
+      `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md` (`locked_by` is empty — verified — so no
+      `[unlock-plan]` is needed), repoint any referrer at the archive path, and re-run
+      `.venv/bin/python scripts/plan-hygiene/regenerate_active_plan_inventory.py` (the duplicate is currently inflating
+      the inventory by one doc and one phantom open todo). (was: "Archive `plans/active/bucket_estate_fold_design…` and
+      `plans/active/issues/gcs_data_access_audit_log_cost…` (both `archivable_now`) via the standard 6-step ritual.")
+      **Done when**: all 6 retags are applied with `check_ag_closeout_linkage.py` passing 0 new orphans,
+      `bucket_estate_fold_design_2026_07_13.md` is archived with every corpus referrer fixed, and only the archive copy
+      of `gcs_data_access_audit_log_cost_2026_07_24.md` remains with the inventory regenerated.
 - [ ] [DOC] P1. **Archive both `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` and
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`** via the standard 6-step ritual (per CLAUDE.md's
       plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above should have

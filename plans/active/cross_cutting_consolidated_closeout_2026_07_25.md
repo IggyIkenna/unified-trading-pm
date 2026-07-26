@@ -674,6 +674,43 @@ manifest-consolidator schema-evolution handling verified, historical rows backfi
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-26** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous), run after this tranche's
+  batch1/batch1b pair. **Headline: a MEMBERSHIP gap, not a fresh-orphan gap.** Tranche membership re-derived
+  mechanically per the skill's cross-cutting rule (`asset_group: cross-cutting` AND a data-relevant `parent_epic`,
+  **OR** explicit membership in this doc's Tracks) = **142 docs**, of which 38 are claimed by the sibling
+  `ao`/`ci`/`infra` closeouts → **104 in-tranche**. batch1+batch1b's todos cover 37 source docs and their Deferred
+  sections name a further 19, leaving **49 members with no coverage from any cross-cutting covering plan** — almost
+  exactly **Tracks 16-24**, which the 2026-07-25 corpus-wide sweep added to this doc AFTER batch1's candidate corpus had
+  already been scoped from the earlier 68-doc epic filter (batch1's own stated Phase-1 scope was 59 docs). **Lesson for
+  the next pass: derive membership from this doc's Track/Sources lists UNION the epic filter, never the epic filter
+  alone.** All 49 were classified by per-doc read (single-threaded — no `Workflow`/`Task` tool exists in that runtime).
+  Drafted
+  [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
+  (14 conflict-cleared todos) +
+  [its finalize](/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize.md), **both
+  `status: draft` pending operator approval — neither is dispatched.** Three measured corrections landed directly rather
+  than being left for a worker to trip over: (1) Track 19's
+  `data_pipeline_self_healing_completion_residual_2026_07_24.md` claimed the dp-audit OOM fix was "ALREADY APPLIED to
+  live prod state" — **false**: `gcloud run jobs describe` returns `cpu=2;memory=4Gi` for `uts-prod-dp-daily-digest` and
+  `uts-prod-dp-reprobe-empty`, and the tracked `.tf` still reads 4Gi at :91-92/:148-149/:267-268, so those 4 monitoring
+  jobs remain OOM-killable (the image-default half DID land, :57); (2) the same doc's `--reclassify-apply` scheduling
+  item and `issues/dp_event_pubsub_delivery_gap_2026_06_22.md`'s "ship the alerting-subscriber code" item were both
+  still marked 🟡 BLOCKED-ON-DIRTY-DEP from 2026-06-22/23 but have in fact LANDED (`.tf:281`;
+  `config.run_subscriber_in_api` + the `api/main.py` lifespan in-tree), as has that doc's prose-only "codify
+  `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions + subscriber IAM in terraform" item
+  (`alerting_relay_pubsub.tf` carries both subscriptions, both IAM members, and import blocks) — dropped from the batch
+  rather than re-dispatched; (3) `issues/gcs_data_access_audit_log_cost_2026_07_24.md` exists in `plans/active/issues/`
+  (`status: open`, 1 open todo) **and** `plans/archive/2026_07/` (`status: resolved`,
+  `resolved_by: operator … 2026-07-25`, 0 open) **simultaneously** — Track 6 above was right that it is done; the batch1
+  finalize's instruction to "archive it via the 6-step ritual" would have overwritten the resolved archived copy with
+  the stale one, so that todo was corrected in place to delete the active duplicate instead. Also confirmed by direct
+  probe, so a later pass need not re-check: `v2_engine_venue_buildout_2026_06_15.md`'s dispatchable work is genuinely
+  covered by its 2026-07-13 5-child split (3 archived — incl. `uac_venue_registry_completion_2026_07_13` — and 2 still
+  active), so its 37 open boxes are mostly `→ SPLIT to …` bookkeeping plus a Tier-2/Tier-3 remainder the plan itself
+  marks do-not-dispatch. **Orthogonality HARD CHECK: CLEAN** — zero single-AG-plus-`cross-cutting` dual tags across all
+  215 `cross-cutting`-tagged docs. 2 items parked for the operator (Track-24's ~121-todo strategy/determinism family
+  needing its own extraction+triage rather than another batch slot; and the batch1 membership-scope question).
+
 - **2026-07-26** — `/plan-reconcile cross-cutting` (autonomous, topic-scoped shard; 104 tranche docs inventoried).
   **Every `[IN FLIGHT 2026-07-25]` marker in this doc was re-verified against the filesystem + git and replaced with its
   measured outcome** — the doc's own frontmatter asked for exactly this re-check. Measured: **5 landed** (Track 5
