@@ -129,5 +129,42 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 - [ ] [SCRIPT] P1. Apply defi phantom reconciliation (219,529 rows → `attempted_failed`) BEFORE defi backfill G0. Run
       `reconcile_phantom_manifest_rows_all.py --asset-group defi` (no dry-run) with `MANIFEST_PER_VM_SHARDS=true`.
       Verify with `--dry-run` post-apply confirms 0 phantoms. Repo: `instruments-service`.
-- [ ] [SCRIPT] P2. After reconcile + backfill: confirm defi OHLCV writers are fixed so new writes don't re-create
-      phantom pattern. Repo: `market-tick-data-service`.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-26 (worker, slot 6).** Confirmed against the CURRENT writer code (the original
+      batch OHLCV writer implicated in this finding was RETIRED 2026-07-18/19 for a per-instrument writer
+      re-architecture, `market-tick-data-service@4ca2640d` — this re-checks the NEW path, not the retired one). Full
+      writeup in Progress Log below. Verdict: SAFE across every active writer for `dex_pool_swaps`/`gas_fees` —
+      `record_captured` fires only after a confirmed-successful parquet upload, in every handler checked. No new issue
+      doc needed; nothing to fix. Repo: `market-tick-data-service`.
+
+## Progress Log
+
+- 2026-07-26 (worker, slot 6, `defi_satellite_ao_dispatch_batch2-021`): re-verified the write-then-record ordering (the
+  exact bug class suspected here) across every active DeFi writer handling `dex_pool_swaps`/`gas_fees` in
+  `market-tick-data-service` (repo scope per this doc + the batch2 todo). `swaps_ohlcv_*` is out of scope for this repo
+  — it is written by market-data-processing-service (MDPS), not MTDS; not re-checked here.
+  - `write_defi_rows` (`market_interface/adapters/defi/canonical_write.py:158-351`) — never touches GCS or calls
+    `record_captured`; pure sharding helper. Not itself a risk point.
+  - `evm_defi_collectors.py::_write_and_upload` (`cli/handlers/evm_defi_collectors.py:42-85`) — SAFE.
+    `storage.upload_bytes` (line 81) runs per-shard before the counts are returned; `record_captured` (line 636) fires
+    only from the `try` block whose exception path calls `record_failed` (line 597) instead.
+  - `dex_swaps_handler.py` (`dex_pool_swaps`) — SAFE. `_write_swap_shard` (line 484-528) uploads every shard (line 525)
+    before building the row-count map; `_collect_one_shard` (line 271-315) only reaches `record_captured`
+    (`_dex_swaps_queries.py:154`) after that succeeds — an upload exception routes to `record_failed` (line 307)
+    instead.
+  - `gas_fee_handler.py` (`gas_fees`) — SAFE across all 4 write paths (EVM date-shard, Solana historical, Solana live,
+    BTC); each uploads (e.g. line 770) inside the `try:` (line 330) that `record_captured` depends on (line 332); an
+    exception routes to `record_failed` (line 303) instead.
+  - Live WS streaming path (`live/websocket_runner.py` → `curve_defi_ws.py`/`dex_swap_uniswap_v3_ws.py`) — SAFE.
+    `_persist_window_to_sink` (line 640-688) calls `record_captured` (line 676) only using the `blob_path` returned by a
+    successful `flush` (line 651); `LiveWebsocketTickSink.flush` (line 164-190) has no swallowing try/except around
+    `upload_bytes` (line 189), so a failure raises and `record_captured` is unreachable for that window.
+  - Shared foundation: `GCPCloudProvider.upload_bytes` (unified-trading-library
+    `cloud_interface/providers/gcp.py:230-246`) has no swallowing try/except — GCS SDK errors propagate as real
+    exceptions, which every handler above relies on. `DefiManifestRecorder.record_captured`
+    (`cli/handlers/_defi_manifest.py:153`) is a thin per-row `ManifestWriter` shim — no batch-level "mark all captured"
+    shortcut exists that could decouple it from an individual write's success.
+  - **Verdict: the 2026-06-28 phantom-capture ordering bug is CLOSED for the current writer generation** — every active
+    `dex_pool_swaps`/`gas_fees` handler correctly gates `record_captured` on a confirmed prior write. No new issue doc
+    filed (nothing found vulnerable). Todos 1+2 above (root-cause diagnosis of the ORIGINAL 2026-06-28 incident +
+    applying the 219,529-row reconciliation) are unrelated to this check and remain open — out of this todo's scope
+    (read-only code review, no live backfill/reconciliation run, per the batch2 plan's own todo text).

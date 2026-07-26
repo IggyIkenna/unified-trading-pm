@@ -537,7 +537,13 @@ drift_direction: advance-code
       regression" ⚠️ for `solana_defi_drift.py`, the updated `adapter_contract_baseline.yaml` diff is committed, and the
       source issue doc's status is flipped to resolved (or a new regression issue doc is filed instead, per the above
       branch).
-- [ ] [SCRIPT] P2. Confirm defi OHLCV/DEX writers no longer reproduce the 2026-06-28 phantom-capture pattern (manifest
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-26 (worker, slot 6).** Verdict: SAFE across every active writer for
+      `dex_pool_swaps`/`gas_fees` in market-tick-data-service — `record_captured` fires only after a confirmed
+      successful parquet upload in every handler checked (`evm_defi_collectors.py`, `dex_swaps_handler.py`,
+      `gas_fee_handler.py`, the live WS streaming path); any upload exception routes to `record_failed` instead.
+      `swaps_ohlcv_*` is MDPS-owned, not MTDS — out of this repo-scoped todo. No new issue doc needed. Full code-line
+      citations in `issues/phantom_captures_defi_2026_06_28.md`'s Progress Log (also flipped that doc's own matching
+      todo 3). Confirm defi OHLCV/DEX writers no longer reproduce the 2026-06-28 phantom-capture pattern (manifest
       `capture_status=captured` rows with no backing GCS parquet — 219,529 rows, dominant in
       `swaps_ohlcv_*`/`dex_pool_swaps`/`gas_fees`). The original capture-BATCH OHLCV writer implicated in the 2026-06-28
       finding was RETIRED 2026-07-18/19 for the per-instrument writer re-architecture (SHIPPED
