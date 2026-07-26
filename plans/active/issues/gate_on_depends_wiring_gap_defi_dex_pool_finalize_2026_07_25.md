@@ -37,7 +37,11 @@ related:
     /plans/archive/issues/gate_on_depends_noop_on_assigned_vm_na_upstream_2026_07_21.md,
   ]
 created: "2026-07-25"
-source: [defi_dex_pool_symbol_fix_backfill_purge_finalize-001]
+source:
+  [
+    defi_dex_pool_symbol_fix_backfill_purge_finalize-001,
+    prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize-001,
+  ]
 parent_epic: agent_operating_framework_master
 priority: P1
 assigned_vm: planning
@@ -199,3 +203,37 @@ ruling (BLK-0d30dec1, Option A), skipping this task rather than re-filing a dupl
 above) is still unfixed as of this note -- this is now the SEVENTH slot to bounce off this same wiring gap (5, 4, 6, 3,
 and now 8, per the notes above), which itself is evidence the root-cause fix (item 1's regen-tick / re-wiring
 investigation) should be prioritized over further individual bounces re-verifying the same fact.
+
+## 2026-07-26 recurrence — SECOND distinct plan pair confirms this is a general wiring gap, not a defi_dex_pool one-off
+
+Slot 4 was freshly dispatched `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize-001` (plan_ref
+`plans/active/prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`) — an ENTIRELY DIFFERENT plan pair from
+the defi_dex_pool one this doc was originally filed against. That finalize plan declares
+`depends_on: [prediction_satellite_ao_dispatch_batch3_2026_07_26]` + `gate_on_depends: true`, with prose stating the
+dispatcher "will not queue any todo below until both tasks in that plan are `done`." Verified live:
+
+```
+GET /api/backlog/prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize-001/blockers
+→ {"task_id":"...-001","explanation":"ready (no blockers)"}
+
+GET /api/backlog (filtered):
+prediction_satellite_ao_dispatch_batch3-001            dispatched   (not done)
+prediction_satellite_ao_dispatch_batch3-002            blocked      (OPERATOR-gated, not done)
+prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize-001   dispatched
+```
+
+Read the parent plan (`prediction_satellite_ao_dispatch_batch3_2026_07_26.md`) directly: both its todos are still
+`- [ ]` (unchecked) in the doc source, consistent with the API's non-`done` statuses. The finalize todo's own
+done_definition ("flip the corresponding checkbox... citing the batch-3 commit(s) that shipped it") presupposes the
+parent's Kalshi-drift-triage + prediction-manifest-residual work has already shipped — it has not. Doing the
+reconciliation now would be a false-completion claim on data-integrity/closeout docs, the exact failure mode this issue
+predicts.
+
+This is now confirmed to be a GENERAL `gate_on_depends` wiring gap affecting at least two unrelated plan-pairs
+(defi_dex_pool_symbol_fix_backfill_purge + prediction_satellite_ao_dispatch_batch3), not something specific to the
+defi_dex_pool plan's shape — strengthens the case for prioritizing root-cause item 1 (trace
+`_wire_gate_on_depends_prereqs` across regen ticks) over continuing to patch/park each affected plan pair individually.
+Applying the same disposition as every defi_dex_pool bounce above: declining to author any reconciliation content,
+skipping this task rather than `/blocked`-ing on an already-answered question. Recommend the same hand-park stopgap
+(populate `prereqs.completed_tasks` with `prediction_satellite_ao_dispatch_batch3-00{1,2}` + `priority_override: true`)
+be applied to this task pair too if it starts bouncing across multiple slots the way the defi_dex_pool pair did.
