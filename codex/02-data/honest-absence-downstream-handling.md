@@ -678,8 +678,10 @@ expired combos via any REST endpoint. The retired `get_instruments?kind=combo` p
 historical states; it only ever listed live combos. **This part is still true and is why `mode="live"` keeps routing to
 this REST adapter** — but it does NOT mean historical data is unobtainable overall (see the Tardis correction above).
 
-This was verified live on 2026-06-18 and documented in the `instruments_mtds_subset_consistency_remediation_2026_06_17`
-plan (§ DERIBIT-COMBO).
+This was verified live on 2026-06-18 and documented (§ DERIBIT-COMBO) in what was then the
+`instruments_mtds_subset_consistency_remediation_2026_06_17` plan; that section now lives in
+`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` (2026-07-24 3-way line-cap split; the original plan was
+trimmed to a pure entry-point index and archived 2026-07-26).
 
 ### How the manifest must represent historical cells — CORRECTED
 

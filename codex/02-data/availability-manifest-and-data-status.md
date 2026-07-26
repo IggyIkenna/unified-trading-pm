@@ -413,7 +413,9 @@ unchanged.
 >    registry source resolved blank — so every captured cell now carries explicit provenance at WRITE time
 >    (C-#6-identity-safe: stamped == `source_string_for(pipeline_mode)`; no-op for non-batch rows + source-exempt modes;
 >    never overrides a real vendor source). Wired into `record_captured` / `record_captured_from_counts` / `add()`.
->    SSOT: `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md`.
+>    SSOT: `plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (moved 2026-07-26 — was
+>    `instruments_mtds_subset_consistency_remediation_2026_06_17.md` before its 2026-07-24 3-way line-cap split +
+>    2026-07-26 archival; this content is the inherited CF single-walk lineage that child now owns).
 
 > 3. **Provenance is write-stamped by the FETCHING ADAPTER, never `SOURCE_PRIORITY[0]` (operator 2026-06-19)** —
 >    `SOURCE_PRIORITY` is READ-time resolution ORDER only; using its top entry to WRITE-stamp mis-attributes a cell

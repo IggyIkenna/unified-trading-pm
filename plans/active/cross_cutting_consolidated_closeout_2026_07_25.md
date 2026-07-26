@@ -62,7 +62,7 @@ related:
     /plans/active/bucket_estate_fold_design_2026_07_13.md,
     /plans/active/bucket_estate_consolidation_closeout_2026_07_24.md,
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    /plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
+    /plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     /plans/active/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
     /plans/active/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
@@ -279,9 +279,10 @@ resolve; `instruments_completion_tracker`'s Stage checkboxes reconciled against 
 
 ## Track 8 — Instruments↔MTDS F1-N9 + venue-onboarding split family · P1
 
-**Sources**: `instruments_mtds_subset_consistency_remediation_2026_06_17.md` (**[IN FLIGHT 2026-07-25]** — parent/
-index, 0 todos of its own by design, trimmed 2026-07-24 to a pure `entry_point_for:` pointer to 3 children — a workflow
-is re-verifying + archiving it now, or updating referrers if archiving would orphan the reachability chain) → children
+**Sources**: `instruments_mtds_subset_consistency_remediation_2026_06_17.md` (**RE-VERIFIED + ARCHIVED 2026-07-26** —
+parent/index, 0 todos of its own by design, trimmed 2026-07-24 to a pure `entry_point_for:` pointer to 3 children;
+re-verified all 3 children are real/findable with matching todo counts, corpus-wide referrer paths fixed to point at the
+correct child instead of the trimmed stub, then moved to `plans/archive/2026_07/`) → children
 `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (29/43 done; open: F1 Kraken 6yr backfill verify,
 F6/F7 tradfi option-encoding + defi pre-genesis check, N5r/N6r DeFi rebuild-for-real-replace, N1b cefi UNCLASSIFIED
 reconcile, N8 pred label drift, an operator-gated legacy-GCS delete of 1.08M cefi objects, a research-bucket `_index`

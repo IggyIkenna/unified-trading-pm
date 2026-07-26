@@ -47,7 +47,7 @@ related_plans:
   - ../active/instruments_foundation_completeness_2026_06_24.md
   - ../active/instruments_foundation_phase0_cross_cutting_2026_07_24.md
   - ../active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md
-  - ../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md
+  - ../archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md
   - ../active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md
   - ../active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md
   - ../active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md
@@ -78,9 +78,16 @@ locked_since: 2026-05-08
 >   `proper_instrument_catalogue_lifecycle_rollup`, `tradfi_databento_subscription_universe_lockdown`,
 >   `defi_venue_name_canonicalisation_and_reth`).
 > - **I-2 ·
->   [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md)**
->   — IS↔MTDS canonical-form single-walk (CF-1…CF-12) + IS audit-finding code remediation (absorbed
->   `instruments_manifest_canonicalisation`, `issues/instruments_service_audit_findings`).
+>   [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md)**
+>   — ARCHIVED 2026-07-26 (trimmed 2026-07-24 to a pure entry-point index, 0 todos of its own; the substantive scope
+>   this bullet used to describe was 3-way split into 3 live children): IS↔MTDS canonical-form single-walk (CF-1…CF-12)
+>   →
+>   [`instruments_store_cf_canonicalization_single_walk_2026_07_24`](../active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md);
+>   core F1-F7/N1-N9 audit-remediation residuals →
+>   [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md);
+>   venue-onboarding + ops-hardening →
+>   [`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24`](../active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md)
+>   (absorbed `instruments_manifest_canonicalisation`, `issues/instruments_service_audit_findings`).
 > - **I-3 ·
 >   [`instruments_catalogue_incremental_rollup_2026_06_29`](../archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md)**
 >   — incremental (trailing-window + frozen-tail) catalogue rollup replacing the full-history re-aggregation that now
@@ -492,10 +499,13 @@ sign-off gate
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Instruments <-> MTDS F1-N9 consistency
 remediation -- residual continuation
 
-### [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md)
+### [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md)
 
-**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: Instruments ↔ MTDS subset + consistency
-remediation
+**status**: complete (archived 2026-07-26 — pure entry-point index, 0 todos of its own) · **estimate**: 0.2 cal AI-days
+(class: infra) **title**: Instruments ↔ MTDS subset + consistency remediation. Substantive scope lives on in the 3
+sibling cards in this section (`instruments_mtds_consistency_remediation_residuals_2026_07_24`,
+`instruments_store_cf_canonicalization_single_walk_2026_07_24`,
+`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24`).
 
 ### [`instruments_store_cf_canonicalization_single_walk_2026_07_24`](../active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md)
 

@@ -9,7 +9,7 @@ summary: >-
   core F1-F7/N1-N9 audit-remediation scope), and `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` (45
   todos -- venue-onboarding + ops-hardening residuals). This file is now an entry-point index only; no todos remain
   here. See the "Where the content went" table below for the exact provenance of every moved section.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -60,7 +60,7 @@ entry_point_for:
     instruments_mtds_consistency_remediation_residuals_2026_07_24,
     mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24,
   ]
-last_updated: "2026-07-24"
+last_updated: "2026-07-26"
 locked_by:
 locked_since:
 supersedes:
@@ -78,6 +78,19 @@ drift_direction: advance-code
 
 # Instruments ↔ MTDS subset + consistency remediation
 
+> **🔵 ARCHIVED 2026-07-26 — re-verification confirmed a clean entry-point index, no live-reachability orphaning.**
+> Re-checked all 3 children below are real, findable docs with `status: active` and todo counts matching this table
+> exactly (26 + 43 + 45 = 114). Grepped the corpus for every referrer of this doc's old
+> `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` path; fixed each hit that functioned as a
+> live reachability pointer (4 codex SSOT docs, the `instruments_master` epic, the cross-cutting closeout tracker, and
+> several plans' `related:`/prose citations) to point at either the correct specific child (where a moved section was
+> cited by name/anchor) or this file's new archive path. Historical narrative citations elsewhere in the corpus (dated
+> audit findings, Progress Log provenance notes) were left as-is — they remain accurate as point-in-time records and
+> this file continues to exist (just relocated) for anyone who follows them. This file itself carries zero todos and was
+> not a target of any other doc's `entry_point_for:`, so archiving it orphans nothing. Moved from `plans/active/` to
+> `plans/archive/2026_07/` per the standard 6-step archival ritual; `locked_by`/`locked_since` were already cleared by
+> the 2026-07-24 trim.
+>
 > **🟢 TRIMMED TO A COORDINATION INDEX (2026-07-24) — plan-hygiene line-cap remediation.** This plan was 2168 lines
 > (over the 1000-line hard-fail cap; `locked_by: live-defi-rollout`). Per
 > `plans/active/issues/plan_line_cap_remediation_2026_07_23.md`'s bucket-(c) classification, the operator granted
