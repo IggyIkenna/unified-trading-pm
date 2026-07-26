@@ -21,9 +21,9 @@ summary: >-
   Tracks with a Reachability map, mirroring the structure of the 5 existing `<ag>_consolidated_closeout_*.md` docs. A
   same-day light-residual-closeout workflow executed ~12 bounded fixes + an archival sweep against named items below;
   every one of its `[IN FLIGHT 2026-07-25]` markers was then re-verified against reality on 2026-07-26 by a
-  `/plan-reconcile cross-cutting` pass and replaced with the measured outcome (5 landed, 2 never started, 1 deliberately
-  not-archived, 1 superseded-not-actioned), so no unresolved in-flight prose remains below. Keep doing that: re-verify a
-  dated marker before trusting it.
+  `/plan-reconcile cross-cutting` pass and replaced with its measured outcome, so no unresolved in-flight prose remains
+  below — the per-marker breakdown is in the Progress Log, deliberately not re-tallied here (a hardcoded count re-stales
+  on the next pass). Keep doing that: re-verify a dated marker before trusting it.
 status: active
 nature: process
 asset_group: [cross-cutting]
