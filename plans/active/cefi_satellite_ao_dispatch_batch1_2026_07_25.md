@@ -657,6 +657,11 @@ drift_direction: advance-code
     `mdps_bench_data_fullmonth/` 3.8G) were not mine to unilaterally clear. Resolved externally — disk is back to 19G
     free (94% used) as of the next check. Unrelated to this todo's own work, noted here only because it interrupted this
     session's monitoring loop.
+  - **Follow-up findings filed as tracked todos (2026-07-26)**: the three MDPS bugs surfaced above (per-day
+    memory-scaling OOM P1, `derivative_ticker` SchemaContract gap P2, `book_snapshot_5` column-mapping P2) are now
+    tracked as real `- [ ]` todos in `issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md` rather than left
+    as Progress-Log-only prose — see that doc for the fix specs. None block THIS todo's own delivery (the narrowed
+    `--instrument-ids` backfill sidesteps bug 1; bugs 2/3 are orthogonal data_types).
 
 ## Deferred
 
