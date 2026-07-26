@@ -15,7 +15,7 @@ summary: >-
   avoid duplicate dispatch. Phase 3 cleared only 2 of the remaining orphans into fresh AO-dispatch todos; left 7
   operator-gated, 1 time-gated, and 1 human-only item (plus the 2 already-covered-elsewhere notes) in the Deferred
   sections below.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -65,6 +65,14 @@ drift_direction: advance-code
 
 # Prediction satellite AO batch 3 — fresh triage extraction
 
+> **🟢 ARCHIVED 2026-07-26.** Both todos' dispatch-cycle work is done: todo 1's schema-drift half shipped
+> (`unified-api-contracts@c03161a1`) with its paper-order-flow half migrated to its own tracked issue doc
+> (`/plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`, `BLK-c2d1fff9`, human-only
+> credential decision); todo 2's `[OPERATOR]` residual close-out migrated to its own source doc
+> (`/plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`, now `assigned_vm: planning`) so
+> it stays dispatchable. Archived via `/plans/active/prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`
+> (archived alongside this doc, same commit).
+>
 > **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
 > ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
 > explicit operator review). Both todos below touch distinct files/docs — safe to dispatch concurrently.

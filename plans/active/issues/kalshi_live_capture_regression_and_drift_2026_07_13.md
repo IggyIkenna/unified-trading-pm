@@ -119,15 +119,16 @@ not sit un-triaged.
    third time.
 3. ~~Triage the growing `kalshi/markets` / `kalshi/market_lookup` schema-drift GitHub issue chain (#45→#590) — decide
    whether this is a Kalshi-side API change requiring a UAC schema bump, or an endpoint that's been retired.~~ ✅
-   **RESOLVED 2026-07-26** (via `prediction_satellite_ao_dispatch_batch3_2026_07_26.md` todo 1's schema-drift half).
-   Root cause: the "23 endpoints" was one weekly auto-filed snapshot issue listing all currently-failing endpoints (only
-   2 of 23 Kalshi) — not 23 separate regressions. Not a live API/schema drift: `KalshiMarket` (schemas.py) + the
-   endpoint registry already correctly documented the March-2026 dollar-field migration; only the 2 VCR cassette
-   fixtures (`markets.yaml`, `market_lookup.yaml`) used as the drift-diff baseline were stale (pre-migration shape / an
-   expired test ticker). Re-recorded both against live data; `validate_schemas.py` + all 4
-   `tests/vcr/test_kalshi_vcr.py` tests green. Shipped `unified-api-contracts@c03161a1`. Closed the 10 superseded weekly
-   snapshots (#45,#46,#47,#60,#102,#319,#416,#541,#555,#590) as duplicates of #673; commented on #673 with the fix (the
-   other 21 unrelated endpoint failures in that snapshot are untouched, out of scope).
+   **RESOLVED 2026-07-26** (via `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md` todo 1's
+   schema-drift half, archived). Root cause: the "23 endpoints" was one weekly auto-filed snapshot issue listing all
+   currently-failing endpoints (only 2 of 23 Kalshi) — not 23 separate regressions. Not a live API/schema drift:
+   `KalshiMarket` (schemas.py) + the endpoint registry already correctly documented the March-2026 dollar-field
+   migration; only the 2 VCR cassette fixtures (`markets.yaml`, `market_lookup.yaml`) used as the drift-diff baseline
+   were stale (pre-migration shape / an expired test ticker). Re-recorded both against live data;
+   `validate_schemas.py` + all 4 `tests/vcr/test_kalshi_vcr.py` tests green. Shipped `unified-api-contracts@c03161a1`.
+   Closed the 10 superseded weekly snapshots (#45,#46,#47,#60,#102,#319,#416,#541,#555,#590) as duplicates of #673;
+   commented on #673 with the fix (the other 21 unrelated endpoint failures in that snapshot are untouched, out of
+   scope).
 
 ---
 
