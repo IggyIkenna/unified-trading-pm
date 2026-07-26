@@ -139,11 +139,25 @@ of a venue-day outage.
 
 ## 7. Todos
 
-- [ ] [WRITER] P1. A-iso — rebuild the `tardis_cefi_shards.py:144` groupby loop as per-shard isolated (§4). Ships alone.
+- [x] ✅ [WRITER] P1. A-iso — rebuild the `tardis_cefi_shards.py:144` groupby loop as per-shard isolated (§4). Ships
+      alone. — **SHIPPED `market-tick-data-service@e49e1395`** ("write-guard + A-iso per-shard write isolation",
+      confirmed in the 2026-07-22 ~19:50Z DELTA per `cefi_4surface_migration_execution_log_2026_07_24.md`). Stale
+      checkbox flip per `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s Deferred-item re-check
+      (`cefi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md` item -002) — commit verified to exist.
 - [ ] [DESIGN] P1. Close the three §5 gaps (derivative-bundle column gate; live-lane dual-resolver reconciliation; read
       marker disposition) before write-enforce.
-- [ ] [WRITER] P2. Pass `violation_classes={STRUCTURAL}` explicitly at the 3 `canonical_path_violations` write
-      callsites.
-- [ ] [DATA] P2. Stage 0 — classify-and-log at every write/manifest/read site, zero behaviour change.
-- [ ] [UAC] P2. `is_quarantined_instrument_id` + `ResolutionEvidence` + the registry (composes, no fenced-file edit).
+- [x] ✅ [WRITER] P2. Pass `violation_classes={STRUCTURAL}` explicitly at the 3 `canonical_path_violations` write
+      callsites. — **SHIPPED as part of the same `market-tick-data-service@e49e1395` batch**: "mtds fail-hard
+      write-guard fix (STRUCTURAL-only enforce + Stage-0 ID_FORM observe-log)" via the shared
+      `enforce_structural_and_observe_id_form()` helper wired into all 3 callsites (`partitioned_writer.py`,
+      `websocket_runner.py`, `book_microstructure_handler.py`). Stale checkbox flip per the same Deferred-item re-check
+      — commit verified to exist.
+- [ ] [DATA] P2. Stage 0 — classify-and-log at every write/manifest/read site, zero behaviour change. — **PARTIALLY
+      done**: the write-side observe-log landed in `market-tick-data-service@e49e1395`, but manifest- and read-site
+      classify-and-log were not confirmed shipped anywhere in the cefi covering-plan set as of the 2026-07-26
+      Deferred-item re-check — genuinely still open, correctly not flipped.
+- [x] ✅ [UAC] P2. `is_quarantined_instrument_id` + `ResolutionEvidence` + the registry (composes, no fenced-file edit).
+      — **SHIPPED `unified-api-contracts@989e9d16`** (quarantine model + `classify_id_form()`) — standalone module, not
+      yet wired into any write/read guard (that's Stage 3, still future work per the `[DESIGN] P1` todo above). Stale
+      checkbox flip per the same Deferred-item re-check — commit verified to exist.
 - [ ] [DATA] P3. Schema v10 `instrument_id_form` + backfill classification (Stage 2), after the v2 dedup `--apply`.

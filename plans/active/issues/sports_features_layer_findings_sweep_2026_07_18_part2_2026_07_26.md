@@ -314,6 +314,13 @@ This needs cross-actor coordination, not unilateral VM deletion:
 - [ ] [OPS] P0. Identify what re-launches the 4-entity enrichment fleet (exit-code actuator? a cron? another slot?) and
       give api-football ONE owner. Until then, any agent enforcing the singleton is fighting an automation that wins by
       default, and the key stays oversubscribed (measured earlier: 153 false `attempted_failed` rows in ~30min).
+
+**Update 2026-07-26**: whoever/whatever relaunches this fleet, it is now MVP-scoped by construction — see
+`sports_enrichment_mvp_scope_leak_2026_07_26.md` (shipped `unified-api-contracts@f674033f` +
+`instruments-service@b00e4433`). The fleet's 4 entities (FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS) can
+no longer fan out past the 96-league MVP set even if URDI's fixture_ids span the wider 383-league curated universe. Does
+NOT resolve the ownership/control-conflict question above — only bounds its blast radius.
+
 - [ ] [OPS] P0. Resume the FIXTURES `--force` run once the key has a single owner — relaunch from
       `last_completed_day + 1` (loop-resume contract, § G-ops). 350 `fixtures_schedule` objects were written before
       preemption; `round` is confirmed populating.
