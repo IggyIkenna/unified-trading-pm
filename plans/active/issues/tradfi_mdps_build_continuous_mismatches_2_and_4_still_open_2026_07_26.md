@@ -58,7 +58,16 @@ locked_since:
 > missing raw ingestion for a specific date) correctly SKIP that date rather than aborting. At this rate the full
 > ~2398-day range could take many hours — do not treat "still RUNNING" as stalled; check the VM's own heartbeat/manifest
 > progress before assuming a problem. Reminder: `rebuild_manifest_from_canonical_paths(...)` must run AFTER this
-> completes (see launcher's own printed reminder).
+> completes (see launcher's own printed reminder). **A 10th real bug found+fixed while this VM was already running**
+> (`market-data-processing-service@d531eb9`): `get_instruments_for_date`'s multi-venue concat used
+> `pl.concat(how="vertical_relaxed")`, which cannot tolerate CBOE's 11-column legacy instrument schema alongside
+> CME/FX/ICE's 51-column canonical schema — raised `polars.exceptions.ComputeError` on ~50% of dates, uncaught by any
+> local except clause, silently swallowed by the `@_sync_storage_errors` retry decorator (returns `None`). Confirmed
+> BENIGN for this specific backfill (the resulting `tradable_keys` is dead code — captured as `_tradable_keys` at
+> `orchestration_service.py:166` and never used), so the CURRENTLY-RUNNING VM (pre-fix code) was NOT killed/relaunched —
+> this fix only benefits future runs + any other real caller of `get_instruments_for_date`. Regression test:
+> `tests/unit/test_cloud_data_provider.py::test_get_instruments_by_venue_tolerates_schema_drift_across_venues`
+> (confirmed failing pre-fix). Full `quality-gates.sh` green; `quickmerge` landed clean.
 
 ## What I found
 
