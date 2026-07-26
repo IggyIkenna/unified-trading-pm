@@ -184,20 +184,48 @@ jobs:
 
           echo "=== Updating manifest: published_packages.$REPO ==="
 
-          jq --arg repo "$REPO" \
-             --arg version "$VERSION" \
-             --arg ts "$PUBLISHED_AT" \
-             '(.published_packages //= {}) | .published_packages[$repo] = {version: $version, published_at: $ts, registry: "artifact-registry"}' \
-             workspace-manifest.json > workspace-manifest.json.tmp \
-            && mv workspace-manifest.json.tmp workspace-manifest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          if ! git diff --quiet workspace-manifest.json; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+          # `main` sees heavy concurrent-push volume (fleet-wide promotes + every repo's own
+          # publish-package run editing this same file) — a bare `git push origin main` here was
+          # observed REJECTED ("! [rejected] main -> main (fetch first)") under load on 2026-07-26,
+          # failing the whole job even though the wheel itself had ALREADY published successfully —
+          # only the manifest bookkeeping commit was lost. Retry: on rejection, fetch fresh main and
+          # re-derive the jq edit against it (idempotent + deterministic + keyed per-repo, so redoing
+          # it from a fresh base is always safe) rather than rebasing a stale local commit.
+          for attempt in 1 2 3 4 5; do
+            jq --arg repo "$REPO" \
+               --arg version "$VERSION" \
+               --arg ts "$PUBLISHED_AT" \
+               '(.published_packages //= {}) | .published_packages[$repo] = {version: $version, published_at: $ts, registry: "artifact-registry"}' \
+               workspace-manifest.json > workspace-manifest.json.tmp \
+              && mv workspace-manifest.json.tmp workspace-manifest.json
+
+            if git diff --quiet workspace-manifest.json; then
+              echo "No manifest change to commit."
+              break
+            fi
+
             git add workspace-manifest.json
-            git commit -m "chore: publish $REPO v$VERSION to Artifact Registry [skip ci]"
-            git push origin main
-          fi
+            git commit -q -m "chore: publish $REPO v$VERSION to Artifact Registry [skip ci]"
+
+            if git push origin main; then
+              echo "Manifest update pushed (attempt $attempt/5)."
+              break
+            fi
+
+            if [ "$attempt" = 5 ]; then
+              echo "::error::Manifest push failed after 5 attempts — main kept moving under concurrent load."
+              exit 1
+            fi
+
+            echo "Push rejected (attempt $attempt/5) — main moved, fetching fresh + retrying."
+            git reset --hard HEAD~1
+            git fetch origin main --quiet
+            git reset --hard origin/main
+            sleep $((attempt * 2))
+          done
 
       - name: Persist CI/CD event
         # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
