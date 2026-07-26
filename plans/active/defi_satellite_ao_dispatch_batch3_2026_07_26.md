@@ -107,6 +107,24 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `features-delta-one-defi` has a populated index, both over the full captured window (2 legs, not 3). Source:
       `data_completion_defi_2026_07_15.md`
 
+      **IN-PROGRESS 2026-07-26 (slot-8) — 2 SPOT VMs launched, both idempotent/safe to re-run if interrupted:**
+                  (a) `features-delta-one-defi-20260726-190820` — launched with window 2026-04-15..2026-07-25, RUNNING as of
+                  19:12 UTC, no dependency failure (delta_one's OHLCV-price inputs predate DeFi-specific onchain data types).
+                  (b) `features-onchain-defi-20260726-191239` — 2nd attempt; the FIRST attempt
+                  (`features-onchain-defi-20260726-190744`, window 2026-04-15..2026-07-25) failed fast with a `DependencyError`
+                  (5 missing upstream MTDS manifests for 2026-04-15: vault_share_price/lst_rates/lending_indices/oracle_prices/
+                  perp_funding — `data_completion_defi_2026_07_15.md` shows `lst_rates` only starts capturing ~2026-06-14, so
+                  2026-04-15 predates DeFi onchain-input availability); relaunched with a corrected, narrower window
+                  2026-07-01..2026-07-25, RUNNING as of 19:12 UTC. **If both VMs are no longer RUNNING when you resume this
+                  todo**: check `gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/EXIT_STATUS` +
+                  `run.log` (both self-delete on completion per `VM_SHUTDOWN_ON_COMPLETION=true`) — if EXIT_STATUS=0 for both,
+                  run the post-backfill manifest rebuild the launcher printed
+                  (`rebuild_manifest_from_canonical_paths(resolve_bucket_name(cloud='gcp', kind='features', asset_group='defi'),
+                  service_name='features-service')`), verify row counts (slim manifest read, `columns=` restricted — do NOT do
+                  a full-column read, it triggers per-VM-shard fallback and can use 10+GB RAM on this shared host), then flip
+                  this checkbox with the VM names as evidence. If a VM shows non-zero EXIT_STATUS, read its `run.log` tail for
+                  the actual failure before relaunching — do not blindly retry the same window twice.
+
 - [ ] [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
       slot-table construction surfaces parallel to the already-swept `archetype_slots_defi.py` DEFI_SLOTS (where 7/28

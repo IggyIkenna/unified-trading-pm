@@ -68,14 +68,21 @@ drift_direction: advance-code
       `tests/unit/test_validate_batch_live_smoke_matrix.py` scans the module's own source for the dead host string (not
       just the one call site) so a third reintroduction anywhere in the file fails the build — wired via a new
       `scripts/validation/` sys.path entry in `tests/unit/conftest.py`. `quality-gates.sh` green.
-- [ ] [DIAG] P1. Quantify the prediction-store event-capture gap the cefi KALSHI-PERP purge surfaced — diff the
+- [x] ✅ [DIAG] P1. Quantify the prediction-store event-capture gap the cefi KALSHI-PERP purge surfaced — diff the
       PREDICTION store's KALSHI/POLYMARKET instrument set against the live Kalshi `/markets` (events host) and
       Polymarket CLOB universe to determine whether event markets (`KXMVESPORTSMULTIGAMEEXTENDED`, `KXMVECROSSCATEGORY`,
       etc.) are captured correctly. No code fix is in scope for this todo, only the quantified finding. Repo:
       market-tick-data-service (prediction store, read-only). **Done when**: a quantified verdict is appended to
       `prediction_capture_incident_remediation_2026_07_06.md`'s Progress Log — either "prediction captures them, purge
       loses nothing" (close) or a named coverage-gap count (N markets missing). Source:
-      `prediction_phase_ab_residuals_2026_07_24.md`.
+      `prediction_phase_ab_residuals_2026_07_24.md`. — **NOT a clean close.** Quantified + root-caused in
+      `prediction_capture_incident_remediation_2026_07_06.md` Phase 3 (flipped) + new Phase 6 (fix filed, not
+      implemented — out of this todo's scope). Verdict: the `KXMVE*` event-contract family this todo named IS correctly
+      captured (honest `OTHER`, 21% of Kalshi volume); the real bug is the OTHER 79% of daily Kalshi volume (30 real
+      classifiable canonical_question_groups) ALSO landing in `OTHER` due to a one-line write-time bug
+      (`instruments-service/instruments_service/engine/orchestrator/prediction.py:95` passes the full `instrument_key`
+      instead of the bare ticker into the classifier) — confirmed for every day 2026-07-12 through 2026-07-26.
+      Read-only: no code changed.
 - [ ] [CODE] P1. Add a write-time guardrail in instruments-service so any `*-PERP` venue record must be
       `instrument_type=PERPETUAL` and pass a perp-ticker sanity check (reject event-contract patterns like
       `KXMVE*`/`KXMVECROSSCATEGORY*`), rejected at the writer rather than silently accepted — closes the class of bug

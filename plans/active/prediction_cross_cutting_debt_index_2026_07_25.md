@@ -242,8 +242,8 @@ source: >-
   (dup ref — see `prediction_consolidated_closeout_2026_07_18.md`'s "Aggregated source docs → Capture / correctness"
   subsection for its 2 open todos — corrected 2026-07-25, was "see Capture / correctness above," which only resolved
   while this content lived in the same file as that subsection)
-- [`plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`](/plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md)
-  — 0 open todos (closed/archived/record-only)
+- [`plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`](/plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md)
+  — 0 open todos (closed/archived/record-only; archived 2026-07-26)
 - [`plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
   — 0 open todos (closed/archived/record-only)
 

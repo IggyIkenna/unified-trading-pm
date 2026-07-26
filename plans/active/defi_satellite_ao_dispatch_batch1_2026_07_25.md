@@ -315,16 +315,21 @@ drift_direction: advance-code
       exists with a lifecycle marker, runs clean read-only against prod GCS/manifest for every named venue, and a
       match%/divergence report is appended to the source issue doc's Progress log. Source:
       `issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`.
-- [ ] [REVIEW] P1. Audit + verify each of the 6 known DeFi cross-chain pool-address collisions (1 CURVE
-      AVALANCHE+OPTIMISM, 5 BALANCER addresses patched by instruments-service's collision-backfill script) end-to-end
-      across catalogue → MTDS (`defi_catalog_reader.py:192`) → MDPS → features-service → manifest/data-status,
-      confirming for each row whether the symbolic `canonical_instrument_id`/`glued_pair_id` correctly disambiguates the
-      chain pair despite the bare `instrument_id` collision, flagging any stage reading bare `instrument_id` instead.
-      Read-only. Repos: instruments-service, market-tick-data-service, market-data-processing-service, features-service,
-      unified-trading-pm. **Done when**: a findings report is appended as a new dated Update in the issue doc
-      enumerating, for all 6 rows, the observed id values at each of the 5 pipeline stages with an explicit PASS/FAIL
-      verdict per row (the 5 Balancer rows are expected to surface as a mismatch — a valid finding, not a failure).
-      Source: `issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — real findings, not the expected Balancer-mismatch.** Audited
+      all 6 known DeFi cross-chain pool-address collisions end-to-end. **Stage 1 (catalogue): PASS for all 6** — no
+      `@CHAIN` suffixes anywhere in the live 12,219-row catalogue (the 2026-07-08 Balancer patch is gone/superseded,
+      resolving the doc's finding #2 outright); `canonical_instrument_id` correctly disambiguates every row. **Stage 2
+      (MTDS `defi_catalog_reader.py:192`): read-PASS, but a genuine pre-flight-skip FAIL/RISK finding** in
+      `orchestrator/__init__.py::_run_preflight_availability_check` — its captured-atom skip-set keys on
+      `(venue, data_type) → {bare instrument_id}` with `chain` never read anywhere in the function, so it cannot
+      distinguish our exact collision shape. **Stage 3 (MDPS): the SAME bug class, second instance** in
+      `orchestration_scanner.py`'s `existing_outputs` dedup (`(timeframe, instrument_id)`, bare). **Stages 4-5
+      (features-service, manifest/data-status): NOT independently traced** (time-bounded; filed as follow-up scope, not
+      guessed at). Filed a new P2 fix todo in the issue doc + flipped 3 stale/resolved checklist items there
+      (verify-6-collisions, reconcile-Balancer-patch — now moot, fix-CURVE — premise was stale, CURVE was already
+      correct). unified-trading-pm@00e073836. Repos: instruments-service, market-tick-data-service,
+      market-data-processing-service, unified-trading-pm (read-only audit, no code changed). Source:
+      `issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
 - [ ] [DOC] P1. Port the already-decided two-id/dual-key POOL model into `/codex/02-data/defi-canonical-naming-ssot.md`
       — document that `instrument_id` stays bare `pool_address.lower()` while `chain` lives only in the symbolic
       `canonical_instrument_id`/`glued_pair_id` (Option A, operator ruling 2026-07-18), sourcing content already

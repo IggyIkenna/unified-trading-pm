@@ -238,13 +238,47 @@ orchestrator-dispatched).
       2026-04-21). Gate: endpoint + auth documented in the issue doc's reference section.
 - [ ] [CODE] P1. Repoint `polymarket_perp` against Polymarket's perps API (demo/testnet if available) →
       `InstrumentRecord(PERPETUAL)`. Gate: demo returns real Polymarket perps, 0 prediction-market rows.
-- [ ] [VERIFY] P1. **Pin the prediction-store event-capture gap** (the real question the purge-vs-move decision
+- [x] ✅ [VERIFY] P1. **Pin the prediction-store event-capture gap** (the real question the purge-vs-move decision
       surfaced): are the Kalshi/Polymarket EVENT markets (`KXMVESPORTSMULTIGAMEEXTENDED`, `KXMVECROSSCATEGORY`, …)
       captured CORRECTLY in the PREDICTION store? Evidence to resolve: the healed prediction enum wrote 0 records under
       top-level venues KALSHI/POLYMARKET but 7,981 across 63 sub-venue groups. Diff the prediction store's
       KALSHI/POLYMARKET instrument set vs the live Kalshi `/markets` (events host) + Polymarket CLOB universe. Gate:
       quantified — either "prediction captures them, purge loses nothing" (close), OR a named coverage gap (`N` markets
-      missing) → file the fix in the PREDICTION Kalshi/Polymarket adapter (NOT by relocating the malformed cefi rows).
+      missing) → file the fix in the PREDICTION Kalshi/Polymarket adapter (NOT by relocating the malformed cefi rows). —
+      **QUANTIFIED 2026-07-26 (slot-12, data_engineering, read-only). Not a clean close — a real, ROOT-CAUSED coverage
+      gap, but the OPPOSITE shape from what this todo suspected.** The `KXMVE*` flooded event-contract family IS
+      correctly captured and correctly routed to `canonical_question_group=OTHER` (2,003/9,513 = 21.1% of today's Kalshi
+      rows, confirmed by re-running the live classifier against the actual captured parquet — the honest catch-all is
+      working as designed, not a gap). The REAL bug: **every genuinely-classifiable Kalshi market — 79% of daily volume,
+      7,510/9,513 rows today — is ALSO being written into `canonical_question_group=OTHER` instead of its correct named
+      group**, because `instruments-service/instruments_service/engine/orchestrator/prediction.py:95`
+      (`_extract_prediction_canonical_group`) passes the FULL `instrument_key` string
+      (`"KALSHI:PREDICTION_MARKET:{ticker}"`) into `classify_kalshi_to_canonical_group(ticker=...)` instead of the bare
+      ticker — the classifier's exact-override + prefix-table lookups (`KXBTCD-*`/`KXINX-*`/`KXFED-*`/etc.) all match
+      against the START of the string, so `"KALSHI:PREDICTION_MARKET:KXBTC..."` never matches anything and silently
+      falls through to `OTHER` for EVERY Kalshi ticker, always. (Polymarket's sibling branch, line 82-90, has the
+      identical instrument_key-not-bare-value pattern but is NOT affected — its classifier's real work happens on
+      `slug=raw_symbol`, not the mis-passed `condition_id=instrument_key`, so Polymarket correctly splits into 24-29
+      distinct CQGs/day — confirmed via the manifest's last-14-day trend, vs Kalshi's exactly 1 CQG/day, always `OTHER`,
+      every single day 2026-07-12 through 2026-07-26.) **Evidence chain (read-only, no writes)**: (1) live Kalshi fetch
+      via `KalshiReferenceDataAdapter().get_instruments()` (events host, unauthenticated) → ~9,200 open markets classify
+      into 34 distinct real CQGs via `classify_kalshi_to_canonical_group` called directly. (2)
+      `_index/availability_index.parquet` manifest, `data_type=prediction_canonical_question_group`: KALSHI shows
+      exactly 1 CQG/day (`OTHER`, ~9,500 rows) every day 2026-07-12→2026-07-26; POLYMARKET shows 24-60 distinct CQGs/day
+      over the same window. (3) Downloaded today's real captured parquet
+      (`instrument_availability/by_date/day=2026-07-26/pipeline_mode=batch_kalshi/asset_group=prediction/     venue=KALSHI/canonical_question_group=OTHER/instruments.parquet`,
+      9,513 rows) and re-ran the SAME classifier against each row's `instrument_key`-embedded ticker: 7,510 rows (79%)
+      resolve to 30 real named groups (`NDX_UP_DOWN_DAILY` 1,103, `SPORTS_MLB_TOTAL` 716, `SPX_UP_DOWN_DAILY` 544,
+      `SOL_PRICE_RANGE_DAILY` 462, `BTC_*` 388-390, `CPI_PRINT_PER_MONTH` 268, `FED_RATE_DECISION_PER_FOMC` 201, …) —
+      proving the DATA is captured correctly (row volume matches the live count), only the CQG-bucketing at write time
+      is broken. **Impact**: any consumer querying the prediction store by
+      `(venue=KALSHI, canonical_question_group=<real_group>)` — e.g. a cross-venue-arb strategy comparing Kalshi vs
+      Polymarket `BTC_UP_DOWN_DAILY` fair value — finds ZERO Kalshi rows for every real group, every day, silently (the
+      rows exist, just parked under `OTHER`). Also blocks/corrupts the `prd/catalog.parquet` full-history-registry
+      snapshot separately (found stale, `max(market_created_at)` = 2026-06-27 KALSHI / 2026-06-24 POLYMARKET — a
+      ~1-month-old snapshot, NOT the live day-to-day capture path; noted here for completeness but tracked as its own,
+      separate freshness concern, not part of this gap's root cause). **Fix filed**: see the new Phase 6 todo below
+      (one-line, `prediction.py:95`) — NOT implemented here, out of this DIAG todo's scope per its own gate.
 
 ### Phase 4 — prod cutover [RESOLVED-BY-RULING 2026-07-14: DESCOPED — perps not MVP]
 
@@ -265,6 +299,27 @@ orchestrator-dispatched).
       perp-ticker sanity check (reject event-contract patterns, e.g. `KXMVE*`/`KXMVECROSSCATEGORY*`); reject at the
       writer, not silently. Gate: a synthetic event contract injected into a `-PERP` feed is rejected, not written to
       the catalogue.
+
+### Phase 6 — fix the Kalshi CQG-bucketing write-time bug (found by Phase 3's VERIFY, 2026-07-26)
+
+- [ ] [CODE] P1. Fix `instruments-service/instruments_service/engine/orchestrator/prediction.py:95`
+      (`_extract_prediction_canonical_group`): `ticker = str(row.get("instrument_key", "") or "")` passes the FULL
+      `"KALSHI:PREDICTION_MARKET:{ticker}"` string into `classify_kalshi_to_canonical_group(ticker=...)` instead of the
+      bare ticker, so every override/prefix-table lookup fails (they match against the string START) and 100% of Kalshi
+      rows fall to `OTHER` — confirmed for every day 2026-07-12 through 2026-07-26. Fix: extract the bare ticker (the
+      `instrument_key` SYMBOL segment, e.g. `.rsplit(":", 1)[-1]`) before calling the classifier — mirrors how Kalshi's
+      OWN adapter (`kalshi.py::_parse_market`) already calls `classify_kalshi_to_canonical_group(ticker=ticker)` with
+      the bare ticker at fetch time (that call is correct; only the WRITER's re-classification at `prediction.py:95` has
+      the bug). Repo: instruments-service. **Done when**: re-running today's captured
+      `venue=KALSHI/canonical_question_group=OTHER` parquet's rows through the fixed extraction yields the same ~30 real
+      named-group split this VERIFY's diagnostic already measured client-side (30 groups, ~7,510/9,513 rows, not
+      9,513/9,513 OTHER); a new unit test asserts `_extract_prediction_canonical_group` on a `KALSHI` row with a real
+      named-series ticker (e.g. `KXBTCD-...`) returns that group, not `OTHER`; `quality-gates.sh` green.
+- [ ] [DATA] P2. Once the Phase 6 CODE fix ships + is verified live for ≥1 day, assess whether the historical
+      `OTHER`-bucketed Kalshi rows (2026-07-12 onward, ~9,500/day, ~30 days) are worth a one-off backfill/reclassify
+      pass into their correct CQG buckets, or whether forward-only correctness is sufficient (per
+      `/codex/02-data/data-pipeline-correctness-hard-rule.md`'s "fix issues in FULL" bar vs the practical cost of
+      reclassifying historical manifest rows) — **operator/architect call, not a mechanical todo**.
 
 ---
 
@@ -376,3 +431,17 @@ orchestrator-dispatched).
   confirmed with a second independent probe) that Phase 4's `BLOCKED-OPERATOR-DECISION` may not actually gate the
   market-data half of the repoint. Order-placement endpoints untested — reads-only finding. No code changed; Workstream
   B's Phase 0-5 structure stands, this just updates the auth assumption feeding Phase 1/2/4.
+- **2026-07-26 (slot-12, `data_engineering`, dispatched via `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo
+  2): Closed Phase 3's event-capture-gap VERIFY — read-only diagnostic, found + root-caused a real bug, filed the fix as
+  new Phase 6 (not implemented, per this VERIFY's own out-of-scope gate).** Live-fetched ~9,200 Kalshi + ~1,600
+  Polymarket markets (unauthenticated adapter calls), classified them client-side via the SAME UAC classifiers the
+  writer uses, cross-referenced the manifest's last-14-day CQG trend, and downloaded + re-classified today's actual
+  captured Kalshi parquet. Verdict: NOT "purge loses nothing" — the `KXMVE*` flooded family this todo worried about IS
+  correctly captured as honest `OTHER` (21% of volume, working as designed); the REAL bug is that the other 79% of
+  Kalshi volume (genuinely classifiable into 30 real named CQGs) is ALSO landing in `OTHER`, because `prediction.py:95`
+  passes the full `instrument_key` instead of the bare ticker into the classifier — every Kalshi row, every day, since
+  at least 2026-07-12. Polymarket is unaffected (its classifier keys off `slug`, not the similarly-mis-passed
+  `condition_id`). See Phase 3's todo body for the full evidence chain + Phase 6 for the one-line fix + its own
+  follow-up backfill-assessment todo. Also flagged (side-finding, not this gap's root cause): `prd/catalog.parquet` is a
+  separate, ~1-month-stale full-history snapshot (not the live capture path) — noted for completeness, not actioned
+  here. No code changed this turn — diagnostic + plan-doc updates only.
