@@ -67,20 +67,22 @@ drift_direction: advance-code
       todo in a follow-up `batch2`; if still genuinely unresolved, leave it explicitly deferred, do not re-surface an
       already-asked operator question a second time. **Done when**: each of the 19 Deferred items has either (a) a note
       that it's ready for `batch2` extraction, or (b) an explicit re-verified confirmation the gate is still open.
-- [ ] [DOC] P2. **Action the 7 mistags + 2 archivable_now docs found during Phase 0/1.** (1) Retag the 2 genuinely
-      single-AG docs (`plans/active/issues/empty_reprobe_disagreement_2026_06_22.md` → `[defi]`,
-      `plans/active/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` → `[cefi]`) and the 5 genuinely
-      infra-scoped docs (`plans/active/bucket_fold_ml_2026_07_17.md`,
+- [ ] [DOC] P2. **Action the 6 remaining mistags + 2 archivable_now docs found during Phase 0/1** (was 7 mistags;
+      `shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` resolved + archived to
+      `plans/archive/issues/shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` in the 2026-07-26 terminal-status sweep — no
+      retag needed, drop it from this list). (1) Retag the 2 genuinely single-AG docs
+      (`plans/active/issues/empty_reprobe_disagreement_2026_06_22.md` → `[defi]`,
+      `plans/active/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` → `[cefi]`) and the 4 remaining
+      genuinely infra-scoped docs (`plans/active/bucket_fold_ml_2026_07_17.md`,
       `plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md`,
       `plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md`,
-      `plans/active/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md`,
-      `plans/active/issues/shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` → `[infra]` or fold into
+      `plans/active/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` → `[infra]` or fold into
       `infra_consolidated_closeout_2026_07_25.md`'s Sources list per that doc's own convention) — read each doc's real
       content first to confirm before retagging (do not blind-apply), then re-run
       `scripts/plan-hygiene/check_ag_closeout_linkage.py` after each retag. (2) Archive
       `plans/active/bucket_estate_fold_design_2026_07_13.md` and
       `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md` (both `archivable_now`) via the standard 6-step
-      ritual. **Done when**: all 7 retags are applied with `check_ag_closeout_linkage.py` passing 0 new orphans, and
+      ritual. **Done when**: all 6 retags are applied with `check_ag_closeout_linkage.py` passing 0 new orphans, and
       both archivable_now docs are moved to `plans/archive/2026_07/` with every corpus referrer fixed.
 - [ ] [DOC] P1. **Archive both `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` and
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`** via the standard 6-step ritual (per CLAUDE.md's

@@ -42,6 +42,9 @@ depends_on: []
 
 # Shared host `/tmp` tmpfs exhaustion — spurious test failures
 
+> **🟢 RESOLVED 2026-07-26 — ACKED-INTO-CODE** — `unified-trading-pm@594d79031c7b8b185413eaa26867af8e03e53755`
+> (cleanup-stale-claude-session-tmp cron shipped + registered live); archived per the terminal-status backlog sweep.
+
 ## What happened
 
 Running `bash scripts/quality-gates.sh --no-fix` in `agent-orchestrator` (to validate the sharded ag-closeout-audit
