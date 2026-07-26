@@ -129,3 +129,37 @@ start without real tradfi/ES feature parquets.
   pipeline is still genuinely blocked, just by a different (partially-overlapping) set of issues than the
   operator-decision framing implied. Sp500_ml plan's P0 items re-worded to point here instead of re-requesting an
   already-answered operator decision.
+- 2026-07-26 (slot-14, `defi_satellite_ao_dispatch_batch2-013` follow-up dispatch, todo 4 of this doc): the AO
+  dispatcher handed me todo 4 ("after mismatches 2+4 fixed, launch + verify") directly — there is no per-todo prereq
+  mechanism within one plan (only whole-plan `depends_on`/`sequential`), so it does not know todo 4 depends on todos 1-3
+  in THIS SAME doc. Re-confirmed via direct code read that mismatch 2 (`panama_core.py:103`, still
+  `f"CME:FUTURE:{root}-{expiry:%Y%m%d}"`) and mismatch 4 (`data_loader.py:650`, `_DERIVATIVE_DATA_TYPES` still
+  `{"options_chain", "futures_chain"}`, no `continuous_future`) are genuinely still unfixed — todo 4 is premature. **New
+  finding while scoping the mismatch-2 fix**: this doc's (and the archived doc's) claim that MDPS's process-step
+  canonically writes short-symbol filenames (`CME:FUTURES:{root}{month}{year}.parquet`, e.g. `CME:FUTURES:ESH0.parquet`)
+  could NOT be confirmed against CURRENT production code —
+  `market_data_processing_service/app/core/output_path_helpers.py`'s `candle_output_filename`/`candle_leaf_filename` is
+  a pure `f"{instrument_id}.parquet"` passthrough (no dedicated short-symbol builder found anywhere in the repo outside
+  a `unified_api_contracts/internal/testing/` mock-data generator, which is test-only). More importantly,
+  `canonical_writer.py`'s `write_candle_parquet` calls `_renormalize_legacy_instrument_ids` →
+  `_renormalize_legacy_tradfi` (`canonical_writer_shaping.py:494-563`), which explicitly detects a legacy 2-segment id
+  (e.g. `CME:ESH0`) and REBUILDS it into the canonical 3-segment `CME:FUTURE:ES-20240621` form via UAC's
+  `build_instrument_id` — i.e. the SAME Databento-date-format shape `panama_core.contract_id_for_expiry` already
+  produces. This raises real doubt that mismatch 2 is still an actual bug rather than something the renormalization
+  layer already fixed since the archived doc was written (2026-06-24, over a month stale) — but I could NOT get a live
+  GCS listing of the actual current `processed_candles/` filenames for ES within this session (bucket-name resolution
+  needs the MDPS service venv set up, which wasn't done yet in my slot for this repo —
+  `resolve_bucket_name(kind=..., asset_group="tradfi")`'s exact `kind` string for this bucket was not determined either;
+  do NOT guess a bucket name, it 404s loudly instead of listing empty). **This is exactly the kind of
+  live-verification-first step that should happen BEFORE trusting either doc's filename-format claim.** Separately, this
+  doc's own text explicitly flags an unresolved architectural question (Option A: bypass MDPS entirely via a direct
+  raw-MTDS read in features-service, vs Option B: fix MDPS's output format) that the ORIGINAL archived doc's author
+  could not settle and left for whoever picks up these todos — picking the wrong side before a live-state check risks
+  throwaway code on a live production TradFi data pipeline. Filed `/blocked` (`BLK-581b75aa`) rather than guessing;
+  skipped todo 4 back to the queue as premature. **Recommended next step for whoever picks this up**: (1) set up the
+  MDPS venv (`bash scripts/setup.sh` in `market-data-processing-service`), resolve the tradfi `processed_candles` bucket
+  name (grep `cloud-providers.yaml` for the `market_data`/`processed_candles` kind key — I did not locate the exact yaml
+  key in this session), (2) `gcloud storage ls` the real current ES filenames under `processed_candles/`, (3) compare
+  against `panama_core.contract_id_for_expiry`'s output to settle whether mismatch 2 is real or already moot, (4) only
+  then decide whether todo 1 (fix mismatch 2) is still needed, or whether the todo should instead be closed as "already
+  resolved by the renormalization layer, doc was stale."
