@@ -18,7 +18,8 @@ stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]
 tags: [cicd, mvp, ldr-main, single-path, staging-dormant, SIT, quickmerge, simplification]
-related: [plans/active/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md, /codex/08-workflows/ci-cd-flow.md]
+related:
+  [/plans/archive/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md, /codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-30
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -65,7 +66,9 @@ blocker.
 > `live-defi-rollout` via `quickmerge`. SIT validates the LDR content. We merge LDR→main. That's it. `staging` stays
 > dormant behind a reversible switch. This plan **supersedes the entire WS-L "complex pipeline" family** (see
 > frontmatter `supersedes`) and **resolves** the promotion-stall issue docs. Full forensic detail of how we got here
-> lives in `issues/ldr_main_promotion_findings_consolidated_2026_06_29.md` (the findings-of-record).
+> lives in
+> [/plans/archive/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md](/plans/archive/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md)
+> (the findings-of-record; archived by this plan's own Phase-3 [DOCS] P2 item — path repointed 2026-07-26).
 
 ## The MVP gate set (the ONLY gates on LDR→main)
 

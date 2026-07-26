@@ -31,9 +31,9 @@ tags:
   [ci-cd, cassette-drift, silent-failure, green-but-wrong, self-hosted-runners, slot-venv, shared-state, backstop-rot]
 related:
   [
-    plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
-    plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
-    plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
+    /plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
+    /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
+    /plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-17
@@ -53,6 +53,33 @@ depends_on: []
 ---
 
 # cassette-drift-check: green every night, has not checked anything since the relocation
+
+> ## ✅ BOTH DEFECTS FIXED IN CODE 2026-07-17 — this doc's "Fix (all three together, or not at all)" is DONE
+>
+> _(Verified 2026-07-26 by `/plan-reconcile ci` — read the live workflow, ran the reachability checks; not inferred from
+> another doc.)_
+>
+> The workflow was fixed **the same day this doc was filed**, and the doc was never updated. Both fix commits are
+> verified ancestors of `origin/live-defi-rollout` (`git merge-base --is-ancestor`):
+>
+> | this doc's prescribed fix                                         | shipped                                                                                                                                                    |
+> | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | 1. **Repoint** at the relocated package module                    | ✅ `cassette-drift-check.yml:96` → `-m unified_api_contracts.testing.detect_cassette_drift` — `unified-trading-pm@f339ce5e8`                               |
+> | 2. **Isolate the install** (never `--system`; throwaway venv)     | ✅ `:76` → `uv pip install -e ./unified-api-contracts --python "${RUNNER_TEMP}/uac/bin/python"`; the `\|\| pydantic pyyaml` fallback is gone — same commit |
+> | 3. **Stop swallowing the exit code** (3 distinct states)          | ✅ `:100-102` → `0)` no drift · `1)` drift · `*) ::error:: … exit "${rc}"` — same commit                                                                   |
+> | "Then drop `setup-python` + `pip install uv` and flip `runs-on:`" | ✅ `:34` `runs-on: [self-hosted, glue]`, `:51` records both steps removed — `unified-trading-pm@e9d02e5d6` ("37/37 movers now self-hosted")                |
+>
+> That last commit also **retires Defect 2's premise**: this doc says cassette-drift-check "is the 1 of 37 deliberately
+> NOT flipped in STEP 2 batch 3" — it was flipped 6 minutes after the fix, making it 37/37. The shared-venv poisoning
+> trap the stale 3.12 pin was accidentally preventing is now prevented _deliberately_ by the per-run `RUNNER_TEMP` venv.
+>
+> **Status deliberately left `open`.** Two operator-scope calls remain and are tracked as an open `[REVIEW] P0` in
+> [/plans/active/github_actions_operator_gated_followups_2026_07_17.md](/plans/active/github_actions_operator_gated_followups_2026_07_17.md):
+> (a) closing the 52 false `[Cassette Drift]` issues in `unified-api-contracts`, and (b) the detector's cassette→model
+> matching being a filename-stem lottery. This doc's own "Negative test that must pass after the fix" is also not
+> evidenced. Per this corpus's convention (see the 2026-07-12 annotation in
+> [/plans/active/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md](/plans/active/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md)),
+> _"closing/resolving is an operator-scope call, not a mechanical doc-sync"_.
 
 ## Defect 1 — it calls a file that does not exist, and hides it
 

@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [ci-cd, github-actions, cost, self-hosted-runner, workflows, spend-reduction, operator-decision]
 related:
   [
-    /plans/active/github_actions_self_hosted_runner_migration_2026_07_15.md,
+    /plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md,
     /plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/archive/issues/quickmerge_agent_sentinel_race_vs_own_rebase_2026_07_16.md,
@@ -57,12 +57,14 @@ drift_direction: advance-code
 
 > **🟡 ACTIVE — forked 2026-07-24 from `github_actions_ci_cost_reduction_2026_07_15.md`** (line-cap remediation,
 > 2026-07-23 triage, row 13 of 30). The parent's self-hosted-runner migration is DONE (37/37 movers, zero-billed) and
-> archived verbatim at `plans/active/github_actions_self_hosted_runner_migration_2026_07_15.md`. This doc carries
-> everything from the parent that is **still open** — 9 todos, plus the full "Deferred work" operator-decision ledger,
-> hard-won operational lessons, and the two calendar-gated billing re-pulls. Content below is moved **verbatim** from
-> the parent — nothing summarized or rewritten. The same-day staging-machinery-shutdown audit (Phase 6 + its two related
-> Progress Log findings) is a distinct topic and lives in
-> `plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md`.
+> archived verbatim at
+> [/plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md](/plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md)
+> _(path corrected 2026-07-26: it said `plans/active/…`, which is self-contradictory with "archived" and does not exist
+> — the file is in `plans/archive/2026_07/`; verified 0 open / 30 done todos there)_. This doc carries everything from
+> the parent that is **still open** — 9 todos, plus the full "Deferred work" operator-decision ledger, hard-won
+> operational lessons, and the two calendar-gated billing re-pulls. Content below is moved **verbatim** from the parent
+> — nothing summarized or rewritten. The same-day staging-machinery-shutdown audit (Phase 6 + its two related Progress
+> Log findings) is a distinct topic and lives in `plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md`.
 
 ## Open todos forked from the parent plan (verbatim)
 
@@ -89,13 +91,20 @@ drift_direction: advance-code
       cheap recurring check that a mover's "did work" counter is not 0 on EVERY run for N days (and that "I did nothing"
       and "I could not look" are DIFFERENT exit states — the one-line assertion that would have caught all three on day
       one). Generalises `/codex/02-data/honest-absence-downstream-handling.md` from data to automation.
-- [ ] [INFRA] P0. **DELETE `reconcile-release-tags` (verdict reached 2026-07-17; saves ~48 no-op runs/day).** NOT a fix
-      — a deletion. It is impossible as written (reads the static pyproject version D13 deleted), redundant with
-      `assert_version_coherence.py` (which WAS migrated and already emits the `tag-ok`/`tag-MISS` check), and its remedy
-      INVERTS D13 (minting a release tag because a JSON cache said so would invent a release that never happened).
-      Measured: every repo is `tag-ok`; exactly 1 of 24 (PM) is manifest-ahead, and per D13 that is a cache split, not a
-      missing tag. **Confirm nothing dispatches it first** (it has a `repository_dispatch: [reconcile-release-tags]`
-      trigger). SSOT: `plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md`.
+- [ ] ⛔ [INFRA] P0. **SUPERSEDED 2026-07-26 — DO NOT EXECUTE THIS DELETION.** ~~DELETE `reconcile-release-tags`~~ The
+      script was **repurposed, not deleted**: `unified-trading-pm@6c4ee4d0c` (2026-07-23, verified ancestor of
+      `origin/live-defi-rollout`) split it into two populations — tag-derived repos are **hard-refused for minting** and
+      instead checked for the real invariant ("`main` must not accumulate commits past the newest `v*` tag" ⇒ STALL). It
+      is now the fleet's **release-stall alarm**, and deleting it would remove the only detector for the 4-week
+      fleet-wide tagging outage that motivated this todo. Codex has ruled: `/codex/08-workflows/ci-cd-flow.md:1004` §
+      _"Release tag reconciler — a STALL DETECTOR, not the minter (corrected 2026-07-25)"_; CLAUDE.md carries the
+      matching one-liner. The live minter is `semver-agent` on `push:[main]` (`unified-trading-pm@0b128a725`,
+      ancestor-verified; fleet-rolled to 22 repos per
+      [/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md](/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
+      § Phase 4). Left **unticked deliberately** — the deletion must not happen, and retiring vs rewriting this todo is
+      a planning call parked for the operator. SSOT:
+      [/plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md](/plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md)
+      (banner at top).
 - [ ] [REVIEW] P0. **OPERATOR DECISIONS on cassette-drift-check (fixed + flipped 2026-07-17, but two calls are yours).**
       (a) **Close the 52 open false `[Cassette Drift]` issues** in `unified-api-contracts` (each self-refuting: "Total
       cassettes checked: 0 / Drifted: 0 / No report file found" under a "Drift Detected" title). (b) **The 02:00 cron

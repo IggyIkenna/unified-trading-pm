@@ -23,7 +23,8 @@ scope: [engineer, admin]
 tags: [ci-cd, quickmerge, workspace-manifest, staging, versions, dependency-gate]
 related:
   - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
-  - ../cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+  - /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+  - /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md
 created: 2026-07-23
 priority: P2
 parent_epic: infrastructure_master
@@ -43,6 +44,49 @@ source:
 ---
 
 # `staging_versions` is a frozen mirror that still outranks `versions` in the quickmerge dep gate
+
+> ## ✅ RE-MEASURED 2026-07-26 — THIS DOC'S OWN GATE IS NOW SATISFIED; THE HARMFUL DRIFT IS 4 → 1
+>
+> _(`/plan-reconcile ci` — ran this doc's own stated gate command and re-derived the drift table from the live
+> `workspace-manifest.json`. Read this BEFORE the two blocked banners below; they are historically accurate but their
+> precondition has moved.)_
+>
+> **1. The gate this doc set has flipped.** The ⏸️ banner below says: _"confirm `versions` is demonstrably advancing —
+> `git log --grep='chore(manifest): update' -- workspace-manifest.json` must show entries newer than 2026-07-23. As of
+> this writing the newest such entry is **2026-06-30**."_ Ran exactly that command: **14 entries since 2026-07-23**,
+> newest `936a2e31a` _"chore(manifest): update unified-api-contracts to 0.72.0"_ (2026-07-26T01:11:02Z). `versions` is
+> demonstrably advancing.
+>
+> **Why**: F2's minting outage was fixed 2026-07-25 — but **not** by the Option-B PM reconciler this doc's banner is
+> waiting on. `semver-agent` was retargeted `staging` → `push:[main]` (`unified-trading-pm@0b128a725`,
+> ancestor-verified) and fleet-rolled to 22 repos. See the ⛔ banner now on
+> [/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md](/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md)
+> § "Option B". **So the ⏸️ banner's stated blocker is discharged** — the inversion it describes has resolved itself in
+> the direction that makes option 1 correct, exactly as it predicted ("minting will record into `versions`… At that
+> point — and only then — option 1 becomes correct").
+>
+> **2. The measured drift moved, in the good direction.** Re-derived from `workspace-manifest.json`
+> (`staging_dormant_mode: true` still): **12 real repos disagree** (was 12), but only **ONE is staging-AHEAD** — the
+> harmful direction the gate fires on:
+>
+> | repo                       | was (2026-07-23)              | now (2026-07-26)                      |
+> | -------------------------- | ----------------------------- | ------------------------------------- |
+> | `unified-api-contracts`    | 0.71.0 vs **0.72.0** ⚠️ AHEAD | 0.72.0 vs 0.72.0 — **CLEARED**        |
+> | `instruments-service`      | 0.88.0 vs **0.90.0** ⚠️ AHEAD | 0.91.0 vs 0.90.0 — behind, harmless   |
+> | `market-tick-data-service` | 0.91.0 vs **0.92.0** ⚠️ AHEAD | 0.93.0 vs 0.92.0 — behind, harmless   |
+> | `ibkr-gateway-infra`       | 0.0.74 vs **0.0.75** ⚠️ AHEAD | 0.0.74 vs **0.0.75** — ⚠️ STILL AHEAD |
+>
+> **Consequence for severity**: the § "Impact" argument that a `--hotfix` landing is hard-BLOCKED by a version that
+> exists nowhere is now scoped to repos depending on **`ibkr-gateway-infra` only**. The fleet-wide exposure via UAC —
+> the reason this was worth filing — is gone. The `[OPERATOR]` option-1/2/3 choice below stays open, but it is now a
+> cleanup, not a live hazard.
+>
+> **3. Internal inconsistency in the ⚠️ banner below (flagged, not rewritten).** Its table is introduced as _"in all
+> four 'stale-AHEAD' repos"_ but its 4th row is `unified-trading-library` — which this doc's own § "Measured drift"
+> places in the **BEHIND** direction ("The other eight (… `unified-trading-library` 0.55.0 vs 0.43.0 …) are stale in the
+> BEHIND direction"). The actual 4th stale-AHEAD repo was `ibkr-gateway-infra`. The banner's underlying point
+> (`staging_versions` tracked the last real tag) still holds for UTL; only the "four stale-AHEAD" label is wrong. Left
+> in place as the dated record rather than rewritten.
 
 > ## ⚠️ PREMISE CORRECTED 2026-07-23 — DO NOT IMPLEMENT THE FIX BELOW YET
 >

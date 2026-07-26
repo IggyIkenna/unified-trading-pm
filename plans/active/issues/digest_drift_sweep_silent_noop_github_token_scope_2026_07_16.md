@@ -50,8 +50,9 @@ tags:
   [ci-cd, digest-ratchet, base-image, github-token, token-scope, silent-failure, green-but-wrong, supply-chain, fleet]
 related:
   [
-    plans/active/build_operability_smoke_all_repos_2026_06_19.md,
-    plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
+    /plans/archive/2026_06/build_operability_smoke_all_repos_2026_06_19.md,
+    /plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
+    /plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-16
@@ -73,6 +74,34 @@ depends_on: []
 
 # digest-drift-sweep: green for 27 days, dispatched nothing
 
+> ## 🟡 PARTIALLY FIXED — the TOKEN half shipped 2026-07-18; the silent-failure + throttle halves did NOT
+>
+> _(Measured 2026-07-26 by `/plan-reconcile ci` against the live `.github/workflows/digest-drift-sweep.yml` — every row
+> below was read out of the file this session, not inferred.)_
+>
+> This doc's root-cause section still reads present-tense (`digest-drift-sweep.yml:77` passes
+> `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`). **That is no longer true.** Scoring this doc's own § "Revised
+> recommendation" 1-4:
+>
+> | recommendation                                                                  | state now                                                                                                                                                                                                                          |
+> | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | 2a. token → `secrets.GH_PAT`, **both** the fetch and the dispatch POST          | ✅ **DONE** — `:82 GH_PAT: ${{ secrets.GH_PAT }}`, `:122 TOKEN="${GH_PAT}"` feeds both `:134` (fetch) and `:166` (dispatch). `unified-trading-pm@f6e98bbdd` (2026-07-18 11:51:54, verified ancestor of `origin/live-defi-rollout`) |
+> | 2b. capture the HTTP status on the FETCH (`404` benign · `401/403` fail loudly) | ❌ **STILL OPEN** — `:133` is still `CONTENT=$(curl -sf … \|\| echo "")` and `:145` still attributes an empty body to _"Dockerfile not found — skipping"_. (The DISPATCH side does capture `%{http_code}` at `:165`.)              |
+> | 2c. self-auditing assertion (`dispatched + fresh == 0` ⇒ exit non-zero)         | ❌ **STILL OPEN** — `:196-198` only emits a `WARNING:` to stderr when `ERRORS > 0`; there is no exit-non-zero on an all-empty sweep                                                                                                |
+> | 3. add a dispatch cap (`--max-dispatches`)                                      | ❌ **STILL OPEN** — no cap anywhere in the loop                                                                                                                                                                                    |
+> | 1. investigate the dormant primary cascade FIRST                                | ❔ unchanged by this note                                                                                                                                                                                                          |
+>
+> **Independent corroboration that the token fix landed and changed behaviour**: the sibling doc
+> [/plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md](/plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md)
+> records the same commit; and
+> [/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md](/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md)
+> § F4 now observes `"Dispatched 16 / Already fresh 0"` — the sweep is reaching Dockerfiles, which the pre-fix
+> `No ARG found: 16` proved it never did. F4 flags a **new** problem in its place (it never converges and fans out to
+> `ubuntu-latest`, so it now costs real money) — that non-convergence is tracked as an open todo there, not here.
+>
+> Net: this doc is **not** resolved; it is 1-of-4 done. The remaining three are the "green but wrong" hardening, which
+> is the part this doc argues is the deeper bug.
+
 ## What it was supposed to do
 
 `digest-drift-sweep.yml` (added 0d5663d4d, 2026-06-19) is the periodic backstop for the FROM-digest ratchet. Every 6
@@ -83,7 +112,9 @@ covers the two cases the normal UTL version-bump cascade misses:
 - (b) UAC / other base-layer republishes that don't ride a UTL version-bump
 - (c) new repos not yet in the UTL dep-graph (never received a prior `dependency-update`)
 
-SSOT: `plans/active/build_operability_smoke_all_repos_2026_06_19.md` Phase 5 fix-c.
+SSOT:
+[/plans/archive/2026_06/build_operability_smoke_all_repos_2026_06_19.md](/plans/archive/2026_06/build_operability_smoke_all_repos_2026_06_19.md)
+Phase 5 fix-c _(archived; path repointed 2026-07-26)_.
 
 ## What it actually does
 
