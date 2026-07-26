@@ -130,11 +130,13 @@ drift_direction: advance-code
       (registered `volatility_index` for cefi, +26 shards = 234) — root-caused via git-stash reproduction on a clean
       HEAD (fails identically without my change), bumped the pin with a dated comment. `quality-gates.sh` green (247s,
       sentinel written).
-- [ ] [CHORE] P1. Fix the 2 stale comments in `strategy-service/strategy_service/cli/handlers/paper_run_handler.py` that
-      describe classes as "kind `perp-funding`"/"kind `dex-pools`" when the code already resolves `kind="tick-data"` —
-      comment-only, no behavior change. Repo: strategy-service. **Done when**: both comments accurately describe the
-      current resolution; no executable line changed; `quality-gates.sh` green. Source:
-      `defi_dedicated_bucket_shared_migration_2026_07_13.md`.
+- [x] ✅ [CHORE] P1. Fix the 2 stale comments in `strategy-service/strategy_service/cli/handlers/paper_run_handler.py`
+      that describe classes as "kind `perp-funding`"/"kind `dex-pools`" when the code already resolves
+      `kind="tick-data"` — comment-only, no behavior change. Repo: strategy-service. **Done when**: both comments
+      accurately describe the current resolution; no executable line changed; `quality-gates.sh` green. Source:
+      `defi_dedicated_bucket_shared_migration_2026_07_13.md`. — strategy-service@4a7fbb17. Verified against the real
+      `resolve_bucket_name()` calls in `canonical_perp_funding_provider.py`/`canonical_dex_pool_provider.py` (both
+      `kind="tick-data"`); comment-only edit, no executable line changed; `quality-gates.sh` green (214s).
 - [ ] [CODE] P1. Implement Phoenix DEX radix-slab top-of-book decode in
       `market_tick_data_service/cli/handlers/phoenix_orderbook_handler.py` — parse the Phoenix market-account slab
       layout (RPC fetch already works) to populate `best_bid_price`/`best_ask_price`/sizes/`spread_bps`/`mid_price`;
