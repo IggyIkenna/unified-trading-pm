@@ -36,7 +36,8 @@ resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
-depends_on: []
+depends_on: [hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26]
+gate_on_depends: true
 source:
   [
     unified-trading-system-ui/.github/workflows/ci.yml,
@@ -115,3 +116,24 @@ proven correct via local reproduction — see that issue doc — but never succe
       `defi_wizard_batch2_018_residual_findings-004`/`-005` (the YAML is fully drafted and locally-verified — see that
       issue doc's evidence — just needs a clean real-CI run to merge with confidence). Repos: unified-trading-system-ui,
       unified-trading-pm.
+
+## 2026-07-26 premature-dispatch finding + `depends_on`/`gate_on_depends` fix (slot 10)
+
+Dispatched todo 3 (`-002` in the backlog) fresh. `GET /api/backlog/.../blockers` returned `"ready (no blockers)"` even
+though this doc's own todo 2 says explicitly "Fix direction... is the sibling doc's still-open todo 2 — not duplicated
+here" — i.e. todo 3 here genuinely depends on
+`hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md`'s todo 2 (`[DEVOPS] P2`, decide + ship the
+fix direction), which is a DIFFERENT plan file. Re-verified live before touching anything:
+`git fetch origin main --tags` + `git merge-base --is-ancestor v0.72.0 origin/main` on `unified-api-contracts` still
+returns NOT an ancestor — the tag-ancestry gap is still open, so `registry-drift` would still fail identically on `main`
+today. Confirmed the sibling doc's todo 2 is still `- [ ]` unchecked.
+
+This is a genuinely different shape from the two premature-dispatch fixes already applied elsewhere today: not a
+same-doc chain (→ `sequential: true`) and not an operator-only credential (→ `BLOCKED-CREDENTIALS`), but a real
+CROSS-PLAN dependency on another doc's still-open, worker-dispatchable todo — exactly the case `depends_on` +
+`gate_on_depends: true` exists for. Added both to this doc's frontmatter above, pointing at the sibling doc's slug. Note
+(per the known `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` issue): this wiring has a documented
+history of not always taking effect on the same regen tick a plan is authored/edited — if `-002` (or its successor id)
+gets re-dispatched again with `blockers` still reporting "ready," that issue doc's wiring-gap investigation is the next
+place to look, not a fresh re-diagnosis here. Declining to run/verify the CI job or flip the checkbox against a fix that
+hasn't landed; skipping this task (`reason_code: GATED`).
