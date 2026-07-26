@@ -552,24 +552,25 @@ drift_direction: advance-code
       populated `resolved_by:` with evidence citations for all 4 original decisions + the 3 CeFi-pivot bugs, committed
       via `docs(plans):`. Source (archived):
       `/plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md`
-- [ ] [SCRIPT] P3. Regenerate the stale `adapter_contract_baseline.yaml` entries for the 2026-07-14 Solana-Drift/Helius
-      split: in `unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml`, first confirm the split
-      (commit 7a8bc43c, moving Helius batch-resolve retry/rate-limit mechanics from
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot 4) — already resolved, no code change needed.** Regenerate the stale
+      `adapter_contract_baseline.yaml` entries for the 2026-07-14 Solana-Drift/Helius split: in
+      `unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml`, first confirm the split (commit
+      7a8bc43c, moving Helius batch-resolve retry/rate-limit mechanics from
       `market_tick_data_service/cli/handlers/solana_defi_drift.py` into the new sibling `solana_defi_drift_helius.py`)
       did not actually DROP any tracked contract calls
       (`classify_venue_error`/`ADAPTER_FETCH_FAILED`/`record_captured`/`record_empty`/`record_zero_rows`/`record_failed`)
       — verify via `git log -p` / `git show` around 7a8bc43c that the calls now counted in `solana_defi_drift_helius.py`
       (9 today) are the same calls formerly counted under `solana_defi_drift.py` (was baselined at 12, now 10), i.e. the
-      split moved calls rather than silently losing them. If confirmed intentional (no real regression), run
-      `check_adapter_contract_regression --regenerate-baseline` (or the equivalent quality-gates.sh 5.70/6
-      baseline-regen flow) scoped to `market-tick-data-service` to update the `solana_defi_drift.py` baseline count to
-      10 and add a fresh baseline entry for `solana_defi_drift_helius.py` at 9. If instead calls were actually lost (a
-      real regression), do NOT regenerate — file a new P1/P2 issue doc describing the lost contract calls and leave the
-      WARN in place. Source: `plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
-      Done when: `quality-gates.sh --no-fix` on `market-tick-data-service` no longer prints the "Adapter contract-call
-      regression" ⚠️ for `solana_defi_drift.py`, the updated `adapter_contract_baseline.yaml` diff is committed, and the
-      source issue doc's status is flipped to resolved (or a new regression issue doc is filed instead, per the above
-      branch).
+      split moved calls rather than silently losing them. **Findings**: the split DID move calls cleanly (verified via
+      `git show 7a8bc43c^:...`/`7a8bc43c:...` — 12→10/9, real code motion), but this question turned out to be moot —
+      `git log --follow` shows BOTH files were deleted entirely by `2e674d1f` (2026-07-16, the operator-ruled
+      DRIFT/PACIFICA removal), one day after this issue was filed, and their baseline entries were separately dropped
+      the same day by `6c5cfa812` ("chore(qg): drop culled DRIFT/PACIFICA entries from the adapter contract
+      baseline..."). Confirmed live: `grep solana_defi_drift adapter_contract_baseline.yaml` = 0 hits;
+      `check_adapter_contract_regression.py --workspace-root .` (run from the slot's sibling-repo parent dir) shows only
+      3 currently-regressed files, none Solana-Drift-related. No regeneration needed — the fix already shipped
+      incidentally via an unrelated commit. Flipped the source issue doc to `status: resolved` with the full re-triage.
+      Source: `plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-26 (worker, slot 6).** Verdict: SAFE across every active writer for
       `dex_pool_swaps`/`gas_fees` in market-tick-data-service — `record_captured` fires only after a confirmed
       successful parquet upload in every handler checked (`evm_defi_collectors.py`, `dex_swaps_handler.py`,
