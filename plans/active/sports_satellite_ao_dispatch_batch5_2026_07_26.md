@@ -455,35 +455,24 @@ drift_direction: advance-code
       import-graph evidence cited (or kept with a stated blocking caller), the 4 siblings are each individually resolved
       (deleted or kept with reason), and each of the 6 unverifiable one-offs has an explicit delete-or-keep verdict
       backed by a cited live-manifest check.
-- [ ] [SCRIPT] P0. **Understat bulk backfill — close out the full sequential chain (§4/§6/§8).** (1) Verify the shipped
-      §9.2 UTL consolidator dedup fix (`unified-trading-library@f5ec2291f`, `NULL==''` dedup at anti-join + window
-      `PARTITION BY`) has reached the ~20 DEPLOYED Cloud Run consolidator jobs (check image digest/rebuild timestamp vs
-      the promote commit) — do not assume, confirm via the running job's image. (2) Once confirmed, run the one-off
-      manifest normalization pass to clean the pre-existing dup pollution (610 XG / 2,235 XG_SHOTS dup groups,
-      seed-vs-seed dups, + the 5 stale `instrument_type="shot"` 2024-12-14 test rows) — normalizing before step (1) is
-      confirmed just re-duplicates against the still-buggy comparison, so this step is strictly gated on (1). (3) Build
-      the bulk writer: reuse the existing `get_fixtures(league,season)` (bulk XG) + `get_match_shots` +
-      `_gated_sink_write` + `record_captured` helpers (no path/manifest reshape) — season `getLeagueData` cache +
-      bounded-concurrency shots fetch, grouped season→per-`(date,league)`, exactly mirroring the sequential path's
-      GCS/manifest atom (this step was already noted "Unblocked — §9.2 shipped" in the doc). (4) `[OPERATOR]` Run the
-      full backfill (5 big-5 leagues, 2014→present, XG + XG_SHOTS) via the force/overwrite path (last-write-wins,
-      promotes stale `empty_confirmed`→`captured`) — **do NOT write to GCS/touch the manifest until the operator
-      explicitly confirms the save path** (the doc's standing "dont save before confirming" working agreement); locus is
-      bulk-local/short-lived, NOT the old date-by-date VM. (5) If `deployment-api` LDR HEAD is now QG-green (was blocked
-      by 4 pre-existing unrelated `test_route_fleet`/`test_empty_reason_breakdown` failures as of 2026-07-06), re-apply
-      the saved patch (`scratchpad/deployment_api_xg_shots_meta.patch`) registering `XG_SHOTS` in
-      `SPORTS_DATA_TYPE_META` so the Data Status tab stops filtering it out; if still red, leave `BLOCKED-PREREQUISITES`
-      and note the specific failing tests. (6) After the backfill completes, re-evaluate the `understat-vm-xg-complete`
-      gate against the live manifest (`0 attempted_failed`, `0 expected_unattempted` for native big-5 leagues,
-      `XG_SHOTS ≈ XG` captured ratio) — flip only on real captured shots, never hollow. Source:
-      `understat_bulk_download_backfill_2026_06_29.md`. Done when: the §9.2 consolidator-deployment check is confirmed
-      one way or the other with cited evidence; the manifest normalization has run (or is documented as still gated on
-      the deployment check); the bulk writer script exists and is validated on ≥1 single-`(date,league)` write; the full
-      5-league backfill has either run to completion under an explicit logged operator confirmation (manifest showing
-      `attempted_failed=0`/`expected_unattempted=0` for native leagues) or is documented as still awaiting that
-      confirmation; the `SPORTS_DATA_TYPE_META` patch is either shipped or left `BLOCKED-PREREQUISITES` with the current
-      failing-test list; and the `understat-vm-xg-complete` gate's flip/no-flip status is re-recorded against the
-      resulting manifest state.
+- [x] ✅ [SCRIPT] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — Understat bulk backfill — close out the full
+      sequential chain (§4/§6/§8).** Discovery: every substantive step of this chain was ALREADY completed via the
+      sibling/successor plan `plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md` (archived
+      2026-07-13, literal 0/0/0 close-out) — the source issue doc's own §8 checkboxes were simply never flipped, which
+      is why this AO-dispatch batch's fresh triage flagged it as orphaned. Verified (not assumed) that the 2026-07-13
+      closure has held: (1) confirmed the §9.2 consolidator fix (`unified-trading-library@f5ec2291f`) is live in the
+      deployed Cloud Run job `uts-prod-manifest-consolidator-instruments-sports` via image→base-image→commit ancestry
+      (base UTL 0.57.0 built 2026-07-25 contains `_dedup_key_sql`); (2) fresh manifest read
+      (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 5,584,073 rows)
+      shows 0 duplicate groups, 0 `attempted_failed`, 0 `expected_unattempted` for big-5 XG/XG_SHOTS (captured
+      6,675/6,666, ratio 0.9984) — unchanged from the 2026-07-13 baseline, 13 days later; (3) the bulk writer + full
+      backfill run were both already done per the archived plan's 2026-07-06/07-08 Progress Log entries; (4) the ONE
+      genuinely-open sub-item — `SPORTS_DATA_TYPE_META` registration for `XG_SHOTS` (deployment-api) — was still blocked
+      on a red LDR HEAD; re-ran deployment-api QG fresh (now green), re-authored + shipped `deployment-api@b04c082`; (5)
+      re-confirmed the `understat-vm-xg-complete` gate state is still green (flipped 2026-07-12, literal-0/0/0
+      re-verified 2026-07-13, and again today). Full evidence + closure narrative in
+      `plans/active/issues/understat_bulk_download_backfill_2026_06_29.md` §8 (all checkboxes flipped) + its 2026-07-26
+      Progress Log entry.
 - [ ] [DATA] P1. **Implement Sports E8 legacy-delete (`migrate_sports_canonical_v9.py --drop-stale`) + delete
       `sports_reference_v1_archive/` under an operator gate.** Implement the currently-unimplemented `--drop-stale` stub
       (line 886-891 raises) as a twin-verified per-surface delete — for both `instruments-store-sports-prd-*` and
