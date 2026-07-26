@@ -107,23 +107,48 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `features-delta-one-defi` has a populated index, both over the full captured window (2 legs, not 3). Source:
       `data_completion_defi_2026_07_15.md`
 
-      **IN-PROGRESS 2026-07-26 (slot-8) — 2 SPOT VMs launched, both idempotent/safe to re-run if interrupted:**
-                  (a) `features-delta-one-defi-20260726-190820` — launched with window 2026-04-15..2026-07-25, RUNNING as of
-                  19:12 UTC, no dependency failure (delta_one's OHLCV-price inputs predate DeFi-specific onchain data types).
-                  (b) `features-onchain-defi-20260726-191239` — 2nd attempt; the FIRST attempt
-                  (`features-onchain-defi-20260726-190744`, window 2026-04-15..2026-07-25) failed fast with a `DependencyError`
-                  (5 missing upstream MTDS manifests for 2026-04-15: vault_share_price/lst_rates/lending_indices/oracle_prices/
-                  perp_funding — `data_completion_defi_2026_07_15.md` shows `lst_rates` only starts capturing ~2026-06-14, so
-                  2026-04-15 predates DeFi onchain-input availability); relaunched with a corrected, narrower window
-                  2026-07-01..2026-07-25, RUNNING as of 19:12 UTC. **If both VMs are no longer RUNNING when you resume this
-                  todo**: check `gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/EXIT_STATUS` +
-                  `run.log` (both self-delete on completion per `VM_SHUTDOWN_ON_COMPLETION=true`) — if EXIT_STATUS=0 for both,
-                  run the post-backfill manifest rebuild the launcher printed
-                  (`rebuild_manifest_from_canonical_paths(resolve_bucket_name(cloud='gcp', kind='features', asset_group='defi'),
-                  service_name='features-service')`), verify row counts (slim manifest read, `columns=` restricted — do NOT do
-                  a full-column read, it triggers per-VM-shard fallback and can use 10+GB RAM on this shared host), then flip
-                  this checkbox with the VM names as evidence. If a VM shows non-zero EXIT_STATUS, read its `run.log` tail for
-                  the actual failure before relaunching — do not blindly retry the same window twice.
+      **IN-PROGRESS 2026-07-26 (slot-8) — real bug found + fixed; 2 SPOT VMs currently RUNNING, both
+              idempotent/safe to re-run if interrupted:**
+
+              **Bug found + FIXED**: onchain's `DependencyChecker` (`features_service/onchain/app/core/dependency_checker.py`,
+              `UPSTREAM_DEPS`/`UPSTREAM_DEPS_DEFI`) had every `bucket_template` missing the `-prd-` env-tier segment
+              (`"market-data-tick-{asset_group_lower}-{project_id}"` instead of the canonical
+              `"market-data-tick-{asset_group_lower}-prd-{project_id}"` — see
+              `unified_trading_library/config_interface/paths/registry.py`'s own `-prd-`-bearing template). This made the
+              checker always resolve a bucket that doesn't exist, so it unconditionally reported all 5 DeFi MTDS on-chain
+              deps (vault_share_price/lst_rates/lending_indices/oracle_prices/perp_funding) as missing regardless of the
+              real capture date — explains why BOTH a 2026-04-15 window AND a 2026-07-01 window failed identically with the
+              same `DependencyError`. Fixed + regression-tested (`tests/onchain/unit/test_dependency_checker_bucket_templates.py`)
+              + shipped: `features-service@5fb00174`.
+
+              Two separate VMs currently RUNNING (post-fix):
+              (a) `features-onchain-defi-20260726-195642` — window 2026-07-01..2026-07-25, launched with the fixed code
+              (tarball republished first — an earlier launch attempt at 19:54 fetched stale pre-fix code and was deleted
+              before it could waste a run).
+              (b) `features-delta-one-defi-20260726-195741` — window 2026-07-01..2026-07-25 (narrowed from the original
+              2026-04-15..2026-07-25). The FIRST delta_one attempt (`features-delta-one-defi-20260726-190820`, full
+              2026-04-15..2026-07-25 window, `--feature-group ALL`) was OOM-killed (exit 137) shortly after logging
+              "Processing 18 feature groups" — likely loading the full ~3.5-month window into memory at once across all
+              DeFi instruments/18 feature groups on an e2-standard-8 (`MACHINE_TYPE` is hardcoded in
+              `deployment-service/scripts/vm/launch-features-vm.sh:221`, no env override exists). Narrowing the window is
+              the safer fix vs hand-patching the launcher's machine type (broader blast radius, affects every feature
+              family). **If this narrower run also OOMs**: the real fix is chunking delta_one's DeFi backfill into
+              several smaller-window VM runs (e.g. monthly) rather than one `--feature-group ALL` pass — try that before
+              touching `MACHINE_TYPE`.
+
+              **If both VMs are no longer RUNNING when you resume this todo**: check
+              `gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/EXIT_STATUS` + `run.log` (both self-delete
+              on completion per `VM_SHUTDOWN_ON_COMPLETION=true`) — if EXIT_STATUS=0 for both, run the post-backfill
+              manifest rebuild the launcher printed
+              (`rebuild_manifest_from_canonical_paths(resolve_bucket_name(cloud='gcp', kind='features', asset_group='defi'),
+              service_name='features-service')`), verify row counts (slim manifest read, `columns=` restricted — do NOT do
+              a full-column read, it triggers per-VM-shard fallback and can use 10+GB RAM on this shared host). **Note**:
+              even on full success, both VMs only cover 2026-07-01..2026-07-25 — the done-when says "full captured
+              window," so additional chunked runs covering back to the actual per-data-type start dates (lst_rates
+              ~2026-06-14 per `data_completion_defi_2026_07_15.md`; verify others) are still needed before flipping this
+              checkbox. If a VM shows non-zero EXIT_STATUS, read its `run.log` tail for the actual failure before
+              relaunching — do not blindly retry the same window twice (2 prior attempts already did that and both failed
+              on the now-fixed bucket-naming bug, not the date).
 
 - [ ] [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
