@@ -146,3 +146,25 @@ The worst variant, and the first on a **CODE** task (deployment-api gunicorn/reg
   babysitting the collision across ~45min and a restart** — exactly the manual toil the BACKEND fix (todos above) should
   remove. Incident 3 upgrades the "self-mitigating / luck" caveat: on a code task the luck margin is thinner, and the
   restart-survival shows ping-staleness failover is too eager against a healthy long-silent worker.
+
+## Incident 4 — sports_satellite_ao_dispatch_batch5-026 (slots 6 & 7), ~2026-07-26
+
+Doc-only this time (no code collision), but a clean example of the SAME task_id live on two slots concurrently:
+
+- Slot 6 (this worker) was dispatched `sports_satellite_ao_dispatch_batch5-026` (the CLV odds_targets export wrapper
+  todo in `sports_satellite_ao_dispatch_batch5_2026_07_26.md`). Re-verified current repo state, found the two remaining
+  implementation todos both required explicit operator sign-off before quickmerge and exceeded the dispatch's 1-hour
+  estimate — escalated via `/blocked` (`BLK-2e9c9505`) asking whether to implement-and-hold or leave tracked/gated.
+- Main's answer to `BLK-2e9c9505` revealed slot 7 held the SAME `task_id` and had ALREADY implemented the export
+  (`unified-api-contracts@b95012ed` + `features-service@0f90702e`, QG-green, committed in slot 7's own clone, held
+  pending a separate `BLK-ec018203` sign-off) — main explicitly flagged: "this task_id appears dispatched to both slot 6
+  and slot 7 — flagging the apparent double-dispatch; the correct single owner is slot 7."
+- Slot 6 stood down via `/skip-current-task` (reason: double-dispatch, same-file collision avoidance) rather than
+  re-implementing the same files. No collision landed — but only because slot 6 asked before touching the files; had
+  slot 6 started building blind (a reasonable move given `can_continue: true` on its own blocked question), it would
+  have hit the exact same-file conflict Incident 3 warns about, on a leakage-safety-sensitive cross-repo change this
+  time.
+- Corroborates: the double-dispatch condition isn't limited to failover-after-silence (Incidents 1-3) — this instance
+  showed no visible silence/ping-staleness trigger from slot 6's side; the SAME task_id was simply live on two slots at
+  once, discovered only because slot 6 happened to ask a question before acting rather than starting an implementation
+  blind.
