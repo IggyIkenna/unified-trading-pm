@@ -145,7 +145,17 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       todo flipped or re-opened with the specific reason. Source:
       `/plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md` (BACKEND P1 — its stated "cannot be done until
       the pipeline promotes the commit" gate has now had two days to clear). That doc's `[DOCS] P1` codex-edit todo is
-      NOT in scope — codex edits are never autonomous.
+      NOT in scope — codex edits are never autonomous. **BLOCKED-CREDENTIALS (2026-07-26, slot 4)**: cannot execute any
+      of the three checks. Both `check-ao-backlog-status.sh` and a hand-rolled `aws ssm send-command` against
+      `i-0c9b283b31d6b5ca7` (`ap-northeast-1`) fail identically:
+      `AccessDeniedException: User: arn:aws:iam::427895769566:user/ikenna-worker is not authorized to perform:     ssm:SendCommand on resource: arn:aws:ec2:ap-northeast-1:427895769566:instance/i-0c9b283b31d6b5ca7 because no     identity-based policy allows the ssm:SendCommand action`.
+      Only one AWS profile (`default`) is configured in this environment, and `iam:ListAttachedUserPolicies` on this
+      same user is also denied, so there is no self-service path to confirm or fix the policy from inside a worker
+      session — this is a genuine operator-only IAM-grant action, not a slot-specific or retriable gap (every slot on
+      this host shares the same AWS credentials, so `/skip-current-task` would not route around it). Remediation: grant
+      `ssm:SendCommand`/`ssm:GetCommandInvocation` on that instance ARN to
+      `arn:aws:iam::427895769566:user/ikenna-worker` (or run the check from a session/account that already has it), then
+      re-dispatch this todo. Left unchecked pending operator action — see `/blocked` filed this session.
 - [ ] [BACKEND] P3. **Prove `head_backward_canary.py` still fires on one legitimate single realign.** After the
       double-reset guard `agent-orchestrator@3e5de0e7b` landed, and record that the canary needed no modification. A
       test exercising the canary against the reflog signature of one allowed realign satisfies this — the source doc's
