@@ -80,3 +80,12 @@ doesn't help an agent that genuinely needs the full `quality-gates.sh` green (e.
 
 None new — this is a checker-calibration bug in `scripts/quality_gates/check_plan_discipline.py`, not a doc-content or
 architecture question.
+
+## Resolution note
+
+Independently found + fixed the same root cause in parallel this session, before this doc's own shipped fix (above)
+landed — same file, same approach, resolved via a genuine `git pull --rebase --autostash` merge conflict rather than
+overwriting either side. The version that shipped (in the "Recommended decision" item above) is more complete — it also
+covers rule C (`_check_rule_c`, the archive-no-successor check) and ships with 7 unit tests
+(`tests/unit/test_check_plan_discipline.py`) — so that is the one in the tree; this note just records that a second,
+narrower fix existed and was superseded, not layered on top, to avoid two competing implementations of the same regex.
