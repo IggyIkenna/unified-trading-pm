@@ -168,10 +168,10 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
       combo builders** (`cefi/deribit_combo_adapter.py`, `cefi/tardis/combos.py`) — the operator spec (2026-07-09)
       explicitly made this cross-asset-group, not TradFi-only. Not attempted in this pass (untouched by this commit's
       diff; needs fresh investigation of those adapters).
-- [ ] [SCRIPT] P3. (NEW, filed 2026-07-09) **Extend UAC's `build_leg()` with an opt-in venue-omission mode** so TradFi
-      combo legs (and any other future venue-less-leg consumer) can route through the real shared builder instead of the
-      local `_build_leg_key()` helper — cross-repo (`unified-api-contracts`), deliberately deferred out of this fix's
-      scope (see the P1 "drop venue prefix" todo above for the full rationale).
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot-10, data_engineering)** — Extended UAC's `build_leg()` with an opt-in
+      `include_venue: bool = True` parameter (`unified-api-contracts@e1023c80`) and migrated all 3 TradFi combo-leg call
+      sites (`instruments-service@de870864`) to it, deleting the local `_build_leg_key()` helper. Full detail:
+      `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s corresponding todo.
 
 ## Progress Log
 

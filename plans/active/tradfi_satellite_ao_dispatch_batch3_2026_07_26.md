@@ -69,20 +69,18 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **Extend UAC's `build_leg()` with an opt-in venue-omission mode.** Currently TradFi combo-leg
-      construction bypasses UAC's real shared `build_leg()`
-      (`unified_api_contracts.internal.reference.canonical_id_builder`) and instead uses a local `_build_leg_key()`
-      helper, because `build_leg()` always includes a venue prefix and TradFi legs deliberately drop it (`TYPE:SYMBOL`
-      only, no `VENUE:` prefix — see the doc's shipped P1 "drop venue prefix" fix for the full rationale). Add an opt-in
-      parameter/flag to `build_leg()` (e.g. `include_venue: bool = True`) so venue-less-leg consumers (TradFi combos
-      today, any future venue-less-leg consumer) can route through the real shared builder instead of maintaining a
-      local duplicate helper. Cross-repo: unified-api-contracts (the builder change) + market-tick-data-service or
-      instruments-service (swap TradFi's `_build_leg_key()` call site over to `build_leg(include_venue=False)`, delete
-      the local helper once parity is proven). Done when: `build_leg()` supports the venue-omission mode with a unit
-      test proving byte-identical output to the current `_build_leg_key()` output for existing TradFi combo legs, the
-      TradFi call site is migrated to call `build_leg()` directly, the local `_build_leg_key()` helper is deleted, and
-      `quality-gates.sh` is green in both repos. Source:
-      canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot-10, data_engineering)** — Extended UAC's `build_leg()` with an opt-in
+      `include_venue: bool = True` parameter (`unified-api-contracts@e1023c80`): when `False`, strips the leading
+      `VENUE:` segment from the built leg key — safe unconditionally since every `build_instrument_id` dispatch path
+      formats as `{_venue_token(...)}:{itype.value}:{symbol...}` and `_venue_token` never itself contains a `:`. 4 new
+      unit tests, including one proving byte-identical output to the old `_build_leg_key()` convention
+      (`f"{InstrumentType.FUTURE}:SP500" == "FUTURE:SP500"`). Migrated all 3 TradFi combo-leg call sites
+      (`instruments-service@de870864`) — `_parse_cme_calendar_spread_legs`, `_parse_cboe_spread_legs`, and the
+      ICE-populated leg path in `adapter.py` — to call
+      `build_leg(venue, ..., passthrough=True,     include_venue=False)` directly; the local `_build_leg_key()` helper
+      deleted. Existing `test_g1c_xcbf_spreads_decompose_to_combo` regression suite (2-leg, 3-leg, unparseable-drops,
+      5-leg-drops, outright-unaffected) verified still green post-migration. `quality-gates.sh --no-fix` green in both
+      repos. Source: canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md.
 - [x] ✅ [DATA] P1. **Audit R1/R2 legacy-decommission safety after the completed 2026-07-06 v9 apply.**
       `data_completion_tradfi_2026_07_15.md` line 183 (E7) reports the no-env legacy `market-data-tick-tradfi` bucket
       was ALREADY permanently deleted 2026-07-06, but line 298's R1 runbook item requires that deletion to have been
