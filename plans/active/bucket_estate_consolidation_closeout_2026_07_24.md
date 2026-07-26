@@ -110,14 +110,14 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       Repoint precondition CONFIRMED: `deployment_api_config.py`'s `ml_configs_store_bucket` field (now at line ~603,
       shifted from :642) defaults `""` → folds through `resolve_bucket_name` to `ml-store-{env}-{pid}` already — no code
       change needed. Bucket-existence probe this session (`gcloud storage buckets describe`, 403=exists vs 404=absent —
-      see `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` Part 1): `ml-models-store-{dev,prod,staging}` (GCP)
-      = **404, already gone** (matches `bucket_estate_fold_design_2026_07_13.md`'s note that Wave 1/2 already deleted
-      these); `ml-configs-store` / `ml-predictions-store` flat, no-suffix (GCP + AWS via `aws s3api head-bucket`) =
-      **404, already gone**. Only **one bucket remains**: GCP `ml-models-store` (flat legacy, 403=exists) —
-      content-parity already proven by a prior session (`bucket_fold_ml_2026_07_17.md` TICK 2: server-side byte-count
-      parity, dst `/models/` byte- identical to `ml-models-store-prd`, "100% redundant... its delete loses NOTHING") and
-      zero live readers already proven (`bucket_fold_ml_2026_07_17.md` TICK 1: "verified NO live source reader resolves
-      the flat name anymore"). Fresh grep-then-READ this session (not grep-then-conclude) across
+      see `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` Part 1): `ml-models-store-{dev,prod,staging}`
+      (GCP) = **404, already gone** (matches `bucket_estate_fold_design_2026_07_13.md`'s note that Wave 1/2 already
+      deleted these); `ml-configs-store` / `ml-predictions-store` flat, no-suffix (GCP + AWS via
+      `aws s3api head-bucket`) = **404, already gone**. Only **one bucket remains**: GCP `ml-models-store` (flat legacy,
+      403=exists) — content-parity already proven by a prior session (`bucket_fold_ml_2026_07_17.md` TICK 2: server-side
+      byte-count parity, dst `/models/` byte- identical to `ml-models-store-prd`, "100% redundant... its delete loses
+      NOTHING") and zero live readers already proven (`bucket_fold_ml_2026_07_17.md` TICK 1: "verified NO live source
+      reader resolves the flat name anymore"). Fresh grep-then-READ this session (not grep-then-conclude) across
       ml-service/deployment-service/ deployment-api/UTL for every literal
       `resolve_bucket_name(kind="ml-models-store"...)` (and sibling `get_write_bucket_name`/`_KIND_ALIASES` call sites)
       found **zero live executable callers** — every hit is a `#`/docstring comment describing the (already-executed)
@@ -217,7 +217,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       versioning/encryption/public-access-block siblings); removing that entry would plan a live S3 bucket DESTROY on
       the next real `terraform apply` — exactly the standalone-apply risk this todo's own text warns against ("fold into
       the dev/stg-tier retirement... rather than a standalone apply"), and a bucket delete is a human-only hard stop
-      (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3) regardless. Flagging this explicitly rather than
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3) regardless. Flagging this explicitly rather than
       silently dropping it: the umbrella dev/stg-tier retirement this was meant to fold into is already DONE (per the
       note below this list), so this specific line was simply never folded in and remains open — a genuine residual for
       whoever next does a supervised AWS bucket-list retirement, not a standalone edit. **(b)** Fixed all 4 named files
@@ -234,7 +234,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       `configs/services/` directory at all, so this PM-repo copy is not confirmed live-injected anywhere. Annotated as
       stale rather than guessing a "corrected" value nothing verifiably reads (a wrong-but-confidently-relabeled value
       would be worse than a clearly-flagged stale one). **(c)** Both scripts already carried the
-      Epic/Lifecycle/Delete-when 3-line marker (`codex/06-coding-standards/script-homes.md`) — added a STATUS note to
+      Epic/Lifecycle/Delete-when 3-line marker (`/codex/06-coding-standards/script-homes.md`) — added a STATUS note to
       each confirming the migration they perform has executed and the bucket names inside are a historical snapshot, not
       a live inventory (do not "fix" the names in place); left the actual delete-vs-keep decision against the
       Delete-when condition (orphan-sweep=0) for a dedicated sweep, since I didn't run one this session. Evidence:
@@ -274,7 +274,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
     already warned against a standalone apply here). Shipped `deployment-service@b47a66f` +
     `unified-trading-pm@b7bef5c7f`.
   - **ml legacy variants — LEFT `[ ]` UNCHECKED, deliberately.** Re-verified genuinely safe to delete (five-part proof
-    per `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, disposition `yes-twin-confirmed`) — but did NOT
+    per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, disposition `yes-twin-confirmed`) — but did NOT
     execute the delete. Two independent reasons, either one sufficient on its own: (1) that same codex doc's § 3
     hard-stop #1 — "Any prod-bucket delete... there is no confidence level at which an agent deletes from prod... Human
     executes; agent suggests" — applies unconditionally to `ml-models-store` regardless of how well-proven the
