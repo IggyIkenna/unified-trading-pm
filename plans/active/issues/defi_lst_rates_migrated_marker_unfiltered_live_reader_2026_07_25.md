@@ -148,4 +148,15 @@ per-venue twin-coverage sampling, content-match results, and the writer-side (Pa
       only for the SAFE population — never a blind glob-delete of "every `_migrated_*` lst_rates object for these 4
       venues," since the FLAGGED (no-twin) minority (up to ~24% for COINBASE in-sample) would lose its only surviving
       copy. Human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — no agent runs the actual
-      delete.
+      delete. **UPDATE 2026-07-26**: the FLAGGED (no-twin) minority this todo was waiting on no longer exists — a
+      copy-only (never-delete) fold one-off ran on an in-region SPOT VM
+      (`canonical-migration-defi-lst-rates-fold-20260726-003855`,
+      `market-tick-data-service@9150bc9fae4fe71b1961f4c46ed1c01933b6df5c`) and wrote the missing per-instrument twin for
+      all 346 previously-FLAGGED markers (`=== SUMMARY === folded: 346`, `rc=0`). Independently re-verified (exhaustive,
+      all 346, not sampled) via the same `verify_marker()` oracle this doc cites: 0 still-FLAGGED, 0 exceptions —
+      COINBASE/MAKER/SWELL/ETHENA are each now at 100% twin coverage (was 87.55%/89.66%/99.58%/99.28% respectively; full
+      before/after table in `plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s Progress Log). 12 of
+      the newly-written leaves (3/venue) were read back directly and confirmed non-empty with the full wide schema
+      intact. **The re-verify half of this todo is therefore done** (see that Progress Log for the full evidence) — only
+      the **purge itself** remains, still correctly `[OPERATOR]`/un-executed/un-checked (prod-bucket delete, human-only
+      per this doc's own citation).

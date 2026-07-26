@@ -195,26 +195,57 @@ that date's matches in that league) — exactly as the sequential path does per 
       ALL no-venue rows. Fix: Rule 1 now HONORS an explicit closed-set `asset_group` on a no-venue reference row (stamps
       `sports`), never touches `venue`. **SHIPPED with §9.2 in `unified-trading-library@f5ec2291f`**; +1 regression
       test.
-- [ ] [DATA] P1. One-off manifest normalization — clean the pre-existing dup pollution (incl. seed-vs-seed
-      `empty_confirmed`+`expected_unattempted` dups) + the 5 stale `instrument_type=shot` test rows on 2024-12-14.
-      **Sequenced AFTER the §9.2 consolidator fix DEPLOYS to the Cloud Run jobs** — normalizing before the deployed
-      consolidator has the fix would just re-duplicate against the still-buggy comparison. §9.
-- [ ] [SCRIPT] P1. Build the bulk writer reusing `get_fixtures(league,season)` (bulk XG) + `get_match_shots` +
-      `_gated_sink_write` + `record_captured` (no path/manifest reshape); season getLeagueData cache + concurrent shots;
-      group season → per (date, league). §4/§6. (Unblocked — §9.2 shipped.)
-- [ ] [DATA] P0. Full backfill run (operator-gated locus; NOT a VM — bulk local) → all 5 leagues 2014→present, XG +
-      XG_SHOTS captured; manifest `pending_fetch=0`, `attempted_failed=0`, `captured>0` for native leagues. §6.
-      (Unblocked — §9.2 shipped. **`dont save before confirming` — operator gate before any GCS write.**)
-- [ ] [CODE] P1. **DEFERRED — Register `XG_SHOTS` in `SPORTS_DATA_TYPE_META`** (deployment-api) so the Data Status tab
-      renders an XG_SHOTS coverage row (currently filtered out → the broken type is invisible). §5. Change is READY
-      (patch saved: `scratchpad/deployment_api_xg_shots_meta.patch`) but **BLOCKED**: deployment-api LDR HEAD
-      (`12e5603`) has 4 PRE-EXISTING unrelated test failures (`test_route_fleet` ×3 from the recent fleet feature
-      `e04668d`, `test_empty_reason_breakdown` taxonomy) → tree not QG-green → quickmerge blocked. Re-apply once LDR
-      deployment-api is green. Operator notified.
-- [ ] [VERIFY] P1. Verify the §9.2 consolidator fix reaches the DEPLOYED Cloud Run jobs (image rebuild on UTL promote);
-      the manifest self-heals once live. Then run the one-off normalization.
-- [ ] [VERIFY] P1. After backfill: re-evaluate the `understat-vm-xg-complete` gate against the manifest; flip only on
-      real captured shots (not hollow). Then the 6 parked sports tasks unblock.
+- [x] ✅ [DATA] P1. **DONE — closed via the sibling plan, not this todo directly.** One-off manifest normalization ran
+      as part of `plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md` (2026-07-13, slot-3): the dup
+      pollution this todo describes was actually closed by a **direct canonical rewrite**
+      (`instruments-service@2f56038e`, `scripts/dedup_mtds_instruments_surface_duplicate_rows_2026_07_13.py`) after
+      root-causing that the 10 residual test-row dups this todo names were a subset of a much larger 683,592-row
+      mislabeled-duplicate class (a buggy `market-tick-data-service` rebuild script, fixed at
+      `market-tick-data-service@55f9e961`). Re-verified independently **2026-07-26** (this session, fresh single-parquet
+      read of `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 5,584,073
+      total rows): **0** duplicate `(date, league_id, data_type)` groups for XG + XG_SHOTS, still holding 13 days later.
+      §9.
+- [x] ✅ [SCRIPT] P1. **DONE — the bulk writer was built and run to completion, not left as a future step.**
+      `plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md`'s 2026-07-06 Progress Log entry
+      documents the bulk driver (reused `_gated_sink_write`/`record_captured`, season `getLeagueData` cache, bounded
+      concurrency shots fetch, grouped season→per-(date,league) exactly as this todo specifies) validated on 8 dates
+      then launched full-scope. §4/§6.
+- [x] ✅ [DATA] P0. **DONE — full backfill ran to completion under an explicit operator go-ahead, DoD met literally.**
+      Same archived plan, `[SCRIPT] P1` todo (DONE 2026-07-08, slot-7): driver reached
+      `=== UNDERSTAT BULK BACKFILL COMPLETE ===` (0 attempted_failed). Re-verified 2026-07-13 (slot-3, literal-100%
+      re-verify): big-5 XG `attempted_failed=0 expected_unattempted=0 dup_groups=0 captured=6,673`; XG_SHOTS
+      `attempted_failed=0 expected_unattempted=0 dup_groups=0 captured=6,666` (ratio 0.999). **Independently
+      re-confirmed 2026-07-26 (this session, fresh manifest read):** big-5 XG `captured=6,675 empty_confirmed=15,965` (0
+      attempted_failed / 0 expected_unattempted); XG_SHOTS `captured=6,666 empty_confirmed=15,054` (0 attempted_failed /
+      0 expected_unattempted) — the clean state has held for 13+ days, not a transient snapshot. §6.
+- [x] ✅ [CODE] P1. **DONE 2026-07-26 (this session).** deployment-api LDR HEAD is QG-green now (the 4 previously-cited
+      `test_route_fleet`/`test_empty_reason_breakdown` failures are gone from the tree — the original saved patch at
+      `scratchpad/deployment_api_xg_shots_meta.patch` no longer existed, so re-authored the same registration). Shipped
+      `deployment-api@b04c082` (`feat(sports): register XG_SHOTS in SPORTS_DATA_TYPE_META`), full QG green (180s local +
+      122s re-verify), quickmerge landed on `live-defi-rollout`. §5.
+- [x] ✅ [VERIFY] P1. **DONE 2026-07-26 (this session).** Confirmed the §9.2 consolidator fix
+      (`unified-trading-library@f5ec2291f`, 2026-07-06) reached the deployed Cloud Run job
+      `uts-prod-manifest-consolidator-instruments-sports`: the job's `market-tick-data-service:latest` image (built
+      2026-07-26T00:23:30, commit `d0a4782`) is `FROM unified-trading-library@sha256:b005050e...` = UTL `0.57.0` (built
+      2026-07-25, tagged `4e696d327b63`), whose tree contains `_dedup_key_sql` in `manifest_consolidator.py` — the exact
+      function `f5ec2291f` introduced. The one-off normalization was independently verified as already-complete (see the
+      first todo above) — no further action needed; the consolidator's ordinary per-minute runs against the fixed dedup
+      logic is what has kept `dup_groups=0` since 2026-07-13.
+- [x] ✅ [VERIFY] P1. **DONE — gate already flipped and independently re-confirmed.** `understat-vm-xg-complete` was
+      flipped green 2026-07-12 (slot-10) and re-verified to a literal 0/0/0 bar 2026-07-13 (slot-3, superseding the
+      2026-07-12 "acceptable residual" ruling). **Re-verified again 2026-07-26 (this session)** against a fresh manifest
+      read: the big-5 state is unchanged (0 attempted_failed, 0 expected_unattempted, 0 dup groups, XG_SHOTS ≈ XG at
+      99.87%) — no regression in the 13 days since the last check. The "6 parked sports tasks" reference was never
+      machine-encoded in `backlog.yaml` (confirmed absent across 4+ prior sessions, 2026-07-06 through 2026-07-13) —
+      nothing to programmatically unblock; this is a pre-existing plan-ordering gap, out of this todo's scope to
+      retroactively fix.
+
+**Closure note (2026-07-26):** every item above was substantively completed via
+`plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md` (archived 2026-07-13) — this doc's own §8
+checkboxes were simply never flipped to reflect that closure, which is why the `/ag-closeout-audit` skill's fresh triage
+(batch5) picked this doc up as "orphaned" work. The only genuinely-new work done in batch5 was the SPORTS_DATA_TYPE_META
+registration (deployment-api was still red when the sibling plan tried it) and this session's independent
+re-verification that the 2026-07-13 closure has held for 13+ days (not stale/regressed).
 
 ## 9. Validation findings (2026-06-30) — consolidator does NOT promote captured cleanly
 
@@ -394,3 +425,28 @@ instrument_type = `""` (blank) per §9.1.
   entry + 4 new todos) and in the sibling dedup docs' own Progress Logs. Not duplicating the fix plan here — this doc's
   §8 todos remain the durable tracking for the consolidator-reaches-deployed-jobs question; treat them as still open,
   not superseded.
+- **2026-07-26 (slot-4, `data_engineering`, task `sports_satellite_ao_dispatch_batch5-021`) — §8 closure + the one
+  genuinely-remaining gap shipped.** Picked this up via the `/ag-closeout-audit` skill's batch5 fresh triage, which
+  flagged this doc as orphaned (its own §8 checkboxes were unflipped despite the underlying work having actually
+  completed via the sibling `understat_local_backfill_completion_2026_07_06.md`, archived 2026-07-13). Did NOT re-run
+  any backfill/normalization — first verified whether the archived plan's 2026-07-13 literal-0/0/0 closure had held:
+  - **Consolidator deployment, independently re-verified (not assumed):** the deployed Cloud Run job
+    `uts-prod-manifest-consolidator-instruments-sports` runs `market-tick-data-service:latest`
+    (`sha256:c2f1bc8c81b8...`, built 2026-07-26T00:23:30, commit `d0a4782`), which `FROM`s
+    `unified-trading-library@sha256:b005050e...` = UTL `0.57.0` (tag `4e696d327b63`, built 2026-07-25). Confirmed via
+    `git show 4e696d327b63:unified_trading_library/manifest_consolidator.py | grep _dedup_key_sql` that the §9.2 fix
+    function is present in that tree — the fix is live, not just landed on LDR.
+  - **Fresh manifest read**
+    (`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, 5,584,073 total rows,
+    `uv run --with pandas --with pyarrow --with gcsfs`, single-parquet read, no whole-corpus walk): big-5 XG
+    `captured=6,675 empty_confirmed=15,965`; XG_SHOTS `captured=6,666 empty_confirmed=15,054`. **Zero**
+    `attempted_failed`, **zero** `expected_unattempted`, **zero** duplicate `(date,league_id,data_type)` groups across
+    the entire 605,368-row understat corpus (not just big-5) — the 2026-07-13 closure has held for 13 days, not
+    regressed.
+  - **The one genuinely-open item:** `SPORTS_DATA_TYPE_META` registration for `XG_SHOTS` was still missing (the
+    2026-07-06 attempt was blocked on a red deployment-api LDR HEAD; the saved patch file no longer exists). Re-ran
+    deployment-api's full `quality-gates.sh` fresh — now green (the previously-cited `test_route_fleet`/
+    `test_empty_reason_breakdown` failures are gone from the tree) — so re-authored the registration (mirroring the
+    existing `XG` entry: `source=understat`, `axis=per_league_per_fixture_date`) and shipped `deployment-api@b04c082`.
+  - Flipped every §8 checkbox above with the corroborating evidence inline; this doc has no further open work as of this
+    session.
