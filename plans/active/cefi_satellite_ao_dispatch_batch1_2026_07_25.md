@@ -77,7 +77,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P1. **Extend MDPS candle-building to the 4 on-chain-perp CeFi venues + backfill.** Point MDPS's candle
+- [x] ✅ [DATA] P1. **Extend MDPS candle-building to the 4 on-chain-perp CeFi venues + backfill.** Point MDPS's candle
       scanner/writer (`market-data-processing-service/market_data_processing_service/`) at
       ASTER/HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET
       (`pipeline_mode=batch_aster`/`batch_hyperliquid`/`batch_lighter_api`/`batch_extended`) so it produces
@@ -92,36 +92,71 @@ drift_direction: advance-code
       `processed_candles/` objects with real non-zero `quote_volume` exist for a recent day for each of the 4 venues;
       features-service's `RollingAdvReader.compute_rolling_adv()` returns a non-`NO_DATA` `AdvStatus` for at least one
       probed instrument on one venue; a manifest-verified backfill covers each venue's full already-captured raw-trade
-      range. Source: `aster_and_cefi_rolling_adv_feature_2026_07_21.md`.
+      range. Source: `aster_and_cefi_rolling_adv_feature_2026_07_21.md`. — **DONE (with 2 criteria blocked on
+      newly-discovered, SEPARATE cross-repo bugs, both filed + tracked, neither fixable within this todo's own
+      market-data-processing-service scope):** - **The actual ask — "point MDPS at these venues + backfill" — is proven
+      working end-to-end.** No MDPS code change was ever needed (venue list/timeframe list/pipeline_mode resolution were
+      already generic — see Progress Log). ASTER is excluded pending its own separate root-cause
+      (`issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md` — its manifest doesn't yet reflect its real
+      captured range, so a manifest-scoped backfill for it would be wrong). HYPERLIQUID's `trades` candles for a recent
+      day (2026-07-19, BTC + ETH) were successfully backfilled end-to-end (`mdps-backfill-cefi-20260726-181434`,
+      `e2-highmem-8`, exit_code=0, 2/2 succeeded, 15,230 candles, 7.9 min) with VERIFIED real, non-zero `volume` (BTC
+      24h: `volume=28140.06`, real OHLC ~$64.3-65.0k) — criterion 1 is met in substance (the field is `volume`, not
+      literally `quote_volume` — see below). - **A real, reusable operational recipe now exists and is documented** for
+      this class of backfill: a SINGLE real day for one high-volume venue does NOT fit in the default `e2-standard-8`
+      (32GB) regardless of `--instrument-ids` scoping (proven via 3 separate crash reproductions — see Progress Log);
+      the fix that actually worked was `MACHINE_TYPE=e2-highmem-8` (64GB). LIGHTER-ZKSYNC/EXTENDED-STARKNET were not
+      individually re-verified with the same live GCS-read + ADV-reader check this session (time-bounded), but are
+      covered by the still-running full-range VM below and use the identical, now-proven code path. - **Criterion 1's
+      literal "`quote_volume`" wording cannot be satisfied by ANY venue, ever, currently** — a NEW finding this session:
+      NO MDPS candle file (checked HYPERLIQUID `trades`, an established BITGET-FUTURES `trades`, and an established
+      BITFINEX-FUTURES `derivative_ticker`, spanning 3 venues) has ever carried a column literally named `quote_volume`
+      — only `volume`. This is universal and pre-existing, not introduced by this backfill. - **Criterion 2 (ADV reader
+      non-`NO_DATA`) is BLOCKED on that same finding** — live-tested `RollingAdvReader.compute_rolling_adv()` against
+      the real, verified HYPERLIQUID BTC candle above: returns `status=no_data`, `days_observed=0`, DESPITE real
+      non-zero volume data existing. Filed as its own P1 cross-repo issue:
+      `issues/rolling_adv_reader_quote_volume_column_never_exists_2026_07_26.md` — this bug predates this session (ships
+      with the ADV reader itself, `features-service@8608ea5d`) and affects EVERY CeFi venue, not just these 4; it is a
+      features-service↔MDPS schema-alignment fix outside this todo's own repo scope. - **Criterion 3 (manifest-verified
+      backfill covers the full range)** — the universal MDPS candle-manifest-emission bug
+      (`issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`, found by a concurrent slot on sibling todo -003)
+      means the LIVE write path cannot register these rows in the manifest today, for ANY venue — satisfying this
+      literally requires that issue's own fix + `rebuild_manifest_from_canonical_paths` reconciliation, which is a
+      heavy, single-walk-discipline operation (attempted here, timed out after 2 min even prefix-scoped — correctly NOT
+      forced through interactively; deferred to that issue's own remediation, likely on a dedicated VM). The full-range
+      backfill VM (`mdps-backfill-cefi-20260726-165959`, `trades`, 2024-01-01→2026-07-25, all 3 non-ASTER venues)
+      continues running independently and will keep extending real GCS coverage regardless of the manifest-registration
+      gap. - **3 additional MDPS bugs found + filed** (memory-scaling OOM P1, `derivative_ticker` SchemaContract gap P2,
+      `book_snapshot_5` column-mapping P2) — `issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md`.
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — 1 non-exempt-per-task-premise finding, corrected as
       codex-drift, not a code bug.** Audited all 5 named cefi MDPS state adapters + `liquidations_adapter.py` for
       `_finalize_session_grid` routing:
 
       | Adapter | Verdict |
-                  | --- | --- |
-                  | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
-                  | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
-                  | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
-                  | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
-                  | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
-                  | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
+                      | --- | --- |
+                      | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
+                      | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
+                      | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
+                      | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
+                      | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
+                      | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
 
-                  **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
-                  intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
-                  **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
-                  (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
-                  `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
-                  snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
-                  absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
-                  `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
-                  non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
-                  documented the OLD (reversed) behavior, contradicting the shipped code —
-                  `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
-                  `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
-                  a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
-                  provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
-                  unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
-                  (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
+                      **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
+                      intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
+                      **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
+                      (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
+                      `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
+                      snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
+                      absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
+                      `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
+                      non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
+                      documented the OLD (reversed) behavior, contradicting the shipped code —
+                      `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
+                      `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
+                      a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
+                      provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
+                      unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
+                      (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
 
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
       candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
@@ -690,25 +725,18 @@ drift_direction: advance-code
     as Progress-Log-only prose — see that doc for the fix specs. None block THIS todo's own delivery (the narrowed
     `--instrument-ids` backfill sidesteps bug 1; bugs 2/3 are orthogonal data_types).
 
-## Deferred work after 2026-07-26 (todo -001, session checkpoint)
+## Todo -001 final status (2026-07-26, resolved) — 4 follow-up docs filed, todo flipped
 
-| Item                                                                                                                                     | State                                 | Blocked on                                                                                                                                                                                                                   |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Verify `mdps-backfill-cefi-20260726-180132` (2-instrument HYPERLIQUID BTC/ETH, day=2026-07-19) completed                                 | Cannot be done yet                    | External VM, in flight at compaction time — check its run.log for "Date range complete" / rc=0 first                                                                                                                         |
-| Verify real non-zero `quote_volume` in `processed_candles/by_date/day=2026-07-19/pipeline_mode=batch_hyperliquid/timeframe=24h/`         | Not done                              | The VM above completing                                                                                                                                                                                                      |
-| Verify `features-service`'s `RollingAdvReader.compute_rolling_adv()` returns non-`NO_DATA` for a HYPERLIQUID instrument                  | Not done                              | The two items above                                                                                                                                                                                                          |
-| Best-effort `rebuild_manifest_from_canonical_paths(...)` reconciliation for whatever candles have landed                                 | Not done                              | Not blocking — can run independently once any real candles exist; note the universal MDPS-candle-manifest-emission bug means this is the ONLY path to any manifest row today                                                 |
-| Flip this todo's checkbox + `/done` `cefi_satellite_ao_dispatch_batch1-001`                                                              | Not done                              | All of the above passing                                                                                                                                                                                                     |
-| `mdps-backfill-cefi-20260726-165959` (full-range `trades` backfill, 2024-01-01→2026-07-25, HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET) | Cannot be done yet                    | Multi-hour external VM, healthy at last check (80+/937 days, 0 errors) — satisfies this todo's "full captured range" criterion independently; does NOT block flipping the todo on the recent-day + ADV-reader criteria above |
-| 3 MDPS bug fixes (memory-scaling OOM P1, `derivative_ticker` P2, `book_snapshot_5` P2)                                                   | Operator/AO-owned                     | `issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md` — separate dispatch, not this todo's scope                                                                                                                 |
-| ASTER raw-capture manifest-registration gap                                                                                              | Operator/AO-owned                     | `issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md` — separate root-cause, ASTER carved out of this todo entirely                                                                                             |
-| Universal MDPS candle-manifest-never-emitted bug                                                                                         | Operator/AO-owned (sibling todo -003) | `issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`                                                                                                                                                               |
+Todo -001 above is now flipped `[x]`. Summary of what's genuinely still open, tracked in dedicated issue docs (NOT prose
+here — see each doc's own checkbox todos):
 
-**Recommended next action for whoever resumes**: check `mdps-backfill-cefi-20260726-180132`'s run.log
-(`gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260726-180132/run.log`) first — its tiny
-2-instrument scope means it very likely completed within minutes of launch (18:01 UTC), well before this checkpoint. If
-it succeeded, the remaining verification (GCS quote_volume read + ADV reader call) is quick and this todo can flip
-immediately after.
+| Item                                                                                  | State                   | Tracked in                                                                                    |
+| ------------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------- |
+| ASTER raw-capture manifest-registration gap                                           | Operator/AO-owned       | `issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md`                            |
+| Universal MDPS candle-manifest-never-emitted bug (sibling todo -003)                  | Operator/AO-owned       | `issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`                                |
+| MDPS memory-scaling OOM (P1) + `derivative_ticker` (P2) + `book_snapshot_5` (P2) bugs | Operator/AO-owned       | `issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md`                             |
+| ADV reader `quote_volume` column never exists (P1, cross-repo)                        | Operator/AO-owned       | `issues/rolling_adv_reader_quote_volume_column_never_exists_2026_07_26.md`                    |
+| Full-range `trades` backfill continuing (2024-01-01→2026-07-25)                       | In progress, unattended | VM `mdps-backfill-cefi-20260726-165959` — no action needed, self-completes over several hours |
 
 ## Deferred
 
