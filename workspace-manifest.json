@@ -762,8 +762,8 @@
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 9,
-        "coverage_pct": 90.9,
-        "large_file_count": 8
+        "large_file_count": 8,
+        "coverage_pct": null
       }
     },
     "market-data-processing-service": {
@@ -823,8 +823,8 @@
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 7,
-        "coverage_pct": 89.6,
-        "large_file_count": 4
+        "large_file_count": 4,
+        "coverage_pct": null
       }
     },
     "market-tick-data-service": {
@@ -883,8 +883,8 @@
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 41,
-        "coverage_pct": 83.53,
-        "large_file_count": 0
+        "large_file_count": 0,
+        "coverage_pct": 83.54
       }
     },
     "ml-service": {
@@ -1302,8 +1302,8 @@
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 0,
-        "coverage_pct": 73.06,
-        "large_file_count": 0
+        "large_file_count": 0,
+        "coverage_pct": null
       }
     },
     "unified-trading-api": {
