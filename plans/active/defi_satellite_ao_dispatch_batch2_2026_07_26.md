@@ -486,7 +486,13 @@ drift_direction: advance-code
       `spot_venue` is a selectable axis for staked-basis in both the leg-spec/manifest and the wizard, mirroring APD's
       `venue_universe` pattern; (4) a written comparison of the 5 behavioural e2e defaults vs production/paper intent is
       committed, with any mismatch either fixed in-repo or filed as a new `plans/active/issues/` doc.
-- [ ] [DOCS] P2. **Close out `features_service_defi_data_loading_blockers_2026_05_29.md` (status still `open`, no
+- [x] ✅ [DOCS] P2. **DONE 2026-07-26 (worker, slot 6).** Re-verified all 5 citations against current code via a
+      dedicated investigation sub-agent (all CONFIRMED, one naming correction: `FEATURE_GROUP_DATA_TYPE_OVERRIDES`, not
+      `DEFI_DATA_TYPE_OVERRIDES`) — flipped the source doc's `status: open` → `resolved`, populated `resolved_by:` with
+      file:line evidence for all 4 decisions + 3 CeFi-pivot bugs, cleared `locked_by:`, added a RESOLVED banner, and
+      archived it to `plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md` per the
+      issue-doc-lifecycle rule (a `status: resolved` doc must not sit in `plans/active/issues/`). Corpus referrers fixed
+      (6 files). **Close out `features_service_defi_data_loading_blockers_2026_05_29.md` (status still `open`, no
       `resolved_by`) — verify + flip, do not re-implement.** Direct code inspection (this audit pass) already confirms
       every substantive item in the doc is SHIPPED: (1)
       `DEFI_DATA_TYPE_OVERRIDES`/`volume_analysis`/`vwap`/`microstructure` now route through UAC
@@ -511,7 +517,8 @@ drift_direction: advance-code
       → `status: resolved`, fill `resolved_by:` with the confirming commit SHAs/citations, and remove
       `locked_by: live-defi-rollout` if no longer needed. **Done when**: frontmatter shows `status: resolved` +
       populated `resolved_by:` with evidence citations for all 4 original decisions + the 3 CeFi-pivot bugs, committed
-      via `docs(plans):`. Source: plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md
+      via `docs(plans):`. Source (archived):
+      `/plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md`
 - [ ] [SCRIPT] P3. Regenerate the stale `adapter_contract_baseline.yaml` entries for the 2026-07-14 Solana-Drift/Helius
       split: in `unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml`, first confirm the split
       (commit 7a8bc43c, moving Helius batch-resolve retry/rate-limit mechanics from

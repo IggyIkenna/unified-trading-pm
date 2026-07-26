@@ -44,7 +44,7 @@ referenced_by:
     /codex/04-architecture/solana-defi-coverage.md,
     /codex/04-architecture/token-wrapping-and-collateral.md,
     plans/active/issues/defi_code_codex_drift_2026_05_27.md,
-    plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
+    plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
     plans/audit/results/defi_c0_datastate_audit_2026_06_01.md,
   ]
 owner:

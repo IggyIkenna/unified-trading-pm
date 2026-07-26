@@ -22,7 +22,7 @@ tags: [plan-hygiene, audit, refactor, data-correctness, defi, observability, rec
 related:
   [
     plans/active/issues/defi_code_codex_drift_2026_05_27.md,
-    plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
+    plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
     plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
     plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
   ]
@@ -37,7 +37,7 @@ source:
     plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md,
     plans/active/issues/defi_code_codex_drift_2026_05_27.md,
     plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md,
-    plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
+    plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
     plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
     plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
     plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md,
