@@ -463,29 +463,33 @@ drift_direction: advance-code
     shipped via quickmerge with real commit shas; and this issue doc's Progress Log is updated to record instances 2+3
     closed while instance 4 (prospectus) stays explicitly open. Source:
     `plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`
-- [ ] [REGISTRY] P2. Close 4 leftover DeFi wizard/taxonomy gaps from
-      `e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`: (1) **D3** — `backtest_solana_basis.py` exercises a
-      drift-perp / Orca(Raydium) SOL-DEX-spot basis that has NO cell in `CARRY_BASIS_PERP` (spot venues are
-      CEX/`uniswap_v3` only, `orca`/`raydium`/`whirlpool` absent) — add the Solana-DEX spot venues to the
-      `CARRY_BASIS_PERP` leg-spec + verdict-matrix (unified-api-contracts) + wizard `leg:CARRY_BASIS_PERP:spot` option
-      tree (unified-trading-system-ui), OR (if Solana-DEX-spot basis is determined to be data-only / not a deployable
-      cell) document that explicitly in the leg-spec instead of the current silent omission; (2) delete or wire the dead
-      `per_venue_margin_buffer_pct: 0.20` key in `strategy-service/.../configs/arbitrage_price_dispersion.yaml`
-      (currently zero Python references) into the collateral-aware down-size branch already shipped in
-      `staked_basis.py::_derive_structure`; (3) make `spot_venue` a first-class selectable axis for staked-basis —
-      currently hardcoded per-LST (ETH-LST→UNISWAP_V3, SOL-LST→JUPITER, `catalog_staked_basis.py:30-35`) with no
-      Binance-spot/orca/raydium alternative, even though the engine already accepts a `spot_venue` param and APD already
-      exposes an equivalent via `venue_universe` — in unified-api-contracts (leg-spec/manifest) + strategy-service
-      (catalog); (4) audit the e2e DeFi catalog's 5 behavioural params left at engine defaults
-      (`entry_bps`/`exit_bps`/`min_health_factor`/`hedge_deadline_ms`/`peg_drift_threshold_bps`) against the
-      production/paper-run intended values for functional (not just nominal) alignment, per the doc's "NEW findings" P2
-      ask. Source: e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md. Done when: (1) CARRY_BASIS_PERP either has
-      orca/raydium spot cells wired end-to-end (leg-spec + verdict-matrix + wizard option tree) with a wizard-buildable
-      drift-perp/orca-spot config, OR the leg-spec explicitly documents Solana-DEX-spot basis as non-deployable; (2)
-      `per_venue_margin_buffer_pct` is either removed from the YAML or has a live code path consuming it; (3)
-      `spot_venue` is a selectable axis for staked-basis in both the leg-spec/manifest and the wizard, mirroring APD's
-      `venue_universe` pattern; (4) a written comparison of the 5 behavioural e2e defaults vs production/paper intent is
-      committed, with any mismatch either fixed in-repo or filed as a new `plans/active/issues/` doc.
+- [x] ✅ [REGISTRY] P2. Close 4 leftover DeFi wizard/taxonomy gaps from
+      `e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md` — unified-api-contracts@13266bf8,
+      strategy-service@1bf99b8e. (1) **D3** — re-audited live: `backtest_solana_basis.py` (the file that modeled
+      drift-perp/Orca SOL-DEX-spot basis) was DELETED in the 2026-07-16 Solana-perp-DEX cull, which also removed DRIFT
+      workspace-wide — that config can no longer be built on ANY spot venue, so the "wizard-buildable
+      drift-perp/orca-spot config" branch of the done-when is now categorically impossible. `raydium` was already added
+      to `CARRY_BASIS_PERP`'s spot leg (2026-07-24 containment fix, backing `catalog_carry.py`'s surviving
+      raydium/hyperliquid SOL row) — added an explicit code comment in `archetype_leg_spec_seeds.py` documenting why
+      `orca`/`whirlpool` are NOT included (no catalog row uses them; adding them would claim a wizard-buildable cell
+      with zero backing). Also found + fixed a related staleness bug while in this file: the generated
+      `capability-verdict-matrix.json` + `capability-manifest.json` (+ derived orphan/readiness reports) were stale —
+      still listing removed venues `drift`/`gmx_v2` for `CARRY_BASIS_PERP` and missing
+      `raydium`/`aster`/`kalshi_perp`/`polymarket_perp` — regenerated both from the current Python leg-spec source. (2)
+      Deleted the dead `per_venue_margin_buffer_pct: 0.20` key (zero Python references confirmed via grep); wiring it
+      into a new APD down-size branch would be net-new engine logic disproportionate to this todo, so removal (not a
+      shim) is the correct fix. (3) **Already shipped** — verified live: `catalog_staked_basis.py`'s
+      `_STAKED_BASIS_ETH_SPOT_VENUES`/`_STAKED_BASIS_SOL_SPOT_VENUES` already emit one slot per (LST × spot_venue)
+      including orca/raydium/jupiter/binance, and UAC's `archetype_leg_spec_seeds.py` already lists the same
+      `_SPOT_VENUES_STAKED` tuple — both landed under the 2026-06-17 operator directive, with an existing regression
+      test (`test_carry_staked_basis_spot_venue_axis.py`); no code change needed for the base archetype (the `_DATED`
+      variant still hardcodes `BINANCE-SPOT` — noted as a separate, smaller residual, not in this todo's done-when). (4)
+      Audited all 5 e2e behavioural params against `param_schema.py`/`staked_basis.py` production defaults — 4 of 5
+      match exactly (`entry_bps`, `exit_bps`, `min_health_factor`, `peg_drift_threshold_bps` by omission);
+      `hedge_deadline_ms` diverges (e2e hardcodes `2000` across all 5 call sites vs production default `5000`) — filed
+      `plans/active/issues/e2e_defi_hedge_deadline_ms_diverges_from_production_default_2026_07_26.md` with the full
+      comparison table + an A/B recommendation for the operator, since resolving it requires knowing whether the tighter
+      e2e deadline is a deliberate test-speed choice.
 - [x] ✅ [DOCS] P2. **DONE 2026-07-26 (worker, slot 6).** Re-verified all 5 citations against current code via a
       dedicated investigation sub-agent (all CONFIRMED, one naming correction: `FEATURE_GROUP_DATA_TYPE_OVERRIDES`, not
       `DEFI_DATA_TYPE_OVERRIDES`) — flipped the source doc's `status: open` → `resolved`, populated `resolved_by:` with
