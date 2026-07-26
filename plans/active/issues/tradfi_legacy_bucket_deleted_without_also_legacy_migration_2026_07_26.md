@@ -126,15 +126,13 @@ never assumed — an irreversible delete ran without its stated R1 precondition,
 data-pipeline-correctness HARD RULE + `gcs-and-manifest-delete-safety-protocol.md` exist to catch. Split into what a
 worker can do read-only now vs what is genuinely operator-gated:
 
-- [ ] [DATA] P0. **Canonical coverage-equivalence census (worker-doable, read-only, NOT a full-corpus GCS walk)** —
-      determine whether `market-data-tick-tradfi-prd`'s OWN Databento-sourced coverage already has equivalent fidelity
-      for the legacy bucket's date range, via a MANIFEST CENSUS (deployment-api axis census / direct manifest read),
-      never a whole-corpus GCS walk (heavy-I/O HARD RULE). Full canonical coverage of the same instrument × date range ⇒
-      net loss ~0 (close as procedural-miss WITH this census evidence cited); any uncovered slice (wider date range /
-      different source / higher-res ticks Databento can't reach) ⇒ that slice is the real, permanent loss. First bound
-      the legacy range from surviving pre-deletion inventory (a stale manifest snapshot, or the migrator's
-      pre-2026-06-29 dry-run planned-count ~3.8M processed_candles) — the deleted bucket itself can't be inspected, but
-      what it HELD can still be scoped. Repo: market-tick-data-service / instruments-service.
+- [x] ✅ [DATA] P0. **Canonical coverage-equivalence census (worker-doable, read-only, NOT a full-corpus GCS walk)** —
+      DONE 2026-07-26 (worker, slot 4) — **VERDICT: NOT a clean net-loss-~0 case.** Census evidence in the new section
+      below finds a real, structural uncovered slice (pre-2023 trade/tick-level + options/futures chain-snapshot tradfi
+      data) that canonical's own Databento source has essentially never captured. See "2026-07-26 census evidence"
+      section below for the full methodology + numbers. This does NOT resolve the parent finding — the two `[OPERATOR]`
+      todos below stay open and this evidence feeds their decision. Repo: market-tick-data-service / instruments-service
+      (read-only manifest census, no code changes).
 - [ ] [OPERATOR] P0. **TIME-CRITICAL — GCS soft-delete / Object-Versioning recovery-window check.** Needs
       `storage.buckets.get` / `gcloud storage buckets list --soft-deleted`, which no available worker credential has.
       The bucket was deleted 2026-07-06 = 20 days ago as of this writing; GCS bucket soft-delete DEFAULT retention is 7
@@ -200,6 +198,64 @@ asserts the tool exits non-zero with a clear report; a fully-covered case exits 
 into this loosely-worded slot without that scoping — Option A is low-value on its own, and Option B is a real feature
 that needs the same plan-authoring rigor (repo, done-when, estimate) as any other todo, not an ad-hoc implementation
 under an audit-finding's addendum.
+
+## 2026-07-26 census evidence (worker P0 todo, slot 4)
+
+**Method**: direct read of the LIVE manifest object
+`gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (5,866,066 rows, object
+`updated: 2026-07-26T03:35:45Z` — read via `blob.download_to_filename` + pandas, NOT a bucket/object walk — single
+81.8MB file, satisfies the manifest-census / no-full-corpus-walk requirement). The legacy no-env bucket itself cannot be
+inspected (deleted); this reads the CANONICAL bucket's own manifest to test whether its Databento-sourced content
+already has equivalent fidelity for the range the legacy bucket held.
+
+**Range bound (best-available, the deleted bucket can't be re-inspected)**: the canonical manifest's own `date` column
+spans **2018-01-01 → 2026-07-26** (today), i.e. it nominally covers (and pre-dates) the migrator's own
+`--start-date 2019-01-01` default and the "2,008-day" legacy-corpus figure from the 2026-06-08 drill-down
+(`tradfi_manifest_canonicalisation_2026_06_01.md`). Distinct dates in canonical `<2023` = **1,826** — same order of
+magnitude as the legacy bucket's 2,008 `day*` dirs, consistent with the legacy corpus being roughly the pre-2023 tradfi
+history. So the DATE RANGE itself is not the gap — what's captured WITHIN that range is.
+
+**Finding — captured_pct by year (source=databento for 5,813,461/5,866,066 = 99.1% of all rows; batch_yahoo/barchart are
+the daily-only slices, immaterial here):**
+
+| year | captured | empty_confirmed | attempted_failed | expected_unattempted | total   | captured % |
+| ---- | -------- | --------------- | ---------------- | -------------------- | ------- | ---------- |
+| 2018 | 0        | 27,964          | 0                | 35,316               | 63,280  | 0.0%       |
+| 2019 | 585      | 24,916          | 0                | 38,372               | 63,873  | 0.9%       |
+| 2020 | 5,841    | 33,690          | 29,954           | 37,034               | 106,519 | 5.5%       |
+| 2021 | 6,251    | 32,566          | 29,805           | 38,602               | 107,224 | 5.8%       |
+| 2022 | 6,066    | 29,695          | 29,372           | 39,762               | 104,895 | 5.8%       |
+| 2023 | 202,344  | 223,855         | 29,132           | 31,247               | 486,578 | 41.6%      |
+| 2024 | 305,343  | 342,042         | 29,634           | 27,172               | 704,191 | 43.4%      |
+
+**The content-type breakdown is the decisive evidence.** Of the `captured` rows in 2018-2022 (18,743 total), the
+`data_type` distribution is: `ohlcv_1s` 90,428 · `ohlcv_1m` 84,541 · `ohlcv_24h` 3,383 · **`trades` 11 · `tbbo` 2** ·
+`options_chain`/`futures_chain` **0**. Contrast 2023+: `options_chain` **114,251** · `tbbo` **12,765** · `trades` 12 ·
+plus the same candle families. i.e. canonical's own Databento source has genuine trade-tick and options/futures
+chain-snapshot coverage starting ~2023, and **essentially none for 2018-2022** — exactly the granularity the legacy
+bucket's `raw_tick_data` L-hive/L-hyphen layouts held (per `migrate_tradfi_to_v9_canonical.py`'s own docstring:
+trades/tbbo/`options_chain`/`futures_chain` are first-class content there, not just candles). This lines up with the
+already-documented Databento entitlement limit noted elsewhere in this corpus
+(`tradfi_consolidated_closeout_2026_07_18.md`: "the billing entitlement is 1-month L3 + 1-year L1") — Databento
+structurally cannot backfill tick-level history beyond its rolling entitlement window, so canonical's own source cannot
+reproduce this even on a fresh re-attempt.
+
+**Caveat (does not change the content-type verdict)**: of the 2018-2022 `attempted_failed` rows, ~87,881 (CME) carry
+`error_reason=WithinBoundsTradfiSourceZero`, a KNOWN, separately-tracked, still-**UNRESOLVED** manifest
+misclassification defect (`tradfi_backfill_throughput_followups_2026_07_24.md` — the NASDAQ/NYSE population of this same
+defect was retired `mtds@ccbac784`; the CME/CBOE/FX population, 202,172 rows corpus-wide, remains open, out-of-scope
+here). Equities (NASDAQ/NYSE) show 0 `attempted_failed` in this range but 167,093 `expected_unattempted` — i.e.
+genuinely never even tried, not confirmed-absent. Neither caveat changes the captured-content finding above
+(trades/tbbo/chain ≈ 0 either way for 2018-2022).
+
+**Verdict**: this is NOT the "procedural miss, no net loss" case main's ruling asked to guard against being assumed. The
+manifest census finds a real, structural uncovered slice — **pre-2023 tradfi trade-level ticks (`trades`/`tbbo`) and
+options/futures chain snapshots** — that canonical's own Databento source has not captured and, per the documented
+billing-entitlement window, likely cannot retroactively capture. Whether the deleted legacy bucket actually HELD real
+data of this shape for 2018-2022 can no longer be verified directly (bucket gone), but its own `raw_tick_data` layout
+being trades/tbbo/chain-snapshot-native makes it the most plausible holder of exactly this missing granularity. This
+raises the urgency of the still-open `[OPERATOR]` soft-delete recovery-window check below — every day narrows or closes
+the only remaining way to actually confirm/recover the content.
 
 ## Codex SSOTs
 
