@@ -72,15 +72,15 @@
     "deployment-service": "0.107.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.39.0",
-    "features-service": "0.67.0",
+    "features-service": "0.68.0",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
     "instruments-service": "0.91.0",
-    "market-tick-data-service": "0.93.0",
+    "market-tick-data-service": "0.94.0",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.72.0",
     "unified-trading-library": "0.57.0",
-    "unified-trading-pm": "1.2.615",
+    "unified-trading-pm": "1.2.618",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
-        "warn_file_count": 14,
         "large_file_count": 6,
-        "coverage_pct": 82.61
+        "warn_file_count": 14,
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "deployment-service": {
@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 11,
         "large_file_count": 2,
-        "coverage_pct": 73.11,
-        "qg_red_reason": null
+        "warn_file_count": 11,
+        "qg_red_reason": null,
+        "coverage_pct": null
       }
     },
     "execution-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "warn_file_count": 9,
         "large_file_count": 8,
-        "coverage_pct": 90.91
+        "warn_file_count": 9,
+        "coverage_pct": null,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "large_file_count": 4,
         "warn_file_count": 7,
         "qg_red_reason": null,
-        "large_file_count": 4,
-        "coverage_pct": 88.96
+        "coverage_pct": 89.13
       }
     },
     "market-tick-data-service": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "large_file_count": 0,
         "warn_file_count": 0,
         "qg_red_reason": null,
-        "large_file_count": 0,
-        "coverage_pct": null
+        "coverage_pct": 72.57
       }
     },
     "unified-trading-api": {
