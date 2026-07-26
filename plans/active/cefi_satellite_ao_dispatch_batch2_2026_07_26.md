@@ -361,23 +361,33 @@ drift_direction: advance-code
      dispatchable todos in `plans/active/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md`. Escalated via
      `BLK-dca02ac2` (unanswered at time of this edit) proposing to close this checkbox now on that basis — proceeding
      per the stated recommendation rather than false-flipping full completion.
-- [ ] [IS][OPERATOR] P0. Finish the IS-layer full-catalogue work + the flagged manifest reclassification for the CeFi
-      capture rule: (1) drop the `CEFI_BASE_ASSET_UNIVERSE` cap from the IS Tardis adapter `_passes_asset_filter` so IS
-      enumerates EVERY instrument per venue (full reference, no universe/perp-gate at the IS layer); (2) force-run
-      fetch+aggregate (full enumeration) and export the per-venue `operator_check` CSV (full catalogue + data_types per
-      venue) for the operator_check gate; (3) [OPERATOR] re-run the manifest reclassification script
-      `market-tick-data-service/scripts/reclassify_cefi_manifest_mvp_universe_2026_06_23.py --apply` to pick up the new
-      mvp cells in the honest-coverage denominator — this mutates ~5.49M manifest rows (dry-run measured
-      `out_of_mvp_removed=3,651,839 · in_mvp_kept=1,842,949 · empty_confirmed→expected_unattempted=206,673`), so cite
-      the script's built-in pre-write snapshot (`_index/snapshots/pre_mvp_reclassify_<UTC>.parquet`) as the
-      delete-safety justification and get an explicit operator go before running `--apply` (dry-run first to confirm
-      current-day counts still match the 2026-06-23 measurement before applying). Source:
-      plans/active/issues/cefi_universe_capture_rule_2026_06_23.md. Done when: (a) `_passes_asset_filter` no longer
-      references `CEFI_BASE_ASSET_UNIVERSE` as a cap, IS enumerates all instruments per venue, and the per-venue
-      operator_check CSV is exported and reviewed; (b) the reclassification script has been re-run with `--apply` (post
-      explicit operator approval) with a pre-write snapshot on disk, and the live manifest's in-MVP row count matches
-      the (re-verified) dry-run projection; both remaining unchecked `[IS]` P0 boxes and the flagged "Orchestrator
-      follow-up" note in this doc's Progress Log are checked off / resolved.
+- [x] ✅ [IS][OPERATOR] P0. **DONE 2026-07-26 (interactive session, operator-approved) — all 3 sub-items closed.** (1)
+      **Already shipped in code** — confirmed `_passes_asset_filter` (instruments-service
+      `reference_data/adapters/cefi/tardis/parsing.py:545`) no longer references `CEFI_BASE_ASSET_UNIVERSE` as a cap;
+      docstring documents full-universe enumeration per the 2026-06-23 operator directive. (2) **Generated the missing
+      `operator_check` CSV** from the live `prod/catalog.parquet` (429,129 rows, up from 226,484 on 2026-06-23 — the
+      catalogue has been growing under full, uncapped enumeration via routine IS backfills all along, confirming (1) is
+      live in prod, not just in code) — per-venue × instrument_type × data_type × mvp breakdown (60 rows) plus a
+      supplementary per-venue `DATA_TYPE_CAPABILITY_REGISTRY` summary, reviewed. Side-finding (not actioned, out of
+      scope): `BINANCE-DELIVERY` and `COINBASE-CDE` have catalogue rows but no `DATA_TYPE_CAPABILITY_REGISTRY` entries.
+      (3) **`--apply` run, operator-approved.** Fresh dry-run deviated materially from the 2026-06-23 baseline
+      (`out_of_mvp_removed` 3,651,839→392,540; `in_mvp_kept` 1,842,949→8,768,112 on a manifest grown 5.49M→9.16M rows) —
+      root-caused to `MVP_SCOPE_CONFIG_VERSION` 7→20 (13 genuine, operator-approved scope-widening commits since
+      2026-06-23: BINANCE-DELIVERY inverse perps, HL/ASTER multiplier k-coins, OKX-FUTURES/OKX-SWAP registration,
+      Bybit-spot/Coinbase-international/Upbit venue adds, 28-member staking exception, equity-perp widening), not a bug
+      — arithmetic reconciles exactly (3,665,864 new rows organically in-MVP by construction + 3,259,299 pre-existing
+      rows flipping out-of-MVP→in-MVP under the wider rule = the full 6,925,163 `in_mvp_kept` delta, with zero
+      unexplained residual). Ran via a new in-region VM launcher (heavy-I/O HARD RULE — manifest-index rewrites don't
+      run locally) — `deployment-service@7a8e5ef` (`scripts/vm/launch-cefi-mvp-reclassify-vm.sh`, direct push,
+      `scripts/**` carve-out; quickmerge's dep-gate was blocked by unrelated live sports WIP in unified-api-contracts).
+      Tarball freshness verified against current `HEAD` for all 4 repos before launch (uac@05d7724d5, mtds@f01a77da6,
+      utl@bc001b2ec2). VM `mtds-migrate-cefi-mvp-reclassify` ran + self-deleted cleanly (exit_code=0, ~8 min lifecycle).
+      Pre-write snapshot:
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/snapshots/pre_mvp_reclassify_20260726T131132Z.parquet`
+      (165 MB). Live manifest re-read post-apply and verified to match the dry-run projection EXACTLY: 8,768,112 total
+      rows (`captured`=3,212,882, `attempted_failed`=978,477, `empty_confirmed`=495,074,
+      `expected_unattempted`=4,081,679); 392,540 out-of-MVP rows removed. Both source-doc `[IS]` P0 boxes + the
+      "Orchestrator follow-up" note in `cefi_universe_capture_rule_2026_06_23.md` flipped/resolved in that doc.
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-8, `review`) — audited + fixed a real remaining mismatch; confirmed
       zero-object finding, no migration needed.** Confirmed the v6 rewrite (`market-tick-data-service@ec0df878`) had
       already landed (batch1's checkbox was stale vs code — flipped it too, see that plan). Full audit of

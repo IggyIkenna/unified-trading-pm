@@ -3505,6 +3505,46 @@ else
     log_success "STEP 5.103: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.104: retry_safe unclassified-default fallback ban ──────────────────
+#
+# mtds_retry_safe_default_audit_2026_07_14 (todo 1 + todo 3, generalized here instead of a
+# repo-local duplicate — pure rg step, no per-repo state, so the fleet-wide home wins over a
+# second copy in market-tick-data-service/scripts/quality-gates.sh): UAC's
+# classify_venue_error(venue, error_code) returns None for any venue/code pair absent from
+# VENUE_ERROR_MAP. The `classification.retry_safe if classification (is not None)? else True`
+# idiom silently defaults an UNCLASSIFIED error to "safe to retry" — for a venue missing from
+# VENUE_ERROR_MAP entirely, this retried permanent HTTP statuses (404/400/403) up to
+# _MAX_RETRIES for no benefit (the kalshi_perp mtds_perp_funding_backfill_hang_2026_07_14 bug
+# class). Convention (shard-level-failure-isolation.md): unclassified -> retry_safe = False
+# (never default-retry unknowns); branch on HTTP status directly BEFORE ever consulting the
+# classifier for the permanent-vs-transient split. Single global ratchet (baseline=2) covers
+# the whole fleet today: market-tick-data-service's onchain/{glassnode,helius_solana}.py kept
+# `else True` deliberately for their non-status aiohttp.ClientError/asyncio.TimeoutError branch
+# (transient-by-EXCEPTION-TYPE, permanent-status class already intercepted above) — annotated
+# `# QG-allow: retry-safe` with the rationale inline. A NEW unmarked site fails immediately; a
+# NEW marked site above the baseline fails too (a whitelist growth needs an explicit baseline
+# bump in this comment + the plan doc, not a silent add).
+_RSD_PATTERN='classification\.retry_safe if classification( is not None)? else True'
+_RETRY_SAFE_DEFAULT_BASELINE=2
+_RETRY_SAFE_DEFAULT_HITS=$(grep -rn -E "${_RSD_PATTERN}" "${SOURCE_DIR}" --include="*.py" 2>/dev/null | grep -v '__pycache__' || :)
+if [ -z "${_RETRY_SAFE_DEFAULT_HITS}" ]; then
+    log_success "STEP 5.104: retry_safe unclassified-default fallback OK (0/${_RETRY_SAFE_DEFAULT_BASELINE})"
+else
+    _RETRY_SAFE_DEFAULT_UNMARKED=$(printf '%s\n' "${_RETRY_SAFE_DEFAULT_HITS}" | grep -v '# QG-allow: retry-safe' || :)
+    _RETRY_SAFE_DEFAULT_COUNT=$(printf '%s\n' "${_RETRY_SAFE_DEFAULT_HITS}" | wc -l | tr -d ' ')
+    if [ -n "${_RETRY_SAFE_DEFAULT_UNMARKED}" ]; then
+        log_fail "STEP 5.104: NEW unclassified-default retry_safe fallback without '# QG-allow: retry-safe' — unclassified venue error must default retry_safe=False (never default-retry unknowns; see shard-level-failure-isolation.md):"
+        echo "${_RETRY_SAFE_DEFAULT_UNMARKED}"
+        V=$(( V + 1 ))
+    elif [ "${_RETRY_SAFE_DEFAULT_COUNT}" -gt "${_RETRY_SAFE_DEFAULT_BASELINE}" ]; then
+        log_fail "STEP 5.104: retry_safe unclassified-default fallback count (${_RETRY_SAFE_DEFAULT_COUNT}) exceeds the global ratchet baseline (${_RETRY_SAFE_DEFAULT_BASELINE}) — a new whitelisted site needs an explicit decision + this comment's baseline bumped, not a silent add:"
+        echo "${_RETRY_SAFE_DEFAULT_HITS}"
+        V=$(( V + 1 ))
+    else
+        log_success "STEP 5.104: retry_safe unclassified-default fallback OK (${_RETRY_SAFE_DEFAULT_COUNT}/${_RETRY_SAFE_DEFAULT_BASELINE}, all annotated)"
+    fi
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call

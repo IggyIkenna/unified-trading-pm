@@ -94,15 +94,19 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
       timeout would then fail the metric/method fetch immediately), or (b) keep `else True` for the transient-only error
       class with an explicit `# lint-allow` comment + lint whitelist, documenting WHY the transient path may default to
       retry. Record the decision rationale in this plan's Progress Log. Repo: `market-tick-data-service`.
-- [ ] [BACKEND] P3. Evaluate generalizing the lint into the shared PM `scripts/quality-gates-base/base-service.sh`
+- [x] [BACKEND] P3. Evaluate generalizing the lint into the shared PM `scripts/quality-gates-base/base-service.sh`
       codex-compliance section (fires for every repo consuming UAC `classify_venue_error`) — implement if trivially
       portable (pure `rg` step, no per-repo state); otherwise record why repo-local is the right home. Repos:
-      `unified-trading-pm`, `market-tick-data-service`.
-- [ ] [BACKEND] P3. Codex SSOT update — add the finalized convention to
+      `unified-trading-pm`, `market-tick-data-service`. ✅ DONE — trivially portable (pure `rg`, no per-repo state), so
+      the fleet-wide home won over a repo-local duplicate. STEP 5.104 added, ratchet baseline=2 (the 2 annotated
+      `# QG-allow: retry-safe` residual sites), fails on any new unmarked or unbaselined site.
+- [x] [BACKEND] P3. Codex SSOT update — add the finalized convention to
       `/codex/04-architecture/shard-level-failure-isolation.md`: (1) unclassified venue error → `retry_safe = False`
       (never default-retry unknowns); (2) unregistered-venue HTTP errors → branch on status (retry only 429/5xx) BEFORE
       consulting the classifier; (3) cross-link the QG lint + the two fix commits as precedent. Repo:
-      `unified-trading-pm`.
+      `unified-trading-pm`. ✅ DONE — all 3 sub-points added under a new "`classify_venue_error()` unclassified-default
+      convention (retry_safe)" section, cross-linked to mtds@b8218f8a/f82f29c1/0041a8a6 + this plan + the parent
+      incident doc.
 - [ ] [BACKEND] P3. Closeout — verify the parent issue doc `issues/mtds_perp_funding_backfill_hang_2026_07_14.md` has no
       remaining open todos, set its `resolved_by:` to this plan + the fix shas, and run the issue-doc lifecycle
       (resolve/archive per `codex/11-project-management/`). Repo: `unified-trading-pm`.
@@ -116,3 +120,11 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
   the shipped equivalent (autostash-conflict resolution, WIP retained in the slot's git stash as `autostash`); plan
   scope reduced from "run the audit" to the unshipped remainder above. Residual `else True` count at HEAD verified = 2
   (non-status transient paths only); `else False` sites = 73.
+- 2026-07-26 — Found this plan's todos 3-4 (lint generalization + codex SSOT update) sitting complete but uncommitted in
+  the working tree (stranded, no session record of who wrote them — likely an earlier slot's WIP from the same
+  2026-07-14 dispatch window that never got shipped). Verified before landing: bash syntax clean
+  (`bash -n scripts/quality-gates-base/base-service.sh`), STEP 5.104's ratchet baseline (2) matches the 2 real annotated
+  `# QG-allow: retry-safe` sites at HEAD, and both cited fix commits (`mtds@b8218f8a`, `mtds@f82f29c1`) plus the
+  residual-annotation commit (`mtds@0041a8a6`) are real, already-shipped ancestors. Flipped both todos, shipping now.
+  Todos 1-2 (repo-local MTDS lint, residual-site decision) and 5 (parent-issue closeout) remain open — not addressed by
+  this uncommitted diff.

@@ -10,17 +10,32 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, deployment-ui, execution-service, instruments-service, strategy-service]
+repos:
+  [
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    instruments-service,
+    strategy-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
-tags: [manifest, data-correctness, backfill, data-status, ssot]
+tags: [manifest, data-correctness, backfill, data-status, ssot, retry, error-classification, venue-error-map, qg-lint]
 related:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
     /codex/06-coding-standards/validation-and-errors.md,
+    /codex/06-coding-standards/quality-gates.md,
   ]
 created: 2026-03-27
-authoritative_for: [shard-level failure isolation rule (no-raise per-shard loop + record_failed continuation)]
+authoritative_for:
+  [
+    shard-level failure isolation rule (no-raise per-shard loop + record_failed continuation),
+    classify_venue_error unclassified-default retry_safe convention,
+  ]
 referenced_by:
   [
     /codex/02-data/defi-venue-protocol-catalogue.md,
@@ -33,8 +48,14 @@ referenced_by:
     /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
   ]
 owner:
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-25
 code_refs:
+  [
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/__init__.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/glassnode.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/helius_solana.py,
+    unified-trading-pm/scripts/quality-gates-base/base-service.sh,
+  ]
 ---
 
 # Shard-Level Failure Isolation (SSOT)
@@ -244,6 +265,50 @@ for shard in shards_to_process:
 
 ---
 
+## `classify_venue_error()` unclassified-default convention (retry_safe)
+
+> Pinned by `mtds_retry_safe_default_audit_2026_07_14` (audit + fixes: mtds@b8218f8a, mtds@f82f29c1; annotated residual:
+> mtds@0041a8a6; QG lint STEP 5.104 in this commit). Fixes the bug class behind the kalshi_perp
+> `mtds_perp_funding_backfill_hang_2026_07_14` incident.
+
+UAC's `classify_venue_error(venue, error_code)` returns `None` whenever the `(venue, error_code)` pair is absent from
+`VENUE_ERROR_MAP` — either the venue is entirely unregistered, or the venue is registered but that specific error code
+isn't. Three rules govern what an adapter does with that `None`:
+
+1. **Unclassified venue error → `retry_safe = False` — never default-retry an unknown.** The historical MTDS idiom
+   `classification.retry_safe if classification (is not None)? else True` silently treated "I don't recognize this
+   error" as "safe to retry," which for an unregistered venue retried PERMANENT HTTP statuses (404/400/403) up to
+   `_MAX_RETRIES` for no benefit — the exact hang-adjacent bug class this audit fixed. The convention (and the
+   fleet-wide QG lint enforcing it, see below) is the safe form:
+   `classification.retry_safe if classification is not None else False` /
+   `classification.retry_safe if classification else False` (both forms in use — see `defi/utils.py`,
+   `prediction/kalshi_adapter.py`, `prediction/polymarket_adapter.py`, `cli/handlers/_defi_manifest.py`).
+2. **Unregistered-venue HTTP errors → branch on the HTTP status directly, BEFORE ever consulting the classifier.** A
+   venue can be structurally unregistered in `VENUE_ERROR_MAP` while its adapter still needs the standard
+   permanent-vs-transient split (retry only `{429, 500, 502, 503, 504}`, fail fast on everything else). Don't route that
+   split through `classify_venue_error` (which will always return `None` for an unregistered venue) — branch on
+   `aiohttp.ClientResponseError.status` (or equivalent) directly in a small per-module `_handle_response_error` helper,
+   and only fall through to the classifier for the non-status exception types it can actually help with. See
+   `market_tick_data_service/market_interface/adapters/onchain/{glassnode,helius_solana}.py::_handle_response_error`.
+3. **A narrow, deliberate exception to rule 1 is allowed for exception TYPES that are transient by construction** — e.g.
+   `aiohttp.ClientError` / `asyncio.TimeoutError` (connection failures, timeouts), as opposed to a permanent HTTP
+   status. If a status-branch per rule 2 already intercepts the permanent-status class before this code is ever reached,
+   keeping `retry_safe = ... else True` for the remaining non-status transient-exception branch is defensible — retrying
+   a bounded number of attempts is the standard resilience posture for a genuinely transient error, unlike retrying a
+   permanent error to exhaustion. Any such exception MUST be annotated inline with `# QG-allow: retry-safe` + a comment
+   explaining why (see the two GLASSNODE/HELIUS-SOLANA sites in `onchain/glassnode.py` / `onchain/helius_solana.py`) and
+   is capped by a **global ratchet baseline** enforced by QG STEP 5.104 in
+   `unified-trading-pm/scripts/quality-gates-base/base-service.sh` (fleet-wide — fires for every repo consuming
+   `classify_venue_error`, not just MTDS). Baseline = 2 as of 2026-07-25; a new whitelisted site requires an explicit
+   decision recorded in the introducing plan/commit AND a baseline bump in that QG step's comment — never a silent add.
+
+**QG enforcement**: `unified-trading-pm/scripts/quality-gates-base/base-service.sh` STEP 5.104 greps every repo's
+`${SOURCE_DIR}` for the unsafe `classification.retry_safe if classification (is not None)? else True` idiom. A hit
+without a `# QG-allow: retry-safe` marker fails immediately (new unclassified-default site); a hit count above the
+baseline fails even when annotated (whitelist growth needs an explicit bump, not a silent add).
+
+---
+
 ## Anti-Patterns (DO NOT)
 
 - `raise RuntimeError(...)` inside a per-shard loop — kills all remaining shards in the batch.
@@ -259,6 +324,9 @@ for shard in shards_to_process:
   day) for years; manifest said `captured`; downstream features computed garbage on garbage.
 - Empty parquet that passes `existence_check` but has 0 rows + manifest claims `captured` — banned. Either
   `record_empty(row_key)` (honest absence) OR `record_failed(<typed_reason>)` (something went wrong).
+- `classification.retry_safe if classification (is not None)? else True` — defaults an UNCLASSIFIED venue error to "safe
+  to retry," which retries permanent 4xx statuses to exhaustion for an unregistered venue (see `classify_venue_error()`
+  unclassified-default convention above). QG-blocked fleet-wide (STEP 5.104).
 
 ---
 
@@ -314,3 +382,7 @@ progress + STOPPED/FAILED at exit; events stream to
   [`06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md)
 - **Active plan**:
   [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+- **`classify_venue_error()` unclassified-default retry_safe convention + QG lint (STEP 5.104) — plan + parent
+  incident**:
+  [`plans/active/mtds_retry_safe_default_audit_2026_07_14.md`](../../plans/active/mtds_retry_safe_default_audit_2026_07_14.md),
+  [`plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md`](../../plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md)

@@ -24,7 +24,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-26
 ---
 
 ## What this is
@@ -186,11 +186,14 @@ rotating baskets).
 
 **IS layer (full catalogue — no universe filter):**
 
-- [ ] [IS] P0. **Drop** the `CEFI_BASE_ASSET_UNIVERSE` cap from the IS Tardis adapter `_passes_asset_filter` so IS
-      enumerates EVERY instrument per venue (full reference). IS keeps NO universe/perp-gate — it's the complete
-      catalogue.
-- [ ] [IS] P0. Force-run fetch+aggregate (full enumeration) + export the per-venue CSV (full catalogue + data_types per
-      venue) → operator_check gate. (NOT blocked on the universe/perp-gate work.)
+- [x] ✅ [IS] P0. **CONFIRMED DONE (2026-07-26)** — `_passes_asset_filter` (`parsing.py:545`) carries no
+      `CEFI_BASE_ASSET_UNIVERSE` cap; docstring documents full-universe enumeration. Live-verified:
+      `prod/catalog.parquet` grew 226,484→429,129 rows since this was shipped, confirming full enumeration is live in
+      prod via routine IS backfills, not just present in code.
+- [x] ✅ [IS] P0. **DONE (2026-07-26)** — generated the per-venue `operator_check` CSV (venue × instrument_type ×
+      data_type × mvp, 60 rows) from the live catalogue + a supplementary per-venue `DATA_TYPE_CAPABILITY_REGISTRY`
+      summary, reviewed. Side-finding (not actioned): `BINANCE-DELIVERY`/`COINBASE-CDE` have catalogue rows but no
+      capability-registry entries. See `cefi_satellite_ao_dispatch_batch2_2026_07_26.md` for full evidence.
 
 **MTDS capture layer (the MVP filter — Phase C/D):**
 
@@ -242,7 +245,8 @@ rotating baskets).
       AAVE/ADA/EIGEN…) · BITGET-SPOT **339** · UPBIT **352** incl. **199 KRW pairs** (KRW-0G/KRW-AAVE/KRW-ADA…). All
       target venues gate correctly. **Orchestrator follow-up (FLAG, NOT run here):** re-run the manifest
       reclassification (`reclassify_cefi_manifest_mvp_universe_2026_06_23.py --apply`) to pick up the new mvp cells in
-      the data-status denominator.
+      the data-status denominator. **RESOLVED 2026-07-26** — `--apply` run via VM, live manifest verified matching
+      dry-run projection exactly (8,768,112 in-MVP rows). See `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`.
 
 ## Progress Log
 

@@ -1223,14 +1223,20 @@ if [ -z "${ENVIRONMENT:-}" ]; then
 fi
 
 # ── EARLY EXIT: identical to main (skip when --no-pr) ─────────────────────────────────────────────
-# GOTCHA (found 2026-07-20, ao_fleet_infra_hardening_2026_07_20.md): `git diff <ref>` is BLIND to
-# untracked files regardless of ref -- a brand-new file you haven't `git add`ed yet produces an EMPTY
-# diff here even though it's genuinely new content, so this early-exit fires and silently skips
-# STAGE 3-5 (the file never gets committed, no error). `git add` the new file BEFORE invoking
-# quickmerge to avoid this; once staged, `git diff <ref>` correctly includes it.
+# GOTCHA (found 2026-07-20, ao_fleet_infra_hardening_2026_07_20.md; FIXED 2026-07-26,
+# quickmerge_untracked_new_files_silent_noop_2026_06_23.md): `git diff <ref>` is BLIND to untracked
+# files regardless of ref -- a brand-new file you haven't `git add`ed yet produces an EMPTY diff here
+# even though it's genuinely new content. Fixed by ALSO checking `git status --porcelain` scoped to
+# `--files` (mirrors line ~1238's own use of `git status --porcelain` for the clean-tree guard below,
+# and stays --files-SCOPED rather than tree-wide so an unrelated dirty file elsewhere in a shared
+# multi-agent checkout can't false-negative this exit). When `--files` is absent this is unchanged
+# behavior (falls through to the tree-wide clean check below, same as before).
 git fetch origin main --quiet 2>/dev/null || true
 if [ "$NO_PR" != "true" ]; then
-  if git rev-parse origin/main &>/dev/null && [ -z "$(git diff origin/main 2>/dev/null)" ]; then
+  # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
+  if git rev-parse origin/main &>/dev/null \
+    && [ -z "$(git diff origin/main 2>/dev/null)" ] \
+    && { [ -z "$FILES_ARG" ] || [ -z "$(git status --porcelain -- $FILES_ARG 2>/dev/null)" ]; }; then
     echo "[$REPO_NAME] No differences from main — nothing to merge"
     exit 0
   fi
