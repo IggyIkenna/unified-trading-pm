@@ -48,6 +48,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
+sequential: true
 source:
   [
     unified-trading-system-ui/.github/workflows/ci.yml,
@@ -151,3 +152,27 @@ instruction ("do not assume a config-only guess is correct"). Diagnosed read-onl
 repo was touched by this investigation; the `fetch-depth: 0` half-fix IS shipped as part of
 `defi_wizard_batch2_018_residual_findings-004`'s own commit (unrelated bug, fixed because it blocked verifying my own
 change and is a genuine independent improvement either way).
+
+## 2026-07-26 premature-dispatch finding + `sequential: true` fix (slot 10)
+
+Dispatched todo 3 (`-003`, `[SCRIPT] P3. Once the tag-ancestry gap is fixed, re-run the registry-drift job...`) fresh.
+That todo's own text is explicitly gated on todos 1 and 2 (`[DEVOPS] P2` root-cause + fix) landing first — but this doc
+had no `sequential: true` and no `depends_on`/`gate_on_depends` split, so the backlog deriver dispatched all of 1/2/3
+independently instead of enforcing the chain (the "no per-todo prereq syntax" gap `task_template.md` warns about: a
+todo's prose dependency does nothing on its own — only `sequential: true` or a `depends_on`+`gate_on_depends` plan-split
+actually gates dispatch).
+
+Re-verified the root cause is still genuinely open before touching anything: `git fetch origin main --tags` +
+`git describe --tags origin/main` → still `v0.71.0-158-gb22f9fca`; `git merge-base --is-ancestor v0.72.0 origin/main` →
+still NOT an ancestor (vs. `origin/live-defi-rollout`, where it IS). `GET /api/backlog` confirmed `-001` and `-002` are
+both `dispatched` (in progress elsewhere), neither `done`. Re-running the `registry-drift` job now would reproduce the
+exact same `ResolutionImpossible` failure documented above — flipping todo 3's checkbox now would be a false-completion
+claim (the failure mode `check_evidence_backed_completion.py` / the runtime-verification HARD RULE exist to stop).
+
+**Fix applied** (adjacent, in this same file — this doc IS my `plan_ref`): added `sequential: true` to the frontmatter
+above. Todos 1→2→3→4 are a genuine dependency/documentation chain in this small (4-todo) doc — no reason to split into a
+gated plan-pair for something this size, per `task_template.md`'s own guidance ("a real dependency chain... →
+`sequential: true`"). This does not undo the two already-in-flight dispatches of `-001`/`-002` (which happened before
+this fix landed), but it should stop `-003`/`-004` from being re-offered to another slot until their true predecessors
+are `done`. Declining to flip todo 3's checkbox; skipping this task (`reason_code: GATED`) rather than fabricating
+completion. Root cause (this doc's own todos 1-2) is still unfixed as of this note.
