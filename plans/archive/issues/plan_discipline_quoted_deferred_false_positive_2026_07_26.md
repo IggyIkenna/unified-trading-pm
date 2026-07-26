@@ -36,6 +36,9 @@ resolved_by: unified-trading-pm (check_plan_discipline.py _has_live_deferred_mar
 drift_direction: advance-code
 ---
 
+> **🟢 RESOLVED 2026-07-26** — `check_plan_discipline.py` fixed (`_has_live_deferred_marker()` quoted-reference
+> exclusion) + archived per the terminal-status-archived rule. No further action needed on this doc.
+
 ## What I found
 
 `check_plan_discipline.py`'s `_DEFERRED_RE` (`\bDEFERRED\b\s+[—-]`) matches a DEFERRED token regardless of whether it
