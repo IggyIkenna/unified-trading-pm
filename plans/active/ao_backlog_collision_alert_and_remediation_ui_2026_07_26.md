@@ -70,13 +70,16 @@ detection/remediation gap the ruling explicitly left open instead.
       created with those fields when the guard fires, and that NO record is created on the ordinary (non-done,
       resettable) reuse path; `bash scripts/quality-gates.sh` green. — agent-orchestrator@b623c2a
       (`log_activity(...,     "backlog_sibling_reset_guard_refused", ...)` in the guard branch; QG green, 1739 passed).
-- [ ] [BACKEND] P1. **Page the AO alerting Slack channel on this event, deduped.** Per
+- [x] ✅ [BACKEND] P1. **Page the AO alerting Slack channel on this event, deduped.** Per
       `/codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only channel; failures page) — this is a
       silent-dispatch-loss failure, which the SSOT's own contract says should page. Dedup by (task_id, incoming
       brief_hash) so a repeat regen tick on the SAME still-unresolved collision doesn't re-page every cycle; a DIFFERENT
       incoming brief_hash colliding with the same task_id later (a second, distinct collision) pages again. Definition
       of done: a unit test fires the same collision twice and asserts exactly one Slack call; a third call with a
-      different incoming brief on the same task_id asserts a second Slack call.
+      different incoming brief on the same task_id asserts a second Slack call. — agent-orchestrator@948f395
+      (`notify_backlog_sibling_reset_guard_refused()` in `server/notifications/slack.py`, called from the guard branch
+      in `sync_backlog_to_db` deduped via a seen-keys set at `dedup_state.backlog_sibling_reset_guard_alerted_path()`
+      keyed by `f"{task_id}:{incoming_brief_hash}"`; QG green, 1752 passed).
 - [ ] [BACKEND] P2. **`POST /api/backlog/{task_id}/remint-collision` — safe one-click remediation endpoint.** Given a
       task_id currently flagged (via todo 1's record) as an unresolved sibling-reset-guard collision: atomically mint a
       genuinely fresh task_id, checking uniqueness against BOTH `backlog.yaml`'s current ids AND the full historical
