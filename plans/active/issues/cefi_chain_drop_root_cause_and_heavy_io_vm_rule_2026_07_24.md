@@ -443,13 +443,13 @@ original 6-date pattern plus a recurring, mislabel-driven DERIBIT trickle across
   range (venue scoping fully isolates a run from other venues' collisions, so this sidesteps the whole "which of the 6
   dates is safe" question cleanly). Next step, still under the same cron-pause drain gate.
 
-## What's left (current as of Finding 10, 2026-07-25 ~05:30Z — table below is STALE, see Finding 8/9/10 for current
+## What's left (current as of Finding 10, 2026-07-25 ~05:30Z — table below is STALE, see Finding 8/9/10 for current state)
 
-state: item 2b DONE via Range A/B/C 504,280 renamed; 2,962 safe renames still pending across EXTENDED-STARKNET/
+Item 2b DONE via Range A/B/C 504,280 renamed; 2,962 safe renames still pending across EXTENDED-STARKNET/
 LIGHTER-ZKSYNC/BYBIT-SPOT/COINBASE-FUTURES, zero collision risk, NEXT STEP; collision residual grew 1114→1292,
 root-caused, still queued as BLOCKED-OPERATOR-DECISION; 2c DONE 2026-07-23 pre-session + recurrence-fix shipped;
 colon_wire NOT explicitly reconfirmed, check via loop-until-dry; line-cap on the parent plan is ALREADY RESOLVED,
-908/617 lines, no longer blocks archival)
+908/617 lines, no longer blocks archival.
 
 | #           | Item                                                              | State                                             | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ----------- | ----------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

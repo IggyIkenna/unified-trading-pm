@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [test-baseline-drift, quality-gates-blocker, cefi, canonical-id, cross-repo]
 related:
   [
-    /plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md,
+    /plans/archive/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md,
     /plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
   ]
 created: "2026-07-21"

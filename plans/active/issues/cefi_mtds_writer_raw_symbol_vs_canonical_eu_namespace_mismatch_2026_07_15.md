@@ -49,9 +49,9 @@ tags:
   ]
 related:
   [
-    ../mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
     /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
-    ../canonical_instrument_id_cefi_defi_backfill_2026_07_14.md,
+    /plans/archive/2026_07/canonical_instrument_id_cefi_defi_backfill_2026_07_14.md,
     /plans/archive/issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md,
   ]
 created: 2026-07-15

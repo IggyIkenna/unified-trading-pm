@@ -67,5 +67,5 @@ tell which are live/in-flight for other slots without checking each one's livene
       to have real memory headroom behind it, or this item is explicitly closed as "leave as-is, use TMPDIR when it
       bites."
   - Recommendation: leave as-is for now and note the `TMPDIR=/var/tmp/...` workaround somewhere agents can find it (e.g.
-    `codex/06-coding-standards/quality-gates.md`) if this recurs — a one-off "No space left on device" wall of failures
+    `/codex/06-coding-standards/quality-gates.md`) if this recurs — a one-off "No space left on device" wall of failures
     should be diagnosed as this class BEFORE assuming a real regression, going forward.
