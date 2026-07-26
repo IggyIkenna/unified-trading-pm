@@ -254,8 +254,8 @@ drift_direction: advance-code
 - [x] ✅ [BACKEND] P0. **RESCOPED (slot-3, 2026-07-26): 2 of 4 sub-items done in this pass (features image-build fix
       verified already-resolved; 3/4 codex reconciliations shipped); sub-items 1 (reader-bridge deploy, infra-craft) and
       3 (OKX-FUTURES manifest relabel, needs collision-aware dedup) split to
-      `issues/cefi_residual_deploy_and_manifest_relabel_remaining_2026_07_26.md` as fresh dispatchable todos — see that
-      doc + the per-sub-item annotations below for full evidence.** Close the four bounded, decision-free residuals from
+      `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` as fresh dispatchable todos — see that doc + the
+      per-sub-item annotations below for full evidence.** Close the four bounded, decision-free residuals from
       `cefi_residual_followups_after_honest_done_2026_07_17.md` that no covering cefi plan cites** (Phase 0b
       DEPLOY-reader-bridge / features image-build fix / Phase 1 OKX-FUTURES itype mislabel / Phase 2 codex
       reconciliation — verified 2026-07-26 as uncovered by every currently-active cefi AO plan, incl.
@@ -268,8 +268,7 @@ drift_direction: advance-code
      2026-07-18 Progress Log ("Reader-bridge VERIFIED READY") — this is the deploy/redeploy step, not new development.
      (repos: market-tick-data-service, market-data-processing-service, features-service, execution-service) — **NOT DONE
      (slot-3, 2026-07-26): infra-craft work, out of backend_engineer scope; no Cloud Run services found for these 4
-     consumers from this worktree — spun to `issues/cefi_residual_deploy_and_manifest_relabel_remaining_2026_07_26.md`
-     todo 1.**
+     consumers from this worktree — spun to `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 1.**
   2. ✅ **Fix the features-service image build** — `cefi_wire_bridge.py:59 import CeFiWireCanonicalMap` ImportError
      because the pinned `BASE_IMAGE_DIGEST` predates the UAC symbol. Bump `BASE_IMAGE_DIGEST` to a base image with fresh
      UAC, OR switch features to COPY-fresh-UAC-source like its MTDS/MDPS/execution siblings (worker's engineering
@@ -284,7 +283,7 @@ drift_direction: advance-code
      2026-07-26): the manifest row_key includes `instrument_type`, so a blind relabel can collide with an
      already-existing FUTURE row for the same shard atom — needs the same collision-aware dedup logic as
      `canonicalize_cefi_instrument_type_legacy_lowercase_2026_07_16.py`, not the DERIBIT-COMBO script's blind in-place
-     relabel; spun to `issues/cefi_residual_deploy_and_manifest_relabel_remaining_2026_07_26.md` todo 2.**
+     relabel; spun to `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3.**
   4. ✅ **Resolve the four named codex↔plan SSOT contradictions**: `chart-candle-delivery-flow.md:274` ("Filename is the
      bare symbol" → canonical target + SUPERSEDED/forward-pointer banner); `read-time-filter-pushdown.md` (update the
      substring-match assumption for now-canonical filenames); `availability-manifest-and-data-status.md` ("immutable
@@ -303,9 +302,9 @@ drift_direction: advance-code
 
      **Parent checkbox left unflipped (slot-3, 2026-07-26)**: 2 of 4 sub-items (image-build fix, codex reconciliation)
      are genuinely done; sub-items 1 (infra deploy) and 3 (manifest relabel) are real remaining work, tracked as
-     dispatchable todos in `plans/active/issues/cefi_residual_deploy_and_manifest_relabel_remaining_2026_07_26.md`.
-     Escalated via `BLK-dca02ac2` (unanswered at time of this edit) proposing to close this checkbox now on that basis —
-     proceeding per the stated recommendation rather than false-flipping full completion.
+     dispatchable todos in `plans/active/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md`. Escalated via
+     `BLK-dca02ac2` (unanswered at time of this edit) proposing to close this checkbox now on that basis — proceeding
+     per the stated recommendation rather than false-flipping full completion.
 - [ ] [IS][OPERATOR] P0. Finish the IS-layer full-catalogue work + the flagged manifest reclassification for the CeFi
       capture rule: (1) drop the `CEFI_BASE_ASSET_UNIVERSE` cap from the IS Tardis adapter `_passes_asset_filter` so IS
       enumerates EVERY instrument per venue (full reference, no universe/perp-gate at the IS layer); (2) force-run

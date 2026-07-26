@@ -8,14 +8,14 @@ summary: >-
   outside backend_engineer scope; item 3 (OKX-FUTURES manifest instrument_type relabel, ~116,742 rows) needs a
   collision-aware dedup migration script, not a blind in-place relabel — both tracked here as follow-up todos rather
   than false-flipping the parent checkbox.
-status: open
+status: superseded
 nature: issue
 asset_group: [cefi]
 stage: [data]
 repos:
   [instruments-service, market-tick-data-service, market-data-processing-service, features-service, execution-service]
 scope: [engineer]
-tags: [cefi, deploy, manifest-relabel, follow-up, ao-dispatch]
+tags: [cefi, deploy, manifest-relabel, follow-up, ao-dispatch, superseded]
 created: 2026-07-26
 priority: P1
 parent_epic: cefi_master
@@ -25,6 +25,7 @@ related:
   [
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/active/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md,
   ]
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -33,9 +34,17 @@ depends_on: []
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: cefi_batch2_010_misscoped_gated_bundle_2026_07_26
 resolved_by:
 ---
+
+# SUPERSEDED — see cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md
+
+This doc was filed by slot-3 before discovering that slot-10 had already filed
+`issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` covering the SAME `cefi_satellite_ao_dispatch_batch2-010`
+todo's 4 sub-items, already correctly gated. Per main's ruling on `BLK-dca02ac2`, all resolution evidence (items 2+4
+done, items 1+3 remaining) has been merged into that doc's "Resolution update (2026-07-26, slot-3)" section instead of
+duplicating it here. This doc is kept only as a redirect — do not action its (now-stale) content below.
 
 # CeFi residual followups — 2 of 4 sub-items still open
 
@@ -85,18 +94,14 @@ Items 1 and 3 remain genuinely open and are why I did not flip `cefi_satellite_a
 
 ## Recommended decision
 
-- [ ] [INFRA] P1. **Deploy the D3 reader-bridge to the 4 in-scope consumers** — MTDS `reader.py`; MDPS
-      (`path_parsing.py`/`canonical_writer_shaping.py`/`orchestration_scanner.py`/`data_source.py`); features-service
-      (`raw_data_loader.py`/`batch_handler.py`); execution-service `algo_library/mtds_book_provider.py` (redeploy only,
-      no code change needed). Verify via redeploy logs/version check per consumer. (repos: market-tick-data-service,
-      market-data-processing-service, features-service, execution-service)
-- [ ] [SCRIPT] P2. **Write + dry-run-validate an OKX-FUTURES dated-futures PERPETUAL→FUTURE manifest relabel script**,
-      collision-aware (dedup on the full `_ROW_KEY_COLUMNS` tuple, mirroring
-      `canonicalize_cefi_instrument_type_legacy_lowercase_2026_07_16.py`'s merge logic, not
-      `relabel_deribit_combo_historical_to_empty_2026_06_27.py`'s blind in-place relabel). Snapshot-first
-      (`_index/snapshots/`). Determine "dated" via cross-reference against `prod/catalog.parquet`'s `instrument_type`
-      for the same `instrument_id`, not a symbol-suffix regex guess. `--apply` only after dry-run counts are
-      cross-checked against the ~116,742-row estimate. (repo: instruments-service)
+**SUPERSEDED — do not dispatch from this doc.** Both remaining-work items below are tracked as the live, canonical todos
+in `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` (`[OPERATOR]`-gated there so they do not
+auto-dispatch). Struck here to prevent a duplicate backlog derivation from this superseded copy:
+
+- ~~[INFRA] P1. Deploy the D3 reader-bridge to the 4 in-scope consumers~~ — see
+  `cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 2.
+- ~~[SCRIPT] P2. Write + dry-run-validate an OKX-FUTURES dated-futures PERPETUAL→FUTURE manifest relabel script~~ — see
+  `cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3.
 
 ## Codex SSOTs
 

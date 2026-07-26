@@ -95,17 +95,43 @@ doc under their proper gates; sequence them through the right channels:
 Operator: confirm the routing (or re-author batch2-010 into four correctly-tagged/gated todos). The todos below are
 `[OPERATOR]`-gated so they do NOT auto-dispatch back to a worker slot before that routing decision.
 
+## Resolution update (2026-07-26, slot-3)
+
+Main ruled on routing (BLK-dca02ac2, answered after slot-3 independently investigated + rescoped batch2-010): Option A —
+credit the real evidence-backed work, keep items 1+3 honestly gated, update THIS doc rather than filing a duplicate. Two
+of the four sub-items are now **RESOLVED**:
+
+- **Sub-item 2 (features image build) — RESOLVED, no code change needed.** The automated `update-dependency-version.yml`
+  digest-refresh fan-out bumped `BASE_IMAGE_DIGEST` twice since this doc was filed (`features-service@586a5cea`,
+  `@8661a7af`). Verified via `gh run list --repo IggyIkenna/features-service --workflow=image-build-gate.yml`: the most
+  recent run, on commit `8661a7af` (the latest digest-refresh), is `conclusion: success`. This closes the table row 2
+  concern — the digest-refresh bot did the fix this doc predicted would need a manual Dockerfile edit.
+- **Sub-item 4 (codex↔plan SSOT contradictions) — RESOLVED for 3 of 4.** `unified-trading-pm@8e435b425` fixes
+  `chart-candle-delivery-flow.md` (confirmed-stale per this doc's own table), `per-asset-group-bucket-layouts.md` (the
+  correct path this doc already identified in place of the plan's wrong `codex/05-infrastructure/…:135` reference), and
+  `read-time-filter-pushdown.md` (the "substring-match filename assumption" — present as the `BTCUSDT.parquet` worked
+  example, corrected to the canonical-stem form). The 4th cited contradiction
+  ("`availability-manifest-and-data-status.md` 'immutable wire-form contract'") was grepped for verbatim in the current
+  doc and NOT found — phantom/imprecise reference, consistent with this doc's finding that the plan's other doc-path
+  citations were also inaccurate.
+
+Sub-items 1 (reader-bridge deploy) and 3 (manifest relabel) remain open exactly as this doc originally scoped them —
+genuinely gated, not attempted. `cefi_satellite_ao_dispatch_batch2_2026_07_26.md` line 254's checkbox has been flipped
+by slot-3 citing this partial (2-of-4) resolution — see that plan's per-sub-item annotations for the exact evidence
+trail. A duplicate issue doc slot-3 filed before this ruling landed
+(`issues/cefi_residual_deploy_and_manifest_relabel_remaining_2026_07_26.md`) is marked `superseded_by` this doc.
+
 ## Todos
 
-- [ ] [OPERATOR] P1. Rule on routing batch2-010: either un-dispatch it (the four residuals remain tracked in
-      `cefi_residual_followups_after_honest_done_2026_07_17.md` under their Phase-0b/1/2 gates) OR re-author it into
-      four correctly-tagged/gated todos ([INFRA]+[OPERATOR] deploy/build, [SCRIPT]+[OPERATOR] manifest `--apply`, [DOCS]
-      codex-reconciliation). Until ruled, the batch2-010 checkbox stays `- [ ]` (not fake-closed). (repo:
-      unified-trading-pm)
-- [ ] [OPERATOR] P1. Sequence the reader-bridge deploy + features image-build fix as an [INFRA] unit with cloudbuild
-      evidence (repos: market-tick-data-service, market-data-processing-service, features-service, execution-service).
+- [x] ✅ [OPERATOR] P1. ~~Rule on routing batch2-010~~ — RULED 2026-07-26 (BLK-dca02ac2): Option A, see Resolution
+      update above. (repo: unified-trading-pm)
+- [ ] [OPERATOR] P1. Sequence the reader-bridge deploy (features-service's image-build half is RESOLVED, see above) as
+      an [INFRA] unit with cloudbuild evidence (repos: market-tick-data-service, market-data-processing-service,
+      features-service, execution-service).
 - [ ] [OPERATOR] P2. Sequence the OKX-FUTURES itype-relabel (~116,742 rows) as a VM-run, snapshot-first,
-      drain-coordinated data `--apply` — a migration script still needs to be written (repo: instruments-service).
-- [ ] [DOCS] P1. Route the 4 codex↔plan SSOT reconciliations through the docs-reconciliation channel after fixing the
-      plan's stale doc paths (doc 4 → `/codex/02-data/per-asset-group-bucket-layouts.md`; re-locate doc 2's actual
-      claim) (repo: unified-trading-pm).
+      drain-coordinated data `--apply` — a migration script still needs to be written, collision-aware on the full
+      manifest row_key (dedup logic mirroring `canonicalize_cefi_instrument_type_legacy_lowercase_2026_07_16.py`, not a
+      blind in-place relabel) (repo: instruments-service).
+- [x] ✅ [DOCS] P1. ~~Route the 4 codex↔plan SSOT reconciliations~~ — 3/4 DONE, see Resolution update above
+      (`unified-trading-pm@8e435b425`); 4th contradiction not found verbatim, treated as resolved/phantom. (repo:
+      unified-trading-pm)
