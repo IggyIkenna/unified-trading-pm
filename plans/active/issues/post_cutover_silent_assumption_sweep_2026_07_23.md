@@ -479,10 +479,51 @@ codex, or a future staging re-entry gets a dead pipeline.
       `0.0.0.dev0` rather than publishing it.
 - [ ] [INFRA] P1. **Re-assess `stale_staging_versions_manifest_2026_07_23.md` in light of F2 before implementing its
       fix** — its premise is inverted (see the ⚠ box above). Do not action the two independently.
-- [ ] [INFRA] P1. **Make dispatch delivery observable.** A 204 cannot distinguish "delivered" from "nobody subscribed",
-      so runtime handling cannot fix this class. Add a STATIC check (CI or QG) that every dispatched `event_type` has a
-      listener for that type in the resolved target repo — the same check that would have caught F1 and both escalation
-      bugs. Fix the unconditional `&& echo "...dispatched"` success reporting at the sites in F3.
+- [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-5, `infra`, `ci_satellite_ao_dispatch_batch1-002`) — the static checker
+      itself.** Delivered `scripts/quality_gates/check_dispatch_listeners.py` (+ regression tests
+      `tests/unit/test_check_dispatch_listeners.py`, 9 cases). Walks every repo for DISPATCH SITES
+      (`.github/workflows/*.yml`, `cloudbuild*.yaml`, `buildspec*.yaml`, `scripts/**/*.sh`) and LISTENER SITES
+      (`on: repository_dispatch: types: [...]`), resolving owner/repo/event_type through literal values, known
+      single-fleet-owner aliases (`OWNER`/`ORG`/`GH_ORG`/`GITHUB_REPOSITORY_OWNER`/`REPO_OWNER` → `IggyIkenna`),
+      file-scope shell variable assignments, and — for `trading-kill-switch.sh`'s exact shape — a shell-function wrapper
+      pass that resolves each literal-argument call site of a fixed-target/variable-event_type dispatcher. **Reproduces
+      F1 + F3 exactly on the live workspace** (run 2026-07-26,
+      `python scripts/quality_gates/check_dispatch_listeners.py --show` from a clean checkout): - F1 confirmed:
+      `trading-kill-switch.sh:75,96` → `halt-order-flow`/`resume-order-flow` → `execution-service`, no listener. - F3
+      confirmed: `cascade-qg-ordering.yml:229` → `quality-gate-run` → dynamic target, **zero repos fleet-wide** listen
+      (provably orphan regardless of which dependent repo the loop picks); `sit-gate.yml:235,239` →
+      `game-day-sit`/`synthetic-smokes` → `system-integration-tests`, no listener (only `full-workspace-sit` is
+      registered there); 12+ services' `cloudbuild.yaml`/`buildspec.aws.yaml` → `service-deployed` →
+      `deployment-service`, no listener. - **New orphans the checker additionally found** (not previously enumerated in
+      F3, same class): all 24 repos' `semver-agent.yml` → `schema-changed` → `unified-trading-pm`, no listener;
+      `unified-api-contracts/cloudbuild.yaml` → `library-published` → `deployment-service`, no listener;
+      `ci-status-update.yml` → `tier-ab-green` → `unified-trading-pm`, no listener;
+      `sit-gate.yml`/`sit-unlock.yml`/`staging-to-main.yml` → `staging-locked`/`staging-unlocked` → dynamic target, zero
+      listeners anywhere (the target's listener block is deliberately commented out per the 2026-07-23 staging-machinery
+      shutdown — expected dormancy, not a fresh bug). - **Total: 63 orphan dispatch sites, 344 dispatch sites scanned,
+      13 unresolved** (documented residual — 2 are genuinely-generic utility functions
+      `dispatch_with_retry`/`stagger-dispatches.sh` with ZERO call sites anywhere in the fleet today, confirmed by a
+      workspace-wide grep, so nothing to resolve). Baselined at 63 in
+      `scripts/quality_gates/check_dispatch_listeners_baseline.yaml` (shrinking ratchet — any NEW orphan beyond 63
+      fails; the 63 are today's tracked, known-broken set, this list). **Deliberately NOT wired into
+      `scripts/quality-gates.sh` yet** (same-file contention with 2 sibling new checkers from this batch — the single
+      registration commit is `ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`'s todo). Regression tests prove:
+      reproduces an F1-shaped orphan, a matching-listener case is NOT flagged, a wildcard listener covers any type, the
+      cloudbuild/buildspec escaped-JSON-quote shape parses, the dynamic-target-with-zero-listeners-anywhere case is
+      flagged while a dynamic-target-with-SOME-listener case is correctly left unresolved (not asserted either way), the
+      shell-wrapper per-call-site resolution works, and the baseline ratchet exits 0 at-baseline / 1 on a synthetic new
+      orphan beyond it. Full PM `quality-gates.sh` green (1356 passed, 16 skipped, 77.95s). **Still open, NOT this
+      todo's scope**: fixing the unconditional `&& echo "...dispatched"` success-reporting at the F3 sites themselves
+      (that's a separate remediation once the checker exists to prevent regressions) — split into its own follow-up
+      below so this todo stays scoped to "make it observable", per its own title.
+- [ ] [INFRA] P2. **Fix the unconditional `&& echo "...dispatched"` success reporting at the F3 orphan-dispatch sites**
+      (split out from the item above once the observability checker existed to prevent a regression while fixing):
+      `cascade-qg-ordering.yml`, `sit-gate.yml` (`game-day-sit`/`synthetic-smokes` — already `::warning::`-guarded, so
+      likely already correct; verify), the 12+ services' `cloudbuild.yaml`/`buildspec.aws.yaml` `service-deployed`
+      dispatches, and the 24 repos' `semver-agent.yml` `schema-changed` dispatch. For each: either add the missing
+      listener in the target repo, or stop claiming success when the dispatch has no subscriber. Use
+      `check_dispatch_listeners.py --show` to enumerate the current live set before starting, and re-baseline
+      (`--baseline-write`) as each is fixed so the ratchet only ever shrinks.
 - [ ] [INFRA] P2. Disable or fix the F4 vacuous crons (`sit-debounce-trigger`, `freeze-deferred-build-replay`,
       `fix-approval-timeout`, `supersede-stale-dep-update-prs`); diagnose `digest-drift-sweep`'s non-convergence (it
       costs real money via `ubuntu-latest` fan-out); make `workspace-quickmerge-validation` fail when it logs a failure.
