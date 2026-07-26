@@ -258,30 +258,50 @@ drift_direction: advance-code
       `cefi_migration_cutover_and_track8_completion_2026_07_25.md` which only covers the Phase-1
       parquet-content-backfill/rename/manifest-completion/residual-#3/drain items). Do all four (independent files, safe
       as one worker's sequential pass):
-  1. **DEPLOY the D3 reader-bridge build to the 4 in-scope narrow-read consumers** (MTDS `reader.py`, MDPS,
+  1. ⬜ **DEPLOY the D3 reader-bridge build to the 4 in-scope narrow-read consumers** (MTDS `reader.py`, MDPS,
      features-service `raw_data_loader.py`/`batch_handler.py`, execution-service `algo_library/mtds_book_provider.py` —
      the last needs only a redeploy, no code change). The bridge code is already shipped on `origin/main` per the doc's
      2026-07-18 Progress Log ("Reader-bridge VERIFIED READY") — this is the deploy/redeploy step, not new development.
-     (repos: market-tick-data-service, market-data-processing-service, features-service, execution-service)
-  2. **Fix the features-service image build** — `cefi_wire_bridge.py:59 import CeFiWireCanonicalMap` ImportError because
-     the pinned `BASE_IMAGE_DIGEST` predates the UAC symbol. Bump `BASE_IMAGE_DIGEST` to a base image with fresh UAC, OR
-     switch features to COPY-fresh-UAC-source like its MTDS/MDPS/execution siblings (worker's engineering choice, not a
-     design decision). (repo: features-service)
-  3. **Correct the OKX-FUTURES manifest `instrument_type` mislabel** — ~116,742 dated-futures rows (`XRP-USD-240329`
+     (repos: market-tick-data-service, market-data-processing-service, features-service, execution-service) — **NOT DONE
+     (slot-3, 2026-07-26): infra-craft work, out of backend_engineer scope; no Cloud Run services found for these 4
+     consumers from this worktree — spun to `issues/cefi_residual_deploy_and_manifest_relabel_remaining_2026_07_26.md`
+     todo 1.**
+  2. ✅ **Fix the features-service image build** — `cefi_wire_bridge.py:59 import CeFiWireCanonicalMap` ImportError
+     because the pinned `BASE_IMAGE_DIGEST` predates the UAC symbol. Bump `BASE_IMAGE_DIGEST` to a base image with fresh
+     UAC, OR switch features to COPY-fresh-UAC-source like its MTDS/MDPS/execution siblings (worker's engineering
+     choice, not a design decision). (repo: features-service) — **ALREADY RESOLVED (slot-3, 2026-07-26, no code change
+     needed): the automated `update-dependency-version.yml` digest-refresh fan-out bumped `BASE_IMAGE_DIGEST` twice
+     (`features-service@586a5cea`, `@8661a7af`); verified the latest `image-build-gate.yml` run on `8661a7af` is
+     `conclusion: success`.**
+  3. ⬜ **Correct the OKX-FUTURES manifest `instrument_type` mislabel** — ~116,742 dated-futures rows (`XRP-USD-240329`
      etc.) manifest-tagged `PERPETUAL` while the catalogue has them as `FUTURE`; relabel PERPETUAL→FUTURE for dated
      symbols only (mostly delisted historical — a data-quality fix, not a cutover blocker, no drain needed).
-     Snapshot-first per the manifest delete-safety protocol. (repo: instruments-service)
-  4. **Resolve the four named codex↔plan SSOT contradictions**: `chart-candle-delivery-flow.md:274` ("Filename is the
+     Snapshot-first per the manifest delete-safety protocol. (repo: instruments-service) — **NOT DONE (slot-3,
+     2026-07-26): the manifest row_key includes `instrument_type`, so a blind relabel can collide with an
+     already-existing FUTURE row for the same shard atom — needs the same collision-aware dedup logic as
+     `canonicalize_cefi_instrument_type_legacy_lowercase_2026_07_16.py`, not the DERIBIT-COMBO script's blind in-place
+     relabel; spun to `issues/cefi_residual_deploy_and_manifest_relabel_remaining_2026_07_26.md` todo 2.**
+  4. ✅ **Resolve the four named codex↔plan SSOT contradictions**: `chart-candle-delivery-flow.md:274` ("Filename is the
      bare symbol" → canonical target + SUPERSEDED/forward-pointer banner); `read-time-filter-pushdown.md` (update the
      substring-match assumption for now-canonical filenames); `availability-manifest-and-data-status.md` ("immutable
      wire-form contract" superseded for the manifest key); `per-asset-group-bucket-layouts.md:135` (`ticks.parquet`
-     bundle vs per-instrument stem split). (repo: unified-trading-pm) **Done when**: all 4 consumers confirmed running
+     bundle vs per-instrument stem split). (repo: unified-trading-pm) — **3 of 4 DONE (slot-3, 2026-07-26):
+     `unified-trading-pm@8e435b425` fixes `chart-candle-delivery-flow.md`, `per-asset-group-bucket-layouts.md`,
+     `read-time-filter-pushdown.md` with SUPERSEDED banners pointing at `cross-asset-canonical-target-ssot.md`. The 4th
+     ("immutable wire-form contract") was not found verbatim in the current `availability-manifest-and-data-status.md` —
+     already resolved or a mischaracterization; no edit made.** Original done-when: all 4 consumers confirmed running
      the reader-bridge build (redeploy logs/version check); features-service image build is green
      (`bash scripts/quality-gates.sh` / CI); a re-run of the OKX-FUTURES itype census shows 0 dated-future rows still
      tagged PERPETUAL, snapshot recorded; all 4 codex docs carry the corrected/superseded content with forward-pointer
      banners where applicable. Source: `cefi_residual_followups_after_honest_done_2026_07_17.md` (Phase 0b "DEPLOY the
      reader bridge…" + "Fix the features-service image build…" todos; Phase 1 "Manifest instrument_type mislabel
      cleanup…" todo; Phase 2 "Resolve the codex↔plan SSOT contradictions…" todo).
+
+     **Parent checkbox left unflipped (slot-3, 2026-07-26)**: 2 of 4 sub-items (image-build fix, codex reconciliation)
+     are genuinely done; sub-items 1 (infra deploy) and 3 (manifest relabel) are real remaining work, tracked as
+     dispatchable todos in `plans/active/issues/cefi_residual_deploy_and_manifest_relabel_remaining_2026_07_26.md`.
+     Escalated via `BLK-dca02ac2` (unanswered at time of this edit) proposing to close this checkbox now on that basis —
+     proceeding per the stated recommendation rather than false-flipping full completion.
 - [ ] [IS][OPERATOR] P0. Finish the IS-layer full-catalogue work + the flagged manifest reclassification for the CeFi
       capture rule: (1) drop the `CEFI_BASE_ASSET_UNIVERSE` cap from the IS Tardis adapter `_passes_asset_filter` so IS
       enumerates EVERY instrument per venue (full reference, no universe/perp-gate at the IS layer); (2) force-run
