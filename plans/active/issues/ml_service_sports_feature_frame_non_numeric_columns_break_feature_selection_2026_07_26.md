@@ -131,13 +131,25 @@ here — flagging so the eventual retrain attempt checks target-class balance be
 
 ## Recommended decision
 
-- [ ] [CODE] P2. Give `_phase_feature_selection` (and any other phase in `uniform_training_pipeline.py` that fits an
-      sklearn estimator directly on `features`) a numeric-only guard — either drop non-numeric columns before fit
-      (defensive, protects every asset group) or have the SPORTS loader stop returning identity/categorical columns as
-      feature columns in the first place (mirrors how CEFI/TRADFI/DEFI apparently never surface them). Whichever shape
-      is chosen, importance/mask indexing (`features.columns[mask]`) must stay aligned to whatever subset was actually
-      fit — a naive `select_dtypes` filter breaks that alignment if not threaded through consistently. (repo:
-      ml-service)
+- [x] [CODE] P2. ✅ **DONE (2026-07-26, slot-12, `data_engineering`) — `ml-service@5a9e3050`.** Gave
+      `_phase_feature_selection` a numeric-only guard: `features.select_dtypes(include=[np.number])` computed once,
+      applied to BOTH the `<=300`-column passthrough path (previously had no guard at all — `selected` was just
+      `list(features.columns)`, would have silently carried non-numeric columns forward into Phase 2/3's
+      `features[selected]` for any asset group with <=300 total features) and the `>300`-column selector-fit path
+      (previously called `selector.fit(features, ...)` on the raw frame). All downstream indexing
+      (`mask`/`top_idx`/`importance_dict` keys) now aligns to `numeric_features.columns`, not the original raw frame —
+      no misalignment risk. Because `_phase_hyperparameter_tuning` and `_phase_base_results` both derive their working
+      feature set via `_get_selected_features(prior, features)` → `features[selected]`, filtering `selected_features` in
+      Phase 1 propagates the fix to every later phase without touching them. CEFI/TRADFI/DEFI frames carry no
+      non-numeric columns today, so this is a no-op for them (verified: existing
+      `test_phase_1_feature_selection`/`test_phase_1_small_dataset_keeps_all` still pass unchanged). 2 new regression
+      tests: `test_phase_1_drops_non_numeric_columns_before_fit` (reproduces the exact crash shape — wide frame +
+      `event_id`/`fixture_id`/object-upcast `xg_blended_total` — asserts none survive into `selected_features`) and
+      `test_phase_1_small_dataset_drops_non_numeric_columns` (proves the guard applies on the `<=300` path too, where no
+      selector fit runs to catch it otherwise). `bash scripts/quality-gates.sh --no-fix` GREEN (124s, sentinel == HEAD);
+      shipped via `quickmerge.sh --agent`. Did NOT implement the alternative (SPORTS loader excludes
+      identity/categorical columns at the source) — the defensive drop-before-fit shape protects every asset group
+      uniformly and needed no changes to `sports_feature_loader.py`. (repo: ml-service)
 - [ ] [DATA] P2. Diagnose the 23 `xg_*` columns upcast to `object` dtype — find the null-sentinel or mixed-type write
       causing the upcast and fix at the source (likely a features-service write path or a join step in
       `sports_feature_loader.py`), rather than papering over it with a blanket `pd.to_numeric(errors="coerce")` in
@@ -157,3 +169,7 @@ here — flagging so the eventual retrain attempt checks target-class balance be
 - 2026-07-26: filed while independently verifying the parent issue doc's Bugs 1+3 fixes — feature loading now works
   end-to-end (2383x956, proving Bug 3's fix), the retrain got one phase further than ever before, and hit this new,
   distinct, precisely-diagnosed blocker plus the CLV-target-degeneracy finding above.
+- 2026-07-26 (slot-12, `data_engineering`): shipped the `[CODE] P2` numeric-only guard fix (`ml-service@5a9e3050`).
+  Status left `open` — the `[DATA] P2` (xg_* upcast root cause), `[DATA] P3` (CLV target-source availability), and
+  `[ML] P2` (re-attempt retrain) todos remain genuinely open. The `[ML] P2` retrain is still blocked on
+  `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s own remaining items too.

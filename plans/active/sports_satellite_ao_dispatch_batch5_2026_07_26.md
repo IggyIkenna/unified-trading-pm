@@ -362,9 +362,10 @@ drift_direction: advance-code
       landing first — CLV retrain completes + independently re-verified, 3 quarantined artifacts untouched;
       `quality-gates.sh` green on every touched repo. **UPDATE 2026-07-26 (slot-6)**: fixed Bugs 1+3 —
       `ml-service@7cccb236`, QG green, real prod `features-sports-prd` loading verified end-to-end (2383x956). Bug 2
-      deferred (P3, design call). (c) still ⏳ — retrain hit a new, deeper blocker (32 non-numeric SPORTS cols crash
+      deferred (P3, design call). (c) still ⏳ — hit a new blocker (32 non-numeric SPORTS cols crash
       `feature_selection`) + a CLV-target-100%-flat finding, filed as
-      `ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`; artifacts untouched.
+      `ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`. **UPDATE (slot-12)**:
+      shipped that doc's `[CODE] P2` fix (`ml-service@5a9e3050`); (c) still ⏳, 3 other todos remain — see that doc.
 - [x] ✅ [DATA] P1. Resolve the sports odds manifest-routing regression opened by the 2026-07-24 addendum to
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`: (1) grep+READ the manifest-write target
       resolution in the sports capture path in market-tick-data-service (same class of `_resolve_manifest_bucket()`
