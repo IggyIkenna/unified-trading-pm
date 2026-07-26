@@ -27,7 +27,6 @@ related:
   ]
 created: "2026-07-26"
 last_updated: "2026-07-26"
-author: slot-6
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,6 +43,7 @@ source: >-
 locked_by:
 locked_since:
 resolved_by:
+depends_on: []
 ---
 
 # ASTER raw-trade capture — manifest registration gap
