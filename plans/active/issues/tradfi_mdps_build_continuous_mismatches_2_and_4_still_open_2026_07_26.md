@@ -122,11 +122,22 @@ start without real tradfi/ES feature parquets.
       trusting the filename, with 4 new regression tests (`tests/unit/test_build_continuous_engine.py`, verified to fail
       without the fix) — market-data-processing-service@62a1255. Answers `BLK-581b75aa`'s open question: a real fix was
       needed and shipped (not a no-op close as "already resolved").
-- [ ] [AGENT] P1. Fix mismatch 4 (read-path handling): add `continuous_future` handling to
+- [x] [AGENT] P1. Fix mismatch 4 (read-path handling): add `continuous_future` handling to
       `features_service/delta_one/app/core/data_loader.py`'s `_DERIVATIVE_DATA_TYPES` (or an equivalent dedicated
       branch) so `_build_blob_path` can locate build-continuous's
       `processed_candles/.../instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet` output. (repo:
-      features-service)
+      features-service) — ✅ FIXED 2026-07-26 (`features-service@65606d26`), but NOT as originally diagnosed:
+      `data_loader.py`'s `_DERIVATIVE_DATA_TYPES` was a misdirected diagnosis — that function is never actually called
+      for continuous-future reads. The real, dedicated (and already-tested since
+      `tradfi_futures_roll_adjuster_centralisation_2026_06_17`) read path is
+      `features_service/delta_one/engine/orchestrator.py`'s `_load_continuous_series`, which hand-rolls its own blob
+      path and was missing the `pipeline_mode=batch_databento/` segment that MDPS's `build-continuous` writer
+      (`build_continuous_engine._continuous_output_path`) always inserts via `build_canonical_candle_path`
+      (`pipeline_mode=PipelineMode.BATCH_DATABENTO.value`) — a read path missing that segment can never match a real
+      written object, regardless of `_DERIVATIVE_DATA_TYPES`. Fixed by building the read path via the SAME
+      `build_canonical_candle_path` UTL SSOT the writer uses; updated
+      `tests/delta_one/unit/test_orchestrator_continuous_read_path.py` with a segment-order assertion + an exact-string
+      parity test pinned to the MDPS write side. `quality-gates.sh` full green (17,836 passed, 209 pre-existing skips).
 - [x] [AGENT] P1. Re-verify mismatch 3 (ES absent from Databento raw `ohlcv_1m`) is still accurate against the CURRENT
       raw MTDS bucket state
       (`raw_tick_data/.../pipeline_mode=batch_databento/.../futures_chain/data_type=ohlcv_1m/underlying=ES/`) -- the
@@ -237,3 +248,19 @@ start without real tradfi/ES feature parquets.
   `PROTOCOL_DATA_SOURCE_BUCKET_TRADFI` config bug remain open — the latter is a new finding, not yet a todo in any doc;
   whoever picks up todo 4 (launch + verify) should fix the bucket env var first or the launch will 404 before ever
   reaching mismatch 2/4's code paths.
+- 2026-07-26 (worker, slot 6): Fixed mismatch 4, but relocated the diagnosis. Grepped for the ONLY consumer of
+  continuous-future candles in features-service (`orchestrator.py`'s `_maybe_roll_adjust`/`_load_continuous_series`,
+  gating `futures_basis`/`technical_indicators`/`momentum` for TRADFI) and found it bypasses `data_loader.py`'s
+  `_build_blob_path`/`_DERIVATIVE_DATA_TYPES` entirely — it hand-rolls its own path. `_DERIVATIVE_DATA_TYPES` is keyed
+  by `data_type` (e.g. `options_chain`/`futures_chain` ARE data_type values there); continuous-future output's
+  `data_type` is `ohlcv_1m` (per MDPS's `DEFAULT_DATA_TYPES`) with `instrument_type="continuous_future"` as a SEPARATE
+  axis, so adding `"continuous_future"` to that data_type-keyed set would have been a no-op with no runtime effect.
+  Comparing `_load_continuous_series`'s hand-rolled path against the MDPS writer's actual
+  `build_canonical_candle_path(...)` call (`build_continuous_engine._continuous_output_path`) found the REAL bug: the
+  read path omitted the `pipeline_mode=batch_databento/` segment the writer always inserts — a read that can never match
+  a real written object regardless of `_DERIVATIVE_DATA_TYPES`. Fixed by routing the read through the same
+  `build_canonical_candle_path` UTL builder the writer uses (never hand-roll this shape, mirroring the writer's own
+  stated principle); extended the existing dedicated test file
+  (`tests/delta_one/unit/test_orchestrator_continuous_read_path.py`) with a segment-order assertion and an exact-string
+  parity test pinned to the writer's shape. `quality-gates.sh` full green (17,836 passed, 209 pre-existing skips,
+  sentinel-verified). Shipped `features-service@65606d26`.
