@@ -933,3 +933,12 @@ UAC) — no separate deploy needed here.
   counts + snapshot paths in "Resolution — YAHOO_FINANCE phantom-venue seeding stopped + orphan rows cleaned
   (2026-07-16)" above. No leftover: the seeding is stopped for good (durable Dockerfile fix on LDR) and the rows are
   cleaned and verified to stay gone.
+- 2026-07-26 (slot 6): Traced the write-time classification decision point for the `ohlcv_15m`/`ohlcv_24h`
+  Databento-filtered cells this Verification addendum's DP-FETCH-009 finding covers the ALERT PERSISTENCE for.
+  `_route_databento`'s data_type filter (`umi_tick_provider.py:444-447`) silently drops these two dts to an empty fetch
+  with NO `failed_per_dt` entry; `sentinels.py::_emit_nonsports_tier2_tier3_sentinels`'s
+  `effective_failure = per_dt_reason or failed_reason_raw` fallback (line 592) is what actually decides
+  `attempted_failed` vs `empty_confirmed` for these — since the silent filter never sets `per_dt_reason`, classification
+  rides on whether that SAME VENUE had an unrelated whole-venue failure that day. So a SEPARATE write-time decision
+  point does exist (not just DP-FETCH-009's no-recency-window count) — full trace + file:line citations in
+  `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s now-flipped `[VERIFY] P3` todo. No code changes.
