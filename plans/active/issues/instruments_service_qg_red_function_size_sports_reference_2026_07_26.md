@@ -13,7 +13,7 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer]
 tags: [quality-gates, coding-standards, sports, function-size]
-related: []
+related: [/plans/active/sports_consolidated_closeout_2026_07_19.md]
 created: 2026-07-26
 parent_epic: infrastructure_master
 assigned_vm: planning
