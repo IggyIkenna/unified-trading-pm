@@ -8,7 +8,7 @@ summary: >-
   operator-gated/time-gated/too-large/human-only items for any that have since cleared), then archives batch2 via the
   standard 6-step ritual. Also carries the follow-up for batch2's 3 non-actioned findings (2 mistag retags + 1
   archivable_now doc).
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]

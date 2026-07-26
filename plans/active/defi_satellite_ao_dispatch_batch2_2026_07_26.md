@@ -13,11 +13,12 @@ summary: >-
   AO-dispatch todos, then found 1 genuine duplicate pair (both docs independently drafted the identical "90-day
   lst-rates backfill for 6 venues" ask) and merged them into a single combined todo citing both sources — 23 todos ship
   here. Left 3 conflict-gated, 11 operator-gated, 3 time-gated, 1 too-large-or-risky, and 2 human-only items in the
-  Deferred sections below for the next iteration or an explicit operator ruling, per the skill's non-batchable taxonomy.
-  Also flags a separate mistag found during Phase-0 discovery
-  (`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`, tagged bare `[cross-cutting]` despite its
-  defi-prefixed title — `locked_by: live-defi-rollout` so not retagged here, flagged for the finalize plan).
-status: draft
+  Deferred sections below (kept concise — a fresh re-read is expected before acting on any of them, per the skill's
+  re-check methodology) for the next iteration or an explicit operator ruling. Also flags a separate mistag found during
+  Phase-0 discovery (`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`, tagged bare
+  `[cross-cutting]` despite its defi-prefixed title — `locked_by: live-defi-rollout` so not retagged here, flagged for
+  the finalize plan).
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -70,10 +71,10 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 2 — fresh triage extraction
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
-> skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review. All 23 todos below are same-priority-independent and touch distinct files/docs (verified — the one
-> confirmed duplicate pair was merged into a single todo before this doc was authored, not left as two colliding
+> **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
+> ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
+> explicit operator review). All 23 todos below are same-priority-independent and touch distinct files/docs (verified —
+> the one confirmed duplicate pair was merged into a single todo before this doc was authored, not left as two colliding
 > entries).
 
 ## Todos
@@ -522,525 +523,112 @@ drift_direction: advance-code
 - **`plans/active/issues/defi_code_codex_drift_2026_05_27.md`**: D15 ("HYPERLIQUID + ASTER are DEFI_VENUE_PHASE=pipeline
   but perp_funding_handler actively collects them; reconcile the phase label (→ live, or confirm cefi-axis
   classification)") is a DUPLICATE of already-tracked-but-undispatched ground, not genuinely orphaned. Live-code check
-  confirms D15's own premise is stale: HYPERLIQUID/ASTER are not even present in UAC's defi_venues.py DEFI_VENUE_PHASE
-  registry today (grep on unified-api-contracts/unified_api_contracts/registry/defi_venues.py returns zero hits for
-  either venue) — they only appear in the CEFI-side registries (market_data_categories.py CEFI venue lists,
-  _mvp_scope_rules.py). The real current gap is exactly what
-  plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md tracks as its own open [CODE] P1 item
-  ("HYPERLIQUID/ASTER durable fix — declare them in UAC's own `ALL_DEFI_VENUES` + `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (a
-  deployment-api-local stopgap already unblocks the dashboard)"), which IS cited inside the covering set at
-  plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md line 478. D15's own alternate framing ("...or
-  confirm cefi-axis classification") is the same blocking question that doc records as needing "the CEFI/DEFI
-  dual-counting axis decision" — and that decision is now ALREADY RESOLVED (operator-confirmed 2026-07-07 in
-  plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md lines 157-168:
-  HYPERLIQUID/ASTER are intentional hybrid on-chain-CLOB venues, CEFI holds instrument definitions / DEFI holds
-  chain-level settlement context; re-confirmed not-a-double-counting-risk in the 2026-07-21 update inside the turbo-api
-  doc itself, lines 265-275). So D15 and the turbo-api doc's P1 prescribe the identical fix (UAC registry declaration)
-  against the identical now-unblocked decision — a clear duplicate, not a genuine two-sided conflict. Per the
-  conflict-check rule, do not draft a competing D15 todo from this orphan-doc's audit; the correct dispatch vehicle for
-  the actual remaining work is the turbo-api doc's own P1 item (already enumerated in the aggregated_sources index, just
-  not yet folded into an active AO-dispatch batch plan). Recommended resolution: when the aggregated_sources index's own
-  backlog is next turned into a dispatch batch, fold that P1 item (now unblocked — no operator decision needed) into it;
-  this orphan doc's D15 line should be closed with a cross-reference note to the turbo-api doc rather than spawning a
-  second, redundant todo.
+  confirms D15's own premise is stale:...
 - **`plans/active/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`**: The one remaining open item in
   this doc — the unchecked `- [ ] [FEATURE] P2 delta_one funding_oi venue-aware annualisation` todo (features-service,
   thread venue through the delta_one calculator interface so non-8h venues like Hyperliquid annualise correctly) — is
-  explicitly annotated in the doc itself as "DEFERRED — successor: perp_funding_data_semantics_and_cadence_2026_06_16.md
-  (parent_epic mtds_mdps_master); migrated 2026-06-21 — not the carry path; cross-cutting delta_one refactor." I
-  verified that successor doc exists, is status:open, asset_group:[cross-cutting], parent_epic:mtds_mdps_master,
-  priority P1, locked_by:live-defi-rollout, last_updated 2026-06-27 — i.e. it is a live, actively-owned issue doc that
-  already claims this exact ground (same file, `features_service/delta_one/app/calculators/funding_oi.py`, same
-  mechanism: venue-aware annualisation). Grepping the entire defi covering set (consolidated closeout, batch1, track01,
-  track5, and all other listed docs) for `funding_oi`/`delta_one`/venue-aware annualisation returns zero hits — nothing
-  in the defi tranche re-claims or duplicates this work, which is correct because it was deliberately migrated OUT of
-  defi scope into a cross-cutting/mtds_mdps_master doc on 2026-06-21. This is therefore not a genuine defi-AG orphan:
-  the work exists, is tracked, and is owned by a different, already-live doc outside this tranche's scope. Drafting a
-  defi-AO todo for it here would create a competing/duplicate claim on the same file against the successor doc's
-  existing ownership (locked_by:live-defi-rollout). Recommended resolution: no action needed in the defi tranche — this
-  item should surface (if at all) only in a cross-cutting or mtds/mdps tranche audit of
-  `perp_funding_data_semantics_and_cadence_2026_06_16.md` itself, not as a new defi satellite-batch todo. The target doc
-  `e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md` can be treated as fully closed-out from the defi AG's
-  perspective — its sole open thread is correctly parked in its designated successor.
+  explicitly annotated in the doc itself as "DEFERRED —...
 - **`plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md`**: Phase-1's "orphaned_never_touched"
   verdict is a false positive produced by the narrow covering-set grep — the target doc is NOT actually orphaned.
   Grepping the covering set for the mechanism names (lst_yields, lst_rates, aave_oracle/AaveOracle, dex_pool_swaps,
-  Curve, Orca/Raydium/Meteora) surfaced defi_consolidated_closeout_aggregated_sources_2026_07_24.md lines 160-180, which
-  itself points to a fully active, non-draft plan NOT in the given 13-doc covering-set list:
-  plans/active/lst_rate_honest_coverage_2026_07_21.md (status: active, created 2026-07-21, `related:` cites this exact
-  target doc plus pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md). That plan's summary is a verbatim
-  restatement of the target doc's four gaps ("#1 CEX spot = a Tardis backfill... #3 Aave oracle = the real code build...
-  #2 DEX pool = a collector/endpoint fix... #4 protocol redemption = a features backfill + a Solana/LRT join fix") and
-  its todo list (grepped directly) carries open, still-unchecked items covering every one of the target's 5 close
-  actions: line 232 open [MTDS] P2 "#1 CEX-spot contiguity backfill — full-history Tardis backfill over *-SPOT LST
-  venues" (= close action 2), line 264 open [FEATURES] P2 "#4 lst_yields backfill — run over the full lst_rates source
-  history" (= close action 1), line 364 open [MTDS] P3 "#2 DEX fill — deep-backfill dex_pool_swaps once the endpoint
-  lands" (= close action 3), line 371/375 open [STRATEGY] "A2 staking leg" / "Recursive-staking borrow leg — unblocks
-  once #3 Aave oracle lands" (downstream of close action 4), and most of the Aave-oracle wiring itself (close action 4)
-  is already [x]-checked done (lines 65-172: adapter built, venue registered, Chainlink feeds added, backfill run) —
-  only the residual force/skip proof (line 158) is open. Close action 5 (Solana Orca/Raydium/Meteora zero-object gap) is
-  separately tracked inside the given covering set itself: defi_satellite_ao_dispatch_batch1_2026_07_25.md line 120
-  "[CODE] P1. Implement Orca Whirlpool tick-array binary decode", plus aggregated_sources' "+6 more" list names G7 Orca
-  tick-array decode / G8 Raydium second pool as open P2 items. This is not a two-different-fixes conflict (no competing
-  approach exists) — it is a clean duplicate: an already-active plan is executing precisely the close actions Phase 1
-  flagged as uncovered, just outside the covering-set list this audit was scoped to check. Recommend: (a) correct the
-  doc's Phase-1 classification from orphaned_never_touched to covered-by-active-plan-outside-given-set, (b) fold
-  lst_rate_honest_coverage_2026_07_21.md into the defi covering-set inventory (defi_consolidated_closeout_2026_07_18.md
-  or aggregated_sources' plan list) so future audits don't re-flag this doc, and (c) do NOT draft a new satellite-batch
-  todo — it would race/duplicate lst_rate_honest_coverage's already-open todos on the same files/mechanisms.
+  Curve, Orca/Raydium/Meteora) surfaced...
 
 ## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION, not batchable)
 
 - **`plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md`**: Conflict check (clean, no overlap): grepped all
   13 covering-plan-set docs for every file/mechanism name in the 4 uncovered §6 items (`jupiter.py`,
   `governance_params_event_poller`, `onchain_event_poller`, `alchemy_adapter`, `thegraph_ws_adapter`, `helius_solana`,
-  `native_staking_handler`). Only one hit: `native_staking_handler.py` appears in
-  `defi_satellite_ao_dispatch_batch1_2026_07_25.md` line 357, but that todo is about threading `mode=` into
-  `assert_defi_catalog_fresh()` across 9 handlers — an unrelated mechanism, not the Helius-consolidation fix. No genuine
-  overlap found; nothing else claims this ground. Confirmed exact uncovered items via re-read of §6 (lines 341-357): of
-  the 6 listed follow-ups, only #5 (onchain/**init**.py docstring, P3) and #6 (curve_adapter._download_liquidity trace,
-  P3) are cited by `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (lines ~182-195) and confirmed by
-  `defi_consolidated_native_ao_extract_2026_07_25.md`'s own conflict-check (lines 136-146). The 4 remaining uncovered
-  items are: 1. `jupiter.py::JupiterReferenceDataAdapter` (P2) — register as a live DeFi venue in
-  `factory.py::_ADAPTERS["jupiter"]` OR delete the class + its 2 test files. 2. Governance-params-refresh
-  re-verification (P1, doc's own 🔴 OPERATOR-NOTIFY banner, big/cross-repo/data-correctness-adjacent) — re-verify
-  features-service `aave_risk_calculator.py` / strategy-service sizing against the measured fact
-  `GovernanceParamsEventPoller` never runs in prod, then either wire it into a live entrypoint or update the plan/codex
-  record to state the feature has never been live. 3. `adapters/defi/live/onchain_event_poller.py` +
-  `adapters/defi_live/{alchemy_adapter.py,thegraph_ws_adapter.py}` (P2) — wire in or delete. 4.
-  `onchain/helius_solana.py::HeliusSolanaAdapter` vs `native_staking_handler.py` (P2) — decide which implementation is
-  authoritative and consolidate. Applying dispatch-scope eligibility: all 4 are explicitly framed by the source doc's
-  own authors (who deliberately declined to make these calls in-pass) as binary product/design decisions, not safe
-  unilateral code fixes — jupiter.py's disposition has stated downstream effects on UAC venue lists /
-  `VENUE_TO_ADAPTER_KEY` / manifest schema / backfill scope / billing (a new live venue is a product decision); item 3
-  is the same "wire in a whole new live-data feature vs delete tested code" shape with no existing successor to default
-  to; item 4 requires choosing which of two working implementations becomes canonical (deleting the other) with no
-  stated tie-breaker; item 2 already carries the doc's own 🔴 OPERATOR-NOTIFY banner (cross-repo,
-  data-correctness-adjacent — features-service/strategy-service APR/sizing risk) and even its "re-verify" half depends
-  on the wire-in-vs-document-as-never-live fork being resolved first. None of the four reduces to a worker-determinable
-  bounded outcome without an operator ruling on the underlying product/scope question first. Recommended resolution:
-  raise all 4 to the operator as a single batched decision request (jupiter venue: register or delete; governance
-  poller: wire in now or document as never-live pending features/strategy re-verification;
-  onchain_event_poller/alchemy/thegraph: wire in or delete; Helius: consolidate onto adapter or delete adapter) — once
-  ruled, each becomes a trivially bounded, batchable AO todo executing the chosen branch.
+  `native_staking_handler`). Only one hit:...
 - **`plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`**: Confirmed the Phase-1 finding: lines
   325-332 carry an unchecked
   `- [ ] [DATA] P2. Reconcile _INSTRUMENT_TYPE_ALIASES ... against the legacy venue_mapping.DataTypeConfig table` item,
   and grepping the exact mechanism name `_INSTRUMENT_TYPE_ALIASES` across the full covering-plan set (consolidated
-  closeout, aggregated-sources, native-ao-extract+finalize, track01, track5, lending-writer-retire-prerequisite,
-  gmx-removal+finalize, dex-pool-symbol-fix+finalize, satellite batch1+finalize) returns zero hits anywhere. Conflict
-  check: 4 docs in the covering set (defi_consolidated_native_ao_extract_2026_07_25.md,
-  defi_track01_per_instrument_and_canon_id_2026_07_24.md, defi_lending_writer_retire_prerequisite_2026_07_20.md,
-  defi_consolidated_closeout_2026_07_18.md) DO mention A_TOKEN/DEBT_TOKEN, but on inspection all of them concern the
-  separate LENDING→A_TOKEN/DEBT_TOKEN instrument_type RETIRE (write-side instrument_type value + GCS-path/manifest-row
-  shard-atom desync across 8 MTDS writers, in instruments-service/MTDS/UTL repos, gated by the operator's D2 ruling).
-  That is a different SSOT and a different mechanism from this doc's uncovered item, which is about UAC's
-  `unified_api_contracts.registry.market_data_categories._INSTRUMENT_TYPE_ALIASES` table (used by
-  `valid_data_types_for_instrument_type`, which feeds `enumerate_expected_universe`'s data_types resolution and
-  `possible_manifest.is_valid_shard_key`) disagreeing with the legacy
-  `venue_mapping.DataTypeConfig.instrument_data_types` table over which data_types (specifically `oracle_prices`) are
-  valid for A_TOKEN/DEBT_TOKEN/LST/YIELD_BEARING tokens. No file/mechanism overlap — genuinely uncovered, not a
-  duplicate of the retire work. However the doc's own text explicitly frames the fix as requiring a decision, not
-  mechanical execution: "decide which table is the SSOT for these tokens' valid data_types (they currently disagree on
-  oracle_prices)... That reconciliation is a genuine SSOT-contradiction call (cross-repo, orphan-sweep-adjacent) needing
-  an explicit decision, not a fix bundled into a P1.3 materialization task." This mirrors the exact escalation pattern
-  the sibling defi_lending_writer_retire_prerequisite_2026_07_20.md plan used for its own analogous A_TOKEN/DEBT_TOKEN
-  SSOT-contradiction questions (todo 6: "Escalate as an option-set if it is not decidable from the naming SSOT"). The
-  decision needed: which registry (UAC's `_INSTRUMENT_TYPE_ALIASES` vs the legacy `venue_mapping.DataTypeConfig`) is
-  authoritative for A_TOKEN/DEBT_TOKEN/LST/YIELD_BEARING valid data_types — specifically whether `oracle_prices` is a
-  legitimate data_type for these instrument types — because picking wrong silently misclassifies real captured
-  `oracle_prices` cells as orphan candidates downstream in the phantom-reconciler/orphan-sweep. This is a bounded
-  engineering task ONLY after that call is made; before that it is an undecided cross-repo semantic-SSOT ruling, so it
-  does not meet dispatch-scope eligibility as-is. Recommend: operator rules on the SSOT question (likely
-  alongside/adjacent to the existing D2 lending-retire ruling track since it touches the same token set), then a
-  follow-up AO todo implements the chosen mapping into `_INSTRUMENT_TYPE_ALIASES`.
+  closeout,...
 - **`plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`**: Confirmed via direct read:
   the doc's Todos list has 4 items. Todos 1 ([DATA] P1 scale measurement) and 2 ([DIAG] P1 content-sample/distribution)
   are cited and dispatched in defi_satellite_ao_dispatch_batch1_2026_07_25.md (matching Phase-1's "(2 todos)" tally).
-  Todos 3 and 4 are NOT dispatched anywhere. Conflict check: grepped plans/active/ for "composite-venue",
-  "legacy_precanonical", "fold-vs-migrate", "ETHENA-ETHEREUM". Only hit besides the target doc itself and the
-  batch1/aggregated-sources citations is defi_track01_per_instrument_and_canon_id_2026_07_24.md (lines 203-216), which
-  is an already-checked-off ✅ item describing the SAME finding and explicitly deferring: "Remaining: scale
-  measurement + a targeted migration script — tracked in that issue doc, not re-duplicated here." No competing fix
-  approach is proposed anywhere else — no genuine conflict, just the same single source of truth (the target issue doc)
-  referenced from two places. Todo 3 is explicitly framed by the doc itself as a genuine, non-mechanical judgment call:
-  "[OPERATOR] P1. Decision needed: fold ... vs. some other disposition — gated on the scale + sample-distribution facts
-  from the two todos above ... This is a genuine judgment call, not a mechanical fix (per task_template.md's
-  bounded-outcome rule) — do not execute a fold/migrate without this decision." That is a direct
-  dispatch-scope-eligibility disqualifier (task_template.md finding + operator ruling 2026-07-23: an open-ended
-  judgment/design call is a human decision, not an AO-eligible todo). Todo 4 ([PM] P2 file a migration plan) is
-  sequentially gated on todo 3's outcome ("once scale + the fold-vs-migrate decision are both in hand") and therefore
-  also not currently draftable as a standalone AO todo — its content (what the migration plan should even propose)
-  cannot be determined until the operator rules on fold-vs-migrate. Both todo 3 and todo 4 must wait: (1) for batch1's
-  todos 1&2 to complete and surface scale + distribution facts, then (2) for the operator to make the fold-vs-migrate
-  call, at which point todo 4 becomes a bounded, batchable "file the migration plan reflecting decision X" todo.
-  Recommended resolution: leave todo 3 as the doc's own gate; once batch1 finalizes, surface the fold-vs-migrate
-  question directly to the operator (not through another AO dispatch draft) and re-run this extraction for todo 4 once
-  that answer exists.
+  Todos 3 and 4 are NOT dispatched anywhere. Conflict check:...
 - **`plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`**: Read the target doc and
   confirmed Phase-1's evidence exactly. Of the 3 open todos, the VERIFY (P2) is dispatched by
   defi_satellite_ao_dispatch_batch1_2026_07_25.md (line ~546-549); the other two are explicitly excluded there (lines
-  ~578-592) with detailed reasoning I independently re-verified against the source doc's own text. Conflict check:
-  grepped defi_consolidated_closeout_2026_07_18.md, defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-  defi_consolidated_native_ao_extract_2026_07_25(+finalize),
-  defi_dex_pool_symbol_fix_backfill_purge_2026_07_25(+finalize), defi_gmx_venue_removal_2026_07_25(+finalize),
-  defi_lending_writer_retire_prerequisite_2026_07_20.md, defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-  defi_track5_coverage_mvp_backfill_2026_07_24.md, and batch1_finalize for "perp_daily_ctx". All hits are pure
-  citations/status-tracking references (the aggregated-sources index restates the same 3 open todos verbatim;
-  batch1_finalize lists it among docs to re-check for closure; track01 only mentions the data_type as part of an
-  unrelated manifest-row filter). No other doc proposes a competing fix or claims this exact registration work — no
-  genuine conflict. Remaining uncovered item: **[CODE] P2** — "Register `perp_daily_ctx` as its own canonical
-  data_type + SchemaContract; add manifest writes to both ad-hoc writers (schema unchanged); backfill manifest rows for
-  existing historical shard tuples" — gated on the VERIFY todo's finding. Applying the dispatch-scope eligibility test:
-  this is NOT a bounded worker-executable outcome even after the VERIFY lands. The source doc itself explicitly flags
-  this step as "needing operator awareness before autonomous execution," citing the SAME parent plan's own established
-  precedent that a canonical-set addition to `DATA_TYPES_BY_ASSET_GROUP` is "NOT safe-code" (RESULT 4, venue-axis case)
-  — it can silently expand the historical `expected_unattempted` universe and drop fleet-wide `completeness_pct`, and it
-  registers a new type in the schema surface read live by `CanonicalPerpFundingProvider` (the live paper-trading
-  reader). This is a genuine blast-radius/judgment call requiring an operator ruling on whether the risk is acceptable,
-  not a determinable-by-worker-alone outcome — batch1's own exclusion reasoning reaches the identical conclusion
-  independently. The 3rd item ([OPERATOR-DECISION] P3, whether to fold perp_daily_ctx into the perp_funding-demotion
-  decision) is separately already queued as entry 4 in issues/autonomous_session_operator_decisions_2026_07_25.md
-  awaiting the operator — no further action needed there. Recommended resolution: once the VERIFY finding lands (from
-  batch1) AND the operator explicitly rules that a `perp_daily_ctx` data_type addition is safe (mirroring whatever
-  ruling comes on the venue-axis precedent, or a fresh sign-off), the CODE todo becomes batchable as a follow-up in a
-  future batch. Until then it stays parked — do not draft a competing/premature candidate_todo.
+  ~578-592) with detailed reasoning I independently re-verified against the source doc's...
 - **`plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`**: Confirmed uncovered: todo-2
   (reconcile the 2026-07-08 Balancer `@CHAIN` instrument_id patch against the 2026-07-18 Option-A ruling — revert vs
   ratify) and todo-3 (fix CURVE's still-bare colliding instrument_id) are not cited by any doc in the covering set. Only
-  todo-1 (read-only audit/verify, explicitly told to flag not resolve) and todo-4 (codex port) are covered, both via
-  `defi_satellite_ao_dispatch_batch1_2026_07_25.md` lines 305-325. Conflict check: grepped all 12 covering-set docs for
-  curve/balancer/@CHAIN/cross-chain mentions. Hits exist in defi_consolidated_closeout_2026_07_18.md,
-  defi_track01_per_instrument_and_canon_id_2026_07_24.md, defi_consolidated_native_ao_extract_2026_07_25.md,
-  defi_dex_pool_symbol_fix_backfill_purge(_finalize)_2026_07_25.md, defi_gmx_venue_removal_finalize_2026_07_25.md — but
-  every one of these is a DIFFERENT mechanism/bug: CURVE/OPTIMISM subgraph-deindex reclassification of
-  `dex_pool_state`/`dex_pool_swaps` capture_status (unrelated to instrument_id collision), and Balancer subgraph
-  `symbol` malformation (a different field entirely, not the `@CHAIN`-suffixed `instrument_id` patch). None touch
-  `unified_api_contracts/canonical/crosscutting/defi.py`, `defi_catalog_reader.py:192`, or
-  `balancer_cross_chain_pool_address_collision_backfill_2026_07_08.py`. No genuine overlap — this is not a duplicate.
-  Dispatch-scope eligibility: the doc's own "Recommended fix" section is headed "not yet actioned — operator/plan-owner
-  decision". Todo-2 is explicitly a two-option fork with no stated default ("either revert the patch ... or explicitly
-  ratify Balancer as an intentional carve-out and document why") — an undecided design/policy call, not a checkable fact
-  a worker can resolve alone. Todo-3 (the actual CURVE fix) is causally downstream of that fork: which mechanism to
-  apply to CURVE (bare + rely on canonical_instrument_id, vs an @CHAIN-style suffix matching Balancer) depends entirely
-  on which branch of todo-2 the operator picks. Additionally, the batch1 audit todo (in-flight, not yet run) is meant to
-  produce end-to-end PASS/FAIL evidence per row that would inform this decision — drafting a CURVE-fix todo now, before
-  that audit's findings land and before the operator rules on revert-vs-ratify, would prescribe a fix mechanism blind.
-  Recommended resolution: operator should rule on todo-2 (revert Balancer's `@CHAIN` patch to bare, or ratify it as a
-  carve-out) — ideally after batch1's audit todo produces its per-row PASS/FAIL findings — and only then should a
-  combined "reconcile Balancer + fix CURVE consistently" AO todo be drafted against that ruling.
+  todo-1 (read-only audit/verify, explicitly told to flag...
 - **`plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`**: Confirmed via full read: the
   target doc's 4 open todos split as (1) VERIFY completeness_pct impact and (4) VERIFY the swaps_ohlcv_4h timeframe
   discrepancy — both explicitly covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 341-355
-  (verbatim-matching "Source:" citations, confirmed by batch1_finalize.md line 85's "(2 todos)" count) — vs (2) execute
-  Path A (build a `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style guard in enumerate_expected_universe.py, THEN add
-  the 7 swaps_ohlcv_* keys to DATA_TYPES_BY_ASSET_GROUP['defi']) and (3) execute Path B (accepted-exception stopgap,
-  `_ACCEPTED_EXCEPTIONS` in deployment-api/_distinct_values.py) — neither cited anywhere in the defi covering set.
-  CONFLICT CHECK: grepped defi_consolidated_closeout_2026_07_18.md (only an index restatement, line 84),
-  defi_satellite_ao_dispatch_batch1_2026_07_25.md/finalize,
-  defi_track01/track5/lending-writer-retire/gmx-venue-removal/dex-pool-symbol-fix (+finalizes), and
-  defi_consolidated_native_ao_extract docs for "swaps_ohlcv", "DEFI_MTDS_TICK_MANIFEST_EXCLUDED", and
-  "enumerate_expected_universe" overlap. No other doc touches the swaps_ohlcv_* registry-addition or accepted-exception
-  mechanism — gmx-venue-removal touches enumerate_expected_universe.py but for a wholly different venue-exclusion
-  concern (GMX venue removal), not the defi data_types axis/guard. No duplicate or superseding claim found on todos
-  #2/#3 specifically. Why NOT batchable: todo #2 is explicitly "(Gated on the verify above.)" in the source doc's own
-  text — its correct execution depends on the completeness_pct simulation's measured output (safe-direct vs.
-  needs-guard-first), which is produced by batch1's VERIFY todo. But batch1 is itself `status: draft` (not yet
-  dispatched/executed) — its VERIFY hasn't run, so no measured answer exists yet to determine whether Path A can proceed
-  directly or must build the guard first. On top of that time/sequencing gate, the doc frames Path A vs Path B as an
-  explicit fork requiring judgment: Path A is "recommended if the exclusion-list work is done first," Path B is the
-  fallback "if Path A's exclusion-list work is not prioritized soon" — the doc's own "Path B" section explicitly
-  instructs whoever picks this up to "flag this semantic tradeoff explicitly to whoever approves it" (Path B trades
-  correctness/precedent-consistency for lower risk/cost). This is a genuine two-option fork needing a prioritization
-  ruling (is the guard-first work worth doing now, or take the interim stopgap?) compounded by a real dependency on an
-  unexecuted prerequisite (batch1's VERIFY). Drafting an AO todo for either path now would either (a) presuppose an
-  unmeasured simulation result, risking exactly the tradfi-precedent denominator-corruption failure mode this same doc
-  documents in detail, or (b) silently pick Path B's lower-accuracy stopgap without the flagged tradeoff being
-  operator-approved. Recommended resolution: once batch1's VERIFY todo lands (status flips off draft and the simulation
-  report is produced), re-run this closeout-audit extraction for this doc — at that point either draft a
-  Path-A-execution todo (if the report shows the guard is unnecessary or scopes exactly what guard to build) or ask the
-  operator explicitly whether to take Path B as an interim stopgap. Do not draft a competing todo now.
+  (verbatim-matching "Source:" citations, confirmed by batch1_finalize.md...
 - **`plans/active/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`**:
   Conflict check: grepped the consolidated closeout plan's own todos plus every
   batch1/track01/lending-writer-retire/gmx-venue-removal/dex-pool-symbol-fix/track5(+finalize) doc for overlap on this
-  doc's remaining ground. The 4 todos in defi_satellite_ao_dispatch_batch1_2026_07_25.md (lines ~386-419: [DATA] P1
-  measure-scale, [BACKEND] P1 fix write_defi_rows leaf, [DOC] P1 correct canonical-cutover-register.md §5, [DOC] P1
-  correct four-surface-reconciliation-procedure.md/reconciliation-finding-taxonomy.md) exactly and non-redundantly cover
-  the doc's [DIAG], [CODE], and both [PM] todos — no other doc in the set independently claims the same ground with a
-  different approach (defi_consolidated_closeout_2026_07_18.md:359-366 cites the same CODE fix redundantly via the same
-  source doc, not a competing fix). No genuine conflict found. The ONE uncovered item is the P0 [OPERATOR] todo ("Decide
-  the sequencing implication of Fact 1: stop active batch/backfill crons until the leaf-naming fix ships, accept the
-  growing backlog, or expedite the fix") — nothing in the covering set contains this decision point, and the source doc
-  itself frames it as "Options, not a recommendation from this doc — needs the plan owner's call." This is a genuine
-  two/three-way operational fork (stop crons vs. accept backlog vs. expedite fix) with real tradeoffs (halting crons vs.
-  data quality vs. schedule risk) that only the plan owner/operator can rule on — it is not a checkable fact or bounded
-  worker-executable outcome, so it fails the dispatch-scope eligibility test and cannot be drafted as an AO-dispatch
-  todo. Recommended resolution: surface this fork to the operator directly (e.g. via the next defi status update or
-  Slack) referencing this issue doc's P0 todo; once ruled, the ruling itself (e.g. "stop crons X/Y/Z" or "expedite CODE
-  fix to P0") could become a follow-on batchable todo.
+  doc's remaining ground. The 4 todos in defi_satellite_ao_dispatch_batch1_2026_07_25.md (lines ~386-419: [DATA] P1...
 - **`plans/active/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`**: No conflict with any
   covering-set doc (grep for test_collateral_validation.py, funding_ensemble_engine.py, CollateralValidationMixin,
   defi_enhancements across the full defi covering set returned zero hits — nothing else claims this ground). The blocker
-  is a genuine three-way operator decision baked into the source doc itself: A) rewrite test_collateral_validation.py
-  against the live v2 mechanism (catalog_staked_basis.py's build_carry_staked_basis() + staked_basis.py's
-  _BANNED_LST_PERP_COMBOS) — doc's recommended option, restores real coverage; B) delete the dead-import file outright,
-  leaving coverage to the (unverified-adequate) catalog/engine unit tests; or C) leave the file as dead code but flip
-  the e2e-testing/scripts/defi/ QG lint block (strategy-service/scripts/quality-gates.sh lines ~137-148) from log_warn
-  (non-blocking) to blocking, so a future dead import fails loudly without fixing this one. These are materially
-  different outcomes (content fix vs deletion vs gate-hardening with no content fix) — not resolvable from the evidence
-  alone, needs an explicit operator ruling on approach before a bounded AO todo can be drafted. Once the operator picks
-  A, B, or C, a follow-up single-outcome todo (e.g., "rewrite test_collateral_validation.py per option A") becomes
-  batchable. Separately, the doc's noted-not-filed follow-up (funding_ensemble_engine.py's hardcoded LST_VENUES =
-  {"ETH": ("stETH","Bybit")} drift risk vs VENUE_COLLATERAL_MATRIX, zero strategy_service/UAC imports) remains genuinely
-  unfiled and uncovered anywhere in the set, but the doc itself calls it lower-severity/exploratory-script — worth
-  folding into whichever follow-up todo eventually gets drafted once the operator rules on the primary A/B/C decision,
-  rather than spinning it out alone.
+  is a genuine three-way operator decision baked into the source doc...
 - **`plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`**: Confirmed via read: the doc's
   "Tracked follow-ups" section (lines 334-365) has 5 items. Item (1) HYPERLIQUID trades backfill re-run and item (3)
   delete retired perp_funding DeFi-routing residue ARE covered — item (3) verbatim in
-  defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 462-471 (cites this doc as Source, targets
-  perp_funding_handler.py `_PROTOCOL_PIPELINE_SOURCE`/`_chain_map` hyperliquid/aster/lighter entries + the one-off
-  script delete). Grepped item (1)'s HL-trades-backfill mechanism too and it is separately covered (not re-verified here
-  since Phase 1 already confirmed it; focus was the 3 uncovered items). Conflict check (grep across the full covering
-  set: consolidated closeout, both dispatch batches, track01, lending-writer-retire-prerequisite,
-  gmx-venue-removal(+finalize), dex-pool-symbol-fix-backfill-purge(+finalize), track5, native-ao-extract(+finalize)) for
-  the 3 remaining uncovered items' target files/mechanisms (`k-prefix`/`kPEPE`/`kBONK`/`kSHIB`,
-  `_EXTRA_LIVE_PROBE_SOURCES_BY_AG`, `RULE 11`, `916 HL`/`642 ASTER`, `defi/perp_funding` reconciliation) returned ZERO
-  hits anywhere except the batch1 residue-delete (item 3, already accounted for). The only proximate touch is
-  defi_gmx_venue_removal_2026_07_25.md editing the SAME file (perp_funding_handler.py) but a DIFFERENT entry (gmx
-  dispatch removal, not hyperliquid/aster/lighter routing or the 916/642 row reconciliation) — complementary, not
-  overlapping, and not one of my 3 uncovered items anyway. No conflict found. All 3 remaining uncovered items are
-  decision-gated, not worker-executable as bounded todos: - Item (2) HYPERLIQUID k-prefix case-sensitivity fix (FIX P3):
-  the doc's own text says the fix "needs the canonical-vs-native HL coin-case convention resolved (risk of a shard-key
-  mismatch)" — two plausible resolutions (normalize the catalogue side to native case vs. make the trade-row match
-  case-insensitive) with a real risk of picking wrong and corrupting a shard key; this is a design call a worker cannot
-  make alone, even though it lacks the literal "BLOCKED-OPERATOR-DECISION" tag the other two carry. - Item (4) reconcile
-  916 HL + 642 ASTER defi/perp_funding legacy rows (INFRA P3): explicitly tagged BLOCKED-OPERATOR-DECISION in the doc —
-  operator must pick delete-vs-re-home before any GCS mutation/index rebuild can run. - Item (5) extend live-probe
-  mechanism to cefi CEX venues (FIX P3): explicitly tagged BLOCKED-OPERATOR-DECISION in the doc — requires an operator
-  ruling to relax the RULE 11 `test_prediction_live_union_is_prediction_scoped_only` invariant before the UAC
-  `possible_manifest.py` change can be made. Recommended resolution: raise all 3 to the operator as one batched decision
-  ask (HL coin-case convention choice; delete-vs-re-home for the 916+642 legacy rows; RULE-11 relax-or-not for cefi
-  live-probing). Once ruled, each resolves into its own bounded, worker-executable todo citing this same source doc —
-  none is currently draftable as a safe AO-dispatch todo.
+  defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 462-471 (cites this doc as Source,...
 - **`plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`**: Confirmed via Read of
   the target doc's final section ("Needs an explicit operator ruling", lines 720-733) plus the 2026-07-23 reconciliation
   note (lines 738-749): the sole genuinely-open remaining item is a two-part semantic fork requiring an OPERATOR
-  decision, not worker-executable bounded work -- (1) whether "ETH-underlying units" client-reporting means (A) a
-  currency-preference view of already-computed USD PnL at today's rate, or (B) a genuinely different FX-noise-isolated
-  "true native staking return" metric -- these visibly disagree over any multi-day window where the underlying asset's
-  USD price moves, and (2) whether the two structurally-incompatible ShareClass enums
-  (canonical.crosscutting.share_class.ShareClass {USDT,ETH,BTC} vs internal.architecture_v2.enums.ShareClass, 9 values)
-  should converge to one canonical enum or stay intentionally scoped with a documented split. The doc itself explicitly
-  frames this as "flagging, not picking." The already-shipped STAKING leg engine wiring (strategy-service@e93902d8) is
-  NOT open against E2 -- that part is settled per the reconciliation note; only the reporting-layer dual-unit VIEWING
-  work (wiring ShareClassFxMatrix to a real rate feed, un-orphaning convert_settlement_to_share_class, and the
-  (A)-vs-(B) semantics ruling) remains, gated behind the operator's fork decision. Conflict check: grepped
-  ShareClass/share_class/convert_settlement_to_share_class across the full defi covering-plan set (consolidated
-  closeout, aggregated-sources index, satellite batch1+finalize, native-ao-extract+finalize,
-  dex-pool-symbol-fix+finalize, gmx-venue-removal+finalize, lending-writer-retire-prerequisite,
-  track01-per-instrument-and-canon-id, track5-coverage-mvp-backfill). Only one hit: defi_gmx_venue_removal_2026_07_25.md
-  line 143, an already-checked-off (shipped) todo removing a GMX ShareClass.USDC catalogue entry -- unrelated to the
-  enum-convergence ruling or the (A)-vs-(B) semantics fork, and already complete, so no genuine overlap. No other
-  covering-plan doc touches this ground at all. Since the outcome hinges on an undecided design/judgment call the
-  operator must make first (two mutually-exclusive client-facing PnL semantics + an enum-convergence-vs-scope-split
-  decision), this cannot be turned into a bounded AO-dispatch todo now. Per the operating rules, this should be resolved
-  via a LOCAL/interactive session posing the ruling to the operator; only after that ruling lands would a
-  properly-scoped implementation todo (wiring ShareClassFxMatrix, un-orphaning convert_settlement_to_share_class per
-  whichever semantics is chosen) become AO-eligible.
+  decision, not worker-executable bounded work -- (1) whether...
 - **`plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`**: Read the target
   doc and confirmed the Phase-1 evidence exactly: todos 1-3 (measure scope, build the restamp script with dry-run/tests,
   ship via quickmerge — explicitly "Do NOT run --apply") are covered verbatim by
-  defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 172-181, which cites this doc by name as Source. Todo 4 is the
-  target doc's own [OPERATOR]-tagged step: "Obtain operator authorization for a paused-writer apply window... identify +
-  pause the relevant MTDS manifest-consolidator cron, run restamp_lending_instrument_type_2026_07_24.py --apply, confirm
-  the post-write verification output, then resume the cron." The doc itself states "This is the human-only /
-  operator-gated step — do not execute the pause or the --apply write without explicit operator authorization." Todo 5
-  (post-apply verification against the distinct-values panel + cross-link back to the parent audit + close out this
-  plan) is strictly sequentially dependent on todo 4's --apply having actually run (it re-pulls the honest-coverage
-  rollup post-apply and diffs against the pre-apply baseline) — it cannot execute until todo 4 completes, so it inherits
-  the same gate. CONFLICT CHECK: grepped defi_consolidated_closeout_2026_07_18.md and every
-  batch1/track01/lending-writer-retire/gmx-venue-removal/dex-pool-symbol-fix/track5(+finalize) doc for
-  restamp_lending_instrument_type / lending_instrument_type / paused-writer / manifest-consolidator-cron mentions. Found
-  two adjacent-but-distinct hits, neither a real conflict: (1) defi_satellite_ao_dispatch_batch1_2026_07_25.md line ~553
-  has an UNRELATED Kamino/Solend `lending_indices` instrument_type shape-conflict todo
-  (`lending_indices_handler.py::resolve_lending_instrument_type()` vs a Track-2 GCS probe) — different handler file
-  (lending_indices_handler.py, not liquidations_handler.py), different instrument_type values
-  (solana_lending/solana_amm_pool, not liquidation/lending), different mechanism (read-only probe, not a manifest
-  restamp). (2) defi_lending_writer_retire_prerequisite_2026_07_20.md documents a hardcoded-literal-vs-resolver desync
-  also in lending_indices_handler.py — again a different writer/file than liquidations_handler.py (the target doc's
-  writer, already fixed at mtds@fec20de2). Neither doc touches the liquidations_handler.py historical-restamp ground or
-  the specific paused-cron/--apply mechanism. No genuine overlap. Recommended resolution: this doc's remaining ground
-  (todos 4-5) stays un-batched as-is until an operator explicitly authorizes the paused-writer apply window — no
-  candidate AO-dispatch todo should be drafted for it, since the doc's own authoring already correctly scoped items 1-3
-  as AO-eligible (already batched) and items 4-5 as the human-only tail. No new todo/plan needed; this is expected,
-  already-correct gating, not a coverage gap to fix.
+  defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 172-181, which cites this doc by name as Source....
 
 ## Deferred — time-gated (re-check on the next batch iteration)
 
 - **`plans/active/issues/defi_morpho_lending_indices_never_wired_2026_07_12.md`**: Not batchable now: this doc's own
   scope (Morpho adapter wiring + calendar-window backfill) is fully complete per the 2026-07-17 re-check #14 — the sole
   remaining item (re-run the G2 gate) is blocked purely on an external condition,
-  `defi_onchain_v10_universe_v2_seed_or_backfill_progressed`, owned by `plans/active/data_completion_defi_2026_07_15.md`
-  (not in this covering set) and shared with the sibling task `mvp_backfill_defi_onchain_v10-001`, which the
-  consolidated closeout (`defi_consolidated_closeout_2026_07_18.md` line ~620) already tracks as parked on the identical
-  condition. This doc's own backlog entry was hand-edited 2026-07-17 to `priority: 999` + the same prerequisite, so it
-  will self-unblock and re-enter dispatch automatically once that condition flips — no covering-plan todo is needed or
-  useful before then, and drafting one would just recreate the proven-dead 13-dispatch bounce cycle documented in
-  re-checks #1-#13. Recommend: (1) no AO todo drafted for this doc at this time; (2) flag for the operator/covering-set
-  author that `defi_consolidated_closeout_2026_07_18.md`'s existing gated todo could be broadened to also name
-  `defi_morpho_lending_indices_never_wired-001` explicitly (both entries share the one condition) so a future closeout
-  pass doesn't re-flag this doc as "uncovered" every cycle; (3) separately, the 2026-07-25 reconciliation-note flagging
-  the worker's direct `backlog.yaml` hand-edit as a HARD-RULE violation is itself unresolved and belongs to whoever owns
-  backlog.yaml governance, not to this doc's data-fix scope.
+  `defi_onchain_v10_universe_v2_seed_or_backfill_progressed`, owned by...
 - **`plans/active/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`**: Confirmed via direct read of § 6:
   the doc has 4 open items. Items (1) [terraform/scheduler wiring for staking-yields, doc's own "§ 6.1"] and (4) [codex
   defi-data-types-catalog.md § 7 Production-label fix] ARE covered — verbatim-matching todos exist in
-  defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 326-333 ([INFRA] P1, Source cites this doc) and lines 334-340
-  ([DATA] P1, Source cites this doc, wording matches § 6's bullet almost exactly). Items (2) and (3) are NOT cited
-  anywhere in the covering set (grepped defi_consolidated_closeout_2026_07_18.md,
-  defi_consolidated_closeout_aggregated_sources_2026_07_24.md, defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-  defi_lending_writer_retire_prerequisite_2026_07_20.md, defi_gmx_venue_removal_2026_07_25(+finalize).md,
-  defi_dex_pool_symbol_fix_backfill_purge_2026_07_25(+finalize).md, defi_track5_coverage_mvp_backfill_2026_07_24.md,
-  defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md — zero hits on "shard leaf", "ticks.parquet",
-  "StakingYieldsHandler", "capability-completion" tied to staking_yields). No genuine conflict either: track01's R2d
-  item registers `lst_rates`-only capability coverage for venues like YEARN_V3/CONVEX/SYMBIOTIC/etc. and explicitly
-  states the reverse ("`lst_rates`-only, not `staking_yields` — the staking_yields handler only covers
-  LIDO/ETHERFI/EIGENLAYER, so registering it would manufacture a false MISSING") — different data_type, deliberately
-  distinguished, no overlap with item (3)'s staking_yields capability-completion work. So this is genuinely
-  orphaned-partial, not a duplicate. However, BOTH remaining items are explicitly, textually self-gated in the source
-  doc on § 6.1 (the terraform/scheduler wiring todo) actually landing AND the handler actually running in production:
-  item (2) reads "Once § 6.1 lands and the handler actually runs, verify the real per-venue shard leaf names match
-  expectation..." and item (3) reads "Scope a capability-completion pass once § 6.1 confirms the 3 existing venues
-  actually produce good data in production." As of this audit, § 6.1's terraform entry is only queued in batch1, not yet
-  executed/verified — zero `instrument_type=staking` rows exist per the doc's own § 1.2 measurement across 6 sampled
-  days. Dispatching (2) or (3) now would have a worker verifying shard names / scoping capability-completion against
-  data that does not yet exist. This is a real external-event gate (first successful scheduled run producing live rows),
-  not a design/judgment call and not a plan conflict — hence time_gated rather than operator_gated or batchable.
-  Recommended resolution: re-run this Phase-3 extraction (or add a follow-up satellite-batch todo, gated via
-  `depends_on` on the batch1 plan / its staking-yields terraform todo) once § 6.1 has shipped and at least one manifest
-  row exists for `instrument_type=staking`.
+  defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 326-333...
 - **`plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`**: Confirmed the two uncovered items
   are Todo3 (P2 spot-check dex_pool_state/dex_pool_swaps coverage for all 4 protocols — UNISWAP_V2, UNISWAP_V4,
   TRADER_JOE_V2, VELODROME_V2 — across 2026-03→today, gated on "once the relaunched mtds-dex-pools-backfill VM (this
-  session) + the running mtds-dex-swaps-backfill-1/2/3 fleet finish") and Todo5 (P3 manifest-level capture_status
-  cross-check, explicitly gated on "once GCS network conditions in an agent sandbox are no longer measured at ~100 KB/s"
-  — an environment-condition gate, not a deterministic worker-executable outcome today). CONFLICT CHECK: grepped the
-  full defi covering set for dex_pool_state/dex_pool_swaps/mtds-dex-pools-backfill/mtds-dex-swaps-backfill overlap. No
-  doc disputes or duplicates the SPOT-CHECK action itself. However there is a genuine entanglement, not a clean "no
-  overlap": plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md (status: active, sequential: true) is an
-  in-flight plan that will DELETE-and-full-historical-re-backfill dex_pool_state for exactly 2 of Todo3's 4 target
-  protocols (TRADER_JOE_V2, VELODROME_V2 — via a different bug fix, the missing inputTokens/symbol-resolution query
-  change) across their "full historical range," which necessarily spans the same 2026-03→today window Todo3 wants
-  spot-checked. That plan's own todos are themselves gated ("Live-test whether 2022-era pool metadata is still
-  indexed... before committing to a full historical backfill", "scoped only to the ranges confirmed recoverable") and
-  not yet reported complete anywhere in the corpus. Dispatching Todo3 now risks either (a) spot-checking data that the
-  symbol-fix plan is about to purge+rewrite out from under it (wasted/stale verification), or (b) racing the symbol-fix
-  plan's own backfill+purge todos on the same underlying parquet leaves. This isn't a "two todos prescribe conflicting
-  fixes" case (different bugs, compatible end-states) so it doesn't meet the bar for conflict_gated, but it does mean
-  Todo3's precondition ("once the relaunched VMs finish") is BOTH externally time-gated (no evidence any of the three
-  referenced VMs — mtds-dex-pools-backfill relaunch, the 3-way dex-swaps shard fleet — have reported completion anywhere
-  in the corpus) and now additionally entangled with the symbol-fix plan's in-flight churn on the same cells for 2/4
-  protocols. Recommended resolution: do not draft a standalone spot-check todo yet; either (1) fold the spot-check into
-  defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md's own post-backfill verification step once that plan's
-  sequential chain reaches its re-backfill todo (natural ordering point), or (2) re-surface this issue doc for
-  AO-dispatch batch2 once BOTH the three original VMs AND the symbol-fix plan's re-backfill todo report done. Todo5 is
-  independently time-gated on transient sandbox network conditions and not itself blocking anything — no action needed
-  until that condition changes; a future audit pass can re-check.
+  session) + the running mtds-dex-swaps-backfill-1/2/3 fleet...
 
 ## Deferred — too-large-or-risky (needs its own dedicated plan, not a batch todo)
 
 - **`plans/active/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`**: Confirmed via Read: Item 2
   (4 zero-capture protocols) is closed per the doc's own 2026-07-25 update (wired 2026-07-14, verified 2026-07-24,
   residual TRADER_JOE_V2/VELODROME_V2 gaps already dispatched in defi_satellite_ao_dispatch_batch1_2026_07_25.md). Item
-  1 (batch_onchain_subgraph bare-0x-address.parquet second writer path, live for CURVE, needing a
-  pool-address→symbol/venue/chain resolver plus a VM-eligible historical migration over genuinely-live production data)
-  remains open. Conflict check: grepped the full covering set for
-  `batch_onchain_subgraph`/pool-address-resolver/bare-0x-address language. Two files match the string
-  `batch_onchain_subgraph` but neither addresses this doc's Item 1: (1) defi_satellite_ao_dispatch_batch1_2026_07_25.md
-  uses the term only to fix a source-label ambiguity (Tier-4 defillama_historical_ratio rows mislabeled with the same
-  pipeline_mode as genuine on-chain rows) and separately to correct a stale "no new defi writes" claim in the cutover
-  register — neither touches the CURVE address-only-file shape or a resolver. (2)
-  defi_track01_per_instrument_and_canon_id_2026_07_24.md uses the term in an unrelated finding (Solana ORCA/RAYDIUM
-  dex_pool_state collector producing zero canonical-shape shards since before a 2026-06-08 pause). No doc in the set
-  proposes or claims the resolver/migration Item 1 describes — this is not a duplicate and not stale on the other side;
-  it is genuinely uncovered. Dispatch-scope eligibility: this fails the bounded/single-worker-checkable test. It
-  requires (a) confirming/locating or building a pool-address→symbol/venue/chain resolver against the reference-data
-  catalog (an open design question — "likely already exists," unverified), then (b) scoping and running a VM-eligible
-  historical backfill/transform over a currently-live production data shape with backup-first safety requirements. The
-  doc's own 2026-07-25 re-check (written under the same ag-closeout-audit batchN methodology this task follows) already
-  explicitly self-classifies this as "too-large/risky... not a bounded, single-worker-checkable batchN todo... needs its
-  own dedicated triage/design pass as a standalone plan when picked up." Agreeing with that self-assessment: this is not
-  a batchable todo. It should be picked up as its own dedicated LOCAL/human-planning triage-and-design session first (to
-  resolve the resolver-source question and scope the migration), only after which a properly-bounded AO todo could be
-  drafted against that decision's outcome. No new candidate_todo drafted; the doc's own recommendation (re-check again
-  only if the resolver/scope question is independently investigated elsewhere first) stands.
+  1 (batch_onchain_subgraph bare-0x-address.parquet second...
 
 ## Deferred — human-only (needs a dedicated engineering/design session, not an AO todo)
 
 - **`plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`**: Confirmed via full read: the
   doc's 4-step fix chain is only partially covered. defi_satellite_ao_dispatch_batch1_2026_07_25.md's 2 cited todos
   cover (a) a DIAGNOSTIC-only pass on the frozen onchain consolidator (fixes only if trivial; otherwise "remediation
-  stays open pending a human design decision" — so step 1 does not definitively close, and step 2 "re-derive the index
-  from producer-honest shards" is explicitly not attempted at all, since it depends on step 1's outcome) and (b) the
-  count-provenance anomaly investigation (fully covers the "not chased here" aside — no further action needed on that
-  thread). Neither that todo nor anything else in the covering set (grepped defi_consolidated_closeout_2026_07_18.md,
-  aggregated_sources, native_ao_extract±finalize, dex_pool_symbol_fix±finalize, gmx_venue_removal±finalize,
-  lending_writer_retire_prerequisite, track01, track5 for
-  `ltv|liquidation_threshold|reward_rate|flash_loan_liquidity|health.factor|feature-less|onchain_manifest_dishonest`)
-  touches step 3 (build missing MTDS chain-field collectors: ltv, liquidation_threshold, reward_rate,
-  flash_loan_liquidity, health-factor inputs) or step 4 (recompute the 5 feature-less groups).
-  defi_consolidated_closeout_aggregated_sources_2026_07_24.md's "0 open todos" claim for this doc is contradicted —
-  steps 2-4 have zero citation anywhere. CONFLICT CHECK: no doc prescribes a competing/different fix for the same file
-  or mechanism — this is pure absence of coverage, not a duplicate or contradiction. One soft, non-blocking overlap
-  worth flagging: defi_gmx_venue_removal_2026_07_25.md independently touched (and currently keeps PAUSED, pending
-  a >=4-cycle durability watch before resume) the shared `uts-prod-manifest-consolidator-market-data-defi-cron` used for
-  its own surgical row-removal work — this is the same physical consolidator process Track 8 claims is "ENABLED, running
-  every 1 minute" per batch1's diagnostic todo. This is a live-state dependency (any onchain-consolidator diagnosis
-  should account for the cron's current paused/resuming status) but not a competing prescribed fix, so it does not gate
-  this into conflict_gated. DISPATCH-SCOPE VERDICT: steps 2-4 are not AO-batchable as a single bounded todo. Step 2 is
-  contingent on step 1's still-undecided outcome (the covering todo explicitly defers to "a human design decision" if
-  non-trivial) — its scope literally cannot be fixed today. Steps 3-4 are, in the source doc's own words, "genuinely new
-  scope (upstream collection)... size them as their own work, not as part of mark→recompute" — building missing MTDS
-  chain-field collectors (ltv/liquidation_threshold/reward_rate/flash_loan_liquidity/health-factor inputs) across the
-  onchain lending protocols requires deciding which chain APIs/protocols to source each field from, schema design, and
-  which of the 5 feature groups to prioritize — an open judgment/design call, not a checkable worker-alone outcome. This
-  is directly analogous to the sibling ORCA/RAYDIUM Solana indexer finding in
-  defi_consolidated_native_ao_extract_2026_07_25.md, independently ruled `[DESIGN] P3`/human-only under the same
-  dispatch-scope rule ("genuinely new capability... file a dedicated implementation plan when this becomes a priority").
-  Recommend: once step 1's consolidator diagnosis lands (from the already-dispatched batch1 todo) and the operator rules
-  on the design question it surfaces, THEN author a dedicated scoping/design plan for steps 2-4 (likely as its own defi
-  satellite doc) — that scoping plan, not this audit, is where a properly-bounded AO todo for the MTDS collector build
-  would first become extractable.
+  stays open pending a human design decision" — so step 1 does...
 - **`plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`**: Conflict check found no genuine conflict:
   defi_consolidated_native_ao_extract_2026_07_25.md (line 170) already independently classified this exact doc as
   human-only for the same reasons. No plan in the covering set attempts to build the indexer, generalize the sig-index
-  script, or author the implementation plan. The item stays uncovered by design — it is gated on an operator priority
-  decision ("when this becomes a priority") plus genuine design/architecture judgment (protocol-specific Solana
-  instruction decoding), not a worker-executable, bounded todo. Recommend: leave as-is until the operator explicitly
-  prioritizes this capability, then a human authors plans/active/<new>_solana_dex_pool_swaps_indexer_<date>.md directly
-  from the doc's existing 5-step breakdown rather than routing it through AO dispatch.
+  script, or author the implementation plan. The...
 
 ## Note — 1 mistag found, not actioned here (flag for a follow-up retag)
 
 - `plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged
-  `asset_group: [defi]` only because it was discovered while shipping a DeFi Fluid-adapter fix, but the doc's actual
-  content is a fleet-wide QG STEP 5.101 (empty-string-fallback ratchet) infra/CI issue spanning multiple repos, not
-  defi-specific. Should be retagged (likely `cross-cutting` or `infra`), not archived or folded into a defi batch.
+  `asset_group: [defi]` only incidentally; real content is a fleet-wide QG STEP 5.101 infra/CI issue, not defi-specific.
+  Should be retagged (likely `cross-cutting` or `infra`), not folded into a defi batch.
 
 ## Note — a second mistag found during Phase-0 discovery (locked, not retagged here)
 
 - `plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md` is tagged bare `[cross-cutting]`
-  despite its `defi_`-prefixed title (the skill's "fork inherits parent's cross-cutting tag" pattern) — its content
-  (collateral-aware sizing, USDC down-size branch, stables-only opportunity-checker scoring) reads as
-  defi/staked-basis-specific, but the doc also describes "full wizard parameterization for all supported archetypes,"
-  which could be genuinely cross-cutting wizard tooling. This is ambiguous enough to need a real read, and the doc is
-  `locked_by: live-defi-rollout` (someone else has it locked) — flagged for the finalize plan's follow-up rather than
+  despite its `defi_`-prefixed title. Content is ambiguous (defi/staked-basis-specific sizing vs. possibly-generic
+  wizard tooling) and the doc is `locked_by: live-defi-rollout` — flagged for the finalize plan's follow-up rather than
   retagged unilaterally here.
 
 ## Note — 1 doc found archivable_now (not actioned here — a separate archival todo, not a batch candidate)
 
-- `plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md` — all 5 todos are checked with detailed completion
-  evidence (root-cause confirmed, defensive guard shipped market-tick-data-service@5a163d02, endpoint fix shipped
-  @56efdd7d, VM relaunch verified end-to-end on live infra). Ready for the standard 6-step archival ritual; not drafted
-  as an AO todo here since archival itself needs no AO worker judgment call.
+- `plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md` — all 5 todos checked with completion evidence
+  (root-cause confirmed, fixes shipped market-tick-data-service@5a163d02/@56efdd7d, VM relaunch verified end-to-end).
+  Ready for the standard 6-step archival ritual.
