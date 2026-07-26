@@ -71,13 +71,13 @@ drift_direction: advance-code
       still open, tracked via the sibling ICE/CME bullets). (4)
       `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` — all 3 Remediation items already struck
       through/done (verified); doc is `locked_by`, left status/lock as-is per its own note. (5)
-      `issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` — all 3 todos done; flipped
+      `archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` — all 3 todos done; flipped
       `status: resolved` (was left open pending a CEFI aster/hyperliquid follow-up that belongs to a different
       asset_group — extracted to a new `issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md` so it stays
       tracked instead of blocking this doc's own closure). (6)
       `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md` — already correctly reconciled via its
       Progress Log + Deferred-work table (3 genuinely open items, stays open). (7)
-      `issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md` — flipped the manifest-vs-disk
+      `archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md` — flipped the manifest-vs-disk
       consistency checkbox (`mtds@ee3d636`, verified); doc reached 0 open todos → flipped `status: resolved`. (8)
       `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` — flipped the known-dead-cells checkbox
       (`deployment-service@01414fc`, verified); 2 unrelated todos remain open, stays `status: open`. (9)

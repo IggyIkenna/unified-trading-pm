@@ -646,7 +646,7 @@ drift_direction: advance-code
     `rebuild_tradfi_manifest.py`. The live index is being rebuilt by a peer RIGHT NOW (`384f0345a`, `mtds@ac051bfe`), so
     per the operator's Phase-3 "coordinate and announce" instruction this is handed off rather than blind-overwritten.
     Corrected projection computed + verified locally ((a)→0, (b)→0). Full finding:
-    `plans/active/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`.
+    `plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`.
   - Issue docs flipped RESOLVED: `massive_purge_blocked_databento_l1_entitlement_2026_07_20.md`,
     `tradfi_canonical_migration_launcher_drops_extra_args_2026_07_20.md`.
 

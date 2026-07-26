@@ -28,7 +28,7 @@ scope: [engineer]
 tags: [qg-warn, adapter-contract-regression, stale-baseline, dex-pools, perf-bundle]
 related:
   [
-    plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md,
+    plans/archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md,
     plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
   ]
 created: 2026-07-26

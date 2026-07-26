@@ -92,7 +92,7 @@ related:
     issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     /plans/archive/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md,
     issues/mtds_perp_funding_backfill_hang_2026_07_14.md,
-    issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md,
+    archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md,
     issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
     issues/phantom_captures_defi_2026_06_28.md,
@@ -106,8 +106,8 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: 2026-06-27
-  2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+last_updated:
+  2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"

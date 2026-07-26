@@ -563,7 +563,7 @@ the tradfi tick `_index`, 2026-07-20 — dropped 686,005 `batch_massive` + 3,615
    reaches its old mtime). Any OTHER standing per-VM shard would re-add its rows on merge, so this recipe is safe only
    when the drop target lives solely in the canonical + `_legacy_seed`. Even a marker strip is now recoverable — a
    missing `consolidator_content_write_at` fails CLOSED (merge, prune nothing), never a silent drop. SSOT for the
-   finding: `plans/active/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`.
+   finding: `plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`.
 
 ## Composes with
 

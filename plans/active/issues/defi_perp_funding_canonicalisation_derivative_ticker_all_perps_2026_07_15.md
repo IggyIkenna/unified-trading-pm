@@ -250,7 +250,7 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
   table (todo 1) pinned scope before any code was written. Shas:
   unified-api-contracts@2170b388d8901a22f17cc2b59245a4b9894671e4,
   market-tick-data-service@5f659c12b4eeed348aea2abe657714c2c9b226df. Side-finding filed (pre-existing, unrelated,
-  warn-only): `plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
+  warn-only): `plans/archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
 - 2026-07-15 (operator ruling, verbatim): "OK so let's kill them all — clear them from everything, delete any data from
   them and catalogue/MVP/manifest entries. They are useless. Without exception." This resolves the
   `[OPERATOR-DECISION] P2` todo above to **option (B) — delete the whole vertical slice.** Split across two agents: CODE

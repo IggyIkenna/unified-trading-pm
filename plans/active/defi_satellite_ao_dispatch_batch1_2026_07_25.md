@@ -611,8 +611,8 @@ stale/resolvable conflict) — it cannot move to batch2 until batch1 actually di
 `issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`,
 `issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`,
 `issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md`,
-`issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md` — each had zero AO-eligible candidates at
-extraction time; see each doc's own rationale. Reworded 2026-07-25 (plan-reconcile) for accuracy:
+`archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md` — each had zero AO-eligible
+candidates at extraction time; see each doc's own rationale. Reworded 2026-07-25 (plan-reconcile) for accuracy:
 `defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md` is NOT a 10th zero-candidate doc — it had 1 AO-eligible
 candidate, deferred alongside it under the too-large-or-risky flag above (see that section). The frontmatter's "10
 excluded docs total" tally is these 9 zero-candidate docs plus that 1 too-large doc, not 10 docs that each had zero

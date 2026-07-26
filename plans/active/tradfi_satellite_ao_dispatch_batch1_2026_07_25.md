@@ -147,7 +147,7 @@ the operator's 2026-07-25 instruction, these are NOT silently resolved or dispat
 conflict quote) is in the triage journal (`subagents/workflows/wf_92bc129c-2a8/journal.jsonl`). Docs with conflict-gated
 candidates: `data_completion_tradfi_2026_07_15.md` (4 items), `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (9
 items), `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` (1),
-`issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` (1),
+`archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` (1),
 `issues/tradfi_backfill_oom_remediation_2026_06_24.md` (2),
 `issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` (1),
 `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md` (2),
