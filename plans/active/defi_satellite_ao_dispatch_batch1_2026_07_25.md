@@ -685,6 +685,48 @@ drift_direction: advance-code
     re-confirm across more cycles, then root-cause the coverage-vs-full divergence) rather than open-ended debugging
     with only 16 log entries/2h to go on from this vantage point.
 
+- **2026-07-26 (slot-14) — KALSHI_PERP/POLYMARKET_PERP cefi-routing todo IN PROGRESS, not yet shipped.** Working the
+  todo "Fix `_perp_funding_kalshi_polymarket.py`'s KALSHI_PERP/POLYMARKET_PERP routing" (market-tick-data-service).
+  **Code complete, targeted-tested, sitting uncommitted in the slot-14 worktree** (not yet quickmerged — blocked on a
+  full `quality-gates.sh` pass, itself delayed by heavy same-host QG contention, see below):
+  - `_perp_funding_kalshi_polymarket.py`: added `_write_cefi_perp_funding_rows()` (mirrors `write_defi_rows`'s
+    per-instrument sharding but via UAC `build_cefi_partition_path`/`build_instrument_id`, no chain axis) and switched
+    `_collect_kalshi_perp`'s write call to it instead of the DeFi-only `write_defi_rows`.
+  - `_defi_manifest.py`: `DefiManifestRecorder` gained an `asset_group: str = "defi"` constructor param (default
+    preserves all ~25 other DeFi-handler callers byte-identical), threaded through `_emit_captured_add`/`record_empty`/
+    `record_zero_rows`/`_emit_failed_row`; `record_zero_rows` also gained a `source` passthrough (was silently dropped
+    before, a latent gap on ANY caller, not just this todo).
+  - `perp_funding_handler.py`: `_run_process` now resolves the CEFI bucket
+    (`get_write_bucket_name("market_data", "cefi")`) and constructs `DefiManifestRecorder(..., asset_group="cefi")`;
+    every `record_captured`/`record_zero_rows`/ `record_failed`/`record_empty` call in
+    `_run_process`/`_dispatch_protocol` now passes an explicit `source=_source_for_protocol(protocol)` (was previously
+    blank on the manifest write, auto-stamping to the wrong single-source `"hyperliquid"` default once routed through
+    the multi-source `cefi/perp_funding` cell).
+  - `tests/unit/test_perp_funding_kalshi_polymarket.py`: updated the one stale assertion
+    (`test_writes_perp_funding_canonical_shard`) that expected the old defi hive path's `batch_kalshi_perp`
+    pipeline_mode segment; cefi paths carry no pipeline_mode segment by design. **71/71 targeted tests pass** (
+    `test_perp_funding_handler.py` + `test_perp_funding_kalshi_polymarket.py` + `test_defi_manifest_recorder.py`, 0.8s).
+  - **Manifest cleanup (the todo's 3rd sub-requirement) — drafted, NOT YET RUN.**
+    `scripts/remove_kalshi_polymarket_defi_manifest_rows_2026_07_26.py` (untracked, lifecycle-marked oneoff) is ready; a
+    live read confirmed **8 stale rows** currently in the DEFI manifest (4 `KALSHI_PERP` `captured` + 4
+    `POLYMARKET_PERP` `attempted_failed`, ALL stamped `source="hyperliquid"` — exactly the bug). Per the source issue
+    doc's explicit sequencing, this MUST run only AFTER the writer fix ships (never before, or the still-live bug
+    resurrects the rows) — do not run it until the 4 files above are committed+pushed.
+  - **Root-caused, filed, and shipped a separate finding along the way**:
+    `issues/shared_host_tmp_tmpfs_full_2026_07_26.md` (unified-trading-pm@f7982c1a1, pushed) — the shared host's `/tmp`
+    tmpfs was at 100% (accumulated since 2026-07-14 across many slots) AND `scripts/quality-gates-base/base-service.sh`
+    has 25 `>/tmp/<name>_qg.log`-redirected QG steps sharing a FIXED (non-PID-unique) filename, so two slots' concurrent
+    `quality-gates.sh` runs collide and produce spurious step failures — reproduced repeatedly (a step fails inline, the
+    SAME checker invoked standalone with the same args passes clean). Did not attempt the 25-site fix itself (each has a
+    paired write+read-back reference; too large for this todo's scope) — filed as a P2 todo in that issue doc instead.
+  - **Next session should**: (1) check whether the backgrounded `quality-gates.sh` run (started with `TMPDIR` overridden
+    to the slot's scratchpad, to sidestep any Python-level tempfile-on-full-/tmp issue) finished — if green, quickmerge
+    the 4 files, THEN run the cleanup script for real (it prints a live count + requires no `--apply` flag, just
+    executes — verify its printed pre-write diff matches the 8-row expectation above before trusting the post-write
+    assertions), THEN flip this todo's checkbox with the shas, THEN `/done`; (2) if QG failed on a
+    canonical-model/architectural-ratchet-style step again, re-run that ONE checker standalone first to distinguish a
+    real regression from the same cross-slot race before concluding anything.
+
 ## Deferred
 
 ### Excluded — doc flagged `doc_too_large_or_risky_for_batch: true` (1 doc) — RE-CHECKED 2026-07-25, still excluded
