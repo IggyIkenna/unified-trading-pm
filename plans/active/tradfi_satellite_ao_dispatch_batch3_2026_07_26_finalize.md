@@ -82,16 +82,30 @@ drift_direction: advance-code
       (`deployment-service@01414fc`, verified); 2 unrelated todos remain open, stays `status: open`. (9)
       `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` — flipped the VERIFY
       classification-trace checkbox (read-only trace, no commit); 1 unrelated todo remains open, stays `status: open`.
-- [ ] [REVIEW] P1. **Re-check the 1 conflict-gated + 2 operator-gated + 1 too-large-or-risky Deferred items from
-      batch3's own doc**, now that time has passed. For `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`
-      specifically, check `autonomous_session_operator_decisions_2026_07_25.md` (or its successor) for a landed operator
-      ruling on the `mvp_mode` wire-in-vs-delete DECISION — `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md`
-      already owns a parallel re-check for the same doc, so cross-reference rather than duplicating that check. For the
-      other 3 Deferred items: re-read the specific gating ground to check if it has since cleared — if so, extract it as
-      a new tracked todo in a follow-up `batch4` (do not draft it directly here); if still genuinely unresolved, leave
-      it explicitly deferred, do not re-surface an already-asked operator question a second time. **Done when**: each of
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5).** **Re-check the 1 conflict-gated + 2 operator-gated + 1
+      too-large-or-risky Deferred items from batch3's own doc**, now that time has passed. For
+      `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` specifically, check
+      `autonomous_session_operator_decisions_2026_07_25.md` (or its successor) for a landed operator ruling on the
+      `mvp_mode` wire-in-vs-delete DECISION — `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md` already owns
+      a parallel re-check for the same doc, so cross-reference rather than duplicating that check. For the other 3
+      Deferred items: re-read the specific gating ground to check if it has since cleared — if so, extract it as a new
+      tracked todo in a follow-up `batch4` (do not draft it directly here); if still genuinely unresolved, leave it
+      explicitly deferred, do not re-surface an already-asked operator question a second time. **Done when**: each of
       the 4 Deferred items has either (a) a note that it's ready for `batch4` extraction because its gate cleared, or
-      (b) an explicit re-verified confirmation the gate is still open.
+      (b) an explicit re-verified confirmation the gate is still open. — **All 4 re-verified STILL GENUINELY OPEN, none
+      cleared, none batch4-eligible** (notes added directly in `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s own
+      Deferred sections with today's date): (1) conflict-gated
+      FX-yahoo-backfill-vs-`tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md` — conflict doc still
+      `status: open`, its own Deferred-work table still lists the historical FX re-stamp as "ready to pick up" but not
+      done; the conflict is unchanged. (2) `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` — still
+      `status: open`; grepped the corpus for an `EXCHANGE_CODE_TO_NAME` SSOT-contradiction ruling, zero hits; not
+      re-asked. (3) `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` — cross-referenced (not duplicated) against
+      `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md`, which is still `status: draft` (undispatched, so it
+      hasn't and couldn't have re-checked this either); grepped `autonomous_session_operator_decisions_2026_07_25.md`
+      for `mvp_mode` — zero matches, no ruling landed; not re-asked. (4)
+      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` — still `status: active` +
+      `locked_by: live-defi-rollout`; the 2026-07-26 archived re-diagnosis's own finding stands (no successful tradfi
+      features run has landed) — still genuinely too-large-or-risky.
 - [ ] [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved or re-confirmed all 4 — verify none silently vanish) → add the archive banner → run

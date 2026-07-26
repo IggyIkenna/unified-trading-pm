@@ -258,39 +258,47 @@ drift_direction: advance-code
       `pd.DataFrame()` at line 447 SILENTLY — no exception, no `failed_per_dt` entry, just a `logger.debug`.
 
       **The actual attempted_failed-vs-empty_confirmed decision is NOT made there — it's one level up**, in
-          `engine/orchestrator/sentinels.py::_emit_nonsports_tier2_tier3_sentinels` (confirmed both `ohlcv_15m`/`ohlcv_24h`
-          route through this Tier-2 venue-level branch, not Tier-3: neither is in UAC's
-          `_PER_INSTRUMENT_SHARD_DATA_TYPES`, `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2309-2333`).
-          For each expected-but-not-captured `dt` (lines 591-612): `per_dt_reason =
-          failed_per_dt_by_venue.get(venue, {}).get(dt)` then `effective_failure = per_dt_reason or failed_reason_raw`
-          (line 592) — `failed_reason_raw` is the WHOLE-VENUE failure reason (`failed_shards.get(venue)`, line 542),
-          independent of which specific data_type actually failed. If `effective_failure` is truthy →
-          `writer_manifest.record_failed(...)` (line 598, → `ATTEMPTED_FAILED`); else →
-          `writer_manifest.record_empty(..., reason="SOURCE_RETURNED_ZERO")` (line 600, → `EMPTY_CONFIRMED`).
+                  `engine/orchestrator/sentinels.py::_emit_nonsports_tier2_tier3_sentinels` (confirmed both `ohlcv_15m`/`ohlcv_24h`
+                  route through this Tier-2 venue-level branch, not Tier-3: neither is in UAC's
+                  `_PER_INSTRUMENT_SHARD_DATA_TYPES`, `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2309-2333`).
+                  For each expected-but-not-captured `dt` (lines 591-612): `per_dt_reason =
+                  failed_per_dt_by_venue.get(venue, {}).get(dt)` then `effective_failure = per_dt_reason or failed_reason_raw`
+                  (line 592) — `failed_reason_raw` is the WHOLE-VENUE failure reason (`failed_shards.get(venue)`, line 542),
+                  independent of which specific data_type actually failed. If `effective_failure` is truthy →
+                  `writer_manifest.record_failed(...)` (line 598, → `ATTEMPTED_FAILED`); else →
+                  `writer_manifest.record_empty(..., reason="SOURCE_RETURNED_ZERO")` (line 600, → `EMPTY_CONFIRMED`).
 
-          **This IS a separate write-time decision point from DP-FETCH-009** (not just the alert-persistence mechanism):
-          because the silent Databento filter never populates `failed_per_dt` for the dropped data_type, its
-          classification rides entirely on whether that SAME VENUE had an unrelated whole-venue failure that day (line
-          592's fallback) — a filtered-out `ohlcv_15m`/`ohlcv_24h` cell can be misclassified `ATTEMPTED_FAILED` by
-          inheriting an unrelated data_type's failure (e.g. `trades` hitting a 429 that day), or correctly land
-          `EMPTY_CONFIRMED` if nothing else failed. This explains HOW the 2026-07-07 stale rows originally got written as
-          `attempted_failed`; DP-FETCH-009's no-recency-window count (already documented in this doc's Verification
-          addendum) separately explains why they keep PAGING today. Both apply — DP-FETCH-009 is not the whole story.
-          Read-only trace, no code changes shipped. Cross-ref added to source doc's Progress Log.
+                  **This IS a separate write-time decision point from DP-FETCH-009** (not just the alert-persistence mechanism):
+                  because the silent Databento filter never populates `failed_per_dt` for the dropped data_type, its
+                  classification rides entirely on whether that SAME VENUE had an unrelated whole-venue failure that day (line
+                  592's fallback) — a filtered-out `ohlcv_15m`/`ohlcv_24h` cell can be misclassified `ATTEMPTED_FAILED` by
+                  inheriting an unrelated data_type's failure (e.g. `trades` hitting a 429 that day), or correctly land
+                  `EMPTY_CONFIRMED` if nothing else failed. This explains HOW the 2026-07-07 stale rows originally got written as
+                  `attempted_failed`; DP-FETCH-009's no-recency-window count (already documented in this doc's Verification
+                  addendum) separately explains why they keep PAGING today. Both apply — DP-FETCH-009 is not the whole story.
+                  Read-only trace, no code changes shipped. Cross-ref added to source doc's Progress Log.
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 
 - **`plans/active/tradfi_multisource_backfill_2026_06_22.md`**: The uncovered item — "[BACKFILL] P1. Run the FX yahoo
   backfill to completion" (line 141, `launch-tradfi-bf-fx-ohlcv-24h.sh` per-year drain to fill remaining
   `expected_unattempted` FX ohlcv_24h manifest rows) — genuinely conflicts with
-  `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`, which is STILL OPEN (verified live: `status:...
+  `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`, which is STILL OPEN (verified live:
+  `status:... **RE-VERIFIED STILL OPEN (2026-07-26, finalize todo 2)**: `tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`remains`status:
+  open` — batch-3 todo 6 fixed the write-path root cause (`unified-trading-library@f237b75a`) but its own Deferred-work
+  table still lists the historical FX re-stamp as "Not done — real work, ready to pick up now the writer is fixed." The
+  conflict is UNCHANGED: running the FX Yahoo backfill before that re-stamp lands would still risk writing more rows
+  under the same provenance ambiguity this doc is tracking. Stays deferred, not batch4-eligible.
 
 ## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION, not batchable)
 
 - **`plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`**: No genuine conflict found (see
   reasoning) — this resolves as operator_gated, not conflict_gated. Two operator decisions are needed before any AO todo
   for this doc's remaining work can be drafted: (1) which of the two disagreeing `EXCHANGE_CODE_TO_NAME` dicts
-  (`tradfi_instrument_universe.py` vs `tradfi_symbology.py`) is authoritative, or whether...
+  (`tradfi_instrument_universe.py` vs `tradfi_symbology.py`) is authoritative, or whether... **RE-VERIFIED STILL OPEN
+  (2026-07-26, finalize todo 2)**: doc is still `status: open`, no operator ruling on either the `EXCHANGE_CODE_TO_NAME`
+  SSOT-contradiction question found anywhere in the corpus (grepped, no hits). Gate has not cleared — not re-asking the
+  operator a second time, stays deferred.
 - **`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`**: Not a fresh finding — already triaged
   repeatedly across the covering-plan corpus. The doc's own first todo is an explicit [DECISION] operator call (wire
   mvp_mode live vs. delete dead code) blocking items 2/3. 5 covering docs independently confirm operator_gated;
@@ -300,7 +308,12 @@ drift_direction: advance-code
   doc against autonomous_session_operator_decisions_2026_07_25.md and spinning a follow-up todo once the operator rules
   — but being draft it is NOT ingested/dispatched, so nothing is actively working it. Flipping batch2+batch2_finalize to
   `status: active` is an operator decision (CLAUDE.md § "Plan destination"); until that happens this deferral has no
-  live owner.
+  live owner. **RE-VERIFIED STILL OPEN (2026-07-26, finalize todo 2 — cross-referenced against batch2_finalize's own
+  live tracking, not duplicated)**: `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` is still `status: open`, its
+  [DECISION] todo still unchecked. Grepped `autonomous_session_operator_decisions_2026_07_25.md` for `mvp_mode`/"mvp
+  mode" — zero matches, no landed ruling. `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md` is still
+  `status: draft` (undispatched), so it has not — and could not have — re-checked this either. No new operator question
+  asked here (already asked repeatedly); stays deferred.
 
 ## Deferred — too-large-or-risky (needs its own dedicated plan, not a batch todo)
 
@@ -312,3 +325,7 @@ drift_direction: advance-code
   `/plans/archive/issues/tradfi_sp500_ml_stale_mdps_blocker_2026_07_26.md` (archived) for both the label-correction AND
   a fresh re-diagnosis finding the archived doc's own "Option A" label is itself disputed by the shipped code, and that
   the underlying pipeline is STILL not actually unblocked — no successful tradfi features run has ever landed).
+  **RE-VERIFIED STILL GATED (2026-07-26, finalize todo 2)**: doc is still `status: active` +
+  `locked_by: live-defi-rollout`; the archived 2026-07-26 re-diagnosis's own finding stands — no successful tradfi
+  features run has landed since. This remains genuinely too-large-or-risky (a real multi-service unblock, not a batch
+  todo); still not batch4-eligible.
