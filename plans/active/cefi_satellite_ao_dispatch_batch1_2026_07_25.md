@@ -633,6 +633,30 @@ drift_direction: advance-code
     manifest at all, so criteria 1 (real non-zero `quote_volume` on disk) and 2 (ADV reader non-`NO_DATA`) are
     completely unaffected by this manifest-emission bug and remain achievable via the GCS-direct backfill already in
     progress.
+  - **Definitive root-cause: a SINGLE real day for ONE venue exceeds 32GB RAM (2026-07-26 17:58 UTC)**. The single-day
+    HYPERLIQUID isolation retry (`mdps-backfill-cefi-20260726-175025`, day=2026-07-19, real data confirmed present) was
+    NOT a multi-day-accumulation issue after all — RSS climbed monotonically through the aggregation cascade
+    (17.1→20.1→24.8→26.2→27.1 GiB, 58.5%→88.6% mem) and was `Killed` (rc=137, SIGKILL) at 88.6% before even finishing.
+    **This is a genuine per-day memory-scaling bug**: processing ALL ~177 tradable HYPERLIQUID instruments' full 15s→24h
+    aggregation cascade for one day does not fit in `e2-standard-8`'s 32GB, independent of how many days are requested.
+    Escalates the P1 follow-up above accordingly — the fix likely needs either per-instrument streaming/chunking in the
+    candle aggregator (not loading every instrument's full tick history simultaneously) or a larger machine type; a
+    7-day (or even 1-day) window is not a safe workaround on its own for high-instrument-count venues. **Practical path
+    forward for THIS todo**: narrowed further to a tiny instrument subset via the launcher's `--instrument-ids` filter —
+    `bash deployment-service/scripts/vm/ launch-mdps-backfill-vm.sh --data-types trades --venues "HYPERLIQUID" --instrument-ids "HYPERLIQUID:PERPETUAL:BTC-USD@LIN HYPERLIQUID:PERPETUAL:ETH-USD@LIN" cefi 2026-07-19 2026-07-19 full`
+    → VM `mdps-backfill-cefi-20260726-180132` (SPOT), confirmed STARTED — 2 instruments should have a small enough
+    footprint to complete, and directly satisfies the "Done when" bar's "at least one probed instrument" wording for the
+    ADV-reader check without needing the full 177-instrument sweep this session.
+  - **Aside — host-wide disk-full emergency (2026-07-26 17:51-18:01 UTC)**: the shared host's root filesystem hit 100%
+    full (290G/290G) mid-session, breaking the Bash tool entirely (even trivial commands failed with ENOSPC) for ~10
+    minutes. Filed `BLK-37401b23` (P0, operator-notify) rather than self-remediating — a `rm -rf` of my own 2
+    just-created `.venv` dirs (unified-trading-library + deployment-service, ~2.8GB, safely recreatable) was correctly
+    BLOCKED by the destructive-command guardrail, and the biggest consumers found (`unified-trading-system-repos/` 157G
+    total across all slots, plus several other-slot scratch dirs
+    `tmp_slot8_manifest_check/`/`tmp_slot3_manifest_restore/`/`tmp_slot9_cf_audit/` totaling ~2.5G and one unowned
+    `mdps_bench_data_fullmonth/` 3.8G) were not mine to unilaterally clear. Resolved externally — disk is back to 19G
+    free (94% used) as of the next check. Unrelated to this todo's own work, noted here only because it interrupted this
+    session's monitoring loop.
 
 ## Deferred
 
