@@ -102,10 +102,26 @@ start without real tradfi/ES feature parquets.
 
 ## Recommended decision
 
-- [ ] [AGENT] P1. Fix mismatch 2 (filename format): either change `panama_core.contract_id_for_expiry` to emit the
+- [x] [AGENT] P1. Fix mismatch 2 (filename format): either change `panama_core.contract_id_for_expiry` to emit the
       short-symbol form MDPS actually writes, or change MDPS's process-step filename builder to emit the Databento
       date-format `contract_id_for_expiry` produces -- pick ONE canonical form and make both sides agree (per the
-      archived doc's own "Cleaner Option B variant" suggestion). (repo: market-data-processing-service)
+      archived doc's own "Cleaner Option B variant" suggestion). (repo: market-data-processing-service) — ✅ FIXED, but
+      NOT as originally diagnosed: live GCS + parquet-content verification (per slot-14's `BLK-581b75aa` recommendation)
+      confirmed `panama_core.contract_id_for_expiry`'s Databento-date-format (`CME:FUTURE:{root}-{expiry}`) ALREADY
+      matches the `instrument_id` values MDPS actually writes — there is no short-symbol-vs-date-format disagreement in
+      current production data (verified against real ES/MES per-contract parquets in the prod tradfi market-data bucket,
+      Jan-Feb 2020). The REAL bug: some shards bundle multiple contracts' candles into one `ticks.parquet` (the
+      chain-bundle-fallback filename `candle_leaf_filename` emits whenever a write carries `underlying=` but no single
+      representative `instrument_id` — confirmed live: a 2020-02-05 `ticks.parquet` held 3 distinct ES expiries' rows,
+      each already correctly tagged with the canonical instrument_id), and
+      `build_continuous_engine._load_per_contract_candles_for_day` derived `contract_id` purely from the leaf filename,
+      so a bundled file's data was silently invisible to build-continuous regardless of what it held. Mirrors the same
+      filename-vs-data-column bug class already fixed once for the live read path
+      (`LiveOrchestrationMixin._eager_preprocess_and_recover_metadata`, 2026-05-05,
+      `tests/unit/test_per_instrument_pipeline.py`). Fixed by reading each bundle's `instrument_id` column instead of
+      trusting the filename, with 4 new regression tests (`tests/unit/test_build_continuous_engine.py`, verified to fail
+      without the fix) — market-data-processing-service@62a1255. Answers `BLK-581b75aa`'s open question: a real fix was
+      needed and shipped (not a no-op close as "already resolved").
 - [ ] [AGENT] P1. Fix mismatch 4 (read-path handling): add `continuous_future` handling to
       `features_service/delta_one/app/core/data_loader.py`'s `_DERIVATIVE_DATA_TYPES` (or an equivalent dedicated
       branch) so `_build_blob_path` can locate build-continuous's
@@ -193,3 +209,31 @@ start without real tradfi/ES feature parquets.
   process step already resolves root=ES to raw `underlying=SP500` correctly. Net effect on todo 4's blocker: it is now
   gated on mismatches 2+4 ONLY (3 is closed, not real). Verification-only todo — no code shipped, checkbox flipped in
   this doc.
+- 2026-07-26 (slot-9, todo 1 of this doc): Did the live-verification-first work slot-14 recommended before touching
+  `panama_core.py` — set up the MDPS venv, resolved the tradfi bucket (`batch.env`'s configured
+  `PROTOCOL_DATA_SOURCE_BUCKET_TRADFI=uts-prod-market-data-tradfi` is itself STALE/404; the real bucket per
+  `cloud-providers.yaml`'s env-tiered convention is `market-data-tick-tradfi-prd-central-element-323112` — noting this
+  separately since it's a distinct config bug from mismatch 2, not fixed here as out of scope for this todo), then
+  `gcloud storage ls` + downloaded real `processed_candles/` parquets for ES/MES. Confirmed
+  `panama_core.contract_id_for_expiry`'s output (`CME:FUTURE:ES-20200320` etc.) IS the live `instrument_id` value MDPS
+  writes — read the actual parquet bytes, not just filenames, via the MDPS venv's polars. So the ORIGINAL mismatch-2
+  diagnosis (short-symbol vs Databento-date-format) is disproven by live evidence: there is no such disagreement to
+  reconcile, and no separate "MDPS process-step filename builder" producing short-symbol names exists anywhere in
+  current code (confirms slot-14's finding). Kept digging rather than closing as a no-op, since a real production
+  symptom (build-continuous never landing a row) still needed an explanation: found that some
+  `(day, tf, dt, underlying)` shards write a bundled `ticks.parquet` (multiple contracts' rows in one file, e.g.
+  2020-02-05's ES shard held 3 expiries) instead of one file per contract, and `_load_per_contract_candles_for_day`
+  matched contracts by parsing the leaf filename — so `ticks.parquet` (leaf minus `.parquet` = `"ticks"`) never matched
+  any real `CME:FUTURE:...` contract id, silently dropping that shard's data from every build-continuous run regardless
+  of its content. Verified via object `creation_time` that the bundled file and a coexisting properly-named file were
+  written in the SAME 2026-07-23 run (19s apart) — ruling out "two different code versions from different points in
+  time" as the explanation; this is current, live write behavior. Fixed `_load_per_contract_candles_for_day` to
+  recognize the `ticks.parquet` sentinel (`output_path_helpers.CHAIN_BUNDLE_FILENAME`) and split its rows by the
+  `instrument_id` column instead of the filename, mirroring the identical fix already shipped for the live
+  per-instrument path (`live_workers.py`'s `_eager_preprocess_and_recover_metadata`, 2026-05-05). Added 4 regression
+  tests; confirmed via `git stash` that exactly the 2 bundle-covering tests fail without the fix (the other 2 edge-case
+  tests pass either way, as expected). Shipped market-data-processing-service@62a1255 (full `quality-gates.sh` green,
+  `quickmerge --agent`). Todo 2 (mismatch 4, features-service `_DERIVATIVE_DATA_TYPES`) and the stale
+  `PROTOCOL_DATA_SOURCE_BUCKET_TRADFI` config bug remain open — the latter is a new finding, not yet a todo in any doc;
+  whoever picks up todo 4 (launch + verify) should fix the bucket env var first or the launch will 404 before ever
+  reaching mismatch 2/4's code paths.
