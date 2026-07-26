@@ -571,6 +571,27 @@ drift_direction: advance-code
     redundant compute, not a correctness/collision risk) and worth it to unblock verification by ~15-20 minutes instead
     of ~9 hours. The full-range VM keeps running independently to satisfy the "full already-captured raw-trade range"
     criterion; only the recent-window VM's output is needed for the other two criteria.
+  - **Whole-VM OOM found + worked around (2026-07-26 17:27-17:36 UTC)**: `mdps-backfill-cefi-20260726-171422` (the
+    30-day recent window) died after 4 days — serial console shows the KERNEL oom-killer killed PID 9523 (`python`,
+    `task_memcg=/system.slice/google-startup-scripts.service`) at 31.18 GB anon-rss, i.e. the **top-level startup-script
+    process itself**, not an isolated per-date subprocess (distinct from, and more serious than, the earlier per-date
+    `rc=-9` checkpoint-then-kill pattern on the same VM — that one self-recovered via the subprocess-per-date isolation;
+    this one killed the whole job, and `google-startup-scripts.service` does not restart itself, so the VM sat
+    `RUNNING`-but-idle with both heartbeat mechanisms stale). Root cause suspected: a growing in-process cache across
+    the date-loop — each date's log repeats
+    `cefi_wire_bridge: loaded 429129 catalogue rows from instruments-store-cefi-prd- central-element-323112/prod/catalog.parquet`,
+    and recent (2026) dates carry far more instruments/volume per day than the 2024 dates the full-range VM is
+    processing, so memory likely accumulates faster on recent-heavy windows. **[DATA] P1 follow-up** (more serious than
+    the earlier P2s — this is a reliability/OOM risk for ANY multi-day MDPS backfill over recent high-volume dates, not
+    just this todo) — root-cause + fix the memory growth across the subprocess-per-date loop in
+    market-data-processing-service's backfill orchestrator (check whether the instruments catalogue / wire-bridge map is
+    being reloaded-but-not-freed per date, or genuinely growing unbounded); until fixed, recent-date MDPS backfills
+    should use SHORT windows (≤7-10 days) or a larger-RAM machine type, not the default `e2-standard-8` over many-day
+    recent ranges. Deleted the crashed VM (`gcloud compute instances delete`, standard cleanup — no data-safety concern,
+    its per-VM shard is inert) and relaunched narrower:
+    `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --data-types trades --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2026-07-19 2026-07-25 full`
+    → VM `mdps-backfill-cefi-20260726-173623` (SPOT), confirmed STARTED — a 7-day window (matching the ADV reader's own
+    `window_days=7` default) small enough to very likely finish before hitting the same ceiling.
 
 ## Deferred
 
