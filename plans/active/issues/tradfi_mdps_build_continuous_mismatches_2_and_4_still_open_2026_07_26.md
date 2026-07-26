@@ -723,6 +723,14 @@ start without real tradfi/ES feature parquets.
   real per-VM manifest row growth across all 7 `y*es-*` shards (not log activity), and once all 7 have stopped (VM
   `VM_SHUTDOWN_ON_COMPLETION=true`), re-run `build-continuous` for ES and re-measure the `24h`/`1d` hit rate before
   flipping this todo's checkbox.
+- 2026-07-26 (slot 2, reconciliation note): after pushing the above, a rebase pulled in slot 3's concurrent commits —
+  `140251` was genuinely SPOT-preempted (not killed by my earlier delete; the timing coincided) and slot 3 had already
+  correctly resumed it from measured progress as a single VM (`mdps-backfill-tradfi-20260726-144837`,
+  `--start-date 2020-02-13` through `2026-07-25`, same ES/MES filter). That VM fully overlapped in scope with my 7
+  freshly-launched `y*es-*` shards (same instrument filter, same remaining date range, just split 7 ways). Killed
+  `144837` to avoid two concurrent efforts covering the identical range — the 7-way split is strictly faster for the
+  same correct scope, so no work/coverage is lost, only the redundant single-VM compute. If slot 3's session finds its
+  `144837` VM gone, this is why: superseded by the `y*es-*` shards, not a preemption or an untracked deletion.
 
 ## Deferred work after 2026-07-26
 
