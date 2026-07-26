@@ -500,14 +500,18 @@ drift_direction: advance-code
       is obtained + the delete executes + is verified (object counts drop, canonical reads unaffected), or (b) the todo
       is left checked-complete-for-code with an explicit `BLOCKED-OPERATOR` note pending sign-off if the operator has
       not yet approved.
-- [ ] [UI] P3. Relabel `FixturesBrowser.tsx`'s window note and remove the stale `MAX_SPAN_DAYS=120` span-cap warning now
-      that `deployment-api/services/fixtures_browser.py` serves the full-history single catalogue source
-      (`prod/catalog.parquet`, deployment-api@dbbf64c, shipped via `sports_satellite_ao_dispatch_batch2_2026_07_24.md`)
-      instead of the old ≤120-day day-walk — the 120-day bound no longer exists. Source:
-      `sports_fixtures_browser_single_catalogue_source_2026_07_24.md`. Done when: `FixturesBrowser.tsx` no longer
-      references `MAX_SPAN_DAYS` or shows the 120-day cap warning, the window note reflects the real full-history
-      coverage (2019-01-01→present), the `[UI]` + `pw:L2` regression spec (per
-      `/codex/06-coding-standards/ui-testing-layers.md`) passes, and `quality-gates.sh` is green.
+- [x] [UI] P3. ✅ 2026-07-26 — `deployment-ui@66cc06d`. Relabel `FixturesBrowser.tsx`'s window note and remove the stale
+      `MAX_SPAN_DAYS=120` span-cap warning now that `deployment-api/services/fixtures_browser.py` serves the
+      full-history single catalogue source (`prod/catalog.parquet`, deployment-api@dbbf64c, shipped via
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`) instead of the old ≤120-day day-walk — the 120-day bound no
+      longer exists. Source: `sports_fixtures_browser_single_catalogue_source_2026_07_24.md`. Done when:
+      `FixturesBrowser.tsx` no longer references `MAX_SPAN_DAYS` or shows the 120-day cap warning, the window note
+      reflects the real full-history coverage (2019-01-01→present), the `[UI]` + `pw:L2` regression spec (per
+      `/codex/06-coding-standards/ui-testing-layers.md`) passes, and `quality-gates.sh` is green. Removed
+      `MAX_SPAN_DAYS`/`spanDays`/`span` (all dead once the cap was gone); note now reads "(catalogue covers full
+      history, 2019-01-01→present — no range-length limit)." Updated the vitest test + added a new pw:L2 spec
+      (`tests/e2e/data-status-fixtures-browser-full-history-note.spec.ts`, verified passing 1/1). `quality-gates.sh`
+      green (101 tests, 75.53% coverage).
 - [ ] [DATA] P0. **Close out `sports_mtds_odds_trades_index_correctness_followup_2026_07_24`'s two open findings (T2.9
       schema-contract drift + T2.10 phantom-row disposition).** (1) **T2.9**: canonical's OWN native live-written
       `(sports, odds, trades)` objects already fail the registered MDT schema contract
