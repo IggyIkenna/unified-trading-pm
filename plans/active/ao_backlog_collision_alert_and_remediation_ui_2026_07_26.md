@@ -61,14 +61,15 @@ detection/remediation gap the ruling explicitly left open instead.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Turn the sibling-reset-guard's existing `logger.error(...)` (server/bootstrap.py,
+- [x] ✅ [BACKEND] P1. **Turn the sibling-reset-guard's existing `logger.error(...)` (server/bootstrap.py,
       `sync_backlog_to_db`) into a queryable record.** When the guard refuses to reset a done+done_sha row on brief_hash
       mismatch, also record the event via this codebase's existing activity-log mechanism (the same one `/api/activity`
       reads) with an event type distinguishing it from ordinary activity — capture task_id, the colliding incoming
       brief, the existing row's done_sha, and a timestamp. Definition of done: extend
       `test_sync_refuses_to_reset_a_done_row_on_id_reuse` (or add a sibling test) asserting the activity record is
       created with those fields when the guard fires, and that NO record is created on the ordinary (non-done,
-      resettable) reuse path; `bash scripts/quality-gates.sh` green.
+      resettable) reuse path; `bash scripts/quality-gates.sh` green. — agent-orchestrator@b623c2a
+      (`log_activity(...,     "backlog_sibling_reset_guard_refused", ...)` in the guard branch; QG green, 1739 passed).
 - [ ] [BACKEND] P1. **Page the AO alerting Slack channel on this event, deduped.** Per
       `/codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only channel; failures page) — this is a
       silent-dispatch-loss failure, which the SSOT's own contract says should page. Dedup by (task_id, incoming
