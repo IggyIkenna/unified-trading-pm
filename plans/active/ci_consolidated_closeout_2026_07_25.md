@@ -161,3 +161,34 @@ unblocked on a CI runner.
   from `deployment_and_user_management_master` + 1 from `strategy_master` + 20 reclassified out of
   `infrastructure_master`'s "pure-infra" bucket). No fixes applied in this pass — pure consolidation for
   `/ag-closeout-audit`/`/plan-reconcile` sharding.
+- **2026-07-26 — `/ag-closeout-audit ci` (autonomous mode). Headline: THIS TRANCHE HAS NO DISPATCH VEHICLE.** Phase 0
+  measured it: this doc carries **zero `- [ ]` todos** (it is a reachability digest, `assigned_vm: NA` +
+  `execution_scope: local-only`), **no `ci_satellite_ao_dispatch_batch*` plan has ever existed** (checked
+  `plans/active/` and `plans/archive/2026_*/`), and all 30 Source docs above are `assigned_vm: NA`/unset. Being listed
+  in a Track's Sources is discoverability, not dispatch — so every remaining open item in this tranche is currently
+  tracked-but-unworked. Phase 1 read all 34 tranche-primary docs end-to-end: **30 orphaned** (20
+  `orphaned_partial_coverage`, 10 `orphaned_never_touched`), 2 `archivable_now`
+  (`github_actions_ci_cost_reduction_2026_07_15.md`, now a pure redirect index that says so itself, and
+  `github_actions_cost_reduction_options_analysis_2026_07_15.md`, a closed decision record whose Appendix-4 `☐` items
+  are explicitly "reference checklist, not dispatch todos"), and 2 NOT orphaned because they are already AO-dispatched.
+  A recurring trap: **12 of the 30 orphans express ALL their remaining work as numbered prose with zero checkboxes**, so
+  a checkbox count answers nothing here.
+  - **Drafted (both `status: draft`, NOT dispatched — flipping to `active` is the operator's call)**:
+    [/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md](/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md)
+    (29 conflict-cleared bounded todos, 33 Deferred by taxonomy) +
+    [/plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md](/plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
+    (`depends_on` + `gate_on_depends: true` + `sequential: true`). Shipped `unified-trading-pm@03d9ed87e`.
+  - **Phase-3 conflict-check result worth carrying forward**: `scripts/quickmerge.sh` is claimed by **6** docs in this
+    tranche and PM `scripts/quality-gates.sh` by **3**, so the batch dispatches exactly ONE quickmerge.sh todo and
+    pushes every new-QG-checker wire-in into the gated finalize plan. Four more files were rationed the same way. This
+    is the tranche's dominant structural constraint — expect batch 2+ to be gated on file contention, not on ideas.
+  - **Four tranche members are listed in NO consolidated closeout at all** (found by sweeping beyond
+    `asset_group: cross-cutting`): `issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` and
+    `issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` (both
+    `asset_group: [meta]`, both orphaned — the first has **zero** referrers corpus-wide), plus
+    `issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` and
+    `issues/ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md` (both `asset_group: [infrastructure]`,
+    both already `assigned_vm: planning` and actively dispatched). All four are cited as `Source:` docs or in the
+    Deferred tables of the batch plan, so they now have a live home. **Deliberately NOT added to the Track Sources
+    above** — `infrastructure` and `meta` are valid `asset_group` values the 9-tranche partition's membership rule never
+    swept, so which tranche owns them is an escalated operator question, not a mechanical fix.
