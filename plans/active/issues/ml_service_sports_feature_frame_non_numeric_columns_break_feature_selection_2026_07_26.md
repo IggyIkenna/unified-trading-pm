@@ -195,17 +195,30 @@ here — flagging so the eventual retrain attempt checks target-class balance be
       because the CLV data that DOES exist (`odds_clv_home`) never reaches the final feature frame under a name the
       target generator recognizes. A retrain attempted now, in ANY window, would ALWAYS produce a 100%-flat garbage
       target.
-- [ ] [DATA] P2. Find and fix the exact mechanism (not yet located — see the P3 finding above) that causes
-      `features-service`'s real, populated `odds_clv_home`/`odds_clv_sharp_home`/`odds_clv_direction_home` columns to be
-      replaced by an always-empty `clv_home`/`sharp_clv_home`/`clv_direction_home` in the final
-      `feature_group=odds_features` export — likely a schema-reindex step consulting a stale naming manifest. Verify the
-      fix by re-reading a real exported date's parquet and confirming `clv_home` (or whichever name is the correct
-      canonical target) is non-null for rows where `odds_clv_home` has a real value. (repo: features-service)
-- [ ] [ML] P2. Once the fix above ships (this is now the ACTUAL blocker, not window choice), re-attempt the 3 CLV model
-      variant retrain (`training-period-2026-04`, `pregame_clv_family`, `timeframes=fixture`) and confirm the target
-      class distribution is non-degenerate before promoting/citing. The 3 quarantined artifacts stay untouched. Blocked
-      on this doc's new `[DATA] P2` AND `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md` both
-      landing.
+- [x] ✅ [DATA] P2. **RE-SCOPED, NOT A FEATURES-SERVICE BUG (2026-07-26, slot-8, `data_engineering`).** The premise (a
+      naming/reindex mechanism silently replacing real `odds_clv_home` data with an always-empty `clv_home`) is FALSE —
+      verified end-to-end with real data at every step. `compute_clv_features`/`compute_opening_odds`
+      (`odds_velocity.py`) are CORRECT: fed the real T-0+T-24h bucketed-odds shards for
+      `day=2026-04-17/league_id=BUNDESLIGA` directly (downloaded from the raw MDPS bucket), they produce real non-null
+      CLV values in-process. The actual cause: `odds_features_exporter.py::_restrict_to_visible_horizons` (line 208)
+      DELIBERATELY restricts the calculator's input to `FEATURE_HORIZONS[model_horizon]` before every call — and per
+      `odds_columns.py:215-233`, T-24h/T-1h/T-10m (the only model horizons that currently emit rows; `HT` never emits,
+      per the exporter's own documented honest-absence design) ALL exclude `T-0` from their visible set. So
+      `compute_clv_features` is guaranteed empty for every row this export ever writes — BY DESIGN, a point-in-time
+      leakage guard, not a bug. Direct read of the real day=2026-04-17 parquet confirms: `horizon` ∈
+      `{T-24h, T-1h, T-10m}` only (0 `HT` rows), `clv_home`/`odds_movement_home` both 0/75 non-null, while
+      T-0-independent columns are fully populated (75/75). Neither `features-service@0ded2449` (naming rename) nor
+      `ml-service@a14985bc` (consumer column-name fix) can close this — the column they now agree on the name of is
+      still always-null by design. Re-scoped as an architecture decision (which repo/path should source a leakage-safe
+      CLV TARGET) spanning features-service + ml-service — filed as
+      `issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md` with 3 candidate directions and a
+      `[DESIGN] P1` decision todo. Did not attempt a features-service code "fix" — removing/weakening the PIT gate would
+      be a real leakage regression for every other `odds_features` consumer.
+- [ ] [ML] P2. **SUPERSEDED — see `issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`'s
+      `[ML] P2`.** The blocker is no longer "the fix above" (there is no features-service fix); it's that new doc's
+      `[DESIGN] P1` architecture decision. Once implemented, re-attempt the 3 CLV model variant retrain
+      (`training-period-2026-04`, `pregame_clv_family`, `timeframes=fixture`) and confirm the target class distribution
+      is non-degenerate before promoting/citing. The 3 quarantined artifacts stay untouched.
 
 ## Progress Log (append-only)
 
@@ -230,3 +243,14 @@ here — flagging so the eventual retrain attempt checks target-class balance be
   `[DATA] P2` fix todo instead of attempting a blind fix. Re-scoped `[ML] P2`'s blocker: this is now a real, confirmed
   bug (not a window-selection question) — a retrain in ANY window today would always produce a 100%-flat garbage target.
   Status left `open` — the new `[DATA] P2` and `[ML] P2` remain genuinely open.
+- 2026-07-26 (slot-8, `data_engineering`): closed `[DATA] P2` — the "naming mismatch" theory from the P3 finding above
+  was the wrong track. Traced the FULL path with real data (raw MDPS bucketed T-0+T-24h odds fed directly into the real
+  calculator functions; the exporter's `_restrict_to_visible_horizons` PIT gate; the actual written parquet's `horizon`
+  column distribution). There is no rename/reindex bug — `compute_clv_features` is correct, and the always-empty CLV is
+  a deliberate, correct point-in-time leakage guard: every model horizon that currently emits rows (T-24h/T-1h/T-10m)
+  is, by design, blind to the T-0 closing line; `HT` (which would see it) never emits. Neither
+  `features-service@0ded2449` nor `ml-service@a14985bc` can close this — both already-shipped fixes are naming fixes for
+  a value that is null by design, not by bug. Re-scoped as an architecture decision spanning features-service +
+  ml-service, filed as `issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`. `[ML] P2` now
+  points there instead of "the fix above". NOTIFIED OPERATOR per the cross-repo big-finding rule (this doc + the new
+  one).

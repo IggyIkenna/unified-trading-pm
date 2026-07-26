@@ -307,7 +307,16 @@ drift_direction: advance-code
       fully traced, filed as a new `[DATA] P2` fix todo instead of guessing. (c) still ⏳ — a retrain today would always
       be 100%-flat garbage until that fix lands; `unified-trading-pm@dfbcf678f`. **UPDATE (slot 13)**:
       `ml-service@a14985b` fixed the same wrong-name bug in the leakage-strip list too — real leakage, not just a bad
-      target. (c) still ⏳.
+      target. (c) still ⏳. **UPDATE 2026-07-26 (slot-8, `data_engineering`)**: closed that doc's `[DATA] P2` — the
+      naming-mismatch theory was wrong. Traced the full path with real data (raw MDPS T-0+T-24h bucketed odds fed
+      directly into the real calculator, the exporter's `_restrict_to_visible_horizons` point-in-time gate, and the
+      actual written parquet's horizon distribution): `compute_clv_features` is correct; CLV is DELIBERATELY empty in
+      every currently-emitting row (T-24h/T-1h/T-10m all exclude the T-0 closing line by design; `HT`, which would see
+      it, never emits). Neither `0ded2449` nor `a14985b` can fix this — both are naming fixes for a value that's null by
+      design, not by bug. Re-scoped as a features-service+ml-service architecture decision, filed as
+      `issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md` with a `[DESIGN] P1` decision todo
+      (3 candidate directions). (c) still ⏳ — now blocked on that architecture decision, not a code fix. NOTIFIED
+      OPERATOR per the cross-repo big-finding rule.
 - [x] ✅ [DATA] P1. Resolve the sports odds manifest-routing regression opened by the 2026-07-24 addendum to
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`: (1) grep+READ the manifest-write target
       resolution in the sports capture path in market-tick-data-service (same class of `_resolve_manifest_bucket()`
