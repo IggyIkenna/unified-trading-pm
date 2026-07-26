@@ -109,22 +109,16 @@ drift_direction: advance-code
       "Follow-up todos" section. Source:
       `plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` (Finding 1 — RESOLVED 2026-07-25
       section, "Two things found during this pass").
-- [ ] [DIAG] P3. Escalate the confirmed 2026-06-21..24 odds_api raw-ingestion gap (MDPS `odds_horizon_bucket` shard4
-      reprocess: all 4 dates have only `instrument_type=sport` meta-snapshot objects under
-      `pipeline_mode={batch,live}_odds_api` in the raw bucket — zero real `instrument_type=odds` `data_type=trades`
-      objects, directly verified via `gcloud storage ls -r`) to the odds_api raw-ingestion pipeline owner. Write a short
-      escalation issue doc under `plans/active/issues/` (e.g. `odds_api_raw_ingestion_gap_2026_06_21_24_<date>.md`,
-      repo: market-tick-data-service) that: (1) cites the 4 exact dates + the raw GCS paths checked (both pipeline_mode
-      variants) as evidence of the meta-only gap; (2) states this was surfaced as a `RAW_ODDS_SHAPE_UNRECOGNIZED` /
-      `attempted_failed` classification during the MDPS `odds_horizon_bucket` league_id-casing-migration reprocess
-      (source doc below), not a script defect; (3) cross-links back to
-      `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md` and notes the P2 shard4 retry item there
-      stays open/time-gated until this gap is resolved upstream. Do NOT attempt to backfill or re-derive any data — this
-      todo is escalation/documentation only. Source:
-      `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md` (P3 item). **Done when**: the new
-      escalation issue doc exists with the 3 required elements above, is committed, and is cross-linked from both
-      directions (new doc → source doc's `related:` frontmatter gets the new doc added; new doc's `related:` cites the
-      source doc).
+- [x] ✅ [DIAG] P3. **DONE 2026-07-26 (slot-10, data_engineering)** — Escalated the confirmed 2026-06-21..24 odds_api
+      raw-ingestion gap. Re-verified live via a scoped `gcloud storage ls -r` on exactly the 4 dates' raw prefixes (no
+      whole-corpus walk), both `pipeline_mode` variants — unchanged: only `instrument_type=sport` meta-snapshot objects
+      exist, zero `instrument_type=odds` `data_type=trades` objects for any of the 4 dates on either pipeline_mode.
+      Filed `issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md` with the 3 required elements (exact dates +
+      GCS paths checked; the `RAW_ODDS_SHAPE_UNRECOGNIZED`/`attempted_failed` provenance, not a script defect;
+      cross-link + note re: the P2 shard4 retry staying open/time-gated). Cross-linked both directions: new doc's
+      `related:` cites the source doc; source doc's `related:` + its own P3 todo updated
+      (`issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`). No backfill/re-derivation attempted.
+      Source: `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md` (P3 item).
 - [ ] [DATA] P3. **Root-cause, measure, and (if material) de-dup canonical sports MDT odds poll-key duplicate rows**
       (repo: market-tick-data-service). Step 1: on a fresh reproducible sample (or manifest-driven population
       measurement — single-walk discipline, do not re-walk the corpus ad hoc), confirm the duplication mechanism
