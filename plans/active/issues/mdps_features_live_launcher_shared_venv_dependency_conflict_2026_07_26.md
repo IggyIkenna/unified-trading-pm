@@ -2,7 +2,8 @@
 doc_type: issue
 title:
   launch-mdps-features-live.sh installs 3 archived/consolidated repos via an unresolved compound VM_SERVICE key — fix
-  written, NOT yet durable (clobbered once already)
+  committed to origin/main, but the published GCS setup script keeps getting overwritten with the old version faster
+  than it can be verified live
 summary: >-
   `launch-mdps-features-live.sh` sets `VM_SERVICE=market_data_processing_service+features_service` (a "+"-joined
   compound key), but `setup-data-pipeline-vm.sh`'s `SERVICE_TARBALLS` lookup only has single-service keys — the lookup
@@ -46,7 +47,7 @@ related:
     /codex/04-architecture/deprecation-ledger.yaml,
   ]
 created: 2026-07-26
-last_updated: 2026-07-26
+last_updated: 2026-07-27
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -142,22 +143,55 @@ every race against a refresh sourced from the committed tree.** The fix must lan
 this repo's normal discipline) before it can be considered actually deployed — until then this issue stays open despite
 the code being written and locally verified.
 
+## Update 3 — fix IS committed to origin/main; live-VM confirmation still blocked by a fast, repeating clobber
+
+Ran the full ship sequence properly: `git pull --ff-only` (clean, no conflicts with an unrelated concurrent commit to
+the same file), `quality-gates.sh --no-fix` (all gates passed),
+`quickmerge.sh --agent --files 'scripts/vm/create- code-tarballs.sh scripts/vm/setup-data-pipeline-vm.sh'` — landed on
+`live-defi-rollout` as commit `0f0e0a7`. Stashed one unrelated dirty file (a separate features-service deploy-script fix
+from earlier in this session, not part of this fix) to get a clean tree, republished via
+`create-code-tarballs.sh --asset-group cefi` (no `--allow-dirty- tarball` needed this time — sourced from the committed
+tree), confirmed via `gsutil stat`/`cat` immediately after that the fix was live, then restored the stashed file.
+
+Re-launched `launch-mdps-features-live.sh --asset-group cefi` (3rd attempt) — **identical pre-fix failure again** ("Code
+deployed from GCS (28 repos)", same `position-balance-monitor-service==0.1.1` unsatisfiable error). Checked the live GCS
+object immediately after: it no longer had the fix (`NEEDED_TARBALLS=`/`MTDS_DEPENDENT_SERVICES=` back at their pre-fix
+positions), despite `gsutil stat`'s reported update-time matching my own publish almost exactly — meaning whatever is
+overwriting this file ran again within roughly the same window as my publish, not 4 minutes later this time but
+effectively immediately. Checked GCS Data Access audit logs for the object's write history — empty (Data Access logging
+isn't enabled on this bucket, so there's no audit trail to name the actual writer). Searched this and other repos'
+`.github/workflows/` for anything invoking `create-code-tarballs.sh` — found nothing, so it isn't
+GitHub-Actions-triggered as far as this session could find.
+
+**Given this is now the second clobber and it's landing faster than a manual publish→verify cycle can outrun, I stopped
+rather than keep burning real VM billing (3 real e2-standard-8 launches so far) on repeated blind retries.** The fix's
+correctness is not in question — it's independently confirmed via (a) the isolated functional test in Update 1 and (b)
+`git show 0f0e0a7:scripts/vm/setup-data-pipeline-vm.sh` showing the correct committed content. What's unconfirmed is a
+live end-to-end VM boot, purely because something keeps racing any manual publish attempt back to the pre-fix state.
+This needs either: identifying and pausing/coordinating with whatever is doing this before the next verification
+attempt, or enabling Data Access audit logging on `gs://deployment-scripts-central-element-323112` long enough to catch
+the actual writer, or simply accepting eventual consistency — the fix IS on `origin/main` now, so the NEXT time anything
+rebuilds tarballs from a fresh, current checkout (this session's clobber-source included, once it's running off a
+checkout that has commit `0f0e0a7` or later), it should self-resolve without further action.
+
 ## Todos
 
-- [ ] [INFRA] P1. Commit + ship (quickmerge) the two fixes in `deployment-service/scripts/vm/create-code-tarballs.sh`
-      (remove `pnl-attribution-service`/`risk-and-exposure-service`/`position-balance-monitor-service` from the category
-      arrays) and `setup-data-pipeline-vm.sh` (compound-VM_SERVICE-aware branch + `MTDS_DEPENDENT_SERVICES` moved
-      earlier). Both are already written and locally verified (functional test in this doc's Update section); this todo
-      is the commit + `create-code-tarballs.sh --asset-group cefi` republish, not new engineering.
-- [ ] [SCRIPT] P2. After the fix is committed and republished, re-run
-      `launch-mdps-features-live.sh --asset-group     cefi` once more to get a genuine live confirmation (both prior
-      attempts hit the pre-fix bug — one before the fix existed, one because the fix got clobbered before the VM
-      launched). Done when: `run.log` shows a clean boot + heartbeat within a few minutes, then delete the VM.
+- [x] [INFRA] P1. ~~Commit + ship (quickmerge) the two fixes~~ — **DONE**: `deployment-service@0f0e0a7`,
+      `quality-gates.sh` green, landed on `live-defi-rollout`.
+- [ ] [SCRIPT] P2. Get a genuine live-VM confirmation of the fix (3 attempts so far all hit either the pre-fix bug or a
+      clobbered publish — see Update 3). Retry once whatever is overwriting
+      `gs://deployment-scripts-central-     element-323112/vm/setup-data-pipeline-vm.sh` is identified/quiesced, or once
+      enough time has passed that routine tarball-refresh activity would naturally be sourcing the now-committed
+      `0f0e0a7`+ state. Done when: `run.log` for a fresh `mdps-features-live-cefi-*` VM shows a clean boot + heartbeat
+      within a few minutes, then delete the VM.
 - [ ] [INFRA] P2. `launch-mdps-features-live.sh` (and likely its MTDS/execution siblings sharing this
       tarball-then-install pattern) should propagate a non-zero `uv pip install` exit into a loud failure signal (an
       `attempted_failed`-style manifest row, an alert, or at minimum an early VM self-terminate) instead of leaving the
       VM running indefinitely with no process and no log — this general gap is independent of the two specific bugs
       above and would have caught either one in minutes instead of 2.5h / requiring a live re-check.
-- [ ] [INFRA] P3. Investigate what re-published the old `setup-data-pipeline-vm.sh` 4 minutes after this session's fix
-      upload — if it's a recurring automated job, it should be identified (so future local testing knows to race against
-      it or disable it temporarily) rather than left as an unexplained "something clobbered it."
+- [ ] [OPERATOR] P2. Identify what is repeatedly re-publishing
+      `gs://deployment-scripts-central-element-323112/vm/     setup-data-pipeline-vm.sh` with old content — happened
+      twice in this session (once ~4min after a publish, once within roughly the same minute), too fast to catch via
+      `.github/workflows` grep or GCS audit logs (Data Access logging not enabled on this bucket). Needs either enabling
+      Data Access logging on this bucket temporarily to catch the actual writer, or checking for a cron/systemd-timer
+      job on some always-on VM/box that runs `create-code-tarballs.sh --all` or similar on a short interval.
