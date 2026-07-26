@@ -87,5 +87,5 @@ request would, under these scripts, already have zero prior revisions left to sh
 ## Codex SSOTs
 
 None new — this is a script-safety gap in `deployment-service`, not an architecture or contract question.
-Cross-reference: `codex/05-infrastructure/deployment-observability.md` (if it documents the intended rollback contract,
+Cross-reference: `/codex/05-infrastructure/deployment-observability.md` (if it documents the intended rollback contract,
 verify these scripts against it as part of the fix).
