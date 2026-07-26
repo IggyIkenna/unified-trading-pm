@@ -571,11 +571,11 @@ def extract_service_registries(workspace_root: Path) -> tuple[list[CapabilityNod
     # archetype→model ``uses_model`` edges (below) instead of leaving them a gap.
     ml_body = (
         "    from ml_service.training.ml.config_schema import VALID_MODEL_TYPES, VALID_TARGET_TYPES\n"
-        "    from ml_service.training.ml.model_registry import ModelVariantConfig\n"
+        "    from unified_trading_library import ModelVariantConfig\n"
         "    from ml_service.training.ml.model_variant_registry import (\n"
         "        model_variants, model_types_for_target, asset_groups_for_target)\n"
         "    from ml_service.training.app.core.defi_target_generator import DEFI_TARGET_BUILDERS\n"
-        "    fields = sorted(getattr(ModelVariantConfig, 'model_fields', {}).keys())\n"
+        "    fields = sorted(getattr(ModelVariantConfig, '__dataclass_fields__', {}).keys())\n"
         "    variants = [\n"
         "        {'asset_group': v.asset_group, 'target_type': v.target_type,\n"
         "         'model_types': list(v.model_types), 'source': v.model_types_source}\n"
