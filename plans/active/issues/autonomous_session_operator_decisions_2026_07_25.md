@@ -421,6 +421,92 @@ operator can type a custom answer.
 
 ---
 
+## 13. Out-of-lifecycle prediction cell — `empty_confirmed[EXPECTED_*]` (out-of-window) or `expected_unattempted`? (2026-07-26, prediction)
+
+`/ag-closeout-audit prediction` (2026-07-26, autonomous, 2nd run of the day) Phase-3 conflict-check. Two open todos in
+the prediction covering set prescribe **different target states for the same cell on the same MTDS emission path**, and
+one of them additionally proposes undoing a shipped cross-repo canonical set. Data-correctness / honest-coverage
+semantics, so it is not a style preference.
+
+Side A — `/plans/active/prediction_phase_ab_residuals_2026_07_24.md:124-128`:
+
+> `- [ ] [BACKEND] P1. **Adapters must apply lifecycle bounds BEFORE the network call** — today inactive days land as `SOURCE_RETURNED_ZERO`instead of an honest`EXPECTED_*` …`
+
+Side B — `/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 1, legs (2) and (3):
+
+> `only emit a cell (captured/empty/failed) for dates WITHIN [available_from, available_to]; outside the market's life = honest BLANK / `expected_unattempted`, NEVER `empty_confirmed``
+> …
+> `evaluate whether `EXPECTED_INSTRUMENT_NOT_LISTED`/`PRE_VENUE_LAUNCH`/`DELISTED`should be REMOVED from`EMPTY_CONFIRMED_REASONS` so out-of-lifecycle dates read as absence, not empty_confirmed`
+
+A wants `EXPECTED_*` (which today _is_ an `empty_confirmed` reason); B wants explicitly NOT `empty_confirmed` and would
+delete those very reasons. **Read from source**, all three named reasons are already members of
+`OUT_OF_COVERAGE_WINDOW_REASONS`
+(`unified-api-contracts/unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py:590-616`) — the
+operator-directed coverage-denominator partition (2026-06-12, extended again by operator 2026-07-17) that clips them
+from numerator AND denominator while keeping the raw rows honestly `empty_confirmed` + a visible reason badge, so "an
+out-of-model range is always VISIBLE, never silently dropped". So B's stated goal appears **already delivered by a
+different shipped mechanism**, and removing the enum members would break `record_empty(reason=...)` validation
+(`UnknownEmptyConfirmedReasonError`) for every asset group that emits them. Either way this is a cross-repo
+canonical-set change — outside dispatch-scope eligibility, so it should not be dispatched as written.
+
+A: Strike leg (3) from batch4 todo 1 and replace it with "verify `OUT_OF_COVERAGE_WINDOW_REASONS` already excludes
+prediction's out-of-lifecycle cells from the denominator"; keep legs (1)-(2) but align (2)'s target state to Side A
+(`empty_confirmed[EXPECTED_INSTRUMENT_NOT_LISTED/DELISTED]`, out-of-window-classified) rather than
+`expected_unattempted`. [WORKER REC] — it is the only option that leaves one contract standing, matches the
+most-recently-operator-affirmed mechanism (2026-07-17), and needs no enum change. B: Genuinely remove the three reasons
+from `EMPTY_CONFIRMED_REASONS` — accept the corpus-wide blast radius (every AG's `record_empty` callsites + the UI
+reason badges) because "blanks where we expected data" should mean a literal blank, not a classified empty. C: Keep both
+todos as-is and rule that the two target states are for different layers (adapter pre-fetch gate vs manifest emission),
+i.e. no conflict — but say which value each layer writes. Other: operator can type a custom answer.
+
+**Status**: open
+
+---
+
+## 14. Unmatched prediction market — `OTHER` (capture-and-flag) or `attempted_failed[ClassifierConfidenceLow]` (honest failure)? (2026-07-26, prediction)
+
+Same audit run. **Three surfaces currently document/implement two different contracts** for a prediction market the cqg
+classifier cannot map, and a fourth doc's shipped-and-ticked todo asserts the opposite of a fifth doc's open premise.
+
+1. `unified-api-contracts/.../predictions/classifiers.py:21-24` (module docstring, still authoritative-looking):
+   > `**Sub-threshold** — when neither path produces a group, return ``None``; caller marks the shard as ``attempted_failed[reason=ClassifierConfidenceLow]``.`
+2. Same file, `classify_polymarket_to_canonical_group`:538-545 — the opposite:
+   > `Previously returned ``None`` (caller routed to ``attempted_failed[reason=ClassifierConfidenceLow]``) — changed to ``OTHER`` so honest-absence capture replaces silent failure.`
+3. `market-tick-data-service/.../scripts/rebuild_prediction_manifest.py:612` still implements contract (1) —
+   `# Unclassified cids → attempted_failed[ClassifierConfidenceLow] (classifier contract).` — which now only bites
+   KALSHI, since `classify_kalshi_to_canonical_group` still returns `None` for unmatched while the Polymarket path no
+   longer does (callsite at `:409-429`).
+4. `/plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md:51-56` + its 4 shipped `[x]` todos
+   (`unified-api-contracts@306923a`): "The classifier MUST map every Polymarket `conditionId` (and Kalshi ticker) to
+   SOME canonical question group … Treating `OTHER` as a known catch-all is honest absence".
+5. `/plans/active/prediction_cqg_residual_2026_07_24.md:69-76` (open `[DATA] P1`) rests on the opposite premise — "94.5%
+   route to `attempted_failed[ClassifierConfidenceLow]` under the operator-corrected contract (None → NOT bundled, no
+   'OTHER' fallback)" — measured 2026-06-11, i.e. five days before decision 338 landed.
+
+Consequence today: prediction's honest-coverage numbers depend on which contract you believe, and the two venues take
+different paths. Note this is a semantics question only — decision 338's _registry-extension_ half is provably already
+ruled and implemented (2026-06-16, 10 in-code citations), which is why the dependent wiring is drafted as dispatchable
+in `/plans/active/prediction_satellite_ao_dispatch_batch5_2026_07_26.md` (`status: draft`) todo 2.
+
+A: Ratify `OTHER` as the single contract for BOTH venues — fix the stale module docstring (1), route KALSHI unmatched to
+`OTHER` too (3), and re-base cqg_residual todo 1's premise. [WORKER REC] — it is the only contract with shipped consumer
+surface behind it (the deployment-ui panel, the `OTHER_BUCKET_MEMBER_ADDED` audit loop, the manifest denominator), and
+it is what the live Polymarket path already does. B: Ratify `attempted_failed[ClassifierConfidenceLow]` as the contract
+— revert (2) so unmatched Polymarket markets fail honestly again, and treat the shipped `OTHER` bucket as the
+regression. C: Keep them deliberately split per venue (Polymarket → `OTHER`, Kalshi → `attempted_failed`) and document
+WHY, since Kalshi's `KXMVE*` parlay flood is a different population from Polymarket's long-tail novelty markets. Other:
+operator can type a custom answer.
+
+Related sub-question if A or C is chosen: `classify_polymarket_to_canonical_group` downgraded
+`OTHER_BUCKET_MEMBER_ADDED` from INFO to DEBUG ("log-volume/latency noise", classifiers.py:540-542), but
+`predictions_other_bucket_and_ui_drilldown_2026_06_20.md`'s shipped `[x]` todo specified **INFO** precisely so "Operator
+periodically queries the event stream to find candidate groups for promotion". That promotion-audit loop is effectively
+off in production today, and the `[x]` now over-claims.
+
+**Status**: open
+
+---
+
 This doc will accumulate entries as genuine judgment calls surface during the cefi/defi/tradfi/prediction/sports
 closeout-audit rollout. Format for each entry:
 
