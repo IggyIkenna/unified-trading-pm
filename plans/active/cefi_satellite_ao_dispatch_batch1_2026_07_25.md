@@ -470,6 +470,45 @@ drift_direction: advance-code
       recorded in the target issue doc's Progress Log; `--apply` never invoked. Source:
       `issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`.
 
+## Progress Log
+
+- **2026-07-26 (slot 6) — todo -001 scoping.** Dispatched the "Extend MDPS candle-building to the 4 on-chain-perp CeFi
+  venues + backfill" todo. Scoping investigation (before any code/infra change) found the todo's own premise partially
+  stale:
+  - **No MDPS code change is needed.** An Explore-agent pass over `market-data-processing-service` confirmed: the CeFi
+    venue list is UAC-owned (`VENUES_BY_ASSET_GROUP["cefi"]`,
+    `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:272-361`) and ASTER/HYPERLIQUID/
+    LIGHTER-ZKSYNC/EXTENDED-STARKNET are ALREADY present in it; MDPS's timeframe list (`config.py:419-421`,
+    `["15s","1m","5m","15m","1h","4h","24h"]`) is one flat default with no per-venue gating;
+    `resolve_pipeline_mode_from_source` (`app/core/canonical_writer_shaping.py:99-138`) generically resolves any
+    closed-set UAC `PipelineMode` member, and `BATCH_ASTER`/`BATCH_HYPERLIQUID`/`BATCH_LIGHTER_API`/`BATCH_EXTENDED`
+    already exist there. No hardcoded allowlist blocks these venues; there is no closed-list test to extend either
+    (grepped `tests/` for all 4 venue tokens — zero hits beyond HYPERLIQUID, which is already treated as supported). The
+    gap is purely OPERATIONAL: the backfill has never been run for these venues.
+  - **Manifest-verified healthy captured raw-trade ranges** (`read_availability_index` over
+    `market-data-tick-cefi-prd-central-element-323112`, filtered `service_name=='market-tick-data-service'`,
+    `capture_status=='captured'`): **HYPERLIQUID** 95,678 rows, 2024-01-01 → 2026-07-20. **LIGHTER-ZKSYNC** 475 rows,
+    2026-02-01 → 2026-05-06. **EXTENDED-STARKNET** 1,305 rows, 2024-10-19 → 2026-07-25. These 3 venues' raw-capture
+    foundation is solid — safe to backfill candles against.
+  - **ASTER carved OUT of this pass** — its manifest shows 486,890 `expected_unattempted` / 300 `attempted_failed` /
+    only 1 `captured` row despite real many-instrument raw-trade files physically present on GCS for a recent day
+    (2026-07-20/21) — a manifest-registration gap, not (necessarily) a real capture failure. This directly contradicts
+    the archived `aster_capture_broken_coverage_and_completeness_2026_07_20.md`'s "RESOLVED — verified with real data"
+    banner. Filed as a P0 big-finding issue doc: `issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md`
+    (`unified-trading-pm@580d1cdf7`). A manifest-scoped backfill range for ASTER would be wrong right now (it would
+    think almost nothing exists), so ASTER is deferred to that issue doc's own remediation, not re-attempted here blind.
+  - **CLI entrypoint confirmed** for the actual backfill:
+    `market-data-processing process --start-date <D> --end-date <D> --CEFI --venues ASTER HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET [--data-types trades ...] [--timeframes ...]`
+    (`market_data_processing_service.cli.main:run_cli`, flags in `cli/parser.py:114-155`). Also confirmed already-
+    unregistered `processed_candles/` output for ASTER on disk (`timeframe=15s`/`1m` only, day=2026-07-20, no MDPS
+    manifest rows) — no currently-running GCE VM is producing it (`gcloud compute instances list` at discovery time
+    showed only unrelated `mdps-backfill-tradfi-*` VMs), so it's stray/orphaned, not a live collision risk.
+  - **Next step (not yet started)**: launch the SPOT VM backfill
+    (`deployment-service/scripts/vm/ launch-mdps-backfill-vm.sh`) for HYPERLIQUID / LIGHTER-ZKSYNC / EXTENDED-STARKNET
+    over their respective captured ranges above, verify `processed_candles/` objects land with non-zero `quote_volume` +
+    real manifest rows, then verify `features-service`'s `RollingAdvReader.compute_rolling_adv()` returns non-`NO_DATA`
+    for at least one probed instrument.
+
 ## Deferred
 
 ### Excluded — doc flagged `doc_too_large_or_risky_for_batch: true` (3 of 29 docs)
