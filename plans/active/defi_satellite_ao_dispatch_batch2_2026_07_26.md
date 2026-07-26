@@ -200,18 +200,14 @@ drift_direction: advance-code
       venue residue found (all hits are generic "delta drift"/"schema drift"/"config drift" prose unrelated to the
       Solana Drift venue; zero pacifica hits). No `unified-api-contracts` code change needed. Verdict documented in
       `plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md` § "UPDATE 2026-07-26".
-- [ ] [DOCS] P3. Document the three MEV archetypes (`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, `ARBITRAGE_MEV_JIT_LIQUIDITY`,
-      `ARBITRAGE_MEV_BACKRUN`) as explicitly OUT of the paper-replay tick-builder-wiring scope. Add a short note (in the
-      relevant strategy-service archetype/catalog doc or module-level docstring near `_ENGINE_DRIVABLE_ARCHETYPES` in
-      `paper_universe.py`, plus a one-line cross-reference from
-      `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`'s own DOCS todo) stating: these three are
-      architecturally opportunistic/runtime-mempool-driven with no catalog-declared currency universe, so no
-      day-partition tick loader can be built against them; a currency constraint for them would require new logic inside
-      the engines themselves — a materially different, separately-scoped piece of work, not attempted here. Source:
-      `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md` (DOCS P3 todo, line ~606). Done when: the
-      out-of-scope rationale for these 3 archetypes is written down in a discoverable, permanent location (codex or
-      in-repo docstring/comment) rather than living only in this issue doc, and the issue doc's own DOCS todo is checked
-      off with a citation to where it now lives.
+- [x] ✅ [DOCS] P3. **DONE 2026-07-26 (worker, slot 6), `strategy-service@8d7c6549`.** Documented the three MEV
+      archetypes (`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, `ARBITRAGE_MEV_JIT_LIQUIDITY`, `ARBITRAGE_MEV_BACKRUN`) as
+      explicitly OUT of the paper-replay tick-builder-wiring scope: a module-level comment directly after the
+      `_ENGINE_DRIVABLE_ARCHETYPES` frozenset in `strategy_service/cli/handlers/paper_universe.py` names all 3
+      archetypes and states the rationale (architecturally opportunistic/runtime-mempool-driven, no catalog-declared
+      currency universe, a currency constraint would need new engine-internal logic — separately scoped, not attempted
+      here). Cross-referenced back: `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`'s own DOCS P3 todo
+      is checked off citing this exact commit + location.
 - [ ] [CODE] P3. Fix wrong catalog-builder import alias in `tests/integration/test_recursive_borrow_scenarios.py`:
       `FAMILY_2_CELL_IDS` is built by importing `_build_carry_recursive_staked` (the **plain** `CARRY_RECURSIVE_STAKED`
       archetype's catalog builder) aliased as `_build_carry_recursive_borrow_perp_hedged`, instead of importing the real
