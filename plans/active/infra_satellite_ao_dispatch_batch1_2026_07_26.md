@@ -156,22 +156,26 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       wrong-version smoke (temporarily place a non-0.10.8 uv on PATH, run `scripts/setup.sh`, confirm it realigns and
       exits 0) passes. Repos: unified-trading-pm + all 25. Source: `issues/uv_pin_fleet_drift_2026_06_22.md`.
 
-- [ ] [INFRA] P1. **Land the two written-but-unshipped workspace boot-script hardenings (the blocker they were held on
-      has cleared).** Both were authored + validated on slot-3 (`bash -n` + `shellcheck -S error` clean) and then held
-      because PM's `main`↔`live-defi-rollout` version split hard-blocked any PM commit; the source doc's own later
-      `[CICD] P1` entry records that split RECONCILED (`main` merged down to LDR, "main is now 0 commits ahead of LDR"),
-      so re-derive and land them from the doc's spec: (a) `scripts/workspace/workspace-bootstrap.sh` — Phase 1 enforce
-      the pinned uv `0.10.8` via the astral installer when the present uv differs (today it logs
-      `[SKIP] uv already installed`, letting 0.11.x ride); Phase 1 install pnpm (corepack → npm → sudo npm fallback) so
-      the UI repo's setup.sh works; after the clone loop `git checkout live-defi-rollout` for every repo (git clone
-      leaves them on `main`, which the FF-pull cron skips and which causes cross-branch dep conflicts). (b)
+- [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7) — already shipped same-day via the carve-out; verified, not re-landed.**
+      Land the two written-but-unshipped workspace boot-script hardenings (the blocker they were held on has cleared).
+      Both were authored + validated on slot-3 (`bash -n` + `shellcheck -S error` clean) and then held because PM's
+      `main`↔`live-defi-rollout` version split hard-blocked any PM commit; the source doc's own later `[CICD] P1` entry
+      records that split RECONCILED (`main` merged down to LDR, "main is now 0 commits ahead of LDR"), so re-derive and
+      land them from the doc's spec: (a) `scripts/workspace/workspace-bootstrap.sh` — Phase 1 enforce the pinned uv
+      `0.10.8` via the astral installer when the present uv differs (today it logs `[SKIP] uv already installed`,
+      letting 0.11.x ride); Phase 1 install pnpm (corepack → npm → sudo npm fallback) so the UI repo's setup.sh works;
+      after the clone loop `git checkout live-defi-rollout` for every repo (git clone leaves them on `main`, which the
+      FF-pull cron skips and which causes cross-branch dep conflicts). (b)
       `scripts/workspace/setup-workspace-config-symlink.sh` — emit the root `.code-workspace` as a REGULAR file with
       root-relative paths (sed-rewrite `"../../X"`→`"X"`, `"../../"`→`"."`) instead of a symlink into
       `.cursor/workspace-configs/`, whose `../../`-relative folder paths resolve above the workspace root and make VS
       Code/Cursor report "no folders containing Git repositories". **Do NOT edit `scripts/setup.sh` here** — the todo
       above owns that file. **Done when**: both scripts carry the changes, `bash -n` + `shellcheck -S error` are clean
       on both, and a fresh `.code-workspace` render is verified to be a regular file whose folder paths resolve inside
-      the workspace root. Repo: unified-trading-pm. Source: `issues/uv_pin_fleet_drift_2026_06_22.md`.
+      the workspace root. Repo: unified-trading-pm. Source: `issues/uv_pin_fleet_drift_2026_06_22.md`. Full verification
+      evidence in the Progress Log below — no new commit needed (the fix already shipped `unified-trading-pm@703b1e912`,
+      2026-06-22, via carve-out #3, same day the issue doc's "BLOCKED from landing" section was written — that section
+      went stale the moment the carve-out push landed and was never updated).
 
 - [ ] [TEST] P2. **Repair the repo-wide E2E login helper contract (3-step chain, combined — the source doc's own todos 2
       and 3 are explicitly gated on todo 1).** (1) Diagnose why `admin@odum.internal` (and likely other demo personas)
@@ -725,6 +729,24 @@ dispatched (`plans/PLAN_FORMAT.md` — `status: draft` is not ingested). Before 
   batch-committing many repos up front before shipping each is the anti-pattern that caused this; see Deferred table for
   exact current state and `/codex/12-agent-workflow/commit-push-flip-rule.md` "Half 1 without Half-2 in the SAME turn"
   for why single-repo tight cycles are the correct pattern instead.
+- **2026-07-26 (slot-7)** — Worked the "Land the two written-but-unshipped workspace boot-script hardenings" todo.
+  Before writing any diff, read both target files and found **both already carry every change the todo spec asks for**:
+  `scripts/workspace/workspace-bootstrap.sh` lines 543-555 enforce pinned uv `0.10.8` via the astral installer
+  (`REQUIRED_UV="0.10.8"` + `curl -LsSf https://astral.sh/uv/${REQUIRED_UV}/install.sh | env UV_UNMANAGED_INSTALL=...`),
+  lines 563-575 install pnpm via corepack → npm → sudo npm fallback, lines 668-685 `git checkout live-defi-rollout` for
+  every cloned repo; `scripts/workspace/setup-workspace-config-symlink.sh` lines 48-59 write the root `.code-workspace`
+  as a regular file with `sed`-rewritten root-relative paths instead of a symlink. `git log` traced this to
+  `unified-trading-pm@703b1e912` ("fix(workspace): harden bootstrap so fresh VMs avoid today's failures", 2026-06-22
+  16:34 +0100) — landed the SAME DAY the issue doc's "Durable boot-script hardening — WRITTEN + VALIDATED, BLOCKED from
+  landing" section was written, via the PM `scripts/**` carve-out #3 direct-push path (bypasses the local-only
+  version-alignment gate that was blocking normal quickmerge at the time). The issue doc's "BLOCKED" framing was never
+  updated after that push landed, so it read as still-open when this batch1 plan extracted the todo from it.
+  **Verification performed (Done-when bar) instead of a no-op re-commit**: `bash -n` clean on both files;
+  `shellcheck -S error` clean on both files (`/home/ubuntu/.local/bin/shellcheck`); re-ran
+  `setup-workspace-config-symlink.sh` fresh in this slot's `.tabs/7/` — produced a regular file (`file` reports "JSON
+  text data", `test -L` false) with root-relative `"path"` entries (`.`, `unified-trading-api`, `unified-trading-pm`,
+  …), spot-checked 2 of them (`unified-trading-api/.git`, `unified-trading-pm/.git`) resolve to real repos inside the
+  workspace root. No commit needed — nothing to ship.
 
 ## Deferred work after 2026-07-26 (slot-11, item 2 fleet rollout — 8/25 shipped incl. PM)
 
