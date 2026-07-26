@@ -147,7 +147,7 @@ drift_direction: advance-code
       `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES` (excluded or mapped to its real protocol), with its
       previously-orphaned rows now attributable to a real protocol or explicitly documented as excluded. (repos:
       deployment-api, unified-api-contracts)
-- [ ] [BACKEND] P1. **Migrate `AaveRateImpactCalculator` off the structurally-zero DefiLlama Yields borrow field onto
+- [x] ✅ [BACKEND] P1. **Migrate `AaveRateImpactCalculator` off the structurally-zero DefiLlama Yields borrow field onto
       MTDS `lending_indices`, then re-point strategy-service's P&L reader to the writer's actual feature_group name.**
       (1) In features-service, change `AaveRateImpactCalculator.fetch_data()`
       (`features_service/onchain/app/calculators/aave_rate_impact_calculator.py`) to source
@@ -171,7 +171,13 @@ drift_direction: advance-code
       real-world borrow activity (spot-check against the MTDS `lending_indices` source rows for the same pools/date);
       `strategy-service/pnl/engine/orchestrator.py` reads `feature_group="rate_impact"` (not `aave_rate_impact`); both
       repos' `quality-gates.sh` green. Source:
-      `issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`.
+      `issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`. ✅ 2026-07-26: `fetch_data()` now
+      blends DefiLlama's real USD TVL with MTDS `lending_indices`' real per-block `utilization_rate`
+      (`total_borrow_usd = tvl_usd * utilization_rate` — dimensionally correct without a separate price feed) + carries
+      the IRM-slope columns `_resolve_rate_params` already reads off a row; unit-tested (regression test proves non-zero
+      `rate_impact_supply_bps`/`rate_impact_borrow_bps` end to end) — `features-service@b0845d83`.
+      `strategy_service/pnl/engine/orchestrator.py` re-pointed to `feature_group="rate_impact"` —
+      `strategy-service@59dd0638`. Both repos' full `quality-gates.sh` green.
 - [x] ✅ [ENGINEER] P1. Triage the 9 `unified-api-contracts/unified_api_contracts/internal/architecture_v2/` files
       flagged by the original `rg -l -i 'drift|pacifica'` sweep but never individually confirmed fixed by the 2026-07-16
       follow-up dispatch — `perp_hedge_sizer.py`, `capability_manifest.py`, `archetype_config.py`,
