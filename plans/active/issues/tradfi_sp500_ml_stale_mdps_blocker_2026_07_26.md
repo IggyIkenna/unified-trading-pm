@@ -24,7 +24,7 @@ summary: >-
   fresh finding this skill is scoped to fix — `ag_closeout_auditor.md`'s `does_not` clause is explicit that this skill
   trusts frontmatter/checkbox state as-is and defers contradiction-resolution to `/plan-reconcile`), so it is filed here
   per the findings-closure rule rather than fixed inline.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
@@ -53,7 +53,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "slot-5, 2026-07-26, pm docs-only + new follow-up issue doc filed"
 drift_direction: advance-code
 ---
 
@@ -95,17 +95,15 @@ its own scope boundary), hence this issue doc.
 Reconcile the doc against the shipped resolution, then re-scope its P0 items against current reality (they may now be
 directly executable, or may have a new, different blocker — that needs to be checked against live infra, not assumed).
 
-- [ ] [DATA] P2. In `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`, update the P0 items at lines 91 and 105
-      (currently `**BLOCKED-OPERATOR-DECISION**` / `**GATED ON**: operator decision on Option A vs B`) to reflect the
-      2026-06-29 Option-A resolution (`market-data-processing-service@cc63d1b` + `features-service@34a5d4ff` +
-      `market-data-processing-service@7d630a3`, per the archived
-      `features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`). Then determine from current code/infra whether the
-      underlying feature-calculator runs (features-delta-one for tradfi/ES; features-volatility for tradfi/ES +
-      tradfi/CBOE-VIX) are now actually unblocked: if yes, re-scope the checkboxes as concrete VM-launch-and-verify
-      todos and, per the "Plans run to actual completion" HARD RULE, actually launch + verify clean feature parquets
-      land (not just mark the doc unblocked); if a new/different blocker is found, document it inline with evidence
-      instead. Also correct `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s Deferred entry for this doc from
-      "Option B" to "Option A" for accuracy. Repos: unified-trading-pm (doc), features-service,
-      market-data-processing-service (if the runs are actually launched). Done when: the sp500_ml doc's blocking
-      language matches current reality (either genuinely re-executed with evidence, or a new blocker documented), and
-      the batch3 citation is corrected.
+- [x] ✅ [DATA] P2. **DONE 2026-07-26 (slot-5).** Updated the P0 items at lines 91/105 of
+      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`. Determined from live code + GCS re-verification that
+      the underlying pipeline is **still blocked**, just by a different set of issues than the stale operator-decision
+      framing implied: mismatches 2 (filename format) and 4 (features-service read-path handling) from the original
+      4-mismatch diagnosis are confirmed STILL unfixed by direct code read, and no successful tradfi features run has
+      ever landed (manifest 404 on `features-tradfi-prd-central-element-323112`). Also found the archived doc's own
+      "Option A" label doesn't match what actually shipped (looks like a partial Option-B-direction fix instead) —
+      flagged, not resolved, in the follow-up. Documented the new blocker with full evidence + concrete fix todos in
+      `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` rather than launching a VM that would
+      predictably repeat the 3 prior failed attempts. Corrected `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s
+      Deferred entry (also completed its truncated sentence) to match the archived doc's own "Option A" label, with a
+      pointer to the label-dispute finding.
