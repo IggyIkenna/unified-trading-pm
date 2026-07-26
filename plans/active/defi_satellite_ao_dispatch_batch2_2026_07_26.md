@@ -237,18 +237,24 @@ drift_direction: advance-code
       10 rows, all correctly slot-labeled `CARRY_BASIS_PERP_INV@...` (was silently `CARRY_RECURSIVE_STAKED@...` before).
       The `>=5` row-count assertion needed no change (10>=5). 40/40 tests pass (`pytest -m "not requires_credentials"`);
       full `quality-gates.sh --no-fix` green (126s, sentinel written). Shipped `strategy-service@628a0a32`.
-- [ ] [DESIGN] P3. Evaluate wiring the existing `curve_adapter.py`/`api.curve.fi` REST path
+- [x] ✅ [DESIGN] P3. **DONE 2026-07-26 (slot 4) — NO-GO.** Evaluate wiring the existing
+      `curve_adapter.py`/`api.curve.fi` REST path
       (`market_tick_data_service/market_interface/adapters/defi/curve_adapter.py`) into the batch `dex_pool_swaps`
       collection cascade for CURVE/OPTIMISM (mirroring the "ARB/POLY only on hosted service (deprecated) — use
       api.curve.fi instead" precedent already documented in UAC `_defi.py`), as an alternative to leaving this cell as a
       permanent honest `EXPECTED_SUBGRAPH_DEINDEXED` absence. Repo: market-tick-data-service. Not urgent — every other
       `dex_pool_swaps` (venue, chain) cell is unaffected and the ~144-952 CURVE/OPTIMISM rows are a small fraction of
-      the asset_group's total gap; do NOT implement the wiring itself in this todo — only produce the evaluation. **Done
-      when**: a written, evidence-cited verdict is appended to the source issue doc stating whether `curve_adapter.py`'s
-      REST integration can realistically be wired into the `dex_swaps_handler.py` batch cascade for this (venue, chain)
-      pair (covering: does the REST response shape map onto the existing `dex_pool_swaps` schema/writer contract; what
-      integration point would the call live at; rough effort), with an explicit go/no-go recommendation for a follow-up
-      implementation todo. Source: `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
+      the asset_group's total gap; do NOT implement the wiring itself in this todo — only produce the evaluation.
+      **Verdict (full evidence in the source issue doc's "Evaluated 2026-07-26" section)**: the "existing REST path"
+      isn't what it looked like — `curve_adapter.py`'s REST call (`_safe_fetch_curve_rest_pools`) only returns
+      pool-discovery metadata, never swap history; the adapter's actual swap-fetch method (`_download_swaps`) is 100%
+      The-Graph-decentralized-network dependent (the SAME dead subgraph mechanism) with a literal
+      `return []  # ... omitted for brevity` REST fallback stub; the REST discovery path is also hardcoded to Ethereum
+      (`venue="CURVE-ETHEREUM"` regardless of `self.chain`); and `dex_swaps_handler.py`'s `_collect_protocol_chain`
+      pipeline is subgraph-only end-to-end with no existing non-subgraph integration seam. No follow-up implementation
+      todo opened — recommended a smaller external-API research step (does Curve's public REST API expose swap-level
+      history for OPTIMISM at all) before any future build attempt. Source:
+      `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
 - [x] [DATA] P2. **Re-run the DeFi `instrument_availability` shape-B ("hive") vs flat reconciliation with a null-aware
       comparator, full population.** The 2026-07-14 corrected-comparison pass found the original 45.2% (1,315/2,911)
       byte-mismatch figure is very likely inflated/entirely explained by a `None`-vs-`NaN` serialization artifact

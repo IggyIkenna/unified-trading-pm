@@ -157,11 +157,14 @@ not wired into the batch `dex_swaps_handler.py` cascade for `dex_pool_swaps`.
       will re-create fresh `attempted_failed` rows that item 2's retroactive script would then need to re-run to clean
       up again. Repo: `market-tick-data-service` (out of scope for the 2026-07-24 dispatch that shipped items 1-2 — that
       dispatch was scoped to unified-api-contracts + instruments-service only).
-- [ ] [DESIGN] P3. Evaluate wiring the existing `curve_adapter.py`/`api.curve.fi` REST path into the batch
-      `dex_pool_swaps` collection for CURVE/OPTIMISM (mirroring the "ARB/POLY only on hosted service" precedent already
-      noted in UAC `_defi.py`) so this cell can actually capture real data instead of staying a permanent honest
-      absence. Not urgent — `dex_pool_swaps` coverage for every OTHER venue is unaffected, and 952 rows is a small
-      fraction of the asset_group's total gap. Repo: `market-tick-data-service`.
+- [x] ✅ [DESIGN] P3. **DONE 2026-07-26 (slot 4) — NO-GO.** Evaluate wiring the existing
+      `curve_adapter.py`/`api.curve.fi` REST path into the batch `dex_pool_swaps` collection for CURVE/OPTIMISM
+      (mirroring the "ARB/POLY only on hosted service" precedent already noted in UAC `_defi.py`) so this cell can
+      actually capture real data instead of staying a permanent honest absence. Not urgent — `dex_pool_swaps` coverage
+      for every OTHER venue is unaffected, and 952 rows is a small fraction of the asset_group's total gap. Repo:
+      `market-tick-data-service`. Full evidence-cited verdict in "Evaluated (2026-07-26, slot 4)" below — the existing
+      REST integration is pool-discovery-only (not swap-history), hardcoded to Ethereum, and the actual swap-fetch path
+      is Graph-only with an unimplemented REST fallback stub; no follow-up implementation todo opened.
 - [ ] [SCRIPT] P3. Do the same live-subgraph-health spot-check for the remaining un-investigated long-tail buckets
       (`UNISWAP_V3` `TimeoutError`×25, `UNISWAP_V3`/POLYGON schema-drift×24, and the handful of 1-8-row buckets) —
       plausibly genuine transient/schema issues (all 5 sampled subgraphs from this session were healthy), but not
@@ -203,3 +206,50 @@ generic `canonical-migration` `VM_TASK`/ `VM_MIGRATION_CMD` dispatch in
 `python scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py --apply`), or add a new one-off category
 to `launch-canonical-migration-vm.sh`'s dispatch table. Shipped: `unified-api-contracts@e893e5c9` (reason),
 `instruments-service@73100d4e` (script).
+
+## Evaluated (2026-07-26, slot 4) — wiring `curve_adapter.py`'s REST path into the batch cascade
+
+**Verdict: NO-GO as currently scoped — the "existing REST path" doesn't do what this todo assumed.** Read
+`market_tick_data_service/market_interface/adapters/defi/curve_adapter.py` and
+`market_tick_data_service/cli/handlers/dex_swaps_handler.py` directly (not just the module docstrings):
+
+1. **The REST integration is pool-DISCOVERY only, not swap-HISTORY.** `_safe_fetch_curve_rest_pools()` calls
+   `CURVE_REST_API_POOLS = f"{_CURVE_REST_BASE}/v1/getPools/all/ethereum"` — this endpoint returns pool metadata
+   (address/name/coins), which is what `fetch_markets()` (instrument discovery, consumed by instruments-service) needs.
+   It returns nothing resembling a swap/trade record. `dex_pool_swaps` needs per-swap history
+   (timestamp/tx_hash/amounts) — this REST endpoint cannot produce that at all, regardless of chain.
+2. **The actual swap-history path (`download_market_data` → `_download_swaps`) is NOT REST-based — it's The Graph, the
+   SAME failure mode.** `_download_swaps()` calls `_download_swaps_from_decentralized_graph()` (PRIORITY 1, queries
+   `THEGRAPH_CURVE_MAINNET` — the decentralized network, exactly what's dead for OPTIMISM) and on failure falls through
+   to a literal stub:
+   `# PRIORITY 2: Fall back to hosted subgraph ... return []  # Hosted subgraph implementation omitted for brevity`
+   (`curve_adapter.py:612-614`). Calling `CurveAdapter.download_market_data()` for CURVE/OPTIMISM today would return
+   **zero swap rows** — it would fail the same way the batch cascade already does, just through a different code path.
+3. **The discovery path (the only genuinely-REST part) is hardcoded to Ethereum, not chain-parameterized.**
+   `CURVE_REST_API_POOLS` hardcodes the literal `/ethereum` URL segment, and `_build_curve_pool_instrument()` hardcodes
+   `"venue": "CURVE-ETHEREUM"` / `instrument_key = f"CURVE-ETHEREUM:POOL:{safe_name}"` regardless of `self.chain` — this
+   adapter has no working OPTIMISM code path today, discovery or otherwise, despite being instantiable with
+   `chain="OPTIMISM"`.
+4. **UAC's `EVM_DEFI_REST_URLS["curve"]` registers only a bare `api_url` host** (`https://api.curve.finance`,
+   `_defi.py:1303-1307`) — no per-chain path template, no second URL type for a volume/swap-history endpoint. There is
+   no existing evidence in this codebase that Curve's public REST API even exposes swap-level history for any chain (its
+   adapter usage here is 100% pool-metadata); confirming that would need an external-API check, which is itself a
+   prerequisite for any real build, not something "wiring the existing path" can shortcut.
+5. **No integration seam exists in `dex_swaps_handler.py` for a non-subgraph source.** `_collect_protocol_chain` →
+   `_paginate_swaps` → `_query_and_parse` → `_run_cascade` is subgraph-only end-to-end, gated by
+   `subgraph_id = get_subgraph_id(protocol, chain)` at entry (`dex_swaps_handler.py:407-409`). There is no branch point
+   today for "if no subgraph, try an adapter fetch instead" — adding one is new architecture, not "wiring."
+
+**What integration point WOULD exist, if pursued for real** (not recommended without the external-API check in point 4):
+a new branch in `_collect_protocol_chain` before the `subgraph_id` early-return, calling a genuinely-new `CurveAdapter`
+method (the existing `_download_swaps` cannot be reused as-is — its Graph-first priority order would need inverting for
+OPTIMISM specifically, and its discovery hardcoding would need chain-parameterizing), then mapping whatever record shape
+that new REST call returns onto `_write_swap_shard`'s expected row schema (per-swap timestamp/tokens/amounts — same as
+`_curve_swap_to_dict`'s shape).
+
+**Recommendation: do not open a follow-up implementation todo yet.** The right next step, if this is ever prioritized,
+is a _separate, smaller_ research todo — confirm whether `api.curve.finance` (or any other Curve public endpoint)
+exposes real swap-level history for OPTIMISM at all — before scoping a build. Given the small blast radius already
+established (952→144 rows, one (venue, chain) pair, honest `EXPECTED_SUBGRAPH_DEINDEXED` absence already shipping via
+the existing follow-up chain), leaving this as a permanent honest absence remains the pragmatic default unless that
+external-API check comes back positive.
