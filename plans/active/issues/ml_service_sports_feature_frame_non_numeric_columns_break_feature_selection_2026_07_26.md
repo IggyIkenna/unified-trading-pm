@@ -166,15 +166,46 @@ here — flagging so the eventual retrain attempt checks target-class balance be
       own scoped issue doc: `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`. 2 new
       regression tests assert every `MULTISOURCE_XG_COLUMNS` entry is numeric dtype (filled or not). 17835 tests pass;
       `quality-gates.sh` green in features-service (370s, sentinel-verified).
-- [ ] [DATA] P3. Check whether `pinnacle_closing_odds_home`/`odds_home_avg` (or `clv_home`'s real source columns) exist
-      for ANY date window in `features-sports-prd` — if genuinely absent everywhere, the CLV target may need a different
-      source/window before a meaningful retrain is possible; if present elsewhere, the `2026-04-01..17` window
-      specifically may just be a bad choice and a different window should be used for the eventual retrain. (repo:
-      ml-service / features-sports-prd data)
-- [ ] [ML] P2. Once the above ships, re-attempt the 3 CLV model variant retrain (`training-period-2026-04`,
-      `pregame_clv_family`, `timeframes=fixture`) and confirm the target class distribution is non-degenerate before
-      promoting/citing. The 3 quarantined artifacts stay untouched. Blocked on this doc AND
-      `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md` both landing.
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-2, `data_engineering`) — genuinely absent everywhere, root cause found: a
+      naming mismatch, not a window/data-absence problem.** Directly read the real `feature_group=odds_features` parquet
+      across 7 dates spanning 2024-2026 (`2024-04-17`, `2025-04-17`, `2026-04-01`, `2026-04-10`, `2026-04-17`,
+      `2026-05-01`, plus 2 dates with no data at all) — `clv_home`/`clv_draw`/`clv_away`/
+      `sharp_clv_*`/`clv_direction_*` are ALL 0/N non-null on EVERY single date checked (never a single real value),
+      while a genuinely-different, correctly-computed column in the SAME file (`pinnacle_vs_market_diff_home`) is fully
+      populated (N/N) every time. `pinnacle_closing_odds_home`/ `odds_home_avg` (the "legacy fallback" pair) don't exist
+      as columns anywhere in the exported file, and grepping the ENTIRE workspace confirms neither name is ever assigned
+      by any repo — they only appear as the ml-service target-generator's OWN fallback-column names, never as a
+      producer's output. **Root cause traced**:
+      `features-service/features_service/sports/calculators/odds_velocity.py::compute_clv_features` produces
+      `odds_clv_home`/`odds_clv_sharp_home`/`odds_clv_direction_home` (confirmed via direct read of its docstring +
+      return columns, and independently confirmed as the SAME names `feature_expectations.py`'s `FEATURE_EXPECTATIONS`
+      registry declares — features-service's own internal expectations are self-consistent and use the `odds_`-prefixed
+      form throughout). But the day=2026-04-17 object's `horizon_schema.json` sidecar (a static per-column horizon
+      manifest written by `writer.py::_write_horizon_schema_sidecar`) declares the BARE names (`clv_home`,
+      `sharp_clv_home`, `clv_direction_home` — no `odds_` prefix) among its 878 keys, NOT `odds_clv_home` — i.e. an
+      OLDER naming convention than what the calculator/registry currently use, matching the exact "sidecar predates the
+      naming fix" pattern `ml-service/.../sports_target_generator.py`'s own code comment already warns about for a
+      DIFFERENT column set (the T-24h leakage-gate CLV aliases). **The precise byte-level mechanism that turns the real,
+      populated `odds_clv_home` into an always-empty `clv_home` in the final written parquet was NOT fully traced this
+      pass** (the exporter's own merge code (`odds_features_exporter.py:287-290,417-418`) never renames the column — the
+      rename/loss must happen in a later, not-yet-located schema-reindex step, possibly one that consults a stale
+      `horizon_schema.json`-style manifest to decide the final column set). Flagging this precisely rather than guessing
+      further — the fix todo below scopes finding + fixing that exact mechanism as its own bounded task. **Verdict for
+      the retrain**: this is NOT a window-choice problem — `clv_home` cannot be non-degenerate in ANY window today,
+      because the CLV data that DOES exist (`odds_clv_home`) never reaches the final feature frame under a name the
+      target generator recognizes. A retrain attempted now, in ANY window, would ALWAYS produce a 100%-flat garbage
+      target.
+- [ ] [DATA] P2. Find and fix the exact mechanism (not yet located — see the P3 finding above) that causes
+      `features-service`'s real, populated `odds_clv_home`/`odds_clv_sharp_home`/`odds_clv_direction_home` columns to be
+      replaced by an always-empty `clv_home`/`sharp_clv_home`/`clv_direction_home` in the final
+      `feature_group=odds_features` export — likely a schema-reindex step consulting a stale naming manifest. Verify the
+      fix by re-reading a real exported date's parquet and confirming `clv_home` (or whichever name is the correct
+      canonical target) is non-null for rows where `odds_clv_home` has a real value. (repo: features-service)
+- [ ] [ML] P2. Once the fix above ships (this is now the ACTUAL blocker, not window choice), re-attempt the 3 CLV model
+      variant retrain (`training-period-2026-04`, `pregame_clv_family`, `timeframes=fixture`) and confirm the target
+      class distribution is non-degenerate before promoting/citing. The 3 quarantined artifacts stay untouched. Blocked
+      on this doc's new `[DATA] P2` AND `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md` both
+      landing.
 
 ## Progress Log (append-only)
 
@@ -190,3 +221,12 @@ here — flagging so the eventual retrain attempt checks target-class balance be
   finding while diagnosing (21 of 28 declared `MULTISOURCE_XG_COLUMNS` never actually computed —
   `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`). Status left `open` — `[DATA] P3` and
   `[ML] P2` remain genuinely open.
+- 2026-07-26 (slot-2, `data_engineering`): closed `[DATA] P3` — directly read real `odds_features` parquet across 7
+  dates (2024-2026), `clv_home`/`sharp_clv_*`/`clv_direction_*` are 0/N non-null on EVERY date (never a window- specific
+  gap); the "legacy fallback" columns don't exist anywhere in the codebase. Root-caused to a naming mismatch:
+  `features-service`'s calculator produces `odds_clv_home` (matching its own `feature_expectations.py` registry
+  self-consistently) but the exported parquet only ever carries an always-empty bare `clv_home` — the exact byte-level
+  rename/reindex mechanism was NOT fully traced (flagged honestly rather than guessed), so filed a new properly-scoped
+  `[DATA] P2` fix todo instead of attempting a blind fix. Re-scoped `[ML] P2`'s blocker: this is now a real, confirmed
+  bug (not a window-selection question) — a retrain in ANY window today would always produce a 100%-flat garbage target.
+  Status left `open` — the new `[DATA] P2` and `[ML] P2` remain genuinely open.
