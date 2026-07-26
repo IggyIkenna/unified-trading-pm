@@ -517,6 +517,19 @@ drift_direction: advance-code
     (should resolve `perpetual`) for HYPERLIQUID `derivative_ticker` → `deriv_ohlcv_1m` candle-building, then either fix
     the resolution or register the missing `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` entry —
     repo: market-data-processing-service (+ unified-api-contracts if a new contract is needed).
+  - **Real backfill, live observation (2026-07-26 16:53 UTC, day 1 of 937)**: `trades` (the ADV-relevant data_type)
+    completed cleanly for day 2024-01-01 with real candles generated; the pipeline then hit a THIRD non-blocking,
+    orthogonal gap while processing `book_snapshot_5`:
+    `MDPS canonical_writer: empty_confirmed manifest write failed for HYPERLIQUID:PERPETUAL:AAVE-USD@LIN day=2024-01-01 tf=15s`
+    — the UTL Phase-1-KEYSTONE honest-absence gate (`record_empty(reason=SOURCE_RETURNED_ZERO)` requires
+    `FetchEvidence`) correctly REFUSED an unproven empty write. Root cause visible in the preceding
+    `WARNING Missing bid_price_0 or ask_price_0 columns` — HYPERLIQUID's raw book_snapshot_5 columns are named
+    `bid_px_00`/`ask_px_00` (not `bid_price_0`/`ask_price_0`), so MDPS's book-candle aggregator reads it as "no valid
+    rows" and (incorrectly) tries to record it as honest-absence rather than as a column-mapping bug. **[DATA] P2
+    follow-up** — fix the book_snapshot_5 column-name mapping for HYPERLIQUID (and check
+    LIGHTER-ZKSYNC/EXTENDED-STARKNET for the same `bid_px_NN`/`ask_px_NN` naming) in the MDPS book-candle aggregator,
+    repo: market-data-processing-service. Non-blocking for this todo's `trades`/24h bar — the gate correctly prevented a
+    silent bad write; this is a data-quality/schema-mapping fix, not urgent.
   - **Real backfill LAUNCHED (2026-07-26, in progress)**:
     `bash deployment-service/scripts/vm/ launch-mdps-backfill-vm.sh --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2024-01-01 2026-07-25 full`
     → VM `mdps-backfill-cefi-20260726-164955` (SPOT, e2-standard-8, asia-northeast1-c), confirmed STARTED (RUNNING at
