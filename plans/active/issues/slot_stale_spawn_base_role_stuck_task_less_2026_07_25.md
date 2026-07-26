@@ -96,7 +96,12 @@ code's own comments warn about (stale `spawn_base_role` surviving past its ownin
       `spawn_base_role`); the one `stale` slot at that moment (slot 1) was an unrelated dead-worker/ alive-tmux case for
       the watchdog to reap, not this bug. Remaining ask is purely optional hardening: consider exposing a
       `POST /api/slots/{id}/clear-spawn-role` escape hatch for the rarer case where the AgentRow legitimately still
-      exists but an operator wants to force a reset anyway. Not urgent — downgraded from P2.
+      exists but an operator wants to force a reset anyway. Not urgent — downgraded from P2. **Note 2026-07-26**: this
+      todo's first regen landed on task_id `-004`, which collided with the unrelated, already-`done` P3-addendum row
+      (`done_sha=41840c1`) — a positional-id reuse hitting the sibling-reset guard from
+      `backlog_regen_id_reuse_stale_status_2026_07_15`/`ao_backlog_regen_integrity_2026_07_20` (the guard correctly
+      refuses to reset a done+done_sha row, so this todo silently read as already-done and would never dispatch). This
+      text edit is the known remedy — it forces a fresh, uncorrupted task_id on the next regen tick.
 
 ## Current slot-2 status (informational, not part of the fix)
 

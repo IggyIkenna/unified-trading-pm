@@ -192,4 +192,14 @@ census twice more — once right after the restamp, once after ≥2 consolidator
       rows immediately after the restamp AND again after ≥2 manifest-consolidator cycles (consolidator SSOT:
       `/codex/05-infrastructure/manifest-consolidator-ssot.md`). (repo: market-tick-data-service or instruments-service
       — whichever owns write access to the sports availability index; confirm via `_maintenance.py`'s existing
-      `purge_venue_before_date()`/`rebuild_manifest()` precedent for which repo's script conventionally does this.)
+      `purge_venue_before_date()`/`rebuild_manifest()` precedent for which repo's script conventionally does this.) —
+      **Related consumer-side gotcha found + separately patched 2026-07-25/26**: `--sports-entity FIXTURES`'s
+      freshness-check routing in `instruments_service/engine/orchestrator/process_preflight.py` also keyed off the
+      literal `"FIXTURES"` CLI string (not the `FIXTURES_SCHEDULE` constant), which meant an entity-scoped FIXTURES VM
+      fell through to the coarse `check_shard_freshness` any-league-match path instead of a real per-league check — any
+      single legacy `FIXTURES` row for a date (of which there are still ~337k per this doc) kept the WHOLE date "fresh"
+      even when curated leagues added later were never captured. Patched narrowly via a
+      `_FIXTURES_ENTITY_ALIASES = {"FIXTURES", FIXTURES_SCHEDULE}` routing fix (not a data restamp) — see
+      `/plans/active/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`. This P0
+      restamp is still the right long-term fix (retires the need for the alias set entirely); the routing patch is a
+      stopgap that works correctly either way.

@@ -31,7 +31,10 @@ referenced_by:
     /codex/05-infrastructure/gcs-object-operations.md,
     /codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,
-    plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
+    plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
+    plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
+    plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md,
     plans/epics/mtds_mdps_master.md,
   ]
 owner:

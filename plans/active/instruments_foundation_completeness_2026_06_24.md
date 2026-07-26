@@ -45,7 +45,7 @@ related:
     instruments_tradfi_g1_g5_gate_execution_2026_07_24,
     plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md,
     plans/active/sports_fixture_completeness_oracle_2026_06_24.md,
-    plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
+    plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
   ]
 created: 2026-06-24

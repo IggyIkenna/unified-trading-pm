@@ -193,6 +193,8 @@ wrote the flat shape; the hive copy simply stopped advancing when the v9 migrati
 `market_tick_data_service/instrument_availability_paths.py::match_instruments_blob` (hive-wins is very likely wrong
 given hive is stale-and-frozen while flat is live — strong evidence now, still an explicit operator call per this doc's
 existing NO-GO/operator-decision stance, not unilaterally changed here), and (b) either finishing the v9 migration's
-real cutover for this specific tree under `instruments_mtds_subset_consistency_remediation_2026_06_17.md`, or
+real cutover for this specific tree under `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (the
+inherited CF single-walk lineage child of `instruments_mtds_subset_consistency_remediation_2026_06_17.md`, which was
+trimmed to a pure entry-point index + archived 2026-07-26 — this is now where that C0 single-walk scope lives), or
 abandoning/deleting the stale hive snapshot once (a) is resolved and flat is confirmed the sole reader target. No new
-plan needed for this — it folds into the already-active v9-remediation plan once the operator decision lands.
+plan needed for this — it folds into the already-active v9-remediation child plan once the operator decision lands.
