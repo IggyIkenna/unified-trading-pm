@@ -89,8 +89,34 @@ paths, since "exit code 0 but OOM-killed" is exactly the kind of ambiguous signa
 Operator/engineer judgment call on the fix direction (memory bump vs. per-asset-group split vs. leak fix) — flagging
 rather than resolving unilaterally, per this being a genuine design decision, not a scoped todo.
 
+## Resolution update (2026-07-26, interactive session)
+
+Root-caused (not just flagged) and fixed. `check_upstream_manifest_has_live_gap()` in
+`market_data_processing_service/app/core/dependency_checker.py` read the upstream `availability_index.parquet` with
+`columns=` pruning but **no date filter**. Confirmed via `RESOURCE_SAMPLE` log timing correlation (both RSS spikes —
+15947MiB and 18706MiB — land entirely inside this one call's window, both times, deterministically) and via a direct
+`pyarrow.parquet.ParquetFile` metadata check: the DEFI upstream index has grown to ~27.4M rows (~1.0GB compressed) vs
+CEFI's 8.7M rows (~152MB) — an unfiltered decode of even a handful of pruned columns across every row still materializes
+12-18GB of pandas/polars overhead. The sibling call `check_shard_freshness` (same function, called just before this one)
+already applies `filters=[("date", "==", date)]` via UTL's row-group pushdown — this call site was simply the one left
+unfiltered. Not a regression of the archived `mdps_filter_pushdown_memory_audit_and_fix_2026_05_28` plan's fix (that
+covered scanner file-listing + per-day `gc.collect()`; this is a different, previously-uncovered call site).
+
+**Fix shipped**: added `filters=[("date", "==", date)]` to match the established pushdown pattern, plus a regression
+test asserting the kwarg is passed. QG green. `market-data-processing-service@6b44226` (landed on `live-defi-rollout`).
+
+**Not yet verified against a real production run** — the fix needs to reach `main` (GCP Cloud Build only triggers on
+push:main; it's currently only on `live-defi-rollout`, pending the normal ~15-60min auto-promotion) and a fresh image
+built before `uts-prod-market-data-processing-service-t1-recon` can be re-triggered to prove the OOM is actually gone,
+not just theoretically fixed. That's the one remaining step — see Todos.
+
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide the fix direction for the `t1-recon` OOM (raise the 32Gi limit further / split the job
-      per-asset-group / profile for a memory leak in candle derivation) and re-dispatch as a properly scoped todo once
-      decided. (repo: market-data-processing-service)
+- [ ] [SCRIPT] P1. Once `market-data-processing-service@6b44226` has promoted to `main` and a fresh Cloud Build image
+      exists (`gcloud builds list --project=central-element-323112` filtered to `market-data-processing-service`, or
+      trigger manually), re-run
+      `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon     --project=central-element-323112 --region=asia-northeast1`
+      and confirm it completes successfully ( `status.conditions[type=Completed].status = True`) — a fresh
+      `RESOURCE_SAMPLE` trend showing DEFI's memory no longer spiking past a few GB would confirm the fix, not just the
+      absence of a crash. Flip this todo with the execution name + final status as evidence. (repo:
+      market-data-processing-service)
