@@ -71,19 +71,20 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P1. **PARTIAL 2026-07-26 (slot-7, `data_engineering`) — schema-drift half DONE, paper-order-flow half
-      BLOCKED-OPERATOR (BLK-c2d1fff9).** **Schema-drift chain (DONE)**: the "23 endpoints" turned out to be ONE weekly
-      auto-filed snapshot issue listing all currently-failing endpoints (only 2 of 23 are Kalshi), not 23 separate
-      per-endpoint issues — root-caused: NOT a live regression, `KalshiMarket` (schemas.py) + the endpoint registry
-      already correctly document the March-2026 dollar-field migration; only the 2 VCR cassette fixtures
-      (`markets.yaml`, `market_lookup.yaml`) used as the drift-diff baseline were stale (pre-migration shape / an
-      expired test ticker). Re-recorded both against live data; `validate_schemas.py` + all 4
-      `tests/vcr/test_kalshi_vcr.py` tests green. Shipped `unified-api-contracts@c03161a1`. Closed the 10 superseded
-      weekly snapshots (#45,#46,#47,#60,#102,#319,#416,#541,#555,#590) as duplicates of #673; commented on #673 with the
-      fix (the other 21 unrelated endpoint failures in that snapshot are untouched, out of scope). **Paper-order flow
-      (BLOCKED)**: found the REAL reason it "was never verified" — `execution_service/adapters/sports_factory.py` wires
-      the Kalshi adapter to secrets `kalshi-api-key-id`/`kalshi-private-key-pem`, NEITHER of which exists in Secret
-      Manager (confirmed `NOT_FOUND`); the actual credential lives under a differently-shaped bundled secret
+- [ ] [DATA] P1. BLOCKED-OPERATOR (BLK-c2d1fff9) — **PARTIAL 2026-07-26 (slot-7, `data_engineering`): schema-drift half
+      DONE, paper-order-flow half blocked on a human-only credential-wiring decision (see below).** **Schema-drift chain
+      (DONE)**: the "23 endpoints" turned out to be ONE weekly auto-filed snapshot issue listing all currently-failing
+      endpoints (only 2 of 23 are Kalshi), not 23 separate per-endpoint issues — root-caused: NOT a live regression,
+      `KalshiMarket` (schemas.py) + the endpoint registry already correctly document the March-2026 dollar-field
+      migration; only the 2 VCR cassette fixtures (`markets.yaml`, `market_lookup.yaml`) used as the drift-diff baseline
+      were stale (pre-migration shape / an expired test ticker). Re-recorded both against live data;
+      `validate_schemas.py` + all 4 `tests/vcr/test_kalshi_vcr.py` tests green. Shipped
+      `unified-api-contracts@c03161a1`. Closed the 10 superseded weekly snapshots
+      (#45,#46,#47,#60,#102,#319,#416,#541,#555,#590) as duplicates of #673; commented on #673 with the fix (the other
+      21 unrelated endpoint failures in that snapshot are untouched, out of scope). **Paper-order flow (BLOCKED)**:
+      found the REAL reason it "was never verified" — `execution_service/adapters/sports_factory.py` wires the Kalshi
+      adapter to secrets `kalshi-api-key-id`/`kalshi-private-key-pem`, NEITHER of which exists in Secret Manager
+      (confirmed `NOT_FOUND`); the actual credential lives under a differently-shaped bundled secret
       (`kalshi-api-credentials`). Any real order attempt fails immediately at secret-load time. This is a genuine
       architecture/ops call (re-provision vs. adapt the code) touching live trading-exchange credentials
       (wallet-key-adjacent, human-only per CLAUDE.md) — filed
@@ -181,3 +182,15 @@ drift_direction: advance-code
   was already exhaustively re-triaged twice by the most recent prior batches
   (prediction_satellite_ao_dispatch_batch1_2026_07_25.md and batch2_2026_07_25.md, both dated 2026-07-25), each
   independently concluding "0 AO-eligible (21 human-only items unchanged), 3 conflicts logged against the doc...
+
+## Progress Log
+
+- 2026-07-26 (slot 2): Re-dispatched `prediction_satellite_ao_dispatch_batch3-003` (the Kalshi schema-drift +
+  paper-order-flow todo) — found no new work to do; `BLK-c2d1fff9` (the paper-order-flow half's human-only
+  credential-wiring decision, per `issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`) is still
+  unanswered. Root-caused WHY it got redispatched despite slot-7's `BLOCKED-OPERATOR` annotation: the token was on the
+  todo's SECOND physical line, invisible to `regen_backlog_from_plan.py`'s `_parse_open_todos` (which only scans line 1
+  — the exact word-wrap gotcha `task_template.md` warns about). Moved `BLOCKED-OPERATOR (BLK-c2d1fff9)` onto the todo's
+  first physical line so this stops re-dispatching while the credential decision is still open. No attempt made to rule
+  on the credential decision itself — it is wallet-key-adjacent (live trading-exchange credentials), a CLAUDE.md
+  human-only hard-stop, not something for a worker or `main` to resolve.
