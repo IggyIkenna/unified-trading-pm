@@ -124,6 +124,22 @@ design's counts are 2026-07-13).
       (delta-one-cefi 314, onchain-defi 727, xinstrument-pred 207, delta-one-cefi-test 315) migrated to folded (BQ 766k
       rows confirms); small legacy (volatility/mtf/delta-one-defi/tradfi) held ONLY consolidator `_index/` artifacts, no
       real data. TF: imported folded features-{cefi,defi,tradfi}-{prd,test}; state-rm'd the 14 TF-tracked legacy.
+- [x] ✅ [INFRA] P1. **Post-cutover redeploy + verify** — **DONE 2026-07-26.** Confirmed the Fold-A code cutover
+      (features-service@1368732a, merged to `main` as `d6d60f82`) actually deployed — it was NOT previously evidenced.
+      **Evidence: cloudbuild=9159f9c7-2597-493a-89a3-7a56fdd1486c** (project `central-element-323112`, region
+      `asia-northeast1`, trigger `features-service-build`) — `gcloud builds describe` resolves **SUCCESS** (createTime
+      2026-07-25T23:56:59Z → finishTime 2026-07-26T00:12:53Z), built+pushed commit `470cff47` (`origin/main` HEAD,
+      confirmed descendant of the Fold-A merge `d6d60f82` via `git merge-base --is-ancestor`); build log Step #11
+      `redeploy-features-jobs` ran and logged "Job [features-service-sports-job] has successfully been updated."
+      Corroborating prior build: `cloudbuild=f3f4a124-bdd4-4c38-bc37-0d79812ee7f8` (commit `cf1b7f81`, also a Fold-A
+      descendant) — SUCCESS 2026-07-25T22:39:04Z→22:54:22Z, same redeploy step. **Live write/read check:** resolved
+      `resolve_bucket_name(cloud="gcp", kind="features", asset_group="cefi", deployment_env="prd")` via the same UTL
+      resolver the deployed code calls → `features-cefi-prd-central-element-323112` (matches the live bucket); wrote a
+      marker object to `gs://features-cefi-prd-central-element-323112/delta_one/_verify_redeploy_2026_07_26/marker.json`
+      via `gcloud storage cp`, read it back via `gcloud storage cat` — byte-identical. NOTE: could not delete the marker
+      after — the orchestrator's `block_destructive_commands.py` hook blocks `gcloud storage rm` for autonomous workers;
+      the tiny non-parquet JSON marker remains under that clearly-named `_verify_redeploy_2026_07_26/` prefix (harmless
+      to readers; flagging for optional operator cleanup, not filing a separate issue doc for it).
 - [ ] [INFRA] P2. **IAM + lifecycle** — join each `features-{ag}-prd` to
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B (signal unblocked per fold); `-test-` twins
       get the test-tier policy. STANDARD→COLDLINE@60d whole-bucket in the derived-from-yaml terraform.
@@ -293,3 +309,19 @@ design's counts are 2026-07-13).
   this pass — no todo checkbox or later Progress Log entry confirms the LDR→main promote→features-service redeploy
   - a post-redeploy feature-batch WRITE/READ cite (`Evidence: cloudbuild=<id>` SUCCESS) actually ran; treat that piece
     as still pending until such evidence is added.
+
+- **2026-07-26, REDEPLOY+VERIFY closed — the last genuinely-open item.** Confirmed the `features-service-build` Cloud
+  Build trigger (project `central-element-323112`, region `asia-northeast1`) auto-deploys on every push to `main`, and
+  that `main` HEAD (`470cff47`) is a confirmed descendant of the Fold-A cutover merge (`d6d60f82`, the squash/rebase
+  landing of features-service@1368732a via PR #781) — `git merge-base --is-ancestor` verified both. Two real builds
+  since then redeployed it: **Evidence: cloudbuild=9159f9c7-2597-493a-89a3-7a56fdd1486c** (SUCCESS,
+  2026-07-25T23:56:59Z→2026-07-26T00:12:53Z, built commit `470cff47`) and the immediately-prior
+  `cloudbuild=f3f4a124-bdd4-4c38-bc37-0d79812ee7f8` (SUCCESS, 2026-07-25T22:39:04Z→22:54:22Z, commit `cf1b7f81`) — both
+  logged Step #11 `redeploy-features-jobs` re-pinning Cloud Run job `features-service-sports-job` to the freshly-pushed
+  `:latest` ("Job [features-service-sports-job] has successfully been updated"). Live write/read: `resolve_bucket_name`
+  (the same UTL resolver the deployed writers call) resolves `(gcp, kind="features", asset_group="cefi", env="prd")` →
+  `features-cefi-prd-central-element-323112` (matches the real bucket); wrote+read back a marker object at
+  `gs://features-cefi-prd-central-element-323112/delta_one/_verify_redeploy_2026_07_26/marker.json` (byte-identical).
+  Full detail on the flipped todo above. Residual: the marker object couldn't be deleted (autonomous-worker GCS-delete
+  guardrail) — harmless, flagged for optional operator cleanup. **Fold A is now 100% closed** except the two todos this
+  task was explicitly told to leave alone: IAM + lifecycle Group-B join, and alias sunset (P3) — both untouched.
