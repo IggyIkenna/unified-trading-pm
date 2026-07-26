@@ -208,3 +208,43 @@ not lost; it is simply not discoverable through the manifest's own key.
 ## Full report this issue was extracted from
 
 `plans/audit/results/data_pipeline_reconciliation_tradfi_2026_07_24.md` §3d, §3e, §7.
+
+## Progress Log
+
+- **2026-07-26 (slot-3) — Finding 1 ROOT-CAUSED + FIXED at the code level; historical re-stamp + Finding 2 still open.**
+  Traced the write path: `market-tick-data-service`'s manifest-finalize call (`_write_shard_counts_to_manifest` →
+  `_resolve_pipeline_mode_for_sentinel(..., source=state.source)`) reaches
+  `unified_trading_library.pipeline_mode_resolver.derive_pipeline_mode_for_row`'s EXPLICIT-source branch, which trusted
+  a caller-supplied `--source` unconditionally on the documented assumption that `assert_source_capable_for_venue` had
+  already fail-closed-validated it at fetch time. That assumption only holds for the `venue_data_types` actually
+  validated in ONE `venue_fetch.py` call — a shared run-level `--source databento` (legitimate for CME/CBOE
+  `ohlcv_1m`/`ohlcv_1s` in the same VM run, confirmed against
+  `deployment-service/scripts/vm/launch-tradfi-forward-poll.sh:132` `VM_SOURCE=databento`) reaching a manifest-finalize
+  call for a DIFFERENT (venue, data_type) pair — ICE/KRX/FX `ohlcv_24h`, which is Yahoo-only
+  (`SOURCE_PRIORITY[("tradfi","ohlcv_24h")] = ["yahoo"]`, databento not even a registered member) — fabricated a
+  `batch_databento` stamp for what was structurally-verified-plausible Yahoo-sourced data. This does NOT indicate an
+  actual off-allowlist Databento API call (no evidence of that either way; the manifest stamp itself was simply wrong) —
+  the "billing-guard gap" question in Finding 1's suggested next-steps stays genuinely unconfirmed. **Fix**:
+  `unified-trading-library@f237b75a` — `derive_pipeline_mode_for_row`'s explicit-source branch now re-validates via
+  `is_source_capable_for_venue(asset_group, data_type, venue, source)` before trusting the explicit source; an incapable
+  combination falls through to the venue-aware/SOURCE_PRIORITY resolution (Yahoo) instead of stamping a provenance lie.
+  Regression tests added (`test_explicit_source_incapable_for_venue_falls_ through_not_fabricated`,
+  `test_explicit_source_capable_for_venue_still_honored`); `quality-gates.sh` green. This closes the write path for ALL
+  current + future callers, not just this one occurrence — broader and safer than the originally-suggested narrow
+  `_VENUE_SOURCE_EXCLUSIONS` entries (which would have been redundant here since `databento` isn't registered for
+  `ohlcv_24h` at all; the actual gap was the explicit-source branch bypassing the capability check entirely). **NOT done
+  this pass** (genuinely remaining, tracked as fresh todos below): (a) re-stamp the confirmed-affected historical rows
+  (4 ICE + 12 KRX + 802 FX, likely more on a full walk) now that new captures write correctly; (b) Finding 2 (FX
+  `SPOT_PAIR` manifest `instrument_id` 0%-canonical) — a fully separate defect in a different write path, not
+  investigated this pass.
+
+### Deferred work after 2026-07-26 (slot-3)
+
+| Item                                                                                    | State                                                                | Blocked on                                                                                                                          |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Re-stamp historical ICE/KRX/FX `ohlcv_24h` rows (4+12+802, snapshot-first)              | Not done — real work, ready to pick up now the writer is fixed       | nobody; needs a fresh full-history census first (the 4/12/802 counts are from the 2026-07-24 sample window, not a corpus-wide walk) |
+| Finding 2 — FX `SPOT_PAIR` manifest `instrument_id` write-path fix + 4,310-row backfill | Not done — untouched this pass, separate write path                  | nobody; next slot should start with `market_tick_data_service/adapters/_umi_yahoo.py` per the sourcing SSOT's routing comments      |
+| Confirm/rule out an actual Databento billing-guard gap for the pre-fix window           | Not done — needs Databento request-log access, not just code reading | possibly operator (Databento account access)                                                                                        |
+
+Recommended next: the historical re-stamp (bounded, mechanical, unblocks nothing else) before Finding 2 (a fresh
+investigation of similar depth to Finding 1's).
