@@ -20,6 +20,12 @@ on:
         description: "Dispatch to ALL repos even if digest is already current"
         required: false
         default: "false"
+      max_dispatches:
+        description:
+          "Cap on repos dispatched in a single run (bounds blast radius per tick — see
+          issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md)"
+        required: false
+        default: "5"
 
 jobs:
   sweep:
@@ -82,6 +88,7 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
           CURRENT_DIGEST: ${{ steps.current-digest.outputs.digest }}
           FORCE_ALL: ${{ inputs.force_all || 'false' }}
+          MAX_DISPATCHES: ${{ inputs.max_dispatches || '5' }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
@@ -118,31 +125,61 @@ jobs:
           " 2>/dev/null || echo "0.1.0")
           echo "UTL version for dispatch payload: $UTL_VERSION"
           echo "Current digest: $CURRENT_DIGEST"
+          echo "Dispatch cap for this tick: $MAX_DISPATCHES"
 
           TOKEN="${GH_PAT}"
           DISPATCHED=0
           ALREADY_FRESH=0
           SKIPPED_NO_ARG=0
           ERRORS=0
+          DEFERRED_CAP=0
+
+          RESP_BODY="$(mktemp)"
+          trap 'rm -f "$RESP_BODY"' EXIT
 
           for REPO in "${IMAGE_REPOS[@]}"; do
             # Fetch Dockerfile content from default branch (live-defi-rollout or main).
-            # Try LDR first (it's the live tip), fall back to main.
+            # Try LDR first (it's the live tip), fall back to main. Capture the HTTP status on
+            # every attempt (never `curl -sf ... || echo ""`, which swallows the status and turns
+            # a 404 and a 401/403 into the same empty string) so a permission failure can never be
+            # misread as the benign "Dockerfile not found" case: 404 = genuinely absent (benign
+            # skip), 401/403 = GH_PAT lost cross-repo scope — fail the step loudly, 200 = parse.
+            # See issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md
+            # § "Also fix the silent-failure class" (this is the exact bug that ran green for 27
+            # days: a 404 silently read as "repo may not be image-building").
             DOCKERFILE_CONTENT=""
+            FETCH_ERROR=0
             for BRANCH in "live-defi-rollout" "main"; do
-              CONTENT=$(curl -sf \
+              HTTP_STATUS=$(curl -s -o "$RESP_BODY" -w '%{http_code}' \
                 -H "Authorization: Bearer $TOKEN" \
                 -H "Accept: application/vnd.github.raw+json" \
-                "https://api.github.com/repos/$OWNER/$REPO/contents/Dockerfile?ref=$BRANCH" 2>/dev/null || echo "")
-              if [ -n "$CONTENT" ]; then
-                DOCKERFILE_CONTENT="$CONTENT"
-                break
-              fi
+                "https://api.github.com/repos/$OWNER/$REPO/contents/Dockerfile?ref=$BRANCH" || echo "000")
+              case "$HTTP_STATUS" in
+                200)
+                  DOCKERFILE_CONTENT="$(cat "$RESP_BODY")"
+                  break
+                  ;;
+                404)
+                  continue
+                  ;;
+                401 | 403)
+                  echo "::error::$REPO ($BRANCH): HTTP $HTTP_STATUS fetching Dockerfile — GH_PAT lacks (or lost) cross-repo contents scope. This is the exact silent-no-op class the token fix closed once already; failing the step instead of misreporting it as a benign 'Dockerfile not found'. See issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md" >&2
+                  exit 1
+                  ;;
+                *)
+                  echo "  $REPO ($BRANCH): unexpected HTTP $HTTP_STATUS fetching Dockerfile — counting as an error, not a benign skip" >&2
+                  FETCH_ERROR=1
+                  ;;
+              esac
             done
 
             if [ -z "$DOCKERFILE_CONTENT" ]; then
-              echo "  $REPO: Dockerfile not found — skipping (repo may not be image-building)"
-              SKIPPED_NO_ARG=$((SKIPPED_NO_ARG + 1))
+              if [ "$FETCH_ERROR" -eq 1 ]; then
+                ERRORS=$((ERRORS + 1))
+              else
+                echo "  $REPO: Dockerfile not found — skipping (repo may not be image-building)"
+                SKIPPED_NO_ARG=$((SKIPPED_NO_ARG + 1))
+              fi
               continue
             fi
 
@@ -158,6 +195,12 @@ jobs:
             if [ "$PINNED_DIGEST" = "$CURRENT_DIGEST" ] && [ "$FORCE_ALL" != "true" ]; then
               echo "  $REPO: digest current ($PINNED_DIGEST) — no dispatch needed"
               ALREADY_FRESH=$((ALREADY_FRESH + 1))
+              continue
+            fi
+
+            if [ "$DISPATCHED" -ge "$MAX_DISPATCHES" ]; then
+              echo "  $REPO: STALE ($PINNED_DIGEST → $CURRENT_DIGEST) but dispatch cap ($MAX_DISPATCHES) already reached this tick — deferring to next run"
+              DEFERRED_CAP=$((DEFERRED_CAP + 1))
               continue
             fi
 
@@ -190,10 +233,23 @@ jobs:
 
           echo ""
           echo "=== Digest drift sweep complete ==="
-          echo "  Dispatched:    $DISPATCHED"
-          echo "  Already fresh: $ALREADY_FRESH"
-          echo "  No ARG found:  $SKIPPED_NO_ARG"
-          echo "  Errors:        $ERRORS"
+          echo "  Dispatched:     $DISPATCHED"
+          echo "  Already fresh:  $ALREADY_FRESH"
+          echo "  No ARG found:   $SKIPPED_NO_ARG"
+          echo "  Deferred (cap): $DEFERRED_CAP"
+          echo "  Errors:         $ERRORS"
           if [ "$ERRORS" -gt 0 ]; then
             echo "WARNING: $ERRORS dispatch(es) failed — check that repos have update-dependency-version.yml workflow" >&2
+          fi
+
+          # Self-auditing assertion. This is the fix for the actual bug: the sweep ran GREEN for
+          # ~110 runs / 27 days while never once reaching a real Dockerfile, because
+          # Dispatched:0/Already fresh:0 was worded as a benign outcome instead of asserted against.
+          # A sweep that saw nothing dispatched, nothing already-fresh, and nothing deferred to the
+          # cap — across a non-empty repo list — did not do its job. Fail loudly instead of
+          # reporting green. See issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md
+          # § "Also fix the silent-failure class".
+          if [ "$((DISPATCHED + ALREADY_FRESH + DEFERRED_CAP))" -eq 0 ] && [ "${#IMAGE_REPOS[@]}" -gt 0 ]; then
+            echo "::error::Sweep saw ZERO repos as dispatched, already-fresh, or cap-deferred across ${#IMAGE_REPOS[@]} image repos — this is the silent-no-op class this workflow exists to catch. Failing loudly instead of reporting green." >&2
+            exit 1
           fi
