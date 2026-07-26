@@ -36,6 +36,7 @@ related:
     /plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
     /plans/active/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md,
     /plans/active/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
+    /plans/active/issues/ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-26
@@ -122,13 +123,56 @@ tag-ancestry gap. This currently blocks:
 - Potentially any OTHER cross-repo consumer that checks out UAC's `main` fresh and pip-installs it editable alongside a
   version-floor-pinned sibling.
 
+## Root cause diagnosed (2026-07-26, slot 6)
+
+**`v0.72.0` was a manual one-off "baseline" tag, and it was placed on the wrong side of the LDR↔main promotion
+boundary.** Full evidence chain (all read-only: `git cat-file`, `git log`, `git merge-base --is-ancestor`,
+`git branch --contains`, `git rev-parse ^{tree}`, `gh run list/view`):
+
+1. `v0.72.0` is an **annotated** tag:
+   `tagger ikennaigboaka [slot-3·laptop] … baseline release tag for git-tag migration (pyproject 0.72.0)`, created
+   2026-06-27T14:40:55+0100 — the same day as the D13 `version_source=git-tag` rollout
+   (`reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md` dates D13 to `execution-service@f4a3865e`,
+   2026-06-27). The message and human-operator tagger identity (the exact `[slot-N·host]` convention CLAUDE.md defines
+   for agent/operator commits, not a bot) confirm this was a manual bootstrap tag, not an automated mint.
+2. The tagged commit is `4ac8be3f` — **`Merge remote-tracking branch 'origin/staging' into _backmerge`** — one leg of
+   the `main-backmerge-to-ldr` flow that folds `main`'s content back into `live-defi-rollout`.
+   `git branch -a --contains 4ac8be3f` lists only `live-defi-rollout` (+ its derived `promote/*` and `wip-preserve/*`
+   refs) — **`main` is never in that list.** This commit structurally lives on the LDR/backmerge side of the graph,
+   never on `main`'s own.
+3. `main` only ever advances via single-parent squash commits titled `chore(promote): LDR → main (Option-B direct)` —
+   confirmed the pattern holds fleet-wide (every commit in `main`'s recent log matches) and confirmed by parent-count
+   (e.g. `acbd08825` has exactly ONE parent). Each squash's parent is the PREVIOUS squash commit on `main`, never any
+   LDR-side commit. So **no LDR/backmerge commit can ever become an ancestor of `main`, structurally, no matter how much
+   time passes or how many further promotions land** — this isn't a lag that will resolve itself.
+4. The content tagged `v0.72.0` DID land on `main` — **2 hours later**, as squash commit
+   `b52aea5d237153ba74568b5cb195934cd255b361` (`chore(promote): LDR → main (Option-B direct)`,
+   2026-06-27T16:37:46+0100), whose tree (`9c2d88022f10f9a8d4929bbfdfb5bdc593391763`) is **byte-identical** to the
+   tagged commit's tree. `b52aea5d` is the one and only `main`-side commit that could have correctly carried this tag.
+5. **Control case — `v0.71.0` (the tag hatch-vcs currently falls back to) was tagged directly on `acbd08825`, itself a
+   `chore(promote): LDR → main` squash commit** — i.e. genuinely on `main`'s own graph, which is exactly why
+   `git merge-base --is-ancestor v0.71.0 origin/main` succeeds. One tag was placed on the right side of the promotion
+   boundary, the other wasn't; that is the entire delta between "works" and "doesn't".
+6. Ruling out the automated minter as the actual cause: at tag-time (2026-06-27) `semver-agent.yml` triggered on
+   `push:[staging]` (rolled out 2026-06-15) — a `_backmerge` merge commit was never something that trigger fires on
+   regardless. And per the CURRENT `semver-agent.yml`'s own changelog comment, that `push:[staging]` path went fully
+   dead the very next day: "the staging drain was stopped 2026-06-28 … staging never advanced → semver went dead
+   fleet-wide → zero tags minted". So this was unambiguously a manual, one-time tag — not a minter bug.
+
+**Adjacent finding for whoever executes todo 2 below** (not itself in scope here): `semver-agent.yml` was retargeted to
+`push:[main]` on 2026-07-25 and IS firing SUCCESS on every subsequent `main` squash-promote
+(`gh run list --workflow=semver-agent.yml --branch main`, 8/8 recent runs green) — any tag it mints there WOULD land
+correctly on `main`'s own graph and self-heal this class going forward. However the most recent run (30197445904,
+2026-07-26T09:59:29Z) shows its **bump-rate circuit breaker (≥3 pending bumps on main) TRIPPED**, refusing to dispatch a
+new version bump — so no new tag has actually been minted since the retarget, and "wait for the next automated tag" is
+not currently a live self-heal path until that breaker clears.
+
 ## Recommended decision
 
-- [ ] [DEVOPS] P2. Diagnose exactly how/when `v0.72.0` was tagged and why it isn't an ancestor of `main`'s current
-      squash-commit chain (repo: unified-api-contracts). Likely candidates: tag minted on an LDR commit directly
-      (bypassing the squash boundary), or minted on an earlier `main` commit that a LATER squash-merge's parent chain
-      doesn't include. Check `semver-agent.yml`'s tag-minting step (`push:[main]`) against the actual squash-commit
-      timeline around when `v0.72.0` was created.
+- [x] ✅ [DEVOPS] P2. Diagnose exactly how/when `v0.72.0` was tagged and why it isn't an ancestor of `main`'s current
+      squash-commit chain (repo: unified-api-contracts) — unified-trading-pm@\<SHA\>. See "Root cause diagnosed" section
+      above: manual D13-bootstrap tag placed on an LDR-side `_backmerge` commit instead of the corresponding `main`-side
+      squash commit (`b52aea5d`, same tree, ~2h later); not a `semver-agent` bug.
 - [ ] [DEVOPS] P2. Once root-caused, decide the fix direction: (a) always tag on `main`'s own HEAD right after each
       squash-promote lands (never on an LDR-only commit), or (b) reconcile the existing gap by re-tagging `v0.72.0` (or
       a corrected release tag) onto current `main` HEAD if the tag is meant to represent "what's actually released on

@@ -22,7 +22,11 @@ repos: [unified-trading-system-ui, unified-api-contracts, unified-trading-librar
 scope: [engineer]
 tags: [ci, registry-drift, hatch-vcs, dynamic-versioning, pip, cross-repo]
 related:
-  [/plans/active/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md, /codex/08-workflows/ci-cd-flow.md]
+  [
+    /plans/active/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
+    /plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-07-26
 parent_epic: infrastructure_master
 priority: P2
@@ -95,12 +99,16 @@ proven correct via local reproduction — see that issue doc — but never succe
 - [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot 2), `unified-trading-system-ui@8c2f3590`.** Shipped the fetch-depth:0 fix
       (layer 1) — it's a genuine, real, independently valuable fix regardless of layer 2's resolution (correct version
       strings resolve now instead of a nonsense placeholder), full `quality-gates.sh` green.
-- [ ] [CICD] P2. Investigate why `v0.72.0` isn't an ancestor of `unified-api-contracts`'s current `main` HEAD (a
-      release-tagging/branch-topology question — check whether the semver-agent retarget-off-`staging` (2026-07-25, per
-      workspace CLAUDE.md) left a topology gap, or whether `main` is simply lagging an LDR→main promotion that hasn't
-      landed for this repo). Once understood, either (a) the natural next `main` promotion + a fresh tag resolves it on
-      its own, or (b) it needs an explicit fix. Repo: unified-api-contracts (investigation may also touch
-      unified-trading-pm's semver-agent config).
+- [x] ✅ [CICD] P2. **DONE 2026-07-26 (slot 6)** — root-caused in the sibling doc
+      `/plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` § "Root cause
+      diagnosed": `v0.72.0` was a MANUAL one-off D13-migration baseline tag placed on an LDR-side `_backmerge` merge
+      commit (`4ac8be3f`), never on `main`'s own graph — not a semver-agent bug, not a stalled promotion (content was
+      byte-identical on `main`'s own squash commit `b52aea5d`, ~2h later, which is what should have been tagged). `main`
+      only advances via single-parent squash commits, so an LDR-side tag can never become a `main` ancestor no matter
+      how many further promotions land — this will NOT resolve on its own via (a). Adjacent finding also logged there:
+      `semver-agent` is correctly retargeted to `push:[main]` since 2026-07-25 and would self-heal this class going
+      forward, but its bump-rate circuit breaker is currently tripped, so no new tag has actually landed yet. Fix
+      direction (re-tag vs. wait-for-breaker-clear) is the sibling doc's still-open todo 2 — not duplicated here.
 - [ ] [SCRIPT] P3. Once the above is resolved, re-verify `registry-drift` goes green on `main` for 3 consecutive pushes
       (not just once — confirm it's not still flaky), THEN pick up the already-designed
       capability-manifest.json/capability-verdict-matrix.json CI-check extension from
