@@ -138,11 +138,18 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       nothing. Repos: instruments-service, market-tick-data-service, e2e-testing. Source:
       `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`.
 
-- [ ] [INFRA] P1. **Fix the `scripts/setup.sh` bootstrap-uv fallback in the PM template + roll it out fleet-wide
-      (combined: the source doc lists this twice — once under "Durable fix" and once as "couples to the fleet rollout" —
-      they are ONE unit, not two racing todos).** Replace the pip fallback in `unified-trading-pm/scripts/setup.sh` with
-      the astral standalone installer so a drifted box self-realigns pip-free (the exact replacement block is quoted
-      verbatim in the source doc's "Durable fix" section —
+- [x] [INFRA] P1. **Fix the `scripts/setup.sh` bootstrap-uv fallback in the PM template + roll it out fleet-wide — DONE
+      (slot-7, 2026-07-26): 25/25 repos now carry the astral-installer fallback, all committed+pushed. 24 were already
+      shipped by prior slots (verified via `git log -1 -- scripts/setup.sh` per repo — real commits, listed in the
+      "Re-check 2026-07-26" note below). The 25th, `agent-orchestrator`, never had a `scripts/setup.sh` at all
+      (confirmed in scope via `workspace-manifest.json`); copied PM's canonical file in, `bash scripts/setup.sh` +
+      `bash scripts/quality-gates.sh` both green (1763 passed, 1 skipped), shipped `agent-orchestrator@89ca717`. Hit +
+      worked through a host disk-full emergency mid-task (see `issues/shared_host_home_filesystem_full_2026_07_26.md`,
+      `BLK-8afbcd6b`) — stashed WIP safely rather than force a red-QG ship, waited for the operator's fix, resumed once
+      disk had headroom. (combined: the source doc lists this twice — once under "Durable fix" and once as "couples to
+      the fleet rollout" — they are ONE unit, not two racing todos).** Replace the pip fallback in
+      `unified-trading-pm/scripts/setup.sh` with the astral standalone installer so a drifted box self-realigns pip-free
+      (the exact replacement block is quoted verbatim in the source doc's "Durable fix" section —
       `curl -LsSf https://astral.sh/uv/0.10.8/install.sh | env UV_UNMANAGED_INSTALL="$HOME/.local/bin" sh` + `hash -r`,
       with the pip path kept as the last resort). Today, when uv is present-but-wrong-version, the fallback shells out
       to a uv-managed CPython that has no pip → non-zero → `set -e` exits 1, which is why human-planning-vm's bootstrap
