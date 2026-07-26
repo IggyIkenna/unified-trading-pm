@@ -7,7 +7,7 @@ summary: >-
   doc's checkboxes independently once its batch-2 todo lands, then re-check the Deferred operator-gated/time-gated/
   human-only items for any that have since cleared), then archives batch2 via the standard 6-step ritual. Also carries
   the follow-up for batch2's 2 non-actioned findings (3 mistag retags + 1 archivable_now doc).
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]

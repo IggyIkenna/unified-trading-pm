@@ -13,7 +13,7 @@ summary: >-
   batch). Phase 3's conflict check cleared 17 of the 29 into fresh AO-dispatch todos (zero cross-todo file collisions,
   zero duplicate-ground conflicts found); left 10 operator-gated, 1 time-gated, and 1 human-only item in the Deferred
   sections below for the next iteration or an explicit operator ruling, per the skill's non-batchable taxonomy.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -64,10 +64,10 @@ drift_direction: advance-code
 
 # CeFi satellite AO batch 2 — fresh triage extraction
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
-> skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review. All 17 todos below are same-priority-independent and touch distinct files/docs (verified — zero
-> cross-todo file overlap found beyond the shared `quality-gates.sh` command, which is not a collision).
+> **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
+> ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
+> explicit operator review). All 17 todos below are same-priority-independent and touch distinct files/docs (verified —
+> zero cross-todo file overlap found beyond the shared `quality-gates.sh` command, which is not a collision).
 
 ## Todos
 
