@@ -300,27 +300,21 @@ drift_direction: advance-code
       the canonical objects; the per-VM manifest shard (`_index/per_vm/league-fold-fixtures-siblings-20260724.parquet`)
       carries exactly 21 rows, all `capture_status=captured`, keyed to the canonical `(date, data_type, league_id)`
       triples.
-- [ ] [DATA] P1. **Close out the freshness-preflight stale-scope-escape issue doc's two remaining todos (P0 code fix
-      already shipped @instruments-service 08387531).** (1) Monitor the already-running relaunch VM
-      `af-backfill-20260726-000946` (asia-northeast1-c, SPOT e2-standard-8, `--sports-entity FIXTURES` over
-      2020-06-06..2026-07-25, resumes via skip-if-fresh from ~2026-06-02) to a terminal state — confirm
-      `exit_code=0`/`DEPLOYMENT_COMPLETED` and the fix's zero-leak pattern
-      (`Entity-scoped mode: restricting to FIXTURES only` on every processed date, no unscoped enrichment fetch lines)
-      held for the entire run. If it instead dies again with `exit_code=137` at a similar point (~53 days in, near
-      2026-06-02), do NOT blind-retry a 3rd time on the same shape — relaunch via
-      `launch-api-football-backfill-vm.sh --entity FIXTURES 2020-06-06 2026-07-25` on a memory-tier bump (e2-highmem-8
-      instead of e2-standard-8); this relaunch is safe-idempotent (SPOT, skip-if-fresh backfill resume, no data-loss
-      risk on retry) so no `[OPERATOR]` gate is needed. (2) Separately, audit whether the earlier same-day 08:12Z
-      API-Football quota exhaustion, and any OTHER currently in-flight `--sports-entity`-scoped sports backfill VM, hit
-      the same stale-not-missing scope-escape pattern (grep each VM's run.log for out-of-scope enrichment fetch lines on
-      a scoped run); if any live VM is found still escaping scope, stop it
-      (`gcloud compute instances stop <vm> --zone=asia-northeast1-c` — a stop is reversible/autonomous, not a launch or
-      delete) per `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`. Source:
-      `sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`. Done when:
-      `af-backfill-20260726-000946` (or its e2-highmem-8 successor if 137 recurred) reaches a confirmed-clean terminal
-      state covering the full 2020-06-06..2026-07-25 range, AND the fleet-wide recurrence audit is recorded complete
-      (either "no other scope-escape found" or every escaping VM stopped) in the issue doc's Progress Log, then flip
-      both P1 and P2 checkboxes and set the doc's `status:` to resolved.
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-7, `data_engineering`) — this todo's own VM reference was STALE; the issue
+      doc had already moved past it.** `af-backfill-20260726-000946` (this todo's named VM) died `exit_code=137` hours
+      before I picked this up and was superseded TWICE in the issue doc's own Progress Log (→
+      `af-backfill-20260726-004904` e2-highmem-8 → root-caused a SECOND, deeper bug (OOM + a freshness-routing mismatch)
+      → `af-backfill-20260726-013313`, the fix-verified VM). The issue doc's own P1 checkbox was ALREADY `[x]` with a
+      "Re-scoped done-when": VM-to-full-terminal-completion is explicitly NOT this issue doc's done-when anymore —
+      that's `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s curated-universe-backfill todo (weeks-scale, already
+      tracking `-013313` as its own "step 2"). Live-verified anyway (`gcloud compute     instances list` + `run.log`
+      tail, 2026-07-26T01:23Z): `-013313` RUNNING, healthy, `last_completed_date=2020-07-06`,
+      `0 entities = 0 calls queued` (zero-leak, entity-scoped), no action needed here. **P2 audit done**: (a) the 08:12Z
+      quota exhaustion (`af-backfill-20260725-032253`) was a DIFFERENT, already-tracked bug (per-fixture
+      hard-failure-swallowed-as-`[]`), not this mechanism; (b) `-013313` is the ONLY currently-running sports backfill
+      VM and is confirmed fix-safe — no other in-flight VM to check/stop. Flipped both remaining todos +
+      `status: resolved` in the issue doc itself:
+      `sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`.
 - [ ] [DATA] P2. Backfill the 3 odds-api league gaps surfaced by the api_football wipe — `soccer_uefa_champs_league`,
       `soccer_china_superleague`, `soccer_russia_premier_league` (2025-H2 golden window + any in-scope gap-dates behind
       the former 112,653 api_football failures) — via odds-api (`batch_odds_api`, the canonical sports-odds source), not

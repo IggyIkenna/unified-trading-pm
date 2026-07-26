@@ -21,7 +21,7 @@ summary: >-
   bump is a candidate to re-trigger this, so it is NOT a one-off. Main (agt-52bb99) ruled option A on the live blocked
   question (BLK-aa5efbbb) and, after the owning worker did not execute the stop, stopped the VM itself as a protective
   billing-waste cap (now TERMINATED). Relaunch of the FIXTURES-only backfill is gated on the fix below.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -48,7 +48,7 @@ assigned_vm: NA
 execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
-resolved_by:
+resolved_by: "slot-7 (data_engineering), 2026-07-26 — both remaining todos closed, see Progress Log"
 locked_by:
 depends_on: []
 ---
@@ -159,10 +159,16 @@ depends_on: []
       scope-escape). **Re-scoped done-when**: this todo (re-relaunch the VM with the fix) is COMPLETE; full historical
       coverage is now correctly tracked under batch2's curated-universe-backfill todo (weeks-scale, per that plan's own
       estimate), not here.
-- [ ] [DATA] P2. Audit whether the earlier 08:12Z quota exhaustion and any other in-flight sports backfills hit the same
-      stale-scope-escape (grep run logs for enrichment fetches on `--sports-entity`-scoped runs); if any already-running
-      VM is escaping scope, stop it too. Cross-ref
-      `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`.
+- [x] ✅ [DATA] P2. **DONE 2026-07-26 (slot-7, `data_engineering`) — audited, no scope-escape found anywhere.** (1) The
+      08:12Z quota exhaustion was `af-backfill-20260725-032253` — a DIFFERENT, already-tracked bug (per-fixture adapters
+      swallowing hard failures as `[]`,
+      `issues/api_football_per_fixture_hard_failure_silently_recorded_empty_2026_07_25.md`), not this stale-scope-escape
+      mechanism; that VM is now TERMINATED. (2) `gcloud compute instances list     --project=central-element-323112`
+      (all zones): the ONLY currently-running sports-related VM is `af-backfill-20260726-013313` — the same VM this
+      doc's own P1 already confirmed runs the fixed code. Live-verified `run.log` tail (2026-07-26T01:23Z):
+      `Per-fixture enrichment: 71 fixtures x 0 entities = 0     calls queued`, entity-scoped/enrichment-only mode,
+      `last_completed_date=2020-07-06`, healthy and progressing — zero-leak pattern holding, nothing to stop. No other
+      in-flight sports backfill VM exists. **Both remaining todos closed** — flipping `status:` to resolved.
 
 ## Progress Log — autonomous monitoring (2026-07-26, operator away ~6h, `/autonomous` armed)
 
