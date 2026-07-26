@@ -118,19 +118,30 @@ dedup-on-write mechanism named anywhere in the investigation, and it will never 
       pattern) would be WRONG here — it would arbitrarily keep whichever spelling happens to sort/appear first, silently
       discarding rows under the OTHER (possibly-canonical) `instrument_id` without ever checking which spelling is
       actually correct. Re-scoped the fix todo below accordingly.
-- [ ] [DATA] P3. **Fix the team-name resolution split causing duplicate `instrument_id`s (repo:
-      market-tick-data-service)** — NOT a blind poll-key de-dup (see the finding above for why that would be wrong
-      here). Step (a): trace the exact home/away team-name→team_id resolution feeding `build_instrument_id`'s calls in
-      the odds-api sports write path and confirm why the SAME real team resolves to two different id fragments (e.g.
-      "SEONGNAM" vs "SEONGNAM_FC") on different polls — likely a missing/incomplete team-name alias table entry,
-      mirroring `unified_api_contracts/external/api_football/team_mappings.py`'s pattern but for whatever odds-api's own
-      team-name source is. Step (b): once the CURRENT canonical spelling is confirmed, re-run this doc's measurement
-      script (`measure_odds_api_poll_key_duplicates_2026_07_26.py`) against the FULL population (not a sample) to get
-      the exact affected-object count, then write a scoped rewrite that keeps the rows under the confirmed-canonical
-      `instrument_id` and drops the stale-spelling rows (not a bare `keep="first"`). **Done when**: the team-name
-      resolution root cause is confirmed with the exact code location, the full-population affected-object count is
-      measured, and a re-run over the affected population confirms 0 poll-key duplicates remain under the canonical
-      spelling.
+- [ ] [DATA] P3. **Step (a) DONE 2026-07-26 (slot-8) — exact mechanism found; Step (b) still open.** NOT a blind
+      poll-key de-dup (see the finding above for why that would be wrong here). **Step (a) result**:
+      `market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py`'s `_build_fixture_rows` (lines
+      717-730) resolves each poll's home/away team name via
+      `unified_api_contracts.external.api_football.team_mappings.validate_team_resolution(name, provider="odds_api")` —
+      Tier 1 exact match, Tier 2 accent/case/whitespace-normalized match against `_UNIVERSAL_REVERSE`. **On
+      `TeamResolutionError` (name matches neither tier), it falls back to `build_team_id(name)` — a raw slug of whatever
+      literal string the vendor sent THAT poll** — and this is what feeds `build_instrument_id`'s
+      `home_team_id`/`away_team_id`. Since `validate_team_resolution` is a pure dict lookup (deterministic for a given
+      input string), the SEONGNAM/SEONGNAM_FC split means the-odds-api.com sent two DIFFERENT literal team-name strings
+      for the same real team across different polls — one matched the alias table (resolved to canonical "SEONGNAM"),
+      the other didn't (fell to the raw-slug fallback "SEONGNAM_FC"). **This gives a decidable de-dup rule Step (b) can
+      use without needing the exact failing string**: within a duplicate-key group, the row whose `instrument_id` embeds
+      a team fragment that IS a registered canonical team_id (i.e. resolution succeeded) is always more trustworthy than
+      the row whose fragment is a raw fallback slug (resolution failed) — prefer the former, drop the latter. **NOT
+      traced this pass**: the exact vendor string that caused the specific `TeamResolutionError` (would need the raw
+      historical API response, not reconstructable from the written parquet alone) — flagging honestly rather than
+      guessing; not required to implement the decidable dedup rule above, only relevant if someone later wants to
+      proactively ADD the missing alias rather than just fixing already-written duplicates. **Step (b) (still open)**:
+      re-run `measure_odds_api_poll_key_duplicates_2026_07_26.py` against the FULL population (not a sample) to get the
+      exact affected-object count, then write a scoped rewrite using the decidable rule above (keep the
+      canonically-resolved row, drop the fallback-slug row within each duplicate group) — NOT a bare `keep="first"`.
+      **Done when**: the full-population affected-object count is measured, and a re-run over the affected population
+      confirms 0 poll-key duplicates remain under the canonical spelling.
 
 ## Progress Log
 
@@ -143,3 +154,12 @@ a team-name/`instrument_id` resolution split, not a writer-side retry. Re-scoped
 player_stats-style blind poll-key de-dup (which would have been actively wrong here — it would silently pick an
 arbitrary spelling rather than the canonical one). Did not attempt the team-name-resolution fix itself this pass (needs
 its own trace + a canonical-spelling decision).
+
+**2026-07-26 (slot-8, `data_engineering`), continued** — traced Step (a): found the exact fallback pattern in
+`odds_api_adapter.py::_build_fixture_rows` (`validate_team_resolution` → `build_team_id` raw-slug fallback on
+`TeamResolutionError`). This yields a decidable Step (b) de-dup rule (prefer the canonically-resolved row over the
+fallback-slug row within a duplicate group) without needing to reconstruct the exact failing vendor string. Did not
+trace the specific vendor-string mismatch that triggered the one observed failure (would need raw historical API
+payloads, not available from written parquet) — not required for the decidable rule, flagged honestly as unexplored.
+Step (b) (full-population measurement + the actual rewrite) remains open — a new, bounded, well-scoped piece of work for
+the next pickup.
