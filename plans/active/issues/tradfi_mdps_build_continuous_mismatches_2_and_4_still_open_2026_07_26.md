@@ -264,3 +264,23 @@ start without real tradfi/ES feature parquets.
   (`tests/delta_one/unit/test_orchestrator_continuous_read_path.py`) with a segment-order assertion and an exact-string
   parity test pinned to the writer's shape. `quality-gates.sh` full green (17,836 passed, 209 pre-existing skips,
   sentinel-verified). Shipped `features-service@65606d26`.
+- 2026-07-26 (slot 3, todo 4 — launch + verify, IN PROGRESS): before attempting the launch, found
+  `--operation build-continuous` was actually UNREACHABLE via the standard `python -m market_data_processing_service`
+  CLI every launcher uses — `cli/main.py`'s `_build_legacy_argv` (the ServiceBootstrap→legacy-parser bridge) never
+  threaded `--operation`/`--root` through at all, so every launch silently fell back to `process_candles_handler`
+  regardless of intent. Fixed by adding `MDPS_OPERATION`/`MDPS_CONTINUOUS_ROOT`/`MDPS_ROLL_DAYS_BEFORE_EXPIRY` env-var
+  bridges (`market-data-processing-service@4b96134`, full `quality-gates.sh` green + regression tests). While proving
+  the fix locally against real prod GCS data (2020-02-04..06, root=ES, real ADC creds, dry-run), found + fixed TWO
+  further live bugs in `_process_day_shard`'s empty/failed paths (same commit): `EmptyConfirmedReason.NO_DATA_FOR_DATE`
+  does not exist (AttributeError) and `record_empty`/`record_failed` only accept shard-identity dims via `row_key`, not
+  as top-level kwargs (TypeError) — every empty/failed build-continuous shard was silently dropping its honest-absence
+  manifest row instead of recording one (2 new regression tests confirmed failing pre-fix, passing post-fix). Verified
+  end-to-end locally: real continuous rows compute + real honest-absence rows record with valid manifest calls, no
+  errors. No launcher existed for build-continuous (only process/backfill) — added
+  `deployment-service/scripts/vm/launch-mdps-build-continuous-vm.sh` (`deployment-service@ab6a36b`, mirrors
+  `launch-mdps-backfill-vm.sh`'s SPOT/tarball-pin/launch-params boilerplate, reuses the registered
+  `mdps-backfill-tradfi-` VM name prefix). Launched prod VM `mdps-backfill-tradfi-buildcontinuous-es-20260726-082054`
+  (`--root ES 2020-01-01..2026-07-25`, `LC_TARBALL_FRESHNESS=auto` confirmed tarball fresh @ `4b9613400a54`) —
+  in-flight; will verify output lands at the canonical path, then launch features-delta-one-tradfi (existing
+  `launch-features-vm.sh --feature-family delta_one --asset-group TRADFI`, no code change needed there per slot-6's fix)
+  and confirm manifest rows before flipping this todo.
