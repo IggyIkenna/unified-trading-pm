@@ -9,11 +9,13 @@ summary: >-
   `data_completion_tradfi_2026_07_15.md`'s R1 runbook item (line 298) requires `migrate_tradfi_to_v9_canonical --apply`
   to include `--also-legacy` before the legacy bucket is decommissioned, so the 2,008-day no-env corpus gets copied into
   canonical form first. E7 (line 180-183) reports the legacy bucket WAS permanently deleted 2026-07-06, "DONE — apply
-  2026-07-06 exit_code=0/fatal=0". Code + doc audit (2026-07-26) finds: (1) the launcher command that actually ran that
-  day (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh` @ commit 77cfcda, the commit live at apply time)
-  builds the tradfi invocation as `--start-date $START_DATE --end-date $END_DATE --workers ${WORKERS:-24}` — NO
-  `--also-legacy` anywhere, and the flag's own `argparse` default is `action="store_true"` (False) with no launcher env
-  knob to inject it; (2) the ONE prior attempt that DID use `--also-legacy`
+  2026-07-06 exit_code=0/fatal=0" — **CORRECTED 2026-07-26 (audit log, see addendum below): the actual permanent-delete
+  event is `storage.buckets.delete` at `2026-07-14T11:03:03.648128088Z` by `ikenna@odum-research.com`, 8 days later than
+  E7's date and NOT part of this apply.** Code + doc audit (2026-07-26) finds: (1) the launcher command that actually
+  ran that day (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh` @ commit 77cfcda, the commit live at
+  apply time) builds the tradfi invocation as `--start-date $START_DATE --end-date $END_DATE --workers ${WORKERS:-24}` —
+  NO `--also-legacy` anywhere, and the flag's own `argparse` default is `action="store_true"` (False) with no launcher
+  env knob to inject it; (2) the ONE prior attempt that DID use `--also-legacy`
   (`canonical-migration-tradfi-20260629-053023`, per `master_data_canonicalisation_migration_catalogue_2026_06_07.md`
   line ~303) OOM-crashed at 06:02 UTC after copying only ~37k of ~3.8M planned `processed_candles` objects (~1%), was
   never resumed with the flag, and the 2026-07-06 "DONE" apply is a SEPARATE, later run using the non-also-legacy
@@ -81,7 +83,10 @@ DONE — apply 2026-07-06 exit_code=0/fatal=0."
    `canonical-migration-tradfi-20260706-152937` (historical range, `planned=1479669 moved=11` — near-total
    idempotent-skip, meaning that range's data was ALREADY canonical-shaped going in, from `canon`-source normalization,
    not from a legacy-bucket copy). Neither VM's run.log survives (rotated, >20 days old) to directly confirm
-   `also_legacy=False` in the startup log line, but the launcher SOURCE at that exact commit is unambiguous.
+   `also_legacy=False` in the startup log line, but the launcher SOURCE at that exact commit is unambiguous. **CORRECTED
+   2026-07-26 (audit log, see addendum below): this apply's date does NOT reconstruct the delete date — the legacy
+   bucket's actual permanent-delete event is measured at `2026-07-14T11:03:03Z`, 8 days after this apply, as a separate
+   later action.**
 4. **The one prior attempt that DID pass `--also-legacy`**:
    `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (line ~301-303) records "Operator fires `--apply`
    (`--also-legacy` per R1)" → VM `canonical-migration-tradfi-20260629-053023` launched 05:53 UTC 2026-06-29 → "🔴
@@ -93,6 +98,9 @@ DONE — apply 2026-07-06 exit_code=0/fatal=0."
 5. **The legacy bucket is confirmed gone**:
    `google.cloud.storage.Client().bucket("market-data-tick-tradfi-central- element-323112").exists()` returns `False`
    via ADC (live credential, not the poisoned CLI active-account) — permanent deletion is real, not a stale doc claim.
+   **CORRECTED 2026-07-26 (audit log, see addendum below): the measured delete event is `storage.buckets.delete` at
+   `2026-07-14T11:03:03.648128088Z` (principal `ikenna@odum-research.com`), not `2026-07-06` — a 120-day Cloud Audit Log
+   window over this bucket's `resourceName` returns exactly one delete event and zero create events.**
 
 **Net**: at most ~1% of the legacy corpus (the partial 2026-06-29 OOM run, IF that partial write actually landed in
 canonical before the crash — unverified) was ever copied to canonical form. The remaining ~99% of the 2,008-day legacy

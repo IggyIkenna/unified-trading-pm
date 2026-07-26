@@ -91,7 +91,14 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
 
 ## Todos
 
-- [ ] [DATA] P0. **Correct the delete DATE in
+- [x] ✅ [DATA] P0. **DONE 2026-07-26 (slot-7)** — corrected the stale "deleted 2026-07-06" framing in
+      `plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`'s frontmatter
+      `summary` and "What I found" items (3) and (5), each now citing the audited event (`storage.buckets.delete` at
+      `2026-07-14T11:03:03.648128088Z`, principal `ikenna@odum-research.com`, 8 days later than E7's claimed date) per
+      the doc's own 2026-07-26 addendum. The TIME-CRITICAL `[OPERATOR]` P0's elapsed-days arithmetic needed no edit — it
+      had already been superseded by the operator's own DONE/closed-verdict text (the addendum's "Elapsed time is 12
+      days, not 20" already carries the correct number). No checkbox flipped and no `[OPERATOR]` item touched in that
+      doc, per scope. **Correct the delete DATE in
       `issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md` and re-derive the soft-delete
       recovery window from it.** That doc's central timeline says the legacy bucket "was permanently deleted 2026-07-06"
       and its TIME-CRITICAL `[OPERATOR]` P0 computes "deleted 2026-07-06 = 20 days ago as of this writing" against the
