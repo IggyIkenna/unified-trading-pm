@@ -463,7 +463,7 @@ drift_direction: advance-code
       todo ran its own bounded read-only prereq check rather than block). Live `gcloud secrets list`/`describe` both
       returned `PERMISSION_DENIED` for the only credential in this worktree
       (`unified-trading-sa@central-element-323112.iam.gserviceaccount.com`), so did the classification via two
-      cross-referenced non-live sources instead: `codex/05-infrastructure/secret-manager-naming.md` (dated 2026-07-23,
+      cross-referenced non-live sources instead: `/codex/05-infrastructure/secret-manager-naming.md` (dated 2026-07-23,
       itself "verified against live GCP inventory") + direct code grep for the literal secret name each service actually
       resolves at runtime (several call sites carry their own "verified live 2026-07-23" comments). Result: 10 of 15
       venues confidently classified and fixed (binance/deribit renamed to read/trade/write split;

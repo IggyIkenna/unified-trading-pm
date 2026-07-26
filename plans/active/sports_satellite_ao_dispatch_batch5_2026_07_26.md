@@ -100,7 +100,8 @@ drift_direction: advance-code
       `normalize_api_football_player_stats` mapping function); an independent final census confirmed 0 remaining,
       `quality-gates.sh` green. Hit + fully remediated a self-caused incident along the way (240 objects briefly written
       empty during the first `--apply`, root-caused, live-refetch-remediated 240/240 with mandatory read-back
-      verification) — see `plans/active/issues/sports_player_stats_normalize_empty_write_incident_2026_07_26.md`. (2)
+      verification) — see `/plans/archive/issues/sports_player_stats_normalize_empty_write_incident_2026_07_26.md`
+      (archived; follow-ups: `/plans/active/issues/sports_player_stats_empty_write_followups_2026_07_26.md`). (2)
       Root-caused the 1,298 missing-GCS cells: 1,210 (93%, dated 2018-2020) match the doc's own Defect-3
       writer-generation quirk; 88 (7%, dated 2025) are a NEW anomaly not explained by that theory, filed as its own
       follow-up todo rather than guessed at. No manifest reconciliation executed this pass (explicit non-actionable
@@ -223,8 +224,8 @@ drift_direction: advance-code
       duplicated one real league each. Added the 1 real entry, bumped both structural-gap test counts by +1 (not +4).
       `.tabs/9/unified-api-contracts` was already self-reset to origin cleanly (0 ahead/0 behind) before this session —
       the reset sub-step was moot. Full detail + resolution:
-      `issues/sports_curated_universe_faroe_wales_leagues_missing_slot9_dup_2026_07_25.md` (flipped to
-      `status:     resolved`). 1271 sports/league tests green, `quality-gates.sh` PASSED.
+      `/plans/archive/issues/sports_curated_universe_faroe_wales_leagues_missing_slot9_dup_2026_07_25.md` (archived
+      2026-07-26). 1271 sports/league tests green, `quality-gates.sh` PASSED.
 - [x] [OPERATOR] P2. Purge the always-empty manifest rows/shards left behind by the § A2 dead-dimension deletion
       (features-service@d564bf6f already deleted `export_players`/`export_coaches`/`export_referees`/`export_rounds` and
       their column registrations — DONE, verified) for the four dimension groups PLAYERS / COACHES / REFEREES / ROUNDS

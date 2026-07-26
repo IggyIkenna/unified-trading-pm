@@ -98,8 +98,9 @@ cleanly picked up by the idempotent re-run — 0 errors on the second pass).
   **RESOLVED 2026-07-26 (slot-2)**: flattened all 3,274 via `instruments-service@a22e371e`
   (`scripts/normalize_nested_player_stats_2026_07_26.py`, reusing the production `normalize_api_football_player_stats`
   mapping function). Hit + fixed a self-caused incident along the way (240 objects briefly written empty, fully
-  remediated) — full writeup: `issues/sports_player_stats_normalize_empty_write_incident_2026_07_26.md`. Independent
-  final census confirms 0 remaining nested-schema `player_stats` objects.
+  remediated) — full writeup: `/plans/archive/issues/sports_player_stats_normalize_empty_write_incident_2026_07_26.md`
+  (archived 2026-07-26; follow-ups: `/plans/active/issues/sports_player_stats_empty_write_followups_2026_07_26.md`).
+  Independent final census confirms 0 remaining nested-schema `player_stats` objects.
 - **1,298/26,687 (4.9%) manifest-`captured` cells have NO corresponding GCS object** — concentrated in 2019 (a
   known-drifted writer-generation era per this doc's own Defect 3). This is a manifest-vs-reality mismatch, not a
   duplicate-row issue; left untouched/logged (never guessed), and is a candidate for its own investigation but out of
@@ -205,8 +206,9 @@ its own touched subset piecemeal.
 
 - 2026-07-26 (slot-2): Both open follow-ups from the 2026-07-25 pass closed out: (1) the 3,274 nested-schema
   `player_stats` cells flattened (`instruments-service@a22e371e`), 0 remaining on an independent census — see
-  `issues/sports_player_stats_normalize_empty_write_incident_2026_07_26.md` for a self-caused incident hit and fully
-  remediated along the way. (2) The 1,298 missing-GCS cells root-caused by era: 1,210 (93%) match the existing Defect-3
-  2019-2020 writer-generation quirk (no new investigation needed beyond confirming the era match); 88 (7%) are a 2025
-  anomaly NOT explained by that theory, filed as its own follow-up todo above rather than guessed at. No manifest
-  reconciliation action taken this pass (ruled non-actionable-in-this-todo, see the follow-up todos).
+  `/plans/archive/issues/sports_player_stats_normalize_empty_write_incident_2026_07_26.md` (archived 2026-07-26) for a
+  self-caused incident hit and fully remediated along the way. (2) The 1,298 missing-GCS cells root-caused by era: 1,210
+  (93%) match the existing Defect-3 2019-2020 writer-generation quirk (no new investigation needed beyond confirming the
+  era match); 88 (7%) are a 2025 anomaly NOT explained by that theory, filed as its own follow-up todo above rather than
+  guessed at. No manifest reconciliation action taken this pass (ruled non-actionable-in-this-todo, see the follow-up
+  todos).

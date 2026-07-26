@@ -48,14 +48,25 @@ source:
 
 # Self-caused incident: nested player_stats normalization wrote 240 objects empty
 
+> **🟢 RESOLVED 2026-07-26 (slot-2).** 240/240 empty-written `PLAYER_STATS` objects remediated via live api_football
+> re-fetch with mandatory per-object read-back verification (`num_columns>0 AND num_rows>0`), independently re-confirmed
+> 0 remaining empty objects project-wide; root cause fixed in the normalization script so the bug class cannot
+> reproduce. Archived here (plan_health hygiene-sweep hard-gate fix, escalation agt-d65e83) per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s ACKED-INTO-CODE trigger. Code-side fix landed at
+> `instruments-service@a22e371e` (pushed to `origin/live-defi-rollout` — confirmed while archiving this doc; an earlier
+> local-only commit, `e8f342a9`, was seen mid-archival and has since landed under this SHA). The two open follow-up
+> todos below are split into their own UNACKED issue,
+> `/plans/active/issues/sports_player_stats_empty_write_followups_2026_07_26.md`, since this doc's parent batch plan
+> (`sports_satellite_ao_dispatch_batch5_2026_07_26.md`) is already at its 1000-line hard cap.
+
 ## What happened
 
 Task `sports_satellite_ao_dispatch_batch5-002` (source:
-[`sports_satellite_ao_dispatch_batch5_2026_07_26.md`](../sports_satellite_ao_dispatch_batch5_2026_07_26.md)) asked to
-flatten the ~3,274 nested-schema canonical `PLAYER_STATS` cells that
+[`sports_satellite_ao_dispatch_batch5_2026_07_26.md`](/plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md))
+asked to flatten the ~3,274 nested-schema canonical `PLAYER_STATS` cells that
 [`dedup_canonical_player_stats_2026_07_25.py`](../../../instruments-service/scripts/dedup_canonical_player_stats_2026_07_25.py)
 correctly skipped (never guessed how to dedupe a schema it wasn't built for — see
-[`canonical_player_stats_fixture_events_quality_2026_07_16.md`](../canonical_player_stats_fixture_events_quality_2026_07_16.md)
+[`canonical_player_stats_fixture_events_quality_2026_07_16.md`](/plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md)
 Finding 1's 2026-07-25 update).
 
 1. Wrote `instruments-service/scripts/normalize_nested_player_stats_2026_07_26.py`, reusing the exact production mapping
@@ -143,18 +154,23 @@ available; a 240-fixture pull is a modest, well-bounded cost), with four mandato
 
 ## Follow-up todos
 
-- [ ] [DATA] P2. Consider enabling GCS object versioning (or a bucket-level soft-delete retention window) on
-      `instruments-store-sports-prd-central-element-323112` (and, if the same gap exists, its sibling prd sports
-      buckets) — this incident was recoverable only because the source was a re-fetchable external API; a similar
-      accidental-empty-write bug against internally-derived (non-re-fetchable) canonical data would have been a
-      PERMANENT loss under the current zero-retention policy. (repo: instruments-service / terraform-canonical infra,
-      needs an infra/operator decision on cost vs. blast-radius reduction)
-- [ ] [DATA] P3. Grep other one-off canonical-rewrite scripts in `instruments-service/scripts/` for the same missing
-      "refuse to write an empty/0-row result" guard (this incident's root-cause class could exist in any script that
-      builds a `pd.DataFrame(records)` from a possibly-empty `records` list before a CAS write) — audit and add the same
-      guard wherever missing. (repo: instruments-service)
+Moved to their own UNACKED issue doc at archival time (this doc's own status is terminal/`resolved`, so per
+`/codex/11-project-management/issue-doc-lifecycle.md` it archives immediately — the two items below are still open and
+need to stay dispatchable from `plans/active/`, not stranded here):
+`/plans/active/issues/sports_player_stats_empty_write_followups_2026_07_26.md`.
+
+1. Consider enabling GCS object versioning (or a bucket-level soft-delete retention window) on the sports prd buckets
+   (infra/operator decision).
+2. Audit other one-off canonical-rewrite scripts in `instruments-service/scripts/` for the same missing "refuse to write
+   an empty/0-row result" guard.
 
 ## Progress Log
 
 - 2026-07-26 (slot 2): Incident discovered via the sibling script's own verification methodology, escalated live
   (BLK-bf61980b), root-cause fixed, remediated (240/240), independently re-verified clean, this doc filed.
+- 2026-07-26 (cicd, slot 6): Archived to `plans/archive/issues/` to clear the `plan_health` hygiene-sweep hard failure
+  (`check_terminal_status_archived.py` — a `status: resolved` issue doc may not sit in `plans/active/issues/`); split
+  the 2 still-open follow-up todos into `sports_player_stats_empty_write_followups_2026_07_26.md`; fixed 2 now-broken
+  relative links from the directory move; corrected 3 corpus-wide referrers
+  (`sports_satellite_ao_dispatch_batch5_2026_07_26.md`, `canonical_player_stats_fixture_events_quality_2026_07_16.md`
+  x2) to the new archived path. Escalation `agt-d65e83`.

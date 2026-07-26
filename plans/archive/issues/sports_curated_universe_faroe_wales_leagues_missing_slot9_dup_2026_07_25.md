@@ -41,6 +41,12 @@ depends_on: []
 
 # 4 Faroe/Wales curated leagues live only in slot-9's diverged unpushed commit (rest is duplicate of origin)
 
+> **🟢 RESOLVED 2026-07-26 (slot-5).** Re-check via `api_football_id` found only 1 of the 4 named leagues
+> (`WALES_FAW_CHAMPIONSHIP`) was genuinely missing — the other 3 already existed under different key names. Added the
+> one missing entry (`unified-api-contracts@40d2dd8f`), 1271 sports/league tests green, full `quality-gates.sh` PASSED.
+> Slot-9's worktree was already cleanly reset to origin (moot). Archived here (plan_health hygiene-sweep hard-gate fix,
+> escalation `agt-d65e83`) per `/codex/11-project-management/issue-doc-lifecycle.md`'s ACKED-INTO-CODE trigger.
+
 ## Evidence (read-only, 2026-07-25 ~06:26Z, main agt-52bb99)
 
 - File both commits touch: `unified_api_contracts/canonical/domain/sports/league_data_other.py` (+ the same two test
