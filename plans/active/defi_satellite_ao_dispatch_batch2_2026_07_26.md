@@ -91,7 +91,14 @@ drift_direction: advance-code
       /plans/active/data_completion_defi_2026_07_15.md (item C8). Done when: a manifest census (deployment-api
       `_axis_census.py` or equivalent) shows lst/lending/perp venue-key counts matching UAC's 90-key registry (100%
       enumerated, not just 14/22, 6/21, 5/8), with DRIFT-SOLANA, FRAX, MORPHO, and FLUID each carrying at least one
-      manifest row; quality-gates.sh green.
+      manifest row; quality-gates.sh green. **RE-DIAGNOSED 2026-07-26 (slot-4)**: premise was wrong — no DeFi
+      `expected_unattempted` seeder exists at all (DeFi is explicitly excluded from the sentinel fan-out every other
+      asset_group uses); there is no seeding pass to "re-run or extend." DRIFT-SOLANA's absence is CORRECT (deliberately
+      removed 2026-07-16) — that done-criterion is unsatisfiable-by-design and must be dropped. FLUID's gap is not
+      list-drift; it's the already-tracked "adapter built, never wired to the manifest-writing CLI handler" class
+      (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md`). Full re-diagnosis + properly-scoped follow-up todos:
+      `/plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`. This checkbox stays unchecked
+      pending an operator/architecture decision on that doc's Option A/B — not AO-completable as originally written.
 - [ ] [CHORE] P3. Finish the two housekeeping-cluster sub-items NOT already covered by
       `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (which only covers the OPERATIONS dict fix and the
       paper_run_handler stale comments): (1) delete
@@ -626,6 +633,13 @@ drift_direction: advance-code
   despite its `defi_`-prefixed title. Content is ambiguous (defi/staked-basis-specific sizing vs. possibly-generic
   wizard tooling) and the doc is `locked_by: live-defi-rollout` — flagged for the finalize plan's follow-up rather than
   retagged unilaterally here.
+
+## Deferred work — migrated to: N/A (this plan itself is not deferred/migrated)
+
+Fixes a `check_plan_discipline.py` false positive (the "## Deferred — operator decision needed" section above quotes
+`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`'s own "DEFERRED — ..." annotation of ONE of its items —
+not a claim that this plan was migrated elsewhere). This plan's own "## Deferred — ..." sections each already cite their
+source issue doc directly as the successor reference.
 
 ## Note — 1 doc found archivable_now (not actioned here — a separate archival todo, not a batch candidate)
 
