@@ -2188,6 +2188,11 @@
       "version": "0.57.1.dev3+g7768355cc",
       "published_at": "2026-07-26T01:02:41Z",
       "registry": "artifact-registry"
+    },
+    "unified-api-contracts": {
+      "version": "0.71.1.dev153+gcee7f7a7d",
+      "published_at": "2026-07-26T01:06:26Z",
+      "registry": "artifact-registry"
     }
   }
 }
