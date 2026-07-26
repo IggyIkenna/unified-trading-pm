@@ -116,6 +116,19 @@ proven correct via local reproduction — see that issue doc — but never succe
       `defi_wizard_batch2_018_residual_findings-004`/`-005` (the YAML is fully drafted and locally-verified — see that
       issue doc's evidence — just needs a clean real-CI run to merge with confidence). Repos: unified-trading-system-ui,
       unified-trading-pm.
+- [ ] [CICD] P3. **Addendum (slot 4, 2026-07-26)**: independently re-derived the same layer-1/layer-2 diagnosis while
+      picking up `defi_wizard_batch2_018_residual_findings-004` concurrently with slot 2 — see the sibling doc
+      `hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` for the concurrently-completed
+      root-cause work (its own todo 1). Also hit a THIRD, separate symptom while re-verifying on scratch PRs
+      #353/#357/#358/#359: a repo-wide `pull_request`-event Actions stall on `unified-trading-system-ui` — zero
+      `pull_request`-triggered workflow runs fired for **20+ minutes** (confirmed via
+      `gh api repos/.../actions/runs?event=pull_request`, checked repo-wide not just on my branch), while
+      `push`-triggered runs on `main`/`live-defi-rollout` kept firing normally throughout the same window. Ruled out:
+      not branch-specific (tested 3 different branches), not draft-PR-specific (`gh pr ready` didn't help), not an
+      Actions-disabled/billing issue (`actions/permissions` shows enabled, GitHub status page green). Whoever picks up
+      the P3 re-verify todo above should check whether this recurs — if `pull_request` events are still silently
+      dropping intermittently, that's a SEPARATE Actions-delivery reliability issue worth its own investigation
+      (possibly GitHub-side, possibly an org webhook config), not the tag-ancestry bug this doc tracks.
 
 ## 2026-07-26 premature-dispatch finding + `depends_on`/`gate_on_depends` fix (slot 10)
 
