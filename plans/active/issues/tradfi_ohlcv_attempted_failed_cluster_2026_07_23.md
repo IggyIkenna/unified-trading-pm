@@ -234,8 +234,15 @@ actions are different (see Todos).
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. Snapshot-before-write,
       dry-run default, matching the established `reclass_*`/`purge_*` precedent scripts. Repo:
       `market-tick-data-service`.
-- [ ] [DESIGN] P2. Give `check_high_attempted_failed` a way to mark a cell "known-dead, expected-coverage-narrowed" so a
-      deliberately-deferred stale residue stops re-nagging every 30 min without requiring an immediate data-purge — this
-      is the same open question already flagged (not fixed) in the 07-15 doc's "Why the alert keeps firing anyway"
-      section; ties `ohlcv_15m` here to the sibling `mbp_10`/`corporate_action_confirmed`/`earnings_result`
-      stale-residue cells from the same prior investigation. Repo: `deployment-service`.
+- [x] [DESIGN] P2. ✅ **DONE 2026-07-26 (batch-3 todo 8) — `deployment-service@01414fc`.** New
+      `known_dead_cells_registry.py` — a
+      `(asset_group, data_type) -> KnownDeadCell(narrowed_at, venue, narrowed_by,     note)` registry, consulted
+      per-cell in `_read_attempted_failed_cells` via the cell's MAX `attempted_at` among its current `attempted_failed`
+      rows (`is_known_dead_for_series`); suppresses only while zero activity is newer than `narrowed_at`, any new
+      `attempted_at` clears it and resumes paging. Keys on `(asset_group, data_type)` — matching
+      `check_high_attempted_failed`'s existing alert granularity (no venue dimension); `venue` stored as provenance
+      only. CBOE `ohlcv_15m` is the first populated instance (`narrowed_at=2026-07-15`, citing
+      `unified-api-contracts@78b9e899`); `mbp_10`/`corporate_action_confirmed`/`earnings_result` are explicitly NOT
+      added yet — each needs its own narrowing-date + zero-new-activity verification before joining (noted as the
+      follow-up in the registry module's own docstring). 10 tests (3 integration + 7 unit); `quality-gates.sh` green.
+      Source: `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` todo 8.

@@ -160,36 +160,36 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       guardrail: do not add `fluid` to `lending_indices_handler.py` without a real collector).
 
       | protocol | lending_indices | risk_params | liquidations | `SUBGRAPH_IDS` |
-          |---|---|---|---|---|
-          | `aave_v3` / `spark` / `compound_v3` / `morpho` | Y | Y | Y | Y |
-          | `fluid` | **N** (no `cascades` entry — confirmed real gap, already tracked as this doc's finding #5) | Y (`_CATALOGUE_ONLY_PROTOCOLS`, deliberate) | Y (dedicated `_FLUID_LIQUIDATIONS_QUERY`/`_parse_fluid_liquidations`) | Y |
-          | `kamino_lending` | Y (dedicated RPC fetcher) | Y | **N** (absent, no rationale found) | N (Solana, RPC-based) |
-          | `solend` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
-          | `marginfi` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
+                      |---|---|---|---|---|
+                      | `aave_v3` / `spark` / `compound_v3` / `morpho` | Y | Y | Y | Y |
+                      | `fluid` | **N** (no `cascades` entry — confirmed real gap, already tracked as this doc's finding #5) | Y (`_CATALOGUE_ONLY_PROTOCOLS`, deliberate) | Y (dedicated `_FLUID_LIQUIDATIONS_QUERY`/`_parse_fluid_liquidations`) | Y |
+                      | `kamino_lending` | Y (dedicated RPC fetcher) | Y | **N** (absent, no rationale found) | N (Solana, RPC-based) |
+                      | `solend` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
+                      | `marginfi` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
 
-          **Findings**:
-          1. `fluid`'s gap is lending_indices-ONLY, confirmed — `risk_params_handler.py` (`_CATALOGUE_ONLY_PROTOCOLS =
-             frozenset({"morpho", "fluid"})`, line 115) and `liquidations_handler.py` (dedicated fluid query, lines
-             588/724/739) both have REAL, working, deliberate `fluid` paths; only `lending_indices_handler.py`'s
-             `_query_and_parse` cascades dict lacks a `fluid` entry. No new work needed beyond what #5 already tracks.
-          2. **New, previously-unflagged gap**: `risk_params_handler.py`'s own imported `SOLANA_LENDING_PROTOCOLS`
-             constant (`_risk_params_stage.py:23`, `frozenset({"kamino_lending", "solend", "marginfi"})`) declares all 3
-             Solana lending protocols as catalogue-fallback-capable (the dispatch logic at lines 330/408 correctly
-             branches on `protocol in SOLANA_LENDING_PROTOCOLS`), but `_DEFAULT_PROTOCOLS` (the actual iteration list,
-             line 380) only includes `kamino_lending` — `solend`/`marginfi` risk_params are silently NEVER collected even
-             though the underlying mechanism already supports them. Unlike the documented `fluid`/`morpho`
-             `_CATALOGUE_ONLY_PROTOCOLS` reasoning, no comment justifies omitting `solend`/`marginfi` here — reads as an
-             unintentional oversight (the 3-Solana-protocol set exists as a real shared constant, just not fully wired
-             into this one handler's dispatch list), not a documented scope decision. Filed as a fresh, precisely-scoped
-             follow-up (P3) below rather than fixed inline (adding them changes runtime dispatch behavior, out of scope
-             for a read-only reconciliation todo).
-          3. `liquidations_handler.py` has ZERO Solana-protocol coverage (no `kamino_lending`/`solend`/`marginfi`, no
-             `SOLANA_LENDING_PROTOCOLS` import at all) — no comment either way; flagging as unconfirmed (may be an
-             intentional scope limit if Solana lending liquidations genuinely have no equivalent data source) rather than
-             asserting it's a bug.
-          4. The 4 core EVM protocols (`aave_v3`/`spark`/`compound_v3`/`morpho`) are fully consistent across all 3
-             handlers and `SUBGRAPH_IDS` — no mismatch.
-          (repo: market-tick-data-service)
+                      **Findings**:
+                      1. `fluid`'s gap is lending_indices-ONLY, confirmed — `risk_params_handler.py` (`_CATALOGUE_ONLY_PROTOCOLS =
+                         frozenset({"morpho", "fluid"})`, line 115) and `liquidations_handler.py` (dedicated fluid query, lines
+                         588/724/739) both have REAL, working, deliberate `fluid` paths; only `lending_indices_handler.py`'s
+                         `_query_and_parse` cascades dict lacks a `fluid` entry. No new work needed beyond what #5 already tracks.
+                      2. **New, previously-unflagged gap**: `risk_params_handler.py`'s own imported `SOLANA_LENDING_PROTOCOLS`
+                         constant (`_risk_params_stage.py:23`, `frozenset({"kamino_lending", "solend", "marginfi"})`) declares all 3
+                         Solana lending protocols as catalogue-fallback-capable (the dispatch logic at lines 330/408 correctly
+                         branches on `protocol in SOLANA_LENDING_PROTOCOLS`), but `_DEFAULT_PROTOCOLS` (the actual iteration list,
+                         line 380) only includes `kamino_lending` — `solend`/`marginfi` risk_params are silently NEVER collected even
+                         though the underlying mechanism already supports them. Unlike the documented `fluid`/`morpho`
+                         `_CATALOGUE_ONLY_PROTOCOLS` reasoning, no comment justifies omitting `solend`/`marginfi` here — reads as an
+                         unintentional oversight (the 3-Solana-protocol set exists as a real shared constant, just not fully wired
+                         into this one handler's dispatch list), not a documented scope decision. Filed as a fresh, precisely-scoped
+                         follow-up (P3) below rather than fixed inline (adding them changes runtime dispatch behavior, out of scope
+                         for a read-only reconciliation todo).
+                      3. `liquidations_handler.py` has ZERO Solana-protocol coverage (no `kamino_lending`/`solend`/`marginfi`, no
+                         `SOLANA_LENDING_PROTOCOLS` import at all) — no comment either way; flagging as unconfirmed (may be an
+                         intentional scope limit if Solana lending liquidations genuinely have no equivalent data source) rather than
+                         asserting it's a bug.
+                      4. The 4 core EVM protocols (`aave_v3`/`spark`/`compound_v3`/`morpho`) are fully consistent across all 3
+                         handlers and `SUBGRAPH_IDS` — no mismatch.
+                      (repo: market-tick-data-service)
 
 - [ ] [DATA] P3. **NEW (found while reconciling the todo above)** — `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS`
       (line 111) omits `solend`/`marginfi` even though its own imported `SOLANA_LENDING_PROTOCOLS` constant
@@ -202,13 +202,79 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       document why they're excluded. (repo: market-tick-data-service). Done when: the omission is confirmed deliberate
       (documented) or fixed (protocols added + a regression test proves they now dispatch), with real IS-catalogue data
       confirmed present before any dispatch-list change ships.
-- [ ] [DATA] P3. Confirm whether FRAX-ETHEREUM's `vault_share_price_handler.py` has actually run/been scheduled recently
-      — if its manifest rows are genuinely absent, that's a scheduling gap, not an enumeration gap. (repo:
-      market-tick-data-service)
-- [ ] [DATA] P3. Confirm MORPHO-ARBITRUM/OPTIMISM/POLYGON's manifest absence is the intentional "0 major-asset markets
-      as of 2026-03" `SUBGRAPH_IDS` scoping decision (re-verify the underlying claim is still current) vs. needing an
-      honest "not IS-producible" manifest stamp once/if the P2 seeder above exists. (repo: unified-api-contracts docs
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-11, data_engineering)** — Confirmed: genuine scheduling gap, not an
+      enumeration gap, and it's WIDER than just FRAX. Read-only investigation, three independent checks: (1)
+      **Manifest**: `read_capture_status_counts`/`read_availability_index` (the sanctioned reader, UTL
+      `manifest_writer`) against the consolidated index at
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (967MB, filtered to
+      `data_type=vault_share_price`) returns **0 rows for ANY venue/chain** — not just FRAX. (2) **Raw GCS**: a
+      correctly-shaped scoped prefix check
+      (`day=*/pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=FRAX/     chain=ETHEREUM/instrument_type=yield_bearing/data_type=vault_share_price/`
+      — note the real object path has a `pipeline_mode=` segment between `day=` and `asset_group=` that the launcher
+      script's own doc-comment omits; an earlier pass of this check without that segment produced a
+      false-negative-shaped "no objects" that was actually just probing the wrong path, corrected before concluding
+      anything) confirms zero raw parquet objects. (3) **No launch history**: `collect-vault-share-price` is NOT in
+      `launch-defi-forward-poll.sh`'s closed set of recurring forward-poll operations
+      (`collect-lst-rates|collect-dex-swaps|collect-dex-pools|collect-oracle-prices` only) — only a one-off manual
+      backfill launcher exists (`deployment-service/scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh`); no record
+      of it ever being invoked in `deployment-orchestration-central-element-323112`'s deployment-events history either.
+      `VaultSharePriceHandler` + its `_VAULTS["sFRAX"]` entry (address/chain/protocol all correct) were added
+      `market-tick-data-service@9475e66b` (2026-05-03) — **code-complete, unit-tested, CLI-registered for ~12 weeks**,
+      but never actually run against production for ANY of its 8 vaults across 5 protocols (YEARN_V3/ETHENA/MAKER/
+      FRAX/MORPHO_VAULTS), not a FRAX-specific issue. No code changed (read-only per this todo's scope; a fix requires
+      an operator call on whether/how to backfill + whether to add it to the forward-poll set — see new P1 follow-up
+      below). (repo: market-tick-data-service)
+- [ ] [DATA] P1. **NEW (found while confirming the FRAX-ETHEREUM todo above)** — the entire `vault_share_price`
+      data_type has zero production data across all 8 vaults/5 protocols despite `VaultSharePriceHandler` being
+      code-complete + unit-tested + CLI-registered since 2026-05-03 (`market-tick-data-service@9475e66b`) — it has
+      simply never been invoked: not in `launch-defi-forward-poll.sh`'s recurring closed set, and no evidence its
+      one-off backfill launcher (`launch-mtds-vault-share-price-backfill-vm.sh`) was ever run. This is a genuine
+      data-pipeline-correctness gap (an entire built data_type silently producing nothing, indistinguishable from "never
+      declared" per `honest-absence-downstream-handling.md`), needing an operator decision before an AO worker acts: (a)
+      verify the 8 vault configs (`_VAULTS` dict — addresses/chains/decimals) are still current before any real capture,
+      (b) run the one-off backfill for historical coverage, (c) decide whether to add `collect-vault-share-price` to the
+      forward-poll closed set for ongoing daily capture (or explain why it's intentionally backfill-only). Done when: an
+      operator ruling is recorded and either (i) the backfill has run + manifest rows exist for all 8 vaults, or (ii)
+      the gap is ruled intentional/deferred with a reason. (repo: market-tick-data-service, deployment-service)
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-2) — claim is STALE, live-verified.** Queried Morpho Blue's live GraphQL API
+      (`blue-api.morpho.org`, the actual data source `morpho_adapter.py` uses — `SUBGRAPH_IDS["morpho"]`'s per-chain
+      entries are declaration-only, per its own comment) directly for `chainId_in: [42161, 10, 137]`
+      (ARBITRUM/OPTIMISM/POLYGON) using the adapter's real `_MARKETS_QUERY` shape. Result: the "0 major-asset markets as
+      of 2026-03" claim no longer holds on any of the 3 chains — - **ARBITRUM**: 92 total markets, 74 major-asset (per
+      `DEFI_MAJOR_ASSET_SYMBOLS`), 16 with
+      supply >$1,000 —
+        unambiguous: the top market (`USDC`/`K`) alone carries **~$3.0B supplied /
+      ~$3.0B borrowed**, not a rounding
+        artifact.
+      - **OPTIMISM**: 6 total, 5 major-asset, 3 with supply >$1,000
+      (top: `WETH`/`wstETH` at
+      ~$117k) — modest but
+        real.
+      - **POLYGON**: 202 total, 134 major-asset, but only 2 with supply >$1,000,
+      and both are single-sided "idle" markets (`collateralAsset: null`, i.e. not a genuine lending pair) — still
+      effectively negligible; genuinely-paired major-asset liquidity has NOT materialized here yet. Mechanism check (so
+      a follow-up fix is a safe, generic extension, not a FLUID-class landmine): the adapter's `MVP_LOAN_TOKENS` filter
+      (`morpho_adapter.py:61`) matches on bare token SYMBOL only (`"USDC" in MVP_LOAN_TOKENS`) — the dict's Ethereum
+      contract-address values are unused comments, not part of the actual filter — so it passes chain-agnostically; the
+      real gate is `_CHAIN_ID_BY_CHAIN = {"ETHEREUM": 1, "BASE": 8453}` (line 160), which simply doesn't list
+      ARBITRUM(42161)/OPTIMISM(10)/POLYGON(137) yet. **Filed as new, precisely-scoped follow-up** (below) rather than
+      fixed inline — this todo's own scope was CONFIRM only, and deciding the OPTIMISM/POLYGON liquidity threshold +
+      updating instrument-discovery wiring is real, separate implementation work. (repo: unified-api-contracts docs
       review + market-tick-data-service)
+- [ ] [DATA] P2. **NEW (found 2026-07-26 while confirming the todo above)** — Wire ARBITRUM (unambiguous:
+      ~$3.0B
+      supplied on the `USDC`/`K` market alone, live-verified via `blue-api.morpho.org`) into Morpho instrument
+      discovery: add `"ARBITRUM": 42161` to `morpho_adapter.py:160`'s `_CHAIN_ID_BY_CHAIN`, and update
+      `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py`'s `SUBGRAPH_IDS["morpho"]`
+      comment (drop the stale "0 major-asset markets as of 2026-03" line; the declaration-only dict itself doesn't
+      need a real subgraph ID added since the adapter queries `blue-api.morpho.org` directly, not The Graph, but the
+      comment must stop asserting a now-false claim). Do NOT add OPTIMISM/POLYGON in the same change — OPTIMISM has
+      only ~$117k
+      max single-market liquidity and POLYGON's only >$1k entries are single-sided idle markets (no real
+      collateral-paired liquidity yet); re-check both again in a future pass rather than wiring in what may still be
+      noise. Repo: market-tick-data-service, unified-api-contracts. Done when: `_CHAIN_ID_BY_CHAIN` includes ARBITRUM, a
+      live smoke-fetch confirms real ARBITRUM Morpho instruments get discovered, the stale comment is corrected, and
+      `quality-gates.sh` is green in both repos.
 - [x] ✅ [INFRA] P3. **DONE 2026-07-26 (slot-4)** — Close a gate gap in agent-orchestrator's `/done` M3 verification
       found 2026-07-26 (slot-2, BLK-0222fc53 ruling): a `- [ ]` cross-repo todo that is genuinely re-scoped/superseded
       (never flipped `[x]`, because there is nothing to complete against — see
@@ -269,3 +335,23 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
   `solend`/`marginfi` as catalogue-fallback-capable but `_DEFAULT_PROTOCOLS` never dispatches them — filed as a fresh,
   precisely-scoped P3 follow-up todo (not fixed inline; a dispatch-list change needs the IS-catalogue data confirmed
   present first).
+- 2026-07-26 (slot 2): Closed the P3 MORPHO-ARBITRUM/OPTIMISM/POLYGON confirmation todo. Live-queried
+  `blue-api.morpho.org` (the adapter's real data source) directly for the 3 chains using the adapter's own query shape —
+  the "0 major-asset markets as of 2026-03" claim is DEFINITIVELY STALE: ARBITRUM alone now carries a
+  ~~$3.0B `USDC`/`K` market (74 total major-asset markets, 16 with >$1k liquidity); OPTIMISM has modest real liquidity
+  (~~$117k max); POLYGON's >$1k entries are single-sided idle markets only, not genuine paired liquidity. Mechanism
+  check confirmed a fix would be a safe, generic extension (not FLUID-class): `MVP_LOAN_TOKENS` filters by bare symbol
+  only, chain-agnostic; the actual gate is `_CHAIN_ID_BY_CHAIN` in `morpho_adapter.py`, which simply omits the 3 chains.
+  Filed a new, precisely-scoped P2 follow-up (ARBITRUM only, unambiguous) rather than fixing inline — OPTIMISM/POLYGON's
+  thin/idle-only liquidity needs a threshold judgment call this confirm-only todo didn't cover.
+- 2026-07-26 (slot 11, `data_engineering`): Closed the P3 FRAX-ETHEREUM `vault_share_price_handler.py`
+  scheduling-vs-enumeration confirmation todo. Read-only investigation (no code touched) via the sanctioned manifest
+  reader (`read_availability_index`/`read_capture_status_counts`, UTL `manifest_writer`) + a corrected scoped GCS prefix
+  check (first pass omitted the `pipeline_mode=` path segment and produced a false-negative-shaped result, corrected
+  before concluding) confirmed the manifest genuinely has zero `vault_share_price` rows — and this is true for ALL 8
+  vaults across 5 protocols, not FRAX-specific. `VaultSharePriceHandler` has been code-complete, unit-tested, and
+  CLI-registered since `market-tick-data-service@9475e66b` (2026-05-03, ~12 weeks) but was never wired into the
+  recurring forward-poll set and has no evidence its one-off backfill launcher was ever run — a genuine scheduling gap,
+  confirming the todo's own hypothesis. Filed a new P1 follow-up (broader scope: the whole data_type, not just FRAX)
+  recommending an operator decision on backfill + forward-poll inclusion, since acting on it (verifying 8 vault
+  configs + launching a real capture) is a production data action beyond a confirm-only todo's scope.

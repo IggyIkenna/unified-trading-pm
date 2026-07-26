@@ -11,7 +11,7 @@ summary:
   trivially (the documented deletion-resurrection gap). rebuild_tradfi_manifest.py (additive per-VM shards, merged) also
   does not drop them. Fixing (a)+(b) needs surgical index removal; fixing (c)+(d) needs the object-walk id
   re-derivation. Both target a live _index a peer is already rebuilding — coordinate before any cutover.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -36,6 +36,8 @@ locked_by:
 locked_since:
 assigned_vm:
 resolved_by:
+  market-tick-data-service@ee3d636 (manifest-vs-disk consistency check, 2026-07-26); all (a)-(d) items + the
+  detection-gap todo now closed
 ---
 
 # Post-purge tradfi manifest cleanup — the naive force-rebuild won't drop the stale rows
@@ -212,9 +214,12 @@ the object-walk rebuild.
       migration lands. A standalone rebuild + 2nd surgical drop (id ∈ `_OPTIONAL_DEDUP_COLS`) is a data-loss-grade op
       for a column no consumer reads canonically — not worth the risk. (repo: market-tick-data-service — NO code change
       required)
-- [ ] [BACKEND] P1. Add a manifest-vs-disk consistency check so a `captured` row with no object on disk fails loudly
-      (prevents the phantom-row class recurring — this exact class produced BOTH the 3,615 real phantoms AND the
-      contaminated 16,389 list). (repo: market-tick-data-service)
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-26 (batch-3 todo 7) — `market-tick-data-service@ee3d636`
+      (`check_tradfi_manifest_disk_consistency.py`).** Samples `captured` rows, checks each has ≥1 backing object under
+      its shard prefix (post-migration `pipeline_mode=` canonical + legacy layout). Live-verified twice against the real
+      prod bucket (a 30-row run surfaced + fixed a casing false-positive in the check itself, then a 100-row re-run
+      passed clean); 11 unit tests incl. the synthetic captured-row-with-no-object case; `quality-gates.sh` green.
+      Source: `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` todo 7.
 - [x] [DOCS] P1. ✅ The deletion-resurrection gap is intended behaviour; dropping rows requires surgical removal under a
       paused consolidator (force-rebuild is insufficient) — the `_legacy_seed` merge-exclusion
       (`manifest_consolidator.py:783,873-875`) makes a surgical drop durable. Documented here + in the codex SSOT §

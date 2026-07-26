@@ -11,8 +11,10 @@ summary:
   Databento parks a worker per CHUNK (short, released between chunks) whereas Tardis parked one for the ENTIRE transfer
   -- so the pool cycles rather than filling. It is still a latent starvation risk whenever concurrent fetches x
   per-chunk duration saturates min(32, cpu+4). Filed as a follow-up, NOT a claimed live defect.
-status: open
+status: resolved
 resolved_by:
+  market-tick-data-service@ac857+889ff829 (2026-07-26); CEFI ThreadedResolver follow-up extracted to
+  cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -89,7 +91,8 @@ defect** — do not cite it as a known TradFi outage cause.
       evidence: `plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s corresponding todo. **Same-pattern
       follow-up (not done here, out of this tradfi-scoped todo)**: `aster_base_client.py` and
       `hyperliquid_base_client.py` (CEFI-only live-venue clients) hardcode the identical `ThreadedResolver()` pattern —
-      a future CEFI-scoped todo could apply the same fix there.
+      extracted 2026-07-26 to `issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md` (asset_group: cefi) so
+      it stays tracked instead of dangling here.
 
 ## Progress Log (append-only)
 
@@ -100,5 +103,9 @@ defect** — do not cite it as a known TradFi outage cause.
 - 2026-07-26 (slot-12): closed out all 3 remaining todos. Todos 1+2 were already done (dedicated executor landed as
   `mtds@ac857` at some point after this doc was filed, never checked off; audit sweep confirmed all named call sites
   compliant). Todo 3 (aiodns/AsyncResolver) genuinely required new code — shipped `market-tick-data-service@889ff829`.
-  Status left `open` pending someone picking up the flagged CEFI (aster/hyperliquid) follow-up, otherwise this doc's own
-  scope is now fully closed.
+  Status left `open` pending someone picking up the flagged CEFI (aster/hyperliquid) follow-up.
+- 2026-07-26 (slot-5, finalize reconciliation — `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` todo 1):
+  this doc's own 3 todos are fully done and its own scope (tradfi/shared-Tardis DNS starvation) is closed. The CEFI
+  aster/hyperliquid follow-up is out of THIS doc's asset_group (cefi, not tradfi) and was a dangling prose note, not a
+  tracked todo — extracted to `issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md` so it stays actionable.
+  Flipping `status: resolved`.

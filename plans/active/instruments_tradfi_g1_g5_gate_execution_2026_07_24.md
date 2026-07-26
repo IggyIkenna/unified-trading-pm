@@ -373,10 +373,18 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
 > Continuation of the `proper_instrument_catalogue_lifecycle_rollup_2026_06_04` (archived) folded-in items — the
 > cross-cutting items from that same archived plan moved to the Phase-0 child.
 
-- [ ] [DATA] P1. **FINDING — IS `by_date` capture frozen ~2026-05-21 fleet-wide; tradfi degraded from ~2026-05-04.**
-      Applied catalogues are honest snapshots-as-of-freeze (cefi usable; tradfi marks ~651K "delisted" → liveness not
-      trustworthy until tradfi capture fixed + catalogue regenerated). Diagnose the tradfi 16K→2/day anomaly (slot-6 /
-      tradfi vertical) + add a coverage-horizon staleness check to producer/audit. (MIGRATED FROM: same.)
+- [x] [DATA] P1. ✅ **PARTIAL — diagnosis + staleness-check ask DONE 2026-07-26 (batch-3 todo 3, item 2); underlying
+      freeze itself NOT fixed, tracked separately below.** Applied catalogues are honest snapshots-as-of-freeze (cefi
+      usable; tradfi marks ~651K "delisted" → liveness not trustworthy until tradfi capture fixed + catalogue
+      regenerated). Root cause re-confirmed: Massive removal (2026-07-19) broke `by_date`; a Databento re-feed has not
+      yet been run — tradfi is STILL degraded (~10-15 writes/day vs the historical 16-18K). The coverage-horizon
+      staleness check this bullet asked for was already shipped `instruments-service@5d31994a` (2026-07-03,
+      `CATALOGUE_STALE_BY_DATE`), applies per-AG generically incl. tradfi, QG-green in production — so THIS bullet's
+      literal ask ("diagnose... + add a coverage-horizon staleness check") is satisfied. This does **not** claim the
+      `by_date` capture is restored — that remains a real, separate open gap (Databento re-feed not yet run); see the
+      sibling ICE/CME-futures-options and CME-futures-reference-gap bullets immediately below, which already track the
+      credential/upstream blockers on the actual data recovery. Source:
+      `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` todo 3.
 - [ ] [DATA] P1. **FINDING — ICE futures + CME futures-options not on Massive → BLOCKED-CREDENTIALS.** Massive covers
       CME-group only, no options-on-futures product; old databento ~16-18K/day was CME ES futures-options. **Operator
       ask**: an ICE-futures + CME-futures-options reference source, or unblock Databento billing. Repo:

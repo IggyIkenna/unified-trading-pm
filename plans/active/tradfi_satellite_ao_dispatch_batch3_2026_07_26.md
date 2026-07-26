@@ -249,18 +249,34 @@ drift_direction: advance-code
       unregistered cell never suppressed). `meta_watchers.py` stayed within its 900-line file-size cap (899 lines) by
       moving the registry + dataclass to the new sibling module rather than growing the existing file. 2849 tests pass;
       `quality-gates.sh` green (127s clean run, sentinel-verified before quickmerge).
-- [ ] [VERIFY] P3. Trace the manifest-write/orchestrator classification layer for TRADFI's
-      `_DATABENTO_SUPPORTED_DATA_TYPES`-filtered-out cells (`mbp_10`, `ohlcv_15m`, `ohlcv_24h`) to confirm exactly how a
-      requested-but-filtered data_type is recorded in the tick manifest — `attempted_failed` vs `empty_confirmed` — and
-      document the concrete write-site (`market-tick-data-service`'s `venue_fetch.py`/`umi_tick_provider.py` dispatch
-      chain plus the manifest-record call it feeds) with file:line citations. Cross-reference this doc's own
-      "Verification addendum" finding that `deployment-service`'s `_read_attempted_failed_cells` (DP-FETCH-009,
-      `meta_watchers.py`) counts `attempted_failed` over the whole manifest with no date-recency window, to determine
-      whether that alone explains why the stale 2026-07-07 rows keep paging, or whether a separate write-time
-      classification decision point also exists. Read-only trace, no code changes. Source:
-      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. Done when: the classification
-      decision point(s) are cited with file:line, a short writeup records the decision logic and whether it accounts for
-      the observed stale-row alert persistence, and this doc's `[VERIFY] P3` checkbox is flipped with evidence.
+- [x] ✅ [VERIFY] P3. **DONE 2026-07-26 (slot 6).** Traced the classification write-site. The Databento data_type filter
+      itself is `market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py:444-447`
+      (`_route_databento`): `db_data_types = [dt for dt in db_data_types if dt in _DATABENTO_SUPPORTED_DATA_TYPES]` (the
+      supported set at line 149 is `{trades, ohlcv_1s, ohlcv_1m, tbbo, mbp_10}` — note `mbp_10` IS supported here, so
+      its own stale rows have a different origin already covered by this doc's earlier "mbp_10 resolution section"; only
+      `ohlcv_15m`/`ohlcv_24h` are actually excluded by this specific filter). If filtering empties the list, it returns
+      `pd.DataFrame()` at line 447 SILENTLY — no exception, no `failed_per_dt` entry, just a `logger.debug`.
+
+      **The actual attempted_failed-vs-empty_confirmed decision is NOT made there — it's one level up**, in
+          `engine/orchestrator/sentinels.py::_emit_nonsports_tier2_tier3_sentinels` (confirmed both `ohlcv_15m`/`ohlcv_24h`
+          route through this Tier-2 venue-level branch, not Tier-3: neither is in UAC's
+          `_PER_INSTRUMENT_SHARD_DATA_TYPES`, `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2309-2333`).
+          For each expected-but-not-captured `dt` (lines 591-612): `per_dt_reason =
+          failed_per_dt_by_venue.get(venue, {}).get(dt)` then `effective_failure = per_dt_reason or failed_reason_raw`
+          (line 592) — `failed_reason_raw` is the WHOLE-VENUE failure reason (`failed_shards.get(venue)`, line 542),
+          independent of which specific data_type actually failed. If `effective_failure` is truthy →
+          `writer_manifest.record_failed(...)` (line 598, → `ATTEMPTED_FAILED`); else →
+          `writer_manifest.record_empty(..., reason="SOURCE_RETURNED_ZERO")` (line 600, → `EMPTY_CONFIRMED`).
+
+          **This IS a separate write-time decision point from DP-FETCH-009** (not just the alert-persistence mechanism):
+          because the silent Databento filter never populates `failed_per_dt` for the dropped data_type, its
+          classification rides entirely on whether that SAME VENUE had an unrelated whole-venue failure that day (line
+          592's fallback) — a filtered-out `ohlcv_15m`/`ohlcv_24h` cell can be misclassified `ATTEMPTED_FAILED` by
+          inheriting an unrelated data_type's failure (e.g. `trades` hitting a 429 that day), or correctly land
+          `EMPTY_CONFIRMED` if nothing else failed. This explains HOW the 2026-07-07 stale rows originally got written as
+          `attempted_failed`; DP-FETCH-009's no-recency-window count (already documented in this doc's Verification
+          addendum) separately explains why they keep PAGING today. Both apply — DP-FETCH-009 is not the whole story.
+          Read-only trace, no code changes shipped. Cross-ref added to source doc's Progress Log.
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 

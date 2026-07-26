@@ -132,14 +132,24 @@ drift_direction: advance-code
       malformation; (c) `quality-gates.sh` green for instruments-service. Source:
       `defi_migration_audit_log_2026_07_24.md` (P1 "DeFi instruments-store `by_date` has a DOUBLED `day={D}/day={D}/`
       prefix" finding, slot-2 2026-06-07 G2 verify dry-run).
-- [ ] [DATA] P3. **Fold `lst-rates` into DeFi data-status + exclude orphan `VAULT` venue.** (1) Wire the `lst-rates`
-      availability_index (bucket `lst-rates-central-element-323112`) into the defi data-status aggregation / rollup
-      `manifest_source` read path (deployment-api `data_status` aggregation + the defi projection rebuild) so the 5 LST
-      venues (ANKR/STADER/STAKEWISE/SWELL/MANTLE + LIDO/ROCKETPOOL/ETHENA/...) stop reading as zero — this corpus
-      already reads only `market-data-tick-defi`, not the dedicated lst-rates bucket, even though the data is genuinely
-      captured (not a data gap). (2) Exclude/remap the orphan generic `VAULT` venue (1113 captured rows, not a real
-      protocol) out of `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES`. Do NOT touch the bare-`SUSHISWAP` classic-vs-V3
-      alias question in the same registries — that is explicitly out of scope here (conflict-gated, see note). Source:
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-2).** Both done-when conditions were ALREADY satisfied by prior, unrelated
+      work — this todo's premises were stale: the dedicated `lst-rates-central-element-323112` bucket no longer exists
+      (live-verified 404; migrated into the shared bucket + deleted 2026-07-13/14) and `VAULT` is already absent from
+      `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES` (test-guarded). Found + fixed the actual live residual instead: a
+      venue-PREFIX exclusion bug (`DEFI_NON_PROTOCOL_VENUE_PREFIXES` in deployment-api's
+      `rollup_cache.py`/`breakdowns_domain.py`) was silently stripping `ANKR-ETHEREUM` (real, capability-registered LST
+      venue) + 6 `ALCHEMY-<chain>` venues + `COINBASE-ETHEREUM` from the rollup venue list/breakdown — fixed to match
+      the full venue string, regression test added. Shipped `deployment-api@f919c87`. Full writeup + per-todo detail:
+      `plans/active/defi_venue_lst_rates_residual_2026_07_24.md`. `SUSHISWAP` classic-vs-V3 (a separate, genuinely-open
+      data-semantics call in that same source doc, already out of scope for this todo) remains open. Originally: **Fold
+      `lst-rates` into DeFi data-status + exclude orphan `VAULT` venue.** (1) Wire the `lst-rates` availability_index
+      (bucket `lst-rates-central-element-323112`) into the defi data-status aggregation / rollup `manifest_source` read
+      path (deployment-api `data_status` aggregation + the defi projection rebuild) so the 5 LST venues
+      (ANKR/STADER/STAKEWISE/SWELL/MANTLE + LIDO/ROCKETPOOL/ETHENA/...) stop reading as zero — this corpus already reads
+      only `market-data-tick-defi`, not the dedicated lst-rates bucket, even though the data is genuinely captured (not
+      a data gap). (2) Exclude/remap the orphan generic `VAULT` venue (1113 captured rows, not a real protocol) out of
+      `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES`. Do NOT touch the bare-`SUSHISWAP` classic-vs-V3 alias question in
+      the same registries — that is explicitly out of scope here (conflict-gated, see note). Source:
       `plans/active/defi_venue_lst_rates_residual_2026_07_24.md`. Done when: (a) the 5 LST venues' rows are visibly
       credited (non-zero) in the DeFi could-exist / data-status view, verified via the deployment-api `data_status`
       endpoint or UI; and (b) `VAULT` no longer appears as a live/uncategorized registered venue in
@@ -208,32 +218,43 @@ drift_direction: advance-code
       currency universe, a currency constraint would need new engine-internal logic — separately scoped, not attempted
       here). Cross-referenced back: `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`'s own DOCS P3 todo
       is checked off citing this exact commit + location.
-- [ ] [CODE] P3. Fix wrong catalog-builder import alias in `tests/integration/test_recursive_borrow_scenarios.py`:
-      `FAMILY_2_CELL_IDS` is built by importing `_build_carry_recursive_staked` (the **plain** `CARRY_RECURSIVE_STAKED`
-      archetype's catalog builder) aliased as `_build_carry_recursive_borrow_perp_hedged`, instead of importing the real
-      `build_carry_basis_perp_inv` (the `CARRY_BASIS_PERP_INV` archetype's actual catalog builder). Today this is
-      harmless (both builders happen to satisfy the same `len(...) >= 5` row-count assertion) but the Family-2 test cell
-      IDs are silently sourced from the wrong archetype's catalog rows. Fix: import and alias
-      `build_carry_basis_perp_inv` correctly, re-run the file's tests, confirm `FAMILY_2_CELL_IDS` now reflects
-      `CARRY_BASIS_PERP_INV`'s real 10-row catalog and the existing assertions still pass (adjust the row-count
-      assertion only if the real count differs from 5+). Ship via quickmerge scoped to this one test file. Source:
+- [x] ✅ [CODE] P3. **DONE 2026-07-26 (slot 4)** — Fix wrong catalog-builder import alias in
+      `tests/integration/test_recursive_borrow_scenarios.py`: `FAMILY_2_CELL_IDS` is built by importing
+      `_build_carry_recursive_staked` (the **plain** `CARRY_RECURSIVE_STAKED` archetype's catalog builder) aliased as
+      `_build_carry_recursive_borrow_perp_hedged`, instead of importing the real `build_carry_basis_perp_inv` (the
+      `CARRY_BASIS_PERP_INV` archetype's actual catalog builder). Today this is harmless (both builders happen to
+      satisfy the same `len(...) >= 5` row-count assertion) but the Family-2 test cell IDs are silently sourced from the
+      wrong archetype's catalog rows. Fix: import and alias `build_carry_basis_perp_inv` correctly, re-run the file's
+      tests, confirm `FAMILY_2_CELL_IDS` now reflects `CARRY_BASIS_PERP_INV`'s real 10-row catalog and the existing
+      assertions still pass (adjust the row-count assertion only if the real count differs from 5+). Ship via quickmerge
+      scoped to this one test file. Source:
       plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md ("Minor incidental finding" under
-      the `CARRY_RECURSIVE_BORROW_LENDING_ONLY` / `CARRY_BASIS_PERP_INV` orchestrator-stub section, 2026-07-24). Done
-      when: `tests/integration/test_recursive_borrow_scenarios.py` imports `build_carry_basis_perp_inv` (not the
-      plain-archetype builder) for its Family-2 registry, `bash scripts/quality-gates.sh --no-fix` is green, and the fix
-      is shipped + the plan checkbox flipped.
-- [ ] [DESIGN] P3. Evaluate wiring the existing `curve_adapter.py`/`api.curve.fi` REST path
+      the `CARRY_RECURSIVE_BORROW_LENDING_ONLY` / `CARRY_BASIS_PERP_INV` orchestrator-stub section, 2026-07-24).
+      **Confirmed**: `catalog.py` exports `build_carry_basis_perp_inv` as a plain (non-underscore) name — no underscore
+      alias existed for it (unlike the other two builders), so the test's import line was changed from
+      `_build_carry_recursive_staked as _build_carry_recursive_borrow_perp_hedged` to
+      `build_carry_basis_perp_inv as     _build_carry_recursive_borrow_perp_hedged`. Directly verified the real catalog:
+      10 rows, all correctly slot-labeled `CARRY_BASIS_PERP_INV@...` (was silently `CARRY_RECURSIVE_STAKED@...` before).
+      The `>=5` row-count assertion needed no change (10>=5). 40/40 tests pass (`pytest -m "not requires_credentials"`);
+      full `quality-gates.sh --no-fix` green (126s, sentinel written). Shipped `strategy-service@628a0a32`.
+- [x] ✅ [DESIGN] P3. **DONE 2026-07-26 (slot 4) — NO-GO.** Evaluate wiring the existing
+      `curve_adapter.py`/`api.curve.fi` REST path
       (`market_tick_data_service/market_interface/adapters/defi/curve_adapter.py`) into the batch `dex_pool_swaps`
       collection cascade for CURVE/OPTIMISM (mirroring the "ARB/POLY only on hosted service (deprecated) — use
       api.curve.fi instead" precedent already documented in UAC `_defi.py`), as an alternative to leaving this cell as a
       permanent honest `EXPECTED_SUBGRAPH_DEINDEXED` absence. Repo: market-tick-data-service. Not urgent — every other
       `dex_pool_swaps` (venue, chain) cell is unaffected and the ~144-952 CURVE/OPTIMISM rows are a small fraction of
-      the asset_group's total gap; do NOT implement the wiring itself in this todo — only produce the evaluation. **Done
-      when**: a written, evidence-cited verdict is appended to the source issue doc stating whether `curve_adapter.py`'s
-      REST integration can realistically be wired into the `dex_swaps_handler.py` batch cascade for this (venue, chain)
-      pair (covering: does the REST response shape map onto the existing `dex_pool_swaps` schema/writer contract; what
-      integration point would the call live at; rough effort), with an explicit go/no-go recommendation for a follow-up
-      implementation todo. Source: `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
+      the asset_group's total gap; do NOT implement the wiring itself in this todo — only produce the evaluation.
+      **Verdict (full evidence in the source issue doc's "Evaluated 2026-07-26" section)**: the "existing REST path"
+      isn't what it looked like — `curve_adapter.py`'s REST call (`_safe_fetch_curve_rest_pools`) only returns
+      pool-discovery metadata, never swap history; the adapter's actual swap-fetch method (`_download_swaps`) is 100%
+      The-Graph-decentralized-network dependent (the SAME dead subgraph mechanism) with a literal
+      `return []  # ... omitted for brevity` REST fallback stub; the REST discovery path is also hardcoded to Ethereum
+      (`venue="CURVE-ETHEREUM"` regardless of `self.chain`); and `dex_swaps_handler.py`'s `_collect_protocol_chain`
+      pipeline is subgraph-only end-to-end with no existing non-subgraph integration seam. No follow-up implementation
+      todo opened — recommended a smaller external-API research step (does Curve's public REST API expose swap-level
+      history for OPTIMISM at all) before any future build attempt. Source:
+      `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
 - [x] [DATA] P2. **Re-run the DeFi `instrument_availability` shape-B ("hive") vs flat reconciliation with a null-aware
       comparator, full population.** The 2026-07-14 corrected-comparison pass found the original 45.2% (1,315/2,911)
       byte-mismatch figure is very likely inflated/entirely explained by a `None`-vs-`NaN` serialization artifact
@@ -340,15 +361,12 @@ drift_direction: advance-code
       (sentinel-verified), shipped via quickmerge. Source:
       `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md` (both follow-on todos flipped
       there too).
-- [ ] [DATA] P3. Append F10 (YEARN_V3/ETHEREUM/yield_bearing/vault_share_price pipeline_mode<->source desync, MEDIUM,
-      delete_elig=NO) to the DeFi reconciliation register as a defi-scoped row, per the audit's own Section 9
-      maintenance-contract note ("F10 ... not in the register as defi-scoped rows ... flagged as follow-up") -- add the
-      row under whichever register doc F10 belongs (/codex/02-data/non-canonical-path-inventory.md or the
-      canonical-cutover-register, matching the format of existing register entries) citing
-      data_pipeline_reconciliation_defi_2026_07_20.md Section 4/Section 9 as the source finding. Source:
-      defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md (todo 5). Done when: F10 has a row in the register doc
-      with the same fields (finding id, severity, description, delete_elig) as other register entries, and the register
-      doc's F10 row links back to data_pipeline_reconciliation_defi_2026_07_20.md.
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot 6), `unified-trading-pm@0c4172c31`.** Appended F10
+      (YEARN_V3/ETHEREUM/yield_bearing/vault_share_price pipeline_mode<->source desync, MEDIUM, delete_elig=NO) to
+      `codex/02-data/canonical-cutover-register.md` §2 (`require_pipeline_mode` axis — F10 is a row-VALUE desync against
+      this exact axis's `{mode}_{source}` invariant, distinct from a path-structure violation) as a new "Known
+      content-desync findings" table with the finding id/severity/description/delete_elig fields, linking back to
+      `data_pipeline_reconciliation_defi_2026_07_20.md` §4/§9.
 - [x] ✅ [CODE] P2. Wire EULER_V2 lending-indices capture and resolve the UAC "Plasma" chain ambiguity — per
       `plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`'s two remaining unblocked open todos
       (items EULER_V2-capture-wiring and Plasma-chain-resolution; the doc's HYPERLIQUID/ASTER UAC-registry todo is
@@ -534,24 +552,25 @@ drift_direction: advance-code
       populated `resolved_by:` with evidence citations for all 4 original decisions + the 3 CeFi-pivot bugs, committed
       via `docs(plans):`. Source (archived):
       `/plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md`
-- [ ] [SCRIPT] P3. Regenerate the stale `adapter_contract_baseline.yaml` entries for the 2026-07-14 Solana-Drift/Helius
-      split: in `unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml`, first confirm the split
-      (commit 7a8bc43c, moving Helius batch-resolve retry/rate-limit mechanics from
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot 4) — already resolved, no code change needed.** Regenerate the stale
+      `adapter_contract_baseline.yaml` entries for the 2026-07-14 Solana-Drift/Helius split: in
+      `unified-trading-pm/scripts/quality_gates/adapter_contract_baseline.yaml`, first confirm the split (commit
+      7a8bc43c, moving Helius batch-resolve retry/rate-limit mechanics from
       `market_tick_data_service/cli/handlers/solana_defi_drift.py` into the new sibling `solana_defi_drift_helius.py`)
       did not actually DROP any tracked contract calls
       (`classify_venue_error`/`ADAPTER_FETCH_FAILED`/`record_captured`/`record_empty`/`record_zero_rows`/`record_failed`)
       — verify via `git log -p` / `git show` around 7a8bc43c that the calls now counted in `solana_defi_drift_helius.py`
       (9 today) are the same calls formerly counted under `solana_defi_drift.py` (was baselined at 12, now 10), i.e. the
-      split moved calls rather than silently losing them. If confirmed intentional (no real regression), run
-      `check_adapter_contract_regression --regenerate-baseline` (or the equivalent quality-gates.sh 5.70/6
-      baseline-regen flow) scoped to `market-tick-data-service` to update the `solana_defi_drift.py` baseline count to
-      10 and add a fresh baseline entry for `solana_defi_drift_helius.py` at 9. If instead calls were actually lost (a
-      real regression), do NOT regenerate — file a new P1/P2 issue doc describing the lost contract calls and leave the
-      WARN in place. Source: `plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
-      Done when: `quality-gates.sh --no-fix` on `market-tick-data-service` no longer prints the "Adapter contract-call
-      regression" ⚠️ for `solana_defi_drift.py`, the updated `adapter_contract_baseline.yaml` diff is committed, and the
-      source issue doc's status is flipped to resolved (or a new regression issue doc is filed instead, per the above
-      branch).
+      split moved calls rather than silently losing them. **Findings**: the split DID move calls cleanly (verified via
+      `git show 7a8bc43c^:...`/`7a8bc43c:...` — 12→10/9, real code motion), but this question turned out to be moot —
+      `git log --follow` shows BOTH files were deleted entirely by `2e674d1f` (2026-07-16, the operator-ruled
+      DRIFT/PACIFICA removal), one day after this issue was filed, and their baseline entries were separately dropped
+      the same day by `6c5cfa812` ("chore(qg): drop culled DRIFT/PACIFICA entries from the adapter contract
+      baseline..."). Confirmed live: `grep solana_defi_drift adapter_contract_baseline.yaml` = 0 hits;
+      `check_adapter_contract_regression.py --workspace-root .` (run from the slot's sibling-repo parent dir) shows only
+      3 currently-regressed files, none Solana-Drift-related. No regeneration needed — the fix already shipped
+      incidentally via an unrelated commit. Flipped the source issue doc to `status: resolved` with the full re-triage.
+      Source: `plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-26 (worker, slot 6).** Verdict: SAFE across every active writer for
       `dex_pool_swaps`/`gas_fees` in market-tick-data-service — `record_captured` fires only after a confirmed
       successful parquet upload in every handler checked (`evm_defi_collectors.py`, `dex_swaps_handler.py`,

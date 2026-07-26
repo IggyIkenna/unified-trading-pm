@@ -54,14 +54,34 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 9 distinct source docs' checkboxes.** For each of
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5).** **Reconcile all 9 distinct source docs' checkboxes.** For each of
       `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s now-done todos: flip the corresponding checkbox/section in
       its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-3 commit(s) that shipped
       it — verify the actual shipped commit exists before citing it. For each source doc: after flipping, re-check
       whether it now has 0 open todos remaining (checkbox AND prose-form — do not trust checkbox count alone). Only flip
       a doc's `status` to `resolved` if it genuinely reaches 0 open todos. **Done when**: all 9 source-doc
       checkboxes/sections are flipped with verified evidence, and any doc that genuinely reaches 0 open todos is flipped
-      to `status: resolved`.
+      to `status: resolved`. — **All 9 reconciled, each commit verified live in its repo before citing**: (1)
+      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` — already flipped by the original worker
+      (verified accurate, no action needed). (2) `data_completion_tradfi_2026_07_15.md` — R1/R2 already correctly
+      reconciled (R1 open pending operator per the data-loss finding, R2 done). (3)
+      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` — G1.g/massive.py/tombstone already flipped; flipped the
+      4th (by_date capture-freeze) bullet as PARTIAL (diagnosis + staleness-check ask done, underlying freeze itself
+      still open, tracked via the sibling ICE/CME bullets). (4)
+      `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` — all 3 Remediation items already struck
+      through/done (verified); doc is `locked_by`, left status/lock as-is per its own note. (5)
+      `issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` — all 3 todos done; flipped
+      `status: resolved` (was left open pending a CEFI aster/hyperliquid follow-up that belongs to a different
+      asset_group — extracted to a new `issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md` so it stays
+      tracked instead of blocking this doc's own closure). (6)
+      `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md` — already correctly reconciled via its
+      Progress Log + Deferred-work table (3 genuinely open items, stays open). (7)
+      `issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md` — flipped the manifest-vs-disk
+      consistency checkbox (`mtds@ee3d636`, verified); doc reached 0 open todos → flipped `status: resolved`. (8)
+      `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` — flipped the known-dead-cells checkbox
+      (`deployment-service@01414fc`, verified); 2 unrelated todos remain open, stays `status: open`. (9)
+      `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` — flipped the VERIFY
+      classification-trace checkbox (read-only trace, no commit); 1 unrelated todo remains open, stays `status: open`.
 - [ ] [REVIEW] P1. **Re-check the 1 conflict-gated + 2 operator-gated + 1 too-large-or-risky Deferred items from
       batch3's own doc**, now that time has passed. For `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`
       specifically, check `autonomous_session_operator_decisions_2026_07_25.md` (or its successor) for a landed operator

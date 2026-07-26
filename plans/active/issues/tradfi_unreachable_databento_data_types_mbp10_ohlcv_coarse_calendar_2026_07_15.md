@@ -220,10 +220,20 @@ these 5 cells.
       to whoever owns that doc as the correct place to measure this data going forward. See "Resolution —
       corporate_action_confirmed / earnings_result (2026-07-15)" below for what shipped and the historical-rows
       decision.
-- [ ] [VERIFY] P3. Trace the orchestrator/sentinel classification layer to confirm exactly how a
-      requested-but-`_DATABENTO_SUPPORTED_DATA_TYPES`-filtered-out data_type gets recorded (`attempted_failed` vs.
-      `empty_confirmed`) — not traced to the manifest-write layer in this pass; needed to fully close out mechanism
-      (1)/(2)'s classification question.
+- [x] [VERIFY] P3. ✅ **DONE 2026-07-26 (batch-3 todo 9, slot 6, read-only trace).** The Databento data_type filter
+      itself is `market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py:444-447`
+      (`_route_databento`) — when filtering empties the list it returns `pd.DataFrame()` SILENTLY (no exception, no
+      `failed_per_dt` entry, just a debug log). The actual `attempted_failed`-vs-`empty_confirmed` decision is made one
+      level up, in `engine/orchestrator/sentinels.py::_emit_nonsports_tier2_tier3_sentinels` (confirmed both
+      `ohlcv_15m`/`ohlcv_24h` route through the Tier-2 venue-level branch, not Tier-3): for each expected-but-not-
+      captured `dt`, `effective_failure = per_dt_reason or failed_reason_raw` falls back to the WHOLE-VENUE failure
+      reason when the filtered-out data_type has no per-dt entry — so a filtered `ohlcv_15m`/`ohlcv_24h` cell can be
+      misclassified `ATTEMPTED_FAILED` by inheriting an unrelated data_type's failure that same day, or correctly land
+      `EMPTY_CONFIRMED` if nothing else failed. This is a SEPARATE write-time decision point from DP-FETCH-009 (not just
+      the alert-persistence mechanism) — explains HOW the 2026-07-07 stale rows originally got written
+      `attempted_failed`; DP-FETCH-009's no-recency-window count separately explains why they keep paging today. Both
+      apply. No code changes shipped (read-only trace). Source: `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`
+      todo 9.
 - [ ] [DESIGN] P2. Decide whether real aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars are wanted (not just alert
       silence). If yes: build a downstream-aggregation writer (reuse `features-service`'s already-tested exact-OHLC
       `candle_resampler.py` engine rather than writing new resampling logic) that resamples CBOE's Databento
@@ -933,3 +943,12 @@ UAC) — no separate deploy needed here.
   counts + snapshot paths in "Resolution — YAHOO_FINANCE phantom-venue seeding stopped + orphan rows cleaned
   (2026-07-16)" above. No leftover: the seeding is stopped for good (durable Dockerfile fix on LDR) and the rows are
   cleaned and verified to stay gone.
+- 2026-07-26 (slot 6): Traced the write-time classification decision point for the `ohlcv_15m`/`ohlcv_24h`
+  Databento-filtered cells this Verification addendum's DP-FETCH-009 finding covers the ALERT PERSISTENCE for.
+  `_route_databento`'s data_type filter (`umi_tick_provider.py:444-447`) silently drops these two dts to an empty fetch
+  with NO `failed_per_dt` entry; `sentinels.py::_emit_nonsports_tier2_tier3_sentinels`'s
+  `effective_failure = per_dt_reason or failed_reason_raw` fallback (line 592) is what actually decides
+  `attempted_failed` vs `empty_confirmed` for these — since the silent filter never sets `per_dt_reason`, classification
+  rides on whether that SAME VENUE had an unrelated whole-venue failure that day. So a SEPARATE write-time decision
+  point does exist (not just DP-FETCH-009's no-recency-window count) — full trace + file:line citations in
+  `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s now-flipped `[VERIFY] P3` todo. No code changes.

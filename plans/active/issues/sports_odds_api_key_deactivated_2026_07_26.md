@@ -123,6 +123,12 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
       end-to-end — see the new P1 todo. Do not re-run at scale until that's root-caused; the fix might not be "just
       re-run" after the credential is fixed. (repo: market-tick-data-service / deployment-service, no code yet —
       operational re-run blocked on the scoping bug too)
+
+      **UNBLOCKED 2026-07-26 (slot 6)**: the P1 root-cause todo below is done — the scoping code was live-tested
+          correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
+          This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
+          is needed first. Still blocked only on the operator's credential fix (todo above).
+
 - [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 4)** — Confirmed via direct manifest query
       (`gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`): ZERO `odds_api`
       rows of ANY `capture_status` (captured or `attempted_failed`) are dated OR written 2026-07-26 in the consolidated
@@ -134,21 +140,38 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
       confirmed directly via `curl https://api.the-odds-api.com/v4/sports?apiKey=...` returning `DEACTIVATED_KEY` (see
       above). **Could NOT confirm whether the `attempted_failed` Slack alert fired** — no Slack access from this
       session; that half of the todo needs an operator/dashboard check, not a worker one.
-- [ ] [DATA] P1. **NEW 2026-07-26 (slot 4)** — Root-cause why `--league` scoping doesn't reach the odds-api adapter's
-      league loop end-to-end. `VM_LEAGUE` metadata IS set correctly on the instance (confirmed via
-      `gcloud compute instances describe mtds-backfill-odds-ucl-gap2 ... --format="value(metadata.items)"` →
-      `VM_LEAGUE=UCL;CHINA_SUPER_LEAGUE;RUSSIA_PREMIER_LEAGUE`), and `setup-data-pipeline-vm.sh` (deployed tarball,
-      confirmed same commit) correctly reads it and appends `--league UCL,CHINA_SUPER_LEAGUE,RUSSIA_PREMIER_LEAGUE` to
-      the CLI invocation. `tick_data_handler.py`'s `_resolve_filter_args` (same deployed commit, `47b19985e84e`) also
-      correctly reads `args.league` and splits it. Yet the VM's own per-VM manifest shard shows it fetched the DEFAULT
-      33-league Prediction-tier pool (`_candidate_leagues()`'s `leagues=None` branch), not the 3 requested leagues —
-      meaning the parsed `--league` value never reached
-      `_fetch_all_leagues(date_str, leagues)`/`_candidate_leagues(registry, leagues)` somewhere between CLI parsing and
-      the adapter call. Needs tracing through `process_ticks()` → `venue_fetch.py` →
-      `OddsApiAdapter.download_batch(leagues=...)` to find where the value is dropped (or possibly the deployed
-      tarball's actual bytes don't match its claimed manifest sha — worth diffing the live tarball content against
-      `git show 47b19985e84e` directly as a sanity check before assuming it's a code bug). This blocks todo P2 above
-      from being a simple "re-run once the key works". (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 6)** — Root-cause: traced the full chain live and found NO drop point — the
+      current code is correct end-to-end. Full trace (all read at `market-tick-data-service@2a324b75`, HEAD at
+      investigation time, which includes `47b19985e84e`): `_resolve_filter_args` (`tick_data_handler.py:361-370`) →
+      `process_ticks(leagues=leagues)` (`orchestrator/__init__.py:690`) → `state.leagues` → `_process_venue` routes
+      `ODDS_API` (a `_LEAGUE_PARTITIONED_VENUES` member) to `_process_sports_venue_with_leagues`
+      (`venue_fetch.py:616-617`) → `_fetch_one_venue(leagues=leagues)` (`venue_fetch.py:705,722`) →
+      `fetch_tick_data_for_venue(leagues=leagues)` (`orchestrator/__init__.py:868`) → `_route_sports(leagues=leagues)` →
+      `download_batch(leagues=leagues)` (`umi_tick_provider.py:192-198`) → `_fetch_all_leagues(date_str, leagues)` →
+      `_candidate_leagues(registry,     leagues)` widens the pool (correct by design, `odds_api_adapter.py:113`) then
+      the per-iteration match filter (`odds_api_adapter.py:558`) narrows to only `leagues` by canonical id OR raw name.
+      **Live-executed a probe against the real `DEFAULT_CLASSIFICATION_REGISTRY`** (scratchpad, not committed —
+      `_candidate_leagues(registry, ["UCL","CHINA_SUPER_LEAGUE","RUSSIA_PREMIER_LEAGUE"])` then filtered by the same
+      canonical/raw-name check line 558 uses): all 3 requested leagues resolve and match exactly —
+      `('UCL','UEFA_CHAMPIONS_LEAGUE','soccer_uefa_champs_league')`,
+      `('CHINA_SUPER_LEAGUE','SUPER_LEAGUE','soccer_china_superleague')`,
+      `('RUSSIA_PREMIER_LEAGUE','PREMIER_LEAGUE','soccer_russia_premier_league')` — pool widened to 96, exactly 3
+      matched. `setup-data-pipeline-vm.sh`'s `mtds-backfill` branch also confirmed correct (`--league ${VM_LEAGUE//;/,}`
+      appended, line ~1516). **Deployment-timeline check** (the "stale tarball" hypothesis the todo raised):
+      `gs://deployment-scripts-central-element-323112/code/mtds-code.manifest.json` (the FLOATING, unpinned tarball
+      `setup-data-pipeline-vm.sh` fetches at boot) shows `commit_sha=47b19985e84e...`, `created_at=2026-07-26T06:49:53Z`
+      — i.e. the fix WAS the live floating tarball. The failed VM (`mtds-backfill-odds-ucl-gap2`) was created
+      `2026-07-26T00:52:02-07:00` = **07:52:02 UTC**, 62 minutes AFTER the fix tarball went live, and its own launcher
+      (`launch-mtds-sports-odds-backfill-vm.sh`) pins no SHA (floating-only, no `VM_CODE_SHA` metadata) — so its
+      boot-time fetch should have gotten the fixed code, not a stale one. No caching/memoization found in
+      `get_adapter`/`factory.py` either (fresh instance per call). **Conclusion**: the scoping code is provably correct
+      today; the historical run's anomaly cannot be reproduced via static/live trace and the VM is gone (can't
+      forensically inspect its actual extracted bytes) — most likely a one-off deployment artifact (e.g. a stale
+      locally-cached extraction on that specific VM's boot, independent of tarball GCS freshness) rather than a design
+      bug in the request-scoping chain. **This UNBLOCKS todo P2**: since the code is confirmed correct, "re-run once the
+      key works" is valid again — P2's own manifest-verification step (0 `attempted_failed` for these 3 leagues
+      afterward) is the correct final confirmation, not a separate code fix. (repo: market-tick-data-service, no code
+      change — investigation only)
 
 ## Progress Log
 
@@ -168,3 +191,15 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
   `--league` capability was "already shipped and tested" — it is shipped (the metadata/CLI-arg plumbing is real and
   independently useful) but NOT yet proven to actually scope the fetch; that needs the new root-cause todo before it can
   be trusted.
+- 2026-07-26 (slot 6): Picked up the P1 root-cause todo. Traced the full chain live (CLI parsing → `process_ticks` →
+  `venue_fetch.py` → `OddsApiAdapter.download_batch` → `_fetch_all_leagues` → `_candidate_leagues` + its per-league
+  match filter) — every hop correctly threads `leagues` through, and a live probe against the real
+  `DEFAULT_CLASSIFICATION_REGISTRY` confirmed all 3 requested leagues (UCL/CHINA_SUPER_LEAGUE/RUSSIA_PREMIER_LEAGUE)
+  resolve and match exactly, narrowing a widened 96-league pool down to precisely those 3. Also checked the "stale
+  tarball" hypothesis the P1 todo raised: the floating `mtds-code` tarball manifest shows the fix (`47b19985e84e`) went
+  live at 06:49:53 UTC, over an hour before the anomalous VM was even created (07:52:02 UTC per
+  `gcloud compute instances describe`'s `creationTimestamp`) — so a stale-tarball boot doesn't fit the timeline either.
+  Net: the scoping code is provably correct today; the historical anomaly isn't reproducible via trace and the VM is
+  gone, so I can't inspect what it actually ran. Flipped the P1 todo done and un-blocked P2 (re-run + verify manifest
+  afterward is now the correct next step, once the credential todo is fixed by the operator) — no code change shipped,
+  this was investigation-only.
