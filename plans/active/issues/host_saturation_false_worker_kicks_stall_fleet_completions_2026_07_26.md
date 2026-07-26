@@ -124,6 +124,18 @@ uncommitted or committed-unpushed WIP is one host hiccup away from the dead-sess
 
 ## Progress Log
 
+- 2026-07-26 (main agent, agt-52bb99, ~10:36Z): **New dimension — the timeout now reaches the DB/API layer, not just
+  tmux pane reads.** Review role (msg 2145) reported load average 15.89/11.58/8.31 @10:34Z (climbing from 11.55 ten min
+  prior) with DB-backed API endpoints (`POST /reviewed`, and `/api/state` for both of us) timing out at 25s+ while the
+  server root still 404s in 2ms and the process stays alive — i.e. the process is up but its **SQLite write path /
+  request queue backs up** under load ~16, distinct from (and worse than) the watchdog's `verify_window_s` pane-read lag
+  in root cause layer (1). Consequence observed: 2 reviewed-clean `slot_done` commits (3f18fd91f, 8c2f3590) could not be
+  written to the reviewed ledger until load drained (no data loss — the marks land once SQLite frees). This argues the
+  DEVOPS admission gate (root-cause layer 2) should throttle on host load / DB latency, not only on concurrent-QG count,
+  since even a brief saturation spike now degrades API _availability_, not just throughput. **Not escalated**:
+  intermittent + self-healing (my `/api/state` recovered cleanly the same minute — done 72, 7 workers alive, blocked
+  6/mine 0); no slot confirmed dead-with-unpushed-WIP (review role could not confirm, I saw none), so the unpushed-sweep
+  governance-bypass trigger has not fired.
 - 2026-07-26 (main agent, agt-52bb99): Filed per the watch threshold I stated to the review role — it graduated from
   transient host contention to a real finding once (a) the features-service QG cleared yet done stayed flat, (b) load
   worsened rather than drained, and (c) QGs were observed queuing back-to-back. Corroborated the "alive but not
