@@ -160,16 +160,21 @@ drift_direction: advance-code
       Remediation section (all 3 items struck through/done, `resolved_by` populated), satisfying (d) —
       `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` (doc is `locked_by: live-defi-rollout`, so left
       status/lock/archival untouched). Repos: market-tick-data-service, unified-api-contracts.
-- [ ] [CODE] P2. Evaluate switching aiohttp sessions in market-tick-data-service's Databento/tradfi fetch paths to an
-      `aiodns`-backed `AsyncResolver` (in place of the default `ThreadedResolver`, which still runs `getaddrinfo` on the
-      shared default executor). If viable (check `aiodns` is already an available/addable dependency, no platform
-      blockers), implement it; if not viable, document the blocker inline in the issue doc. This removes DNS resolution
-      from the thread-pool executor entirely, making the whole DNS-starvation bug class structurally impossible rather
-      than relying on the dedicated-executor convention landed in `mtds@ac857`. Source:
-      `issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` ([CODE] P2 todo). Done when:
-      aiodns/AsyncResolver is either adopted (with the sessions switched + a quick smoke test confirming DNS resolution
-      still works) or a documented decision-not-to (with rationale) is appended to the issue doc, and the doc's [CODE]
-      P2 checkbox is flipped to `[x]` accordingly.
+- [x] ✅ [CODE] P2. **DONE (2026-07-26, slot-12, `data_engineering`) — `market-tick-data-service@889ff829`.** Evaluated:
+      `aiodns` was viable (already transitively resolved via `ccxt`, `pycares` working on this platform, no blockers) —
+      promoted to a direct dependency. Databento's own fetch path has no aiohttp session at all (its SDK is synchronous,
+      already wrapped in the dedicated executor from `mtds@ac857` — nothing to switch there). The real targets were the
+      shared Tardis clients (Tardis serves tradfi data too, via `tardis_adapter.py`): `tardis_stream_client.py` was
+      explicitly hardcoding `ThreadedResolver()` — switched to `AsyncResolver()`; `tardis_base_client.py` was relying on
+      aiohttp's implicit "DefaultResolver picks AsyncResolver if aiodns is importable" behavior (only true by accident
+      via ccxt's transitive dep) — made explicit. 2 new regression tests assert both clients' `TCPConnector` receives an
+      `AsyncResolver` instance; live-verified end-to-end outside the test suite (network-sandboxed in CI) against
+      `api.tardis.dev` — 200 OK, DNS resolved + fetched via `AsyncResolver`. `quality-gates.sh` green (271s,
+      sentinel==HEAD; a separate warn-only adapter-contract-count flag on `_defi_manifest.py`/`dex_pools_handler.py` is
+      pre-existing from a concurrent slot's `ff1b5d51` commit, not touched by this diff). CEFI-only live-venue clients
+      (`aster_base_client.py`/`hyperliquid_base_client.py`) share the identical `ThreadedResolver()` pattern but are out
+      of this tradfi-scoped todo — flagged as a same-pattern follow-up in the issue doc rather than scope-crept into
+      here.
 - [x] ✅ [BACKEND] P0. **RESCOPED (slot-3, 2026-07-26): Finding 1's write-path root cause fixed + verified; historical
       re-stamp, billing-guard confirmation, and all of Finding 2 (FX instrument_id) remain genuinely open — split to
       `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`'s Deferred-work table (2026-07-26 Progress Log

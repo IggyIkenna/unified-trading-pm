@@ -74,15 +74,22 @@ defect** — do not cite it as a known TradFi outage cause.
 
 ## Todos
 
-- [ ] [CODE] P1. Give the Databento chunk pull a **dedicated executor** (mirror
-      `tardis_csv_transport._get_parse_executor`: module-level singleton, `thread_name_prefix="databento-fetch"`, sized
-      above whatever bounds concurrent fetches). Keeps the default pool free for DNS regardless of future concurrency.
-- [ ] [AUDIT] P2. Sweep the repo for other `run_in_executor(None, ...)` call sites that do **network-blocking** work and
-      classify each (short-lived = tolerable; holds-for-transfer = must move off the default pool). Known so far:
-      `databento_batch_jobs.py:629`, `databento_base_client.py:499` (warmup — one-shot, likely fine),
-      `databento_fetch.py:186`, `:388`, `:672`.
-- [ ] [CODE] P2. Consider an `aiodns`/`AsyncResolver` for aiohttp sessions, which removes DNS from the thread pool
-      entirely and makes this whole bug class structurally impossible rather than convention-enforced.
+- [x] ✅ [CODE] P1. **DONE (already landed as `mtds@ac857`, confirmed 2026-07-26, slot-12)**: the Databento chunk pull
+      uses a dedicated `_get_dbn_fetch_executor()` (`databento_fetch_executor.py`), not the default pool — verified live
+      in `databento_fetch.py` at all 3 named call sites (`:192`, `:394`, `:683`).
+- [x] ✅ [AUDIT] P2. **DONE (confirmed 2026-07-26, slot-12)**: swept all named call sites — `databento_batch_jobs.py`
+      (now `:661`) already uses `_get_dbn_fetch_executor()`; `databento_fetch.py:186/:388/:672` (now `:192/:394/:683`
+      after intervening edits) all use it too. Only `databento_base_client.py:499` (warmup) still uses the default pool,
+      exactly as pre-classified above — one-shot, not holds-for-transfer, no change needed.
+- [x] ✅ [CODE] P2. **DONE — `market-tick-data-service@889ff829`.** `aiodns` viable (transitively available via ccxt,
+      promoted to direct dep). Databento itself has no aiohttp session to switch (synchronous SDK). Fixed the real
+      targets: `tardis_stream_client.py` (was hardcoding `ThreadedResolver()`) and `tardis_base_client.py` (was relying
+      on aiohttp's implicit resolver-picks-AsyncResolver-if-aiodns-importable behavior) — both now explicit
+      `AsyncResolver()`. 2 new regression tests + a live DNS smoke test against `api.tardis.dev` (200 OK). Full
+      evidence: `plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s corresponding todo. **Same-pattern
+      follow-up (not done here, out of this tradfi-scoped todo)**: `aster_base_client.py` and
+      `hyperliquid_base_client.py` (CEFI-only live-venue clients) hardcode the identical `ThreadedResolver()` pattern —
+      a future CEFI-scoped todo could apply the same fix there.
 
 ## Progress Log (append-only)
 
@@ -90,3 +97,8 @@ defect** — do not cite it as a known TradFi outage cause.
   on the default pool). Deliberately NOT folded into `market-tick-data-service@2e7c2b5d` — that commit fixes the Tardis
   path where the failure is measured; widening it to a path where the failure is only theoretical would have shipped an
   unverified change under the cover of a verified one. Severity stated honestly: same class, lower risk, unobserved.
+- 2026-07-26 (slot-12): closed out all 3 remaining todos. Todos 1+2 were already done (dedicated executor landed as
+  `mtds@ac857` at some point after this doc was filed, never checked off; audit sweep confirmed all named call sites
+  compliant). Todo 3 (aiodns/AsyncResolver) genuinely required new code — shipped `market-tick-data-service@889ff829`.
+  Status left `open` pending someone picking up the flagged CEFI (aster/hyperliquid) follow-up, otherwise this doc's own
+  scope is now fully closed.
