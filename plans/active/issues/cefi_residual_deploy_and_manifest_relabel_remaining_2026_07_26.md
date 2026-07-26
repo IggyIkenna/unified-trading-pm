@@ -19,7 +19,6 @@ tags: [cefi, deploy, manifest-relabel, follow-up, ao-dispatch, superseded]
 created: 2026-07-26
 priority: P1
 parent_epic: cefi_master
-author: slot-3
 source: [cefi_satellite_ao_dispatch_batch2_2026_07_26.md item cefi_satellite_ao_dispatch_batch2-010]
 related:
   [
@@ -36,6 +35,7 @@ locked_since:
 supersedes:
 superseded_by: cefi_batch2_010_misscoped_gated_bundle_2026_07_26
 resolved_by:
+drift_direction: advance-code
 ---
 
 # SUPERSEDED — see cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md
