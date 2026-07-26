@@ -202,9 +202,9 @@ drift_direction: advance-code
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1). Full evidence:
       `sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` (all 3 todos `[x]`, new "Full
       exhaustive census results + 280-day bucket disposition" section).
-- [ ] [DOC] P2. Close out `issues/sports_batch_footystats_swap_wrong_script_2026_07_25.md` as superseded: its claim that
-      `merge_migrated_odds_into_canonical_2026_07_17.py` was never run (based on one missing manifest shard path) is
-      contradicted and outweighed by two independently-corroborating, same-day re-verifications —
+- [x] ✅ [DOC] P2. Close out `issues/sports_batch_footystats_swap_wrong_script_2026_07_25.md` as superseded: its claim
+      that `merge_migrated_odds_into_canonical_2026_07_17.py` was never run (based on one missing manifest shard path)
+      is contradicted and outweighed by two independently-corroborating, same-day re-verifications —
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s "Step (4) batch_footystats copy+swap — CORRECTED 2026-07-25
       (slot 7)" section (citing `market-tick-data-service@75f226e8`, 0 rows lost, acceptance-tested) and
       `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` (independent manifest census
@@ -217,8 +217,8 @@ drift_direction: advance-code
       `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` as the sole remaining
       (human-gated PROD-delete) work, and do NOT separately edit batch2's todo text (todo #3 here) since batch2 already
       self-corrected via its own "CORRECTED 2026-07-25" addendum. Source:
-      `sports_batch_footystats_swap_wrong_script_2026_07_25`. Done when: the doc's frontmatter `status` is `resolved`,
-      its 3 todos are struck/annotated as superseded, and it cites both corroborating docs as the resolution.
+      `sports_batch_footystats_swap_wrong_script_2026_07_25`. **DONE 2026-07-26**: re-verified fresh, doc flipped
+      `resolved`, 3 todos struck as superseded, both corroborating docs cited.
 - [ ] [DATA] P2. Add the 4 leagues unique to slot-9's diverged unpushed commit (71d6a787) that origin's current
       `unified_api_contracts/canonical/domain/sports/league_data_other.py` still lacks — `FAROE_ISLANDS_PREMIER_LEAGUE`,
       `FAROE_ISLANDS_CUP`, `WALES_PREMIER_LEAGUE`, `WALES_FAW_CHAMPIONSHIP` — following the existing curated-universe
