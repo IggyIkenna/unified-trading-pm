@@ -133,15 +133,17 @@ concurrent workers do not collide on this file.
       file — parked, see `## Deferred` D2. **Done when**: the three changes are in, the negative test passes, and a
       `workflow_dispatch` run demonstrates the loud-failure path. Source:
       `issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md` § "Revised recommendation".
-- [ ] [INFRA] P1. **`check_strict_quickmerge.py` fails OPEN on a bad range, and `_backmerge` exemption is unconfirmed.**
-      Two bounded defects in one file, from two docs. (a) An unresolvable/invalid commit range prints "no bypassed code
-      commits" and exits 0 rather than erroring — a typo'd range reads as a pass (found while testing the pre-push
-      hook). Make it fail CLOSED on an unresolvable range. (b) Confirm that `_backmerge` merge commits
-      (`Merge remote-tracking branch 'origin/main' into _backmerge`), which carry no `Quickmerge:` trailer and appear in
-      the same scan, are carve-out-exempt; if they are not, add the exemption and a test, so future provenance triage
-      does not chase them as offenders. **Explicitly OUT of scope**: the dirty-deps carve-out trailer proposal — it
-      changes the provenance gate's TRUST MODEL and its own doc requires operator sign-off (`## Deferred` D5). **Done
-      when**: both behaviours are covered by tests and PM `quality-gates.sh` is green. Sources:
+- [x] ✅ [INFRA] P1. **`check_strict_quickmerge.py` fails OPEN on a bad range, and `_backmerge` exemption is
+      unconfirmed.** — unified-trading-pm@fd52877f6. (a) `main()` now runs `git rev-list` via a checked `_run_git()` and
+      fails CLOSED (exit 1, unconditional of `--block`/`STRICT_QUICKMERGE_BLOCK`) when the range is unresolvable,
+      instead of silently falling through to "✅ no bypassed code commits". (b) Confirmed `_backmerge` merge commits are
+      ALREADY carve-out-exempt via the existing generic 2-parent "merge/reconcile commit" rule — no code change needed
+      there, just proof: `test_backmerge_merge_commit_is_exempt` builds a real 2-parent `_backmerge`-style merge in a
+      throwaway repo and asserts `commit_violates` returns exempt. Evidence: 3 new tests
+      (`test_main_fails_closed_on_unresolvable_range`,
+      `test_main_fails_closed_on_unresolvable_range_even_without_block`, `test_backmerge_merge_commit_is_exempt`) —
+      16/16 pass in `tests/unit/test_check_strict_quickmerge.py`; full PM `quality-gates.sh` green (1359+6 passed, 16
+      skipped; sentinel matched committed HEAD). Sources:
       `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P2) +
       `issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md` (Fix direction 3).
 - [ ] [INFRA] P2. **Make `rollout-cloudbuild.py` unable to regress a repo.** Add a "would drop content" guard: refuse to
