@@ -249,7 +249,7 @@ changed since batch1.
       flipped with a per-site verdict + rationale written inline for every remaining `run_in_executor(None, ...)`
       network-blocking site, explicitly including the 2 newly-identified sites — WITHOUT touching the [CODE] P1 checkbox
       or the doc's status/resolved_by fields. Source:
-      `issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`.
+      `archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`.
 
 - [ ] [TRADFI] P1. **Profile market-tick-data-service's per-date OHLCV fetch/decode path with `memray`** against one
       reproduced heavy chunk (a liquid `GC.OPT ohlcv_1s` expiry day, or a NASDAQ/NYSE many-symbol `ohlcv_1m` week) to

@@ -13,7 +13,7 @@ summary: >-
   — is a well-established, repeatedly-confirmed operator-gated item with its own live re-check mechanism already in
   `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md`), and 1 too-large-or-risky item in the Deferred section
   below.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -62,10 +62,14 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 3 — fresh triage extraction
 
-> **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
-> ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
-> explicit operator review). All 9 todos below are same-priority-independent and touch distinct files/docs (verified —
-> zero cross-todo file collisions).
+> **🟢 ARCHIVED 2026-07-26.** All 9 todos done (verified live in the source repos before citing, per
+> `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` todo 1). The 4 Deferred items below (1 conflict-gated, 2
+> operator-gated, 1 too-large-or-risky) remain genuinely open — re-verified 2026-07-26 by that same finalize doc's todo
+> 2 — but every one of them is independently tracked in its own still-active/open source doc
+> (`tradfi_multisource_backfill_2026_06_22.md`, `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`,
+> `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`,
+> `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`,
+> `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`), so no work is orphaned by archiving this batch.
 
 ## Todos
 
@@ -258,25 +262,25 @@ drift_direction: advance-code
       `pd.DataFrame()` at line 447 SILENTLY — no exception, no `failed_per_dt` entry, just a `logger.debug`.
 
       **The actual attempted_failed-vs-empty_confirmed decision is NOT made there — it's one level up**, in
-                  `engine/orchestrator/sentinels.py::_emit_nonsports_tier2_tier3_sentinels` (confirmed both `ohlcv_15m`/`ohlcv_24h`
-                  route through this Tier-2 venue-level branch, not Tier-3: neither is in UAC's
-                  `_PER_INSTRUMENT_SHARD_DATA_TYPES`, `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2309-2333`).
-                  For each expected-but-not-captured `dt` (lines 591-612): `per_dt_reason =
-                  failed_per_dt_by_venue.get(venue, {}).get(dt)` then `effective_failure = per_dt_reason or failed_reason_raw`
-                  (line 592) — `failed_reason_raw` is the WHOLE-VENUE failure reason (`failed_shards.get(venue)`, line 542),
-                  independent of which specific data_type actually failed. If `effective_failure` is truthy →
-                  `writer_manifest.record_failed(...)` (line 598, → `ATTEMPTED_FAILED`); else →
-                  `writer_manifest.record_empty(..., reason="SOURCE_RETURNED_ZERO")` (line 600, → `EMPTY_CONFIRMED`).
+                          `engine/orchestrator/sentinels.py::_emit_nonsports_tier2_tier3_sentinels` (confirmed both `ohlcv_15m`/`ohlcv_24h`
+                          route through this Tier-2 venue-level branch, not Tier-3: neither is in UAC's
+                          `_PER_INSTRUMENT_SHARD_DATA_TYPES`, `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2309-2333`).
+                          For each expected-but-not-captured `dt` (lines 591-612): `per_dt_reason =
+                          failed_per_dt_by_venue.get(venue, {}).get(dt)` then `effective_failure = per_dt_reason or failed_reason_raw`
+                          (line 592) — `failed_reason_raw` is the WHOLE-VENUE failure reason (`failed_shards.get(venue)`, line 542),
+                          independent of which specific data_type actually failed. If `effective_failure` is truthy →
+                          `writer_manifest.record_failed(...)` (line 598, → `ATTEMPTED_FAILED`); else →
+                          `writer_manifest.record_empty(..., reason="SOURCE_RETURNED_ZERO")` (line 600, → `EMPTY_CONFIRMED`).
 
-                  **This IS a separate write-time decision point from DP-FETCH-009** (not just the alert-persistence mechanism):
-                  because the silent Databento filter never populates `failed_per_dt` for the dropped data_type, its
-                  classification rides entirely on whether that SAME VENUE had an unrelated whole-venue failure that day (line
-                  592's fallback) — a filtered-out `ohlcv_15m`/`ohlcv_24h` cell can be misclassified `ATTEMPTED_FAILED` by
-                  inheriting an unrelated data_type's failure (e.g. `trades` hitting a 429 that day), or correctly land
-                  `EMPTY_CONFIRMED` if nothing else failed. This explains HOW the 2026-07-07 stale rows originally got written as
-                  `attempted_failed`; DP-FETCH-009's no-recency-window count (already documented in this doc's Verification
-                  addendum) separately explains why they keep PAGING today. Both apply — DP-FETCH-009 is not the whole story.
-                  Read-only trace, no code changes shipped. Cross-ref added to source doc's Progress Log.
+                          **This IS a separate write-time decision point from DP-FETCH-009** (not just the alert-persistence mechanism):
+                          because the silent Databento filter never populates `failed_per_dt` for the dropped data_type, its
+                          classification rides entirely on whether that SAME VENUE had an unrelated whole-venue failure that day (line
+                          592's fallback) — a filtered-out `ohlcv_15m`/`ohlcv_24h` cell can be misclassified `ATTEMPTED_FAILED` by
+                          inheriting an unrelated data_type's failure (e.g. `trades` hitting a 429 that day), or correctly land
+                          `EMPTY_CONFIRMED` if nothing else failed. This explains HOW the 2026-07-07 stale rows originally got written as
+                          `attempted_failed`; DP-FETCH-009's no-recency-window count (already documented in this doc's Verification
+                          addendum) separately explains why they keep PAGING today. Both apply — DP-FETCH-009 is not the whole story.
+                          Read-only trace, no code changes shipped. Cross-ref added to source doc's Progress Log.
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 

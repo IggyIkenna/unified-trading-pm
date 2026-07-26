@@ -64,7 +64,7 @@ drift_direction: advance-code
       `tradfi_backfill_throughput_followups_2026_07_24.md` (3 checkboxes, 1 combined todo — plus confirm the
       `issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md`-sourced todo also flipped this doc's own P2
       candidate on the 182,407-cell cohort), `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`,
-      `issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`,
+      `archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`,
       `issues/tradfi_backfill_oom_remediation_2026_06_24.md`,
       `issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`,
       `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`,

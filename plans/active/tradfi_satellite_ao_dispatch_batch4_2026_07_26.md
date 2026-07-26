@@ -23,8 +23,8 @@ related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md,
     /plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -282,14 +282,15 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
   same shared launcher library. Not resolvable from evidence alone, so parked per the operator's standing instruction
   never to silently resolve a conflict.
 
-- **BLOCKED-OPERATOR-DECISION — `issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`'s `[CODE] P1`
-  checkbox has TWO claimants and a prior batch deliberately declined to pick.** The fix shipped (`mtds@ac857`, confirmed
-  by `tradfi_backfill_throughput_followups_2026_07_24.md`'s own checked-off todo, which says "Tracking issue … is now
-  STALE (fix landed) → doc-hygiene flip pending"), but `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s todo 5
-  states verbatim: "**Deliberately scoped to NOT touch the doc's [CODE] P1 checkbox or `status`/`resolved_by`
-  frontmatter** — that closure is already claimed by `tradfi_backfill_throughput_followups_2026_07_24.md`'s own
-  checked-off todo … leaving that flip to whichever side the operator wants to execute avoids racing it." Drafting the
-  flip here would override an explicit prior deferral to the operator. Parked unchanged.
+- **BLOCKED-OPERATOR-DECISION — `archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`'s
+  `[CODE] P1` checkbox has TWO claimants and a prior batch deliberately declined to pick.** The fix shipped
+  (`mtds@ac857`, confirmed by `tradfi_backfill_throughput_followups_2026_07_24.md`'s own checked-off todo, which says
+  "Tracking issue … is now STALE (fix landed) → doc-hygiene flip pending"), but
+  `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s todo 5 states verbatim: "**Deliberately scoped to NOT touch the
+  doc's [CODE] P1 checkbox or `status`/`resolved_by` frontmatter** — that closure is already claimed by
+  `tradfi_backfill_throughput_followups_2026_07_24.md`'s own checked-off todo … leaving that flip to whichever side the
+  operator wants to execute avoids racing it." Drafting the flip here would override an explicit prior deferral to the
+  operator. Parked unchanged.
 
 ## Deferred — too-large-or-risky (needs its own dedicated plan, not a batch todo)
 

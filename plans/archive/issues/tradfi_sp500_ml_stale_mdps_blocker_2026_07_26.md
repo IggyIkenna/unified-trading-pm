@@ -34,7 +34,7 @@ tags: [tradfi, plan-hygiene, stale-checkbox, mdps, features, ml, sp500, ag-close
 related:
   [
     /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]

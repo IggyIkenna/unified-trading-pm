@@ -626,7 +626,7 @@ drift_direction: none
       low-value/deferred.
   - [`plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md`](/plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`](/plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md)
+  - [`plans/archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`](/plans/archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`](/plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md)
     (5 open)

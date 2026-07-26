@@ -316,3 +316,21 @@ start without real tradfi/ES feature parquets.
      `mdps-backfill-tradfi-buildcontinuous-es-20260726-084944` (`--root ES 2020-01-01..2026-07-25`, tarball fresh @
      `market-data-processing-service@4738ade8`) — in-flight as of this entry; next steps unchanged (verify output at the
      canonical path, launch features-delta-one-tradfi, confirm manifest rows, then flip this todo).
+- 2026-07-26 (slot 3, todo 4 continued): a 4TH real bug on the SAME real VM run above — every real write failed with
+  `record_captured: DataFrame missing required 'available_at' column`, reproduced across a wide span (2020-01-15,
+  2021-01-04, 2021-03-21/23). Root cause: `apply_panama_canal_backadjust` only carries through whatever the per-contract
+  INPUT candles happened to have, so a continuous series stitched from legacy per-contract parquets written before v9's
+  `available_at` column existed inherited the gap, and `record_captured` hard-requires it. Killed the VM (widespread,
+  not worth letting run partially-broken), fixed by stamping write-time via the same `_stamp_candle_available_at` the
+  eager candle writer uses — `market-data-processing-service@e03e629` (new regression test asserts the captured
+  DataFrame carries a fully-populated column; confirmed failing pre-fix). Before relaunching, spot-checked a wider
+  spread locally (mid-June across 2020-2026 + a 2026-01 date): all clean, zero errors — the `total_rows=0` dates turned
+  out to be genuine pre-existing per-contract data gaps (confirmed via GCS listing showing literally no objects for e.g.
+  `day=2020-06-15/`), not a code bug, and correctly recorded as `empty_confirmed`. Relaunched clean:
+  `mdps-backfill-tradfi-buildcontinuous-es-20260726-091215` (`--root ES 2020-01-01..2026-07-25`, tarball fresh @
+  `market-data-processing-service@e03e6298d9ca`) — in-flight as of this entry. Running tally of bugs found+fixed while
+  landing this ONE launch: CLI operation bridge unreachable, 2× manifest honest-absence signature mismatches, a launcher
+  tarball-pin race, missing `source=`, a `log_event` bad kwarg, and this `available_at` gap — none of these were caught
+  by the code's own test suite before this session; each was found by actually running the real pipeline against real
+  prod data and watching it fail. Next steps unchanged (verify output at the canonical path, launch
+  features-delta-one-tradfi, confirm manifest rows, then flip this todo).

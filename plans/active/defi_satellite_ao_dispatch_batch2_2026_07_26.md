@@ -363,8 +363,8 @@ drift_direction: advance-code
       there too).
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot 6), `unified-trading-pm@0c4172c31`.** Appended F10
       (YEARN_V3/ETHEREUM/yield_bearing/vault_share_price pipeline_mode<->source desync, MEDIUM, delete_elig=NO) to
-      `codex/02-data/canonical-cutover-register.md` §2 (`require_pipeline_mode` axis — F10 is a row-VALUE desync against
-      this exact axis's `{mode}_{source}` invariant, distinct from a path-structure violation) as a new "Known
+      `/codex/02-data/canonical-cutover-register.md` §2 (`require_pipeline_mode` axis — F10 is a row-VALUE desync
+      against this exact axis's `{mode}_{source}` invariant, distinct from a path-structure violation) as a new "Known
       content-desync findings" table with the finding id/severity/description/delete_elig fields, linking back to
       `data_pipeline_reconciliation_defi_2026_07_20.md` §4/§9.
 - [x] ✅ [CODE] P2. Wire EULER_V2 lending-indices capture and resolve the UAC "Plasma" chain ambiguity — per
@@ -570,7 +570,7 @@ drift_direction: advance-code
       `check_adapter_contract_regression.py --workspace-root .` (run from the slot's sibling-repo parent dir) shows only
       3 currently-regressed files, none Solana-Drift-related. No regeneration needed — the fix already shipped
       incidentally via an unrelated commit. Flipped the source issue doc to `status: resolved` with the full re-triage.
-      Source: `plans/active/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
+      Source: `plans/archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`.
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-26 (worker, slot 6).** Verdict: SAFE across every active writer for
       `dex_pool_swaps`/`gas_fees` in market-tick-data-service — `record_captured` fires only after a confirmed
       successful parquet upload in every handler checked (`evm_defi_collectors.py`, `dex_swaps_handler.py`,
