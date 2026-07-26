@@ -337,8 +337,8 @@ drift_direction: advance-code
       real prod features-sports-prd 2026-04-15..2026-05-15: 29/31 dates PASS at 100%, gate_met=YES). Independently
       re-ran both regression test files (103 passed, 0 failed) — confirmed, not just claimed. (c): attempted the CLV
       retrain, found the 3 exact quarantined artifacts
-      (`ml-store-prd-.../models/models/     CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260417{154715,164033,201036}/`) and hit
-      3 STACKED, pre-existing ml-service training-CLI bugs while trying to reproduce their training scope: (1)
+      (`ml-store-prd-.../models/models/CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260417{154715,164033,201036}/`) and hit 3
+      STACKED, pre-existing ml-service training-CLI bugs while trying to reproduce their training scope: (1)
       `--target-type` singular has no fallback to `--target-types`, crashes `'None' is not a valid TargetType`; (2)
       `--family` is required+validated for `--asset-group SPORTS` but never consumed anywhere in `ml_service/training/`
       — dead wiring; (3) the REAL blocker — `cloud_feature_provider.py`'s feature dispatcher has a DEFI-specific
@@ -348,16 +348,12 @@ drift_direction: advance-code
       data-absence) — **ml-service has likely never trained on real SPORTS features at all**, not CLV-specific. Filed
       `plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md` with all 3 bugs + a
       fix direction (mirror `_query_defi_features` for sports); did not attempt the architectural fix myself (out of
-      scope for a P2 sub-item, needs dedicated work). The 3 quarantined artifacts remain untouched/unpromoted.
-      Explicitly OUT OF SCOPE for this todo (do not touch): the doc's item (2) blank-`fixture_id` upstream-writer fix —
-      very likely ALREADY FIXED by `market-tick-data-service@3401c0ab` (batch2, `_build_fixture_rows()` now stamps
-      `fixture_id` alongside `af_fixture_id` at the exact write path the doc names) even though the doc's own re-triage
-      text (same day, order ambiguous) still calls it open — verify against `market-tick-data-service@3401c0ab` before
-      doing any further work here, do not duplicate; and the doc's item (4) T-0 shard manifest reconciliation —
-      structurally blocked on the sports legacy-bucket-cutover's T6.1 merge of
-      `_index/per_vm/cutover-move-20260716.parquet`, confirmed still unmerged as of the cutover's own 2026-07-24 history
-      doc. Source: `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`. **Done when**: (a) ✅ regression test proves the
-      PIT gate fires on the `ht_break_minutes`-unknown path; (b) ✅ `ml_readiness_check.py` rebased per-horizon,
+      scope for a P2 sub-item, needs dedicated work). The 3 quarantined artifacts remain untouched/unpromoted. OUT OF
+      SCOPE (do not touch): item (2) blank-`fixture_id` fix — likely ALREADY FIXED by
+      `market-tick-data-service@3401c0ab` (verify before duplicating); item (4) T-0 shard reconciliation — blocked on
+      the sports legacy-bucket-cutover's T6.1 merge (`_index/per_vm/cutover-move-20260716.parquet`, still unmerged).
+      Source: `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`. **Done when**: (a) ✅ regression test proves the PIT
+      gate fires on the `ht_break_minutes`-unknown path; (b) ✅ `ml_readiness_check.py` rebased per-horizon,
       re-measured; (c) ⏳ gated on `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s fix
       landing first — CLV retrain completes + independently re-verified, 3 quarantined artifacts untouched;
       `quality-gates.sh` green on every touched repo. **UPDATE 2026-07-26 (slot-6)**: fixed Bugs 1+3 —
