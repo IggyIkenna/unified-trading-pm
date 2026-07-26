@@ -79,7 +79,7 @@ drift_direction: advance-code
       `cefi_universe_capture_rule_2026_06_23.md` shows 0 unchecked boxes but has a real prose-form open TODO, a
       scaffolded live-liquidity hook + an unactioned side-finding, so it correctly stays `status: open`, not flipped to
       `resolved`) — so no `status: resolved` flips were made this pass.
-- [ ] [REVIEW] P1. **Re-check the 10 operator-gated + 1 time-gated + 1 human-only Deferred items from batch2's own
+- [x] ✅ [REVIEW] P1. **Re-check the 10 operator-gated + 1 time-gated + 1 human-only Deferred items from batch2's own
       doc**, now that time has passed and batch2's own todos have landed. For each of the 12 Deferred items: re-read the
       specific gating ground (operator decision, elapsed-time condition, or design-session need) to check if it has
       since cleared — if so, extract it as a new tracked todo in a follow-up `batch3` (do not draft it directly here,
@@ -87,7 +87,33 @@ drift_direction: advance-code
       explicitly deferred (not speculative) — do not re-surface an already-asked operator question a second time, just
       note the re-check happened and it's still awaiting an answer. **Done when**: each of the 12 Deferred items has
       either (a) a note that it's ready for `batch3` extraction because its gate cleared, or (b) an explicit re-verified
-      confirmation the gate is still open.
+      confirmation the gate is still open. — **DONE 2026-07-26 (slot-2, review).** Re-checked all 12 Deferred items —
+      **11 of 12 remain genuinely open, no gate change** (verified via `last_updated`/live prerequisite-condition
+      re-checks, not assumption): `aster_and_cefi_rolling_adv_feature_2026_07_21.md` (design conversation still not
+      held), `crypto_alpha_research_2026_07_24.md` (no operator triage occurred),
+      `cefi_backfill_per_day_catalogue_reload_2026_07_20.md` (Option-A gate — the OOM investigation it's contingent on,
+      `cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`, still has 2 open items),
+      `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` (no policy ruling),
+      `cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md` +
+      `onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md` (both gated on batch1's EXTENDED-STARKNET
+      characterization todo, confirmed still `[ ]` unchecked in `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`),
+      `instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` (Option A/B DESIGN todo unchanged since 2026-07-08),
+      `l2_book_microstructure_capture_2026_07_13.md` (live-WS relaunch decision — the referenced pause-confirmation doc
+      `cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md` resolved the outage-vs-intentional AMBIGUITY in
+      2026-07-14, not the "should the pause lift" decision itself, which is still open; the backlog-hygiene park item is
+      also still uncovered/operator-gated), `vol_dvol_backtestable_engines_2026_07_13.md` (`BLK-011c84cb` still
+      standing), `cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md` (time-gated —
+      `cefi-recapture-sweep-complete` condition confirmed still `value: false` via live `/api/state`),
+      `fail_hard_canonical_enforcement_design_2026_07_20.md` (the genuine `[DESIGN] P1` §5-gaps todo still needs a
+      dedicated design session — but flipped its 3 stale checkboxes [items 1/3/5] to `[x]` per batch2's own
+      recommendation, since `market-tick-data-service@e49e1395` + `unified-api-contracts@989e9d16` verified already
+      shipped them). **1 of 12 gate genuinely cleared, but not into a batch3 todo** —
+      `cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`'s "PACIFICA-SOLANA historical depth" 3-option design
+      fork is now **MOOT**: PACIFICA-SOLANA was permanently culled/quarantined venue-wide on 2026-07-16 (before batch2
+      even ran), so there is no more "how do we backfill it" decision to make — option 3 (accept honest absence) is the
+      outcome by construction. Annotated a `⛔ MOOT` banner in that doc rather than drafting a batch3 todo, since there
+      is no work to extract (the decision evaporated, it wasn't answered). That doc's OTHER item (1, BLOCKED-CREDENTIALS
+      Tardis-lighter entitlement) remains genuinely open, unaffected.
 - [ ] [DOC] P2. **Action batch2's 2 non-batched findings.** (1) Retag the 3 mistagged docs named in batch2's "Note — 3
       mistags found" section (`breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`,
       `mtds_ungated_test_families_2026_07_17.md`, `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`)
