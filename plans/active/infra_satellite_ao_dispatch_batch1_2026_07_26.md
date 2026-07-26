@@ -761,7 +761,7 @@ dispatched (`plans/PLAN_FORMAT.md` — `status: draft` is not ingested). Before 
   …), spot-checked 2 of them (`unified-trading-api/.git`, `unified-trading-pm/.git`) resolve to real repos inside the
   workspace root. No commit needed — nothing to ship.
 
-## Deferred work after 2026-07-26 (slot-11, item 2 fleet rollout — 8/25 shipped incl. PM)
+## Deferred work after 2026-07-26 (slot-11, item 2 fleet rollout — 8/25 shipped incl. PM) — SUPERSEDED, see slot-7 re-check below the table
 
 | Repo (17 remaining)                                                                                                                                                  | State                                                                                                                                                                                             | Blocked-on                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -776,3 +776,29 @@ above) are now DONE — QG green, shipped `fund-administration-service@8c8bc25` 
 **Recommended next item**: `unified-trading-system-ui` or `unified-trading-api` (both `ahead=1`, never reset, no known
 blockers) — ship those first while host load is checked, THEN tackle the 8 reset repos (cheap re-copy, just needs a
 clean QG window), saving `unified-api-contracts` for a low-host-load moment given its 15-20 min QG runtime.
+
+### Re-check 2026-07-26 ~21:50 UTC (slot-7) — 24/25 shipped, only agent-orchestrator remains
+
+Diffed every repo named in the table above against PM's canonical `scripts/setup.sh`. All 15 repos slot-11 had listed as
+"Not done" (either flavor) are now genuinely committed+shipped — other slots continued this rollout after slot-11's
+checkpoint (verified via `git log -1 -- scripts/setup.sh` per repo, real commits, not coincidental content match):
+`batch-live-reconciliation-service@8521395`, `e2e-testing@fd23a90`, `greeks-service@264d77c`,
+`unified-trading-api@447f69e`, `unified-trading-system-ui@acdd569f`, `ibkr-gateway-infra@23b9a66`,
+`alerting-service@4f9f37e`, `client-reporting-api@ec925ed`, `deployment-api@53a9e44`, `execution-service@fea26219`,
+`features-service@ff67e6c9`, `market-data-processing-service@19c7a52`, `strategy-service@3439a8e2`,
+`unified-api-contracts@562220e3` — plus `fund-administration-service@8c8bc25` + `trading-agent-service@2d57283` already
+noted done by slot-11.
+
+**Only `agent-orchestrator` remains — a DIFFERENT case, not a repeat of the reset-guard issue.** It never had a
+`scripts/setup.sh` at all (confirmed in scope via `workspace-manifest.json`'s 25-repo list;
+`rollout-quality-gates-unified.py --repo agent-orchestrator --dry-run` confirms it would create one). Copied PM's
+canonical file in — syntactically clean (`bash -n` OK) — but **could not complete QG verification: the host disk-full
+condition (`/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`) got WORSE while working this**
+(`df -h /` went 1.2GB → 3.4M → 2.4M free across ~15 min), and a fresh `uv pip install -e ../unified-trading-library` for
+agent-orchestrator's never-before-built `.venv` hard-failed with `No space left on device (os error 28)` mid-copy of a
+`ccxt` wheel — a real, current, externally-caused blocker, not a code defect. Stashed the addition cleanly (`git stash`
+on `agent-orchestrator`, message `slot7-agent-orchestrator-setup-sh-disk-blocked`) rather than leave it as loose
+uncommitted WIP or force a red-QG ship. **Next pickup**: `git stash pop` in `.tabs/<slot>/agent-orchestrator`, re-check
+`df -h /` has real headroom (need enough for a fresh venv + ruff/basedpyright/pytest/unified-trading-library — budget at
+least a few hundred MB), then `bash scripts/setup.sh && bash scripts/quality-gates.sh` and ship the moment it's green.
+This is the LAST repo — closing it closes this todo.

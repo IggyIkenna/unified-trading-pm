@@ -109,3 +109,15 @@ specific to any one task.
   `block_destructive_commands.py` this time (a bare glob `rm -f *.parquet` in my own scratchpad tripped the "recursive
   rm (tree delete)" heuristic) — did not attempt to circumvent it, per the hook's own instruction. Deferred to the
   operator per the existing `[OPERATOR]` todo; not re-escalating a third BLOCKED question for the same condition.
+- 2026-07-26 ~21:50 UTC (slot-7, follow-up, condition WORSENED and now a genuine hard task-blocker, not just a scare):
+  ~10 min after the previous entry, `df -h /` had dropped further: `1.2G → 3.4M → 2.4M` free across the same session. A
+  fresh `uv pip install -e ../unified-trading-library` for `agent-orchestrator`'s never-before-built `.venv` (needed to
+  roll out `infra_satellite_ao_dispatch_batch1-002`'s setup.sh fix to the one remaining repo) hard-failed with
+  `error: Failed to install: ccxt-4.5.64... Caused by: No space left on device (os error 28)` mid wheel-copy — this is
+  no longer a lost-log-line annoyance, it is now GENUINELY PREVENTING a routine task (installing a package into a fresh
+  venv) from completing anywhere on the host. Did not retry `rm`. Stashed the blocked repo's WIP cleanly (`git stash`,
+  not a raw delete) and deferred that one task item rather than force anything. This raises the practical urgency of the
+  existing `[OPERATOR]` delete-the-3-dead-scratch-dirs todo — at current burn rate the host may hit sustained
+  0-byte-free soon, which would start failing `git` object writes fleet-wide, not just venv installs. Still not
+  re-opening a new BLOCKED question (would be the 3rd for the same condition) — flagging the severity trend here is the
+  appropriate escalation channel per the existing thread.
