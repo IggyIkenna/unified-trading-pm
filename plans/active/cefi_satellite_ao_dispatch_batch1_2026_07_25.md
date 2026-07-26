@@ -663,6 +663,26 @@ drift_direction: advance-code
     as Progress-Log-only prose — see that doc for the fix specs. None block THIS todo's own delivery (the narrowed
     `--instrument-ids` backfill sidesteps bug 1; bugs 2/3 are orthogonal data_types).
 
+## Deferred work after 2026-07-26 (todo -001, session checkpoint)
+
+| Item                                                                                                                                     | State                                 | Blocked on                                                                                                                                                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Verify `mdps-backfill-cefi-20260726-180132` (2-instrument HYPERLIQUID BTC/ETH, day=2026-07-19) completed                                 | Cannot be done yet                    | External VM, in flight at compaction time — check its run.log for "Date range complete" / rc=0 first                                                                                                                         |
+| Verify real non-zero `quote_volume` in `processed_candles/by_date/day=2026-07-19/pipeline_mode=batch_hyperliquid/timeframe=24h/`         | Not done                              | The VM above completing                                                                                                                                                                                                      |
+| Verify `features-service`'s `RollingAdvReader.compute_rolling_adv()` returns non-`NO_DATA` for a HYPERLIQUID instrument                  | Not done                              | The two items above                                                                                                                                                                                                          |
+| Best-effort `rebuild_manifest_from_canonical_paths(...)` reconciliation for whatever candles have landed                                 | Not done                              | Not blocking — can run independently once any real candles exist; note the universal MDPS-candle-manifest-emission bug means this is the ONLY path to any manifest row today                                                 |
+| Flip this todo's checkbox + `/done` `cefi_satellite_ao_dispatch_batch1-001`                                                              | Not done                              | All of the above passing                                                                                                                                                                                                     |
+| `mdps-backfill-cefi-20260726-165959` (full-range `trades` backfill, 2024-01-01→2026-07-25, HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET) | Cannot be done yet                    | Multi-hour external VM, healthy at last check (80+/937 days, 0 errors) — satisfies this todo's "full captured range" criterion independently; does NOT block flipping the todo on the recent-day + ADV-reader criteria above |
+| 3 MDPS bug fixes (memory-scaling OOM P1, `derivative_ticker` P2, `book_snapshot_5` P2)                                                   | Operator/AO-owned                     | `issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md` — separate dispatch, not this todo's scope                                                                                                                 |
+| ASTER raw-capture manifest-registration gap                                                                                              | Operator/AO-owned                     | `issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md` — separate root-cause, ASTER carved out of this todo entirely                                                                                             |
+| Universal MDPS candle-manifest-never-emitted bug                                                                                         | Operator/AO-owned (sibling todo -003) | `issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`                                                                                                                                                               |
+
+**Recommended next action for whoever resumes**: check `mdps-backfill-cefi-20260726-180132`'s run.log
+(`gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260726-180132/run.log`) first — its tiny
+2-instrument scope means it very likely completed within minutes of launch (18:01 UTC), well before this checkpoint. If
+it succeeded, the remaining verification (GCS quote_volume read + ADV reader call) is quick and this todo can flip
+immediately after.
+
 ## Deferred
 
 ### Excluded — doc flagged `doc_too_large_or_risky_for_batch: true` (3 of 29 docs)
