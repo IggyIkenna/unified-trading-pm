@@ -1,12 +1,15 @@
 ---
 doc_type: plan
-title: DeFi lending writer fix — HARD PREREQUISITE for the D2 flat-LENDING retire
-summary:
+title: DeFi lending writer fix — resolver-based close-out of the D2 flat-LENDING question (physical retire WON'T-DO)
+summary: >-
   Fix the MTDS market/event lending writers that broke into `attempted_failed`/zero-data when the flat-`LENDING` →
   `A_TOKEN`/`DEBT_TOKEN` retire was first attempted, and close the shard-atom desync (GCS `instrument_type=a_token` vs
-  manifest `lending`) that the partial work-around introduced. This plan is the UPSTREAM gate on the operator's D2
-  ruling — the ~16.7M-row migration MUST NOT START until this plan is green. Omitting exactly this step is what caused
-  the first attempt to be reversed.
+  manifest `lending`) that the partial work-around introduced (todos 1-6/9/12/13, DONE). **Session-3 (2026-07-26,
+  operator present) decision: the physical A_TOKEN/DEBT_TOKEN retire (todos 8/10/11/14) is WON'T-DO, permanently — after
+  two reversals, a read-side resolver function (todo 15) delivers the same canonical-instrument-id → rate lookup without
+  the GCS rewrite / manifest re-key / IS re-seed the flip required.** Also surfaced a live data-correctness bug (todo
+  16): `evm_defi_handler.py` and `lending_indices_handler.py` redundantly double-capture Aave/Compound/Morpho
+  `lending_indices` into the same shard, and the former silently drops the supply rate.
 status: active
 nature: process
 asset_group: [defi]
@@ -55,26 +58,31 @@ source:
   data_pipeline_reconciliation_skill_2026_07_20.md todo 23
 ---
 
-# DeFi lending writer fix — HARD PREREQUISITE for the D2 flat-`LENDING` retire
+# DeFi lending writer fix — resolver-based close-out (physical retire WON'T-DO)
 
-> **⛔ GATE — READ FIRST.** The operator's **D2** ruling (2026-07-20) is to complete the FULL flat-`LENDING` retire to
-> `A_TOKEN`/`DEBT_TOKEN`. That migration (~16.7M manifest rows) **MUST NOT START until this plan is green.** The retire
-> was attempted once and **reversed** — the reversal cause was not the target model, it was executing the migration
-> without first fixing the writers. Re-executing in the same order reproduces the same outage.
+> **⛔ SUPERSEDES the original D2-retire gate banner below (session-3, 2026-07-26, operator present).** The operator's
+> **D2** ruling (2026-07-20) originally called for the FULL flat-`LENDING` retire to `A_TOKEN`/`DEBT_TOKEN` via a
+> ~16.7M-row migration. Sessions 1-2 (below) proved that migration cannot ship safely as a writer-fix-only step — it
+> needs an atomic UAC+MTDS+UTL wave PLUS an instruments-service `expected_unattempted` re-seed, and the operation has
+> already been reversed twice. **Session-3 decision: stop pursuing the physical retire. It will not ship.** Instead, a
+> new read-side resolver (todo 15) gives downstream consumers the canonical A_TOKEN/DEBT_TOKEN instrument_id → rate
+> lookup the retire was meant to provide, without touching the physical data model. See the session-3 Progress Log entry
+> for the full reasoning and the newly-found `evm_defi_handler.py`/`lending_indices_handler.py` duplicate-capture bug
+> (todo 16).
 >
-> Mandatory order — **all three steps, in this sequence**:
+> **Original mandatory-order banner, preserved for history (no longer operative — steps 2/3 never happen):**
 >
-> 1. **Fix the writers** (THIS PLAN) and prove them green on a real run.
-> 2. **Migrate the ~16.7M rows** (owned by `defi_consolidated_closeout_2026_07_18.md`, not this plan).
-> 3. **Re-sync the shard atom** across GCS · manifest · data-status · UI (owned by the migration plan).
->
-> **This plan owns step 1 only.** It does not own the migration, the atom re-sync, or any GCS rewrite.
+> 1. ~~Fix the writers (THIS PLAN) and prove them green on a real run.~~ — DONE for the parts that were real bugs (todos
+>    1-6/9/12/13); the rest of "fixing the writers" (the flip itself) is now moot.
+> 2. ~~Migrate the ~16.7M rows.~~ — WON'T-DO.
+> 3. ~~Re-sync the shard atom across GCS · manifest · data-status · UI.~~ — WON'T-DO, nothing to re-sync.
 >
 > **Ruling authority**: `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` §"OPERATOR DECISIONS — ALL THREE
-> RULED 2026-07-20" (D2 + its "D2 consequences" block). **Codex SSOTs** (referenced, never duplicated here):
-> `/codex/02-data/defi-canonical-naming-ssot.md` (the two-layer lending model + the interim banner) ·
-> `/codex/02-data/availability-manifest-and-data-status.md` (shard atom, 4-state `capture_status`) ·
-> `/codex/04-architecture/shard-level-failure-isolation.md` (per-shard `except` discipline).
+> RULED 2026-07-20" (D2 + its "D2 consequences" block) — **D2's migration mandate is reversed by this session's decision
+> above**, D1 (C2a casing) is unaffected. **Codex SSOTs** (referenced, never duplicated here):
+> `/codex/02-data/defi-canonical-naming-ssot.md` (the two-layer lending model — being updated by todo 17 to drop the
+> interim/migration_pending framing) · `/codex/02-data/availability-manifest-and-data-status.md` (shard atom, 4-state
+> `capture_status`) · `/codex/04-architecture/shard-level-failure-isolation.md` (per-shard `except` discipline).
 
 ---
 
@@ -213,34 +221,63 @@ This plan is **green** — and only then may step 2 (the ~16.7M-row migration) b
       `position_data` are FAN-OUT (both legs, per-row); `liquidation_events`/`flash_loan_events`/`risk_params`/
       `liquidations` are relabel-only (A_TOKEN). This is design-complete, NOT implementation — todo 8 remains open to
       apply it in code as part of the atomic 3-repo wave.
-- [ ] 8. [CODE] P0. **Ship the retire atomically across all three repos in ONE wave** — UAC
-      (`canonical_id_builder.py:186` `UNSUPPORTED_BY_DESIGN` gains `LENDING`), MTDS (all 8 writers on their new
-      mapping), UTL (`_derive_instrument_id.py:76-77` `_DISPATCH[('defi','lending')]`/`[('defi','lending_position')]`,
-      the third consumer identified at `defi_consolidated_closeout_2026_07_18.md:693-699`). The documented META-LESSON
-      of the reversal is that a partial wave IS the outage; do not land UAC ahead of MTDS.
+- [x] ⛔ 8. [CODE] P0. **WON'T-DO (session-3, 2026-07-26) — superseded, not deferred.** Was: ship the retire atomically
+      across UAC/MTDS/UTL. The operator decided (session-3 Progress Log) to never do the physical flip — see todo 15's
+      resolver instead. Closing rather than leaving `- [ ]` since the premise (a physical A_TOKEN/DEBT_TOKEN retire will
+      eventually ship) no longer holds.
 - [x] ✅ 9. [TEST] P0. **SHIPPED `market-tick-data-service@fec20de2` —
       `tests/unit/test_defi_lending_writer_instrument_type_pinning.py`.** Enumerate-from-source pinning tests. A test
       that reads each handler's own protocol→type map and asserts `build_instrument_id` succeeds for every producible
       tuple, plus a test asserting GCS-path segment == parquet column == manifest row `instrument_type` for a
       representative shard per writer. Enumerating from the handlers' maps (not a hand-written list) is what makes this
       survive the next protocol addition.
-- [ ] 10. [DATA] P0. **Runtime green proof — run it, don't read it.** Execute a real one-day run for each of the 8
-      writers and verify from the MANIFEST that each recorded `captured` with non-zero rows and **zero
-      `attempted_failed`**. Cite the day, the venue/chain shards touched, and the measured row counts. A handler return
-      value is not evidence; the manifest is.
-- [ ] 11. [DATA] P0. **Three-surface agreement check** on the shards produced by todo 10 — GCS object path segment ·
-      parquet content column · manifest row, at the shard atom. Any disagreement is a hard fail of this plan, not a
-      follow-up.
-- [ ] 12. [DATA] P1. **Grain regression check** — confirm the type change did not disturb the per-market
-      `record_captured` grain that converts `expected_unattempted` (`_lending_grain.py:1-19`, `:84-119`). Compare
-      EU→captured conversion counts for the run day before and after.
+- [x] ⛔ 10. [DATA] P0. **WON'T-DO (session-3) — superseded.** Was the runtime green proof for the flip; moot, no flip
+      is shipping.
+- [x] ⛔ 11. [DATA] P0. **WON'T-DO (session-3) — superseded.** Was the 3-surface agreement check for the flip; moot.
+- [x] ⛔ 12. [DATA] P1. **N/A — the flip never lands, so there is nothing to regress-check.** (Todo 12's own analysis
+      already proved the writer-fix collapse is value-preserving; that finding stands independent of this closure.)
 - [x] ✅ 13. [DOCS] P1. **SHIPPED `market-tick-data-service@fec20de2` (same wave as todo 2-5/9).** Align the MTDS docs
       to what shipped — `docs/GCS_PATHS.md`, `docs/DEFI_DOWNLOAD_STRATEGY.md`, `docs/DATA_TYPE_DECISIONS.md` all carry
-      the interim `instrument_type=lending` statement (shipped `market-tick-data-service@e9764b38`). Update them in the
-      SAME wave as todo 8, with a dated correction annotation, not a silent overwrite.
-- [ ] 14. [PM] P1. **Flip the gate and hand off.** When acceptance criteria 1-8 all hold, record the evidence here, flip
-      the todo-1 banner in the migration plan from BLOCKED to CLEARED with the commit SHAs, and notify the operator that
-      step 2 (the ~16.7M-row migration) may begin. Do not start step 2 from this plan.
+      the interim `instrument_type=lending` statement (shipped `market-tick-data-service@e9764b38`). **Session-3 note:**
+      these need a FURTHER update alongside todo 17 — "interim, migration_pending" language must become "permanent,
+      resolver-backed" everywhere it appears, not just in the naming SSOT.
+- [x] ⛔ 14. [PM] P1. **WON'T-DO (session-3) — superseded.** Was: flip the migration gate to CLEARED. There is no
+      migration to clear into — see todo 18 (closes the migration plan's reference instead).
+- [x] ✅ 15. [CODE] P0. **SHIPPED `unified-api-contracts@1d01a911`.** Build the canonical A_TOKEN/DEBT_TOKEN → rate
+      resolver. New function in `unified-api-contracts`, DeFi lending domain module (grep for where
+      `AavePoolParams`/`RateImpactResult` / `rate_model.py` live — colocate). Given a canonical A_TOKEN or DEBT_TOKEN
+      instrument_id: resolve `(venue, chain, underlying_symbol)` from instruments-service's registered
+      `InstrumentRecord` metadata for that instrument; look up the matching flat-`LENDING`/`SOLANA_LENDING`
+      `lending_indices` row for `(venue, chain, underlying_symbol, day)`; return `supply_apy` for an A_TOKEN caller,
+      `borrow_apy` for a DEBT_TOKEN caller. Grep features-onchain/strategy-service for any existing ad-hoc attempt at
+      this join and point them at the new function. Unit tests: both branches, plus the underlying-symbol/venue/chain
+      resolution, plus a not-found case (no LENDING row for that market/day — must return an honest absence, never a
+      fabricated 0.0).
+- [x] ✅ 16. [CODE] P0. **[session-3] RESOLVED — see Progress Log for the full investigation + fix.** Reconciled the
+      `evm_defi_handler.py` vs `lending_indices_handler.py` duplicate capture + fix the missing-supply-rate bug.
+      `evm_defi_handler.py`'s `collect-evm-defi` and `lending_indices_handler.py`'s `collect-lending-indices` both fetch
+      Aave V3's `reserveParamsHistoryItems` for `aave_v3`/`compound_v3`/`morpho` and write the same
+      `data_type=lending_indices` partition; `evm_defi_handler.py`'s batch query never fetches `liquidityRate` so its
+      rows silently lack a supply rate, and whichever handler wrote last wins the shard. Read both capture paths fully
+      (this is genuine investigation, not scripted — determine whether `collect-evm-defi` is still actively invoked
+      anywhere for these 3 overlapping protocols, or whether it's effectively dead/superseded historical-backfill-only
+      code) before deciding: either stop `evm_defi_handler.py` from covering the 3 overlapping protocols (keep it for
+      its unique `venus`/`benqi`/`radiant`/`euler_v2` coverage only, where there's no duplication), or fix its query to
+      include `liquidityRate` and designate ONE of the two as authoritative writer-of-record. File as a data-correctness
+      finding per `/codex/02-data/data-pipeline-correctness-hard-rule.md` regardless of which fix is chosen — this is a
+      live bug, not a design question.
+- [ ] 17. [DOCS] P0. **[session-3] Update the naming SSOT.** `codex/02-data/defi-canonical-naming-ssot.md`
+      instrument_type row: replace "RULED 2026-07-20 D2... FULL retire... migration_pending" with the resolved decision
+      — flat `LENDING`/`SOLANA_LENDING` is now PERMANENT for market/event lending data; canonical A_TOKEN/DEBT_TOKEN
+      rate lookup is via todo 15's resolver (name it explicitly), not by re-keying raw data. State plainly this reverses
+      D2's migration mandate and why (avoids a third reversal of the same operation; achieves the same downstream
+      capability with no GCS rewrite / no manifest re-key / no IS re-seed). Also close the
+      `"Same logic for `lending_indices`"` cross-reference in the `dex_pool_state` section and any other doc carrying
+      the old "interim, migration_pending" framing (todo 13's docs need the same pass).
+- [ ] 18. [PM] P0. **[session-3] Close the migration reference in `defi_consolidated_closeout_2026_07_18.md`.** That
+      plan's `:426` "Retire legacy `LENDING` → A_TOKEN/DEBT_TOKEN" todo and its `:429` BLOCKED banner (set by this
+      plan's own todo 1) currently point at a migration that is no longer going to happen. Close/remove that todo with a
+      note pointing to this plan's session-3 decision + the updated codex doc. Do not touch any other todo in that plan.
 
 ---
 
@@ -458,3 +495,63 @@ resolution point, liquidations desync closed, MTDS QG green, contract errors lou
 value-flip + a real forward-write run + 3-surface agreement on flipped shards + non-regressed EU conversion — all
 inseparable from the migration + IS re-seed + capture resume (above). So `todo 14` does NOT flip; the migration-plan
 banner (closeout `:429`) stays BLOCKED, refreshed to this precise state. The ~16.7M-row migration remains gated.
+
+### 2026-07-26 (session 3, /autonomous, interactive — operator present, decision made WITH the operator this session, not solo) — todo 7's premise is SUPERSEDED: no physical retire, ever; a resolver replaces the flip. Plus one new live bug found.
+
+**Decision, made this session with the operator (documenting per rule 12f — this is a genuine scope change against the
+prior sessions' documented intent, not a clarification within it):** Sessions 1-2 above correctly proved the atomic
+writer-flip (todo 8) cannot ship safely — 4 tightly-coupled legs, an IS `expected_unattempted` re-seed, and a ~16.7M-row
+migration that has already caused two reversals. This session's operator, independently reviewing the same tradeoff,
+chose to **stop pursuing the physical flip entirely** rather than eventually clearing it: `lending_indices` /
+`liquidations` / `liquidation_events` / `flash_loan_events` / `position_data` / `risk_params` stay flat
+`LENDING`/`SOLANA_LENDING`-keyed **permanently** — not "interim, migration_pending." The downstream need the flip was
+meant to serve (an A_TOKEN/DEBT_TOKEN canonical instrument_id resolving to a supply/borrow rate) is instead served by a
+**new read-side lookup function** (this session's todo 15) that maps a canonical A_TOKEN/DEBT_TOKEN instrument_id →
+`(venue, chain, underlying_symbol)` via instruments-service's registered metadata → the existing flat-`LENDING` row →
+`supply_apy` or `borrow_apy`. No GCS rewrite, no manifest re-key, no IS re-seed, no UAC `UNSUPPORTED_BY_DESIGN`
+addition. **This supersedes todo 7's fan-out design and closes todos 8/10/11/14 as WON'T-DO** (not deferred — the
+premise they were gated on no longer applies). Todos 1-6, 9, 12, 13 remain valid and done independent of this pivot (the
+resolver-desync fixes and SOLANA-out-of-scope ruling are correct regardless of whether the eventual target is a physical
+flip or a read-side resolver).
+
+**New finding this session (verified against live code, not the plan table — the table's "Post-retire target" column was
+previously misread by this agent as "emits today"; corrected):** `evm_defi_handler.py`'s `_EVM_DEFI_INSTRUMENT_TYPES`
+(`:119-126`) maps every protocol including `aave_v3`/`compound_v3`/`morpho` to flat `InstrumentType.LENDING` TODAY — so
+there is no live A_TOKEN/DEBT_TOKEN `lending_indices` data anywhere in prod; the resolver design above has a clean
+slate. BUT: `evm_defi_handler.py` (`collect-evm-defi`) and `lending_indices_handler.py` (`collect-lending-indices`) are
+two INDEPENDENT capture pipelines that both fetch Aave V3's `reserveParamsHistoryItems` subgraph entity for the SAME
+overlapping protocols (`aave_v3`, `compound_v3`, `morpho`) and both write `data_type=lending_indices` to the SAME
+partition (`instrument_type=LENDING`, same venue/chain/symbol/day) — a genuine redundant-capture waste. Worse:
+`evm_defi_handler.py`'s batch query (`_AAVE_V3_HISTORY_QUERY` `:334-352`) never fetches `liquidityRate`, so its parser
+(`_parse_aave_v3_history` `:329-369`) never populates a supply-side rate at all — while `lending_indices_handler.py`'s
+version does. Since both land in the same shard, write order silently determines whether that day's row has a supply
+rate. `scripts/full-defi-backfill.sh:57-60` has run `collect-evm-defi` across 2022-01-01→2026-05-03. **Filed as a new
+todo (16) — this is a live data-correctness bug per `/codex/02-data/data-pipeline-correctness-hard-rule.md`, not a
+naming inconsistency.**
+
+**New todos added this session** (15: build the resolver; 16: reconcile the aave_v3/compound_v3/morpho duplicate
+capture + the missing-supply-rate bug; 17: update the naming SSOT to remove the migration_pending framing; 18: close the
+migration reference in `defi_consolidated_closeout_2026_07_18.md`) — see Todos section below.
+
+**Todo 16 — RESOLVED (confirmed LIVE, not hypothetical, via
+`deployment-service/terraform/gcp/ defi_collection_scheduler.tf`).** Cloud Scheduler runs `collect-lending-indices`
+daily at 00:45 UTC (`lending_indices_handler.py`, full field set incl. `liquidityRate`) and `collect-evm-defi` daily at
+01:55 UTC (`evm_defi_handler.py`), both in `--mode batch` (confirmed from the `defi_collect_job` module's `args`) — so
+`collect-evm-defi` runs through its BATCH/history code path (`_AAVE_V3_HISTORY_QUERY` / `_parse_aave_v3_history`) every
+single day, not just during the one-time historical backfill. That query never fetches `liquidityRate`, so every daily
+row `collect-evm-defi` writes for `aave_v3`/`compound_v3`/`morpho` has no supply rate; since both jobs write the SAME
+GCS partition (`instrument_type=LENDING`, same venue/chain/symbol/day), whichever ran last determined whether that day's
+row was complete — a live, ongoing correctness bug per `/codex/02-data/data-pipeline-correctness-hard-rule.md`, not a
+one-off historical artifact. The terraform's own `collect-evm-defi` description ("for any chain not covered by
+op-specific jobs") already documented the INTENDED non-overlapping scope; the code just never implemented it.
+
+**Fix shipped** (`market-tick-data-service`, evm_defi_handler.py): removed `aave_v3`/`compound_v3`/`morpho` from
+`_EVM_DEFI_INSTRUMENT_TYPES`/`_DEFAULT_CHAINS`/`_DEFAULT_PROTOCOLS`/`_LIVE_ONLY_PROTOCOLS` — `collect-evm-defi`'s
+default (cron-driven) dispatch now covers only `venus`/`benqi`/`radiant`/`euler_v2`, which have no other flat-LENDING
+writer and so no duplication risk. The underlying `_AAVE_V3_QUERY`/`_AAVE_V3_HISTORY_QUERY`/`_parse_aave_v3*`/
+`_parse_compound_v3*` query+parser code was left in place (still directly unit-tested, still reachable via the explicit
+`--evm-defi-protocols` CLI override for debugging) rather than deleted — tracing every call site safely in one pass was
+out of scope for this session; **follow-up P3 housekeeping item**: confirm nothing else references it and delete if
+truly dead. Test updates: `tests/unit/test_evm_defi_handler.py`'s
+`test_default_protocols_defined`/`test_default_chains_defined` updated to the new scope + a new
+`test_aave_compound_morpho_removed_from_active_dispatch` regression guard.
