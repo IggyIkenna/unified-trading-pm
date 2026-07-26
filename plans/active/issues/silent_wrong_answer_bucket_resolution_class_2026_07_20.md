@@ -31,6 +31,8 @@ related:
     /plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
     /plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
+    /plans/active/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md,
+    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master
@@ -145,18 +147,42 @@ Deleting the fallback is the fix; the rest is what makes it stay fixed.
 
 ## 6. Open
 
-- **`aave_rate_impact` has never been produced.** `strategy-service` reads `feature_group=aave_rate_impact` for
-  projected supply APYs. `AaveRateImpactCalculator` exists in features-service and is registered in UAC, but the group
-  is absent from the bucket — the seven live groups are flash_loan_availability, health_factor, lending_rates,
-  liquidation_events, lst_yields, rewards, risk_params. The path fix landed; the **backfill has not been run**, so that
-  read still returns `{}`. It is now a loud absence rather than a silent one, but the projected-APY scaling is still not
-  happening.
+- ✅ **`aave_rate_impact` backfill — RUN 2026-07-26** (`features-service`, data-only, no code change): the group was
+  never produced because this calculator is batch-incompatible for any date before today (DefiLlama Yields is a
+  live-only source — confirmed in `orchestrator.py`'s own `FEATURE_GROUP_SKIPPED_BATCH_INCOMPATIBLE` skip, live-mode is
+  the only path that can ever write it), so "the backfill" can only mean "run it for today." Ran
+  `python -m features_service --feature-family onchain --operation compute --mode batch --asset-group DEFI --feature-group rate_impact --start-date 2026-07-26 --end-date 2026-07-26 --force --skip-dependency-check`
+  (`--skip-dependency-check` bypasses the blanket onchain MTDS-manifest preflight gate, which this calculator's
+  DefiLlama-only `fetch_data` doesn't need). **Result**: 71 rows written to
+  `gs://features-defi-prd-central-element-323112/onchain/by_date/day=2026-07-26/feature_group=rate_impact/features.parquet`,
+  read back and verified non-empty / zero `NaN`. **But every one of the 4 output columns reads back as a deterministic
+  `0`** — DefiLlama's `/pools` endpoint returns `totalBorrowUsd=None` for all 16,092 pools it serves (verified, not
+  sampled), which zeroes utilization and, given every UAC rate-model default's `base_rate=0.00`, zeroes both the supply-
+  and borrow-side outputs by construction, for every symbol, every day, regardless of real market state — a NEW instance
+  of exactly this doc's own silent-wrong-answer class (non-empty/non-NaN but numerically meaningless). Filed, not fixed
+  here (the fix is a data-source migration, not a backfill — MTDS `lending_indices` already carries real borrow-side
+  fields per the un-executed Step-4 tail of `/plans/archive/issues/aave_irm_slope_capture_dropped_2026_05_12.md`):
+  `/plans/active/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`. Separately (already
+  tracked there, not re-litigated here): the writer name (`rate_impact`, post-2026-07-21 UAC rename) still doesn't match
+  strategy-service's reader (`aave_rate_impact`) per
+  `/plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`, so projected-APY
+  scaling is still not reaching the P&L engine even with this run done.
 - **A stray empty bucket exists**: `market-data-tick-prediction-test-{pid}` (0 objects), created by the string-mangling
   smoke harness. Deletion is a prod-adjacent operation and is left for an operator decision under
   `bucket_estate_consolidation_to_sub100_2026_07_13`.
-- **23 sports cells exist in PROD but are absent from the UAC enumeration** (BETMGM, BETONLINEAG, BETRIVERS, BETSSON,
-BETVICTOR, BETWAY, BOVADA, CASUMO, CORAL, LADBROKES_UK, LIVESCOREBET, MATCHBOOK, PADDYPOWER, SKYBET, SMARKETS, SPORT888,
-UNIBET/\_EU/\_UK, VIRGINBET, WILLIAMHILL, + 2 ARBITRAGE_OPPORTUNITY cells), surfaced by the smoke run's
-`_augment_with_observed_cells`. Same blind-spot class as the earlier OKX-FUTURES / volatility_index discovery: the
-matrix reports a clean sweep over cells it never enumerated.
+- ⚠️ **23 sports cells item — NOT actioned, premise superseded by a later operator ruling (checked 2026-07-26, left
+unflipped).** Re-read against the current UAC registry: 16 of these 23 names (BETMGM, BETONLINEAG, BETRIVERS, BETSSON,
+BETVICTOR, BETWAY, BOVADA, CASUMO, CORAL, LIVESCOREBET, MATCHBOOK, PADDYPOWER, SKYBET, UNIBET, VIRGINBET, WILLIAMHILL)
+are 16 of the 20 ODDS_API fan-out bookmakers the operator explicitly ruled OUT of canonical registration two days after
+this doc was written — `plans/active/distinct_values_noncanonical_audit_2026_07_20.md` § "Operator decisions — RULED
+2026-07-22": _"do NOT add them, in fact remove them everywhere so they don't come up in audit"_ — SHIPPED at
+`unified-api-contracts@9908520b` / `deployment-api@5295c76` as `SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS` (a
+deliberate NON-canonical accepted-exception set, never merged into `VENUES_BY_ASSET_GROUP`). Adding them to the
+canonical registry now — the literal ask here — would directly revert that shipped, dated operator decision. The
+remaining 7 cells (LADBROKES_UK, SMARKETS, SPORT888, UNIBET_EU, UNIBET_UK, the 2 ARBITRAGE_OPPORTUNITY cells) are NOT
+named one way or the other in that audit's own 2026-07-25 refresh (sports venues stood at 7/14 non-canonical, not
+individually enumerated there) and sit inside that same actively-in-flight plan's scope, not this one — findings-triage
+"fits another plan → annotate it, don't fix (collision risk)" applies. Left unflipped rather than guessed at partially;
+the correct owner is `distinct_values_noncanonical_audit_2026_07_20.md`, which already has the live census machinery and
+the operator's ear on this exact registry.
 </content>
