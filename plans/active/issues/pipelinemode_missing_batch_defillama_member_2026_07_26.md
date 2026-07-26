@@ -8,7 +8,7 @@ summary: >-
   data-pipeline-correctness bug, not just a failing test. Discovered on slot-3 while shipping
   defi_satellite_ao_dispatch_batch1-006 (Phoenix radix-slab decode): quickmerge's re-gate correctly refused to push
   slot-3's unrelated, ready commit on top of this now-red shared tree (worker.md § 4b repo-blocker path).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -31,7 +31,15 @@ assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: >-
+  slot-2, 2026-07-26. Root-caused as a real cross-slot race, not a missed fix. slot-2 had already added BATCH_DEFILLAMA
+  locally (defi_satellite_ao_dispatch_batch1_2026_07_25.md sub-item (a)) and quickmerged
+  market-tick-data-service@45a9fe69 BEFORE unified-api-contracts@f7019ffb landed (delayed by an unrelated incident — an
+  external process reset slot-2's uncommitted unified-api-contracts commit mid-flight, see commit body of f7019ffb for
+  recovery detail), opening exactly the window slot-3 hit. unified-api-contracts@f7019ffb (BATCH_DEFILLAMA +
+  SOURCE_PRIORITY/SOURCE_MODE_CAPABILITY/EMISSION_LATENCY_MS_BY_SOURCE entries) is now on origin/live-defi-rollout. MTDS
+  depends on it via a uv.sources PATH dependency (pyproject.toml, not a version-pinned wheel), so any fresh pull picks
+  it up immediately, no dependency-bump PR needed. Both todos below are already satisfied, do not re-implement.
 ---
 
 # What I found
@@ -84,12 +92,18 @@ in `market-tick-data-service` to confirm it passes, then `quality-gates.sh` in B
 
 ## Todos
 
-- [ ] [CODE] P0. Add `BATCH_DEFILLAMA = "batch_defillama"` to `PipelineMode` (StrEnum) in
+- [x] ✅ [CODE] P0. Add `BATCH_DEFILLAMA = "batch_defillama"` to `PipelineMode` (StrEnum) in
       `unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py`, alongside the other
       `BATCH_<SOURCE>` members (alphabetical-ish region near `BATCH_DATABENTO`/ `BATCH_EIA`). Repo:
       unified-api-contracts. **Done when**: the member exists; `quality-gates.sh` green in unified-api-contracts (any
-      closed-set/round-trip tests pass).
-- [ ] [CODE] P0. Verify `market-tick-data-service`'s full test suite is green again after the UAC bump lands (bump the
-      `unified-api-contracts` dependency if it's pinned), specifically
+      closed-set/round-trip tests pass). — unified-api-contracts@f7019ffb, `quality-gates.sh` green (also added the
+      matching `SOURCE_PRIORITY`/`SOURCE_MODE_CAPABILITY`/`EMISSION_LATENCY_MS_BY_SOURCE` entries the closed-set
+      round-trip rule requires, and updated the 3 tests whose exact-count/exact-dict assertions the new member affects).
+- [x] ✅ [CODE] P0. Verify `market-tick-data-service`'s full test suite is green again after the UAC bump lands (bump
+      the `unified-api-contracts` dependency if it's pinned), specifically
       `test_lst_rates_handler_coverage.py::TestPipelineModeDerivation::test_tier4_solana_row_gets_distinct_pipeline_mode`.
-      Repo: market-tick-data-service. **Done when**: `quality-gates.sh` green, ship via quickmerge.
+      Repo: market-tick-data-service. **Done when**: `quality-gates.sh` green, ship via quickmerge. — no dependency bump
+      needed (`uv.sources` path dependency on `../unified-api-contracts`, picks up f7019ffb on next fresh pull);
+      `market-tick-data-service@45a9fe69`'s test suite (incl. the named regression test) confirmed green against
+      unified-api-contracts@f7019ffb locally in slot-2; the repo-blocker's `repo-market-tick-data-service-qg-green`
+      condition auto-resolves via RepoHealthWatcher once CI observes it.

@@ -163,19 +163,29 @@ drift_direction: advance-code
       the tz-comparison `TypeError` and reports a final candidate count; `quality-gates.sh` green in
       instruments-service. Source: `data_completion_defi_2026_07_15.md`,
       `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`.
-- [ ] [BACKEND] P1. **Combined `market-tick-data-service/.../lst_rates_handler.py` fix — sub-item (b) DONE 2026-07-26
-      (slot-14), sub-item (a) still OPEN.** (a) both `pipeline_mode_for_source("onchain_subgraph", ...)` call sites
-      (~line 351 and ~447) hardcode the source string for EVERY Solana LST row regardless of which tier actually
-      produced it — the per-row `method` field (written by `solana_lst_archival.py`) already tracks
+- [x] ✅ [BACKEND] P1. **Combined `market-tick-data-service/.../lst_rates_handler.py` fix — sub-item (b) DONE 2026-07-26
+      (slot-14), sub-item (a) DONE 2026-07-26 (slot-2).** (a) both `pipeline_mode_for_source("onchain_subgraph", ...)`
+      call sites (~line 351 and ~447) hardcoded the source string for EVERY Solana LST row regardless of which tier
+      actually produced it — the per-row `method` field (written by `solana_lst_archival.py`) already tracks
       `alchemy_get_account_info` / `thegraph_subgraph` / `rest_api` / `defillama_historical_ratio`, so Tier-4
-      `defillama_historical_ratio` rows (a market-price proxy, NOT genuine on-chain data) get the same
-      `batch_onchain_subgraph` label as genuine Tier 1-3 rows — derive the source argument from each row's own
-      `method`/tier instead (at minimum add a distinct source value for the Tier-4 path); the EVM LST path has no
-      tier-fallback system and must stay byte-identical (do not touch it). **Still open — the remaining unit of work on
-      this todo.** (b) ✅ **DONE 2026-07-26 (slot-14, done as a prerequisite of
-      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s residual-emitter todo, which discovered this was still
-      unshipped despite that plan's premise that it was already fixed excluding the residual path).**
-      `_write_single_lst_group()` now loops `write_defi_rows()`'s per-instrument `shards` and calls
+      `defillama_historical_ratio` rows (a market-price proxy, NOT genuine on-chain data) were getting the same
+      `batch_onchain_subgraph` label as genuine Tier 1-3 rows. Fixed by deriving the pipeline_mode per WRITTEN SHARD
+      from that shard's own `method` column instead of a single hardcoded call: added `PipelineMode.BATCH_DEFILLAMA` (+
+      `SOURCE_PRIORITY[("defi","lst_rates")]` fallback entry, `SOURCE_MODE_CAPABILITY`, `EMISSION_LATENCY_MS_BY_SOURCE`)
+      in `unified-api-contracts@f7019ffb`; `_write_single_lst_group()` in `market-tick-data-service@45a9fe69` picks
+      `batch_defillama` when a shard's rows are ALL `defillama_historical_ratio`, else keeps the unchanged
+      `batch_onchain_subgraph` label (covers the EVM path too, which never carries that `method` value — stayed
+      byte-identical, no tier-fallback system touched). The `_check_preflight` (~line 447) call site was deliberately
+      left untouched — it fires before any row/tier is resolved (catalog-unavailable gate for all 4 sentinels), so there
+      is no per-row tier to derive from there; the "Remaining done when" criterion below is scoped to actually-WRITTEN
+      rows only. `defillama` is BATCH-only (mirrors `aave`'s precedent) — `_finalize_lst_rows` defensively falls back to
+      the unchanged label rather than raising if this handler ever runs in live mode (no `LIVE_DEFILLAMA` member
+      exists). Regression test added: `test_tier4_solana_row_gets_distinct_pipeline_mode` in
+      `test_lst_rates_handler_coverage.py` (asserts EVM + Tier1-3 Solana → `BATCH_ONCHAIN_SUBGRAPH`, Tier-4 Solana →
+      `BATCH_DEFILLAMA` in the same `process()` run). Both repos' `quality-gates.sh` green. (b) ✅ **DONE 2026-07-26
+      (slot-14, done as a prerequisite of `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s residual-emitter todo,
+      which discovered this was still unshipped despite that plan's premise that it was already fixed excluding the
+      residual path).** `_write_single_lst_group()` now loops `write_defi_rows()`'s per-instrument `shards` and calls
       `record_captured(instrument_id=..., row_count=...)` once per shard instead of one (protocol, chain) aggregate with
       no `instrument_id` — mirrors `record_swap_pool_map()`/`record_market_captures()`/`_record_manifest_result()`. The
       residual/empty path (originally out of THIS todo's scope, per its "do not touch" framing — it belongs to
@@ -183,10 +193,7 @@ drift_direction: advance-code
       since batch2's todo genuinely depends on this fix landing first. Split the write functions into a new
       `_lst_rates_write.py` sibling module (codex 900-line ratchet). Extended the existing captured-path test with an
       `instrument_id` assertion. `market-tick-data-service@9d796b0e`, `quality-gates.sh` green. **Repo:
-      market-tick-data-service. Remaining done when (sub-item (a) only)**: a distinct pipeline_mode/source label is
-      written for Tier-4-sourced rows vs Tier 1-3 rows (new/updated assertion in `tests/unit/test_lst_rates_handler.py`
-      or `test_lst_rates_handler_coverage.py`), EVM LST pipeline_mode unchanged (pinned by a regression assertion);
-      `quality-gates.sh` green. Source: `defi_strategy_pnl_axis_index_2026_07_24.md`,
+      market-tick-data-service + unified-api-contracts.** Source: `defi_strategy_pnl_axis_index_2026_07_24.md`,
       `lst_rate_honest_coverage_2026_07_21.md`,
       `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
 - [ ] [BACKEND] P1. Fix `_perp_funding_kalshi_polymarket.py`'s KALSHI_PERP/POLYMARKET_PERP routing in
