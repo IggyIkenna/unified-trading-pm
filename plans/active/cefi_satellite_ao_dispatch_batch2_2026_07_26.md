@@ -71,7 +71,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Execute the COINBASE bare-name execution-service caller migration** (S1-S3 of
+- [x] ✅ [BACKEND] P2. **Execute the COINBASE bare-name execution-service caller migration** (S1-S3 of
       `coinbase_bare_name_migration_execution_service_2026_07_10.md`, whose prerequisite parent plan
       `coinbase_bare_name_migration_2026_07_06.md` is already `status: complete`): (1) grep execution-service's
       external-facing surfaces (API route handlers, order-routing request schemas) for any caller still passing bare
@@ -87,7 +87,26 @@ drift_direction: advance-code
       label/comment. Source: `coinbase_bare_name_migration_execution_service_2026_07_10.md`. Done when:
       `grep -rn '"COINBASE"' execution-service/execution_service/ --include='*.py'` (excluding the deliberately-kept
       Nautilus-boundary files listed above) returns 0 hits, the registry.py decision is documented with grep evidence in
-      that plan's Progress Log, and execution-service `bash scripts/quality-gates.sh` is green on the final commit.
+      that plan's Progress Log, and execution-service `bash scripts/quality-gates.sh` is green on the final commit. —
+      **DONE (slot-3, 2026-07-26): `execution-service@1267290`.** (1) Grepped API route handlers/request schemas
+      (`api/manual_schemas.py`, `api/preview_schemas.py`) — no bare `"COINBASE"` literal caller found; deleted
+      `registry.py`'s bare-venue resolver branches in BOTH `convert_to_gcs_format` (178-179) AND
+      `convert_to_nautilus_format`'s `venue_lookup_map` (207-208, same UAC-facing backward-compat class). ALSO removed
+      `instruments/utils.py`'s `VENUE_MAP` bare `"COINBASE"` entry (line 28) — same category, not named in this todo's
+      file list but caught by re-verifying the actual codebase per the source plan's own instruction; the grep-0
+      criterion would not pass without it. KEPT `trade_execution/venue_mapping.py` entirely untouched, deviating from
+      item (2)'s literal instruction — reading the file's own docstring ("NautilusTrader uses bare venue names... this
+      module provides the mapping layer at the adapter boundary") confirmed it is a full bidirectional Nautilus adapter
+      boundary module, the SAME class as the explicitly-KEEP files, not UAC drift; re-keying it would have broken the
+      Nautilus integration it exists to serve. (2) Re-keyed `execution_cost_estimator.py:32`, `sor.py`'s 2 `Example:`
+      docstring dicts (153/169 — the narrative prose at 27/29/34 stays bare per this todo's own "docstring examples
+      (cosmetic)" instruction), and `configs/expected_start_dates.yaml` (4 occurrences). (3)
+      `trade_handler.py`/`serializer.py` were ALREADY fully `COINBASE-SPOT` — 0 bare hits, no change needed. Final grep
+      evidence: `grep -rn '"COINBASE"' execution_service/ --include='*.py'` returns 7 hits, all in
+      `venue_mapping.py`/`utils.py`'s `normalize_venue_for_nautilus`/`nautilus_compatibility.py`/`registry.py`'s
+      canonical-keyed `VENUE_GCS_CONFIG` + Nautilus-output map — zero bare-venue-as-input-key resolvers remain. 117
+      targeted tests pass (nautilus_compatibility, sor, execution_cost_estimator, algorithm_factory, routing_matrix,
+      instruction_convert); `quality-gates.sh` green.
 - [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-7, `data_engineering`) — CeFi E6 CF-7 diagnostic.** Live read of
       `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (9,138,791 rows, single read,
       no corpus walk, no `--apply`). **(a) relabel candidates**: `COINBASE` bare-venue = **0 rows** (already fully
