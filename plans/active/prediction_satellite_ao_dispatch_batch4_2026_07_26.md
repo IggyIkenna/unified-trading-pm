@@ -16,7 +16,7 @@ summary: >-
   (operator/time/human-gated) — NOT re-drafted here, cited in the Deferred section. `status: draft` — a skill-drafted AO
   batch is never auto-shipped; flipping to `active` to dispatch is an operator decision (CLAUDE.md "Plan destination —
   ASK BEFORE CREATING").
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]

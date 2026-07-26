@@ -13,7 +13,7 @@ summary: >-
   is subsumed into another cleared candidate's broader fix, and 8 candidates remain genuinely conflict-gated (competing
   claim still open, unshipped). Same combine-same-file-collision discipline as batch1: 3 groups of same-source-doc
   candidates are bundled into single combined todos (11 dispatchable todos total from the 20 cleared candidates).
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]

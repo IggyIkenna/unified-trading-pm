@@ -23,7 +23,7 @@ tags: [quickmerge, quality-gates, strict-quickmerge, pre-push-hook, tooling-gap,
 related:
   [
     /plans/archive/issues/features_service_raw_ldr_pushes_bypass_quickmerge_2026_07_13.md,
-    /plans/active/issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md,
+    /plans/archive/issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md,
     /plans/archive/issues/qg_pytest_testpaths_excludes_scripts_quality_gates_2026_07_14.md,
   ]
 created: "2026-07-14"

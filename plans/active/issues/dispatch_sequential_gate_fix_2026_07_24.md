@@ -94,7 +94,16 @@ backfill).
       `867b1731e` (`git merge-base --is-ancestor`); (b) the `sequential` column exists on the live `tasks` table (the
       migration ran at `create_all_tables()` on restart); (c) a non-sequential plan's tasks actually dispatch to
       different slots. **Gate**: all three confirmed, evidenced. **Cannot be done until the pipeline promotes the commit
-      and the VM restarts** — not actionable immediately.
+      and the VM restarts** — not actionable immediately. **Re-opened 2026-07-26 (slot 4) — BLOCKED-CREDENTIALS, not
+      re-attempted "too early".** The two-day promotion wait has cleared, but neither
+      `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` nor a direct `aws ssm send-command` against
+      this instance/region can run: both return
+      `AccessDeniedException: User: arn:aws:iam::427895769566:user/ikenna-worker is not authorized to perform:     ssm:SendCommand on resource: arn:aws:ec2:ap-northeast-1:427895769566:instance/i-0c9b283b31d6b5ca7`.
+      No alternate AWS profile is configured, and `iam:ListAttachedUserPolicies` on the same user is also denied — no
+      self-service fix available from a worker session, and every slot on this host shares the same credentials, so this
+      blocks the whole fleet, not just slot 4. Needs an operator IAM-grant (`ssm:SendCommand` +
+      `ssm:GetCommandInvocation` on `arn:aws:ec2:ap-northeast-1:427895769566:instance/i-0c9b283b31d6b5ca7` for
+      `arn:aws:iam::427895769566:user/ikenna-worker`) before this todo is actionable again.
 
 ## Lessons (2026-07-24)
 

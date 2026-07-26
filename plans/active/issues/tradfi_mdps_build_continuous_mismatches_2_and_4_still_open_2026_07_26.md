@@ -68,6 +68,16 @@ locked_since:
 > this fix only benefits future runs + any other real caller of `get_instruments_for_date`. Regression test:
 > `tests/unit/test_cloud_data_provider.py::test_get_instruments_by_venue_tolerates_schema_drift_across_venues`
 > (confirmed failing pre-fix). Full `quality-gates.sh` green; `quickmerge` landed clean.
+>
+> **UPDATE 14:41 UTC — original VM `...-140251` PREEMPTED** after ~40 min (processed 2020-01-01..2020-02-12, ~43 real
+> days; log ends abruptly mid-`2020-02-13` with no clean-shutdown message; no `PROGRESS.json` exists for this launcher —
+> confirmed via `gcloud compute operations describe` on the delete op + the workspace rule that one-off migration VMs
+> aren't fleet-monitored/auto-relaunched). Resumed correctly from measured progress (NOT replayed `START_DATE`, per the
+> HARD RULE): `mdps-backfill-tradfi-20260726-144837`, same instrument filter, `--start-date 2020-02-13` (the last
+> INCOMPLETE date) through the original `2026-07-25` end. Tarballs republished + `LC_TARBALL_FRESHNESS=enforce`-verified
+> fresh, including the `d531eb9` schema-drift fix — the resumed run should no longer emit `schema lengths differ` at all
+> (watching to confirm). Re-armed monitoring with explicit empty-`status` detection (a `gcloud describe` returning
+> empty/error on this VM name is now treated as a preemption/deletion signal, not silently ignored).
 
 ## What I found
 
@@ -664,15 +674,72 @@ start without real tradfi/ES feature parquets.
   fresh on the retry), confirmed RUNNING. A 60-hour background watchdog is tracking real per-VM manifest row growth (not
   log activity) across all 7 shards; this todo stays open/in-progress pending real completion + a re-verified hit-rate
   improvement (todo 1's ~19% baseline) per the "plans run to actual completion" HARD RULE.
+- 2026-07-26 (slot 2, this same "backfill MDPS's per-contract process step" P0 todo, continued): Picked up from slot 4's
+  IN-FLIGHT state. Found a real scope-mismatch bug in the just-launched 7 per-year shards: slot 4's resharding
+  invocation (`launch-mdps-backfill-vm.sh tradfi 2020-01-01 2026-07-25 full`) dropped the
+  `MDPS_INSTRUMENT_IDS='CME:FUTURE:ES CME:FUTURE:MES'` scope that the FIRST single-VM attempt
+  (`mdps-backfill-tradfi-20260726-140251`, launched separately — banner-attributed to slot 3, still RUNNING alongside
+  the 7 shards) had. Confirmed via direct parquet-content inspection of two of the 7 shards' per-VM manifest files:
+  `y2020` had written 2,652 rows, 380 distinct `instrument_id`s, ALL malformed `_migrated_`/garbage strike ids (the
+  already-tracked garbage corpus); `y2025` had written 1,651 rows, 414 distinct `instrument_id`s, ALL `NYSE:EQUITY:*`
+  tickers (`ABBV`, `ABT`, `ACN`, ... — real S&P 500 equities, `instrument_type=EQUITY`, `data_type=ohlcv_15m`). Neither
+  shard had produced a SINGLE ES/MES futures row — the 7 VMs were processing the ENTIRE TradFi instrument universe
+  (equities + options + garbage ids), not the ES/MES futures this todo targets, a real billing-waste + scope-creep bug
+  (7× the compute, mostly on out-of-scope data, defeating the whole point of resharding for speed). **Fix**: killed all
+  7 mis-scoped shards. Separately verified the surviving correctly- scoped `140251` VM directly via its GCS-teed
+  `run.log`: real invocation confirmed `--instrument-ids CME:FUTURE:ES CME:FUTURE:MES`, genuine per-date progress
+  (`🏁 Date range complete` markers), clean (zero errors on tradfi so far). Investigated whether its `VM_FORCE=false`
+  (no `--force`) would prevent it from ever fixing the documented wrong-contract-per-date bug (e.g. `2021-01-05` holding
+  only June-2021's file when March-2021 should be active) — dispatched a sub-agent to read the actual
+  `--operation process` batch-mode skip path (NOT the live/streaming `candle_write_mixin.blob_exists` path, which is a
+  different code path and not what this CLI invocation uses): `orchestration_service._filter_existing_outputs` →
+  `orchestration_scanner._check_existing_outputs` (`orchestration_scanner.py:650-701`) keys the skip check on
+  `(timeframe, instrument_id)` extracted from the RAW INPUT blob path via `extract_instrument_id_from_blob_path`; for
+  TradFi FUTURE the raw MTDS input is a chain-bundle (`.../underlying={U}/ticks.parquet`) which extracts to an
+  EMPTY-STRING sentinel (`gcs_path_utils.py:105-110`), never a real contract id — so it can never collide with an
+  existing real-contract-named OUTPUT, meaning the day is NOT skipped and gets reprocessed; `write_candle_parquet`
+  itself (`canonical_writer.py`) has no existence check at all, it always overwrites. Conclusion: `--force` is NOT
+  needed — the backfill will correctly add the missing correct-contract file even without it (the confirmed remaining
+  gap is upstream RAW MTDS coverage for that contract/date, not a skip-if-fresh false-positive). Flagged one adjacent,
+  NOT-yet-hit latent bug for visibility (not chased further): if a STALE existing OUTPUT were itself an unnamed
+  `ticks.parquet` bundle (the `candle_leaf_filename` fallback), its extracted key would ALSO be the empty-string
+  sentinel and WOULD collide with a bundle-shaped raw input, silently skipping regardless of content — worth a follow-up
+  look if a future backfill shows anomalously-low real hit rates on a bundle-heavy shard. **Efficiency re-fix**: even
+  correctly scoped, `140251`'s real steady-state rate (spot-measured via consecutive `🏁 Date range complete`
+  timestamps, ~18-20s/date with occasional multi-minute outliers on malformed-id-heavy dates) projects to ~12-20+ hours
+  for the full 2,398-day range on one VM — genuinely too slow for this todo's critical-path urgency. Killed `140251`
+  (idempotent skip-if-fresh means the ~43 already-processed early-2020 days are re-skipped near- instantly on relaunch,
+  not redone) and relaunched the SAME per-year-sharding idea slot 4 had, this time WITH the ES/MES filter preserved:
+  `MDPS_INSTRUMENT_IDS='CME:FUTURE:ES CME:FUTURE:MES' bash launch-mdps-backfill-vm.sh --vm-name mdps-backfill-tradfi-y<YEAR>es-<ts> tradfi <year-start> <year-end> full`
+  for each of 2020-2026. Hit the SAME tarball-drift race documented earlier TWICE more during this relaunch (once
+  needing a fresh `create-code-tarballs.sh` for
+  `market-data-processing-service`/`unified-api-contracts`/`deployment-service` — the deployment-service repo clone in
+  this slot had no `.venv` yet, `bash scripts/setup.sh` first — and once mid-batch for `market-tick-data-service` after
+  a concurrent fleet push moved its HEAD again); re-synced + republished each time. All 7 launched clean
+  (`mdps-backfill-tradfi-y2020es-20260726-144859` .. `y2026es-20260726-145338`), confirmed RUNNING, confirmed via VM
+  metadata + a live `run.log` spot-check that the ES/MES instrument filter is actually present in the running command
+  this time. This todo stays open/in-progress pending real completion + a re-verified `24h`/`1d` hit-rate improvement
+  (todo 1's ~19% baseline) per the "plans run to actual completion" HARD RULE — whoever picks this up next should check
+  real per-VM manifest row growth across all 7 `y*es-*` shards (not log activity), and once all 7 have stopped (VM
+  `VM_SHUTDOWN_ON_COMPLETION=true`), re-run `build-continuous` for ES and re-measure the `24h`/`1d` hit rate before
+  flipping this todo's checkbox.
+- 2026-07-26 (slot 2, reconciliation note): after pushing the above, a rebase pulled in slot 3's concurrent commits —
+  `140251` was genuinely SPOT-preempted (not killed by my earlier delete; the timing coincided) and slot 3 had already
+  correctly resumed it from measured progress as a single VM (`mdps-backfill-tradfi-20260726-144837`,
+  `--start-date 2020-02-13` through `2026-07-25`, same ES/MES filter). That VM fully overlapped in scope with my 7
+  freshly-launched `y*es-*` shards (same instrument filter, same remaining date range, just split 7 ways). Killed
+  `144837` to avoid two concurrent efforts covering the identical range — the 7-way split is strictly faster for the
+  same correct scope, so no work/coverage is lost, only the redundant single-VM compute. If slot 3's session finds its
+  `144837` VM gone, this is why: superseded by the `y*es-*` shards, not a preemption or an untracked deletion.
 
 ## Deferred work after 2026-07-26
 
-| Item                                                                                              | State / why deferred                                                                                                                                                                      | Blocked on                                          |
-| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| Todo 4 (this file, P0) — real features-delta-one-tradfi production launch + manifest verification | ✅ DONE 2026-07-26 (slot 3) — real feature parquets + real manifest `captured` rows verified via direct GCS listing + parquet-content inspection                                          | N/A — closed                                        |
-| New P1 todo — MDPS `24h`/`1d` sparse coverage investigation                                       | ✅ DONE 2026-07-26 (slot 2) — root cause found (upstream per-contract processed-candle data gap, not a build-continuous code bug); see progress log for the 3-part evidence chain         | N/A — closed                                        |
-| New P0 todo — backfill MDPS's per-contract "process" step for ES/MES full history                 | Not done — newly surfaced by the sparse-coverage investigation above; a real VM-launch-scale backfill (`launch-mdps-backfill-vm.sh`, default `process` operation), not a same-session fix | Nobody — real work, needs its own VM-launch session |
+| Item                                                                                              | State / why deferred                                                                                                                                                                                                                                          | Blocked on                                                                                                                        |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Todo 4 (this file, P0) — real features-delta-one-tradfi production launch + manifest verification | ✅ DONE 2026-07-26 (slot 3) — real feature parquets + real manifest `captured` rows verified via direct GCS listing + parquet-content inspection                                                                                                              | N/A — closed                                                                                                                      |
+| New P1 todo — MDPS `24h`/`1d` sparse coverage investigation                                       | ✅ DONE 2026-07-26 (slot 2) — root cause found (upstream per-contract processed-candle data gap, not a build-continuous code bug); see progress log for the 3-part evidence chain                                                                             | N/A — closed                                                                                                                      |
+| New P0 todo — backfill MDPS's per-contract "process" step for ES/MES full history                 | IN PROGRESS — 7 correctly ES/MES-scoped per-year VMs (`mdps-backfill-tradfi-y2020es-20260726-144859` .. `y2026es-20260726-145338`) running; prior 7 mis-scoped (whole-tradfi-universe) shards + the slow single-VM attempt were killed by slot 2 (2026-07-26) | Whoever picks this up next — check real per-VM manifest row growth, then re-run build-continuous + re-measure `24h`/`1d` hit rate |
 
-**Recommended next item**: the new P0 todo above — backfill MDPS's per-contract "process" step for ES/MES across the
-full 2020-01-01..2026-07-25 history via `launch-mdps-backfill-vm.sh`, then re-run build-continuous and re-verify the
-real `24h`/`1d` hit rate rises materially above the current ~19%. This is the last open item in this doc.
+**Recommended next item**: monitor the 7 running `y*es-*` shard VMs to real completion (per-VM manifest row growth, not
+log activity), then re-run `build-continuous` for ES and re-verify the real `24h`/`1d` hit rate rises materially above
+the current ~19% baseline before flipping this todo's checkbox. This is the last open item in this doc.

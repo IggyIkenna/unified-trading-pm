@@ -62,6 +62,17 @@ genuine new mistags found (feed back into the Orthogonality HARD CHECK below), a
 recommendations. **This is the mode a scheduled/cron AO invocation with no explicit tranche argument should resolve to —
 never fail or block asking "which tranche?"**.
 
+**Total-coverage gap, fixed 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #32,
+option A): this 9-tranche partition's stated value is total coverage of the plans/issues corpus, but
+`plans/PLAN_FORMAT.md:88` also declares `infrastructure` and `meta` as valid `asset_group` values — the 9 tranches above
+only ever sweep `cross-cutting` (+ the 5 AGs), so docs tagged `asset_group: infrastructure` or `asset_group: meta` were
+invisible to every tranche's membership rule regardless of `all` mode. Measured: sweeping those 2 additional values
+returns ~48 unlisted docs. **`all` mode (and any single-tranche run building its own membership set) MUST also sweep
+`asset_group: infrastructure` and `asset_group: meta`**, folding genuine hits into `ci`/`infra`/`ao` per their existing
+content-judgment membership rule above — do not silently skip them. `check_ag_closeout_linkage.py` does not catch this
+class either; a corpus-wide triage of the ~48-doc delta is tracked in
+`plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md`.
+
 **This skill answers a forward-looking completeness question — it is NOT `/plan-reconcile`.** `/plan-reconcile` fixes
 what's already provably done (false-unchecked flips, contradiction resolution, archival) across the WHOLE corpus (or, as
 of 2026-07-25, a single topic-scoped shard of it — see `/plan-reconcile`'s own SKILL.md). This skill projects forward

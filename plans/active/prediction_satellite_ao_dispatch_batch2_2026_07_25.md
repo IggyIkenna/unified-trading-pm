@@ -13,7 +13,7 @@ summary: >-
   new todo; 6 produced genuinely new, conflict-free AO-eligible todos below, matching this doc's actual 6 dispatchable
   todos); the remainder stay genuinely blocked (duplicate-of-batch1, 0-AO-eligible-content, or operator-gated) and are
   re-recorded in Deferred with an explicit current-state note per item, per the skill's non-batchable taxonomy.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]

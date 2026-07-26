@@ -226,8 +226,8 @@ Phase 1:
       "No differences from main — nothing to merge" and exits 0 without staging/committing anything, because the no-diff
       guard (`git diff origin/main`, worktree-vs-commit) does not see untracked files (unlike the clean-tree guard
       elsewhere, which correctly uses `git status --porcelain`). Full repro + root cause + recommended fix:
-      `issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md` (re-verified still-live 2026-07-12, current
-      `quickmerge.sh` ~line 1188). **Fixed** `unified-trading-pm@04c0eef0e` — the guard also checks
+      `/plans/archive/issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md` (re-verified still-live
+      2026-07-12, current `quickmerge.sh` ~line 1188). **Fixed** `unified-trading-pm@04c0eef0e` — the guard also checks
       `git status --porcelain -- $FILES_ARG` scoped to the supplied `--files`. Regression test:
       `scripts/quality-gates-base/tests/test-quickmerge-untracked-new-file-guard.sh` (extracts the real guard; verified
       it fails against the pre-fix commit and passes against the fix). Closed via

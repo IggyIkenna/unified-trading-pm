@@ -10,7 +10,7 @@ summary: >-
   (`autonomous_session_operator_decisions_2026_07_25.md` #5-8) rather than silently drafted or dropped. No new Phase-1
   triage ran — batch2 (28/37 done, still in flight) and batch3 (draft, undispatched) were checked and neither touches
   any of the 7 candidates' ground, so nothing they've shipped changed the verdicts below beyond what's cited per item.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]

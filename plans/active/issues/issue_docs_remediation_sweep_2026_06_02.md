@@ -416,7 +416,11 @@ verified complete**.
       `features-cefi/defi/tradfi/prediction-service` names + omits strategy-service, diverging from the backend
       `SERVICE_TO_KIND` consolidated families (`features-delta-one/volatility/onchain/sports-service`). Make the list
       UAC/discovery-driven (or align to the backend kinds) + surface strategy-service in the pipeline view. Playwright
-      gate applies (`pw:L2 ✓` + regression spec). Source: e2e-pipeline-manifest-wiring (G-UI).
+      gate applies (`pw:L2 ✓` + regression spec). Source: e2e-pipeline-manifest-wiring (G-UI). **Sequencing ruled
+      2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #35): cross-cutting batch1 also
+      claims this same file for a 3-value UI split and is already `status: active` — let batch1 land first, pick this up
+      in an infra batch once quiet (batch1's own finalize plan already re-checks this exact conflict before shipping).
+      Do NOT dispatch this todo concurrently with batch1.
 - [ ] [CODE] P3. deployment-api + deployment-ui: GAP **G-TRACE** — add a cross-service E2E trace
       (`/api/data-status/pipeline-trace?instrument&date`) threading one instrument/date through all stages with per-hop
       `capture_status`, + a UI view. Larger feature; coordinate with the in-flight data-status canonicalisation slot.

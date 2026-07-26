@@ -15,7 +15,7 @@ summary: >-
   bullets, plus a 54th appended 2026-07-25 once operator-decision entry #3 (Kamino/Solend `lending_indices` shape)
   resolved and moved from the operator queue into Todos (see the Deferred section's "RESOLVED" note) — 54 todo bullets
   total.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]

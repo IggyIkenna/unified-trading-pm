@@ -890,3 +890,64 @@ before starting resolutions.
 **Recommended next item**: work through the 70-item batch applying `[REC]` where confident (the large majority), landing
 each resolution with real evidence per the same discipline as everything else this session; return only genuine
 toss-ups.
+
+## Round 8 (2026-07-26) — resolved all 34 open entries in the decisions log
+
+Per the operator's next-phase directive above, worked through `autonomous_session_operator_decisions_2026_07_25.md`
+entry-by-entry (the durable log supersedes the raw 70-item chat/scratchpad batch as the authoritative source — some
+scratchpad items were self-resolved inline by their originating agent and never became durable-log entries; the log's 38
+numbered entries, 4 already resolved before this round, are the real remaining surface). Applied `[REC]` directly on
+every entry — none were genuine toss-ups requiring a bounce back to the operator. Landed across 5 quickmerge commits
+(`unified-trading-pm@2c61a8dc4`/`36c5433eb`/+ 2 more; `unified-api-contracts@f7aed74a`):
+
+- **Mechanical flips**: ao/ci/infra first-ever batch1 dispatch plans → `active` (entries #22/#26/#38), finalize siblings
+  deliberately left `draft` (already `gate_on_depends: true` — self-activates once the batch lands).
+- **Real content fixes discovered mid-pass**: prediction entry #14's premise (Kalshi still routes to
+  `attempted_failed[ClassifierConfidenceLow]`) was already stale at HEAD — `classify_kalshi_to_canonical_group` is
+  non-Optional and already returns `OTHER` (`unified-api-contracts@d4523602`, landed before this session even started
+  auditing). Fixed the stale docstring + re-scoped the now-false 94.5%-residual premise in
+  `prediction_cqg_residual_2026_07_24.md` rather than re-litigating an already-settled question.
+- **Archival with full referrer-repoint**: entry #12 folded a BLOCKED-UPSTREAM remnant into
+  `prediction_phase_ab_residuals_2026_07_24.md` and archived the shell plan, 12 referrer paths repointed corpus-wide
+  (verified via `check_reference_paths.py`: 946 dangling vs. 956 baseline — net improvement, no regressions).
+- **A real gate fixed, not just documented**: entry #11's `locked_by:` enforcement gap (the mechanism only ran under
+  `quality-gates.sh`, which `docs(plans):` commits are explicitly routed away from) — ruled the lock mandatory,
+  sharpened the fix-todo with the actual `pre-commit`-vs-`commit-msg` hook-staging root cause found while scoping it (a
+  `git commit -m` message isn't reliably in `COMMIT_EDITMSG` at the `pre-commit` stage), and retro-cleaned one
+  already-independently-verified stale lock.
+- **A skill-scope gap closed workspace-wide**: entry #32 — `/ag-closeout-audit`'s 9-tranche partition only ever swept
+  `asset_group: cross-cutting`, missing the `infrastructure`/`meta` enum values entirely (~48 docs invisible to every
+  tranche). Widened `SKILL.md`, filed the remaining corpus-wide triage as its own tracked issue doc. `entry #18` and
+  `#25` (AO tranche membership gaps, one covering plan missing from Sources for its first 24h) are the same root pattern
+  at smaller scale — fixed both directly, filed the epic-based-membership-rule redefinition as a proper follow-on todo
+  rather than doing the full re-derivation in this pass.
+- **One entry (#31) had already been independently resolved by concurrent workers** exactly along the recommended line
+  (filed `/blocked` rather than force-moving a published git tag; operator separately answered `BLK-2d9aae3f` with the
+  same direction A/B split this session's own analysis reached) — confirms the resolution, no further action needed.
+- **Found and landed genuinely stranded work while auditing git state**: `mtds_retry_safe_default_audit_2026_07_14`'s
+  final 2 todos (a codex SSOT update + a fleet-wide QG lint, STEP 5.104) were sitting complete-but-uncommitted in the
+  working tree with no session record of authorship — verified against real shipped commits
+  (`mtds@b8218f8a`/`f82f29c1`/`0041a8a6`) before landing (`unified-trading-pm@4d3713ade`). Also pruned 12 more
+  already-landed worktrees accumulated since Round 7.
+- **Where a full fix was disproportionate to one decision item**: several entries (#17 finalize-plan template gap, #29
+  DEPLOYMENT_ENV leak sequencing, #36 base-service.sh contention, #37 human_led_audit_pool re-test) got the
+  systemic/durable half of the fix (a rule change, a sequencing ruling, a serialization declaration) with the remaining
+  mechanical execution left as a properly-scoped, already-precise todo rather than hand-built in this pass — consistent
+  with this session's own calibration: deep investigation where correctness/safety was actually at stake, lighter-touch
+  recording where the judgment call itself was the valuable part.
+
+`autonomous_session_operator_decisions_2026_07_25.md` now shows 0 entries with `**Status**: open` outside its own
+closing template block (verified via grep before closing this round).
+
+### Deferred work after 2026-07-26 (Round 8)
+
+| Item                                                                                                                     | State       | Blocked on                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mass flip (draft→active) of the remaining cefi/defi/tradfi/prediction/sports batch/finalize pairs not touched this round | Not started | Nothing — this round only flipped the 3 first-ever ao/ci/infra vehicles; the other 5 AGs' newer batches (cefi batch3, defi batch3/4, tradfi batch4, prediction batch4/5, sports batch5/6) were never individually escalated as their own decision-log entries and still sit `draft` |
+| Corpus-wide ~48-doc `infrastructure`/`meta` triage (entry #32's follow-on)                                               | Not started | `issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` — 4 of ~48 already triaged                                                                                                                                                                                           |
+| AO tranche epic-based-membership-rule redefinition + ~40-doc delta triage (entry #25's follow-on)                        | Not started | New todo in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`                                                                                                                                                                                                                         |
+| base-service.sh/base-library.sh 4-item serialized batch (entry #36)                                                      | Not started | Next infra batch authoring                                                                                                                                                                                                                                                          |
+| human_led_audit_pool's 12-row re-test against the current qualitative rule (entry #37)                                   | Not started | Whoever picks the doc up next                                                                                                                                                                                                                                                       |
+
+**Recommended next item**: the mass-flip is now the only thing standing between this rollout and every tranche having
+real, active, AO-dispatchable work — the batched-decisions gate that held it back is now cleared.

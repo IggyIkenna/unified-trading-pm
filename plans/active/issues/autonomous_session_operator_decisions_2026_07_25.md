@@ -140,7 +140,9 @@ bypass read, retire `perp_funding` raw capture). C: Rule directly now that `perp
 captured raw type (keep dual-capture; close the DESIGN todo as "keep both — no parity check needed"). Other: operator
 can type a custom answer
 
-**Status**: open
+**Status**: resolved — option A. Filed the re-scoped HYPERLIQUID/ASTER cross-source funding-parity todo directly in
+`defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`, gating the DESIGN demote decision on its
+results. `unified-trading-pm@2c61a8dc4`.
 
 ---
 
@@ -168,7 +170,9 @@ already `captured`, not a conflict. [WORKER REC] B: Hold this specific relaunch 
 so the golden-window fix and the full-history extension ship as one coherent pass instead of two. Other: operator can
 type a custom answer
 
-**Status**: open
+**Status**: resolved — option A. Dispatch the narrow golden-window-scoped Transfermarkt relaunch as originally scoped;
+cheap, no conflict with Sports P2b whenever it eventually runs (smart-skip no-ops already-resolved cells). No file edit
+needed — the candidate was already correctly scoped in `data_completion_sports_2026_07_24.md`.
 
 ---
 
@@ -194,7 +198,8 @@ superset of useful input for whoever eventually re-runs the R1/R2/R3 gate — it
 REC] B: Hold until the R1/R2/R3 gate is actually re-run, so the diagnosis happens in the context of the full gate re-run
 rather than as a standalone golden-window snapshot that may need re-doing. Other: operator can type a custom answer
 
-**Status**: open
+**Status**: resolved — option A. Dispatch the ODDS+PREDICTIONS blank-reason measure-and-file candidate as scoped;
+read-only/diagnosis-only, cannot regress or race the R1/R2/R3 gate. No file edit needed.
 
 ---
 
@@ -233,7 +238,9 @@ until the operator rules on the 55,233-row DELETE-policy question in
 plan are designed together in one pass instead of the census possibly needing a re-run. Other: operator can type a
 custom answer
 
-**Status**: open
+**Status**: resolved — verified the census todo in `sports_legacy_fixtures_path_migration_2026_07_24.md` already
+requires a real GCS object read (not manifest-label-only) on the legacy side per its own text — the scope correction
+option A called for was already present. Dispatch as-is.
 
 ---
 
@@ -264,7 +271,9 @@ a separate classification pass. [WORKER REC] B: Keep them as two separate, indep
 starts). C: Dispatch the phantom-audit spot-check now as originally scoped, and treat any STANDINGS/TEAMS finding it
 produces as an input to decision 16 rather than a competing conclusion. Other: operator can type a custom answer
 
-**Status**: open
+**Status**: resolved — option A. Merge into one investigation: dispatch decision 16's day-partition root-cause dig first
+(sports_consolidated_closeout Track S), fold the phantom-audit STANDINGS/TEAMS spot-check in as a corroborating data
+point. No file edit made this pass — next sports dispatch should sequence accordingly.
 
 ---
 
@@ -351,7 +360,9 @@ the difference**: archive `data_pipeline_reconciliation_skill_2026_07_20.md` (it
 `data_pipeline_e2e_milestones_gate_2026_07_24.md` live as the standing 14-criteria gate. Other: operator can type a
 custom answer
 
-**Status**: open
+**Status**: resolved — option A. Added a "standing reference surface, not an archival candidate" note to both
+`data_pipeline_e2e_milestones_gate_2026_07_24.md` and `data_pipeline_reconciliation_skill_2026_07_20.md`; kept
+`status: active`. `unified-trading-pm@2c61a8dc4`.
 
 ## 11. A `locked_by:` doc got archived with no `[unlock-plan]` — is the lock mandatory or advisory? (2026-07-26, cross-cutting)
 
@@ -417,7 +428,10 @@ rather than buried in a 345-line residuals plan. C: Fold it instead into
 `/plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (2 open), the other Phase-A3 split sibling. Other:
 operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. The lock is mandatory (CLAUDE.md's own text is unambiguous); sharpened the
+mechanism-fix todo in `issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md` with the real
+commit-msg-vs-pre-commit staging nuance found while scoping it, and retro-cleaned the stale `locked_by:` on the
+already-independently-verified archived doc. `unified-trading-pm@2c61a8dc4`.
 
 ---
 
@@ -459,7 +473,10 @@ reason badges) because "blanks where we expected data" should mean a literal bla
 todos as-is and rule that the two target states are for different layers (adapter pre-fetch gate vs manifest emission),
 i.e. no conflict — but say which value each layer writes. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Rewired `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 1 leg (3) to
+verify `OUT_OF_COVERAGE_WINDOW_REASONS` already excludes these cells from the denominator instead of removing enum
+members; aligned leg (2)'s target state to `empty_confirmed[EXPECTED_*]`, matching Side A
+(`prediction_phase_ab_residuals_2026_07_24.md`) which was already correct. `unified-trading-pm@2c61a8dc4`.
 
 ---
 
@@ -503,7 +520,12 @@ Related sub-question if A or C is chosen: `classify_polymarket_to_canonical_grou
 periodically queries the event stream to find candidate groups for promotion". That promotion-audit loop is effectively
 off in production today, and the `[x]` now over-claims.
 
-**Status**: open
+**Status**: resolved — option A, ratified. Verified at current HEAD: both `classify_polymarket_to_canonical_group` and
+`classify_kalshi_to_canonical_group` are already non-Optional and route to `OTHER` for both venues
+(`unified-api-contracts@d4523602` already shipped this) — the entry's premise (Kalshi still returns None) was stale.
+Fixed the module docstring (`unified-api-contracts@f7aed74a`), re-scoped the now-stale 94.5%-ClassifierConfidenceLow
+premise in `prediction_cqg_residual_2026_07_24.md`, and corrected the shipped INFO→DEBUG over-claim in
+`predictions_other_bucket_and_ui_drilldown_2026_06_20.md`. `unified-trading-pm@2c61a8dc4`.
 
 ---
 
@@ -519,7 +541,9 @@ recomputes matchday anyway; a second live mechanism only creates a race against 
 gated interim fix with `depends_on` + an escape clause. C: Leave both open (status quo). Other: operator can type a
 custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Declared the matchday regex-recovery todo superseded and closed it in
+`sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md` — Track F's mandatory corpus-wide re-run
+recomputes matchday anyway. `unified-trading-pm@2c61a8dc4`.
 
 ## 16. 55 open checkboxes in a split features-sweep doc — reconcile in place vs. archive (2026-07-26, sports)
 
@@ -531,7 +555,9 @@ A: Reconcile in place (already drafted as `sports_satellite_ao_dispatch_batch6_2
 B: Archive §§G-AA as history, re-file only live residue fresh. C: Do A then B once the surviving-open count is measured.
 Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Already correctly drafted as `sports_satellite_ao_dispatch_batch6_2026_07_26.md` todos
+1-2 (reconciling part2's 24 + part3's 31 open checkboxes). No further edit needed; becomes real dispatchable work once
+sports's batch6 is flipped active.
 
 ## 17. Finalize-plan template gap — generalize workspace-wide? (2026-07-26, sports)
 
@@ -544,7 +570,10 @@ A: Amend the template + codex + backfill into the other 4 AGs' finalize plans. [
 AGs queued to reproduce the same failure. B: Sports-only fix (as drafted). C: Reject, rely on the CI-gate
 auto-remediation as the intended mechanism. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Amended `task_template.md` §4's finalize-plan-coverage rule to also check each
+batch-extraction plan's SOURCE docs for archival eligibility, not just the plan itself — closes the gap workspace-wide
+(all draft finalize plans reference the template generically, so no per-AG backfill needed).
+`unified-trading-pm@2c61a8dc4`.
 
 ## 18. Orphan doc invisible to every tranche's membership rule (2026-07-26, sports/infra)
 
@@ -557,7 +586,9 @@ A: Assign to `infra`. [WORKER REC] — matches the skill's own epic-split note. 
 to admit the epic instead (fixes root cause, competitive with A — worth ruling on both). C: Leave unowned, rely on an
 `all`-tranche run. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. `sports_prediction_mvp_writetime_precompute_2026_07_24.md` assigned to the `infra`
+tranche in this session's earlier 9-tranche run (see plan-of-record). Option B (widen cross-cutting's membership rule)
+filed as the follow-on via entry #32's scope-widening work.
 
 ## 19. Track 24 (strategy/execution determinism, ~121 open todos across 8 docs) — undrainable block (2026-07-26, cross-cutting)
 
@@ -570,7 +601,10 @@ accept permanent orphan reporting on every future audit. C: Split by kind (resea
 home vs. drop the over-counted v2_engine reference) — fold into A regardless of split choice. Other: operator can type a
 custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Extracted Track 24 (~121 todos, 8 source docs) out of
+`cross_cutting_consolidated_closeout_2026_07_25.md` into its own child plan
+`cross_cutting_strategy_execution_determinism_2026_07_26.md`, carrying the `v2_engine_venue_buildout` over-count caveat
+forward. `unified-trading-pm@2c61a8dc4`.
 
 ## 20. Track 22 monitor-instance docs — retag to single-AG, or keep cross-cutting? (2026-07-26, cross-cutting)
 
@@ -585,7 +619,9 @@ all 4 to their AGs, delete Track 22. C: Split — keep the 2 manifest_hygiene do
 phantom_captures docs to their AGs (defensible second choice, needs sign-off since it reassigns ownership of a live
 data-correctness fix). Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Kept Track 22's `[cross-cutting]` tag (retagging mid-rollout was judged the greater
+hazard) and added an explicit ownership note to `cross_cutting_consolidated_closeout_2026_07_25.md`.
+`unified-trading-pm@2c61a8dc4`.
 
 ## 21. WorkerLivenessWatchdog — harden vs. soften, and ordering (2026-07-26, ao)
 
@@ -601,7 +637,10 @@ has measured active harm right now; the harden side's evidence is a single 5-day
 classifier is known-wrong is actively dangerous. B: Author one unifying "liveness classification contract" plan first.
 C: Widen `verify_window_s` as a config-only stopgap. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Gated `killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`'s
+hard-kill-escalation todo on `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s two-window fix
+landing first — measured active harm (false kicks on progressing workers) outweighs a single 5-day-old stuck-slot data
+point. `unified-trading-pm@36c5433eb`.
 
 ## 22. Flip `ao_satellite_ao_dispatch_batch1_2026_07_26.md`/finalize to active? (2026-07-26, ao)
 
@@ -612,7 +651,9 @@ A: Flip both now. B: Flip only the batch, hold the finalize per `task_template.m
 reconciles evidence — nothing to reconcile yet). [WORKER REC] C: Flip only a P1/P2 subset first. Other: operator can
 type a custom answer.
 
-**Status**: open
+**Status**: resolved — option B. Flipped `ao_satellite_ao_dispatch_batch1_2026_07_26.md` to `active`; held the finalize
+sibling `draft` (already `gate_on_depends: true` — self-activates once the batch's todos land).
+`unified-trading-pm@2c61a8dc4`.
 
 ## 23. Seven deleted `tab/rootm/*` branches — real work loss or already-superseded? (2026-07-26, ao)
 
@@ -625,7 +666,9 @@ todo 9 already does this read-only, with explicit no-push/no-cherry-pick/no-dele
 work-loss, escalate any absent item for recovery attempt. C: Accept the loss without verifying. Other: operator can type
 a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Already correctly scoped as batch1's own read-only presence-check todo
+(no-push/no-cherry-pick/no-delete guardrails already present); dispatched as part of flipping ao batch1 active. No
+further edit needed.
 
 ## 24. Two "not AO-dispatched" docs whose remaining todo is now bounded — extractable? (2026-07-26, ao)
 
@@ -638,7 +681,9 @@ batch 2; keep the alert-channel one LOCAL/manual (its real question — "is the 
 [WORKER REC] B: Keep both LOCAL, run manually. C: Rule generally that prose declarations always outrank batchN
 extraction workspace-wide. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A in principle (the KPI re-measure is a bounded numeric re-run, no human needed) — but not
+extracted into a separate batch, since the target date (~2026-07-27) is only a day out and it's the last open item in an
+otherwise-shipped LOCAL plan; the natural trigger is the date arriving. `unified-trading-pm@36c5433eb`.
 
 ## 25. AO tranche membership — the one covering plan sits outside the Sources list (2026-07-26, ao)
 
@@ -652,7 +697,9 @@ A: Add the doc to Sources now. B: Change the rule to an epic-based definition
 Do both — A now, B as a follow-on with the ~40-doc delta triaged explicitly. [WORKER REC] Other: operator can type a
 custom answer.
 
-**Status**: open
+**Status**: resolved — option C (do both). Added `ao_open_issues_consolidated_close_out_2026_07_17.md` to
+`ao_consolidated_closeout_2026_07_25.md`'s Track 5 Sources now; filed the epic-based-membership-rule redefinition +
+~40-doc delta triage as a new todo in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`. `unified-trading-pm@2c61a8dc4`.
 
 ## 26. Flip `ci_satellite_ao_dispatch_batch1_2026_07_26.md`/finalize — first-ever ci dispatch vehicle (2026-07-26, ci)
 
@@ -662,7 +709,9 @@ A: Flip both, leave the closeout hub as a pure digest (digest/dispatch split is 
 REC] B: Flip both + add the 5 Close-out criteria as verification todos to the hub. C: Leave draft, review the 29 todos
 individually first. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A (adapted). Flipped `ci_satellite_ao_dispatch_batch1_2026_07_26.md` to `active`, hub
+stays a pure digest; held the finalize sibling `draft` for consistency with entries #22/#38 (`gate_on_depends: true`
+already self-activates it). `unified-trading-pm@2c61a8dc4`.
 
 ## 27. `scripts/quickmerge.sh` claimed by 6 docs — is the dispatch order right? (2026-07-26, ci)
 
@@ -675,7 +724,8 @@ A: Keep this order — the no-op fix is fully specified with no pending decision
 binding first instead (more severe — a gate bypass, but alters gate semantics fleet-wide, worse to run concurrently with
 28 other todos). C: Serialize all six in one dedicated quickmerge-only plan. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Already correctly captured in `ci_satellite_ao_dispatch_batch1_2026_07_26.md` — only
+todo 1 (the no-op-ship fix) touches `quickmerge.sh`, the other 5 claims deferred to batch 2+. No edit needed.
 
 ## 28. `digest-drift-sweep.yml` — three docs, one file, cost symptom in the least-related doc (2026-07-26, ci)
 
@@ -688,7 +738,8 @@ batch 2 once todo 3 lands. [WORKER REC] — bundling now would put an unrooted i
 doc 1 SSOT, merge everything into one combined todo. C: Dispatch the money-costing half first, defer hardening. Other:
 operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Already correctly captured in the same batch1 doc — todo 3 owns the digest-drift-sweep
+hardening as the sole edit now; F4's non-convergence explicitly deferred to fold in once todo 3 lands. No edit needed.
 
 ## 29. MTDS `DEPLOYMENT_ENV` leak — fix the reproducer tests or preserve them? (2026-07-26, ci)
 
@@ -701,7 +752,9 @@ A: Instrument the cascade step first, hold the test-fix. [WORKER REC] — silenc
 risks making a real leak permanently invisible. B: Fix the tests now, re-reproduce later if needed. C: Do both — add
 isolation AND an autouse ambient-leak detector (strong second choice). Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Ruled in `qg_sentinel_environment_blind_2026_07_23.md`: hold the MTDS test-fix
+specifically until quickmerge's cascade-step is instrumented (the 2 MTDS tests are the only known reproducer);
+deployment-api/strategy-service proceed independently. `unified-trading-pm@36c5433eb`.
 
 ## 30. STEP 2d — is the operator HOLD (D3) now discharged by events? (2026-07-26, ci)
 
@@ -713,7 +766,8 @@ hardening lands (item #28). [WORKER REC] — "fix digest-drift-sweep" is measura
 declaring full discharge overstates the evidence. C: Re-scope STEP 2d as its own design pass first. Other: operator can
 type a custom answer.
 
-**Status**: open
+**Status**: resolved — option B. Already correctly captured in `ci_satellite_ao_dispatch_batch1_2026_07_26.md` — D3
+treated as partially discharged, STEP 2d unblocks once todo 3's digest-drift hardening lands. No edit needed.
 
 ## 31. A dispatched todo asks a worker to move a published git tag (2026-07-26, ci)
 
@@ -726,7 +780,10 @@ clear the tripped breaker. [WORKER REC] — "decide the fix direction" between t
 published release identity, is a design call live right now on a worker. B: Leave dispatched as-is (todo has its own
 warning text). C: Leave the todo, just add both docs to ci's Sources. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A, independently reached and already executed by concurrent workers before this ruling
+landed: filed as `/blocked` question `BLK-2d9aae3f` rather than force-moving the tag; operator answered PARTIAL —
+direction B (ancestry-aware idempotency guard) authorized now, direction A (force-retag) held pending operator
+authorization. Confirms this ruling's direction; no further action needed.
 
 ## 32. ~48 active docs sit in NO consolidated closeout (2026-07-26, ci)
 
@@ -740,7 +797,10 @@ partition's stated value is total coverage, and that claim is currently false by
 docs now. C: Declare `meta`/`infrastructure` deliberately out-of-scope, document it. Other: operator can type a custom
 answer.
 
-**Status**: open
+**Status**: resolved — option A. Widened `/ag-closeout-audit`'s membership rule
+(`cursor-configs/skills/ag-closeout-audit/SKILL.md`) to also sweep `asset_group: infrastructure`/`meta` (~48-doc gap);
+filed `issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` to track the remaining corpus-wide triage (4 of ~48
+already resolved by ci tranche's own audit). `unified-trading-pm@36c5433eb`.
 
 ## 33. `stale_staging_versions_manifest` — confirm option 1 (dormancy-aware gate)? (2026-07-26, ci)
 
@@ -751,7 +811,9 @@ A: Confirm option 1, queue as the batch-2 quickmerge.sh slot. [WORKER REC] B: Op
 entirely, needs checking 2 other consumers first). C: Do nothing — drift is down to 1 repo, no longer a live hazard.
 Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Confirmed in `stale_staging_versions_manifest_2026_07_23.md`: the doc's own
+pre-committed gate (versions advancing since 2026-07-23) is now measured satisfied; queued as a `quickmerge.sh`-touching
+todo for ci's batch 2. `unified-trading-pm@36c5433eb`.
 
 ## 34. MTDS `PYTEST_UNIT_DIR` — two competing widenings (2026-07-26, infra/cefi)
 
@@ -764,7 +826,9 @@ REC] — turning on 70 uncollected files with 22 known failures unfixed would re
 doc wins — stricter, permanent, but reds MTDS until all 22 land. C: Land cefi's fixes first, then apply infra's
 whole-tree value, plus promote a fleet-wide PM check for this class. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. cefi's `mtds_ungated_test_families_2026_07_17.md` wins (narrower target +
+fix-the-40-known-failures-first ordering); rewrote the infra todo in `codex_violations_ratchet_to_five_2026_06_10.md` as
+a pointer to it. `unified-trading-pm@36c5433eb`.
 
 ## 35. `DataStatusTab.tsx` claimed by two tranches for two different changes (2026-07-26, infra/cross-cutting)
 
@@ -775,7 +839,9 @@ A: Let cross-cutting batch1 land first (already active), pick up G-UI in infra b
 finalize plan already re-checks this exact conflict. B: Merge into one todo, one shared regression spec. C: Move G-UI
 permanently into cross-cutting (retag). Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Sequenced: let cross-cutting batch1 (already active) land `DataStatusTab.tsx` first,
+infra picks up the G-UI change once quiet — annotated in `issue_docs_remediation_sweep_2026_06_02.md`.
+`unified-trading-pm@36c5433eb`.
 
 ## 36. PM `base-service.sh`/`base-library.sh` — multi-tranche edit hotspot, no ownership rule (2026-07-26, infra)
 
@@ -788,7 +854,9 @@ deferred infra items into one unit. [WORKER REC] — the measured cost of no rul
 batch. B: Give infra sole ownership, other tranches file requests against it. C: Accept contention, rely on quickmerge
 rebase + QG to catch collisions. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Declared `base-service.sh`/`base-library.sh` a serialized resource; batched the 4
+deferred infra items into one `sequential: true` unit for the next infra batch, annotated in
+`infra_satellite_ao_dispatch_batch1_2026_07_26.md`. `unified-trading-pm@36c5433eb`.
 
 ## 37. `human_led_audit_pool`'s 12 seeded rows — human-only justification now retired (2026-07-26, infra)
 
@@ -802,7 +870,9 @@ weeks at 12/14 unstarted is the shape of work that is not going to happen while 
 human-only, since the real claim may be qualitative just phrased in context-size language. C: Split by priority,
 dispatch lower-priority rows as a test. Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Annotated `human_led_audit_pool_2026_05_21.md`: the context-size justification is
+retired per CLAUDE.md's 2026-07-23 ruling; queued the 12-row re-test against the current qualitative dispatch-scope rule
+(not executed row-by-row this pass). `unified-trading-pm@36c5433eb`.
 
 ## 38. Flip `infra_satellite_ao_dispatch_batch1_2026_07_26.md`/finalize — first-ever infra dispatch vehicle (2026-07-26, infra)
 
@@ -814,7 +884,10 @@ A: Flip both, give the hub real todos (its 4 Track close-out criteria) so future
 B: Flip both, keep hub a pure digest, add an `aggregated_sources` sibling doc instead. C: Don't flip yet — review the 25
 todos first (5 touch prod/fleet-wide surfaces). Other: operator can type a custom answer.
 
-**Status**: open
+**Status**: resolved — option A. Flipped `infra_satellite_ao_dispatch_batch1_2026_07_26.md` to `active`; added the 4
+Track close-out criteria to `infra_consolidated_closeout_2026_07_25.md` as verification todos; held the finalize sibling
+`draft` (gate_on_depends self-activates); todo 19 stays gated by its own `[OPERATOR]` tag regardless.
+`unified-trading-pm@2c61a8dc4`.
 
 ---
 

@@ -21,13 +21,18 @@ source:
     "data_completion_to_100_all_ag_2026_06_21.md (B2 IntraClientRebalanceCoordinator ship, 2026-06-23)",
   ]
 assigned_vm: NA
-resolved_by: unified-trading-pm@04c0eef0e (fix) + unified-trading-pm@<pending> (regression test)
-locked_by: live-defi-rollout
+resolved_by: unified-trading-pm@04c0eef0e (fix) + unified-trading-pm@3ddd1a4f2 (regression test)
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-26
 ---
+
+> **🟢 RESOLVED 2026-07-26** — fix shipped `unified-trading-pm@04c0eef0e`, regression test
+> `unified-trading-pm@3ddd1a4f2` (`scripts/quality-gates-base/tests/test-quickmerge-untracked-new-file-guard.sh`),
+> tracking-home P0 in `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` flipped done, closed via AO batch
+> `ci_satellite_ao_dispatch_batch1_2026_07_26.md` todo 1. Archived — no deferred work.
 
 ## What I found
 

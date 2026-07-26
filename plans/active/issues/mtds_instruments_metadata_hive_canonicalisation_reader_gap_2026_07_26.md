@@ -161,24 +161,30 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
 
 ## Todos
 
-- [ ] 1. [DATA] P1. Make `_instruments_metadata.py`'s `load_pool_metadata_for_date` layout-tolerant across the
+- [x] 1. ✅ [DATA] P1. Make `_instruments_metadata.py`'s `load_pool_metadata_for_date` layout-tolerant across the
       instrument_availability hive cutover: replace the exact `download_bytes(bucket, blob_path)` single-GET (:223-230)
       with a day-scoped `list_blobs(bucket, prefix=f"instrument_availability/by_date/day={date_str}/")` + a venue-tail
       regex match (mirror `unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py:181`'s
       `re.compile(r"day=(\d{4}-\d{2}-\d{2})/(?:[^/]+/)*venue=([^/]+)/")` pattern), selecting the blob whose matched
       venue equals `venue_tag` and downloading THAT blob. Must tolerate both the pre-cutover flat shape (still the only
       shape for any date ≤ 2026-07-22, which historical/backfill reads will keep hitting) and the post-cutover hive
-      shape. (repo: market-tick-data-service)
+      shape. (repo: market-tick-data-service) — market-tick-data-service@b94259a0. Added a shared, reusable
+      `_resolve_instrument_availability_blob_path()` helper that lists the day-scoped prefix once and regex-matches the
+      venue tail across both layouts (mirrors `_maintenance.py`'s pattern exactly); `load_pool_metadata_for_date` now
+      resolves via that helper before downloading, instead of guessing an exact single-blob path. Todo 2 (the 3 sibling
+      loaders) can reuse this same helper.
 - [ ] 2. [DATA] P1. Apply the same layout-tolerant fix to the other 3 loaders in the same file:
       `load_oracle_feeds_for_date` (:397-469), `load_staking_url_for_protocol` (:472-551),
-      `load_evm_lst_contract_addresses_for_date` (:554-647) — same blob_path construction, same bug. (repo:
+      `load_evm_lst_contract_addresses_for_date` (:554-647) — same blob_path construction, same bug. Reuse the
+      `_resolve_instrument_availability_blob_path()` helper landed in todo 1 rather than re-deriving the pattern. (repo:
       market-tick-data-service)
-- [ ] 3. [DATA] P1. Add missing `_PROTOCOL_TO_VENUE_PREFIX` entries (`_instruments_metadata.py:52-80`):
+- [x] 3. ✅ [DATA] P1. Add missing `_PROTOCOL_TO_VENUE_PREFIX` entries (`_instruments_metadata.py:52-80`):
       `"kamino_lending": "KAMINO"`, `"solend": "SOLEND"`, `"marginfi": "MARGINFI"` — confirmed real IS venue prefixes
       via `instruments-service/instruments_service/engine/orchestrator/defi.py:160,168-169`. This is a separate,
       pre-existing defect from todos 1-2 and must land in the SAME change as todo 1 (todo 1 alone does nothing for these
       3 protocols since `venue_prefix_for_protocol` returns `None` before any path is even built). (repo:
-      market-tick-data-service)
+      market-tick-data-service) — market-tick-data-service@b94259a0, landed in the same commit as todo 1 per this todo's
+      own requirement. Added the 3 map entries + a regression test asserting all 3 resolve.
 - [ ] 4. [DATA] P2. After todos 1-3 ship, verify against the real bucket:
       `load_pool_metadata_for_date("kamino_lending",     "SOLANA", <a 2026-07-2{3,4,5,6} date>, ...)` returns non-`None`
       real rows (not just no-exception), and confirm via the availability manifest (`read_availability_index` on the
@@ -205,3 +211,11 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   CURRENTLY in-flight to slot 4, both on the same file (`_instruments_metadata.py`); todo 2's own text requires
   mirroring todo 1's pattern, which didn't exist yet. Added `sequential: true` (was missing) so the dispatcher
   serializes todos 1-3 (all same-file) going forward instead of re-offering this same collision.
+- 2026-07-26 (slot 4, `data_engineering`): Shipped todos 1 + 3 in one change (per todo 3's own same-change requirement).
+  `load_pool_metadata_for_date` now resolves via a new `_resolve_instrument_availability_blob_path()` helper (day-scoped
+  `list_blobs` + `re.compile(r"day=(\d{4}-\d{2}-\d{2})/(?:[^/]+/)*venue=([^/]+)/")` venue-tail match) instead of
+  guessing the exact flat-layout path; added the 3 missing Solana-lending `_PROTOCOL_TO_VENUE_PREFIX` entries. Updated
+  all pre-existing `test_instruments_metadata_loader.py` cases to mock `list_blobs` (the old exact-path code never
+  called it) + added 3 new regression tests (hive-layout resolution, venue-absent-from-day-listing no-match, and the 3
+  new venue-prefix entries). 25/25 unit tests green locally. Todos 2/4/5/6 are separate follow-up tasks left for their
+  own dispatch (todo 2 can now reuse the shared helper).
