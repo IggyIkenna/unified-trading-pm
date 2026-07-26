@@ -502,9 +502,9 @@ drift_direction: advance-code
       Audited all 5 e2e behavioural params against `param_schema.py`/`staked_basis.py` production defaults — 4 of 5
       match exactly (`entry_bps`, `exit_bps`, `min_health_factor`, `peg_drift_threshold_bps` by omission);
       `hedge_deadline_ms` diverges (e2e hardcodes `2000` across all 5 call sites vs production default `5000`) — filed
-      `plans/active/issues/e2e_defi_hedge_deadline_ms_diverges_from_production_default_2026_07_26.md` with the full
-      comparison table + an A/B recommendation for the operator, since resolving it requires knowing whether the tighter
-      e2e deadline is a deliberate test-speed choice.
+      `plans/archive/issues/e2e_defi_hedge_deadline_ms_diverges_from_production_default_2026_07_26.md` (resolved +
+      archived 2026-07-26, slot-11) with the full comparison table + an A/B recommendation for the operator, since
+      resolving it requires knowing whether the tighter e2e deadline is a deliberate test-speed choice.
 - [x] ✅ [DOCS] P2. **DONE 2026-07-26 (worker, slot 6).** Re-verified all 5 citations against current code via a
       dedicated investigation sub-agent (all CONFIRMED, one naming correction: `FEATURE_GROUP_DATA_TYPE_OVERRIDES`, not
       `DEFI_DATA_TYPE_OVERRIDES`) — flipped the source doc's `status: open` → `resolved`, populated `resolved_by:` with

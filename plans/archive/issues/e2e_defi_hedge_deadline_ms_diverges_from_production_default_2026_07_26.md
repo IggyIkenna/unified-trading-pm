@@ -42,6 +42,12 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **🟢 RESOLVED 2026-07-26 (slot-11, plan_health archival sweep).** All work already landed (slot-2,
+> e2e-testing@49a129c) — operator ruled B (unintentional drift), all 5 `hedge_deadline_ms` call sites bumped
+> `2000`→`5000`, QG green. This doc was left `status: resolved` in `plans/active/issues/` instead of being archived;
+> archiving now per the issue-doc-lifecycle rule (a `status: resolved` doc must not sit in `plans/active/issues/`) to
+> clear the `check_terminal_status_archived` hard gate. No new work — pure archival housekeeping.
+
 ## What I found
 
 Comparison of the 5 behavioural params the e2e DeFi catalog leaves at engine defaults
