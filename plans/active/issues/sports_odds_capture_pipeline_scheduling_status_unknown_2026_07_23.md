@@ -17,7 +17,7 @@ summary:
   by name in `gcloud compute instances list`. Net: genuinely UNKNOWN whether sports TRADES capture (the raw odds-tick
   pipeline K1/K2 this session made canonical, and the pipeline the api_football wrong-source rows were masquerading as)
   is scheduled/running AT ALL right now, or has been dormant for some unknown period up to and including ~4 months."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data, live]
@@ -41,7 +41,7 @@ drift_direction: unknown
 assigned_vm: NA
 execution_scope: local-only
 source: [operator Q&A on sports honest coverage, verifying uac@44623d25 deploy status, 2026-07-23]
-resolved_by:
+resolved_by: "sports_satellite_ao_dispatch_batch5_2026_07_26.md item 6 (2026-07-26, slot 8, data_engineering)"
 locked_by:
 depends_on: []
 ---
@@ -133,18 +133,61 @@ gap that predates the day=2026-07-24 resumption — worth its own investigation.
 
 ### New todos
 
-- [ ] 6. [DATA] P1. Confirm whether `market-data-tick-sports-prd`'s manifest writes for `batch_odds_api` (and every
+- [x] ✅ 6. [DATA] P1. Confirm whether `market-data-tick-sports-prd`'s manifest writes for `batch_odds_api` (and every
       other sports `pipeline_mode`) were DELIBERATELY re-routed to `instruments-store-sports-prd` around 2026-07-20/21
       (a code/config change), or whether this is an unintended regression — grep+READ the manifest-write target
       resolution in the sports capture path (same class of `_resolve_manifest_bucket()` logic already documented in
       `sports_phantom_audits_reference_not_marketdata_2026_07_14.md`), not just the two data points this addendum
-      measured (repo: market-tick-data-service).
-- [ ] 7. [DATA] P2. Investigate the separate 2026-07-21→2026-07-23 GCS-side gap for
+      measured (repo: market-tick-data-service). **RESOLVED 2026-07-26: DELIBERATE, not a regression.**
+      `market_tick_data_service/engine/orchestrator/_manifest_bucket.py::_resolve_manifest_bucket()` docstring confirms:
+      the 2026-06-07 sports-manifest-canonicalisation decision moved sports' canonical availability manifest to
+      `instruments-store-sports-prd` while raw tick BYTES correctly stay in `market-data-tick-sports-prd`; this was
+      CODE-ENFORCED 2026-07-13 (`sports_data_sources_canonical_completion_2026_07_13.md`) and refined 2026-07-21
+      (cross-AG prediction-bleed fix, commit `5581dcf9`) — both BEFORE the "around 2026-07-20/21" observation window,
+      confirming the routing itself didn't change then; someone just noticed the effect around then. Independently
+      cross-confirmed by `sports_phantom_audits_reference_not_marketdata_2026_07_14.md`'s 2026-07-15 addendum, which
+      reached the identical conclusion from the phantom-audit angle. No code change needed — this is working as
+      designed.
+- [x] ✅ 7. [DATA] P2. Investigate the separate 2026-07-21→2026-07-23 GCS-side gap for
       `pipeline_mode=batch_odds_api/asset_group=sports/` (zero venue prefixes on disk for those 3 dates, confirmed by
       direct listing) — distinct from the manifest-routing question above; this is a real fetch/write gap on the writer
-      side, not just a manifest-recording gap (repo: market-tick-data-service).
-- [ ] 8. [DATA] P2. If todo 6 confirms the manifest target moved, decide whether `market-data-tick-sports-prd`'s own
+      side, not just a manifest-recording gap (repo: market-tick-data-service). **RESOLVED 2026-07-26: same root cause
+      as `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`'s future-date-guard bug
+      (`TickDataHandler._check_early_exit`, fixed `market-tick-data-service@410d7569`) — NOT a separate writer defect,
+      and the gap NO LONGER EXISTS.** Direct GCS listing today (2026-07-26) shows real, populated objects for all three
+      previously-empty dates (42/84/40 objects for 07-21/22/23 respectively, matching the correct manifest's
+      captured-row counts almost exactly). Cross-checked `written_at` in `instruments-store-sports-prd`: each date's
+      rows were written in a SINGLE BATCH ~24-25h after the fixture date, just after UTC midnight of date+1
+      (`date=2026-07-21` written 2026-07-22T00:57Z, etc.) — the exact fingerprint of the future-date guard rejecting the
+      date all day then clearing at midnight, not a distinct fetch/write-side gap. The "zero venue prefixes" observation
+      in the 2026-07-24 addendum was a snapshot taken before the T+1-day catch-up write had landed for those dates, not
+      a persistent gap. Full detail (including the GCS bucket-density correction this also forced) in
+      `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`.
+- [x] ✅ 8. [DATA] P2. If todo 6 confirms the manifest target moved, decide whether `market-data-tick-sports-prd`'s own
       `_index/` should be (a) left as a stale historical artifact and documented as such, or (b) backfilled/repointed so
       single-bucket tools (orphan sweep, this skill's default Phase-0 methodology, any future
       `market-data-tick-sports-prd`-scoped reconciliation) stop producing a false orphan signal for sports specifically
-      (repo: unified-trading-library / market-tick-data-service, decision needed first).
+      (repo: unified-trading-library / market-tick-data-service, decision needed first). **RESOLVED 2026-07-26:
+      disposition (a) — leave `market-data-tick-sports-prd`'s `_index/` as a documented, INTENTIONALLY stale-for-
+      manifest-purposes artifact.** Since todo 6 confirms the instruments-store routing is deliberate architecture (not
+      a bug), disposition (b) — backfilling/repointing `market-data-tick-sports-prd`'s own index — would be ACTIVELY
+      WRONG: it would reintroduce the exact manifest-routing split-brain the 2026-07-13 fix eliminated. No code change
+      needed. Documentation note for future single-bucket sports reconciliation tooling: sports' canonical availability
+      manifest lives in `instruments-store-sports-prd`, NOT `market-data-tick-sports-prd`, even though sports' raw tick
+      bytes live in the latter — any tool assuming manifest-bucket == data-bucket for sports will read a false
+      "orphan"/"stale" signal there by design. This mirrors the existing phantom-audit
+      `_BUCKET_KIND_MAP["sports"] = ("instruments-store", "sports")` convention already in place for the reference-data
+      phantom check.
+
+## Resolution (2026-07-26, slot 8, data_engineering)
+
+All three todos closed while working `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s follow-up item on the same
+pipeline (dispatched right after that plan's fix for the future-date-guard bug shipped
+`market-tick-data-service@410d7569`). Summary: the manifest-routing "regression" is not a regression (deliberate,
+documented, code-enforced since 2026-07-13); the GCS-side writer gap and the future-date-guard bug are the SAME
+mechanism, already fixed; and `market-data-tick-sports-prd`'s own manifest index should stay a documented stale artifact
+by design, never repointed. This investigation also forced a correction to
+`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`'s original density claim, which had checked the
+now-non-authoritative `market-data-tick-sports-prd` bucket instead of `instruments-store-sports-prd` — see that doc's
+correction banner for the full, re-verified picture (including direct confirmation the fix has already reached
+production and same-day capture is writing successfully as of this resolution).

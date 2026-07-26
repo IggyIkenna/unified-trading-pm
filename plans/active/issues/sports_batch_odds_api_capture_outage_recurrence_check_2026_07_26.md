@@ -103,13 +103,14 @@ source:
 >   GRID (T-24h, T-12h, T-6h, T-4h, T-2h, T-1h, T-10m, T-0) collapsing into one T+1-day-late historical re-fetch**,
 >   destroying the odds-TRAJECTORY signal (CLV, drift, steam-move features) the adapter's own docstring says the 8-point
 >   grid exists to capture, even though each day's data eventually arrives.
-> - **The fix (`market-tick-data-service@410d7569`) appears to have ALREADY reached production** — `date=2026-07-26`
->   (today) has manifest rows `written_at` **2026-07-26T01:17Z, same-day**, not T+1 — the first same-day (non-delayed)
->   write observed in this investigation, landing ~25 minutes after the fix was pushed to `live-defi-rollout` (00:52Z).
->   This is a strong but INDIRECT signal (inferred from timing, not a confirmed image-digest check) that an auto-deploy
->   pipeline picked up the fix quickly. Operator should still independently confirm via
->   `gcloud run jobs describe uts-prod-market-tick-data-service-fast-t1-recon` image digest / build history — this
->   observation is a "very likely already fixed" not a "confirmed fixed."
+> - **DEPLOY CONFIRMED (2026-07-26, directly verified, not inferred)**: `gcloud artifacts docker images list` shows
+>   `asia-northeast1-docker.pkg.dev/.../market-tick-data-service:latest` tagged `f6ea001` (built 2026-07-26T01:29:12Z),
+>   a git descendant of `410d7569` (my fix); the image tagged `410d756` itself was built 2026-07-26T01:10:00Z (~18 min
+>   after the fix was pushed to `live-defi-rollout` at 00:52Z — a fast auto-deploy-on-push pipeline, not a manual
+>   trigger). A live execution (`uts-prod-market-tick-data-service-fast-t1-recon-cv7ch`, started 2026-07-26T01:35:57Z,
+>   i.e. AFTER the `f6ea001` image became `:latest`) was directly log-inspected: 30+
+>   `StreamingParquetWriter: uploaded market-data-tick-sports-prd-.../day=2026-07-26/pipeline_mode=batch_odds_api/.../ticks.parquet`
+>   lines, zero `DATA_NOT_AVAILABLE` errors — **same-day capture is confirmed working in production, right now.**
 >
 > **Revised backfill-decision framing for the open operator item**: the ~1-month "gap" is NOT one undifferentiated
 > blackout. Two distinct sub-questions: (1) the 2026-06-27…2026-07-15 true dormancy (~19 days, genuinely zero data,
