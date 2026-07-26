@@ -573,26 +573,25 @@ drift_direction: advance-code
       deferred-work table row "Phase 5 #2 dex_pool_swaps backfill"). Done when: all 3 VMs are confirmed terminated with
       a completed date-range (or successfully relaunched to reach that state), the doc's Phase 5 #2 todo is checked off
       with cited manifest evidence, and the RESUME POINT table row is updated to reflect the closed state.
-- [ ] [SCRIPT] P2. **Run the designed 90-day lst-rates backfill for the 6 already-shipped, accuracy-verified DeFi venues
-      (ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER) — first re-verify the shared LST-rates cron is no longer
-      crash-looping.** `defi_five_never_captured_venues_fix_2026_07_22.md` asserts the blocking gas-fees crash-loop bug
-      is already fixed (mtds@522185a6); `defi_venue_phase_live_definition_contradiction_2026_07_22.md` (same underlying
-      ask, filed independently) requires a live re-check before trusting that — do the re-check first since it is cheap
-      and the two docs disagree on whether it is still needed. Verify `uts-prod-mtds-collect-lst-rates` (Cloud Scheduler
-      job `uts-prod-mtds-collect-lst-rates-cron`, `asia-northeast1`, project `central-element-323112`) is healthy on its
-      most recent run(s) —
-      `gcloud scheduler jobs describe uts-prod-mtds-collect-lst-rates-cron --location=asia-northeast1` +
-      `gcloud run jobs executions list --job=<the corresponding Cloud Run Job> --region=asia-northeast1` (or equivalent
-      log check) confirming no OOM/timeout crash-loop in the last several scheduled runs. **If healthy**: run the local,
-      no-VM, ~2,340-call 90-day RPC backfill for the 6 venues via the current canonical `lst_rates_handler.py` RPC-based
-      path (queries historical block numbers directly), then manifest-verify new rows landed across the full 90-day
-      window for each of the 6 venues (`instruments-service/scripts/measure_honest_coverage.py` or a direct manifest
-      read against the prod `lst-rates-central-element-323112` bucket / `market-data-tick-defi` corpus, whichever the
-      handler writes to) — `record_captured` (not `attempted_failed`) for all 6 venues, any gap either backfilled or
-      explicitly logged as a real per-day upstream absence, never silently skipped. **If still crash-looping**: do NOT
-      run the backfill — instead file a new tracked issue doc
-      (`plans/active/issues/defi_lst_rates_cron_crash_loop_<date>.md`) documenting the health-check evidence and the
-      specific crash-loop symptom, and explicitly leave the backfill deferred pending that fix. Source:
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-26 (slot-8, `data_engineering`) — cron re-verified healthy; backfill turned out to
+      be UNNECESSARY for 5/6 venues (already organically complete); found the real remaining gap is a different venue
+      /handler/data_type than this todo assumed.** Cron health re-check: `uts-prod-mtds-collect-lst-rates-cron`
+      `state=ENABLED`, last 4 Cloud Run executions (2026-07-23..2026-07-26) all `Completed True` vs. 2 `Completed False`
+      on 2026-07-21/22 before the crash-loop fix (`mtds@522185a6`) — confirms healthy, no crash-loop, matches
+      `defi_five_never_captured_venues_fix_2026_07_22.md`'s claim over the other doc's doubt. **Manifest-verified BEFORE
+      running the RPC backfill** (direct filtered read against `market-data-tick-defi-prd`'s availability index,
+      columns+filters pushdown — NOT a full-corpus read, see the linked issue doc's "measurement trap" note):
+      ANKR/STADER/STAKEWISE/SWELL/MANTLE already show 90/90 days `captured` across 2026-04-27..2026-07-25, organically
+      via the daily cron — running the designed ~2,340-call backfill would have been entirely wasted work. **MAKER is
+      not actually an `lst_rates` venue** — `grep`+live-verified it's registered under `vault_share_price_handler.py`
+      (`data_type=vault_share_price`), never in `lst_rates_handler.py`'s `load_evm_lst_contract_addresses_for_date`; its
+      87 legacy `lst_rates` rows (2026-04-27..2026-07-22) were a single retroactive batch write (`written_at` all
+      clustered at 2026-07-23T01:30Z), not organic capture, and correctly stopped once the writer's real classification
+      took over. Checking MAKER under its REAL data type found a genuine, different gap: 61/90 days captured, a
+      contiguous 29-day hole (2026-06-22..2026-07-20), confirmed genuinely absent (not `attempted_failed`) via direct
+      query. Not root-caused this pass (different bug class than the crash-loop this todo was scoped around) — filed as
+      `issues/defi_maker_vault_share_price_29day_gap_2026_07_26.md` with the exact evidence + 2 follow-up todos
+      (root-cause + backfill, gated on each other). Zero manifest/GCS writes performed — pure verification. Source:
       `issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`,
       `issues/defi_five_never_captured_venues_fix_2026_07_22.md`. **Done when**: either (a) the 90-day backfill is
       complete and manifest-verified for all 6 venues with cited cron-health evidence, or (b) a new issue doc exists
