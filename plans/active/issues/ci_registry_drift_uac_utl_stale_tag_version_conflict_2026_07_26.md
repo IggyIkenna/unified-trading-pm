@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [ci, registry-drift, hatch-vcs, dynamic-versioning, pip, cross-repo]
 related:
   [
-    /plans/active/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
+    /plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
     /plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]

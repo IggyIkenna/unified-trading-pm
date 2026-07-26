@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [capability-manifest, generator, ml-service, stale-import, wizard]
 related:
   [
-    /plans/active/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
+    /plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
     /plans/active/issues/ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md,
   ]
 created: 2026-07-26

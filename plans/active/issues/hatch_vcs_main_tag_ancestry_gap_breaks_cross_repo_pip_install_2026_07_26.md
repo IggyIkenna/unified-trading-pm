@@ -35,7 +35,7 @@ related:
   [
     /plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
     /plans/active/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md,
-    /plans/active/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
+    /plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
     /plans/active/issues/ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]

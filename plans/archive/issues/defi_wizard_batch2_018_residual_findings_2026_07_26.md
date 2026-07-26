@@ -45,6 +45,12 @@ source:
   ]
 ---
 
+> **🟢 RESOLVED 2026-07-26 — ACKED-INTO-CODE** — all 5 recommended-decision items actioned (slots 2 + 6):
+> `strategy-service@4d1bbb18`, `unified-trading-system-ui@bd527d83`/`@3715d3ec`, `unified-api-contracts@449d1b3d`; the
+> two CI-automation todos are designed + locally byte-identical-verified but blocked on real-CI verification by a
+> separate, pre-existing, unrelated CI defect, split out to
+> `ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md`. Archived per the terminal-status backlog sweep.
+
 ## What I found
 
 **Finding 1 — `CARRY_STAKED_BASIS_DATED` spot_venue still hardcoded.** The base `CARRY_STAKED_BASIS` archetype's
