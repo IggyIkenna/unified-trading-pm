@@ -38,13 +38,12 @@ drift_direction: advance-code
 
 # COINBASE bare-name execution-service caller migration (follow-on)
 
-> **STATUS: draft.** Filed per `coinbase_bare_name_migration_2026_07_06.md` Step S7 ("File a follow-on task for the bare
-> COINBASE removal after the 25-caller migration plan is drafted and lands. Owner: `assigned_role: backend-engineer`.
-> Depends on THIS plan."). `assigned_vm: NA` / LOCAL track (default per CLAUDE.md "ask the operator before creating an
-> AO plan" — this plan defaults to the human/LOCAL track; the operator can flip `assigned_vm: planning` +
-> `status: active` if they want the fleet to dispatch it). **Do NOT execute before
-> `coinbase_bare_name_migration_2026_07_06.md` S1-S6 have landed** (UAC must drop bare `COINBASE` from
-> `VENUES_BY_ASSET_GROUP["cefi"]` first — see `depends_on`).
+> **🟢 COMPLETE 2026-07-26 — ARCHIVED.** All 3 steps (S1-S3) landed via
+> `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s item -001 (slot-3, backend_engineer): `execution-service@1267290`.
+> S1 removed the UAC-facing `registry.py`/`utils.py` bare-COINBASE backward-compat branches (external callers verified
+> clean); S2 re-keyed the internal lookups; S3 confirmed the remaining grep-only entries already clean. §5's
+> full-execution criterion holds (0 bare-venue `"COINBASE"` resolver keys remain; QG green). See Progress Log below for
+> the full evidence trail.
 
 ## 1. Context
 

@@ -123,10 +123,8 @@ drift_direction: advance-code
          separate gap.
     - 5. **[REVIEW] P2.** Once 2-4 ship, re-run MTDS's full `quality-gates.sh` to confirm this ripple is the only
          blocker.
-  - [`plans/active/coinbase_bare_name_migration_execution_service_2026_07_10.md`](/plans/active/coinbase_bare_name_migration_execution_service_2026_07_10.md)
-    (status: draft)
-    - **[BACKEND] P2.** Grep execution-service surfaces for bare "COINBASE" callers post S1-S6; delete or keep the
-      backward-compat branch per findings.
+  - [`plans/archive/2026_07/coinbase_bare_name_migration_execution_service_2026_07_10.md`](/plans/archive/2026_07/coinbase_bare_name_migration_execution_service_2026_07_10.md)
+    — 0 open todos (complete/archived 2026-07-26, `execution-service@1267290`).
     - **[BACKEND] P2.** Re-key bare "COINBASE" → "COINBASE-SPOT" in
       `execution_cost_estimator.py`/`sor.py`/`venue_mapping.py`/`expected_start_dates.yaml`.
     - **[BACKEND] P3.** Grep `trade_handler.py`/`serializer.py` for bare COINBASE usage; re-key if lookup, leave if
@@ -568,13 +566,9 @@ drift_direction: advance-code
     - **[VERIFY] P2.** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers.
     - **[DECISION] P2.** Once the AAVE_V3 pilot trace lands, decide the reconciliation cadence for the remaining 58
       findings.
-  - [`plans/active/issues/aster_mtds_failure_count_regression_2026_07_07.md`](/plans/active/issues/aster_mtds_failure_count_regression_2026_07_07.md)
-    - **[VERIFY] P1.** Re-run the exact live turbo query used in this audit to confirm the ASTER failure_pillars finding
-      is still reproducible.
-    - **[VERIFY] P1.** Pull the raw manifest rows behind ASTER's `attempted_failed` count and check
-      error_reason/timestamps.
-    - **[VERIFY] P1.** Check whether a manifest index rebuild ran on `market-data-tick-cefi` between 2026-06-22 and
-      2026-07-07 reading a stale snapshot.
+  - [`plans/archive/issues/aster_mtds_failure_count_regression_2026_07_07.md`](/plans/archive/issues/aster_mtds_failure_count_regression_2026_07_07.md)
+    — 0 open todos (resolved/archived 2026-07-26: count self-recovered to 150, well below the 06-22 baseline; see doc's
+    Progress Log for the full evidence trail).
     - **[SCRIPT] P2.** Once root-caused: re-run recovery or diagnose a new adapter break.
   - [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
     (exactly 8 open — all listed)
