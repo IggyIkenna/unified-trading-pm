@@ -484,7 +484,7 @@ drift_direction: advance-code
       re-verified 2026-07-13, and again today). Full evidence + closure narrative in
       `plans/active/issues/understat_bulk_download_backfill_2026_06_29.md` §8 (all checkboxes flipped) + its 2026-07-26
       Progress Log entry.
-- [ ] [DATA] P1. **Implement Sports E8 legacy-delete (`migrate_sports_canonical_v9.py --drop-stale`) + delete
+- [x] [DATA] P1. **Implement Sports E8 legacy-delete (`migrate_sports_canonical_v9.py --drop-stale`) + delete
       `sports_reference_v1_archive/` under an operator gate.** Implement the currently-unimplemented `--drop-stale` stub
       (line 886-891 raises) as a twin-verified per-surface delete — for both `instruments-store-sports-prd-*` and
       `market-data-tick-sports` surfaces, delete a legacy (no-`pipeline_mode`) object ONLY when its canonical
@@ -503,7 +503,8 @@ drift_direction: advance-code
       both surfaces, `sports_reference_v1_archive/` deletion is included in the plan, and either (a) operator sign-off
       is obtained + the delete executes + is verified (object counts drop, canonical reads unaffected), or (b) the todo
       is left checked-complete-for-code with an explicit `BLOCKED-OPERATOR` note pending sign-off if the operator has
-      not yet approved.
+      not yet approved. **DONE-FOR-CODE 2026-07-26** — `market-tick-data-service@236d945e` (+`@08439787`):
+      implemented+tested+dry-run-verified twin-safe both surfaces. **BLOCKED-OPERATOR** on the `--apply` firing.
 - [x] [UI] P3. ✅ 2026-07-26 — `deployment-ui@66cc06d`. Relabel `FixturesBrowser.tsx`'s window note and remove the stale
       `MAX_SPAN_DAYS=120` span-cap warning now that `deployment-api/services/fixtures_browser.py` serves the
       full-history single catalogue source (`prod/catalog.parquet`, deployment-api@dbbf64c, shipped via
