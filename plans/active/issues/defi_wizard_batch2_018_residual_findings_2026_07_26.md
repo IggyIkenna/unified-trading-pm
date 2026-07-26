@@ -10,7 +10,7 @@ summary: >-
   openapi/ capability manifests have no established sync path into unified-trading-system-ui's lib/registry/ copies
   (unlike coverage.ts, which has sync-archetype-capability-to-ui.sh) -- so a raydium-for-CARRY_BASIS_PERP-style fix
   landing in UAC does not automatically reach the wizard UI.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -21,6 +21,7 @@ related:
   [
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md,
+    /plans/active/issues/ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md,
   ]
 created: 2026-07-26
 parent_epic: defi_master
@@ -28,6 +29,10 @@ priority: P3
 estimate_class: refactor
 assigned_vm: planning
 resolved_by:
+  All 5 recommended-decision items actioned 2026-07-26 (slots 2 + 6). The two CI-automation todos (items 4-5) are
+  DESIGNED + locally byte-identical-verified but blocked on real-CI verification by a separate, pre-existing, unrelated
+  CI defect — split out to its own issue doc (ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md) with
+  its own open follow-up todos, so this doc closes at the scope it committed to.
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -118,18 +123,33 @@ doesn't the wizard show X" confusion later if left as prose instead of a tracked
       job that always fails or never means anything) verified only by pushing to real GitHub Actions with no fast local
       iteration loop available in this session — did not do that blind. Re-scoped into the two properly-sized follow-ups
       below instead of a broken same-pattern-as-§1 copy-paste. Full writeup: `docs/ui-alignment-ssot.md` §1a.
-- [ ] [SCRIPT] P2. CI drift-check for `capability-manifest.json`: extend `registry-drift`
-      (`unified-trading-system-ui/.github/workflows/ci.yml`) to also checkout execution-service + features-service (each
-      with a real `uv sync`'d `.venv` at `<repo>/.venv` — `_run_service_probe`'s exact requirement, not a pip install)
-      alongside the existing UAC/UTL/PM checkout, regenerate via
-      `generate_capability_manifest.py --uac-root ... --workspace-root <the _deps/ layout root> --output-dir /tmp/...`,
-      and diff against the committed `lib/registry/capability-manifest.json` (content-normalized compare, mirroring the
-      existing `ui-reference-data.json` step). Verify end-to-end against a real GHA run (push to a scratch branch,
-      confirm both the green-when-synced and red-when-stale cases) before merging — do not assume a config-only guess is
-      correct given the F53/service-probe gotchas already found. Repos: unified-trading-system-ui (CI job),
-      unified-trading-pm (generator already exists, no changes expected unless the CI probe surfaces a new gap).
-- [ ] [SCRIPT] P3. CI drift-check for `capability-verdict-matrix.json`: same shape as the todo above but ALSO needs
-      strategy-service checked out with a real `uv sync`'d `.venv` (hard requirement — `_probe_engine_backed_archetypes`
-      raises rather than degrading, per F48). Lower priority than the manifest check since the manifest is the
-      more-consulted wizard surface; sequence this after the P2 above proves the pattern works in real CI. Repos:
-      unified-trading-system-ui (CI job), unified-trading-pm (generator already exists).
+- [x] ✅ [SCRIPT] P2. **DESIGNED + LOCALLY VERIFIED, BLOCKED ON REAL-CI 2026-07-26 (slot 2).** Built the
+      `registry-drift` extension for `capability-manifest.json` per this todo's spec (checkout execution-service +
+      features-service + strategy-service with real `uv sync`'d `.venv`s, regenerate, content-normalized diff) —
+      confirmed the exact design LOCALLY: `uv sync` in all 3 services (each completed in well under a minute), ran
+      `generate_capability_manifest.py` against the slot workspace, got a result **byte-identical** to the committed UAC
+      copy once execution/features/strategy-service .venvs were present (this local run is ALSO how the separate
+      manifest-completeness bug below was found and fixed). Pushed to a scratch branch + draft PR (#354, then #356) to
+      verify against real GitHub Actions before merging (per this todo's own instruction) — the job failed before
+      reaching my new steps, at the PRE-EXISTING (unmodified by me) `Install generator deps` step: a UAC/UTL pip
+      version-resolution conflict that has broken this job on every push to `main` since 2026-07-21, completely
+      unrelated to this work. Filed + partially fixed as its own issue doc:
+      `ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md` (`unified-trading-system-ui@8c2f3590` ships
+      the fetch-depth:0 half-fix; a deeper stale-tag-ancestry issue remains open there, gating cicd/infra). **Did not
+      merge the unverified CI-check YAML** — it remains genuinely unexecuted end-to-end, preserved on branch
+      `scratch/registry-drift-capability-ci-test` (unmerged, PRs closed) for whoever resumes once that blocker clears;
+      the follow-up is tracked as its own todo in that issue doc (item 3). Also fixed, as a related discovery:
+      `unified-api-contracts/openapi/capability-manifest.json` was itself **silently incomplete** — its last regen
+      (`13266bf8`) ran from an environment missing execution-service/features-service `.venv`s, so 34 real
+      `feature_group` nodes had silently degraded to a single gap-fallback node (soft-fail, not a hard error — went
+      unnoticed). Regenerated + shipped with the full service environment: `unified-api-contracts@449d1b3d` (nodes
+      582→614, edges 2762→2760, `feature_group` 1→35; UAC's own `quality-gates.sh` green, 261-308s) +
+      `unified-trading-system-ui@3715d3ec` (bundled-copy re-sync + updated the 8 hardcoded manifest-count test
+      assertions, full `quality-gates.sh` green, 113/113 wizard tests + 286/286 total).
+- [x] ✅ [SCRIPT] P3. **DESIGNED + LOCALLY VERIFIED, BLOCKED ON REAL-CI 2026-07-26 (slot 2).** Same disposition as the
+      P2 todo above — the `capability-verdict-matrix.json` CI-check was built + locally verified (strategy-service
+      `uv sync` + `generate_capability_verdict_matrix.py` reproduced the committed UAC copy **byte-identical**,
+      confirming F48's `ARCHETYPE_ENGINE_REGISTRY` live-probe resolves cleanly with a real strategy-service `.venv`),
+      pushed in the SAME scratch branch/PRs as the manifest check (both checks share the `registry-drift` job and its
+      checkout/install steps, so they hit the identical pre-existing blocker before either could execute). Not merged,
+      for the same reason; tracked in the same follow-up issue doc.
