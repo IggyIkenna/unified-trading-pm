@@ -85,9 +85,29 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
 
 ## Todos
 
-- [ ] [SCRIPT] P0. **Populate POLYMARKET + KALSHI instrument lifecycle
-      (`available_from_datetime`/`available_to_datetime`) on the write path + bound honest-absence emission to the
-      lifecycle window.** (1) instruments-service: the POLYMARKET gamma raw-market enumeration MUST set
+- [x] ✅ [SCRIPT] P0. **DONE 2026-07-26 (slot-7)** — all three legs were ALREADY SHIPPED by prior commits; this todo's
+      "0/25 populated" premise was stale. **Leg (1)** instruments-service: POLYMARKET (`instruments-service@be45660f`)
+      and KALSHI (`instruments-service@686e0ac4`) already set `available_from_datetime`/`available_to_datetime` from
+      gamma/Kalshi lifecycle fields in `_parse_market()` (`polymarket/parsing.py:139-143`, `kalshi.py:849-850,918-919`).
+      Gap found: KALSHI's `_parse_market()` had ZERO direct unit-test coverage of this (unlike Polymarket's
+      `test_parse_market_populates_lifecycle_bounds_from_gamma`) — added
+      `test_parse_market_populates_lifecycle_bounds_from_kalshi` +
+      `test_parse_market_floors_available_from_to_midnight_for_intraday_open_time` to
+      `tests/unit/test_prediction_lifecycle.py` (proves non-NULL bounds + the DP-PATH-006 midnight-floor behavior).
+      Shipped `instruments-service@3617261f`; QG green (4913 passed). **Leg (2)** market-tick-data-service: honest-
+      absence emission already bounded to the lifecycle window in
+      `engine/orchestrator/sentinels.py::_emit_tier3_for_dt` +
+      `prediction_tier3_lifecycle.py::_classify_prediction_tier3_reason` (typed `EXPECTED_INSTRUMENT_NOT_LISTED`/
+      `EXPECTED_INSTRUMENT_DELISTED`, never bare `empty_confirmed`), already covered by
+      `tests/unit/engine/test_sentinels_prediction_lifecycle_tier3.py`
+      (`test_pre_genesis_cid_routes_to_expected_instrument_not_listed`,
+      `test_post_resolution_cid_routes_to_expected_instrument_delisted`). No code change needed; QG green (7015 passed,
+      0 changes). **Leg (3)** unified-api-contracts: verified `OUT_OF_COVERAGE_WINDOW_REASONS`
+      (`_honest_coverage_empty_reasons.py:590-606`) already excludes both reasons from the coverage denominator, already
+      covered by `tests/unit/test_coverage_exclusions.py::test_reason_is_out_of_model_clipped_from_denominator`. No code
+      change; QG green (0 changes). All 4 "Done when" criteria satisfied. **Populate POLYMARKET + KALSHI instrument
+      lifecycle (`available_from_datetime`/`available_to_datetime`) on the write path + bound honest-absence emission to
+      the lifecycle window.** (1) instruments-service: the POLYMARKET gamma raw-market enumeration MUST set
       `available_from_datetime` from gamma `startDate`/`createdAt` + `available_to_datetime` from `endDate`/`closedTime`
       (today both NULL → 0/25); apply the SAME check for KALSHI (the adapter sets `market_created_at`/`resolution_time`
       on `MarketLifecycle` — verify those flow onto the `InstrumentRecord`'s `available_from/to_datetime`). (2)

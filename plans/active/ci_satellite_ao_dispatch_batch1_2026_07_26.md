@@ -121,18 +121,25 @@ concurrent workers do not collide on this file.
       scope — "make it observable" — doesn't cover). Full PM `quality-gates.sh` green (1356 passed, 16 skipped). Source:
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` (Resolution checklist, [INFRA] P1 "Make dispatch
       delivery observable").
-- [ ] [INFRA] P1. **digest-drift-sweep silent-failure hardening — the 3 of 4 recommendations still provably open.**
-      `/plan-reconcile ci` re-measured the live `.github/workflows/digest-drift-sweep.yml` on 2026-07-26: rec 2a (token
-      → `GH_PAT`) is DONE, and 2b/2c/3 are still open at the cited lines. Implement exactly those three: (2b) capture
-      the fetch HTTP status (`-o body -w '%{http_code}'` instead of `:133`'s `curl -sf … || echo ""`) and branch — 404 =
-      benign skip, 401/403 = fail the step loudly, 200 = parse; (2c) make the summary self-auditing — if
-      `Dispatched + Already fresh == 0` while `IMAGE_REPOS` is non-empty, exit non-zero (`:196-198` only warns on
-      `ERRORS > 0` today); (3) add a `--max-dispatches`-equivalent cap so one tick cannot fan out to all 16 repos.
-      Preserve the doc's own negative test: a repo genuinely without a Dockerfile must still be a benign skip counted in
-      `SKIPPED_NO_ARG`. **Explicitly OUT of scope**: the non-convergence / `ubuntu-latest` fan-out claim on this same
-      file — parked, see `## Deferred` D2. **Done when**: the three changes are in, the negative test passes, and a
-      `workflow_dispatch` run demonstrates the loud-failure path. Source:
-      `issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md` § "Revised recommendation".
+- [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-5, infra)** — digest-drift-sweep silent-failure hardening, the 3 of 4
+      recommendations that were still open. Shipped `unified-trading-pm@6cb21eca3`: (2b) the Dockerfile fetch now
+      captures the HTTP status via `-o "$BODY_FILE" -w '%{http_code}'` instead of `curl -sf … || echo ""` — `404` on
+      both `live-defi-rollout` and `main` is a genuine benign skip (still counted in `SKIPPED_NO_ARG`), `401`/`403`/any
+      other status `exit 1`s the step loudly instead of being folded into the benign-skip branch; (2c) the summary is
+      now self-auditing — `Dispatched + Already fresh + Capped == 0` over a non-empty `IMAGE_REPOS` exits non-zero
+      (`CAPPED` counts as "found and would have dispatched", so a cap-bound run is never mistaken for the failure); (3)
+      added a `workflow_dispatch.inputs.max_dispatches` (default 5) that bounds real `/dispatches` POSTs per run,
+      deferring the rest to the next tick and counting them separately. Proven via
+      `scripts/quality-gates-base/tests/test-digest-drift-sweep-silent-failure-hardening.sh` — extracts the live
+      workflow's embedded bash (not a replica) via PyYAML and exercises all 8 cases: the negative test
+      (genuinely-absent-Dockerfile benign skip), 401/403 loud-failure, dispatch-cap bounding, and the self-audit
+      assertion's positive/negative cases; all 8 pass against the fix, and the structural anchor fails against the
+      pre-fix commit. The loud-failure path was proven via this extracted-block test rather than a live
+      `workflow_dispatch` run — forcing a real 401/403 would require deliberately de-scoping the shared `GH_PAT` secret
+      other production dispatches also depend on, an unacceptable side effect for a routine hardening change. Full PM
+      `quality-gates.sh` green. Source doc's own status table updated to match:
+      `issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md` (now 3-of-4 done; recommendation 1, the
+      dormant-cascade investigation, remains open and out of this todo's scope).
 - [x] ✅ [INFRA] P1. **`check_strict_quickmerge.py` fails OPEN on a bad range, and `_backmerge` exemption is
       unconfirmed.** — unified-trading-pm@fd52877f6. (a) `main()` now runs `git rev-list` via a checked `_run_git()` and
       fails CLOSED (exit 1, unconditional of `--block`/`STRICT_QUICKMERGE_BLOCK`) when the range is unresolvable,

@@ -20,6 +20,10 @@ on:
         description: "Dispatch to ALL repos even if digest is already current"
         required: false
         default: "false"
+      max_dispatches:
+        description: "Cap on dispatches per run (bounds the fan-out to a fraction of the fleet per tick)"
+        required: false
+        default: "5"
 
 jobs:
   sweep:
@@ -82,6 +86,7 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
           CURRENT_DIGEST: ${{ steps.current-digest.outputs.digest }}
           FORCE_ALL: ${{ inputs.force_all || 'false' }}
+          MAX_DISPATCHES: ${{ inputs.max_dispatches || '5' }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
@@ -124,24 +129,42 @@ jobs:
           ALREADY_FRESH=0
           SKIPPED_NO_ARG=0
           ERRORS=0
+          CAPPED=0
 
           for REPO in "${IMAGE_REPOS[@]}"; do
             # Fetch Dockerfile content from default branch (live-defi-rollout or main).
-            # Try LDR first (it's the live tip), fall back to main.
+            # Try LDR first (it's the live tip), fall back to main. The HTTP status is captured
+            # and branched on explicitly (never folded into a swallowed empty string): 404 =
+            # genuinely absent (benign skip, tried on both branches); 401/403/anything else =
+            # an auth/permission failure and must FAIL THE STEP LOUDLY — conflating that with a
+            # benign skip is exactly how this sweep went silently no-op for 27 days (see
+            # issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md).
             DOCKERFILE_CONTENT=""
+            FOUND=false
             for BRANCH in "live-defi-rollout" "main"; do
-              CONTENT=$(curl -sf \
+              BODY_FILE=$(mktemp)
+              HTTP_STATUS=$(curl -s -o "$BODY_FILE" -w '%{http_code}' \
                 -H "Authorization: Bearer $TOKEN" \
                 -H "Accept: application/vnd.github.raw+json" \
-                "https://api.github.com/repos/$OWNER/$REPO/contents/Dockerfile?ref=$BRANCH" 2>/dev/null || echo "")
-              if [ -n "$CONTENT" ]; then
-                DOCKERFILE_CONTENT="$CONTENT"
+                "https://api.github.com/repos/$OWNER/$REPO/contents/Dockerfile?ref=$BRANCH")
+              if [ "$HTTP_STATUS" = "200" ]; then
+                DOCKERFILE_CONTENT=$(cat "$BODY_FILE")
+                rm -f "$BODY_FILE"
+                FOUND=true
                 break
+              elif [ "$HTTP_STATUS" = "404" ]; then
+                rm -f "$BODY_FILE"
+                continue
+              else
+                echo "  $REPO: HTTP $HTTP_STATUS fetching Dockerfile@$BRANCH — auth/permission failure, NOT a benign absence" >&2
+                cat "$BODY_FILE" >&2
+                rm -f "$BODY_FILE"
+                exit 1
               fi
             done
 
-            if [ -z "$DOCKERFILE_CONTENT" ]; then
-              echo "  $REPO: Dockerfile not found — skipping (repo may not be image-building)"
+            if [ "$FOUND" != "true" ]; then
+              echo "  $REPO: Dockerfile not found on live-defi-rollout or main — skipping (repo may not be image-building)"
               SKIPPED_NO_ARG=$((SKIPPED_NO_ARG + 1))
               continue
             fi
@@ -158,6 +181,12 @@ jobs:
             if [ "$PINNED_DIGEST" = "$CURRENT_DIGEST" ] && [ "$FORCE_ALL" != "true" ]; then
               echo "  $REPO: digest current ($PINNED_DIGEST) — no dispatch needed"
               ALREADY_FRESH=$((ALREADY_FRESH + 1))
+              continue
+            fi
+
+            if [ "$DISPATCHED" -ge "$MAX_DISPATCHES" ]; then
+              echo "  $REPO: STALE ($PINNED_DIGEST → $CURRENT_DIGEST) — dispatch cap ($MAX_DISPATCHES) reached this run, deferring to next tick"
+              CAPPED=$((CAPPED + 1))
               continue
             fi
 
@@ -192,8 +221,19 @@ jobs:
           echo "=== Digest drift sweep complete ==="
           echo "  Dispatched:    $DISPATCHED"
           echo "  Already fresh: $ALREADY_FRESH"
+          echo "  Capped (deferred to next tick): $CAPPED"
           echo "  No ARG found:  $SKIPPED_NO_ARG"
           echo "  Errors:        $ERRORS"
           if [ "$ERRORS" -gt 0 ]; then
             echo "WARNING: $ERRORS dispatch(es) failed — check that repos have update-dependency-version.yml workflow" >&2
+          fi
+
+          # Self-auditing assertion: a sweep that never successfully read/acted on a single repo
+          # (Dispatched + Already fresh + Capped all zero) despite a non-empty IMAGE_REPOS list is
+          # the exact silent-no-op failure mode this workflow shipped with for 27 days — fail loudly
+          # instead of reporting a benign-looking all-skipped green run. CAPPED counts as "found and
+          # would have dispatched", so a cap-bound run is never mistaken for this failure.
+          if [ "${#IMAGE_REPOS[@]}" -gt 0 ] && [ "$((DISPATCHED + ALREADY_FRESH + CAPPED))" -eq 0 ]; then
+            echo "ERROR: Dispatched + Already fresh + Capped == 0 across ${#IMAGE_REPOS[@]} repos — the sweep never successfully read a single Dockerfile. See issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md." >&2
+            exit 1
           fi

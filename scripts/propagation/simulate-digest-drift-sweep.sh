@@ -19,11 +19,13 @@
 # │ number measured last week is not the number you will get today.                                  │
 # └────────────────────────────────────────────────────────────────────────────────────────────────┘
 #
-# It mirrors digest-drift-sweep.yml's `Sweep stale repos` step (:123-184) EXACTLY — same IMAGE_REPOS
+# It mirrors digest-drift-sweep.yml's `Sweep stale repos` step (:91-218) EXACTLY — same IMAGE_REPOS
 # list and order, same live-defi-rollout→main fallback, same `^ARG BASE_IMAGE_DIGEST=sha256:<64hex>`
 # extraction, same staleness rule (PINNED != CURRENT and FORCE_ALL != true). ONE difference, and it is
 # the point: it NEVER POSTs /dispatches. If you edit the workflow's logic, edit this to match or it
-# stops being a simulation and becomes a guess.
+# stops being a simulation and becomes a guess. (The workflow's --max-dispatches cap and its 401/403
+# loud-failure branch only affect the real POST/fetch paths, which this script never exercises — the
+# staleness verdict computed here is unaffected by either.)
 #
 # NOTE ON THE TOKEN: this uses a cross-repo-scoped PAT (via load-gh-token.sh) — i.e. it runs the
 # sweep as the FIXED workflow would. That asymmetry IS the bug being simulated.
