@@ -99,16 +99,28 @@ concurrent workers do not collide on this file.
       `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` and closed
       `/plans/archive/issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md` (`status: resolved`) so both stop
       duplicate- tracking this bug.
-- [ ] [INFRA] P1. **Deliver a static dispatch-delivery checker: every `repository_dispatch` `event_type` emitted
-      anywhere must have a listener for that type in the resolved TARGET repo.** A 204 cannot distinguish "delivered"
-      from "nobody subscribed", so this can only be caught statically. The source doc names the concrete population it
-      must catch: F1 (`halt-order-flow`/`resume-order-flow` → execution-service, no listener), F3's 4 orphan dispatches
-      and 4 dead listeners. Deliver as a NEW standalone `scripts/quality_gates/check_dispatch_listeners.py` with a
-      shrinking-ratchet baseline for today's known-broken set — **do NOT wire it into `scripts/quality-gates.sh`** (see
-      § Same-file contention; the wire-in is a finalize-plan todo). **Done when**: the script reproduces the F1 + F3
-      findings from a clean checkout, exits non-zero on a synthetic new orphan dispatch, exits 0 on the baselined set,
-      and its output is recorded in the source doc. Source: `issues/post_cutover_silent_assumption_sweep_2026_07_23.md`
-      (Resolution checklist, [INFRA] P1 "Make dispatch delivery observable").
+- [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-5, `infra`)** — Delivered
+      `scripts/quality_gates/check_dispatch_listeners.py` + `tests/unit/test_check_dispatch_listeners.py` (9 regression
+      cases). Walks every repo's `.github/workflows/*.yml` / `cloudbuild*.yaml` / `buildspec*.yaml` / `scripts/**/*.sh`
+      for `repos/{o}/{r}/dispatches` calls + each repo's own `on: repository_dispatch: types: [...]` listeners; resolves
+      owner/repo/event_type via literals, known single-owner aliases, file-scope shell vars, and (for
+      `trading-kill-switch.sh`'s exact shape) a shell-function-wrapper pass. **Reproduces F1 exactly**
+      (`halt-order-flow`/`resume-order-flow` → execution-service, no listener) **and F3 exactly** (`quality-gate-run`
+      dynamic-target zero-listeners-anywhere; `game-day-sit`/`synthetic-smokes` → system-integration-tests, no listener;
+      12+ services' `cloudbuild.yaml`/`buildspec.aws.yaml` `service-deployed` → deployment-service, no listener) — plus
+      additional real orphans not previously enumerated (`schema-changed` across all 24 repos, `library-published`,
+      `tier-ab-green`, the dormant `staging-locked`/`staging-unlocked` pair). **63 orphans / 344 dispatch sites scanned
+      / 13 unresolved** (2 of the 13 confirmed zero-call-site generic utilities, nothing to resolve). Baselined at 63
+      (shrinking ratchet). NOT wired into `scripts/quality-gates.sh` (per § Same-file contention — registration is the
+      finalize plan's todo). Regression tests prove: F1-shaped orphan detection, matching-listener NOT flagged, wildcard
+      listener coverage, the cloudbuild/buildspec escaped-JSON-quote parsing (the exact bug that silently dropped every
+      cloudbuild.yaml hit before the fix), the dynamic-target zero-vs-some-listeners distinction, the shell-wrapper
+      per-call-site resolution, and the baseline ratchet exiting 0 at-baseline / 1 on a synthetic new orphan. Full
+      findings + evidence recorded in the source doc's Resolution checklist (split the remaining "fix the unconditional
+      success-reporting" work into its own new follow-up todo there, since that's a separate remediation this todo's own
+      scope — "make it observable" — doesn't cover). Full PM `quality-gates.sh` green (1356 passed, 16 skipped). Source:
+      `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` (Resolution checklist, [INFRA] P1 "Make dispatch
+      delivery observable").
 - [ ] [INFRA] P1. **digest-drift-sweep silent-failure hardening — the 3 of 4 recommendations still provably open.**
       `/plan-reconcile ci` re-measured the live `.github/workflows/digest-drift-sweep.yml` on 2026-07-26: rec 2a (token
       → `GH_PAT`) is DONE, and 2b/2c/3 are still open at the cited lines. Implement exactly those three: (2b) capture
