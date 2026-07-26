@@ -6,7 +6,7 @@ summary:
   already refuses to silently recycle a done row on a positional task_id collision — but it only logs an ERROR nobody
   watches. A new todo can land on a stale done+done_sha id and sit invisibly un-dispatched forever unless a human goes
   digging with SSM+SQL. Give this event a Slack page, a dashboard panel, and a one-click safe fix.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -38,13 +38,18 @@ source:
   (it was a real, already-done, unrelated fix with done_sha=41840c1), so the new todo silently read as done and would
   never dispatch. The 2026-07-20 plan's own closing note flagged this exact residual as "worth watching for in practice"
   — this plan is that watch.
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 ---
 
 # AO backlog id-collision — surface it and offer a one-click safe fix
+
+> **🟢 ARCHIVED 2026-07-26** — all 4 todos shipped + independently re-verified from a fresh checkout (fresh QG run,
+> commit-sha spot checks, and a live real-code-path collision reproduction — not just the parent's own "green" claim) by
+> `ao_backlog_collision_alert_and_remediation_ui_finalize_2026_07_26.md`. See that finalize doc for the re-verification
+> evidence.
 
 ## Why this, why now
 

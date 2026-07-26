@@ -12,7 +12,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [dashboard, playwright, e2e, flaky-test, backlog]
-related: [/plans/active/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md]
+related: [/plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md]
 created: 2026-07-26
 parent_epic: orchestrator_master
 assigned_vm: planning

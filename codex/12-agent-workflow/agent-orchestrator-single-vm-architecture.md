@@ -308,9 +308,15 @@ the fleet's work, and a task's identity is stable across regens.
   (`slug + next index`), so a completed todo re-read as `- [ ]` under a shifted index can still collide with a sibling's
   id — `TaskRow.brief_hash` detects the mismatch, but `sync_backlog_to_db` now REFUSES to reset a row that is `done`
   with a `done_sha` (a done row is audit history, never silently recycled) instead of blindly resetting it. Accepted
-  trade-off: this also blocks the legitimate "id genuinely reused for a brand-new todo" case — that todo will read as
-  `done` and never dispatch until someone notices. The real fix (content-derived ids) remains deliberately out of scope;
-  re-open only if this guard proves insufficient. Tracked in
+  trade-off: this also blocks the legitimate "id genuinely reused for a brand-new todo" case — that todo silently reads
+  as `done` and never dispatches. **Detection + remediation shipped**
+  (`ao_backlog_collision_alert_and_remediation_ui_2026_07_26`): the guard's refusal is now a queryable
+  `backlog_sibling_reset_guard_refused` activity row, pages Slack once (deduped by `task_id`+incoming-brief-hash — see
+  `/codex/04-architecture/agent-orchestrator-alerting.md`), surfaces in the dashboard's "Backlog Integrity" panel, and a
+  one-click `POST /api/backlog/{task_id}/remint-collision` mints the stuck content a genuinely fresh id (checked against
+  both `backlog.yaml` AND the full historical `tasks` table) while leaving the original done row's audit fields
+  byte-for-byte untouched — no longer "until someone notices." The real fix (content-derived ids) remains deliberately
+  out of scope; re-open only if the remediation flow proves insufficient. Tracked in
   `plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (still open — one todo, the
   content-derived-id follow-up, is deliberately deferred, not resolved).
 
