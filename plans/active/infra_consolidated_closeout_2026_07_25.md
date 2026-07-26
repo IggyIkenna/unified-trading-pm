@@ -178,3 +178,34 @@ phases ship.
   `/plans/active/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md`. Exit gate re-run after rebasing onto
   current origin: `run_hygiene_sweep.sh --ci` = **0 hard / 1 soft** (the soft warning is the same pre-existing
   delete/VM-launch candidate signal, all of it outside this tranche). Shipped `unified-trading-pm@79f892f40`.
+- **2026-07-26** — First `/ag-closeout-audit` run **scoped to this tranche** (autonomous mode, operator away), directly
+  after the `/plan-reconcile` pass above. **Headline structural finding: this tranche's covering set is a ZERO-TODO
+  digest.** This hub carries no `- [ ]` of its own (`grep -cE '^\s*-\s*\[[ xX]\]'` → `0`), its `depends_on:` is `[]` and
+  its `related:` names only the 3 sibling tranche closeouts + the audit SKILL (so the dependency-graph discovery path
+  finds no forked children either), and **no `infra_*_satellite_ao_dispatch_batch*` plan has ever existed** in
+  `plans/active/` or `plans/archive/` — against 41 such plans across the 5 AGs. So the audit's projection question
+  resolves to "everything is orphaned", because nothing in the covering set dispatches anything. All 34 tranche-primary
+  docs were read end-to-end (32 Sources + 2 members not yet listed here:
+  [issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md](/plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md),
+  found unclaimed by ANY of the 4 non-AG tranche closeouts, and
+  [issues/infra_plan_reconcile_parked_decisions_2026_07_26.md](/plans/active/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md)):
+  **29 orphaned** (28 `orphaned_never_touched` + 1 `orphaned_partial_coverage`), 5 not orphaned (the generated inventory
+  dashboard, `task_template.md`, the self-referential rollout meta-plan, and the two operator-decision registers). Phase
+  3 drafted
+  [infra_satellite_ao_dispatch_batch1_2026_07_26.md](/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md) +
+  [infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md](/plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
+  — **25 todos from 17 source docs, both `status: draft` (NOT ingested; the flip to `active` is the operator's call)**.
+  The HARD conflict check ran against all 93 existing batch/finalize/closeout plans plus pairwise across the 25 drafted
+  todos: 10 further AO-eligible items were deferred conflict-gated (notably `PYTEST_UNIT_DIR`, where a cefi doc
+  prescribes a different approach gated behind 22 test fixes; `DataStatusTab.tsx`, claimed by a cross-cutting batch; and
+  `base-service.sh`/`base-library.sh`, a multi-tranche hotspot with no ownership rule), and **3 were resolved by logic
+  rather than re-drafted** — the CME BTC/ETH OPT-atom question is answered by an explicit operator ruling recorded in
+  `tradfi_consolidated_closeout_2026_07_18.md:196-197`, the `vm_log_archival_scheduler.tf` apply already landed
+  (`deployment-service@3cd0b1d`, verified 2026-07-07), and 4 DeFi items are already claimed by defi batches 1/3/4. Also
+  measured and reported (not fixed here — reconcile's territory):
+  [utl_uac_reuse_consolidation_remediation_2026_06_10.md](/plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md)'s
+  25 open boxes are almost certainly false-unchecked residue of its 2026-07-13 AO split — all 10 split children are now
+  archived with 0 open todos, and its still-open Phase-9 registry-extract box is contradicted by
+  `unified_trading_library/deployment_registry.py` existing and being exported at `__init__.py:695`. Exit gate
+  `run_hygiene_sweep.sh --ci --no-regen` = **0 hard / 1 soft**, and the drafts themselves are clean of the
+  delete/VM-launch signal.
