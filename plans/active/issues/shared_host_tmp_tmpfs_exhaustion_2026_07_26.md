@@ -33,6 +33,7 @@ estimate_baseline_ai_days: 0.1
 estimate_calibrated_ai_days: 0.1
 assigned_role: infra
 drift_direction: NA
+depends_on: []
 ---
 
 # Shared host `/tmp` tmpfs exhaustion — spurious test failures
