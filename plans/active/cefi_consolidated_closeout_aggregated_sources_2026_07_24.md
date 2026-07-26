@@ -93,14 +93,8 @@ drift_direction: advance-code
     - 7. **[DATA] P1.** Re-sync the manifest / data-status render for the migrated cefi chain cells so all four
          canonical surfaces agree.
     - 8. **[REVIEW] P1.** On W1 ship, record the cefi chain-tail v6 cutover date in the canonical-cutover-register.
-  - [`plans/active/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`](/plans/active/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md)
-    - 1. **[DATA] P1.** Confirm via `gcloud storage ls`/manifest query whether `deribit-options-chain` has actually been
-         RUN in prod.
-    - 2. **[DATA] P1.** Rewrite `_write_shard` to build its path via UAC `build_cefi_partition_path` so this handler
-         lands on the SAME v6 canonical path W1/W2 do.
-    - 3. **[REVIEW] P1.** Audit `manifest_recorder`/honest-absence bookkeeping for this handler post-fix.
-    - 4. **[DATA] P2.** If prod objects exist under the legacy `pipeline_mode=live_deribit/...` shape, migrate them
-         (copy → verify → human-only purge).
+  - [`plans/archive/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`](/plans/archive/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md)
+    — 0 open todos (resolved/archived 2026-07-26, `market-tick-data-service@ec0df878`).
   - [`plans/archive/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`](/plans/archive/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`](/plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md)
