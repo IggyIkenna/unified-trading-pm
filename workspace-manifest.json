@@ -341,9 +341,9 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 6,
         "qg_red_reason": null,
-        "coverage_pct": null,
+        "large_file_count": 6,
+        "coverage_pct": 82.59,
         "warn_file_count": 14
       }
     },
@@ -762,7 +762,7 @@
       "codebase_health": {
         "qg_red_reason": null,
         "large_file_count": 8,
-        "coverage_pct": null,
+        "coverage_pct": 90.9,
         "warn_file_count": 9
       }
     },
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 6,
         "qg_red_reason": null,
-        "warn_file_count": 21,
-        "coverage_pct": 88.34
+        "large_file_count": 6,
+        "coverage_pct": 88.33,
+        "warn_file_count": 21
       }
     },
     "unified-trading-pm": {
@@ -1300,9 +1300,9 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "qg_red_reason": "ruff",
+        "qg_red_reason": null,
         "large_file_count": 0,
-        "coverage_pct": 73.08,
+        "coverage_pct": null,
         "warn_file_count": 0
       }
     },
@@ -1515,10 +1515,10 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 7,
+        "qg_red_reason": null,
         "large_file_count": 10,
         "coverage_pct": null,
-        "qg_red_reason": null
+        "warn_file_count": 8
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
