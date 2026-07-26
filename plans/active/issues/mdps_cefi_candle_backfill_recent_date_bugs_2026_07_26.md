@@ -113,7 +113,8 @@ on-chain-CLOB wire format.
       2-instrument) HYPERLIQUID `trades` candle backfill for one high-volume recent day completes on the STANDARD
       `e2-standard-8` launcher without OOM (confirming the fix actually scopes memory to the requested work), with a
       regression test/benchmark recorded. A full (all-177-instrument) run completing is a stretch goal, not required for
-      this item's own done-when.
+      this item's own done-when. — **CODE FIX SHIPPED 2026-07-26, live-VM done-when proof still OUTSTANDING** (see
+      Progress Log — NOT flipped `[x]` since the actual gate, a real backfill completing without OOM, hasn't been run).
 - [ ] [DATA] P2. **Fix HYPERLIQUID `derivative_ticker`→`deriv_ohlcv_1m` candle building.** Root-cause the
       `instrument_type='UNKNOWN'` resolution (should resolve `perpetual`) for HYPERLIQUID `derivative_ticker` rows, then
       either fix the resolution or register the missing
@@ -126,3 +127,35 @@ on-chain-CLOB wire format.
       the book-candle aggregator expects. Repo: market-data-processing-service. **Done when**: a real `book_snapshot_5`
       backfill for at least one HYPERLIQUID instrument produces a valid candle instead of the "Missing bid_price_0"
       warning + refused honest-absence write.
+
+## Progress Log
+
+- 2026-07-26 (slot-12, `data_engineering`): **Root-caused + fixed bug 1's code path; live-VM done-when proof NOT yet
+  run.** Root cause: `market_data_processing_service/app/core/orchestration_scanner.py::_list_instrument_files` listed
+  the ENTIRE day's `raw_tick_data/by_date/day={date}/` prefix (every venue/instrument_type/data_type in the category)
+  and materialized every `BlobMetadata` into a Python list BEFORE applying the `--venues`/`--instrument-ids` filter —
+  this is what actually drove the multi-GB RSS growth, not the 13,601-instrument catalogue load (that load's own result,
+  `tradable_keys`, is even unused/discarded downstream — wasteful but not GB-scale). Fix: for CEFI, derive a venue set
+  (explicit `--venues`, or parsed from canonical `VENUE:TYPE:SYMBOL` `--instrument-ids` via the existing
+  `parse_canonical_instrument_id`) and scope the GCS listing to
+  `raw_tick_data/by_date/day={date}/{asset_group|category}= cefi/venue={V}/` per venue instead of the whole-day scan —
+  falls back to the pre-existing whole-day scan when no venue is resolvable (bare-symbol instrument_ids, or neither
+  filter given), and other categories (DeFi's DEX venues nest under `pipeline_mode=` instead, unconfirmed to match this
+  hive layout) are left on the unchanged whole-day path. Threaded `category:` through `_list_instrument_files` → the
+  public `list_instrument_files` wrapper → `_resolve_files_to_process` → the CLI pre-count loop in
+  `cli/handlers/process_handler.py`. Added 6 regression tests
+  (`tests/unit/test_orchestration_scanner_venue_scoped_listing.py`) pinning: instrument-id-derived venue scoping +
+  exclusion of other venues' blobs, explicit-`--venues` scoping, both `asset_group=`/`category=` hive-key spellings
+  tried per venue, bare-symbol fallback to whole-day scan, `category=None` full backward-compatibility, and non-CEFI
+  categories keeping the whole-day scan. `quality-gates.sh` green (61s, fresh run post-fix — caught + fixed a
+  `reportPossiblyUnboundVariable` on `prefix` I introduced in the first pass, confirmed via direct `basedpyright`
+  before/after: 8→7 errors, the remaining 7 all pre-existing/unrelated). Shipped:
+  `market-data-processing-service@86a16239c35ae3aea6e1439c3599c7a428f93f0c`. **NOT done**: the todo's own done-when is a
+  LIVE backfill (`--instrument-ids`-narrowed HYPERLIQUID `trades`, one recent day, on the standard `e2-standard-8`
+  launcher, completing without OOM) — this requires launching a VM, which wasn't attempted this session (ran into a
+  severe, unrelated `/home` disk-space crisis workspace-wide, see `codex`/operator channel; also this is real infra
+  verification that deserves its own dedicated attention, not a rushed check under context pressure). **Next step**:
+  launch the standard backfill launcher against HYPERLIQUID `trades`, `--instrument-ids` narrowed to 2, for one
+  high-volume recent day (e.g. `2026-07-19`, the day originally OOM'd), confirm it completes without OOM, then flip this
+  todo `[x]` with the run's evidence (VM name + log tail showing completion). Todos 2/3 (bugs 2/3,
+  `derivative_ticker`/`book_snapshot_5`) are untouched — separate, smaller fixes, not started.
