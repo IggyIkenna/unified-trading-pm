@@ -104,13 +104,32 @@ doesn't the wizard show X" confusion later if left as prose instead of a tracked
       current manual mechanism in `docs/ui-alignment-ssot.md` new §1a. Building real automation (a
       `sync_capability_manifest_to_ui.py` + `uac-registry-sync.yml`-style workflow, or extending the `registry-drift`
       `ci.yml` job) is bigger than this P3 UI-craft todo — filed as its own follow-up below.
-- [ ] [SCRIPT] P2. Build automated UAC→UI sync for `capability-manifest.json` / `capability-verdict-matrix.json`,
-      mirroring `sync-archetype-capability-to-ui.sh`'s pattern (a `sync_capability_manifest_to_ui.py` generator +
-      diff/write CLI) plus either a `uac-registry-sync.yml`-style `repository_dispatch` auto-PR workflow, or (simpler)
-      extend the existing `registry-drift` job in `unified-trading-system-ui/.github/workflows/ci.yml` to also
-      regenerate + diff these two files the way it already does for `ui-reference-data.json` — that job already checks
-      out UAC/UTL/PM as siblings, so it's the smaller lift. Without this, the only drift protection
-      (`tests/unit/wizard/parity-gates.test.ts`'s hash check) stays a no-op in the UI repo's own CI (confirmed
-      2026-07-26: no sibling UAC checkout in `ci.yml`'s `test` job) and the manifest can silently go stale again the
-      next time UAC regenerates it. See `docs/ui-alignment-ssot.md` §1a for the full gap writeup. Repos:
-      unified-trading-pm (generator + workflow), unified-trading-system-ui (CI job + committed copies).
+- [x] ✅ [SCRIPT] P2. **DONE-AS-SCOPING 2026-07-26 (slot 2), `unified-trading-pm` (this doc +
+      `docs/ui-alignment-ssot.md` §1a).** Attempted to scope "extend `registry-drift` like `ui-reference-data.json` —
+      that job already checks out UAC/UTL/PM, so it's the smaller lift" (this todo's own original text) and found that
+      premise WRONG before writing any CI code: both `generate_capability_manifest.py` and
+      `generate_capability_verdict_matrix.py` live-probe OTHER services' own built `.venv`s
+      (`_run_service_probe(workspace_root, repo, ...)`, not a light pip-install) — the manifest generator soft-fails to
+      a `gap_registry` node if execution-service/features-service are unreachable (so a UAC-only CI job would regenerate
+      a manifest that's _structurally different by design_ every run vs. the current full-workspace-regen committed copy
+      — 21 real `execution_algo` + 1 `feature_group` node today — i.e. a **permanent false-positive drift signal on
+      every future PR**, not a real check), and the verdict-matrix generator HARD-FAILS (`raise RuntimeError`, F48)
+      without strategy-service's `.venv`. Shipping a UAC-only version of either check would be a net regression (a CI
+      job that always fails or never means anything) verified only by pushing to real GitHub Actions with no fast local
+      iteration loop available in this session — did not do that blind. Re-scoped into the two properly-sized follow-ups
+      below instead of a broken same-pattern-as-§1 copy-paste. Full writeup: `docs/ui-alignment-ssot.md` §1a.
+- [ ] [SCRIPT] P2. CI drift-check for `capability-manifest.json`: extend `registry-drift`
+      (`unified-trading-system-ui/.github/workflows/ci.yml`) to also checkout execution-service + features-service (each
+      with a real `uv sync`'d `.venv` at `<repo>/.venv` — `_run_service_probe`'s exact requirement, not a pip install)
+      alongside the existing UAC/UTL/PM checkout, regenerate via
+      `generate_capability_manifest.py --uac-root ... --workspace-root <the _deps/ layout root> --output-dir /tmp/...`,
+      and diff against the committed `lib/registry/capability-manifest.json` (content-normalized compare, mirroring the
+      existing `ui-reference-data.json` step). Verify end-to-end against a real GHA run (push to a scratch branch,
+      confirm both the green-when-synced and red-when-stale cases) before merging — do not assume a config-only guess is
+      correct given the F53/service-probe gotchas already found. Repos: unified-trading-system-ui (CI job),
+      unified-trading-pm (generator already exists, no changes expected unless the CI probe surfaces a new gap).
+- [ ] [SCRIPT] P3. CI drift-check for `capability-verdict-matrix.json`: same shape as the todo above but ALSO needs
+      strategy-service checked out with a real `uv sync`'d `.venv` (hard requirement — `_probe_engine_backed_archetypes`
+      raises rather than degrading, per F48). Lower priority than the manifest check since the manifest is the
+      more-consulted wizard surface; sequence this after the P2 above proves the pattern works in real CI. Repos:
+      unified-trading-system-ui (CI job), unified-trading-pm (generator already exists).

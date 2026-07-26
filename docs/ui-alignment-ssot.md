@@ -131,11 +131,30 @@ investigation the UI's bundled `capability-manifest.json` was stale by a full UA
 nodes/edges) — i.e. the exact "a fix landing in UAC does not automatically reach the wizard UI" scenario. Manually
 re-synced via `unified-trading-system-ui@bd527d83`.
 
-**Follow-up (not done here — bigger than a UI-craft P3, needs a Python generator + GHA workflow change):** either build
-real automation mirroring `sync-archetype-capability-to-ui.sh`'s pattern (a `sync_capability_manifest_to_ui.py` +
-`uac-registry-sync.yml`-style `repository_dispatch` workflow), or at minimum extend the `registry-drift` `ci.yml` job to
-also regenerate + diff these two files the way it already does for `ui-reference-data.json`. Tracked as a follow-up todo
-in the same issue doc.
+**Why "just extend `registry-drift` like `ui-reference-data.json`" is NOT the smaller lift it looks like (found
+2026-07-26 scoping the follow-up todo):** both generators reach past UAC — they live-probe OTHER services' own `.venv`s
+via `_run_service_probe(workspace_root, repo, ...)` (`workspace_root / repo / ".venv" / "bin" / "python"`, a real built
+venv, not just a pip-installed package):
+
+- `generate_capability_manifest.py`'s `extract_service_registries()` probes **execution-service** (`execution_algo`
+  nodes) and **features-service** (`feature_group` nodes). It fails SOFT — an unreachable `.venv` degrades that registry
+  to a `gap_registry` node rather than raising — so it would still "run" in a UAC-only CI job. But the current committed
+  manifest has REAL nodes from a full-workspace regen (21 `execution_algo` + 1 `feature_group`, confirmed 2026-07-26),
+  so a CI job checking out only UAC/UTL would regenerate a manifest that's structurally _different by design_ every
+  single run (real nodes → gap nodes) — a **permanent false-positive drift signal that would red-flag every future PR**,
+  not a real check.
+- `generate_capability_verdict_matrix.py`'s `_probe_engine_backed_archetypes()` probes **strategy-service** for
+  `ARCHETYPE_ENGINE_REGISTRY` and — unlike the manifest's soft-fail — **hard-fails** (`raise RuntimeError`, "F48: ...
+  refusing to fall back to a transcribed set") if that `.venv` is unreachable. A UAC-only CI job wouldn't produce a
+  false diff here — it would just always **crash**.
+
+So a correct CI drift-check for either file needs execution-service **and** features-service **and** strategy-service
+checked out with real, built `.venv`s (uv-managed — a full `uv sync` per service, not a light `pip install -e`)
+alongside UAC/UTL — a materially heavier CI job than `ui-reference-data.json`'s, and one this determination round did
+not attempt to build blind (no fast local iteration loop against real GitHub Actions execution; shipping an untested
+version risks the exact permanent-false-positive failure mode described above, a worse outcome than today's manual-only
+gap). Tracked as a properly-rescoped follow-up todo in the same issue doc — size it for real CI iteration cycles, not a
+same-pattern-as-§1 copy-paste.
 
 ---
 
