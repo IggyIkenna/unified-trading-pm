@@ -15,7 +15,7 @@ summary: >-
   avoid duplicate dispatch. Phase 3 cleared only 2 of the remaining orphans into fresh AO-dispatch todos; left 7
   operator-gated, 1 time-gated, and 1 human-only item (plus the 2 already-covered-elsewhere notes) in the Deferred
   sections below.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -65,9 +65,9 @@ drift_direction: advance-code
 
 # Prediction satellite AO batch 3 — fresh triage extraction
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
-> skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review. Both todos below touch distinct files/docs — safe to dispatch concurrently.
+> **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
+> ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
+> explicit operator review). Both todos below touch distinct files/docs — safe to dispatch concurrently.
 
 ## Todos
 

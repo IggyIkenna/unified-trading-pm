@@ -8,7 +8,7 @@ summary: >-
   items for any that have since cleared — including re-checking whether sports_satellite_ao_dispatch_batch5's ml-service
   migration todo has landed, which would clear the 2 already-covered-elsewhere notes), then archives batch3 via the
   standard 6-step ritual.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
