@@ -12,7 +12,7 @@ summary: >-
   "manual review" sub-part) to make them genuinely bounded; 2 required an added live-probe first-step because the source
   todo's own prerequisite state is ambiguous or self-contradictory. 1 candidate (venue vocabulary re-stamp) explicitly
   EXCLUDES a sub-item already covered by `sports_satellite_ao_dispatch_batch3_2026_07_25.md`.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -79,21 +79,29 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P0. **Track F — PURGE the fabricated POST-FLOOR `derived_features` remainder (Jun-Dec 2020 + 2021-2026
-      only) + re-verify by CENSUS, one worker, in order.** Source todo's own prerequisite state is self-contradictory:
-      the "re-run" checkbox immediately above it in the parent doc is marked `[x]` yet its own body text says "This todo
-      is NOT done for the post-floor residue" — do not trust either signal at face value. **Step 1 (live-probe, per the
-      `recovery_plan_source_liveness_probe_gap` discipline)**: run a GCS creation-time census across
-      `features-sports-prd`'s `derived_features` corpus for Jun-Dec 2020 + 2021-2026 to establish the CURRENT
-      pre-/post-`2026-07-19` object-count split directly, rather than trusting the contradictory checkbox. **Step 2**:
-      snapshot the delete list, then delete every object from that scope still carrying a pre-`2026-07-19` creation
-      timestamp (honest absence beats an invented `competition_phase` — do NOT re-touch pre-floor 2017-2019/pre-06-06
-      2020 dates, already handled by the separate pre-floor wipe). **Step 3**: re-run the census, confirm 0 remain.
-      **Not `[OPERATOR]`-gated** (same justification the source todo states): GCS soft-delete gives a 7-day recovery
-      window, reversible-for-a-week, not the irreversible class the delete-safety protocol reserves for human-only
-      sign-off — the snapshot-first step is the safety net. (repo: features-service / GCS `features-sports-prd`). **Done
-      when**: the step-3 census returns 0 post-floor `derived_features` objects with a pre-`2026-07-19` creation
-      timestamp. Source: `sports_consolidated_closeout_2026_07_19.md:244-259`.
+- [ ] [OPERATOR] [DATA] P0. **Track F — PURGE the fabricated POST-FLOOR `derived_features` remainder (Jun-Dec 2020 +
+      2021-2026 only) + re-verify by CENSUS, one worker, in order.** **⛔ CORRECTED 2026-07-26 (slot-12
+      `data_engineering`): this todo's own "Not `[OPERATOR]`-gated" justification is WRONG and has been removed.** The
+      target bucket, confirmed live via `gcloud storage ls`, is `features-sports-prd-central-element-323112` — a genuine
+      `-prd-` production bucket. `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1 is an UNCONDITIONAL
+      human-only hard stop: **"Any prod-bucket delete. Object, prefix or bucket, in any `-prd-` / production-serving
+      bucket. There is no confidence level at which an agent deletes from prod."** — there is no
+      soft-delete-reversibility carve-out anywhere in that section; the original triage's reasoning (7-day recovery
+      window ⇒ exempt) does not appear in the codex SSOT and is a misapplication. Confirmed real, populated corpus in
+      scope (not already-resolved): `gcloud storage ls -r` on a sample day (`sports_features/by_date/day=2021-01-01/**`)
+      shows real `league={id}/feature_group=derived_features/     features.parquet` objects across multiple leagues —
+      this is NOT an empty/moot target. **Step 1 (live-probe, SAFE, READ-ONLY, an agent MAY still do this)**: run a GCS
+      creation-time census across `features-sports-prd-central-element-323112`'s
+      `sports_features/by_date/day={D}/league={L}/     feature_group=derived_features/` corpus for Jun-Dec 2020 +
+      2021-2026 to establish the CURRENT pre-/post- `2026-07-19` object-count split directly (do not trust the parent
+      doc's contradictory checkbox state). **Step 2 — HUMAN-ONLY, per the hard stop above**: snapshot the delete list,
+      then delete every object from that scope still carrying a pre-`2026-07-19` creation timestamp (honest absence
+      beats an invented `competition_phase` — do NOT re-touch pre-floor 2017-2019/pre-06-06 2020 dates, already handled
+      by the separate pre-floor wipe). **Step 3**: re-run the census, confirm 0 remain. (repo: features-service / GCS
+      `features-sports-prd-central-element-323112`). **Done when (worker scope)**: the Step 1 census is run and its
+      pre-/post-`2026-07-19` split is recorded for the operator to act on. **Done when (full todo, operator-executed)**:
+      the step-3 census returns 0 post-floor `derived_features` objects with a pre-`2026-07-19` creation timestamp.
+      Source: `sports_consolidated_closeout_2026_07_19.md:244-259`.
 - [ ] [REVIEW] P1. **Track C — re-verify the existing K1/K2 delete-candidate GCS object list against the CURRENT casing
       state.** Read-only: a fresh object-level census confirms whether the candidate list matches the corpus's actual
       casing as of the check date (it may predate or postdate the still-pending lowercase-revert). No delete action in
@@ -300,3 +308,26 @@ unsupervised"; (f) items whose real content lives in another doc this extraction
 `sports_legacy_bucket_cutover_2026_07_16.md`'s T2.9/T2.10,
 `sports_canonical_universe_and_apifootball_reference_ expansion_2026_06_24.md`'s own ~9-11 todos, a mis-filed DEFI
 item). See the dispatching session's full report for the per-todo table.
+
+## Progress Log
+
+- 2026-07-26 (slot-12, `data_engineering`): **Todo 1 (Track F derived_features purge) — corrected mis-gating + completed
+  the worker-safe portion; the delete itself stays human.** The todo's own "Not `[OPERATOR]`-gated" justification was
+  WRONG: confirmed the target bucket is `features-sports-prd-central-element-323112` (a genuine `-prd-` production
+  bucket) and `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1's "Any prod-bucket delete" hard stop is
+  unconditional — no soft-delete-reversibility carve-out exists in that section. Added `[OPERATOR]` to the todo +
+  corrected its justification text (see todo 1 above). Ran the SAFE, read-only Step 1 live-probe as a bounded SAMPLE
+  (not an exhaustive multi-year walk — a full census across ~6.5 years × all leagues would itself be a
+  whole-corpus-scale GCS walk better run as its own single-walk-compliant job, and the delete needs operator execution
+  regardless): 5 sample days across the range (`2020-06-06`, `2021-06-15`, `2022-06-15`, `2024-06-15`, `2026-06-15`),
+  one `derived_features` object's real `creation_time` checked per day via `gcloud storage objects describe`. Result:
+  `2020-06-06`'s sampled object has `creation_time=2026-07-17T21:52:06Z` — genuinely PRE the `2026-07-19` cutoff,
+  confirming the fabricated post-floor residue the todo describes STILL EXISTS for at least this date. The other 4
+  sampled dates (`2021-06-15`/`2022-06-15`/`2024-06-15`/`2026-06-15`) all show `creation_time=2026-07-19T*`, consistent
+  with the parent doc's "re-run" checkbox having genuinely regenerated most of the corpus that day — so BOTH
+  contradictory signals in the source todo's prerequisite state were partially right: the bulk re-run happened, but
+  residue remains. **Handoff to operator**: this sample is sufficient to confirm the purge is still needed and
+  non-trivial in scope, but not exhaustive enough to safely drive a delete list — recommend either (a) the operator runs
+  the full census + delete personally, or (b) files a dedicated, properly-VM- launched, single-walk-compliant follow-up
+  plan for the exhaustive census + delete (Tier-2 SPOT VM, per the workspace heavy-I/O rule). Not flipping todo 1's
+  checkbox — the substantive delete action has not occurred.

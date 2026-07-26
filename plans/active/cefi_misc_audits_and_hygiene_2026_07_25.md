@@ -10,7 +10,7 @@ summary: >-
   other candidate originally considered for this plan (the ccxt/native adapter audit, the non-Tardis VM sweep, the
   UAC-fallback blast-radius audit, the data-status axis-value-census quickmerge, the UPBIT wiring check) is already
   drafted in cefi_consolidated_native_ao_extract_2026_07_25.md — deliberately NOT duplicated here.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]

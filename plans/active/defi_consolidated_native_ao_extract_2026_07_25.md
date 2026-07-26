@@ -10,7 +10,7 @@ summary: >-
   turned out to be STALE on a fresh read (2 native todos are fully superseded by newer findings in sibling docs — see
   the Conflicts section, deliberately left un-touched in the source doc per this task's scope). Only 4 conflict-clear,
   bounded candidates survived, spanning 3 repos.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]

@@ -9,7 +9,7 @@ summary: >-
   cefi_migration_cutover_and_track8_completion_2026_07_25.md finishing (launching before the Track-1 drain re-enables
   would fight the consolidator). The 2 PRE-BACKFILL baseline checkpoints are deliberately NOT here — already drafted,
   ungated, as candidates 3/4 of cefi_consolidated_native_ao_extract_2026_07_25.md.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]

@@ -137,13 +137,24 @@ drift_direction: advance-code
       `defi_dedicated_bucket_shared_migration_2026_07_13.md`. — strategy-service@4a7fbb17. Verified against the real
       `resolve_bucket_name()` calls in `canonical_perp_funding_provider.py`/`canonical_dex_pool_provider.py` (both
       `kind="tick-data"`); comment-only edit, no executable line changed; `quality-gates.sh` green (214s).
-- [ ] [CODE] P1. Implement Phoenix DEX radix-slab top-of-book decode in
+- [x] ✅ [CODE] P1. Implement Phoenix DEX radix-slab top-of-book decode in
       `market_tick_data_service/cli/handlers/phoenix_orderbook_handler.py` — parse the Phoenix market-account slab
       layout (RPC fetch already works) to populate `best_bid_price`/`best_ask_price`/sizes/`spread_bps`/`mid_price`;
       replace `record_failed(reason="SOURCE_HANDLER_TODO_PHOENIX_DECODE")` with `record_captured` once decoded; add 5+
       unit tests against known slab states. Repo: market-tick-data-service. **Done when**: a successful fetch calls
       `record_captured` (not `record_failed`) with all 5 fields populated; >=5 new unit tests pass; `quality-gates.sh`
-      green. Source: `data_completion_defi_2026_07_15.md`.
+      green. Source: `data_completion_defi_2026_07_15.md`. — market-tick-data-service@ee49a76d. Layout verified against
+      the on-chain `Ellipsis-Labs/phoenix-v1` + `sokoban` program source (MarketHeader, sokoban RedBlackTree slab,
+      free-list-aware node walk), cross-checked against the official `Ellipsis-Labs/phoenixpy` SDK's own decode. Decodes
+      bids/asks, aggregates size at the best price tick, excludes freed/tombstoned nodes and expired
+      (`last_valid_slot`/`last_valid_unix_timestamp_in_seconds`) orders, then populates `bid_price`/`bid_size`/
+      `ask_price`/`ask_size`/`mid_price`/`spread_bps` and routes via `record_captured`/`record_zero_rows` instead of the
+      stub's `record_failed`. Added per-sample-per-day looping (mirroring the Orca/Raydium ingesters) since the stub's
+      `samples_per_day` param was previously accepted but unused. 20 new unit tests
+      (`test_phoenix_orderbook_handler.py`) cover known slab states incl. a freed-node-exclusion case and an
+      expired-order-exclusion case. `quality-gates.sh` green (7092 tests). Hit and resolved a repo-blocker (RB-ef115f4a,
+      `pipelinemode_missing_batch_defillama_member_2026_07_26.md`, now archived) from an unrelated concurrent commit
+      before shipping.
 - [ ] [CODE] P1. Implement Orca Whirlpool tick-array binary decode in
       `market_tick_data_service/cli/handlers/orca_whirlpool_state_handler.py` — decode the 3 nearest tick arrays around
       the already-extracted `tick_current_index` (~150-200 LOC), captured per-snapshot alongside the existing pool-state
@@ -163,19 +174,29 @@ drift_direction: advance-code
       the tz-comparison `TypeError` and reports a final candidate count; `quality-gates.sh` green in
       instruments-service. Source: `data_completion_defi_2026_07_15.md`,
       `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`.
-- [ ] [BACKEND] P1. **Combined `market-tick-data-service/.../lst_rates_handler.py` fix — sub-item (b) DONE 2026-07-26
-      (slot-14), sub-item (a) still OPEN.** (a) both `pipeline_mode_for_source("onchain_subgraph", ...)` call sites
-      (~line 351 and ~447) hardcode the source string for EVERY Solana LST row regardless of which tier actually
-      produced it — the per-row `method` field (written by `solana_lst_archival.py`) already tracks
+- [x] ✅ [BACKEND] P1. **Combined `market-tick-data-service/.../lst_rates_handler.py` fix — sub-item (b) DONE 2026-07-26
+      (slot-14), sub-item (a) DONE 2026-07-26 (slot-2).** (a) both `pipeline_mode_for_source("onchain_subgraph", ...)`
+      call sites (~line 351 and ~447) hardcoded the source string for EVERY Solana LST row regardless of which tier
+      actually produced it — the per-row `method` field (written by `solana_lst_archival.py`) already tracks
       `alchemy_get_account_info` / `thegraph_subgraph` / `rest_api` / `defillama_historical_ratio`, so Tier-4
-      `defillama_historical_ratio` rows (a market-price proxy, NOT genuine on-chain data) get the same
-      `batch_onchain_subgraph` label as genuine Tier 1-3 rows — derive the source argument from each row's own
-      `method`/tier instead (at minimum add a distinct source value for the Tier-4 path); the EVM LST path has no
-      tier-fallback system and must stay byte-identical (do not touch it). **Still open — the remaining unit of work on
-      this todo.** (b) ✅ **DONE 2026-07-26 (slot-14, done as a prerequisite of
-      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s residual-emitter todo, which discovered this was still
-      unshipped despite that plan's premise that it was already fixed excluding the residual path).**
-      `_write_single_lst_group()` now loops `write_defi_rows()`'s per-instrument `shards` and calls
+      `defillama_historical_ratio` rows (a market-price proxy, NOT genuine on-chain data) were getting the same
+      `batch_onchain_subgraph` label as genuine Tier 1-3 rows. Fixed by deriving the pipeline_mode per WRITTEN SHARD
+      from that shard's own `method` column instead of a single hardcoded call: added `PipelineMode.BATCH_DEFILLAMA` (+
+      `SOURCE_PRIORITY[("defi","lst_rates")]` fallback entry, `SOURCE_MODE_CAPABILITY`, `EMISSION_LATENCY_MS_BY_SOURCE`)
+      in `unified-api-contracts@f7019ffb`; `_write_single_lst_group()` in `market-tick-data-service@45a9fe69` picks
+      `batch_defillama` when a shard's rows are ALL `defillama_historical_ratio`, else keeps the unchanged
+      `batch_onchain_subgraph` label (covers the EVM path too, which never carries that `method` value — stayed
+      byte-identical, no tier-fallback system touched). The `_check_preflight` (~line 447) call site was deliberately
+      left untouched — it fires before any row/tier is resolved (catalog-unavailable gate for all 4 sentinels), so there
+      is no per-row tier to derive from there; the "Remaining done when" criterion below is scoped to actually-WRITTEN
+      rows only. `defillama` is BATCH-only (mirrors `aave`'s precedent) — `_finalize_lst_rows` defensively falls back to
+      the unchanged label rather than raising if this handler ever runs in live mode (no `LIVE_DEFILLAMA` member
+      exists). Regression test added: `test_tier4_solana_row_gets_distinct_pipeline_mode` in
+      `test_lst_rates_handler_coverage.py` (asserts EVM + Tier1-3 Solana → `BATCH_ONCHAIN_SUBGRAPH`, Tier-4 Solana →
+      `BATCH_DEFILLAMA` in the same `process()` run). Both repos' `quality-gates.sh` green. (b) ✅ **DONE 2026-07-26
+      (slot-14, done as a prerequisite of `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s residual-emitter todo,
+      which discovered this was still unshipped despite that plan's premise that it was already fixed excluding the
+      residual path).** `_write_single_lst_group()` now loops `write_defi_rows()`'s per-instrument `shards` and calls
       `record_captured(instrument_id=..., row_count=...)` once per shard instead of one (protocol, chain) aggregate with
       no `instrument_id` — mirrors `record_swap_pool_map()`/`record_market_captures()`/`_record_manifest_result()`. The
       residual/empty path (originally out of THIS todo's scope, per its "do not touch" framing — it belongs to
@@ -183,10 +204,7 @@ drift_direction: advance-code
       since batch2's todo genuinely depends on this fix landing first. Split the write functions into a new
       `_lst_rates_write.py` sibling module (codex 900-line ratchet). Extended the existing captured-path test with an
       `instrument_id` assertion. `market-tick-data-service@9d796b0e`, `quality-gates.sh` green. **Repo:
-      market-tick-data-service. Remaining done when (sub-item (a) only)**: a distinct pipeline_mode/source label is
-      written for Tier-4-sourced rows vs Tier 1-3 rows (new/updated assertion in `tests/unit/test_lst_rates_handler.py`
-      or `test_lst_rates_handler_coverage.py`), EVM LST pipeline_mode unchanged (pinned by a regression assertion);
-      `quality-gates.sh` green. Source: `defi_strategy_pnl_axis_index_2026_07_24.md`,
+      market-tick-data-service + unified-api-contracts.** Source: `defi_strategy_pnl_axis_index_2026_07_24.md`,
       `lst_rate_honest_coverage_2026_07_21.md`,
       `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
 - [ ] [BACKEND] P1. Fix `_perp_funding_kalshi_polymarket.py`'s KALSHI_PERP/POLYMARKET_PERP routing in
@@ -666,6 +684,48 @@ drift_direction: advance-code
     `issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md` (P2, `assigned_vm: planning`, 2 scoped todos:
     re-confirm across more cycles, then root-cause the coverage-vs-full divergence) rather than open-ended debugging
     with only 16 log entries/2h to go on from this vantage point.
+
+- **2026-07-26 (slot-14) — KALSHI_PERP/POLYMARKET_PERP cefi-routing todo IN PROGRESS, not yet shipped.** Working the
+  todo "Fix `_perp_funding_kalshi_polymarket.py`'s KALSHI_PERP/POLYMARKET_PERP routing" (market-tick-data-service).
+  **Code complete, targeted-tested, sitting uncommitted in the slot-14 worktree** (not yet quickmerged — blocked on a
+  full `quality-gates.sh` pass, itself delayed by heavy same-host QG contention, see below):
+  - `_perp_funding_kalshi_polymarket.py`: added `_write_cefi_perp_funding_rows()` (mirrors `write_defi_rows`'s
+    per-instrument sharding but via UAC `build_cefi_partition_path`/`build_instrument_id`, no chain axis) and switched
+    `_collect_kalshi_perp`'s write call to it instead of the DeFi-only `write_defi_rows`.
+  - `_defi_manifest.py`: `DefiManifestRecorder` gained an `asset_group: str = "defi"` constructor param (default
+    preserves all ~25 other DeFi-handler callers byte-identical), threaded through `_emit_captured_add`/`record_empty`/
+    `record_zero_rows`/`_emit_failed_row`; `record_zero_rows` also gained a `source` passthrough (was silently dropped
+    before, a latent gap on ANY caller, not just this todo).
+  - `perp_funding_handler.py`: `_run_process` now resolves the CEFI bucket
+    (`get_write_bucket_name("market_data", "cefi")`) and constructs `DefiManifestRecorder(..., asset_group="cefi")`;
+    every `record_captured`/`record_zero_rows`/ `record_failed`/`record_empty` call in
+    `_run_process`/`_dispatch_protocol` now passes an explicit `source=_source_for_protocol(protocol)` (was previously
+    blank on the manifest write, auto-stamping to the wrong single-source `"hyperliquid"` default once routed through
+    the multi-source `cefi/perp_funding` cell).
+  - `tests/unit/test_perp_funding_kalshi_polymarket.py`: updated the one stale assertion
+    (`test_writes_perp_funding_canonical_shard`) that expected the old defi hive path's `batch_kalshi_perp`
+    pipeline_mode segment; cefi paths carry no pipeline_mode segment by design. **71/71 targeted tests pass** (
+    `test_perp_funding_handler.py` + `test_perp_funding_kalshi_polymarket.py` + `test_defi_manifest_recorder.py`, 0.8s).
+  - **Manifest cleanup (the todo's 3rd sub-requirement) — drafted, NOT YET RUN.**
+    `scripts/remove_kalshi_polymarket_defi_manifest_rows_2026_07_26.py` (untracked, lifecycle-marked oneoff) is ready; a
+    live read confirmed **8 stale rows** currently in the DEFI manifest (4 `KALSHI_PERP` `captured` + 4
+    `POLYMARKET_PERP` `attempted_failed`, ALL stamped `source="hyperliquid"` — exactly the bug). Per the source issue
+    doc's explicit sequencing, this MUST run only AFTER the writer fix ships (never before, or the still-live bug
+    resurrects the rows) — do not run it until the 4 files above are committed+pushed.
+  - **Root-caused, filed, and shipped a separate finding along the way**:
+    `issues/shared_host_tmp_tmpfs_full_2026_07_26.md` (unified-trading-pm@f7982c1a1, pushed) — the shared host's `/tmp`
+    tmpfs was at 100% (accumulated since 2026-07-14 across many slots) AND `scripts/quality-gates-base/base-service.sh`
+    has 25 `>/tmp/<name>_qg.log`-redirected QG steps sharing a FIXED (non-PID-unique) filename, so two slots' concurrent
+    `quality-gates.sh` runs collide and produce spurious step failures — reproduced repeatedly (a step fails inline, the
+    SAME checker invoked standalone with the same args passes clean). Did not attempt the 25-site fix itself (each has a
+    paired write+read-back reference; too large for this todo's scope) — filed as a P2 todo in that issue doc instead.
+  - **Next session should**: (1) check whether the backgrounded `quality-gates.sh` run (started with `TMPDIR` overridden
+    to the slot's scratchpad, to sidestep any Python-level tempfile-on-full-/tmp issue) finished — if green, quickmerge
+    the 4 files, THEN run the cleanup script for real (it prints a live count + requires no `--apply` flag, just
+    executes — verify its printed pre-write diff matches the 8-row expectation above before trusting the post-write
+    assertions), THEN flip this todo's checkbox with the shas, THEN `/done`; (2) if QG failed on a
+    canonical-model/architectural-ratchet-style step again, re-run that ONE checker standalone first to distinguish a
+    real regression from the same cross-slot race before concluding anything.
 
 ## Deferred
 

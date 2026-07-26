@@ -9,7 +9,7 @@ summary: >-
   combined into one ordering-safe todo as candidate 7 of cefi_consolidated_native_ao_extract_2026_07_25.md. This plan
   machine-gates the delete on that plan's completion instead, preserving the original verify->backfill->delete ordering
   constraint via a cross-plan gate rather than intra-plan sequencing.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]

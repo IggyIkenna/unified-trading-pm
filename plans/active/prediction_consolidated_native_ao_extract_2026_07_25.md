@@ -15,7 +15,7 @@ summary: >-
   Phase-B-post-migration blocker), and the P1 POLYMARKET `prediction_trades` schema-extension todo stays human — its own
   linked issue doc states the trader-identity/PII field list "needs a separate call", an unresolved UAC canonical-schema
   architecture decision, not a bounded worker task.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]

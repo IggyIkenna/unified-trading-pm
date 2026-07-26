@@ -31,6 +31,9 @@ last_updated: 2026-07-26
 locked_since:
 ---
 
+> **🟢 RESOLVED 2026-07-26** — confirmed intentional (unified-trading-library@6ce1ddb6, column-prune + pyarrow-backed
+> read fix), not a bug. Session observed a shared module's before/after state across a real intervening commit.
+
 # cf_manifest_audit._read_index() inconsistent return shape
 
 ## What I found

@@ -373,14 +373,13 @@ concurrent workers do not collide on this file.
       billed-job-count table is recorded in the source doc, or the credential block is recorded. **Explicitly NOT the
       two-week Phase-5 re-pull** (still calendar-gated, `## Deferred` D29). Source:
       `github_actions_operator_gated_followups_2026_07_17.md` ([VERIFY] P0, `measure-billed-notify-cost.sh`).
-- [ ] [VERIFY] P2. **Confirm `ldr-docs-gate`'s hourly `schedule:` actually fires.** It was retargeted `push` →
-      `schedule: "0 * * * *"` on 2026-07-22, but a `schedule:` trigger resolves against the DEFAULT branch's workflow
-      file, which did not carry the fix at commit time. The source doc gives the exact check and an explicit
-      anti-pattern warning: run `gh run list -R IggyIkenna/unified-trading-pm --workflow=ldr-docs-gate.yml` and look for
-      a `schedule`-triggered run; **do not assume "still waiting" indefinitely** — if none has appeared in the days
-      since promotion landed, something else is wrong, diagnose it. **Done when**: either a `schedule`-triggered run is
-      cited with its id and conclusion, or the reason it still cannot fire is root-caused and recorded. Source:
-      `github_actions_operator_gated_followups_2026_07_17.md` (Deferred row 14).
+- [x] ✅ [VERIFY] P2. DONE 2026-07-26 (slot 6) — **CONFIRMED FIRING.**
+      `gh run list -R IggyIkenna/unified-trading-pm     --workflow=ldr-docs-gate.yml --limit 20` shows 20 consecutive
+      `event=schedule` runs, ALL `conclusion=success`, spanning `2026-07-26T03:02:59Z` through `2026-07-26T23:19:47Z`
+      (most recent: run id `30225007924`) — roughly hourly cadence with the documented ~80-90% GH `schedule:` delivery
+      slippage (e.g. `03:02→05:07` is a ~2h gap, consistent with known throttling, not a real miss). The
+      `push`→`schedule: "0 * * * *"` retarget from 2026-07-22 is genuinely live and healthy; no root-cause investigation
+      needed. Source: `github_actions_operator_gated_followups_2026_07_17.md` (Deferred row 14).
 - [ ] [INFRA] P2. **Find the CI/CD event-ledger CONSUMER — the one blocking question behind decision D2.** The
       `persist-cicd-event` ledger is written with an unlocked read-modify-write on ONE object per repo per day, so
       overlapping writers silently discard each other's rows while every writer logs success. The operator's
