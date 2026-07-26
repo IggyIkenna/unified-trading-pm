@@ -42,6 +42,7 @@ related:
     /plans/archive/issues/shared_host_tmp_tmpfs_exhaustion_2026_07_08.md,
     /plans/archive/issues/shared_host_tmp_tmpfs_exhaustion_2026_07_26.md,
     /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/issues/shared_host_tmp_tmpfs_full_2026_07_26.md,
   ]
 created: "2026-07-26"
 last_updated: "2026-07-26"
@@ -116,6 +117,20 @@ depends_on: []
   substitution, verified via `git diff` — no check LOGIC changed, only where its stdout/stderr capture file lives).
   `bash -n` clean; full `quality-gates.sh --no-fix` re-run (with `TMPDIR=${HOME}/.cache/qg-tmp` set, since this
   session's OWN shell had no TMPDIR exported) went from 2 hard failures to a clean pass on the identical tree.
+
+## Relationship to `shared_host_tmp_tmpfs_full_2026_07_26.md` (slot-14, same session, independent discovery)
+
+Slot-14 hit the identical symptom (STEP 5.93 failing in-pipeline while the same checker passes standalone) within a
+minute of this doc being filed and correctly diagnosed a SECOND, DISTINCT root cause on the same ~35 lines: a
+**cross-slot filename COLLISION**, not disk-space exhaustion — two slots' concurrent `quality-gates.sh` runs on this
+shared host can both target the identical fixed `/tmp/<name>_qg.log` name at the same instant, so one's write races the
+other's read. My `${TMPDIR:-/tmp}` fix (this doc) does NOT resolve that collision on its own — if two slots share the
+same `TMPDIR` value (e.g. both left unset, defaulting to plain `/tmp`), the identical race remains. Slot-14's own P2
+SCRIPT todo (PID-or-mktemp-unique paths + updating every paired read-back site) is the correct fix for THAT root cause
+and is still needed — **but it must now rebase against this doc's already-landed rewrite of the same ~35 lines**
+(`unified-trading-pm@f7e913e98`) rather than the pre-fix version, or it will conflict. Both fixes are complementary and
+both real: ENOSPC-on-full-disk (this doc) and same-name-collision-under-concurrency (slot-14's doc) are two different
+ways the same hardcoded-shared-filename design fails.
 
 ## Todos
 
