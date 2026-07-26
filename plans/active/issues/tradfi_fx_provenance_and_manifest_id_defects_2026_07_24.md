@@ -240,11 +240,41 @@ not lost; it is simply not discoverable through the manifest's own key.
 
 ### Deferred work after 2026-07-26 (slot-3)
 
-| Item                                                                                    | State                                                                | Blocked on                                                                                                                          |
-| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Re-stamp historical ICE/KRX/FX `ohlcv_24h` rows (4+12+802, snapshot-first)              | Not done — real work, ready to pick up now the writer is fixed       | nobody; needs a fresh full-history census first (the 4/12/802 counts are from the 2026-07-24 sample window, not a corpus-wide walk) |
-| Finding 2 — FX `SPOT_PAIR` manifest `instrument_id` write-path fix + 4,310-row backfill | Not done — untouched this pass, separate write path                  | nobody; next slot should start with `market_tick_data_service/adapters/_umi_yahoo.py` per the sourcing SSOT's routing comments      |
-| Confirm/rule out an actual Databento billing-guard gap for the pre-fix window           | Not done — needs Databento request-log access, not just code reading | possibly operator (Databento account access)                                                                                        |
+| Item                                                                                    | State                                                                                             | Blocked on                                                                         |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Re-stamp historical ICE/KRX/FX `ohlcv_24h` rows (4+12+802, snapshot-first)              | ✅ Census DONE 2026-07-26 (slot 2) — see below; APPLY still `[OPERATOR]`-gated                    | operator CAS-apply per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` |
+| Finding 2 — FX `SPOT_PAIR` manifest `instrument_id` write-path fix + 4,310-row backfill | IN PROGRESS 2026-07-26 (slot 2) — write-path fix underway, historical backfill stays out of scope | nobody                                                                             |
+| Confirm/rule out an actual Databento billing-guard gap for the pre-fix window           | Not done — needs Databento request-log access, not just code reading                              | possibly operator (Databento account access)                                       |
 
 Recommended next: the historical re-stamp (bounded, mechanical, unblocks nothing else) before Finding 2 (a fresh
 investigation of similar depth to Finding 1's).
+
+### Full-history census (2026-07-26, slot 2)
+
+Read the live `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` as a single object
+(no GCS walk — same method the legacy-bucket census used), snapshot at 2026-07-26 ~18:33 UTC. Filtered
+`capture_status == "captured"`, `data_type == "ohlcv_24h"`, `venue` in `{ICE, KRX, FX}`, and (`pipeline_mode` containing
+`databento` OR `source == "databento"`) — the same databento-derived-mislabel signature Finding 1 documents. Total
+manifest rows scanned: 5,825,023.
+
+**Corpus-wide result: 1,141 mis-stamped rows (vs. the 818-row 2026-07-24 sample-window estimate — the real number is
+~40% higher, and FX's affected range starts in 2020, not just "present since 2020" as prose — it never fully stopped):**
+
+| Venue | Year | Count |
+| ----- | ---- | ----- |
+| ICE   | 2026 | 5     |
+| KRX   | 2026 | 12    |
+| FX    | 2020 | 134   |
+| FX    | 2022 | 2     |
+| FX    | 2023 | 114   |
+| FX    | 2024 | 297   |
+| FX    | 2025 | 401   |
+| FX    | 2026 | 176   |
+
+**Totals by venue**: ICE=5, KRX=12, FX=1,124. **Grand total: 1,141**. Snapshot path:
+`gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (read 2026-07-26, do not
+reuse this count without a fresh re-read — the manifest keeps growing). The 2021 gap in FX's per-year breakdown (zero
+rows) is itself worth noting for whoever runs the apply — either a genuine gap in the mislabeling pattern that year, or
+FX simply had less overall `ohlcv_24h` capture volume in 2021; not investigated further here (out of this todo's
+read-only scope). This is the exact worklist the `[OPERATOR]` CAS re-stamp gate needs — the count itself is NOT applied
+here, per this todo's explicit scope boundary.
