@@ -165,12 +165,37 @@ start without real tradfi/ES feature parquets.
       confirm real feature parquets land (check the manifest actually gains rows -- not just "job exit 0"). This closes
       `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s P0 items per the "Plans run to actual completion"
       HARD RULE. (repo: market-data-processing-service, features-service)
-- [ ] [AGENT] P1. Investigate why MDPS build-continuous's `24h`/`1d` output has genuinely sparse real coverage
+- [x] [AGENT] P1. Investigate why MDPS build-continuous's `24h`/`1d` output has genuinely sparse real coverage
       (`total_rows=454` across `days=2398` on the shipped ES re-run, ~19% hit rate — a real single day near 2024-06-17
       only found 14/86 real prior days) even after the right-edge-timestamp date-filter fix
       (`market-data-processing-service@e9edb39`). Likely a `build_active_contracts_table`/`extract_roll_events` gap
       specific to daily granularity's single-bar-per-contract-per-day nature (no redundancy the way 1440 intraday bars
       provide) — confirm via direct GCS gap analysis before assuming a code fix. (repo: market-data-processing-service)
+      — ✅ INVESTIGATED 2026-07-26, hypothesis DISPROVEN by direct evidence; root cause is upstream data coverage, not a
+      build-continuous code bug. See progress log for the full 3-part evidence chain (manifest cross-tab across
+      timeframes + raw-vs-processed density comparison + direct GCS content inspection). Verification-only — no code
+      shipped, per this same doc's todo-3 precedent (slot-8, MOOT-close).
+- [ ] [AGENT] P0. Backfill MDPS's per-contract "process" step (`--operation process`, the default
+      `process_candles_handler` path, NOT build-continuous) across the full ES/MES 2020-01-01..2026-07-25 history via
+      `launch-mdps-backfill-vm.sh` (no `MDPS_OPERATION` override needed — process is the default routing). This is the
+      actual blocker the P1 investigation above surfaced: build-continuous's sparse output is caused by the per-contract
+      `instrument_type=FUTURE`/`underlying=ES` processed-candle layer itself being sparse and internally inconsistent
+      (scattered single-date/single-contract files, several holding the WRONG contract relative to the roll schedule for
+      their date — e.g. `2021-01-05`/`02-02`/`03-02` hold ONLY the June-2021 contract while March-2021 should be active
+      per the roll schedule; `2021-03-22` holds ONLY September-2021 while June-2021 should be active), not by
+      build-continuous's own stitching logic. Concurrently with this investigation, a genuine raw-MTDS backfill VM was
+      observed RUNNING (`tradfi-bf-cme-ohlcv-1m-es-2020-20260726-120107`,
+      `VM_SERVICE=market_tick_data_service VM_TASK=mtds-backfill VM_OPERATION=download VM_SOURCE=databento     VM_INSTRUMENT_IDS=ES.FUT;ES.OPT VM_START_DATE=2020-01-01 VM_END_DATE=2020-12-31`)
+      — that fixes RAW ingestion only; it does NOT populate the per-contract processed-candle layer this todo targets,
+      so both are needed. After this backfill lands, re-run build-continuous (todo 1 above) and re-verify the real hit
+      rate rises materially above ~19%. Separately (smaller, not itself blocking): the process step's real ES/MES writes
+      carry NO matching manifest rows under `instrument_type=FUTURE`+`underlying=ES/MES` at all — the only
+      `underlying=SP500`/`MES` `FUTURE`-type manifest rows found use an unrelated synthetic-looking id scheme
+      (`CME:FUTURE:SP500-USD@LIN-{expiry}`, expiries out to 2029, no `capture_status`/`timeframe` populated) that does
+      not match the real Databento contract ids (`CME:FUTURE:ES-{expiry}`) the GCS objects actually carry — worth a
+      follow-up look at whether the process step's writer even calls `record_captured`/`record_empty` for TradFi FUTURE
+      candles, since right now this gap is invisible to the manifest/dashboard. (repo: market-data-processing-service,
+      deployment-service, market-tick-data-service)
 - [x] [AGENT] P1. `_TfClusterMixin._process_tf_clusters_date_range`'s per-date loop (`_process_one_date_for_cluster`
       returning `False` → `if not ok: return False`) aborts the ENTIRE multi-day range on the FIRST date that fails for
       ANY reason — including a genuine, expected absence (e.g. a market holiday). Any real multi-year backfill will
@@ -521,13 +546,59 @@ start without real tradfi/ES feature parquets.
 - 2026-07-26 (slot 4): Fixed the per-date abort-on-first-failure gap (this doc's last open P1 todo).
   `features-service@81ab1264`, full `quality-gates.sh` green. See the flipped checkbox above for the fix detail; removed
   the now-redundant "New P1 todo" deferred-work row (superseded by the checkbox, which already carries the same fix).
+- 2026-07-26 (slot 2, 24h/1d sparse-coverage investigation): Confirmed the todo's own leading hypothesis
+  (`build_active_contracts_table`/`extract_roll_events` gap specific to daily granularity) is **DISPROVEN**, via three
+  independent lines of live evidence, before touching any code — per the todo's own instruction to "confirm via direct
+  GCS gap analysis before assuming a code fix":
+  1. **Manifest cross-tab across timeframes** (read the real `_index/availability_index.parquet` directly off
+     `market-data-tick-tradfi-prd-central-element-323112`, bypassing `read_availability_index()` which returned 0 rows
+     for unknown reasons not chased further — the raw parquet read worked fine): `instrument_type=continuous_future`,
+     `underlying=ES` shows **1m, 5m, 15m, and 1d ALL captured EXACTLY 454 of 2398 days** (`1h`=442, `4h`=418 — close but
+     from an earlier/different run window). If the gap were specific to "daily granularity's single-bar-per-day,
+     no-redundancy" nature as hypothesized, 1m/5m/15m (1440/288/96 bars-per-day redundancy) should show a MATERIALLY
+     HIGHER hit rate than 1d — they don't; they're identical. This alone rules out a 1d-specific code path.
+  2. **Raw-ingestion vs per-contract-processed density comparison**: the RAW MTDS layer that feeds MDPS's process step
+     (`instrument_type=futures_chain`, `underlying=SP500` — the real `EXCHANGE_CODE_TO_NAME`-mapped path, confirmed by
+     slot-8's todo-3 finding) shows a MUCH denser `ohlcv_1m` capture rate: 1516/2697 sampled day-shards captured,
+     ~242-253 real days/year for most years (consistent with real CME trading-day coverage, incl. Sunday-evening opens —
+     day-of-week distribution of captured continuous_future days spans all 7 days, not just Mon-Fri), with a real dip to
+     143 in 2022 specifically (a genuine, separate raw-data gap, not investigated further here). This proves the
+     DISCONTINUITY is introduced BETWEEN raw ingestion and the per-contract processed-candle layer, not in
+     build-continuous itself (build_active_contracts_table is a pure calendar-date table builder with no I/O — it cannot
+     itself be the source of a data-availability gap).
+  3. **Direct GCS content inspection** (the smoking gun): cross-referenced 2021 dates where raw `futures_chain` data IS
+     captured but continuous_future output is NOT (206 such dates in 2021 alone) and downloaded the actual per-contract
+     candle files MDPS's process step wrote. Found the per-contract `instrument_type=FUTURE`, `underlying=ES` layer is
+     itself sparse AND internally inconsistent: `2021-01-05`, `2021-02-02`, `2021-03-02` each have exactly ONE contract
+     file present — `CME:FUTURE:ES-20210618.parquet` (June 2021) — even though the roll schedule (8 business days before
+     the 2021-03-19 expiry) says `CME:FUTURE:ES-20210319` (March 2021) should be active on those dates; `2021-03-22`
+     holds ONLY `CME:FUTURE:ES-20210917.parquet` (September 2021) when June 2021 should be active; several other dates
+     (`2021-01-08`, `2021-03-19`, `2021-06-01`, `2021-06-18`, `2021-06-21`) have ZERO per-contract files of any kind.
+     `apply_panama_canal_backadjust` correctly finds nothing for `active_contracts` on these dates because the WRONG (or
+     no) contract's data exists — this is expected, correct behavior given the input, not a bug in the stitching logic.
+     All sampled per-contract files carry a `creation_time` of `2026-07-23T06:52:06Z` — i.e. written 3 days before this
+     investigation, not from today's session, and not a genuine systematic historical backfill (a real backfill would
+     cover EVERY roll-schedule-active contract for EVERY date, not an inconsistent single mismatched contract per date
+     with large silent gaps). Also noted in passing (not chased further, scoped out as a separate manifest-completeness
+     gap, now folded into the new backfill todo below): manifest rows under `instrument_type=FUTURE` +
+     `underlying=SP500`/`MES` exist but use an unrelated synthetic-looking id scheme
+     (`CME:FUTURE:SP500-USD@LIN-{expiry}`, expiries to 2029, no `capture_status`/`timeframe` populated) that doesn't
+     match the real Databento ids the GCS objects carry — the process step's real ES/MES writes are NOT manifest-tracked
+     at all under any vocabulary searched. Also observed (for context, not caused by or fixed in this todo) a genuine
+     concurrent VM `tradfi-bf-cme-ohlcv-1m-es-2020-20260726-120107` RUNNING during this investigation
+     (`VM_SERVICE=market_tick_data_service`, `VM_TASK=mtds-backfill`, `VM_OPERATION=download`, `VM_SOURCE=databento`, ES
+     2020 raw ohlcv_1m/ohlcv_1s) — a RAW-layer backfill that will not, by itself, populate the per-contract
+     processed-candle layer this todo's new follow-up todo targets. Net conclusion: no code fix belongs in
+     build-continuous for this todo (verification-only close, mirroring slot-8's todo-3 MOOT-precedent); the real next
+     action is a genuine per-contract "process" step backfill, captured as a new P0 todo above.
 
 ## Deferred work after 2026-07-26
 
-| Item                                                                                              | State / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                  | Blocked on                                        |
-| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| Todo 4 (this file, P0) — real features-delta-one-tradfi production launch + manifest verification | Not done — all blocking code bugs are now fixed and shipped (9 real bugs across market-data-processing-service, features-service, deployment-service); next session should launch a REAL production VM for a realistic single-day/narrow-range window (avoid 2020-01-01 — a market holiday with zero data, which would hit the untracked-until-now per-date abort-on-first-failure gap) and verify real parquets + manifest rows land | Nobody — pick up directly, no external dependency |
-| New P1 todo — MDPS `24h`/`1d` sparse coverage investigation                                       | Not done — needs a dedicated GCS gap analysis, not chased this session (time-boxed per the "big finding" triage rule)                                                                                                                                                                                                                                                                                                                 | Nobody — real work, needs its own session         |
+| Item                                                                                              | State / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                  | Blocked on                                          |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Todo 4 (this file, P0) — real features-delta-one-tradfi production launch + manifest verification | Not done — all blocking code bugs are now fixed and shipped (9 real bugs across market-data-processing-service, features-service, deployment-service); next session should launch a REAL production VM for a realistic single-day/narrow-range window (avoid 2020-01-01 — a market holiday with zero data, which would hit the untracked-until-now per-date abort-on-first-failure gap) and verify real parquets + manifest rows land | Nobody — pick up directly, no external dependency   |
+| New P1 todo — MDPS `24h`/`1d` sparse coverage investigation                                       | ✅ DONE 2026-07-26 (slot 2) — root cause found (upstream per-contract processed-candle data gap, not a build-continuous code bug); see progress log for the 3-part evidence chain                                                                                                                                                                                                                                                     | N/A — closed                                        |
+| New P0 todo — backfill MDPS's per-contract "process" step for ES/MES full history                 | Not done — newly surfaced by the sparse-coverage investigation above; a real VM-launch-scale backfill (`launch-mdps-backfill-vm.sh`, default `process` operation), not a same-session fix                                                                                                                                                                                                                                             | Nobody — real work, needs its own VM-launch session |
 
 **Recommended next item**: todo 4 (P0) — launch the real production VM for a single realistic date (e.g. a 2024 weekday
 already confirmed to have real MDPS continuous data, such as `2024-06-17`) with `TIMEFRAME=1m` set on the launcher, then
