@@ -483,15 +483,23 @@ drift_direction: advance-code
       unified-trading-pm. **Done when**: both docs state the check covers
       `_ID_FORM_CHECKED_ASSET_GROUPS={tradfi,cefi,defi}`; the shared example is corrected or replaced. Source:
       `issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`.
-- [ ] [INFRA] P1. Apply the already-shipped `,`→`;` + `^;^`-delimiter metadata-parsing fix (live in
-      `launch-mtds-dex-pools-backfill-vm.sh` and `launch-mtds-dex-swaps-backfill-vm.sh`) to
+- [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7) — deployment-service@e34060c, verified.** Apply the already-shipped
+      `,`→`;` + `^;^`-delimiter metadata-parsing fix (live in `launch-mtds-dex-pools-backfill-vm.sh` and
+      `launch-mtds-dex-swaps-backfill-vm.sh`) to
       `deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh`'s `VM_LENDING_PROTOCOLS` metadata
       construction — identical bug shape (comma-separated `--lending-protocols` collides with gcloud's default
       `,`-delimited `--metadata` parsing), latent because this launcher has only ever been exercised single-protocol.
       Repo: deployment-service. **Done when**: the launcher joins metadata pairs with `;` and passes
       `--metadata="^;^${METADATA}"`; invoking it with a comma-separated `--lending-protocols` value no longer throws
       gcloud's `Bad syntax for dict arg`; single-protocol behavior unchanged. Source:
-      `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`.
+      `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`. Metadata construction now matches the proven
+      dex-pools/dex-swaps pattern exactly (`;`-joined, `startup-script-url=` folded into `$METADATA` itself,
+      `--metadata="^;^${METADATA}"`). Verified for real (not just by analogy): ran the actual
+      `gcloud compute instances create` local-parse step (against a deliberately nonexistent project, so nothing was
+      ever created) with a synthetic 3-protocol value — the OLD comma-delimited format reproduces the exact reported
+      error (`Bad syntax for dict arg: [compound_v3]`); the NEW `;`-delimited format parses cleanly past metadata and
+      fails only on the (expected, harmless) project-not-found step. Single-protocol case verified clean too.
+      `bash -n` + `shellcheck -S error` clean; full `quality-gates.sh` green (98s, sentinel `bd46bf2`).
 - [ ] [BACKEND] P1. Rename the onchain feature_group keys in unified-api-contracts' two vocabularies not updated during
       the writer/CLI-name ratification (`unified-api-contracts@e9faf32e`) — `FEATURE_REQUIRED_INPUTS`
       (`required_inputs.py`) and the feature_group refs in `_feature_contracts.py` — from old registry names

@@ -20,7 +20,7 @@ summary:
   mirroring the per-AG pattern already used by the manifest consolidator jobs. Not attempted or fixed in this pass — is
   its own dedicated infra task, reported here per the big-finding / cross-cutting NOTIFY-OPERATOR rule rather than
   silently worked around."
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [data]
@@ -56,7 +56,7 @@ source:
     gs://cf-manifest-audit-central-element-323112/cf_audit/ (0 objects),
   ]
 assigned_vm: NA
-resolved_by:
+resolved_by: unified-trading-library@6ce1ddb6, unified-trading-library@21069582, deployment-service@e9bcb34
 locked_by:
 execution_scope: local-only
 estimate_class: infra
@@ -106,12 +106,35 @@ This is genuinely its own scoped infra task (job config change + redeploy + a ve
 per the `Evidence: cloudbuild=<id>` rule) — out of scope for the cefi recording pass that surfaced it. Flagged per the
 CLAUDE.md big-finding / cross-cutting NOTIFY-OPERATOR rule rather than silently worked around or left undocumented.
 
-## Next steps (not yet started)
+## Next steps — DONE 2026-07-26
 
-- [ ] [INFRA] P1. Diagnose the exact exit-1 cause on the non-OOM failure days (2026-07-04 through 2026-07-12) via
+- [x] ✅ [INFRA] P1. Diagnose the exact exit-1 cause on the non-OOM failure days (2026-07-04 through 2026-07-12) via
       `gh`/`gcloud run jobs executions describe` + `--log-failed`-equivalent Cloud Logging query — confirm whether they
-      are the same OOM under a different symptom or a distinct bug.
-- [ ] [INFRA] P1. Either bump the job's memory limit (measure the real peak RSS for a full `--all-ags` pass first) or
-      split into 5 per-asset_group Cloud Run executions/schedules.
-- [ ] [INFRA] P1. Verify with a real green run: `gs://cf-manifest-audit-central-element-323112/cf_audit/` gains a fresh
-      dated object for all 5 asset_groups after the fix, cited with resolving evidence.
+      are the same OOM under a different symptom or a distinct bug. — **DISTINCT bug.**
+      `gcloud run jobs executions     list` shows two clean phases: 2026-06-27..07-12 all failed
+      `exit code: 1, "container exited with an error"` (the silent-exec bug the terraform file's own 2026-07-10-FIXED
+      comment describes); 2026-07-13..07-26 (14 straight days) all failed
+      `exit code: 0, "The configured memory limit was reached"` (a genuine OOM — the 2026-07-10 fix let the job actually
+      start executing real work for the first time).
+- [x] ✅ [INFRA] P1. Either bump the job's memory limit (measure the real peak RSS for a full `--all-ags` pass first) or
+      split into 5 per-asset_group Cloud Run executions/schedules. — Did both, in order: (1) root-caused the cost —
+      `_read_index()` loaded the FULL ~42-column index into pandas; measured ~7.9GB RSS for cefi's tick manifest (8.8M
+      rows) and ~12.6GB for defi's (26.3M rows, the fleet's largest). Shipped `unified-trading-library@6ce1ddb6`
+      (column-pruned + `dtype_backend="pyarrow"` read, ~3.7-4x reduction). (2) A live run at 16Gi/4vCPU still OOM'd on
+      the defi-tick bucket (real container overhead beyond the isolated local measurement); bumped to Cloud Run's
+      ceiling, 32Gi/8vCPU, via `ENV=prod ./tofu.sh apply` against the live prod state (`deployment-service@e9bcb34`,
+      GCP + AWS parity) — not a per-AG split, since a single AG's own worst-case bucket needs enough memory regardless
+      of how the job is partitioned.
+- [x] ✅ [INFRA] P1. Verify with a real green run: `gs://cf-manifest-audit-central-element-323112/cf_audit/` gains a
+      fresh dated object for all 5 asset_groups after the fix, cited with resolving evidence. — **Evidence**: Cloud Run
+      execution `uts-prod-cf-manifest-audit-qsp6r` (2026-07-26T21:14:24Z-21:18:13Z, asia-northeast1) completed ALL 10
+      buckets (5 AGs × {market-data-tick, instruments-store}) with ZERO OOM/signal-9 anywhere in its log, including the
+      previously-fatal defi-tick bucket (26,316,834 rows loaded successfully). Wrote
+      `gs://cf-manifest-audit-central-element-323112/cf_audit/2026-07-26.json` (7,730 bytes, verified via
+      `gsutil ls -l` + `gsutil cat | python3 -m json.tool`) — the bucket's FIRST EVER object. The execution's overall
+      Cloud Run status is `Failed` because the tool is DESIGNED to exit non-zero when any CF is RED (`OVERALL: RED`) —
+      that is the tool correctly alerting on real, previously-invisible data-quality gaps now that it completes, not an
+      OOM/scheduling failure; tracked separately: `issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`.
+
+**Status: RESOLVED.** All 3 next-steps closed 2026-07-26. The scheduled job now runs to completion daily; remaining work
+is DATA-quality triage of the reds it surfaces, tracked in the findings doc above — not a re-open of this issue.

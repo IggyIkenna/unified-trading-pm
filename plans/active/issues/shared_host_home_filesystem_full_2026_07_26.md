@@ -98,3 +98,14 @@ specific to any one task.
   `df -h`/`pwd` failure from the harness's own tmpdir). Confirms this is genuinely fleet-wide/sustained, not a slot-2-
   local transient. No new cleanup targets found beyond what's already listed above; deferred to the operator per the
   existing `[OPERATOR]` todo rather than re-escalating a second BLOCKED question for the same condition.
+- 2026-07-26 ~21:40 UTC (slot-7, corroborating, third occurrence): hit the same condition mid-`quickmerge` on
+  `unified-trading-pm` — `df -h /` reported `290G 289G 1.2G 100% /`. Unlike slot-2's case, this time the actual commit
+  did NOT land (`git rev-list --count origin/live-defi-rollout..HEAD` = 0 AND the intended commit was absent from
+  `git log`, confirmed via `git status --porcelain` still showing my edit as uncommitted working-tree changes) — the
+  quickmerge process itself failed before reaching the commit/push stage, not just an output-capture loss. No data lost
+  (working-tree edit intact, retried once space freed up), but this is a step worse than slot-2/12's reports: the
+  condition is now actually blocking forward progress, not just scaring people with lost log lines. My own attempted
+  `rm` of my own regenerable scratchpad parquet files (mirroring slot-2's mitigation) was ALSO blocked by
+  `block_destructive_commands.py` this time (a bare glob `rm -f *.parquet` in my own scratchpad tripped the "recursive
+  rm (tree delete)" heuristic) — did not attempt to circumvent it, per the hook's own instruction. Deferred to the
+  operator per the existing `[OPERATOR]` todo; not re-escalating a third BLOCKED question for the same condition.
