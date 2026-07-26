@@ -75,7 +75,7 @@ doesn't the wizard show X" confusion later if left as prose instead of a tracked
 
 ## Recommended decision
 
-- [x] ✅ [REGISTRY] P3. **DONE 2026-07-26 (slot 6), `strategy-service@9fc7c2bd`.** Made `spot_venue` a selectable axis
+- [x] ✅ [REGISTRY] P3. **DONE 2026-07-26 (slot 6), `strategy-service@4d1bbb18`.** Made `spot_venue` a selectable axis
       for `CARRY_STAKED_BASIS_DATED`, mirroring the base archetype's `_STAKED_BASIS_ETH_SPOT_VENUES` pattern (ETH-only —
       no SOL equivalent exists for either archetype post-DRIFT-cull): `build_carry_staked_basis_dated()` now loops
       `(dated_expiry_tag × _STAKED_BASIS_ETH_SPOT_VENUES)` instead of hardcoding `spot_venue="BINANCE-SPOT"`, emitting 6
