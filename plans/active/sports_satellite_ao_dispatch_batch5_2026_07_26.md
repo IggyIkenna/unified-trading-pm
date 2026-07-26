@@ -365,7 +365,7 @@ drift_direction: advance-code
       the honest matrix (not a flat 0.95) and the gate's pass/fail on the current corpus is re-measured and reported;
       (c) a CLV retrain run completes post-ODDS_FEATURES-recompute, is independently re-verified (not just claimed), and
       the 3 quarantined artifacts remain untouched/unpromoted; `quality-gates.sh` green on every touched repo.
-- [ ] [DATA] P1. Resolve the sports odds manifest-routing regression opened by the 2026-07-24 addendum to
+- [x] ✅ [DATA] P1. Resolve the sports odds manifest-routing regression opened by the 2026-07-24 addendum to
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`: (1) grep+READ the manifest-write target
       resolution in the sports capture path in market-tick-data-service (same class of `_resolve_manifest_bucket()`
       logic documented in `sports_phantom_audits_reference_not_marketdata_2026_07_14.md`) to determine whether
@@ -388,7 +388,9 @@ drift_direction: advance-code
       recommendation stated rather than left silent; all three findings are recorded as a new dated section in
       `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`, and the doc's frontmatter `status` is
       flipped to `resolved` if all three are closed (or left `open` with the remaining item named). Source:
-      `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`.
+      `sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`. **Resolution (2026-07-26, slot 8)**: all
+      three closed (deliberate routing / same future-date-guard root cause, no longer reproducible / index left
+      stale-by-design) — `unified-trading-pm@3d48c7a9b`.
 - [ ] [DATA] P3. Flip the still-unchecked "NEW compute: add per-bookmaker raw decimal-odds retention...
       `decimal_odds_<outcome>_<venue>`" todo (`- [ ]` at line ~110-114) in
       `plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md` to `[x]` with a SHIPPED annotation citing
