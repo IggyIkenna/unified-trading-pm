@@ -23,10 +23,12 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-07-25"
+last_updated: "2026-07-26"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -61,6 +63,19 @@ source: >-
 3. **Orchestrator VM/auth/DB infra** → Track 3
 4. **AO alerting/observability + tooling regressions** → Track 4
 5. **Session/remediation meta-plans** → Track 5
+
+## AO-dispatch batches extracted from these Sources (the actual dispatch surface)
+
+This doc is a **digest** — being listed as a Source below is discoverability, NOT dispatch, and this doc carries **zero
+todos of its own**. The plans that actually work these docs' open items:
+
+- [ao_satellite_ao_dispatch_batch1_2026_07_26](/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md) —
+  **`status: draft`, awaiting operator approval** (10 todos) + its gated pair
+  [ao_satellite_ao_dispatch_batch1_finalize_2026_07_26](/plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md).
+- [ao_open_issues_consolidated_close_out_2026_07_17](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
+  — an earlier AO-scope tracker (9 open todos) that is **not** in the Sources lists below but does cover some of them
+  (its Recovery-audit Layer-1 producer todo owns `issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`). Whether it
+  should join this tranche's membership is an open operator question, raised by `/plan-reconcile ao` 2026-07-26.
 
 ## Track 1 — Dispatch/backlog scheduling bugs · P0/P1
 
@@ -193,3 +208,21 @@ posts; dead code refs restored or removed cleanly; Playwright port-collision fix
   membership SSOT. **Not resolved by this pass**: whether an 8th `infrastructure_master` doc was _intended_ for this
   tranche and dropped during authoring — that is a classification/ownership call for `/ag-closeout-audit ao`, not a
   count correction, and removing the number does not assert the membership is complete.
+- **2026-07-26** (`/ag-closeout-audit ao`, autonomous) — **First full closeout-completeness audit of this tranche.** All
+  35 Sources read end to end (single-threaded — the run environment exposed no Workflow/Agent tool, so the skill's
+  per-doc fan-out could not be used; recorded as this run's main coverage caveat). Result: **2 archivable now** (the
+  `ao_repo_docs_deleted…` and `orchestrator_slots_context_directive…` docs, both 100% `[x]` with gates re-measured), **1
+  covered** (`issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`, by
+  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`'s Layer-1-producer todo), and **32 orphaned** —
+  the direct consequence of this doc carrying zero todos while no `ao_*batch*` plan had ever existed. Phase 3 drafted
+  `ao_satellite_ao_dispatch_batch1_2026_07_26` + its finalize pair (both **`status: draft`** — flipping to `active` is
+  the operator's call) covering 13 source-doc todos across 10 conflict-cleared docs, one of which folds a genuine
+  duplicate pair (`git_status_reporter_stale_public_url_token_expiry` and
+  `orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage` prescribe the identical loopback fix to the same
+  script). Four premises were re-measured rather than trusted: the DB-pool `BEGIN IMMEDIATE`-on-reads root cause is
+  **still unfixed** at HEAD, all 7 `tab/rootm/*` branches are **GONE** from all six repos (so
+  `orphan_rootm_branch_unmerged_work_2026_06_05.md`'s "left in place" premise is false), `agent-orchestrator@867b1731e`
+  is on LDR but **not** on `main`, and the PM empty-string-fallback ratchet is **back at baseline** (so
+  `plan_health_tests_leak…`'s "blocks every PM code quickmerge" claim no longer holds). **The largest single blocker is
+  not a missing batch** — six docs claim the worker-liveness/watchdog kick+escalation mechanism and two of them
+  prescribe OPPOSITE directions on it; that ordering is an operator decision, escalated by this run.
