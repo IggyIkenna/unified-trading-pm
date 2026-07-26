@@ -26,7 +26,7 @@ tags:
 related:
   [
     /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
-    /plans/active/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md,
+    /plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md,
   ]
 created: 2026-07-17
 source:

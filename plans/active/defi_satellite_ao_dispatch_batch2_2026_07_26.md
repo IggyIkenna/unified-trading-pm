@@ -363,7 +363,7 @@ drift_direction: advance-code
       there too).
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot 6), `unified-trading-pm@0c4172c31`.** Appended F10
       (YEARN_V3/ETHEREUM/yield_bearing/vault_share_price pipeline_mode<->source desync, MEDIUM, delete_elig=NO) to
-      `codex/02-data/canonical-cutover-register.md` §2 (`require_pipeline_mode` axis — F10 is a row-VALUE desync against
+      `/codex/02-data/canonical-cutover-register.md` §2 (`require_pipeline_mode` axis — F10 is a row-VALUE desync against
       this exact axis's `{mode}_{source}` invariant, distinct from a path-structure violation) as a new "Known
       content-desync findings" table with the finding id/severity/description/delete_elig fields, linking back to
       `data_pipeline_reconciliation_defi_2026_07_20.md` §4/§9.

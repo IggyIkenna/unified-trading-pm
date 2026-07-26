@@ -447,7 +447,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[SCRIPT] P2.** Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive
 
 - **Throughput / jobs / VMs**:
-  - [`plans/active/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`](/plans/active/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md)
+  - [`plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`](/plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md)
     - **[CODE] P1.** Give the Databento chunk pull a dedicated executor (mirror
       `tardis_csv_transport._get_parse_executor`)
     - **[AUDIT] P2.** Sweep the repo for other `run_in_executor(None, ...)` call sites doing network-blocking work
@@ -694,7 +694,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       progress)
     - **P1 (L460).** Phase B migration items still shown unchecked in a stale copy — flip the four false-negative boxes
     - **P1 (L237).** §4 closing paragraph needs rewriting to match the current migration state
-  - [`plans/active/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`](/plans/active/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md)
+  - [`plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`](/plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md)
     - **[BACKEND] P1.** Add a manifest-vs-disk consistency check so a `captured` row with no object on disk fails loudly
   - [`plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`](/plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md)
     — 0 open todos (closed/archived/record-only)
