@@ -85,9 +85,9 @@ drift_direction: advance-code
       three read 0 and this doc's todo #4 checkbox + frontmatter `status` are flipped citing both the fresh read and the
       2026-07-12 archived-plan evidence, or (b) a nonzero count is found and filed as its own new finding (not silently
       re-closed). Source: `issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md`.
-- [ ] [REVIEW] P1. **Reconcile the stale last todo in
-      `plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md`** — a doc-sync gap, not a real conflict: (1)
-      re-run the sanctioned census —
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — plus a genuine NEW finding+fix beyond the doc-sync scope.**
+      Reconcile the stale last todo in `plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md` — a
+      doc-sync gap, not a real conflict: (1) re-run the sanctioned census —
       `deployment-api/scripts/census_manifest_data_type_2026_07_24.py --service instruments-service --asset-group     sports --filter-prefix FIXTURES`
       against bucket `instruments-store-sports-prd-central-element-323112` — and record the current legacy `FIXTURES`
       row count; (2) confirm via `git log` in instruments-service that `e19c5a7a`/`47c1ffb3`/`e92efc78` are the commits
@@ -109,6 +109,18 @@ drift_direction: advance-code
       `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`; a dated `## Update (2026-07-25)` section is added;
       no restamp script is written or re-run (docs-only change, zero production mutation) and `status: open` is left
       unchanged. Source: `issues/fixtures_manifest_legacy_backfill_2026_07_24.md`.
+
+      **Evidence + a genuine new finding beyond scope**: re-ran the census live — `FIXTURES` is 100,801 (NOT the
+          expected stable 55,233), because it's actively GROWING: 44,889 of the 100,801 rows were written TODAY
+          (2026-07-26, single burst ~01:30 UTC) via `enumerator_run_id='enum-universe-sports-20260726-013031'` —
+          the sports expected-universe enumerator (`enumerate_expected_universe.py`) has a 10th, previously-missed
+          call site that seeds legacy `"FIXTURES"` `expected_unattempted` rows (its `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`
+          map had `ODDS_HORIZON_BUCKET` but no `FIXTURES` entry). This is a genuine, small, clear root-cause fix
+          (one dict entry, directly analogous to the existing pattern) — fixed inline (not just documented) per
+          findings-triage: added `"FIXTURES": "FIXTURES_SCHEDULE"` to the override map + a regression test (184/184
+          pass) — `instruments-service@ca8bd7b3ab`. Full writeup + census output in the target doc's new
+          `## Update (2026-07-26)` section (the doc's original `[DATA] P0` todo also flipped `[x]` citing the 3 SHAs).
+
 - [ ] [DIAG] P1. **market-tick-data-service: sweep the manifest-driven `odds_horizon_bucket` index to size the extent of
       the stale/zombie-tick contamination that predates the now-confirmed-shipped 2026-07-25 staleness-cap fix
       (`market-data-processing-service@aa6e8ac`, verified via `git log` — added `STALENESS_CAP_SECONDS`/

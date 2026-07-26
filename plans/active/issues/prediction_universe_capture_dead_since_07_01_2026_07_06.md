@@ -10,7 +10,7 @@ summary:
   instruments consolidators every minute (racing co-writers; other AGs paused legacy 06-08); Cloud Run jobs ship no app
   logs to Cloud Logging; the shard-isolation catch logs without exc_info. UTL write-side Int64 coercion shipped as the
   crash-proof fix; consolidator dtype + migration + backfill of the missed days remain."
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -35,6 +35,11 @@ source:
     writer merge ArrowTypeError,
   ]
 resolved_by:
+  "market-tick-data-service@a664511f (Root Cause #4) + instruments-service@1fa9177f (Root Cause #5) +
+  market-tick-data-service@d2040f8f (Root Cause #6) — all 3 confirmed on live-defi-rollout AND main (content-diff
+  verified for main, since these repos squash-merge on promote); production capture proof (423 captured trades rows /
+  6,407 Kalshi trades, day=2026-07-09) re-confirmed live 2026-07-26, exact match to
+  kalshi_live_capture_regression_and_drift_2026_07_13.md's 2026-07-14T11:00Z citation."
 locked_by:
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -350,3 +355,21 @@ and Phase 4 waits on Ikenna's access answer.
   filter by the venue segment, feed the bare id to each adapter) — a scoped MTDS fix in
   `base_prediction_adapter`/`KalshiAdapter`; the expected-instrument oracle's 1-instrument KALSHI universe
   (`DOGE_UP_DOWN_DAILY`) needs the same normalization check.
+
+- 2026-07-26 (slot-5/review, prediction_satellite_ao_dispatch_batch2-006 — closure verification): re-checked this doc's
+  `status: open` against its already-shipped fix chain. All 3 SHAs confirmed present on BOTH `live-defi-rollout` and
+  `main` in their respective repos: `market-tick-data-service@a664511f` (Root Cause #4, composite `VENUE:TYPE:BARE_ID` →
+  bare per-venue id normalization in `_load_market_lifecycle_for_date`), `instruments-service@1fa9177f` (Root Cause #5,
+  per-venue `{group,day,venue}` `market_lifecycle` partition — POLYMARKET no longer clobbers KALSHI),
+  `market-tick-data-service@d2040f8f` (Root Cause #6, Kalshi millisecond-vs-second timestamp fix). Since all 3 repos
+  promote via squash-merge (`git merge-base --is-ancestor` alone would false-negative on `main`), verified via
+  content-diff: each commit's distinctive added lines/comments (`"Root Cause #4"` marker in
+  `base_prediction_adapter.py`, `int(day_start.timestamp())` in `kalshi_adapter.py`, `"Root Cause #5"` marker + the
+  `venue`-keyed partition dict in `writers.py`) are all present in `origin/main`'s copies of the same files.
+  **Re-confirmed the production capture proof still holds**: live query of the prediction availability manifest for
+  `venue=KALSHI, data_type=trades, date=2026-07-09` returns exactly **423 `captured` rows summing to 6,407** — an EXACT
+  match to `kalshi_live_capture_regression_and_drift_2026_07_13.md`'s 2026-07-14T11:00Z citation, still holding 12 days
+  later. `status` flipped `open` → `resolved`, `resolved_by` populated with all 3 SHAs + the corroborating doc. This
+  makes `prediction_consolidated_closeout_2026_07_18.md`'s "0 open todos" claim for this doc real+cited instead of an
+  unverified assumption. Root-Cause-#2's event-capture-gap question stays separately tracked (batch1 todo 2), not
+  re-extracted here.

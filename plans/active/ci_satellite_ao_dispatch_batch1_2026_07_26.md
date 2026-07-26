@@ -171,12 +171,12 @@ concurrent workers do not collide on this file.
       clean against today's tree with the intentional drift baselined, fails on a synthetic template-lags-repo case, and
       the api/ui/infra/sit template measurements are recorded in the source doc. Source:
       `issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` ([DEVOPS] P1 + P3).
-- [x] ✅ [INFRA] P1. **Deliver a checker banning the swallowed-credential-fetch idiom.** —
-      unified-trading-pm@PENDING_SHA. Delivered `scripts/quality_gates/check_no_swallowed_credential_fetch.py`
-      (standalone, NOT wired into `scripts/quality-gates.sh` per the finalize-plan gate; `glue-runner-run.sh`
-      untouched) + a shrinking-ratchet baseline (`no_swallowed_credential_fetch_baseline.yaml`, seeded at 18 real hits
-      across 3 repos) + `tests/unit/test_check_no_swallowed_credential_fetch.py` (22 cases incl. a synthetic-new-hit
-      failure case). Hit list recorded in `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md`.
+- [x] ✅ [INFRA] P1. **Deliver a checker banning the swallowed-credential-fetch idiom.** — unified-trading-pm@c91844b09.
+      Delivered `scripts/quality_gates/check_no_swallowed_credential_fetch.py` (standalone, NOT wired into
+      `scripts/quality-gates.sh` per the finalize-plan gate; `glue-runner-run.sh` untouched) + a shrinking-ratchet
+      baseline (`no_swallowed_credential_fetch_baseline.yaml`, seeded at 18 real hits across 3 repos) +
+      `tests/unit/test_check_no_swallowed_credential_fetch.py` (22 cases incl. a synthetic-new-hit failure case). Hit
+      list recorded in `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md`.
 - [ ] [INFRA] P1. **Self-hosted glue pool with 0 runners listening must page on its OWN cause.** Nothing watches runner
       liveness — a total pool collapse surfaced only as a generic `PROMOTION LAG > 60m` WARNING and was mis-read as
       "normal SIT latency" for 16 hours. Implement the source doc's own cheapest-honest-signal design as a NEW workflow:

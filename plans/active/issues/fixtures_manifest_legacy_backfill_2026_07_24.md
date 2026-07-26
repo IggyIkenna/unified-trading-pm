@@ -182,16 +182,17 @@ census twice more — once right after the restamp, once after ≥2 consolidator
 - [x] [DATA] P1. ✅ SUPERSEDED (main 2026-07-24) — the manifest backfill is scoped + dispatchable as the `[DATA] P0`
       todo in `/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md` (main-resolved design; SPOT-VM;
       census-zero Done-when). Run + verify there.
-- [ ] [DATA] P0. Write + run the SIMPLIFIED 1:1 manifest restamp (per the correction above — NOT the 1-to-2 fan-out in
-      resolution point 3): a script mirroring
-      `market-tick-data-service/scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py`'s exact pattern (snapshot the
-      consolidated index to `_index/backups/` first, download full parquet, mask `data_type == "FIXTURES"` rows, rewrite
-      `data_type` to `FIXTURES_SCHEDULE` in place, CAS re-upload with `if_generation_match`), targeting bucket
-      `instruments-store-sports-prd-central-element-323112`. **Done when**: a census via
-      `deployment-api/scripts/census_manifest_data_type_2026_07_24.py --filter-prefix FIXTURES` returns zero `FIXTURES`
-      rows immediately after the restamp AND again after ≥2 manifest-consolidator cycles (consolidator SSOT:
-      `/codex/05-infrastructure/manifest-consolidator-ssot.md`). (repo: market-tick-data-service or instruments-service
-      — whichever owns write access to the sports availability index; confirm via `_maintenance.py`'s existing
+- [x] ✅ [DATA] P0. **ACTION SHIPPED 2026-07-24, DONE-WHEN STILL BLOCKED (reconciled 2026-07-26, slot-5/review — see
+      "Update (2026-07-26)" below for the full current picture).** The SIMPLIFIED 1:1 manifest restamp described here
+      WAS already written and run in production — confirmed via `git log`: `instruments-service@e19c5a7a` (writer/reader
+      migration), `instruments-service@e92efc78` (vectorized restamp script, verified 282,231 safe / 55,233 escalate / 0
+      internal collisions on the real prod corpus), plus the restamp script itself
+      (`instruments-service/scripts/restamp_fixtures_manifest_legacy_atom_2026_07_24.py`) and its actual `--apply` run
+      documented in the sibling `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`. **Do NOT write or re-run
+      a new restamp script** — the action already shipped. The stated Done-when (census-zero `FIXTURES` rows) is NOT met
+      and, per the 2026-07-26 update below, the reason is NOT simply the static 55,233 collision residual as originally
+      scoped — see below for why. (repo: market-tick-data-service or instruments-service — whichever owns write access
+      to the sports availability index; confirm via `_maintenance.py`'s existing
       `purge_venue_before_date()`/`rebuild_manifest()` precedent for which repo's script conventionally does this.) —
       **Related consumer-side gotcha found + separately patched 2026-07-25/26**: `--sports-entity FIXTURES`'s
       freshness-check routing in `instruments_service/engine/orchestrator/process_preflight.py` also keyed off the
@@ -203,3 +204,38 @@ census twice more — once right after the restamp, once after ≥2 consolidator
       `/plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`. This P0
       restamp is still the right long-term fix (retires the need for the alias set entirely); the routing patch is a
       stopgap that works correctly either way.
+
+## Update (2026-07-26, slot-5/review — sports_satellite_ao_dispatch_batch4-002)
+
+**Re-ran the sanctioned census**
+(`deployment-api/scripts/census_manifest_data_type_2026_07_24.py --service instruments-service --asset-group sports --filter-prefix FIXTURES`,
+live against `instruments-store-sports-prd-central-element-323112`):
+
+```
+FIXTURES_SCHEDULE: 461,881
+FIXTURES_OUTCOMES: 102,086
+FIXTURES:          100,801   (was 337,464 pre-restamp; expected to stabilize at ~55,233 per the collision-residual doc)
+```
+
+**Found the census did NOT stabilize at 55,233 — it's GROWING, not the static known residual.** Sampled the current
+100,801 `FIXTURES` rows' `written_at` timestamps: 44,889 of them (44.5%) were written **TODAY (2026-07-26)**, in a
+single burst at hour=01 UTC, all `service_name=instruments-service`, all `capture_status=expected_unattempted`, tagged
+`enumerator_run_id='enum-universe-sports-20260726-013031'`. This is NOT the previously-fixed
+`sports_fixture_status_refresh.py` trigger leak (`instruments-service@47c1ffb3`, a `record_captured`/`record_failed`
+path) — it's a **10th, previously-unidentified call site**: the sports expected-universe enumerator
+(`instruments-service/scripts/enumerate_expected_universe.py`) seeds `expected_unattempted` placeholder rows via
+`_sports_manifest_data_type()`, whose `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE` map had an entry for `ODDS_HORIZON_BUCKET`
+but NONE for `FIXTURES` — so every enumerator run re-seeded tens of thousands of legacy `"FIXTURES"` rows via identity
+fallback (`.get(dt, dt)`), growing the residual by ~45K in 2 days on top of the stable 55,233 collision-blocked
+population. **Fixed** (`instruments-service@ca8bd7b3ab`): added `"FIXTURES": "FIXTURES_SCHEDULE"` to the override map,
+mirroring the existing `ODDS_HORIZON_BUCKET` pattern exactly; updated
+`tests/unit/scripts/test_enumerate_expected_universe_v2.py`'s
+`test_sports_manifest_data_type_helper_identity_except_odds_horizon_bucket` (which had asserted the OLD, buggy identity
+behavior for `FIXTURES` — removed it from the identity list) and added a new
+`test_sports_manifest_data_type_helper_maps_fixtures_to_fixtures_schedule` regression test; 184/184 tests pass.
+
+**Revised Done-when path**: once this fix's next enumerator run lands + the manifest consolidator catches up, the
+`FIXTURES` census should decay toward the TRUE stable residual (55,233, tracked in
+`fixtures_manifest_duplicate_collision_residual_2026_07_24.md`) rather than continuing to grow. Re-verify with the same
+census command after the next `enum-universe-sports-*` run + ≥2 consolidator cycles. `status: open` left unchanged — the
+underlying 55,233 collision-residual decision (delete vs. leave) is still unresolved in the sibling doc.
