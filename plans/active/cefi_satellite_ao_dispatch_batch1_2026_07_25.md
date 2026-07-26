@@ -133,30 +133,30 @@ drift_direction: advance-code
       `_finalize_session_grid` routing:
 
       | Adapter | Verdict |
-                                                  | --- | --- |
-                                                  | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
-                                                  | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
-                                                  | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
-                                                  | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
-                                                  | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
-                                                  | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
+                                                          | --- | --- |
+                                                          | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
+                                                          | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
+                                                          | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
+                                                          | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
+                                                          | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
+                                                          | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
 
-                                                  **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
-                                                  intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
-                                                  **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
-                                                  (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
-                                                  `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
-                                                  snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
-                                                  absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
-                                                  `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
-                                                  non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
-                                                  documented the OLD (reversed) behavior, contradicting the shipped code —
-                                                  `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
-                                                  `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
-                                                  a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
-                                                  provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
-                                                  unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
-                                                  (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
+                                                          **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
+                                                          intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
+                                                          **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
+                                                          (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
+                                                          `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
+                                                          snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
+                                                          absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
+                                                          `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
+                                                          non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
+                                                          documented the OLD (reversed) behavior, contradicting the shipped code —
+                                                          `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
+                                                          `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
+                                                          a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
+                                                          provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
+                                                          unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
+                                                          (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
 
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
       candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
@@ -204,8 +204,9 @@ drift_direction: advance-code
       `TestPerInstrumentCoverageDoesNotDoubleCountPipelineModeRows::test_pipeline_mode_rows_do_not_double_count_shards`
       asserts 2 instruments x 5 dates x 2 pipeline_modes (`batch_binance`/`live_binance`) = 20 raw rows collapse to
       `found_shards == 10` distinct shard atoms. `quality-gates.sh` green (sentinel `cc1403d`), shipped via quickmerge.
-- [ ] [DATA] P1. **Re-run the IS cefi reference-data backfill to close the KRAKEN-SPOT/KRAKEN-FUTURES/BITFINEX-SPOT
-      gap.** Now that `_DEFAULT_EXCHANGES` derives from the canonical `VenueMapping.all_tardis_exchanges` SSOT (shipped
+- [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot-7) — gap already closed by a prior real-infra backfill; verified, not
+      re-run.** Re-run the IS cefi reference-data backfill to close the KRAKEN-SPOT/KRAKEN-FUTURES/BITFINEX-SPOT gap.
+      Now that `_DEFAULT_EXCHANGES` derives from the canonical `VenueMapping.all_tardis_exchanges` SSOT (shipped
       `is@a6bc4d48`), re-run `instrument_availability/by_date/` so the IS catalogue's captured-venue set becomes ⊇ the
       MTDS captured present-set. Memory-heavy multi-year sweep — launch on a SPOT VM per the heavy-I/O +
       VM-launcher-runbook rules, sized to avoid the OOM that previously killed `cefi-instr-deribit` (2026-05-04). Repo:
@@ -214,7 +215,9 @@ drift_direction: advance-code
       since master closeout's Track-2 raw-tick coverage backfill also claims the hard N=1-concurrent-Tardis-VM cap; do
       not launch both simultaneously. **Done when**: `instrument_availability/by_date/` for a sampled recent day shows
       the previously-missing venues present in the IS reference catalogue, with a measured before/after venue-count and
-      row-count delta recorded in this plan's Progress Log. Source: `data_completion_cefi_2026_07_15.md`.
+      row-count delta recorded in this plan's Progress Log. Source: `data_completion_cefi_2026_07_15.md`. Full
+      before/after measurement + evidence in the Progress Log below — no new VM launch was needed (re-launching would
+      have violated the single-walk/prune-don't-scan efficiency rule against already-complete data).
 - [x] ✅ [DIAG] P1. **Root-cause the ASTER MTDS `attempted_failed` regression (3,491 → 17,675), evidence-gathering
       only.** (a) Re-run
       `GET /api/data-status/turbo?service=market-tick-data-service&start_date=2018-01-01&end_date=<today>&asset_group=CEFI&include_sub_dimensions=true`
@@ -774,6 +777,44 @@ drift_direction: advance-code
     tracked as real `- [ ]` todos in `issues/mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md` rather than left
     as Progress-Log-only prose — see that doc for the fix specs. None block THIS todo's own delivery (the narrowed
     `--instrument-ids` backfill sidesteps bug 1; bugs 2/3 are orthogonal data_types).
+
+- **2026-07-26 (slot 7) — IS cefi reference-data backfill todo (line 207): gap already closed, verified not re-run.**
+  Investigated before launching a new SPOT VM (per the todo's own coordination note + the data_engineering craft's
+  single-walk/prune-don't-scan efficiency rule — an avoidable re-scan of already-complete data is a defect, not a
+  detail).
+  - **Tardis-guard check (non-blocking, run anyway)**:
+    `tardis_running_vm_count asia-northeast1-c central-element-323112` → **0** running Tardis-consuming VMs in the fleet
+    (confirmed via `deployment-service/scripts/vm/tardis-concurrency-guard.sh`); no collision risk either way. Also
+    confirmed `launch-cefi-instruments-backfill.sh` doesn't source the guard / stamp `VM_TARDIS_CONSUMER` at all — per
+    the guard script's own header comment, IS's Tardis reads hit the PUBLIC unauthenticated `api.tardis.dev` metadata
+    endpoint (instrument listings), not the licensed single-IP `datasets.tardis.dev` tick-data endpoint the cap
+    protects, so this backfill class never contended with the cap in the first place.
+  - **BEFORE state (reconstructed)**: `is@a6bc4d48` (2026-06-08) shows KRAKEN-SPOT/KRAKEN-FUTURES/BITFINEX-SPOT were
+    entirely absent from `_DEFAULT_EXCHANGES` pre-fix → 0 `instrument_availability` rows for all 3 venues at any date,
+    by construction.
+  - **AFTER state (measured 2026-07-26, downloaded + read the consolidated
+    `gs://instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet`, 84,441 rows — no new
+    whole-corpus GCS walk, this is the single already-consolidated manifest index)**:
+    - IS catalogue now carries **29** distinct cefi venues (was ⊆12 pre-fix hand list); MTDS's captured-present cefi
+      venue set (read from `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`,
+      `capture_status=='captured'`) is **22** venues — **all 22 are present in the IS 29-venue set (missing-set diff =
+      ∅)**, i.e. IS ⊇ MTDS now holds.
+    - Per-venue row-count delta (0 → current): **KRAKEN-SPOT** 2,677 rows / 2,676 distinct dates
+      (2019-03-30→2026-07-26), 2,395 `captured` (695,869 total instruments); **KRAKEN-FUTURES** 2,707 rows / 2,676
+      dates, 2,425 `captured` (358,125 instruments); **BITFINEX-SPOT** 2,678 rows / 2,676 dates, 2,396 `captured`
+      (530,131 instruments). `capture_status` mix (captured/empty_confirmed/expected_unattempted) for all 3 matches the
+      healthy baseline of a long-standing venue (spot-checked BINANCE-SPOT: 2,677 rows / 2,399 captured) — not an
+      anomaly.
+    - **Confirmed genuine backfill, not a synthetic bulk-write**: `written_at` for KRAKEN-SPOT clusters at 718 rows over
+      ~9h on 2026-06-24 + 1,923 rows on 2026-06-26 (two VM passes, real incremental writes across the historical range),
+      then a steady 1 row/day since — matching daily forward-poll cadence. No `cefi-instr-*` GCE instance remains in the
+      zone (deleted per the launcher's own post-run cleanup instructions), consistent with a completed-and-cleaned-up VM
+      run between the 2026-06-08 code fix and this verification.
+  - **Conclusion**: the historical backfill this todo asks for already ran to completion on real infra sometime
+    2026-06-24–2026-06-28 (before this todo was dispatched to slot 7) — most likely a prior, uncommitted pickup of this
+    same AO todo. Re-launching a multi-year SPOT VM sweep now would duplicate already-captured work for zero gain. Todo
+    flipped `[x]` on this verification; no code or infra change shipped by this session (the underlying fix
+    `is@a6bc4d48` was already shipped weeks prior).
 
 ## Todo -001 final status (2026-07-26, resolved) — 4 follow-up docs filed, todo flipped
 
