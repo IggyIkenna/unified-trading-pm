@@ -68,6 +68,16 @@ locked_since:
 > this fix only benefits future runs + any other real caller of `get_instruments_for_date`. Regression test:
 > `tests/unit/test_cloud_data_provider.py::test_get_instruments_by_venue_tolerates_schema_drift_across_venues`
 > (confirmed failing pre-fix). Full `quality-gates.sh` green; `quickmerge` landed clean.
+>
+> **UPDATE 14:41 UTC — original VM `...-140251` PREEMPTED** after ~40 min (processed 2020-01-01..2020-02-12, ~43 real
+> days; log ends abruptly mid-`2020-02-13` with no clean-shutdown message; no `PROGRESS.json` exists for this launcher —
+> confirmed via `gcloud compute operations describe` on the delete op + the workspace rule that one-off migration VMs
+> aren't fleet-monitored/auto-relaunched). Resumed correctly from measured progress (NOT replayed `START_DATE`, per the
+> HARD RULE): `mdps-backfill-tradfi-20260726-144837`, same instrument filter, `--start-date 2020-02-13` (the last
+> INCOMPLETE date) through the original `2026-07-25` end. Tarballs republished + `LC_TARBALL_FRESHNESS=enforce`-verified
+> fresh, including the `d531eb9` schema-drift fix — the resumed run should no longer emit `schema lengths differ` at all
+> (watching to confirm). Re-armed monitoring with explicit empty-`status` detection (a `gcloud describe` returning
+> empty/error on this VM name is now treated as a preemption/deletion signal, not silently ignored).
 
 ## What I found
 
