@@ -27,7 +27,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
 created: 2026-07-25
-last_updated: 2026-07-25
+last_updated: 2026-07-26
 priority: P3
 parent_epic: sports_master
 source:
@@ -118,30 +118,57 @@ dedup-on-write mechanism named anywhere in the investigation, and it will never 
       pattern) would be WRONG here — it would arbitrarily keep whichever spelling happens to sort/appear first, silently
       discarding rows under the OTHER (possibly-canonical) `instrument_id` without ever checking which spelling is
       actually correct. Re-scoped the fix todo below accordingly.
-- [ ] [DATA] P3. **Step (a) DONE 2026-07-26 (slot-8) — exact mechanism found; Step (b) still open.** NOT a blind
-      poll-key de-dup (see the finding above for why that would be wrong here). **Step (a) result**:
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-2, `data_engineering`) — Step (b) complete: full-population measured,
+      decidable rewrite shipped + re-verified.** Step (a) result (unchanged):
       `market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py`'s `_build_fixture_rows` (lines
       717-730) resolves each poll's home/away team name via
       `unified_api_contracts.external.api_football.team_mappings.validate_team_resolution(name, provider="odds_api")` —
       Tier 1 exact match, Tier 2 accent/case/whitespace-normalized match against `_UNIVERSAL_REVERSE`. **On
       `TeamResolutionError` (name matches neither tier), it falls back to `build_team_id(name)` — a raw slug of whatever
       literal string the vendor sent THAT poll** — and this is what feeds `build_instrument_id`'s
-      `home_team_id`/`away_team_id`. Since `validate_team_resolution` is a pure dict lookup (deterministic for a given
-      input string), the SEONGNAM/SEONGNAM_FC split means the-odds-api.com sent two DIFFERENT literal team-name strings
-      for the same real team across different polls — one matched the alias table (resolved to canonical "SEONGNAM"),
-      the other didn't (fell to the raw-slug fallback "SEONGNAM_FC"). **This gives a decidable de-dup rule Step (b) can
-      use without needing the exact failing string**: within a duplicate-key group, the row whose `instrument_id` embeds
-      a team fragment that IS a registered canonical team_id (i.e. resolution succeeded) is always more trustworthy than
-      the row whose fragment is a raw fallback slug (resolution failed) — prefer the former, drop the latter. **NOT
-      traced this pass**: the exact vendor string that caused the specific `TeamResolutionError` (would need the raw
-      historical API response, not reconstructable from the written parquet alone) — flagging honestly rather than
-      guessing; not required to implement the decidable dedup rule above, only relevant if someone later wants to
-      proactively ADD the missing alias rather than just fixing already-written duplicates. **Step (b) (still open)**:
-      re-run `measure_odds_api_poll_key_duplicates_2026_07_26.py` against the FULL population (not a sample) to get the
-      exact affected-object count, then write a scoped rewrite using the decidable rule above (keep the
-      canonically-resolved row, drop the fallback-slug row within each duplicate group) — NOT a bare `keep="first"`.
-      **Done when**: the full-population affected-object count is measured, and a re-run over the affected population
-      confirms 0 poll-key duplicates remain under the canonical spelling.
+      `home_team_id`/`away_team_id`. **Step (b) full-population measure** (`market-tick-data-service@<sha>`, added
+      `--full`/`--output` to `measure_odds_api_poll_key_duplicates_2026_07_26.py`): all 275,136 captured
+      `batch_odds_api` cells scanned (single bounded manifest read, no new GCS walk) — **4,045/275,136 (1.5%) affected
+      objects**, 55,872 duplicate rows total. **Design correction found via live-data validation**: the decidable rule
+      as originally specified ("the row whose instrument_id embeds a canonical team fragment") required BOTH home AND
+      away legs canonical — checking the real `2022-09-04/BETONLINEAG/K_LEAGUE_1` SEONGNAM object found the AWAY leg
+      ("ULSAN_HYUNDAI_FC", constant across both rows) isn't in TODAY's alias table either (the team was since renamed to
+      "ULSAN_HD") even though it was never the source of the SEONGNAM/SEONGNAM_FC ambiguity — requiring both legs
+      canonical wrongly marked that group (and others like it) undecidable. **Corrected rule** (shipped in
+      `scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py`): judge ONLY the team-fragment position that actually
+      VARIES across a duplicate group's rows; a group is decided when exactly one distinct value of the varying leg
+      resolves to a registered canonical team_id (keep that row, drop the rest); undecided when zero or >1 distinct
+      values resolve, or both legs vary simultaneously (doesn't match the single-team-resolution-split mechanism — e.g.
+      `2022-04-23/BETVICTOR/SEGUNDA_DIVISION`'s "FUENLABRADA"/"CF_FUENLABRADA" AND "PONFERRADINA"/"SD_PONFERRADINA"
+      varying together). **Rewrite applied + verified**: dry-run and `--apply` both confirmed **3,829/4,045 (94.7%)
+      objects deduped** (26,670 duplicate rows dropped via CAS-protected
+      `download_bytes_with_generation`/`conditional_upload_bytes`, mirroring
+      `dedup_canonical_player_stats_2026_07_25.py`'s write-safety pattern), **0 write errors**. Re-run over the same
+      4,045-cell affected population post-apply confirms **0 poll-key duplicates remain among the 3,829 decided cells**
+      (`clean`, matching pre-apply `would_dedupe` count exactly). **216/4,045 (5.3%) cells left genuinely undecidable**
+      (1,266 duplicate-key groups, no canonical spelling to prefer) — untouched by design, see the new follow-up todo
+      below. Both scripts have unit tests (19 total,
+      `tests/unit/scripts/test_{measure,dedup}_odds_api_poll_key_duplicates.py`), including a regression test for the
+      exact design-correction bug found above.
+- [ ] [DATA] P3. **NEW (filed 2026-07-26, slot-2) — 216 residual undecidable objects need a DIFFERENT fix, not the
+      single-team-resolution-split rule.** The Step (b) rewrite above intentionally left 216/4,045 affected objects
+      (1,266 duplicate-key groups) untouched because BOTH home and away team-id fragments vary simultaneously within the
+      group — a different mechanism than the SEONGNAM/SEONGNAM_FC single-leg split (confirmed via direct object
+      inspection on 2+ real cases: `2022-04-23/BETVICTOR/SEGUNDA_DIVISION` — "FUENLABRADA"↔"CF_FUENLABRADA" AND
+      "PONFERRADINA"↔"SD_PONFERRADINA" together; `2022-09-05/BETSSON/PRIMEIRA_LIGA` — "BOAVISTA"↔"BOAVISTA_PORTO" AND
+      "PACOS_FERREIRA"↔"PACOS_DE_FERREIRA" together). **Notable concentration**: 10+ of the residual cells are all
+      `2022-04-15/PRIMEIRA_LIGA` across many different venues on the same day — worth checking whether this is one
+      specific real fixture whose team names changed/were re-captured differently that day, rather than 10 independent
+      coincidences. **Recommended next step**: root-cause whether the both-legs-varying pattern is a club-prefix
+      normalization difference (e.g. "CF_"/"SD_" prefix inconsistently applied) that a NEW decidable rule could target
+      (e.g. prefer the pair where BOTH legs are canonical over a pair where NEITHER is, when such a pair exists), or
+      whether it needs manual per-case review. Full affected-cell list (JSON) is NOT preserved as an artifact (scratch
+      output); re-run `dedup_odds_api_poll_key_duplicates_2026_07_26.py` (no `--affected-cells-file`, full scan) to
+      regenerate the current undecidable set — a 4,045-cell affected-only run takes ~20-40s (32-48 workers); a full
+      275,136-cell scan takes ~20-25min, so target it via a prior `--full --output` measure run, don't re-run cold.
+      Repo: market-tick-data-service. **Done when**: the both-legs-varying mechanism is root-caused and either (a) a new
+      decidable rule is implemented + applied + re-verified (0 remaining), or (b) it's confirmed genuinely
+      non-automatable and each case is resolved manually with the resolution documented.
 
 ## Progress Log
 
@@ -163,3 +190,15 @@ trace the specific vendor-string mismatch that triggered the one observed failur
 payloads, not available from written parquet) — not required for the decidable rule, flagged honestly as unexplored.
 Step (b) (full-population measurement + the actual rewrite) remains open — a new, bounded, well-scoped piece of work for
 the next pickup.
+
+**2026-07-26 (slot-2, `data_engineering`)** — closed Step (b). Added `--full`/`--output` to
+`measure_odds_api_poll_key_duplicates_2026_07_26.py` and ran it over all 275,136 captured cells: 4,045 affected (1.5%).
+Built `dedup_odds_api_poll_key_duplicates_2026_07_26.py` implementing the decidable rule. **Live-data validation caught
+a design bug before shipping**: the rule as specified in Step (a) (require BOTH team legs canonical) wrongly marked
+genuinely-decidable groups undecidable whenever the CONSTANT leg had since fallen out of today's alias table (team
+renamed post-capture) — corrected to judge only the leg that actually varies within each group. Added a regression test
+for this exact bug. Ran dry-run → `--apply` → re-verify dry-run against the full 4,045-cell affected population: 3,829
+(94.7%) deduped with 0 write errors, re-verify confirms 0 remaining duplicates among them; 216 (5.3%) correctly left
+untouched (different mechanism — both legs vary simultaneously, not the single-team-resolution-split this rule targets).
+Filed the 216-residual as a new follow-up todo above (P3, scoped + done-when'd) rather than guessing a fix for a pattern
+this rule wasn't built for.

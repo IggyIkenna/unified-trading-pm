@@ -119,16 +119,20 @@ drift_direction: advance-code
       `related:` cites the source doc; source doc's `related:` + its own P3 todo updated
       (`issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`). No backfill/re-derivation attempted.
       Source: `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md` (P3 item).
-- [ ] [DATA] P3. **PARTIAL 2026-07-26 (slot-8) — Step 1 DONE, Step 2 re-scoped.** Root-cause + measure poll-key
+- [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-2, `data_engineering`) — Step (b) closed: full-population measured
+      (4,045/275,136 = 1.5% affected), decidable rewrite shipped + re-verified.** Root-cause + measure poll-key
       `(event, market, outcome, bm_time, price, fetch_utc)` duplicates in canonical
-      `market-data-tick-sports-prd-central-element-323112` odds objects (repo: market-tick-data-service); if material,
-      de-dup mirroring `instruments-service@210d4567`'s `player_stats` pattern. Source:
-      `mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`. **Step 1 (`mtds@2a324b75`)**: 2 independent 300-object
-      samples on real prod data — rate 0.3%/1.0% (~0.67%), 10-50x LOWER than the original 15% claim. Root cause is NOT a
-      writer retry: every affected group differs only in `instrument_id` (a team-name resolution split, e.g. "SEONGNAM"
-      vs "SEONGNAM_FC"). **Step 2 blocked**: the planned blind `drop_duplicates(keep="first")` would be wrong here
-      (arbitrary spelling kept, not the canonical one) — re-scoped in the issue doc to trace team-name resolution first.
-      Full detail + evidence in the issue doc, not duplicated here.
+      `market-data-tick-sports-prd-central-element-323112` odds objects (repo: market-tick-data-service). Source:
+      `mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`. `market-tick-data-service@25916f6e`: added
+      `--full`/`--output` to `measure_odds_api_poll_key_duplicates_2026_07_26.py`; shipped
+      `dedup_odds_api_poll_key_duplicates_2026_07_26.py` implementing the decidable rule (prefer the
+      canonically-resolved team-id row over a raw-slug fallback within a poll-key duplicate group) — corrected via
+      live-data validation to judge only the team-fragment position that actually varies within a group (a constant leg
+      can be absent from today's alias table without being the source of the ambiguity). Applied against the full
+      affected population: **3,829/4,045 (94.7%) deduped** (26,670 duplicate rows dropped, CAS-protected writes, 0
+      errors), re-verified 0 remaining duplicates among them. **216/4,045 (5.3%) left genuinely undecidable** (different
+      mechanism — both team legs vary simultaneously) — filed as a new follow-up todo in the issue doc, not guessed at.
+      19 unit tests added/passing. Full detail + evidence in the issue doc, not duplicated here.
 - [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot 4)** — Root-cause WHY `quality-gates.sh`'s function/class/method SIZE
       CHECK (phase 5) didn't block the 2026-07-16 sports-orchestrator function-size regression at commit time (candidate
       commits `a66fc295`, `493393c8`, `86cc71ff`, all instruments-service, same day) — determine whether it was the
