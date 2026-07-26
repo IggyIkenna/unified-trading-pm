@@ -599,6 +599,40 @@ drift_direction: advance-code
     `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --data-types trades --venues "HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET" cefi 2026-07-19 2026-07-25 full`
     → VM `mdps-backfill-cefi-20260726-173623` (SPOT), confirmed STARTED — a 7-day window (matching the ADV reader's own
     `window_days=7` default) small enough to very likely finish before hitting the same ceiling.
+  - **Escalation — the SAME whole-VM OOM recurred at only 2 days (2026-07-26 17:41 UTC)**:
+    `mdps-backfill-cefi- 20260726-173623` was killed identically (kernel oom-killer, PID on
+    `google-startup-scripts.service`, 31.19 GB anon-rss) after processing only `day=2026-07-19` (which completed a
+    self-recovered per-date `rc=-9` first) and starting `day=2026-07-20`. This raises the severity of the P1 follow-up
+    above: the memory ceiling is reached within ~1-2 RECENT (2026, high-volume) days per VM invocation, not a slow
+    multi-day accumulation — the growth is fast enough that even a 7-day window isn't safe on `e2-standard-8`. Confirmed
+    `day=2026-07-19` DID produce real output before the crash —
+    `processed_candles/by_date/day=2026-07-19/pipeline_mode=batch_hyperliquid/` exists but **only at `timeframe=15s`** —
+    the aggregation cascade (15s→1m→5m→15m→1h→4h→24h) never reached 24h for that day before the VM died, so this alone
+    does not yet satisfy the "non-zero `quote_volume`" bar. Deleted the crashed VM and launched a maximally-isolated
+    single-day, single-venue probe to determine whether even ONE recent day's full timeframe cascade fits in memory at
+    all:
+    `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --data-types trades --venues "HYPERLIQUID" cefi 2026-07-24 2026-07-24 full`
+    → VM `mdps-backfill-cefi-20260726-174627` (SPOT), confirmed STARTED. If this ALSO OOMs, the finding escalates
+    further (repo-side fix needed before ANY recent-date CeFi candle backfill is reliable, not just a VM-sizing
+    workaround) and the "Done when" bar's recent-day requirement may need to fall back to an OLDER-but-still- 2026 day,
+    or a code fix must land first.
+  - **Critical cross-reference (2026-07-26, sibling todo -003)**: a concurrent slot verified todo -003 ("MDPS cefi
+    candle-manifest faithfulness") and found `issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md` — **MDPS's
+    cefi candle-generation pipeline has NEVER emitted a single manifest row, for ANY venue, EVER** (0/2,953
+    candle-manifest rows are `service_name=market-data-processing-service`, across the WHOLE corpus — confirmed real
+    files exist for established venues like BITGET-FUTURES/BITFINEX-FUTURES too). This is a UNIVERSAL, pre-existing,
+    fleet-wide bug — **not specific to ASTER/HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET** and not something introduced
+    or fixable within this todo's scope (it's tracked as its own P1 fix in that issue doc, repo:
+    market-data-processing-service). This directly reframes this todo's own "Done when" bar #3 ("a manifest-verified
+    backfill covers each venue's full already-captured raw-trade range"): the LIVE write path (`record_captured` during
+    backfill) cannot register these rows today regardless of which venue, so satisfying #3 must go through the
+    launcher's own documented reconciliation step (`rebuild_manifest_from_canonical_paths`, which walks the GCS paths
+    directly) rather than the live write path. **Good news for the other two criteria**: confirmed `features-service`'s
+    `RollingAdvReader` (`cross_instrument/app/calculators/adv.py:265,268,363`) reads candles via
+    `blob_exists`/`download_bytes` on GCS DIRECTLY (`resolve_bucket` + a raw blob path) — it does **not** query the
+    manifest at all, so criteria 1 (real non-zero `quote_volume` on disk) and 2 (ADV reader non-`NO_DATA`) are
+    completely unaffected by this manifest-emission bug and remain achievable via the GCS-direct backfill already in
+    progress.
 
 ## Deferred
 
