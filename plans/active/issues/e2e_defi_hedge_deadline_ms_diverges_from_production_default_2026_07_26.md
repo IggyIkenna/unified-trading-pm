@@ -93,7 +93,12 @@ Ack + route to the strategy-engine e2e owner. Options:
       never set `hedge_deadline_ms` at all (grep-verified 0 matches) — it already matched production by omission, the
       same as `peg_drift_threshold_bps`; the table's "all 5 files" claim was inaccurate for this one, only 4 files (6
       including the 2 sites in `test_additional_asset_groups_e2e_smoke.py`... 5 real sites) actually hardcoded `2000`.
-      `quality-gates.sh` green. Originally: Resolve the `hedge_deadline_ms` 2000-vs-5000 divergence per the operator's
+      `quality-gates.sh` green. **Follow-up (2026-07-26, same session) — `e2e-testing@db70ead`**: the formal
+      `BLK-4f4edc96` ruling landed after the fix above shipped (its recommendation was auto-approved and acted on
+      first); its 2 guardrails were verified retroactively — (1) grepped all 5 files for any test asserting against
+      `hedge_deadline_ms` or depending on `2000` to force/assert a timeout scenario: none found, confirmed safe; (2)
+      added a one-line comment citing this doc at each of the 5 call sites so `5000` reads as intentional-matches-prod,
+      not another silent literal. Originally: Resolve the `hedge_deadline_ms` 2000-vs-5000 divergence per the operator's
       A/B call above — either comment the 5 e2e call sites as intentional, or bump them to 5000. Repo: e2e-testing.
       Files: `test_csb_paper_e2e_smoke.py`, `test_apd_paper_e2e_smoke.py`, `test_concurrent_archetype_e2e_smoke.py`,
       `test_failure_modes_e2e_smoke.py`, `test_additional_asset_groups_e2e_smoke.py` (2 call sites in the last file).
