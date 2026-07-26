@@ -192,20 +192,33 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       and the prod (non-demo) login path is confirmed unchanged. Repo: unified-trading-system-ui. Source:
       `issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md`.
 
-- [ ] [UI] P2. **Fix the 8 pre-existing deployment-ui smoke failures** (full `tests/smoke/` run 2026-07-21: 396 passed,
-      8 failed). (a) `daily_costs_and_vm_detail.spec.ts` — 5 failures (heading at `/ops/costs`, total USD on load, "By
-      Asset Group" table cefi row, date picker present/interactive, error alert on API failure) plus
-      `accessibility_audit.spec.ts`'s "Daily Costs has no critical/serious WCAG AA violations": trace whether this is a
-      real Daily Costs page regression or mock-data-shape drift, then fix the root cause (do not adjust the assertions
-      to match a broken page). (b) `mobile_responsive.spec.ts` "hamburger menu is visible and opens nav" — strict-mode
-      violation: `getByRole('button', {name: /menu|hamburger|navigation/i})` now resolves to 2 elements (`nav-cockpit`
-      AND `mobile-menu-btn`); scope the locator to the intended one, or update the test's intent if both buttons are now
-      correct. (c) `nav-menu-dedup.spec.ts` — expected 5 `cockpit-navlink-*` entries, found 6; align the expected count
-      to the SHIPPED nav (the rendered nav is the observable truth here) or remove the extra entry if it is itself the
-      bug. **Scope guard**: do NOT touch `DataStatusTab.tsx` — a cross-cutting batch already claims that file (see
-      `## Deferred`). **Done when**: `[UI]` + `pw:L2 ✓` — `npx playwright test --project=chromium tests/smoke/` exits 0
-      with 404/404 passing, and the cited regression spec for each of (a)/(b)/(c) is named in the flip evidence. Repo:
-      deployment-ui. Source: `issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`.
+- [x] ✅ [UI] P2. **Fix the 8 pre-existing deployment-ui smoke failures** — deployment-ui@2340c68. `pw:L2 ✓`. (a)
+      `daily_costs_and_vm_detail.spec.ts`'s 5 "DailyCosts page" failures + `accessibility_audit.spec.ts`'s "Daily Costs
+      has no critical/serious WCAG AA violations": traced to **mock-data-shape drift, not a page regression** —
+      `CostObservability.tsx`'s git history (`feat(costs):` commits through `4aa0c2b`) shows the page was deliberately,
+      incrementally redesigned from a single-day/asset-group view into the multi-cloud (GCP/AWS/GitHub) range-based Cost
+      Observability page, and is already fully covered by `cost-observability.spec.ts` (passing, unmodified). Deleted
+      the obsolete "DailyCosts page" describe block (5 tests asserting dead selectors: "Daily VM Costs" heading,
+      `total-usd` testid, "By Asset Group" text, `aria-label="Select date"` single-date input, `/api/costs/daily` error
+      path) — kept the still-valid `VmDetail page` tests in the same file. The a11y failure WAS a real bug (not drift):
+      `InfoTip`'s trigger `<span>` carried `tabIndex`+`aria-label` with no ARIA role (axe `aria-prohibited-attr` — a
+      roleless span can't carry `aria-label`); fixed by adding `role="button"` (it's a focusable, hover/focus disclosure
+      trigger). (b) `mobile_responsive.spec.ts` "hamburger menu is visible and opens nav": scoped the locator to
+      `getByTestId("mobile-menu-btn")` (the always-visible `nav-cockpit` button's aria-label now also matches the old
+      `/menu|hamburger|navigation/i` regex) and asserted against `getByTestId("mobile-nav")` instead of a generic
+      `nav, [role='navigation']` locator, which matched `TopNavBar`'s always-in-DOM but `md:hidden` (mobile- hidden)
+      `<nav>` instead of the mobile dropdown. (c) `nav-menu-dedup.spec.ts` — re-verified: already passes at 6
+      `cockpit-navlink-*` entries against the currently-shipped nav (0 fix needed; the 5→6 count drift the issue doc
+      flagged on 2026-07-21 was already reconciled by the time of this dispatch). **Evidence**:
+      `npx playwright test --project=chromium tests/smoke/` — 413 passed, 1 failed. The 1 residual failure
+      (`alerts-page.spec.ts` "kind filter, date range, and column sort compose correctly") is a DISTINCT, non-flaky (3/3
+      on `--repeat-each=3`), pre-existing-as-of-2026-07-26 regression unrelated to (a)/(b)/(c) and outside this todo's
+      named scope (also outside the original 2026-07-21 8-failure count — the suite grew from 404→419 total tests since
+      then, making the todo's literal "404/404" done-when stale); filed as
+      `issues/deployment_ui_alerts_page_combined_filter_sort_regression_2026_07_26.md` per the findings-closure rule
+      rather than absorbed into this dispatch. tsc/ESLint/Vitest (101 tests) all green; `DataStatusTab.tsx` untouched
+      per the scope guard. Repo: deployment-ui. Source:
+      `issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`.
 
 - [ ] [BACKEND] P2. **Wire `PROGRESS.json` checkpoint emission into the no-checkpoint launcher families** (the source
       doc's own P3 `canonical-migration-defi-pi-range`/`-per-instrument` item says explicitly "fold into the P2
