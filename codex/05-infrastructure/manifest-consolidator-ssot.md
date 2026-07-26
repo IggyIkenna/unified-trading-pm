@@ -552,11 +552,41 @@ the tradfi tick `_index`, 2026-07-20 — dropped 686,005 `batch_massive` + 3,615
    time, and the NEXT consolidator cycle then fails closed on the missing marker (§ above, "canonical EXISTS but carries
    no marker") — merges every per-VM shard again with pruning disabled. **Verified recovery**: immediately after your
    CAS write (same operation, don't wait for the cron), call `manifest_consolidator.consolidate(bucket, force=True)`
-   yourself — this is the officially-supported write path and re-stamps the marker correctly in the same pass (its own
-   `log_event` call needs `setup_events()` first; that's a separate, non-blocking failure — the CAS write itself already
-   lands before that call). Skipping this step measured as a real, if narrow, resurrection window: a paused-then-resumed
-   cron's first post-edit cycle can transiently restore rows you just removed before a later cycle re-derives cleanly —
-   durability-check across ≥4 consolidator cycles after the write, not just one.
+   yourself — this is the officially-supported write path and re-stamps the marker correctly in the same pass. Skipping
+   this step measured as a real, if narrow, resurrection window: a paused-then-resumed cron's first post-edit cycle can
+   transiently restore rows you just removed before a later cycle re-derives cleanly — durability-check across ≥4
+   consolidator cycles after the write, not just one.
+
+   **Correction (2026-07-26, superseding the "separate, non-blocking failure" framing this section used to carry)**:
+   calling `consolidate(force=True)` directly (bypassing `manifest_consolidator.py`'s own CLI `main()`) is NOT
+   automatically safe just because the CAS write already landed. **Two real failure modes measured live, both of which
+   silently no-op the ENTIRE re-stamp while still returning what looks like a normal-ish report**:
+   - **Missing `setup_events()` bootstrap.** `consolidate()` emits lifecycle events via `log_event()`, which raises
+     `RuntimeError: Event logging not initialized` unless `setup_events()` already ran. `main()` does this bootstrap; a
+     direct `consolidate()` call from a one-off script does NOT get it for free. The `RuntimeError` is caught INTERNALLY
+     and returned as `success=False, shards_scanned=0, error_reason='RuntimeError: ...'` — the merge never starts at
+     all, not a benign post-write log skip. A caller that only checks truthiness of the return value (or logs the report
+     without checking `.success`) will believe the re-stamp worked when it did nothing.
+   - **`no_op_lock=True` masquerading as success.** If another cycle (the resumed cron itself, or a concurrent caller)
+     holds `_index/consolidator.lock` (`_LOCK_TTL_SECONDS=300` default), `consolidate()` skips the cycle and returns
+     `success=True, shards_scanned=0, no_op_lock=True, error_reason='locked'` — `success=True` here means "no error",
+     NOT "the marker was re-stamped". A caller checking only `report.success` will falsely conclude the no-op was a real
+     re-stamp.
+   - **Sanctioned fix, live-validated 2026-07-26** (`plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md` +
+     `plans/archive/2026_07/cefi_bybit_spot_manifest_remediation_2026_07_25.md` Progress Logs): don't mirror `main()`'s
+     `PubSubEventSink` bootstrap for a one-off caller — a canonical-migration VM's service account has no standing need
+     for `pubsub.topics.publish` on the `lifecycle-events` topic, so that mirror hits
+     `PermissionDenied: 403 ... pubsub.topics.publish` the first time anything actually calls it from that VM class. Use
+     `setup_events("manifest-consolidator", mode="local")` instead (no sink, no IAM dependency, `log_event()` just logs
+     locally — losing Pub/Sub-routed alerting for a one-off remediation run is a fine trade). Check
+     **`report.success AND not report.no_op_lock`** before declaring the re-stamp done, and retry the no-op-lock case
+     (it is a transient condition — the lock's 300s TTL means it either releases normally or a later attempt reclaims it
+     as stale) rather than treating it as terminal.
+     `market-tick-data-service/scripts/one_offs/ restamp_manifest_consolidator_2026_07_26.py` (Lifecycle: permanent)
+     implements both fixes plus a bounded lock-contention retry loop — reuse it via
+     `launch-canonical-migration-vm.sh manifest-restamp` (`RESTAMP_BUCKET= <bucket>`) rather than re-deriving this
+     pattern per one-off script.
+
 6. **RESUME** the cron; watch ≥2 cycles — a durable drop shows `verdict=empty, shards_changed=0, rows_added=0` and the
    row count holds. **Durability holds because `_legacy_seed` is EXCLUDED from every merge path once a canonical
    exists** (`manifest_consolidator.py:783` marker-strip branch, `:873-875` force branch; the incremental path never

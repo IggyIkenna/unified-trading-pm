@@ -390,7 +390,13 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
    counts byte-identical to the original 2026-07-07 diagnosis: 81,659 EMPTY-instrument_type + 53,785
    PERPETUAL-mislabeled rows, plus ~54K stray spot-nonsense-data_type rows (derivative_ticker/futures_chain/
    options_chain/perp_funding/liquidations — none valid for a SPOT venue). No pre-apply backup snapshot exists at either
-   expected path. The real fix (relabel + delete) has never actually been executed against production.
+   expected path. The real fix (relabel + delete) has never actually been executed against production. **RESOLVED
+   2026-07-26** — `plans/archive/2026_07/cefi_bybit_spot_manifest_remediation_2026_07_25.md` re-verified this finding
+   was still current as of 2026-07-25 (found (b) partially changed: the PERPETUAL→SPOT_PAIR gate had organically closed
+   via routine reprocessing, but the 53,934 spot-nonsense rows had not), then ran the real `--apply` against production.
+   Independently reconfirmed via `by_data_type` (only `{trades, book_snapshot_5}` remain) and
+   `measure_honest_coverage.py` (0 of the cefi-wide `stray_tuples` belong to BYBIT-SPOT). This finding is closed; the
+   2026-07-07 diagnosis doc's `status: resolved` is now genuinely accurate, not just checkbox-claimed.
 
 ### P1
 

@@ -9,7 +9,7 @@ summary:
   actually run with --apply against the real production manifest. Both scripts already exist, already target the correct
   (twice-ruled) UPPERCASE SPOT_PAIR casing, and already carry dry-run/--smoke/--apply modes with stop-on-surprise guards
   and pre-apply snapshots -- this plan is "verify state, then run the existing tools", not new development.
-status: active
+status: complete # (was: active) 2026-07-26 -- all 5 todos done, evidence-verified, archival ritual
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -52,6 +52,13 @@ superseded_by:
 ---
 
 # Run the already-built BYBIT-SPOT manifest corrective scripts against production
+
+> **✅ ARCHIVED 2026-07-26 — all 5 todos DONE, evidence-verified.** The spot-nonsense purge (53,934 rows) and the
+> PERPETUAL→SPOT_PAIR relabel gate both landed against production; `measure_honest_coverage.py` independently
+> reconfirmed BYBIT-SPOT carries zero stray tuples. This run also surfaced + fixed 4 real bugs in the
+> force-consolidate-restamp pattern (see Progress Log) -- the corrective knowledge is now captured durably in
+> `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s "Surgical ROW REMOVAL" section, not just in this plan's
+> history. See the Progress Log for the full incident + closure evidence.
 
 ## Context (read before dispatching any todo)
 
@@ -121,8 +128,8 @@ someone else, or the manifest shape may have shifted.
       side-effect of the a1 forward-path fix (`mtds@9d21b133`) + uppercase-casing fix (`mtds@60287d3e`) combined with
       routine manifest-consolidation reprocessing since 2026-07-12, not this script's `--apply` (which nobody ran -- see
       Progress Log). No operator action needed; closing on verified end-state per this todo's own Done-when wording.
-- [ ] [OPERATOR] P1. **Run the spot-nonsense manifest purge** (only if todo 1 found it still needed; independent of todo
-      2 -- disjoint row sets, but keep sequential for a clean one-mutation-at-a-time production trail).
+- [x] ✅ [OPERATOR] P1. **Run the spot-nonsense manifest purge** (only if todo 1 found it still needed; independent of
+      todo 2 -- disjoint row sets, but keep sequential for a clean one-mutation-at-a-time production trail).
       `cd     market-tick-data-service && .venv/bin/python     scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py`
       dry-run first, then `--smoke` (deletes one `perp_funding` shard row, verify), then `--apply` (snapshots first;
       refuses if `VENUE_DATA_TYPE_CAPABILITIES["BYBIT-SPOT"]` is still empty -- confirm this gate reads populated before
@@ -130,17 +137,15 @@ someone else, or the manifest shape may have shifted.
       per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. **Done when**: `by_data_type` for BYBIT-SPOT
       shows only `{trades, book_snapshot_5}`, zero rows remain under
       `derivative_ticker`/`futures_chain`/`options_chain`/ `ohlcv_1m`/`perp_funding`/`liquidations`. (repo:
-      market-tick-data-service) -- **⚠️ STILL NEEDED, AND THE SCRIPT ITSELF IS NOW STALE (found 2026-07-25, slot-6
-      data_engineering).** The 53,934-row spot-nonsense problem is byte-identical to 2026-07-07/07-10 (same 6
-      data_types, same per-type counts, still 100% `capture_status=empty_confirmed`, still 0 captured rows -- LOSSLESS
-      to delete). BUT this script's `_target_mask` hard-requires `instrument_type == ""`, and that condition no longer
-      holds: a LIVE dry-run today returns "rows to delete: 0" and then STOP-ON-SURPRISE fires ("53,934 rows ... carry
-      instrument_type != ''") because these rows now carry `instrument_type=SPOT_PAIR` (same organic cause as todo 2's
-      note above). **Before running this todo**: the script's identity filter needs a small maintenance fix -- drop or
-      relax the `instrument_type==""` guard (the real identity is
-      `venue + data_type-in-{6 nonsense types} +     capture_status=empty_confirmed + row_count=0`, not the itype value)
-      -- then dry-run/`--smoke`/`--apply` per the updated script. Do not hand-wave past the script's own
-      stop-on-surprise refusal; it is correctly protecting against exactly this kind of drift.
+      market-tick-data-service) -- **DONE 2026-07-26.** Script's stale `instrument_type==""` guard fixed
+      (mtds@87004c5b), hardened to VM-launcher parity with the GMX purge script (mtds@d5c07559,
+      deployment-service@0dd6de9). Operator paused the cefi consolidator cron and ran `--apply` via VM
+      (`canonical-migration-cefi-bybit-spot-purge-20260726-010028`). **Done-when condition independently verified
+      TWICE**: (1) the script's own post-apply `by_data_type` read showed ONLY
+      `{trades: 86,201, book_snapshot_5:     86,184}`; (2) this plan's own todo 4 re-measurement
+      (`measure_honest_coverage.py`) independently confirmed 0 of the cefi-wide `stray_tuples` belong to BYBIT-SPOT. See
+      Progress Log for the full force-consolidate incident this surfaced (4 real bugs found + fixed) and the
+      cron-resume + durability-watch closure.
 - [x] ✅ [DATA] P2. **Re-measure cefi Layer-1** (`measure_honest_coverage.py` or the current canonical entry point --
       confirm which one is live per `/codex/02-data/honest-coverage-model.md`, tooling may have moved since 2026-07-07)
       after todos 2-3 land, and confirm the BYBIT-SPOT tuple closes cleanly (matches
