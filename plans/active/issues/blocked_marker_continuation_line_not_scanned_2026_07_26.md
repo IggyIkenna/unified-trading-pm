@@ -114,9 +114,14 @@ Do NOT fix by mass-editing the ~50 existing occurrences — that's a separate, p
 be resolved) once the parser fix lands; re-derive candidates via the grep recipe above against a fresh _parse_open_todos
 read instead of hand-auditing every plan.
 
-- [ ] [BACKEND] P2. Extend `_parse_open_todos` (`server/regen_backlog_from_plan.py`) to scan a todo's full continuation
-      block for `_NON_DISPATCHABLE_RE`, not just its checkbox's own physical line, while keeping `description`/`brief`
-      derived from the checkbox line only. Add the regression test described above. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P2. Extend `_parse_open_todos` (`server/regen_backlog_from_plan.py`) to scan a todo's full
+      continuation block for `_NON_DISPATCHABLE_RE`, not just its checkbox's own physical line, while keeping
+      `description`/`brief` derived from the checkbox line only. Add the regression test described above. (repo:
+      agent-orchestrator) — agent-orchestrator@e856b56: added `_TODO_BLOCK_BOUNDARY_RE` lookahead (stops at next
+      checkbox item or header); `_NON_DISPATCHABLE_RE` now searches checkbox-line + continuation block,
+      `description`/`brief` stays checkbox-line only; regression test
+      `test_parse_skips_non_dispatchable_marker_in_continuation_text` added; full quality-gates.sh green (1758 passed, 1
+      skipped).
 - [ ] [DATA] P3. Once the P2 fix above ships, re-run the corpus grep (recipe in this doc's "What I found" section)
       against live `plans/active/*.md` and spot-check a handful of the flagged todos to confirm the new parser now
       correctly excludes them from the backlog; file any genuinely-still-open ones as a small per-AG cleanup rather than
