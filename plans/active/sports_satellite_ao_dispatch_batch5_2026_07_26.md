@@ -498,20 +498,33 @@ drift_direction: advance-code
       with a written disposition recorded (contract-fix commit sha; T2.10 outcome stated as either "0 remaining, closed
       via 2026-07-23 wipe" or "N phantom rows stripped from seed, verified by content, consolidator re-merge
       confirmed").
-- [ ] [DATA] P2. Migrate 4 ml-service files still using pre-migration odds-feature names (missed by the earlier
-      ml-service migration commits `unified-api-contracts@689efa54`/`ml-service@91f031a`, which covered only the
-      `OddsFeaturesMixin` schema/loader, not mock-data generation or target generation):
-      `ml_service/training/engine/mock_data_provider.py`, `ml_service/training/app/core/sports_target_generator.py`,
-      `tests/training/unit/test_sports_feature_loader.py`, `tests/training/unit/test_horizon_gate_shield.py`. Apply the
-      same generative naming scheme + UAC `OddsFeaturesMixin` ground-truth mapping used by the already-shipped
-      features-service migration (features-service@0ded2449/e240eca2/0ab873b3) — re-derive names from the scheme table,
-      don't hand-guess. Watch for the same f-string dynamically-built-column-name gap that bit the earlier FSS pass (a
-      quoted-literal-only search misses `f"clv_{outcome}"`-style construction) and for the same-string-different-schema
-      trap (verify which schema a given `df` actually carries before renaming a read of it — a synthetic/raw-data column
-      can coincidentally share an old feature-name string). (repo: ml-service). Source:
-      `sports_odds_feature_naming_canonicalization_2026_07_21.md`. Done when: a repo-wide grep of ml-service for any of
-      the old `ODDS_COLUMNS` names (quoted-literal AND f-string-prefix forms) returns zero hits in these 4 files, and
-      `quality-gates.sh` is green.
+- [x] ✅ [DATA] P2. **DONE 2026-07-26 (slot-10, data_engineering) — `ml-service@10e219f`.** Migrated 4 ml-service files
+      still using pre-migration odds-feature names (missed by the earlier ml-service migration commits
+      `unified-api-contracts@689efa54`/`ml-service@91f031a`, which covered only the `OddsFeaturesMixin` schema/loader,
+      not mock-data generation or target generation). Re-derived the exact 125-entry old→new mapping positionally from
+      the already-shipped `features-service@0ded2449` migration diff (ground truth, not hand-guessed), then grepped all
+      125 old names (word-boundary) across the 4 named files: - `mock_data_provider.py`: 6 genuine hits fixed in
+      `_SPORTS_FEATURE_NAMES` + the matching `X[...]` reads in `_generate_sports_training_data`
+      (`velocity_home_24h_to_6h`→`odds_velocity_home_24h_to_6h`, `velocity_home_6h_to_1h`→`odds_velocity_home_6h_to_1h`,
+      `steam_magnitude_home`→`odds_steam_magnitude_home`, `sharp_consensus_home`→`odds_consensus_home_sharp`,
+      `pinnacle_vs_market_diff_home`→`odds_movement_pinnacle_diff_home`,
+      `book_fragmentation_home`→`odds_fragmentation_home`). Left `implied_prob_home/draw/away` untouched — a different,
+      coincidental naming (word-order-reversed), not an actual `ODDS_COLUMNS` entry. - `sports_target_generator.py`:
+      **needed NO change** — an earlier, unrelated fix (`ml-service@a14985b`, a real data-leakage bug) already replaced
+      its bare CLV/velocity column names with the real `odds_`-prefixed ones; its remaining old-name mentions are
+      historical bug-documentation comments + `TARGET_TYPE` dict keys (a different namespace: target identifiers, not
+      `ODDS_COLUMNS` feature columns). - `test_horizon_gate_shield.py`: 1 genuine hit fixed (3 sites) —
+      `opening_home_odds`→`odds_opening_home` (a real pre-match-signal fixture column). -
+      `test_sports_feature_loader.py`: 8 sites fixed in `TestOddsJoinKeyCrosswalk` (`home_implied_prob`→
+      `prob_implied_home`) — incidental join-key-crosswalk placeholders, unrelated to schema-name validation.
+      **Deliberately left unchanged**: `test_naming_mismatch_raises_loudly` (lines 146+149,
+      `home_implied_prob`/`draw_implied_prob`) — this test intentionally constructs a dataframe with the OLD
+      pre-migration names to prove the schema-validation gate raises loudly on a naming mismatch; renaming them would
+      give the fixture 100% overlap with `OddsFeaturesMixin` and silently defeat the test's own purpose — the exact
+      same-string-different-schema trap this todo warned about, hit for real. No f-string dynamically-built old-name
+      construction found in any of the 4 files. Post-fix repo-wide grep of all 125 old names across the 4 files: zero
+      functional hits (only the 2 categories above — the intentional negative test + historical
+      comments/different-namespace dict keys — remain, both correctly out of scope). `quality-gates.sh` full run green.
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 
