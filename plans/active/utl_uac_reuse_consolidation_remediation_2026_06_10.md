@@ -145,6 +145,23 @@ local; one trivial LOW stub only).
     (`unified-trading-pm@1496b40f`, PR #242). Rule-11 verified: the enabled gate exits 0 across all 15 service-flavoured
     repos. REMAINING in Phase 9: edge #4 (deployment-api→deployment-service `deployments_registry`→UTL extract — does
     NOT block the gate since deployment-service is `type=infrastructure`) + the deferred raw-`import` scan extension.
+- **RECONCILED (2026-07-26, slot-11, `infra_satellite_ao_dispatch_batch1-008`)** — walked all 25 of this tracker's open
+  checkboxes against its 10 archived split children (confirmed each child has 0 open todos via
+  `grep -c -E '^\s*-\s*\[ \]'`). 24/25 were false-unchecked split residue: the work shipped under the split plans and
+  every cited sha was verified to resolve (`git show`) in the owning repo before flipping. 1/25 (Phase 8's closing
+  "remove banners + archive per the 5-step HARD RULE" todo) is **genuinely still open** — its own copy inside
+  `utl_reuse_phase8_codex_ssot_archive_2026_07_13.md` was never executed either; it was FOLDED OUT (2026-07-15,
+  plan-reconcile §6) to `plans/epics/infrastructure_master.md` § "Folded-in scope 2026-07-15", where it remains an open
+  `- [ ]` today. **Archive-readiness verdict**: this tracker's OWN remaining work is done (24/25 boxes closed, 1
+  correctly left open pending the epic-tracked archival action) — but the tracker itself is NOT ready to archive yet,
+  because (a) the Phase-0 in-flight banners are still present in all 5 epic plans (not yet removed), and (b) the closing
+  archival action lives in `infrastructure_master.md`, not here, and hasn't run. **`[unlock-plan]` ask**: this doc
+  carries `locked_by: live-defi-rollout` — per CLAUDE.md, clearing that lock needs an explicit operator `[unlock-plan]`
+  before anyone (human or agent) can archive it. Recommend the operator either (1) grant `[unlock-plan]` now and route
+  the actual banner-removal + archival execution through `infrastructure_master.md`'s already-tracked "Folded-in scope
+  2026-07-15" item, or (2) leave the lock in place until that epic-tracked item executes, whichever the operator prefers
+  — this agent did not archive or touch the lock, only reconciled the 25 checkboxes per its dispatched todo's explicit
+  scope.
 
 ---
 
@@ -200,13 +217,22 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 
 ## Phase 0 — Guardrails (do first)
 
-- [ ] [AUDIT] P0. Add the cross-plan banner `> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation**` to the 5 epic
-      plans in `related_plans`, so concurrent slots don't re-touch the same risk/auth/registry surfaces.
-- [ ] [VERIFY] P0. Snapshot pre-change behaviour: for strategy risk + ml registry + features builders, capture a
+- [x] ✅ [AUDIT] P0. Add the cross-plan banner `> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation**` to the 5 epic
+      plans in `related_plans`, so concurrent slots don't re-touch the same risk/auth/registry surfaces. — DONE via the
+      split `unified-trading-pm@d96e7b27` (Phase 0 child creation commit); re-verified 2026-07-26 (slot-11): banner
+      present in all 5 (`infrastructure_master.md`, `strategy_master.md`, `features_and_ml_master.md`,
+      `execution_master.md`, `orchestrator_master.md`). Reconciled per `utl_reuse_phase0_guardrails_2026_07_13.md`'s
+      identical todo 1.
+- [x] ✅ [VERIFY] P0. Snapshot pre-change behaviour: for strategy risk + ml registry + features builders, capture a
       golden-output fixture (one client risk eval, one inference-date model selection, one `resolve_build_order` per
-      family) so each merge is provably behaviour-preserving, not just compiling.
-- [ ] [SPEC] P0. Confirm UTL/UAC are the SSOT targets for every extension below and that no parallel old+new path is
-      left behind (CLAUDE.md "delete deprecated code").
+      family) so each merge is provably behaviour-preserving, not just compiling. — DONE `strategy-service@ffa363e`,
+      `ml-service@3f18fa0`, `features-service@35d6b3a5` (shas verified via `git show`). Reconciled per
+      `utl_reuse_phase0_guardrails_2026_07_13.md`'s identical todo 2.
+- [x] ✅ [SPEC] P0. Confirm UTL/UAC are the SSOT targets for every extension below and that no parallel old+new path is
+      left behind (CLAUDE.md "delete deprecated code"). — CONFIRMED against live code 2026-07-13 (slot 7); full
+      per-phase (1/3/4) writeup lives in `unified-trading-pm@d96e7b27`'s `utl_reuse_phase0_guardrails_2026_07_13.md`
+      body — verified accurate, two small drift items found + corrected in-plan (not left as parallel old+new paths).
+      Reconciled per that plan's identical todo 3.
 
 ## Phase 1 — strategy-service risk/HWM (finding #1, CRITICAL) — COMPOSE, do not delete
 
@@ -223,10 +249,14 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       UAC `RiskMetrics`/`RiskStatus` assembly, `assert_client_allowed`. — DONE `strategy-service@2b2e326cc`:
       `risk_metrics.py` now imports `get_threshold_status`/`compute_drawdown`/`account_equity_proxy` from
       `risk_calculator.py` instead of reimplementing.
-- [ ] [AGENT] P0. **Migrate the one genuine same-layer duplication** —
+- [x] ✅ [AGENT] P0. **Migrate the one genuine same-layer duplication** —
       `risk/v2/preflight.py:226 _run_legacy_portfolio_gates` (daily-loss / drawdown / family-cap) → UTL `RiskRule`
       registry entries (`MaxDailyLossTrigger`/`MaxDrawdownTrigger` + a family-cap trigger). After migration the legacy
       `PortfolioContext` branch reduces to the **recon-staleness** check only (explicitly NOT a RiskRule — keep local).
+      — RE-SCOPED + DONE `strategy-service@0beadebe` (sha verified via `git show`): triggers already existed in UAC;
+      family-cap is a verified NON-finding (non-overlapping taxonomy, kept local); composed (not replaced) the daily-
+      loss/drawdown registry seeds as an additional static safety-net floor. Full writeup in
+      `utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md`'s identical todo 2.
 - [x] ✅ [AGENT] P0. **Route the 6 comparison checks through UTL rules** where the gate already runs: feed
       `pre_trade_check_engine.py`'s already-computed position_size/leverage/gross/net/concentration into UTL
       `evaluate_rule` so the threshold **numbers** have one SSOT (UAC caps), not `RiskLimits` config + UAC rules
@@ -245,14 +275,23 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       leverage → can breach). **This also delivers the first slice of the P0 "dedupe twin equity helper" above** (the
       equity-proxy formula is now single-sourced).
 
-- [ ] [AGENT] P1. **Extract one local `equity_curve_drawdown()` helper** for the duplicated peak/max-drawdown loop in
+- [x] ✅ [AGENT] P1. **Extract one local `equity_curve_drawdown()` helper** for the duplicated peak/max-drawdown loop in
       `engine/core/components/pnl_monitor.py:214-222` and `engine/core/output_builders.py:153-158`. Keep it **local**
-      (do NOT route to UTL `hwm_invariants` — wrong domain). Leave fee-crystallization HWM to UTL `post_trade`.
-- [ ] [AGENT] P2. Keep `risk/core/correlation_matrix.py` (instrument NxN) as-is — UTL `family_aggregator` only gives
+      (do NOT route to UTL `hwm_invariants` — wrong domain). Leave fee-crystallization HWM to UTL `post_trade`. — DONE
+      `strategy-service@12dc136c` (sha verified via `git show`): `MetricsCalculator.equity_curve_drawdown()` added,
+      local-only, verified bit-identical via new regression tests. Full writeup in
+      `utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md`'s identical todo 5.
+- [x] ✅ [AGENT] P2. Keep `risk/core/correlation_matrix.py` (instrument NxN) as-is — UTL `family_aggregator` only gives
       **family-level pairwise** rhos, a different axis/shape. Optional local cleanup: unify the 3 local correlation
-      shapes (instrument-matrix / family-pairwise-dict / v2 nested-dict) — local typing only, not a UTL migration.
-- [ ] [VERIFY] P0. Golden risk-eval fixture from Phase 0 reproduces identically; `quality-gates.sh` green; ship via
-      quickmerge.
+      shapes (instrument-matrix / family-pairwise-dict / v2 nested-dict) — local typing only, not a UTL migration. —
+      VERIFIED NON-FINDING, no code change (pure verification; the "3 shapes" cleanup was investigated and explicitly
+      declined — zero behavioural gain). See `utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md`'s identical todo 6 for
+      the full per-shape investigation.
+- [x] ✅ [VERIFY] P0. Golden risk-eval fixture from Phase 0 reproduces identically; `quality-gates.sh` green; ship via
+      quickmerge. — VERIFIED against `strategy-service@10943bfd` (sha verified via `git show`; this was the sentinel
+      HEAD at verification time — pure verification, no code change needed). Full risk suite green (722 passed, 1
+      skipped). Full writeup in `utl_reuse_phase1_strategy_risk_hwm_2026_07_13.md`'s identical final todo — this closes
+      out Phase 1's all 6 todos.
 
 ## Phase 2 — API auth dedup (findings #2, #3, #7b)
 
@@ -284,8 +323,11 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       validation core to UTL `create_api_auth(...)`'s new legacy path; preserve the gateway-specific mock/app_state
       wiring (the only local-specific bit). — DONE `unified-trading-api@267028848`: `middleware/auth.py` delegates key
       comparison to `_utl_api_auth = create_api_auth("unified-trading-api")`, preserving `app.state.disable_auth`.
-- [ ] [VERIFY] P0. Auth smoke per repo (200 with valid **X-API-Key**, 200 with Bearer JWT / X-Service-Token, 401
-      without, DISABLE_AUTH refused in prod mode); `quality-gates.sh` green; quickmerge each.
+- [x] ✅ [VERIFY] P0. Auth smoke per repo (200 with valid **X-API-Key**, 200 with Bearer JWT / X-Service-Token, 401
+      without, DISABLE_AUTH refused in prod mode); `quality-gates.sh` green; quickmerge each. — DONE: alerting-service
+      `tests/unit/test_auth_wiring_smoke.py` (`alerting-service@6761e50`, sha verified via `git show`), unified-trading-
+      api's real-path tests (`unified-trading-api@2670288`), client-reporting-api (`client-reporting-api@9cd77cc`, 579
+      tests). Full writeup in `utl_reuse_phase2_api_auth_dedup_2026_07_13.md`'s identical final todo.
 
 ## Phase 3 — ml-service ModelRegistry (findings #4, #13) — EXTEND UTL FIRST
 
@@ -293,13 +335,18 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 > MANIFEST_PATH are **byte-identical** between local and UTL — zero reconciliation needed there. BUT local carries
 > load-bearing controls UTL lacks, and local has a latent bug UTL does not.
 
-- [ ] [AGENT] P0. **Carry into UTL `ModelRegistry` (ship UTL MINOR bump first):**
-  - [ ] `store_model` writegate — `training_completeness_fraction` param +
+- [x] ✅ [AGENT] P0. **Carry into UTL `ModelRegistry` (ship UTL MINOR bump first):** — DONE
+      `unified-trading-library@7e4f9a23` (sha verified via `git show`). Full writeup in
+      `utl_reuse_phase3_ml_model_registry_2026_07_13.md`'s identical todo 1.
+  - [x] ✅ `store_model` writegate — `training_completeness_fraction` param +
         `_check_emission_policy`/`publish_with_policy` BLOCK_CRITICAL gate (suppresses partial-coverage model writes +
-        P0 alert). Data-correctness invariant.
-  - [ ] `store_model` availability-manifest emission — `ManifestWriter.add(...).write()` with `job_id`.
-  - [ ] `load_model` joblib **trusted-prefix allowlist** (`_ALLOWED_JOBLIB_PREFIXES`) — keep UTL's `expected_sha256`
-        integrity param too (strongest combination = both).
+        P0 alert). Data-correctness invariant. — DONE `unified-trading-library@7e4f9a23`, extracted into
+        `_emission_gate()`.
+  - [x] ✅ `store_model` availability-manifest emission — `ManifestWriter.add(...).write()` with `job_id`. — DONE
+        `unified-trading-library@7e4f9a23`, via `_emit_availability_record()`.
+  - [x] ✅ `load_model` joblib **trusted-prefix allowlist** (`_ALLOWED_JOBLIB_PREFIXES`) — keep UTL's `expected_sha256`
+        integrity param too (strongest combination = both). — DONE `unified-trading-library@7e4f9a23`, enforced in
+        `_deserialize_model`.
 - [x] ✅ [AGENT] P0. **Adopt UTL's correct manifest-match** — local `get_model_metadata`/`_upsert_version` test
       `... or training_period == ""` (`:531`,`:646`) returns the WRONG version from cache; UTL's `== training_period` is
       correct. Consolidating onto UTL **fixes** this for ml-service. — DONE `ml-service@40f45d804`: deletes the local
@@ -318,8 +365,12 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 - [x] ✅ [AGENT] P1. Delete the **dead** `inference/types.py:ModelMetadata` TypedDict (no importers; the live
       `ModelMetadata` everywhere is the UTL dataclass). — DONE `ml-service@00855f64c`: removes the `ModelMetadata`
       TypedDict from `inference/types.py`; no such class exists in the repo today.
-- [ ] [VERIFY] P0. Golden inference-date selection fixture reproduces; writegate still blocks a partial-coverage write;
-      `quality-gates.sh` green for UTL + ml-service; quickmerge.
+- [x] ✅ [VERIFY] P0. Golden inference-date selection fixture reproduces; writegate still blocks a partial-coverage
+      write; `quality-gates.sh` green for UTL + ml-service; quickmerge. — VERIFIED:
+      `test_golden_get_model_for_inference_date_phase0` + UTL's `TestModelRegistryWritegate` (4 tests) all PASSED; both
+      repos' `quality-gates.sh` full-green at HEAD (`unified-trading-library@7e4f9a23`, `ml-service@35e5716c`, shas
+      verified via `git show`). Full writeup in `utl_reuse_phase3_ml_model_registry_2026_07_13.md`'s identical final
+      todo.
 
 ## Phase 4 — features-service builder_registry + calc base (finding #5)
 
@@ -339,9 +390,11 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `resolve_build_order()` → `_utl_resolve_build_order(_get_registry())`. **Do NOT blind-swap the dataclass.** — DONE
       `features-service@48895959`: `resolve_build_order()` delegates to the UTL Kahn's-sort implementation; local
       function-based `BuilderEntry` dataclass unchanged.
-- [ ] [DESIGN] P2. **sports dataclass — operator/design call**: either (a) add a UTL `FunctionBuilderEntry` sibling
+- [x] ✅ [DESIGN] P2. **sports dataclass — operator/design call**: either (a) add a UTL `FunctionBuilderEntry` sibling
       (callable + `columns` + `required_inputs` + `default_kwargs`), or (b) keep sports' local function-based dataclass.
-      Default to (b) unless a 2nd function-based consumer appears (YAGNI).
+      Default to (b) unless a 2nd function-based consumer appears (YAGNI). — DECIDED (b), no code change: confirmed
+      fleet-wide grep found no 2nd function-based consumer, so a UTL sibling would be a single-caller abstraction. Full
+      writeup in `utl_reuse_phase4_features_builder_registry_2026_07_13.md`'s identical todo 3.
 - [x] ✅ [AGENT] P2. **delta_one base.py — surgical, not wholesale**: migrate `_boxcox_transform` → UTL
       `transformations.boxcox_transform` (adapt the `1e-8` vs `+1` edge-shift) and DELETE local. Leave
       `calculate_time_since` (element-wise log/lookback), `calculate_time_to_next`, rolling `calculate_zscore`,
@@ -355,7 +408,10 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `resolve_bucket_name(kind="features-volatility", asset_group=...)` (its own sibling configs already do). — DONE
       `features-service@208516e6a`: swaps the hardcoded f-string for `config.get_output_bucket(asset_group)`, which
       wraps `resolve_bucket(kind="features-volatility", ...)`.
-- [ ] [VERIFY] P1. `resolve_build_order` golden output identical per family; `quality-gates.sh` green; quickmerge.
+- [x] ✅ [VERIFY] P1. `resolve_build_order` golden output identical per family; `quality-gates.sh` green; quickmerge. —
+      VERIFIED at `features-service@4d9a1656` (sha verified via `git show`; also the todo-1 migration commit) — mt,
+      volatility, onchain, sports all reproduce their pinned golden build order identically. Full writeup + 2026-07-14
+      correction note in `utl_reuse_phase4_features_builder_registry_2026_07_13.md`'s identical final todo.
 
 ## Phase 5 — Cloud-SDK-direct → UTL cloud_interface (findings #6, #7, #9, #12)
 
@@ -380,8 +436,11 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       through UTL `get_storage_client()`. Keep `compute_v1` + pubsub/secretmanager liveness probes. — DONE
       `deployment-api@cb16bc085`: `builds_history.py` now uses `get_storage_client(...).get_blob_metadata()`;
       `shard_detail`'s `_parquet_signed_url` uses UTL `generate_download_url()`.
-- [ ] [VERIFY] P1. Per repo: secret fetch + GCS read still work against emulator/mock; `quality-gates.sh` green;
-      quickmerge.
+- [x] ✅ [VERIFY] P1. Per repo: secret fetch + GCS read still work against emulator/mock; `quality-gates.sh` green;
+      quickmerge. — DONE `deployment-api@cb16bc0` (sha verified via `git show`; 62 targeted unit tests pass,
+      `quality-gates.sh` sentinel-verified). Other repos this phase touched (execution-service, agent-orchestrator,
+      market-tick-data-service, deployment-service) each carry their own ship-time green evidence on their todos above.
+      Full writeup in `utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13.md`'s identical final todo.
 
 ## Phase 6 — Venue-error, health router, retry helper (findings #8, #10, #11)
 
@@ -401,8 +460,10 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       onto `unified_trading_library.utils.retry`/`with_retry`. Preserve each adapter's classify-on-give-up behaviour. —
       DONE: MTDS `market-tick-data-service@adec3c30` (`base_adapter.py` imports `retry`/`retry_async` from UTL) +
       instruments-service `instruments-service@d88991d7` (`base_adapter.py` imports `with_retry_async`).
-- [ ] [VERIFY] P1. Adapter retry behaviour unchanged (mock 429 → N retries → classify); health endpoints respond;
-      `quality-gates.sh` green; quickmerge.
+- [x] ✅ [VERIFY] P1. Adapter retry behaviour unchanged (mock 429 → N retries → classify); health endpoints respond;
+      `quality-gates.sh` green; quickmerge. — DONE `instruments-service@d88991d7` (sha verified via `git show`; 17/17
+      retry tests pass) + `market-tick-data-service` 22/22 + `execution-service@348385ad` health-router tests (8 new,
+      green at ship time). Full writeup in `utl_reuse_phase6_venue_health_retry_2026_07_13.md`'s identical final todo.
 
 ## Phase 7 — LOW + lint tail (findings #14–#19)
 
@@ -518,11 +579,15 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `credentials-registry.yaml`); the `# config-bootstrap` os.environ reads left as sanctioned.
 - [x] ✅ [AGENT] P3. **greeks-service** — DONE `greeks-service@b119b5b` (QG 0). Deleted `greeks_service/events.py`
       re-export stub; the single importer now imports `log_event` from UTL directly.
-- [ ] [AGENT] P3. **strategy-service**: noqa-with-reason (or `UnifiedCloudConfig`) the un-annotated `os.environ.get` in
-      `recovery_event_helper.py:41,90` and `pnl/engine/mock_data_provider.py:38` (mirror the existing
-      `position/engine/mock_data_provider.py` noqa pattern).
-- [ ] [CODE] P2. **execution-service cross-service imports surfaced by the 2026-06-11 imports-in-fn sweep (codex ratchet
-      plan)** — two UNSANCTIONED sites were hiding behind lazy in-function imports (now carrying tracked
+- [x] ✅ [AGENT] P3. **strategy-service**: noqa-with-reason (or `UnifiedCloudConfig`) the un-annotated `os.environ.get`
+      in `recovery_event_helper.py:41,90` and `pnl/engine/mock_data_provider.py:38` (mirror the existing
+      `position/engine/mock_data_provider.py` noqa pattern). — VERIFIED STALE, no code change needed:
+      `recovery_event_helper.py` has zero `os.environ` calls today (cleared by an earlier commit predating this plan);
+      `pnl/engine/mock_data_provider.py:38` is already covered by `quality-gates.sh`'s `OS_ENV_EXCLUDE_GLOBS` (matches
+      any `engine/mock_data_provider.py`, not just `position/`'s) — confirmed by running the exact QG grep logic
+      locally, 0 hits. Full writeup in `utl_reuse_phase7_low_lint_tail_2026_07_13.md`'s identical todo 5.
+- [x] ✅ [CODE] P2. **execution-service cross-service imports surfaced by the 2026-06-11 imports-in-fn sweep (codex
+      ratchet plan)** — two UNSANCTIONED sites were hiding behind lazy in-function imports (now carrying tracked
       `# noqa: imports-inside-functions` markers): (1) `execution_service/algo_library/leg_controller_runner.py:222`
       imports `strategy_service.position.core.leg_snapshot_builder` — `strategy_service.position` is in the UAC
       `service_contract_map` **forbidden_imports** for execution-service and NOT in forbidden_exceptions (unlike the
@@ -532,13 +597,28 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `../market-tick-data-service` as a path dep (pyproject ~L124) — same no-service↔service violation class the
       MDPS/deployment-api removals fixed 2026-06-11; needs the reader surface promoted to a shared lib (UTL) or the
       manifest-read path flipped to the UAC contract + GCS. Repos: execution-service + strategy-service +
-      market-tick-data-service + unified-api-contracts.
-- [ ] [AGENT] P3. **lint ratchet tail (opportunistic, not blocking)**: in MTDS/IS/execution/deployment one-off
+      market-tick-data-service + unified-api-contracts. — DONE: (1) `leg_snapshot_builder` relocated to UTL
+      `unified-trading-library@ff387620` (sha verified), consumers repointed `strategy-service@59297fa0` +
+      `execution-service@cd65e2cd`. (2) `mtds_book_provider.py`'s reader import SANCTIONED as a tracked exception (too
+      large/risky to promote in this unit) via `unified-api-contracts@0bd81fc2` + a deprecation-ledger entry
+      (`execution_service_mtds_reader_dep`) tracking the real promotion as follow-up. Full writeup in
+      `utl_reuse_phase7_low_lint_tail_2026_07_13.md`'s identical todo 6.
+- [x] ✅ [AGENT] P3. **lint ratchet tail (opportunistic, not blocking)**: in MTDS/IS/execution/deployment one-off
       `scripts/` (~70 files), convert `from google.cloud import storage` → `get_storage_client()`, `gs://` →
       `resolve_bucket_name`, per-object `gsutil`/`gcloud` subprocess → UTL `gcs_copy/delete/describe_object`, and fix
       the banned env name `GOOGLE_CLOUD_PROJECT` → `GCP_PROJECT_ID` (`cleanup_kraken_spot_empty_confirmed.py:96`,
-      `cleanup_may4_bait_sentinels.py:117`, MTDS `cleanup_*`). These are QG-baselined; counts only go down.
-- [ ] [VERIFY] P2. `quality-gates.sh` green per touched repo; ratchet baselines decrease (never increase); quickmerge.
+      `cleanup_may4_bait_sentinels.py:117`, MTDS `cleanup_*`). These are QG-baselined; counts only go down. — PARTIAL,
+      BY DESIGN (explicitly opportunistic, not a full sweep — "counts only go down" is the bar, not zero-remaining): the
+      2 cited `GOOGLE_CLOUD_PROJECT` reads fixed (`market-tick-data-service@36614fc7`, sha verified via `git show`); the
+      rest of the ~89-file pattern-1/2/3 surface surveyed but explicitly deferred to a dedicated follow-up (recommended,
+      not filed as blocking). Full writeup + survey detail in `utl_reuse_phase7_low_lint_tail_2026_07_13.md`'s identical
+      todo 7.
+- [x] ✅ [VERIFY] P2. `quality-gates.sh` green per touched repo; ratchet baselines decrease (never increase);
+      quickmerge. — VERIFIED at `strategy-service@8db3f717` (sha verified via `git show`; sentinel HEAD at verification
+      time, pure verification). Other 8 repos this phase touched each carry their own ship-time green evidence on their
+      todos above; no ratchet-baseline regressions introduced. Full writeup in
+      `utl_reuse_phase7_low_lint_tail_2026_07_13.md`'s identical final todo — closes every todo in that plan except the
+      explicitly-opportunistic lint-ratchet tail.
 
 ## Phase 9 — Service↔service dependency violations + DEAD enforcement gate (operator sweep 2026-06-10)
 
@@ -569,7 +649,7 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `treasury_routes.py` now imports from the UTL facade + DROPPED the `[tool.uv.sources]` strategy-service path-dep +
       dep line + marked the 3 FastAPI DTOs `# CORRECT-LOCAL` (`deployment-api@0a9600a9`). Removes the service→service
       edge. Dep order: UTL→strategy-service→deployment-api; all QG exit 0.
-- [ ] [AGENT] P1. **deployment-api → deployment-service — EXTRACT the shared registry to UTL (NOT reclassification;
+- [x] ✅ [AGENT] P1. **deployment-api → deployment-service — EXTRACT the shared registry to UTL (NOT reclassification;
       corrected 2026-06-10).** The initial "reclassify deployment-service to library" idea was **wrong**:
       deployment-service genuinely IS a deployed service (has `Dockerfile` + `cloudbuild.yaml` + `buildspec.aws.yaml` +
       a live FastAPI `api/main.py` with ServiceBootstrap/uvicorn). BUT the coupling is **library-like** — the 6
@@ -579,7 +659,10 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       deployment-api (reader/dashboard). **Fix: relocate `deployments_registry.py` into UTL** (e.g.
       `unified_trading_library.deployment_registry`); both services import it from UTL — removes the service→service
       edge with no forced HTTP boundary. (Same shared-accessor-to-library pattern as the strategy NAV-functions fix.)
-      Keep deployment-service `type=service`.
+      Keep deployment-service `type=service`. — DONE `unified-trading-library@5926c6f0` (sha verified via `git show`;
+      exported at `unified_trading_library/__init__.py:695`), consumers repointed `deployment-service@b665123e` +
+      `deployment-api@a7978bc3` (shas verified). Full writeup in
+      `utl_reuse_phase9_deployment_registry_extract_2026_07_13.md`'s identical todo 3.
 - [x] ✅ [AGENT] P2. **market-data-processing-service → market-tick-data-service — DONE.** Relocated
       `databento_classifier` (825 lines, UAC-only deps) to UAC `unified_api_contracts/external/databento/` + its test
       suite (`unified-api-contracts@00a7aca9`; +15 tests for the previously-uncovered paths to hold UAC's 94% coverage
@@ -605,26 +688,41 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       service-flavour, so the gate correctly does not flag that path-dep (it is a library-like-coupling extraction, not
       a service↔service violation in the gate's terms). The stale manifest dep-edges for the 2 resolved edges were
       dropped via `fix-internal-dependency-alignment.py` (alignment: True).
-- [ ] [AGENT] P2. **DEFERRED (additive hardening) — extend `check-no-service-deps.py` to also catch a raw
+- [x] ✅ [AGENT] P2. **DEFERRED (additive hardening) — extend `check-no-service-deps.py` to also catch a raw
       `import <other_service>` in source/tests** (currently `[tool.uv.sources]` path-dep-only). Today every LIVE
       service↔service violation also carries a path dep, so the path-dep gate catches them all; this extension is
       belt-and-suspenders for a future import-without-path-dep case. Target repo: `unified-trading-pm`
       (`scripts/validation/check-no-service-deps.py`). Provenance: deferred from the P1 DEAD-GATE-FIX item
-      (utl_uac_reuse 2026-06-11) — the path + types + parser + enable shipped; only the import-level scan remains.
+      (utl_uac_reuse 2026-06-11) — the path + types + parser + enable shipped; only the import-level scan remains. —
+      DONE `unified-trading-pm@386a7325` (sha verified via `git show`): `find_raw_service_imports()` AST-walks every
+      service repo, WARN-only (not hard-fail — ~11 pre-existing/tracked hits fleet-wide would otherwise break 3 repos'
+      QG outside this plan's scope). Full writeup in `utl_reuse_phase9_deployment_registry_extract_2026_07_13.md`'s
+      identical final todo.
 
 ## Phase 8 — Codex SSOT + archive (HARD RULE)
 
-- [ ] [AUDIT] P1. Update codex for every contract this plan changes: `/codex/06-coding-standards/README.md`
+- [x] ✅ [AUDIT] P1. Update codex for every contract this plan changes: `/codex/06-coding-standards/README.md`
       (reuse-before-reimplement rule + the new UTL retry helper),
       `/codex/04-architecture/agent-orchestrator-overview.md` (cloud I/O via UTL; auth-fetch only),
       `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (strategy equity-drawdown-HWM is local +
       distinct from UTL fee-crystallization HWM — record the NON-finding so a future audit doesn't re-flag it), and the
-      ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in UTL).
+      ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in UTL). — DONE
+      `unified-trading-pm@6d454d5b7` (sha verified via `git show`): all 4 docs updated as specified, plus
+      `/codex/04-architecture/ml-service-architecture.md`'s sub-package layout. Full writeup in
+      `utl_reuse_phase8_codex_ssot_archive_2026_07_13.md`'s identical todo 1.
 - [x] ✅ [AUDIT] P1. Record the **verified NON-findings** list (greeks BSM, execution order-CB, hwm_seeds, etc.) in the
       relevant codex docs so the next reuse audit doesn't re-open them. — unified-trading-pm@6bd87af85, done via split
       plan `utl_reuse_phase8_codex_ssot_archive_2026_07_13.md`.
 - [ ] [VERIFY] P1. Remove the Phase-0 in-flight banners; run plan-hygiene + active-inventory regen; archive per the
-      5-step HARD RULE once all repos hit C5.
+      5-step HARD RULE once all repos hit C5. **GENUINELY STILL OPEN (2026-07-26, slot-11 reconciliation) — no
+      counterpart flip exists anywhere.** This exact todo's copy inside
+      `utl_reuse_phase8_codex_ssot_archive_2026_07_13.md` was itself never done — it was **FOLDED OUT** (2026-07-15,
+      plan-reconcile §6 operator ruling) to `plans/epics/infrastructure_master.md` § "Folded-in scope 2026-07-15", where
+      it is STILL an open `- [ ]` item today (verified by direct read, 2026-07-26). So the archival action has a single
+      live home (`infrastructure_master.md`), not this tracker or its split child — leaving this box open here (rather
+      than flipping it against a phantom completion) is correct; the epic's copy is the one to execute. The Phase-0
+      banners themselves ARE still present in all 5 epic plans (verified above, box 1) and have NOT been removed — that
+      half of this todo is also still outstanding.
 
 ---
 

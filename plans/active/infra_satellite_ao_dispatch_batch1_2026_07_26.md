@@ -297,11 +297,11 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`,
       `issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md`.
 
-- [ ] [DOCS] P1. **Reconcile `utl_uac_reuse_consolidation_remediation_2026_06_10.md`'s 25 open checkboxes against its 10
-      ARCHIVED split children — this is almost certainly false-unchecked split residue, not open work.** That tracker's
-      own 2026-07-13 banner says its remaining todos were carved into 10 per-phase `assigned_vm: planning` plans, that
-      the tracker "is no longer AO-ingestible", that nobody should "dispatch work from here directly", and that it
-      should be archived "once every split plan reaches C5". Measured 2026-07-26: all 10 children now live under
+- [x] ✅ [DOCS] P1. **Reconcile `utl_uac_reuse_consolidation_remediation_2026_06_10.md`'s 25 open checkboxes against its
+      10 ARCHIVED split children — this is almost certainly false-unchecked split residue, not open work.** That
+      tracker's own 2026-07-13 banner says its remaining todos were carved into 10 per-phase `assigned_vm: planning`
+      plans, that the tracker "is no longer AO-ingestible", that nobody should "dispatch work from here directly", and
+      that it should be archived "once every split plan reaches C5". Measured 2026-07-26: all 10 children now live under
       `plans/archive/2026_07/utl_reuse_phase{0..9}_*_2026_07_13.md` and **every one has 0 open todos**
       (`grep -c -E '^\s*-\s*\[ \]'` → 0 on all ten). Spot-verified the hardest case: the tracker still shows Phase 9's
       `deployment-api → deployment-service — EXTRACT the shared registry to UTL` as `- [ ]`, while the archived
@@ -315,7 +315,12 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       `[unlock-plan]` from the operator (ASK, never autonomous). **Done when**: every one of the 25 boxes is either
       flipped with a verified sha or explicitly recorded as genuinely-still-open with a reason, and the tracker's
       Progress Log states an archive-readiness verdict plus the `[unlock-plan]` ask. Repo: unified-trading-pm. Source:
-      `utl_uac_reuse_consolidation_remediation_2026_06_10.md`.
+      `utl_uac_reuse_consolidation_remediation_2026_06_10.md`. — DONE (2026-07-26, slot-11): walked all 25 boxes against
+      the 10 archived children; 24/25 were false-unchecked split residue (each shipped sha verified via `git show`
+      before flipping) and 1/25 (Phase 8's closing archival todo) is genuinely still open — its own split-child copy was
+      FOLDED OUT to `plans/epics/infrastructure_master.md` § "Folded-in scope 2026-07-15", which still carries it as an
+      open item today. Tracker's Progress Log now states the archive-readiness verdict + the `[unlock-plan]` ask
+      (tracker NOT archived — lock untouched, per instruction).
 
 - [ ] [CODE] P3. **Fix the execution-service `service_name` manifest drift.** `results/save_operations.py` writes
       `"execution-service"` but `cli/backtest.py` writes `"execution-services"` (plural) — one producer must emit one
