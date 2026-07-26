@@ -212,11 +212,14 @@ stays a pointer until the operator resolves at least one of the 4 gates.
 
 **Sources**: `mvp_scope_catalogue_tagging_2026_06_08.md` (5/7 phase items + all 3 config-versioning items shipped; open:
 features/strategy MVP rules+consumer [AO-eligible], models MVP taxonomy [BLOCKED-OPERATOR-DECISION], a real-data
-MVP-toggle denominator re-verify [AO-eligible]) + `manifest_consolidator_dtype_at_source_fix_2026_07_07.md` (**[IN
-FLIGHT 2026-07-25]** — DuckDB write-path dtype-loss bug, flipping draft→active and fixing now).
+MVP-toggle denominator re-verify [AO-eligible]) +
+[manifest_consolidator_dtype_at_source_fix_2026_07_07.md](/plans/archive/2026_07/manifest_consolidator_dtype_at_source_fix_2026_07_07.md)
+(**RESOLVED + ARCHIVED 2026-07-25** — was: "[IN FLIGHT 2026-07-25]"; DuckDB write-path dtype-loss bug, fix already
+shipped `unified-trading-library@02fc4661`, verified live against both previously-poisoned buckets, both todos done).
 
-**Close-out criterion**: both docs' AO-eligible residuals shipped; the models-MVP-taxonomy item stays parked pending an
-operator ruling.
+**Close-out criterion**: `mvp_scope_catalogue_tagging_2026_06_08.md`'s AO-eligible residuals shipped (the
+manifest-consolidator doc is fully closed, no longer a close-out blocker); the models-MVP-taxonomy item stays parked
+pending an operator ruling.
 
 ## Track 5 — GCS bucket-estate structural fold (Wave-3) · P1
 

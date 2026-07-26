@@ -237,10 +237,12 @@ current work.
   Workstream B's own header + Phase 0-3 in `prediction_capture_incident_remediation_2026_07_06.md`, and the sibling plan
   itself, contain no ownership-gating statement anywhere in their bodies)). References issue
   `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
-- **is-daily-enum capture heal + consolidator fix — AO-ready (2026-07-07; born draft):**
-  is_daily_enum_capture_heal_2026_07_07.md (exc_info fix → real diagnosis → fix → backfill; one sequential thread) +
-  manifest_consolidator_dtype_at_source_fix_2026_07_07.md (independent, different repo — parallel). Both split from
-  prediction_capture_incident_remediation's Workstream A; flip to `active` once AO updates land. References issue
+- **is-daily-enum capture heal + consolidator fix — split 2026-07-07:** is_daily_enum_capture_heal_2026_07_07.md
+  (exc_info fix → real diagnosis → fix → backfill; one sequential thread; still `status: draft`, AO-ready, flip to
+  `active` once AO updates land) +
+  [manifest_consolidator_dtype_at_source_fix_2026_07_07.md](/plans/archive/2026_07/manifest_consolidator_dtype_at_source_fix_2026_07_07.md)
+  — **(ARCHIVED 2026-07-25 — RESOLVED, both todos done, fix already shipped `unified-trading-library@02fc4661`, no
+  longer AO-ready/pending)**. Both split from prediction_capture_incident_remediation's Workstream A. References issue
   `issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`.
 
 ### Library Consolidation
