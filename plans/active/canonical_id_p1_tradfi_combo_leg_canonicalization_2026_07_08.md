@@ -167,7 +167,10 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
 - [ ] [SCRIPT] P2. (NEW, filed 2026-07-09) **Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing
       combo builders** (`cefi/deribit_combo_adapter.py`, `cefi/tardis/combos.py`) — the operator spec (2026-07-09)
       explicitly made this cross-asset-group, not TradFi-only. Not attempted in this pass (untouched by this commit's
-      diff; needs fresh investigation of those adapters).
+      diff; needs fresh investigation of those adapters). **NOTE (na-eligibility-audit 2026-07-27)**: this exact item is
+      already claimed as `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 5th todo (`status: active`,
+      `assigned_vm: planning`, cites this doc as its Source) — still open there too as of this audit. Not reclassified
+      independently; this checkbox stays open until that batch's todo lands and its finalize twin flips it here.
 - [x] ✅ [SCRIPT] P3. **DONE 2026-07-26 (slot-10, data_engineering)** — Extended UAC's `build_leg()` with an opt-in
       `include_venue: bool = True` parameter (`unified-api-contracts@e1023c80`) and migrated all 3 TradFi combo-leg call
       sites (`instruments-service@de870864`) to it, deleting the local `_build_leg_key()` helper. Full detail:

@@ -204,6 +204,10 @@ drift_direction: advance-code
       coverage against that manifest verification, not as a never-ingested gap. Until fully backfilled, the manifest
       must still show not-yet-covered cells as MISSING/`attempted_unattempted`, never `empty_confirmed` (CF-11).
       **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      **NOTE (na-eligibility-audit 2026-07-27)**: this exact manifest-verify item is already claimed (combined with the
+      base-library.sh sentinel item above, before that one was found separately resolved) in
+      `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (`status: active`, `assigned_vm: planning`, line ~263). Not
+      reclassified independently — see that plan for live dispatch status.
 
 - [ ] [CODE] P1. ⑦ tradfi could-exist denominator seed — build the `--catalog-path` parquet from the tradfi IS catalog
       (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
@@ -393,13 +397,13 @@ per MTDS consolidation ruling.)**
       adapter/`classify_venue_error`/`ADAPTER_FETCH_FAILED` patterns). **DEFERRED** until Phase 5 wiring. **(MIGRATED
       FROM: `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [SCRIPT] P2. **DEFERRED — PM-template gap: `base-library.sh` QG writes `.qg_content_sentinel` but `quickmerge.sh`
-      `--agent` fast-path (STAGE 3) verifies `.qg_last_passed_sha`** — so the agent quickmerge fast-path is structurally
-      unsatisfiable for **library** repos (UAC), whereas `base-service.sh` writes the sha sentinel. Worked around here
-      by writing `.qg_last_passed_sha` after a verified-green UAC QG. Fix: have `base-library.sh` also write
-      `.qg_last_passed_sha` on a complete green run (mirror base-service), then roll out via
-      `rollout-workflow-templates`/the QG-base propagation. Provenance: UAC quickmerge 2026-06-09 STAGE 3 block. Target
-      repo: `unified-trading-pm` (`scripts/quality-gates-base/base-library.sh`). **(MIGRATED FROM:
+- [x] ✅ [SCRIPT] P2. **CLOSED 2026-07-27 (na-eligibility-audit) — checkbox was stale, this doc's OWN "Deferred work —
+      migrated to:" section below already confirmed it resolved.** PM-template gap: `base-library.sh` QG writes
+      `.qg_content_sentinel` but `quickmerge.sh` `--agent` fast-path (STAGE 3) verifies `.qg_last_passed_sha` — so the
+      agent quickmerge fast-path was structurally unsatisfiable for **library** repos (UAC), whereas `base-service.sh`
+      writes the sha sentinel. Fix landed separately: `scripts/quality-gates-base/base-library.sh` now writes
+      `.qg_last_passed_sha` on a complete green run too (see the "SENTINEL CONTRACT (parity with base-service.sh, WS-L
+      #1014)" block, ~line 1467-1484, this file). No further code action required. **(MIGRATED FROM:
       `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 ## Deferred work — migrated to:

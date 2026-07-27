@@ -199,12 +199,15 @@ source:
       mtds-backfill BASE_CLI when set; `launch-mtds-backfill-vm.sh` (+`_tradfi-ohlcv-launcher-lib.sh`) stamp the
       metadata (opt-in/default-off). CLI flag itself is free via ServiceCLI (no per-CLI change needed — the driver ship
       provides it to MTDS **and** IS). (repos: deployment-service, market-tick-data-service, instruments-service)
-- [ ] [INFRA] P2. **~~Collapse `mtds_chunk_loop.sh`~~ — SUPERSEDED by a safer refinement (2026-07-18).** The 7-day chunk
-      is a **deliberate** per-IP-429/memory-bound safety (`setup-data-pipeline-vm.sh:~L1276` comment), so collapsing it
-      is risky. Instead the shipped path adds date-concurrency **within** each chunk via `--batch-date-concurrency`
-      (each request is still a 1-day span, just more in flight, bounded by the Databento semaphore) + tunes chunk width
-      via `--chunk-size`. A full single-process collapse remains optional future work if the measurement shows chunk
-      cold-start is a material fraction. (repo: deployment-service)
+- [x] ✅ [INFRA] P2. **CLOSED 2026-07-27 (na-eligibility-audit) — ~~Collapse `mtds_chunk_loop.sh`~~ SUPERSEDED by a
+      safer refinement (2026-07-18), nothing left to dispatch.** The 7-day chunk is a **deliberate** per-IP-429/
+      memory-bound safety (`setup-data-pipeline-vm.sh:~L1276` comment), so collapsing it is risky. The shipped path
+      instead adds date-concurrency **within** each chunk via `--batch-date-concurrency` (each request is still a 1-day
+      span, just more in flight, bounded by the Databento semaphore) + tunes chunk width via `--chunk-size`. The
+      remaining "full single-process collapse" is explicitly conditional ("optional future work IF measurement shows
+      chunk cold-start is a material fraction") — a stretch marker, not a committed open task; closing rather than
+      leaving it open indefinitely. Re-open as a fresh, precisely-scoped todo if that measurement ever actually shows
+      the condition. (repo: deployment-service)
 - [x] ✅ [INFRA] P0. **Equity OHLCV launchers re-sharded by (ticker-group × year) — SHIPPED
       deployment-service@d85d06e.** Equity — not CME — was the binding constraint on the tradfi MVP backfill ETA:
       `launch-tradfi-bf-{nasdaq,nyse}` created ONE VM PER YEAR carrying ALL ~622 tickers, so 207,856 equity cells (46%
@@ -327,7 +330,11 @@ source:
       re-pay the full per-date overhead over the same 1,193 dates — 5× the compute for ~1.0–1.2× the speed. Replace
       `ohlcv_split_ticker_groups` fan-out with N contiguous DATE slices per venue (all tickers per VM): equity critical
       path 7.1 h → 1.2 h and equity compute 231 → 46 VM-h. Keep the ticker-group code path behind a flag for the
-      pathological case (a single VM exceeding memory on the full universe). (repo: deployment-service)
+      pathological case (a single VM exceeding memory on the full universe). (repo: deployment-service) — **NOTE
+      (na-eligibility-audit 2026-07-27)**: this exact item (and the CME re-measure item below) is already claimed,
+      combined into one todo, in `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` (`status: active`,
+      `assigned_vm: planning`, line ~202), whose own "Done when" clause flips both checkboxes here once that todo lands.
+      Do NOT dispatch/reclassify this item independently — it would duplicate live work already queued.
 - [x] ✅ [INFRA] P1. **Raise `OHLCV_FLEET_CONCURRENCY_CAP` 60 → 150 and default `TRADFI_OHLCV_MACHINE=e2-highmem-16`.**
       The corrected ETA is THROUGHPUT-bound (~999 VM-h against a cap of 60), not critical-path-bound, so the cap is the
       single highest-leverage knob: 60 → 150 takes expected ~22 h → ~9 h. Safe for the same reason `d85d06e` gave for 20
@@ -339,7 +346,8 @@ source:
       CT).** CME is 76% of total backfill VM-hours but is anchored on only two run.logs whose per-date costs differ 26×
       (CL 2.59 min/date vs SI 0.10). This is the single measurement that collapses the 15–30 h ETA band to ~±15%. Read
       it from existing `vm-logs/tradfi-bf-cme-ohlcv-1m-<root>-<year>-*/run.log` — no new VM launch required. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — **NOTE (na-eligibility-audit 2026-07-27)**: already claimed alongside the item above in
+      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s combined todo — see that note; not reclassified here.
 
 ## Codex SSOTs (read before touching this workstream)
 
@@ -348,6 +356,12 @@ source:
 `tradfi_consolidated_closeout_2026_07_18.md` (not duplicated here).
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-27**: KEEP-NA, stale items — closed 1 (`mtds_chunk_loop.sh` collapse, superseded); 2
+  items (date-range re-shard, CME re-measure) confirmed already claimed via
+  `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, noted inline, not reclassified (would duplicate live dispatched
+  work). Remaining open items are genuinely NA (bundle-into-fewer-VMs design call, vendor-discovery-floor
+  reclassification, OOM/consolidator monitor cross-doc tracking).
 
 > **Moved verbatim from the parent's Progress Log (2026-07-24 line-cap split)** — this is the download/backfill-
 > throughput slice of the parent's single continuous autonomous-session narrative (ticks 14, 16, 22, the tick-26 ETA

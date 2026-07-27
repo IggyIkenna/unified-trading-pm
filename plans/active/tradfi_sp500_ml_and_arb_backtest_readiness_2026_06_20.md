@@ -141,17 +141,16 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       for TRADFI, or a direct-ohlcv read path. Named successor: this item, or a new features-service PR once MDPS gap
       resolution is decided. (Provenance: slot-23 investigation 2026-06-24.)
 
-- [ ] [AGENT] P2. **DEFERRED: CBOE VIX cash index gap** — `compute_vix_features()` in `vix_calculator.py` is NOT
-      imported anywhere in service non-test code (wiring gap similar to realized_vol). Additionally, VIX cash index
-      (^VIX) is NOT in TRADFI IS catalog (only CME venue). CLAUDE.md: VIX 15m sourced from Barchart preload + Yahoo
-      rolling 60d. Wiring `compute_vix_features()` requires: (1) add VIX IS entry or a special-case static instrument,
-      (2) add a Yahoo/Barchart VIX OHLCV load path to `data_loader.py`, (3) add `"realized_vol_vix"` or `"vix"` to
-      `FEATURE_GROUPS`, (4) dispatch in `feature_group_service._calculate_features`. (was: "an operator decision was
-      needed on routing VIX through the existing Barchart/Yahoo MTDS path or a new VIX-specific data source" — that
-      decision has since been made, see next.) **RESOLVED by prior operator ruling 2026-06-23** — VIX cash index DELETED
-      entirely; VIX exposure = VX futures via XCBF.PITCH. See tradfi_multisource_backfill_2026_06_22.md §VIX. Synced per
-      plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 304). (Provenance: slot-23
-      investigation 2026-06-24.)
+- [x] ✅ [AGENT] P2. **CLOSED 2026-07-27 (na-eligibility-audit) — fully superseded, merged into the successor item
+      below.** DEFERRED: CBOE VIX cash index gap — `compute_vix_features()` in `vix_calculator.py` is NOT imported
+      anywhere in service non-test code (wiring gap similar to realized_vol). Additionally, VIX cash index (^VIX) is NOT
+      in TRADFI IS catalog (only CME venue). CLAUDE.md: VIX 15m sourced from Barchart preload + Yahoo rolling 60d.
+      **RESOLVED by prior operator ruling 2026-06-23** — VIX cash index DELETED entirely; VIX exposure = VX futures via
+      XCBF.PITCH. See tradfi_multisource_backfill_2026_06_22.md §VIX. Synced per
+      plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 304). Steps (1)/(2) of the
+      original ask are void (no such VIX-index series exists — deleted 2026-06-23); the only live remainder (steps
+      (3)/(4)) is carried forward verbatim in the next item, so this one closes rather than sitting open alongside its
+      own successor. (Provenance: slot-23 investigation 2026-06-24.)
 - [ ] [AGENT] P2. **Live sub-todo under the resolved VIX ruling above** — steps (1)/(2) in the item above now target the
       existing VX futures_chain IS entry (CBOE venue, XCBF.PITCH, already captured per
       `tradfi_multisource_backfill_2026_06_22.md`) instead of a VIX cash-index IS entry / Yahoo-Barchart VIX-index OHLCV
