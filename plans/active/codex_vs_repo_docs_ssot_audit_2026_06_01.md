@@ -262,7 +262,23 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       (+`CONFIGURATION`/`ERROR_HANDLING`/`SCHEMA_VALIDATION` carry retired `{category}` vocab; +`specs/README` DELETE;
       +root `README` archived-mirror FIX-STALE). 5 DELETE · 7 FIX-STALE · 3 REDIRECT (all codex targets VERIFIED-EXIST)
       · no MIGRATE. Apply stays Phase-3/4.
-- [ ] [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`, `codex/02-venues`.
+- [x] ✅ [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`,
+      `codex/02-venues`. **AUDIT VERIFIED + FIX-STALE APPLIED 2026-07-27** (Appendix-A `execution-service (20)` registry
+      HOLDS, ground-truthed vs live code): pass-1 FIX-STALE already landed @`4b0ea42f` (ARCHITECTURE bucket literals
+      env-tiered `execution-store-{ag}-{env}-{project_id}` ✓; README py3.13-canonical ✓). Applied the
+      operator-hold-PERMITTED residual FIX-STALE only: 2 archived-mirror `unified-trading-codex/` refs → verified-live
+      `../../unified-trading-pm/codex/` (`06-coding-standards/integration-testing-layers.md` in `docs/TESTING.md`;
+      `08-workflows/t1-batch-dag.md` in `docs/GCS_PATHS.md` — both VERIFIED-EXIST) + 1 dangling deploy-spec ref (dead
+      `docs/SHARDING_GUIDE.md`+`docs/SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md` → live `docs/DEPLOYMENT_GUIDE.md`, in
+      `docs/`+`specs/BACKTEST_DEPLOYMENT.md`) — **execution-service@`0c6a93e1`** (QG-green sentinel c4fbb495).
+      Sonnet-scoped mechanical sweep (plan §"Execution model" permits sonnet ONLY for FIX-STALE literal sweeps). Held to
+      Phase-3/4 (operator FIX-STALE-only hold + opus-gated): DELETE
+      `UNIFIED_BATCH_LIVE_ARCHITECTURE`/`CLEAN_ALGORITHM_INTERFACE_DESIGN`/`DEFI_INTEGRATION_TODO` (the 3 residual
+      `batch-live-symmetry.md` mirror refs left in-place inside the slated-for-deletion
+      `UNIFIED_BATCH_LIVE_ARCHITECTURE` — live equiv is `/codex/04-architecture/batch-live-architecture.md`); REDIRECT
+      `GCS_PATHS`/`ROUTING_MATRIX`/`CONFIGURATION`/`ERROR_HANDLING`/`DEPLOYMENT_GUIDE`. no MIGRATE
+      (codex/04-architecture already holds the execution-arch SSOTs; codex/02-venues exists w/
+      venue-registry-reference).
 - [x] ✅ [DOCS] P0. **instruments-service** (19→13) — IS→MTDS contract/path docs vs `codex/04-architecture`,
       `codex/02-data`. **AUDIT REFRESHED 2026-07-27** (read-only via opus sub-agent; registry in **Appendix B** below,
       SUPERSEDES the stale Appendix-A `(19)` entry). Repo drifted hard from Appendix-A: `specs/` dir GONE (consolidated
