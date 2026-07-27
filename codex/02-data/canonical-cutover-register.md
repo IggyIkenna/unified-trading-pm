@@ -324,19 +324,24 @@ Two further sports facts a reconciliation pass needs, both from the Phase-0 audi
 ## §6a — Axis: features data-at-rest `by_date/day=` root (R1, 2026-07-21)
 
 **Target ruled: 2026-07-21** (operator R1) — every features data-at-rest tree MUST carry the `by_date/day=` level. This
-RATIFIES the UTL paths registry, which already declares it. **In force at the writer: NOT YET → effective-from for
-classification is UNKNOWN.**
+RATIFIES the UTL paths registry, which already declares it. **In force at the writer: 2026-07-21 →
+`features-service@57f8b45d`. Historical migration EXECUTED 2026-07-27 (304/304 legacy `delta_one` CEFI objects
+twin-verified-deleted; volatility had zero legacy objects). Effective-from for classification: 2026-07-21.**
 
-| Kind             | Registry SSOT (already canonical)                                 | Live writer today                                                                                         | State               |
-| ---------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------- |
-| delta_one (cefi) | `registry.py:57` `delta_one/by_date/day=…`                        | ❌ `delta_one/day=…` — NO `by_date/` (`feature_writer.py:132-136` prefix `"delta_one"`; probe `:793-796`) | `migration_pending` |
-| volatility       | `registry.py:90` `volatility/by_date/day=…`                       | ❌ **bucket root** — `get_data_sink` with NO `prefix=` (`volatility/core/feature_writer.py:152-155`)      | `migration_pending` |
-| onchain (defi)   | `registry.py:74` `onchain/by_date/day=…`                          | ✅ `onchain/adapters/onchain_writer.py:62` already `by_date/day=` (verify-only)                           | canonical (verify)  |
-| sports           | writer `sports/data/writer.py:26` `sports_features/by_date/day=…` | ✅ already `by_date/day=` (verify `feature_versioning.py:57` prefix `"by_date"`)                          | canonical (verify)  |
+| Kind             | Registry SSOT (already canonical)                                 | Live writer today                                                                                                                                           | State                                 |
+| ---------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| delta_one (cefi) | `registry.py:57` `delta_one/by_date/day=…`                        | ✅ `delta_one/by_date/day=…` (`feature_writer.py:132-136` prefix `"delta_one/by_date"`; probe `:793-796` updated in lockstep) — `features-service@57f8b45d` | canonical (migrated)                  |
+| volatility       | `registry.py:90` `volatility/by_date/day=…`                       | ✅ `volatility/by_date/day=…` (`volatility/core/feature_writer.py:152-155` `prefix="volatility/by_date"`) — `features-service@57f8b45d`                     | canonical (no legacy objects existed) |
+| onchain (defi)   | `registry.py:74` `onchain/by_date/day=…`                          | ✅ `onchain/adapters/onchain_writer.py:62` already `by_date/day=` (verify-only)                                                                             | canonical (verify)                    |
+| sports           | writer `sports/data/writer.py:26` `sports_features/by_date/day=…` | ✅ already `by_date/day=` (verify `feature_versioning.py:57` prefix `"by_date"`)                                                                            | canonical (verify)                    |
 
-Until the delta_one + volatility writers ship the `by_date/` prefix, their existing objects are `migration_pending`
-(written before the ruling), NOT a regression. Fix + migration:
-[`../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md`](../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md).
+Cutover EXECUTED. Historical `delta_one/day=…` (CEFI) legacy objects were twin-verified-deleted 304/304 (0 skipped) —
+TRADFI delta_one and volatility (CEFI+TRADFI) had zero legacy objects to begin with. **Post-migration probe
+2026-07-27**: `gcloud storage ls` on `delta_one/day=`, `volatility/`, and bucket-root `day=` in
+`features-cefi-prd-central-element-323112` all return zero matches; `delta_one/by_date/day=…/` is populated and live.
+Full detail:
+[`../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md`](../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md)
+(todos 1-8, all closed). Non-canonical-path-inventory row #17 retired in lockstep.
 
 ---
 
