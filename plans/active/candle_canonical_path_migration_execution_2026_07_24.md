@@ -163,27 +163,39 @@ and final verify/reconcile.
       enumerated object got exactly one disposition or the run aborts loudly):
 
       | Asset group    |  Total objects |   MIGRATE | SPLIT_BRAIN_DUPLICATE | QUARANTINE_CORRUPT | EMPTY_STEM (w/wo underlying) | NEEDS_CONTENT_ITYPE | NEEDS_CONTENT_TRADFI_ID | CANONICAL_NOOP | ORPHAN |
-          | -------------- | -------------: | --------: | ---------------------: | ------------------: | ---------------------------: | -------------------: | ----------------------: | --------------: | -----: |
-          | defi           |      1,124,849 | 1,123,407 |         (folded into MIGRATE) |               1,442 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
-          | prediction     |      1,165,459 |         1 |              1,165,458 |                   0 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
-          | cefi           |        940,606 |        10 |                804,670 |             130,906 |                2,576 / 2,198 |                  238 |                       0 |               8 |      0 |
-          | tradfi         |      7,646,831 |         0 |                724,214 |                   0 |              428,792 / 6,780 |                    0 |               6,487,045 |               0 |      0 |
-          | **TOTAL**      | **10,877,745** |         — |                      — |                   — |                            — |                    — |                       — |               — |      0 |
+              | -------------- | -------------: | --------: | ---------------------: | ------------------: | ---------------------------: | -------------------: | ----------------------: | --------------: | -----: |
+              | defi           |      1,124,849 | 1,123,407 |         (folded into MIGRATE) |               1,442 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
+              | prediction     |      1,165,459 |         1 |              1,165,458 |                   0 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
+              | cefi           |        940,606 |        10 |                804,670 |             130,906 |                2,576 / 2,198 |                  238 |                       0 |               8 |      0 |
+              | tradfi         |      7,646,831 |         0 |                724,214 |                   0 |              428,792 / 6,780 |                    0 |               6,487,045 |               0 |      0 |
+              | **TOTAL**      | **10,877,745** |         — |                      — |                   — |                            — |                    — |                       — |               — |      0 |
 
-          Evidence: each VM's `run.log` at
-          `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-{cat}-candle-census-<ts>/run.log` +
-          staged mapping TSVs at
-          `gs://deployment-scripts-central-element-323112/canonical-migration-candle-census/<ts>/canonical-migration-{cat}-candle-census-<ts>/mappings/`.
-          This satisfies the todo's own ask exactly: precise per-AG object count (replacing the ±2-3x in-session estimate),
-          dup-shape breakdown (`pipeline_mode=` vs naked `timeframe=` split-brain counts per AG), and empty-stem inventory
-          (with/without `underlying=`) — all measured, not estimated. No re-run needed; re-launching 4 more Tier-2 census
-          VMs against an unchanged corpus would be pure duplicate cost. Follow-up findings from that census (cefi's
-          anomalous 13.9% QUARANTINE_CORRUPT rate, the unregistered `pipeline_mode=batch_hyperliquid_rest` value) were
-          filed as that doc's own todos 17/18 — not re-filed here.
+              Evidence: each VM's `run.log` at
+              `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-{cat}-candle-census-<ts>/run.log` +
+              staged mapping TSVs at
+              `gs://deployment-scripts-central-element-323112/canonical-migration-candle-census/<ts>/canonical-migration-{cat}-candle-census-<ts>/mappings/`.
+              This satisfies the todo's own ask exactly: precise per-AG object count (replacing the ±2-3x in-session estimate),
+              dup-shape breakdown (`pipeline_mode=` vs naked `timeframe=` split-brain counts per AG), and empty-stem inventory
+              (with/without `underlying=`) — all measured, not estimated. No re-run needed; re-launching 4 more Tier-2 census
+              VMs against an unchanged corpus would be pure duplicate cost. Follow-up findings from that census (cefi's
+              anomalous 13.9% QUARANTINE_CORRUPT rate, the unregistered `pipeline_mode=batch_hyperliquid_rest` value) were
+              filed as that doc's own todos 17/18 — not re-filed here.
 
-- [ ] 5. [SCRIPT] P0. Build the migration executor (P5): clone
-      `market-tick-data-service/scripts/migrate_tradfi_canonical_2026_07.py` — idempotent, sharded,
-      enumeration-file-driven, `--apply`-gated, PROGRESS.json checkpointed.
+- [x] ✅ 5. [SCRIPT] P0. **VERIFIED 2026-07-27 (slot-10)**: another duplicate of already-shipped work (5 of the first 5
+      dispatched todos on this plan — 2,3,4,5 — now all confirmed already-completed; only todo 1, the tarball rebuild,
+      was genuinely new work). `market-data-processing-service@6ce1a25` ("feat(migration): P5 candle-canonical backward
+      migration executor (dry-run default, --apply gated)") shipped `scripts/migrate_candle_canonical_2026_07.py` (1033
+      lines) + `tests/.../test_migrate_candle_canonical_2026_07.py` (469 lines), confirmed still an ancestor of current
+      LDR tip (`git merge-base --is-ancestor 6ce1a25 HEAD`). Direct read of the shipped file confirms every property
+      this todo asks for: dry-run default / `--apply`-gated destructive path; idempotent copy→verify→delete (skip-copy
+      if target already verified-present, safe for concurrent/retried runs); sharded (`--shard-of`/ `--shard-index`,
+      applied only to the classify pass + `--apply`'s execution loop, never to index construction — documented as
+      load-bearing, not an oversight); enumeration-file-driven (`--enumeration <file>`, a physical pre-listed object
+      file, never a live re-walk); its own content-hashed checkpoint mechanism for VM resume
+      (`enumeration_signature`-fingerprinted, explicitly distinct from — but functionally equivalent to — the
+      workspace's generic day-frontier `PROGRESS.json`). Matches the sibling doc's Progress Log ("P5 migration executor
+      shipped `mdps@6ce1a25`, 951 lines + 23 tests — a 3-lens adversarial review caught a CRITICAL pre-prod bug...
+      before any real object was touched"). No code change needed.
 - [ ] 6. [SCRIPT] P0. Implement the path transform in the executor: backward-add `instrument_type=` via
       `build_canonical_candle_path`, keep SOURCE `data_type` (no re-aggregation), tf-normalise where needed,
       `pipeline_mode=` insert where missing.
