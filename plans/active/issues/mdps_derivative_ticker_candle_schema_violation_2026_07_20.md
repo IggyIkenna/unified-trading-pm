@@ -180,8 +180,17 @@ Two candidate fixes: (A) MDPS passes the AGGREGATED key `mdps_data_type_key(src,
 dimension (aligns validation with the manifest key + registered contract); (B) UAC also registers the nullable candle
 contract under the SOURCE key as an alias. The workflow chooses + verifies before any code change.
 
-- [ ] 2. [DATA] P0. Make a run whose every write failed EXIT NON-ZERO (and fix the `N success / 0 failed` summary to
-      count _written_, not _processed_). Today a 100%-failed shard reports `rc=0` + "20 success".
+- [x] 2. ✅ [DATA] P0. DONE — mdps@0b513c0. Root cause: `_process_all_timeframes` discarded `_write_candles`' return
+      value, so a `StreamingParquetWriter` schema-violation write failure (caught + swallowed inside `_write_candles`,
+      returning `None`) was still counted as a processed/successful timeframe. Fix: a `None` write result now routes to
+      the `errors` list instead of `processed_timeframes`/`total_candles`, which flows through
+      `_run_adapter_and_write`'s `success` computation into `ProcessingResult.success=False` → `ProcessingStatus.FAILED`
+      → `tracker.summary.total_failed` → the pre-existing non-zero exit-code path in `process_handler.py` (no separate
+      exit-code change needed — fixing the counter was sufficient). Extracted the per-timeframe write/record-empty
+      branch into `_write_or_record_empty_timeframe` to keep `_process_all_timeframes` under the C901 complexity cap. 2
+      new regression tests (`TestProcessAllTimeframesWriteFailureNotCountedAsSuccess`,
+      `TestRunAdapterAndWriteAllWritesFailedMarksFailure`) + 3 existing tests fixed (they asserted a `None` write result
+      was fine — that assertion codified the bug). Full QG green (2220 passed, 86.97% coverage).
 - [ ] 3. [DATA] P1. Sweep the OTHER candle data_types for the same class of contract drift before the backfill
       (`trades`, `book_snapshot_5`, `liquidations`, `options_chain`, `futures_chain`, the DeFi set). A scoped
       `/data-pipeline-check-mdps --legs force --require-captured --auto-day` per data_type is exactly the tool.
