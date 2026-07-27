@@ -403,7 +403,7 @@ handling. So every prediction "trades" file goes through the CeFi base class's c
 ### Real raw schema pulled directly from GCS (not assumed from the docstring)
 
 Bucket `market-data-tick-pred-prd-central-element-323112` (resolved via
-`resolve_bucket_name(kind="market-data-tick-prediction")` per `codex/02-data/prediction-data-types-catalog.md`). Two
+`resolve_bucket_name(kind="market-data-tick-prediction")` per `/codex/02-data/prediction-data-types-catalog.md`). Two
 real files downloaded and inspected with `pyarrow`:
 
 **KALSHI**
@@ -466,7 +466,7 @@ assumption `CefiTradesAdapter`/`PredictionTradesAdapter` makes, column-for-colum
   `tests/unit/test_prediction_adapter_category_d.py` and the full `tests/` tree; zero hits. The adapter's full git
   history (`e197da8` "feat: read hive-partitioned tick data ... prediction adapter" through `792ae5e` "fix(prediction):
   3-segment instrument_keys") shows no commit ever touching Kalshi-shaped columns.
-- Corroborating context: `codex/02-data/prediction-schema-paths.md` documents a
+- Corroborating context: `/codex/02-data/prediction-schema-paths.md` documents a
   `[DELTA 2026-05-22 — KALSHI API MIGRATION]` with Kalshi integration verification `BLOCKED-CREDENTIALS` as of that date
   — consistent with real Kalshi trade data only starting to flow in this bucket some time after that (first observed
   here on 2026-07-20, the earliest of the 5 probed days).
@@ -483,7 +483,7 @@ failure mode was never going to self-resolve; it needs a real design pass.
 
 ### SSOT-vs-code contradiction found along the way (flagging, not resolving — outside this todo's scope)
 
-`codex/02-data/prediction-data-types-catalog.md` (§ NEEDS_CANDLE_PROCESSING) states: _"`trades` has NEEDS_CANDLE=False
+`/codex/02-data/prediction-data-types-catalog.md` (§ NEEDS_CANDLE_PROCESSING) states: _"`trades` has NEEDS_CANDLE=False
 for the prediction asset_group — the UAC override for prediction means raw trades are not processed into OHLCV candles.
 Only CeFi/TradFi `trades` have NEEDS_CANDLE=True."_ The **actual running code** contradicts this:
 `unified_api_contracts/registry/market_data_categories.py:640` declares `NEEDS_CANDLE_PROCESSING: dict[str, bool]` as a
@@ -575,23 +575,23 @@ semantics, stop at a well-documented todo instead of guessing"), no code was cha
       ONE group, not every group written under it.
 
       **Fix**: added `no_real_chain_root` (true only for the legacy-sentinel, no-underlying case) to
-                                  `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
-                                  (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
-                                  own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
-                                  original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
-                                  so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
+                                      `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
+                                      (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
+                                      own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
+                                      original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
+                                      so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
 
-                                  **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
-                                  batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
-                                  id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
-                                  green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files). Not yet re-verified against a live
-                                  `t1-recon` execution (that would need the fixed image to reach `main`/be rebuilt first, then a scoped sports
-                                  re-run mirroring Update 4/5's methodology) — the fix is code-verified + unit-tested but the "reproduce via"
-                                  command below has not been re-run against it this session.
+                                      **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
+                                      batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
+                                      id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
+                                      green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files). Not yet re-verified against a live
+                                      `t1-recon` execution (that would need the fixed image to reach `main`/be rebuilt first, then a scoped sports
+                                      re-run mirroring Update 4/5's methodology) — the fix is code-verified + unit-tested but the "reproduce via"
+                                      command below has not been re-run against it this session.
 
-                                  Repro command for the next verification pass:
-                                  `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
-                                  (repo: market-data-processing-service)
+                                      Repro command for the next verification pass:
+                                      `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
+                                      (repo: market-data-processing-service)
 
 - [ ] [SCRIPT] P2. **Scope MDPS's per-asset-group candle timeframe iteration** — `config.py`'s `default_timeframes`
       (`["15s","1m","5m","15m","1h","4h","24h"]`) is applied uniformly to every asset_group; sports only has
@@ -619,22 +619,22 @@ semantics, stop at a well-documented todo instead of guessing"), no code was cha
       worked — it was never built**: zero test coverage of Kalshi's real columns anywhere in the repo, zero git history
       touching them, and Kalshi raw ticks only start appearing in this bucket around 2026-07-20 (consistent with the
       `[DELTA 2026-05-22 — KALSHI API MIGRATION]` `BLOCKED-CREDENTIALS` banner in
-      `codex/02-data/prediction-schema-paths.md`).
+      `/codex/02-data/prediction-schema-paths.md`).
 
       **Real open design decisions the next implementer must make** (see Update 6 for full detail + evidence):
-                              (1) which of `yes_price_dollars`/`no_price_dollars` is the OHLCV price for a two-sided YES/NO market (they sum to
-                              exactly 1.00 — confirmed on 54,295 real rows); (2) how `taker_side`/`taker_outcome_side`/`taker_book_side`
-                              (yes/no/bid/ask, not BUY/SELL) map to the adapter's `is_buy` buy/sell-split and whale-detection features;
-                              (3) whether `count_fp` (string-typed, cleanly float-parseable) is genuinely trade size/contract count;
-                              (4) timestamp source — `available_at` is evidence-backed safe (confirmed byte-exact match against `created_time`
-                              across all 54,295 rows of a real file, genuine per-trade granularity, 44,077 distinct values across one day) but
-                              wiring it into `_get_local_timestamp_column`'s existing local-vs-exchange-time HFT-delay convention needs a
-                              decision since Kalshi has no local/exchange timestamp split.
+                                  (1) which of `yes_price_dollars`/`no_price_dollars` is the OHLCV price for a two-sided YES/NO market (they sum to
+                                  exactly 1.00 — confirmed on 54,295 real rows); (2) how `taker_side`/`taker_outcome_side`/`taker_book_side`
+                                  (yes/no/bid/ask, not BUY/SELL) map to the adapter's `is_buy` buy/sell-split and whale-detection features;
+                                  (3) whether `count_fp` (string-typed, cleanly float-parseable) is genuinely trade size/contract count;
+                                  (4) timestamp source — `available_at` is evidence-backed safe (confirmed byte-exact match against `created_time`
+                                  across all 54,295 rows of a real file, genuine per-trade granularity, 44,077 distinct values across one day) but
+                                  wiring it into `_get_local_timestamp_column`'s existing local-vs-exchange-time HFT-delay convention needs a
+                                  decision since Kalshi has no local/exchange timestamp split.
 
-                              **Also flag before starting**: a genuine SSOT-vs-code contradiction — `codex/02-data/prediction-data-types-catalog.md`
-                              claims `NEEDS_CANDLE_PROCESSING["trades"]` has a prediction-specific `False` override, but the actual UAC
-                              registry (`unified_api_contracts/registry/market_data_categories.py:640`, flat/non-asset-group-keyed) sets it
-                              `True` for `trades` uniformly, with a comment explicitly stating prediction shares CeFi's `True` value. Resolve
-                              this FIRST — if the codex doc's intent is correct, the right fix may be "stop attempting prediction candle
-                              derivation entirely" rather than building a Kalshi adapter. (repo: market-data-processing-service,
-                              unified-api-contracts if the NEEDS_CANDLE contradiction is resolved as a code fix)
+                                  **Also flag before starting**: a genuine SSOT-vs-code contradiction — `/codex/02-data/prediction-data-types-catalog.md`
+                                  claims `NEEDS_CANDLE_PROCESSING["trades"]` has a prediction-specific `False` override, but the actual UAC
+                                  registry (`unified_api_contracts/registry/market_data_categories.py:640`, flat/non-asset-group-keyed) sets it
+                                  `True` for `trades` uniformly, with a comment explicitly stating prediction shares CeFi's `True` value. Resolve
+                                  this FIRST — if the codex doc's intent is correct, the right fix may be "stop attempting prediction candle
+                                  derivation entirely" rather than building a Kalshi adapter. (repo: market-data-processing-service,
+                                  unified-api-contracts if the NEEDS_CANDLE contradiction is resolved as a code fix)
