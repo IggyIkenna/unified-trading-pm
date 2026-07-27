@@ -74,10 +74,17 @@ specific to any one task.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P1. Delete (or explicitly authorize an agent to delete) the 3 confirmed-dead ad-hoc scratch directories
-      named above (~2.47GB total): `/home/ubuntu/tmp_slot8_manifest_check`, `/home/ubuntu/tmp_slot3_manifest_restore`,
-      `/home/ubuntu/tmp_slot9_cf_audit`. This is a human-gated destructive action per the orchestrator's own guardrail —
-      not something a worker can do unilaterally even with strong staleness evidence.
+- [x] ✅ [OPERATOR] P1. **MOOT as of 2026-07-27** — verified fresh from this same shared host (confirmed via
+      `.tabs/1`/`.tabs/2` slot dirs present under `unified-trading-system-repos/`, i.e. this session runs on the exact
+      host the finding describes): none of the 3 named directories exist anymore (`ls` on all 3 absolute paths → "No
+      such file or directory") and `df -h` now reports `145G total, 87G used, 59G avail, 60% use` (vs the
+      `290G     290G 448K 100%` reported 2026-07-26) — the crisis has resolved and the specific delete target is already
+      gone (cleaned by the operator or another agent in the interim; not executed by this session). **Classification
+      note**: this was never actually a GCS delete-safety-protocol case — it's a LOCAL filesystem recursive-delete,
+      gated by a different, unconditional guardrail (`agent-orchestrator/scripts/hooks/block_destructive_commands.py`,
+      which has no §3a-style reversibility carve-out for any command class it blocks, local or cloud). Nothing to
+      reclassify or fix; flipping done since the underlying ask is satisfied by passage of time, not by a gating change.
+      The broader `unified-trading-system-repos/` audit (DATA P2 todo below) is unaffected and still open.
 - [ ] [DATA] P2. Audit `unified-trading-system-repos/` (157G, the dominant consumer) for real cleanup headroom —
       orphaned `.venv` directories from decommissioned/renamed slots, stale `node_modules`, build artifacts, or
       duplicate git objects that `git gc`/`git prune` could reclaim — WITHOUT touching any repo's actual tracked content
