@@ -89,15 +89,20 @@ committed-locally-pending (staged, QG-clean on every OTHER check, ready to ship 
 
 ## Open work
 
-- [ ] 1. [SCRIPT] P1. **Triage all 15 over-baseline empty-string-fallback sites** in
+- [x] 1. [SCRIPT] P1. **Triage all 15 over-baseline empty-string-fallback sites** in
       `scripts/migrate_candle_canonical_2026_07.py` (4 sites), `scripts/reconcile_1440_nan_placeholders.py` (7 sites),
       `scripts/seed_mock_data.py` (4 sites) — for each, decide fail-fast rewrite vs
       `# noqa: qg-empty-fallback <reason>`, per `check_no_empty_string_fallback.py`'s own guidance. Repo:
-      market-data-processing-service.
+      market-data-processing-service. ✅ market-data-processing-service@01744b73a — 1 docstring false-positive reworded,
+      2 dead-code `.get(k, "")` sites (`timeframe`, `blob_path`, both provably always-set by their producers) rewritten
+      to direct dict indexing, 13 noqa'd as genuinely deliberate absent-means-N/A cases (canonical row_key hive
+      segments, checkpoint metadata that fails safe via the enumeration_signature mismatch path, mock-seed rows). Live
+      scan count now 51 (< baseline 66, see todo 2).
 - [ ] 2. [SCRIPT] P1. Once todo 1 lands, update
       `unified-trading-pm/scripts/quality_gates/no_empty_string_fallback_baseline.yaml`'s
       `market-data-processing-service` entry to the new (lower or equal) real count, WITH a `commit:` reference
       (matching the `market-tick-data-service` entry's format) so the next drift is attributable to an actual commit,
       not silently stale again.
-- [ ] 3. [SCRIPT] P2. Ship the already-written `scripts/candle_orphan_sweep.py` (staged locally in slot-13, zero new
-      violations of its own) once todos 1-2 clear the gate.
+- [x] 3. [SCRIPT] P2. Ship the already-written `scripts/candle_orphan_sweep.py` (staged locally in slot-13, zero new
+      violations of its own) once todos 1-2 clear the gate. ✅ market-data-processing-service@01744b73a — shipped in the
+      same commit as todo 1's fix (the gate cleared for both in one quickmerge).
