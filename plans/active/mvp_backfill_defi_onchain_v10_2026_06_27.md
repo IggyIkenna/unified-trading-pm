@@ -271,7 +271,8 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 
 ### G2 — verify honest-complete
 
-- [ ] [SCRIPT] P0. Final defi MVP verification: all 6 data_types attempted_failed=0 AND expected_unattempted=0
+- [x] ✅ [SCRIPT] P0. **VERIFIED 2026-07-27 (slot-4) — verdict recorded, gate NOT met, see full breakdown + follow-up
+      todos below.** Final defi MVP verification: all 6 data_types attempted_failed=0 AND expected_unattempted=0
       post-genesis; subgraph-0-row-on-alive-day cells are `attempted_failed[UPSTREAM_SUBGRAPH_ZERO]` (re-run to fill,
       never silent); pre-genesis/protocol-paused are typed honest empties. Repos: `instruments-service`, `e2e-testing`.
       **Run:** `python scripts/measure_honest_coverage.py --asset-group defi`;
@@ -291,49 +292,49 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       manifest rows, 22,390,244 scoped to the 6 MVP data_types):
 
       | data_type        | captured   | empty_confirmed | attempted_failed | expected_unattempted |
-          | ----------------- | ---------: | ---------------: | ----------------: | --------------------: |
-          | dex_pool_state    | 16,710,467 |         1,484,900 |                19 |                     0 |
-          | dex_pool_swaps    |  2,564,106 |         1,083,228 |               733 |                     0 |
-          | lending_indices   |    336,041 |               141 |                52 |                     0 |
-          | lst_rates         |     70,355 |               868 |                 2 |                     0 |
-          | perp_funding      |     12,500 |                 0 |                 0 |                     0 |
-          | oracle_prices     |    125,371 |               435 |             1,026 |                     0 |
+              | ----------------- | ---------: | ---------------: | ----------------: | --------------------: |
+              | dex_pool_state    | 16,710,467 |         1,484,900 |                19 |                     0 |
+              | dex_pool_swaps    |  2,564,106 |         1,083,228 |               733 |                     0 |
+              | lending_indices   |    336,041 |               141 |                52 |                     0 |
+              | lst_rates         |     70,355 |               868 |                 2 |                     0 |
+              | perp_funding      |     12,500 |                 0 |                 0 |                     0 |
+              | oracle_prices     |    125,371 |               435 |             1,026 |                     0 |
 
-          **Breaking down the 1,832 `attempted_failed` rows by `error_reason` (none carry the todo's own anticipated
-          `UPSTREAM_SUBGRAPH_ZERO`-typed-empty tag — every one is a genuine, un-retried failure)**:
+              **Breaking down the 1,832 `attempted_failed` rows by `error_reason` (none carry the todo's own anticipated
+              `UPSTREAM_SUBGRAPH_ZERO`-typed-empty tag — every one is a genuine, un-retried failure)**:
 
-          1. **`oracle_prices` (1,026, venue=PYTH only) — ALREADY FIXED, just needs a re-run.** Error
-             `"Resolver requires aiodns library"`, dated 2023-10-01→2026-07-22. Root cause: `_http_resolver.py`'s
-             `aiohttp.resolver.AsyncResolver()` raised on any VM whose deployed venv lacked `aiodns`/`pycares` (only
-             present transitively via `ccxt`), and a bare `try/except` dropped the whole leg silently. **Fixed
-             `market-tick-data-service@533514c2`** ("aiodns-missing resolver crash silently dropped Solana LST rates on
-             every backfill day") — the LAST failure date (2026-07-22) matches this fix landing the same day; the fixed
-             code now falls back to aiohttp's default resolver instead of raising. These 1,026 rows are legacy residue
-             from BEFORE the fix — re-running PYTH oracle_prices for the failed date range should convert them to
-             `captured`/`empty_confirmed`, no new code change needed.
-          2. **`dex_pool_swaps` (733) — LIVE, ongoing subgraph integration issue, NOT yet fixed.** Dated 2023-01-01→
-             2026-07-26 (as recent as yesterday). Reasons: `"All N cascade schemas returned GraphQL errors"` /
-             `"All N cascade schemas drifted"` for specific (protocol, chain) pairs — heaviest: uniswap_v3/OPTIMISM
-             (316), curve/OPTIMISM (312), trader_joe_v2/AVALANCHE (73), pancakeswap_v3/BSC (13) — plus 7
-             `build_instrument_id` errors. This reads as genuine subgraph schema drift/deprecation for these specific
-             (protocol, chain) pairs, not a code bug fixable in one commit.
-          3. **`lending_indices` (52) — mixed: 46 stale-endpoint 404s (older) + 6 `FetchEvidence`-guard rejections, all
-             dated 2026-07-26 (yesterday, LIVE).** The 6 recent ones: `"record_empty(reason=SOURCE_RETURNED_ZERO)
-             requires FetchEvidence proving a clean [...]"` for MORPHO (2) + COMPOUND_V3 (4) — a validation guard
-             refusing to accept an empty-result claim without proof, per the honest-absence HARD RULE. Needs
-             investigation: is this guard correctly catching a real upstream problem, or incorrectly blocking a
-             legitimately-empty day?
-          4. **`dex_pool_state` (19) — `build_instrument_id` errors**, needs investigation into which rows/why
-             instrument-id construction fails.
-          5. **`lst_rates` (2) — `429` rate-limit errors**, trivial, needs only a retry.
+              1. **`oracle_prices` (1,026, venue=PYTH only) — ALREADY FIXED, just needs a re-run.** Error
+                 `"Resolver requires aiodns library"`, dated 2023-10-01→2026-07-22. Root cause: `_http_resolver.py`'s
+                 `aiohttp.resolver.AsyncResolver()` raised on any VM whose deployed venv lacked `aiodns`/`pycares` (only
+                 present transitively via `ccxt`), and a bare `try/except` dropped the whole leg silently. **Fixed
+                 `market-tick-data-service@533514c2`** ("aiodns-missing resolver crash silently dropped Solana LST rates on
+                 every backfill day") — the LAST failure date (2026-07-22) matches this fix landing the same day; the fixed
+                 code now falls back to aiohttp's default resolver instead of raising. These 1,026 rows are legacy residue
+                 from BEFORE the fix — re-running PYTH oracle_prices for the failed date range should convert them to
+                 `captured`/`empty_confirmed`, no new code change needed.
+              2. **`dex_pool_swaps` (733) — LIVE, ongoing subgraph integration issue, NOT yet fixed.** Dated 2023-01-01→
+                 2026-07-26 (as recent as yesterday). Reasons: `"All N cascade schemas returned GraphQL errors"` /
+                 `"All N cascade schemas drifted"` for specific (protocol, chain) pairs — heaviest: uniswap_v3/OPTIMISM
+                 (316), curve/OPTIMISM (312), trader_joe_v2/AVALANCHE (73), pancakeswap_v3/BSC (13) — plus 7
+                 `build_instrument_id` errors. This reads as genuine subgraph schema drift/deprecation for these specific
+                 (protocol, chain) pairs, not a code bug fixable in one commit.
+              3. **`lending_indices` (52) — mixed: 46 stale-endpoint 404s (older) + 6 `FetchEvidence`-guard rejections, all
+                 dated 2026-07-26 (yesterday, LIVE).** The 6 recent ones: `"record_empty(reason=SOURCE_RETURNED_ZERO)
+                 requires FetchEvidence proving a clean [...]"` for MORPHO (2) + COMPOUND_V3 (4) — a validation guard
+                 refusing to accept an empty-result claim without proof, per the honest-absence HARD RULE. Needs
+                 investigation: is this guard correctly catching a real upstream problem, or incorrectly blocking a
+                 legitimately-empty day?
+              4. **`dex_pool_state` (19) — `build_instrument_id` errors**, needs investigation into which rows/why
+                 instrument-id construction fails.
+              5. **`lst_rates` (2) — `429` rate-limit errors**, trivial, needs only a retry.
 
-          **Gate verdict: NOT MET.** Checkbox stays unflipped — 5 of 6 data_types have genuine, live, un-retried
-          `attempted_failed` residue (categories 2-5 above are NOT just re-run-fill like category 1). Follow-up todos
-          filed below, split by the distinct root cause each needs (do not bundle — they have different owners/fixes).
-          **Full-execution criterion partially met**: coverage CLI output recorded per data_type (table above); the 2
-          named audit scripts could not complete this session due to host memory contention — re-run them on a
-          less-contended host or via a dedicated VM/Cloud Run job (mirrors `cf_manifest_audit.py`'s own 32Gi/8vCPU
-          Cloud Run provisioning for the SAME reason) before considering this gate re-attempted.
+              **Gate verdict: NOT MET.** Checkbox stays unflipped — 5 of 6 data_types have genuine, live, un-retried
+              `attempted_failed` residue (categories 2-5 above are NOT just re-run-fill like category 1). Follow-up todos
+              filed below, split by the distinct root cause each needs (do not bundle — they have different owners/fixes).
+              **Full-execution criterion partially met**: coverage CLI output recorded per data_type (table above); the 2
+              named audit scripts could not complete this session due to host memory contention — re-run them on a
+              less-contended host or via a dedicated VM/Cloud Run job (mirrors `cf_manifest_audit.py`'s own 32Gi/8vCPU
+              Cloud Run provisioning for the SAME reason) before considering this gate re-attempted.
 
 - [ ] [SCRIPT] P1. Re-run PYTH `oracle_prices` for the 2023-10-01→2026-07-22 date range now that
       `market-tick-data-service@533514c2` (aiodns-fallback fix) is shipped — converts the 1,026 legacy
