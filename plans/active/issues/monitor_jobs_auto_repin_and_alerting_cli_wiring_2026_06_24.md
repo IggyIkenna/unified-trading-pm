@@ -25,7 +25,7 @@ locked_since: 2026-06-24
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-27
 ---
 
 ## What I found
@@ -78,20 +78,36 @@ re-pin — the exact manual toil that made this incident's coordination fragile.
       after the deployment-service `main` force-sync and still resolves `main`→`4d054df`, which lacks the step AND has
       inconsistent monitor code). So the step is config-correct but unproven; it will self-verify on the next REAL
       (non-`[skip ci]`) `main` promotion (which refreshes the CB mirror).
-- [ ] [INFRA] P1. **Verify the `redeploy-monitor-jobs` auto-repin EXECUTES end-to-end + codify the force-push CB-mirror
-      hazard.** (a) On the next real deployment-api `main` build (post-mirror-resync), confirm the step's
-      `Re-resolving     uts-prod-dp-*` lines appear in the build log AND the 4 jobs land on the new digest AND a monitor
-      job executes cleanly on it. (b) **Force-push-to-main has CI side-effects** discovered 2026-06-24: it (1) ORPHANS
-      the in-flight CI commit → the deploy trigger builds a now-nonexistent SHA → BAD image, and (2) leaves **Cloud
-      Build's repo mirror stale** (resolves `main`→the orphaned SHA; `gcloud builds triggers run --sha=<real-tip>` →
-      `FAILED_PRECONDITION:     Couldn't read commit`; only a real non-`[skip ci]` `main` push resyncs it — a
-      hand-rolled empty-commit nudge needs a relax→push→restore of `enforce_admins` + the `require-quality-gates`
-      ruleset, which is finicky: the rulesets-disable API is not `-f enforcement=disabled`, and `enforce_admins`
-      re-enable is `POST` not `PUT`). **Codify in the clean-start force-sync SSOT (`/codex/08-workflows/ci-cd-flow.md` §
-      force-sync):** after a `main` force-sync, the CB mirror is stale + the next image build may be orphan-built — do
-      NOT auto-repin monitor jobs from it; pin them to a known-good digest until a real promotion resyncs the mirror.
-      **Orphan-built bad images to ignore:** `1f66fd70`, `db336b9` (nothing is pinned to them; the 4 jobs are safely on
-      `cbf05302`).
+- [x] ✅ [INFRA] P1. **Verify the `redeploy-monitor-jobs` auto-repin EXECUTES end-to-end + codify the force-push
+      CB-mirror hazard.** VERIFIED BROKEN, then FIXED (2026-07-27): (a) The step shipped by item 1 above was **never
+      reachable**. It lived in `deployment-service/cloudbuild.yaml` guarded on `_SERVICE_NAME==deployment-api`, but no
+      LIVE Cloud Build trigger ever builds that file with that substitution — `deployment-service-build` (the only
+      trigger that builds that file on `main`) never overrides `_SERVICE_NAME`, so it always builds the file's own
+      default (`deployment-dashboard`); the trigger that actually builds+deploys deployment-api,
+      `deployment-api-main-deploy`, reads a **completely different file** — deployment-api's own root `cloudbuild.yaml`
+      — which never contained the step at all. Confirmed two ways: (i)
+      `gcloud builds log <deployment-api-main-deploy build d8ac905b, 2026-07-27T06:25:23Z, SUCCESS>` has no
+      `redeploy-monitor-jobs` step; (ii) all 4 monitor jobs' `run.googleapis.com/lastUpdatedTime` sat stale (e.g.
+      `uts-prod-monitoring-deadman` last touched 2026-07-12 by a human `gcloud run jobs update`, not the Cloud Build SA)
+      across dozens of real deployment-api main builds since 2026-06-24. **FIXED**: moved the step into
+      `deployment-api/cloudbuild.yaml` (the file the live trigger actually reads), gated on `_DEPLOY=true` like the
+      `deploy` step so a feature-branch/build-only `:latest` can never repin production jobs — deployment-api@21d6858
+      (amended from b1028e6 by quickmerge). Removed the now-fully-dead step from `deployment-service/cloudbuild.yaml` —
+      deployment-service@02d3292 (amended from dd8c6d6). (b) Codified BOTH the force-push CB-mirror hazard AND the
+      general "a shared cloudbuild.yaml guard only protects code actually built with the guarded substitution" lesson in
+      `/codex/08-workflows/ci-cd-flow.md` (new subsections after "Workflow-template rollout") —
+      unified-trading-pm@6ef1b4fb0. **RESIDUAL** (tracked as the new todo below): the fix has not yet been proven
+      executing on a REAL `deployment-api-main-deploy` build — that requires the next LDR→main promotion to actually
+      reach `main` and fire the deploy trigger, which is beyond this todo's own turn to synchronously wait out.
+- [ ] [INFRA] P1. **Confirm the moved `redeploy-monitor-jobs` step (deployment-api@21d6858) actually executes on the
+      next real `deployment-api-main-deploy` build.**
+      `gcloud builds list --project=central-element-323112     --region=asia-northeast1 --filter="buildTriggerId=c862d220-fd4d-40fa-b4b3-2feb3597f75a" --limit=5`
+      for the first build after this fix reaches `main`;
+      `gcloud builds log <id> --project=central-element-323112     --region=asia-northeast1 | grep "Re-resolving"` must
+      show all 4 jobs, AND `gcloud run jobs describe <job> --region=asia-northeast1 --format=export` must show
+      `run.googleapis.com/lastUpdatedTime` advance to that build's time with `lastModifier` = the Cloud Build service
+      account (not a human email). If it does NOT fire (e.g. `_DEPLOY` substitution missing/false on that build),
+      diagnose why before closing.
 - [ ] [INFRA] P2. **Finalize the alerting-CLI durable command**: the `__main__` guard IS in `alerting-service:latest`
       (verified 2026-06-24) but NOT yet confirmed on alerting-service's _main_ — so switching the job to
       `python -m alerting_service.cli.main` (which re-pins `:latest`) risks the same caveat-#2 regression on the next
