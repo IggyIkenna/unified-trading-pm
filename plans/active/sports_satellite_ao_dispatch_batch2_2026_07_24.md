@@ -276,7 +276,24 @@ source: >-
       Update Time=20:04:41Z (near-real-time write); `gcloud     compute operations list` filtered to this VM's
       targetLink for `compute.instances.preempted` returns zero rows. No OOM/error lines. No relaunch needed. Step 2
       still mid-run, step 3 stays gated — checkbox correctly unchecked. Next slot: re-verify from scratch, don't trust
-      this note as current.
+      this note as current. **Check-in 2026-07-27T20:16Z (slot 9, data_engineering) — brief, cross-check only (slot 11
+      re-verified 7min prior, avoiding a redundant full re-verification write-up)**: VM RUNNING; `run.log`
+      `last_completed_date=2023-06-24 monotonic=true`, heartbeat 20:14:30Z (+5 days from slot 11's 2023-06-19 in ~10min,
+      ~2min/date — consistent); manifest shard Update Time=20:16:52Z; 0 preemption events. Fully consistent with slot
+      11's concurrent finding — no drift, no action needed. Step 2 mid-run, step 3 gated, checkbox correctly unchecked.
+      This todo is being actively monitored by multiple slots in close succession right now; next slot should check
+      timestamps before re-verifying to avoid duplicate work. **Check-in 2026-07-27T20:40Z (slot 5, data_engineering)**:
+      re-verified from scratch (ambient `github-actions-deploy@central-element-323112.iam.gserviceaccount.com`, no auth
+      workaround needed). All 3 signals fresh: VM `af-backfill-20260727-064958` status=RUNNING (SPOT); `run.log` tail
+      shows `last_completed_date=2023-08-31 monotonic=true` with a fresh manifest-flush log line at 20:40:36Z (advanced
+      +68 days from slot 9's 2023-06-24 in ~24min, ~21sec/date — notably faster than the prior ~1.5-2min/date pace; log
+      shows why, not a fluke: this date range is "Enrichment-only mode... 0 extra API calls" / "0 calls queued,
+      skipped_already_captured" — dates already enrichment-captured need no external API round-trips, so throughput
+      jumps once the run crosses into already-enriched territory). Manifest shard
+      (`_index/per_vm/af-backfill-20260727-064958.parquet`) Update Time=20:40:36Z (real-time write, 1.62MiB).
+      `gcloud compute operations list` filtered to this VM's `targetLink` for `compute.instances.preempted` returns zero
+      rows. No OOM/error lines. No relaunch needed. Step 2 still mid-run (2023-08-31→2026-07-27 remaining), step 3 stays
+      gated — checkbox correctly unchecked. Next slot: re-verify from scratch, don't trust this note as current.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 

@@ -150,9 +150,18 @@ from scope).
       remediation is a corpus-wide archived-mirror `unified-trading-codex/` → PM `/codex/` reference fix + FIX-STALE
       literals; 2 MIGRATE-TO-CODEX deltas (client-reporting-api commercial facts) + 2 operator-gated big findings
       captured as todos below.
-- [ ] [DOCS] P0. **Phase 2 — migrate unique deltas into codex.** For every MIGRATE-TO-CODEX doc (mtime-newer +
+- [x] ✅ [DOCS] P0. **Phase 2 — migrate unique deltas into codex.** For every MIGRATE-TO-CODEX doc (mtime-newer +
       codex-missing), write/extend the codex SSOT doc first. Commit codex changes. This must precede any
-      REDIRECT/DELETE.
+      REDIRECT/DELETE. **DONE 2026-07-27** — every DETERMINABLE migrate candidate is resolved (see "Phase 2 progress"
+      below): the 3 AUDIT-03/gcs_hive candidates were verified no-op (codex already correct), and the deployment-service
+      "marginal MIGRATE" SHARDING_AND_DATA_ALIGNMENT shard-atom taxonomy (sports `league_id`, prediction
+      `canonical_question_group`, ML/strategy/execution `job_id`) was VERIFIED already present verbatim in
+      `/codex/02-data/availability-manifest-and-data-status.md` (lines 53-67, 302-318) — no codex write needed. The ONE
+      genuine remaining delta (client-reporting-api commercial facts) is OPERATOR-GATED and already tracked on its own
+      separate `[OPERATOR-DECISION]` todo below — per CLAUDE.md "only operator-gated
+      BLOCKED-CREDENTIALS/-OPERATOR-DECISION/-UPSTREAM-OUTAGE defer" + the dispatch-scope-eligibility ruling
+      (2026-07-23: a non-determinable operator gate must not keep an otherwise-complete, worker-determinable phase open
+      indefinitely / re-dispatching). Phase 3 (redirect + slim) can proceed on schedule.
 - [ ] [DOCS] P1. **Phase 3 — redirect + slim.** Convert REDIRECT docs to the S5.11 template; slim KEEP-ESSENTIAL docs to
       repo-local + codex links. Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service).
 - [ ] [DOCS] P1. **Phase 4 — delete pure-dups.** Remove DELETE-class docs (migration already done in Phase 2). Update
@@ -177,9 +186,21 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
   and source docs present (`CLIENT_OPERATIONS_GUIDE.md`, `PNL_AND_INVOICING_GUIDE.md`). These carry **real client IDs +
   per-client fee %s + org hierarchy** — per the `[OPERATOR-DECISION]` todo in Appendix B ("confirm the fee
   numbers/roster are current before migrating; committing stale commercial facts to codex-as-SSOT is worse than leaving
-  them repo-local"), the migration is **BLOCKED-OPERATOR-DECISION**. The Phase-2 umbrella checkbox stays open on that
-  gate; once the operator confirms currency, the migration target is `/codex/14-customer-journeys/commercial-model/`
-  (new roster+fees SSOT) per that todo.
+  them repo-local"), the migration is **BLOCKED-OPERATOR-DECISION**. Tracked on its OWN separate todo (line ~479 below)
+  — it is not re-blocking the Phase-2 umbrella checkbox (closed 2026-07-27, see below); once the operator confirms
+  currency, the migration target is `/codex/14-customer-journeys/commercial-model/` (new roster+fees SSOT) per that
+  todo.
+- **1 marginal-MIGRATE candidate → VERIFIED already-satisfied, no codex write needed (closes Phase 2, 2026-07-27).** The
+  deployment-service refreshed registry (below) flagged `SHARDING_AND_DATA_ALIGNMENT.md`'s shard-atom taxonomy (sports
+  `(league_id, day)`, prediction `(canonical_question_group, day)`, ML/strategy/execution `job_id` v7 column) as "worth
+  folding into" `availability-manifest-and-data-status.md`. Direct grep confirms it is ALREADY there verbatim — the
+  deployment-service doc's "Multi-axis correction (2026-05-06)" callout (lines 5-12) and the codex doc's identical
+  callout (lines 53-67) match; `job_id`/`league_id`/`canonical_question_group` shard-atom semantics are documented at
+  codex lines 65-67, 53-54, 58-60, 302-318 respectively. The deployment-service doc's own text already declares codex as
+  the "Canonical SSOT for shard atoms + manifest semantics" (line 18) — the "marginal MIGRATE" framing in the prior
+  audit pass was stale; this was already a REDIRECT-class doc, not a migrate source. With this, **every determinable
+  Phase-2 migrate candidate across all 20 repos is resolved** — the umbrella checkbox above is flipped, leaving only the
+  one already-separately-tracked operator-gated item open.
 
 ## Success criteria
 
@@ -212,12 +233,61 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
 - [ ] [DOCS] P1. **market-tick-data-service finish**: `DEPLOYMENT_GUIDE_FEMI.md` (person-named onboarding dup) +
       `SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md` (infra-spec dup) → migrate unique delta, replace with redirect to
       `codex/05-infrastructure` + `codex/08-workflows`, delete the dumps. Slim `DEPENDENCIES.md` / `ARCHITECTURE.md`.
-- [ ] [DOCS] P0. **deployment-service** (79) — deploy-flow/infra/bucket/VM-tarball docs vs `codex/05-infrastructure`,
-      `codex/08-workflows`. Highest duplication surface.
-- [ ] [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`.
-- [ ] [DOCS] P0. **market-data-processing-service** (22) — path/manifest/candle docs vs `codex/02-data`.
-- [ ] [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`, `codex/02-venues`.
-- [ ] [DOCS] P0. **instruments-service** (19) — IS→MTDS contract/path docs vs `codex/04-architecture`, `codex/02-data`.
+- [x] ✅ [DOCS] P0. **deployment-service** (79) — deploy-flow/infra/bucket/VM-tarball docs vs `codex/05-infrastructure`,
+      `codex/08-workflows`. Highest duplication surface. **AUDIT DONE 2026-07-27** — refreshed per-doc registry (89
+      repo-owned docs: 47 core + 42 infra/profiles/runbooks; excl. `docs/archive/*` 13 + vendored `.terraform` provider
+      CHANGELOGs 10) in **Appendix B** below; SUPERSEDES the stale `deployment-service (~52)` entry in Appendix A. Net:
+      12 DELETE (dead Feb/Mar-2026 impl-plan dumps + the `audit/` trio, not codex-dups) · 14 REDIRECT (all 12 codex
+      targets VERIFIED-EXIST — none need creating) · systemic FIX-STALE = archived-mirror `unified-trading-codex/`
+      links + a stale `POST_PLAN_BANNER_2026_05_06` replicated across ~30 files. Redirect/delete APPLY stays Phase-3/4
+      (operator's FIX-STALE-only hold, line ~224).
+- [x] ✅ [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`. **AUDIT VERIFIED +
+      FIX-STALE APPLIED 2026-07-27** (Appendix-A UAC registry HOLDS, ground-truthed against live code): confirmed
+      `canonical/normalize/` + `schemas/` dirs are GONE (normalizers now `normalize_utils/{trades,orderbooks,…}.py`;
+      `_venue_errors_*` now `normalize_utils/errors`) and the 4 DELETE-class docs (`ICLOUD_REPO_MIGRATION_PROMPT`,
+      `SCHEMA_NORMALIZATION_GAPS_AUDIT`, `UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY`, `VIX_LIVE_RESEARCH`) each
+      already have a `docs/archive/` twin. Applied the operator-hold-PERMITTED FIX-STALE sweep only: 3 archived-mirror
+      `unified-trading-codex/` refs → verified-live PM `/codex` (`vcr-cassette-ownership.md`,
+      `contracts-scope-and-layout.md`, `contracts-integration.md`) in `docs/{README,MOCKS_AND_VCR,SCHEMA_GOVERNANCE}.md`
+      — **unified-api-contracts@25085037**. Sonnet-scoped to the mechanical literal sweep (plan §"Execution model"
+      permits sonnet ONLY for FIX-STALE literal sweeps). Held to Phase-3/4 (operator FIX-STALE-only hold + opus-gated):
+      REDIRECT `PACKAGE_LAYOUT_AND_SCOPE`/ `BATCH_LIVE_SYMMETRY`/`canonical-instrument-ids`; DELETE the 4 `docs/` twins;
+      `SCHEMA_GOVERNANCE` placement-table rewrite; 3 residual mirror refs with NO 1:1 live target (`SCHEMA_CHANGELOG`
+      L13 `canonical-schema-versioning.md`; `BATCH_LIVE_SYMMETRY` L208 + `UAC_FULL_GAP…` L278 `batch-live-symmetry.md` →
+      pick live equivalent).
+- [x] ✅ [DOCS] P0. **market-data-processing-service** (22→25) — path/manifest/candle docs vs `codex/02-data`. **AUDIT
+      REFRESHED 2026-07-27** (registry in **Appendix B**): Appendix-A largely HOLDS but drifted — `GCS_PATHS.md` is NO
+      LONGER un-tiered (edited 2026-07-21, now `{env}`-carrying; residual staleness is only inline `gs://`/`gsutil` vs
+      `resolve_bucket_name`), and the count was undercounted 22→25
+      (+`CONFIGURATION`/`ERROR_HANDLING`/`SCHEMA_VALIDATION` carry retired `{category}` vocab; +`specs/README` DELETE;
+      +root `README` archived-mirror FIX-STALE). 5 DELETE · 7 FIX-STALE · 3 REDIRECT (all codex targets VERIFIED-EXIST)
+      · no MIGRATE. Apply stays Phase-3/4.
+- [x] ✅ [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`,
+      `codex/02-venues`. **AUDIT VERIFIED + FIX-STALE APPLIED 2026-07-27** (Appendix-A `execution-service (20)` registry
+      HOLDS, ground-truthed vs live code): pass-1 FIX-STALE already landed @`4b0ea42f` (ARCHITECTURE bucket literals
+      env-tiered `execution-store-{ag}-{env}-{project_id}` ✓; README py3.13-canonical ✓). Applied the
+      operator-hold-PERMITTED residual FIX-STALE only: 2 archived-mirror `unified-trading-codex/` refs → verified-live
+      `../../unified-trading-pm/codex/` (`06-coding-standards/integration-testing-layers.md` in `docs/TESTING.md`;
+      `08-workflows/t1-batch-dag.md` in `docs/GCS_PATHS.md` — both VERIFIED-EXIST) + 1 dangling deploy-spec ref (dead
+      `docs/SHARDING_GUIDE.md`+`docs/SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md` → live `docs/DEPLOYMENT_GUIDE.md`, in
+      `docs/`+`specs/BACKTEST_DEPLOYMENT.md`) — **execution-service@`0c6a93e1`** (QG-green sentinel c4fbb495).
+      Sonnet-scoped mechanical sweep (plan §"Execution model" permits sonnet ONLY for FIX-STALE literal sweeps). Held to
+      Phase-3/4 (operator FIX-STALE-only hold + opus-gated): DELETE
+      `UNIFIED_BATCH_LIVE_ARCHITECTURE`/`CLEAN_ALGORITHM_INTERFACE_DESIGN`/`DEFI_INTEGRATION_TODO` (the 3 residual
+      `batch-live-symmetry.md` mirror refs left in-place inside the slated-for-deletion
+      `UNIFIED_BATCH_LIVE_ARCHITECTURE` — live equiv is `/codex/04-architecture/batch-live-architecture.md`); REDIRECT
+      `GCS_PATHS`/`ROUTING_MATRIX`/`CONFIGURATION`/`ERROR_HANDLING`/`DEPLOYMENT_GUIDE`. no MIGRATE
+      (codex/04-architecture already holds the execution-arch SSOTs; codex/02-venues exists w/
+      venue-registry-reference).
+- [x] ✅ [DOCS] P0. **instruments-service** (19→13) — IS→MTDS contract/path docs vs `codex/04-architecture`,
+      `codex/02-data`. **AUDIT REFRESHED 2026-07-27** (read-only via opus sub-agent; registry in **Appendix B** below,
+      SUPERSEDES the stale Appendix-A `(19)` entry). Repo drifted hard from Appendix-A: `specs/` dir GONE (consolidated
+      into `ADAPTER_ARCHITECTURE` + 5 asset docs), `POLYMARKET_PREDICTION`→`PREDICTION_INSTRUMENTS`,
+      `instrument-catalogue` gone. Net: duplication vs codex LOW (asset catalogs + adapter arch legitimately
+      service-local); 2 DELETE · 6 FIX-STALE (README dead-repo/CLI/mirror drift is the big one) · no REDIRECT strictly
+      required · no MIGRATE · no codex target needs creating. Apply stays Phase-3/4 (operator FIX-STALE-only hold). BIG
+      FINDING (determinable FIX-STALE, not operator-gated) captured in the registry: README front-door contradicts its
+      two newer authoritative docs on the dependency graph.
 - [ ] [DOCS] P1. **strategy-service** (15) — archetype/promote docs vs `codex/09-strategy`, `codex/04-architecture`.
 - [ ] [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs.
 - [ ] [DOCS] P1. **e2e-testing** (21) — defi/sports/prediction runbooks vs `codex/08-workflows`, `codex/15-runbooks`.
@@ -279,9 +349,9 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       sole Elysium ref is a legit link to the client-pod onboarding doc. Nothing to scrub.
 - [x] ✅ [DOCS] P2. **gcs_hive partition-path doc FIX-STALE** — VERIFIED already-canonical 2026-07-27 (Phase-2), no
       codex change needed. Sampled the codex hive-partition path examples
-      (`codex/02-data/sports-data-source-coverage-matrix.md`, `sports-data-types-catalog.md`, et al.); all use canonical
-      `key=value` segments (`by_date/day=…/entity=…/league=…`, `data_type=odds`). No malformed non-`key=value` example
-      survives in codex. (Operator note preserved from
+      (`/codex/02-data/sports-data-source-coverage-matrix.md`, `sports-data-types-catalog.md`, et al.); all use
+      canonical `key=value` segments (`by_date/day=…/entity=…/league=…`, `data_type=odds`). No malformed non-`key=value`
+      example survives in codex. (Operator note preserved from
       `archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`: doc-fix only; the GCS DATA
       remediation stays operator-deferred and is out of scope here.)
 - **Parked — features-service**: another agent active; LDR branch-protected. Docs commit `b9b4103e` on
@@ -468,3 +538,145 @@ genuine-UI, out of scope.
       README/docs/coverage-floor treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human
       2FA"; `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN` describe manual GUI/IB-Key login). Needs an operator/owner call on the
       repo's actual status + the canonical 2FA path before the FIX-STALE rewrite can land. (repo: ibkr-gateway-infra)
+
+### deployment-service refreshed registry (2026-07-27) — supersedes the stale Appendix-A `(~52)` entry
+
+> Read-only re-audit of the highest-duplication repo via 2 parallel opus sub-agents (core docs +
+> infra/profiles/runbooks). 89 repo-owned docs (47 core + 42 infra/profiles/runbooks); OUT-OF-SCOPE: `docs/archive/*`
+> (13), vendored `terraform/**/.terraform/providers/*` provider CHANGELOGs (10). **Redirect/delete APPLY stays
+> Phase-3/4** under the operator's FIX-STALE-only hold; this entry is the classification the phases consume. All
+> REDIRECT targets VERIFIED-EXIST in current PM `/codex/` — none need creating.
+
+**deployment-service [core docs] (47)** — DELETE: `IMPLEMENTATION_MAX_WORKERS`, `MASTER_IMPLEMENTATION_INDEX`,
+`MAX_WORKERS_UNIFIED_IMPLEMENTATION_PLAN`, `MASTER_ML_IMPLEMENTATION_PLAN`, `ML_IMPLEMENTATION` (dead Feb-2026 "ready to
+implement" dumps, ~6.7k lines), `UI_TYPESCRIPT_TYPES`, `GCS_LIFECYCLE_COST_OPTIMIZATION` (dup of AGGRESSIVE_STRATEGY),
+`docs/SPECS.md` (historical contractor spec dump), `docs/specs/{PLANS_ALIGNMENT,README}` (archived 2026-05-06 plans),
+`CONFIGURATION` (near-empty stub), `service-bundling-review` (completed 2026-03 one-off). FIX-STALE: `CONTRIBUTING`
+(mis-titled "Contributing to Instruments Service"; prescribes retired `git checkout main`/`python -m pytest`/plain
+quickmerge), `INDEX` (links ARCHIVED `unified-trading-codex/` mirror + broken targets), `MIGRATION` (archived 2026-05-06
+plans as "active" + archived-mirror), `LIVE_MODE` (archived-mirror batch-live-symmetry ref), `HARDENING` (broken
+BIGQUERY_HIVE ref), `CLOUD_BUILD_SUCCESS_CHECKLIST` (retired merge-to-main-triggers-CloudBuild vs LDR→main + qg-v2).
+REDIRECT (targets exist): `docs/ARCHITECTURE` (→ `/codex/05-infrastructure/deployment-clusters-live-vs-batch.md`),
+`GCS_PATHS` (→ `/codex/05-infrastructure/path-registry.md`), `SCHEMA_VALIDATION` + `GCS_AND_SCHEMA` (→
+`/codex/02-data/availability-manifest-and-data-status.md`), `DEPLOYMENT_GUIDE` (→
+`/codex/05-infrastructure/vm-tarball-deployment.md`), `CLOUD_AGNOSTIC_MIGRATION` (→
+`/codex/05-infrastructure/cloud-agnostic-script-pattern.md`), `INFRASTRUCTURE` (→
+`/codex/05-infrastructure/auth-setup.md`), `COST` (→ `/codex/05-infrastructure/billing-cost-observability.md`),
+`GCS_LIFECYCLE_AGGRESSIVE_STRATEGY` (→ `/codex/05-infrastructure/gcs-lifecycle-policies.md`), `GITHUB_TOKEN_CLOUD_BUILD`
+(→ `/codex/05-infrastructure/cicd-setup.md`), `UI_SPEC` (→ `/codex/05-infrastructure/deployment-ui-architecture.md`),
+`COMPREHENSIVE_SERVICE_AUDIT_FRAMEWORK` (→ `/codex/11-project-management/` citadel standards). KEEP: root
+`{README,ARCHITECTURE,QUALITY_GATE_BYPASS_AUDIT}`, `RUNBOOKS`, `hybrid-live-seam`, `cli`, `SHARDING_AND_DATA_ALIGNMENT`,
+`STANDARDIZED_EVENT_LOGGING`, `TESTING`, `BIGQUERY_INTEGRATION_GUIDE`, `RESOURCE_MONITORING_AND_RIGHTSIZING`,
+`VM_HEALTH_AND_GCSFUSE_OPTIMIZATION`, `CACHE_AND_STATE`, `E2E_SPECS`, `setup`, `dev-environment`, `local-run-guide`,
+`CLI_REFERENCE_TEMPLATE`. ~~Marginal MIGRATE: `SHARDING_AND_DATA_ALIGNMENT` shard-atom taxonomy…~~ **RESOLVED no-op
+2026-07-27 (Phase-2): VERIFIED already present verbatim** in `/codex/02-data/availability-manifest-and-data-status.md` —
+the shard-atom taxonomy (sports `(league_id,day)` codex L53-54/302-327, prediction `(canonical_question_group,day)`
+codex L58-60/302-318, v7 `job_id` col codex L65-67/521-529) matches the deployment-service doc's own "Multi-axis
+correction (2026-05-06)" callout, and that doc already declares codex the "Canonical SSOT for shard atoms + manifest
+semantics" (L18). Not a migrate source — a REDIRECT-class doc for Phase 3. No codex write.
+
+**deployment-service [infra/profiles/runbooks] (42)** — DELETE:
+`audit/{CURRENT_AUDIT,ARCHIVE,DEPLOYMENT_SPLIT_AUDIT_REPORT}.md` (the whole `audit/` dir — stale 2026-03 point-in-time
+snapshots, resolved P0s / completed migration). FIX-STALE: `resource-profiles/*` (all 22 carry
+`POST_PLAN_BANNER_2026_05_06` w/ a wrong-depth `../`-relative link + refs to archived May plans; `execution-service.md`
+uses stale `.plan` ext), `terraform/README.md` + `terraform/modules/README.md` (broken `unified-trading-codex/` refs —
+mirror archived/gone), `configs/RUNTIME_TOPOLOGY_DECISIONS.md` (broken archived-mirror refs + Feb-dated gap tables),
+`templates/branch-protection-template.md` (names `quality-gates` — actual `quality-gates-v2`; cites nonexistent
+`make ci-local`). REDIRECT: `templates/branch-protection-template.md` (→ `/codex/08-workflows/ci-cd-flow.md`),
+`configs/RUNTIME_TOPOLOGY_DECISIONS.md` (redirect-with-migration →
+`/codex/04-architecture/runtime-deployment-topology.md`). KEEP: `resource-profiles/*` (22 — repo-specific
+CPU/mem/timeout/cost/VM-override per service incl. COINBASE c2-standard-60; content KEEP, only the banner is stale),
+`scripts/{vm,recovery,cloud-run}/README.md`, `configs/{README,BUCKET_CONFIG_SCHEMA}.md`,
+`packer/agent-orchestrator/README.md`, `deployment_service/backends/README.md`, `terraform/{README,modules/README}.md`
+(KEEP content, fix refs), `infra/ibkr-gateway/FIRST_TIME_LOGIN.md`. **Runbooks: 4/4 FULLY frontmatter-compliant**
+(`owner`/`cadence`/`verifier`/`last_executed`; two staging runbooks carry `last_executed: never` but the field is
+present).
+
+### market-data-processing-service refreshed registry (2026-07-27) — supersedes the Appendix-A `(22)` entry
+
+> Read-only re-audit verifying the initial-pass classification against current repo docs + codex. Count corrected 22→25.
+> All REDIRECT targets VERIFIED-EXIST. Apply stays Phase-3/4 under the operator FIX-STALE-only hold.
+
+**market-data-processing-service (25)** — DELETE: `DEPLOYMENT_GUIDE.md` (stub → FEMI), `TESTING.md` (stub, `pytest`
+direct → TESTING_GUIDE), `REFACTORING_STANDARDS_COMPLIANCE.md` (one-off + archived-mirror refs),
+`specs/PLANS_ALIGNMENT.md` + `specs/README.md` (stale plan map — archived plans). FIX-STALE: `DEPENDENCIES.md`
+(`{category}` vocab + `gs://market-data-tick-{category}`), `DEPLOYMENT_GUIDE_FEMI.md` (`{category}` + hyphen partition
+`day-{date}/`; its `{env}` bucket refs ARE tiered), `CONFIGURATION.md` (`{category}` + un-tiered processed bucket),
+`ERROR_HANDLING.md` (`category="CEFI"` arg), `SCHEMA_VALIDATION.md` (`category` schema-column "spot/perp/future" retired
+vocab), `GCS_PATHS.md` (inline `gs://`/`gsutil ls` vs `resolve_bucket_name` — NO LONGER un-tiered, now `{env}`-carrying
+since 2026-07-21), root `README.md` (archived-mirror ref). REDIRECT (targets exist):
+`TIMEFRAME_AGGREGATION_SPECIFICATION.md` (→ `/codex/02-data/bar-boundary-candle-edge-convention.md` +
+`/codex/02-data/mdps-candle-canonical-reconciliation.md`), `SCHEMA_VALIDATION_AND_TIMEFRAME_SUFFIXING_E2E.md` (→
+`/codex/02-data/schema-governance.md` + `/codex/02-data/canonical-schema-groups.md`),
+`UNIFIED_SCHEMA_AND_CLIENT_USAGE_GUIDE.md` (→ `/codex/02-data/canonical-schema-groups.md`). KEEP: `ARCHITECTURE.md`,
+`HFT_FEATURES_TIER1_ADDITIONS.md`, `batch_processing/NAN_HANDLING_DESIGN_SPECIFICATION.md`, `SETUP_GUIDE.md`,
+`USAGE_GUIDE.md`, `TESTING_GUIDE.md`, `VERIFICATION_GUIDE.md`, `CONTRIBUTING.md`, `QUALITY_GATE_BYPASS_AUDIT.md`,
+`docs/README.md`. No MIGRATE (candle-edge/schema material codex needs already lives in the REDIRECT targets).
+`TIMEFRAME_AGGREGATION`'s `resample(closed='right', label='right')` is ALIGNED with the codex right/close-edge
+convention (genuine duplication → REDIRECT, not FIX-STALE).
+
+### instruments-service refreshed registry (2026-07-27) — supersedes the stale Appendix-A `(19)` entry
+
+> Read-only re-audit via opus sub-agent (`.claude/*` symlink mirrors, `.pytest_cache/`, `.git/` excluded as
+> vendored/generated). 13 repo-owned docs. The Appendix-A `(19)` entry is FULLY superseded — its `specs/` dir,
+> `instrument-catalogue`, and `POLYMARKET_PREDICTION` no longer exist (consolidated into `docs/ADAPTER_ARCHITECTURE.md`
+>
+> - the 5 per-asset-group `*_INSTRUMENTS.md` docs). All cited REDIRECT/repoint targets VERIFIED-EXIST — none need
+>   creating. Apply (redirects/deletes/fixes) stays Phase-3/4 under the operator FIX-STALE-only hold.
+
+**instruments-service (13)** — DELETE: `scripts/README.md` (documents ONLY a non-existent `run_quality_gates.py`; cites
+retired `../unified-cloud-services` monorepo + stale 65% coverage [actual 88] + `GH_PAT`-in-`.env` flow; zero index
+value — never lists the ~90 real scripts), `.github/BRANCH_PROTECTION_SETUP.md` (dead manual GitHub-clicks how-to,
+superseded by centralized ruleset/template rollout from PM per CLAUDE "branch protection = ruleset + classic BOTH";
+names retired `quality-gates` check + 65% coverage). FIX-STALE: `README.md` (HEAVY — 4 archived-mirror
+`unified-trading-codex/` refs [L35/116/123/124]; cites 3 NON-EXISTENT dep repos
+`unified-internal-contracts`/`unified-reference-data-interface`/`unified-sports-reference-interface` [actual siblings =
+UTL+UAC only]; attributes `InstrumentRecord`/`InstrumentGenerator`/`MockScenario` to "UIC" though they live in UAC
+`.../internal/reference/`; stale CLI `--CEFI/--TRADFI/--DEFI/--SPORTS`+`--redo-all` vs real
+`--asset-group CEFI`+`--force`; `urdi_reference_provider.fetch(venue,date)` vs real
+`fetch_instruments_for_all_venues()`), `CONTRIBUTING.md` (retired `git checkout/pull/push origin main`,
+`python -m pytest`, plain `quickmerge "msg"` [no `--agent`/`--files`], PR-auto-merge-to-main [no LDR],
+branch-protection-on-main, dead `.cursorrules`/`unified-trading-deployment-v2/` refs), `.github/BRANCH_PROTECTION.md`
+(required check `quality-gates` → actual `quality-gates-v2`; nonexistent `make ci-local`; coverage 35%/65% → actual 88;
+1-approval model), `docs/SETUP_GUIDE.md` (CLI examples `--mode instruments`/`--mode instruments-query` [L38/476/477] use
+`--mode` as an OPERATION name — violates the CLI-convention SSOT; real form `--operation instruments --mode batch`),
+`docs/SPORTS_INSTRUMENTS.md` (LOW-CONFIDENCE — `gs://features-sports-{project}/` [L432/501-502] lacks the `{env}` tier
+its siblings carry; verify vs codex before treating as stale — may be a legit folded env-agnostic bucket). REDIRECT:
+none strictly required (`CONTRIBUTING.md` + `.github/BRANCH_PROTECTION.md` are REDIRECT-eligible →
+`/codex/08-workflows/ci-cd-flow.md`, but classified FIX-STALE to match the deployment-service
+`CONTRIBUTING`/branch-protection-template precedent; owner's Phase-3 call). MIGRATE-TO-CODEX: none. KEEP-ESSENTIAL:
+`QUALITY_GATE_BYPASS_AUDIT.md`, `docs/ADAPTER_ARCHITECTURE.md`, `docs/{CEFI,DEFI,PREDICTION,TRADFI}_INSTRUMENTS.md`, +
+`docs/SETUP_GUIDE.md`/`docs/SPORTS_INSTRUMENTS.md` (KEEP content, fix the one literal each above) — all rich, current,
+repo-specific (per-asset-group instrument-type catalogs + real GCS audit findings + module map / 8-stage command flow /
+canonical-id current-vs-target spec), correctly citing LIVE PM `/codex/` + UAC ownership. **Net: duplication LOW;
+dominant remediation FIX-STALE (README dep/CLI/mirror drift) + 2 DELETEs; no MIGRATE; no codex target needs creating for
+confirmed items.**
+
+Verification notes (all cited targets ground-truthed):
+
+- `/codex/08-workflows/ci-cd-flow.md`, `/codex/06-coding-standards/quality-gates.md`,
+  `/codex/06-coding-standards/cli-convention.md` — **VERIFIED-EXIST** (CONTRIBUTING/BRANCH_PROTECTION repoint;
+  scripts/README's real QG replacement; SETUP_GUIDE `--mode` fix authority).
+- README L35 `unified-trading-codex/09-strategy/cross-cutting/operational-modes-matrix.md` →
+  `/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` — **VERIFIED-EXIST** (note the
+  `architecture-v2/` path drift). L116/L123 `unified-trading-codex/{02-data,06-coding-standards}/` → live `/codex/…`
+  dirs — **VERIFIED-EXIST**. L124 `unified-trading-codex/09-strategy/defi/` — **NEEDS-MANUAL-PICK** (no 1:1 live target;
+  `/codex/09-strategy/defi/` absent — closest live SSOTs `/codex/04-architecture/defi-execution-overview.md` or
+  `/codex/02-data/defi-canonical-naming-ssot.md`; Phase-3 editorial choice, NOT a codex create).
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`,
+  `/codex/04-architecture/instrument-universe-registry-consolidation.md` — **VERIFIED-EXIST** (already cited correctly
+  by `ADAPTER_ARCHITECTURE`; no change needed).
+- **URDI (plan finding 369) — CONFIRMED not a doc-staleness problem**: `ADAPTER_ARCHITECTURE.md` (L54-58) +
+  `TRADFI_INSTRUMENTS.md` (L75) describe URDI correctly as the load-bearing internal
+  `reference_data`/`urdi_reference_provider.py` module, aligned with codex. No URDI doc rename recommended (README's
+  URDI staleness is only its framing of URDI-as-external-repo, folded into the README FIX-STALE).
+- Code-truth false-positives avoided: `unified_api_contracts.canonical.canonical_mappings` (SETUP_GUIDE L282) STILL
+  EXISTS (the plan's "canonical/ deleted" note was specifically `canonical/normalize/`); PREDICTION `category=` (L98) is
+  a live Kalshi API query param, not retired partition vocab.
+- **BIG FINDING (determinable FIX-STALE → Phase-3, owner-routed, not operator-gated)**: `instruments-service/README.md`
+  (mtime 2026-07-03) — the repo front-door — contradicts its two newer authoritative docs (`SETUP_GUIDE.md`@2026-07-24,
+  `ADAPTER_ARCHITECTURE.md`@2026-07-19) and live `pyproject.toml` on the dependency graph: it tells a reader IS depends
+  on / imports from `unified-internal-contracts`, `unified-reference-data-interface`,
+  `unified-sports-reference-interface` — none of which exist in the workspace (actual editable siblings = UTL + UAC
+  only). A reader following README would import nonexistent packages. The Phase-3 README rewrite must cite
+  `SETUP_GUIDE`/`ADAPTER_ARCHITECTURE` as the reconciliation ground truth.

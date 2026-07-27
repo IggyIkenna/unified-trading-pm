@@ -17,6 +17,6 @@
 #
 # See codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 4 for the full
 # rationale.
-max_na_docs: 366
-max_na_open_todos: 1441
+max_na_docs: 369
+max_na_open_todos: 1390
 last_updated: "2026-07-27"

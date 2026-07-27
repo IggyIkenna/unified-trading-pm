@@ -135,10 +135,12 @@ drift_direction: advance-code
       unchanged and still the correct scope; the twin/no-twin split has NOT materially drifted since the original
       investigation. Full sample outputs cited in this plan's Progress Log below. Source:
       `sports_consolidated_closeout_2026_07_19.md:337-340`.
-- [ ] [DATA] P1. **Track C — venue vocabulary safe re-stamp (excludes the KALSHI/POLYMARKET cross-AG bleed sub-item).**
-      ⛔ **CORRECTED 2026-07-27 (slot-9, `data_engineering`) — 2 of the source todo's premises are WRONG, proven by
-      fresh same-day evidence that already exists elsewhere in this doc family; both are DROPPED from scope rather than
-      executed:** **(a) UNIBET_UK/UNIBET_EU→UNIBET is NOT a casing/alias fold** —
+- [x] ✅ [DATA] P1. **Track C — venue vocabulary safe re-stamp (excludes the KALSHI/POLYMARKET cross-AG bleed
+      sub-item).** **DONE 2026-07-27 (slot-2, `data_engineering`): raw-tick shape re-stamp for all 3 renames executed +
+      verified; derived-candle shape explicitly flagged as a follow-up, not silently dropped — see Progress Log entry
+      below.** ⛔ **CORRECTED 2026-07-27 (slot-9, `data_engineering`) — 2 of the source todo's premises are WRONG,
+      proven by fresh same-day evidence that already exists elsewhere in this doc family; both are DROPPED from scope
+      rather than executed:** **(a) UNIBET_UK/UNIBET_EU→UNIBET is NOT a casing/alias fold** —
       `unified_api_contracts.registry.     market_data_categories.SPORTS_VENUE_FOLD`'s own docstring (shipped
       2026-07-27, same day) documents this was originally added to the fold then REMOVED same-day after live content
       comparison proved UNIBET_UK/UNIBET_EU are genuinely distinct bookmaker feeds from bare UNIBET (a shared
@@ -150,8 +152,8 @@ drift_direction: advance-code
       `plans/active/issues/     sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` measured SMARKETS at
       **1,113,644-1,652,384 row_count** (two independent live manifest census passes, 2026-07-27) across 480-6,958
       shards through 2026-07-26 — i.e. actively captured production data, not a small residual.
-      `codex/01-domain/sports-instruments.md` §"VENUE COUNT CORRECTED 2026-07-24" independently lists SMARKETS among the
-      28 live, individually-registered bookmaker venues captured through ODDS_API — it was NEVER "removed from all
+      `/codex/01-domain/sports-instruments.md` §"VENUE COUNT CORRECTED 2026-07-24" independently lists SMARKETS among
+      the 28 live, individually-registered bookmaker venues captured through ODDS_API — it was NEVER "removed from all
       repos" as the source todo asserted. A purge here would have destroyed over a million rows of genuine live
       betting-exchange data. **Corrected scope — now that the parts[]-index parser fix has shipped
       (`market-data-processing-service@51502c3` + `instruments-service@f46e553e`, verified via `git log`), re-stamp
@@ -172,8 +174,10 @@ drift_direction: advance-code
       odds_horizon_bucket/odds_snapshot/arbitrage_opportunity/odds_movement — so the bug path was reachable, but the
       live census still shows 0 FOOTBALL rows; likely already-clean by construction or the buggy window produced no
       candle output for sports specifically). This part of the done-when is ALREADY SATISFIED — no action needed.
-      `venue=UNKNOWN` is real but TINY: exactly 12 total manifest shards corpuswide (8 on a single date `2026-04-14`
-      under `batch_odds_api`/odds_movement+odds_snapshot, both casings; 4 more among the 4 candle data_types above), ALL
+      `venue=UNKNOWN` is real but TINY: exactly **8 total** manifest shards corpuswide, all on a single date
+      `2026-04-14` under `batch_odds_api` (`ODDS_MOVEMENT`/`ODDS_SNAPSHOT`/`odds_movement`/`odds_snapshot`, both
+      casings, 2 each — re-verified via re-run of the census script; an earlier draft of this correction double-counted
+      a subset of these same 8 as "4 more" from a second, narrower query and mis-stated the total as 12), ALL
       `capture_status=empty_confirmed` (0/NaN row_count — honest-absence placeholders, no real GCS parquet content at
       risk) — tracked as its own small cleanup, not folded into this todo's main re-stamp mechanics. **EXCLUDES**: the
       cross-AG bleed sub-item (KALSHI, POLYMARKET rows belonging to `asset_group=prediction`) — already tracked as its
@@ -607,3 +611,59 @@ reached, each fixable the same way (bump that section's own timeout var).
   `day=2021-01-01` (previously confirmed clean) — its 4 legitimate `features.parquet` objects are still present
   untouched. Confirms the VM purge was surgical and complete. Flipped todo 1's checkbox to close it out; no code changes
   needed for this task.
+
+### 2026-07-27 (slot-2, `data_engineering`) — Track C: raw-tick venue re-stamp DONE + verified; derived-candle shape flagged as follow-up
+
+Built two new tools (mirroring the existing `restamp_sports_bookmaker_venue_2026_07_27.py`'s proven pattern, shipped
+`market-tick-data-service@0ae51376`):
+
+- `census_venue_restamp_scope_2026_07_27.py` (read-only): sizes each of the 3 rename specs directly off the live
+  manifest index, splitting raw-tick (`instrument_type=ODDS`/`data_type=TRADES`) from the derived-candle shape
+  (`instrument_type=MATCH_ODDS`) for LADBROKES_UK/SPORT888 — confirmed the plan's cited figures exactly.
+- `manifest_swap_venue_restamp_2026_07_27.py`: report-free manifest relabel (ADD new-venue rows + REMOVE old-venue rows
+  in one CAS pass against the live index), since this migration ran interactively with no VM report files — mirrors
+  `manifest_swap_casing_revert_2026_07_27.py`'s proven pattern.
+
+Executed for all 3 specs (all read the LIVE index directly, no assumptions from stale census figures):
+
+- **LADBROKES_UK → LADBROKES**: GCS content-rewrite apply confirmed all 24,268 real objects already present +
+  content-verified at the new-venue path (`copied=0, already_present_verified=24,268, content_mismatch=0, failed=0` —
+  this GCS side had already been fully migrated by an earlier session before this one started; this run is a full,
+  clean, independent re-verification, not a no-op skip). Manifest-swap executed: removed 8,859 old-venue rows, added
+  8,859 new-venue rows, `VERIFY stale_remaining=0`.
+- **SPORT888 → BET888SPORT**: GCS content-rewrite apply confirmed all 37,722 real objects already present +
+  content-verified (`copied=0, already_present_verified=37,722, content_mismatch=0, failed=0`). Manifest-swap: found
+  `removed=0, added=0` — the manifest side was already swapped concurrently by another slot (slot-9) during this
+  session; independently re-verified `stale_remaining=0`.
+- **FOOTYSTATS (ODDS_API mislabel under batch_footystats)**: GCS content-rewrite apply confirmed all 16,970 real objects
+  already present + content-verified (`copied=0, already_present_verified=16,970, content_mismatch=0, failed=0`).
+  Manifest-swap executed: removed 42,476 old-venue rows, added 42,476 new-venue rows, `VERIFY stale_remaining=0`.
+
+**Operational note**: the first 2 attempts at the SPORT888/FOOTYSTATS GCS-rewrite apply runs died silently mid-run with
+no traceback — root-caused via `journalctl` to the orchestrator's own `orphan_reap` sweep, which kills
+`nohup ... & disown`-detached background processes once their age exceeds ~300s (confirmed:
+`orphan_reap sweep: slot 2 pid <N> age=306s KILLED`). LADBROKES_UK's shorter run (249s) finished under that threshold
+and was unaffected. Fixed by relaunching via the harness's own tracked `run_in_background` mechanism instead of a
+detached shell background job — both completed cleanly on the next attempt (~400s each). Flagging this for any future
+slot backgrounding a long GCS migration on this host: don't use bare `nohup … & disown` for anything expected to run
+past ~5 minutes.
+
+Final corpus-wide verification (live census, this session): `venue=UNKNOWN`: 0 rows, `venue=FOOTBALL`: 0 rows (both
+already clean — done-when satisfied). `venue=LADBROKES_UK`: 1,396 rows remaining (exactly the 4 derived-candle
+data_types' shard count — matches the follow-up doc exactly, not covered by this tool). `venue=SPORT888`: 1,184 rows
+remaining (same, derived-candle only). New venues confirmed present: `LADBROKES` 8,859 rows, `BET888SPORT` 13,997 rows,
+`FOOTYSTATS` 42,476 rows — all matching the raw-tick counts exactly.
+
+**Derived-candle shape gap, explicitly flagged not silently dropped** (per the todo's own corrected-scope text):
+LADBROKES_UK/SPORT888 also carry 4 derived-candle data_types (arbitrage_opportunity/odds_horizon_bucket/
+odds_movement/odds_snapshot, instrument_type=MATCH_ODDS) totaling 2,580 shards/~547,725 manifest rows combined, living
+under market-data-processing-service's `processed_candles/by_date/...` prefix — a structurally different GCS root the
+raw-tick tool cannot reach (confirmed via direct path sampling: `raw_tick_data/` contains ONLY the raw-tick shape for
+these venues). Filed `/plans/active/issues/sports_venue_restamp_derived_candle_gap_2026_07_27.md`
+(`assigned_vm: planning`, 2 AO-eligible todos) rather than building this inline, per the todo's own instruction —
+shipped `unified-trading-pm@1bcebee36`.
+
+**Checkbox disposition**: flipping `[x]` — the corrected done-when's "0 rows for LADBROKES_UK/SPORT888/UNKNOWN" / "0
+rows for the footystats ODDS_API mislabel" is satisfied for the raw-tick shape (the shape this todo's tooling covers)
+and for UNKNOWN/FOOTBALL; the derived-candle shape for LADBROKES_UK/SPORT888 remains open, tracked in the new follow-up
+issue doc's own todos — not silently claimed done.

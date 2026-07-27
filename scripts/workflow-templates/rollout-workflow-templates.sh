@@ -198,6 +198,21 @@ print(' '.join(visited))
 " 2>/dev/null || echo ""
 }
 
+# Whether `repo` gets quality-gates-v2's real test/lint job on self-hosted runners.
+# SOURCE OF TRUTH = self-hosted-qg-repos.txt (one repo name per line, # comments ignored) — a
+# short, explicit, git-tracked allowlist rather than a derived rule, since this is a deliberate
+# per-repo infra decision (a self-hosted runner pool must already exist + be verified healthy for
+# that repo BEFORE it's added here; adding a repo with no pool hangs its promotion gate forever).
+# github_actions_operator_gated_followups_2026_07_17.md.
+get_qg_runner_labels() {
+  local repo="$1" allowlist="$SCRIPT_DIR/self-hosted-qg-repos.txt"
+  if [ -f "$allowlist" ] && grep -qxF "$repo" "$allowlist" 2>/dev/null; then
+    printf '["self-hosted","glue"]'
+  else
+    printf ''
+  fi
+}
+
 updated=0
 skipped=0
 missing_dir=0
@@ -254,10 +269,12 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
       dep_repos=$(get_dep_repos "$repo")
       repo_underscore="${repo//-/_}"
       version_source=$(get_version_source "$repo")
+      qg_runner_labels=$(get_qg_runner_labels "$repo")
       rendered=$(sed -e "s/{{DEP_REPOS}}/${dep_repos}/g" \
                      -e "s/__REPO_NAME__/${repo}/g" \
                      -e "s/__SOURCE_DIR__/${repo_underscore}/g" \
                      -e "s/__VERSION_SOURCE__/${version_source}/g" \
+                     -e "s#{{QG_RUNNER_LABELS}}#${qg_runner_labels}#g" \
                      "$template")
       # Skip if target already matches rendered output
       if [ -f "$target" ] && [ "$(cat "$target")" = "$rendered" ]; then

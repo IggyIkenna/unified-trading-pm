@@ -586,13 +586,24 @@ drift_direction: advance-code
       HYPERLIQUID trades rows across both windows (post-force-rerun) with the pre-existing
       `empty_confirmed`/`SOURCE_RETURNED_ZERO` status cleared, and 2025-03-22..2025-05-24 correctly left empty. Source:
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
-- [ ] [BACKEND] P1. Delete the retired perp_funding DeFi-routing residue: remove the stale `hyperliquid`/`aster`/
+- [x] ✅ [BACKEND] P1. Delete the retired perp_funding DeFi-routing residue: remove the stale `hyperliquid`/`aster`/
       `lighter` entries from `_PROTOCOL_PIPELINE_SOURCE` (`perp_funding_handler.py:188-194`) and `_chain_map`
       (`:244-249`), delete the spent one-off script `scripts/backfill_hl_funding_from_s3_asset_ctxs_2026_06_17.py` (past
       its own `# Delete-when:` marker). Verify the `protocols` iterable no longer includes hyperliquid/aster/lighter
       before deleting the entries. Repo: market-tick-data-service. **Done when**: `perp_funding_handler.py` no longer
       routes those 3 venues through the defi bucket, the script file is deleted, `quality-gates.sh` green. Source:
-      `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
+      `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`. — **Already resolved, no code change
+      needed**: `market-tick-data-service@2a760000` ("refactor(perp-funding): delete retired HYPERLIQUID/ASTER/LIGHTER
+      DeFi-routing residue + spent backfill_hl_funding_from_s3_asset_ctxs one-off"), landed 2026-07-19, 6 days before
+      this batch1 plan's 2026-07-25 triage ran. Verified live on current HEAD: `_PROTOCOL_PIPELINE_SOURCE` and the
+      per-protocol `_chain_map` inside `_run_process` both contain only `kalshi_perp`/`polymarket_perp` (no
+      hyperliquid/aster/lighter keys); `DEFAULT_PROTOCOLS` likewise lists only those two; the `protocols` iterable never
+      includes the retired venues, so `perp_funding_handler.py` cannot route them through the defi bucket. The one-off
+      script `scripts/backfill_hl_funding_from_s3_asset_ctxs_2026_06_17.py` is confirmed deleted
+      (`git log     --diff-filter=D` shows it removed in the same commit; `find` on current tree returns nothing).
+      Remaining `hyperliquid` mentions in the file are docstring/comment history + one unrelated
+      `pipeline_mode_for_source` default in the generic "unknown protocol" error-path fallback, not a routing entry.
+      Nothing to ship.
 - [ ] [BACKEND] P1. Add the missing `Mode.REPLAY` case to `possible_manifest._canonical_pipeline_mode_prefixes` in
       unified-api-contracts so it also emits `replay_<source>/` prefixes alongside `Mode.BATCH`/`Mode.LIVE`, closing a
       latent gap in the phantom-shard auditor (additive, 1-line-class, no-risk future-proofing). Confirm

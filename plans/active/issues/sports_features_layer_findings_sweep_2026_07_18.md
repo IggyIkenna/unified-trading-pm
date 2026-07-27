@@ -115,6 +115,17 @@ INPUT (flat raw): shape (40, 13)  ->  OUTPUT: shape (0, 0)   # 40 rows -> 0
 **Fix**: handle the flat shape (keep legacy parsing for any old shards), and emit `coach_id`/`coach_name`. Then
 re-derive `fixture_lineups` across history — **no api-football calls needed**, the corpus is already on disk.
 
+**2026-07-27 corroboration + open question (slot-3, todo-10 benchmark work,
+`/plans/active/data_pipeline_check_mdps_features_2026_07_20.md`)**: running the `/data-pipeline-check-features`
+benchmark leg for `SPORTS:sports` (day=2026-07-19, both a 7-day and a 30-day window, 13 distinct days observed total),
+the `player_lineup` calculator still emits 74/74 all-zero columns every day tested — consistent with, not contradicting,
+the "starved calculator" finding above. **Open question, not independently diagnosed**: the 2026-07-18 re-derive's
+window was `2019-01-01..2026-07-17` — day=2026-07-19 falls 2 days PAST that window's end. Worth checking whether this is
+(a) normal expected data-capture lag for a day only ~8 days old relative to when it was tested, or (b) the forward/live
+`fixture_lineups` capture path was never wired to keep pace after the one-time historical re-derive (i.e. new days
+landing after 2026-07-17 never get the flat-shape fix applied going forward). Flagging rather than guessing — did not
+trace the live/forward capture path this session.
+
 - [x] [CODE] P0. Fix `_normalize_fixture_lineups` to parse the flat one-row-per-player shape + emit `coach_*`; add a
       regression test pinning BOTH shapes (flat 40 rows -> 40 rows; legacy nested -> unchanged). —
       features-service@cf10b931 + 7 regression tests. Evidence: QG green (17,689 passed / 0 failed, ALL QUALITY GATES
