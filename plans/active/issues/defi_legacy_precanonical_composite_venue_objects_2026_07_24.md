@@ -118,6 +118,12 @@ it.
 - [ ] [OPERATOR] P1. **Decision needed**: fold (migrate each object onto its correct canonical path, parsing the
       parquet's own `instrument_key`/`data_type` columns to re-derive it) vs. some other disposition — gated on the
       scale + sample-distribution facts from the two todos above. This is a genuine judgment call, not a mechanical fix
-      (per task_template.md's bounded-outcome rule) — do not execute a fold/migrate without this decision.
+      (per task_template.md's bounded-outcome rule) — do not execute a fold/migrate without this decision. **Citation
+      corrected 2026-07-27**: the two prerequisite todos above are checked `[x]` here only because they were DELEGATED
+      to `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (todos at its lines ~307/315) — as of this re-check, THOSE
+      todos are still open `[ ]` there, so the scale + distribution facts this decision needs have NOT actually been
+      gathered yet. Kept operator-gated (genuine design judgment, not a reversibility question), but decide fresh once
+      the satellite plan's measurement todos actually land — do not treat the `[x]` above as proof the prerequisite data
+      already exists.
 - [ ] [PM] P2. File a proper migration plan once scale + the fold-vs-migrate decision are both in hand — this issue doc
       is the scoping step per CLAUDE.md's findings triage ("audit-scope → wrapper plan"), not the execution surface.
