@@ -68,9 +68,12 @@ watch the 429 rate before any wide wave.**
       fixed to read from an inherited env so a PROGRESS-checkpoint-resumed relaunch round-trips instead of being
       clobbered by the hardcoded default. Verified by reading both launchers' current HEAD; checkbox was outstanding
       only because the code-ship commit never flipped it.
-- [ ] [DATA] P0. **`available_at` clobbered by wall-clock `now()`** — filed separately as
-      `defi_available_at_clobbered_by_wallclock_2026_07_20.md` (BIG FINDING, breaks batch==live ε=0). Needs an operator
-      ruling on the intended semantics before the fix.
+- [x] ✅ [DATA] P0. **`available_at` clobbered by wall-clock `now()`** — filed separately as
+      `defi_available_at_clobbered_by_wallclock_2026_07_20.md`, now RESOLVED + ARCHIVED. Operator ruled 'keep the
+      on-chain tick' (Option A): `mtds@f7af6ece` removed the 3 verified clobbers, `mtds@51ec9af2` extended the fix to
+      the broader 17-handler follow-up (9 handlers left on wall-clock as the honest fallback, no on-chain timestamp
+      exists). Both SHAs verified ancestors of `origin/live-defi-rollout`. Checkbox was outstanding only because the
+      resolving commits never flipped it here.
 
 ## Optimization — the perf bundle (ship as ONE commit or not at all; canary-gated)
 
