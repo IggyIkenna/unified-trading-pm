@@ -95,7 +95,21 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       logical_dead_end for staking venues), and `BROKER_REGISTRY` (honest-empty — no TradFi broker in the DeFi/CeFi MVP
       set, a typed gap not a silent omission). Verified 2026-07-27 via live import: 7 registry venues, all fields
       populated or explicitly `None` with a cited reason.
-- [ ] [SPEC] P1. **Fees**: exchange/gas/broker/clearing fees at venue/instrument-type/tier granularity.
+- [x] ✅ [SPEC] P1. **Fees**: exchange/gas/broker/clearing fees at venue/instrument-type/tier granularity. — ALREADY
+      FIXED (checkbox was stale) `unified_api_contracts/internal/architecture_v2/fees_registry.py` was backfilled
+      2026-06-13 (commit `5e7d0685`): `FEES_REGISTRY` carries 21 cited entries — CeFi perp+spot maker/taker (official
+      base/VIP0 tier per venue: hyperliquid/binance/bybit/okx/deribit) + DeFi swap fee + gas estimate + Aave flash-loan
+      fee (transcribed from execution-service `algorithms/sor.py` / `venues/aave.py`, file:line cited). Verified
+      2026-07-27: the module's own docstring falsely claimed the registry was "intentionally empty" — fixed in
+      unified-api-contracts@13a01913 (this task) to accurately state the backfilled status. **RESIDUAL** (honest gap,
+      same class as `collateral_registry.py`'s empty `BROKER_REGISTRY`): `FeeComponent.BROKER` (0 entries — no TradFi
+      commission rate table in-repo, only IBKR's live `commissionReport` callback field) and `FeeComponent.CLEARING` (0
+      entries — no CME/ICE/Deribit/CBOE clearing-fee constant in-repo) stay honest-empty; every entry carries
+      `tier="base"` only (no volume/VIP fee-tier schedule exists in-repo, unlike margin's sibling
+      `cefi_margin_tiers.py`). Also fixed stale doc-drift in `codex/09-strategy/architecture-v2/capability-wizard.md`
+      (line 115 said fees was still "honest-empty") and `capability-wizard-question-bank.md` (fee-stack question status
+      `gap`→`partial`; the three sibling collateral-registry questions were ALSO stale `gap` despite
+      `collateral_registry.py`'s 2026-06-12 backfill — fixed those to `registry` too, broker question stays `gap`).
 - [ ] [SPEC] P1. **Simulation assumptions**: simulatable candle granularities, matching/fill assumptions per archetype
       area, backtest-live symmetry nuances per venue/instrument.
 - [ ] [SPEC] P1. **Fund structures**: offerable pooled/SMA/prop structures with subscription/redemption + rebalance
