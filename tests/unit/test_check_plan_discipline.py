@@ -52,3 +52,14 @@ class TestHasLiveDeferredMarker:
 
     def test_no_deferred_token_at_all(self) -> None:
         assert MOD._has_live_deferred_marker("Nothing to see here.") is False
+
+    def test_deferred_by_design_is_not_live(self) -> None:
+        text = "5. e2e_defi_config_taxonomy D1 — confirmed stays DEFERRED-BY-DESIGN, no timeline."
+        assert MOD._has_live_deferred_marker(text) is False
+
+    def test_deferred_by_design_does_not_mask_a_real_marker_elsewhere(self) -> None:
+        text = "This item stays DEFERRED-BY-DESIGN, but separately this plan's own item is **DEFERRED** for real."
+        assert MOD._has_live_deferred_marker(text) is True
+
+    def test_other_deferred_qualifier_is_still_live(self) -> None:
+        assert MOD._has_live_deferred_marker("Blocked pending DEFERRED-OPERATOR-DECISION on the key rotation.") is True
