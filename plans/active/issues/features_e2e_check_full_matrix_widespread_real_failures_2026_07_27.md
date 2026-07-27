@@ -228,11 +228,21 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
       `features-service@696768c7` that a THIRD slot shipped concurrently for a related-but-distinct bug). Full
       reconciliation + verification against real production data in
       `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`.
-- [ ] [SCRIPT] P0. **Root cause B** — fix `features-multi-timeframe-service`'s delta_one-input lookup to use the
+- [x] [SCRIPT] P0. **Root cause B** — fix `features-multi-timeframe-service`'s delta_one-input lookup to use the
       requested `--start-date`/`--end-date` (or the per-day date it's currently processing), not the current wall-clock
       date. Repo: features-service (`features_service/multi_timeframe/` or wherever the delta_one input loader lives).
       **Done when**: a force run for a historical day with real delta_one output present succeeds (not a 0-instruments
-      failure) — add a regression test asserting the lookup uses the CLI-provided date, not `datetime.now()`/similar.
+      failure) — add a regression test asserting the lookup uses the CLI-provided date, not `datetime.now()`/similar. —
+      ✅ features-service@87e39bc7. Root cause: `deployment-service/scripts/vm/launch-features-vm.sh` invokes EVERY
+      family (multi_timeframe included) with `--start-date`/`--end-date`, never `--date`, but
+      `features_service/multi_timeframe/cli/main.py`'s `_extra_args` only declared `--date` — `ServiceBootstrap`'s
+      `parser.parse_known_args()` silently dropped the unrecognised `--end-date`, so `date_arg` fell through to
+      `date.today()` for every batch invocation regardless of the requested window. Added `--start-date`/`--end-date` to
+      the CLI (`--end-date` wins over the legacy `--date`, preserving back-compat for `scripts/e2e/run_pipeline_e2e.py`
+      and `scripts/multi_timeframe/smoke_matrix.py`, which still pass only `--date`). 3 new regression tests in
+      `tests/multi_timeframe/unit/test_cli_main.py` assert the CLI-provided `--end-date` reaches the batch handler (not
+      `date.today()`), that `--end-date` wins when both are given, and that the `--date`-only back-compat path still
+      works. Full `quality-gates.sh` green (17945 passed, exit 0) before ship.
 - [ ] [SCRIPT] P1. **Root cause C** — either chunk/stream the `regime_detection` HMM fit for `cross_instrument` (CEFI
       has ~589 instruments per the recent universe-filter fix; 4,476 columns is a wide feature matrix) or size the
       launcher's VM up for this family/AG, and/or add a memory-budget guard before the fit rather than letting the OS
