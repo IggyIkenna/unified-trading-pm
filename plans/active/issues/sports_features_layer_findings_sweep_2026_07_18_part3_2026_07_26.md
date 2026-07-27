@@ -97,15 +97,24 @@ in the ROLL-UP, not the capture. That reframes the remaining work completely:
 - The genuinely-missing ~50% is a real but much smaller target, and some of it is honest absence (cup/friendly fixtures
   legitimately have no `Regular Season - N` round).
 
-- [ ] [DATA] P0. Rebuild the sports catalogue
+- [x] ✅ [DATA] P0. Rebuild the sports catalogue
       (`build_instrument_catalogue.py --asset-group sports --since     2019-01-01`) and re-measure `round` /
       `competition_phase` there. If the catalogue jumps from 3.2% toward the raw ~50%, the rollup was simply stale and
-      NO backfill is needed for that half.
-- [ ] [DIAG] P0. Only after that: characterise the residual raw blanks — split genuine absence (cups/friendlies with no
-      round concept) from real capture gaps, and size the surgical run against the real gap.
-- [ ] [CODE] P1. The surgical script scans `"/entity=fixtures/"` (line 79) — the LEGACY entity. Retarget to
+      NO backfill is needed for that half. **Answered in two parts**: § R found the bare rebuild alone does NOT fix it
+      (dead entity, `round` came out WORSE at 0.7%); R-FIXED then repointed the entity and re-ran the same rebuild,
+      taking `round` to **70.6%**. Track V's `[OPS] P2` re-roll (`sports_consolidated_closeout_2026_07_19.md`) owns the
+      NEXT periodic re-roll (+26,894 rows from § T/§ U) — still open there, not duplicated here.
+- [x] ✅ [DIAG] P0. Only after that: characterise the residual raw blanks — split genuine absence (cups/friendlies with
+      no round concept) from real capture gaps, and size the surgical run against the real gap. **Done, exceeding this
+      ask** — § T/§ U/§ W characterised the residual in full: in-window (38,170) vs pre-2019 (122,864, out of scope),
+      registry-member (27,301) vs non-registry (10,869, excluded from denominator), and "blank-only" leagues
+      re-classified from presumed-cups to genuinely-fetchable (§ W refuted the cup hypothesis on a 5-pair pilot). The
+      "Round work — TERMINAL STATE" table below reconciles every remaining in-window blank.
+- [x] ✅ [CODE] P1. The surgical script scans `"/entity=fixtures/"` (line 79) — the LEGACY entity. Retarget to
       `entity=fixtures_schedule` (verified to carry `af_fixture_id` + `round`) before any real run, or it patches the
-      wrong tree. Same staleness class as `migrate_sports_canonical_v9.py`.
+      wrong tree. Same staleness class as `migrate_sports_canonical_v9.py`. **Done** — § T's retargeted backfill
+      (`instruments-service@34ada099`) is this same script gaining a `--pairs-file` mode; verified in the current source
+      (`backfill_sports_fixture_round_2026_07_17.py:63`): `_ENTITY_SEG = "/entity=fixtures_schedule/"`.
 
 ## P. DERIVE `round` for the confident majority, spend API calls only on the clustered remainder
 
@@ -137,15 +146,22 @@ captured is the banned silent-placeholder. Hence: score first, whitelist second,
 have `round`. If the blanks are disproportionately cups/friendlies (where `Regular Season - N` does not apply at all),
 derivation covers far less of them. This MUST be measured before sizing the API run.
 
-- [ ] [DIAG] P0. Profile the BLANK half by league + competition type. If blanks concentrate in cups/friendlies,
-      derivation is not the lever there — honest absence is (a cup tie has no `Regular Season - N`).
-- [ ] [CODE] P1. Build the per-league confidence whitelist: for each (league, season), score date→round derivation
+- [x] ✅ [DIAG] P0. Profile the BLANK half by league + competition type. If blanks concentrate in cups/friendlies,
+      derivation is not the lever there — honest absence is (a cup tie has no `Regular Season - N`). **Done** — P-SIZING
+      (below, same doc) profiled it: 92% of blanks live in leagues that already have round data (50 leagues, 1,539
+      blanks), only 8% in blank-only leagues (7 leagues, 133 blanks).
+- [x] ✅ [CODE] P1. Build the per-league confidence whitelist: for each (league, season), score date→round derivation
       against the populated fixtures. Whitelist leagues scoring 100%; exclude any league with a multi-round matchday
-      (e.g. `253`).
-- [ ] [CODE] P1. Derive `round` ONLY for whitelisted (league, season) blanks, and stamp provenance (derived vs captured)
-      — never write a derived value indistinguishable from a fetched one.
-- [ ] [DATA] P1. API-fetch only the residual: non-whitelisted leagues + cup competitions + any league-season with no
-      populated fixtures to score against. Size the run from THAT count, not the whole corpus.
+      (e.g. `253`). **Shipped** — § Q's `derive_sports_fixture_round_2026_07_18.py` (`instruments-service@e63049e7`)
+      implements this as unanimity-per-(league,day) rather than a literal whitelist file: a day whose known values
+      disagree is REFUSED, self-handling the ambiguous leagues with no maintained list.
+- [x] ✅ [CODE] P1. Derive `round` ONLY for whitelisted (league, season) blanks, and stamp provenance (derived vs
+      captured) — never write a derived value indistinguishable from a fetched one. **Shipped** — § Q:
+      `round_provenance='derived'` stamped on every filled row (captured rows carry `'captured'`).
+- [x] ✅ [DATA] P1. API-fetch only the residual: non-whitelisted leagues + cup competitions + any league-season with no
+      populated fixtures to score against. Size the run from THAT count, not the whole corpus. **Done** — § T fetched
+      the 194 in-window regular-round pairs, § W fetched the 159 blank-only-league pairs; both bounded by
+      (league,season) pair count exactly as specified here.
 
 ### P-SIZING (2026-07-18) — the blank half IS exchangeable; ~89% derivable, API residual is TINY
 
@@ -172,12 +188,15 @@ round), **~89% of blanks are derivable with ZERO api-football calls**.
 The residual is bounded by DISTINCT (league, season) pairs needing a fetch, NOT by fixture or date count — one
 `GET /fixtures?league&season` returns the whole season (measured: 242 fixtures in one call).
 
-- [ ] [CODE] P0. Implement derive-then-fetch: (1) score date→round per (league, season) against populated fixtures; (2)
-      derive blanks for leagues scoring 100%, stamped as DERIVED provenance; (3) enumerate the residual (blank-only
-      leagues + non-perfect scorers) and bulk-fetch ONLY those (league, season) pairs.
-- [ ] [DIAG] P2. Classify the 7 blank-only leagues: genuine honest absence (a cup tie has no `Regular Season - N`) vs a
-      real capture gap. Do not fetch what has no round concept — that is honest absence and should be recorded as such,
-      not chased.
+- [x] ✅ [CODE] P0. Implement derive-then-fetch: (1) score date→round per (league, season) against populated fixtures;
+      (2) derive blanks for leagues scoring 100%, stamped as DERIVED provenance; (3) enumerate the residual (blank-only
+      leagues + non-perfect scorers) and bulk-fetch ONLY those (league, season) pairs. **Shipped end-to-end** — § Q
+      (`instruments-service@e63049e7`) implements steps 1-2; § T + § W implement step 3.
+- [x] ✅ [DIAG] P2. Classify the 7 blank-only leagues: genuine honest absence (a cup tie has no `Regular Season - N`) vs
+      a real capture gap. Do not fetch what has no round concept — that is honest absence and should be recorded as
+      such, not chased. **Done** — § W's 5-pair pilot REFUTED the honest-absence hypothesis: 4 of 5 were ordinary
+      leagues with simply no round captured yet (fully fetchable, 1,751 rows would-fill), only 1 was genuine
+      out-of-coverage-season absence.
 
 ### P-ERA (2026-07-18) — `round` capture STARTS mid-2019; the underivable residual is one bounded era
 
@@ -212,11 +231,14 @@ Total projected api-football spend for the entire `round` gap: **~100 calls**, v
 `--force` corpus refetch — and versus ~600-700 for the whole-corpus surgical script. The operator's "a couple of hours
 rather than days" is conservative; this is minutes of API time.
 
-- [ ] [DIAG] P0. Full-corpus dry-run running (no `--max-days`) — read fill / ambiguous / no-sibling corpus-wide before
-      `--apply`. Confirms the era split and gives the exact residual.
-- [ ] [CODE] P1. Cross-file sibling grouping: the script groups per PARQUET. If a (league, day)'s populated rows and
+- [x] ✅ [DIAG] P0. Full-corpus dry-run running (no `--max-days`) — read fill / ambiguous / no-sibling corpus-wide
+      before `--apply`. Confirms the era split and gives the exact residual. **Done** — Q-RESULT (below) is exactly
+      this: 499,620 rows scanned, 354,279 blank, 115,715 derived, 6,654 ambiguous, 231,910 no-sibling.
+- [x] ✅ [CODE] P1. Cross-file sibling grouping: the script groups per PARQUET. If a (league, day)'s populated rows and
       blanks live in different files, siblings are invisible and blanks are mis-counted as "no sibling". If the full-run
-      no-sibling count exceeds the ~8% predicted by § P-SIZING, group by (league, day) ACROSS the day's files.
+      no-sibling count exceeds the ~8% predicted by § P-SIZING, group by (league, day) ACROSS the day's files. **Done**
+      — § Q's shipped design: "Two-pass per day... pools known values across ALL the day's files" — the per-parquet
+      first cut reported 0% filled; the cross-file fix took it to 89.2% on the pilot sample.
 
 ## Q. Round derivation SHIPPED + APPLYING — 89.2% of the gap closed with ZERO api-football calls
 
@@ -251,11 +273,14 @@ Matches the § P-SIZING prediction (92% mixed-league x 97% unanimity ~= 89%) alm
 **Revised total api-football spend for the whole `round` gap: ~100 bulk calls** (early-2019 era, one
 `GET /fixtures?league&season` per league) versus **~1,260,000** for the rejected `--force` corpus refetch.
 
-- [ ] [DATA] P1. After the apply completes: re-measure round population per era, then fetch the early-2019 residual (~89
-      league-season bulk calls) and the ~8% no-sibling remainder.
-- [ ] [DATA] P1. Then rebuild the catalogue (`build_instrument_catalogue.py --asset-group sports --since 2019-01-01`)
+- [x] ✅ [DATA] P1. After the apply completes: re-measure round population per era, then fetch the early-2019 residual
+      (~89 league-season bulk calls) and the ~8% no-sibling remainder. **Done** — Q-RESULT's own era table shows the
+      before/after population per day; § T + § W fetched the residual (353 total bulk calls, superseding the ~89 early
+      estimate once the true scope was measured).
+- [x] ✅ [DATA] P1. Then rebuild the catalogue (`build_instrument_catalogue.py --asset-group sports --since 2019-01-01`)
       and verify `competition_phase` is no longer ~100% UNKNOWN — the § O hypothesis is that the rollup, not capture,
-      was the 3.2%.
+      was the 3.2%. **Done** — R-FIXED rebuilt (round 0.7%→70.6%); § X verified `competition_phase` at 77.2% populated
+      against the real read path (was ~100% UNKNOWN in the original issue).
 
 ### Q-RESULT (2026-07-19 00:13Z) — derivation APPLIED corpus-wide: 115,715 rows filled, ZERO api-football calls
 
@@ -293,11 +318,14 @@ blanks; a file with no blanks returns early and is left unstamped. So the invari
 `round_provenance == 'derived'` identifies derived rows — anything else is captured/pre-existing. The safety requirement
 (a derived value must never be indistinguishable from a fetched one) holds.
 
-- [ ] [DATA] P1. Residual fetch: 231,910 no-sibling blanks across 3,386 days, dominated by the early-2019 zero-era.
+- [x] ✅ [DATA] P1. Residual fetch: 231,910 no-sibling blanks across 3,386 days, dominated by the early-2019 zero-era.
       Bounded by DISTINCT (league, season) pairs (~600-700 bulk calls, the original surgical-script estimate), NOT by
-      fixture count. Retarget that script to `entity=fixtures_schedule` first (§ O todo).
-- [ ] [DATA] P1. Then rebuild the catalogue and verify `competition_phase` — with raw now at 90-99% on populated eras,
-      this is the real test of the § O "the 3.2% was the stale rollup" hypothesis.
+      fixture count. Retarget that script to `entity=fixtures_schedule` first (§ O todo). **Done** — § T corrected the
+      count (161,034, not 231,910 — the 231,910 figure double-counted bare-parquet rows outside the live read path) and
+      executed the retargeted backfill (`instruments-service@34ada099`, already retargeted per § O's todo).
+- [x] ✅ [DATA] P1. Then rebuild the catalogue and verify `competition_phase` — with raw now at 90-99% on populated
+      eras, this is the real test of the § O "the 3.2% was the stale rollup" hypothesis. **Done** — R-FIXED rebuilt
+      (round 70.6%); § X verified `competition_phase` at 77.2% populated via the real read path.
 
 ### L-COMPLETE (2026-07-19 00:45Z) — lineups re-derive FINISHED and verified at scale
 
@@ -352,17 +380,26 @@ This reframes the whole epic: chasing `round` through backfills (1.26M-call refe
 treating a CONSUMER-MIGRATION bug as a data-capture bug. The derivation was still worth doing — raw is now 90-99% and
 that is real — but the catalogue will keep reporting ~0% until its reader is repointed.
 
-- [ ] [CODE] P0. Repoint `SPORTS_FIXTURE_ENTITY` to `fixtures_schedule` (verify the schema carries what the rollup
+- [x] ✅ [CODE] P0. Repoint `SPORTS_FIXTURE_ENTITY` to `fixtures_schedule` (verify the schema carries what the rollup
       needs: `af_fixture_id`, `round`, kickoff/timestamp) and re-run the catalogue. Handle `fixtures_outcomes` if the
-      rollup needs scores/status — the split put those on the OTHER leg.
+      rollup needs scores/status — the split put those on the OTHER leg. **Done** — see R-FIXED directly below: round
+      0.7%→70.6%, verified the rollup needs only SCHEDULE fields (no outcomes join needed).
 - [ ] [DIAG] P0. Audit EVERY consumer above for the same staleness; each is silently reading a 2-month-frozen corpus.
-      Anything reporting "sports data is missing/stale" since 2026-05-23 is suspect for this cause.
-- [ ] [CODE] P1. `competition_phase` / `round_name` / `is_promotion_relegation` are ABSENT as catalogue columns, not
+      Anything reporting "sports data is missing/stale" since 2026-05-23 is suspect for this cause. **Owned by
+      `sports_consolidated_closeout_2026_07_19.md` Track E** (`[CODE] P1` "repoint the remaining stale `entity=fixtures`
+      consumers, sweep §R's ~9-file list, now 7") — still open there as of 2026-07-27, one item (`gcs_reader`, § V
+      below) already fixed independently. Not duplicated here.
+- [x] ✅ [CODE] P1. `competition_phase` / `round_name` / `is_promotion_relegation` are ABSENT as catalogue columns, not
       merely UNKNOWN — the rollup never projects them. Even with a live entity, the derivation from `round` must be
-      wired into the catalogue build.
+      wired into the catalogue build. **Retracted, wrong layer** — see R-FIXED's own already-flipped entry directly
+      below: these are `features_sports` UAC fields, not catalogue columns; the producer (`season_context.py`) already
+      existed, only needed `round` populated (§ Q/§ R), no new projection code.
 - [ ] [PROCESS] P1. An entity rename/split MUST enumerate and migrate consumers in the same change. This one shipped the
       writer on 2026-05-23 and left ~10 readers pointing at a corpus that stopped updating — silently, because a frozen
-      corpus still reads successfully.
+      corpus still reads successfully. **Genuinely open** — a proposed workspace process rule, not yet codified into a
+      codex doc (checked `codex/12-agent-workflow/` and `codex/04-architecture/` for an entity-migration-consumer rule;
+      none exists). Not batchable — codifying a new authoring rule is an operator call, same class as batch6 todo 7's
+      own Deferred item on generalising the finalize-plan fix.
 
 ### R-FIXED (2026-07-19 02:01Z) — catalogue repointed to the LIVE entity: `round` 0.7% -> **70.6%**
 
@@ -401,7 +438,9 @@ level.
       instruments-service `classify_competition_phase(round_name)` (NORMAL_LEAGUE / PLAYOFF / TOURNAMENT …) and the
       features one (`early|mid|late` from matchday progress). The UAC field is the features one.
 - [ ] [DIAG] P0. The other ~9 stale-entity consumers (§ R list) are still reading the frozen corpus. Each needs the same
-      repoint + a re-run; anything reporting stale sports data since 2026-05-23 is suspect.
+      repoint + a re-run; anything reporting stale sports data since 2026-05-23 is suspect. **Owned by
+      `sports_consolidated_closeout_2026_07_19.md` Track E** — same item as § R's `[DIAG] P0` above, not duplicated
+      here.
 
 ### S (2026-07-19) — P1 MEASURED: `total_matchdays` is hardcoded **38 for every league on earth**
 
@@ -449,8 +488,12 @@ already carries future fixtures), or a per-league reference mapping.
       the package, so silently NaN-ing the whole corpus would be the worse failure.
       `test_total_matchdays_defaults_to_38` asserted `== 38` and therefore encoded the bug as the contract; rewritten to
       pin honest-NaN, + 3 new regression tests.
-- [ ] [DATA] P1. After the fix, sports features need a re-run for the affected leagues — the currently-persisted
-      `games_remaining` / `points_at_stake` / `competition_phase` are wrong wherever season length != 38.
+- [x] ✅ [DATA] P1. After the fix, sports features need a re-run for the affected leagues — the currently-persisted
+      `games_remaining` / `points_at_stake` / `competition_phase` are wrong wherever season length != 38. **Superseded
+      by Z-FIXED's later, more complete re-run tracking** (below, same doc) — the corpus-wide `derived_features` re-run
+      this todo asks for is the same re-run Z-FIXED's `[DATA] P0` already routes to
+      `sports_consolidated_closeout_2026_07_19.md` FEATURES track (Track F), which supersedes this earlier, narrower
+      framing. Not duplicated here.
 
 ### T (2026-07-19) — residual round blanks SCOPED by measurement; my "early-2019 era" claim was WRONG
 
@@ -494,10 +537,13 @@ absence, not a gap. Verify on a pilot pair before spending 648 calls on the assu
       (ARGENTINA_PRIMERA_NACIONAL) and the apply filled **exactly 662** across 1,297 parquets from 648 fetched fixtures,
       each write re-downloaded and verified. Launched only after re-confirming 0 running af-\* VMs, so the api-football
       singleton rule holds.
-- [ ] [DIAG] P2. Pilot ~5 of the 648 cup pairs before committing the remaining calls; if the API returns no round for
-      them, record it as explained-absence rather than an open gap.
-- [ ] [DECISION] P2. Pre-2019 (122,864 rows) is outside the stated window — confirm whether the corpus is meant to cover
-      2013–2018 at all before spending 915 fetches on it.
+- [x] ✅ [DIAG] P2. Pilot ~5 of the 648 cup pairs before committing the remaining calls; if the API returns no round for
+      them, record it as explained-absence rather than an open gap. **Done** — § W's 5-pair pilot (below): 4/5 fetchable
+      ordinary leagues (1,751 rows would-fill), 1/5 genuine out-of-coverage-season absence.
+- [x] ✅ [DECISION] P2. Pre-2019 (122,864 rows) is outside the stated window — confirm whether the corpus is meant to
+      cover 2013–2018 at all before spending 915 fetches on it. **ANSWERED 2026-07-20** —
+      `sports_consolidated_closeout_2026_07_19.md` Track V § T decision (decision 3): pre-2019 (2013-2018) is OUT OF
+      SCOPE, intentionally excluded, no further api-football spend.
 
 ### U (2026-07-19) — the round backfill can only REACH 353 of the 842 in-window pairs
 
@@ -528,11 +574,15 @@ A first measurement of the registry universe returned **0** leagues because I gu
 (`tier1`/`tier2`/…) instead of reading the script's actual `("prediction", "reference", "features")`. The numbers above
 are from the corrected probe — the 0-league result was discarded, not reported.
 
-- [ ] [DECISION] P1. Settle the 489 non-registry in-window pairs: extend the registry to cover what is being captured,
-      or stop capturing them. "Backfill at 100%" cannot be asserted for sports until this is decided one way or the
-      other — the gap is a definition problem, not a data-fetch problem.
-- [ ] [DATA] P2. The 159 reachable cup pairs (16,849 rows) still need the pilot from § T before spending their calls — a
-      cup's round vocabulary is "Quarter-finals", not "Regular Season - N", and a fetch may honestly return nothing.
+- [x] ✅ [DECISION] P1. Settle the 489 non-registry in-window pairs: extend the registry to cover what is being
+      captured, or stop capturing them. "Backfill at 100%" cannot be asserted for sports until this is decided one way
+      or the other — the gap is a definition problem, not a data-fetch problem. **ANSWERED 2026-07-20** —
+      `sports_consolidated_closeout_2026_07_19.md` Track V § U decision (decision 2): stop capturing non-registry
+      leagues; the 489-pair/10,869-row population is excluded from the denominator, a purge candidate.
+- [x] ✅ [DATA] P2. The 159 reachable cup pairs (16,849 rows) still need the pilot from § T before spending their calls
+      — a cup's round vocabulary is "Quarter-finals", not "Regular Season - N", and a fetch may honestly return nothing.
+      **Done** — § W piloted + then backfilled all 159 reachable pairs (same disposition as § T's identical ask directly
+      above).
 
 ### V (2026-07-19) — FIXED: features read a legacy `entity=fixtures` object in preference to the LIVE split leg
 
@@ -563,8 +613,11 @@ on that reasoning is precisely what let this bug hide, so both now patch the spl
 actually looks like) and say why, plus a new test pins the precedence itself (legacy object present, split still wins,
 legacy bytes never downloaded).
 
-- [ ] [DATA] P0. Sports features must be RE-RUN: every pre-cutover feature row was computed from the stale legacy frame.
-      This supersedes the § S re-run note — one re-run now covers both the `total_matchdays` fix and this.
+- [x] ✅ [DATA] P0. Sports features must be RE-RUN: every pre-cutover feature row was computed from the stale legacy
+      frame. This supersedes the § S re-run note — one re-run now covers both the `total_matchdays` fix and this.
+      **Superseded by Z-FIXED's later, more complete re-run tracking** (below, same doc) — routes to
+      `sports_consolidated_closeout_2026_07_19.md` FEATURES track (Track F), same disposition as § S's identical ask.
+      Not duplicated here.
 
 ### T P1 — VERIFIED against the corpus, not the log (2026-07-19)
 
@@ -620,8 +673,9 @@ rounds", when it only ever meant "we captured none". Absence is evidence of miss
 otherwise — the pilot is what distinguishes them, not the classifier.
 
 - [x] [DIAG] P2. ✅ Cup pilot run — hypothesis REFUTED, the pairs are fetchable leagues (1,751 rows would-fill on 5).
-- [ ] [DATA] P1. 159-pair blank-league backfill RUNNING (16,828 rows targeted); verify against a corpus re-scan, not the
-      script log, per the § T P1 precedent.
+- [x] ✅ [DATA] P1. 159-pair blank-league backfill RUNNING (16,828 rows targeted); verify against a corpus re-scan, not
+      the script log, per the § T P1 precedent. **Done, verified** — the "Round work — TERMINAL STATE" table (below)
+      confirms the corpus re-scan: 16,435 rows closed, delta 0 vs the script's own claim, 158/159 pairs cleared.
 
 ### Round work — TERMINAL STATE (2026-07-19)
 
@@ -677,13 +731,16 @@ fix was in fact working. Counts across a join/normalize boundary are not compara
 Same failure mode as the § W misclassification — inferring a property from an aggregate instead of measuring the thing
 itself.
 
-- [ ] [INFRA] P0. Fan out the features re-run. **HARD RULE interaction**: the re-run needs `FORCE=true` (otherwise
+- [x] ✅ [INFRA] P0. Fan out the features re-run. **HARD RULE interaction**: the re-run needs `FORCE=true` (otherwise
       presence-skip makes it a no-op), and `--force` on SPOT is NOT replayable — `RelaunchPreemptedVm` replays the
       original params and force disables the skip the resume relies on, so a preempted run restarts at day one FOREVER
       (`/codex/05-infrastructure/spot-vms-for-backfill.md`). Drive it as **bounded per-year chunks** (2019..2026) so a
       preemption replays one year, not the whole corpus. Use the consolidated
       `launch-features-vm.sh --feature-family sports --asset-group SPORTS` (the sports-specific launcher carries a
-      deprecation note for new backfills).
+      deprecation note for new backfills). **Superseded by Z-FIXED's later, more complete re-run tracking** (below, same
+      doc) — the fleet this todo asked to fan out was in fact launched, then STOPPED when Z-FIXED found it was writing a
+      fabricated pattern; the clean re-run (same bounded per-year chunking) now routes to
+      `sports_consolidated_closeout_2026_07_19.md` Track F. Not duplicated here.
 
 ### Y (2026-07-19) — P2: `launch-features-vm.sh` prints a post-backfill hint naming a bucket that does not exist
 
@@ -707,7 +764,9 @@ is the same — **validate that a progress metric can ever be non-zero before tr
 
 - [ ] [CODE] P2. Fix the post-backfill hint in `deployment-service/scripts/vm/launch-features-vm.sh` to resolve the
       bucket via `resolve_bucket_name` (never string-interpolate an env-split bucket name) and to name the real
-      `sports_features/` prefix.
+      `sports_features/` prefix. **Owned by `sports_satellite_ao_dispatch_batch6_2026_07_26.md` todo 3** — that todo
+      ships the fix and flips this checkbox as part of its own evidence. Left open here intentionally; do not flip it
+      from this doc.
 
 ### Z (2026-07-19) — pilot VALIDATES the re-run; separate `matchday` persistence defect found (NOT root-caused)
 
