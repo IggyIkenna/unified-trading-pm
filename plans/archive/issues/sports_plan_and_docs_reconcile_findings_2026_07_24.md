@@ -119,7 +119,7 @@ reference also corrected in the same pass.
       live row-count check the next day found the swap had silently reverted (260,298 stale raw rows back,
       byte-identical to the pre-swap scope), root-caused to a TOCTOU consolidator race the swap's write predates by 2
       days. Re-applied and this time verified stable across 5 consolidator cycles. Full detail:
-      `/plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. Lesson: "the script logged
+      `/plans/archive/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. Lesson: "the script logged
       VERIFY PASSED" and "GCS objects exist" are NOT proof a canonical-index write survived — always re-read the live
       manifest row state itself, across at least 2 consolidator cycles, not just the write-time log.
 - [x] [DOC] P0. ✅ **DONE 2026-07-24.** Edited `sports_master_closeout_2026_07_21.md`'s title (line 4), H1 heading,

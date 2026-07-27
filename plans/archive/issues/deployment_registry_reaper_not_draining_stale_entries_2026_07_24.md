@@ -152,7 +152,7 @@ flipping the checkbox.
   missing `EXPECTED_SUBGRAPH_DEINDEXED`) — fixed inline. The other 4 are a live data-correctness regression from a
   DIFFERENT, still-in-flight migration (sports `FIXTURES`→`FIXTURES_SCHEDULE` atom rename) — NOT mine to fix (owned by
   `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 1) → filed
-  `/plans/active/issues/fixtures_schedule_atom_migration_partial_landing_regression_2026_07_24.md` + declared
+  `/plans/archive/issues/fixtures_schedule_atom_migration_partial_landing_regression_2026_07_24.md` + declared
   repo-blocker `RB-f19d63e7` for `deployment-api` + posted `/blocked` (`BLK-7b657f46`) for operator visibility. Waiting
   on that repo-blocker to clear before `quickmerge` can ship; diff sits ready (uncommitted) in the slot-2
   `deployment-api` worktree.

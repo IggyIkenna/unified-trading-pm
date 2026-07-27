@@ -20,7 +20,7 @@ tags: [orchestrator, autospawn, sqlite, database-locked, dispatch, review-agent]
 related:
   [
     /plans/archive/2026_06/orchestrator_spawn_reliability_db_lock_2026_06_10.md,
-    /plans/active/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md,
+    /plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md,
   ]
 created: 2026-07-26
 last_updated: 2026-07-26
