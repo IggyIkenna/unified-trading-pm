@@ -598,3 +598,31 @@ every todo executes an already-decided spec from the parent doc.
   (`gcloud compute operations list --filter="operationType=compute.instances.preempted AND targetLink~canonical-migration-cefi-content-apply-055803"`),
   and keep checking `EXIT_STATUS` objects for genuine completions — do not wait for a "notification," GCE VMs don't page
   this conversation, poll directly.
+- **2026-07-27T05:31Z — SECOND, much larger preemption wave: 33 of the remaining 41 SPOT shards wiped out at once; root
+  cause found (zone-wide `e2-standard-16` SPOT stockout in `asia-northeast1-c`); pivoted the whole campaign to
+  `ON_DEMAND`.** A fresh direct check (not the 3-min-interval monitor, an out-of-band re-verify) found only 9 VMs still
+  `RUNNING` — and all 9 were exactly the 10 shards relaunched `ON_DEMAND` in the entry above (minus `cs1-1r`, already
+  completed) — every single remaining SPOT VM (all 33: the 3 canaries `cs2c/cs81c/cs91c` included) had been preempted.
+  **Diagnosed, not just patched**: attempted a same-machine-type `ON_DEMAND` relaunch of the 32 missing shards; 31/32
+  succeeded immediately, but `cs2d` hit `ZONE_RESOURCE_POOL_EXHAUSTED_WITH_DETAILS` — GCP's own error confirms
+  `asia-northeast1-c` has **zero `e2-standard-16` capacity available right now, for ANY provisioning model** (the exact
+  error suggests `asia-northeast1-b`/`-a` have capacity instead) — this is what was silently causing both preemption
+  waves (SPOT gets reclaimed first when a zone is genuinely capacity-constrained). **Fix**: retried `cs2d` on
+  `e2-standard-8` (half the RAM) in the SAME zone — succeeded immediately, confirming `e2-standard-8` capacity exists
+  even though `e2-standard-16` doesn't right now. Did not fall back to a different zone (would fragment the fleet across
+  zones for no benefit once `e2-standard-8` proved available in `asia-northeast1-c` itself) or re-litigate the earlier
+  OOM-mitigation reasoning — the OOM history was tied to ONE monolithic 635K-file shard on `e2-standard-8`; every shard
+  in this campaign is already sub-sharded to ~75K-200K files, well under the scale that OOM'd, so `e2-standard-8` should
+  be safe for the rest too if `e2-standard-16` capacity disappears again. **All 32 relaunches now landed**: 31 on
+  `e2-standard-16` + `cs2d` on `e2-standard-8`, all `ON_DEMAND` (immune to further SPOT reclaim). **Fleet state
+  05:35Z**: 41 RUNNING + `cs1-1r` completed = 42 accounted for, ALL non-completed VMs now `ON_DEMAND`, 0 new preemptions
+  since the pivot (expected — nothing left on SPOT to reclaim), 0 verify_failed/error signals. **Cost note for the
+  record**: this campaign is no longer SPOT-cost-optimized (the HARD RULE's stated opt-out condition — "ON_DEMAND is the
+  only opt-out... if you have a specific reason" — is squarely met here: two full preemption waves + a confirmed hard
+  zone stockout is about as concrete a reason as this rule anticipates). **Status: IN FLIGHT, fleet materially more
+  stable now than the last checkpoint.** Whoever continues this:
+  `gcloud compute operations list --filter="operationType=compute.instances.preempted"` should show NO NEW entries
+  beyond the 42 total already recorded (10 wave-1 + 32 wave-2, though `cs1-1`/`cs1-1r` overlap the two counts) — if new
+  preemption operations DO appear, something is still on SPOT and needs the same on-demand fix; otherwise the fleet
+  should just need periodic `EXIT_STATUS`-completion polling from here. Full wave-2 shard→date-range map + launch
+  scripts remain in this dispatch's scratchpad.
