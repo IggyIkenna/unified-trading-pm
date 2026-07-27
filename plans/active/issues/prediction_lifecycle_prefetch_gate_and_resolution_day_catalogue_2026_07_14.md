@@ -112,8 +112,9 @@ locked_since:
       PROVEN on real data: 2026-07-06 NEW catalogue = 97,113 markets of which only 10,089 resolve that day, see the
       quantification section below; Kalshi IS adapter audited — NO equivalent defect, already active-window, see the
       widening-scope section). Kalshi verdict: no change needed.
-- [ ] [VERIFY] P2. Post-fix: re-measure prediction attempted/captured trajectory on a sampled window; append
-      before/after counts here and to the coverage docs if the model description changes.
+- [x] ✅ [VERIFY] P2. Post-fix: re-measure prediction attempted/captured trajectory on a sampled window; append
+      before/after counts here and to the coverage docs if the model description changes. — `unified-trading-pm` (this
+      doc's Progress Log below). Verdict: **improvement CONFIRMED, no model-description change needed.**
 - [ ] [INFRA] P1 [BLOCKED-OPERATOR-DECISION]. Launch the historical prediction re-backfill under the widened catalogue —
       cost estimate in `## Re-backfill cost quantification` below (≈16.1M additional (conditionId × day) fetch attempts
       over 2025-03-14→2026-07-14, ≈9–11 days single-process wall-clock at the adapter's 20 req/s cap, ÷N for N sharded
@@ -125,6 +126,41 @@ locked_since:
 - 2026-07-14: Filed. Finding 1 verified read-only (file:line above); Finding 2's filter verified by direct read of
   `clob.py:335-341`, propagation deliberately left as the P0 VERIFY. Operator notified in the main session (big-finding
   rule: data-correctness class). No code changed.
+
+- 2026-07-27 [VERIFY P2 — DONE, `prediction_satellite_ao_dispatch_batch1-004`, slot 15]: Re-measured attempted/captured
+  on a sampled window now that both fixes (MTDS pre-fetch gate `abe0904d` + IS active-window catalogue widening
+  `41ca79d7`) are live. **Method**:
+  `unified_trading_library.manifest_writer.read_capture_status_counts(bucket, date_range=...)` — single manifest-index
+  read (`_index/availability_index.parquet`), no whole-corpus GCS walk, per
+  codex/02-data/availability-manifest-and-data-status.md's documented query path. Bucket:
+  `market-data-tick-pred-prd-central-element-323112`. Because the historical re-backfill itself is still
+  `[BLOCKED-OPERATOR-DECISION]` (unlaunched), a before/after over the SAME historical target-dates would show no change
+  — the only currently-observable "after" data is what the LIVE daily cron has captured for target days AFTER the
+  2026-07-14 fix landed. So the comparison below is two LIVE-cron-captured windows straddling the fix date (apples to
+  apples: both are cron-captured, not backfilled), not a historical-vs-rerun comparison.
+
+  | window                                                                               | captured | empty_confirmed | attempted_failed | expected_unattempted_pending_fetch | captured ÷ (captured+empty_confirmed+attempted_failed) | rows/day (captured) |
+  | ------------------------------------------------------------------------------------ | -------: | --------------: | ---------------: | ---------------------------------: | -----------------------------------------------------: | ------------------: |
+  | BEFORE: 2026-07-04 → 2026-07-13 (10 days)                                            |      446 |           1,251 |                0 |                                401 |                                                  26.3% |                44.6 |
+  | AFTER: 2026-07-15 → 2026-07-25 (11 days, excludes the 07-26 anomaly day — see below) |   22,639 |             477 |                0 |                                702 |                                                  97.9% |             2,058.1 |
+
+  **Verdict**: captured fraction of attempted rows jumped **26.3% → 97.9%** (+71.6pp), and raw captured rows/day rose
+  **~46×** (44.6 → 2,058.1/day) — direct confirmation the pre-fetch gate + active-window widening are working as
+  designed: far fewer wasted `empty_confirmed` attempts (73.7% → 1.9% of attempted) and a much larger, correctly-scoped
+  daily catalogue. No change to the model description in the coverage docs is warranted — this is the SAME honest-
+  absence model (captured / empty_confirmed / expected_unattempted / attempted_failed), just healthier proportions; the
+  earlier "755,943 shards, 6.0% captured, ~94% empty_confirmed" figure in Finding 1 remains a historical, whole-corpus
+  (mostly pre-fix, mostly backfill-scoped) baseline and is NOT superseded by this sampled live-window result — a
+  corpus-wide re-measurement is only meaningful after the gated historical re-backfill actually runs.
+
+  **Caveat / new finding (NOT part of this VERIFY's scope, filed separately)**: the raw 2026-07-15→2026-07-26 window (12
+  days, before excluding the anomaly) also contains 14,175 `attempted_failed` rows, but ALL of them concentrate on a
+  single day (`date=2026-07-26`, 14,095 with `error_reason=UNCLASSIFIED_ADAPTER_ERROR`, 100% KALSHI, 2,010 distinct
+  instruments, `attempted_at` in a tight 2026-07-27T01:45-03:19Z run window) — excluded from the table above so the
+  lifecycle-gate measurement isn't skewed by an unrelated incident. Filed as
+  `plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md` (big-finding class per
+  CLAUDE.md's findings-triage rule) rather than investigated here, since root-causing it is outside this todo's
+  read-only-measurement scope.
 
 - 2026-07-14 [VERIFY P0 — CONFIRMED, CONDITIONALLY]: Traced the full propagation + read real GCS partitions (read-only,
   no mutation). **Verdict: was active-life trading structurally never attempted? YES for backfilled historical days; NO

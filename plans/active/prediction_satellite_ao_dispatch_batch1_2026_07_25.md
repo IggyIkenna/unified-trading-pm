@@ -94,12 +94,18 @@ drift_direction: advance-code
       rejection test (`test_event_contract_ticker_rejected`). New `tests/unit/test_perp_write_guard.py` covers the guard
       function directly (genuine-perp pass, non-PERPETUAL reject, event-contract-ticker reject, case-insensitive).
       `quality-gates.sh` green (263s, then re-verified 149s on the quickmerge pass).
-- [ ] [DIAG] P1. Re-measure prediction attempted/captured trajectory on a sampled window now that the pre-fetch
+- [x] ✅ [DIAG] P1. Re-measure prediction attempted/captured trajectory on a sampled window now that the pre-fetch
       lifecycle gate (market-tick-data-service@abe0904d) and the active-window catalogue widening
       (instruments-service@41ca79d7) have both shipped, and append the before/after counts. Repo: read-only measurement.
-      **Done when**: before/after attempted-vs-captured counts for a sampled window are appended to
-      `plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`'s Progress Log
-      (and to the coverage docs if the model description changes). Source:
+      — `unified-trading-pm`. Before/after counts appended to
+      `plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`'s Progress
+      Log: captured fraction of attempted rows 26.3% → 97.9% (+71.6pp), captured rows/day ~46× (44.6 → 2,058.1),
+      comparing live-cron-captured windows straddling the 2026-07-14 fix (historical corpus re-backfill is still
+      operator-gated, so no historical before/after exists yet — this is the honest currently-measurable comparison). No
+      coverage-doc model-description change needed (same honest-absence model, healthier proportions). A separate,
+      unrelated anomaly surfaced incidentally (14,095 KALSHI `attempted_failed`/`UNCLASSIFIED_ADAPTER_ERROR` rows
+      concentrated on `date=2026-07-26`) and was filed as its own issue doc rather than absorbed into this todo's scope:
+      `plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`. Source:
       `prediction_phase_ab_residuals_2026_07_24.md`.
 - [ ] [DIAG] P1. **Combined investigation for
       `prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` (2 sub-items merged into one todo
