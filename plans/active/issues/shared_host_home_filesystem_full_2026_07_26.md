@@ -142,3 +142,15 @@ specific to any one task.
   regardless). Not re-opening a 4th BLOCKED question for the same standing condition — logging the regression here per
   the established escalation channel. My own task's `quality-gates.sh` run is currently blocked by this; retrying once
   host pressure eases rather than forcing a QG run I can't trust the result of under active disk exhaustion.
+- 2026-07-27T07:0x (slot-12, another corroborating data point + a workaround worth recording): hit the identical `/tmp`
+  tmpfs 100%-full condition mid-task, this time as a hard blocker for `tofu init` (P1.2 of
+  `bucket_iam_write_protection_per_tier_2026_06_09.md`) — provider plugin install failed with
+  `write /tmp/terraform-provider...: no space left on device`. `df -h`: `/tmp` `2.0G 2.0G 0 100%`, `/home`
+  `290G 286G 4.3G 99%` (worse than the 8.4G this same session measured ~20 min earlier — confirms the "actively
+  worsening" trend slot-9 measured is still ongoing, not a one-off spike). **Workaround that worked**: point
+  `TMPDIR`/`TF_DATA_DIR` at a SHORT path directly under `/home/ubuntu/` (e.g. `/home/ubuntu/.tofu-work-<slot>`) instead
+  of either `/tmp` (full) or the per-session scratchpad (has room but its path is long enough to break the provider
+  plugin's unix-socket handshake — a DIFFERENT, already-documented gotcha, see this plan's own P1.1 note). `/home` still
+  has headroom (4.3G at measurement time) even while `/tmp` tmpfs is fully exhausted — worth knowing for any tool that
+  defaults to `/tmp` and fails hard when it's full, not just for tofu specifically. Did not attempt any cleanup/delete;
+  same posture as every prior entry.
