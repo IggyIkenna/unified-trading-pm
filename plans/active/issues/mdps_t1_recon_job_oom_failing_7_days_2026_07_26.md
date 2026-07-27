@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [mdps, oom, cloud-run-job, candle-derivation, production-incident]
 related: [/plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md]
 created: 2026-07-26
-last_updated: 2026-07-27 (Update 7)
+last_updated: 2026-07-27 (Update 8)
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -602,6 +602,103 @@ confirmed uncontaminated for two independent mixed-market fixtures. It was alrea
 concurrent session shipped the fix before this session's verification pass started); this update supplies the missing
 verification evidence for that already-flipped checkbox. No further action needed on this specific todo.
 
+## Update 8 (2026-07-27, attended session) — per-asset-group candle-timeframe scoping (the `_4h` gap) FIXED + verified; operator confirmed the general (not sports-only) approach
+
+Implements the P2 todo below ("Scope MDPS's per-asset-group candle timeframe iteration"). Operator explicitly confirmed
+the direction: **"yeah should be per AG scoped properly"** — build the general per-asset-group mechanism, not a
+sports-only special case.
+
+**Step 1 — checked whether other asset_groups are also narrower than the uniform `default_timeframes`, not just
+sports.** Grepped `unified-api-contracts` for `MDPS_TIMEFRAMES_<ASSET_GROUP>`-shaped constants — the pattern already
+exists broadly:
+
+| Constant                                        | Timeframes         | Narrower than the full default (`15s,1m,5m,15m,1h,4h,24h`/`1d`)?                                       |
+| ----------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `MDPS_TIMEFRAMES_CEFI` / `MDPS_TIMEFRAMES_DEFI` | full 7-tf set      | No — matches full set                                                                                  |
+| `MDPS_TIMEFRAMES_TRADFI`                        | 1m,5m,15m,1h,4h,1d | **Yes** — no 15s (deliberate: "1m native from Databento" per `_candle_contracts.py`'s own docstring)   |
+| `MDPS_TIMEFRAMES_SPORTS`                        | 1m,15m,1h          | **Yes** (the confirmed `_4h` bug)                                                                      |
+| `MDPS_TIMEFRAMES_PREDICTION`                    | 1m,15m,1h          | **Yes**, but only for the generic `prediction_market` contract                                         |
+| `MDPS_TIMEFRAMES_PREDICTION_TRADES`             | full 7-tf set      | Broader — for the "trades" data_type only (KALSHI/POLYMARKET fills, instrument_type=PREDICTION_MARKET) |
+
+Also confirmed why TRADFI's narrower set never actually produced a `SchemaContractNotFoundError` in production despite
+being narrower: `BaseCandleAdapter.get_valid_output_timeframes()` already floor-filters timeframes below an adapter's
+base granularity before any schema lookup, which incidentally drops "15s" for tradfi's 1m-native adapters. That filter
+only guards the floor (too-fine), not the ceiling (too-coarse) — it does nothing for sports's actual bug (`4h` is too
+COARSE, not too fine), which is why sports alone produced the observed OOM-job errors.
+
+**"prediction" is deliberately NOT scoped down**, despite having a narrower generic constant just like sports:
+prediction's "trades" data_type (KALSHI/POLYMARKET fills) resolves to instrument_type="PREDICTION_MARKET" and the
+SEPARATE, BROADER `MDPS_TIMEFRAMES_PREDICTION_TRADES` contract — not the generic `MDPS_TIMEFRAMES_PREDICTION`
+{1m,15m,1h}. Scoping the whole "prediction" asset_group down to the generic 3-timeframe ceiling would silently narrow
+"trades" candle coverage at 15s/5m/4h/1d — a real regression, not a fix. This needs per-(asset_group, data_type)
+resolution, not per-asset_group, to close safely; left as the full default (unchanged behavior), not guessed at.
+
+**Step 2 — implementation, PLUS a critical correction after the first attempt didn't actually work.**
+`market_data_processing_service/config.py`: added `_TIMEFRAME_CEILING_BY_ASSET_GROUP` (SPORTS →
+`MDPS_TIMEFRAMES_SPORTS`, TRADFI → `MDPS_TIMEFRAMES_TRADFI`; cefi/defi omitted as no-ops, prediction omitted per above)
+and `MarketDataProcessingServiceConfig.resolve_timeframes(asset_group)`, which intersects `self.default_timeframes`
+against the UAC ceiling (normalising the "1d"/"24h" spelling difference for comparison only).
+`orchestration_service.py`'s `process_category()` was wired to call `self.config.resolve_timeframes(category)` instead
+of `self.config.default_timeframes` at all 3 call sites. Shipped as `market-data-processing-service@36e80cd`, promoted
+to `main`, fresh image built and deployed.
+
+**Re-triggered the exact sports-scoped repro command (`MDPS_ASSET_GROUP=SPORTS`, `--force`, `2026-07-25`..`2026-07-26`)
+against that image — the `4h`/`24h` candle aggregation was STILL happening.** Traced why: `cli/parser.py`'s
+`--timeframes` argparse argument had its OWN hardcoded `default=["15s","1m","5m","15m","1h","4h","24h"]`, completely
+independent of `config.default_timeframes`. `process_handler.py` always passed this non-None argparse default straight
+into `process_category(timeframes=...)`, so the `timeframes or self.config.resolve_timeframes(category)` fallback added
+above never fired for the real CLI / Cloud Run job entry point — it only helps a caller that invokes
+`process_category()` directly, bypassing the CLI, which no real production caller does. The standing job's own baked-in
+args (`deployment-service/terraform/gcp/audit03_cron_provisioning.tf`'s `mdps_t1_recon_job` module:
+`args = ["--operation", "process", "--mode", "batch"]`) never pass `--timeframes`, so this was a 100%-live bug, not a
+theoretical one — confirmed by re-observing `POLARS AGGREGATED ... 4h candles`/`24h candles` log lines for sports in the
+post-"fix" run.
+
+**Fix 2**: `--timeframes` now defaults to `None` (the idiomatic argparse pattern for distinguishing "unset" from
+"explicit override"), letting `_process_one_category`'s existing `timeframes or config.resolve_timeframes(category)`
+call finally take effect. Verified `_build_single_date_argv` (the subprocess-per-date child-argv builder) already
+correctly omits `--timeframes` when `None` — an existing regression test (`test_no_optional_flags_when_defaults`)
+already covered this, no change needed there. Mock-mode's `generate_mock_candles()` already accepted
+`timeframes: list[str] | None = None` natively. Updated the one CLI-parser test asserting the old hardcoded default.
+Also checked for an `MDPS_TIMEFRAMES` env-var bridge (`cli/main.py::_build_legacy_argv`) that could independently
+re-inject an explicit `--timeframes` — confirmed unset on the standing job (terraform + live `gcloud run jobs describe`
+both checked). Shipped as `market-data-processing-service@f7d259e`, promoted to `main`, fresh image rebuilt.
+
+**Verification — real production run, watched to a genuine terminal state.** Re-triggered the same sports-scoped repro
+(`uts-prod-market-data-processing-service-t1-recon-krtkf`) against the corrected image. Confirmed via
+`gcloud logging read`: **zero** `POLARS AGGREGATED ... 4h candles`/`24h candles` lines across the entire run (13,007
+`POLARS AGGREGATED` lines total, ALL `1h` — the only non-base timeframe sports still aggregates), and **zero** "No
+SchemaContract registered" errors anywhere (previously the dominant failure class per Update 4/5/7). `odds_movement`,
+`odds_snapshot`, and `arbitrage_opportunity` each completed 100% (505/505 and 837/837 across the two dates).
+`odds_horizon_bucket` still fails partially (348/505, 654/837) — but for the ALREADY-TRACKED, unrelated
+`MalformedTickFieldError` bug this same session's Update 7 filed as its own P2 todo below, not a timeframe/schema issue
+(confirmed: the error text is identical `bm_minutes_to_kickoff_or_h2h_columns` field-drop, nothing to do with this fix).
+`Completed=False` (exit code 1) is therefore due entirely to that already-tracked, out-of-scope bug — this fix's own
+target (`_4h` SchemaContractNotFoundError) is conclusively gone.
+
+**cefi/tradfi regression check — reasoned rather than re-run live.** A live cefi/tradfi-scoped confirmation hit a
+practical limit: the `gcloud run jobs execute --args` path only forwards a fixed flag subset through
+`cli/main.py::_build_legacy_argv` (start/end date, category, force, dry-run, skip-dep-check) — `--max-results`/
+`--data-types` aren't forwarded, so a cheap/narrow live check isn't reachable through the real production entrypoint,
+and a full unscoped cefi/tradfi force-run is genuinely costly (comparable to the ~25-45min full runs in Updates 4/5).
+Relying instead on: (a) `resolve_timeframes()` is directly unit-tested for CEFI (returns `default_timeframes` unchanged)
+and TRADFI (returns the list minus `15s`) in `tests/unit/test_config.py::TestResolveTimeframes`; (b) the EXACT SAME call
+site/mechanism (`_process_one_category` → `process_category(timeframes=args.timeframes)` →
+`resolve_timeframes(category)`) is now proven live in production for sports — there is no category-conditional branching
+anywhere in the entrypoint/bridge/argv path besides the single `MarketAssetGroup` value threaded through identically for
+every category. The standing job's daily cron (`0 1 * * *` UTC) will naturally exercise cefi/tradfi through this same
+code path within 24h of this write-up if a live cross-check is wanted.
+
+**Known residual gap, not fixed here (documented, not silently dropped)**: `LiveModeHandler.run()`
+(`cli/handlers/live_mode_handler.py`) resolves ONE flat `timeframes` list up front from `config.default_timeframes`
+(when the caller doesn't pass one) and reuses it for EVERY category in its per-category loop — a
+`--mode live --categories SPORTS` invocation would bypass this fix's per-category scoping (the explicit non-None list
+short-circuits `process_category`'s own fallback). Low risk today: live mode's default `categories` is
+`["CEFI", "TRADFI", "DEFI"]` (sports/prediction excluded by default), and this todo's confirmed repro is the
+`--mode batch` t1-recon job specifically. Not fixed this session — would need a 3-signature change
+(`run()`/`_run_live_mode()`/ `_process_cycle()`'s `timeframes: list[str]` param becoming Optional, resolved per-category
+inside the loop) beyond this todo's stated scope.
+
 ## Todos
 
 - [x] [SCRIPT] P1. **Root-cause and fix the second OOM path** (the silent >28GB spike after DEFI `dex_pool_swaps`
@@ -653,39 +750,53 @@ verification evidence for that already-flipped checkbox. No further action neede
       ONE group, not every group written under it.
 
       **Fix**: added `no_real_chain_root` (true only for the legacy-sentinel, no-underlying case) to
-                                              `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
-                                              (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
-                                              own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
-                                              original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
-                                              so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
+                                                      `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
+                                                      (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
+                                                      own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
+                                                      original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
+                                                      so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
 
-                                              **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
-                                              batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
-                                              id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
-                                              green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files).
+                                                      **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
+                                                      batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
+                                                      id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
+                                                      green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files).
 
-                                              **Re-verified end-to-end against real production data (Update 7, 2026-07-27)**: execution
-                                              `uts-prod-market-data-processing-service-t1-recon-86jbn` (the exact repro command below, against the fixed image
-                                              rebuilt on `main`@`eaf8127`), watched to a genuine `Completed=False`/`NonZeroExitCode` terminal state (failing for
-                                              two unrelated, already-triaged reasons, not the mixing bug — see Update 7). Zero `partition_mismatch`/
-                                              `instrument_type mismatch` occurrences anywhere in the run's logs, and two independent freshly-written
-                                              MATCH_ODDS/MATCH_ODDS_LAY output pairs for the same fixture (BETFAIR_EX_EU ALLSVENSKAN KALMAR-MJALLBY;
-                                              BETFAIR_EX_EU MLS COLUMBUS_CREW_SC-CINCINNATI) were pulled directly from GCS and confirmed uncontaminated
-                                              (`instrument_id.unique()` per file contains only that file's own market). See Update 7 for full evidence.
+                                                      **Re-verified end-to-end against real production data (Update 7, 2026-07-27)**: execution
+                                                      `uts-prod-market-data-processing-service-t1-recon-86jbn` (the exact repro command below, against the fixed image
+                                                      rebuilt on `main`@`eaf8127`), watched to a genuine `Completed=False`/`NonZeroExitCode` terminal state (failing for
+                                                      two unrelated, already-triaged reasons, not the mixing bug — see Update 7). Zero `partition_mismatch`/
+                                                      `instrument_type mismatch` occurrences anywhere in the run's logs, and two independent freshly-written
+                                                      MATCH_ODDS/MATCH_ODDS_LAY output pairs for the same fixture (BETFAIR_EX_EU ALLSVENSKAN KALMAR-MJALLBY;
+                                                      BETFAIR_EX_EU MLS COLUMBUS_CREW_SC-CINCINNATI) were pulled directly from GCS and confirmed uncontaminated
+                                                      (`instrument_id.unique()` per file contains only that file's own market). See Update 7 for full evidence.
 
-                                              Repro command used for this verification pass:
-                                              `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
-                                              (repo: market-data-processing-service)
+                                                      Repro command used for this verification pass:
+                                                      `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
+                                                      (repo: market-data-processing-service)
 
-- [ ] [SCRIPT] P2. **Scope MDPS's per-asset-group candle timeframe iteration** — `config.py`'s `default_timeframes`
-      (`["15s","1m","5m","15m","1h","4h","24h"]`) is applied uniformly to every asset_group; sports only has
+- [x] [SCRIPT] P2. **Scope MDPS's per-asset-group candle timeframe iteration** — `config.py`'s `default_timeframes`
+      (`["15s","1m","5m","15m","1h","4h","24h"]`) was applied uniformly to every asset_group; sports only has
       SchemaContracts for `{1m,15m,1h}` (`_candle_contracts.py`'s declared "Sports {1m, 15m, 1h}" by strategy need), so
-      every run throws `No SchemaContract registered ..._4h` for all 4 sports-derived products. UAC's
-      `MDPS_TIMEFRAMES_SPORTS` constant already exists as the intended SSOT but is never imported anywhere in MDPS —
-      grep confirms zero consumers. Do NOT "fix" this by registering `_4h` sports contracts (that fabricates schema for
-      a timeframe the product docs say sports doesn't need) — the correct fix scopes the ORCHESTRATOR's timeframe
-      resolution per-asset-group (touches every asset_group's default, not just sports; a broader, riskier change than
-      this issue's scope). (repo: market-data-processing-service)
+      every run threw `No SchemaContract registered ..._4h` for all 4 sports-derived products. **DONE, verified** —
+      operator confirmed the general per-asset-group approach ("should be per AG scoped properly"). Added
+      `MarketDataProcessingServiceConfig.resolve_timeframes(asset_group)` (`config.py`), sourcing UAC's
+      `MDPS_TIMEFRAMES_SPORTS`/`MDPS_TIMEFRAMES_TRADFI` constants as confirmed-safe per-asset-group ceilings (cefi/defi
+      are no-ops; prediction deliberately excluded — its "trades" data_type needs the BROADER
+      `MDPS_TIMEFRAMES_PREDICTION_TRADES` set, so scoping it down would regress KALSHI/POLYMARKET trades coverage).
+      Wired into `orchestration_service.py::process_category()`. A first attempt (`36e80cd`) didn't actually take effect
+      on the real production path — `cli/parser.py`'s `--timeframes` argparse argument had its own hardcoded non-None
+      default, shadowing the new fallback; corrected (`f7d259e`) by defaulting `--timeframes` to `None`, the idiomatic
+      "unset vs explicit override" argparse pattern. Verified against a live sports-scoped `t1-recon` execution
+      (`uts-prod-market-data-processing-service-t1-recon-krtkf`): zero `4h`/`24h` candle aggregation attempts (13,007
+      `POLARS AGGREGATED` lines, all `1h`), zero "No SchemaContract registered" errors anywhere,
+      `odds_movement`/`odds_snapshot`/`arbitrage_opportunity` all 100% succeeded — the one remaining partial failure
+      (`odds_horizon_bucket`) is the already-tracked, unrelated `MalformedTickFieldError` bug (see the P2 todo below).
+      cefi/tradfi regression-checked via direct unit tests (`tests/unit/test_config.py::TestResolveTimeframes`) plus the
+      identical, category-agnostic call-site mechanism already proven live for sports — a live cefi/tradfi run wasn't
+      reachable cheaply through the real production entrypoint (see Update 8 for the full reasoning) and wasn't forced
+      given the strength of the existing evidence. See Update 8 for full investigation, the two-shipped-commits story,
+      and a documented residual gap in `LiveModeHandler` (out of scope, low risk, not fixed). (repo:
+      market-data-processing-service)
 
 - [ ] [DESIGN] P2. **Build a genuine KALSHI trades→candle schema mapping in `PredictionTradesAdapter` — NOT a rename, a
       real venue-schema design decision.** Deepened investigation in Update 6 (2026-07-27) supersedes the original
@@ -706,22 +817,22 @@ verification evidence for that already-flipped checkbox. No further action neede
       `/codex/02-data/prediction-schema-paths.md`).
 
       **Real open design decisions the next implementer must make** (see Update 6 for full detail + evidence):
-                                          (1) which of `yes_price_dollars`/`no_price_dollars` is the OHLCV price for a two-sided YES/NO market (they sum to
-                                          exactly 1.00 — confirmed on 54,295 real rows); (2) how `taker_side`/`taker_outcome_side`/`taker_book_side`
-                                          (yes/no/bid/ask, not BUY/SELL) map to the adapter's `is_buy` buy/sell-split and whale-detection features;
-                                          (3) whether `count_fp` (string-typed, cleanly float-parseable) is genuinely trade size/contract count;
-                                          (4) timestamp source — `available_at` is evidence-backed safe (confirmed byte-exact match against `created_time`
-                                          across all 54,295 rows of a real file, genuine per-trade granularity, 44,077 distinct values across one day) but
-                                          wiring it into `_get_local_timestamp_column`'s existing local-vs-exchange-time HFT-delay convention needs a
-                                          decision since Kalshi has no local/exchange timestamp split.
+                                                  (1) which of `yes_price_dollars`/`no_price_dollars` is the OHLCV price for a two-sided YES/NO market (they sum to
+                                                  exactly 1.00 — confirmed on 54,295 real rows); (2) how `taker_side`/`taker_outcome_side`/`taker_book_side`
+                                                  (yes/no/bid/ask, not BUY/SELL) map to the adapter's `is_buy` buy/sell-split and whale-detection features;
+                                                  (3) whether `count_fp` (string-typed, cleanly float-parseable) is genuinely trade size/contract count;
+                                                  (4) timestamp source — `available_at` is evidence-backed safe (confirmed byte-exact match against `created_time`
+                                                  across all 54,295 rows of a real file, genuine per-trade granularity, 44,077 distinct values across one day) but
+                                                  wiring it into `_get_local_timestamp_column`'s existing local-vs-exchange-time HFT-delay convention needs a
+                                                  decision since Kalshi has no local/exchange timestamp split.
 
-                                          **Also flag before starting**: a genuine SSOT-vs-code contradiction — `/codex/02-data/prediction-data-types-catalog.md`
-                                          claims `NEEDS_CANDLE_PROCESSING["trades"]` has a prediction-specific `False` override, but the actual UAC
-                                          registry (`unified_api_contracts/registry/market_data_categories.py:640`, flat/non-asset-group-keyed) sets it
-                                          `True` for `trades` uniformly, with a comment explicitly stating prediction shares CeFi's `True` value. Resolve
-                                          this FIRST — if the codex doc's intent is correct, the right fix may be "stop attempting prediction candle
-                                          derivation entirely" rather than building a Kalshi adapter. (repo: market-data-processing-service,
-                                          unified-api-contracts if the NEEDS_CANDLE contradiction is resolved as a code fix)
+                                                  **Also flag before starting**: a genuine SSOT-vs-code contradiction — `/codex/02-data/prediction-data-types-catalog.md`
+                                                  claims `NEEDS_CANDLE_PROCESSING["trades"]` has a prediction-specific `False` override, but the actual UAC
+                                                  registry (`unified_api_contracts/registry/market_data_categories.py:640`, flat/non-asset-group-keyed) sets it
+                                                  `True` for `trades` uniformly, with a comment explicitly stating prediction shares CeFi's `True` value. Resolve
+                                                  this FIRST — if the codex doc's intent is correct, the right fix may be "stop attempting prediction candle
+                                                  derivation entirely" rather than building a Kalshi adapter. (repo: market-data-processing-service,
+                                                  unified-api-contracts if the NEEDS_CANDLE contradiction is resolved as a code fix)
 
 - [ ] [SCRIPT] P2. **Investigate + fix `MalformedTickFieldError` for `bm_minutes_to_kickoff_or_h2h_columns` — a large
       fraction of sports MATCH_ODDS/ASIAN_HANDICAP/OVER_UNDER instruments fail with "ticks present but downstream calc

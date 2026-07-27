@@ -90,8 +90,32 @@ rebuilt. `LC_TARBALL_FRESHNESS=enforce` would turn the existing (currently silen
 which would at least fail loud instead of silently running stale code — worth considering as the default, or wiring an
 automatic tarball rebuild into the quickmerge/promote pipeline for repos with VM-based test harnesses.
 
+**Corroborating finding, 2026-07-27T10:15Z (slot-10, Track F follow-up,
+`sports_consolidated_native_ao_extract_2026_07_25.md`)**: a DIFFERENT, more specific bug in the SAME freshness-check
+mechanism. `launch-canonical-migration-vm.sh`'s `_fresh_repos` array (line ~1301) is a per-category allowlist of which
+repos `lc_verify_tarball_freshness()` even checks — it defaults to
+`(market-tick-data-service unified-api-contracts unified-trading-library deployment-service)` with a few
+category-specific overrides (`tradfi-catalogue-canon`, `*-candle-census`, etc.), but had **no override for
+`sports-features-purge`** — so the check never looked at `features-service` at all for that category, even though the
+category's whole job is running a features-service script. Silently launched a VM against a tarball that predated the
+just-shipped purge script by minutes → `rc=2 No such file or directory` on first launch (not even a `warn`-level
+message, since the repo was never in the checked list to begin with). Fixed by adding a `sports-features-purge` →
+`(features-service unified-api-contracts unified-trading-library deployment-service)` override, verified `bash -n`
+clean; **fix is currently STASHED, not yet landed** (`git stash` entry
+`orchestrator-slot-10-sports-features-purge-tarball-freshness-fix-2026-07-27` in the deployment-service worktree at
+`.tabs/10/`) — deployment-service's own QG died twice under a separate, unrelated fleet-wide CPU-contention spike (load
+avg hit 39) while trying to land it, so it was parked (not lost) rather than force a QG run that couldn't be trusted.
+Unblocked the actual VM relaunch in the meantime via `create-code-tarballs.sh --allow-dirty-tarball` (the documented
+emergency-hotfix escape hatch), which worked correctly since the fix only needs to be present in the LOCAL checkout
+invoking the launcher, not committed.
+
 ## Todos
 
+- [ ] [DATA] P2. Land the stashed `_fresh_repos` fix for the `sports-features-purge` category in
+      `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (stash:
+      `orchestrator-slot-10-sports-features-purge-tarball-freshness-fix-2026-07-27`, `.tabs/10/` worktree) via a normal
+      QG + quickmerge cycle once host load is calm — `git stash pop`, verify `bash -n`, ship. Small, already-verified,
+      no design work needed.
 - [ ] [DATA] P2. Consider defaulting `LC_TARBALL_FRESHNESS=enforce` (or auto-rebuilding the affected repo's tarball) as
       part of the quickmerge/promote pipeline for any repo with a VM-based e2e-check skill, so a fresh push is never
       silently invisible to the next VM launch. Scope: `deployment-service/scripts/vm/lib/launcher_common.sh`,

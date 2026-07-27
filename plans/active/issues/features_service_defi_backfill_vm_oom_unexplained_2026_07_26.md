@@ -203,6 +203,30 @@ SIGKILL, and I could not observe the actual final seconds to catch a real OOM-ki
 **Open question, not resolved**: what actually sends SIGKILL to the `features_service` process at ~8 minutes, and is the
 process merely BLOCKED (not allocating) for that whole window?
 
+## 2026-07-27 handoff (slot-11, operator-confirmed) -- the ONLY remaining step is relaunch-to-validate
+
+A candidate fix for finding 1 is shipped: `unified-trading-library@06190d77` (see the checked-off P2 script item below).
+It is a CANDIDATE, not a confirmed fix -- do not flip `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo until
+the repro below actually goes green (runtime-verification HARD RULE: a done-claim requires running the code).
+
+**Pending gate**: the fix has NOT reached features-service yet. It needs the UTL wheel release pipeline (LDR -> staging
+-> main -> semver-agent publish) to land a new `unified-trading-library` wheel version before any features-service VM
+picks it up. Do not idle-hold a worker slot polling for this (async-wait/poll-discipline HARD RULE) -- check back on a
+normal cadence instead, or park behind a wheel-release prerequisite if this recurs.
+
+**Exact repro command** (matches the 2026-07-27 live-VM-profiling attempt above, the one that hung with zero log
+output):
+
+```
+--feature-family onchain --asset-group DEFI --start-date 2026-07-20 --end-date 2026-07-25 --feature-group lst_yields
+```
+
+**Next dispatch should**: confirm the features-service venv/lockfile has picked up a UTL version >= the one containing
+`06190d77`, then relaunch this exact repro on a SPOT VM. If it goes green (no OOM/hang, features compute completes),
+flip the P2 item's "confirmed" note here, flip D1 in the batch3 plan, and close this issue (`resolved_by:`). If it STILL
+hangs/OOMs, findings 2 (the `BlobMetadata.size` accounting hole) and 3 (memory-watchdog backpressure) are the next
+candidates, or the still-open OOM-vs-hang question needs the more robust on-VM monitor (P1 items below) to settle.
+
 ## Recommended next steps (none done yet -- do NOT re-attempt the same repro without one of these)
 
 - [ ] [DATA] P1. Re-run the exact same repro
@@ -216,11 +240,27 @@ process merely BLOCKED (not allocating) for that whole window?
 - [ ] [DATA] P1. If the next repro confirms a genuine hang (not OOM): attach `py-spy dump` to the stuck PID during the
       silent window to get a real Python stack trace of what it's blocked on (network read, lock, retry-forever loop) --
       this would point directly at the true root cause instead of further code-reading guesses.
-- [ ] [SCRIPT] P2. Add `filters=[("date", "==", date_str)]` (or the bucket's real date-partition column) to the
+- [x] ✅ [SCRIPT] P2. Add `filters=[("date", "==", date_str)]` (or the bucket's real date-partition column) to the
       `read_availability_index(bucket)` call in `unified_trading_library/feature_service_base/manifest_discovery.py:59`
       -- mirrors the already-fixed sibling pattern (`mtds_backfill_vm_startup_oom_rc137_2026_07_14`) and is safe
       regardless of whether it's THE fix, since an unfiltered full-schema manifest read is never the intended shape for
-      a single-day dependency check. (repo: unified-trading-library)
+      a single-day dependency check. (repo: unified-trading-library) — unified-trading-library@06190d77 (2026-07-27,
+      slot-11). Shipped `read_manifest_rows()` scoped to `columns=["date","data_type","capture_status"]` +
+      `filters=[("date","=="...), ("data_type","==",...)]`, which routes it onto the slim, row-group-pushdown path
+      (previously it called `read_availability_index(bucket)` with no columns/filters at all, so it ALWAYS took the
+      full-schema, unbounded-read branch — filters are only honored on the slim path per that function's own docstring —
+      meaning this hot-path DEFI onchain preflight caller never benefited from either the slim path or the per-VM-shard
+      `filters=` threading this doc's finding 1 pointed at). Added regression coverage
+      (`tests/unit/feature_service_base/test_manifest_discovery.py::TestReadManifestRows`) asserting the exact
+      `columns=`/`filters=` call. **Not yet end-to-end validated against a live repro VM** — the fix needs to reach the
+      features-service venv via the next UTL wheel release (LDR→staging→main→semver-agent publish) before a repro VM
+      picks it up; re-run the `--feature-group lst_yields` repro from the 2026-07-27 update above once that wheel lands
+      to confirm whether this closes the hang/OOM or whether findings 2/3 (or the still-open hang-vs-OOM question) are
+      also in play. Also fixed an unrelated pre-existing flaky QG gate discovered while shipping this
+      (`tests/unit/test_streaming_writer.py::TestFdLifecycle::test_5000_sequential_writers_do_not_leak_fds` —
+      deterministically failed when run as part of the full suite vs standalone, confirmed byte-identical on a clean
+      stashed tree; fixed with `gc.collect()` around the baseline/after fd samples to remove suite-position-dependent GC
+      jitter, same commit).
 - [ ] [DESIGN] P2. Scope a fix for the `BlobMetadata.size: int` vs GCS's genuinely-`None`-until-eventually-consistent
       size (`cloud_interface/providers/gcp.py:301`, `blob.size or 0`) -- decide whether `size` becomes `int | None`
       workspace-wide (audit every consumer) or whether `list_blobs` should instead retry/refresh metadata for

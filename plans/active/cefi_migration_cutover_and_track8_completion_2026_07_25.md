@@ -813,3 +813,47 @@ every todo executes an already-decided spec from the parent doc.
   shard before detection. **Process fix going forward**: every check-in must now include a REAL staleness sweep
   (last-progress-timestamp vs. wall-clock now, flagging anything >45min stale) across the WHOLE fleet, not just
   spot-checking 2-3 shards — this is now the standing check-in procedure, not optional.
+
+- **2026-07-27T~12:00Z (pre-compact checkpoint, coordinating interactive session)** — durability checkpoint before a
+  context-compaction boundary in the driving session; NOT a stopping point for the campaign itself, which continues
+  unattended in GCE regardless of this session's context state.
+  - **Live snapshot at checkpoint time** (fresh
+    `gcloud compute instances list --filter="name~canonical-migration-cefi-content-apply"`, project
+    `central-element-323112`): **23 VMs still RUNNING** (`cs10-3e/4a/4b/5d`, `cs2d`, `cs3-2d`, `cs4-3d`, `cs5-1d/2d`,
+    `cs6-2d/3r`, `cs7-3d/4d/5f`, `cs8-1e/2f/3f/5e/6f`, `cs9-1d/2e/3e/4e`) — down from 42 total launched, consistent with
+    real ongoing completions (not independently re-confirmed via `EXIT_STATUS` objects at this exact moment — that
+    re-verification is the first thing any resumed check should do). Zero visible distress signals in this snapshot (no
+    new preemption-count movement checked this pass).
+  - **Todos 1-2-3(Scripts3/4) done; Script 1 (this fleet) is the only remaining piece of todo 3.** Todos 4 (mostly done,
+    live-refetch proof still owed — see its own checkbox note) and 5 remain after Script 1 finishes.
+  - **Continuity mechanism (session-internal, will NOT survive a genuinely fresh session/new conversation — only
+    survives a same-session `/compact`)**: a background monitoring sub-agent has been resumed every ~30-60min via
+    `SendMessage` throughout this dispatch, paired with a `ScheduleWakeup` timer (currently armed, ~30-60min cadence)
+    that re-invokes the driving session to trigger the next resume. **If this exact mechanism is gone (new session, or
+    the agent/timer didn't survive)**: resuming monitoring from scratch just means re-running the same live
+    `gcloud compute instances list` filter above,
+    `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` per VM for progress, and checking
+    for `EXIT_STATUS` objects under each VM's `vm-logs/` prefix for genuine completions — the campaign's state lives in
+    GCE + GCS, not in this session's memory. Do NOT re-launch any `cs*` VM still `RUNNING`.
+  - **Lessons worth not re-learning** (see full detail in the entries above, condensed here): (1) a "%X/hour" progress
+    comparison across check-ins is worthless unless computed from REAL log timestamps, not assumed interval labels — the
+    mid-session "25x slowdown" scare was a wall-clock-assumption bug, not a real regression, and cost a full diagnostic
+    detour to rule out; (2) GCE `status=RUNNING` is not liveness — a whole-VM OS-level freeze (memory pressure) can
+    silence even the heartbeat daemon for hours while GCE reports healthy; only externally-read signals (GCS heartbeat
+    blob / uploaded run.log mtime, read from OUTSIDE the VM) reliably catch that class, never an in-VM watchdog (it dies
+    with the same freeze); (3) always trace a claimed "X doesn't invoke Y" through the FULL execution path (host
+    launcher → GCE startup-script → actual wrapper) before concluding an absence — grepping only the top-level launcher
+    script for `vm-exec-with-gcs-tee.sh` gave a false negative this session (it IS invoked, one hop downstream via a
+    shared startup script) and had to be corrected twice after being asserted in a committed doc.
+  - **Companion work this session, all independently verified pushed** (not just self-reported): the
+    `migration_vm_hung_detection_monitoring_gap_2026_07_27.md` issue doc (6 todos, all implemented and shipped this
+    session across `deployment-api`/`deployment-service`/`market-tick-data-service`) plus 3 further issue docs it spun
+    off for genuinely separate gaps found along the way (`vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md`,
+    `deployment_api_inventory_alert_gate_ondemand_only_2026_07_27.md`,
+    `relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md`) — none of that work is at risk; every commit cited in
+    those docs was independently re-verified live on `origin/live-defi-rollout` (`git merge-base --is-ancestor`) as part
+    of this same checkpoint, not trusted from sub-agent self-reports.
+  - **git state at checkpoint**: every repo touched this session (`unified-trading-pm`, `instruments-service`,
+    `market-tick-data-service`, `deployment-service`, `deployment-api`) is `ahead=0` of `origin/live-defi-rollout` —
+    nothing uncommitted or unpushed anywhere. The only untracked files present (`plans/audit/results/*_2026_06_28.*`)
+    predate this session and are not mine — left untouched per the foreign-WIP rule.

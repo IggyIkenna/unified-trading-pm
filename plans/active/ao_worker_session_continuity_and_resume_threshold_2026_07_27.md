@@ -146,9 +146,14 @@ source: >-
       quickmerge; flip every checkbox above in the SAME turn per the commit-push-flip HARD RULE. —
       **`agent-orchestrator@998574b`**, quickmerged to `live-defi-rollout`. Full suite: 1798 passed, 2 skipped; ruff +
       basedpyright clean; dashboard tsc + vitest (154 tests) clean.
-- [ ] [OPERATOR] P1. **Decide whether to flip `plan_continuity_reset_enabled` to `True`** now that it's implemented,
+- [x] ✅ [OPERATOR] P1. **Decide whether to flip `plan_continuity_reset_enabled` to `True`** now that it's implemented,
       tested, and quickmerged — mirrors the `context_burn_kill` precedent (ship gated, flip on operator approval once
-      verified). BLOCKED-OPERATOR-DECISION until answered; not auto-flipped by this plan.
+      verified). BLOCKED-OPERATOR-DECISION until answered; not auto-flipped by this plan. — **APPROVED 2026-07-27
+      (operator, in-session, verbatim: "Flip to True now")** — `agent-orchestrator@0f85d03`, same-day flip. Updated
+      `test_plan_continuity_reset_enabled_default_is_false` → `..._default_is_true` and the flag-off test
+      (`test_plan_continuity_reset_flag_off_dispatches_normally_across_plan_switch`) to explicitly set the flag `False`
+      via `set_tuning`, since it can no longer rely on the (now-flipped) default. `quality-gates.sh` green, quickmerged
+      to `live-defi-rollout`.
 
 ## Progress Log
 
@@ -162,3 +167,22 @@ codex docs. `quality-gates.sh`: 1798 passed, 2 skipped, ruff + basedpyright clea
 
 Only the `[OPERATOR]` todo (whether to flip `plan_continuity_reset_enabled` to `True`) remains — asked directly this
 session rather than left as a silent blocker.
+
+**2026-07-27 (same session, continued).** Operator approved the flip verbatim ("Flip to True now") — shipped
+`agent-orchestrator@0f85d03` same-day, `quality-gates.sh` green. **All 7 todos in this plan are now done** — no operator
+action or further work remains. This plan is ready for its own finalize/archival pass (not run in this session — the
+`ao_worker_context_lifecycle_gap` precedent uses a separate gated finalize plan; this plan is small enough that a future
+archival pass can fold the standard 6-step ritual directly here, or a dedicated finalize plan can be authored per the
+operator's usual preference for AO-dispatched plans — this one is LOCAL, so either is fine).
+
+## Deferred work after 2026-07-27
+
+| Item                                                                                                                              | State              | Blocked on                                                                                                                     |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Run the standard 6-step archival ritual on this plan (banner, codex-alignment re-check, referrer fixup, move to `plans/archive/`) | Not done           | Nobody — all 7 todos are done; this is routine closeout, not new work                                                          |
+| Watch live `worker_plan_switch_reset` volume now that `plan_continuity_reset_enabled=True` is deployed                            | Cannot be done yet | Elapsed time — needs the fleet to actually dispatch across plan/role boundaries post-deploy before there's anything to observe |
+
+**Recommended next item**: nothing needs a human right now — both remaining items are routine/observational, not
+blocking. When picked up again, the archival ritual is the quick one (few minutes); the live-volume watch is better
+suited to a future `/check-agent-orchestrator`-style read-only pass once the fleet has run for a while under the new
+flag.

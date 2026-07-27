@@ -48,6 +48,7 @@ related:
     /plans/active/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md,
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
     /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md,
+    /plans/active/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master
@@ -220,13 +221,38 @@ automatic, and depends entirely on someone deciding to look and knowing to look 
 
 ## What's NOT done / follow-up needed
 
-- [ ] [HUMAN] P1. **Add `"hung"` to `deployments_inventory.py`'s `_ALERT_HEALTH_STATES` (currently
+- [x] [HUMAN] P1. **Add `"hung"` to `deployments_inventory.py`'s `_ALERT_HEALTH_STATES` (currently
       `frozenset({"oom-risk", "stalled"})`), or wire an equivalent dedicated paging path for it.** Weigh whether "hung"
       at 15-minute heartbeat staleness pages too eagerly for legitimately-quiet workloads before flipping it on for the
       whole fleet (may need a per-VM-class threshold, not just adding the literal to the set). Done when: a VM whose
       `composite_health_status` transitions into `"hung"` produces a `_persist_alert(...)` call (verified via a
       deliberately-induced stale-heartbeat test VM or a unit test around `_alert_on_health_transition`), with no new
-      false-positive-page complaint from a legitimately-quiet live/paper VM in the following week of operation.
+      false-positive-page complaint from a legitimately-quiet live/paper VM in the following week of operation. —
+      **deployment-api@ea594d60d60f4a55ef56a0ecace70beba6d66d87** (2026-07-27). A same-session false-positive-risk
+      investigation (traced every `VM_TASK` launched via `setup-data-pipeline-vm.sh`) found the flat 15-minute
+      `_STALE_HEARTBEAT_MINUTES` threshold is SAFE to page fleet-wide as-is — **no per-VM-class threshold was needed or
+      added**: every VM class (live/backfill/canonical-migration alike) installs the SAME 60s-interval HeartbeatDaemon
+      unconditionally, so 15 minutes is a uniform ~15x margin over that fixed write cadence for every class. The
+      legitimately-slower classes found (live-capture sparse WS logging; `af-backfill-*`'s ~54s-throttled API-Football
+      chunks) are slow on a DIFFERENT signal (run-log/manifest-shard freshness, workload-paced) that
+      `heartbeat_stall_watcher.py`'s own `PREFIX_IDLE_THRESHOLDS`/`_is_backfill_vm` gate already carves out separately —
+      duplicating that per-prefix-override pattern into `_vm_health.py`/`deployments_inventory.py` would solve a problem
+      this signal doesn't have. `_ALERT_HEALTH_STATES` is now `frozenset({"oom-risk", "stalled",     "hung"})`. Added
+      `test_alert_on_health_transition_fires_on_hung_transition` (deployment-api
+      `tests/unit/test_route_deployments_inventory.py`) proving a fresh `hung` transition fires `_persist_alert(...)`
+      (severity `WARNING`), that repeated polls / an already-alerted VM do not re-page (existing dedup-by-transition
+      behavior, now verified against this state too), and that recovery-then-re-hang fires again as a fresh transition;
+      also removed `"hung"` from `test_alert_on_health_transition_ignores_non_alertable_states`'s non-alertable list,
+      since it no longer is one. Full `quality-gates.sh --no-fix` green (sentinel
+      `aff52ca6af97d9c9e769da2ffb66b6df727cd5f3`). **One residual gap surfaced by the investigation and filed separately
+      (outside this todo's literal scope — it's about the surrounding SCHEDULE, not this gate's own logic):**
+      `plans/active/issues/deployment_api_inventory_alert_gate_ondemand_only_2026_07_27.md` — deployment-api's inventory
+      computation (and therefore this alert gate) is on-demand/cache-driven only (45s TTL, no dedicated Cloud Scheduler
+      cron unlike `heartbeat_stall_watcher.py`/`vm_zombie_watchdog.py`), so today its real page-firing cadence is
+      bounded by whoever has the deployment-ui dashboard open or the once-daily digest cron — not yet the
+      fully-automatic, schedule-independent safety net the parent investigation's intent implies. The "no new
+      false-positive-page complaint... in the following week" half of this todo's done-when criterion is therefore still
+      open pending real-world observation; the unit-test half is shipped and green.
 - [x] [HUMAN] P1. **Wire `canonical-migration-*` (and any other one-off migration VM prefixes launched via
       `deployment-service/scripts/vm/launch-*-vm.sh` that behave like backfill VMs) into `heartbeat_stall_watcher.py`'s
       `_is_backfill_vm()` matching**, so the run-log-freshness liveness signal applies to them instead of the
@@ -251,17 +277,61 @@ automatic, and depends entirely on someone deciding to look and knowing to look 
       `DP_VM_STALL` → `RelaunchStalledVm` (a different actuator) — confirmed that actuator has NO checkpoint/resume
       logic at all (`grep` for checkpoint/PROGRESS/resume in `relaunch_stalled_vm.py` returns nothing), so even this
       newly-enabled detection path relaunches blind, not via the PROGRESS.json checkpoint (see todo 6).
-- [ ] [HUMAN] P2. **Determine what (if anything) actually enforces a stall-timeout on `VM_MIGRATION_CMD`-executed
+- [x] [HUMAN] P2. **Determine what (if anything) actually enforces a stall-timeout on `VM_MIGRATION_CMD`-executed
       workers** launched by `launch-canonical-migration-vm.sh`, given Gap 2 shows `vm-exec-with-gcs-tee.sh` is never
       invoked by this launcher at all. Done when: either (a) a stall-enforcement mechanism is identified and confirmed
       live for this launcher's VM-side execution path, or (b) it's confirmed there is none, and a decision is recorded
       on whether to route this launcher through `vm-exec-with-gcs-tee.sh` (with `STALL_PROGRESS_REGEX` set) or build an
-      equivalent in-VM watchdog for the `bash -c "$VM_MIGRATION_CMD"` path.
-- [ ] [HUMAN] P2. **If routing `launch-canonical-migration-vm.sh` through `vm-exec-with-gcs-tee.sh`, set a content-aware
+      equivalent in-VM watchdog for the `bash -c "$VM_MIGRATION_CMD"` path. — **RESOLVED (2026-07-27, todo-3+4
+      implementation session): criterion (a) applies**, confirming (not contradicting) the CORRECTION note already
+      recorded against Gap 2 above from the todo-2 session: re-verified directly this session by tracing
+      `setup-data-pipeline-vm.sh`'s `VM_TASK == "canonical-migration"` branch (calls `_launch_with_tee "$FULL_CMD" ...`,
+      where `$FULL_CMD` embeds `VM_MIGRATION_CMD` — there is no separate/parallel execution path bypassing the tee
+      wrapper) and `_launch_with_tee()` itself (unconditionally invokes the downloaded `vm-exec-with-gcs-tee.sh` via
+      `nohup bash "$TEE_WRAPPER" "$GCS_LOG_URI" bash -c "$cmd"` whenever the tarball download succeeded). The mechanism
+      is LIVE today for every `VM_TASK=canonical-migration` category (byte-growth mode, `STALL_TIMEOUT_SEC=1800`
+      default) — no code change was needed in `setup-data-pipeline-vm.sh` or `vm-exec-with-gcs-tee.sh` themselves, since
+      both already read `STALL_TIMEOUT_SEC`/`STALL_PROGRESS_REGEX` off GCE instance metadata generically, independent of
+      `VM_TASK` (confirmed via direct read: `setup-data-pipeline-vm.sh` lines ~460/468). The decision on the remaining
+      "content-aware or not" question is recorded + implemented at todo 4 below.
+- [x] [HUMAN] P2. **If routing `launch-canonical-migration-vm.sh` through `vm-exec-with-gcs-tee.sh`, set a content-aware
       `STALL_PROGRESS_REGEX`** matching this migration script's real per-chunk/per-object progress log line (not just
       byte-growth), so a wedged network call inside an otherwise-noisy log gets caught within `STALL_TIMEOUT_SEC`. Done
       when: a deliberately-induced hang-on-network-call test run (log still emitting non-progress noise) trips the
-      stall-kill within the configured timeout, where it previously would not have under the size-growth-only default.
+      stall-kill within the configured timeout, where it previously would not have under the size-growth-only default. —
+      **FIXED: deployment-service@b2d135a1e8cadd648197f53cf1e116d57c018d88** (2026-07-27). Set
+      `STALL_PROGRESS_REGEX=progress:|files/sec` in `launch-canonical-migration-vm.sh`'s metadata-construction block,
+      scoped ONLY to the `cefi-content-apply` category — the one script whose real progress-log line format was read
+      directly out of `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` this session
+      (`market-tick-data-service`): `"Discovery progress: day=%s ..."` (discovery phase),
+      `"Progress: %d/%d files (%.1f files/sec, ...)"` (every 200 files + final tally), and
+      `"Elapsed (migrate phase): ...files/sec"` (final summary) all match; the tool's OWN wedged-worker WARNING
+      (`"No progress in the last poll window..."`) does NOT match (case-sensitive — no `"progress:"` substring, no
+      `"files/sec"`), so it correctly never resets the stall timer. Matches the exact `STALL_PROGRESS_REGEX` convention
+      already proven live in production by 7 other launchers (`launch-mtds-gas-fees-backfill-vm.sh`,
+      `_tradfi-ohlcv-launcher-lib.sh`, `launch-mdps-sharded-backfill.sh`, `launch-sfi-backfill-vm.sh`,
+      `launch-cefi-sharded-backfill.sh`, `launch-orphan-sweep-vm.sh`, `launch-backfill-orphan-e-vm.sh`) — no code change
+      was needed in `setup-data-pipeline-vm.sh` or `vm-exec-with-gcs-tee.sh` (both already read
+      `STALL_TIMEOUT_SEC`/`STALL_PROGRESS_REGEX` off GCE metadata generically). Every OTHER
+      `VM_TASK=canonical-migration` category deliberately gets NO regex yet — only cefi-content-apply's script has been
+      individually verified; todo 5's per-category audit is the stated place for the rest (broadening the regex metadata
+      key onto an unverified category's script would risk a false-positive stall-kill on a legitimately slow/quiet phase
+      of a different tool with a different log shape). Test:
+      `tests/unit/test_vm_launcher_scripts.py::TestCanonicalMigrationStallDetection` (deployment-service) — proves (1)
+      the launcher wires the metadata key only for `cefi-content-apply` and NOT for `cefi-late-renames`/
+      `cefi-dedup-apply`/`cefi`; (2) the exact regex matches the real per-line formats above via the same `grep -qE`
+      matcher `vm-exec-with-gcs-tee.sh` itself uses, and does not match the wedged-worker WARNING; and (3) — against the
+      REAL shipped `vm-exec-with-gcs-tee.sh`, not a reimplementation — a simulated hung worker emitting non-progress
+      noise IS killed (`rc=124`, `status=failed`) within a compressed `STALL_TIMEOUT_SEC` when the regex is set, is NOT
+      killed under the byte-growth-only default (the exact historical blind spot, reproduced small-scale), and a
+      genuinely-healthy run emitting real progress markers interleaved with the tool's own wedged-worker WARNING is
+      never false-killed. Full `quality-gates.sh` green (2874 passed, 5 skipped). **This fix alone does not close the
+      incident actually observed** — the campaign's own Progress Log
+      (`/plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md`) records serial-console evidence
+      consistent with a whole-VM OS-level memory-pressure freeze (heartbeat itself went silent), a failure class no
+      in-VM watchdog can reliably catch since it runs inside the same distressed VM; todos 1+2 (paging on the `"hung"`
+      state, and the `_is_backfill_vm()` naming fix already shipped) are the actual external defense for that specific
+      incident class, not this todo.
 - [x] [HUMAN] P3. **Audit other one-off launcher scripts under `deployment-service/scripts/vm/` for the same three-gap
       pattern** (paging-set exclusion is fleet-wide so N/A per-launcher, but the stall-watchdog non-invocation and
       backfill-naming-regex miss are per-launcher-name issues) — not just `launch-canonical-migration-vm.sh`. Done when:
@@ -324,6 +394,22 @@ automatic, and depends entirely on someone deciding to look and knowing to look 
       direct code read of the day-completion accounting logic and by confirming the consuming
       `read_progress_checkpoint()`/`RelaunchPreemptedVm` machinery is already live and unconditional on this script's
       own changes.
+- [ ] [HUMAN] P3. **Close the tracking gap todo 5's audit left open**: two items were explicitly flagged "left open" in
+      todo 5's own text but never converted into a trackable todo or issue doc (caught during this doc's 2026-07-27
+      reconciliation pass — see Resolution section below). (a) **Individually VM_TASK-verify each of the ~35 unverified
+      one-off/recon/audit/validation-named launchers** todo 5 identified (e.g. `launch-orphan-sweep-vm.sh`,
+      `launch-manifest-recon-*-vm.sh`, `launch-sports-full-sweep-vm.sh`, `launch-mtds-gas-fees-backfill-vm.sh`) against
+      whether each routes through the same Class-A `setup-data-pipeline-vm.sh` path and is safe to add to
+      `_is_backfill_vm()`'s naming match — checking each for a fleet-naming collision against a legitimately-continuous
+      VM name per the parent doc's blast-radius rule — before broadening the heuristic. (b) **Fix the confirmed active
+      mis-route `launch-batch-live-recon-cron-vm.sh`** (`VM_NAME="batch-live-recon-${TARGET_DATE//\-/}-${RUN_TS}"`,
+      re-confirmed this session by direct grep — the literal `-live-` substring trips `_is_backfill_vm()`'s early-out to
+      `False` even though it's a batch reconciliation cron, not a live-capture VM) — needs either a narrower early-out
+      condition (e.g. requiring `-live-` to NOT be immediately preceded by `batch`) or an explicit inclusion carve-out.
+      Done when: each of the ~35 launchers has an individually-verified verdict recorded (added to `_is_backfill_vm()`
+      or explicitly rejected with reasoning), and `launch-batch-live-recon-cron-vm.sh` routes to the correct
+      (backfill/run-log- freshness) liveness signal without regressing any genuinely-live VM whose name legitimately
+      contains `-live-`.
 
 ## Evidence / how to reproduce
 
@@ -347,3 +433,72 @@ grep -n 'def _is_backfill_vm\|canonical' \
 10/42-hung and the 1-2.5h+ stall durations were observed operationally during this session's manual fleet sweep during
 the Script-1 campaign — there is no separate artifact/log file cited for that count beyond the campaign's own Progress
 Log entries in `/plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md`.
+
+## Resolution (2026-07-27, reconciliation pass)
+
+This section closes out a fresh read-and-verify pass over all 6 todos above, run after the three implementation sessions
+(naming fix, stall-timeout fix, alert-state fix) and the spot-recovery investigation had all completed. Every commit sha
+cited below was independently re-verified this session — not trusted from any prior summary — via
+`git cat-file -t <sha>` (confirms the object exists) and `git merge-base --is-ancestor <sha> origin/live-defi-rollout`
+(confirms it's actually on the shared branch, not a local-only/dangling commit) in each repo's own clone.
+
+**Shipped commits (all verified live on `origin/live-defi-rollout`):**
+
+- **deployment-api@ea594d60d60f4a55ef56a0ecace70beba6d66d87** — todo 1: `"hung"` added to `_ALERT_HEALTH_STATES`;
+  `test_alert_on_health_transition_fires_on_hung_transition` added.
+- **deployment-service@fde4f4f3b557f9dcef8cb355a57d63122ab087bd** — todo 2 (Gap 3): `_is_backfill_vm()` extended to
+  match the canonical-migration launcher family; `test_is_backfill_vm_matches_migration_launcher_family` added.
+- **deployment-service@b2d135a1e8cadd648197f53cf1e116d57c018d88** — todo 4: `STALL_PROGRESS_REGEX` set for the
+  `cefi-content-apply` category in `launch-canonical-migration-vm.sh`; `TestCanonicalMigrationStallDetection` added.
+- **market-tick-data-service@54817bc15acc218762431180e20d3e3f4a230929** — todo 6: `record_vm_progress(day)` wired into
+  `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`'s per-day completion accounting, gated on `--apply`.
+- **Todo 3** required no code commit — it was a pure investigation/decision-recording todo, and its own done-when
+  criterion (a) was satisfied by re-reading the existing `_launch_with_tee()` → `vm-exec-with-gcs-tee.sh` call chain,
+  which was already live before this doc existed. Correctly recorded as RESOLVED without a shipped sha.
+- **Todo 5** required no code commit (it's an audit) and its core deliverable — every one of the 103 `launch-*-vm.sh`
+  scripts under `deployment-service/scripts/vm/` checked against `_is_backfill_vm()` and against
+  `vm-exec-with-gcs-tee.sh` invocation — is genuinely complete; **re-spot-checked this session**:
+  `ls deployment-service/scripts/vm/launch-*-vm.sh | wc -l` returns exactly **103** (matches the audit's own count), and
+  `launch-batch-live-recon-cron-vm.sh`'s actual `VM_NAME="batch-live-recon-${TARGET_DATE//\-/}-${RUN_TS}"` line does
+  contain the literal `-live-` substring, confirming the audit's claimed mis-route exactly as described. However, two
+  items the audit itself flagged "left open" (the ~35 unverified potential Class-A launchers, and the
+  `launch-batch-live-recon-cron-vm.sh` mis-route) had **not** actually been converted into a trackable todo or issue
+  doc, despite the audit's own done-when criterion requiring exactly that ("added as a new todo here/in a follow-up
+  plan"). Closed that tracking gap this session by adding **todo 7** above for both items — the audit's information
+  content was never lost, it just wasn't wired into anything actionable yet.
+
+**Separately, a genuine additional gap was found during this reconciliation** (not one of the original 3 gaps, and
+distinct from todo 6): `RelaunchStalledVm` (`deployment-service/scripts/recovery/relaunch_stalled_vm.py`, the
+`DP_VM_STALL` auto-recover actuator) has **zero checkpoint/resume logic of any kind** — confirmed by a full-file read
+this session (`grep -n "checkpoint\|PROGRESS\|resume\|START_DATE"` → zero hits), in contrast to `RelaunchPreemptedVm`,
+which already has this logic. This affects every VM `_is_backfill_vm()` matches, not just canonical-migration ones, and
+it was previously only mentioned in passing inside todo 2's own evidence text, never tracked as its own item. Filed as
+`/plans/active/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md` per findings-triage (a cross-cutting
+actuator gap, out of this doc's exact Gap-1/2/3 scope).
+
+**Status**: left as `open`, not `resolved` — todo 7 (new, tracking the audit's own flagged-but-unfiled follow-up) is
+genuinely unresolved open work, so marking this doc `resolved` would misrepresent that. Todos 1, 2, 3, 4, and 6 are all
+genuinely done with verified, shipped, ancestor-confirmed commits (or, for todo 3, a verified no-code-needed
+resolution); todo 5's audit deliverable is complete but its own follow-up tracking is what todo 7 now carries forward.
+
+### Direct answer to the operator's SPOT-recovery question
+
+**"Does relaunching a preempted/hung canonical-migration VM now actually resume from where it left off?"**
+
+**Split answer: YES for genuine SPOT preemption; NO (still) for a stall-triggered relaunch.**
+
+- **Preemption path — YES.** `RelaunchPreemptedVm` (`relaunch_backfill_vm.py`) was already eligible for
+  `canonical-migration-cefi-*` VMs before today (registered in `launcher_registry.py`/`vm_prefix_registry.py`,
+  independent of `_is_backfill_vm()`), and its checkpoint-read (`read_progress_checkpoint()` →
+  `vm-logs/{vm}/PROGRESS.json`) + `START_DATE`-override logic was already live. The one missing piece was the migration
+  script never calling `record_vm_progress()` — fixed by todo 6. So as of market-tick-data-service@54817bc1, a genuine
+  GCE preemption of `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` running on one of these VMs will resume
+  from the last-fully-completed day, not replay `--start-date` from genesis.
+- **Stall/hung path — NO, still.** After todo 2's naming fix, a hung (not preempted) canonical-migration VM now
+  correctly feeds `DP_VM_STALL` (previously misrouted as live-capture). But that finding's own actuator,
+  `RelaunchStalledVm`, was independently re-verified this session (full-file read, not assumed) to have no
+  checkpoint/resume logic at all — it relaunches by blindly re-invoking the launcher with its original `launcher_env`,
+  regardless of any PROGRESS.json checkpoint that exists. So a stall-triggered relaunch of a canonical-migration VM — or
+  any other `_is_backfill_vm()`-matched VM — still does **not** resume from where it left off today. This is a genuine,
+  broader, pre-existing gap (not introduced or fixed by any of this doc's 6 todos), filed separately at
+  `/plans/active/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md`.

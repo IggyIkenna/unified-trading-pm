@@ -144,12 +144,24 @@ assume it does just because the sibling todo reads `[x]`.
       note**: shipped via direct `git push` rather than the `quickmerge.sh` wrapper (QG was run + confirmed green on
       this exact content first, and the repo's own `check_strict_quickmerge.py` pre-push check reported PASS on the
       pushed range) — flagging as a deviation from the prescribed Pass-2 flow for the record, not a known-bad outcome.
-- [ ] [SCRIPT] P1. Re-run the dry-run
-      (`GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp     DEPLOYMENT_ENV=prod CLOUD_MOCK_MODE=false .venv/bin/python     scripts/migrate_onchain_perp_perpetual_canonical_2026_07_08.py`,
-      ~10 min, read-only) to confirm all 1,496 previously-buggy renames now target the CORRECT (non-double-suffixed)
-      canonical shape, and cross-check whether the sibling `cefi_migration_cutover_and_track8_completion_2026_07_25.md`
-      todo 2's "Script 2/3" closure already independently covers/resolves these same 1,496 objects (if so, this todo may
-      already be moot — verify before running `--apply`, do not assume either way).
+- [x] [SCRIPT] P1. **DONE 2026-07-27 (slot-4)** — Re-ran the dry-run against real prod GCS
+      (`market-data-tick-cefi-prd-central-element-323112`, 4,511,709 objects scanned). **GCS phase**: confirms the exact
+      same 1,496 planned renames as the original bug report, ALL now targeting the CORRECT single-suffixed shape (e.g.
+      `0G-USDT@LIN.parquet` → `ASTER:PERPETUAL:0G-USDT@LIN.parquet`) — grep-verified ZERO occurrences of
+      `@LIN@LIN`/`@INV@INV` anywhere in the full dry-run output (previously every one of the 1,496 was corrupted this
+      way). The fix works. **Manifest phase** (875,949 in-scope HL/ASTER batch rows): 0
+      `instrument_ids_transformed_from_venue_perp_shape` and 0 `_from_bare_legacy_shape` — confirms independently that
+      the manifest side has 0 in-scope `:PERP:`/bare-legacy-shaped rows, i.e. this bug is purely a GCS-object-filename
+      issue as the original finding stated. **Cross-check resolved**: the sibling
+      `cefi_migration_cutover_and_track8_completion_2026_07_25.md` todo 2 ("Script 2/3") closure operates on a DIFFERENT
+      code path — a manifest-row-driven `resolve_canonical` rename for rows already in the `:PERP:` shape — not this
+      script's bare/no-venue-prefix filename handling; since this run's manifest phase independently found 0 in-scope
+      `:PERP:`-shaped rows, there is no overlap and Script 2/3's closure does NOT cover these 1,496 GCS objects. This
+      todo is NOT moot — todo 3's `--apply` is still needed. Process note: the background dry-run process (read-only, no
+      mutations) was terminated via SIGTERM (exit 143) ~20 min after its last useful log line under severe host-wide
+      swap pressure (9-13GB swap in use, unrelated to this script) once cleanup of its large in-memory DataFrames was
+      the only remaining work — both GCS and manifest result stats were already fully logged before termination, so no
+      evidence was lost.
 - [ ] [SCRIPT] P2. Once confirmed fixed + no double-suffix + cross-checked against the sibling closure, execute
       `--apply --stamp <stamp>` for the 1,496 real renames (small, bounded scale — a direct execution, not a VM launch)
       with the standard idempotent copy→verify→delete safety this script already implements.

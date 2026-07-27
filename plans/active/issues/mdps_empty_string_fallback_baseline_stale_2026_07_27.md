@@ -98,11 +98,14 @@ committed-locally-pending (staged, QG-clean on every OTHER check, ready to ship 
       to direct dict indexing, 13 noqa'd as genuinely deliberate absent-means-N/A cases (canonical row_key hive
       segments, checkpoint metadata that fails safe via the enumeration_signature mismatch path, mock-seed rows). Live
       scan count now 51 (< baseline 66, see todo 2).
-- [ ] 2. [SCRIPT] P1. Once todo 1 lands, update
-      `unified-trading-pm/scripts/quality_gates/no_empty_string_fallback_baseline.yaml`'s
-      `market-data-processing-service` entry to the new (lower or equal) real count, WITH a `commit:` reference
-      (matching the `market-tick-data-service` entry's format) so the next drift is attributable to an actual commit,
-      not silently stale again.
+- [x] ✅ 2. [SCRIPT] P1. **DONE 2026-07-27 (slot-9).** Re-verified live rather than trusting todo 1's "51" snapshot —
+      other commits landed on this hot branch in the interim, so the live count had drifted back to **66** (still `<= `
+      the recorded baseline, not a regression). Ran
+      `check_no_empty_string_fallback.py --scope     market-data-processing-service --update-baseline`: confirmed
+      `01744b7` (todo 1's fix) is a real ancestor of current HEAD (`43d8f7d`), then stamped the baseline with a
+      `commit:` reference (`43d8f7d7d30de3430202bf91568cdb61e3a652fc`) matching the `market-tick-data-service` entry's
+      format — count stays `66` (accurate, not silently stale), so the next drift is now attributable to an actual
+      commit.
 - [x] 3. [SCRIPT] P2. Ship the already-written `scripts/candle_orphan_sweep.py` (staged locally in slot-13, zero new
       violations of its own) once todos 1-2 clear the gate. ✅ market-data-processing-service@01744b73a — shipped in the
       same commit as todo 1's fix (the gate cleared for both in one quickmerge).
