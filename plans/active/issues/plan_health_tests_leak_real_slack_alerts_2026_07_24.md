@@ -144,10 +144,22 @@ whole suite (1609 passed).
       `agent-orchestrator@a545800`. **Gate met**: a throwaway test with a live-looking webhook URL AND zero notify
       mocking (the exact "forgot the mock" scenario) still made 0 real `httpx.Client` calls — the fixture alone blocks
       it, independent of the per-test mock. Full suite (1609 passed, 1 skipped) unaffected.
-- [ ] [OPERATOR] P2. Decide whether to also verify why `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is visible inside a worker's
-      `quality-gates.sh` pytest run at all (is it exported at the shell/profile level for all subprocesses on the
-      central VM, not just the systemd-managed `orchestrator.service`?) — informs whether the fix belongs ONLY in the
-      tests, or also in how broadly that env var is scoped on the host.
+- [x] [DIAG] P2. **Answered 2026-07-27 (classification sweep, read-only SSM against the orchestrator VM,
+      `i-0c9b283b31d6b5ca7`)** — `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is **NOT** exported at the shell/profile level:
+      `grep -rl AGENT_ORCHESTRATOR_SLACK_WEBHOOK /etc/environment /etc/profile.d /etc/systemd/system /home/*/.bashrc     /home/*/.profile /home/*/.bash_profile`
+      matched only 3 systemd drop-ins (`orchestrator.service.d/slack-alerts.conf` + 2
+      `audit-*.service.d/slack-alerts.conf` — no shell dotfile). It IS, however, present in the live tmux SERVER
+      process's own environment (`/proc/<tmux-server-pid>/environ`, confirmed via `sudo` read) — meaning every worker
+      pane spawned on that shared tmux server inherits it, because the tmux server itself was started as a descendant of
+      `orchestrator.service` (which correctly needs the var) and never had it stripped before spawning worker sessions.
+      **This explains the observed flood exactly**: not a careless broad export, but env-inheritance through the
+      AutoSpawn → tmux-server → worker-pane process chain. **No further host-level fix is required** — the already-
+      shipped `_no_real_slack_webhook` autouse conftest fixture (P1 todo above) defaults the webhook to `""` inside
+      every test regardless of what the surrounding shell/tmux environment exports, so this mechanism is fully closed at
+      the test layer independent of the host-level env-var chain. Optional future hardening (not required, not actioned
+      here): `AutoSpawn`'s tmux-spawn call could explicitly `unset AGENT_ORCHESTRATOR_SLACK_WEBHOOK` before launching a
+      new slot session, so a FUTURE test class that forgets to mock Slack doesn't inherit a working webhook either — but
+      the current fix already prevents the concrete flood this issue was filed for.
 - [ ] [SCRIPT] P3. Add a `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback to `scripts/dev/slack-read-channel.py` (gcloud
       ADC stays primary; env var is the degraded path) — every gcloud identity available in this session hit either
       `PERMISSION_DENIED` on `secretmanager.versions.access` or a stale-token reauth prompt that can't run

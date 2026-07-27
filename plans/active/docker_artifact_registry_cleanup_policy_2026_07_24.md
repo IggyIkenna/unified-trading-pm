@@ -34,8 +34,8 @@ related: []
 created: 2026-07-24
 last_updated: 2026-07-24
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 3

@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-06-27
 parent_epic: defi_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra

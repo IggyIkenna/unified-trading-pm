@@ -22,8 +22,8 @@ tags: [audit, documentation, ssot, codex, consolidation, deduplication]
 related: []
 created: 2026-06-01
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 8

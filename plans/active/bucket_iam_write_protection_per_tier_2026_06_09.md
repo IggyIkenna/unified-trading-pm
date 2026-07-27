@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-06-09
 parent_epic: infrastructure_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
@@ -34,6 +34,7 @@ locked_since: 2026-06-09
 supersedes:
 superseded_by:
 depends_on:
+assigned_role: infra
 source:
 Codex SSOTs:
   [/codex/05-infrastructure/bucket-isolation-model.md, /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]

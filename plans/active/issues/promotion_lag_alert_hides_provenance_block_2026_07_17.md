@@ -27,7 +27,7 @@ related:
     "/codex/08-workflows/ci-cd-flow.md",
     "/codex/04-architecture/ci-alerting.md",
     "/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md",
-    "/plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md",
+    "/plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md",
   ]
 created: 2026-07-17
 parent_epic: infrastructure_master
@@ -112,7 +112,7 @@ scan of `origin/main..origin/live-defi-rollout`. Neither repo was touched.
 
 ## Known rough edge, same LDR→main promotion subsystem (2026-07-26)
 
-`/plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` found an adjacent
+`/plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` found an adjacent
 failure mode in the same promotion pipeline: `main`'s squash-merge history can make a real release tag unreachable from
 `main`'s own commit graph even though content is byte-identical to `live-defi-rollout`, so `git describe`/ hatch-vcs on
 `main` falls back to a stale tag and computes a version below the current release floor — breaking a fresh

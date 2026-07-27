@@ -167,3 +167,101 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   draft batch/native_ao_extract plans flipped across 2 rounds) + the blank-`assigned_vm` classification pass (57 docs,
   198 todos surfaced) revealed the deeper structural gap this plan exists to close. Operator explicitly chose the
   LOCAL/human track (not AO-dispatched) when asked. Not started.
+
+- **2026-07-27 — Phase 1 executed same-night (operator override via `/autonomous`, not deferred to next session as
+  originally scoped).** 9 parallel read-only sub-agents (one per tranche: cefi/defi/tradfi/prediction/sports/meta +
+  cross-cutting split into 3 batches) classified all 142 `doc_type:plan`, `assigned_vm:NA` docs with open todos (1,202
+  todos total; `sports_consolidated_closeout` and this plan itself pre-excluded). Full per-doc verdict tables are in
+  each sub-agent's transcript (not reproduced here in full to respect the line cap) — this entry is the durable
+  summary + every actionable finding.
+
+  **Headline finding: the population splits into three very different shapes, not one.**
+  1. **Genuine KEEP-NA** (majority, ~95 of 142 docs) — real, dated, evidenced exclusions: explicit operator rulings
+     (`BLK-*` codes), machine `depends_on`+`gate_on_depends` gates on still-open prerequisites, `status: paused`,
+     hard-stops (wallet keys, kill-switch, prod-bucket deletes without §3a qualification), or genuinely open-ended
+     design/research work. These are NOT defaults — almost every one cites a specific date/ruling/gate.
+  2. **RECLASSIFY but ALREADY-DUPLICATED** (the largest surprise, ~35 docs) — the doc's own remaining open checkboxes
+     describe work that this session's OWN earlier satellite-batch drafting (batch1-6 across all 9 tranches, shipped
+     hours earlier tonight) already extracted verbatim into an active `assigned_vm: planning` doc. The source doc's
+     checkboxes were simply never flipped `[x]` to cite the extraction. Flipping these source docs' `assigned_vm`
+     directly would dispatch DUPLICATE AO todos for work already queued or done — explicitly NOT done this pass.
+     **Follow-up needed** (not yet executed): a stale-checkbox correction sweep citing the extracting batch doc, tranche
+     by tranche. Docs in this bucket (source doc → extracting batch, non-exhaustive, see sub-agent transcripts for full
+     evidence): `mtds_retry_safe_default_audit_2026_07_14` → batch1b; `l0_doc_index_generator_2026_06_24` → infra
+     batch1; `agent_orchestrator_alert_channel_cleanup_2026_07_13` → infra batch1;
+     `data_feed_sla_registry_and_active_self_healing_2026_06_19` → batch2; `instruments_completion_tracker_2026_07_06` /
+     `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24` /
+     `instruments_store_cf_canonicalization_single_walk_2026_07_24` / `data_source_provenance_enforcement_2026_07_24` /
+     `data_completion_to_100_all_ag_2026_06_21` / `instruments_mtds_consistency_remediation_residuals_2026_07_24` /
+     `legacy_bucket_dual_write_decommission_2026_07_24` / `instruments_foundation_phase0_cross_cutting_2026_07_24` /
+     `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` /
+     `infra_ops_residual_migration_verification_2026_07_24` / `repo_scripts_governance_audit_2026_06_18` /
+     `data_status_tab_and_downloads_remediation_2026_06_16` → cross-cutting batch1/batch1b;
+     `data_pipeline_ag_residual_backfill_decisions_2026_07_24` / `data_pipeline_alert_substrate_residual_2026_07_24` /
+     `instrument_record_schema_completeness_extra_forbid_2026_07_18` / `ui_build_warm_cache_2026_06_17` /
+     `colocated_feature_pipeline_in_memory_handoff_2026_06_21` / `bucket_estate_consolidation_closeout_2026_07_24` →
+     cross-cutting batch2; `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24` /
+     `sports_fixtures_browser_single_catalogue_source_2026_07_24` (partial) /
+     `sports_odds_feature_naming_canonicalization_2026_07_21` / `sports_odds_bookmaker_coverage_enumeration_2026_06_20`
+     (partial) / `sports_prelaunch_cf5_verify_residual_2026_07_24` (partial) → sports batch2/batch5;
+     `instruments_tradfi_g1_g5_gate_execution_2026_07_24` (partial) /
+     `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08` / `tradfi_phase_d_terminal_gate_2026_07_24`
+     (partial) / `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24` (partial) /
+     `tradfi_multisource_backfill_2026_06_22` / `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20` /
+     `tradfi_backfill_throughput_followups_2026_07_24` / `data_completion_tradfi_2026_07_15` → tradfi batch1/2/4;
+     `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24` /
+     `data_completion_defi_2026_07_15` (partial) / `defi_migration_audit_log_2026_07_24` (partial) /
+     `defi_track01_per_instrument_and_canon_id_2026_07_24` (partial) /
+     `defi_dedicated_bucket_shared_migration_2026_07_13` / `lst_rate_honest_coverage_2026_07_21` → defi batch1/2/3;
+     `prediction_cross_venue_arb_and_coverage_2026_07_24` / `prediction_phase_ab_residuals_2026_07_24` /
+     `prediction_live_clob_depth_capture_2026_07_24` / `prediction_phase_d_formal_smoke_and_backfill_2026_07_24` /
+     `predictions_ml_walk_forward_and_arb_2026_06_20` / `prediction_capture_incident_remediation_2026_07_06` →
+     prediction batch1/2/4/5/native-extract; `data_pipeline_alerts_batch_remediation_2026_07_15` → already-closed tradfi
+     doc + an issue doc; `github_actions_staging_machinery_shutdown_2026_07_24` → an issue doc.
+  3. **RECLASSIFY, genuinely clean, no conflict** (~16 docs, ~185 todos) — **executed this pass**, see below.
+
+  **Executed: 16 docs flipped `assigned_vm: NA → planning`** (`unified-trading-pm@<pending, see next commit>`), each
+  individually verified conflict-free (zero or milestone-only references, not verbatim duplicates) before flipping;
+  `execution_scope` corrected to `orchestrator-agent` where stale, 2 docs also flipped `status: draft → active`
+  (`is_daily_enum_capture_heal_2026_07_07` — a genuine orphan found via a 2026-06-27 blanket "pause AO dispatch on 19
+  active plans" commit, `468a0f580`, that swept it off `planning` for reasons unrelated to its own merits and it was
+  never revisited; `mdps_candle_manifest_population_disconnect_2026_07_25`), 5 docs got a missing `assigned_role` filled
+  in (`data_engineering` ×4, `infra` ×1): `docker_artifact_registry_cleanup_policy_2026_07_24` (16 todos) ·
+  `mtds_available_at_cross_asset_backfill_2026_07_13` (9, also had a genuine `execution_scope`/`assigned_vm` field-drift
+  — its own Progress Log records 15+ real AO dispatches already happened under its task ids) ·
+  `tradfi_manifest_content_recovery_completion_2026_07_24` (7, flagged unaddressed by 3 PRIOR `/ag-closeout-audit`
+  passes) · `is_daily_enum_capture_heal_2026_07_07` (3) · `mdps_candle_manifest_population_disconnect_2026_07_25` (8) ·
+  `cefi_deribit_binance_futures_bundle_verification_2026_06_20` (2) ·
+  `canonical_id_builder_retrofit_checklist_2026_07_08` (9) · `defi_onchain_derivable_values_and_date_drift_2026_06_20`
+  (2) · `defi_pipeline_e2e_and_coverage_validation_2026_06_20` (3) · `data_completion_cefi_2026_07_15` (25, note: ~5 of
+  its many todos were partially covered by cefi batch1 — dedup on next pass) ·
+  `data_pipeline_check_mdps_features_2026_07_20` (28,
+  `depends_on: [candle_canonical_path_migration_execution_2026_07_24]` — flipped together in the same batch) ·
+  `candle_canonical_path_migration_execution_2026_07_24` (16) · `deployment_redesign_cherrypicks_2026_07_20` (3) ·
+  `bucket_iam_write_protection_per_tier_2026_06_09` (7) · `codex_vs_repo_docs_ssot_audit_2026_06_01` (23) ·
+  `mvp_backfill_defi_onchain_v10_2026_06_27` (1, `depends_on: [mvp_catalogue_finalization_v10_2026_06_27]` — verified
+  archived/done, not a live block). **Net: ~185 new open todos entered the AO backlog this pass.**
+
+  **Notable KEEP-NA verified, not touched** (selection — full evidence in sub-agent transcripts):
+  `ao_fleet_observability_kpis_2026_07_20` (an explicit, dated 2026-07-26 operator ruling defers its one bounded item to
+  "whoever picks this up on/after 2026-07-27" rather than an AO batch — genuinely correct, not a default);
+  `org_migration_to_odumresearch_2026_06_07` (re-confirmed `status: paused` since 2026-07-12, 0/27 executed);
+  `v2_engine_venue_buildout_2026_06_15` (has one known-stale `DECOMMISSIONED` item deliberately left `[ ]` per an
+  established "ruled-out, not completed" convention in that doc — NOT a bug, do not "fix" it);
+  `deployment_ui_observability_ux_tracker_2026_07_17` ("🟡 TRACKER — DO NOT DISPATCH THIS FILE, EVER" banner);
+  `bucket_fold_*` family (2026-07-17 operator ruling: "all 5 folds as HUMAN plans"); `crypto_alpha_research_2026_07_24`
+  / `cefi_ml_directional_continuous_live_2026_06_20` (live-trading judgment/wallet-key hard-stops);
+  `defi_lending_writer_retire_prerequisite_2026_07_20` (a live, in-progress Session-3 operator WON'T-DO ruling — do not
+  touch, another session owns it right now).
+
+  **Cross-cutting process finding**: `ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26.md` (filed by the
+  prediction sub-agent) documents that `prediction_cqg_residual_2026_07_24` was invisible to 3 prior
+  `/ag-closeout-audit` passes purely because its `asset_group` line carries a trailing YAML comment that broke a
+  grep-based membership check — the same class of bug as the `assigned_vm` multi-line false-positive found earlier
+  tonight. **Any future re-run of a grep-based membership/classification sweep over this corpus should parse frontmatter
+  properly (PyYAML), not grep** — this is now the second confirmed instance of the exact failure mode, not a one-off
+  (Phase 0's `[SCRIPT] P1` todo above already scopes the general fix; this is the second piece of evidence it needs to
+  happen, not a new todo).
+
+  **Next**: stale-checkbox correction sweep for the ~35 already-duplicated docs (bucket 2 above); Phase 2 (the 299
+  `doc_type:issue` NA docs, 677 todos) — not yet started.

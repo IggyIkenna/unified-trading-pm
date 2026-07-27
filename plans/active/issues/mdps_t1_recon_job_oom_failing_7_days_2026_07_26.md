@@ -110,13 +110,59 @@ push:main; it's currently only on `live-defi-rollout`, pending the normal ~15-60
 built before `uts-prod-market-data-processing-service-t1-recon` can be re-triggered to prove the OOM is actually gone,
 not just theoretically fixed. That's the one remaining step — see Todos.
 
+## Update 3 (2026-07-26/27, interactive session) — original fix CONFIRMED, but job still fails via a SECOND, distinct OOM
+
+`market-data-processing-service@6b44226` promoted to `main` (verified: git content-diff, not SHA-ancestor — LDR→main
+promotion squashes/rewrites, so `git merge-base --is-ancestor` is unreliable here; the actual
+`filters=[("date", "==", date)]` line was confirmed present in `git show origin/main:.../dependency_checker.py`). Fresh
+Cloud Build `dbfbf45a-09ba-496b-8463-7d5102aaff0c` (tag `14617c1`, 2026-07-26T22:59:10Z) matches that content exactly.
+
+Re-ran the job: execution `uts-prod-market-data-processing-service-t1-recon-7q78v`, confirmed via
+`gcloud artifacts docker images list --include-tags` to have used image `sha256:4ab492d3...` tagged `14617c1` — the
+correct, fix-containing image, not stale.
+
+**The original bug IS fixed** — `RESOURCE_SAMPLE` trend for this execution shows rss peaking at ~6.3GB (23:15:43) then
+resetting to <1GB (23:16:47, next asset_group/date_type boundary) and climbing again to ~3.5GB (23:21:51). This is
+categorically different from the pre-fix pattern (a gradual, unbroken climb to 14.86 GiB from the single unfiltered
+27.4M-row DEFI manifest read) — no evidence of that call site reappearing.
+
+**But the job still failed** — `Completed=False`, "The configured memory limit was reached", at 2026-07-26T23:23:00Z,
+this time at ~13 min elapsed (vs ~22 min pre-fix — earlier, not later). Container limit confirmed unchanged at 32Gi
+(`gcloud run jobs describe ... resources.limits` = `memory=32Gi`). Logs show:
+
+- Last RESOURCE_SAMPLE before death: 23:21:51, rss=3516MiB (13.6%) — nowhere near the limit.
+- Last app log line: 23:21:29, finishing `POLARS AGGREGATED` candle work for DEFI `dex_pool_swaps`/2026-07-25 (704
+  files, 0 skipped, just-listed from `market-data-tick-defi-prd-central-element-323112`).
+- **Zero log lines of any kind between 23:21:51 and the `WARNING Container terminated on signal 9` at 23:22:58** — a
+  67-89s gap where >28GB was allocated with no intermediate log output at all (confirmed via direct
+  `gcloud logging read` on the execution, not the truncated default 2000-line pull which only covered the first 34s of
+  the run).
+
+**A genuinely different, not-yet-root-caused bug** — this is NOT a regression of the fix; it's a second OOM path, likely
+specific to `defi`/`dex_pool_swaps`'s unusually high per-day file count (704 for one asset_group/data_type/date) or
+whatever runs immediately after that data_type's `ThreadPoolExecutor` batch completes (the trailing
+`MEMORY_HIGH_WATER_MARK` `log_event()` call, or the transition to the next data_type/asset_group). Ruled out during this
+session: `ProcessingResult` (lightweight dataclass, no embedded DataFrames — not the accumulator);
+`ManifestFreshnessCache._refresh_locked` / `check_shard_freshness` (already date-filtered per the 2026-07-14
+`mtds_backfill_vm_startup_oom_rc137` fix, and called once per category/date, not per data_type, so not in the hot path
+here).
+
+**Also fixed in this session, unrelated**: the interactive-session watcher script used to monitor this execution had its
+own bug — it parsed `gcloud run jobs executions describe` output via a Python `print(status, '|', msg)` call, which
+inserts a space before the `|`; the bash `${var%%|*}` split then left a trailing space on the status value, so
+`[ "$cond_status" = "False" ]` never matched and the watcher polled uselessly for the full 45-minute timeout instead of
+exiting the moment the real terminal `Completed=False` appeared at the 12-minute mark. Caught by manually re-deriving
+state from `gcloud run jobs executions describe` directly, not from the watcher's own output.
+
 ## Todos
 
-- [ ] [SCRIPT] P1. Once `market-data-processing-service@6b44226` has promoted to `main` and a fresh Cloud Build image
-      exists (`gcloud builds list --project=central-element-323112` filtered to `market-data-processing-service`, or
-      trigger manually), re-run
-      `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon     --project=central-element-323112 --region=asia-northeast1`
-      and confirm it completes successfully ( `status.conditions[type=Completed].status = True`) — a fresh
-      `RESOURCE_SAMPLE` trend showing DEFI's memory no longer spiking past a few GB would confirm the fix, not just the
-      absence of a crash. Flip this todo with the execution name + final status as evidence. (repo:
-      market-data-processing-service)
+- [ ] [SCRIPT] P1. **Root-cause and fix the second OOM path** (the silent >28GB spike after DEFI `dex_pool_swaps`
+      finishes candle aggregation, described above). Suggested approach: instrument the code between the end of
+      `_process_files_parallel`'s `ThreadPoolExecutor` block and the following data_type's first log line with
+      additional `RESOURCE_SAMPLE`-style checkpoints (entry/exit of the `log_event("MEMORY_HIGH_WATER_MARK", ...)` call,
+      entry into the next data_type's `_resolve_files_to_process`), ship, re-trigger the job, and correlate against a
+      finer-grained log window than the default 2000-line `gcloud logging read` pull (query with an explicit
+      `timestamp>=/<=` range instead). Once root-caused, apply the same date/column-pushdown discipline as the first fix
+      if it's another unfiltered read, or a chunked/streaming write if it's a bulk accumulation. Re-run the job and
+      confirm `status.conditions[type=Completed].status = True` with a bounded `RESOURCE_SAMPLE` trend end-to-end (not
+      just up to the point this session's run reached) before flipping this todo. (repo: market-data-processing-service)

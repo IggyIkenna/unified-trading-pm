@@ -14,7 +14,7 @@ tags: [cefi, backfill, verification, phantom-audit, deribit, binance-futures]
 related: [./cefi_manifest_canonicalisation_2026_06_01.md, ../epics/cefi_master.md]
 created: "2026-06-12"
 parent_epic: cefi_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
@@ -26,6 +26,7 @@ locked_since: 2026-06-20
 supersedes:
 superseded_by:
 depends_on:
+assigned_role: data_engineering
 source:
 drift_direction: advance-code
 ---

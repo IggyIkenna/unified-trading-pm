@@ -19,8 +19,8 @@ related: [/plans/active/distinct_values_noncanonical_audit_2026_07_20.md]
 created: "2026-07-20"
 last_updated: "2026-07-20"
 parent_epic: deployment_and_user_management_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 2

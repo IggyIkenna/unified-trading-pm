@@ -53,12 +53,15 @@ Filing them here as their own UNACKED issue so they stay dispatchable.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Consider enabling GCS object versioning (or a bucket-level soft-delete retention window) on
-      `instruments-store-sports-prd-central-element-323112` (and, if the same gap exists, its sibling prd sports
-      buckets) — the empty-write incident was recoverable only because the source was a re-fetchable external API; a
-      similar accidental-empty-write bug against internally-derived (non-re-fetchable) canonical data would have been a
-      PERMANENT loss under the current zero-retention policy. Needs an infra/operator decision on cost vs. blast-radius
-      reduction. Repo: instruments-service / terraform-canonical infra.
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-07-27** — fresh-checked via
+      `gcloud storage buckets describe gs://<bucket> --format="value(soft_delete_policy.retentionDurationSeconds)"`
+      against all 3 `-prd-` sports buckets: `instruments-store-sports-prd-central-element-323112` = `604800`,
+      `features-sports-prd-central-element-323112` = `604800`, `market-data-tick-sports-prd-central-element-323112` =
+      `604800` (all 7-day soft-delete retention, none disabled). This is the exact fix
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a's fleet baseline records as having been applied to
+      this exact bucket on 2026-07-26 (the sole fleet exception at audit time, fixed same day via
+      `gcloud storage buckets update ... --soft-delete-duration=7d`) — this todo's ask is now satisfied fleet-wide for
+      the sports asset_group; no further action needed. No code change, an infra-state verification only.
 - [ ] [SCRIPT] P3. Grep other one-off canonical-rewrite scripts in `instruments-service/scripts/` for the same missing
       "refuse to write an empty/0-row result" guard that caused the incident (any script that builds a
       `pd.DataFrame(records)` from a possibly-empty `records` list before a CAS write is a candidate). Audit and add the

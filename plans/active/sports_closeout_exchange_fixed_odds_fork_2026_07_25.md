@@ -106,10 +106,26 @@ drift_direction: advance-code
       fee-model/capability/alpha-profile classification (was incorrectly COMMISSION/SPORTS_EXCHANGE/ALPHA_SEEKING, now
       correctly matches BETMGM's bookmaker classification). No test asserted the old (wrong) classification; existing
       tests iterate the sets rather than hardcode membership. `quality-gates.sh` re-run green post-fix.
-- [ ] [DATA] P0. **Pre-drain the sports odds writers before any GCS object move.** `odds` (pre-fork instrument_type,
+- [x] ✅ [DATA] P0. **Pre-drain the sports odds writers before any GCS object move.** `odds` (pre-fork instrument_type,
       561,260 rows) is written live — stop all sports odds-writing jobs both clouds and snapshot first. (repo:
       deployment-service / market-data-processing-service). **Done when**: a corpus-wide check confirms zero sports
       odds-writing jobs are running in either cloud, and the pre-drain snapshot object is recorded (path + row count).
+      ✅ **DONE 2026-07-27:** GCP: found + stopped `mtds-backfill-sports-odds-3leagues-1` (project
+      `central-element-323112`, zone `asia-northeast1-c`) — was `RUNNING` but stale (heartbeat + run.log both idle
+      ~17.6h, every shard failing 401 Unauthorized from The Odds API, likely an expired/invalid key — flagged
+      separately, not fixed here since credential rotation is out of this todo's scope).
+      `gcloud compute instances     stop` (not delete — reversible), now `TERMINATED`. Corpus-wide re-check
+      (`name~"sports"` OR `name~"odds"`, `status=RUNNING`) returns empty. AWS (`ap-northeast-1`, project
+      `427895769566`): zero instances tagged `mtds-sports-odds-*` at any state, and the full running/pending list has
+      only the two agent-orchestrator VMs — clean, nothing to stop. Pre-drain snapshot: byte-verified round-trip copy of
+      the live sports availability index to
+      `gs://market-data-tick-sports-prd-central-element-323112/_index/snapshots/pre_odds_predrain_exchange_fixed_fork_2026_07_27_20260727T004717Z.parquet`
+      (10,367,527 bytes). **Row count, measured**: 295,921 manifest entries / 54,835,957 summed `row_count` across
+      `instrument_type` `odds`+`ODDS` (both casings, unfiltered by date/venue) — materially higher than this todo's own
+      "561,260 rows" figure and spanning ~27 venues vs. the plan's 8-venue mapping. Filed as
+      `/plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (P0, operator-notify) —
+      **read that doc before dispatching the two "Move the GCS objects" todos below**, since their current venue list
+      may be incomplete.
 - [ ] [DATA] P1. **Add UAC contract entries for EXCHANGE_ODDS/FIXED_ODDS BEFORE touching data** (contracts-first,
       deliberately — manifest-first previously caused the tradfi CME manifest↔disk↔registry divergence, repaired
       `@bd115230`, must not repeat). Keep the legacy `odds` contract entry live for the dual-read window. (repo:

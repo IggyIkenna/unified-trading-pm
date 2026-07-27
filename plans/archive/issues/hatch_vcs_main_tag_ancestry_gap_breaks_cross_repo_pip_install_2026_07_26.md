@@ -24,7 +24,7 @@ summary: >-
   class as, and possibly related to) the tag-mechanism issues already tracked in
   `reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md` and
   `promotion_lag_alert_hides_provenance_block_2026_07_17.md`.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -44,7 +44,7 @@ parent_epic: infrastructure_master
 priority: P2
 estimate_class: infra
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-api-contracts v0.72.0 retagged 2026-07-26 (operator-executed) — see Resolution section below
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: none
@@ -211,11 +211,12 @@ not currently a live self-heal path until that breaker clears.
       `v0.71.0` per the ancestry gap) — that still needs direction A (force-retag `v0.72.0` onto `b52aea5d`,
       operator-reserved) or a brand-new tag past the floor; what this todo unblocks is that the NEXT qualifying mint
       attempt fails loudly instead of silently no-op'ing, so the wedge can no longer hide.
-- [ ] [SCRIPT] P3. Once the tag-ancestry gap is fixed, re-run the `registry-drift` job on unified-trading-system-ui's
-      `main`/next promote PR and confirm
-      `pip install -e     _deps/unified-api-contracts -e _deps/unified-trading-library` succeeds (both the
+- [ ] [SCRIPT] P3. Now genuinely unblocked (the retag below landed) — re-run the `registry-drift` job on
+      unified-trading-system-ui's `main`/next promote PR and confirm
+      `pip install -e _deps/unified-api-contracts -e _deps/unified-trading-library` succeeds (both the
       `ui-reference-data.json` AND `capability-manifest.json` diff steps should then execute for real, rather than the
-      whole job dying at the install step).
+      whole job dying at the install step). Not verified in this pass — leaving open for the next dispatch/promote cycle
+      rather than claiming completion without actually running it.
 - [x] ✅ [DOCS] P3. Cross-link this doc from `reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md` and
       `promotion_lag_alert_hides_provenance_block_2026_07_17.md` — same hatch-vcs/git-tag subsystem, adjacent failure
       modes, worth a shared "known rough edges" note so the next diagnosis doesn't restart from zero. —
@@ -275,6 +276,38 @@ consequential, git-push-adjacent action `RULES.md`/CLAUDE.md gate to human/main-
 "never force-push a shared branch") — filed as a `/blocked` question with this evidence + recommendation rather than run
 `git push --force origin v0.72.0` unilaterally. -003 (re-run `registry-drift`) stays correctly blocked until the retag
 lands.
+
+## Resolution (2026-07-26, operator-executed)
+
+Direction (b) — the force-retag main's `BLK-2d9aae3f` decision authorized but left held pending operator authorization —
+landed. The operator ran, in their own terminal (to avoid a real race against this session's own background
+`git fetch`/cron traffic silently reverting a locally-prepared retag before it could be pushed):
+
+```
+git tag -d v0.72.0
+git tag -a v0.72.0 -m "..." b52aea5d237153ba74568b5cb195934cd255b361
+git push --force origin refs/tags/v0.72.0
+```
+
+Output: `+ cf17f1ad...9c42be2c v0.72.0 -> v0.72.0 (forced update)`.
+
+Verified immediately after (read-only):
+
+```
+$ git fetch origin --tags --force --quiet && git rev-parse v0.72.0^{commit}
+b52aea5d237153ba74568b5cb195934cd255b361          # target commit, as intended
+
+$ git merge-base --is-ancestor v0.72.0 origin/main && echo ok
+ok                                                  # now a real ancestor of main
+
+$ git describe --tags origin/main
+v0.72.0-165-gb6b92922                               # main's hatch-vcs baseline is unwedged
+```
+
+`main`'s version baseline now reads `0.72.0` immediately (no longer stuck at `0.71.0`), and the next qualifying
+semver-agent promote on `main` will compute `0.72.1`/`0.73.0` against a live, correctly-anchored tag instead of
+re-hitting the same idempotency wedge — self-healing resumes as originally designed. Todo `-003` (re-run
+`registry-drift`) is left open, not flipped, since it needs an actual CI run to verify, not just the tag fix.
 
 ## Provenance
 

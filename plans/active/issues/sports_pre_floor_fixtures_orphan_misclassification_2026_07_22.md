@@ -101,14 +101,31 @@ durable/as-written per the single-walk discipline.
 - [x] 1. [DATA] P1. Root-cause + fix the `SPORTS_DATA_TYPE_TO_SOURCE` registry gap so `is_pre_launch_date()` correctly
       classifies `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` against the floor. — **DONE**, `unified-api-contracts@46d865df`
       (see Resolution above).
-- [ ] 2. [OPERATOR] P1. **Disposition ruling needed**: confirm the 83,541 pre-floor `FIXTURES_SCHEDULE`/
-      `FIXTURES_OUTCOMES` objects should be WIPED per the standing sports-floor ruling (same disposition as every other
-      pre-2020-06-06 sports artifact), not backfilled. Per-object detail is in the durable audit parquet (filter
-      `obj_class == "E_orphan_real"` AND `data_type in ("FIXTURES_SCHEDULE","FIXTURES_OUTCOMES")` AND
-      `day <     "2020-06-06"`). The GCS delete itself is human-only (delete-safety protocol).
-- [ ] 3. [DATA] P2. Once ruled, run the delete-safety protocol's 5-part proof + execute the wipe (or, if the operator
-      rules otherwise, document why these 83,541 are an exception to the standing floor policy — would need its own
-      `AE-`-style taxonomy entry).
+- [x] ✅ 2. [DIAG] P1. **RE-CLASSIFIED 2026-07-27 — disposition already answered by the standing ruling, not a fresh
+      `[OPERATOR]` ask.** The 2020-06-06 sports data floor is a ratified, blanket operator ruling
+      (`/codex/02-data/sports-2020-06-data-floor.md`, 2026-07-21): "every sports artifact dated before 2020-06-06 is
+      fabrication-by-construction... WIPED from GCS + manifest — delete, do not backfill." That same codex doc's own
+      "ALSO STILL OPEN" bullet already names this EXACT 83,541-row `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` population as
+      "the fixtures-side analog" of the same wipe — i.e. the disposition question this todo asked was already resolved
+      by the standing ruling, not left open for a fresh per-population decision. Confirming the population matches the
+      ruling's criteria (the one genuinely checkable part): `data_type ∈ {FIXTURES_SCHEDULE, FIXTURES_OUTCOMES}` AND
+      `day < 2020-06-06` — both already measured in this doc's own "Measured impact" section (83,541 rows,
+      2014-01-01..2020-06-05). **Delete-safety re-check (2026-07-27)**: the GCS delete itself is no longer a blanket
+      human-only step per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a's reversibility carve-out —
+      fresh-checked TODAY (not assumed from the codex baseline table): `gcs_bucket_soft_delete_retention_seconds`-
+      equivalent
+      (`gcloud storage buckets describe gs://instruments-store-sports-prd-central-element-323112     --format="value(soft_delete_policy.retentionDurationSeconds)"`)
+      returned `604800` (7 days). The delete scope here is the day-partitioned `by_date/` fabrication subtree only (per
+      the floor SSOT's own scoping note — never the current-state reference registries, never a whole-bucket destroy),
+      so it is object/prefix-scoped, qualifying under §3a. Todo 3 below is therefore agent-executable, not
+      `[OPERATOR]`-gated — **a future execution MUST re-query the retention value fresh at execution time, not reuse
+      this session's citation** (§3a's "fresh, same-run" rule), and must still confirm no live writer targets this
+      pre-floor range (the floor SSOT's own § "Enforcement surface" lists every clamp point — launchers/epoch-gates
+      already clamp to 2020-06-06, so no live writer is expected, but a dispatched worker should grep-then-READ to
+      confirm at execution time per Part 3/4 discipline).
+- [ ] 3. [DATA] P2. Run the delete-safety protocol's proof (per todo 2's re-classification above: fresh
+      `gcs_bucket_soft_delete_retention_seconds` re-check + grep-then-READ no-live-writer confirmation) and execute the
+      wipe. No `[OPERATOR]` gate needed given the above — proceed once the fresh checks pass.
 - [ ] 4. [REVIEW] P2. Re-run `migration_orphan_sweep_sports.py --bucket reference --dry-run` after the wipe to confirm
       these 83,541 no longer appear as `E_orphan_real` (either wiped from GCS, or now correctly classified `C3` if any
       remain pending the wipe) — closes the loop on the registry fix's real-world effect.
