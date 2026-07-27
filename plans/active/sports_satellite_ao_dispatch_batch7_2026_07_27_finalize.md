@@ -6,7 +6,7 @@ summary: >-
   true until all 4 of that plan's todos are done. Mirrors the batch3-6-finalize pattern: reconcile each distinct source
   doc's checkboxes once its batch-7 todo lands, then re-check the 7 Deferred items for any that have since cleared
   (extract into a future batch8 if so, do not draft here).
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -45,8 +45,9 @@ drift_direction: advance-code
 
 # Sports satellite AO batch 7 — finalize
 
-> **⚠️ `status: draft` — NOT dispatched.** Flips to `active` only when its parent batch does, on explicit operator
-> approval. Drafted in the same turn as the parent per `task_template.md` § 4's finalize-plan-coverage rule.
+> **✅ `status: active` — flipped 2026-07-27 in the same commit as its parent, on explicit operator approval.**
+> `gate_on_depends: true` (below) is the mechanism that actually holds this plan's todos back until the parent's 4 todos
+> are `done` — `status: active` alone does not bypass that gate.
 
 > **Machine-gated on `sports_satellite_ao_dispatch_batch7_2026_07_27.md`** (`depends_on` + `gate_on_depends: true`) —
 > the dispatcher will not queue any todo below until all 4 tasks in that plan are `done`. `sequential: true` because

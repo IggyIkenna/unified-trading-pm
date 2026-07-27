@@ -12,7 +12,7 @@ summary: >-
   `sports_consolidated_closeout_2026_07_19.md`'s Progress). 4 items are genuinely orphaned AND bounded/checkable — those
   become the todos below. Everything else orphaned was gated (operator judgment, elapsed time, or another in-flight todo
   landing first) and is NOT re-drafted here — see Deferred.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -55,10 +55,11 @@ drift_direction: advance-code
 
 # Sports satellite AO batch 7 — consolidated-closeout orphans
 
-> **⚠️ `status: draft` — NOT dispatched.** Drafted autonomously per the `/ag-closeout-audit` skill's Autonomous-mode
-> rule: drafting a `status: draft` pair is safe unattended, but flipping it to `active` is the operator's call. Do not
-> flip without explicit approval. Its gated companion is
-> `/plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md` (also `status: draft`).
+> **✅ `status: active` — DISPATCHED 2026-07-27, operator-approved.** Drafted autonomously, then explicitly approved by
+> the operator the same session before flipping. Its gated companion,
+> `/plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27_finalize.md`, stays `status: draft` — it is
+> machine-gated on this plan's 4 todos completing (`depends_on` + `gate_on_depends: true`) regardless of its own
+> `status`, so it is flipped `active` in the same commit rather than waiting for todo 1-4 to land first.
 
 > **Why this is scoped narrower than batch2-6.** The operator's question was specifically about
 > `sports_consolidated_closeout_2026_07_19.md`'s OWN remaining todos, not a fresh full-corpus sweep (batch6 already did
