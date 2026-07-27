@@ -259,7 +259,7 @@ already handles honestly).
       baseline. Verification: `bash scripts/quality-gates.sh --no-fix` GREEN (exit 0); mtds unit suite 439 passed (1
       pre-existing skip); ruff + basedpyright clean on all changed files. Defense-in-depth. Repo:
       market-tick-data-service.
-- [ ] [SCRIPT] P3. **Residual split out of the P2 above (NOT part of the pre-genesis-classification task, left
+- [x] [SCRIPT] P3. **Residual split out of the P2 above (NOT part of the pre-genesis-classification task, left
       honest):** thread `mode=` (`"live"`/`"batch"` per run_tag) into `assert_defi_catalog_fresh(...)` for the 9
       handlers that still omit it (`liquidations`, `native_staking`, `liquidation_events`, `token_transfers`,
       `bridge_events`, `flash_loan_events`, `aggregator_route`, `solana_defi`, `lending_indices`;
@@ -268,7 +268,8 @@ already handles honestly).
       fixed for itself in `@420221b4`. This is ORTHOGONAL to the pre-genesis classification (the gate returns False for
       pre-genesis dates regardless of `mode`, and the classification split above then records them honestly), so it was
       deliberately not force-completed with the classification fix: it is a separate freshness-semantics concern and
-      mis-wiring the per-handler run_tag/mode plumbing risks changing gate behaviour. Repo: market-tick-data-service.
+      mis-wiring the per-handler run_tag/mode plumbing risks changing gate behaviour. Repo: market-tick-data-service. —
+      already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
 - [x] [DEPLOY] P1 **NEW (2026-07-15 re-investigation)**. ✅ **DONE (2026-07-26, slot-12)**. Redeployed the DeFi backfill
       VM tarball to current HEAD `ec0df8784b17` (`market-tick-data-service`, `v0.93.0-550-gec0df878` — the deployed
       tarball was already at `d09705ff`, 7 commits past `420221b4`, before this rebuild; rebuilt anyway for freshness)

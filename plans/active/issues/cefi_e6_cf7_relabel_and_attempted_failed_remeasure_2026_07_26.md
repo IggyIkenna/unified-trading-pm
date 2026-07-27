@@ -113,8 +113,9 @@ rows) is real but small and not urgent.
 
 ## Recommended decision
 
-- [ ] [DOCS] P3. Update `data_completion_cefi_2026_07_15.md`'s bare E6 CF-7 line item to strike the stale "~50% (1.33M)"
-      figure and point at this doc for the current 11.61%/1,060,613 measurement + attribution.
+- [x] [DOCS] P3. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md, see that doc for
+      execution]** Update `data_completion_cefi_2026_07_15.md`'s bare E6 CF-7 line item to strike the stale "~50%
+      (1.33M)" figure and point at this doc for the current 11.61%/1,060,613 measurement + attribution.
 - [ ] [DATA] P3. Root-cause the 9,750 blank-`data_type` `captured` rows in market-tick-data-service (which writer path
       stamps `capture_status=captured` without a `data_type`, spanning 2019-2026) and either backfill the correct
       `data_type` per row or confirm honest-absence-safe disposition. No urgency — small population, does not affect any

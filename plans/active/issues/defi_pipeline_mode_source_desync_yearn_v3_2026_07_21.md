@@ -126,10 +126,11 @@ vault-share-price collector) end-to-end:
       `pipeline_mode` implies one vendor source (via `pipeline_mode_for_source` reverse-mapping) while the row's own
       `source` column names a different vendor, scoped to YEARN_V3 first then all `vault_share_price`-data_type venues
       (repo: market-tick-data-service).
-- [ ] 3. [CODE] P2. Fix `vault_share_price_handler.py` to pass an explicit `source=` on every `record_captured` /
+- [x] 3. [CODE] P2. Fix `vault_share_price_handler.py` to pass an explicit `source=` on every `record_captured` /
       `record_failed` / `record_zero_rows` call, consistent with the `"onchain_rpc"` already passed to
       `pipeline_mode_for_source` — closing the crosscutting "`source=` required" gap for this handler (repo:
-      market-tick-data-service).
+      market-tick-data-service). — already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for
+      execution).
 - [ ] 4. [DECISION] P2. If todo 1 confirms stale legacy rows (not an active-write bug), rule on remediation: leave the
       legacy row as an accepted historical artifact (annotate the cutover register) vs. a targeted manifest correction
       pass — do not blind-pick; this is manifest-absence/correction semantics territory per the workspace's

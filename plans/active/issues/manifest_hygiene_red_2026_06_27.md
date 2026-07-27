@@ -80,7 +80,8 @@ not a completion claim; `oracle_expects_but_empty` and `noncanonical_path_on_dis
 
 ## Todos
 
-- [ ] [CODE] P1. Manifest hygiene RED — 1 AG(s) with findings (2026_06_27) — diagnose + fix the root cause
+- [x] [CODE] P1. Manifest hygiene RED — 1 AG(s) with findings (2026_06_27) — diagnose + fix the root cause
       (misclassified-empty vs real gap, not-v9 schema row, or oracle-expects-but-empty divergence) in
       `market-tick-data-service`. Read `SUB_AGENT_MANDATORY_RULES.md` + the data-pipeline codex SSOT + the candidate
-      CSV(s) above first (source `manifest_hygiene_daily.py`).
+      CSV(s) above first (source `manifest_hygiene_daily.py`). — already covered by
+      plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).

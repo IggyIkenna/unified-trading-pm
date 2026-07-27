@@ -191,13 +191,14 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
   branch, repair the shared login helper, then retroactively re-run this spec) rather than block this ticket on an
   unrelated, pre-existing E2E-infra break outside its scope. `pw:L2` evidence is deferred to that issue doc's item 3.
 
-- [ ] BLOCKED-SUPERSEDED [CODE] P3. ~~Execute the `AssetClass` → `AssetGroup` rename repo-wide~~ — SUPERSEDED
+- [x] BLOCKED-SUPERSEDED [CODE] P3. ~~Execute the `AssetClass` → `AssetGroup` rename repo-wide~~ — SUPERSEDED
       2026-07-21: the real blast radius is 9+ repos (not 2), touches a persisted-schema-adjacent field, and risks
       conflating two distinct `AssetClass` enums (domain vs. `LedgerAssetClass`). See
       `plans/archive/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md` (the investigation)
       and `plans/active/asset_class_to_asset_group_rename_2026_07_21.md` (the dedicated 6-todo phased plan that owns
       this work now — human plan, `assigned_vm: NA`, pending operator dispatch decision). Non-dispatchable — do not
-      execute this line as scoped. (repo: unified-api-contracts, unified-trading-system-ui)
+      execute this line as scoped. (repo: unified-api-contracts, unified-trading-system-ui) — already covered by
+      plans/active/asset_class_to_asset_group_rename_2026_07_21.md (see that doc for execution).
 - [x] [CODE] P3. ✅ Apply `lib/strategy-display.ts` formatters (`formatFamily`/`formatArchetype`/`formatSlotLabel`) in
       `StrategyCatalogueSurface.tsx`'s `AdminUniverseGrid`, `signal-history-table.tsx`, and
       `admin/strategy-universe/page.tsx` — currently render raw underscore identifiers. (repo:

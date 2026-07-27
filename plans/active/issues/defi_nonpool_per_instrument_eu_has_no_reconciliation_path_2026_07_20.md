@@ -179,11 +179,12 @@ not a labelling choice.
       correctly a no-op today** (`--apply` not run — nothing to apply) **and stays in place as a self-cleaning safety
       net should stale reference-only EU cells recur.** The prospective enumerator fix (`instruments-service@a516bd01`)
       remains the durable guard against this class recurring going forward.
-- [ ] [DATA] P2. Check whether any affected `(venue, chain)` are in UAC `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` (→ correct
+- [x] [DATA] P2. Check whether any affected `(venue, chain)` are in UAC `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` (→ correct
       terminal state is `EXPECTED_ACQUISITION_PENDING`, self-healing) or covered by `PROTOCOL_PAUSE_WINDOWS` (→
       `EXPECTED_PROTOCOL_PAUSED`). **Superseded by the enumerator's priority ordering**
       (`instruments-service@a516bd01`): `_is_reference_only` is checked BEFORE `_acq_pending`, so a reference-only
       instrument_type always routes to `EXPECTED_REFERENCE_ONLY_NO_CAPTURE_PATH` regardless of the venue's
       acquisition-pipeline status — this was a deliberate design choice (the reference-only condition is permanent;
       acquisition-pending is transient), so the venue/PROTOCOL_PAUSE_WINDOWS cross-check is no longer decision-relevant
-      for this class.
+      for this class. — already covered by instruments-service@a516bd01's priority ordering (self-superseded) (see that
+      doc for execution).

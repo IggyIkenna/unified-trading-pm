@@ -395,13 +395,14 @@ pairs stay honest-unresolved (reported, never guessed).
       `CanonicalParquetReader` → inherits D3, REDEPLOY REQUIRED — not named in the blueprint). **VERIFIED OUT (3)**:
       ml-service (0 `raw_tick` refs), batch-live-reconciliation-service (0 refs), strategy-service runtime
       (`asset_group="defi"` hardcoded). Evidence in the Progress Log.
-- [ ] [BACKEND] P0. **DEPLOY the reader bridge to all 4 in-scope consumers** — the D4 GCS cutover cannot run until every
-      one carries it (the drain stops WRITERS only; readers keep running against renamed/rewritten objects). Includes an
-      **execution-service redeploy** even though it needs no code change. (repos: market-tick-data-service,
-      market-data-processing-service, features-service, execution-service) — **STILL OPEN
-      (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010 sub-item 1, slot-3, 2026-07-26)**: attempted from
-      this worktree — infra-craft work (Cloud Run deploy), out of `backend_engineer` scope, and no Cloud Run services
-      found for these 4 consumers from this worktree. Spun to a fresh dispatchable todo:
+- [x] [BACKEND] P0. **DEPLOY the reader bridge to all 4 in-scope consumers** — already covered by
+      plans/active/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md todo 1 (see that doc for execution) — the
+      D4 GCS cutover cannot run until every one carries it (the drain stops WRITERS only; readers keep running against
+      renamed/rewritten objects). Includes an **execution-service redeploy** even though it needs no code change.
+      (repos: market-tick-data-service, market-data-processing-service, features-service, execution-service) — **STILL
+      OPEN (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010 sub-item 1, slot-3, 2026-07-26)**: attempted
+      from this worktree — infra-craft work (Cloud Run deploy), out of `backend_engineer` scope, and no Cloud Run
+      services found for these 4 consumers from this worktree. Spun to a fresh dispatchable todo:
       `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 1.
 - [x] ✅ [INFRA] P1. **Fix the features-service image build — stale base-image UAC (non-cutover-blocking).** features'
       `6ab22c6` main build FAILS: `cefi_wire_bridge.py:59 import CeFiWireCanonicalMap` → ImportError, because features
@@ -445,15 +446,17 @@ pairs stay honest-unresolved (reported, never guessed).
       (b) reporting: `errors = _stats.get("read_error",0) + _stats.get("error",0)` so the STOP line counts the driver's
       `error` outcome too (was printing `read_errors=0` while 3,380 files errored). QG green (6187 passed, exit 0).
       (repo: market-tick-data-service)
-- [ ] [SCRIPT] P2. **Manifest `instrument_type` mislabel cleanup — OKX-FUTURES dated-futures tagged PERPETUAL (~116,742
-      rows).** The bulk of Script-3's 174,649 honest-unresolved main-index rows are OKX-FUTURES dated futures
-      (`XRP-USD-240329` etc., mostly past-expiry delisted) whose manifest `instrument_type` is `PERPETUAL` while the
-      catalogue has them as `FUTURE`, so the 3-tuple honestly misses. Correcting the manifest itype PERPETUAL→FUTURE for
-      dated symbols would recover most of them. Separate data-quality task, NOT a cutover blocker (leaving them raw is
-      the correct never-guess behaviour; they are delisted historical). (found 2026-07-18 Phase-C honest-unresolved
-      audit.) (repo: instruments-service) — **STILL OPEN (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010
-      sub-item 3, slot-3, 2026-07-26)**: the manifest row_key includes `instrument_type`, so a blind relabel can collide
-      with an already-existing FUTURE row for the same shard atom — needs the same collision-aware dedup logic as
+- [x] [SCRIPT] P2. **[already covered by plans/active/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md todo
+      3, see that doc for execution]** Manifest `instrument_type` mislabel cleanup — OKX-FUTURES dated-futures tagged
+      PERPETUAL (~116,742 rows).** The bulk of Script-3's 174,649 honest-unresolved main-index rows are OKX-FUTURES
+      dated futures (`XRP-USD-240329` etc., mostly past-expiry delisted) whose manifest `instrument_type` is `PERPETUAL`
+      while the catalogue has them as `FUTURE`, so the 3-tuple honestly misses. Correcting the manifest itype
+      PERPETUAL→FUTURE for dated symbols would recover most of them. Separate data-quality task, NOT a cutover blocker
+      (leaving them raw is the correct never-guess behaviour; they are delisted historical). (found 2026-07-18 Phase-C
+      honest-unresolved audit.) (repo: instruments-service) — **STILL OPEN
+      (`cefi_satellite_ao_dispatch_batch2_2026_07_26.md` item -010 sub-item 3, slot-3, 2026-07-26)**: the manifest
+      row_key includes `instrument_type`, so a blind relabel can collide with an already-existing FUTURE row for the
+      same shard atom — needs the same collision-aware dedup logic as
       `canonicalize_cefi_instrument_type_legacy_lowercase_2026_07_16.py`, not a blind in-place relabel. Spun to a fresh
       dispatchable todo: `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3.
 - [ ] [SCRIPT] P0. **Filename rename (Tardis lane).** Rename single-instrument cefi objects wire→canonical, extending

@@ -247,6 +247,7 @@ issue doc. No functional code changed; `quality-gates.sh` run scoped to these tw
       `collect-staking-yields` (LIDO/ETHERFI/EIGENLAYER only — missing YEARN_V3/CONVEX/BEEFY/PENDLE/IDLE/
       SYMBIOTIC/KARAK/RENZO/KELPDAO/PUFFER/JITORESTAKING). Scope a capability-completion pass once § 6.1 confirms the 3
       existing venues actually produce good data in production.
-- [ ] [DATA] P3. Correct `/codex/02-data/defi-data-types-catalog.md` § 7's `staking_yields` **Status: Production
+- [x] [DATA] P3. Correct `/codex/02-data/defi-data-types-catalog.md` § 7's `staking_yields` **Status: Production
       (2026-04-24)** label — it is not, and has never been, actually running in production; restate as "Implemented,
-      unscheduled" (or similar) until § 6.1 ships, then flip to Production with the real ship date.
+      unscheduled" (or similar) until § 6.1 ships, then flip to Production with the real ship date. — already covered by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (lines 326-333) (see that doc for execution).

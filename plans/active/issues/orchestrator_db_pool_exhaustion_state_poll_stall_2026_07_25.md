@@ -104,23 +104,28 @@ re-triggers AutoSpawn's spawn-in-txn on restart).
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Break the spawn-holds-write-lock wedge (the actual root cause).** Run the slow claude/tmux spawn
+- [x] [BACKEND] P1. **Break the spawn-holds-write-lock wedge (the actual root cause).** Run the slow claude/tmux spawn
       in `server/autospawn.py::_do_spawn` **OUTSIDE** the `BEGIN IMMEDIATE` write transaction — acquire the lock only
       for the short DB state-mutation, release it before the ~75s cold-start wait, re-acquire briefly to record the
       result. This is the fix already scoped in `orchestrator_spawn_reliability_db_lock_2026_06_10`; the current
       incident proves it is not yet implemented (`_do_spawn:1316` still wraps the spawn). **Done when**: a spawn holds
       the SQLite write lock for <1s, and a pool-exhaustion reproduction under concurrent git-status + an in-flight spawn
-      no longer stalls `/api/state`.
-- [ ] [BACKEND] P1. **Stop read-only endpoints from acquiring the write lock.** `_on_begin` issues `BEGIN IMMEDIATE` for
+      no longer stalls `/api/state`. — already covered by plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md
+      (agent-orchestrator, quality-gates.sh green 1760 passed/1 skipped) (see that doc for execution).
+- [x] [BACKEND] P1. **Stop read-only endpoints from acquiring the write lock.** `_on_begin` issues `BEGIN IMMEDIATE` for
       EVERY transaction, so read paths (`/api/state → list_slots`, `/api/agents/*/poll` read portion) needlessly contend
       for the single writer. Use a read-only / deferred transaction for read endpoints (WAL already allows concurrent
       readers), reserving `BEGIN IMMEDIATE` for genuine writers (dispatch/`/done`). This alone would let `/api/state` +
-      poll stay responsive even while a writer holds the lock.
-- [ ] [BACKEND] P2. **Align the timeouts so the failure is loud + fast, not a 30s silent pool hang.** `pool_timeout`
+      poll stay responsive even while a writer holds the lock. — already covered by
+      plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (agent-orchestrator, quality-gates.sh green 1760
+      passed/1 skipped) (see that doc for execution).
+- [x] [BACKEND] P2. **Align the timeouts so the failure is loud + fast, not a 30s silent pool hang.** `pool_timeout`
       (30s default) < `busy_timeout` (120s) is why lock contention surfaces as opaque pool exhaustion. Either lower
       `busy_timeout` toward the pool timeout, or raise `pool_timeout` above `busy_timeout` so a genuine lock wait
       surfaces as "database is locked" (actionable) rather than "QueuePool exhausted" (misleading). Consider a modest
-      `pool_size` bump too, but only alongside the two P1 fixes above (not instead of them).
+      `pool_size` bump too, but only alongside the two P1 fixes above (not instead of them). — already covered by
+      plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (agent-orchestrator, quality-gates.sh green 1760
+      passed/1 skipped) (see that doc for execution).
 - [ ] [BACKEND] P2. Determine root cause: connection LEAK vs. concurrency-over-pool. Audit every DB-session usage on the
       hot paths (`/api/slots/*/git-status`, `/api/agents/*/poll`, `/api/state`) for a session/connection that isn't
       returned to the pool on all exit paths (missing `with Session(...)` / context-manager / `finally` close,

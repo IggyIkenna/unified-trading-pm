@@ -250,10 +250,11 @@ in a registry/exception addition without addressing the discrepancy.
 
 ## Todos (for whoever picks this up next — NOT dispatched automatically)
 
-- [ ] [VERIFY] P2. Confirm the exact `completeness_pct` before/after impact of adding an
+- [x] [VERIFY] P2. Confirm the exact `completeness_pct` before/after impact of adding an
       `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style guard vs. adding the 7 keys WITHOUT one — a small, bounded,
       read-only simulation against `enumerate_expected_universe.py` (or a scoped subset of the defi catalog) rather than
-      a full production re-run. Answers whether Path A is safe to execute directly or needs the guard built first.
+      a full production re-run. Answers whether Path A is safe to execute directly or needs the guard built first. —
+      already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
 - [ ] [CODE] P2. (Gated on the verify above.) Execute Path A: add the defi-scoped exclusion guard to
       `enumerate_expected_universe.py`, THEN add the 7 `swaps_ohlcv_*` keys to `DATA_TYPES_BY_ASSET_GROUP['defi']`,
       measuring + citing the before/after `completeness_pct` delta (expected: zero, if the guard is correctly scoped).
@@ -261,8 +262,9 @@ in a registry/exception addition without addressing the discrepancy.
 - [ ] [CODE] P3. Alternatively/interim, execute Path B (accepted-exception stopgap) if Path A is not prioritized soon —
       lower engineering cost, zero denominator risk, but flag the semantic tradeoff (these are not a "permanent,
       never-fixed" case the way tradfi's bundle-grain values are) to whoever approves it.
-- [ ] [VERIFY] P3. Reconcile the `swaps_ohlcv_4h` timeframe discrepancy (real captured data exists at a timeframe not in
-      `_candle_contracts.py`'s declared DeFi timeframe set) before either path ships.
+- [x] [VERIFY] P3. Reconcile the `swaps_ohlcv_4h` timeframe discrepancy (real captured data exists at a timeframe not in
+      `_candle_contracts.py`'s declared DeFi timeframe set) before either path ships. — already covered by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
 
 ## Not fixed here, why
 

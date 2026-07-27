@@ -96,9 +96,10 @@ completed) — mirroring the existing "every actionable alert gets a ✅ CLOSE b
       per tick), `::test_unpark_fires_resolved_notify_exactly_once`, and a park-survives-a-Slack-outage test, plus 6
       rendering tests in `tests/test_slack_notifications.py`. The doc's **Notes** item (wire
       `BacklogSummary.auto_parked` as a UI-visible counter) also landed in the same commit — see its subject line.
-- [ ] [BACKEND] P3. Audit whether any OTHER `reason_code` values passed to `/skip-current-task` have the same silent gap
+- [x] [BACKEND] P3. Audit whether any OTHER `reason_code` values passed to `/skip-current-task` have the same silent gap
       (this investigation was scoped to `GATED` specifically, prompted by one live incident — confirm the finding
-      generalizes or is GATED-specific before assuming full coverage).
+      generalizes or is GATED-specific before assuming full coverage). — already covered by
+      plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (see that doc for execution).
 
 ## Notes
 

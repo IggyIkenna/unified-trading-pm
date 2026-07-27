@@ -211,7 +211,7 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
       declaration/export). Removed + their dedicated unit-test classes
       (`TestLoadVenueCoordinates`/`TestExtractFixtureVenueIds` in `tests/unit/test_orchestrator_helpers.py`) deleted. —
       instruments-service@2b45cb78.
-- [ ] [DATA] P2. **Design a manifest-slice-based replacement for `check_api_football_dependency()`** — load+filter once
+- [x] [DATA] P2. **Design a manifest-slice-based replacement for `check_api_football_dependency()`** — load+filter once
       per backfill run (or per reasonable chunk, e.g. per year) rather than per-date network calls; keep the current
       direct-GCS path as a fallback ONLY if a genuine same-run consolidation-lag risk is confirmed real (the manifest
       consolidator cron runs every 1 minute — `/codex/05-infrastructure/manifest-consolidator-ssot.md` — so there's a
@@ -219,15 +219,21 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
       scope for this pass (this todo is about the ORIGINAL function's manifest-vs-GCS performance question, not the
       correctness bugs fixed above; `sports_dependency.py::check_api_football_dependency` itself was verified to already
       be path-CORRECT — canonical-prefix-first + legacy-fallback via `_prefix_has_object` — it is purely a
-      performance/cost question, unlike the sites fixed above).
-- [ ] [DATA] P2. **Share path-template constants between the real fixtures writer and this checker** — PARTIALLY
+      performance/cost question, unlike the sites fixed above). — already covered by
+      `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` (shipped, instruments-service@bd1da540,
+      `_manifest_shows_fixtures_captured()`; see that doc for execution).
+- [x] [DATA] P2. **Share path-template constants between the real fixtures writer and this checker** — PARTIALLY
       addressed: the ~9 expanded-scope sites now share ONE helper (`_read_per_league_entity_df`); the ORIGINAL
       `check_api_football_dependency()` function (todo above) still has its own independent path-template constants, not
-      yet unified.
-- [ ] [VERIFY] P2. **Confirm real backfill speedup** against a real multi-month or full-year backfill run, before vs.
+      yet unified. — already covered by `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` (that same
+      commit's own evidence text rules this moot now that the hot path no longer touches the path templates; see that
+      doc for execution).
+- [x] [VERIFY] P2. **Confirm real backfill speedup** against a real multi-month or full-year backfill run, before vs.
       after, not just the isolated per-call measurements above. **Still open** — this pass fixed correctness (not
       performance) at most sites; a real backfill timing run is still needed for whatever manifest-slice work remains
-      for `check_api_football_dependency()` and `sports_fixtures.py:356`.
+      for `check_api_football_dependency()` and `sports_fixtures.py:356`. — already covered by
+      `plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md` (carries an open todo whose job is to
+      re-check this exact gate and extract the verification once cleared; see that doc for execution).
 - [x] [SCRIPT] P2. **Ship via quickmerge**, quality-gates green. — instruments-service@2b45cb78 (quality-gates.sh full
       run PASSED before commit; quickmerge landed on `live-defi-rollout`, strict-quickmerge verified, pushed to origin —
       confirmed via `git merge-base --is-ancestor`).

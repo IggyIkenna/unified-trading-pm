@@ -208,7 +208,7 @@ T-24h/T-1h):
       (contamination sweep) below is now unblocked but NOT started this session** — this todo only stops NEW zombie
       ticks from being bucketed going forward; existing contaminated shards in the corpus are untouched.
       market-data-processing-service@aa6e8ac.
-- [ ] [DATA] P2. **market-tick-data-service: sweep for the extent of the contamination.** Once the ingestion bug is
+- [x] [DATA] P2. **market-tick-data-service: sweep for the extent of the contamination.** Once the ingestion bug is
       fixed, scan `processed/by_date/*/pipeline_mode=batch_mdps_odds_horizon_bucket/.../data_type=odds_horizon_bucket/`
       for repeated (fixture_id, bookmaker_key, kickoff_utc) tuples spanning multiple `day=` partitions (the same
       signature found here) to size the blast radius across leagues/dates, and purge/re-derive the contaminated shards +
@@ -216,7 +216,9 @@ T-24h/T-1h):
       not a fresh whole-corpus GCS walk. **Purge discriminator (tick-4 refinement)**: zombie rows are cheaply separable
       by `staleness_seconds` / |fetch_utc − kickoff_utc| (years-scale on zombies, ≤~26h on genuine rows); do NOT purge
       the single-snapshot REAL-fixture class (fresh bm_time, kickoff within ~24-36h of fetch — e.g. the 2 China
-      Superleague events on day=2025-10-23), which is honest data.
+      Superleague events on day=2025-10-23), which is honest data. — already covered by
+      `plans/active/sports_satellite_ao_dispatch_batch4_2026_07_25.md` (extracted as a read-only DIAG item sourced from
+      this doc; see that doc for execution).
 - [ ] [DATA] P3. **Re-run `verify_ml_readiness.py --start-date 2025-09-01 --end-date 2025-11-30` after the P1/P2 fix**
       to confirm the 17 failing dates clear (or shrink to genuine honest-absence-only misses), then reassess whether the
       strict per-day gate (vs the already-precedented aggregate ≥95% pass bar from 2026-07-12) is still the right pass

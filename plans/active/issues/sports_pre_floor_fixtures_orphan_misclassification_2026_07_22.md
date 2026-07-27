@@ -123,12 +123,16 @@ durable/as-written per the single-walk discipline.
       pre-floor range (the floor SSOT's own § "Enforcement surface" lists every clamp point — launchers/epoch-gates
       already clamp to 2020-06-06, so no live writer is expected, but a dispatched worker should grep-then-READ to
       confirm at execution time per Part 3/4 discipline).
-- [ ] 3. [DATA] P2. Run the delete-safety protocol's proof (per todo 2's re-classification above: fresh
+- [x] 3. [DATA] P2. Run the delete-safety protocol's proof (per todo 2's re-classification above: fresh
       `gcs_bucket_soft_delete_retention_seconds` re-check + grep-then-READ no-live-writer confirmation) and execute the
-      wipe. No `[OPERATOR]` gate needed given the above — proceed once the fresh checks pass.
-- [ ] 4. [REVIEW] P2. Re-run `migration_orphan_sweep_sports.py --bucket reference --dry-run` after the wipe to confirm
+      wipe. No `[OPERATOR]` gate needed given the above — proceed once the fresh checks pass. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track V "decision 14" — this doc's own
+      "Duplicate-tracking note" names that bullet canonical for this exact 83,541-row population; see that doc for
+      execution).
+- [x] 4. [REVIEW] P2. Re-run `migration_orphan_sweep_sports.py --bucket reference --dry-run` after the wipe to confirm
       these 83,541 no longer appear as `E_orphan_real` (either wiped from GCS, or now correctly classified `C3` if any
-      remain pending the wipe) — closes the loop on the registry fix's real-world effect.
+      remain pending the wipe) — closes the loop on the registry fix's real-world effect. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track V "decision 14"; see that doc for execution).
 
 ## RE-TRIAGE (2026-07-23)
 

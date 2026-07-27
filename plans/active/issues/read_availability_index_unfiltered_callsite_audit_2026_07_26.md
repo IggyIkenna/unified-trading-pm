@@ -68,10 +68,11 @@ a fresh full decode each time.
 
 ## Todos
 
-- [ ] [DATA] P3. **Triage each call site above**: for each, determine (a) is it inside a per-date/per-shard loop over a
+- [x] [DATA] P3. **Triage each call site above**: for each, determine (a) is it inside a per-date/per-shard loop over a
       potentially-large range, or a one-shot call; (b) if the former, convert to the slim + date-filtered pattern
       (`columns=[...]`, `filters=[("date", "==", date)]` or a range filter) matching the two call sites already fixed in
       `_queries.py::check_shard_freshness` and `sports.py::_should_skip_date_for_per_league`. **Done when**: every
       per-date-loop call site is converted (with the same column-list-matches-actual-usage discipline the two fixed
       sites used) or explicitly documented as safe (one-shot, small range, or already TTL-cache-warm by construction) —
-      no site left unaudited.
+      no site left unaudited. — already covered by plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md
+      (see that doc for execution).

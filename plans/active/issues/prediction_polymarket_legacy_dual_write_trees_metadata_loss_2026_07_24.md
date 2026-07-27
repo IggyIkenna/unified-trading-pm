@@ -218,28 +218,32 @@ venue.
 
 ## Todos
 
-- [ ] [CODE] P1. Grep-then-READ the MTDS Polymarket adapter + `rebuild_prediction_manifest.py` (and any
+- [x] [CODE] P1. Grep-then-READ the MTDS Polymarket adapter + `rebuild_prediction_manifest.py` (and any
       `*migrat*2026_04_19*` script) to identify which writer/script produced shapes #3/#3b/#4 and whether any is still
-      live. Repo: `market-tick-data-service`. Gate: a named commit/script + a live-vs-historical verdict.
-- [ ] [CODE] P1. Confirm whether `title`/`slug`/`eventSlug` (or equivalent human-readable market text) is recoverable
+      live. Repo: `market-tick-data-service`. Gate: a named commit/script + a live-vs-historical verdict. — already
+      covered by plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
+- [x] [CODE] P1. Confirm whether `title`/`slug`/`eventSlug` (or equivalent human-readable market text) is recoverable
       from `instruments-service`'s `prod/catalog.parquet` (`InstrumentRecord.question`) for the condition_ids sampled
-      here, before any delete suggestion is entertained for shape #4. Repo: `instruments-service`.
+      here, before any delete suggestion is entertained for shape #4. Repo: `instruments-service`. — already covered by
+      plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
 - [ ] [DATA] P2. Once Q1/Q2 are answered, either (a) register the register-patch stanza in
       `non-canonical-path-inventory.md` with a real disposition, or (b) design a migration that folds shape #4's extra
       metadata into the canonical schema before any legacy-tree cleanup. Repo: `unified-trading-pm` +
       `unified-api-contracts` (schema) + `market-tick-data-service` (writer).
-- [ ] [DESIGN] P1. **Design the extended canonical `trades` schema** (Q3 RESOLVED — operator ruling 2026-07-25: extend,
+- [x] [DESIGN] P1. **Design the extended canonical `trades` schema** (Q3 RESOLVED — operator ruling 2026-07-25: extend,
       don't drop or permanently-fork). Decide which of the 25 `prediction_trades` columns become first-class canonical
       fields (at minimum `title`/`slug`/`event_slug`/`outcome`/`outcome_index` — the market-question + resolution
       metadata with no surviving copy elsewhere; trader-identity fields `proxy_wallet`/`name`/`pseudonym`/`bio`/
       `profile_image` need a separate call — privacy/PII-adjacent, confirm they're genuinely needed downstream before
       keeping them canonical) against the current 5-column `trades` schema
       (`amount, instrument_id,     canonical_question_group, asset_group, resolution_period`). Repo:
-      `unified-api-contracts`.
-- [ ] [CODE] P1. **Update the MTDS Polymarket CLOB writer** to emit the extended schema going forward, and **migrate**
+      `unified-api-contracts`. — already covered by plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md
+      (see that doc for execution).
+- [x] [CODE] P1. **Update the MTDS Polymarket CLOB writer** to emit the extended schema going forward, and **migrate**
       the 2,477 `data_type=prediction_trades` rows (+ shape #4's 158+ objects, per Q2's live-vs-historical finding) into
       the canonical `data_type=trades` path/shape under the extended schema — copy+verify+delete per the standard
-      delete-safety protocol, no data loss. Repo: `market-tick-data-service`, `unified-api-contracts`.
+      delete-safety protocol, no data loss. Repo: `market-tick-data-service`, `unified-api-contracts`. — already covered
+      by plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md (see that doc for execution).
 - [ ] [DATA] P2. Register the extended schema + this migration in `canonical-cutover-register.md` and
       `non-canonical-path-inventory.md` so a future reconciliation pass doesn't re-flag the (now-closed) gap. Repo:
       `unified-trading-pm`.

@@ -224,11 +224,12 @@ actions are different (see Todos).
 
 ## Todos
 
-- [ ] [INVESTIGATE] P1. Root-cause the actual `WithinBoundsTradfiSourceZero` trigger for the live, active
+- [x] [INVESTIGATE] P1. Root-cause the actual `WithinBoundsTradfiSourceZero` trigger for the live, active
       `ohlcv_1s`/`ohlcv_1m` CME/NASDAQ/NYSE population — grep live logs for the already-shipped
       `DATABENTO_EMPTY_BUT_VALID` structured event on a sample of affected (venue, date, instrument) cells and diff the
       echoed request args against the 2026-07-13 working diagnostic in
-      `tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md`. Repo: `market-tick-data-service`.
+      `tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md`. Repo: `market-tick-data-service`. — already covered by
+      plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md (see that doc for execution).
 - [ ] [DATA] P2. Purge or reclassify the 1,242 dead CBOE `ohlcv_15m` rows (frozen since 2026-07-07, already narrowed out
       of expected coverage) — mirrors the deferred cleanup recommendation already on record in
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. Snapshot-before-write,

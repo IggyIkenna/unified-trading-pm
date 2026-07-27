@@ -141,13 +141,14 @@ not wired into the batch `dex_swaps_handler.py` cascade for `dex_pool_swaps`.
       backup-then-write, idempotent). **Script SHIPPED + dry-run VERIFIED** — `instruments-service@73100d4e`,
       `scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py`. Full result + evidence in "Verified
       live (2026-07-24)" below.
-- [ ] [DATA] P1. **Run `--apply` on a VM + verify the manifest rows actually flipped.** Blocked by the heavy-I/O hard
+- [x] [DATA] P1. **Run `--apply` on a VM + verify the manifest rows actually flipped.** Blocked by the heavy-I/O hard
       rule (must run on a VM, not locally). Per `defi_consolidated_closeout_2026_07_18.md`'s tracking of this same
       action: **NOT YET RUN** — 2 VM-launch attempts 2026-07-24 both FAILED differently (rc=2 file-not-found from a
       `setup-data-pipeline-vm.sh` hardcoded-path bug; a workaround attempt's `run.log` never got created), stopped
       rather than blind-retry a 3rd time. Split out 2026-07-25 (apply_batch_12) from the prior single checked-off todo,
-      which incorrectly read as fully done while the actual data mutation had not happened.
-- [ ] [SCRIPT] P2. In `dex_swaps_handler.py`, recognize a 200-status GraphQL response whose `errors[]` message matches
+      which incorrectly read as fully done while the actual data mutation had not happened. — already covered by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
+- [x] [SCRIPT] P2. In `dex_swaps_handler.py`, recognize a 200-status GraphQL response whose `errors[]` message matches
       `subgraph not found: no allocations` (or more generally, any non-schema-drift GraphQL-level error that repeats
       across all 5 cascade schemas) as a **distinct, terminal condition** at FETCH TIME — do not raise the generic
       `RuntimeError`; instead raise/return a typed `_SubgraphNotFoundError`-equivalent (or a new
@@ -156,7 +157,8 @@ not wired into the batch `dex_swaps_handler.py` cascade for `dex_pool_swaps`.
       detection to USE it at capture time has not shipped; without this, the next backfill VM run against CURVE/OPTIMISM
       will re-create fresh `attempted_failed` rows that item 2's retroactive script would then need to re-run to clean
       up again. Repo: `market-tick-data-service` (out of scope for the 2026-07-24 dispatch that shipped items 1-2 — that
-      dispatch was scoped to unified-api-contracts + instruments-service only).
+      dispatch was scoped to unified-api-contracts + instruments-service only). — already covered by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
 - [x] ✅ [DESIGN] P3. **DONE 2026-07-26 (slot 4) — NO-GO.** Evaluate wiring the existing
       `curve_adapter.py`/`api.curve.fi` REST path into the batch `dex_pool_swaps` collection for CURVE/OPTIMISM
       (mirroring the "ARB/POLY only on hosted service" precedent already noted in UAC `_defi.py`) so this cell can
@@ -165,10 +167,11 @@ not wired into the batch `dex_swaps_handler.py` cascade for `dex_pool_swaps`.
       `market-tick-data-service`. Full evidence-cited verdict in "Evaluated (2026-07-26, slot 4)" below — the existing
       REST integration is pool-discovery-only (not swap-history), hardcoded to Ethereum, and the actual swap-fetch path
       is Graph-only with an unimplemented REST fallback stub; no follow-up implementation todo opened.
-- [ ] [SCRIPT] P3. Do the same live-subgraph-health spot-check for the remaining un-investigated long-tail buckets
+- [x] [SCRIPT] P3. Do the same live-subgraph-health spot-check for the remaining un-investigated long-tail buckets
       (`UNISWAP_V3` `TimeoutError`×25, `UNISWAP_V3`/POLYGON schema-drift×24, and the handful of 1-8-row buckets) —
       plausibly genuine transient/schema issues (all 5 sampled subgraphs from this session were healthy), but not
-      confirmed row-by-row. Repo: `market-tick-data-service`.
+      confirmed row-by-row. Repo: `market-tick-data-service`. — already covered by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
 
 ## Verified live (2026-07-15, ~12:57Z)
 

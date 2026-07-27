@@ -198,7 +198,8 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
       when an instruments-service adapter's stamped `instrument_type` changes (relevant the moment any of the
       AAVE_V3/SPARK/COMPOUND_V3/MORPHO/FLUID/etc fixes actually ship) — if manual, that's a real "fix shipped but
       nothing looks different for N days" trap worth flagging in each fix's own rollout plan.
-- [ ] [VERIFY] P2. **Spot-check 2-3 more findings from the smoke-test doc across all 3 layers** — good candidates: the
+- [x] [VERIFY] P2. **[already covered by plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md, see that doc for
+      execution]** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers** — good candidates: the
       DERIBIT live-vs-batch FUTURE misclassification (does deployment-ui show a FUTURE count that matches the real GCS
       row count, or does the live-WS mislabel bleed into the manifest?), and HUOBI-SPOT's missing-from-venue-universe
       gap (does deployment-ui even have a HUOBI-SPOT row to look wrong, or does the venue not appear in the UI's venue

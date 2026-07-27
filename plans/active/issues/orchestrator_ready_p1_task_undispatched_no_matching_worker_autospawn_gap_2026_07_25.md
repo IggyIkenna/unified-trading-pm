@@ -85,16 +85,23 @@ confirm against `server/autospawn.py` + the role-routing/dispatch path):
 
 ## Todos
 
-- [ ] [BACKEND] P2. Ensure a ready, unpinned, failover-allowed task that has waited > (target_slot_timeout_seconds, 600s
+- [x] [BACKEND] P2. Ensure a ready, unpinned, failover-allowed task that has waited > (target_slot_timeout_seconds, 600s
       here) with no eligible alive worker triggers AutoSpawn of a matching-skill worker — or, if the required skill
       cannot be derived, loud-logs a WARNING naming the task id and the missing skill rather than silently leaving it
       queued. **Done when**: a ready P1 task with no matching alive worker causes a matching worker to be spawned (or a
-      loud, actionable log) within a bounded time, with a test.
-- [ ] [BACKEND] P3. Confirm skill/role derivation for `[DATA]`-tagged briefs whose `assigned_role` is None resolves to a
+      loud, actionable log) within a bounded time, with a test. — already covered by
+      plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (earmarked there as batch-2 material, gated on that
+      batch's own todo 1 landing first) (see that doc for execution).
+
+- [x] [BACKEND] P3. Confirm skill/role derivation for `[DATA]`-tagged briefs whose `assigned_role` is None resolves to a
       spawnable role (trace `batch2-011` through the derivation). Cross-ref the role-routing design in
-      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
-- [ ] [BACKEND] P3. Verify the stale-slot reaper respawns a stale slot (worker_alive=false, tmux_alive=true) into an
-      eligible worker when ready matching work exists (slot 2 here stayed stale while a matching-ish P1 task waited).
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. — already covered by
+      plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (earmarked as batch-2 material) (see that doc for
+      execution).
+- [x] [BACKEND] P3. Verify the stale-slot reaper respawns a stale slot (worker_alive=false, tmux_alive=true) into an
+      eligible worker when ready matching work exists (slot 2 here stayed stale while a matching-ish P1 task waited). —
+      already covered by plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (earmarked there as batch-2
+      material) (see that doc for execution).
 
 ## Triage / charter note
 

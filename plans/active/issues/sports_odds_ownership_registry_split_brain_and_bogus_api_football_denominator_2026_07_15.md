@@ -422,6 +422,9 @@ Notes for whoever picks this up:
   real cells into a 362,742 headline). Believed in-flight under
   `sports_data_sources_canonical_completion_2026_07_13.md`; flagged here, not claimed.
 
-- [ ] [VERIFY] P2. Reconcile the post-07-13 rebuild delta (`PLAYER_VALUES` −10,934, `ODDS` −3,180 captured cells vs the
+- [x] [VERIFY] P2. Reconcile the post-07-13 rebuild delta (`PLAYER_VALUES` −10,934, `ODDS` −3,180 captured cells vs the
       2026-07-12 verified state) against real GCS objects — phantom-correction or data loss. Gate: per-key
-      manifest-vs-GCS diff for the missing keys.
+      manifest-vs-GCS diff for the missing keys. — already covered by
+      `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` (extracted per
+      `plans/active/sports_closeout_track_s2_foldin_2026_07_25.md`'s explicit "(5) the post-07-13 rebuild-delta
+      reconciliation (fully covered, not repeated here)"; see that doc for execution).

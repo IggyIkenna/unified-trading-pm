@@ -41,13 +41,16 @@ depends_on: []
 
 ## Todos
 
-- [ ] [DIAG] P2. Inventory catalogue completeness across all 9 features-service modules: for each module, does a
+- [x] [DIAG] P2. Inventory catalogue completeness across all 9 features-service modules: for each module, does a
       per-feature declarative registry exist (a `BuilderEntry`-shaped or equivalent structure), and does each entry
       carry a `status`/`formula_version` field. Definition-of-done: a per-module table (registry exists Y/N,
       status/formula_version field Y/N), confirming/correcting the known baseline (delta_one full but 98% un-audited; 6
-      partial with no status/formula_version; commodity/performance_features/strategy_pnl_archetype absent entirely).
-- [ ] [DIAG] P2. Empirically test whether the family-level smoke check can mask a broken individual external-data-source
+      partial with no status/formula_version; commodity/performance_features/strategy_pnl_archetype absent entirely). —
+      already covered by plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for
+      execution).
+- [x] [DIAG] P2. Empirically test whether the family-level smoke check can mask a broken individual external-data-source
       adapter — scope: the ~16 real vendor adapters across the commodity/calendar families. Definition-of-done: a real
       test run demonstrating either (a) a deliberately-broken single adapter still shows the family-level check green
       (confirming the masking risk), or (b) the check correctly fails (refuting it) — cite the actual run, not a
-      code-read inference alone.
+      code-read inference alone. — already covered by
+      plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).

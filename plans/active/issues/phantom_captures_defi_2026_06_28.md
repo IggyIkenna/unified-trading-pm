@@ -123,9 +123,10 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Diagnose defi phantom root cause: uniform ~25,400 counts across 7 swaps_ohlcv_* granularities +
+- [x] [SCRIPT] P1. Diagnose defi phantom root cause: uniform ~25,400 counts across 7 swaps_ohlcv_* granularities +
       UNISWAP_V4 dominance suggest a single batch writer failure. Check DeFi OHLCV writer logs for affected window.
-      Repo: `market-tick-data-service`.
+      Repo: `market-tick-data-service`. — already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md + this
+      doc's own 2026-07-26 Progress Log entry (see that doc for execution).
 - [ ] [SCRIPT] P1. Apply defi phantom reconciliation (219,529 rows → `attempted_failed`) BEFORE defi backfill G0. Run
       `reconcile_phantom_manifest_rows_all.py --asset-group defi` (no dry-run) with `MANIFEST_PER_VM_SHARDS=true`.
       Verify with `--dry-run` post-apply confirms 0 phantoms. Repo: `instruments-service`.

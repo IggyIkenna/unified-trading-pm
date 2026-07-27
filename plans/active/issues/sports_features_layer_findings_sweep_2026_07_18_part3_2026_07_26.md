@@ -761,9 +761,10 @@ suppresses the matchday NaN rejection; `validate_feature_output` logs the budget
       league → honest `None`). 2 regression tests added (the exact missing test that let it ship).
 - [x] [OPS] P0. ✅ STOPPED the 8-VM features re-run fleet — it was actively writing the fabricated pattern; every shard
       needs re-writing after the fix anyway.
-- [ ] [DATA] P0. **Corpus-wide `derived_features` re-run required** (clean, replaces the stopped fleet) — the bug fired
+- [x] [DATA] P0. **Corpus-wide `derived_features` re-run required** (clean, replaces the stopped fleet) — the bug fired
       whenever `footystats_matches` had any row that day, i.e. most of the 61,461 captured `derived_features` rows.
-      Tracked in `sports_consolidated_closeout_2026_07_19.md` FEATURES track.
+      Tracked in `sports_consolidated_closeout_2026_07_19.md` FEATURES track. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (FEATURES track; see that doc for execution).
 - [x] [DIAG] P2. ✅ Root-cause found (above). **Three candidates ELIMINATED by measurement — do not re-run these:** 1.
       _Base-frame collision_ — the normalized fixtures frame carries NO season*context column (`matchday`,
       `competition_phase`, `games_remaining`, `points_at_stake`, `round_name`, `total_matchdays` all absent). 2. \_A

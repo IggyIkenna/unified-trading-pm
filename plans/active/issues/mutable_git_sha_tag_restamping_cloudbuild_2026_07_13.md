@@ -193,7 +193,8 @@ directly beneath it.)_
       deliberate operator ruling was sought; stays open as the standing question.)
 - [ ] [INFRA] P3. deploy-shared.sh manual path: passes `SHORT_SHA=$(git rev-parse --short HEAD)` — now safe (guard keeps
       the first digest); no change needed, noted for awareness.
-- [ ] [INFRA] P3. deployment-api's secondary configs `cloudbuild-tier3.yaml` (writes the SAME
+- [x] [INFRA] P3. deployment-api's secondary configs `cloudbuild-tier3.yaml` (writes the SAME
       `${_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA` image path) and `cloudbuild-dashboard.yaml` still carry the
       unguarded pattern — no live trigger uses them (all 3 deployment-api triggers point at `cloudbuild.yaml`;
-      `deployment-api-build` is disabled), manual-submit-only vectors; guard them at next touch.
+      `deployment-api-build` is disabled), manual-submit-only vectors; guard them at next touch. — already covered by
+      plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md (see that doc for execution).

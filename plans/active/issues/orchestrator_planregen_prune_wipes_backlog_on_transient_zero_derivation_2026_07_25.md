@@ -88,16 +88,19 @@ result.
 
 ## Todos
 
-- [ ] [BACKEND] P2. Add a zero/collapse circuit-breaker to the PlanRegenLoop prune path: if a regen derives `total=0`
+- [x] [BACKEND] P2. Add a zero/collapse circuit-breaker to the PlanRegenLoop prune path: if a regen derives `total=0`
       (or total drops by > a large fraction, e.g. >75%, vs. the last successful tick) while `scanned` is non-trivial,
       **skip prune_stale entirely, keep the prior backlog, log a loud WARNING, and do not cancel any in-flight tasks**;
       let the next tick re-derive. **Done when**: a simulated empty/failed derivation leaves the existing backlog intact
-      and cancels nothing, with a test.
-- [ ] [BACKEND] P2. Make regen robust to a wedged/unavailable DB: if the derivation cannot complete because DB reads are
+      and cancels nothing, with a test. — already covered by plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md
+      (agent-orchestrator@d66fbf2) (see that doc for execution).
+- [x] [BACKEND] P2. Make regen robust to a wedged/unavailable DB: if the derivation cannot complete because DB reads are
       failing (pool exhaustion / timeouts), abort the tick WITHOUT pruning rather than completing with a partial/empty
       task set. Cross-ref the pool-wedge root cause in
       `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (fixing that removes the
-      trigger; this guard removes the blast radius).
+      trigger; this guard removes the blast radius). — already covered by
+      plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (agent-orchestrator@d66fbf2) (see that doc for
+      execution).
 - [ ] [BACKEND] P3. Investigate the 05:41:16Z regen/positional-id collisions (`sync_backlog_to_db: REFUSING to reset …`)
       — positional task-id assignment appears to shift under a partial snapshot, which both logs scary errors and risks
       mis-identifying tasks. Confirm task IDs are content-anchored, not purely positional, so a partial plan snapshot

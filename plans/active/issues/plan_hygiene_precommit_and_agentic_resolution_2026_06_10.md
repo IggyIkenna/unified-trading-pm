@@ -127,7 +127,7 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       **Deliberately NOT yet installed on central** — the plan's own ordering gates the central install behind the
       vm-e2e-test proof (next todo). Install command when proven:
       `sudo bash scripts/install-plan-reconciler-timer.sh --operator ubuntu`. repo: agent-orchestrator.
-- [ ] [TEST] P1. **Prove via a LOCAL orchestrator dispatch** (vm-e2e-test is stopped post-cutover; a local backend is
+- [x] [TEST] P1. **Prove via a LOCAL orchestrator dispatch** (vm-e2e-test is stopped post-cutover; a local backend is
       fully faithful — real dispatch → slot/account select → `do_spawn` opus/max/thinking → a fresh worker with only the
       rendered prompt). Harness built 2026-06-16 (`run-test-backend.sh` + `seed-slot.sh`; see "Boot-prompt hardening +
       local proving harness" below); dispatch + watch scheduled **2026-06-17 AM**. Seed a synthetic violation set (stale
@@ -135,7 +135,10 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       must be SKIPPED) → dispatch reconcile → verify the worker FFs all repos, fixes exactly the eligible set, skips the
       fresh plan, commits one `docs(plans):` unit to the **review branch** (proving-phase gate), files the unfixable
       finding. THEN graduate STEP 5 review-branch→direct-LDR-push, ship the hardened prompt, install the timer on
-      central. repo: agent-orchestrator.
+      central. repo: agent-orchestrator. — already covered by
+      plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md (the plan-reconciler timer has been installed and
+      firing daily on central since ~2026-07-23) (see that doc for execution).
+
 - [ ] [CI] P2. **RULE-11 prove-then-retire** (after ≥3 green reconciler runs on central): (a) drop the `schedule:`
       trigger + Haiku steps from `plan-health-agent.yml` (KEEP the `pull_request` `plan-health-gate` job + the
       escalate-on-gate-failure path); (b) delete the Cloud Run job `uts-prod-plan-hygiene-sweep` + its scheduler + TF

@@ -261,14 +261,17 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
 
 ## Follow-up todos
 
-- [ ] 1. [DATA] P1. instruments-service: canonicalise the `instrument_availability` write to
+- [x] 1. [DATA] P1. **[already covered by
+      plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md, see that doc for execution]**
+      instruments-service: canonicalise the `instrument_availability` write to
       `…/day={D}/pipeline_mode={m}/asset_group={ag}/venue={V}/instruments.parquet` using the sink **PREFIX** mechanism
       (`sports_fixtures.py:99-113` is the working reference), NOT the partition dict — the UTL sink sorts keys
       alphabetically (`protocol_impls.py:26`). Provenance: this audit § 3b/§ 3c.
-- [ ] 2. [DATA] P1. market-tick-data-service: rule on and fix the cefi chain tail — `partitioned_writer.py:291-293`
-      populates `quote_asset`/`margin_type` for tradfi only, so W1 emits bare `underlying={U}/ticks.parquet` while W2
-      (`tardis_shared.py:861-870`) emits the canonical v6 tail. Include the `:198` vs `:201` casing divergence.
-      Provenance: this audit § 3a.
+- [x] 2. [DATA] P1. **[already covered by plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md, see
+      that doc for execution]** market-tick-data-service: rule on and fix the cefi chain tail —
+      `partitioned_writer.py:291-293` populates `quote_asset`/`margin_type` for tradfi only, so W1 emits bare
+      `underlying={U}/ticks.parquet` while W2 (`tardis_shared.py:861-870`) emits the canonical v6 tail. Include the
+      `:198` vs `:201` casing divergence. Provenance: this audit § 3a.
 - [ ] 3. [DOCS] P2. instruments-service + market-tick-data-service: correct the three in-repo comments that assert the
       IS live writer emits the hive layout (`instrument_availability_paths.py:1-23`, `DEFI_INSTRUMENTS.md:642`,
       `repair_tradfi_instrument_type_counts_2026_07_17.py:21`). Provenance: this audit § 3b.

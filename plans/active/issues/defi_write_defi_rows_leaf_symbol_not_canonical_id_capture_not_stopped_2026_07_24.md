@@ -172,23 +172,27 @@ oracle's PRE-`d40c5d7d` behavior (structure-only), which would have reported the
       (b) accept the growing backlog and let the eventual migration sweep it up, or (c) ship the leaf-naming fix on an
       expedited timeline given it's now measurably live-growing rather than static? Options, not a recommendation from
       this doc — needs the plan owner's call.
-- [ ] [DIAG] P1. **Measure the scale**: how many `pipeline_mode=batch_*` DeFi objects have been written since 2026-07-20
+- [x] [DIAG] P1. **Measure the scale**: how many `pipeline_mode=batch_*` DeFi objects have been written since 2026-07-20
       (the register's implicit "capture stopped" reference point) under the bare-symbol leaf shape? A bounded
-      per-day-since-2026-07-20 delimiter descent (not a corpus walk) would answer this.
-- [ ] [CODE] P1. **Fix `write_defi_rows()`'s leaf construction** to use the full `instrument_id` (or
+      per-day-since-2026-07-20 delimiter descent (not a corpus walk) would answer this. — already covered by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
+- [x] [CODE] P1. **Fix `write_defi_rows()`'s leaf construction** to use the full `instrument_id` (or
       `canonical_instrument_id` once that column is populated — see the companion FIND-06 in this run's report about the
       missing `canonical_instrument_id`/`asset_group`/`pipeline_mode`/`source`/`schema_version` columns) instead of the
       bare `symbol`, matching the "Confirmed decisions" target. Coordinate with whoever owns
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R1 item — this is a correction to an item already
-      marked shipped, not new scope.
-- [ ] [PM] P2. **Update `canonical-cutover-register.md` §5** to reflect that the "no new defi writes" premise does not
+      marked shipped, not new scope. — already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc
+      for execution).
+- [x] [PM] P2. **Update `canonical-cutover-register.md` §5** to reflect that the "no new defi writes" premise does not
       hold for the batch lane as of 2026-07-24 — either narrow the claim to the live/websocket lane specifically, or
-      remove it and substitute the measured fact.
-- [ ] [PM] P3. **Update `four-surface-reconciliation-procedure.md` §4/§4.3 and `reconciliation-finding-taxonomy.md`
+      remove it and substitute the measured fact. — already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md
+      (see that doc for execution).
+- [x] [PM] P3. **Update `four-surface-reconciliation-procedure.md` §4/§4.3 and `reconciliation-finding-taxonomy.md`
       §2.2** — both currently state the oracle's filename id-form check is tradfi-only; it now covers cefi+defi by
       default (`unified-api-contracts@d40c5d7d` 2026-07-20, refined `@1cd27478` 2026-07-23). Their own worked example
       (`ADAF0:USTF0.parquet`, cited as "0 violations == CANONICAL, false-clean") now returns a real violation when
-      re-tested directly.
+      re-tested directly. — already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for
+      execution).
 
 ## Codex SSOTs
 

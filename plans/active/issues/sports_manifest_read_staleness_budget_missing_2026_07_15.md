@@ -91,10 +91,13 @@ mask a genuine multi-hour outage (a truly-dead consolidator holds no fresh lock,
 in-flight-horizon check still catches real death independently). Operator may prefer to match cefi's 86400 for
 uniformity — either is defensible; 1800s is the tighter, still-safe choice.
 
-- [ ] [DATA] P1. Add `"sports": 1800` to `AG_STALENESS_BUDGET_SEC` in
+- [x] [DATA] P1. Add `"sports": 1800` to `AG_STALENESS_BUDGET_SEC` in
       `unified-trading-library/unified_trading_library/manifest_writer/_staleness_budget.py` (repo:
       unified-trading-library). Update the module docstring to note sports' ~11-min cadence alongside the cefi note.
-      Add/extend a unit test asserting `staleness_budget_for_bucket("instruments-store-sports-prd-x") == 1800`.
+      Add/extend a unit test asserting `staleness_budget_for_bucket("instruments-store-sports-prd-x") == 1800`. —
+      already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (fixed via
+      `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 8, unified-trading-library@fd87daa1; see that doc for
+      execution).
 - [ ] [DATA] P1. Mirror the same `"sports": 1800` into `_AG_STALENESS_BUDGET_SEC` in
       `deployment-api/deployment_api/routes/health_consolidator.py` (repo: deployment-api) so the cockpit
       consolidator-health view stops false-flagging sports as DOWN. Keep the two dicts in sync (they are duplicated by
