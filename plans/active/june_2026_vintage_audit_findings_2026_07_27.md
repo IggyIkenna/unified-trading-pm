@@ -23,7 +23,7 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 supersedes: []
 superseded_by:
 locked_by:
@@ -176,7 +176,20 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (P1, legs a-e) +
       `instruments_completion_tracker_2026_07_06.md` (Stage 2a/2b GAP-4). Already migrated verbatim 2026-07-26; both
       successors still open — dual-track until they ship, then flip+archive. 2 items correctly left gated/latent, not
-      migrated.
+      migrated. **STATUS UPDATE 2026-07-28 (unified-trading-pm@21d31f2a9, verification pass)**: both successors
+      confirmed real and open — batch1b's P1 todo (legs a-e) is present and unchecked; `instruments_completion_tracker`
+      Stage 2c (nested under the doc's "Stage 2" header — the "2a/2b" citation was an approximation, GAP-4 is actually
+      under 2c) carries the open GAP-4 reconcile todo at line ~235-238, also unchecked. The "2 items correctly left
+      gated/latent" claim confirmed accurate (pre-funding-genesis Aster trades backfill, gated on GAP-4; the latent cefi
+      `ohlcv_*` direct-write capability, deferred no-current-need) — both are explicitly named in batch1b's "Excludes"
+      note. **New finding**: batch1b's leg (a) ("make exact discrete per-settlement funding readable") is now DONE
+      UPSTREAM — the source doc's own P1 checkbox for it shipped 2026-07-27
+      (`unified-api-contracts@22689df5`/`market-tick-data-service@466d5670`), one day after batch1b was drafted;
+      annotated batch1b in-place so it isn't re-done. **New finding**: a 3rd item — the source doc's standalone P2 "Bulk
+      historical Tardis-CSV `derivative_ticker.funding_timestamp` is forward-looking" todo — is NOT covered by batch1b's
+      5 legs nor the 2-item Excludes note; it needs a design decision (in-place derivation vs. heavy-I/O reprocessing
+      backfill), so it isn't a bare-dispatchable AO todo — flagged inline in batch1b, not force-dispatched. Still
+      dual-track, not archivable — both successors remain open.
 - [ ] [PLAN] P2. `plans/active/issues/phantom_captures_prediction_2026_06_28.md` →
       `cross_cutting_consolidated_closeout_2026_07_25.md` Track 22. Track 22 only cites the 1 remaining CODE P2 todo
       (MTDS writer → `empty_confirmed` for 0-activity contracts) — copy the full todo text + gate verbatim, then
@@ -255,7 +268,15 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
 - [ ] [PLAN] P2. `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft), dispatches both AO-eligible residuals
       (FeaturesMvpRule/StrategiesMvpRule+consumer; real-data MVP-toggle verify) verbatim. Not yet archivable (batch1b
-      hasn't run). Models-MVP-taxonomy item should be re-parked as its own `BLOCKED-OPERATOR-DECISION` issue doc.
+      hasn't run). ~~Models-MVP-taxonomy item should be re-parked as its own `BLOCKED-OPERATOR-DECISION` issue doc.~~
+      **SUPERSEDED 2026-07-28 (unified-trading-pm@21d31f2a9)** — per §5-RESOLVED item 29, this framing is stale: a
+      stable, already-versioned `model_id` scheme already exists (`generate_model_id`/`parse_model_id`,
+      `ml-service/ml_service/training/ml/config_schema.py`). Corrected the source doc's P2b prose to cite the existing
+      scheme and reframed the remaining work as an implementation task, then filed it as a real scoped
+      `- [ ] [IMPLEMENT] P2` todo directly below the corrected prose in `mvp_scope_catalogue_tagging_2026_06_08.md`
+      itself (wire a `ModelsMvpRule` against `generate_model_id`/`parse_model_id`'s identity axes + a data-status
+      consumer) — content verified present in both files, batch1b's copy verified still open. Still not archivable
+      (batch1b hasn't run; the new ModelsMvpRule todo is also unexecuted).
 - [ ] [PLAN] P2. `plans/active/ui_build_warm_cache_2026_06_17.md` → `ci_satellite_ao_dispatch_batch1_2026_07_26.md`
       (item 4). Item 1 (tsc incremental) is ALREADY implemented in both UI repos' tsconfig.json — flag batch1's D28
       entry as needing correction, not fresh dispatch. Item 2 confirmed genuinely not done; item 3 deferred as D20 (see
@@ -266,8 +287,14 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       (`locked_by: live-defi-rollout`) before archival — confirm with operator this specific doc before flipping.
 - [ ] [PLAN] P2. `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft), covers 3 bounded items (relocate 8
-      `smoke_matrix.py` files; retire `compute_sfi_progressive_only.py`+launcher; script-homes sweep). 2
-      owner-design-call items (velocity-accel fallback; `make_session` loop-safety) have no successor — see §5.
+      `smoke_matrix.py` files; retire `compute_sfi_progressive_only.py`+launcher; script-homes sweep). ~~2
+      owner-design-call items (velocity-accel fallback; `make_session` loop-safety) have no successor — see §5.~~
+      **RESOLVED 2026-07-28 (unified-trading-pm@21d31f2a9)** — per §5-RESOLVED item 35, both are now agent-owned scoped
+      work, not parked on a human. Investigated + scoped both into real `- [ ] [CODE] P2` todos in
+      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (next to the existing 3-item entry, each with a
+      concrete fix + clear done-when criteria — not implemented here, scoping only) and annotated the 2 DEFERRED lines
+      in the source doc to point at them (prevents double-dispatch). Content verified present in both files. Still not
+      archivable (batch1b hasn't run; 5 total bounded items now open there for this source).
 
 ---
 
@@ -306,7 +333,15 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       extracted verbatim into `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (L113-125, own done-when
       criteria), still open there too — mark superseded-by-batch1 here to avoid duplicate dispatch. Item 1.5b (column
       pruning) confirmed un-migrated anywhere, still blocked on `features_service_e2e_pipeline_test_2026_05_26.md`
-      reaching green — keep open here or fold into that plan's eventual owner.
+      reaching green — keep open here or fold into that plan's eventual owner. **STATUS UPDATE 2026-07-28
+      (unified-trading-pm@21d31f2a9)**: confirmed 1.4/1.3b/1.7e present verbatim in batch1 (~L113-125, one combined
+      `[DESIGN] P2` todo) — annotated all 3 checkboxes in the source doc SUPERSEDED-BY-BATCH1 with the exact citation,
+      left open (bookkeeping record) pending batch1 shipping. Item 1.5b: confirmed still un-migrated anywhere, still
+      genuinely gated — `features_service_e2e_pipeline_test_2026_05_26.md`'s 2026-05-26 ROLLOUT-AGENT HOLD banner WAS
+      lifted 2026-07-27 as expected, but that plan remains `status: active` with real open remainder (2 of its 7
+      reconciled Track-1 todos still genuinely open per its own 2026-07-27 note) — not yet "end-to-end green," so 1.5b
+      correctly stays open+gated, not dispatched. Whole doc NOT archived (real remainder: 1.5b + the 3
+      superseded-but-not-yet-shipped bookkeeping items).
 - [ ] [PLAN] P2. `plans/active/codex_violations_ratchet_to_five_2026_06_10.md` — vast majority done (all fleet repos ≤5
       violations, verified 2026-07-27); MTDS >900-line-tail confirmed done in code — flip it, rewrite the
       "remaining >900 tail" catch-all to just instruments-service `_solana_utils.py` (1068L). 2 items (UAC
