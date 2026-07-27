@@ -101,15 +101,15 @@ drift_direction: advance-code
       `plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md` § "2026-07-27 — CBOE terminal-state re-check", replacing
       the "Still in-flight" note and Deferred-work row. No code changes (DIAG-scoped; the fix itself stays tracked at
       the issue doc, not re-attempted here). Source: `tradfi_phase_d_terminal_gate_2026_07_24.md`.
-- [ ] [DOC] P1. Add the two Phase-D pipeline-check launcher name patterns as named candidates in
-      `vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8/9 scoping list. `mtds-backfill-*-pipelinecheck-*`
-      and `instr-backfill-*-pipelinecheck-*` are registered in the fleet relaunch machinery by launcher-prefix match but
-      were never named as candidates for the native-shutdown-script (`lc_write_preemption_signal_file`)
-      early-preemption-blind-window fix that 3 other launchers already carry, despite exhibiting the exact same
-      early-boot `vm_self_deleted_no_exit_status` preemption pattern this Phase-D terminal-gate work measured repeatedly
-      on single-shard smoke-test VMs. This is a doc-only scoping addition (alongside the already-listed
-      `launch-mtds-dex-swaps-backfill-vm.sh` example) — NOT the code fix itself, which remains that issue doc's own
-      future work. Repo: unified-trading-pm. **Done when**:
+- [x] ✅ [DOC] P1. **DONE 2026-07-27 (slot-15)** — Add the two Phase-D pipeline-check launcher name patterns as named
+      candidates in `vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8/9 scoping list.
+      `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` are registered in the fleet relaunch
+      machinery by launcher-prefix match but were never named as candidates for the native-shutdown-script
+      (`lc_write_preemption_signal_file`) early-preemption-blind-window fix that 3 other launchers already carry,
+      despite exhibiting the exact same early-boot `vm_self_deleted_no_exit_status` preemption pattern this Phase-D
+      terminal-gate work measured repeatedly on single-shard smoke-test VMs. This is a doc-only scoping addition
+      (alongside the already-listed `launch-mtds-dex-swaps-backfill-vm.sh` example) — NOT the code fix itself, which
+      remains that issue doc's own future work. Repo: unified-trading-pm. **Done when**:
       `plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8 and/or item 9 candidate list
       explicitly names both `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` as candidates for
       the native-shutdown-script pattern rollout. Source: `tradfi_phase_d_terminal_gate_2026_07_24.md`.
