@@ -107,10 +107,10 @@ related:
   ]
 created: 2026-07-18
 last_updated: 2026-06-27
-  2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+  2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
-  # "2026-07-24"
+  # "2026-07-24"; "2026-07-27" session-3 lending-resolver close-out (todo 18)
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -310,7 +310,11 @@ Discriminator = **does a manifest row exist**.
   4-segment form is retired.
 - **Two-id model kept** (Option A) — no mass address→symbol rewrite; ensure symbolic `canonical_instrument_id` coexists
   on every row + downstream reads the right id.
-- **Retire legacy `LENDING`** → migrate ~16.7M rows to the A_TOKEN/DEBT_TOKEN split + bake into the catalogue builder.
+- ~~**Retire legacy `LENDING`** → migrate ~16.7M rows to the A_TOKEN/DEBT_TOKEN split + bake into the catalogue
+  builder.~~ **SUPERSEDED (session-3, 2026-07-26)** — WON'T-DO; flat `LENDING`/`SOLANA_LENDING` is now permanent for
+  market/event lending, replaced by the `resolve_lending_underlying` read-side resolver. See
+  `defi_lending_writer_retire_prerequisite_2026_07_20.md` session-3 entry +
+  `/codex/02-data/defi-canonical-naming-ssot.md`.
 - **instrument_type case**: **⛔ corrected 2026-07-20, operator ruling D1 — ~~"lowercase in the PATH + manifest COLUMN
   (writer grain), UPPER stays only in the id SEGMENT"~~.** Three separate legs: manifest **COLUMN → UPPERCASE**
   (catalogue wins, ruling D1) · GCS **path segment → lowercase** (unchanged) · **id middle segment → UPPER**
@@ -597,9 +601,16 @@ file, not here.
       writing timestamp-glued empty markers across 6 handlers; `70b9a81a` promoted the verify tool to
       `scripts/one_offs/verify_defi_glued_ids_2026_07_24.py`). **Remaining**: run the 9-cell ORCA retry + re-run the
       verify script for a fresh 0-glued-ids reading before the marker-delete `--apply` todo above proceeds.
-- [ ] [DATA] P1. **~16.7M-row LENDING→A_TOKEN/DEBT_TOKEN migration** — gated on lending-writer-retire todos 7/8/10/11
-      (per-data_type target mapping + atomic 3-repo wave + runtime proof), see
-      `defi_lending_writer_retire_prerequisite_2026_07_20.md`.
+- [x] ⛔ [DATA] P1. **WON'T-DO (session-3, 2026-07-26, operator present) — closed, not deferred.** Was: the ~16.7M-row
+      LENDING→A_TOKEN/DEBT_TOKEN migration, gated on lending-writer-retire todos 7/8/10/11.
+      `defi_lending_writer_retire_prerequisite_2026_07_20.md`'s own investigation found the flip needs 4 tightly-coupled
+      legs incl. an instruments-service `expected_unattempted` re-seed, on top of a migration already reversed once.
+      Session-3 decided to stop pursuing the physical retire permanently — flat `LENDING`/ `SOLANA_LENDING` stays the
+      canonical form for market/event lending data_types, and a new read-side resolver
+      (`unified_api_contracts.internal.domain.defi.resolve_lending_underlying`, shipped
+      `unified-api-contracts@1d01a911`) gives canonical A_TOKEN/DEBT_TOKEN instrument_ids a rate lookup without any
+      physical re-key. See `defi_lending_writer_retire_prerequisite_2026_07_20.md`'s session-3 Progress Log entry (todos
+      15-18) and `/codex/02-data/defi-canonical-naming-ssot.md`'s instrument_type row for the full decision + rationale.
 - [ ] [DATA] P1. **Residual canon walk C2-C12 — corrected 2026-07-25, the bundled title was stale-drift.** 6 items still
       SCOPED not executed (C2/C3/C4/C9/C11/C12), code-side verified GREEN for C2/C3/C9/C12; ALL SIX need a data-side
       read of the live `_index` once the 2 canonical-migration VMs reach a terminal state, then

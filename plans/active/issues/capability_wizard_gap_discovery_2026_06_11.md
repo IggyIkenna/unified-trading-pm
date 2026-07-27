@@ -27,7 +27,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-27
 ---
 
 # Capability wizard — gap discovery tracker
@@ -46,17 +46,36 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
 
 ### Generator-suite drift — `missing_extraction` (Phase 0 of the plan)
 
-- [ ] [SCRIPT] P0. SERVICE_REGISTRY in `scripts/openapi/generate_unified_spec.py` lists 10+ phantom pre-consolidation
+- [x] ✅ [SCRIPT] P0. SERVICE_REGISTRY in `scripts/openapi/generate_unified_spec.py` lists 10+ phantom pre-consolidation
       services (8× `features-*-service`, `ml-inference/-training-service`, `pnl-attribution-service`,
       `position-balance-monitor-service`, `risk-and-exposure-service`) and misses `features-service`, `ml-service`,
-      `fund-administration-service`, `greeks-service`.
-- [ ] [SCRIPT] P0. `generate_ui_reference_data.py` never extracts `architecture_v2` (StrategyArchetype ×53,
+      `fund-administration-service`, `greeks-service`. — ALREADY FIXED (checkbox was stale) unified-trading-pm@50bdbcd36
+      (2026-06-11, same day as this issue doc): `SERVICE_REGISTRY` is now built by `_load_service_registry()` from
+      `workspace-manifest.json` + disk presence (auto-discovery), no hardcoded phantom list remains. Verified
+      2026-07-27: `grep SERVICE_REGISTRY generate_unified_spec.py` shows
+      `SERVICE_REGISTRY = _load_service_registry(workspace_root)` at line 583.
+- [x] ✅ [SCRIPT] P0. `generate_ui_reference_data.py` never extracts `architecture_v2` (StrategyArchetype ×53,
       StrategyFamily ×9, ARCHETYPE_CAPABILITY_REGISTRY, AtomicExecutionMode, VenueCategoryV2, MarginMode,
       KillSwitchReason, VenueFeature, RiskGateLayer/Decision, CompensationPolicy, MevSubmissionMode, HoldPolicy,
-      StakingMethod) — extraction walks package-root exports only.
-- [ ] [SCRIPT] P0. `generate_config_registry.py` mirrors the phantom/missing service list.
-- [ ] [SCRIPT] P1. `_validate_service_coverage()` warns instead of failing → suite rotted silently; committed outputs
-      stale (May 22 – Jun 1 vs Jun 11).
+      StakingMethod) — extraction walks package-root exports only. — ALREADY FIXED (checkbox was stale)
+      unified-trading-pm@50bdbcd36 (2026-06-11, same day as this issue doc): `extract_uic_enums()` now explicitly walks
+      `unified_api_contracts.internal.architecture_v2.enums` + `.archetype_capability` submodules (not just root
+      exports), and `extract_architecture_v2_capability_registry()` serialises `ARCHETYPE_CAPABILITY_REGISTRY`
+      separately. Verified 2026-07-27 by running the generator live (UAC venv + workspace-sibling `PYTHONPATH`, output
+      `ui-reference-data.json`): every named enum present with real counts — StrategyArchetype=60, StrategyFamily=9,
+      AtomicExecutionMode=4, VenueCategoryV2=6, MarginMode=5, KillSwitchReason=8, VenueFeature=12, RiskGateLayer=4,
+      RiskGateDecision=4, CompensationPolicy=3, MevSubmissionMode=6, HoldPolicy=7, StakingMethod=13;
+      `archetype_capability_registry.archetype_count`=53.
+- [x] ✅ [SCRIPT] P0. `generate_config_registry.py` mirrors the phantom/missing service list. — ALREADY FIXED (checkbox
+      was stale) unified-trading-pm@50bdbcd36 (2026-06-11, same day as this issue doc): the phantom services
+      (features-\*-service split / ml-inference / ml-training / pnl-attribution-service /
+      position-balance-monitor-service / risk-and-exposure-service) are removed, per the file's own comment "Phantom
+      services removed 2026-06-11"; features-service/ml-service/fund-administration-service/greeks-service are present.
+      Verified 2026-07-27.
+- [x] ✅ [SCRIPT] P1. `_validate_service_coverage()` warns instead of failing → suite rotted silently; committed outputs
+      stale (May 22 – Jun 1 vs Jun 11). — ALREADY FIXED (checkbox was stale) unified-trading-pm@50bdbcd36 (2026-06-11,
+      same day as this issue doc): `_validate_service_coverage()` now calls `sys.exit(1)` on missing coverage (line 550)
+      instead of only warning. Verified 2026-07-27.
 - [ ] [SCRIPT] P1. Source-mode capability matrix (batch/live/replay × source × WS/REST) exists only as a manual audit
       doc (`source-mode-capability-matrix_2026-06-07.md`), not as registry + extraction.
 

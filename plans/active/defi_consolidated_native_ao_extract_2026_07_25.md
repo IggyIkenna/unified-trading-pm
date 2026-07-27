@@ -177,6 +177,40 @@ session's final report; condensed here for anyone re-auditing this doc later:
 | Open follow-ups `[OPERATOR] P1` delete_migrated_defi_markers --apply (629)                          | Already `[OPERATOR]`-tagged, prod-bucket-adjacent delete, human-gated by its own text; also still blocked on the in-flight dry-run finishing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Open follow-ups `[DATA] P1` DeFi MVP backfill to 100% (695)                                         | Explicit "C-GREEN gated on Track 1 + Track 2 + Track 3" pointer + a parked backlog task; the one concretely-executable sub-piece (`catalogue_pool_ids_for_shard` generalization) is already drafted in `defi_satellite_ao_dispatch_batch1_2026_07_25.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
+## Progress log
+
+- 2026-07-26/27 (slot 4, todo 1 — CURVE/OPTIMISM subgraph-deindex reclassification, IN PROGRESS): Sub-step (a, the `cd`
+  bug fix) is CODE-COMPLETE but NOT YET SHIPPED. Fixed `setup-data-pipeline-vm.sh`'s `canonical-migration` `VM_TASK`
+  branch — it hardcoded `cd "$WORKSPACE/mtds"` regardless of `VM_SERVICE`, so a fresh VM running the instruments-service
+  reclassify script (`VM_SERVICE=instruments_service`) would hit `ERROR: $WORKSPACE/mtds missing` even though its
+  tarball was correctly extracted to `$WORKSPACE/instruments`. Fixed by deriving the workspace dir via the SAME
+  `SERVICE_TARBALLS` → `TARBALL_DIRS` mapping the tarball-install step already uses (never hand-rolled a second
+  service→dir mapping), with a `mtds` fallback for an unmapped `VM_SERVICE` (preserves the pre-fix default for every
+  existing MTDS-only canonical-migration caller). Added 3 regression tests
+  (`TestCanonicalMigrationServiceKeyedWorkspaceDir` in `tests/unit/test_vm_launcher_scripts.py`) that extract the REAL
+  `SERVICE_TARBALLS`/`TARBALL_DIRS` declarations + the fix's derivation lines directly out of the setup script (not a
+  hand-duplicated copy, so the test can't silently drift from the real mapping) and assert: `instruments_service` →
+  `instruments` (the bug this fixes), `market_tick_data_service` → `mtds` (backward-compat), and an unmapped
+  `VM_SERVICE` → `mtds` (safe fallback). **Verified the fix's actual logic is correct** by extracting and running the
+  exact generated bash snippet directly (`bash -c`, outside pytest) — confirmed `instruments_service` resolves to
+  `instruments` in <1s, exit 0. **Blocked on shipping**: running the SAME check through `pytest` hangs indefinitely —
+  confirmed via 3 separate attempts (bare run, `--timeout=30`, a 120s-timeout run) and a live process inspection
+  (`ps --forest`) showing the pytest process in kernel state `D` (uninterruptible sleep) on `wait_on_buffer` /
+  `folio_wait_bit_commo` — a genuine disk-I/O/page-cache-reclaim stall, not a deadlock in the test code (confirmed via
+  `/proc/loadavg` reading 21-37 on an 8-core host at the time, i.e. severe shared-host contention, not this repo's
+  fault). Both files remain UNCOMMITTED in this slot's `deployment-service` worktree (`git status`:
+  `M scripts/vm/setup-data-pipeline-vm.sh`, `M tests/unit/test_vm_launcher_scripts.py`) — correctly withheld per the
+  "commit only from a `quality-gates.sh`-green tree" HARD RULE, not lost (this is a live git worktree, not a scratchpad
+  file — it survives a context compact). **Next steps once host load allows**: re-run
+  `.venv/bin/python -m pytest tests/unit/test_vm_launcher_scripts.py -k TestCanonicalMigrationServiceKeyedWorkspaceDir`,
+  then `bash scripts/quality-gates.sh`, then
+  `bash scripts/quickmerge.sh "fix(vm): derive canonical-migration workspace dir from VM_SERVICE" --agent --files 'scripts/vm/setup-data-pipeline-vm.sh tests/unit/test_vm_launcher_scripts.py'`.
+  Only THEN proceed to sub-step (b): launch a fresh canonical-migration VM running
+  `instruments-service/scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py --apply`, T+10min
+  health-verify RUNNING with real `run.log` progress, confirm completion, spot-check the manifest shows the ~144
+  previously-`attempted_failed` CURVE/OPTIMISM rows now carrying `EXPECTED_SUBGRAPH_DEINDEXED`, THEN flip this todo's
+  checkbox with the shipped SHA + verification evidence.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from

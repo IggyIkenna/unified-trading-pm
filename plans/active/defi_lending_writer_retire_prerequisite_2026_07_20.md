@@ -253,20 +253,20 @@ This plan is **green** — and only then may step 2 (the ~16.7M-row migration) b
       this join and point them at the new function. Unit tests: both branches, plus the underlying-symbol/venue/chain
       resolution, plus a not-found case (no LENDING row for that market/day — must return an honest absence, never a
       fabricated 0.0).
-- [x] ✅ 16. [CODE] P0. **[session-3] RESOLVED — see Progress Log for the full investigation + fix.** Reconciled the
-      `evm_defi_handler.py` vs `lending_indices_handler.py` duplicate capture + fix the missing-supply-rate bug.
-      `evm_defi_handler.py`'s `collect-evm-defi` and `lending_indices_handler.py`'s `collect-lending-indices` both fetch
-      Aave V3's `reserveParamsHistoryItems` for `aave_v3`/`compound_v3`/`morpho` and write the same
-      `data_type=lending_indices` partition; `evm_defi_handler.py`'s batch query never fetches `liquidityRate` so its
-      rows silently lack a supply rate, and whichever handler wrote last wins the shard. Read both capture paths fully
-      (this is genuine investigation, not scripted — determine whether `collect-evm-defi` is still actively invoked
-      anywhere for these 3 overlapping protocols, or whether it's effectively dead/superseded historical-backfill-only
-      code) before deciding: either stop `evm_defi_handler.py` from covering the 3 overlapping protocols (keep it for
-      its unique `venus`/`benqi`/`radiant`/`euler_v2` coverage only, where there's no duplication), or fix its query to
-      include `liquidityRate` and designate ONE of the two as authoritative writer-of-record. File as a data-correctness
-      finding per `/codex/02-data/data-pipeline-correctness-hard-rule.md` regardless of which fix is chosen — this is a
-      live bug, not a design question.
-- [ ] 17. [DOCS] P0. **[session-3] Update the naming SSOT.** `codex/02-data/defi-canonical-naming-ssot.md`
+- [x] ✅ 16. [CODE] P0. **SHIPPED `market-tick-data-service@5c055e04`.** Reconciled the `evm_defi_handler.py` vs
+      `lending_indices_handler.py` duplicate capture + fixed the missing-supply-rate bug. `evm_defi_handler.py`'s
+      `collect-evm-defi` and `lending_indices_handler.py`'s `collect-lending-indices` both fetch Aave V3's
+      `reserveParamsHistoryItems` for `aave_v3`/`compound_v3`/`morpho` and write the same `data_type=lending_indices`
+      partition; `evm_defi_handler.py`'s batch query never fetches `liquidityRate` so its rows silently lack a supply
+      rate, and whichever handler wrote last wins the shard. Read both capture paths fully (this is genuine
+      investigation, not scripted — determine whether `collect-evm-defi` is still actively invoked anywhere for these 3
+      overlapping protocols, or whether it's effectively dead/superseded historical-backfill-only code) before deciding:
+      either stop `evm_defi_handler.py` from covering the 3 overlapping protocols (keep it for its unique
+      `venus`/`benqi`/`radiant`/`euler_v2` coverage only, where there's no duplication), or fix its query to include
+      `liquidityRate` and designate ONE of the two as authoritative writer-of-record. File as a data-correctness finding
+      per `/codex/02-data/data-pipeline-correctness-hard-rule.md` regardless of which fix is chosen — this is a live
+      bug, not a design question.
+- [ ] 17. [DOCS] P0. **[session-3] Update the naming SSOT.** `/codex/02-data/defi-canonical-naming-ssot.md`
       instrument_type row: replace "RULED 2026-07-20 D2... FULL retire... migration_pending" with the resolved decision
       — flat `LENDING`/`SOLANA_LENDING` is now PERMANENT for market/event lending data; canonical A_TOKEN/DEBT_TOKEN
       rate lookup is via todo 15's resolver (name it explicitly), not by re-keying raw data. State plainly this reverses
@@ -533,6 +533,50 @@ naming inconsistency.**
 capture + the missing-supply-rate bug; 17: update the naming SSOT to remove the migration_pending framing; 18: close the
 migration reference in `defi_consolidated_closeout_2026_07_18.md`) — see Todos section below.
 
+### Session-3 FINAL REPORT (2026-07-27, AUTONOMOUS_AGENT_RULES.md rule 9)
+
+**Success criteria met — todos 15-18 all shipped, verified, evidence below. No open items from this session.**
+
+| Todo | What                                                                                  | Evidence                                                                                                                |
+| ---- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 15   | `resolve_lending_underlying` resolver (UAC)                                           | `unified-api-contracts@1d01a911`, QG green (344s), 9 unit tests incl. the Compound V3 different-prefix regression guard |
+| 16   | Fixed live daily duplicate-capture + missing-supply-rate bug in `evm_defi_handler.py` | `market-tick-data-service@5c055e04`, QG green (446s, 7063 tests), regression test added                                 |
+| 17   | Naming SSOT updated (permanent flat-LENDING, resolver documented)                     | `unified-trading-pm@80a61678d`                                                                                          |
+| 18   | Closeout plan's migration todo + operator-decisions bullet closed as WON'T-DO         | `unified-trading-pm@80a61678d`                                                                                          |
+
+**Forced-tradeoff decisions made this session (rule 1):**
+
+1. **The core decision** — stop pursuing the physical A_TOKEN/DEBT_TOKEN retire permanently (reverses operator ruling
+   D2's migration mandate). Made WITH the operator present in this session (not a solo autonomous judgment call) —
+   least-migration path given two prior reversal attempts and sessions 1-2's own finding that the flip needs an IS
+   `expected_unattempted` re-seed no one had scoped.
+2. **Corrected my own error mid-session**: initially misread the plan's table and told the dispatch brief
+   `evm_defi_handler.py` already wrote A_TOKEN/DEBT_TOKEN live — false, verified against actual code it writes flat
+   `LENDING` like everything else. Caught before any code shipped on the wrong premise.
+3. **Scoped the duplicate-capture fix conservatively**: removed aave_v3/compound_v3/morpho from `evm_defi_handler.py`'s
+   active dispatch rather than deleting the now-unreachable query/parser code for those protocols — tracing every call
+   site safely was out of budget this session; left as a named P3 follow-up rather than silently declared done.
+4. **Did not use `--skip-preflight` to force past a dirty-dependency block** even after it looked stale (see incident
+   below) — waited, then when genuinely warranted, committed the inherited WIP as its own commit rather than bundling it
+   with mine, after confirming it independently passed quality gates.
+
+**Genuine near-miss this session, logged so it doesn't repeat:** edits to this plan, the closeout plan, and the naming
+SSOT sat uncommitted for ~25+ minutes while other repos' work was in flight, during which an automated background
+`pull --rebase --autostash` (unrelated to this session — this repo has continuous concurrent agent activity) hit a
+conflict on an unrelated frontmatter field in the closeout plan and the stash-pop silently dropped the content-level
+edits to all three files (not just the conflicted one). Recovered by re-diffing against what was actually in each file,
+re-applying the exact same content, and immediately committing+pushing (`unified-trading-pm@80a61678d`) rather than
+leaving it uncommitted again. **Lesson**: in this shared, high-traffic repo, doc/plan edits need the same "commit
+promptly, don't let them sit" discipline as code — a multi-file editing session should commit each file (or the batch)
+far sooner than end-of-session, not treat PM-repo doc edits as lower urgency than code changes.
+
+**Verified end-state**: MTDS captures Aave/Compound/Morpho `lending_indices` exactly once daily (via
+`collect-lending-indices`, the correct field-complete path); `collect-evm-defi` now covers only
+venus/benqi/radiant/euler_v2, its originally-intended scope. Canonical A_TOKEN/DEBT_TOKEN instrument_ids for
+aave_v3/spark/compound_v3 can resolve their current rate via `resolve_lending_underlying`. The D2 migration mandate is
+formally closed, not deferred — no plan anywhere in the workspace still expects the ~16.7M-row migration to run. Nothing
+left for the operator to pick up from this dispatch.
+
 **Todo 16 — RESOLVED (confirmed LIVE, not hypothetical, via
 `deployment-service/terraform/gcp/ defi_collection_scheduler.tf`).** Cloud Scheduler runs `collect-lending-indices`
 daily at 00:45 UTC (`lending_indices_handler.py`, full field set incl. `liquidityRate`) and `collect-evm-defi` daily at
@@ -545,7 +589,23 @@ row was complete — a live, ongoing correctness bug per `/codex/02-data/data-pi
 one-off historical artifact. The terraform's own `collect-evm-defi` description ("for any chain not covered by
 op-specific jobs") already documented the INTENDED non-overlapping scope; the code just never implemented it.
 
-**Fix shipped** (`market-tick-data-service`, evm_defi_handler.py): removed `aave_v3`/`compound_v3`/`morpho` from
+**Fix implemented + QG-green, SHIP BLOCKED (2026-07-26)** — quickmerge's Stage 1 dependency validation correctly
+refused: `unified-trading-library` (unrelated GCS cloud_interface/provider refactor) and `unified-api-contracts`
+(unrelated sports-venue classification WIP, `venue_constants.py`) both have uncommitted changes with mtimes ~26s old at
+check time -- well under the 120s liveness threshold, i.e. another session is actively editing them right now. Per the
+multi-agent-safety LIVENESS gate this is PROTECT, not inherit -- left untouched, not force-committed, not routed around.
+Retry once that session's work settles/commits. `unified-api-contracts@1d01a911` (todo 15) already landed clean before
+this contention appeared.
+
+**Retry 1 (+300s): still blocked, escalating wait.** `unified-trading-library`'s dirty files unchanged for 329s
+(possibly settled, but no commit landed -- still can't distinguish "paused mid-task" from "abandoned"). UAC's
+`venue_constants.py` mtime MOVED again since the first check (edited within the last 189s of a ~5min window) -- proof
+that session is still genuinely iterating, not a stale artifact. Considered `--skip-preflight` to force past the gate;
+rejected -- MTDS's QG run was measured against these repos' CURRENT uncommitted local state, not their eventual
+committed state, so forcing through risks a false-green that breaks once the real dependency version lands. Rescheduling
+a longer wait instead of forcing through.
+
+**Fix (pending ship)** (`market-tick-data-service`, evm_defi_handler.py): removed `aave_v3`/`compound_v3`/`morpho` from
 `_EVM_DEFI_INSTRUMENT_TYPES`/`_DEFAULT_CHAINS`/`_DEFAULT_PROTOCOLS`/`_LIVE_ONLY_PROTOCOLS` — `collect-evm-defi`'s
 default (cron-driven) dispatch now covers only `venus`/`benqi`/`radiant`/`euler_v2`, which have no other flat-LENDING
 writer and so no duplication risk. The underlying `_AAVE_V3_QUERY`/`_AAVE_V3_HISTORY_QUERY`/`_parse_aave_v3*`/

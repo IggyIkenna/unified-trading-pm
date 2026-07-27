@@ -63,15 +63,24 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Fix the DERIBIT `instrument_id` missing-quote defect, then rebuild `prod/catalog.parquet`.** The
-      canonical symbol must ALWAYS be `BASE-QUOTE` (operator ruling 2026-07-18, overriding the `BASE[_QUOTE]`
-      optional-quote decision in `instrument_id_format_canonicalization_2026_07_08.md`). Verified live: **265,538 of
-      425,160 catalogue rows (62%) — ALL DERIBIT (263,950 OPTION + 1,588 FUTURE)** — drop the quote
-      (`raw=AVAX_USDC-1APR26` → `DERIBIT:FUTURE:AVAX@LIN-20260401`, must be `…AVAX-USDC@LIN…`; `BTC-5APR19-3250-C` →
-      `DERIBIT:OPTION:BTC@INV-…`, must be `…BTC-USD@INV-…`). DERIBIT-only (every other venue already carries the quote).
-      Fix the DERIBIT adapter/builder to always emit `BASE-QUOTE@MARGIN_TYPE[-YYYYMMDD][-STRIKE-C|P]` (USDC linear / USD
-      inverse), then rebuild `prod/catalog.parquet` (coordinated ~38-min prod op). **Self-justified, no `[OPERATOR]`
-      tag** per `task_template.md` finding Q (operator ruling 2026-07-25, cefi.2/cefi.3): the design pass floated an
+- [x] [BACKEND] P0. **Fix the DERIBIT `instrument_id` missing-quote defect, then rebuild `prod/catalog.parquet`.** —
+      `instruments-service@d72edcf7` (adapter/builder fix, 2026-07-18) + `instruments-service@b2e084fa` (Phase-−1 gate
+      extended with the quote-mandatory assertion, same day) + live-verified 2026-07-27: gate run against
+      `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` (429,129 rows) returned `GREEN=True`
+      (0 `:PERP:`, 0 id!=canonical, **0 missing-quote**); a DERIBIT-only re-check confirmed 267,128 OPTION + 1,781
+      FUTURE rows, 0 missing-quote in either bucket, incl. the exact plan-cited example now reading
+      `DERIBIT:FUTURE:AVAX-USDC@LIN-20260401`. See Progress Log 2026-07-27 for full detail — the operational rebuild
+      already happened on 2026-07-18 (same day as the fix) and the fixed state has persisted through 9 days of
+      incremental catalogue growth (425,573 → 429,129 rows) with no regression, so no NEW full-corpus rebuild was
+      triggered (would be a redundant heavy-I/O op against an already-satisfied done-when). The canonical symbol must
+      ALWAYS be `BASE-QUOTE` (operator ruling 2026-07-18, overriding the `BASE[_QUOTE]` optional-quote decision in
+      `instrument_id_format_canonicalization_2026_07_08.md`). Verified live: **265,538 of 425,160 catalogue rows (62%) —
+      ALL DERIBIT (263,950 OPTION + 1,588 FUTURE)** — drop the quote (`raw=AVAX_USDC-1APR26` →
+      `DERIBIT:FUTURE:AVAX@LIN-20260401`, must be `…AVAX-USDC@LIN…`; `BTC-5APR19-3250-C` → `DERIBIT:OPTION:BTC@INV-…`,
+      must be `…BTC-USD@INV-…`). DERIBIT-only (every other venue already carries the quote). Fix the DERIBIT
+      adapter/builder to always emit `BASE-QUOTE@MARGIN_TYPE[-YYYYMMDD][-STRIKE-C|P]` (USDC linear / USD inverse), then
+      rebuild `prod/catalog.parquet` (coordinated ~38-min prod op). **Self-justified, no `[OPERATOR]` tag** per
+      `task_template.md` finding Q (operator ruling 2026-07-25, cefi.2/cefi.3): the design pass floated an
       instant-rollback-via-GCS-object-versioning justification, but bucket versioning is NOT independently confirmed in
       this pass, so this uses finding Q's other basis instead — prior explicit operator approval (the 2026-07-18 ruling
       that this exact fix gates the Track-1 cutover) plus per-script validation (the adapter/builder fix ships behind
@@ -158,3 +167,43 @@ own true source docs (`cefi_residual_followups_after_honest_done_2026_07_17.md`'
 `/codex/02-data/availability-manifest-and-data-status.md`,
 `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`. No new durable contract is created by this plan —
 every todo executes an already-decided spec from the parent doc.
+
+## Progress Log
+
+- **2026-07-27 (autonomous session, driven off an operator prompt asking to check + fix lowercase/non-canonical cefi
+  `instrument_type` — this plan is the existing execution vehicle, not a new investigation)**: confirmed live via AO
+  backlog check (SSM, read-only) that all 5 todos here are already ingested + `queued`, none `dispatched`. Operator
+  chose to have this driven interactively now rather than wait for orchestrator dispatch, then invoked `/autonomous` (do
+  not stop to confirm; proceed through dry-run-validated applies/renames/deletes for real). Investigated todo 1 first
+  (it gates everything else): the DERIBIT adapter fix AND the roll-up self-heal
+  (`_canonicalize_cefi_deribit_dated_quote`, wired into `_canonicalize_cefi_rollup_id`) both already shipped in
+  `instruments-service@d72edcf7` (2026-07-18) — confirmed via `git log -L` on `scripts/build_instrument_catalogue.py`.
+  So todo 1's code is done; what remains is the operational `--mode full` catalogue rebuild + live verification.
+  Dispatching a sub-agent to execute that + the Phase-−1 gate extension now; this log will be updated as each todo
+  lands.
+- **2026-07-27 (sub-agent, todo 1 execution)**: confirmed `instruments-service@d72edcf7ab2a861dcdb444d56bb7734d52e0c060`
+  (2026-07-18 11:55:09 +0100) is an ancestor of current HEAD — the adapter fail-loud fix + roll-up self-heal
+  (`_canonicalize_cefi_deribit_dated_quote` wired into `_canonicalize_cefi_rollup_id`) are live in-tree. Found the
+  Phase-−1 gate (`scripts/gate_cefi_catalogue_canonical_phase_minus1_2026_07_18.py`) **already carries** the
+  missing-quote assertion (assertion 3, "quote MANDATORY") — shipped same-day in
+  `instruments-service@b2e084fa92d4589279de1e48ddeb3890dada4554` (2026-07-18 13:16:20 +0100, ~80min after the adapter
+  fix), commit message: "assert 0 :PERP: + id==canonical + quote-mandatory (0 missing-quote) on prod/catalog.parquet
+  before the D4 cutover; ran GREEN on the 425,573-row rebuild" — i.e. a full/fresh rebuild was already run + promoted to
+  prod on 2026-07-18, same day as the fix, and verified GREEN at that time. **Live re-verification today (2026-07-27,
+  read-only, via `.venv/bin/python scripts/gate_cefi_catalogue_canonical_phase_minus1_2026_07_18.py` against
+  `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`)**: 429,129 rows (grown from 425,573 via
+  9 days of incremental builds since), `GREEN=True` — 0 `:PERP:` offenders, 0 id!=canonical offenders, **0 missing-quote
+  offenders**. Ran a DERIBIT-scoped follow-up check (ad hoc script, read-only, scratchpad-only, not committed)
+  confirming 267,128 DERIBIT OPTION rows + 1,781 DERIBIT FUTURE rows, 0 missing-quote in either bucket — spot-checked
+  the plan's own cited defect example: `raw=AVAX_USDC-1APR26` now resolves to `DERIBIT:FUTURE:AVAX-USDC@LIN-20260401`
+  (quote present, matches the plan's target form exactly, not the pre-fix `DERIBIT:FUTURE:AVAX@LIN-20260401`).
+  **Heavy-I/O check**: `instrument_availability/by_date/` for cefi has 2,676 date-partitions (each with multiple venue
+  subdirs) — well over the "few hundred objects" local-safe threshold, so a genuine `--mode full` walk would require an
+  in-region VM per the heavy-I/O rule. **Decision**: did NOT trigger a new full-corpus rebuild. The done-when ("0
+  missing-quote DERIBIT ids fleet-wide on a fresh catalogue build" + "gate extended to assert this") is already
+  satisfied by the 2026-07-18 same-day rebuild+gate-extension pair, and today's live read confirms zero regression
+  through 9 days of subsequent incremental growth — triggering another full rebuild would be a redundant heavy-I/O prod
+  op with no incremental benefit (the fix is in the adapter code path that both full AND incremental builds exercise for
+  any row they touch, and the self-heal + already-verified-clean live catalogue cover the rest). Flipped todo 1 to
+  `- [x]` citing `instruments-service@d72edcf7` + `instruments-service@b2e084fa` + this session's live verification.
+  **Todo 1: DONE.** Todos 2-5 left untouched (`- [ ]`) — out of this dispatch's scope.

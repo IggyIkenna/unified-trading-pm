@@ -114,22 +114,28 @@ author flagged ("would break team/venue resolution").
 
 ## Why this can't be resolved unilaterally
 
-`instruments-store-sports-prd` has **soft-delete=0** (confirmed in `/codex/02-data/sports-2020-06-data-floor.md`'s
-wipe-campaign status section) — any delete here is irreversible, no 7-day recovery net (unlike `features-sports-prd`).
-Given (a) the fold-as-described is not mechanically possible (Finding 1/2), (b) the alternative (delete as dead legacy
-data) is irreversible and was explicitly flagged as risky by the plan's own author, and (c) my in-repo grep can rule out
-live-code consumers but not every possible offline consumer — this is a genuine judgment call requiring operator
-sign-off, not a properly-scoped AO-dispatchable todo per the "Dispatch-scope eligibility" rule
-(`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`).
+`instruments-store-sports-prd` had **soft-delete=0** at the time this doc was authored (confirmed in
+`/codex/02-data/sports-2020-06-data-floor.md`'s wipe-campaign status section) — any delete was irreversible, no 7-day
+recovery net (unlike `features-sports-prd`). **⚠️ Stale as of 2026-07-27**: this bucket's soft-delete was fixed the same
+day as the 2026-07-17 manifest-consolidator incident that prompted it
+(`gcloud storage buckets update ... --soft-delete-duration=7d`) — a fresh
+`gcs_bucket_soft_delete_retention_seconds(...)` check today returns `604800` (7 days), confirmed via
+`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a's fleet baseline. This resolves reason (b) below, but
+NOT reasons (a)/(c) — those were never about reversibility. Given (a) the fold-as-described is not mechanically possible
+(Finding 1/2 — moot for the delete path once the operator selected Option A over B), (b) ~~the alternative (delete as
+dead legacy data) is irreversible~~ no longer applies (see above), and (c) my in-repo grep can rule out live-code
+consumers but not every possible offline consumer — the judgment call requiring operator sign-off was about WHETHER to
+delete at all (reasons a/c), which the operator already resolved by authorizing Option A below; only the delete's
+EXECUTION mechanics changed with the reversibility fix, not the judgment call itself.
 
 ## Disposition (main, 2026-07-25)
 
 Interim: **leave `day=all` in place** (Option C below) — this investigation is the deliverable; the AO-dispatched todo
 (`sports_satellite_ao_dispatch_batch2_2026_07_24.md`) is closed as resolved-as-investigated on that basis. Two items
-remain genuinely escalated to the operator, not re-opened as worker-dispatchable work: (1) authorize/decline the
-irreversible delete of the two `day=all` objects (Option A — soft-delete=0, no recovery net); (2) the TEAMS FLAT-layout
-design decision (Option B — net-new UAC layout vs fold into per-day-per-league). This doc stays `open` until the
-operator rules on either.
+remain genuinely escalated to the operator, not re-opened as worker-dispatchable work: (1) authorize/decline the delete
+of the two `day=all` objects (Option A — was soft-delete=0/no recovery net at the time, now fixed, see below); (2) the
+TEAMS FLAT-layout design decision (Option B — net-new UAC layout vs fold into per-day-per-league). This doc stays `open`
+until the operator rules on either.
 
 ## Options
 
@@ -166,11 +172,16 @@ the todo's own quoted dates.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **🟢 AUTHORIZED 2026-07-25 (operator, in-session) — Option A.** Delete
+- [ ] [SCRIPT] P2. **🟢 AUTHORIZED 2026-07-25 (operator, in-session) — Option A.** Delete
       `sports_reference/by_date/day=all/entity=teams/teams.parquet` and
       `sports_reference/by_date/day=all/entity=venues/venues.parquet` in
-      `instruments-store-sports-prd-central-element-323112` (soft-delete=0, irreversible), following
+      `instruments-store-sports-prd-central-element-323112`, following
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`: backup-copy both objects to a `_legacy_archive/`
-      prefix (or equivalent) first, verify the backup, then delete the originals, then verify gone. Prod-bucket delete,
-      human-gated — no agent runs this. Done-when: both objects removed from the live path, backup copies confirmed
-      present, corresponding manifest rows (if any) cleared.
+      prefix (or equivalent) first, verify the backup, then delete the originals, then verify gone. **No longer
+      `[OPERATOR]`-gated — reversibility-verified** (finding T, `task_template.md`): object-level delete only (2 named
+      objects, never the bucket) — `gcs_bucket_soft_delete_retention_seconds(...)` returned `604800` (7 days)
+      fresh-checked 2026-07-27 per §3a (this bucket was the one that had soft-delete disabled at authoring time; fixed
+      2026-07-26). Re-query fresh before running, not from this citation. The operator's Option-A authorization already
+      covers the judgment call on the residual unconfirmed-offline-consumer risk (Finding 3) — the backup-copy-first
+      step stays as extra safety margin regardless. Done-when: both objects removed from the live path, backup copies
+      confirmed present, corresponding manifest rows (if any) cleared.

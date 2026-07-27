@@ -55,7 +55,7 @@ referenced_by:
     /codex/02-data/orphan-object-detection.md,
   ]
 owner:
-last_reviewed: 2026-07-26
+last_reviewed: 2026-07-27
 code_refs:
   [
     unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py,
@@ -232,12 +232,15 @@ structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it doe
    object or row whose only non-canonical attribute is `instrument_type` casing is a `migration_pending` fold-UP item
    (repaired in place, **never a delete candidate**), and prod-scale casing rewrites (>12M rows, incl. defi rows not yet
    folded UP) remain a human-only hard stop. See § 4.
-5. **The defi `dex_pools/` + `lending_indices/` delete.** The standing delete orders in
-   `defi_consolidated_closeout_2026_07_18.md` Track 2 and `canonical_closeout_open_questions_2026_07_18.md` §A6 are
-   **STALE and would destroy data** — overturned by R5 in the same plan (Part 2 above). Current disposition is
-   FOLD-not-delete, in the order: (1) content-UNION the 32 legacy-only pools and the twin-less cells into canonical; (2)
-   repoint `execution-service/execution_service/providers/solana_amm_depth_provider.py` to `data_type=dex_pool_state`
-   and fix its raising `resolve_bucket_name` call; (3) only then consider delete. Issue doc:
+5. **The defi `dex_pools/` + `lending_indices/` delete — ✅ RESOLVED 2026-07-21 (folded, then deleted).** The standing
+   delete orders in `defi_consolidated_closeout_2026_07_18.md` Track 2 and
+   `canonical_closeout_open_questions_2026_07_18.md` §A6 were **STALE and would have destroyed data** — overturned by R5
+   (Part 2 above), corrected to FOLD-not-delete: (1) content-UNION the 32 legacy-only pools + twin-less cells into
+   canonical; (2) repoint `execution-service/execution_service/providers/solana_amm_depth_provider.py` to
+   `data_type=dex_pool_state` and fix its raising `resolve_bucket_name` call; (3) **then** delete. All three steps
+   executed — 648 legacy-only Solana twins folded + verified, the reader repointed, operator prod-deleted the legacy
+   prefixes (now 0 objects). Residual: the twins' manifest rows are still unregistered — tracked separately, not a
+   delete-safety concern. **Retained here as a worked example**, not as an open stop. Issue doc:
    `plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`.
 
 **Not a hard stop, but adjacent**: manifest-row deletion via a phantom-audit `--apply`. That has its own gate —

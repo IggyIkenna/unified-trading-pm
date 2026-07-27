@@ -71,6 +71,9 @@ resolved_by:
 
 # launch-mdps-features-live.sh compound-VM_SERVICE / archived-repo bug
 
+> **🟢 ARCHIVED 2026-07-27** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
+
 ## What I found (corrected — see Update below for the real root cause)
 
 Launched `mdps-features-live-cefi-20260726-202458` as a brief verification that the MDPS+features live pipeline boots

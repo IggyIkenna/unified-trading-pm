@@ -142,7 +142,7 @@ per-venue twin-coverage sampling, content-match results, and the writer-side (Pa
       per-instrument leaf + a `_migrated_*` marker at the same shard path and asserting only the real leaf is
       matched/read (the marker's mock raises `AssertionError` if ever downloaded — never fires). `quality-gates.sh`
       green: 17826 passed, 209 skipped, 0 failed, sentinel `.qg_last_passed_sha` == HEAD before quickmerge.
-- [ ] [OPERATOR] P2. **Re-verify + purge, only after the reader fix lands.** Re-run this delete-safety proof (or the
+- [ ] [SCRIPT] P2. **Re-verify + purge, only after the reader fix lands.** Re-run this delete-safety proof (or the
       sanctioned `delete_migrated_defi_markers_2026_07_23.py --dry-run`, which already implements the correct per-marker
       SAFE/FLAGGED disposition logic) with the reader fixed, then execute `defi_dex_pool_symbol_fix_backfill_purge-001`
       only for the SAFE population — never a blind glob-delete of "every `_migrated_*` lst_rates object for these 4
@@ -158,5 +158,10 @@ per-venue twin-coverage sampling, content-match results, and the writer-side (Pa
       before/after table in `plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s Progress Log). 12 of
       the newly-written leaves (3/venue) were read back directly and confirmed non-empty with the full wide schema
       intact. **The re-verify half of this todo is therefore done** (see that Progress Log for the full evidence) — only
-      the **purge itself** remains, still correctly `[OPERATOR]`/un-executed/un-checked (prod-bucket delete, human-only
-      per this doc's own citation).
+      the **purge itself** remains, un-executed/un-checked. **2026-07-27 update — no longer `[OPERATOR]`-gated:
+      reversibility-verified** (finding T, `task_template.md`): object-level delete only, target
+      `market-data-tick-defi-prd-central-element-323112` — `gcs_bucket_soft_delete_retention_seconds(...)` returned
+      `604800` (7 days) fresh-checked 2026-07-27 per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a.
+      Re-query fresh before running, not from this citation. See
+      `plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 1 for the executable form of this same
+      purge.
