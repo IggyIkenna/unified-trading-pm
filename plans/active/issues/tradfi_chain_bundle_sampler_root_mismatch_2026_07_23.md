@@ -155,6 +155,30 @@ the reverse-translation step deliberately (probably scoped inside
 (non-micro) contract code) rather than a blind dict inversion. Not attempted in this session — flagged for operator
 input on which registry wins and which contract family the checker should prefer.
 
+- [ ] [DATA] P1-OPERATOR-DECISION. **CONFIRMED — this mismatch is NOT CME-only; it also hits CBOE/VX (2026-07-27).**
+      Re-verifying `tradfi_phase_d_terminal_gate_2026_07_24.md`'s "still in-flight" CBOE force+skip check
+      (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, launched
+      2026-07-24 12:43 UTC against `mtds-code@0205eaab` — the build that added `CBOE → "VIX"` to
+      `_CHAIN_UNDERLYING_FALLBACK`) found the identical symptom on BOTH force legs' raw `run.log`:
+      `DatabentoAdapter:     instrument_ids filter ['VIX'] matched nothing for venue=CBOE dataset(s)=['XCBF.PITCH'] — 2 curated symbol(s)     available (['VX', 'VX.FUT'])`
+      → `0 records` → `SHARD_INCOMPLETE`. This is the exact same canonical-root (`VIX`) vs raw-Databento-symbol
+      (`VX`/`VX.FUT`) class this doc already names — confirmed by this doc's own exhaustive diff, where `VX`/`VIX` is a
+      **match** entry (both UAC files agree). The `mtds@0205eaab` fix correctly routed CBOE ohlcv_1s/1m into
+      bundled-chain sampling but did NOT add the reverse translation, so every CBOE VX-futures force-leg re-fetch
+      silently writes 0 records — masked in the automated checker's own report
+      (`plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_13_cboe_reverify.md`, both force legs read
+      `passed`/`parquet=2`/`manifest=captured`) because that "captured" data is a PRE-EXISTING shard from an earlier
+      run, not proof of this run's own fetch — the checker does not distinguish "wrote fresh data" from "manifest
+      already satisfied by an older write" on a force leg. Evidence:
+      `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-tradfi-pipelinecheck-20260724-124343-3b5c3d/run.log`
+      (ohlcv_1s force) and
+      `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-tradfi-pipelinecheck-20260724-125331-e7f533/run.log`
+      (ohlcv_1m force); full record in `plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md` § "2026-07-27 — CBOE
+      terminal-state re-check". **Done when**: the §4 reverse-translation fix (once the operator resolves the
+      `EXCHANGE_CODE_TO_NAME` SSOT question) is scoped to cover CBOE's `VIX → VX`/`VX.FUT` case alongside CME's, and a
+      fresh CBOE force-leg re-verification shows a genuine (non-stale) `0 records` → nonzero transition. Not
+      AO-dispatchable — blocked on the same operator SSOT decision as §4, not a worker-determinable fact.
+
 ## Exhaustive `EXCHANGE_CODE_TO_NAME` diff (2026-07-26)
 
 Enumeration-only (no dict edited, no authoritative choice made). Produced by importing both dicts directly

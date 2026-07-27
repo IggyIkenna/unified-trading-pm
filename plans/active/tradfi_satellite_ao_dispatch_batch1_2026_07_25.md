@@ -86,18 +86,21 @@ drift_direction: advance-code
       either cited-and-kept with evidence, or corrected to the real state with a citation; (b) the dry-run output
       (report path + row count) is posted into the doc's Progress Log; `--apply` is NOT run in either step. Source:
       `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`.
-- [ ] [DIAG] P1. Confirm the terminal-state of the in-flight CBOE force+skip re-verification VM launched at the
-      2026-07-24 session's wrap-up
-      (`data-pipeline-check-mtds --asset-group TRADFI --venue CBOE --data-types     ohlcv_1s,ohlcv_1m --day 2026-07-13 --legs force,skip --require-captured --auto-day`,
-      against code tarball `mtds-code@0205eaab...`) — read the VM's `run.log` and/or the manifest state to determine
-      whether CBOE force+skip for both ohlcv_1s and ohlcv_1m passed cleanly, or failed; if the original VM/its artifacts
-      are no longer reachable (>24h elapsed since launch), re-run the identical command fresh against the current
-      `market-tick-data-service` codebase rather than searching for a phantom VM. Record the definitive verdict +
-      evidence citation in this doc, replacing the "Still in-flight" note. Repo: market-tick-data-service. **Done
-      when**: a definitive pass/fail verdict for CBOE ohlcv_1s+ohlcv_1m force+skip legs is recorded in
-      `plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md` with an evidence citation (a VM run.log GCS path, or a
-      `plans/audit/results/` report path if freshly re-run), replacing the "Still in-flight at session end" row in the
-      Deferred-work table. Source: `tradfi_phase_d_terminal_gate_2026_07_24.md`.
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-2)** — Confirmed the terminal-state of the in-flight CBOE force+skip
+      re-verification VM launched at the 2026-07-24 session's wrap-up. The VM had already completed (4 per-shard VMs,
+      all `EXIT_STATUS=0`, self-deleted); read directly from raw `run.log` rather than trusting the checker's summary
+      label alone. **Definitive verdict: MIXED, not a clean pass** — both skip legs (`ohlcv_1s`, `ohlcv_1m`) genuinely
+      passed (manifest-driven `skip_proof: genuine`); both force legs wrote 0 fresh records
+      (`DatabentoAdapter: instrument_ids filter ['VIX'] matched nothing for venue=CBOE ... curated symbol(s)     available (['VX', 'VX.FUT'])`
+      → `SHARD_INCOMPLETE`) and only read "passed" in the checker's report because a pre-existing captured shard from an
+      earlier run already satisfied the manifest check. Root cause: the same canonical-root (`VIX`) vs
+      raw-Databento-symbol (`VX`/`VX.FUT`) mismatch already tracked as open in
+      `plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4 (previously known CME-only, now
+      confirmed to also hit CBOE) — logged as a new instance there, not a separate issue doc, since it's the identical
+      operator-gated design question. Full record + evidence citations (VM names, GCS run.log paths, report path) in
+      `plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md` § "2026-07-27 — CBOE terminal-state re-check", replacing
+      the "Still in-flight" note and Deferred-work row. No code changes (DIAG-scoped; the fix itself stays tracked at
+      the issue doc, not re-attempted here). Source: `tradfi_phase_d_terminal_gate_2026_07_24.md`.
 - [ ] [DOC] P1. Add the two Phase-D pipeline-check launcher name patterns as named candidates in
       `vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8/9 scoping list. `mtds-backfill-*-pipelinecheck-*`
       and `instr-backfill-*-pipelinecheck-*` are registered in the fleet relaunch machinery by launcher-prefix match but
