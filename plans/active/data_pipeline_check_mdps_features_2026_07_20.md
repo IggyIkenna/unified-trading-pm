@@ -445,7 +445,12 @@ the ones already in candles) and do features service across all shards too"_
   live scope + gate condition live in the one post-split todo. NOT re-attempted this session — no value in a 6th
   reproduction of an already-diagnosed, still-open P1 blocker. Original text (was
   `- [ ] NEW todo.     [DATA] P0. Run /data-pipeline-check-mdps across all relevant AGs NOT already in candles.`).
-- [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-features` across ALL shards (8 families x valid AGs).
+- [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-features` across ALL shards (8 families x valid AGs). **`--day`
+      RULED 2026-07-27 (BLK-f2039422, main)**: `--day 2026-07-05` — matches the sibling `/data-pipeline-check-mdps` run
+      in this plan that auto-resolved to + direct-GCS-verified this exact day 4-5x (a settled, high-coverage day, no
+      feature-computation-lag risk); NOT a synthesized default (honors the skill's own hard rule). If the shared-host
+      session-teardown (`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`, still open) hits mid-run,
+      `/progress` it as the known P1 rather than blind-retrying.
 
 ### 2026-07-20 — ✅ SPOT preemption auto-recovery was NOT fleet-wide; now it is (`deployment-service@c79f984`)
 
