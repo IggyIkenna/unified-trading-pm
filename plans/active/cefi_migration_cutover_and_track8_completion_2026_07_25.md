@@ -652,3 +652,31 @@ every todo executes an already-decided spec from the parent doc.
   instruction — this will span several more resumed turns given the ~5h projected remainder; next checkpoint will follow
   once either a new preemption is found, a meaningful batch of shards completes, or another natural pause point is
   reached.
+- **2026-07-27T06:30Z (scheduled 30-min check-in) — 3 shards OOM-killed (`rc=137`), NOT genuine completions; relaunched
+  with reduced concurrency; fleet-wide memory-risk sampled, no reliable early-warning signal found.** Fresh poll found 4
+  `EXIT_STATUS` objects (up from 1) — first read as 4 completions, but direct verification caught the real signal:
+  `cs8-1d`, `cs10-2d`, `cs10-3d` all show `EXIT_STATUS=137` (SIGKILL/OOM, matching the ORIGINAL cs8 OOM signature from
+  the pre-campaign measurement) with NO `SCRIPT 1 CONTENT MIGRATION SUMMARY` block — genuinely killed mid-run, not
+  completed (`bash: ... Killed` + `rc=137` in each `run.log` tail). Only `cs1-1r` (769 files) is a real `EXIT_STATUS=0`
+  success. **This means the earlier "e2-standard-16 fixes the OOM" conclusion from the canary was WRONG or incomplete**
+  — these 3 are ALSO `e2-standard-16`, same as the canary that looked clean; OOM recurred anyway. **Diagnosed, not
+  blindly retried**: sampled `bytes_read` across ~37 of the other currently-running shards (a `--workers 24` fleet) —
+  found several perfectly healthy shards ALREADY well past the ~47-52GB `bytes_read` level the 3 OOM'd shards died at
+  (e.g. `cs7-1d` at 113GB, `cs4-1d`/`cs5-2d` at ~107GB, `cs3-1d` at 102GB, all still running fine) — so cumulative
+  bytes-read is NOT a reliable OOM leading indicator; this looks like transient bad luck of many large files (likely
+  `book_snapshot_5`-heavy days) converging on the SAME worker pool at once, not a deterministic per-shard property.
+  **Mitigation applied**: relaunched all 3 with identical date ranges + `ON_DEMAND` + `e2-standard-16`, but
+  `--workers 10` (down from 24) — fewer concurrent workers directly caps peak concurrent per-file memory buffers (each
+  in-flight file costs ~2-4 buffers: download bytes, parsed DataFrame, patched copy, serialized write bytes, plus a
+  second read+parse on the immediate post-write verify), so this should reduce recurrence probability without needing a
+  corpus-wide restart. **Deliberately did NOT preempt/restart the other ~37 healthy, already-progressed `--workers 24`
+  shards** (several 30-60%+ through their own file counts, e.g. `cs7-1d` at 38,600/72,064=54%, `cs6-4r` at
+  26,000/83,490=31%) — killing healthy progress on a THEORETICAL risk that hasn't materialized for them costs more
+  (redone idempotent work) than it saves; the policy going forward is REACTIVE, evidence-based recovery (any shard that
+  OOMs gets relaunched at `--workers 10`), not a blanket preemptive derate. **New VM names**: `cs8-1d2`, `cs10-2d2`,
+  `cs10-3d2`. **Fleet state 06:30Z**: 41 RUNNING + 1 genuine completion (`cs1-1r`) = 42 accounted for, 0 new preemptions
+  (still exactly 42 preemption-ops, unchanged), 1 isolated `read_error=1` noted in `cs8-6d`'s stats (per-file isolation
+  — the tool counts and skips, does not abort the run; not itself a failure mode needing action, just noted for the
+  record). **Whoever continues this: watch for MORE `EXIT_STATUS=137` completions going forward** (not just `=0`) —
+  treat any as an OOM, relaunch same date-range at `--workers 10` (or lower, e.g. 6, if 10 recurs), never assume a fresh
+  `EXIT_STATUS` object means success without checking its actual value + the run.log's SUMMARY block.
