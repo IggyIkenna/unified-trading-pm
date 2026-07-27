@@ -198,9 +198,20 @@ Two independent gates because Group A and Group B are at different stages:
 > now genuinely unblocked on the listing gap, but still needs this re-derivation pass before it's ready to apply — not
 > done in this update.
 
-- [ ] [TERRAFORM] P1.1. Define per-tier SAs (`uts-dev-sa`, `uts-stg-sa`, `uts-prd-sa`) + a dedicated **migration SA**
-      (`uts-migration-sa`, cross-tier write — the sanctioned exception, used only by
-      `*_service/scripts/migration_*.py`).
+- [x] ✅ [TERRAFORM] P1.1. **SHIPPED 2026-07-27 (slot-8) — `deployment-service@72c78a8`.** Defined + applied all 4 SAs
+      in `terraform/gcp/bucket_iam_per_tier_sa.tf`: `uts-dev-sa`, `uts-stg-sa`, `uts-prd-sa`, `uts-migration-sa`
+      (cross-tier write, the sanctioned exception for `*_service/scripts/migration_*.py`). Targeted `tofu apply` against
+      the real `terraform/state/prod` backend (confirmed authoritative — it already holds the live
+      `google_service_account.unified_trading` resource main.tf declares); plan showed exactly 4 adds, 0
+      changes/destroys. Live-verified via `gcloud iam service-accounts list`: all 4 emails exist
+      (`uts-{dev,stg,prd,migration}-sa@central-element-323112.iam.gserviceaccount.com`). **No IAM role bindings
+      granted** — these are P1.2's scope, deliberately out of this todo (the 2026-07-25 finding above that Group A's
+      real buckets are `-test-/-prd-` only, not `-dev-/-stg-`, affects which suffixes P1.2 binds each SA to, not whether
+      the SA resources themselves should exist — an empty, unbound SA grants zero access either way). Tooling note: this
+      session's environment needed `tofu` (OpenTofu, matches the pre-existing `registry.opentofu.org` lock-file entries)
+      rather than the repo's much older pinned `terraform` v1.5.7 binary (protocol-incompatible with the resolved
+      `google` provider v7.41.0), and a short `TMPDIR`/`TF_DATA_DIR` (a long scratchpad path broke the provider plugin's
+      unix-socket handshake — `Unrecognized remote plugin message`/ "Failed to read any lines from plugin's stdout").
 - [ ] [TERRAFORM] P1.2. Replace the project-wide `roles/storage.objectAdmin` with **per-suffix bindings**: dev SA →
       `objectAdmin` on `*-dev-*`; stg SA → `*-stg-*`; prd SA → `*-prd-*`; all SAs + CI/CD + developer identities →
       `objectViewer` broadly (read-anything) but **read-only on `*-prd-*`**. Apply to **Group A buckets first** (they
