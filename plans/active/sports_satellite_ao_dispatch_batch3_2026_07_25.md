@@ -67,11 +67,11 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P1. **Build the alias→canonical league_id mapping for the 85 contaminated
-      `day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule` league folders and check GCS for
-      existing canonical-folder fixtures data (read-only, no PROD write/delete).** For each of the 85 raw folder names
-      (e.g. `ARGENTINA_RESERVE_LEAGUE`, `ENGLAND_CHAMPIONSHIP`, `ITALY_SERIE_B`, `SAUDI_ARABIA_PRO_LEAGUE`, ... — full
-      list re-derivable via a bounded listing of
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-10)** — **Build the alias→canonical league_id mapping for the 85
+      contaminated `day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule` league folders and check
+      GCS for existing canonical-folder fixtures data (read-only, no PROD write/delete).** For each of the 85 raw folder
+      names (e.g. `ARGENTINA_RESERVE_LEAGUE`, `ENGLAND_CHAMPIONSHIP`, `ITALY_SERIE_B`, `SAUDI_ARABIA_PRO_LEAGUE`, ... —
+      full list re-derivable via a bounded listing of
       `sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule/` and
       identifying the instrument-catalogue-shaped shards, same method the issue doc used), compute the UAC
       prediction-tier league registry's own `build_league_id(country, league_name)` value for every registered league
@@ -88,7 +88,22 @@ drift_direction: advance-code
       this issue doc or a linked scratch doc) lists, for each of the 85 affected league folder names: (1) the matched
       canonical league_id or "no match", and (2) whether canonical-folder `day=2026-04-14` fixtures data already exists
       and its schema-correctness. No PROD GCS object is written, moved, or deleted. Source:
-      `issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`.
+      `issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`. **This exact gate-(b)/(c) investigation was
+      already fully completed by slot 11 (mapping) and slot 2 (GCS check) on 2026-07-25T05:45Z, and the corresponding
+      remediation write already shipped (`instruments-service@a9f42320`, DATA P2 in the same issue doc, DONE
+      2026-07-25T11:16Z) — the source issue doc had since moved to `plans/archive/issues/` with all 4 of its own todos
+      checked, which the 2026-07-25 orphan-audit apparently missed before drafting this batch. Rather than re-deriving
+      the 85-name mapping from scratch (duplicate work — and the todo's own suggested "iterate every registered league
+      entry through `build_league_id()`" method is less robust than gate-(b)'s already-verified reverse-catalog
+      approach, which achieved a clean 0-unmatched result), ran a bounded, read-only re-verification of the two things
+      that could have drifted since: (1) confirmed 0/35 unregistered leagues have since been registered and 0/50
+      previously-matched canonical league_ids have dropped out of `LEAGUE_REGISTRY`; (2) live-checked all 50 registered
+      canonical `day=2026-04-14` fixtures_schedule shards — all 50 now read with the correct schema (confirming the
+      instruments-service@a9f42320 write genuinely landed, not just the checkbox claim), zero contaminated/missing/
+      errors. Full written report appended as a new dated section to the archived issue doc
+      (`plans/archive/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` §"Post-remediation verification of
+      the 85-league mapping + GCS state (2026-07-27, slot-10, data_engineering)"). No PROD GCS object was written,
+      moved, or deleted — verification only.**
 - [ ] [CODE] P1. **Close the PRIMERA_DIVISION (Chile) Odds-API team-name alias gap** — re-run the shipped
       `FixtureIdResolver`/`validate_team_resolution()` match-rate measurement (mirroring this doc's own methodology)
       against every real captured `pipeline_mode=batch_odds_api` PRIMERA_DIVISION day currently in bucket
@@ -291,6 +306,17 @@ written up, not just pointed at). The 2 `doc_too_large_or_risky_for_batch` docs 
 dedicated pass.
 
 ## Progress Log
+
+- **2026-07-27 (slot-10)** — Worked the "85-contaminated-league alias→canonical mapping" todo. Found the source issue
+  doc (`sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`) had already moved to `plans/archive/issues/` with all
+  4 of its own todos checked — gate (b) mapping + gate (c) GCS check (this todo's exact ask) were done by slot 11/slot 2
+  on 2026-07-25T05:45Z, and the remediation write already shipped (`instruments-service@a9f42320`). Ran a bounded,
+  read-only re-verification instead of re-deriving from scratch: confirmed no `LEAGUE_REGISTRY` drift on either side of
+  the 85 (0/35 newly registered, 0/50 dropped), and live-checked all 50 registered canonical `day=2026-04-14` shards —
+  all 50 now read with the correct fixtures schema, confirming the prior remediation genuinely landed. Report appended
+  to the archived issue doc's new "Post-remediation verification" section. No PROD write/delete; no code shipped (this
+  was a read-only investigation todo by design — see the todo's own "covers ONLY the read-only investigation" text). No
+  file collision with any other in-flight batch3/batch4 todo (touched only the archived issue doc + this plan file).
 
 - **2026-07-26 (slot-7)** — Worked the `lifecycle-catalogue-regen` events-sink IAM-grant todo. Confirmed the bucket name
   ambiguity in the todo's own text resolves to `central-element-323112-events` (the `live_event_log` Terraform module's
