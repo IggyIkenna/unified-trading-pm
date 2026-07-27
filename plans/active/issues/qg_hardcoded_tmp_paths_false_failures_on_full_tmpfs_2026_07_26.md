@@ -150,3 +150,33 @@ ways the same hardcoded-shared-filename design fails.
       account's crontab access) to actually land. **Done when**: `crontab -l` on this host shows both marker lines
       (`# cleanup-stale-qg-tmp`, `# cleanup-stale-claude-session-tmp`) and a subsequent `/tmp` check shows meaningfully
       more free space than the 100%-full state that triggered this doc.
+
+## Update 2026-07-27 (slot-4, ag_closeout_auditor) — THIRD failure mode, this time on the ROOT filesystem, not just /tmp
+
+While shipping `defi_satellite_ao_dispatch_batch5_2026_07_27.md`, a `quickmerge.sh --agent` attempt failed with the
+plan-hygiene pre-commit hook reporting `missing required field: parent_epic/title/priority/status/estimate_class/...` on
+THREE files that visibly and unambiguously carry every one of those fields (confirmed by direct `grep` immediately after
+— `parent_epic:`/`title:` both present, count=1 each). The same run's stderr showed the real cause:
+`awk: ... warning: error writing standard output: No space left on device` for all three files, at the exact FNR
+line-numbers the frontmatter parser would be reading. `df -h /` at that moment showed `/dev/root 290G 288G 2.4G 100% /`
+— i.e. this is NOT the 2GB `/tmp` tmpfs this doc's Fixed section already addressed; it's the 290GB ROOT filesystem
+itself (which `/home` shares — same device), independently near-exhausted. By the time a later retry succeeded (~10
+minutes later), `df -h /` read `290G 289G 1.2G 100% /` — i.e. the condition is ACTIVELY WORSENING in real time, not a
+one-off blip. Two sibling slots independently hit and documented the same root-disk-exhaustion class in the same window:
+`issues/host_root_disk_full_transient_2026_07_13.md` (earlier occurrence) and
+`issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` (concurrent RAM-pressure symptom, same host, same
+session).
+
+**New failure mode for this doc's tracking purposes**: the plan-hygiene pre-commit's own frontmatter-schema check (an
+`awk`-based parser, NOT one of the ~35 `base-service.sh` `/tmp/*_qg.log` sites already fixed) silently mis-reports
+"missing required field" — a CONTENT-shaped error message — when its stdout write hits ENOSPC mid-file, on a filesystem
+it doesn't control the fullness of. This is the same failure SHAPE as this doc's original finding (a disk-write failure
+surfacing as a false content/logic error, sending whoever hits it down the wrong debugging path) but a DIFFERENT script
+(plan-hygiene, not base-service.sh) and a DIFFERENT filesystem (root disk, not the 2GB tmp tmpfs) — so the existing
+"Fixed" section's `${TMPDIR:-/tmp}` remediation does not cover this instance; there is no `/tmp` redirect to fix here,
+the disk itself is the constrained resource. Retrying (fetch + `git merge --ff-only` + re-run) worked once transient
+headroom returned, so this is not a hard block, but it burned ~6 unnecessary retry cycles before the true (external,
+unfixable-by-me) cause was clear each time. Not filing a new todo — the existing P2 operator ask (register the cleanup
+crons on this host) is the correct remedy already tracked above; flagging here only because it's evidence the condition
+is both broader (root disk, not just tmp) and actively worsening, which raises the urgency of that existing todo. No
+content of this doc's existing Todos changes.
