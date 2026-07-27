@@ -23,8 +23,8 @@ summary: >
   documented action "Recreated `IggyIkenna/agent-orchestrator` native" (the repo was a fork of
   `CosmicTrader/orchastrator` and had to be re-created as a native repo, not transferred). The most likely explanation
   is the `GCP_SA_KEY` secret was re-set during that repo recreation with an empty/truncated value (a copy-paste or
-  empty-stdin mistake), and — per `codex/07-security/gha-wif-migration.md`'s own fleet audit table — the WIF pool for at
-  least one other repo/workflow in this exact migration was already flagged `BLOCKED-OPERATOR (WIF pool not
+  empty-stdin mistake), and — per `/codex/07-security/gha-wif-migration.md`'s own fleet audit table — the WIF pool for
+  at least one other repo/workflow in this exact migration was already flagged `BLOCKED-OPERATOR (WIF pool not
   provisioned)`, so agent-orchestrator's WIF secrets were likely never provisioned at all (not lost — never set).
 
   **Why not fixed in this session**: regenerating/rotating a live GCP service-account-key secret (or provisioning a new

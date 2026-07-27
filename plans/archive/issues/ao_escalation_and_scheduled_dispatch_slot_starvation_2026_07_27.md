@@ -41,6 +41,9 @@ source:
   — "fix and implement that in full too."
 ---
 
+> **🟢 RESOLVED 2026-07-27** — `ORCHESTRATOR_ESCALATION_SLOT_RESERVE` shipped, QG green including 2 new regression
+> tests, fleet-worker-cap raise applied and verified live.
+
 # Escalation + scheduled-dispatch slot starvation — 2026-07-27
 
 ## What I found

@@ -45,6 +45,9 @@ source:
   watching several episodes auto-recover (RECOVERED bookends for slots 4, 7, 12 all within ~20 minutes of their pages).
 ---
 
+> **🟢 RESOLVED 2026-07-27** — `GIT_RED_SUSTAIN_S` raised 50m->90m, stale hardcoded threshold text fixed, QG green (48
+> tests passing across both affected files), shipped via quickmerge.
+
 # Fleet-git RED threshold too tight for long-task slots — 2026-07-27
 
 ## What I found
