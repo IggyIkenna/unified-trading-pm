@@ -313,17 +313,15 @@ source: >-
 > `venue=CME/data_type=ohlcv_15m`). Operator guidance (2026-07-23): genuinely-tiny irrecoverable loss is acceptable; the
 > priority is getting this resolved properly, with any new code change tracked here, not done ad hoc.
 
-- [ ] [DATA] P1. **Survey raw-tick source availability across the full quarantine population** (not just one sampled
-      day). Spot-check 2026-07-23 on `day=2022-06-05`, `venue=CME`, `data_type=ohlcv_15m`: `raw_tick_data/` has **zero**
-      objects under `batch_databento` (only `venue=FX` present that day), **zero** under `batch_massive`, **zero** under
-      `batch_yahoo` — i.e. no obvious raw source for THIS sample, unlike CEFI's equivalent bundle-collision case (a
-      different, already-verified-safe fix — out of scope for this TradFi plan) where raw ticks were confirmed intact.
-      Before deciding a fix strategy, enumerate the quarantine corpus's actual `(day, venue, data_type)` cells
-      (delimiter-descent, no full walk) and cross-check each against `raw_tick_data/` presence — this determines whether
-      "regenerate via MDPS backfill" is viable at all, versus needing per-object leaf-id content-repair (fragile, see
-      the migration script's `_content_resolve_tradfi`), versus some genuinely-unrecoverable slice (Massive was the
-      likely original CME-options source and was removed 2026-07-19 pending a gated GCS purge — check `batch_massive`
-      presence specifically before it's purged).
+- [x] ✅ [DATA] P1. **Survey raw-tick source availability — DONE 2026-07-27 (slot 14)** —
+      market-data-processing-service@fcfaa5e. Delimiter-descent survey
+      (`scripts/survey_tradfi_quarantine_raw_source_2026_07_27.py`): 712 days, 4,451 cells, 0 unparsed. **3,123 (70.2%)
+      recoverable / 1,328 (29.8%) unrecoverable** (no raw ticks in `batch_databento`/`batch_massive`/`batch_yahoo`).
+      Report: `market-data-processing-service/scripts/_tradfi_quarantine_raw_source_survey_2026_07_27.json`.
+      `batch_databento` backs all recoverable cells; `batch_massive`=ZERO (already purged 2026-07-21, this todo's
+      "before purged" text is stale). **Unrecoverable concentrated in `ICE`(853)/`CME`(368)/`CBOE`(107),
+      `ohlcv_1m`(699)/`ohlcv_15m`(342)/ `trades`(178)/`tbbo`(108), spans 677/712 days — looks systemic, not isolated.**
+      Handoff: not "genuinely tiny" — flag for BLOCKED-OPERATOR-DECISION in the next todo.
 - [ ] [DATA] P1. **Decide + execute the fix strategy per cell-class found above.** Likely NOT one uniform answer: cells
       with intact raw ticks → delete the quarantined candle object + targeted MDPS `--force` backfill re-derivation
       (clean, uses the already-correct writer, no per-object parquet surgery); cells with NO raw source → either accept
