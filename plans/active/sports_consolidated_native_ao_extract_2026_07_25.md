@@ -299,6 +299,27 @@ drift_direction: advance-code
       "re-check once the K1/K2 legacy-object DELETE executes" sub-part — gated on the still-operator-pending K1/K2
       delete (Track V), stays human/deferred to a follow-up once that delete lands. (repo: deployment-service, doc
       edit). **Done when**: the runbook note is added. Source: `sports_consolidated_closeout_2026_07_19.md:951-955`.
+- [ ] [DATA] P0. **Track F (follow-up) — VM-launched EXHAUSTIVE `derived_features` post-floor residue census + delete
+      (Jun-Dec 2020 + 2021-2026), superseding the interactive-session attempt at todo 1.** Todo 1's delete is already
+      agent-authorized (fresh `gcs_bucket_soft_delete_retention_seconds` on `features-sports-prd-central-element-323112`
+      independently re-confirmed `604800` on 2026-07-27, see Progress Log), but a bounded 60-day stratified sample
+      (2026-07-27, slot-14) found the true scope exceeds interactive-session bounds: 41/447 sampled
+      `feature_group=derived_features` objects (~9.2%) still carry a pre-`2026-07-19` creation timestamp, scattered
+      irregularly across 11/60 sampled days spanning the FULL 2020-2025 range with no era pattern (the per-day match cap
+      of 15 was hit on ~15/60 sampled days, so the true per-day population is higher than sampled — the real delete-list
+      is estimated in the LOW THOUSANDS of objects). This exceeds the heavy-I/O rule's interactive-session bound
+      (`/codex/05-infrastructure/vm-launcher-runbook.md` § heavy-I/O rule: "> few-hundred-object renames go on a VM
+      in-region, always") for both the exhaustive census and the delete. **Action**: launch a Tier-2 SPOT VM
+      (`deployment-service/scripts/vm/` — grep `VM_PREFIX_TO_BUCKET` first; reuse/extend an existing `launch-*.sh`
+      rather than hand-rolling a new name) to (1) walk the full
+      `sports_features/by_date/day={D}/*/     feature_group=derived_features/` prefix for the in-scope date range, (2)
+      snapshot the exact delete list, (3) fresh-re-check `gcs_bucket_soft_delete_retention_seconds` immediately before
+      deleting (do not reuse this or the 07-27 citation), (4) delete every object still pre-`2026-07-19` (excluding
+      pre-floor 2017-2019/pre-06-06-2020 dates, handled elsewhere), (5) re-census confirming 0 remain. (repo:
+      features-service / GCS `features-sports-prd-central-element-323112`, VM-executed). **Done when**: the VM's
+      post-delete census returns 0 post-floor `derived_features` objects with a pre-`2026-07-19` creation timestamp,
+      verified per the no-fire-and-forget rule (STARTED <60s, ≥1 progress/hr, STOPPED/FAILED, verified T+10min). Source:
+      todo 1 above + Progress Log 2026-07-27 (slot-14) sample.
 
 ## Classification notes — why every OTHER open native todo stays human
 
@@ -339,3 +360,26 @@ item). See the dispatching session's full report for the per-todo table.
   the full census + delete personally, or (b) files a dedicated, properly-VM- launched, single-walk-compliant follow-up
   plan for the exhaustive census + delete (Tier-2 SPOT VM, per the workspace heavy-I/O rule). Not flipping todo 1's
   checkbox — the substantive delete action has not occurred.
+- 2026-07-27 (slot-14, `data_engineering`): **Todo 1 (Track F derived_features purge) — expanded the sample, confirmed
+  agent-executable delete authorization, but escalated to a new VM-launched follow-up todo (added above) rather than
+  executing the delete interactively.** Re-verified the §3a fresh-retention gate independently, not trusting the todo's
+  own citation, per its own instruction:
+  `get_bucket_soft_delete_retention_seconds("features-sports-prd-central-element-323112")` = `604800` (== 7 days,
+  qualifies) — agrees with the 07-27 correction's citation. Expanded slot-12's 5-day sample to a bounded 60-day
+  stratified sample (capped scan per day, capped at 15 `derived_features` matches per day — 447 objects checked total,
+  still NOT exhaustive) across the full Jun-Dec 2020 + 2021-2026 range: 41/447 (~9.2%) still carry a pre-`2026-07-19`
+  creation timestamp (used GCS `updated`/`last_modified` as the proxy for `time_created` — the UTL storage abstraction's
+  `list_blobs`/`get_blob_metadata` does not expose raw `time_created`, and this artifact is write-once so the two are
+  expected to coincide in practice), found across 11/60 sampled days with no discernible pattern by era — residue and
+  non-residue days both appear in 2020, 2021, 2022, 2023, 2024, and 2025. Most striking: two adjacent stratified samples
+  21 days apart, `2020-10-10` (0/15 residue) and `2020-10-31` (15/15 residue), show the corpus flips between
+  fully-regenerated and fully-fabricated within a 3-week window — confirming there is no safe way to infer the delete
+  list from any date-range heuristic; it must be built from an actual object-level walk. The per-day match cap (15) was
+  hit on ~15/60 sampled days, meaning the true per-day population is higher than what was sampled on those days, so the
+  real full-corpus scope is almost certainly larger than a naive 9.2%-of-447 extrapolation would suggest. **Verdict**:
+  residue is real, material, and irregularly distributed across the ENTIRE date range (confirms + strengthens slot-12's
+  2026-07-26 finding with 12x the sample size); the true delete-list size is estimated in the LOW THOUSANDS of objects —
+  past the heavy-I/O rule's interactive-session bound. Filed a new todo for a VM-launched exhaustive census+delete: the
+  delete itself is now agent-executable (§3a, confirmed twice independently) — the remaining blocker is EXECUTION SCALE,
+  not authorization. Not flipping todo 1's checkbox — Steps 2/3 (delete, re-census) still have not run; the new
+  follow-up todo carries that work forward.
