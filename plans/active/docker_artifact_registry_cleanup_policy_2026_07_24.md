@@ -237,6 +237,10 @@ human-only.
 - [ ] 8. [OPERATOR] P2. Flip `unified-trading-system`'s policy live — human-only, permanent, no AR soft-delete/undelete;
       same human-gate discipline as
       [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md).
+      **Note (2026-07-27): that doc's §3a reversibility carve-out does NOT apply here** — §3a's fresh-check
+      (`gcs_bucket_soft_delete_retention_seconds`) is specific to GCS bucket objects; Artifact Registry Docker images
+      have no equivalent soft-delete/undelete mechanism at all, which is exactly why this todo already states the
+      correct AR-specific reason (irreversible, no undo) rather than the GCS reversibility question §3a addresses.
       Done-when: `gcloud artifacts repositories describe unified-trading-system --format="yaml(cleanupPolicies)"` shows
       the live policy.
 - [ ] 9. [INFRA] P2. Re-run the storage audit at T+2 days (cleanup runs as a ~daily background job) and confirm the
@@ -257,7 +261,13 @@ human-only.
       `get-lifecycle-policy-preview`; apply the same deployed-digest-keep principle. Done-when: a previewed ECR policy
       is presented to the operator for the same sign-off gate as Phase C.
 - [ ] 13. [OPERATOR] P3. Delete the legacy GCR bucket `gs://artifacts.central-element-323112.appspot.com` (8.9 GiB, GCR
-      is shut down) — human-gated prod delete, cite the delete-safety protocol. Done-when: the bucket is gone and the
+      is shut down). This is a whole-BUCKET destroy, which is never reversibility-qualified regardless of soft-delete
+      config (delete-safety-protocol §3a) — stays `[OPERATOR]`-gated (confirmed live 2026-07-27: the bucket itself
+      carries `soft_delete_policy.retentionDurationSeconds=604800`, but that only protects individual objects/versions
+      inside a bucket, not the bucket resource itself once deleted). Per §3a's approve-executes flow: stage the exact
+      delete command, open a structured BLOCKED question recommending "approve — execute now"; a FINAL operator answer
+      authorizes the SAME worker session to run it immediately (no second agent, no manual operator execution) — not the
+      old "an agent must never run it, a human runs it separately" framing. Done-when: the bucket is gone and the
       re-audit no longer lists it.
 - [ ] 14. [INFRA] P3. Stub `/codex/05-infrastructure/artifact-registry-cleanup-policy.md` — the per-package scoping
       decision, the keep-deployed-digest + keep-floor + delete-window pattern, and an explicit disambiguation of
