@@ -650,3 +650,61 @@ consolidator-race fix (`unified-trading-library@14301571`, 2026-07-24) by 2 days
 `/plans/archive/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. **Still genuinely outstanding**:
 `odds_horizon_bucket` (109,312 objects, needs MDPS `reprocess_sports_odds.py` Step-7) + `batch_footystats` (16,970
 objects, needs its own copy+swap pass) + the coverage-registry refresh + the human-gated final delete.
+
+## MERGED TRACKING 2026-07-27 — `LEAGUE_ID_TO_TIER` mapping + 28-unmapped-`league_id` gap analysis (from `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`)
+
+Per `sports_closeout_track_x_hygiene_2026_07_25.md` todo 2 (the canonical-form conflict between that plan and this
+closeout's Track V) — **this section is now the single settled location** for the two open gap-analysis items that
+plan's own "P1 — gap-analysis follow-ups" section tracks as its own todos 1-2. This is a tracking merge only: it does
+not implement the mapping, and the source plan's todos stay open there (still the execution home for that work) — this
+section exists so the mapping + gap list are visible from the league_id-migration tracking, not only from the
+originating plan.
+
+**⚠️ Vocabulary flag (the actual conflict this merge resolves):** the source plan's own text labels raw api-football
+display strings (`PREMIER_LEAGUE`, `BUNDESLIGA`, `SERIE_A`, `LA_LIGA`, …) plus the odds_api-native `SOCCER_*` machine
+keys as its **"canonical namespace"** (`sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` § "Input from P1c
+golden-window audit"). That label describes only the raw _observed_ league-id vocabulary from that plan's own 2026-06-27
+golden-window audit — it is **NOT** this closeout's canonical form. Per the Canonical target section above and this
+doc's own write-path fix (`mtds@ad4f1872`), the UAC `LEAGUE_REGISTRY` slug (`EPL`, `BUNDESLIGA`, `BUNDESLIGA_2`, …) is
+canonical; every raw display string and every `SOCCER_*` key is exactly the non-canonical `league_id` population this
+doc's relocation (§§1-9 above) already has a verified mapping for (`sportkey_canon_final.json` / `classification.json`,
+committed at `market-tick-data-service@b2a49317:scripts/sports/league_id_relocation/`). When the `LEAGUE_ID_TO_TIER`
+mapping (below) is eventually built, it should route both raw and `SOCCER_*` forms to the SAME canonical target already
+resolved there, not re-derive a second, parallel tier taxonomy keyed on non-canonical strings.
+
+**Coverage-tier mapping result (23 of 51 observed league_ids mapped, from the 2026-06-27 P1c Todo 4 cluster-validation
+audit)** — static validation against `sports_bookmaker_league_coverage.json` (27 bookmakers × 51 leagues):
+
+- `tier_1_domestic` (10 leagues): BUNDESLIGA, LA_LIGA, LIGUE_1, PREMIER_LEAGUE, SERIE_A, SOCCER_EPL,
+  SOCCER_FRANCE_LIGUE_ONE, SOCCER_GERMANY_BUNDESLIGA, SOCCER_ITALY_SERIE_A, SOCCER_SPAIN_LA_LIGA — expected bookmakers
+  (pinnacle, betfair_ex_uk, williamhill, unibet_uk) ALL PRESENT.
+- `tier_1_international` (1 league): SOCCER_UEFA_CHAMPS_LEAGUE — expected bookmakers (pinnacle, betfair_ex_uk,
+  williamhill) ALL PRESENT.
+- `tier_2_domestic` (12 leagues): 2._BUNDESLIGA, CHAMPIONSHIP, EREDIVISIE, FIRST_DIVISION_A, LIGUE_2, PRIMEIRA_LIGA,
+  PRIMERA_DIVISION, SEGUNDA_DIVISION, SERIE_B, SOCCER_BELGIUM_FIRST_DIV, SOCCER_NETHERLANDS_EREDIVISIE,
+  SOCCER_PORTUGAL_PRIMEIRA_LIGA — expected bookmakers (pinnacle, betfair_ex_uk) ALL PRESENT.
+
+**The 28 unmapped `league_id`s (no tier definition in UAC `EXPECTED_BOOKMAKER_MARKET_SETS`)**: A-LEAGUE, ALLSVENSKAN,
+EKSTRAKLASA, ELITESERIEN, J1_LEAGUE, K_LEAGUE_1, LIGA_MX, MLS, PREMIERSHIP, SOCCER_ARGENTINA_PRIMERA_DIVISION,
+SOCCER_AUSTRALIA_ALEAGUE, SOCCER_AUSTRIA_BUNDESLIGA, SOCCER_CHINA_SUPERLEAGUE, SOCCER_DENMARK_SUPERLIGA,
+SOCCER_GREECE_SUPER_LEAGUE, SOCCER_JAPAN_J_LEAGUE, SOCCER_KOREA_KLEAGUE1, SOCCER_MEXICO_LIGAMX,
+SOCCER_NORWAY_ELITESERIEN, SOCCER_POLAND_EKSTRAKLASA, SOCCER_RUSSIA_PREMIER_LEAGUE, SOCCER_SWEDEN_ALLSVENSKAN,
+SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPERLIGA, SUPER_LEAGUE, SUPER_LIG.
+**Overlap note**: SOCCER_CHINA_SUPERLEAGUE and SOCCER_RUSSIA_PREMIER_LEAGUE are 2 of these 28 — both were the "genuinely
+UNRESOLVED" leagues in this doc's own relocation work above, until the operator added them to `LEAGUE_REGISTRY`
+(`unified-api-contracts@beec78aa`, § "STATUS 2026-07-21"); they remain unmapped for the cluster-validation tier purpose
+tracked here, a separate, still-open gap from the relocation's own (now-resolved) registry-membership gap.
+
+**Required follow-up actions** (`sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` P1 todos 1-2, execution stays
+in that plan):
+
+1. Add a `LEAGUE_ID_TO_TIER` mapping (function or dict) to UAC routing each of the 51 observed league_ids to a
+   `LeagueTier` key in `EXPECTED_BOOKMAKER_MARKET_SETS`
+   (`unified_api_contracts/canonical/crosscutting/_honest_coverage_clusters.py` — `EXPECTED_BOOKMAKER_MARKET_SETS`
+   already exists there; `LEAGUE_ID_TO_TIER` does not yet, confirmed by a repo grep 2026-07-27). Without it, runtime
+   cluster-validation code cannot determine which expected bookmaker set applies to a given manifest row.
+2. Extend `EXPECTED_BOOKMAKER_MARKET_SETS` to cover the 28 unmapped league_ids above (or add a `tier_3_global` /
+   `no_expectation` tier for non-EU leagues the empirical audit determines have inconsistent bookmaker coverage).
+
+Cross-reference: `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` § "Gap analysis from P1c Todo 4 cluster
+validation" + § "P1 — gap-analysis follow-ups".

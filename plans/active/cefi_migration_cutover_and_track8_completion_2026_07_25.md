@@ -969,3 +969,32 @@ every todo executes an already-decided spec from the parent doc.
   fast, not full-cost). Honest read: 4 of 6 shards finish within ~1.5h; `cs8-6f` and `cs9-1d-r2` are the real unknowns
   and could run several hours past that — will re-baseline this estimate against measured throughput on the next
   check-in rather than assert a single number now.
+
+- **2026-07-27T~16:32Z (scheduled check-in) — 3 VMs RUNNING** (`cs3-2d`, `cs7-4d-r2`, `cs8-6f`). `cs10-5d`/`cs4-3d` both
+  confirmed clean (`EXIT_STATUS=0`). **`cs9-1d-r2` OOM'd (exit 137)** at only 5,600/159,332 files — its
+  `bytes_read`/file ratio (~19MB/file average, driven by a handful of enormous files) matches the DERIBIT dated-options
+  giant-file class already diagnosed earlier this campaign, and this shard had NEVER had `--exclude-venues` applied
+  (unlike `cs7-4d-r2`, which already excludes it). Relaunched as
+  `canonical-migration-cefi-content-apply-055803-cs9-1d-r3` with `--exclude-venues DERIBIT`; caught + republished 2
+  stale tarballs (`unified-api-contracts`, `deployment-service`) before they could matter. Checked all 3 currently-
+  running VMs for the new frozen-but-RUNNING failure class (per the operator's ask last cycle) — all 3 have fresh
+  `run.log` activity within 1-3 minutes of the check, no freeze. **ETA re-baseline**: `cs3-2d` (95.6%, 3.1 files/sec)
+  ~30min; `cs7-4d-r2` (87.1%, 7.3/sec) ~38min; `cs8-6f` (58.1%, 3.9/sec) ~5.7h — still the confirmed long pole;
+  `cs9-1d-r3` just restarted with DERIBIT now excluded, too early to rate — if it settles near `cs7-4d-r2`'s
+  post-exclusion rate (~7/sec) it'd be ~6.3h, but this is a rough guess pending real throughput data.
+
+- **2026-07-27T~17:57Z — operator asked whether the confirmed long pole (`cs8-6f`, ~5.7h ETA) could be resharded to
+  finish in under an hour instead. Yes — resharded it.** `cs8-6f` had no `PROGRESS.json` checkpoint (predates the fix)
+  and its date-range shard (`2024-12-19..2025-02-01`, 45 days, already excludes `HYPERLIQUID:ASTER:DERIBIT`) isn't
+  processed in strict date order, so there was no clean "resume from X%" cut point. Killed it and split the FULL 45-day
+  range into 8 sub-shards of ~6 days each (`cs8-6f-p0`..`cs8-6f-p7`), each launched with the SAME
+  `--exclude-venues HYPERLIQUID:ASTER:DERIBIT`; idempotent-skip means the ~60% already migrated by the killed VM costs
+  each sub-shard only a fast metadata-skip, not full reprocessing. All 8 confirmed `RUNNING`. Caught + republished a
+  `deployment-service` tarball that had drifted stale again since the last republish (a different slot pushed a new
+  commit in between) — this is now the 4th same-day hit of the tarball-staleness gap already tracked + P1-bumped in
+  `features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`. At 8-way parallelism, even at the
+  ORIGINAL single-VM's blended 3.9 files/sec (a lower bound — each VM now has less competing I/O and only needs to
+  scan+skip a fraction of the corpus, so real throughput per shard should be comparable or better), 8×3.9≈31 files/sec
+  aggregate vs. ~75,470 files remaining ≈ ~40min — should land the whole range well under an hour, matching the
+  operator's ask. Did NOT apply the same resharding to `cs9-1d-r3` yet (just relaunched, no throughput data to judge
+  whether it's actually a long pole) — will reshard it too if its rate stays slow on the next check-in.

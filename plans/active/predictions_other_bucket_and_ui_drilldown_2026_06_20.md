@@ -135,13 +135,21 @@ after each backfill VM run and recurring patterns promoted to first-class groups
 
 ## P2 — prediction sentinel fan-out
 
-- [ ] [SCRIPT] P2. **Prediction sentinel fan-out for `prediction_canonical_question_group` empty rows** — when a
-      canonical question group has zero markets trading on a given day, no
-      `data_type=prediction_canonical_question_group` `empty_confirmed` row is emitted today (the tier-2 sentinel only
-      emits `data_type=trades, SOURCE_RETURNED_ZERO`). Fix: after the finalize loop in `orchestrator.py`, fan out
-      `record_empty(SOURCE_RETURNED_ZERO)` for each CQG in the UAC canonical group registry not populated in
-      `prediction_cluster_counts_by_venue` for that (venue, day). Ensures the manifest denominator includes
-      zero-trading-day groups + the deployment-ui drilldown shows honest 0% for inactive CQGs rather than omitting them.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-27 (slot-11, via `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 4).**
+      **Prediction sentinel fan-out for `prediction_canonical_question_group` empty rows** — when a canonical question
+      group has zero markets trading on a given day, no `data_type=prediction_canonical_question_group`
+      `empty_confirmed` row is emitted today (the tier-2 sentinel only emits `data_type=trades, SOURCE_RETURNED_ZERO`).
+      Fix: after the finalize loop in `orchestrator.py`, fan out `record_empty(SOURCE_RETURNED_ZERO)` for each CQG in
+      the UAC canonical group registry not populated in `prediction_cluster_counts_by_venue` for that (venue, day).
+      Ensures the manifest denominator includes zero-trading-day groups + the deployment-ui drilldown shows honest 0%
+      for inactive CQGs rather than omitting them. **Result**: `_finalize_prediction_bundles`
+      (`market_tick_data_service/engine/orchestrator/manifest_finalize.py`) now fans out
+      `record_empty(reason="SOURCE_RETURNED_ZERO", fetch_evidence=...)` for every `CanonicalQuestionGroup` enum member
+      absent from a venue's `cqg_counts` that day, proven via the Tier-3 sentinel pattern's
+      `_reached_empty_fetch_evidence` helper. Unit-tested
+      (`test_finalize_prediction_bundles_emits_sentinel_for_absent_cqg`), `quality-gates.sh` green. Shipped
+      `market-tick-data-service@9a8b96c1`. (Note: the UI-facing success criteria below — playwright-verified drilldown,
+      `OTHER` bucket render — are NOT covered by this todo; only the writer-side manifest-completeness fix is done.)
 
 ## Success criteria
 

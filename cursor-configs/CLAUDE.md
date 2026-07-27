@@ -240,10 +240,11 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
 ## Governance + safety HARD RULES
 
 - **Plans run to actual completion, not smoke-test green** — backfills/migrations run on real infra with
-  manifest-verified rows (ADC admin on GCP `central-element-323112` + AWS `427895769566`; don't pause on infra ops).
+  manifest-verified rows (both cloud identities are IAM-self-service — grant a missing role yourself, don't pause).
   **Hard-stops (human-only)**: wallet keys, force-push main, 1.0.0 graduation. **Kill-switch is direction+scope-aware**:
   protective arming always autonomous; resume/un-kill autonomous only within the auto-recovery matrix (`manual_unkill` =
-  human-only). SSOT: `/codex/04-architecture/autonomous-recovery-matrix.md`.
+  human-only). SSOTs: `/codex/04-architecture/autonomous-recovery-matrix.md`,
+  `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`.
 - **Data pipeline correctness is the heartbeat** — an audit's issues are fixed in FULL (no deadline deferrals, no
   asset_group skipped); only operator-gated `BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/`-UPSTREAM-OUTAGE` defer; a RED
   data audit FREEZES layer-N+1 work (foundation-completion-gate). **External data is always available** — exhausting the

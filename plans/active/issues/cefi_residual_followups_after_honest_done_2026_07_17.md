@@ -662,4 +662,24 @@ pairs stay honest-unresolved (reported, never guessed).
   cap per slot-6's structural finding). **Next check-in should verify**: `captured` continuing to climb from the 6,725
   baseline toward the ~21,604 total-attempted target (expected_unattempted+empty_confirmed+captured), `attempted_failed`
   still ~3, no further preemption on this run-id, and eventual `DEPLOYMENT_COMPLETED exit_code=0` — then flip the parent
-  checkbox.
+  checkbox. **UPDATE (slot-5, in-session monitoring through 16:34Z)**: `/done` was attempted after the relaunch note
+  above and hard-rejected by the AO server's M3 gate (requires a commit touching the actual plan checkbox — an
+  issue-doc-only note doesn't satisfy it; correctly refused to force a dishonest flip). Continued monitoring in-session
+  instead: day 1 (2026-06-24) completed cleanly at 15:42Z (8.15M rows across trades/book_snapshot_5/ derivative_ticker,
+  `process_final=True`), day 2 (2026-06-25) completed cleanly at 16:14Z, day 3 (2026-06-26) in progress as of 16:34Z
+  (book_snapshot_5, ~1355 per-VM shard entries) — zero errors, zero `attempted_failed` regressions, one
+  correctly-handled honest-absence case (KSHIB, stale S3 archive) and one correctly-handled day-boundary clip (24
+  boundary-bleed ticks trimmed) observed. Pace ~30min/day → full 32-day range projects to ~16h total, consistent with
+  slot-6's original estimate. **Minor unrelated finding (P3, not blocking)**: the launcher's `FORCE="${FORCE:-250}"`
+  default (`deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh:61`) is functionally harmless
+  (downstream `VM_FORCE` consumers only match the literal string `"true"`, so `"250"` never triggers force-mode) but is
+  almost certainly a copy-paste artifact from the adjacent `DRY_RUN="${DRY_RUN:-250}"` default one line above — worth a
+  follow-up cleanup to a clearer default (`false`) so a future reader doesn't waste time investigating it as a suspected
+  bug the way this session briefly did.
+
+- [ ] [SCRIPT] P3. **deployment-service** — fix the confusing `FORCE="${FORCE:-250}"` default in
+      `scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (line ~61) to `FORCE="${FORCE:-false}"`. Harmless today
+      (only the literal string `"true"` triggers `VM_FORCE=true` downstream) but reads as a bug — likely copy-pasted
+      from the adjacent `DRY_RUN="${DRY_RUN:-250}"` line. **Done when**: default reads `false`, existing dry-run/force
+      tests (if any target this script) still pass, `quality-gates.sh --no-fix` green. Source: this doc, slot-5
+      checkbox.

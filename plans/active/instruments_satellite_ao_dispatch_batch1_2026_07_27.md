@@ -83,14 +83,41 @@ source doc is untouched (beyond one stale-checkbox citation fix, done directly, 
 
 ## Todos
 
-- [ ] [DATA] P1. **Raw-parquet spot-check the 5 additional CeFi venues** flagged by the pre-audit's registry read as
+- [x] ✅ [DATA] P1. **Raw-parquet spot-check the 5 additional CeFi venues** flagged by the pre-audit's registry read as
       likely hitting the same multi-type blank-collapse: `OKX-FUTURES`, bare `BYBIT`, `BINANCE-FUTURES`,
       `KRAKEN-FUTURES`, `BINANCE-DELIVERY` — same method already used on DERIBIT/ASTER (download
       `availability_index.parquet`, check `instrument_type` distribution). Repo: instruments-service. Source:
       `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` ("Raw-parquet spot-check the 5 additional
       CeFi venues..."). Done when: each of the 5 venues has a recorded pass/fail against the same coverage class
-      DERIBIT/ASTER were checked against, with the raw-parquet read cited.
-- [ ] [DATA] P1. **Add `missing_dates`/`dates_found_list` to the per-instrument_type and per-underlying breakdown
+      DERIBIT/ASTER were checked against, with the raw-parquet read cited. — read-only, no commit (no code changed).
+      Downloaded `gs://instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet` (the exact
+      bucket cited in the source doc's Finding 3) and computed the `instrument_type` distribution per venue, split
+      pre/post the 2026-07-07 writer-fix date. Result: **2 of 5 genuinely hit the DERIBIT-class blank-collapse bug, 3 of
+      5 did not**: - **FAIL→confirmed bug (matches DERIBIT's class)**: bare **`BYBIT`** — 277 blank-`instrument_type`
+      rows pre-2026-07-08 (out of 3,847 pre-fix rows: PERPETUAL 2,380 / FUTURE 1,190 / blank 277), **0 blank** in the 58
+      post-fix rows (cleanly split PERPETUAL 20 / FUTURE 20 / SPOT_PAIR 17 / 1 `expected_unattempted` placeholder) — the
+      writer fix resolved it going forward; historical rows stay blank pending the already-tracked separate backfill
+      todo. **`BINANCE-DELIVERY`** — 444 blank + 31 `expected_unattempted`-null rows pre-fix (out of 4,783: FUTURE 2,182
+      / PERPETUAL 2,126 / blank 444), **0 blank** in the 41 post-fix rows (FUTURE 20 / PERPETUAL 20 / 1 placeholder) —
+      same pattern, fix confirmed working. - **PASS→no bug found**: **`OKX-FUTURES`**, **`BINANCE-FUTURES`**,
+      **`KRAKEN-FUTURES`** — **zero** blank-type rows anywhere in their full history (2019-03-30 → 2026-07-27); all
+      three were already cleanly split by `instrument_type` even before the fix (e.g. BINANCE-FUTURES/KRAKEN-FUTURES:
+      PERPETUAL 2,657 / FUTURE 11 pre-fix, byte-identical row totals between the two venues — a real coincidence, not a
+      shared-bug artifact, each venue's own rows filtered independently). The registry-derived assumption that these 3
+      would hit the same collapse as DERIBIT does not hold in the real data. - **Secondary observation (not a new
+      finding — corroborates already-tracked work, no new issue doc filed)**: OKX-FUTURES's own PERPETUAL rows (2,631
+      historically) stop entirely from 2026-07-08 onward (only FUTURE continues, 101-136 rows/day) — checked whether
+      this is a live capture regression by confirming OKX-SWAP independently and continuously captured its own PERPETUAL
+      rows across the same window (402-423/day, unaffected), ruling out a routing-consolidation explanation. This is
+      consistent with — not a new instance of — the already-tracked OKX-FUTURES dated-futures-mislabeled-PERPETUAL
+      cleanup (`plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md:458-461`, fix tracked in
+      `cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3): OKX-FUTURES's canonical declared type is
+      `future`-only (`cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`'s venue table), so the
+      historical PERPETUAL rows were themselves the mislabel, and their disappearance from 2026-07-08 reads as that
+      mislabel resolving, not a capture gap opening. Confirmed all 4 NULL-`instrument_type` rows found across the 5
+      venues are honest `capture_status=expected_unattempted` placeholders (`row_count=0`), unrelated to the
+      blank-collapse bug pattern.
+- [x] ✅ [DATA] P1. **Add `missing_dates`/`dates_found_list` to the per-instrument_type and per-underlying breakdown
       entries** (`deployment-api/deployment_api/services/data_status/breakdowns_core.py` —
       `_build_instrument_type_breakdown` ~405-409, `_build_underlying_breakdown` ~508-512; mirror
       `_build_data_type_breakdown`'s entry shape ~629-643, which already carries this). Needs a matching
@@ -99,7 +126,18 @@ source doc is untouched (beyond one stale-checkbox citation fix, done directly, 
       `TurboDataTypeStatus` at `client.ts:984-999`). Repo: deployment-api, deployment-ui. Source:
       `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` ("Add `missing_dates`/`dates_found_list`
       to the per-instrument_type and per-underlying breakdown entries..."). Done when: both breakdown entry types carry
-      both fields in the mirrored shape, the UI renders them, with a passing test.
+      both fields in the mirrored shape, the UI renders them, with a passing test. — deployment-api@554cde9,
+      deployment-ui@8f6c4bc. `_build_instrument_type_breakdown`/`_build_underlying_breakdown` now compute
+      `it_found_dates`/`ul_found_dates` (intersection of observed vs. UAC-expected dates) and emit `dates_missing`,
+      `missing_dates`, `dates_found_list` — same shape as `_build_data_type_breakdown`. 2 new unit tests
+      (`test_instrument_type_breakdown_includes_missing_dates_and_found_list`,
+      `test_underlying_breakdown_includes_missing_dates_and_found_list`) assert the exact found/missing split on a
+      narrow 3-day fixture; both pass (4/4 incl. the 2 pre-existing clamp tests). `TurboInstrumentTypeStatus`/
+      `TurboUnderlyingStatus` in `client.ts` carry the 3 new optional fields; `DataStatusTab.tsx`'s instrument_type and
+      underlying rows now render an expandable found/missing date-list drilldown (mirroring the existing per-data_type
+      block, `openShardDetail` wired with `instrument_type`/`underlying`/`data_type: ""`). Verified: `tsc --noEmit`
+      clean, `eslint` clean, full `npm run build` clean, full `vitest run` (1099 passed / 16 skipped, no regressions),
+      both repos' `quality-gates.sh` green pre-commit.
 - [ ] [DATA] P1. **Pull the real per-instrument_type breakdown for DERIBIT live** (the comparison built for the source
       doc used illustrative numbers pending this) and confirm whether OPTION coverage is actually healthy or is itself a
       live gap once visible. Repo: market-tick-data-service. Source:

@@ -22,7 +22,7 @@ related:
     /codex/05-infrastructure/live-deployment-monitoring.md,
     plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
     /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
-    /plans/active/issues/deployment_ui_fleet_tab_removal_2026_07_27.md,
+    /plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md,
     /plans/active/monitoring_control_plane_master_2026_06_10.md,
     /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,

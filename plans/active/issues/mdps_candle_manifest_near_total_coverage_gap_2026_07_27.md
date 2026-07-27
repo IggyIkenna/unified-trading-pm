@@ -150,6 +150,38 @@ the candle layer instead of raw-tick.
       CEFI-only scope (3 known venues, one known day, "corpus-wide extent unknown") is now superseded by this
       corpus-wide measurement — likely yes, this doc should probably fold into or supersede that one once the backfill
       scope is finalized.
+- [ ] [DATA] P2. **Remediate cefi + prediction `processed_candles/` objects mis-tagged with an unregistered
+      `source=databento`** — two independent AGs hit the identical mistag SHAPE (a manifest write attempted with
+      `source='databento'`, which isn't in that AG's `SOURCE_PRIORITY`-registered source list), confirmed via
+      `RECORD-ERROR` warnings in the backfill VMs' `run.log`; `backfill_candle_manifest.py` correctly REFUSED to write a
+      manifest row in every case (never silently mis-records) — these objects remain unmanifested after todo 1's
+      backfill. - **cefi** (10 `RECORD-ERROR`s, `backfill-candle-manifest-cefi-20260727-151741`): root-caused via direct
+      GCS listing — for the SAME shard key
+      (`day=2019-04-01/timeframe=1d/data_type=derivative_ticker/instrument_type=PERPETUAL/venue=DERIBIT/*-PERPETUAL`),
+      TWO objects exist — one correctly at `pipeline_mode=batch_tardis/`, one incorrectly at
+      `pipeline_mode=batch_databento/` (databento is not in cefi's registered source list: aster, binance, bybit,
+      deribit, extended, hyperliquid, kalshi_perp, kraken, okx, polymarket_perp, tardis). Confirmed scope via
+      `gcloud storage ls -r gs://market-data-tick-cefi-prd-central-element-323112/processed_candles/by_date/**/pipeline_mode=batch_databento/**`
+      → 1,639 objects across ~1,638 distinct day/instrument combos, DERIBIT PERPETUAL derivative_ticker/1d only (not
+      re-checked for other data_types/timeframes/venues — scope this todo's own read before remediating). -
+      **prediction** (10 `RECORD-ERROR`s, confirmed 2026-07-27 slot-6,
+      `backfill-candle-manifest-prediction-20260727-152012`): same shape, different AG — all 10 are
+      `MissingSourceError: source='databento' ... not a registered source for       asset_group='prediction' data_type='trades'`
+      (allowed sources: `kalshi`, `polymarket_clob`), all `venue='POLYMARKET'`, dates `2025-03-14`..`2025-03-24`
+      (contiguous run, one `date` per RECORD-ERROR — not yet checked whether this is the full extent or just what this
+      backfill pass's report happened to cover; scope a fresh GCS listing before remediating, same as cefi's open scope
+      gap). Not yet root-caused whether this is the same underlying mistag mechanism as cefi's (a stray
+      databento-sourced write landing on a non-databento AG's canonical path) or a distinct cause — worth checking
+      together given the identical error shape landed on two unrelated AGs. - **tradfi** (0 `RECORD-ERROR`s, confirmed
+      2026-07-27 slot-6, `backfill-candle-manifest-tradfi-20260727-151950`, clean
+      `escalated=0 read_failed=0 verify_failed=0`) — does NOT show this pattern, so it's not universal across AGs;
+      consistent with tradfi being a legitimate Databento-sourced AG (`SOURCE_PRIORITY` databento-first there), so a
+      `source=databento` write there is expected to be valid, not mistagged. Options for both AGs: (a) relabel the
+      mistagged objects' `pipeline_mode=`/source path segment to the correct source (copy-not-move + verify twin content
+      matches, then this todo's own `record_captured` pass), or (b) if the mistagged object is actually STALE/superseded
+      by a correctly-tagged twin, treat as a legacy-duplicate cleanup candidate instead (needs a content diff first — do
+      NOT assume). Small, bounded, does not block todo 1's completion (25,593+ cefi cells and 1,609 prediction cells
+      recorded successfully despite these).
 
 ## Progress Log
 
@@ -235,3 +267,24 @@ the candle layer instead of raw-tick.
     1's `- [ ]` to `- [x]` citing `market-data-processing-service@cf94e23` + `deployment-service@fafde10`/`@b947d9f` +
     the 4 VERDICT lines as evidence, `docs(plans):` commit + push. Do NOT flip early on "VMs launched" alone — that is
     exactly the smoke-test-green false-completion the data-pipeline-correctness HARD RULE forbids.
+- **2026-07-27T16:36Z** (AO dispatch, slot 8, `data_engineering`) — Second checkpoint:
+  `backfill-candle-manifest-cefi-20260727-151741` finished
+  (`VERDICT cefi: already_covered=0 ok=405496 recorded_cells=25593 junk=0 escalated=0 read_failed=0 verify_failed=0`,
+  self-shutdown). Found + root-caused a small pre-existing data anomaly while it ran — see the new `[DATA] P2` todo
+  above (~1,639 cefi objects mis-tagged `pipeline_mode=batch_databento`); NOT a bug in this backfill or its tool (the
+  script correctly refused to falsely manifest them), and does NOT block todo 1's completion. The other 3 VMs are still
+  running, all healthy, no errors observed beyond the same class covered by the new P2 todo (not yet confirmed whether
+  defi/tradfi/prediction have their own analogous mistagged slices — check each VM's `run.log` for `RECORD-ERROR` lines
+  when it finishes and fold any into the same P2 todo rather than filing duplicates). Snapshot at 16:36Z: defi
+  footer-read 467,000/1,131,367 (41%), tradfi 459,000/536,934 (85%), prediction 418,000/569,947 (73%).
+- **2026-07-27T17:05Z** (slot 6, `data_engineering`, monitoring the campaign from the sibling
+  `mdps_candle_manifest_population_disconnect_2026_07_25.md` todo 5 — not this doc's own owner, folding in per the above
+  instruction to check each finishing VM's `run.log`). `tradfi` finished clean
+  (`VERDICT tradfi: already_covered=0 ok=536934 recorded_cells=22905 junk=0 escalated=0 read_failed=0 verify_failed=0`,
+  exit_code=0, zero `RECORD-ERROR` lines) — no analogous mistag for tradfi, consistent with tradfi legitimately being a
+  Databento-sourced AG. `prediction` finished
+  (`VERDICT prediction: already_covered=0 ok=569947 recorded_cells=1609 junk=0 escalated=0 read_failed=0 verify_failed=0`,
+  exit_code=1) with the SAME mistag shape as cefi's already-tracked finding — 10 `RECORD-ERROR`s, all
+  `source='databento'` not registered for `asset_group='prediction'`, all `venue='POLYMARKET'` `data_type='trades'` —
+  folded into the P2 todo above rather than filing a duplicate. `defi` still `RUNNING` as of this checkpoint
+  (footer-read ~646,000/1,131,367, ~57%); will check back via a bounded watchdog.

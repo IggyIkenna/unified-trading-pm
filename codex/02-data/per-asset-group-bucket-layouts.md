@@ -199,6 +199,26 @@ processing is `adapters/sports/bucket_assignment_adapter.py`, which writes to th
 `odds_movement_adapter.py` / `odds_snapshot_adapter.py` / `arbitrage_adapter.py` are registered but (as of 2026-07-23)
 unverified in production — see the SPORTS row above.
 
+> **⛔ CORRECTED 2026-07-27 — the "ZERO prod objects, not yet root-caused" finding above is STALE; root-caused, fixed,
+> and reverified with real GCS objects.** The referenced
+> `issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md` is archived; its own "dead code vs.
+> silently-empty, unconfirmed" verdict was superseded by
+> `plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` (Updates 4/5/7). Actual root cause: these 3
+> products WERE dispatched, but every write attempt threw `No SchemaContract registered ... asset_group='sports'`
+> (`unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` had no entry matching MDPS's real per-market
+> `instrument_type` lookup key) — a genuine schema-registration gap, not dead code, not a silent-empty write. Fixed via
+> a bounded `lookup_contract()` fallback + registering the missing `odds_snapshot` loop entry
+> (`unified-api-contracts@ed5434b3`), plus two more asset-group-specific bugs that were masked behind the schema crash
+> and only surfaced once it cleared (`unified-trading-library@bcd73241` — sports id-shape blindness in
+> `validate_partition_consistency`; `market-data-processing-service@1390312` — candle-write batching mixed different
+> markets into one partition). Verified against real production data (execution
+> `uts-prod-market-data-processing-service-t1-recon-86jbn`, 2026-07-27): `odds_movement`/`odds_snapshot`/
+> `arbitrage_opportunity` each completed 100% (505/505 and 837/837 across 2 dates), with real written output confirmed
+> uncontaminated per-market via direct GCS pandas inspection. **`odds_horizon_bucket` is no longer the only sports MDPS
+> product with real prod objects** — all 4 registered sports adapters now do, under the generic single-derivation
+> `processed_candles/` path this section already documents. Full evidence:
+> `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Updates 4, 5, 7.
+
 ---
 
 ## Dep-checker `UPSTREAM_DEPS` routing

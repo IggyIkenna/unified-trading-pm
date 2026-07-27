@@ -136,7 +136,7 @@ registered canonical_question_groups have ≥1 live manifest row.
 
 **Per-cadence completion % table** (captured / empty_confirmed / attempted_failed / expected_unattempted counts, and
 `reachable_coverage_pct = captured / (captured + attempted_failed + expected_unattempted)` — empty_confirmed EXCLUDED
-from the numerator per the RULED formula, `codex/02-data/availability-manifest-and-data-status.md` line 1054):
+from the numerator per the RULED formula, `/codex/02-data/availability-manifest-and-data-status.md` line 1054):
 
 | cadence                           | captured | empty_confirmed | attempted_failed | expected_unattempted | total rows | reachable_coverage % | distinct CQGs |
 | --------------------------------- | -------: | --------------: | ---------------: | -------------------: | ---------: | -------------------: | ------------: |

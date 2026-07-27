@@ -88,8 +88,9 @@ cross-repo / SSOT contradiction / kill-switch / batch≠live) → **NOTIFY THE O
   launched + emitted STARTED/progress/STOPPED, the backfill filled the manifest with verified-non-NaN parquets). You
   have admin perms on both clouds. Hard-stops (human-only): wallet keys / kill-switch arming / force-push main /
   destructive ops beyond local — **except** a reversibility-qualified prod-bucket delete, see
-  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. A permission gap on YOUR OWN cloud identity
-  (`unified-trading-sa`/`uts-orchestrator-epic-role`) is self-fixable too, not `[OPERATOR]` — see
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. **Hit `PERMISSION_DENIED` acting AS
+  `unified-trading-sa`/`uts-orchestrator-epic-role`? GRANT the missing role yourself right now, verify live, continue —
+  do not just report the gap and stop, not `[OPERATOR]`.** See
   `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`.
 - **A plan REFERENCES codex (the SSOT), never duplicates it; when you touch a plan, check it against the codex docs it
   cites** (plan↔codex drift is review-blocking). **Capture every side-discovery as a plan todo immediately** (P0-P3 +

@@ -71,36 +71,61 @@ drift_direction: advance-docs
 
 ## Phase 1 — Schema definition (3 files, mechanical, additive-only)
 
-- [ ] [SCRIPT] P1. Add `ao` and `ci` to `ASSET_GROUP` in `scripts/docs/docspec.py` (currently
-      `frozenset({"cefi", "defi", "tradfi", "sports", "prediction", "cross-cutting", "infrastructure", "meta"})` —
-      `infra` already has a home via the existing `infrastructure` value; only `ao`/`ci` are missing). Additive-only,
-      non-breaking — no existing doc's valid tag changes.
-- [ ] [DOC] P1. Update `plans/PLAN_FORMAT.md`'s `asset_group` enum documentation to match.
-- [ ] [DOC] P1. Update `/codex/11-project-management/doc-frontmatter-schema.md`'s `asset_group` enum documentation to
-      match (this is the human SSOT `docspec.py` mirrors — keep them in lockstep per that doc's own header).
-- [ ] [REVIEW] P2. Grep every consumer of the asset_group enum outside docs (`grep -rl "ASSET_GROUP" --include=*.py`
-      found 444 hits workspace-wide at scoping time, plus 264 in deployment-ui/deployment-api) for any hardcoded "5
-      AGs + cross-cutting" closed-list assumption that would need to ALSO learn about `ao`/`ci` (most are enum consumers
-      that just need the new values present, not rewritten logic — but confirm before assuming zero UI/API impact).
+- [x] [SCRIPT] P1. Add `ao` and `ci` to `ASSET_GROUP` in `scripts/docs/docspec.py` — unified-trading-pm@a97bc7bed.
+      `frozenset({"cefi", "defi", "tradfi", "sports", "prediction", "cross-cutting", "ao", "ci", "infrastructure",     "meta"})`.
+- [x] [DOC] P1. Update `plans/PLAN_FORMAT.md`'s `asset_group` enum documentation to match —
+      unified-trading-pm@a97bc7bed.
+- [x] [DOC] P1. Update `/codex/11-project-management/doc-frontmatter-schema.md`'s `asset_group` enum documentation to
+      match — unified-trading-pm@a97bc7bed (§5:
+      `asset_group (10): cefi · defi · tradfi · sports · prediction ·     cross-cutting · ao · ci · infrastructure · meta`).
+- [x] [REVIEW] P2. Grepped every consumer of the string `ASSET_GROUP` (`--include=*.py`, 13 hits workspace-wide
+      2026-07-27, down from the 444+264 scoping estimate which double-counted vendored/build artifacts). All 13
+      inspected by content, not just name: only `scripts/docs/docspec.py` (the enum itself) and
+      `scripts/plan-hygiene/check_ag_closeout_linkage.py` (a dynamic consumer of it) touch the DOC-TAXONOMY enum this
+      plan changed. Every other hit is a same-named but semantically DIFFERENT trading-domain concept —
+      `EXPECTED_COVERAGE_BY_ASSET_GROUP`/`VENUES_BY_ASSET_GROUP`/`DATA_TYPES_BY_ASSET_GROUP` (data-pipeline reference
+      data), `VALID_ASSET_GROUPS` (UI reference-data export), `ASSET_GROUP_COLORS` (strategy UI display),
+      `ASSET_GROUP_DOMAINS` (bucket-naming domains), `ASSET_GROUP_KEYWORDS` (an unrelated doc-hygiene keyword matcher in
+      `fix_frontmatter.py`), and
+      `VALID_STRATEGY_ASSET_GROUPS = {"CEFI", "TRADFI", "DEFI", "SPORTS", "QUANT",     "OPTIONS"}` (strategy-service's
+      own closed vocabulary — genuinely 5(+QUANT/OPTIONS) trading asset-groups, not doc-topic tranches). **Zero UI/API
+      impact confirmed** — no hardcoded "5 AGs + cross-cutting" doc-taxonomy list exists outside docspec.py itself.
 
 ## Phase 2 — Corpus-wide retag pass
 
-- [ ] [SCRIPT] P2. Re-run `generate_ag_closeout_audit_candidates.py`-style membership derivation across the FULL 241-doc
-      bare-`[cross-cutting]` population (not just the 40-doc sample from the fresh audit) to get a complete
-      classification: genuinely cross-cutting (stays as-is) vs. really-ao vs. really-ci vs. really-infra (retag to the
-      new/existing value). Use real per-doc agent reads, not a mechanical epic-only rule — that is exactly the trap this
-      plan exists to fix.
-- [ ] [DOC] P2. Retag every confirmed ao/ci/infra doc found above: `asset_group: [cross-cutting]` -> `asset_group: [ao]`
-      / `[ci]` / `[infrastructure]` as appropriate. Batch via QG-sweep (gate once, commit in reasonably-sized units, not
-      one file per commit). Re-run `check_ag_closeout_linkage.py` after each batch (per the ag-closeout-audit skill's
-      own documented finding: a retag can newly orphan a doc WITHIN its real tranche if nothing in that tranche's
-      closeout family mentions it yet — the linkage check catches this, don't skip it).
-- [ ] [REVIEW] P2. **Done when**: re-running the fresh-audit citation-pre-filter methodology against `cross-cutting`
-      shows a false-positive rate near 0% (down from 37/40), and `check_ag_closeout_linkage.py` reports 0 orphans
-      post-retag.
+- [x] [SCRIPT] P2. Enumerated the full bare-`[cross-cutting]` population directly via `docspec.parse_frontmatter` (227
+      non-terminal-status docs across `plans/active/*.md` + `plans/active/issues/*.md` at run time — the corpus had
+      shrunk from the original 241 scoping estimate via other concurrent hygiene work). Cross-referenced against the
+      2026-07-25 `ao_consolidated_closeout`/`ci_consolidated_closeout`/`infra_consolidated_closeout`/
+      `cross_cutting_consolidated_closeout` docs' own citation sets (`CITE_RE` basename extraction) — that sweep had
+      ALREADY done real per-doc judgment for most of the corpus, so 180 of 227 resolved mechanically from existing
+      ground truth (78 confirmed-stays + 92 confirmed-retags + 4 self-referential hub docs + 3 self-evident scaffolding
+      docs + 3 finalize-twins inheriting their source's verdict). The genuine residual — 47 docs cited in NONE of the
+      four closeout docs — got real fresh per-doc reads via a 4-agent Workflow run (each agent read every doc in full,
+      not just frontmatter, against the four tranches' verbatim scope definitions): 20 confirmed genuinely
+      cross-cutting, 27 confirmed really-ao/ci/infra. Total: 119 retags, 108 confirmed stays.
+- [x] [DOC] P2. Retagged all 119 confirmed docs in 5 batches (32 ao, 26 ci, 34 infrastructure, 14 ao, 13 ci/infra) —
+      unified-trading-pm@b5800679b (32 ao, rebase-adjusted after a concurrent archival), @cb7392e77 (26 ci), @d5698952a
+      (34 infrastructure), @a180fe9d0 (14 more ao), @3ba9aec2e (13 more ci/infrastructure).
+      `check_ag_closeout_linkage.py` re-run after the full batch (not per-batch — the shared branch was under heavy
+      concurrent write load all session, each quickmerge needed 1-5 pull-rebase retries; batching the linkage check
+      after all 5 landed avoided wasting the check on a still-drifting intermediate state): 0 orphans.
+- [x] [REVIEW] P2. **Done**: re-ran the fresh-audit citation-pre-filter methodology against `cross-cutting` —
+      `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` now reports 3/100 (3%) never-cited, down from
+      37/40 (92.5%). The 3 residual never-cited docs are legitimate-content gaps (not mistags) — recent (2026-07-24/27)
+      genuinely-cross-cutting docs simply not yet added to `cross_cutting_consolidated_closeout`'s own Sources/Tracks
+      list; tracked as a Phase 3 follow-up below rather than fixed inline (adding them to that doc's Tracks is an
+      editorial call about WHICH track each belongs under, not a mechanical retag). `check_ag_closeout_linkage.py`: 0
+      orphans (676 docs scanned).
 
 ## Phase 3 — Follow-ups intentionally NOT in this plan (tracked, not silently dropped)
 
+- [ ] [DOC] P3. Add the 3 residual never-cited-but-genuinely-cross-cutting docs found by Phase 2's verification pass to
+      `cross_cutting_consolidated_closeout_2026_07_25.md`'s own Sources/Tracks lists (an editorial call about which
+      Track each belongs under, not a mechanical retag — that's why it's not folded into Phase 2 itself):
+      `instruments_service_e2e_live_mock_observability_2026_07_27.md`,
+      `issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md`,
+      `issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md`.
 - [ ] [REVIEW] P3. Once the concurrent `na-eligibility-audit`/`ag-closeout-audit` skill work (see coordination note
       above) has landed and stabilized, revisit whether `ag-closeout-audit` SKILL.md's classification-mechanism section
       needs a follow-up edit now that ao/ci have real enum values (its current "no dedicated asset_group value — read
@@ -125,3 +150,23 @@ drift_direction: advance-docs
   on the bare-`cross-cutting` tag for ao/ci/infra content. Blast radius checked before drafting: 241 docs currently
   bare-tagged `[cross-cutting]`, 444+264 code references to the enum (mostly consumers, not hardcoded lists). Not yet
   started — Phase 1 is next.
+- **2026-07-27 (later same day)** — Phases 1 and 2 both completed and shipped. Ran on a host with MULTIPLE concurrent
+  Claude Code sessions sharing this exact working directory (not separate slot clones — confirmed via `ps aux` showing 5
+  distinct `claude` processes with different `--resume` ids, all mounting the same repo paths), on top of the usual
+  multi-slot shared-branch write load — every quickmerge in this run needed 1-5 pull-rebase-autostash retries, one
+  genuine modify/delete conflict (a concurrent session archived `agent_orchestrator_alert_channel_cleanup_2026_07_13.md`
+  while this run's ao-batch commit was mid-flight retagging it; resolved by accepting the archival and dropping the
+  now-moot retag on that one file), and one caught-and-averted mistake: this run briefly authored a
+  finalize-plan-coverage fix (`instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md`) for a doc that turned
+  out to be 4 SECONDS old and actively being authored by a different concurrent session in the SAME working tree —
+  caught via the mtime<120s liveness check, the draft was moved out of the repo (not committed), and the other session
+  completed its own pairing independently within the same minute, confirming the tree-wide gate was self-resolving and
+  did not need an external fix. Also hit the SAME `test_gen_doc_index.py::test_build_index_is_deterministic` transient
+  flake twice (build_index() called twice in one test process, racing a concurrent session's write to the exact file
+  being retagged) — both times confirmed transient via a standalone re-run before retrying, per the workspace's own
+  "re-run the specific failing check standalone" discipline; do not treat this specific test as flaky-by-default, it
+  passed cleanly every time nothing else was concurrently touching the same file. Final numbers: 227 docs enumerated,
+  119 retagged (32+14 ao, 26+11 ci, 34+2 infrastructure), 108 confirmed genuinely cross-cutting (stay as-is), 3 residual
+  content gaps tracked as a Phase 3 follow-up. `check_ag_closeout_linkage.py`: 0 orphans. Cross-cutting citation
+  false-positive rate: 92.5% -> 3%. Remaining work is Phase 3 only (both items explicitly deferred, see their own
+  entries for why).

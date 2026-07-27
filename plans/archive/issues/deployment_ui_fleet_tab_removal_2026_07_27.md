@@ -22,7 +22,7 @@ summary: >-
   cross-link → external link to the AO dashboard; CockpitHealth's "Fleet VMs" landing tile → /deployments, since that
   tile's own VM-census framing already described data that lives there since the 2026-07-21 Fleet-tab consolidation, not
   git-health). All four repos' quality gates + test suites green.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -67,10 +67,16 @@ source: >-
   we dont have here and both are using same backend code as well" — followed by an explicit choice, when asked, to
   "Delete it anyway, port snapshot-age into AO's popover first" over keeping deployment-ui's page.
 locked_by:
-resolved_by:
+resolved_by: "cicd plan_health gate worker, 2026-07-27 (plan-hygiene NA-corpus ratchet triage)"
 ---
 
 # deployment-ui `/fleet` removed — fleet git-health consolidates onto agent-orchestrator's own dashboard
+
+> **🟢 RESOLVED 2026-07-27** — fix shipped and verified across all four repos this doc names (agent-orchestrator
+> `tsc`/`vitest`/`vite build` clean; deployment-ui `tsc`/`eslint`/`vitest` clean; deployment-api full `quality-gates.sh`
+> green; unified-trading-pm doc updates). Zero open follow-up todos — this doc is itself a closed-out record, not a
+> dispatch (see "Gate" section below). Archived per `/codex/11-project-management/issue-doc-lifecycle.md` trigger 2
+> (commit-SHA-fixes-the-issue).
 
 ## What triggered this
 

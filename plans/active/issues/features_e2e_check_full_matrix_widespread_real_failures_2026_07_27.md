@@ -157,6 +157,30 @@ Three external commodity-data vendors (EIA weekly storage, CFTC COT report, Bake
 check itself caused. Per CLAUDE.md's "external data is always available" rule, exhausting the free/configured path is a
 `BLOCKED-CREDENTIALS` finding, not a silent descope — flagged here for the operator to route.
 
+**2026-07-27 UPDATE (operator-directed investigation)**: all three vendors are actually free/no-auth-required — the
+operator's "drop if not free" heuristic doesn't apply to any of them. Root-caused each individually:
+
+- **EIA** (`fetch_ng_storage` / crude storage, `storage_alpha` factor): genuinely free (email-only instant registration
+  at eia.gov/opendata), but `eia_ng.py`/`eia_crude.py` never send the required `api_key` query param at all — confirmed
+  via `gcloud secrets describe eia-api-key` that the secret doesn't exist yet. Credential ask has been open since
+  2026-06-09 (`unified-trading-pm/ikenna_orchestrator/pings/slot_3.md`), unactioned for >6 weeks. **Operator decision
+  2026-07-27**: leave EIA BLOCKED-CREDENTIALS and exclude `storage_alpha` from `DEFAULT_FACTOR_GROUPS` (not fixed this
+  session, adapter scaffold kept per the external-data-always-available rule).
+- **CFTC**: fully public, no auth ever required — the 403 was `www.cftc.gov`'s Cloudflare bot-mitigation (JS challenge)
+  blocking the annual ZIP download; confirmed by curl (403 on the ZIP endpoint, clean 200 JSON from CFTC's own Socrata
+  Open Data API for the identical dataset). **Fixed**: `cftc.py` rewritten to query
+  `publicreporting.cftc.gov/resource/72hh-3qpy.json` instead. Same investigation also found the NG/CL market-name
+  fragments were stale post-contract-rename (`"NATURAL GAS"`/`"CRUDE OIL"` no longer match the primary NYMEX contracts,
+  now named `"HENRY HUB - NEW YORK MERCANTILE EXCHANGE"` / `"WTI-PHYSICAL - NEW YORK MERCANTILE EXCHANGE"`) — fixed in
+  the same commit since it's the same fetch path.
+- **Baker Hughes**: fully public, no auth — the 404 was a stale hardcoded filename
+  (`North-America-Rotary-Rig-Count-Current-Week.xlsx`); Baker Hughes moved to opaque per-upload `/static-files/<uuid>`
+  paths that change on every weekly republish. **Fixed**: `baker_hughes.py` now scrapes the current report's URL from
+  the `na-rig-count` landing page at fetch time instead of hardcoding a filename.
+- Repo: features-service. Evidence: `features_service/commodity/adapters/{cftc,baker_hughes}.py` rewritten,
+  `features_service/commodity/config.py` (`storage_alpha` removed from `DEFAULT_FACTOR_GROUPS`), tests updated in
+  `tests/commodity/unit/{test_sources,test_sources_extra,test_schema_robustness}.py` — 340/340 commodity tests green.
+
 ### F. Cascading failure: TRADFI:cross_instrument (force, exit=1)
 
 ```
@@ -191,19 +215,34 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
       `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` for the fix-todo (same
       underlying disagreement between `--require-captured --auto-day`'s coverage check and the VM-side
       `check_dependencies()`, confirmed on 3 independent occurrences across 2 different days now). Reconcile there, not
-      here, to avoid two parallel fix attempts. — ✅ features-service@ecd548b8 + features-service@c06a9bbf (sibling doc
-      has full detail). Root cause was neither phantom-capture nor a coverage-check gap: 2026-07-04 (the delta_one
-      lookback window's start day) is an honest TradFi weekend/holiday (`empty_confirmed` in the real manifest, no
-      backing object by design) — the coverage-check already handled it correctly; the VM-side `check_dependencies()`
-      had zero manifest awareness and hard-failed on the honest-empty day. Fixed by making `DependencyChecker`
-      manifest-aware. Also caught + fixed a live regression in a different slot's concurrently-shipped phantom-capture
-      guard (features-service@696768c7) that was over-applying its new object-existence check to `empty_confirmed` days
-      too, which would have broken coverage for nearly every multi-day TradFi window.
-- [ ] [SCRIPT] P0. **Root cause B** — fix `features-multi-timeframe-service`'s delta_one-input lookup to use the
+      here, to avoid two parallel fix attempts. — ✅ features-service@ecd548b8 (sibling doc has full detail; this todo's
+      own local `c06a9bbf` follow-up was superseded by a concurrently-shipped, more complete fix from another slot —
+      discarded via `git rebase --skip`, never pushed, per the sibling doc's reconciliation). Root cause was neither
+      phantom-capture nor a plain coverage-check gap: 2026-07-04 (the delta_one lookback window's start day) is an
+      honest TradFi weekend/holiday (`empty_confirmed` in the real manifest, no backing object by design) — fixed at TWO
+      complementary layers: (1) the runtime `DependencyChecker.check_dependencies()` (raw GCS probe, zero manifest
+      awareness) is now manifest-aware (`features-service@ecd548b8`); (2) `pipeline_e2e_check.py`'s coverage-check
+      itself had a separate, real granularity gap — it applied the same acceptable-status set to the TARGET day as to
+      window-interior days, so an `EMPTY_CONFIRMED` target still read as "covered" — fixed via
+      `features-service@1b272676` + `4fbf4dc7` (a different slot, reconciled together with the phantom-capture guard
+      `features-service@696768c7` that a THIRD slot shipped concurrently for a related-but-distinct bug). Full
+      reconciliation + verification against real production data in
+      `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`.
+- [x] [SCRIPT] P0. **Root cause B** — fix `features-multi-timeframe-service`'s delta_one-input lookup to use the
       requested `--start-date`/`--end-date` (or the per-day date it's currently processing), not the current wall-clock
       date. Repo: features-service (`features_service/multi_timeframe/` or wherever the delta_one input loader lives).
       **Done when**: a force run for a historical day with real delta_one output present succeeds (not a 0-instruments
-      failure) — add a regression test asserting the lookup uses the CLI-provided date, not `datetime.now()`/similar.
+      failure) — add a regression test asserting the lookup uses the CLI-provided date, not `datetime.now()`/similar. —
+      ✅ features-service@87e39bc7. Root cause: `deployment-service/scripts/vm/launch-features-vm.sh` invokes EVERY
+      family (multi_timeframe included) with `--start-date`/`--end-date`, never `--date`, but
+      `features_service/multi_timeframe/cli/main.py`'s `_extra_args` only declared `--date` — `ServiceBootstrap`'s
+      `parser.parse_known_args()` silently dropped the unrecognised `--end-date`, so `date_arg` fell through to
+      `date.today()` for every batch invocation regardless of the requested window. Added `--start-date`/`--end-date` to
+      the CLI (`--end-date` wins over the legacy `--date`, preserving back-compat for `scripts/e2e/run_pipeline_e2e.py`
+      and `scripts/multi_timeframe/smoke_matrix.py`, which still pass only `--date`). 3 new regression tests in
+      `tests/multi_timeframe/unit/test_cli_main.py` assert the CLI-provided `--end-date` reaches the batch handler (not
+      `date.today()`), that `--end-date` wins when both are given, and that the `--date`-only back-compat path still
+      works. Full `quality-gates.sh` green (17945 passed, exit 0) before ship.
 - [ ] [SCRIPT] P1. **Root cause C** — either chunk/stream the `regime_detection` HMM fit for `cross_instrument` (CEFI
       has ~589 instruments per the recent universe-filter fix; 4,476 columns is a wide feature matrix) or size the
       launcher's VM up for this family/AG, and/or add a memory-budget guard before the fit rather than letting the OS
@@ -216,12 +255,23 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
       unified-trading-library (env propagation) + deployment-service or the consolidator's own repo (Cloud Run fix).
       **Done when**: the consolidator is current for this bucket AND a VM launched without the override still succeeds
       (proving the fix isn't just papering over a permanently-broken consolidator).
-- [ ] [OPERATOR] P1. **Root cause E** — investigate/renew credentials or config for the EIA weekly-storage, CFTC
-      COT-report, and Baker Hughes rig-count adapters (403/403/404 respectively) — this needs operator-level
-      credential/vendor-account access per the external-data-always-available rule; the code path itself is behaving
-      correctly (honestly failing rather than emitting a partial/fabricated signal — note the
-      `ManifestWriter.record_empty` guard correctly REJECTED treating these as honest-absence, which is itself good
-      defensive behavior working as intended).
+- [x] [SCRIPT] P1. **Root cause E, part 1** — CFTC + Baker Hughes were NOT credential gaps (both are free/no-auth);
+      fixed the actual bugs — CFTC switched from the Cloudflare-protected `www.cftc.gov` ZIP download to the public
+      Socrata Open Data API (`publicreporting.cftc.gov/resource/72hh-3qpy.json`) plus corrected the stale NG/CL
+      market-name fragments (post-contract-rename); Baker Hughes now resolves the current-week report URL by scraping
+      the `na-rig-count` landing page instead of a hardcoded (now-404) filename. Repo: features-service
+      (`features_service/commodity/adapters/{cftc,baker_hughes}.py`). **Done**: 340/340 `tests/commodity/` tests green
+      (`tests/commodity/unit/{test_sources,test_sources_extra}.py` updated for the new fetch paths + regression tests
+      added for the URL-resolution and NG/CL fragment fixes).
+- [x] [OPERATOR] P1. **Root cause E, part 2 — EIA** — operator ruling 2026-07-27: EIA IS free (email-only instant
+      registration at eia.gov/opendata) but there's no `eia-api-key` Secret Manager entry yet (confirmed via
+      `gcloud secrets describe`) and the credential ask has sat open since 2026-06-09
+      (`unified-trading-pm/ikenna_orchestrator/pings/slot_3.md`) — operator chose to defer registering it rather than
+      action it now. Per the external-data-always-available rule this stays `BLOCKED-CREDENTIALS`, not a permanent
+      descope: `storage_alpha` factor group removed from `DEFAULT_FACTOR_GROUPS` (features-service `config.py`) so the
+      live signal engine no longer tries it by default, but the `StorageDeviationFactor`/`eia_ng.py`/`eia_crude.py`
+      scaffold is untouched and still registered in `FACTOR_REGISTRY` — re-enable once the secret is provisioned AND the
+      adapters are wired to actually send `api_key=` (they currently don't, a separate small fix needed at that time).
 - [ ] [DATA] P2. Once A-D land, re-run `/data-pipeline-check-features` for the affected 6 shards (CEFI/TRADFI:delta_one,
       CEFI/TRADFI:cross_instrument, CEFI/TRADFI:multi_timeframe, SPORTS:sports) and confirm genuine (non-error)
       verdicts; the report's pass rate should rise substantially once B alone is fixed (it affects every family/AG
@@ -248,3 +298,13 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   slot also corroborated root causes C (OOM) and E (commodity 404) independently, and confirmed (for their own run) that
   no PROD-pollution occurred for volatility/cross_instrument/multi_timeframe/commodity — matching this session's own
   direct PROD-safety verification for sports/calendar.
+- 2026-07-27 (interactive session, operator-directed): operator asked "are EIA/CFTC commodities features" + ruled that a
+  vendor with no Secret Manager credentials AND no free tier isn't MVP. Investigation (live curl probes against
+  api.eia.gov, cftc.gov, publicreporting.cftc.gov, rigcount.bakerhughes.com + `gcloud secrets describe`) found the
+  premise didn't hold — all three vendors are free; the 403/404s were real bugs, not credential gaps. Operator chose
+  "fix CFTC + Baker Hughes now (zero operator action needed), drop EIA only (still needs the operator to register a free
+  key, however small)." Shipped: `cftc.py` + `baker_hughes.py` rewritten (see root cause E above for detail),
+  `config.py::DEFAULT_FACTOR_GROUPS` no longer includes `storage_alpha`, `CONFIGURATION.md`/`DEPLOYMENT_GUIDE.md`
+  updated, `tests/commodity/unit/{test_sources,test_sources_extra,test_schema_robustness}.py` updated — 340/340
+  commodity tests green. EIA adapter code untouched (scaffold stays per external-data-always-available rule) —
+  registering `eia-api-key` and wiring it into `eia_ng.py`/`eia_crude.py` remains open, not actioned this session.

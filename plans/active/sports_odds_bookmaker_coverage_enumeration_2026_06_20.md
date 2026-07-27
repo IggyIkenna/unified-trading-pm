@@ -58,6 +58,14 @@ drift_direction: advance-code
 > `issues/sports_league_id_namespace_migration_2026_07_20.md`). **Do not resolve this conflict unilaterally from this
 > doc** — check the closeout's current Track sections (Track C, Track V) for the latest state before acting on either
 > doc.
+>
+> **MERGED 2026-07-27** (`sports_closeout_track_x_hygiene_2026_07_25.md` todo 2): the convention conflict this banner
+> flags is already decided elsewhere in the closeout (UAC registry form is canonical) — this todo only propagates that,
+> it does not re-litigate it. This plan's `LEAGUE_ID_TO_TIER` mapping + 28-unmapped-league_id gap analysis (the P1 todos
+> below) are now also tracked in `issues/sports_league_id_namespace_migration_2026_07_20.md` § "MERGED TRACKING
+> 2026-07-27" — that section is the single settled location cross-referenced from Track V; this plan's own P1 todos
+> below remain the execution home (not duplicated, not moved). See that section's "Vocabulary flag" for why this plan's
+> "canonical namespace" label (below) is scoped to this plan's own golden-window audit only.
 
 > **Provenance**: extracted 2026-06-20 from the inline `sports_master` epic body during the asset-group-umbrella
 > restructure (the L0 umbrellas were carrying stale May-08 inline todos that the backlog regen — which only scans
@@ -154,10 +162,13 @@ SOCCER_ARGENTINA_PRIMERA_DIVISION, SOCCER_AUSTRALIA_ALEAGUE, SOCCER_GREECE_SUPER
 SOCCER_KOREA_KLEAGUE1, SOCCER_MEXICO_LIGAMX, SOCCER_NORWAY_ELITESERIEN, SOCCER_POLAND_EKSTRAKLASA,
 SOCCER_SWEDEN_ALLSVENSKAN, SOCCER_USA_MLS
 
-**Canonical namespace** (27 more): PREMIER_LEAGUE, BUNDESLIGA, SERIE_A, LA_LIGA, LIGUE_1, CHAMPIONSHIP,
-PRIMERA_DIVISION, SEGUNDA_DIVISION, SERIE_B, LIGUE_2, SUPERLIGA, SUPER_LIG, SUPER_LEAGUE, EREDIVISIE, EKSTRAKLASA,
-ELITESERIEN, ALLSVENSKAN, PREMIERSHIP, FIRST_DIVISION_A, 2._BUNDESLIGA, A-LEAGUE, J1_LEAGUE, K_LEAGUE_1, MLS, LIGA_MX,
-PRIMEIRA_LIGA
+**"Canonical namespace" (27 more) — ⚠️ this plan's own golden-window-audit label only, NOT this closeout's canonical
+form** (flagged 2026-07-23, merged into the single settled location 2026-07-27 — see the SCOPE OVERLAP banner +
+`issues/sports_league_id_namespace_migration_2026_07_20.md` § "MERGED TRACKING 2026-07-27"; the closeout's actual
+canonical form is the UAC `LEAGUE_REGISTRY` slug, e.g. `EPL`, not these raw display strings): PREMIER_LEAGUE,
+BUNDESLIGA, SERIE_A, LA_LIGA, LIGUE_1, CHAMPIONSHIP, PRIMERA_DIVISION, SEGUNDA_DIVISION, SERIE_B, LIGUE_2, SUPERLIGA,
+SUPER_LIG, SUPER_LEAGUE, EREDIVISIE, EKSTRAKLASA, ELITESERIEN, ALLSVENSKAN, PREMIERSHIP, FIRST_DIVISION_A,
+2._BUNDESLIGA, A-LEAGUE, J1_LEAGUE, K_LEAGUE_1, MLS, LIGA_MX, PRIMEIRA_LIGA
 
 **Additional blocker noted**: `fixture_id=NULL` for all golden window trades rows — the P1 audit must also confirm that
 fixture IDs are propagated to odds rows before per-fixture cluster validation (gate of P1c Todo 4) can proceed.
@@ -204,6 +215,10 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
 > checkbox-tracked. Per the SCOPE OVERLAP banner near the top of this doc, the league_id-mapping todos below (1-2)
 > overlap `sports_consolidated_closeout_2026_07_19.md` Track C / Track V — check that doc's current Track state before
 > executing them, since it may already own this work or resolve the canonical-namespace question differently.
+>
+> **Merged 2026-07-27**: todos 1-2's mapping + gap list are cross-tracked (not duplicated) in
+> `issues/sports_league_id_namespace_migration_2026_07_20.md` § "MERGED TRACKING 2026-07-27" — the single settled
+> location Track V now cites. Execute here as before; that section is visibility only.
 
 - [ ] [SCRIPT] P1. **Add a `LEAGUE_ID_TO_TIER` mapping (function or dict) to UAC that routes each of the 51 observed
       league_ids to a `LeagueTier` key in `EXPECTED_BOOKMAKER_MARKET_SETS`** — without it, runtime cluster-validation
