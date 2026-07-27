@@ -123,16 +123,54 @@ reason):
    `test_real_combined_shape_af_fixture_id_nan_end_to_end`'s pattern) against a real non-h2h instrument slice to confirm
    real, non-NaN prices reach the output.
 
+## Decision (operator, 2026-07-27, BLK-4f4309e2)
+
+**Option B — branch the OHLCV mapping by instrument market type; NO new UAC fields.** `CandleOutput`'s generic
+open/high/low/close schema stays unchanged; the sports bucket-assignment adapter maps each instrument's own market type
+onto the 4 existing slots (mirroring the already-accepted h2h repurposing: `open=home_odds`, `high=away_odds`,
+`low=draw_odds`, `close=home_odds`).
+
+Reasoning (operator, verbatim rationale): (1) **UAC minimalism** — `CandleOutput` is a shared cross-asset contract
+(CEFI/DEFI/TRADFI/OPTIONS/QUANT/SPORTS); adding sports-specific named fields (`over_odds`/`btts_yes_odds`/
+`asian_handicap_*`) pushes asset-specific bloat onto every consumer, the exact canonical-bloat direction UAC
+consolidation fights. (2) **Intra-sports consistency** — h2h already repurposes OHLCV slots; adding named fields for the
+other 3 market types would leave two different representations for sports odds inside the same `odds_horizon_bucket`
+output (h2h repurposed vs. spreads/totals/btts named), which is incoherent. Branching keeps all sports odds markets on
+one mechanism. (3) **Blast radius + reversibility** — branching touches no cross-cutting SSOT and is reversible (named
+fields can still be added later if this proves painful); adding fields commits a shared contract that is hard to walk
+back.
+
+**Required mitigation (non-negotiable per the ruling)**: the market-type → OHLCV-slot mapping MUST be explicit and
+documented (a mapping table/comment on the branch, matching the existing h2h repurposing convention) — never a silent
+overload, so a downstream reader of e.g. a BTTS instrument is not misled into thinking `open`/`high` are literal
+first/highest trade prices.
+
+**Re-block trigger for the next implementer**: if any market type turns out to need >2 meaningful odds legs that do not
+fit the 4 OHLCV slots (e.g. a 3-way spread or a multi-line totals market), STOP and re-open a `/blocked` — that specific
+market would justify revisiting Option A (named fields) for that market only, not a wholesale reversal.
+
+Known market shapes to map (from `_pivot_market`'s existing spreads/totals/btts pivoting, now correctly reaching this
+adapter per the Layer-2 fix above):
+
+- `asian_handicap` (spreads): 2 legs (`asian_handicap_home_odds`, `asian_handicap_away_odds`) → fits 2 of 4 slots.
+- `totals`: 2 legs (`over_odds`, `under_odds`) → fits 2 of 4 slots.
+- `btts`: 2 legs (`btts_yes_odds`, `btts_no_odds`) → fits 2 of 4 slots.
+
+All three are ≤2 legs, so none currently trip the re-block trigger.
+
 ## Recommended decision
 
-- [ ] [DESIGN] P1. Decide the `CandleOutput` schema question above (new market-specific fields vs. market-aware OHLCV
+- [x] [DESIGN] P1. Decide the `CandleOutput` schema question above (new market-specific fields vs. market-aware OHLCV
       branching) for sports `odds_horizon_bucket`'s spreads/totals/btts output — a genuine product/schema decision, not
-      a worker-determinable fact. (repo: market-data-processing-service, unified-api-contracts if new schema fields are
-      chosen)
-- [ ] [SCRIPT] P2. Once the above is decided: generalize `process_to_candles`'s Path A½ check (the same
-      `_RECOGNIZED_MARKET_KEYS`-style generalization drafted and reverted this session) + implement the chosen
-      candle-value mapping, with a live production repro proving real non-NaN prices for a spreads/totals/btts
-      instrument. (repo: market-data-processing-service)
+      a worker-determinable fact. ✅ — DECIDED: Option B (market-aware OHLCV branching, no UAC schema change), operator
+      ruling via BLK-4f4309e2, 2026-07-27. See "Decision" section above for full rationale + required mitigation +
+      re-block trigger. No code shipped for this todo — it is pure decision-of-record (task `repos: []`); todo 2 below
+      implements it.
+- [ ] [SCRIPT] P2. Now unblocked: generalize `process_to_candles`'s Path A½ check (the same
+      `_RECOGNIZED_MARKET_KEYS`-style generalization drafted and reverted this session) + implement the Option-B
+      candle-value mapping (explicit market-type → slot table per the required mitigation above), with a live production
+      repro proving real non-NaN prices for a spreads/totals/btts instrument. STOP + re-block if any market needs >2
+      meaningful odds legs. (repo: market-data-processing-service)
 
 ## Codex SSOTs
 
