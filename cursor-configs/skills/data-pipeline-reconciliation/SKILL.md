@@ -453,8 +453,11 @@ oracle's expected set is invisible to every manifest-driven tool, which is exact
 
 ### 4b. Delete suggestions — suggestions only, and they carry their proof
 
-Deletes are **never executed by this skill**. It emits a suggestion with a disposition and the evidence behind it. Per
-`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, a suggestion may rise above `unknown` only with a
+Deletes are **never executed by this skill, full stop — read-only-by-construction is unconditional, independent of the
+2026-07-26 reversibility carve-out below.** §3a lets a SEPARATE, execution-oriented plan todo run a
+reversibility-qualified prod delete autonomously; it does not extend to this skill, which only ever emits a suggestion +
+its proof regardless of the target's reversibility. It emits a suggestion with a disposition and the evidence behind it.
+Per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, a suggestion may rise above `unknown` only with a
 **five-part proof**: (1) the twin **resolves** via `gcs_describe_object`, not by path construction; (2) a **content**
 verify, not existence; (3) grep-then-READ proof nothing still **writes** it; (4) grep-then-READ proof nothing still
 **reads** it; (5) the **legacy-COPIED-not-MOVED** invariant is honoured. Any part failing → `no-migrate-first`.
@@ -466,7 +469,8 @@ Disposition vocabulary: `yes-twin-confirmed` · `yes-after-verify` · `no-migrat
 > otherwise have destroyed **32 legacy-only high-TVL Raydium pools** (XMR/USDC ~$47M, BNB/USDC ~$18M) whose paths looked
 > duplicated. Path-shape similarity is not evidence of duplication.
 
-**Human-only hard stops** — never crossed autonomously, on any tick:
+**Human-only hard stops for THIS skill** — never crossed autonomously, on any tick (this skill suggests only; a
+downstream execution todo elsewhere may still be reversibility-qualified per delete-safety-protocol §3a):
 
 - any **prod-bucket delete**;
 - any **legacy-object delete after copy**;

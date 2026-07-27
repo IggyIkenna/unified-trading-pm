@@ -190,7 +190,10 @@ This plan is done when:
       manifest write at this scale without an already-established idempotent pattern — cite
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` if any delete/overwrite semantics are involved (a pure
       `record_captured` backfill of previously-absent rows is additive, not a delete, but state that explicitly rather
-      than assuming it).
+      than assuming it). If overwrite semantics ARE involved (e.g. rewriting an existing manifest shard rather than
+      appending), the §3a reversibility carve-out may apply instead of `[OPERATOR]` — GCS Soft Delete covers overwrites
+      too, not just deletes — provided a fresh `gcs_bucket_soft_delete_retention_seconds(...)` check on the target
+      manifest bucket returns `>= 604800` at execution time; cite the actual queried value, don't assume it.
 - [ ] 4. [DATA] P1. **Re-verify the cross-AG numbers fresh** (this plan's Measured Evidence carried defi/tradfi/
       prediction from the 2026-07-23 measurement in the source issue doc, only re-verifying cefi directly) before
       relying on them for the backfill's sizing in todo 3 — a stale number risks under- or over-sizing the VM job.

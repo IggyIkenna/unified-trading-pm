@@ -237,6 +237,18 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   proven-safe outcome)._ Don't reflexively tag everything large/irreversible — check whether prior explicit approval
   - validation already exists; if so, state that inline as the justification (finding O's option (a)) rather than
     defaulting to `[OPERATOR]`.
+- **Finding O now has a third self-justification path (c) — "reversibility-verified"** _(finding T, 2026-07-26, operator
+  ruling: AO kept blocking on the operator for prod-bucket deletes even where the target had a real GCS Soft Delete
+  recovery window, forcing the operator to answer and then separately ask a different, locally-supervised agent to
+  actually run the already-approved command — pure toil with no safety benefit once the delete is genuinely
+  reversible)._ A GCS delete todo may skip `[OPERATOR]` by citing a FRESH, same-run
+  `gcs_bucket_soft_delete_retention_seconds(bucket)` check returning `>= 604800` (7 days) — state the actual queried
+  value inline, per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. **Verified, not asserted**: a
+  2026-07 sports-plan todo self-justified on soft-delete WITHOUT querying the real policy — that is now the canonical
+  negative example this finding exists to prevent. Path (c) never applies to a whole-bucket destroy (always
+  `[OPERATOR]`-gated regardless of bucket policy) or when the fresh check returns below the threshold — those still need
+  `[OPERATOR]`, but citing §3a's approve-executes flow (a FINAL operator answer authorizes the SAME worker session to
+  execute immediately) rather than the old assume-a-human-runs-it-elsewhere framing.
 - **When splitting an over-cap plan, correctness beats file count** _(finding R, 2026-07-25, operator ruling: asked
   whether to fork every Track with a real sequential/gating constraint into its own child+finalize even if small, vs.
   merge related Tracks to reduce file count — ruled "correctness over file count")._ Give any Track/section with a real

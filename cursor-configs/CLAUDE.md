@@ -285,12 +285,13 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   start 2020-06-06; pre-floor is fabrication-by-construction — WIPED from GCS + manifest, denominators/launchers/gates
   clamp to it) → `/codex/02-data/sports-2020-06-data-floor.md`.
 - **RECONCILING an AG's estate against canonical (paths ↔ manifest ↔ catalogue)?** Use `/data-pipeline-reconciliation`
-  (per-AG, PROD-only, read-only; deletes are SUGGESTIONS gated on a 5-part proof — prod-bucket deletes are human-only).
-  Canonical/non-canonical is the UAC `canonical_path_violations()` MACHINE ORACLE, never a re-implemented rule; pass
-  `require_pipeline_mode` from the cutover register (it defaults FALSE = weaker than the codex declaration). **The
-  oracle answers PATH STRUCTURE ONLY — it does NOT validate the filename instrument_id** (drops the last segment; stem
-  rule is tradfi-gated), so ~811,200 wire-named cefi objects read CANONICAL — structure and id-form are ORTHOGONAL,
-  neither alone proves canonical; check id-form separately or say it wasn't checked →
+  (per-AG, PROD-only, read-only; deletes are SUGGESTIONS gated on a 5-part proof — prod-bucket deletes are human-only
+  unless reversibility-qualified, delete-safety-protocol §3a). Canonical/non-canonical is the UAC
+  `canonical_path_violations()` MACHINE ORACLE, never a re-implemented rule; pass `require_pipeline_mode` from the
+  cutover register (it defaults FALSE = weaker than the codex declaration). **The oracle answers PATH STRUCTURE ONLY —
+  it does NOT validate the filename instrument_id** (drops the last segment; stem rule is tradfi-gated), so ~811,200
+  wire-named cefi objects read CANONICAL — structure and id-form are ORTHOGONAL, neither alone proves canonical; check
+  id-form separately or say it wasn't checked →
   `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`. The oracle is ALSO **value-blind**
   (never checks `instrument_type`/`data_type`/`venue`/`chain` VALUES vs their enums) — the **distinct-value CENSUS**
   (manifest via deployment-api `_axis_census.py`; GCS via delimiter descent) is the cheap vocabulary complement; heavy

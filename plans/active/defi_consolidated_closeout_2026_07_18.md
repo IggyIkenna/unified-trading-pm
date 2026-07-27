@@ -107,7 +107,7 @@ related:
   ]
 created: 2026-07-18
 last_updated: 2026-06-27
-  2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+  2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"
@@ -353,9 +353,13 @@ Discriminator = **does a manifest row exist**.
 > [`defi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/defi_consolidated_closeout_history_2026_07_25.md).
 
 - [ ] [OPERATOR] P1. **Delete the lending-indices legacy bucket (C0f)** + resolve TF estate drift
-      (`market_data_defi_lending_indices_prd` still declared) + the bare `features-onchain` vs asset-group bucket. All
-      GCS/bucket DELETEs are snapshot-first, human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
-      — an agent must never run the delete itself. (repos: deployment-service, market-tick-data-service)
+      (`market_data_defi_lending_indices_prd` still declared) + the bare `features-onchain` vs asset-group bucket. A
+      whole-BUCKET destroy is never reversibility-qualified regardless of soft-delete config (delete-safety-protocol
+      §3a) — stays snapshot-first + `[OPERATOR]`. Per §3a's approve-executes flow: stage the exact command + snapshot
+      evidence, open a structured BLOCKED question recommending "approve — execute now"; a FINAL operator answer
+      authorizes the SAME worker session to run it immediately (no second agent, no manual operator execution) — not the
+      old "an agent must never run it, a human runs it separately" framing. (repos: deployment-service,
+      market-tick-data-service)
 - [ ] [BACKEND] P0. **NEW 2026-07-24 — `write_defi_rows()` writes the bare SYMBOL as the filename leaf, not the ruled
       canonical_instrument_id, AND DeFi batch capture is actively writing (NOT stopped as the codex/plan text assumes) —
       so this is a growing defect, not frozen residue.** 13/13 sampled objects fail the UAC id-form oracle
@@ -545,16 +549,18 @@ file, not here.
 > `gs://deployment-scripts-central-element-323112/canonical-migration-defi-marker-cleanup/resume-seed/` are the proof
 > either way, they don't need the VM alive to read.
 
-- [ ] [OPERATOR] P1. **Run `delete_migrated_defi_markers_2026_07_23.py --apply`** — CODE-SHIP HALF DONE
+- [ ] [SCRIPT] P1. **Run `delete_migrated_defi_markers_2026_07_23.py --apply`** — CODE-SHIP HALF DONE
       (`market-tick-data-service@a65117eb`, confirmed on `origin/live-defi-rollout` — the blocking flaky-test issue was
       worked around via the serial-pytest mitigation, not fixed at root; see
       `issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`, reopened 2026-07-24). Exact
-      operator command:
-      `cd market-tick-data-service && .venv/bin/python     scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py --apply`.
-      **Gated on the "21 glued-id rows" todo below** — re-verify 0 glued ids before running; the fix that stops NEW
-      glued rows shipped (`f2e3ad41`) but the 12 pre-existing liquidations rows found 2026-07-23 have not yet been
-      re-verified clean. Prod-bucket delete, human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
-      — an agent must never run `--apply` itself.
+      command:
+      `cd market-tick-data-service && .venv/bin/python scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py --apply`.
+      **Gated on the "21 glued-id rows" todo below** — re-verify 0 glued ids before running (a content-correctness
+      prerequisite, independent of the reversibility check below). **Reversibility-verified, no `[OPERATOR]` gate
+      needed** (finding T, `task_template.md`): object-level delete only (per-marker, never the bucket), target
+      `market-data-tick-defi-prd-central-element-323112` — `gcs_bucket_soft_delete_retention_seconds(...)` returned
+      `604800` (7 days) fresh-checked 2026-07-26 per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a.
+      Re-query fresh before running, not from this citation.
 - [x] 1. ✅ [DATA] P1. **Remediate FLAGGED `_migrated_*` markers — ROOT-CAUSED + DECIDED 2026-07-25.** Full analysis in
       `issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md` (live parquet inspection, not guessed).
       Operator decided all three clusters same day; execution now tracked in two dedicated plans (not here, to keep this

@@ -6,9 +6,13 @@ summary: >-
   object, prefix, bucket or manifest row. Defines the FIVE-PART PROOF (twin resolves via gcs_describe_object · CONTENT
   verify not existence · nothing still WRITES it · nothing still READS it · the legacy-COPIED-not-MOVED invariant), the
   closed disposition vocabulary (yes-twin-confirmed / yes-after-verify / no-migrate-first / no-still-authoritative /
-  unknown), the enumerated human-only hard stops an agent never crosses autonomously, and the sanctioned mechanics (UTL
-  gcs_* helpers, resolve_bucket_name, never subprocess gcloud/gsutil, never an inline gs://). Absorbs the GCS DELETE
-  SAFETY INVARIANT previously stranded in pipeline-mode-partition.md.
+  unknown), the enumerated human-only hard stops an agent never crosses autonomously — INCLUDING the §3a
+  reversibility-qualified carve-out (2026-07-26) that lets an agent execute a prod object/prefix delete itself, no
+  operator step, once a fresh per-bucket GCS-Soft-Delete check clears a 7-day recovery window, plus the approve-executes
+  fallback (a FINAL operator answer authorizes the SAME worker session to execute immediately) for everything that
+  doesn't qualify — and the sanctioned mechanics (UTL gcs_* helpers, resolve_bucket_name, never subprocess
+  gcloud/gsutil, never an inline gs://). Absorbs the GCS DELETE SAFETY INVARIANT previously stranded in
+  pipeline-mode-partition.md.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -51,8 +55,13 @@ referenced_by:
     /codex/02-data/orphan-object-detection.md,
   ]
 owner:
-last_reviewed: 2026-07-20
-code_refs: [unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py]
+last_reviewed: 2026-07-26
+code_refs:
+  [
+    unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py,
+    unified-trading-library/unified_trading_library/cloud_interface/providers/gcp.py,
+    agent-orchestrator/server/routes/backlog.py,
+  ]
 ---
 
 # GCS + manifest delete-safety protocol
@@ -199,8 +208,10 @@ These are **never** crossed autonomously, at any confidence, under `/autonomous`
 does not name the specific stop in the same turn. An agent that believes one of these should proceed escalates with
 structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it does not act.
 
-1. **Any prod-bucket delete.** Object, prefix or bucket, in any `-prd-` / production-serving bucket. There is no
-   confidence level at which an agent deletes from prod.
+1. **Any prod-bucket delete that is not reversibility-qualified (§3a).** Object, prefix or bucket, in any `-prd-` /
+   production-serving bucket. There is no confidence level at which an agent deletes from an UNqualified prod bucket —
+   see §3a for the one narrow exception, added 2026-07-26, and note it never covers a whole-**bucket** destroy, which
+   stays a hard stop regardless of soft-delete config.
 2. **Any legacy-object delete after copy.** The entire v9-migration legacy estate is gated by Part 5 above; the copy
    made the legacy object look redundant without proving it is.
 3. **The tradfi `batch_massive` purge — ✅ EXECUTED 2026-07-20/21 (operator, human-only).** All objects under
@@ -233,6 +244,57 @@ structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it doe
 `--apply` only after `prefix_tpls` cover every current path shape, verified by a clean `--dry-run` — documented at
 `pipeline-mode-partition.md:94-101`. Running `--apply` against stale templates flips real `captured` rows to
 `attempted_failed`, silently corrupting honest-coverage accounting.
+
+---
+
+## 3a. Reversibility-qualified prod deletes — the agent-autonomous path (2026-07-26, operator ruling)
+
+Hard-stop #1 above is not absolute: an agent may execute a prod-bucket delete itself, no operator step at all, when BOTH
+hold:
+
+1. **Object/prefix-scoped, via `gcs_delete_object`/`gcs_conditional_delete` (§5) — never a whole-bucket destroy.**
+   Deleting the bucket itself is never reversibility-qualified, regardless of soft-delete config; it stays hard-stop
+   #1's fallback path (below) always.
+2. **A FRESH, same-run check** — via the new helper `gcs_bucket_soft_delete_retention_seconds(bucket_name)`
+   (`unified_trading_library.cloud_interface`) — confirms the target bucket's GCS Soft Delete retention window is **≥
+   604800 seconds (7 days)**. Fresh means queried in the same execution as the delete, never assumed from a prior
+   session's claim, a plan's authoring-time note, or this doc's own baseline table below.
+
+**Rationale.** GCS Soft Delete transparently retains the prior content/state of any deleted or overwritten object for
+its configured retention window, restorable via `gcloud storage objects restore` (or the bucket's native restore API)
+without needing the object to have been separately versioned. A delete under a confirmed ≥7-day window is a mistake with
+a 7-day undo — the same risk class as any other repairable pipeline error this workspace already treats as
+autonomous-eligible — not the irreversible class hard-stop #1 exists to gate.
+
+**Negative example — what NOT to do.** A 2026-07 sports-plan todo
+(`sports_consolidated_native_ao_extract_2026_07_25.md`) already self-justified skipping `[OPERATOR]` on a delete by
+_asserting_ "GCS soft-delete gives a 7-day recovery window, reversible-for-a-week." That claim was never checked against
+the actual bucket policy. This is now the canonical example of the failure mode this section exists to close: **an
+asserted justification is not a verified one.** Query the bucket, cite the actual returned value, every time.
+
+**2026-07-26 fleet baseline** (a starting point to re-verify from, never a substitute for the live check): 25 of 26
+`-prd-` GCP buckets carried `soft_delete_policy.retentionDurationSeconds = 604800` at audit time. The sole exception,
+`instruments-store-sports-prd-central-element-323112` — the exact bucket behind the 2026-07-17 manifest-consolidator
+incident below — had it disabled (`0`); fixed the same day via
+`gcloud storage buckets update ... --soft-delete-duration=7d`.
+
+**Why this matters, concretely — the 2026-07-17 incident.** An automated manifest-consolidator run "succeeded" while
+destroying 7,185 manifest rows describing ~344k real objects on `instruments-store-sports-prd`, with **zero recoverable
+GCS versions** at the time — soft delete was disabled on that exact bucket. It was recovered only because the executing
+agent happened to have separately downloaded the shards minutes earlier. Had the fresh-check requirement above been in
+force with soft delete enabled, the same mistake would have cost nothing — this is precisely the gap the reversibility
+carve-out closes, and precisely why "fresh, not assumed" is non-negotiable.
+
+**Non-qualifying fallback — "approve-executes."** When the bucket check fails (retention `< 604800`), or the operation
+is a whole-bucket destroy, the todo stays gated — but the mechanics changed too, closing the actual toil this was
+causing (an operator answering, then having to separately ask a different, locally-supervised session to run the
+already-approved command): the worker still runs the full five-part proof and stages the exact command, then opens a
+_structured_ BLOCKED question (per `SUB_AGENT_MANDATORY_RULES.md` § escalation — options A/B/C, the worker's
+recommendation marked, e.g. "A: approve — execute now [WORKER REC]"). A FINAL (non-partial) operator answer selecting
+that option is authorization for the **same worker session** — already resumed to `working` by the existing
+`answer_blocked_endpoint` (`agent-orchestrator/server/routes/backlog.py:691-706`, which enqueues the answer to the
+worker's own slot) — to run the staged command immediately, verify via a post-delete `gcs_describe_object(...) is None`,
+and mark the todo done citing both pre- and post-delete evidence. No second agent, no manual operator execution.
 
 ---
 
@@ -269,14 +331,16 @@ migration lands.
 
 **Object operations — UTL helpers only.** Import from `unified_trading_library.cloud_interface`:
 
-| Helper                              | Signature                                  | Use                                              |
-| ----------------------------------- | ------------------------------------------ | ------------------------------------------------ |
-| `gcs_describe_object(uri)`          | `-> BlobMetadata \| None`                  | Part 1 twin resolution; `None` = does not exist. |
-| `gcs_copy_object(src_uri, dst_uri)` | `-> None` (server-side rewrite, no egress) | The migrate step of `no-migrate-first`.          |
-| `gcs_delete_object(uri)`            | `-> None`                                  | The delete itself — human-gated per § 3.         |
+| Helper                                             | Signature                                  | Use                                                         |
+| -------------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------- |
+| `gcs_describe_object(uri)`                         | `-> BlobMetadata \| None`                  | Part 1 twin resolution; `None` = does not exist.            |
+| `gcs_copy_object(src_uri, dst_uri)`                | `-> None` (server-side rewrite, no egress) | The migrate step of `no-migrate-first`.                     |
+| `gcs_delete_object(uri)`                           | `-> None`                                  | The delete itself — gated per § 3 / autonomous per §3a.     |
+| `gcs_bucket_soft_delete_retention_seconds(bucket)` | `-> int` (seconds; `0` = disabled)         | The §3a fresh-check — query before every autonomous delete. |
 
-Definitions: `unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py:38` (copy), `:45`
-(delete), `:51` (describe). All three split the `gs://` URI and dispatch through `get_storage_client()`.
+Definitions: `unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py` (all four helpers;
+`providers/gcp.py`'s `GCSStorageClient` holds the real implementations). All split/take the `gs://` URI or bare bucket
+name and dispatch through `get_storage_client()`.
 
 **Never a subprocess.** `gcloud` / `gsutil` spawns cost ~500ms per call versus ~50-200ms for the REST helpers, and the
 helpers release the GIL so `ThreadPoolExecutor` workers parallelise — a measured 250× throughput difference (~8,500 vs
