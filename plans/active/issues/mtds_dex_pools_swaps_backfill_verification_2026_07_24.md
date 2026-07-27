@@ -206,8 +206,28 @@ rule (see Progress Log entry below for the observed outcome).
       agent sandbox are no longer measured at ~100 KB/s, to corroborate this issue's GCS-object-existence-based findings
       against the manifest's own `capture_status` distribution. Not blocking — object-level evidence here is already
       ground truth for "did real rows land."
+- [ ] [BACKEND] P1. **Scope extension, 2026-07-27 (slot-2)**: the SAME TheGraph subgraph-schema-cascade failure class as
+      TRADER_JOE_V2 above is confirmed live TODAY (not stale) on 6 additional venue/chain pairs, discovered via a direct
+      read of the live `market-data-tick-defi-prd-central-element-323112` manifest while scoping
+      `defi_satellite_ao_dispatch_batch3-003` D2 (that todo's own premise — 28,634 UNISWAP_V3-ETHEREUM stale
+      chain-column rows — turned out to be superseded by the C0 migration; this is a genuinely different, currently
+      active issue found along the way). 795 total `dex_pool_swaps` `attempted_failed` rows,
+      `error_reason="All N     cascade schemas drifted/returned GraphQL errors for {venue}/{chain} (subgraph=...)"`,
+      `attempted_at` spanning 2026-07-22 through 2026-07-27 (accumulating ~100-180 rows/day): UNISWAP_V3/OPTIMISM (342,
+      subgraph `Cghf4LfVqPiFw6fp...`), CURVE/OPTIMISM (338, subgraph `CXDZP...`), TRADER_JOE_V2/AVALANCHE (73, already
+      the P1 todo above), PANCAKESWAP_V3/BSC (15) + PANCAKESWAP_V3/ETHEREUM (2), UNISWAP_V4/ETHEREUM (5, GraphQL
+      errors) + UNISWAP_V4 `build_instrument_id` errors (7), UNISWAP_V2/ETHEREUM (5), VELODROME_V2/OPTIMISM (5),
+      AERODROME_V3/BASE (1), UNISWAP_V3/POLYGON (2). `chain` column is 100% populated for all these rows (not the old
+      chain-propagation bug — a live subgraph-endpoint/schema-cascade problem, same class as the TRADER_JOE_V2 fix
+      above). Diagnose per venue/chain in `market_tick_data_service/cli/handlers/dex_swaps_handler.py` /
+      `_dex_swaps_query_strings.py` (likely more rotated/dead subgraph deployment IDs or missing cascade-schema
+      variants, mirroring the TRADER_JOE_V2 root cause) and fix or file per-venue follow-ups. Repo:
+      market-tick-data-service.
 
 ## Progress Log
 
 - 2026-07-24 — issue filed from a live verification session (closeout plan `defi_consolidated_closeout_2026_07_18.md`
   line 445). See findings + evidence above.
+- 2026-07-27 (slot-2) — scoping `defi_satellite_ao_dispatch_batch3-003` D2 required a live manifest read that surfaced 6
+  more venue/chain pairs hitting the same subgraph-cascade failure class as TRADER_JOE_V2, all currently active (not
+  stale). Added as a new P1 todo above rather than a duplicate issue doc.
