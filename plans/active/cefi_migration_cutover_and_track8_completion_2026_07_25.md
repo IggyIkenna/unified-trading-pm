@@ -888,3 +888,24 @@ every todo executes an already-decided spec from the parent doc.
   finding there and bumped its "default `LC_TARBALL_FRESHNESS=enforce`" todo P2→P1 given it's now a 3rd same-day hit,
   rather than fix the default mid-campaign (not the right moment to flip a workspace-wide launch gate while other shards
   are in flight).
+
+- **2026-07-27T~13:35Z — fleet check after a session interruption (battery cut mid git-push retry loop; no work lost,
+  the interrupted commit was still sitting safely uncommitted in the working tree on resume).** Fresh count: **14 shards
+  still RUNNING** (`cs10-3e/4b/5d`, `cs3-2d`, `cs4-3d`, `cs5-1d`, `cs6-2d`, `cs7-3d(finishing)/5f`, `cs8-3f/6f`,
+  `cs9-1d/2e/4e`, `cs7-4d-r2`) — **28/42 shards clean-complete** (5 more since the last snapshot: `cs10-4a`, `cs2d`,
+  `cs8-2f`, `cs8-5e`, `cs7-3d`, all confirmed `EXIT_STATUS=0`). `cs7-4d-r2` (the DERIBIT-excluded retry) is healthy at
+  36,200/128,129 files (28%) and — confirmed via its own `run.log` — IS writing
+  `[[VM_PROGRESS]] last_completed_date=... monotonic=true` checkpoints, meaning it picked up the fresh (post-`54817bc1`)
+  tarball despite the earlier-suspected race; it now has real crash-resilience its predecessor never had. No new
+  casualties, no new stale-tarball hits, no wedged-worker warnings escalating past the known-benign noise pattern.
+  **Committed via the pathspec form (`git commit -m "..." -- <2 files>`) after this session's own git-commit skill
+  diagnosed the actual cause of ~9 consecutive "branch drift"/foreign-content collisions this cycle: a still-alive
+  background sub-agent from earlier in this session (a "review role" agent, visible via `[slot-2·laptop]`-authored
+  commits with unrelated content — `codex/02-data/prediction-data-types-catalog.md`,
+  `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) sharing this SAME un-isolated working tree, not a truly
+  foreign concurrent slot** — both of its commits were legitimate, independently verified content (one already
+  corroborated by `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`'s own Update 6), so nothing was discarded, just
+  not bundled into my own commit. **Lesson for future sessions**: spawning monitoring/review sub-agents without
+  `isolation: "worktree"` means they share this git tree and WILL occasionally interleave commits under the same slot
+  identity — expected, not a bug, and the pathspec commit form (`git commit -m ... -- <my files>`) is the clean way
+  through it instead of a stash-restore dance.
