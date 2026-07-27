@@ -642,6 +642,44 @@ silent fleet drift.
 
 SSOT: `plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md`.
 
+### Cloud Build auto-repin steps after a force-sync — the CB repo mirror can be stale (codified 2026-07-27)
+
+A `cloudbuild.yaml` step that auto-repins a downstream Cloud Run resource (e.g. `redeploy-monitor-jobs` re-pinning the 4
+`dp-*` monitor jobs to a freshly-pushed `:latest`, `deployment-api/cloudbuild.yaml`) assumes every build it fires from
+is a **real, reachable commit**. A `main` force-sync breaks that assumption twice (found during the 2026-06-24 incident,
+`plans/active/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md`):
+
+1. It **orphans the in-flight CI commit** — the deploy trigger builds a now-nonexistent SHA → a BAD image gets pushed to
+   `:latest`, and an auto-repin step would happily re-pin production jobs onto that bad image.
+2. It leaves **Cloud Build's GitHub repo-connection mirror stale** — the mirror keeps resolving `main` → the orphaned
+   SHA until a REAL (non-`[skip ci]`) `main` push re-syncs it; `gcloud builds triggers run --sha=<real-tip>` fails
+   `FAILED_PRECONDITION: Couldn't read commit` in the meantime.
+
+**Rule**: after a `main` force-sync, do NOT let an auto-repin step run against whatever `:latest` the CB mirror produces
+next — pin the downstream resource(s) to a KNOWN-GOOD digest by hand until a real promotion (not a force-sync, not
+`[skip ci]`) resyncs the mirror and a build off the real tip proves clean. Treat any auto-repin step's output right
+after a force-sync as unverified until then.
+
+### A shared `cloudbuild.yaml` guard only protects code that is actually BUILT with the guarded substitution (codified 2026-07-27)
+
+A step guarded on `if [ "${_SERVICE_NAME}" != "x"]; then exit 0; fi` inside a `cloudbuild.yaml` that is nominally
+"shared" across services is only reachable if some LIVE, ENABLED Cloud Build trigger actually builds that exact file
+with `_SERVICE_NAME=x` set. It is not enough for the guard to be syntactically correct — verify with
+`gcloud builds triggers describe <trigger> --format="value(filename,substitutions)"` (or lack of an override, which
+falls back to the file's own `substitutions:` default) that a trigger exists which both (a) reads that file and (b) sets
+the substitution the guard checks for. **Confirmed incident** (`monitor_jobs_auto_repin_and_alerting_cli_wiring`,
+verified 2026-07-27): the `redeploy-monitor-jobs` step was added to `deployment-service/cloudbuild.yaml` guarded on
+`_SERVICE_NAME == deployment-api`, but the only trigger that builds that file (`deployment-service-build`) never
+overrides `_SERVICE_NAME` (so it always builds as the file's own default, `deployment-dashboard`) and the trigger that
+actually builds+deploys `deployment-api` (`deployment-api-main-deploy`) reads a **completely different file** —
+`deployment-api`'s own root `cloudbuild.yaml` — which never contained the step at all. The guard was correct; the step
+was in the wrong repo's file and was silently unreachable for over a month (confirmed via the target Cloud Run jobs'
+`run.googleapis.com/lastUpdatedTime` staying weeks-stale across dozens of real `deployment-api` main builds, and via
+`gcloud builds log <recent deployment-api-main-deploy build id>` showing no `redeploy-monitor-jobs` step at all). **A
+service-specific auto-repin/side-effect step belongs in THAT service's own `cloudbuild.yaml`** (or, if it must live in a
+shared file, verify end-to-end which live trigger reaches it before declaring the wiring "CONFIG DONE" — "the step
+exists in a file with the right guard" is not evidence it ever executes).
+
 ## Strict quickmerge — direct integration-branch code pushes are BANNED (HARD RULE, 2026-06-08)
 
 CODE reaches the integration branch ONLY via `quickmerge --agent --files`. A direct `git push` of code to
