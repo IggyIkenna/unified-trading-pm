@@ -1613,56 +1613,114 @@ fi
 # run). When --files is set, only THOSE paths need to be clean to conclude "already
 # committed, safe to push" — the unscoped path is unaffected and still requires a fully
 # clean tree (the caller owns the whole tree there).
-_QM_ALREADY_COMMITTED=0
-if [ -z "$(git diff --cached --name-only)" ]; then
+# Re-stage helper (deletion-aware, --files-scoped when set) — shared by the
+# reformat-retry below AND the branch-drift retry loop, so both retry paths
+# re-stage identically instead of drifting into two slightly different rules.
+_qm_restage_target_files() {
   if [ -n "$FILES_ARG" ]; then
-    # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
-    [ -z "$(git status --porcelain -- $FILES_ARG)" ] && _QM_ALREADY_COMMITTED=1
-  elif [ -z "$(git status --porcelain)" ]; then
-    _QM_ALREADY_COMMITTED=1
-  fi
-fi
-
-if [ "$_QM_ALREADY_COMMITTED" = 1 ]; then
-  # Nothing staged and (--files paths | whole tree) clean — changes were already committed
-  # in a previous quickmerge run (or by a worker that commits before calling quickmerge, per
-  # the documented --agent flow). That pre-existing commit never passed through the trailer
-  # stamp above, so check_strict_quickmerge.py/pre-push-strict-quickmerge.sh will reject the
-  # push unless HEAD already carries a Quickmerge: trailer — amend it on now if missing.
-  if git log -1 --format=%B | grep -q '^Quickmerge:'; then
-    echo "[$REPO_NAME] ℹ️  Working tree clean (scoped to --files, if set) — changes already committed. Proceeding to push."
+    for f in $FILES_ARG; do
+      if [ -e "$f" ] || git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then git add -- "$f"; fi
+    done
   else
-    _QM_AMEND_MSG_FILE=$(mktemp "${TMPDIR:-/tmp}/qm-amend-msg.XXXXXX")
-    { git log -1 --format=%B; printf '\nQuickmerge: %s\n' "$_QM_TRAILER_KIND"; } >"$_QM_AMEND_MSG_FILE"
-    git commit --amend -F "$_QM_AMEND_MSG_FILE" --quiet
-    rm -f "$_QM_AMEND_MSG_FILE"
-    echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed but missing the Quickmerge trailer; amended HEAD to add 'Quickmerge: ${_QM_TRAILER_KIND}'. Proceeding to push."
+    git add -A
   fi
-elif ! git commit -m "$_QM_COMMIT_MSG" --quiet; then
+}
+
+# Bounded retry for a commit-time branch-drift race (ao_quickmerge_stage5_
+# branch_drift_retry_2026_07_27): STAGE 0.4 already pulled us current before QG
+# ran, but on a busy shared branch a peer can push AGAIN in the seconds between
+# that pull and this commit, so the check-branch-drift pre-commit hook fails
+# here — previously a hard, uninformative exit requiring the calling agent to
+# manually pull + re-stage + re-invoke quickmerge from scratch (observed: 20+
+# consecutive manual retries in one session under heavy live-defi-rollout
+# traffic, each burning a full quickmerge re-run). This is a pure GIT-REF race,
+# not a content/QG-validity race (contrast the sentinel retry above, which
+# re-gates because the TREE may have changed) — our staged --files paths were
+# already Pass-1-QG-verified, and a peer's commit landing on unrelated files
+# doesn't invalidate that, so recovery here is just "pull, re-stage, recommit",
+# never a re-gate. _qm_stage_0_4_not_behind_gate is reused verbatim (same
+# ff-only-then-rebase-autostash-then-QUICKMERGE_BLOCKED contract already
+# trusted elsewhere in this script) so a GENUINE same-file conflict still hard-
+# blocks with the structured error instead of this loop papering over it.
+_QM_COMMIT_RETRY_MAX=15
+_QM_COMMIT_ATTEMPT=0
+while true; do
+  _QM_ALREADY_COMMITTED=0
+  if [ -z "$(git diff --cached --name-only)" ]; then
+    if [ -n "$FILES_ARG" ]; then
+      # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
+      [ -z "$(git status --porcelain -- $FILES_ARG)" ] && _QM_ALREADY_COMMITTED=1
+    elif [ -z "$(git status --porcelain)" ]; then
+      _QM_ALREADY_COMMITTED=1
+    fi
+  fi
+
+  if [ "$_QM_ALREADY_COMMITTED" = 1 ]; then
+    # Nothing staged and (--files paths | whole tree) clean — changes were already committed
+    # in a previous quickmerge run (or by a worker that commits before calling quickmerge, per
+    # the documented --agent flow). That pre-existing commit never passed through the trailer
+    # stamp above, so check_strict_quickmerge.py/pre-push-strict-quickmerge.sh will reject the
+    # push unless HEAD already carries a Quickmerge: trailer — amend it on now if missing.
+    if git log -1 --format=%B | grep -q '^Quickmerge:'; then
+      echo "[$REPO_NAME] ℹ️  Working tree clean (scoped to --files, if set) — changes already committed. Proceeding to push."
+    else
+      _QM_AMEND_MSG_FILE=$(mktemp "${TMPDIR:-/tmp}/qm-amend-msg.XXXXXX")
+      { git log -1 --format=%B; printf '\nQuickmerge: %s\n' "$_QM_TRAILER_KIND"; } >"$_QM_AMEND_MSG_FILE"
+      git commit --amend -F "$_QM_AMEND_MSG_FILE" --quiet
+      rm -f "$_QM_AMEND_MSG_FILE"
+      echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed but missing the Quickmerge trailer; amended HEAD to add 'Quickmerge: ${_QM_TRAILER_KIND}'. Proceeding to push."
+    fi
+    break
+  fi
+
+  if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+    break
+  fi
+
   # Pre-commit may have modified files (e.g. Prettier). Re-stage and retry once.
   # RE-ASSERT --files SCOPE: a hook that reformats files must NOT let `git add -A`
   # sweep FOREIGN modified files (another agent's WIP, an inventory regen, a concurrent
   # edit) into a scoped commit — that is the prek-auto-stage-vs-`--files` foot-gun. When
   # --files is set, re-stage ONLY those paths (the hook's edits to YOUR files re-stage;
   # foreign modified files stay out of the index). Only the unscoped path uses `git add -A`.
-  if [ -n "$FILES_ARG" ]; then
-    for f in $FILES_ARG; do
-      # Deletion-aware re-stage (same rule as the primary loop): tracked-but-absent = deletion.
-      if [ -e "$f" ] || git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then git add -- "$f"; fi
-    done
-  else
-    git add -A
+  _qm_restage_target_files
+  if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+    if [ -n "$FILES_ARG" ]; then
+      echo "[$REPO_NAME] Pre-commit modified files; re-staged (scoped to --files) and committed on retry" >&2
+    else
+      echo "[$REPO_NAME] Pre-commit modified files; staged and committed on retry" >&2
+    fi
+    break
   fi
-  if ! git commit -m "$_QM_COMMIT_MSG" --quiet; then
+
+  # Still failing after the reformat-retry. Distinguish a branch-drift RACE
+  # (retryable — pull and try again) from a genuine content-level pre-commit
+  # failure (lint/type/etc — pulling can never fix this, so fail fast, never
+  # loop blindly).
+  _QM_DRIFT_UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
+  if [ -n "$_QM_DRIFT_UPSTREAM" ]; then
+    git fetch "${_QM_DRIFT_UPSTREAM%%/*}" --quiet 2>/dev/null || true
+    _QM_STILL_BEHIND=$(git rev-list "HEAD..$_QM_DRIFT_UPSTREAM" --count 2>/dev/null || echo 0)
+  else
+    _QM_STILL_BEHIND=0
+  fi
+  if [ "${_QM_STILL_BEHIND:-0}" = "0" ]; then
     echo "[$REPO_NAME] ❌ Commit failed (pre-commit may have failed). Run: pre-commit run --all-files; git add -A; git commit -m \"...\"" >&2
     exit 1
   fi
-  if [ -n "$FILES_ARG" ]; then
-    echo "[$REPO_NAME] Pre-commit modified files; re-staged (scoped to --files) and committed on retry" >&2
-  else
-    echo "[$REPO_NAME] Pre-commit modified files; staged and committed on retry" >&2
+
+  _QM_COMMIT_ATTEMPT=$((_QM_COMMIT_ATTEMPT + 1))
+  if [ "$_QM_COMMIT_ATTEMPT" -gt "$_QM_COMMIT_RETRY_MAX" ]; then
+    echo "[$REPO_NAME] ❌ Commit still losing the branch-drift race after ${_QM_COMMIT_RETRY_MAX} retries — sustained" >&2
+    echo "  contention, not a one-off. Run: git pull --ff-only ; git add <your files> ; retry quickmerge.sh" >&2
+    exit 1
   fi
-fi
+  _QM_COMMIT_BACKOFF=$((1 + RANDOM % 3))
+  echo "[$REPO_NAME] ⏳ commit lost the branch-drift race (peer pushed mid-commit, behind=${_QM_STILL_BEHIND}) — retry ${_QM_COMMIT_ATTEMPT}/${_QM_COMMIT_RETRY_MAX} in ${_QM_COMMIT_BACKOFF}s"
+  sleep "$_QM_COMMIT_BACKOFF"
+  _qm_stage_0_4_not_behind_gate
+  _qm_restage_target_files
+done
 
 git push -u origin "$BRANCH" --quiet 2>/dev/null
 
