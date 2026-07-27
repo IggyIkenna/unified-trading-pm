@@ -185,16 +185,23 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       cell). **NICE-TO-HAVE** — the ceiling measurement is sufficient for a CONFIRM/TOO-LOW/TOO-HIGH verdict; this
       tightens it. Provenance: Source-latency validation (2026-06-22). — deployment-service@46ffbad (FirstSuccessPoller
       extracted to sports_latency_observation.py; scheduler ≤900 lines; QG green)
-- [ ] [DATA] P2. **Re-pin `source_data_latency.py` from ≥2 weeks of empirical observations** (unified-api-contracts) —
-      after the live scheduler has accrued ~2 weeks of `_index/latency_observations` over the open leagues, run
-      `python3 instruments-service/scripts/aggregate_source_latency_observations.py --emit-constants` (add
-      `--first-success-only` once the P3 enhancement lands), review the per-source p50/p95/max-vs-assumed verdict, and
-      update the 5 constants in `unified-api-contracts/.../registry/source_data_latency.py` from REAL data (the
-      constants feed `CanonicalFixture.report_time = match_end + lag`, a cross-repo contract → human-reviewed UAC edit,
-      semver via the agent). NO historical-row migration needed: `available_at`/`report_time` on EXISTING captured rows
-      are write-time stamps that don't retro-change; only NEW forward `report_time` derivation picks up the re-pinned
-      constants (live=batch, one path). Then flip this + re-doc the Source-latency section as VALIDATED (not assumed).
-      Repo: unified-api-contracts. Provenance: Migration plan section below.
+- [x] ✅ [DATA] P2. **DONE 2026-07-27 (slot-15)** — **Re-pin `source_data_latency.py` from ≥2 weeks of empirical
+      observations** (unified-api-contracts) — ran
+      `python3 instruments-service/scripts/aggregate_source_latency_observations.py --emit-constants` and
+      `--first-success-only` against `instruments-store-sports-prd`'s 552 `_index/latency_observations/day=*/*.parquet`
+      files (2026-07-14..2026-07-27, ~13-day accrual). Result: only **api_football** accrued samples (n=2504, all
+      first-ATTEMPT/ceiling observations — `first_success` is 0/2504, the genuine first-success poller has never
+      confirmed a real capture live); observed p50=361s/p95=673s/max=898s is below the 1800s assumed constant, so per
+      the aggregator's fail-safe (never lower a floor from a ceiling-only sample without `--allow-lower`) the constant
+      is retained **unchanged** — a CONFIRM, not a re-pin. **sfi/understat/footystats/open_meteo all read n=0
+      (UNDER-SAMPLED)**, each for a distinct, now-diagnosed structural reason (see Step 2 table below) — one of which
+      (`understat`'s `stats_delayed` trigger) is a genuine live-scheduler bug, not a thin-accrual-window issue, filed as
+      `issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md` (P0, NOTIFIED — a potential live-pipeline
+      data-completeness gap beyond this todo's scope). All 5 constants documented in place
+      (unified-api-contracts@37611070) with per-source empirical-review docstrings citing sample counts + root causes;
+      no numeric value changed this cycle. `quality-gates.sh` green (no tests reference this module). Source-latency
+      Step-2 verdict table below updated from UNVALIDATABLE-FROM-BACKFILL to the empirical per-source verdict (NOT a
+      blanket VALIDATED — 4/5 sources remain genuinely unvalidated pending the filed follow-ups).
 
 ## Source-latency validation (2026-06-22)
 
@@ -246,13 +253,43 @@ per-entity `available_at` reflect **OUR backfill write time, not the source's fi
 | `understat` XG                      | 7200 s (2 h)         | `written_at` = backfill batch clusters (top cluster 92 rows @ one ts)                                        | **UNVALIDATABLE-FROM-BACKFILL**                                    | 5,619                  |
 | `open_meteo` WEATHER (historical)   | 3600 s (1 h)         | `available_at` = backfill wall-clock, up to 43 days post-match                                               | **UNVALIDATABLE-FROM-BACKFILL**                                    | 13,963                 |
 
-**Verdict: all five constants are UNVALIDATABLE FROM BACKFILL DATA.** None can be confirmed or refuted from what GCS
-holds today, because no captured sports cell carries a real source-first-publish timestamp — every `available_at` is
-either the lag-constant arithmetic (`match_end + lag`, circular) or the backfill write wall-clock (days-to-weeks late).
-The constants are NOT changed (no evidence justifies a change in either direction). They remain plausible as
-order-of-magnitude assumptions (SFI is a live in-play feed → ~minutes is reasonable; understat xG genuinely posts ~hours
-after FT; api-football/footystats post-match stats within ~tens-of-minutes-to-an-hour), but "assumed" must NOT be
-re-labelled "validated" until a live-poll capture proves them.
+**Verdict (backfill-only, 2026-06-22): all five constants are UNVALIDATABLE FROM BACKFILL DATA.** None could be
+confirmed or refuted from what GCS held at the time, because no captured sports cell carried a real source-first-publish
+timestamp — every `available_at` was either the lag-constant arithmetic (`match_end + lag`, circular) or the backfill
+write wall-clock (days-to-weeks late). Superseded by the live-forward re-verification below.
+
+### Step 2 update — empirical live-forward re-verification (2026-07-27, ~13-day accrual)
+
+Ran `instruments-service/scripts/aggregate_source_latency_observations.py --emit-constants` (+ `--first-success-only`)
+against the live `_index/latency_observations/day=*/*.parquet` files (552 parquets, 2026-07-14..2026-07-27):
+
+| Source / data_type           | Assumed-p95 | n (live obs) | first_success=True | Observed p50/p95/max | Verdict                                                                           |
+| ---------------------------- | ----------- | ------------ | ------------------ | -------------------- | --------------------------------------------------------------------------------- |
+| `api_football` FIXTURE_STATS | 1800 s      | 2504         | 0                  | 361s / 673s / 898s   | **CONFIRMED (ceiling-only)** — floored, not lowered; see note below               |
+| `sfi` SFI_PROGRESSIVE_STATS  | 300 s       | 0            | —                  | —                    | **UNDER-SAMPLED** — no live trigger wired for this entity                         |
+| `understat` XG               | 7200 s      | 0            | —                  | —                    | **UNDER-SAMPLED** — confirmed scheduler bug, trigger can never fire               |
+| `footystats` MATCHES         | 3600 s      | 0            | —                  | —                    | **UNDER-SAMPLED** — source never instrumented (not in the observation-target map) |
+| `open_meteo` WEATHER         | 3600 s      | 0            | —                  | —                    | **UNDER-SAMPLED** — source never instrumented (not in the observation-target map) |
+
+**Verdict: NOT a blanket VALIDATED.** Only `api_football` accrued a usable sample, and even that sample is first-ATTEMPT
+ceiling data (the P3 genuine-first-success poller, `deployment-service@46ffbad`, has never actually confirmed a
+`first_success=True` row in 13 days of live operation — a separate suspicious gap, not yet root-caused). Its observed
+p95 (673s) is below the assumed 1800s constant; per the aggregator's own fail-safe (never lower a floor from a
+ceiling-only/thin sample without `--allow-lower`), the constant is retained unchanged — this is a CONFIRM, not a re-pin.
+The other 4 sources remain genuinely un-validated:
+
+- `sfi`: `SFI_PROGRESSIVE_STATS` has no corresponding trigger entry in `sports-trigger-tiers.yaml`'s `post_match` tier
+  at all — the live scheduler never dispatches it, so no observation can accrue regardless of accrual time.
+- `understat`: the `stats_delayed` trigger (offset_hours=24) IS configured but can structurally **never fire** —
+  root-caused to `get_upcoming_fixtures()`'s ~2h-post-kickoff fixture-visibility cutoff, which closes long before a
+  24h-offset trigger becomes due. This is a real scheduler bug with potential live data-completeness impact beyond
+  latency observation (the same trigger dispatches the REAL Understat/FootyStats XG capture). Filed as
+  `issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md` (P0).
+- `footystats` / `open_meteo`: neither is mapped in `ENTITY_TO_OBSERVATION_TARGET` — never instrumented by this
+  mechanism at all, independent of accrual time or trigger-firing correctness.
+
+The 5 constants in `source_data_latency.py` are documented in place with this review's findings; none change value this
+cycle (unified-api-contracts, 2026-07-27).
 
 ### Step 3 — how to validate LIVE (the only path that proves source-publish lag)
 
