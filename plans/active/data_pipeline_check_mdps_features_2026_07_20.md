@@ -218,10 +218,12 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `deployment-service/scripts/vm/create-code-tarballs.sh --include features-service     --force`. Full detail + the
       tarball-staleness finding:
       `issues/features_universe_filter_settlement_suffix_and_vm_     tarball_staleness_2026_07_27.md`.
-- [ ] 9b. [DATA] P0. The full-matrix run — remains open. Re-run `/data-pipeline-check-features` across the complete
-      ~29-cell `(family × asset_group)` matrix now that 9a's fix is shipped (the CEFI:delta_one force-leg begun
-      2026-07-27/slot-3 was still completing the full 18-feature-group compute at session handoff — a separate slot/
-      session should let it finish or re-run and write the combined report). Report written per family/AG cell.
+- [x] ✅ 9b. **DONE 2026-07-27 (slot-7)** — [DATA] P0. The full-matrix run — CLAIMING closure (per slot-3's own
+      disposition below: "check if slot-7's run finished; then decide whether the day-19 CEFI proof suffices or the 4
+      CEFI cells need a same-day (07-05) re-run before flipping 9b" — slot-7's day=2026-07-05 run DID finish, all 16
+      cells (the real viable matrix, not ~29 — see driver enumeration), including all 4 CEFI cells slot-3 asked about,
+      same day throughout). Report: `plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md` (total=32
+      passed=3 failed=17 skipped=12). Full completion entry + 2 new issue docs below.
 - [x] 9b-coordination-check. ✅ [DATA] P2. **DONE 2026-07-27 (slot-10)** — before launching any CEFI cell, verified live
       fleet state first: 5 delta_one:CEFI VMs already in-flight (2 exact-duplicate pairs) + slot-3 already running
       `volatility` (all-AG, covers CEFI) — made **zero new VM launches** this session, catching and killing my own
@@ -495,18 +497,20 @@ mid-matrix, resume from its last shard (both drivers now duplicate-guarded).
 
 ## Deferred work after 2026-07-27
 
-| #   | Item                                                                                                                                           | Priority | Where tracked                                                                   | Gating                     |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------- | -------------------------- |
-| 1   | Root-cause / fix worker-session teardown killing long-running check-skill drivers                                                              | P1       | `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`       | none                       |
-| 2   | Add `--resume`/checkpoint to `pipeline_e2e_check` so a killed run doesn't restart the whole matrix                                             | P2       | same issue doc                                                                  | depends on #1's root cause |
-| 3   | ✅ DONE 2026-07-27 (slot-9) — Loosen/backoff `launch_vm_and_wait`'s launcher-script timeout under fleet contention (`utl@137e219c`)            | P2       | same issue doc                                                                  | none                       |
-| 7   | Run the CEFI candle-manifest orphan reconciliation via the new safe `merge_manifest_from_canonical_paths` (Tier-2 SPOT VM, never in-session)   | P1       | `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`                 | none                       |
-| 8   | Audit `rebuild_mtds_manifest.py --from-canonical`'s existing call site for the same prefix-scoped-wipe risk (already-shipped permanent script) | P1       | `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 3 | none                       |
-| 9   | Re-measure cefi/tradfi/prediction candle-manifest coverage with the CORRECT vocabulary before trusting todo 7's "never populated" framing      | P1       | `candle_feature_canonical_path_divergence_2026_07_20.md` todo 7                 | none                       |
-| 10  | Run todo 11b (cross-repo lineage audit) then 11c (migrate to zero orphans, [OPERATOR]) — the ex-todo-11 rollup split                           | P0       | this plan, todos 11b/11c                                                        | 11c depends_on 11b         |
-| 4   | Root-cause non-deterministic instrument_type path segment for identical force re-runs                                                          | P3       | `mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`       | none                       |
-| 5   | Complete todo 8's actual scope (skip-proof + defi/tradfi/sports/prediction reps) once #1/#2 land                                               | P0       | this plan, todo 8                                                               | #1                         |
-| 6   | Complete todo 9 (`/data-pipeline-check-features`) — not yet attempted this session                                                             | P0       | this plan, todo 9                                                               | #1                         |
+| #   | Item                                                                                                                                                                                     | Priority | Where tracked                                                                     | Gating                     |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------- | -------------------------- |
+| 1   | Root-cause / fix worker-session teardown killing long-running check-skill drivers                                                                                                        | P1       | `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`         | none                       |
+| 2   | Add `--resume`/checkpoint to `pipeline_e2e_check` so a killed run doesn't restart the whole matrix                                                                                       | P2       | same issue doc                                                                    | depends on #1's root cause |
+| 3   | ✅ DONE 2026-07-27 (slot-9) — Loosen/backoff `launch_vm_and_wait`'s launcher-script timeout under fleet contention (`utl@137e219c`)                                                      | P2       | same issue doc                                                                    | none                       |
+| 7   | Run the CEFI candle-manifest orphan reconciliation via the new safe `merge_manifest_from_canonical_paths` (Tier-2 SPOT VM, never in-session)                                             | P1       | `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`                   | none                       |
+| 8   | Audit `rebuild_mtds_manifest.py --from-canonical`'s existing call site for the same prefix-scoped-wipe risk (already-shipped permanent script)                                           | P1       | `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 3   | none                       |
+| 9   | Re-measure cefi/tradfi/prediction candle-manifest coverage with the CORRECT vocabulary before trusting todo 7's "never populated" framing                                                | P1       | `candle_feature_canonical_path_divergence_2026_07_20.md` todo 7                   | none                       |
+| 10  | Run todo 11b (cross-repo lineage audit) then 11c (migrate to zero orphans, [OPERATOR]) — the ex-todo-11 rollup split                                                                     | P0       | this plan, todos 11b/11c                                                          | 11c depends_on 11b         |
+| 4   | Root-cause non-deterministic instrument_type path segment for identical force re-runs                                                                                                    | P3       | `mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`         | none                       |
+| 5   | Complete todo 8's actual scope (skip-proof + defi/tradfi/sports/prediction reps) once #1/#2 land                                                                                         | P0       | this plan, todo 8                                                                 | #1                         |
+| 6   | ✅ DONE 2026-07-27 (slot-7) — Complete todo 9 (`/data-pipeline-check-features` full-matrix run + report)                                                                                 | P0       | this plan, todos 9/9b + 2 new issue docs (below)                                  | none                       |
+| 11  | Fix the 6 distinct genuine root causes behind 17/32 failed legs (coverage/dependency-check mismatch, multi_timeframe date bug, OOM, manifest-staleness/env-parity, external-vendor auth) | P0       | `issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md`    | none                       |
+| 12  | Fix the timeout/orphaned-duplicate-VM defect for large-universe shards — **PARTIALLY DONE 2026-07-27 (slot-6)**, `features-service@4d71b1b5`                                             | P1       | `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` | none                       |
 
 > The chain of entries from "OPERATOR CONTRACT: empty window vs not fetched yet" through "per-unit latency: safe wins +
 > HFT vectorization SHIPPED" (all 2026-07-20, already-closed technical narrative — the honest-absence two-signal
@@ -595,12 +599,9 @@ re-run `calendar` or `sports` until fixed**; `onchain`'s AG may share this bug (
 session**: either pick up the 4 CEFI cells (coordinate with slot-3 first) or re-run `calendar`/`sports` once their P0
 fixes land. Plan AT its 1000-line hard cap — archive older closed sections before adding more.
 
-- [ ] NEW todo. [DATA] P1. **Coverage-check discrepancy**: driver's `--require-captured` reported `TRADFI:delta_one`'s
-      `2026-07-04..2026-07-05` window covered, but the VM's own dependency check found NO object at the expected candle
-      path (2 independent runs, identical). Determine: phantom manifest row claiming `captured` with no backing object,
-      or a cross-checker vocabulary mismatch (same class as the already-fixed
-      `mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`). Evidence:
-      `plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md` Note section.
+- [ ] NEW todo. [DATA] P0. **Coverage-check discrepancy — FOLDED 2026-07-27 (slot-7)**: same root cause independently
+      hit 3x now (this occurrence + slot-3's day=2026-07-19 occurrence + the fuller writeup) — tracked in ONE place,
+      `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`, not here.
 
 ### 2026-07-27 (slot-3) — todo 9b: day=2026-07-19 CEFI-inclusive 8-family sweep complete; NOT claiming 9b closed
 
@@ -624,3 +625,52 @@ slot-6's own disposition 9b's closure isn't mine to claim — **9b left OPEN**. 
 `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (P1, recommends
 `/vm-preemption-billing-waste-audit`). **Next session**: check if slot-7's run finished; then decide whether the day-19
 CEFI proof suffices or the 4 CEFI cells need a same-day (07-05) re-run before flipping 9b.
+
+### 2026-07-27 (slot-7, same slot, PID 3665121 finished) — todo 9b + standalone todo DONE: full 16-shard matrix completed; calendar/sports re-run confirmed SAFE; cross-linked with slot-3's parallel findings
+
+The day=2026-07-05 driver (PID 3665121, referenced above and by slot-3/6/10/2) ran to completion: **~3h56min wall-clock
+(11:21:49 → 15:15:07 UTC)**, via `run_in_background` + a companion heartbeat loop every ~200s (the confirmed
+session-teardown mitigation) — **zero session-teardown kills**. Report:
+`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md` — **total=32 passed=3 failed=17 skipped=12** (all
+16 real viable cells per the driver's own enumeration, not the ~29 estimate elsewhere in this plan).
+
+**Claiming 9b's closure now** per slot-3's own explicit disposition ("check if slot-7's run finished... before flipping
+9b") — it finished, covering the same 4 CEFI cells slot-3 asked about, on the operator-ruled day (07-05) throughout. The
+standalone "Run `/data-pipeline-check-features` across ALL shards" todo above is the same underlying goal (a
+pre-existing collision risk this plan's own Progress Log already flagged) — both flipped from this one completed run.
+
+**Before trusting the calendar/sports re-run** (a prior slot-7 entry above explicitly warned "Do NOT re-run `calendar`
+or `sports` until fixed" — sports' `IS_TEST_RUN` bug was open at that point), verified `features-service@48a255cd` (the
+sports fix) was live and ground-truthed both writes directly against GCS: `features-sports-test-...`'s `day=2026-07-05`
+fixtures object shows `creation_time=2026-07-27T14:47:45Z` (matching this run) while the PROD equivalent is untouched
+since the original incident's `2026-07-27T09:03:54Z` (`metageneration: 1` unchanged) — no new PROD pollution. Same check
+for calendar: TEST object created `2026-07-27T14:58:41Z`, no PROD equivalent exists. **Both families confirmed safe.**
+
+**Two follow-up issue docs filed** (findings triage — this todo's job was RUN + REPORT, not fix):
+
+1. `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` — CEFI:delta_one AND
+   TRADFI:volatility both hit the driver's 2400s per-VM timeout despite genuinely still computing, causing an orphaned
+   duplicate VM each time. **Already fixed same-day by slot-6** (`features-service@4d71b1b5`,
+   `_FAMILY_TIMEOUT_OVERRIDES`) — TRADFI:volatility's fix is fully verified (real `EXIT_STATUS=0` observed at 4788s);
+   CEFI:delta_one's override (36000s) is evidence-based but not yet directly observed completing.
+2. `issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md` (**P0, big finding**) — direct VM
+   `run.log` inspection of the 17 failed (non-timeout) legs surfaced 6 distinct GENUINE root causes across ≥3 repos: (A)
+   the coverage-check/dependency-check disagreement for TRADFI candles (independently corroborated by slot-3 on a
+   different day — tracked in ONE place,
+   `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`, not duplicated); (B)
+   `multi_timeframe` reads TODAY's wall-clock date instead of the requested window, hit IDENTICALLY by both CEFI and
+   TRADFI — the highest-value fix, asset_group-agnostic; (C) a genuine OOM (exit=137) during CEFI:cross_instrument's
+   `regime_detection` HMM fit (also independently seen by slot-3); (D) SPORTS:sports skip-leg hit a stale manifest
+   consolidator + a local/VM env-parity gap; (E) TRADFI:commodity's external vendors (EIA/CFTC/Baker Hughes) 403/404'd —
+   credential/config, `[OPERATOR]`-tagged (also independently seen by slot-3); (F) a cascade of (A). 12 skips were
+   honest and correctly not counted as failures.
+
+**Cross-referenced all 4 issue docs** (this session's 2 + slot-3's 2) so root causes A and the timeout defect each have
+exactly ONE tracked fix-todo. **Corrected an error made mid-session**: an earlier version of the timeout doc mistook
+`TRADFI:delta_one`'s fast EXIT (a real dependency-check failure, root cause A) for a fast clean pass and called it a
+"negative control" — fixed in that doc's own Progress Log once caught; did not affect the shipped timeout fix, which
+targeted the two independently-confirmed cells on their own merits.
+
+**Disposition**: DONE. **Next session**: work the 6 fix-path todos in the widespread-failures doc (root cause B — the
+`multi_timeframe` date bug — is the highest-value/lowest-effort fix, asset_group-agnostic), then re-run for just the
+affected shards to confirm genuine (non-error) verdicts.

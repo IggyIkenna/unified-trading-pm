@@ -1,0 +1,243 @@
+---
+doc_type: issue
+title:
+  Full-matrix /data-pipeline-check-features run (day=2026-07-05) surfaced 6 distinct GENUINE root-cause classes behind
+  17/32 real failures — dependency-check/coverage mismatch, a date-handling bug, an OOM, a manifest-staleness/env-parity
+  gap, and external-vendor auth failures
+summary: >-
+  Running the full 16-shard /data-pipeline-check-features matrix (day=2026-07-05) to completion (report:
+  plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md), only 3/32 (force,skip) legs PASSED — 12 were
+  cleanly skipped (no captured input / non-canonical, both honest and expected), but 17 FAILED with real VM exit codes
+  (not the 4 timeout cases already tracked separately in
+  issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md). Direct VM run.log inspection for a
+  representative sample of the 17 failures surfaced SIX DISTINCT, GENUINE, REPRODUCIBLE root causes spanning at least 3
+  repos — this is a real data-pipeline-correctness finding, not infra flakiness, and is being escalated per the
+  workspace's "big finding" rule (cross-repo + data-correctness).
+status: open
+nature: issue
+asset_group: [cefi, tradfi, sports, tradfi]
+stage: [data]
+repos: [features-service, unified-trading-library, market-data-processing-service, deployment-service]
+scope: [engineer, admin]
+tags:
+  [
+    infra,
+    features-service,
+    pipeline-e2e-check,
+    data-correctness,
+    dependency-check,
+    date-bug,
+    oom,
+    manifest-consolidator,
+    external-vendor,
+    big-finding,
+  ]
+related:
+  [
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md,
+    /plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/02-data/external-data-always-available-rule.md,
+  ]
+created: 2026-07-27
+priority: P0
+parent_epic: infrastructure_master
+source:
+  "slot-7, infra, discovered while running data_pipeline_check_mdps_features-030 (full-matrix
+  /data-pipeline-check-features, day=2026-07-05), 2026-07-27 — BIG FINDING, operator attention requested"
+assigned_vm: planning
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+locked_by:
+locked_since:
+resolved_by:
+---
+
+# Full-matrix features check surfaced 6 distinct genuine failure classes — data-pipeline-correctness escalation
+
+## What I found
+
+The full 16-shard `/data-pipeline-check-features` matrix (day=2026-07-05, all 8 families × valid asset_groups,
+`--legs force,skip --require-captured --auto-day`) ran to completion. The written report
+(`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md`) summarizes: **total=32 passed=3 failed=17
+ambiguous=0 skipped=12**.
+
+Only **3/32 legs actually passed**: `SPORTS:sports` force, `GLOBAL:calendar` force, `GLOBAL:calendar` skip (a genuine
+skip-proof). The 12 `skipped` legs are honest and expected (`no_captured_input_for_window` for DEFI/PREDICTION on
+families whose upstream candle/chain data doesn't exist yet, `non_canonical_input` for CEFI:volatility — both correctly
+NOT counted as failures per the canonical-paths principle). **The 17 `failed` legs are the concern** — I read the actual
+VM `run.log` for a representative sample and found SIX independent, genuine, reproducible root causes (none are infra
+flakiness or a repeat of the already-tracked timeout issue):
+
+### A. Dependency-check / coverage-check DISAGREEMENT (TRADFI:delta_one, force+skip, exit=1)
+
+**Independently corroborated on a THIRD occurrence** by a different slot's parallel day=2026-07-19 run, which hit the
+byte-identical `DEPENDENCY CHECK FAILED` for the same TRADFI:delta_one shard on a different day (2026-07-18) — see
+`issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` for that occurrence's own detail
+and its tracked fix-todo (not duplicated here; this doc's own todo below was folded into that one as the single
+fix-tracker for this root cause).
+
+The driver's own `--require-captured --auto-day` pre-check decided the `2026-07-04..2026-07-05` window for
+TRADFI:delta_one WAS covered (no skip logged). But the VM's own `check_dependencies()` call refuses to run:
+
+```
+ERROR DEPENDENCY CHECK FAILED
+ERROR Missing: market-data-processing-service
+ERROR   Path: gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-07-04/
+ERROR   Reason: No data for 2026-07-04/TRADFI
+```
+
+The local coverage pre-check and the VM-side dependency check are reading the SAME upstream MDPS candle bucket but
+reaching OPPOSITE conclusions about whether `2026-07-04` is covered. This is either (a) a genuine gap in the
+`--require-captured` logic (checking a stale/wrong index, wrong `pipeline_mode`/`source` prefix, or the wrong day math),
+or (b) the MDPS candles for that exact day genuinely aren't there and the coverage check is wrong to have called it
+"covered." Either way this is a real correctness bug in one of the two check paths, not an infra blip.
+
+### B. `multi_timeframe` family reads TODAY's date instead of the requested window (CEFI + TRADFI, force, exit=1)
+
+BOTH `CEFI:multi_timeframe` and `TRADFI:multi_timeframe` fail identically:
+
+```
+ERROR No upstream data: delta-one features for asset_group=CEFI date=2026-07-27 produced 0 instruments.
+ERROR No upstream data: delta-one features for asset_group=TRADFI date=2026-07-27 produced 0 instruments.
+```
+
+**`2026-07-27` is TODAY (the actual wall-clock run date) — not the requested `--start-date`/`--end-date` window**
+(`2026-06-28/2026-06-29` for CEFI, `2026-07-04/2026-07-05` for TRADFI). This is a genuine, reproducible code defect in
+`features-multi-timeframe-service`: it appears to look up delta_one input by the CURRENT date rather than the date range
+the CLI was actually invoked with. This would fail for ANY asset_group/day combination, always, until fixed — it is
+completely independent of upstream data availability.
+
+### C. Genuine OOM during compute (CEFI:cross_instrument, force, exit=137)
+
+```
+INFO Loaded 115584 rows x 4476 columns from input bucket
+INFO Computing feature group: regime_detection
+WARNING HMM fitting failed: 'covars' must be symmetric, positive-definite
+bash: line 1: 8732 Killed  ...python -m features_service --feature-family cross_instrument ...
+[vm-exec] command exited rc=137
+```
+
+`exit=137` = `128+SIGKILL(9)` — the OS OOM-killed the process during `regime_detection`'s HMM fit on a 115,584-row ×
+4,476-column matrix. This is a genuine memory-scaling issue in the `cross_instrument` compute path (likely needs
+chunking, a smaller working set, or a bigger machine type), not a transient host-contention artifact — the process was
+killed mid-computation on real, successfully-loaded data.
+
+### D. Manifest consolidator stale/down + VM/local env-parity gap (SPORTS:sports, skip, exit=1)
+
+```
+unified_trading_library.manifest_writer._state.ManifestConsolidatorStaleError: Consolidated availability_index for
+bucket='features-sports-test-central-element-323112' is stale or missing (older than
+MANIFEST_CONSOLIDATED_STALENESS_SEC=1800s) while per-VM shards exist — the manifest consolidator is behind or DOWN.
+Refusing to fall back to the per-VM shard merge (can OOM on large buckets). Remediation: fix the consolidator Cloud
+Run Job + Scheduler for this bucket; set MANIFEST_ALLOW_STALE_FALLBACK=true to force the recovery merge.
+```
+
+Two things here: (1) the manifest consolidator for `features-sports-test-central-element-323112` is genuinely stale/down
+(real ops gap), and (2) the LOCAL driver process sets `MANIFEST_ALLOW_STALE_FALLBACK=true` for its own reads
+(`pipeline_e2e_check.py::main()`, `os.environ.setdefault(...)`) but this same tolerance is NOT propagated to the remote
+VM's environment — so the identical staleness condition that the local driver silently tolerates causes the VM's own
+`sports/cli` invocation to hard-refuse. This is an env-parity gap between the local check-runner and the VMs it
+launches.
+
+### E. External commodity-data vendor auth/config failures (TRADFI:commodity, force+skip, exit=1)
+
+```
+ERROR [CRITICAL] infrastructure error in features-service.fetch_ng_storage: HTTP Error 403: Forbidden
+ERROR [CRITICAL] infrastructure error in features-service.fetch_cot_positions: HTTP Error 403: Forbidden
+ERROR [CRITICAL] infrastructure error in features-service.fetch_rig_count: HTTP Error 404: Not Found
+ERROR Partial factor coverage for commodity=NG date=2026-07-05: 2/5 factors produced values (3 missing). Failing
+day rather than emitting a partial signal.
+```
+
+Three external commodity-data vendors (EIA weekly storage, CFTC COT report, Baker Hughes rig count) are returning
+403/404 — this reads as credential/config issues (403 = auth) or a moved/retired endpoint (404), not something this
+check itself caused. Per CLAUDE.md's "external data is always available" rule, exhausting the free/configured path is a
+`BLOCKED-CREDENTIALS` finding, not a silent descope — flagged here for the operator to route.
+
+### F. Cascading failure: TRADFI:cross_instrument (force, exit=1)
+
+```
+FileNotFoundError: No delta-one features found under gs://features-tradfi-test-central-element-323112/delta_one/by_date/day=2026-07-04/.
+Run features-delta-one-service for TRADFI/2026-07-04 first.
+```
+
+This is a DOWNSTREAM CONSEQUENCE of root cause A (TRADFI:delta_one never wrote output because its own dependency check
+failed first) — not an independent bug. Flagged for completeness but does not need its own fix; it should resolve
+automatically once A is fixed and TRADFI:delta_one's force leg produces real output.
+
+## Why it matters
+
+- **The pass rate (3/32 = 9%) badly understates the actual mechanism health** and badly OVERSTATES it too in the
+  opposite direction if read carelessly — neither "everything is broken" nor "everything works" is the honest read. The
+  correct read is: 6 SPECIFIC, DIAGNOSED, FIXABLE issues, each independently actionable, plus 2 already known timeout
+  cases (separate doc) and 12 honest skips.
+- **Root cause B (multi_timeframe date bug) is the most concrete and highest-value fix** — it is asset_group- and
+  day-agnostic (both CEFI and TRADFI hit it identically), meaning the `multi_timeframe` family has likely NEVER produced
+  a valid batch/backfill run for any historical date, only ever "today" — a genuine correctness gap that would affect
+  real production backfills, not just this smoke check.
+- **Root cause A (dependency vs. coverage-check disagreement) is a data-pipeline-correctness HARD RULE matter**: either
+  the coverage pre-check is lying about what's captured (risk: launching VMs against uncaptured windows fleet-wide,
+  wasting compute) or the dependency check is wrong (risk: blocking real backfills that COULD succeed). Needs resolving
+  before this family/AG combination can be trusted for a real backfill.
+- **Root cause C (OOM) and D (manifest staleness) are real infra gaps** that will recur on every future run against
+  these same shard shapes until fixed.
+
+## Recommended fix path
+
+- [ ] [DATA] P0. **Root cause A — TRACKED IN A SIBLING DOC, not duplicated here**: see
+      `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` for the fix-todo (same
+      underlying disagreement between `--require-captured --auto-day`'s coverage check and the VM-side
+      `check_dependencies()`, confirmed on 3 independent occurrences across 2 different days now). Reconcile there, not
+      here, to avoid two parallel fix attempts.
+- [ ] [SCRIPT] P0. **Root cause B** — fix `features-multi-timeframe-service`'s delta_one-input lookup to use the
+      requested `--start-date`/`--end-date` (or the per-day date it's currently processing), not the current wall-clock
+      date. Repo: features-service (`features_service/multi_timeframe/` or wherever the delta_one input loader lives).
+      **Done when**: a force run for a historical day with real delta_one output present succeeds (not a 0-instruments
+      failure) — add a regression test asserting the lookup uses the CLI-provided date, not `datetime.now()`/similar.
+- [ ] [SCRIPT] P1. **Root cause C** — either chunk/stream the `regime_detection` HMM fit for `cross_instrument` (CEFI
+      has ~589 instruments per the recent universe-filter fix; 4,476 columns is a wide feature matrix) or size the
+      launcher's VM up for this family/AG, and/or add a memory-budget guard before the fit rather than letting the OS
+      OOM-kill it silently. Repo: features-service. **Done when**: a from-scratch `cross_instrument` CEFI force-leg run
+      completes without an OOM kill.
+- [ ] [SCRIPT] P1. **Root cause D** — (a) propagate `MANIFEST_ALLOW_STALE_FALLBACK` (or an equivalent recovery flag) to
+      the remote VM's environment the same way the local driver sets it for itself, so the two sides have consistent
+      staleness tolerance; (b) separately, check why `features-sports-test-central-element-323112`'s manifest
+      consolidator Cloud Run Job/Scheduler is genuinely behind/down and fix the underlying schedule/job. Repo:
+      unified-trading-library (env propagation) + deployment-service or the consolidator's own repo (Cloud Run fix).
+      **Done when**: the consolidator is current for this bucket AND a VM launched without the override still succeeds
+      (proving the fix isn't just papering over a permanently-broken consolidator).
+- [ ] [OPERATOR] P1. **Root cause E** — investigate/renew credentials or config for the EIA weekly-storage, CFTC
+      COT-report, and Baker Hughes rig-count adapters (403/403/404 respectively) — this needs operator-level
+      credential/vendor-account access per the external-data-always-available rule; the code path itself is behaving
+      correctly (honestly failing rather than emitting a partial/fabricated signal — note the
+      `ManifestWriter.record_empty` guard correctly REJECTED treating these as honest-absence, which is itself good
+      defensive behavior working as intended).
+- [ ] [DATA] P2. Once A-D land, re-run `/data-pipeline-check-features` for the affected 6 shards (CEFI/TRADFI:delta_one,
+      CEFI/TRADFI:cross_instrument, CEFI/TRADFI:multi_timeframe, SPORTS:sports) and confirm genuine (non-error)
+      verdicts; the report's pass rate should rise substantially once B alone is fixed (it affects every family/AG
+      that's `multi_timeframe`-derived).
+
+## Progress Log
+
+- 2026-07-27 (slot-7, infra): Filed after the full 16-shard `data_pipeline_check_mdps_features-030` matrix run completed
+  (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md`, total=32 passed=3 failed=17 skipped=12). Read
+  the actual VM `run.log` for 7 of the 17 failed legs (one from each distinct failure signature) to establish root cause
+  rather than reporting a bare pass/fail count — this surfaced 6 independent findings (A-F, F being a cascade of A)
+  spanning at least 3 repos. NOT fixed this session (task scope was running the check + writing the report, not fixing
+  features-service bugs) — filed as its own P0 issue doc per the "big finding" / data-pipeline-correctness escalation
+  rule. The two already-known timeout cases (CEFI:delta_one, TRADFI:volatility) are tracked separately in
+  `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` and are NOT duplicated here.
+- 2026-07-27 (slot-7, infra, discovered on pull-rebase): a different slot ran an independent parallel
+  `/data-pipeline-check-features` sweep for day=2026-07-19 (todo 9b,
+  `plans/audit/results/data_pipeline_e2e_check_features_2026_07_19.md`, 3 passed/13 failed/14 skipped) and independently
+  hit root cause A (TRADFI:delta_one dependency-check gap, on a different day) and the timeout/duplicate-VM pattern (on
+  the same TRADFI:volatility shard) — filed as
+  `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` and
+  `issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` respectively. Cross-referenced all
+  four docs so root causes A and the timeout defect each have exactly ONE tracked fix-todo, not two competing ones. That
+  slot also corroborated root causes C (OOM) and E (commodity 404) independently, and confirmed (for their own run) that
+  no PROD-pollution occurred for volatility/cross_instrument/multi_timeframe/commodity — matching this session's own
+  direct PROD-safety verification for sports/calendar.

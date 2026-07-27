@@ -74,3 +74,14 @@ input gap didn't change.
 - [ ] [DATA] P3. Re-run `/data-pipeline-check-features --family delta_one --asset-group TRADFI` once MDPS TRADFI candle
       backfill covers 2026-07-18 (or once the require-captured gap is fixed) to get a genuine force+skip proof for this
       shard.
+
+## Progress Log
+
+- 2026-07-27 (slot-7): **Independently corroborated on a THIRD occurrence.** The same full-matrix run (day=2026-07-05)
+  hit the identical `DEPENDENCY CHECK FAILED — Missing market-data-processing-service` for `TRADFI:delta_one` at
+  `gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-07-04/` — a THIRD distinct
+  day (07-04 here, 07-18 in this doc's own finding) hitting the same TRADFI-candle coverage-check/dependency-check
+  disagreement. Raises confidence this is a persistent gap, not a one-off manifest glitch for a single day. Folded into
+  the broader multi-root-cause writeup (this is "Root cause A" there, alongside 5 sibling findings from the same run):
+  `issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md`. Not fixed by either session — this
+  doc's own todo above remains the tracked fix; not duplicating a second fix-todo in the broader doc.

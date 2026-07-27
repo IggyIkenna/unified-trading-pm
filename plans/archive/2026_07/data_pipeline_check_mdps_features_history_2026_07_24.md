@@ -1174,3 +1174,164 @@ write-batching + vol_clock remaining).**
 - [ ] NEW todo. [SCRIPT] P2. Write-batching: collapse the 7 per-timeframe parquet writes per instrument-day into fewer
       objects to attack the ~20s I/O floor (the remaining bulk of the 5s-target gap). GATED on the canonical A/B/C
       ruling (it changes the object layout).
+
+### 2026-07-27 — todo 8 PARTIAL: CEFI force-leg mechanism re-proven 4x; skip-proof + other AGs blocked by session teardown
+
+Scoped `/data-pipeline-check-mdps` to CEFI:BINANCE-FUTURES:trades (day=2026-07-05, auto-day-resolved) as a
+representative cell before attempting the full 448-cell all-AG matrix (unscoped run is explicitly warned against by the
+skill itself). **Force leg independently re-proven correct on real infra 4 separate times** (VMs
+`...pipelinecheck-20260727-022633`, `-023618`, `-031200`, `...manualskip-033855` — all `exit_code=0`, all derive the
+identical 7,615 candles across the 7 timeframes). The automated skill driver (`pipeline_e2e_check.py --legs force,skip`)
+could not be kept alive long enough by this interactive session to produce a clean automated skip-proof verdict — the
+local process was killed mid-run 4 times across different backgrounding strategies (plain `run_in_background`,
+`nohup&disown`, foreground-with-auto-background, `setsid`). Full findings + recommended fixes:
+`/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. A secondary, minor
+finding (byte-identical candle written to two different paths — with/without `instrument_type=` segment — across
+consecutive force runs) is tracked separately:
+`/plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`.
+
+**Disposition:** todo 8 stays OPEN (not flipped) — the force-leg _mechanism_ is proven, but the todo's actual scope
+("every MVP candle shard, all AGs") and even a single clean automated skip-proof are not yet met. Report written this
+session: `plans/audit/results/data_pipeline_e2e_check_mdps_2026_07_05.md`.
+
+### 2026-07-27 (slot-9) — one of todo 8's two identified blockers FIXED; todo 8 itself still OPEN
+
+Dispatched to continue todo 8. Rather than re-attempt the exact same 4x-failed backgrounding strategies (harness
+`run_in_background`, `nohup&disown`, foreground-auto-backgrounded, `setsid` — all already exhausted per the entry
+above), root-caused and fixed the CONCRETE bug behind attempt 3's `launcher_script_timeout` false-failure:
+`unified-trading-library@137e219c` — a `subprocess.TimeoutExpired` on the launcher-script client-side wait
+(`_LAUNCHER_SCRIPT_TIMEOUT_SEC=120s`) previously aborted the whole shard immediately with ZERO retry, even though the
+identical `_vm_is_present`-gated retry machinery already existed for ordinary nonzero launcher exits (added for the
+exact same "gcloud create succeeded server-side after the client-side confirmation wait already gave up" failure mode).
+Now a timeout is converted to a synthetic nonzero-exit result and flows through that same retry path. 3 new regression
+tests, QG green (226s). Full detail + evidence:
+`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` todo 3 (flipped).
+
+**Disposition:** todo 8 stays OPEN — this fixes one of the two identified blockers (the launcher-timeout false-failure),
+not the other (the session/container teardown killing the long-running driver process itself, still under P1
+investigation, unresolved). A from-scratch automated run may now get further before hitting the teardown wall, but
+re-attempting the full multi-hour/462-cell matrix was out of scope for this 1-hour task; the next attempt should happen
+once the teardown root-cause (item 1 below) is resolved, or from a longer-lived host if the teardown proves to be this
+interactive-session-class specific.
+
+### 2026-07-27 (slot-12) — todo 11 PARTIAL: caught + fixed a P0 unsafe-rebuild bug blocking the candle-manifest orphan reconciliation; DEFI candle-manifest measurement corrected
+
+Dispatched to todo 11 (cross-repo orphan/lineage audit + migrate to zero orphans). Scoping how to execute the
+already-open `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (CEFI candle files orphaned by
+pre-fix-era OOM crashes) surfaced a genuine, previously-uncaught **P0 data-loss risk in the recommended remediation
+itself**: `unified_trading_library.manifest_writer.rebuild_manifest_from_canonical_paths()` builds its output purely
+from a `prefix`-scoped GCS walk and uploads that as the bucket's WHOLE consolidated manifest index — on the
+`market-data-tick-{ag}-prd` buckets, which co-locate MTDS's `raw_tick_data/` and MDPS's `processed_candles/` under ONE
+index, a prefix-scoped call (exactly what the reconciliation doc recommended) would have silently deleted essentially
+the entire raw-tick manifest for that asset_group to backfill a much smaller candle-orphan set. **Caught before any VM
+launched — nothing was actually deleted.** Full analysis, evidence, and fix:
+`issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` (new, P0). Shipped the fix:
+`unified-trading-library@2352e7c8` — added `merge_manifest_from_canonical_paths()`, an additive sibling that only adds
+genuinely-missing `(day, venue, chain, instrument_type, data_type)` rows and preserves every existing row (including
+rows for other prefixes) verbatim; 2 new regression tests directly proving the safety property (a pre-existing
+out-of-prefix row survives the merge, both in the returned frame AND in what actually lands in GCS) plus an idempotency
+test. Corrected `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`'s recommended-fix section to route
+through the new additive function instead of the unsafe call, and to re-verify the bucket's non-candle row count is
+unchanged before trusting a future run.
+
+**Also corrected a stale measurement feeding this same effort**:
+`candle_feature_canonical_path_divergence_2026_07_20.md` todo 7's "candle manifest never systematically populated" claim
+(cefi=6/defi=0/tradfi=73/prediction=168 rows, 2026-07-23) used the WRONG `data_type` vocabulary (the aggregated
+`ohlcv_*` family) — the SAME mistake already root-caused for cefi in the archived
+`mdps_cefi_candle_manifest_never_emitted_2026_07_26.md` (MDPS stamps `data_type=<SOURCE type>` + a real `timeframe`, not
+the aggregated family, by deliberate operator ruling). Re-measured DEFI directly this session with the correct
+vocabulary: **7,913 real `market-data-processing-service` candle-manifest rows exist today**
+(`data_type=dex_pool_swaps`, real timeframes), not 0. Flagged in that todo; not fully re-verified for
+cefi/tradfi/prediction this session — do not close it on the DEFI spot-check alone.
+
+**Disposition:** todo 11 stays OPEN — this session did NOT run the actual candle/feature migration. The previously-
+recommended reconciliation path was unsafe; the additive fix (`unified-trading-library@2352e7c8`) has now SHIPPED and is
+QG/CI-green, so `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` is UNBLOCKED for its next session (only
+the actual Tier-2 SPOT VM reconciliation run remains, deliberately not launched from this interactive session per the
+heavy-I/O rule). The full cross-repo lineage audit (MTDS→MDPS→features→ml/strategy) beyond the candle-manifest slice was
+not attempted this session. What shipped is a genuine, verifiable safety fix + a corrected measurement that a future
+session's migration work depends on not repeating.
+
+### 2026-07-27 (slot-10) — todo 9b: no new CEFI cell launchable without duplicating in-flight work; billing-waste finding filed
+
+Dispatched to todo 9b (full-matrix features re-run). Fresh-checked live state before launching anything (per the
+duplicate-VM lesson learned mid-session, see below): `gcloud compute instances list --filter="name~'features-e2e-cefi'"`
+showed **5 delta_one:CEFI VMs already RUNNING** from prior sessions (oldest since 06:34 UTC, ~4.7h runtime at check
+time), none complete — `run.log` tails confirm all 5 are genuinely still computing (live-advancing timestamps, not
+stuck), so none qualify for deletion under the VM-delete guardrail. Two are exact-duplicate pairs of each other (same
+family/AG/window, both `--force`) — real billing waste from repeated relaunches with no in-flight check, filed as a new
+todo in `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. Separately confirmed via
+`gcloud compute instances list --filter="name~'features-'"` that slot-3 is concurrently running `--family volatility`
+(all-AG, covers CEFI) since 10:44 UTC, and another slot is running `sports`/`TRADFI:volatility` re-verification (both
+post their respective fixes landing at 10:17/unclear). **Near-miss**: launched a
+`--family volatility --asset-group CEFI` driver myself before checking local processes — `ps aux` immediately after
+caught slot-3's identical in-flight run; killed my own 5-second-old duplicate before it reached VM-launch (confirmed via
+its log: enumeration only, no VM created). Net effect: **zero new VMs launched this session** — every remaining CEFI
+cell (`delta_one`, `volatility`) is already covered by in-flight work, and the two derived cells (`multi_timeframe`,
+`cross_instrument`) are blocked on `delta_one`'s test-bucket output, which none of the 5 in-flight runs have produced
+yet (checked `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-07-19/` — no objects; only the
+still-writing `day=2026-06-28` partition has partial output so far).
+
+**Disposition:** todo 9b stays OPEN. **Next session**: check
+`gcloud compute instances list --filter="name~'features-e2e-cefi'"` FIRST — if all 5 have terminated, check which (if
+any) reached a real completion (non-empty `by_date/day=<window-end>/` output in the test bucket) before launching
+`multi_timeframe`/`cross_instrument` for CEFI (they need `delta_one`'s test output as `--source-bucket`); do NOT launch
+a 6th `delta_one` VM. If `volatility` has a written report from slot-3 by then, fold it into the combined
+`data_pipeline_e2e_check_features_2026_07_05` report via `merge_pipeline_e2e_report.py`.
+
+### 2026-07-27 (slot-6) — todo 9b: found slot-7 ALREADY driving the full matrix; shipped the duplicate-VM billing-waste fix instead of launching
+
+Dispatched to todo 9b. Per the disposition above, checked live fleet state FIRST:
+`gcloud compute instances list --filter="name~'features-e2e'"` showed **7** `features-e2e-cefi-*` VMs RUNNING (up from
+the 5 slot-10 found) + 2 `features-e2e-tradfi-*`, all confirmed live-advancing via fresh `run.log` tails (none stalled).
+`ps aux` found slot-7 actively running
+`.venv/bin/python scripts/pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day` (no
+`--family`/`--asset-group` — the genuine unrestricted full-matrix driver todo 9b calls for) since 11:21 UTC, whose own
+`run.log` showed it had just launched one of the 7 CEFI VMs (`-112159`, shard 1/16 = `CEFI:delta_one`) — i.e. **slot-7
+is already doing exactly this todo**, ~35 min in, correctly progressing. This is the same slot-6/slot-7 double-dispatch
+pattern main already ruled on once this session for a different task (`sports_satellite_ao_dispatch_batch5-026` — "stand
+down, the other slot already implemented it"); applying the same resolution here: did NOT start a competing full-matrix
+run (would duplicate VM spend on top of an already-running one) and did NOT touch slot-7's VMs (all genuinely
+progressing, none eligible for the delete guardrail).
+
+Instead used the dispatch productively: slot-7's own `-112159` launch was itself a NEW duplicate of the
+2026-06-28..2026-06-29 window `-101851`/`-102228` were already computing — live proof that the P1 duplicate-VM-launch
+bug filed in `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` was still unfixed and
+actively costing money on the very run meant to close todo 9b. Shipped the fix: `features-service@6981b2b8` adds
+`_find_inflight_duplicate_vm` (labels-based `aggregated_list_instances` check, no raw gcloud/subprocess) to both the
+force and skip leg launch paths — a hit skips the launch with `status=skipped, reason=duplicate_in_flight: ...` instead
+of creating another billable VM. QG green, quickmerge shipped. Full detail + a follow-up MDPS-parity todo (not yet
+confirmed vulnerable, not yet fixed) in the same issue doc.
+
+**Disposition:** todo 9b remains OPEN, now owned by slot-7's in-flight run (started 11:21 UTC, shard 1/16 of 16, window
+`--day 2026-07-05 --auto-day`). **Next session**: check `ps aux | grep pipeline_e2e_check` for slot-7's process FIRST —
+if it completed, read its written report (`data_pipeline_e2e_check_features_2026_07_05*`) and fold in any still-separate
+`volatility` report from slot-3 via `merge_pipeline_e2e_report.py`; if it died mid-matrix (no `--resume` support yet —
+see the other open todo in the same issue doc), resume from whichever shard it reached (check `run.log`'s last
+`Starting compute:` line) rather than restarting all 16 from shard 1 — the new duplicate-guard fix will now correctly
+skip any of the 7 already-running CEFI VMs / 2 TRADFI VMs it encounters again instead of adding an 8th/9th/10th.
+
+### 2026-07-27 (slot-2) — todo 9b: slot-7 still in-flight; closed the MDPS-parity duplicate-VM-guard followup instead
+
+Dispatched to todo 9b. Re-checked live fleet state: slot-7's driver (PID 3665121, started 11:21 UTC) STILL RUNNING,
+1h18m+ elapsed, alive not zombie. Per the slot-6/slot-10 resolution, did NOT launch anything.
+
+Used the dispatch productively to close the MDPS-parity followup flagged in
+`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (full detail there — confirmed
+vulnerable + the launcher-label insufficiency finding + both fixes): `market-data-processing-service@6cd96e8` (ports
+`_find_inflight_duplicate_vm` into both force/skip legs, 6 new tests, QG green 118s) + `deployment-service@c8ee47e`
+(extends `launch-mdps-backfill-vm.sh` labels with venue/data_type, 5 new tests).
+
+**Disposition:** todo 9b remains OPEN, still owned by slot-7's in-flight run — this closed an ADJACENT gap, not 9b
+itself. **Next session**: `ps aux | grep pipeline_e2e_check` for slot-7 first; if finished, read its report; if died
+mid-matrix, resume from its last shard (both drivers now duplicate-guarded).
+
+### 2026-07-21 — Option-A candle canonical-path migration EXTRACTED to its own plan
+
+The full "OPTION-A MIGRATION SCOPED" record and the "RESUMPTION STATE 2026-07-21" record (scale correction, blast
+radius, path transform, the 8-phase breakdown, the LOCKED canonical shape, the per-repo shipped/uncommitted-file table,
+RESUME ORDER, and the 🔑 LESSONS) were extracted **verbatim** 2026-07-24 to
+`/plans/active/candle_canonical_path_migration_execution_2026_07_24.md` (plan-hygiene line-cap remediation) — that plan
+now owns the migration epic end-to-end (census → executor → per-AG SPOT migration → verify). See that file for the full
+record; nothing here was summarized or lost, only moved. This plan's own remaining work (todo 15) is `depends_on`-gated
+on that plan's completion.

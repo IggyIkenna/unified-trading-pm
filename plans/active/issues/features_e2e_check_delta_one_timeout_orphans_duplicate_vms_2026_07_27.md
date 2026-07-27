@@ -12,9 +12,12 @@ summary: >-
   that second VM ALSO ran past its own 2400s timeout, triggering the driver to launch a THIRD VM. Every abandoned VM
   (none ever produced EXIT_STATUS) keeps running with no code ever checking its eventual result, wasting real SPOT
   compute, and recording a misleading timeout verdict for a shard whose mechanism was never actually disproven (it just
-  needed more than 40 minutes). **Not universal**: TRADFI:delta_one (same family, smaller/faster-covered universe)
-  completed BOTH legs cleanly in ~3.5min each — this is specifically a large-instrument-universe problem, not a blanket
-  driver defect.
+  needed more than 40 minutes). **CORRECTED (see Progress Log)**: this doc originally claimed TRADFI:delta_one was a
+  fast-clean negative control; it was actually a FAST FAILURE (a real dependency-check error, exit=1, unrelated to this
+  timeout defect — tracked separately in
+  issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md) that was mistaken for fast
+  success. No confirmed non-timeout example exists yet within this run; the universe-size hypothesis is still plausible
+  but unproven by this doc's own evidence.
 status: open
 nature: issue
 asset_group: [cefi, tradfi]
@@ -74,28 +77,30 @@ At no point did the local driver log an explicit "timed out" message for either 
   no `EXIT_STATUS` object present — i.e. the driver abandoned both without ever learning their true outcome, and nothing
   in the check flow re-polls or reconciles an abandoned VM's eventual result.
 
-### Corroboration: shard 5 (`TRADFI:volatility`) hit the IDENTICAL pattern; shard 2 (`TRADFI:delta_one`) did NOT
+### Corroboration: shard 5 (`TRADFI:volatility`) hit the IDENTICAL pattern
 
 Continuing to watch the same run:
 
-| time     | event                                                                                                      |
-| -------- | ---------------------------------------------------------------------------------------------------------- |
-| 12:42:16 | `TRADFI:delta_one` force-leg VM `features-e2e-tradfi-20260727-124216-2b064d` launched                      |
-| 12:46:04 | force leg completed CLEANLY in ~3.5min; skip-leg VM `features-e2e-tradfi-20260727-124604-2b064d` launched  |
-| 12:49:21 | skip leg also completed cleanly; driver moves to `TRADFI:volatility` (window auto-resolved 2026-01-29..30) |
-| 12:49:44 | `TRADFI:volatility` force-leg VM `features-e2e-tradfi-20260727-124921-b1a99f` launched                     |
-| 13:29:23 | (2400s later, IDENTICAL to CEFI:delta_one) driver abandons it, launches skip-leg VM `...-132923-b1a99f`    |
-| ~14:09   | that skip-leg VM's own 2400s window elapses too (same pattern expected to repeat)                          |
+| time     | event                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 12:42:16 | `TRADFI:delta_one` force-leg VM `features-e2e-tradfi-20260727-124216-2b064d` launched                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 12:45:27 | force leg exited `rc=1` in ~3.5min — a REAL failure (dependency check: MDPS TRADFI candles missing for the requested day, unrelated to this timeout defect — tracked in `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`), NOT a clean pass. **CORRECTION**: an earlier version of this doc misread this fast exit as a fast SUCCESS and called it a "negative control" — it was a fast FAILURE. Skip-leg VM `features-e2e-tradfi-20260727-124604-2b064d` launched next per the normal force→skip sequencing (also failed the same way, exit=1). |
+| 12:49:21 | driver moves to `TRADFI:volatility` (window auto-resolved 2026-01-29..30)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 12:49:44 | `TRADFI:volatility` force-leg VM `features-e2e-tradfi-20260727-124921-b1a99f` launched                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 13:29:23 | (2400s later, IDENTICAL to CEFI:delta_one) driver abandons it, launches skip-leg VM `...-132923-b1a99f`                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ~14:09   | that skip-leg VM's own 2400s window elapses too (confirmed via the written report: both legs recorded `vm_not_success:timeout_no_exit_status` / `exit=None`)                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 Both `features-e2e-tradfi-124921-b1a99f` and `...-132923-b1a99f` were independently confirmed `RUNNING` with no
 `EXIT_STATUS` well after the driver moved on — genuinely still computing (per-instrument TRADFI options/futures
 iteration, e.g. `ECNG`/`ECNQ`/`ECRTY`, plus an active `PIPELINE_HEARTBEAT` line), not stalled or preempted.
 
-**This rules out "CEFI:delta_one specifically" as the scope** — the defect is: any `(family, asset_group)` cell whose
-REAL covered instrument universe is large enough that per-instrument sequential compute exceeds ~40 minutes will hit
-this pattern, regardless of family. `TRADFI:delta_one` completing both legs in ~3.5min each (a MUCH smaller
-window/universe for that specific auto-resolved day) is the useful negative control proving this is a genuine
-universe-size threshold effect, not a blanket timeout-value-too-small-for-anything defect.
+**This rules out "CEFI:delta_one specifically" as the scope** — the defect hit a second, unrelated family/AG
+(TRADFI:volatility) with the identical mechanism. **Independently corroborated on a THIRD occurrence** by a DIFFERENT
+slot's parallel day=2026-07-19 run, which hit the byte-identical pattern on the SAME `TRADFI:volatility` shard (see
+`issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md`, which traces the root cause to the
+same class of bug already fixed for MDPS in `unified-trading-library@137e219c`). The universe-size hypothesis
+(small/fast-covered windows are immune) remains PLAUSIBLE but is not proven by any example within this doc —
+TRADFI:delta_one's fast exit was a different bug, not evidence either way.
 
 ## Why it matters
 
@@ -119,22 +124,26 @@ universe-size threshold effect, not a blanket timeout-value-too-small-for-anythi
 ## Recommended fix path
 
 - [x] [SCRIPT] P1. ✅ Raise (or make per-family-configurable) `--timeout-sec` for large-instrument-universe cells —
-      confirmed affected: CEFI:delta_one, TRADFI:volatility (the TRADFI:delta_one cell this same run resolved a much
-      smaller day-window for completed cleanly in ~3.5min, so this is universe-size-dependent, not
-      family-name-dependent) — either a higher default informed by a real full-completion measurement, or a
-      `_FAMILY_TIMEOUT_OVERRIDES` map in `features-service/scripts/pipeline_e2e_check.py` keyed by
-      `(family, asset_group)`. Repo: features-service. **Done when**: a from-scratch CEFI:delta_one AND
-      TRADFI:volatility force-leg run each complete with `EXIT_STATUS=0` observed locally (not abandoned) within the
-      configured timeout. — `features-service@4d71b1b5`. **TRADFI:volatility's done-when bar is fully met**: real
-      from-scratch force-leg run (`features-e2e-tradfi-20260727-124921-b1a99f`) observed `EXIT_STATUS=0` at 4788s,
-      within the new 7200s override. **CEFI:delta_one's override (36000s) is shipped and reasoned from strong partial
-      real evidence** (group 1/5 measured completing in ~7320s; the shard was still healthily RUNNING — not stalled —
-      past 3h37m with no `EXIT_STATUS` at time of closing this todo, consistent with the doc's own read that this is the
-      separate, already-tracked S1 sequential-per-instrument-timeframe-loop bottleneck, not a broken mechanism) but its
-      own from-scratch completion was NOT directly observed before closing this todo — continuing to hold this todo open
-      to watch a multi-hour VM would block 700+ other queued tasks for a confirmation that todo 4 below already exists
-      to capture. Widened todo 4 to explicitly pick up CEFI:delta_one's real completion time and tighten the override if
-      it differs materially from 36000s.
+      confirmed affected: CEFI:delta_one, TRADFI:volatility. **CORRECTION**: the original claim that "TRADFI:delta_one
+      resolved a smaller window and completed cleanly in ~3.5min" was wrong — that cell actually FAILED fast (a real
+      dependency-check error, exit=1, unrelated to this timeout defect — see
+      `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`); it is not evidence for or
+      against the universe-size hypothesis. The fix below stands on its own merits (raising the timeout for the two
+      CONFIRMED-affected cells) regardless of that now-corrected framing. Either a higher default informed by a real
+      full-completion measurement, or a `_FAMILY_TIMEOUT_OVERRIDES` map in
+      `features-service/scripts/pipeline_e2e_check.py` keyed by `(family, asset_group)`. Repo: features-service. **Done
+      when**: a from-scratch CEFI:delta_one AND TRADFI:volatility force-leg run each complete with `EXIT_STATUS=0`
+      observed locally (not abandoned) within the configured timeout. — `features-service@4d71b1b5`.
+      **TRADFI:volatility's done-when bar is fully met**: real from-scratch force-leg run
+      (`features-e2e-tradfi-20260727-124921-b1a99f`) observed `EXIT_STATUS=0` at 4788s, within the new 7200s override.
+      **CEFI:delta_one's override (36000s) is shipped and reasoned from strong partial real evidence** (group 1/5
+      measured completing in ~7320s; the shard was still healthily RUNNING — not stalled — past 3h37m with no
+      `EXIT_STATUS` at time of closing this todo, consistent with the doc's own read that this is the separate,
+      already-tracked S1 sequential-per-instrument-timeframe-loop bottleneck, not a broken mechanism) but its own
+      from-scratch completion was NOT directly observed before closing this todo — continuing to hold this todo open to
+      watch a multi-hour VM would block 700+ other queued tasks for a confirmation that todo 4 below already exists to
+      capture. Widened todo 4 to explicitly pick up CEFI:delta_one's real completion time and tighten the override if it
+      differs materially from 36000s.
 - [ ] [SCRIPT] P1. When a leg's VM abandons via `timeout_no_exit_status`, do not silently launch the NEXT leg's VM for
       the same shard without at least logging a loud, explicit warning (ideally: check whether the abandoned VM is still
       `RUNNING` before deciding whether launching a concurrent duplicate is safe/wasteful). Repo:
@@ -168,12 +177,12 @@ universe-size threshold effect, not a blanket timeout-value-too-small-for-anythi
   to watch the same run, `TRADFI:volatility` (shard 5/16) hit the byte-for-byte identical pattern (force leg abandoned
   at 2400s → duplicate skip-leg VM launched → that ALSO ran past 2400s). Confirmed via `gcloud` both TRADFI VMs
   (`features-e2e-tradfi-20260727-124921-b1a99f`, `...-132923-b1a99f`) were genuinely still computing (active
-  `PIPELINE_HEARTBEAT` + per-instrument options iteration), not stalled. Crucially, `TRADFI:delta_one` (shard 2, same
-  run, ran IMMEDIATELY before volatility) completed BOTH legs cleanly in ~3.5min each — this is the negative control
-  proving the defect is universe-size-dependent (a function of how many real instruments + how much lookback history a
-  given cell's auto-resolved window covers), not specific to the `delta_one` family or to CEFI. Retitled the doc and
-  widened the recommended-fix todo accordingly; the underlying driver run itself was left running uninterrupted (no VMs
-  deleted, no code changed) so as not to block the in-flight dispatch — this doc is the tracked follow-up.
+  `PIPELINE_HEARTBEAT` + per-instrument options iteration), not stalled. At the time this entry was written,
+  `TRADFI:delta_one` (shard 2, same run, ran immediately before volatility) was believed to be a clean negative control
+  that completed both legs in ~3.5min — **this was WRONG, corrected in a later entry below**: it was actually a fast
+  FAILURE (dependency-check error), not a fast success. Retitled the doc and widened the recommended-fix todo
+  accordingly; the underlying driver run itself was left running uninterrupted (no VMs deleted, no code changed) so as
+  not to block the in-flight dispatch — this doc is the tracked follow-up.
 - 2026-07-27 (slot-6): Picked up todo 1 ([SCRIPT] P1, timeout raise). **Shipped**: `features-service@4d71b1b5` adds
   `_FAMILY_TIMEOUT_OVERRIDES: dict[tuple[str, str], int]` + `_resolve_timeout_sec(shard, cli_timeout_sec)` to
   `scripts/pipeline_e2e_check.py` — an explicit `--timeout-sec` still overrides every shard uniformly; absent that, each
@@ -203,3 +212,18 @@ universe-size threshold effect, not a blanket timeout-value-too-small-for-anythi
     widened todo 4 to explicitly pick up CEFI:delta_one's real completion time + tighten the override if it differs
     materially from 36000s. The background watcher keeps running (harmless, bounded at 6h) — if it resolves within this
     same session that data feeds todo 4 directly; otherwise a future session picks it up per todo 4.
+- 2026-07-27 (slot-7, infra, returning to correct the doc's own history): **Corrected a factual error introduced in this
+  doc's second entry above** (and inherited into slot-6's fix-todo text): `TRADFI:delta_one` was described as completing
+  "cleanly in ~3.5min" and used as a "negative control" — this was wrong. Re-checking the actual written report
+  (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md`) shows `TRADFI:delta_one` force AND skip legs
+  both recorded `vm_not_success:vm_exit_nonzero=1` / `vm_not_success (exit=1)` — a REAL failure (a dependency-check
+  error: MDPS TRADFI candles missing for the requested day, tracked separately in
+  `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`, independently corroborated by
+  another slot's parallel run on a different day). It was fast because it failed fast at startup, not because it
+  succeeded — the exact "fast ≠ success" mistake this same session later caught itself making and documented as a
+  lesson. Does NOT change the diagnosis or the shipped fix (`features-service@4d71b1b5`, which correctly targeted the
+  two CONFIRMED-affected cells on their own merits, independent of this now-corrected framing) — only the incidental
+  "negative control" claim, which had no bearing on the fix itself. Also cross-linked this doc with
+  `issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (a different slot's independent
+  discovery of the identical duplicate-launch mechanism, on the same `TRADFI:volatility` shard, via a parallel
+  day=2026-07-19 run) so the two don't track the same fix separately.
