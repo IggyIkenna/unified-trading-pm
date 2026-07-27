@@ -1568,6 +1568,15 @@ if [ -n "$FILES_ARG" ]; then
       # (half-shipped removals, e.g. instruments-service polygon 2026-06-10).
       git add -- "$f"
       ADDED_ANY=1
+    elif git diff --cached --name-only -- "$f" 2>/dev/null | grep -qFx "$f"; then
+      # Already staged as a deletion (e.g. the caller ran `git rm`/committed via a
+      # pre-existing index before invoking quickmerge). `git ls-files` no longer lists
+      # it — removing a path from the INDEX also removes it from ls-files' output, not
+      # just the worktree — so the check above alone misreads a legitimate, already-staged
+      # deletion as an untracked/invalid path. A --files argument consisting ENTIRELY of such
+      # paths (a pure-deletion diff) previously left ADDED_ANY=0 and hard-failed with
+      # "No valid paths from --files" despite there being a real, ready-to-commit deletion.
+      ADDED_ANY=1
     else
       echo "[$REPO_NAME] ⚠️  Path not found (and not tracked): $f"
     fi
@@ -1722,13 +1731,38 @@ while true; do
   _qm_restage_target_files
 done
 
-git push -u origin "$BRANCH" --quiet 2>/dev/null
+# quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27: under sustained
+# branch churn (commits landing every 20-90s), the remote can move again during the ~45-300s
+# Pass-1 QG re-verification that already ran above — by the time we reach THIS push, it loses
+# the non-fast-forward race. The content hasn't changed, only the base commit has, so retrying
+# the whole pipeline (re-running the full QG suite) per collision is pure waste — measured at
+# 16+ attempts / 70+ min for one non-conflicting change. Retry just the cheap rebase+push here,
+# bounded, before ever asking the caller to re-invoke quickmerge. Also fixes a real pre-existing
+# bug: the old bare `git push ... 2>/dev/null` never checked its own exit code, so a failed push
+# silently fell through into PR creation as if it had succeeded.
+_QM_PUSH_RETRIES="${QUICKMERGE_PUSH_RETRIES:-5}"
+_qm_push_attempt=0
+_qm_push_ok=0
+while [ "$_qm_push_attempt" -lt "$_QM_PUSH_RETRIES" ]; do
+  _qm_push_attempt=$((_qm_push_attempt + 1))
+  _qm_push_err=$(git push -u origin "$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
+  echo "[$REPO_NAME] ⚠️  push rejected (attempt $_qm_push_attempt/$_QM_PUSH_RETRIES) — rebasing onto the new remote tip and retrying (no QG re-run needed, content unchanged)..." >&2
+  if ! git pull --rebase --autostash origin "$BRANCH" --quiet 2>/dev/null; then
+    echo "[$REPO_NAME] ❌ rebase during push-retry hit a real conflict — resolve manually (git status)." >&2
+    exit 1
+  fi
+done
+if [ "$_qm_push_ok" != 1 ]; then
+  echo "[$REPO_NAME] ❌ push to $BRANCH failed after $_qm_push_attempt attempts (non-fast-forward race under high churn). Last error: $_qm_push_err" >&2
+  exit 1
+fi
 
 # Extract issue references from commit message for PR body
 ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+" || echo "")
 
 # Determine PR base branch
 # Staging-first model: all human commits target staging; [skip ci] automation goes direct to main.
+PM_OPTION_B=false
 if [ "$SKIP_CI" = true ]; then
   PR_BASE="main"
   echo "[$REPO_NAME] [skip ci] detected: PR targets main directly (automation commit)"
@@ -1743,7 +1777,8 @@ elif [ "$REPO_NAME" = "unified-trading-pm" ]; then
   # repos building on staging still get PM via the dep-clone fallback (clone -b staging → -b main),
   # so PM having no staging branch is transparent to them. SSOT: codex/08-workflows/ci-cd-flow.md.
   PR_BASE="main"
-  echo "[$REPO_NAME] Option B: PR targets main directly (PM has no staging; v2 on the main PR is the gate)"
+  PM_OPTION_B=true
+  echo "[$REPO_NAME] Option B: lands on LDR trunk; ldr-to-main-promote.yml drains to main (v2 on that PR is the gate)"
 else
   PR_BASE="staging"
   echo "[$REPO_NAME] Staging-first: PR targets staging (semver-agent will validate label vs API diff)"
@@ -1806,6 +1841,23 @@ fi
 if [ "$PR_BASE" = "staging" ] && [ "$HOTFIX" != true ]; then
   echo "[$REPO_NAME] ✅ Landed on $BRANCH. Tier-C drain (≤15min) promotes LDR→staging (v2-gated, dep-order-checked)."
   echo "[$REPO_NAME]    Need it on staging now? re-run with --hotfix (opens a staging PR; respects the staging lock)."
+  exit 0
+fi
+
+# ldr_to_main_promote_churn_fix_verification_2026_07_27: quickmerge used to open its OWN
+# direct-to-main PR here (--head "$BRANCH", i.e. live-defi-rollout) for every PM ship. That PR's
+# head is the live, ever-moving LDR branch — under fleet commit velocity (every 20-90s) it
+# re-triggers a fresh quality-gates-v2 run on EVERY subsequent commit anyone ships, fleet-wide,
+# for as long as it stays open (measured: 22 runs in ~45min on one such PR). The standing
+# ldr-to-main-promote.yml bot already drains PM→main on its own ~15min tick via an IMMUTABLE
+# per-SHA ref (frozen snapshot, no re-trigger churn — the fix shipped earlier this same day,
+# commit 48800b7ad) — so quickmerge opening a second, unfrozen, competing PR on top of that was
+# pure waste, not an additional safety net. Land on LDR and let the bot own 100% of the
+# promotion, same as every other (staging-first) repo already does above. --hotfix is kept as an
+# escape hatch for a case that genuinely needs the old immediate-PR behavior.
+if [ "$PM_OPTION_B" = true ] && [ "$HOTFIX" != true ]; then
+  echo "[$REPO_NAME] ✅ Landed on $BRANCH (LDR trunk). ldr-to-main-promote.yml drains PM→main (frozen-per-SHA-ref, ~15-30min SLA) — quickmerge no longer opens a direct PR here (churn fix, 2026-07-27)."
+  echo "[$REPO_NAME]    Need it on main immediately? re-run with --hotfix (opens a direct PR, old behavior)."
   exit 0
 fi
 
