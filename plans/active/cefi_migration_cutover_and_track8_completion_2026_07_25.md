@@ -909,3 +909,19 @@ every todo executes an already-decided spec from the parent doc.
   `isolation: "worktree"` means they share this git tree and WILL occasionally interleave commits under the same slot
   identity — expected, not a bug, and the pathspec commit form (`git commit -m ... -- <my files>`) is the clean way
   through it instead of a stash-restore dance.
+
+- **2026-07-27T~14:15Z — operator follow-up on the "does crash resilience cover all VM runs" question, shipped
+  `deployment-service@02ac568`.** Corrected an earlier claim: `RelaunchBackfillVm` (the OOM/exit-137 actuator) itself
+  has no machine-escalation logic, but `escalation.py::_recover_backfill_vm()` ALREADY did (shipped 2026-06-23, sourced
+  from `launch_budget_registry.MEMORY_TIER_LADDER`, capped at `n2-highmem-32`/256GB — exactly matching the operator's
+  stated cap) — I had looked at the wrong abstraction layer. Two REAL gaps found and fixed this cycle: (1) a successful
+  escalated-memory OOM relaunch previously left NO human-visible trace of why the VM OOM'd in the first place
+  (`route_finding` stayed on the quiet `auto_recover` tier) — now also files an idempotent-per-(vm-prefix, day)
+  "investigate OOM root cause" issue doc, without changing the tier/paging behavior; (2) `RelaunchStalledVm` (the
+  watchdog-kill actuator) had zero checkpoint-resume logic at all, unlike `RelaunchPreemptedVm` — per operator direction
+  ("stale vms should be watchdog killed and relaunched if they weren't complete"), ported the core
+  monotonic-checkpoint-resume + force-run-no-checkpoint-pages logic (NOT the tarball-repin machinery, a separate
+  preemption-specific concern) across `heartbeat_stall_watcher.py` (reads `LAUNCH_PARAMS.json`/`PROGRESS.json` only on a
+  genuine STALL verdict), `escalation.py::_recover_stalled_vm()`, and `relaunch_stalled_vm.py`. 12 new tests, full QG
+  forced-fresh (bypassing the green content-sentinel via `QG_SENTINEL_DISABLE=true` to get a genuine re-run, not a skip)
+  — 2889 passed, 0 failed. Shipped via quickmerge (code, not docs) — `02ac568` on `live-defi-rollout`, `ahead=0`.
