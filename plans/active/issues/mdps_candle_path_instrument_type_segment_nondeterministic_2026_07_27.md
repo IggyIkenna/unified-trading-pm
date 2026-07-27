@@ -18,7 +18,11 @@ parent_epic: infrastructure_master
 resolved_by:
 locked_by:
 source: [data_pipeline_check_mdps_features_2026_07_20.md todo 8]
-related: [/plans/active/data_pipeline_check_mdps_features_2026_07_20.md]
+related:
+  [
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+  ]
 tags: [data, mdps, canonical-path, minor]
 priority: P3
 execution_scope: orchestrator-agent
