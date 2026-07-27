@@ -133,13 +133,23 @@ direction.
       both our inputs, so it wasn't reusable; used `re.split(r"[:-]", inst_id, maxsplit=1)[0]` instead. Added
       `test_cefi_hyphenated_instrument_id_resolves_same_tier_as_colon` asserting `"BTC-USD-PERP"` and `"BTC:PERP:USDT"`
       compute identical `usage_pct` and both grade `OK`. Full quality-gates.sh green.
-- [ ] 2. [BACKEND] P1. **Replace the `mmr_warning_pct`-as-MMR-rate fallback**
+- [x] 2. ✅ [BACKEND] P1. **Replace the `mmr_warning_pct`-as-MMR-rate fallback**
       (`unified-trading-library/unified_trading_library/margin_and_liquidation/margin_model.py:196-198`) with a real
       conservative default MMR (e.g. the venue's own worst-case/highest configured tier rate, or a small fixed
       conservative constant like 1-2%) — never the warning _threshold_ itself, which guarantees near-warning-band
       results for any unresolved asset. Repo: unified-trading-library. Cross-check against
       `unified-api-contracts/.../cefi_margin_tiers.py`'s documented venues to confirm BTC/ETH are the only ones with
-      real tiers today (any other asset hits this same fallback even once todo 1 lands).
+      real tiers today (any other asset hits this same fallback even once todo 1 lands). —
+      unified-trading-library@71970a2f. Cross-checked `CEFI_MARGIN_TIERS`: only
+      `("<venue>", "BTC")`/`("<venue>",     "ETH")` entries exist across binance/bybit/okx/deribit/hyperliquid/aster —
+      every other asset, on every venue, hits the fallback. Chose the small fixed conservative constant (2%) over the
+      venue's worst-case/highest tier rate: the highest tiers (25-50%) only apply at very large notional and would
+      reproduce the same near-warning-band overshoot for typical positions the bug report flagged; 2% sits at the upper
+      end of the tier-1 (smallest-notional) MMR rates actually observed across every configured venue/asset (0.4%-2%),
+      so an unresolved asset is now treated like a typical small-tier position instead of an assumed near-liquidation
+      one. Added `_DEFAULT_UNLISTED_ASSET_MMR` constant + regression test asserting a $40k/$1k-debt position with an
+      unresolved asset (`SOL-USD-PERP`) now grades `OK` (~2.05% usage) instead of `WARNING` (~71.8%). Full
+      quality-gates.sh green.
 - [ ] 3. [BACKEND] P2. **Audit whether any live/paper trading already ran through this path** since the margin-cluster
       remediation shipped (2026-06-15) — if `margin_health.py`'s live query API or alerting-service has actually
       consumed a misclassified `MarginEvent`/`MarginHealthSnapshot` in production, note it for the operator

@@ -176,36 +176,40 @@ THEN re-sync the manifest / data-status. Do not delete the old tree until the tw
       proven on this thin real-data window.
 
       **2026-07-27 (slot 8) — historical migration DONE + volatility leg fully diagnosed; now checking this box.**
-          Historical migration (the second half of this todo): per-object twin-verified delete of every legacy
-          `delta_one/day=<d>/` CEFI object against its canonical `delta_one/by_date/day=<d>/` counterpart (fresh
-          `gcs_bucket_soft_delete_retention_seconds()` check this run = 604800s, qualifying the reversibility carve-out) —
-          304/304 legacy objects deleted, 0 skipped (every one had a verified twin, several days were an exact key-for-key
-          match, `day=2026-05-03` had 6 MORE objects canonical-side than legacy — a strict superset). Legacy
-          `delta_one/day=*` prefixes now confirmed 0 objects in `features-cefi-prd-central-element-323112`. TRADFI
-          delta_one had NO legacy objects (already clean). Volatility has NO legacy objects anywhere (CEFI or TRADFI) — it
-          never wrote real output before or after the fix, consistent with the finding below.
+                  Historical migration (the second half of this todo): per-object twin-verified delete of every legacy
+                  `delta_one/day=<d>/` CEFI object against its canonical `delta_one/by_date/day=<d>/` counterpart (fresh
+                  `gcs_bucket_soft_delete_retention_seconds()` check this run = 604800s, qualifying the reversibility carve-out) —
+                  304/304 legacy objects deleted, 0 skipped (every one had a verified twin, several days were an exact key-for-key
+                  match, `day=2026-05-03` had 6 MORE objects canonical-side than legacy — a strict superset). Legacy
+                  `delta_one/day=*` prefixes now confirmed 0 objects in `features-cefi-prd-central-element-323112`. TRADFI
+                  delta_one had NO legacy objects (already clean). Volatility has NO legacy objects anywhere (CEFI or TRADFI) — it
+                  never wrote real output before or after the fix, consistent with the finding below.
 
-          Volatility's real-day leg: root-caused to a genuine, pre-existing, ALREADY-TRACKED upstream capture gap, not a
-          writer defect. Direct availability-index verification (`market-tick-data-service`, CEFI) shows 0 rows with
-          `capture_status` in `{captured, empty_confirmed}` for `options_chain`/`futures_chain` across the FULL ~400-day
-          auto-day scan window (306/318 sampled rows `attempted_failed`, rest `expected_unattempted` — never one
-          successful capture). This is the same gap as `deribit_options_chain_af_g4_blocker_2026_07_03.md` (open since
-          2026-07-03, DERIBIT options_chain/futures_chain `attempted_failed` ~100% as of the 2026-07-26 re-verify,
-          actively being worked under the Track-2 coverage backfill) — a genuine BLOCKED-UPSTREAM data-availability gap,
-          not something this todo's writer-fix scope can or should resolve. Along the way, found + filed (separately) a
-          diagnostic-harness bug: `scripts/pipeline_e2e_check.py`'s coverage scan mislabels this exact zero-capture state
-          as `non_canonical_input` (implies migration work) instead of `no_captured_input_for_window` (implies a
-          backfill/capture fix) for `raw_chains`/`raw_defi` families — see
-          `pipeline_e2e_check_non_canonical_input_misclassifies_absent_data_2026_07_27.md`.
+                  Volatility's real-day leg: root-caused to a genuine, pre-existing, ALREADY-TRACKED upstream capture gap, not a
+                  writer defect. Direct availability-index verification (`market-tick-data-service`, CEFI) shows 0 rows with
+                  `capture_status` in `{captured, empty_confirmed}` for `options_chain`/`futures_chain` across the FULL ~400-day
+                  auto-day scan window (306/318 sampled rows `attempted_failed`, rest `expected_unattempted` — never one
+                  successful capture). This is the same gap as `deribit_options_chain_af_g4_blocker_2026_07_03.md` (open since
+                  2026-07-03, DERIBIT options_chain/futures_chain `attempted_failed` ~100% as of the 2026-07-26 re-verify,
+                  actively being worked under the Track-2 coverage backfill) — a genuine BLOCKED-UPSTREAM data-availability gap,
+                  not something this todo's writer-fix scope can or should resolve. Along the way, found + filed (separately) a
+                  diagnostic-harness bug: `scripts/pipeline_e2e_check.py`'s coverage scan mislabels this exact zero-capture state
+                  as `non_canonical_input` (implies migration work) instead of `no_captured_input_for_window` (implies a
+                  backfill/capture fix) for `raw_chains`/`raw_defi` families — see
+                  `pipeline_e2e_check_non_canonical_input_misclassifies_absent_data_2026_07_27.md`.
 
-          **Checking this box now**: the writer-fix itself is proven correct on real data (delta_one, above) and
-          unit-verified for both families (30/30 tests); the historical migration is complete (nothing left to migrate);
-          volatility's real-day proof is honestly BLOCKED-UPSTREAM on an already-tracked, actively-remediated capture gap
-          — not a gap in this todo's scope, and re-attempting it here would just re-derive the same already-documented
-          absence. Todo 7 (manifest resync) and todo 8 (cutover register + inventory update) remain open follow-ons.
+                  **Checking this box now**: the writer-fix itself is proven correct on real data (delta_one, above) and
+                  unit-verified for both families (30/30 tests); the historical migration is complete (nothing left to migrate);
+                  volatility's real-day proof is honestly BLOCKED-UPSTREAM on an already-tracked, actively-remediated capture gap
+                  — not a gap in this todo's scope, and re-attempting it here would just re-derive the same already-documented
+                  absence. Todo 7 (manifest resync) and todo 8 (cutover register + inventory update) remain open follow-ons.
 
-- [ ] 7. [DATA] P1. Re-sync the availability manifest + data-status render for the migrated features cells so all four
-      canonical surfaces agree; verify the coverage surface after the migration.
+- [x] ✅ 7. [DATA] P1. Re-sync the availability manifest + data-status render for the migrated features cells so all
+      four canonical surfaces agree; verify the coverage surface after the migration. **2026-07-27 (slot 10)** — see
+      Progress Log entry below. Verified directly against live production GCS + the live availability manifest (no code
+      commit: the one-off remediation script's effect is a data operation already executed + durable; see Progress Log
+      for why it was stashed rather than shipped — `features-service` stash
+      `orchestrator-slot-10-features_by_date_root_canonicalisation-002`).
 - [ ] 8. [REVIEW] P1. On writer ship, record the features `by_date/day=` cutover date in
       `/codex/02-data/canonical-cutover-register.md` (repo@sha), and flip the non-canonical-path-inventory row #17
       disposition to EXECUTED with a dated post-migration probe.
@@ -268,3 +272,79 @@ quality-gates run finishes") did **not** match a shipped state:
   `migration_pending` with the writer fix "NOT YET in force" — that register entry now looks stale too (the writer fix
   landed 2026-07-22) but updating it is out of scope for this pass (codex changes need dedicated review); flagging it
   here for whoever picks up todo 8.
+
+- **2026-07-27 (slot 10) — todo 7 executed: manifest was genuinely desynced, not just path-blind.** Read
+  `codex/02-data/availability-manifest-and-data-status.md` + `codex/05-infrastructure/manifest-consolidator-ssot.md`
+  first: the `AvailabilityRecord` schema carries no physical-GCS-path column at all — the shard key for features rows is
+  purely logical (`date`, `feature_group`, `timeframe`, `feature_family`). This means the by_date/day= path migration
+  (todo 6) cannot by construction have desynced the manifest — a path move is invisible to a schema that never encoded
+  the path. Verified this is also true read-side: `deployment-api`'s `_BUCKET_CATEGORY_OVERRIDES` is empty and
+  `read_manifest_index()` only ever calls UTL `read_availability_index()` (no path/prefix column in `DRILLDOWN_COLUMNS`)
+  — the data-status render is structurally path-blind too, confirmed by an Explore sub-agent
+  (`features_service/delta_one/{engine/orchestrator_manifest.py,cli/handlers/_*.py}` and
+  `volatility/{engine/manifest_helpers.py,engine/feature_group_service.py,cli/handlers/batch_handler.py}` — zero
+  `ManifestWriter` calls anywhere pass a path/prefix kwarg). Also confirmed the two existing GCS-path-scanning
+  reconcilers (`rebuild_manifest_from_canonical_paths` / `merge_manifest_from_canonical_paths`,
+  `unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py:502-861`) are hardcoded to the
+  market-data `(day, venue, chain, instrument_type, data_type)` shard key via a `venue=` regex gate — the features hive
+  path (`delta_one/by_date/day=.../feature_group=.../timeframe=.../{id}.parquet`, no `venue=` segment) matches neither
+  tool, so they were not reusable here as-is.
+
+  Directly read the live `features-cefi-prd-central-element-323112` bucket (not inferred) and found a REAL, separate
+  gap: the canonical `_index/availability_index.parquet` carried only **3** `delta_one` rows (all `date=2026-05-03`,
+  `written_at=2026-07-21` — leftover from the 2026-07-21 peer-agent verification pass), while `delta_one/by_date/` holds
+  **301 real parquet objects** across **20 distinct `(day, feature_group, timeframe)`** shards spanning 4 days
+  (2026-04-22, 05-01, 05-02, 05-03). The consolidator for this bucket is healthy (`_index/latest.json`: `last_run_at`
+  fresh, `success=true`) but had nothing to consolidate — no per-VM shard had ever landed for these captures, i.e. the
+  delta_one writes that produced these 301 objects did not reliably reach the manifest write path in production (a
+  correctness gap, not a migration side-effect). `volatility/by_date/`, `cross_instrument/`, and `multi_timeframe/` all
+  have **0** real objects in this bucket — consistent with 0 manifest rows for those families; NOT a gap, matches the
+  plan's own note that volatility never wrote real output.
+
+  **Fix applied**: a bounded, additive one-off
+  (`features-service/scripts/backfill_delta_one_cefi_by_date_manifest_2026_07_27.py` — single-prefix walk of
+  `delta_one/by_date/`, 301 objects, not a new whole-corpus scan) computed the 18 missing
+  `(day, feature_group, timeframe)` keys against the real GCS objects and wrote them via `ManifestWriter.add(...)` using
+  the EXACT kwarg shape production code uses
+  (`features_service/delta_one/engine/orchestrator_manifest.py::_write_feature_group_manifest` —
+  `processing_date`/`row_count`/`feature_group`/`feature_family="delta_one"`/`timeframe`, plus the blank-timeframe
+  rollup row per `(day, feature_group)` production's second `add()` call also emits), through the sanctioned
+  per-VM-shard path (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=delta-one-cefi-manifest-backfill-20260727`) — never the
+  destructive `rebuild_manifest_from_canonical_paths`. Force-consolidated immediately via the existing reusable
+  `market-tick-data-service/scripts/one_offs/restamp_manifest_consolidator_2026_07_26.py` (bucket-agnostic tool, already
+  shipped) rather than waiting on the `*/1` cron:
+  `ConsolidationReport(shards_scanned=2, rows_in=59, rows_out=31, success=True, no_op_lock=False)`. **Verified
+  post-merge**: `read_availability_index()` now shows 31/31 `delta_one` rows `capture_status=captured` covering all 20
+  real shards (18 backfilled + the pre-existing 2 + the new blank-timeframe rollups), `volatility` still correctly 0
+  rows, and the very next standing cron cycle (`_index/latest.json` a few seconds later) read back
+  `no_op=true, rows_added=0` — confirming the merge is durable, not a transient. Since `deployment-api`'s data-status
+  render reads this same `read_availability_index()` call with no intermediate cache (confirmed above), the coverage
+  surface is verified correct by the same evidence — all four canonical surfaces (GCS path, parquet content, manifest
+  shard key, data-status render) now agree for the migrated delta_one CEFI cells.
+
+  **Adjacent finding (correcting todo 6's evidence, not reopening it)**: todo 6's 2026-07-27 update claims the real-day
+  proof "writes to the canonical `delta_one/by_date/day=2026-07-19/...` tree ... proving the writer fix works correctly
+  on real production data" with the parenthetical "confirmed by direct GCS listing, not inferred." Directly re-listed
+  `features-cefi-prd-central-element-323112` for `2026-07-19` under `delta_one/` and found **zero** objects; the
+  `day=2026-07-19` objects (80 of them, incl. the cited `candlestick_patterns/.../HYPERLIQUID:PERPETUAL:BTC-USD@LIN`
+  parquet) exist only in `features-cefi-test-central-element-323112` (the `-test-` bucket). The writer-fix mechanism
+  itself is still correctly proven (unit tests + this test-bucket run + the independently-verified 301 real prod objects
+  under the canonical prefix), but the specific "real production data" framing for the 2026-07-19 proof is inaccurate —
+  it was a test-bucket run. Not reopening todo 6 (no code defect, no data at risk — a `-test-` bucket write is
+  inconsequential); noting here so the record is accurate and so nobody treats `2026-07-19` as a real prod capture day
+  for delta_one CEFI when re-deriving coverage numbers.
+
+  **Shipping note**: `features-service`'s full `quality-gates.sh --no-fix` run for this one-off script hit a 6th
+  corroboration of the tracked `shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` pattern (INTERNALERROR in
+  `pytest_timeout`'s `threading.Timer` construction at 66% through the suite; host load 18.65-23.39, 2.2Gi free, 3
+  concurrent full QG runs observed fleet-wide at that instant — see that doc for the full corroboration). Since the
+  script's real-world effect (the manifest backfill above) was already executed and independently verified durable
+  against live GCS + the live manifest BEFORE this QG attempt, and the script is a single-shot one-off with nothing left
+  to do, it was not worth holding this task open on a contended shared host waiting for a green QG run of a script that
+  had already served its purpose — stashed (`features-service` stash
+  `orchestrator-slot-10-features_by_date_root_canonicalisation-002`, tag matches the sanctioned "unimportant scratch
+  WIP" path) rather than committed. No permanent feature-writer code changed in this todo — todos 1-3 already shipped
+  that fix (`57f8b45d`); this todo was purely a data-plane remediation, and its evidence is the live-infra verification
+  above, not a git commit.
+
+  Todo 8 (cutover register + non-canonical-path-inventory row #17 EXECUTED flip) remains open, unaffected by this entry.

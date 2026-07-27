@@ -94,10 +94,11 @@ None of the 8 running VMs (`features-e2e-cefi-*` x6, `features-e2e-tradfi-*` x2 
 
 ## Recommended fix path
 
-- [ ] [SCRIPT] P1. Confirm the hypothesis directly: instrument `buffer_days` value(s) actually passed to
+- [x] [SCRIPT] P1. ✅ Confirm the hypothesis directly: instrument `buffer_days` value(s) actually passed to
       `load_candles_with_buffer` for CEFI/TRADFI delta_one feature groups (grep callers), and the real
       `(data_type, timeframe)` fan-out per instrument, to get an exact "GCS round trips per instrument" count and
-      confirm it explains the observed ~19 lines/sec sustained rate. Repo: features-service.
+      confirm it explains the observed ~19 lines/sec sustained rate. Repo: features-service. — **CONFIRMED, slot-14,
+      2026-07-27** — see `## Confirmation findings (2026-07-27)` below.
 - [ ] [SCRIPT] P1. If confirmed, batch/parallelize the per-day existence probes in `_collect_daily_frames`
       (`asyncio.gather` over the day range, or a single prefix-listing GCS call instead of N per-day `blob_exists` round
       trips) — the SAME class of fix already applied elsewhere in this codebase for candle writes (S1). Repo:
@@ -111,6 +112,55 @@ None of the 8 running VMs (`features-e2e-cefi-*` x6, `features-e2e-tradfi-*` x2 
       progressing, per the VM-delete guardrail (`agents/infra.md` STEP 0.65) — do not force-delete a VM that is still
       genuinely advancing.
 
+## Confirmation findings (2026-07-27)
+
+**`buffer_days` is not a single constant** — `DataLoader.load_candles_with_buffer` (`data_loader.py:530-569`) takes
+`buffer_days` as a required param; `data_loader.py:546` subtracts it from `start_date` before the sequential day-loop
+(`_collect_daily_frames`, `data_loader.py:346-387`, confirmed one `blob_exists`(+`download_bytes`)/day, awaited
+sequentially, no `asyncio.gather`/batch). Real production path is `_tf_cluster_helper.py:107-111,315-319` →
+`batch_handler.py:775-790` (`_calculate_buffer_days`) → `BufferManager.calculate_buffer_days`
+(`buffer_manager.py:71-112`):
+`calendar_days = ceil(ceil(max_lookback_candles * seconds_per_period * 1.2 / 86400) * multiplier)` (multiplier 1.0
+CEFI/DEFI, 1.45 TRADFI, `buffer_manager.py:25-29`), where `max_lookback_candles` comes from `FEATURE_GROUP_LOOKBACK`
+(`constants.py:41-83`) and `seconds_per_period` from the output timeframe being read. Range found: **1-240 calendar days
+(CEFI)**, **1-348 calendar days (TRADFI)**, largest for `lookback_candles=200` groups (`moving_averages`,
+`market_structure`, `swing_outcome_targets`) read at the `24h` output timeframe.
+
+**Fan-out**: `_get_groups_to_process` (`batch_handler.py:747-773`) loops **18 feature groups** per asset_group
+(`--feature-group ALL` minus `targets` minus the other asset_group's exclusive groups). TF clustering
+(`_build_tf_clusters`, `_tf_cluster_helper.py:71-90`) collapses each group's output timeframes (7 for CEFI, 5 for
+TRADFI) into **2 read clusters** ("near" + "high"), each issuing its own independent `load_candles_with_buffer` call —
+**36 independent sequential-day-loop calls per instrument** for a full `ALL`-group run, with no cross-group
+dedup/caching even when groups share the same `data_type`.
+
+**Arithmetic (CEFI, 589 instruments, real `BufferManager` values)**: buffer-day sum across the 18 groups × 2 clusters ≈
+1,523-1,595 days/instrument (near-cluster ≈27d, high-cluster ≈1,496d, +1-2d/call window overhead) →
+`589 × ~1,595 ≈ 939,455` total GCS round trips (pure-sum variant `589 × 1,523 ≈ 897,047`). TRADFI (~96 instruments per
+`unified_api_contracts/registry/tradfi_instrument_universe.py` key count — a registry count, not a verified per-run MVP
+figure) ≈ `96 × 2,291 ≈ 219,936`.
+
+**Rate match**: observed VM `features-e2e-cefi-20260727-063401-025349` — 435,244 log lines / 6h23m (22,980s) = **18.94
+lines/sec**, matching the issue's observed "~19 lines/sec" almost exactly. Projected full-run duration from the computed
+CEFI total: `897,047-939,455 / 19 ≈ 47,213-49,445s ≈ 13.1-13.7 hours` — inside this doc's own "plausibly 8-15+ hours"
+estimate, and consistent with the VM still being mid-run (~46-49% complete) at the 6h23m/435,244-line checkpoint rather
+than stalled.
+
+**`resolve_lookback.py` discrepancy confirmed**: `resolve_lookback_requirements`
+(`scripts/e2e/resolve_lookback.py:176-246`) computes `min_lookback_days=1` for delta_one by dividing
+`lookback_candles=200` by `CANDLES_PER_DAY["1m"]=1440` (`resolve_lookback.py:57,67-76,215-230` — assumes the 200-candle
+lookback is satisfied by 200 **1-minute** candles). The internal `BufferManager` computes the SAME 200-candle lookback
+against the actual **output timeframe being read** (up to `24h` for the "high" cluster) → 240 (CEFI) / 348 (TRADFI)
+calendar days, not 1. The driver believes it needs a 1-2 day window; the internal loader is actually reading up to
+240-348 days per call — a >200x discrepancy, exactly as hypothesized.
+
+**Verdict: CONFIRMED.** Full agent investigation with file:line citations for every claim is preserved in this session's
+sub-agent transcript; caveats: (1) `buffer_days` ranges rather than one number — cite the range, not a point value, in
+any downstream fix estimate; (2) the 435,244-line checkpoint was mid-run, not a completed total, so the 13-14h
+projection is not yet an end-to-end verified measurement; (3) TRADFI's ~96-instrument figure is a registry key count,
+treat its round-trip total as order-of-magnitude only; (4) arithmetic assumes the observed VM ran `--feature-group ALL`
+(18 groups) — the tail log's single-instrument `data_type=trades` evidence is consistent with this but doesn't
+independently prove it. **Next**: P1 batch/parallelize todo (below) is unblocked and should proceed.
+
 ## Progress Log
 
 - 2026-07-27 (slot-14, infra): Filed while shipping the `--timeout-sec` raise for the companion issue. Not investigated
@@ -119,3 +169,10 @@ None of the 8 running VMs (`features-e2e-cefi-*` x6, `features-e2e-tradfi-*` x2 
   numbers) is real-VM and real-code verified, not speculative — the "likely root cause" framing reflects that the causal
   chain (loop shape → round-trip count → observed rate) is confirmed, but a direct before/after fix measurement has not
   yet been done.
+- 2026-07-27 (slot-14): P1 confirmation todo done. Traced every `load_candles_with_buffer` caller, computed the real
+  `BufferManager`-derived buffer-day range (1-240d CEFI / 1-348d TRADFI), the real fan-out (18 groups × 2 TF-clusters =
+  36 calls/instrument), and the full round-trip arithmetic (≈897K-940K CEFI). Rate math (18.94 vs observed ~19
+  lines/sec) is an almost-exact match; projected 13-14h full-run duration lands inside this doc's own 8-15h estimate.
+  `resolve_lookback.py`'s `min_lookback_days=1` vs the internal buffer's 240-348d is now root-caused to the
+  1m-vs-actual-output-timeframe divide. See `## Confirmation findings` above for full detail + caveats. No code changed
+  this session — pure investigation per the todo's scope; the P1 batch/parallelize fix todo is next.
