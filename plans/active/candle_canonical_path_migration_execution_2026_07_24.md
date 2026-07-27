@@ -141,9 +141,19 @@ and final verify/reconcile.
       issue doc's Progress Log shows the ENTIRE P5-P8 migration (todos 3-15 below) also already executed + independently
       verified clean 2026-07-21→23, one day BEFORE this plan was split out 2026-07-24 carrying a stale pre-completion
       todo snapshot.
-- [ ] 3. [DATA] P0. VERIFY readers dual-read correctly (features-service delta_one + volatility, unified-trading-api
-      `batch_candles.py`, MDPS `build_continuous_engine.py`) against both the canonical and legacy-flat prefixes via
-      `candle_read_prefixes`.
+- [x] ✅ 3. [DATA] P0. **VERIFIED 2026-07-27 (slot-10)**: confirms slot-4's "BIG FINDING" below — this todo is also a
+      duplicate of already-shipped, already-verified work. Direct code read (not just trusting the sibling doc) of all
+      four named readers confirms every one dual-reads via the UTL `candle_read_prefixes` SSOT: features-service
+      `delta_one/app/core/data_loader.py:460`, `volatility/core/data_loader.py:284/299` +
+      `volatility/io/loader.py:91/105` (all import + call `candle_read_prefixes`); unified-trading-api
+      `services/batch_candles.py:131` (same); MDPS `build_continuous_engine.py` — writer uses
+      `build_canonical_candle_path` (canonical shape incl. `pipeline_mode=`/`instrument_type=continuous_future`, line
+      ~100) and its reader dual-reads via `candle_read_prefixes` too (line ~138, comment: "dual-read for the
+      migration"). This matches the sibling doc's Phase-0 ruling ("continuous_future slice → IN SCOPE... writer + reader
+      move in lockstep... already canonical") and its Progress Log ("2026-07-21 — coordinated writer+reader lockstep
+      landed" — `features@99d5554e`/`features@d58b7760` delta_one+volatility dual-read, `uta@8377c98` chart reader
+      dual-read), independently re-confirmed by P8 cross-AG verify/reconcile (2026-07-23, all 4 AGs clean). No code
+      change needed — closing as verified-via-code-read, not re-implementing.
 - [ ] 4. [SCRIPT] P0. Run the sanctioned Tier-2 spot-VM single-walk census (bounded in-session sampling already
       estimated ~10-20M candle objects, tradfi-dominated, ±2-3x) to get a precise per-AG object count + dup-shape
       (`pipeline_mode=` vs naked `timeframe=`) + empty-stem inventory before sizing the migration fleet.
