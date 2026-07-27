@@ -104,29 +104,29 @@ drift_direction: advance-code
       (`plans/archive/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` §"Post-remediation verification of
       the 85-league mapping + GCS state (2026-07-27, slot-10, data_engineering)"). No PROD GCS object was written,
       moved, or deleted — verification only.**
-- [ ] [CODE] P1. **Close the PRIMERA_DIVISION (Chile) Odds-API team-name alias gap** — re-run the shipped
-      `FixtureIdResolver`/`validate_team_resolution()` match-rate measurement (mirroring this doc's own methodology)
-      against every real captured `pipeline_mode=batch_odds_api` PRIMERA_DIVISION day currently in bucket
-      `market-data-tick-sports-prd-central-element-323112` (not just the original 4-day sample) to enumerate the
-      COMPLETE current roster of `UNRESOLVED_TEAM_NAME` team-name strings (known as of the doc's 2026-07-23 RE-TRIAGE:
-      `Coquimbo Unido`, `Deportes Concepción`, `Deportes Limache`, `Universidad de     Concepción` — confirmed still
-      absent from the alias dict via direct repo grep; re-verify the list is still current/complete since it may have
-      grown or shrunk with newer captured days). For each unresolved name, look up its correct AF-verified canonical
-      spelling + EXISTING canonical_team_id via the already-checked-in crosswalk
-      `unified_api_contracts/canonical/domain/sports/data/team_mapping.csv` (already has rows
-      `COQUIMBO_UNIDO`/`CONCEPCION`/`DEPORTES_LIMACHE`/`UNIVERSIDAD_DE_CONCEPCION` with verified AF team names/ids — no
-      live API-Football pull or new canonical-id minting needed), cross-checked against the real
-      `af_home_name`/`af_away_name` fields in the captured
-      `sports_reference/.../entity=fixtures/league=PRIMERA_DIVISION/fixtures.parquet` for the same fixtures — the exact
-      verification method the already-landed `OHIGGINS`/`UNIVERSIDAD_CATOLICA` Phase-E L2a fix used per its own code
-      comments. Add the missing entries to `CHILE_PRIMERA_TEAM_ALIASES` / `API_FOOTBALL_TO_CANONICAL_CHILE_PRIMERA` /
-      `_CROSS_PROVIDER_ALIASES` in `unified_api_contracts/external/api_football/team_mappings.py`, add regression tests
-      in `unified-api-contracts/tests/unit/test_team_mappings.py` mirroring the existing accent/bare/suffix
-      disambiguator cases, then re-run the match-rate measurement to confirm PRIMERA_DIVISION's rate improves from the
-      57% baseline. (repo: unified-api-contracts). **Done when**: `validate_team_resolution()` resolves all 4
-      currently-known unresolved names (plus any others the fuller-date-range re-measurement surfaces) without raising
-      `TeamResolutionError`; new regression tests pass; PRIMERA_DIVISION's `UNRESOLVED_TEAM_NAME` count is zero or every
-      residual is explicitly documented; `quality-gates.sh` green. Source:
+- [x] ✅ [CODE] P1. **DONE 2026-07-27 (slot-13)** — **Close the PRIMERA_DIVISION (Chile) Odds-API team-name alias gap**
+      — unified-api-contracts@96d15ba7. Re-ran the `validate_team_resolution()` match-rate measurement against every
+      real captured `pipeline_mode=batch_odds_api` day for the league across the full manifest history in
+      `market-data-tick-sports-prd-central-element-323112` (411 captured days via the
+      `_index/availability_index.parquet` manifest — not just the original 4-day sample; note the canonical `league_id`
+      for this league is `CHILE_PRIMERA` per `unified_api_contracts/canonical/domain/sports/league_data_prediction.py` —
+      "PRIMERA_DIVISION" is the league's display name used in this doc's title/prose, and a stale non-canonical
+      `league_id=PRIMERA_DIVISION` folder also exists in GCS with 0 manifest rows, superseded by `CHILE_PRIMERA`).
+      Baseline: 64.1% match rate (84,492 total rows), 9 distinct `UNRESOLVED_TEAM_NAME` strings — the 4 the issue doc
+      originally cited (`Coquimbo Unido`, `Deportes Concepción`, `Deportes Limache`, `Universidad de Concepción`) plus 5
+      more the fuller 411-day range surfaced (`CD Cobreloa` — a short-form gap on the pre-existing `COBRELOA` canonical
+      — plus 4 genuinely new canonical entries: `Deportes Copiapó`→`DEPORTES_COPIAPO`, `La Serena`→`D_LA_SERENA`,
+      `Magallanes`→`MAGALLANES`, `Antofagasta`→`ANTOFAGASTA`). Every canonical_team_id already existed in
+      `unified_api_contracts/canonical/domain/sports/data/team_mapping.csv` — no live API-Football pull or new
+      canonical-id minting needed. Cross-checked each against the real `af_home_name`/`af_away_name` fields in the
+      captured `instruments-store-sports-prd-central-element-323112`
+      `sports_reference/.../entity=fixtures/league=CHILE_PRIMERA/fixtures.parquet` for matching fixtures (same method
+      the `OHIGGINS`/`UNIVERSIDAD_CATOLICA` Phase-E L2a fix used). Added all 9 alias entries (extended the existing
+      `COBRELOA` entry + 8 new canonical entries) to `CHILE_PRIMERA_TEAM_ALIASES` in
+      `unified_api_contracts/external/api_football/team_mappings.py`; added 22 regression tests (parametrized +
+      no-regression cases) to `unified-api-contracts/tests/unit/test_team_mappings.py`. Re-measured post-fix: **100%
+      match rate, 0 unresolved names**, across all 411 real captured days. `quality-gates.sh` green
+      (`.qg_last_passed_sha=e052d16d` → shipped `96d15ba7`). Source:
       `issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`.
 - [ ] [DATA] P1. Re-pin unified-api-contracts's `source_data_latency.py` 5 p95-lag constants (SFI/API-Football/
       FootyStats/Understat/Open-Meteo) from empirical `latency_observations` data — the ~2-week accrual window has
