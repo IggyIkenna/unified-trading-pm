@@ -481,3 +481,12 @@ reached, each fixable the same way (bump that section's own timeout var).
   real VM per `deployment-service/scripts/vm/launch-canonical-migration-vm.sh sports-features-purge <d1> <d2> full`
   (already smoke-tested dry-run pre-crash), verify STARTED<60s + real progress + the `--recensus` step reports 0
   residue, THEN flip this todo's checkbox — not before. Todo stays open.
+- 2026-07-27T09:2X-09:29Z (slot-10, same follow-up todo, STOP confirmed): operator answered `BLK-0afe051c` authorizing
+  exactly ONE more lower-footprint attempt (`--no-fix`) before stopping if it died entering TYPE CHECK again. Found the
+  fleet already AT the 2-QG cap (slot-5 + slot-9), killed my own premature 3rd instance, armed a watchdog to launch once
+  a slot freed. That one attempt fired but died **even earlier** (15% into pytest) under **worse** measured load (load
+  avg 17.37 vs 14.93, 3 OTHER slots' QGs running concurrently) — confirms the bottleneck is fleet-wide and external, not
+  this attempt's own footprint. Per operator guidance: NOT retrying further this session. Full evidence chain (13+1
+  attempts, 5 root causes fixed, this final confirming data point) is in
+  `issues/shared_host_home_filesystem_full_2026_07_26.md`. Todo stays open, script stays uncommitted (green-tree rule);
+  moving to other backlog work while this clears.

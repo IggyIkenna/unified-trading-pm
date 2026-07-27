@@ -249,3 +249,19 @@ specific to any one task.
   itself (`features-service/scripts/purge_sports_derived_features_post_floor_residue_2026_07_27.py`) is code-complete
   and twice independently re-verified against real GCS data this session; it is NOT lost, just blocked on a QG run
   completing on this host.
+- 2026-07-27T09:2X-09:29Z (slot-10, same follow-up todo, confirming the stop condition): operator answered
+  `BLK-0afe051c` authorizing exactly ONE more lower-footprint attempt (`quality-gates.sh --no-fix`, same env-var fix
+  set) before stopping for good if it still died entering TYPE CHECK. First discovered the fleet was ALREADY at the
+  documented cap (`max(2, floor(8 cores/4))=2`) with slot-5 + slot-9 both running full QGs — killed my own
+  prematurely-launched 3rd instance (never another slot's) and armed a watchdog to auto-launch once a slot freed. The
+  watchdog's attempt DID fire, but died **even earlier** this time — only 15% into pytest (232 log lines, no error,
+  process gone) vs the 13th attempt's clean 100% pytest completion. At the moment of this 14th death: `uptime` load
+  average **17.37** (up from 14.93 four minutes earlier), `free -h` **2.4Gi/30Gi RAM free + 4.2Gi swap in use**,
+  `df -h /` **16G/290G free (95%)**, and **3 other slots' full QGs still running concurrently** (slot-5, slot-3,
+  slot-13) — strictly worse contention than the 13th attempt, not better. This is the confirming data point for the STOP
+  condition: the failure got worse under worse measured load, not better with a lower-footprint invocation, which rules
+  out "my own attempt's footprint" as the fixable variable — the bottleneck is fleet-wide, external, and outside any one
+  slot's control. Per operator guidance, NOT retrying further; moving to other backlog work while this clears. The
+  script remains code-complete, twice-verified, and uncommitted (commit-only-from-green-tree hard rule) — next session
+  should re-attempt QG once a fleet-wide load/disk snapshot shows meaningfully lower concurrent-QG count and higher
+  headroom than the two data points recorded here (14.93/97%-full and 17.37/95%-full), not just "try again."
