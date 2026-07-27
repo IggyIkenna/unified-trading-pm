@@ -533,6 +533,50 @@ naming inconsistency.**
 capture + the missing-supply-rate bug; 17: update the naming SSOT to remove the migration_pending framing; 18: close the
 migration reference in `defi_consolidated_closeout_2026_07_18.md`) — see Todos section below.
 
+### Session-3 FINAL REPORT (2026-07-27, AUTONOMOUS_AGENT_RULES.md rule 9)
+
+**Success criteria met — todos 15-18 all shipped, verified, evidence below. No open items from this session.**
+
+| Todo | What                                                                                  | Evidence                                                                                                                |
+| ---- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 15   | `resolve_lending_underlying` resolver (UAC)                                           | `unified-api-contracts@1d01a911`, QG green (344s), 9 unit tests incl. the Compound V3 different-prefix regression guard |
+| 16   | Fixed live daily duplicate-capture + missing-supply-rate bug in `evm_defi_handler.py` | `market-tick-data-service@5c055e04`, QG green (446s, 7063 tests), regression test added                                 |
+| 17   | Naming SSOT updated (permanent flat-LENDING, resolver documented)                     | `unified-trading-pm@80a61678d`                                                                                          |
+| 18   | Closeout plan's migration todo + operator-decisions bullet closed as WON'T-DO         | `unified-trading-pm@80a61678d`                                                                                          |
+
+**Forced-tradeoff decisions made this session (rule 1):**
+
+1. **The core decision** — stop pursuing the physical A_TOKEN/DEBT_TOKEN retire permanently (reverses operator ruling
+   D2's migration mandate). Made WITH the operator present in this session (not a solo autonomous judgment call) —
+   least-migration path given two prior reversal attempts and sessions 1-2's own finding that the flip needs an IS
+   `expected_unattempted` re-seed no one had scoped.
+2. **Corrected my own error mid-session**: initially misread the plan's table and told the dispatch brief
+   `evm_defi_handler.py` already wrote A_TOKEN/DEBT_TOKEN live — false, verified against actual code it writes flat
+   `LENDING` like everything else. Caught before any code shipped on the wrong premise.
+3. **Scoped the duplicate-capture fix conservatively**: removed aave_v3/compound_v3/morpho from `evm_defi_handler.py`'s
+   active dispatch rather than deleting the now-unreachable query/parser code for those protocols — tracing every call
+   site safely was out of budget this session; left as a named P3 follow-up rather than silently declared done.
+4. **Did not use `--skip-preflight` to force past a dirty-dependency block** even after it looked stale (see incident
+   below) — waited, then when genuinely warranted, committed the inherited WIP as its own commit rather than bundling it
+   with mine, after confirming it independently passed quality gates.
+
+**Genuine near-miss this session, logged so it doesn't repeat:** edits to this plan, the closeout plan, and the naming
+SSOT sat uncommitted for ~25+ minutes while other repos' work was in flight, during which an automated background
+`pull --rebase --autostash` (unrelated to this session — this repo has continuous concurrent agent activity) hit a
+conflict on an unrelated frontmatter field in the closeout plan and the stash-pop silently dropped the content-level
+edits to all three files (not just the conflicted one). Recovered by re-diffing against what was actually in each file,
+re-applying the exact same content, and immediately committing+pushing (`unified-trading-pm@80a61678d`) rather than
+leaving it uncommitted again. **Lesson**: in this shared, high-traffic repo, doc/plan edits need the same "commit
+promptly, don't let them sit" discipline as code — a multi-file editing session should commit each file (or the batch)
+far sooner than end-of-session, not treat PM-repo doc edits as lower urgency than code changes.
+
+**Verified end-state**: MTDS captures Aave/Compound/Morpho `lending_indices` exactly once daily (via
+`collect-lending-indices`, the correct field-complete path); `collect-evm-defi` now covers only
+venus/benqi/radiant/euler_v2, its originally-intended scope. Canonical A_TOKEN/DEBT_TOKEN instrument_ids for
+aave_v3/spark/compound_v3 can resolve their current rate via `resolve_lending_underlying`. The D2 migration mandate is
+formally closed, not deferred — no plan anywhere in the workspace still expects the ~16.7M-row migration to run. Nothing
+left for the operator to pick up from this dispatch.
+
 **Todo 16 — RESOLVED (confirmed LIVE, not hypothetical, via
 `deployment-service/terraform/gcp/ defi_collection_scheduler.tf`).** Cloud Scheduler runs `collect-lending-indices`
 daily at 00:45 UTC (`lending_indices_handler.py`, full field set incl. `liquidityRate`) and `collect-evm-defi` daily at
