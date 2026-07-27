@@ -175,15 +175,21 @@ drift_direction: advance-code
       this exact layout with the cited writer file:line references, and its path is added to
       `sports_consolidated_closeout_2026_07_19.md`'s Codex SSOTs list. Source:
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
-- [ ] [DATA] P1. Audit instruments-service's `odds_api_team_mapping.parquet` (`sports_reference/mappings/`) coverage
-      against the distinct `od_team_name` values actually present in MDPS's bucketed-odds shards, and extend the mapping
-      table with the missing `od_team_name -> af_team_id` rows found (confirmed gap as of 2026-07-14: `Burgos CF`,
-      SEGUNDA_DIVISION, is unmapped — smaller-league spellings are likely under-covered generally). Repo:
-      instruments-service. **Done when**: a coverage census (distinct MDPS `od_team_name` values vs mapping-table keys)
-      is run and its gap count reported; every genuinely-resolvable gap found is added to
-      `odds_api_team_mapping.parquet` with the team/league identity confirmed (not guessed); any residual
-      honestly-unmappable names are left dropping at ml-service merge time as already documented, not fabricated.
-      Source: `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-2)** — Audit instruments-service's `odds_api_team_mapping.parquet`
+      (`sports_reference/mappings/`) coverage against the distinct `od_team_name` values actually present in MDPS's
+      bucketed-odds shards, and extend the mapping table with the missing `od_team_name -> af_team_id` rows found
+      (confirmed gap as of 2026-07-14: `Burgos CF`, SEGUNDA_DIVISION, is unmapped — smaller-league spellings are likely
+      under-covered generally). Ran a stride-sampled coverage census (204 days across the 2020-06-06 data floor, 2,193
+      shard reads — honestly disclosed as a sample, not an exhaustive corpus walk) against MDPS's
+      `pipeline_mode=batch_mdps_odds_horizon_bucket` shards: 734 distinct team names observed, 131 gaps vs the 658-row
+      table. Resolved 59 with confirmed identity (via the live pipeline's own `validate_team_resolution` alias resolver
+      cross-referenced against `team_mapping_v2.parquet`, `af_league_id` majority-voted from already-mapped teammates in
+      the same league sample — never guessed) and applied them (658 -> 717 rows, incl. `Burgos CF` ->
+      `af_team_id=9580`). 72 residual names are genuinely unmappable today (no alias / not in team_mapping_v2 / no
+      league vote) and are left dropping at ml-service merge time per this todo's own accepted behavior. Repo:
+      instruments-service@dd3ecff1 (`scripts/odds_api_team_mapping_coverage_audit_2026_07_27.py`). Findings + full
+      breakdown: `plans/active/issues/odds_api_team_mapping_coverage_audit_2026_07_27.md`. Source:
+      `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
 - [ ] [DATA] P1. Remove/relabel the 2 confirmed cross-asset_group mislabeled rows sitting in the SPORTS manifest: (1)
       `date=2026-06-26 venue=UNISWAP_V3-BASE asset_group=defi service_name=instruments-service     capture_status=attempted_failed source=api_football`,
       and (2) a second row `source=instruments_service asset_group=cefi capture_status=captured` found in the same
