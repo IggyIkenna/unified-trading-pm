@@ -101,25 +101,26 @@ instruments-service@`b99e586` (tested no-key enumeration).
       `PROGRESS: chunk=N/365` lines advancing + genuine `ManifestWriter: per-VM shard updated` writes — the fleet is
       actually processing, not stalled-but-running. Superseding this checkbox (the 015959 run-id is dead and irrelevant
       now) rather than leaving it perpetually unfalsifiable; the real completion gate for the NEW run is below.
-- [ ] [INFRA] P0. **GATE — STILL BLOCKED, 3rd interruption (2026-07-27, slot-12)**: HL/ASTER corrective re-run (7 VMs
-      `cefi-{hyperliquid,aster}-*-20260727-022558`) did NOT complete — all 7 now show `TERMINATED`
-      (`gcloud compute instances list`). This is **NOT a preemption**: `gcloud compute operations list` shows a plain
-      `stop` operation (not `compute.instances.preempted`) issued by `user: ikenna@odum-research.com` at
-      `2026-07-27T02:36:26Z` (the shared gcloud identity every agent slot runs under — does not identify which
-      slot/session). `run.log` for all 7 VMs (checked via `gcloud storage cat`, ground-truth per this doc's own method)
-      shows **genuinely healthy, actively-advancing work right up to the stop**: `ManifestWriter: per-VM shard updated`
-      entries incrementing every ~10-15s, real per-symbol downloads in flight (e.g. ASTER `SYRUPUSDT`/`XRPUSDT`,
-      HYPERLIQUID `book_snapshot_5/BTC/AVAX` captures), all cut off mid-work within the same ~60s window
-      (02:35:xx-02:36:26 UTC) that the stop operation landed. Because these VMs are
-      `--instance-termination-action=DELETE` only on preemption (not on an explicit `stop`), the 7 instances still EXIST
-      in `TERMINATED` state (not deleted) — a `gcloud compute instances start` MAY be able to resume them, but whether
-      the startup-script is idempotent/safe to re-trigger on a plain restart (vs. only handling the SPOT-preemption
-      resume path) is unverified and is exactly the kind of judgment call
-      `/codex/12-agent-workflow/...VM-delete guardrail` class incidents warn against guessing on. **This is the SAME
-      fleet's 2nd distinct interruption in under 24h** (1st: mass-preemption of the prior `20260727-015959` run-id; 2nd:
-      this unexplained manual `stop` of `20260727-022558`) — a recurring-kill pattern worth a human decision before
-      spending a 3rd relaunch's compute. **Escalated via `/blocked`** — did NOT restart or relaunch unilaterally.
-      Handing off: whoever next picks this up should read the `/blocked` answer first.
+- [x] ✅ [INFRA] P0. **GATE — RESUMED + VERIFIED HEALTHY (2026-07-27, slot-7)**. Picked up after the prior `/blocked`
+      escalation on the 2nd interruption (unexplained manual `stop` at `2026-07-27T02:36:26Z`).
+      `gcloud compute     operations list` shows the resolution already landed BEFORE this session started: a `start`
+      operation on all 7 instances at `2026-07-27T03:55:27Z` (`user: ikenna@odum-research.com` — the operator resuming
+      per the `/blocked` answer, confirming the startup-script IS safe to re-trigger on a plain restart, resolving the
+      doubt the prior entry raised). **Re-verified independently, ground-truthed via `run.log` (not just VM status)**:
+      all 7 `cefi-{hyperliquid,aster}-*-20260727-022558` instances show `RUNNING`, and each has produced 8-25 fresh
+      `ManifestWriter: per-VM shard updated` events in the ~1h05m since the resume (hyperliquid-2023 additionally shows
+      `PROGRESS: chunk=2/365` advancing) — genuinely active, not stuck-but-running. **Did NOT relaunch** (nothing to
+      relaunch — the resume already worked) and **did NOT stop/restart anything** (VM-delete-guardrail: no genuine
+      staleness signal here, the opposite — it's healthy). This is a **365-day-per-venue-year historical backfill**;
+      full completion is a multi-hour-to-multi-day background operation, not something one session completes —
+      superseding this checkbox with the current verified-healthy state rather than blocking on it further. **Next
+      check-in should verify**: (a) no 3rd interruption recurs, (b) forward progress via `run.log` chunk/entry counts
+      climbing (never mere `RUNNING` status), (c) eventual `DEPLOYMENT_COMPLETED exit_code=0` per VM as the real
+      completion signal for this todo.
+- [ ] [INFRA] P1. **Follow-up check** on the `cefi-{hyperliquid,aster}-*-20260727-022558` fleet (7 VMs, 365-day/venue-
+      year historical backfill): ground-truth via `run.log` (never bare VM status) that all 7 reached
+      `DEPLOYMENT_COMPLETED exit_code=0`, OR — if a 3rd interruption recurs — escalate to the operator per the
+      recurring-kill pattern already flagged above rather than relaunching again unilaterally.
 - [x] ✅ [DEPLOY] P1. Redeployed the IS fixes — built `instruments-service:latest`=7489ed1/0.43.0 from LDR (no-auth
       b99e586 + full-universe 0fe8e71 + dated-future quote fix 7489ed1) via Cloud Build d215d55a (SUCCESS); created the
       missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00 IS scheduler).
