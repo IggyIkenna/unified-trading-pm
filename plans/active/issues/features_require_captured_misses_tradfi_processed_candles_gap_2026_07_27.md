@@ -67,32 +67,40 @@ input gap didn't change.
 
 ## Todos
 
-- [x] [SCRIPT] P2. Compare `--require-captured`'s coverage-check query against the exact
-      `market-data-processing-service` dependency-check path/date the runtime check enforces for TRADFI candles —
-      confirm whether this is phantom-capture (manifest row without object) or a coverage-check granularity gap, then
-      fix at the root (either the manifest/GCS divergence, or require-captured's query). — ✅ features-service@c06a9bbf
-      (+ features-service@ecd548b8). Confirmed via the REAL manifest (queried 2026-07-27 against
-      `market-data-tick-tradfi-prd-central-element-323112`): every `market-data-processing-service` row for
-      2026-07-01..2026-07-05 is `capture_status=empty_confirmed`, not `captured` — this occurrence is neither phantom
-      capture nor a coverage-check granularity gap. It's a THIRD, distinct cause: 2026-07-04 (the delta_one lookback
-      window's START day) is a Saturday + US holiday, so MDPS correctly writes `empty_confirmed` (market closed, zero
-      candles expected, `record_empty_for_shard` — no backing object BY DESIGN). The coverage-check already treated
-      `empty_confirmed` as covered (correct); the VM-side runtime `DependencyChecker.check_dependencies()` did a raw GCS
-      blob-existence probe with no manifest awareness at all and hard-failed on the honest-empty day. Fixed
-      `features_service/delta_one/app/core/dependency_checker.py`'s `DependencyChecker` to consult the availability
-      manifest first and accept `CAPTURED`/`EMPTY_CONFIRMED`, falling back to the real GCS probe only when the manifest
-      has no row for that date (features-service@ecd548b8, 5 regression tests). **Cross-cutting discovery while
-      investigating**: a DIFFERENT slot's concurrently-shipped commit (features-service@696768c7, landed the same
-      session) fixes a REAL separate phantom-capture bug in `_scan_input_coverage` (a `capture_status=captured` manifest
-      row with no backing object) by probing every manifest-canonical candle day for a real GCS object — but it applied
-      that probe to `empty_confirmed` days too. Verified empirically (2026-07-27) that this reclassified the entire real
-      2026-07-01..07-05 TRADFI window's `canonical_days` to `[]` (every day in that window is `empty_confirmed`), which
-      would have broken `_window_is_covered` for nearly every multi-day TradFi window going forward — a much worse
-      regression than the one it fixed. Corrected in features-service@c06a9bbf: `_scan_input_coverage` now tracks
-      `capture_status` per canonical day and only requires the object-existence probe for days carrying a `CAPTURED`
-      row; a day canonical purely via `EMPTY_CONFIRMED` is exempt (2 new regression tests). Re-verified against the real
-      manifest/GCS post-fix: `canonical_days` for 2026-07-01..07-05 is correct and
-      `_window_is_covered("2026-07-05", lookback=1) == True`.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-27 — independently converged fixes from slot-4 and slot-2, merged here.** Compare
+      `--require-captured`'s coverage-check query against the exact `market-data-processing-service` dependency-check
+      path/date the runtime check enforces for TRADFI candles — confirm whether this is phantom-capture (manifest row
+      without object) or a coverage-check granularity gap, then fix at the root. **Two real, complementary root causes
+      confirmed against the live manifest+GCS (queried 2026-07-27, `market-data-tick-tradfi-prd-central-element-323112`,
+      `service_name=market-data-processing-service`, every row for the failing days is `capture_status=empty_confirmed`
+      — a genuinely closed TradFi market day, `record_empty_for_shard` writes a manifest row only, never a backing
+      object, BY DESIGN — neither phantom-capture nor a manifest lie):** (1) **Coverage-check granularity gap**
+      (`scripts/pipeline_e2e_check.py`, slot-4): `_window_is_covered` applied the same acceptable-status set (`CAPTURED`
+      or `EMPTY_CONFIRMED`) to the TARGET/end day as to window-interior days, so an `EMPTY_CONFIRMED` target (e.g. a
+      TradFi weekend) passed the coverage-check even though the exact GCS path the runtime dependency checker probes is
+      guaranteed empty there. Fixed: `features-service@1b272676` (+ test reconciliation `4fbf4dc7`) — `_CoverageScan`
+      gained `captured_days` (CAPTURED-only), and `_window_is_covered`/`_slide_to_covered_window` now require the TARGET
+      day specifically to be in it, while window-interior days still tolerate the broader `canonical_days` set. (2)
+      **Runtime dependency-checker manifest blindness** (`features_service/delta_one/app/core/dependency_checker.py`,
+      slot-2): `DependencyChecker     .check_dependencies()` does a raw GCS blob-existence probe with zero manifest
+      awareness, called with `date=start_date` (the lookback WINDOW START, not the target day) from
+      `batch_handler.py::_check_dependencies` — so it hard-fails on an honest-empty day even when the coverage-check
+      (once fixed) correctly tolerates it as a window-interior day. Fixed: `features-service@ecd548b8` —
+      `DependencyChecker` now reads the manifest for the checked date first and accepts `CAPTURED`/`EMPTY_CONFIRMED`,
+      falling back to the raw GCS probe only when the manifest has no row for that date (5 regression tests,
+      `tests/delta_one/unit/test_dependency_checker_manifest_aware.py`). Both fixes are needed — (1) alone doesn't touch
+      the runtime checker (a window-interior empty-confirmed day could still hard-fail there); (2) alone doesn't stop
+      `--require-captured` wasting a VM launch on an empty TARGET day. **A third, SEPARATE real bug was also caught and
+      fixed along the way**: a different slot's concurrently-shipped `features-service@696768c7` (a genuine
+      phantom-capture guard: a `capture_status=captured` manifest row with no backing object) applied its new GCS
+      object-existence probe to EVERY `canonical` day, including `EMPTY_CONFIRMED` ones — since those never have a
+      backing object BY DESIGN, this would have reclassified `canonical_days` to `[]` for any window containing a TradFi
+      weekend/holiday, breaking `_window_is_covered` for nearly every multi-day TradFi window going forward (worse than
+      the bug it fixed). **Independently caught and fixed by BOTH slot-4 (as part of `1b272676`, scoping the probe to
+      the new `captured_days` field) and slot-2 (as a follow-up commit titled "exempt EMPTY_CONFIRMED-only candle days
+      from the phantom-capture object probe")** — slot-4's landed first on `origin/live-defi-rollout` (verified via
+      `git log`); slot-2's equivalent fix should be treated as superseded on rebase, not re-applied on top. See the
+      Progress Log below for both investigations in full.
 - [ ] [DATA] P3. Re-run `/data-pipeline-check-features --family delta_one --asset-group TRADFI` once MDPS TRADFI candle
       backfill covers 2026-07-18 (or once the require-captured gap is fixed) to get a genuine force+skip proof for this
       shard. Not run this session (the fix above was verified directly against the real manifest/GCS resolution logic,
@@ -153,3 +161,72 @@ input gap didn't change.
   change to touch) before trusting the combined behavior, (3) if you find another edge case, re-verify against the REAL
   manifest/GCS first (this is what caught the empty_confirmed regression — a plausible-sounding fix commit message was
   NOT sufficient evidence on its own).
+
+- 2026-07-27 (slot-4): **ROOT-CAUSED — coverage-check granularity gap, not phantom-capture.** Read the real availability
+  index (`market-data-tick-tradfi-prd-central-element-323112`) for the exact days that failed (2026-07-04, 07-05, 07-18,
+  07-19 — all TradFi weekends/holidays) and cross-checked against a live GCS listing at the exact
+  `processed_candles/by_date/day={date}/` path the runtime `BaseDependencyChecker` probes: **every one of the 4 days has
+  manifest rows with `capture_status=empty_confirmed` (never `captured`) for
+  `service_name=market-data-processing-service`, and the real GCS listing returns 0 objects for all 4 days** — so the
+  manifest is telling the truth (MDPS positively confirmed zero output because the market was closed); there is no
+  phantom-capture / manifest-GCS divergence.
+
+  The actual bug: `pipeline_e2e_check.py`'s `_ACCEPTABLE_INPUT_STATUSES` (`{CAPTURED, EMPTY_CONFIRMED}`) is applied
+  uniformly to every day in a shard's coverage scan, including the TARGET/end day whose exact GCS path the runtime
+  dependency checker enforces. Treating `EMPTY_CONFIRMED` as "acceptable" is correct for LOOKBACK-WINDOW _interior_ days
+  (a rolling calculator should tolerate an individual confirmed-empty weekend elsewhere in its window — that was the
+  original, deliberate intent per the code's own comment), but it is wrong for the _target_ day specifically: an
+  `EMPTY_CONFIRMED` target day is, by definition, a day the writer confirmed has zero output objects — exactly what the
+  runtime GCS listing then (correctly) finds. `_window_is_covered`/`_slide_to_covered_window` never distinguished the
+  two, so `--auto-day` was free to land on (or the requested day could itself be) a confirmed-empty target and still
+  report the window "covered".
+
+  **Fix shipped**: `features-service@1b272676` (test reconciliation: `4fbf4dc7`) — `_CoverageScan` gained a
+  `captured_days` field (CAPTURED-status-only, canonical-shaped days, tracked alongside the existing broader
+  `canonical_days`). `_window_is_covered` now requires the TARGET day specifically to be in `captured_days` (real data
+  proven to exist) while still allowing window-interior days to satisfy the broader `canonical_days` set
+  (empty-confirmed still tolerated there). `_slide_to_covered_window` now draws its candidate list from `captured_days`
+  instead of `canonical_days`, so `--auto-day` only ever lands on a day with real captured data — matching what the
+  runtime dependency checker's real GCS listing will find. 4 new regression tests
+  (`tests/unit/test_pipeline_e2e_check_target_day_requires_captured.py`) cover: an empty-confirmed-only target is
+  rejected, a captured target is accepted, a window-interior empty-confirmed day is still tolerated, and `--auto-day`
+  correctly skips empty-confirmed-only candidates to land on the nearest real-captured day.
+
+  **Todo 2 (re-run) status**: separately checked the manifest over 2026-06-01..2026-07-27 for ANY
+  `capture_status=captured` TRADFI/MDPS candle row — found none in that window. So the fix makes
+  `--require-captured`/`--auto-day` correctly SKIP (rather than false-launch a VM on) every TRADFI weekend/holiday, but
+  a genuine force+skip proof for `delta_one:TRADFI` is still gated on TRADFI MDPS candles actually being backfilled for
+  at least one real trading day in the scanned window — todo 2 stays OPEN, now with a sharper blocking condition than
+  "phantom-capture" (there is simply no real TRADFI candle data yet within the driver's scan horizon).
+
+  **Reconciled with TWO other independent same-bug fixes that landed concurrently on `live-defi-rollout`** (this todo
+  attracted 3 simultaneous dispatches — worth flagging to main/operator as a dedup gap, not just noted here):
+  1. `features-service@696768c7` (slot-14) — same root symptom, different mechanism: adds `_candle_day_object_exists` (a
+     real, bounded GCS existence probe) and applies it to EVERY `canonical` day (CAPTURED or EMPTY_CONFIRMED),
+     reclassifying any day without a real backing object as `non_canonical`. **Rebase-merged, not simply taken as-is**:
+     applying the probe to the whole `canonical` set (not just CAPTURED days) would have blanket-excluded every
+     EMPTY_CONFIRMED weekend/holiday from `canonical_days` too — since `delta_one`'s own `min_lookback_days=1` means any
+     Monday target's 2-day window already spans a Sunday, and any family with a larger multi-day lookback spans a
+     weekend in virtually every window, this would have made `--require-captured` almost never judge a TRADFI multi-day
+     window "covered" again (a worse regression than the original bug). Reconciled by scoping their object-existence
+     probe to `captured_days` only (this fix's new field) — catches the same genuine phantom-capture case (a CAPTURED
+     row with no real object) without touching `canonical_days`, so window-interior EMPTY_CONFIRMED tolerance survives
+     intact. Their 4 tests (`tests/unit/test_pipeline_e2e_check_candle_phantom_capture.py`) updated to assert against
+     `captured_days` instead of `canonical_days`/`non_canonical_days`; one new test added proving an EMPTY_CONFIRMED day
+     is never even sent through the probe. All 18 tests across the 3 related test files pass.
+  2. `features-service@ecd548b8` (slot-2) — a DIFFERENT, complementary layer: makes the RUNTIME
+     `features_service.delta_one.app.core.dependency_checker.DependencyChecker` itself manifest-aware (consults the
+     availability manifest first, accepts CAPTURED/EMPTY_CONFIRMED, falls back to the raw GCS probe only when the
+     manifest has no row) — this affects real PRODUCTION delta_one runs, not just the `pipeline_e2e_check.py` pre-flight
+     skip decision this todo's fix touches. Different file (`features_service/delta_one/app/core/dependency_checker.py`
+     vs `scripts/pipeline_e2e_check.py`), no merge conflict, complementary rather than redundant: their fix stops the
+     runtime hard-failing on an already-known-empty day; this todo's fix stops `--require-captured` wasting a VM launch
+     on that day in the first place. Both are needed — this fix alone doesn't touch the runtime checker, so without
+     slot-2's fix a non-`--require-captured` run (or a window whose target is genuinely captured but an interior day is
+     empty-confirmed) could still hit the old hard-fail at the runtime layer.
+
+  **A 4th concurrent dispatch was observed in-flight** (slot-2, commit message "fix(pipeline_e2e_check): exempt
+  EMPTY_CONFIRMED-only candle days from the phantom-capture object probe", still running its own quickmerge as this
+  fix's push landed first at `features-service@4fbf4dc7`) — same stated intent as this fix's reconciliation of slot-14's
+  probe. Not coordinated with directly; whoever rebases second will find their change already subsumed and should drop
+  the now-redundant hunks rather than re-applying an equivalent fix on top.

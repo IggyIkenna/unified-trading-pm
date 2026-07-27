@@ -599,9 +599,22 @@ re-run `calendar` or `sports` until fixed**; `onchain`'s AG may share this bug (
 session**: either pick up the 4 CEFI cells (coordinate with slot-3 first) or re-run `calendar`/`sports` once their P0
 fixes land. Plan AT its 1000-line hard cap — archive older closed sections before adding more.
 
-- [ ] NEW todo. [DATA] P0. **Coverage-check discrepancy — FOLDED 2026-07-27 (slot-7)**: same root cause independently
-      hit 3x now (this occurrence + slot-3's day=2026-07-19 occurrence + the fuller writeup) — tracked in ONE place,
-      `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`, not here.
+- [x] ✅ NEW todo. [DATA] P0. **Coverage-check discrepancy — FOLDED 2026-07-27 (slot-7); FIXED 2026-07-27 (slot-4)**:
+      same root cause independently hit 3x (this occurrence + slot-3's day=2026-07-19 occurrence + the fuller writeup) —
+      tracked and fixed in `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` todo 1,
+      not here: `features-service@1b272676` (+ test reconciliation `4fbf4dc7`). Root cause was a coverage-check
+      granularity gap (NOT phantom-capture) — `--require-captured`/`--auto-day` accepted an `EMPTY_CONFIRMED` TARGET day
+      (a TradFi weekend/holiday MDPS positively confirmed has zero output) as "covered", guaranteeing the runtime
+      dependency checker's real GCS listing would then fail. Fixed by requiring the target day specifically to have a
+      real `CAPTURED` row while still tolerating `EMPTY_CONFIRMED` window-interior days. **This todo attracted 3
+      simultaneous independent dispatches** (this fix + slot-14's `696768c7` object-existence-probe variant + slot-2's
+      `ecd548b8` runtime-dependency-checker fix) — reconciled by rebase-merging slot-14's probe scoped to
+      `captured_days` only (not the broader `canonical_days`, which would have blanket-excluded every TradFi
+      weekend/holiday from window-interior tolerance too — a worse regression); slot-2's fix is a complementary
+      different-layer change (runtime checker vs this driver's pre-flight skip), no conflict. Full reconciliation
+      writeup in the issue doc. 18 tests pass across the 3 related test files, QG green. The issue doc's own todo 2
+      (re-run for a genuine force+skip proof) stays open — no `capture_status=captured` TRADFI/MDPS candle row exists
+      yet in the 06-01..07-27 window, so that proof is gated on a real TRADFI candle backfill, not on this fix.
 
 ### 2026-07-27 (slot-3) — todo 9b: day=2026-07-19 CEFI-inclusive 8-family sweep complete; NOT claiming 9b closed
 
