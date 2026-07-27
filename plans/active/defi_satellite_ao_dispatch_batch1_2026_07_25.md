@@ -262,13 +262,17 @@ drift_direction: advance-code
       market-tick-data-service. **Done when**: `market_interface/adapters/onchain/__init__.py`'s docstring matches the
       issue doc's §2.2 text verbatim, committed via quickmerge with `quality-gates.sh` green. Source:
       `issues/defi_adapter_dead_code_audit_2026_07_24.md`.
-- [ ] [DIAG] P1. Trace whether `market_interface/adapters/defi/curve_adapter.py::_download_liquidity`'s broad
-      `except Exception: ... return []` (~line 682) is distinguishable, in `base_defi_adapter.py`'s per-instrument
-      loop's `if not result: continue` success/failure accounting, from a genuine zero-liquidity-snapshot day — write
-      the finding (confirmed-masking or confirmed-legitimate) into an update appended to the issue doc, or a new issue
-      doc if masking is confirmed. Repo: market-tick-data-service. **Done when**: a written, evidence-cited verdict
-      states definitively whether the broad-except-return-`[]` path is/isn't distinguishable from a genuine empty-result
-      day, quoting the caller code that proves it. Source: `issues/defi_adapter_dead_code_audit_2026_07_24.md`.
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-11) — no code shipped (diagnostic-only todo).** Traced whether
+      `market_interface/adapters/defi/curve_adapter.py::_download_liquidity`'s broad `except Exception: ... return []`
+      (~line 682) is distinguishable, in `base_defi_adapter.py`'s per-instrument loop's `if not result: continue`
+      success/failure accounting, from a genuine zero-liquidity-snapshot day. **CONFIRMED MASKING** — quoted the full
+      4-hop caller chain (curve_adapter.py → base_defi_adapter.py) proving a broad-except failure and a genuine empty
+      day both produce `result = {"dex_pool_state": []}`, a non-empty (truthy) dict that never trips
+      `if not result:     continue`, so the instrument is counted `succeeded` with zero rows either way. Finding
+      appended to `issues/defi_adapter_dead_code_audit_2026_07_24.md` §2.3. Also surfaced + filed as its own issue doc a
+      broader, cross-adapter version of the same gap (~12 adapters' `{"success": False, ...}` signal is never read by
+      the same caller): `issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md`. Source:
+      `issues/defi_adapter_dead_code_audit_2026_07_24.md`.
 - [ ] [SCRIPT] P1. **Combined `market-tick-data-service/.../dex_swaps_handler.py` fix (2 sub-items merged into one todo
       — both would EDIT the same file, different venues/bugs):** (a) classify the CURVE/OPTIMISM "no allocations"
       GraphQL response as a distinct terminal condition at fetch time — detect a 200-status response whose `errors[]`
