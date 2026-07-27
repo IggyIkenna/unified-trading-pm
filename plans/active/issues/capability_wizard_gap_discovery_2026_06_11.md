@@ -146,8 +146,22 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       stale pre-backfill `6f31f59`) for fund-structures/order-semantics/sim-assumptions/agent-capability/fees;
       `capability-wizard-question-bank.md`'s Stage A fund-structure question status reads `partial` (was `gap`),
       matching the sibling cadence question. No further action needed on this item.
-- [ ] [SPEC] P1. **Order semantics per venue adapter**: TIF (FOK/IOC/post-only), make/take, ref-pricing modes (fixed vs
-      delta-adjusted to underlying), multi-leg/spread delta-risk ownership, auth-wired status.
+- [x] ✅ [SPEC] P1. **Order semantics per venue adapter**: TIF (FOK/IOC/post-only), make/take, ref-pricing modes (fixed
+      vs delta-adjusted to underlying), multi-leg/spread delta-risk ownership, auth-wired status. — ALREADY FIXED
+      (checkbox was stale), confirming the 2026-07-27 (slot-13) pattern flagged above: `git log --follow` on
+      `order_semantics.py` shows the registry was backfilled in `unified-api-contracts@5e7d0685` (2026-06-13, "backfill
+      order-semantics + sim-assumptions + fees + fund-structures + trading-agent registries"), same commit as the other
+      four Phase-2 items. Verified 2026-07-27: `VENUE_ORDER_SEMANTICS` carries 7 real per-venue entries
+      (hyperliquid/deribit fully wired with source file:line citations; binance/bybit/okx honest `NOT_REGISTERED`
+      scaffolds — `NotImplementedError` on `place_order`; aave_v3/kamino lending venues, no CLOB/TIF semantics) — every
+      field the todo asks for (`honored_tif`, `make_take_modes`, `ref_pricing_modes`, `multi_leg_delta_owner`,
+      `auth_wired`) is populated or explicitly honest-empty, matching the Collateral/Fees/Fund-structures resolution
+      pattern exactly. Only the file's own top-of-file docstring was stale ("STATUS: schema shipped;
+      `VENUE_ORDER_SEMANTICS` is intentionally empty") despite the real backfilled data below it — fixed in
+      `unified-api-contracts@2648f916` (mirrors the `fees_registry.py` STATUS-line pattern). Pre-existing passing tests
+      (`tests/unit/test_capability_manifest.py::test_venue_order_semantics_backfilled` +
+      `tests/unit/test_order_semantics_sim_backfill.py`) already assert the backfilled population — no new test needed.
+      No design work remaining.
 - [ ] [SPEC] P2. **Trading-agent/LLM capability**: no declaration linking trading-agent-service to archetypes (which
       strategies permit agent-driven instructions over features, which models are allowed).
 
