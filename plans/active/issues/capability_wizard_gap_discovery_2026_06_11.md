@@ -81,9 +81,20 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
 
 ### Missing registries — `missing_registry` (Phase 2 of the plan)
 
-- [ ] [SPEC] P0. **Collateral**: accepted collateral per venue, haircut per collateral, max/liquidation LTV, maintenance
-      vs liquidation margin, per-platform liquidation protocol, broker list. Currently derived from wallet structure
-      (DeFi 20/80 treasury/hot, CeFi 0/100) — not declarative, not queryable.
+- [x] ✅ [SPEC] P0. **Collateral**: accepted collateral per venue, haircut per collateral, max/liquidation LTV,
+      maintenance vs liquidation margin, per-platform liquidation protocol, broker list. Currently derived from wallet
+      structure (DeFi 20/80 treasury/hot, CeFi 0/100) — not declarative, not queryable. — ALREADY FIXED (checkbox was
+      stale) `unified_api_contracts/internal/architecture_v2/collateral_registry.py` was backfilled 2026-06-12 (7 perp +
+      2 lending MVP venues, every numeric cited to a `source_of_truth`) and has been actively maintained since (GMX
+      removal 2026-07-25, Drift/Solana-perp-DEX removal 2026-07-16). Fully declarative + queryable:
+      `COLLATERAL_REGISTRY` (`CollateralPolicy` per venue: `accepted_collateral` list of `AssetHaircut` with
+      `haircut_pct`/per-asset `max_ltv`/`liquidation_threshold`/`liquidation_bonus`, policy-level
+      `max_ltv`/`liquidation_ltv`/
+      `maintenance_margin`/`margin_modes`/`liquidation_protocol`/`liquidation_description`), `TREASURY_SPLIT_POLICIES`
+      (the DeFi 20/80 / CeFi 0/100 split, now typed not hardcoded), `STAKING_VENUES_NO_COLLATERAL_POLICY` (documented
+      logical_dead_end for staking venues), and `BROKER_REGISTRY` (honest-empty — no TradFi broker in the DeFi/CeFi MVP
+      set, a typed gap not a silent omission). Verified 2026-07-27 via live import: 7 registry venues, all fields
+      populated or explicitly `None` with a cited reason.
 - [ ] [SPEC] P1. **Fees**: exchange/gas/broker/clearing fees at venue/instrument-type/tier granularity.
 - [ ] [SPEC] P1. **Simulation assumptions**: simulatable candle granularities, matching/fill assumptions per archetype
       area, backtest-live symmetry nuances per venue/instrument.
