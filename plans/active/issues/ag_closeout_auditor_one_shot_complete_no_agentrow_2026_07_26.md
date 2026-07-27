@@ -97,6 +97,53 @@ cosmetic error message.
       test/dev invocation) — if so this may be a one-off rather than a live production gap; if the daily timer itself is
       capable of producing this same bypass, that's the more urgent half of this finding. This session's actual audit
       work is verified complete and shipped regardless of how the plumbing question resolves.
+      **ANSWERED 2026-07-27 (slot-4) — this IS a live, recurring gap, not a one-off; see Update below for the precise
+      residual condition the 2026-07-26 fix does not cover.**
+
+## Update 2026-07-27 (slot-4, ag_closeout_auditor, tranche=defi) — reproduced AGAIN after the `agent-orchestrator@a01aeae` fix; identifies the exact residual condition
+
+Hit the byte-identical rejection today, on a fresh dispatch (`dispatch_id agt-1c2932`, `TRANCHE=defi`), AFTER the
+`DONE 2026-07-26` fix above had already shipped. Sequence observed:
+
+1. STEP 0 boot-started heartbeat, BEFORE reading any role file, already returned `already_in_progress: true` with an
+   UNRELATED Class-A backlog task (`data_pipeline_check_mdps_features-023`, `model: sonnet`, `assigned_role: infra`) —
+   i.e. slot 4's session had pre-existing Class-A `spawn_base_role`/task-binding state from a PRIOR occupant BEFORE my
+   `ag_closeout_auditor` dispatch's own `/boot` call ever ran.
+2. Two full `/boot` attempts (both correctly including `slot_role`/role context after the required `read_files` 428
+   round-trip) still resumed that same stale Class-A task (`dispatch_reason: "resume"`) instead of registering a fresh
+   one-shot `AgentRow` — the lazy-create path this doc's fix describes never fired.
+3. Completed the full audit anyway (65-doc defi Phase 0-3 triage, shipped `unified-trading-pm@af57cfcff` +
+   `@f5fc5a067`), then hit the identical `one_shot_complete` rejection.
+4. `POST /api/slots/4/skip-current-task` released the stale task — but the VERY NEXT `/heartbeat` immediately handed
+   back ANOTHER unrelated Class-A task (`capability_wizard_gap_discovery-010`, then after a second skip,
+   `cefi_tardis_write_schema_contract_column_mismatch-003`) rather than going idle or resolving to a one-shot
+   registration. `/done` with `one_shot_complete: true` was retried 3 ways (empty `task_id`, `task_id` set to the
+   session's own `DISPATCH_ID`, after clearing every stale task binding) — identical rejection every time:
+   `"one_shot_complete on slot 4 but no active agent owns its session 'orch-slot-4' — a Class-A worker must /done with
+   a task_id."`
+
+**This precisely confirms and narrows the fix's stated condition** ("`boot_slot()` now lazily constructs the missing
+`AgentRow`... when... `spawn_base_role` isn't already a typed role"): slot 4 already had a **typed Class-A
+`spawn_base_role`** bound from its prior occupant BEFORE this `ag_closeout_auditor` dispatch's first `/boot` call —
+so the lazy-create's own guard condition (`spawn_base_role isn't already a typed role`) is FALSE, and the fix
+correctly, deliberately does NOT override it (per its own logic) — it only helps a slot that boots into `plan_health`
+role territory with a genuinely EMPTY/untyped `spawn_base_role`. A slot inheriting a **stale but typed Class-A**
+binding from whatever ran there immediately before is the exact case the fix does not cover, and — per this session's
+repeated `skip-current-task` → immediately-rehanded-a-new-Class-A-task cycle — **clearing the stale task does NOT
+clear the underlying `spawn_base_role` typing**, so no amount of `/skip-current-task` + re-`/boot`/`/heartbeat`
+converges on a one-shot registration; the slot just keeps cycling through the Class-A backlog instead.
+
+**Refined recommendation**: the lazy-create branch (or a new one) needs to also fire when a `plan_health`-family
+`slot_role`/dispatch arrives at a slot whose `spawn_base_role` is ALREADY a typed Class-A role — i.e. the incoming
+one-shot dispatch should be able to REPLACE a stale prior-occupant's typing, not just fill an empty one, since a slot
+number is reused across arbitrary dispatch types over its lifetime and the previous occupant's `/done` may not have
+(or, per `slot_dual_flip_pattern_violation`-style gaps elsewhere, sometimes cannot) clear its own typing before the
+next dispatch lands. Practically: `POST /api/plan-health/dispatch` (or an equivalent explicit slot-role-assignment
+call) should be authoritative over whatever `spawn_base_role` a slot currently holds, not deferential to it.
+
+**This session's actual audit work is verified complete and shipped regardless** (`unified-trading-pm@af57cfcff`,
+`@f5fc5a067`, `git rev-list --count HEAD ^origin/live-defi-rollout` = 0). Ending this turn with a clear final report
+instead of a working `/done` call, per this doc's own 2026-07-26 precedent.
 
 ## Current session status (informational, not part of the fix)
 
