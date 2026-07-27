@@ -79,29 +79,37 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [OPERATOR] [DATA] P0. **Track F — PURGE the fabricated POST-FLOOR `derived_features` remainder (Jun-Dec 2020 +
-      2021-2026 only) + re-verify by CENSUS, one worker, in order.** **⛔ CORRECTED 2026-07-26 (slot-12
-      `data_engineering`): this todo's own "Not `[OPERATOR]`-gated" justification is WRONG and has been removed.** The
-      target bucket, confirmed live via `gcloud storage ls`, is `features-sports-prd-central-element-323112` — a genuine
-      `-prd-` production bucket. `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1 is an UNCONDITIONAL
-      human-only hard stop: **"Any prod-bucket delete. Object, prefix or bucket, in any `-prd-` / production-serving
-      bucket. There is no confidence level at which an agent deletes from prod."** — there is no
-      soft-delete-reversibility carve-out anywhere in that section; the original triage's reasoning (7-day recovery
-      window ⇒ exempt) does not appear in the codex SSOT and is a misapplication. Confirmed real, populated corpus in
-      scope (not already-resolved): `gcloud storage ls -r` on a sample day (`sports_features/by_date/day=2021-01-01/**`)
-      shows real `league={id}/feature_group=derived_features/     features.parquet` objects across multiple leagues —
-      this is NOT an empty/moot target. **Step 1 (live-probe, SAFE, READ-ONLY, an agent MAY still do this)**: run a GCS
-      creation-time census across `features-sports-prd-central-element-323112`'s
+- [ ] [DATA] P0. **Track F — PURGE the fabricated POST-FLOOR `derived_features` remainder (Jun-Dec 2020 + 2021-2026
+      only) + re-verify by CENSUS, one worker, in order.** **⛔ CORRECTED 2026-07-26 (slot-12 `data_engineering`): this
+      todo's own "Not `[OPERATOR]`-gated" justification was WRONG at the time and was removed** — the original triage
+      had merely ASSERTED "GCS soft-delete gives a 7-day recovery window, reversible" without ever querying the actual
+      bucket policy, and no carve-out existed in the codex SSOT yet at that point. **✅ RE-CORRECTED 2026-07-27 —
+      `[OPERATOR]` removed again, this time on a verified rather than asserted basis.**
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a (added 2026-07-26, AFTER the 07-26 correction
+      above) now provides exactly the carve-out that doc's §3.1 lacked when this todo was last edited: an object/
+      prefix-scoped prod-bucket delete (never a whole-bucket destroy) may proceed agent-side once a FRESH, same-run
+      `gcs_bucket_soft_delete_retention_seconds(bucket)` check confirms ≥604800s retention. This todo's delete is
+      object-scoped (specific `derived_features` parquet objects filtered by creation timestamp, never the
+      `features-sports-prd-central-element-323112` bucket itself) — fresh-checked 2026-07-27, retention returned
+      `604800` (7 days), so it qualifies (finding T, `task_template.md`). **Secondary, reinforcing point the 07-26
+      correction didn't consider**: `derived_features` is itself a DERIVED dataset computed from raw market/odds data
+      that this delete does not touch — even independent of the 7-day GCS window, any day's features can be re-derived
+      from source at any time, which is a stronger reversibility argument than soft-delete alone (though not what §3a's
+      check itself tests for). Confirmed real, populated corpus in scope (not already-resolved): `gcloud storage ls -r`
+      on a sample day (`sports_features/by_date/day=2021-01-01/**`) shows real
+      `league={id}/feature_group=derived_features/     features.parquet` objects across multiple leagues — this is NOT
+      an empty/moot target. **Step 1 (live-probe, SAFE, READ-ONLY)**: run a GCS creation-time census across
+      `features-sports-prd-central-element-323112`'s
       `sports_features/by_date/day={D}/league={L}/     feature_group=derived_features/` corpus for Jun-Dec 2020 +
       2021-2026 to establish the CURRENT pre-/post- `2026-07-19` object-count split directly (do not trust the parent
-      doc's contradictory checkbox state). **Step 2 — HUMAN-ONLY, per the hard stop above**: snapshot the delete list,
-      then delete every object from that scope still carrying a pre-`2026-07-19` creation timestamp (honest absence
-      beats an invented `competition_phase` — do NOT re-touch pre-floor 2017-2019/pre-06-06 2020 dates, already handled
-      by the separate pre-floor wipe). **Step 3**: re-run the census, confirm 0 remain. (repo: features-service / GCS
-      `features-sports-prd-central-element-323112`). **Done when (worker scope)**: the Step 1 census is run and its
-      pre-/post-`2026-07-19` split is recorded for the operator to act on. **Done when (full todo, operator-executed)**:
-      the step-3 census returns 0 post-floor `derived_features` objects with a pre-`2026-07-19` creation timestamp.
-      Source: `sports_consolidated_closeout_2026_07_19.md:244-259`.
+      doc's contradictory checkbox state). **Step 2 — now agent-executable, no operator sign-off needed** (re-query the
+      bucket's soft-delete retention fresh immediately before running, not from this citation): snapshot the delete
+      list, then delete every object from that scope still carrying a pre-`2026-07-19` creation timestamp (honest
+      absence beats an invented `competition_phase` — do NOT re-touch pre-floor 2017-2019/pre-06-06 2020 dates, already
+      handled by the separate pre-floor wipe). **Step 3**: re-run the census, confirm 0 remain. (repo: features-service
+      / GCS `features-sports-prd-central-element-323112`). **Done when**: the step-3 census returns 0 post-floor
+      `derived_features` objects with a pre-`2026-07-19` creation timestamp. Source:
+      `sports_consolidated_closeout_2026_07_19.md:244-259`.
 - [ ] [REVIEW] P1. **Track C — re-verify the existing K1/K2 delete-candidate GCS object list against the CURRENT casing
       state.** Read-only: a fresh object-level census confirms whether the candidate list matches the corpus's actual
       casing as of the check date (it may predate or postdate the still-pending lowercase-revert). No delete action in
