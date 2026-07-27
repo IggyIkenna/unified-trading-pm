@@ -56,10 +56,10 @@ held two objects — `_migrated_lst_rates_1585224000.parquet` (created 2026-07-1
 
 `venue=LST` is not canonical — real DeFi LST venues are per-protocol (`LIDO`, `ROCKETPOOL`, `ETHERFI`, `ETHENA`,
 `MARINADE`, ... — 14 in `LST_VENUE_TO_TOKENS`). `LST` is the `instrument_type` category value
-(`codex/02-data/defi-canonical-naming-ssot.md:87-88`) leaking into the venue slot.
+(`/codex/02-data/defi-canonical-naming-ssot.md:87-88`) leaking into the venue slot.
 
 Widening the check to the full pre-Lido-genesis window (Lido/stETH genesis 2020-12-18/19,
-`codex/02-data/instrument-pipeline-defi.md:142-143`) found the SAME shard exists for **all 353 days**, 2020-01-01
+`/codex/02-data/instrument-pipeline-defi.md:142-143`) found the SAME shard exists for **all 353 days**, 2020-01-01
 through ~2020-12-18 — confirmed as the FULL scope via an independent `gsutil du -s` total (1,764,302 bytes = exactly 551
 × 3,202-byte files, matching the object count below). Of those 353 days, **217 had a freshly-written `empty.parquet`
 dated 2026-07-26** (yesterday relative to this session) — i.e. this is not dead historical debris, it is an
@@ -114,7 +114,7 @@ ever run in dry-run mode. So: **yes, scripted in detail, but the apply/delete st
 
 - Verified the bucket's soft-delete policy fresh (not assumed): `soft_delete_policy.retentionDurationSeconds = "604800"`
   (7 days), active since 2026-05-12 — satisfies the reversibility-verified bar for a prod delete
-  (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a).
+  (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a).
 - Deleted all 551 objects under `venue=LST/chain=ETHEREUM/instrument_type=lst/data_type=lst_rates/` across the full
   353-day pre-genesis range (334 `_migrated_*.parquet` tombstones + 217 `empty.parquet`) via the sanctioned SDK path
   (`unified_trading_library.cloud_interface.gcs_delete_object`, never a raw `gsutil`/`gcloud` subprocess — the workspace
@@ -141,7 +141,7 @@ placeholder venue string. Applied in `market_tick_data_service/cli/handlers/lst_
 - Full `bash scripts/quality-gates.sh --no-fix` run: **7223 passed, 17 skipped, 1 xpassed, 0 failed**, coverage 80.46%
   (floor 79%), `QG_EXIT=0`. Not yet committed/shipped — pending an explicit shipping decision.
 
-`codex/02-data/honest-absence-downstream-handling.md:101-102` (writers should not emit physical zero-row placeholder
+`/codex/02-data/honest-absence-downstream-handling.md:101-102` (writers should not emit physical zero-row placeholder
 parquets at all, `record_empty()` is the manifest-only SSOT) was considered as an alternative, larger fix (remove the
 physical marker write entirely) but was not applied here — the operator's instruction was specifically about eliminating
 the fallback/default-venue behavior, not about removing the marker mechanism itself, and the `_write_empty_lst_marker`

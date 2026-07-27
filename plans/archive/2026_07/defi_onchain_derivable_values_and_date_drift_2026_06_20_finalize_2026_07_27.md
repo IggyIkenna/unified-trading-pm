@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
+    /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

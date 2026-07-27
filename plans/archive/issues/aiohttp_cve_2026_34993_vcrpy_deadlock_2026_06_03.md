@@ -44,7 +44,7 @@ last_updated: 2026-06-27
 
 > **✅ ARCHIVED (archived 2026-07-27)** — RESOLVED banner below confirmed still accurate: `workspace-constraints.toml`
 > line 11 carries `aiohttp = "aiohttp>=3.14.1,<4.0.0"`. The sole remaining P2 scope (execution-service aioresponses
-> holdout, owned by `/plans/active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`) is
+> holdout, owned by `/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`) is
 > now ALSO fully done — the operator's standing "do not refactor execution-service tests mid-active-development" gate
 > was lifted 2026-07-27 (`/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #18/19) and the
 > migration executed the same day: execution-service@`9ce159a7` (confirmed ancestor of `origin/live-defi-rollout`), 8

@@ -20,7 +20,7 @@ related:
   [
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md,
-    /plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
+    /plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
     /plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md,
     /plans/active/stash_pile_workspace_cleanup_2026_06_03.md,
     /plans/active/org_migration_to_odumresearch_2026_06_07.md,
@@ -86,13 +86,13 @@ discipline as the control. Other: operator can type a custom answer
 
 Two infra-tranche issue docs are each **near-complete with exactly 1 open todo**, and it is provably the _same_ work.
 
-`/plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md:216-222` (its sole remaining `- [ ]`): "**The
+`/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md:216-222` (its sole remaining `- [ ]`): "**The
 only remaining scope of this item is the execution-service holdout** (still pinned to 3.13.5 via
 `[tool.uv] override-dependencies`, retaining both ignore-vulns) — tracked by
 `execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`. Left unchecked (not flipped) because that
 holdout migration has not shipped yet."
 
-`/plans/active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md:72-79` (its sole remaining
+`/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md:72-79` (its sole remaining
 `- [ ]`) already owns exactly that: "migrate the 8 `aioresponses` test files… Then **remove the
 `aiohttp>=3.13.4,<3.14.0` line from execution-service's `[tool.uv] override-dependencies`**… and **drop the 11 aiohttp
 `--ignore-vuln` entries**".

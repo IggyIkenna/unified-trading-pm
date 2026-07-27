@@ -4,7 +4,7 @@ title: Sports golden-window attempted_failed remediation — mostly misclassific
 summary:
   "Golden window is effectively at 100% on FIXTURES/MATCHES/TEAMS/VENUES/LEAGUES/ODDS/XG/STANDINGS/PLAYER_STATS. The
   ~5,900 `attempted_failed` cells are **mostly misclassification, not missing data**:"
-status: resolved # (was: open) 2026-07-27: 3 stale items confirmed done + flipped; sole remainder is a dormant contingency, footnoted at codex/02-data/sports-data-source-coverage-matrix.md §2.3
+status: resolved # (was: open) 2026-07-27: 3 stale items confirmed done + flipped; sole remainder is a dormant contingency, footnoted at /codex/02-data/sports-data-source-coverage-matrix.md §2.3
 nature: process
 asset_group:
   [sports] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
@@ -32,7 +32,7 @@ assigned_vm: planning
 resolved_by:
   "2026-07-27 /plan-vintage-audit -- 3 stale items independently re-verified against current code (understat.py,
   gcs_paths.py) + the archived sports_p1_golden_window_mtds_odds_2026_06_27.md Todo 1/2; sole remainder (3-way understat
-  split) footnoted at codex/02-data/sports-data-source-coverage-matrix.md as a dormant contingency"
+  split) footnoted at /codex/02-data/sports-data-source-coverage-matrix.md as a dormant contingency"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
