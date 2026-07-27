@@ -24,11 +24,13 @@ related:
 created: 2026-07-27
 priority: P1
 parent_epic: tradfi_master
-author: agent-orchestrator worker slot-9
 assigned_vm: planning
 source: [tradfi_manifest_content_recovery_completion_2026_07_24.md]
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
