@@ -358,6 +358,119 @@ needed.
 
 ---
 
+## §5-RESOLVED — Interactive operator-gate session (2026-07-27, all 42 items dispositioned)
+
+Ran item-by-item; several turned out to be stale/already-resolved on fresh investigation (flagged below), not fresh
+operator decisions. Recorded here so §2-§4 execution + fresh todos can proceed without re-litigating. **General
+correction**: Tardis API-key/billing block is CLEARED — every item below tagged BLOCKED-CREDENTIALS(Tardis) is now
+UNBLOCKED (#3, #12, #25). **General correction**: "Owner: Ikenna/Harsh" human-split tags are STALE — no more human-owner
+splits, this is agent work (operator ruling, applies beyond #38/#42 — any other `Owner: <name>` design-call tag found
+during §2-§4 execution should be treated the same way, not re-parked on a human).
+
+1. cefi_ml — stands: wallet keys/kill-switch + operator-scheduled VM run, no chat decision.
+2. cryptovenue_equity_perps — **CORRECTED**: no literal "SCOPE UNCLEAR" flag exists in the doc; Phase 1d-1f are
+   well-scoped live DESIGN/RESEARCH/SCRIPT todos with clear repos already in the active plan, Phase 3/4/Codex-SSOT are
+   plain 1-line P2 todos. No operator naming needed — leave the plan active, todos are normal open work, not blocked.
+3. v2_engine_venue_buildout — Tardis creds UNBLOCKED (see general correction); VOL_* backtests can proceed. ML
+   model-variant trainings still need an operator-scheduled VM run.
+4. defi_collateral_sizing bps=150 — KEEP as documented reasonable estimate; close the placeholder flag, no calibration
+   work needed.
+5. e2e_defi_config_taxonomy D1 — confirmed stays DEFERRED-BY-DESIGN, no timeline.
+6. sports_canonical day=all fold — **CORRECTED (was stale)**: already operator-authorized 2026-07-25 (Option A,
+   `sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`), reversibility re-verified 2026-07-27 (7-day
+   soft-delete). Not about "teams over time" — confirmed dead legacy season-keyed snapshot, zero live readers.
+   **Execute**: backup-copy-first, then delete the 2 named objects per the delete-safety protocol.
+7. sports_odds_bookmaker_coverage — canonical-namespace conflict **ALREADY resolved** (merged 2026-07-27, UAC registry
+   form wins, no fresh decision). Regression-test-deletion: **RESTORE** equivalent tests for `TestFootystatsOddsNanFill`
+   (4 tests) + the SP-10-ODDS regression guard (functionality survived, only the tests were dropped in
+   instruments-service@6404abd6 and never restored).
+8. tradfi_eu_not_draining — 4,655 stale Barchart manifest rows: **PURGE** (source retired 2026-07-19).
+9. data_completion_to_100_all_ag — BYBIT futures_chain legacy delete: **APPROVED**.
+10. monitoring_control_plane G4/G5 panels — **UNBLOCK**: no CI/CD billing wall anymore: proceed with the real Firestore
+    verdict-store generalisation (not the faithful-port workaround) for both panels.
+11. dp_alerts_dp_not_v9 — `populate_v9_index_columns_inplace.py --apply`: **APPROVED** to run.
+12. fleet_audit_triad Tardis paid key — UNBLOCKED (see general correction), proceed. GCS 22-day gap item unchanged
+    (still under the 2026-06-01 "let it be" banner).
+13. vm_backfill_data_correctness F4 (Curve subgraph) — stands, BLOCKED-CREDENTIALS, external. F7 (TradFi `is_mvp`
+    gating) — **DECIDED**: yes, gate TradFi capture by `is_mvp`; file as a real P2/P3 todo in
+    `tradfi_consolidated_closeout_2026_07_18.md` (this also unblocks the §1 bug-1 fix's F7 rehome).
+14. master_data_canonicalisation — G1-ENUM fix: **Option (a) chosen** — symmetric `_rollup_bundle_grain` on the
+    present-set before the set-difference. G5 ownership: **unblock the 5 named per-AG plans** (manifest migrations done
+    everywhere, G4 green all 5 AGs) but **wrap the actual todos into a newer backfill plan covering AWS parity in code**
+    (switch-toggle to use AWS via config, as already designed — smoke-testable; GCP stays home for MTDS full backfills)
+    — check staleness of the 5 named plans' todos given their age since G4 unlocked.
+15. citadel_paper_batch_live P2.7.3/P7.3 — stands, human-only custody gate, external.
+16. live_mode_event_sink_topic — **Option A chosen**: repoint UTL `_sink_factory.py` to canonical
+    `service-lifecycle-events`; delete the interim unmanaged `market-tick-data-service-events` topic after.
+17. live_pipeline_persistence M-C7 warm-GCS-parts durable sink — **APPROVED** to build real code (not just design).
+    18/19. execution_service_aioresponses migration (+ CVE-2026-34993 vcrpy) — **gate LIFTED** for this specific
+    test-infra-only migration (mock library swap, no production-logic touch). 20a. cicd_mvp cron cadence — **Option A
+    chosen**: self-hosted VM heartbeat, dispatch the promoter every 15min via `gh workflow run`. 20b. cicd_mvp
+    quickmerge-provenance re-arm leak — **CLOSE the leak**: re-run the provenance check before re-arming an existing PR.
+    20c. cicd_mvp WS-I service-to-service-auth — **still wanted**, re-home into a fresh active plan (not the other ~51
+    deferred hygiene todos from the archived source).
+18. aws_codebuild_pr_approval_status_noise — **CONFIRMED ALREADY RESOLVED**: verified live via `gh pr view` — the "AWS
+    CodeBuild" status check shows `SKIPPED` (not the red `FAILURE` the finding described) on unified-api-contracts#776
+    and deployment-service#571. Archive with this evidence, no fresh action.
+19. codex_violations — unlock **GRANTED**. `delta_proxy_repricer.py`: NOT dead code as assumed — its dependency
+    `UnderlyingTracker` is tested/used elsewhere but the repricer class itself has zero tests/callers (built, never
+    wired in). **File as real work to wire in**: keep the module, open a new todo to integrate it into the live
+    execution handler + add tests (MM delta-proxy repricing IS wanted).
+20. repo_scripts_governance D16 — **PM-only carve scope chosen** (matches current CLAUDE.md carve #3). The
+    campaign-gated delete-execution cohort is a sequencing gate, not a fresh decision (already correctly scoped: wait
+    for each AG's manifest-canonicalisation plan to archive).
+21. plan_hygiene RULE-11 — **APPROVED** (drop `schedule:`/Haiku, delete the Cloud Run hygiene-sweep job).
+22. plan_issue_epic_consolidation Tardis-historical-billing (775.9k cells) — confirmed still unowned (separate rehome
+    task, tracked in §4), now also UNBLOCKED (see general correction).
+23. plan_reconciler INDEX.md — **KEEP + auto-generate**: extend `regenerate_active_plan_inventory.py` (or a sibling
+    script) to render a domain-grouped index from each plan's own `summary:`/`asset_group:` frontmatter (every plan
+    already carries `summary:`) — fixes the drift at the root while keeping the narrative-context value the pure
+    checkbox dashboard doesn't have. Add a CLAUDE.md doc-retrieval rule to read it before scanning `plans/active/` for a
+    domain.
+24. instruments_service_plan_reconciliation C9 — fold into `cefi_consolidated_closeout_2026_07_18.md`.
+25. issue_docs_remediation_sweep 2 orphans (deployment-scripts bucket lifecycle rules; G-TRACE E2E trace API) — **file
+    both** into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` as new todos.
+26. bigquery_feature_ml — scale-bound subset first + BQML-vs-feature-store-per-model both **confirmed**. Sequencing: v9
+    `--apply` **HAS landed** (G4 green all 5 AGs) — this plan is unblocked; **also check the corpus for other plans
+    similarly stale-blocked on "wait for v9 apply"** (new todo, not yet done).
+27. bucket_iam_write_protection P1.2b — stands, BLOCKED-CREDENTIALS (current credential lacks `setIamPolicy`), external
+    grant needed from operator.
+28. mtds_file_size_refactor — **RESUME** (un-pause).
+29. mvp_scope_catalogue Models-MVP-taxonomy P2b — **CORRECTED**: a stable, already-versioned `model_id` scheme ALREADY
+    EXISTS — `generate_model_id`/`parse_model_id` in `ml-service/ml_service/training/ml/config_schema.py`:
+    `{ASSET_GROUP}_{ASSET}_{TARGET_TYPE}_{MODEL_TYPE}_{TIMEFRAME}_V{N}`, genuinely unique/stable over time by
+    construction. The "BLOCKED-OPERATOR-DECISION" framing is stale — the real remaining work is wiring a `ModelsMvpRule`
+    consumer against this existing scheme (an implementation task, not an open design decision).
+30. ui_build_warm_cache pnpm — **MIGRATE** to pnpm's global content-addressable store.
+31. utl_uac_reuse_consolidation — unlock **GRANTED**.
+32. instruments_foundation_completeness GATE 0/G1/G4 sign-off tensions — **CORRECTED**: already accepted-as-is per the
+    operator's 2026-07-23 unlock ruling, not re-litigated. No fresh decision needed.
+33. capability_wizard_analysis F46 — stands, BLOCKED-CREDENTIALS (3 CeFi perp adapters need live API keys), external.
+34. capability_wizard_gap F45 — **owner: strategy-service pre-trade layer** (not a net-new risk-service). The
+    margin_health CeFi LOGIC-FREEZE items are mostly already implemented (`emit_live_cefi_margin_events` shipped); the
+    one remaining stub is explicitly LOGIC-FREEZE-deferred to PBM dispatch, not a fresh operator ask.
+35. features_service_coverage 2 owner-design items (velocity-accel fallback semantics; `make_session` loop-safety) —
+    **operator directive: the plan (agent) owns investigating + scoping these into canonical tasks in the right plans**
+    — todo for whoever executes §3/§4: do that scoping work, don't re-park on a human owner.
+36. org_migration_to_odumresearch — **STAY on IggyIkenna Pro**. Close out: remove `status: paused`, drop the migration
+    scope.
+37. orphan_rootm_branch — **CORRECTED**: already resolved via `autonomous_session_operator_decisions_2026_07_25.md` #23
+    (Option A, resolved) — batch1's read-only presence-check todo already covers it. Add a correction banner; archive
+    once `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` writes its dated verdict.
+38. macro_micro_econ_data_capture — heads up: the doc's "Massive re-adopted as Databento's secondary source" premise is
+    now STALE (Massive/Polygon.io fully REMOVED 2026-07-19) — **confirmed redundant, operator agrees**, correction
+    banner needed. Answered anyway: (a) altdata home = **shared cross-asset axis**, no new asset_group; (b) paid sources
+    = **DECLINE all** (no Glassnode/CoinGlass/CryptoQuant spend); (c) FRED dedup — checked both adapters: MTDS's (358L,
+    canonical tradfi shard writer) vs features-service's (158L, independently re-fetches from live FRED API instead of
+    reading MTDS's captured output) — **consolidate into MTDS, taking the best of both adapters** (not a pure delete —
+    fold in whatever features-service's version does better, e.g. its Secret-Manager config pattern, before removing the
+    duplicate fetch path); (d) first-tranche scope = **crypto (CeFi+DeFi) + ETF flows first**.
+39. service_dockerfile_pattern_normalization — **agent owns it** (no more Ikenna/Harsh human-owner split, per the
+    general correction above) — proceed with Pattern-A fan-out to the 8 remaining Pattern-B repos + the
+    strategy-service/MTDS-vendoring tier-violation investigation.
+
+---
+
 ## §6 — Unclear, needs a closer look before deciding (2 docs)
 
 - [ ] [VALIDATE] P3. `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md` — 23 done/8 open: 3 UI todos
