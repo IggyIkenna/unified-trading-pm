@@ -385,8 +385,22 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
       (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s first todo, "Resume the cefi Tardis COVERAGE
       backfill") that will dispatch automatically once Track 1 completes — no separate DERIBIT-specific launch is needed
       or correct to force now.
-- [ ] [REVIEW] P1. Close `tardis_concurrent_ip_lockout_2026_07_12.md`'s open post-fix G4 re-measurement todo once a
-      genuine post-cap-1 production wave has accumulated enough fresh cefi history.
+- [x] ✅ [REVIEW] P1. **RESOLVED-AS-SUPERSEDED 2026-07-27 (slot-4)** — traced the reference chain and found there is no
+      live checkbox to close: `tardis_concurrent_ip_lockout_2026_07_12.md` itself has ZERO open `- [ ]` todos (every
+      item already `[x]`), and the doc its 2026-07-14 entry names as owning the actual re-measurement
+      (`mvp_backfill_cefi_tick_v10_2026_06_27.md` G4) is ARCHIVED with `status: complete`/"zero open todos" since
+      2026-07-15. More importantly, the tardis doc's OWN 2026-07-25 SUPERSEDED banner already reconciles this: the G4
+      re-measurement this todo asks for was scoped to compare pre/post the **lease** mechanism
+      (`TARDIS_CONCURRENCY_LEASE`, N=3-concurrent-with-lease model) that doc built and measured through 2026-07-14 — but
+      the operator's 2026-07-16 ruling replaced that whole approach with a hard **N=1-concurrent-VM cap**
+      (`tardis-concurrency-guard.sh`), which the lease-era measurement never covered. So there is no valid "close the
+      old G4 re-measurement" action left to take — the thing it would have measured no longer exists in the current
+      architecture. Attempted a live manifest read for a fresh post-cap-1 attempted_failed/403 census anyway
+      (`read_availability_index` on `market-data-tick-cefi-prd-central-element-323112`) but got 0 rows both total and
+      post-2026-07-16 — inconclusive (likely a wrong call signature on my part, not proof of genuine absence at
+      ~7.5M-row scale) — NOT reporting this as a real finding. **Recommendation**: if a fresh post-N=1-cap
+      attempted_failed/403 census is still wanted, scope it as a NEW todo against the current architecture (not a
+      "close" of this now-moot lease-era one).
 - [ ] [DATA] P1. Trace the fresh (2026-07-21) `"FUTURE/OPTION row requires 'expiry_date'"` recurrence
       (DERIBIT/COINBASE-FUTURES/BITFINEX-FUTURES/OKX-FUTURES) to specific symbols via the real run.log; confirm or rule
       out the DERIBIT-combo-symbol hypothesis; file/extend an issue doc once traced.
