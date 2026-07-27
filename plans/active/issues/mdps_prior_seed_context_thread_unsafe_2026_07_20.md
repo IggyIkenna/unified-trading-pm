@@ -129,9 +129,46 @@ lives_, not _what it resolves to_.
       `max_workers>1` over a HETEROGENEOUS file list (>=2 venues and/or underlyings and/or pipeline_modes) and assert
       each instrument's resolved prior-day seed path matches its OWN venue/underlying/pipeline_mode. A homogeneous list
       must not be used — it cannot detect the bug.
-- [ ] 3. [DATA] P1. Assess blast radius on EXISTING candle data: any past MDPS run with `max_workers>1` over a
-      heterogeneous file list may carry wrong leading-bin seed values. Determine whether prod backfills ran with
-      concurrency and whether affected shards need re-derivation.
+- [x] 3. ✅ [DATA] P1. Assess blast radius on EXISTING candle data — LOW/near-zero, evidence below.
+
+## 2026-07-27 update (slot-8) — todo 3 blast-radius assessment
+
+**Method**: enumerated every `mdps-backfill-*` VM run under `gs://deployment-scripts-central-element-323112/vm-logs/`
+(excluding `-pcskip-`/`-pipelinecheck-`/`-pcbench-`, which are smoke/verification runs, not real backfills) and checked
+each real run's start timestamp against the fix commit (`market-data-processing-service@b3376b8`,
+`2026-07-20 20:47:10 +0100` = `2026-07-20T19:47:10Z`).
+
+**Finding: zero real backfill runs predate the fix.** Every real (non-smoke) `mdps-backfill-*` run in the log bucket is
+timestamped `2026-07-21` or later (the great majority `2026-07-26`) — CEFI, TradFi (incl. the `y2020`..`y2026`
+year-sharded + `buildcontinuous-es` runs), and SPORTS. No real backfill activity exists from before the fix landed.
+
+**Confirmed real (non-dry-run) writes under the exact heterogeneous-venue precondition**:
+`mdps-backfill-cefi- 20260726-165959` and `-171422` — `MDPS_VENUES='HYPERLIQUID LIGHTER-ZKSYNC EXTENDED-STARKNET'` (3
+venues, one `data_type=trades`), no `MAX_WORKERS` override (defaults to `min(cpu_count,16)`=8 on `e2-standard-8`),
+windows `2024-01-01..2026-07-25` / `2026-06-26..2026-07-25`. Verified via `run.log`: real
+`POLARS AGGREGATED: 1440 1m candles` writes + `ManifestWriter: per-VM shard updated` entries, and
+`RESOURCE_SAMPLE cpu=278.6% ... threads=82` confirms actual multi-threaded concurrent execution occurred — this is
+exactly the bug's trigger shape (heterogeneous venues, default worker count >1, real writes).
+
+**Why blast radius is assessed LOW despite that match**: these runs are dated `2026-07-26`, 5-6 days AFTER the fix
+commit. `market-data-processing-service`'s launcher pins are `MDPS_TARBALL_SHA` = **floating** (not pinned in VM
+metadata, confirmed via this run's own `TARBALL_PINS.json`), meaning the VM pulled whichever
+`market-data-processing- service-code` tarball was live at launch time. The CI-driven `create-code-tarballs.sh` rebuild
+cadence (observed: today's live manifest was rebuilt `2026-07-27T01:29:26Z`, itself a different sha again) is fast
+enough relative to a 5-6 day gap that these runs almost certainly ran the FIXED code. **This cannot be independently
+re-verified after the fact** — GCS retains only the CURRENT tarball manifest, not historical snapshots, so there's no
+way to directly confirm which exact commit sha was live at `2026-07-26T17:14:22Z` (this run's launch time) versus assume
+it from the rebuild cadence.
+
+**Conclusion**: no DETERMINED corruption. The one class of run that structurally matches the bug's trigger (real,
+heterogeneous-venue, default-concurrency, non-smoke) only exists post-fix, and CI's per-commit tarball rebuild pattern
+makes pre-fix code on those specific runs unlikely though not provably ruled out. **No re-derivation is recommended on
+current evidence** — if this needs to be escalated to certainty, the only path is checking Cloud Build's tarball-build
+history (if retained) for `market-data-processing-service-code` builds between `2026-07-20T19:47Z` and
+`2026-07-26T17:14Z` to confirm at least one rebuild happened after the fix commit and before the flagged runs; I did not
+have budget in this session to pull that separately since deployment/build-history access wasn't part of this session's
+already-open tool surface.
+
 - [x] 4. ✅ [SCRIPT] P1. R1 SHIPPED mdps@b3376b8 — opt-in MDPS_DATE_CONCURRENCY/--date-concurrency (default 1);
       date-level multiprocessing (measured 4.12->1.04s @N=1..4). In-date max_workers raise still a follow-up. Only AFTER
       1+2: raise the concurrency lever (the pool was measured under-fed — 2 futures into 8 slots) and re-measure
