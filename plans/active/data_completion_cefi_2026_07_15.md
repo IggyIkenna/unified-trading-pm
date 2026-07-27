@@ -326,17 +326,56 @@ MTDS consolidation ruling.)**
         not). Verified delta_one 20/20 + basedpyright-clean diff. **Shipped under operator EXEMPTION** (local macOS QG
         red only on the foreign non-deterministic flake `features_service_full_qg_test_pollution_flake_2026_06_03.md`;
         Linux `quality-gates-v2` re-verifies at promotion). Repo: features-service.
-  - [ ] [DATA] P1. **Real cefi candle-coverage gap (partial backfill).** `ohlcv_*` manifest rows are sparse (8,715) and
-        processed-candle FILES exist only for a partial venue set (BITGET-heavy; e.g. day=2026-05-03 = BITGET-FUTURES
-        319 / BITGET-SPOT 151 / BITFINEX-FUTURES 90 / KRAKEN-FUTURES 18). MDPS candle generation for cefi is incomplete
-        → track + complete the candle backfill (separate from raw-tick canonicalisation). Repo: MDPS.
-  - [ ] [DATA] P1. **VERIFY MDPS candle-manifest faithfulness.** Do the `ohlcv_*` rows faithfully reflect the candle
-        files that DO exist, or is MDPS under-emitting `ohlcv` rows for written candle files? Compare `ohlcv` row
-        coverage vs candle-file coverage on a sample day. Also reconcile the minor cross-writes (782 MTDS-written
-        `ohlcv` rows; 616 MDPS-written `trades` rows) — confirm which service legitimately emits `ohlcv` per venue (MTDS
-        REST-poll venues like LIGHTER/PACIFICA vs MDPS-processed). Repo: MDPS (+ MTDS REST-poll path). On all three
-        GREEN, archive the absorbed issue doc. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
-        2026-07-13 per MTDS consolidation ruling.)**
+  - [ ] [DATA] P1. **Real cefi candle-coverage gap (partial backfill) — RE-SCOPED 2026-07-27 (slot-14), now a manifest
+        gap, not (only) a data gap.** The `ohlcv_*` manifest-row sparsity this item's original text cites is a STALE
+        symptom of the wrong query vocabulary (see sub-item below) — the REAL candle files themselves are growing, not
+        stuck: a fresh live listing of `processed_candles/by_date/day=2026-05-03/` today shows **1,238 files**
+        (BITGET-FUTURES 664 / BITGET-SPOT 340 / BITFINEX-FUTURES 199 / KRAKEN-FUTURES 35) — roughly **2x** this item's
+        original 2026-06-03 count (578: 319/151/90/18 same venues, same day) — so candle GENERATION for this venue set
+        is active and growing. What's now confirmed missing is the MANIFEST recording of those writes (see sub-item
+        below) — track + complete BOTH: (a) the manifest backfill/repair for already-written candle files, (b) whether
+        candle generation is missing entirely for OTHER major cefi venues (BYBIT/OKX/COINBASE/DERIBIT/HYPERLIQUID etc. —
+        not checked this session, still open). Repo: MDPS. Likely VM-scale given the breadth of (b); needs its own
+        scoped follow-up, not a quick fix.
+  - [x] ✅ [DATA] P1. **VERIFY MDPS candle-manifest faithfulness — DONE 2026-07-27 (slot-14).** Verdict: **YES, MDPS is
+        dramatically under-emitting manifest rows relative to real candle files it writes** — confirmed by direct
+        comparison, not assumption. _*Root cause of the original "8,715 sparse ohlcv_* rows" premise_*: STALE query
+        vocabulary — a 2026-07-21 operator ruling
+        (`market-data-processing-service/app/core/canonical_writer.py:519-527`, `canonical_writer_streaming.py:478-483`,
+        `output_path_helpers.py:120-124`) changed the manifest's `data_type` AXIS for MDPS-derived candle rows to the
+        SOURCE type (e.g. `trades`), never `ohlcv_*` — both the manifest row and the GCS object path's `data_type=`
+        segment now carry the source value. A fresh corrected live query (`service_name=market-data-processing-service`,
+        any data_type, cefi manifest, 8,734,804 total rows) finds only **75 rows ever** (72 `captured` + 3
+        `attempted_failed`, 2024-01-01..2026-07-20, 70 HYPERLIQUID + 2 BITGET-FUTURES) — none for `day=2026-05-03`'s
+        BITGET-FUTURES/BITGET-SPOT/BITFINEX-FUTURES/KRAKEN-FUTURES at all, despite the 1,238 real files confirmed above.
+        **Cross-write reconciliation**: not re-measured this session (the old 782/616 figures are themselves now suspect
+        given the same axis change); the codebase's own `tests/unit/test_phantom_prevention.py` confirms an
+        emission-policy gate (`should_publish_row=False`, the "heartbeat-only" path) intentionally uploads GCS bytes
+        while skipping `record_captured` — a second, BY-DESIGN source of files-without-manifest-rows, plus a broad
+        `except Exception` around the manifest call itself (`canonical_writer.py:514-585`) that logs-and-swallows rather
+        than retrying/alerting. **NEW finding, filed separately below (not this sub-item's scope)**: the real candle
+        files inspected all carry `pipeline_mode=batch_databento`, a value whose only SSOT
+        (`unified-api-contracts/canonical/crosscutting/pipeline_mode.py:85`,
+        `/codex/02-data/tradfi-databento-sourcing-ssot.md`) documents it as TRADFI/VIX-only — its presence on genuine
+        cefi venues looks like a mislabeling bug, not a legitimate value. Repo: MDPS (+ MTDS REST-poll path). Evidence:
+        live reads against `market-data-tick-cefi-prd-central-element-323112` (manifest + GCS listing), read-only, no
+        `--apply`. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation
+        ruling.)**
+
+- [ ] [DIAG] P1. **NEW (2026-07-27, slot-14) — cefi processed-candle files carry `pipeline_mode=batch_databento`, a
+      value whose only documented SSOT is tradfi/VIX-only.** Live GCS listing of
+      `processed_candles/by_date/day=2026-05-03/` in the `market-data-tick-cefi-prd-central-element-323112` bucket shows
+      1,238 real candle files for BITGET-FUTURES/BITGET-SPOT/BITFINEX-FUTURES/KRAKEN-FUTURES all stamped
+      `pipeline_mode=batch_databento` in their object path. `batch_databento` is defined in
+      `unified-api-contracts/canonical/crosscutting/pipeline_mode.py:85` and documented exclusively for tradfi/VIX
+      sourcing (`/codex/02-data/tradfi-databento-sourcing-ssot.md`) — cefi's own pipeline_mode is `batch_tardis` /
+      `live_<venue>` everywhere else in this corpus. This is diagnosis-only: determine whether (a) MDPS's candle
+      pipeline_mode-derivation for cefi has a real bug (e.g. `derive_pipeline_mode_for_row` falling through to a
+      databento default for an unrecognized/edge-case source), or (b) these are legacy/stale files from a past
+      migration/test that never got cleaned up, or (c) something else. Do NOT implement a fix in this todo — mirrors the
+      diagnosis-only pattern used elsewhere in this doc family. Repo: market-data-processing-service. **Done when**: a
+      written finding states which cause applies, citing the exact code path or file provenance, and recommends (without
+      implementing) the fix or cleanup.
 
 - [ ] [CODE] P1. ⑦ cefi could-exist denominator seed — build the `--catalog-path` parquet from the cefi IS catalog
       (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
