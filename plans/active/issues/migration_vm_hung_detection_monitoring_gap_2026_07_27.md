@@ -276,17 +276,61 @@ automatic, and depends entirely on someone deciding to look and knowing to look 
       `DP_VM_STALL` → `RelaunchStalledVm` (a different actuator) — confirmed that actuator has NO checkpoint/resume
       logic at all (`grep` for checkpoint/PROGRESS/resume in `relaunch_stalled_vm.py` returns nothing), so even this
       newly-enabled detection path relaunches blind, not via the PROGRESS.json checkpoint (see todo 6).
-- [ ] [HUMAN] P2. **Determine what (if anything) actually enforces a stall-timeout on `VM_MIGRATION_CMD`-executed
+- [x] [HUMAN] P2. **Determine what (if anything) actually enforces a stall-timeout on `VM_MIGRATION_CMD`-executed
       workers** launched by `launch-canonical-migration-vm.sh`, given Gap 2 shows `vm-exec-with-gcs-tee.sh` is never
       invoked by this launcher at all. Done when: either (a) a stall-enforcement mechanism is identified and confirmed
       live for this launcher's VM-side execution path, or (b) it's confirmed there is none, and a decision is recorded
       on whether to route this launcher through `vm-exec-with-gcs-tee.sh` (with `STALL_PROGRESS_REGEX` set) or build an
-      equivalent in-VM watchdog for the `bash -c "$VM_MIGRATION_CMD"` path.
-- [ ] [HUMAN] P2. **If routing `launch-canonical-migration-vm.sh` through `vm-exec-with-gcs-tee.sh`, set a content-aware
+      equivalent in-VM watchdog for the `bash -c "$VM_MIGRATION_CMD"` path. — **RESOLVED (2026-07-27, todo-3+4
+      implementation session): criterion (a) applies**, confirming (not contradicting) the CORRECTION note already
+      recorded against Gap 2 above from the todo-2 session: re-verified directly this session by tracing
+      `setup-data-pipeline-vm.sh`'s `VM_TASK == "canonical-migration"` branch (calls `_launch_with_tee "$FULL_CMD" ...`,
+      where `$FULL_CMD` embeds `VM_MIGRATION_CMD` — there is no separate/parallel execution path bypassing the tee
+      wrapper) and `_launch_with_tee()` itself (unconditionally invokes the downloaded `vm-exec-with-gcs-tee.sh` via
+      `nohup bash "$TEE_WRAPPER" "$GCS_LOG_URI" bash -c "$cmd"` whenever the tarball download succeeded). The mechanism
+      is LIVE today for every `VM_TASK=canonical-migration` category (byte-growth mode, `STALL_TIMEOUT_SEC=1800`
+      default) — no code change was needed in `setup-data-pipeline-vm.sh` or `vm-exec-with-gcs-tee.sh` themselves, since
+      both already read `STALL_TIMEOUT_SEC`/`STALL_PROGRESS_REGEX` off GCE instance metadata generically, independent of
+      `VM_TASK` (confirmed via direct read: `setup-data-pipeline-vm.sh` lines ~460/468). The decision on the remaining
+      "content-aware or not" question is recorded + implemented at todo 4 below.
+- [x] [HUMAN] P2. **If routing `launch-canonical-migration-vm.sh` through `vm-exec-with-gcs-tee.sh`, set a content-aware
       `STALL_PROGRESS_REGEX`** matching this migration script's real per-chunk/per-object progress log line (not just
       byte-growth), so a wedged network call inside an otherwise-noisy log gets caught within `STALL_TIMEOUT_SEC`. Done
       when: a deliberately-induced hang-on-network-call test run (log still emitting non-progress noise) trips the
-      stall-kill within the configured timeout, where it previously would not have under the size-growth-only default.
+      stall-kill within the configured timeout, where it previously would not have under the size-growth-only default. —
+      **FIXED: deployment-service@b2d135a1e8cadd648197f53cf1e116d57c018d88** (2026-07-27). Set
+      `STALL_PROGRESS_REGEX=progress:|files/sec` in `launch-canonical-migration-vm.sh`'s metadata-construction block,
+      scoped ONLY to the `cefi-content-apply` category — the one script whose real progress-log line format was read
+      directly out of `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` this session
+      (`market-tick-data-service`): `"Discovery progress: day=%s ..."` (discovery phase),
+      `"Progress: %d/%d files (%.1f files/sec, ...)"` (every 200 files + final tally), and
+      `"Elapsed (migrate phase): ...files/sec"` (final summary) all match; the tool's OWN wedged-worker WARNING
+      (`"No progress in the last poll window..."`) does NOT match (case-sensitive — no `"progress:"` substring, no
+      `"files/sec"`), so it correctly never resets the stall timer. Matches the exact `STALL_PROGRESS_REGEX` convention
+      already proven live in production by 7 other launchers (`launch-mtds-gas-fees-backfill-vm.sh`,
+      `_tradfi-ohlcv-launcher-lib.sh`, `launch-mdps-sharded-backfill.sh`, `launch-sfi-backfill-vm.sh`,
+      `launch-cefi-sharded-backfill.sh`, `launch-orphan-sweep-vm.sh`, `launch-backfill-orphan-e-vm.sh`) — no code change
+      was needed in `setup-data-pipeline-vm.sh` or `vm-exec-with-gcs-tee.sh` (both already read
+      `STALL_TIMEOUT_SEC`/`STALL_PROGRESS_REGEX` off GCE metadata generically). Every OTHER
+      `VM_TASK=canonical-migration` category deliberately gets NO regex yet — only cefi-content-apply's script has been
+      individually verified; todo 5's per-category audit is the stated place for the rest (broadening the regex metadata
+      key onto an unverified category's script would risk a false-positive stall-kill on a legitimately slow/quiet phase
+      of a different tool with a different log shape). Test:
+      `tests/unit/test_vm_launcher_scripts.py::TestCanonicalMigrationStallDetection` (deployment-service) — proves (1)
+      the launcher wires the metadata key only for `cefi-content-apply` and NOT for `cefi-late-renames`/
+      `cefi-dedup-apply`/`cefi`; (2) the exact regex matches the real per-line formats above via the same `grep -qE`
+      matcher `vm-exec-with-gcs-tee.sh` itself uses, and does not match the wedged-worker WARNING; and (3) — against the
+      REAL shipped `vm-exec-with-gcs-tee.sh`, not a reimplementation — a simulated hung worker emitting non-progress
+      noise IS killed (`rc=124`, `status=failed`) within a compressed `STALL_TIMEOUT_SEC` when the regex is set, is NOT
+      killed under the byte-growth-only default (the exact historical blind spot, reproduced small-scale), and a
+      genuinely-healthy run emitting real progress markers interleaved with the tool's own wedged-worker WARNING is
+      never false-killed. Full `quality-gates.sh` green (2874 passed, 5 skipped). **This fix alone does not close the
+      incident actually observed** — the campaign's own Progress Log
+      (`/plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md`) records serial-console evidence
+      consistent with a whole-VM OS-level memory-pressure freeze (heartbeat itself went silent), a failure class no
+      in-VM watchdog can reliably catch since it runs inside the same distressed VM; todos 1+2 (paging on the `"hung"`
+      state, and the `_is_backfill_vm()` naming fix already shipped) are the actual external defense for that specific
+      incident class, not this todo.
 - [x] [HUMAN] P3. **Audit other one-off launcher scripts under `deployment-service/scripts/vm/` for the same three-gap
       pattern** (paging-set exclusion is fleet-wide so N/A per-launcher, but the stall-watchdog non-invocation and
       backfill-naming-regex miss are per-launcher-name issues) — not just `launch-canonical-migration-vm.sh`. Done when:
