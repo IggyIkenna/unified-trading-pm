@@ -22,7 +22,7 @@ summary: >-
   the identical pre-fix failure. The fix must be committed to `origin/main` before any tarball-refresh (automated or
   another agent's) can durably pick it up — local uncommitted edits lose every race against a refresh sourced from the
   committed tree.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, cross-cutting]
 stage: [meta]
@@ -44,6 +44,7 @@ related:
   [
     /plans/active/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md,
     /plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
     /codex/04-architecture/deprecation-ledger.yaml,
   ]
 created: 2026-07-26
@@ -64,6 +65,8 @@ superseded_by:
 depends_on:
 source: interactive session, operator-directed reader-bridge deploy verification, 2026-07-26
 resolved_by:
+  interactive session, 2026-07-27 — deployment-service@0f0e0a7 (dep-install fix), @c5a716a (loud-failure propagation);
+  live-VM confirmed via mdps-features-live-cefi-20260727-004133
 ---
 
 # launch-mdps-features-live.sh compound-VM_SERVICE / archived-repo bug
@@ -174,24 +177,104 @@ the actual writer, or simply accepting eventual consistency — the fix IS on `o
 rebuilds tarballs from a fresh, current checkout (this session's clobber-source included, once it's running off a
 checkout that has commit `0f0e0a7` or later), it should self-resolve without further action.
 
+## Update 4 — root cause of the clobber race identified; loud-failure propagation shipped; race is self-healing (not a bug)
+
+**Root cause of the repeated clobber (closes the `[OPERATOR]` todo — no operator action needed):** the mechanism is
+`google_cloud_scheduler_job.code_tarball_refresh_cron`
+(`deployment-service/terraform/gcp/code_tarball_refresh_scheduler.tf`), schedule `*/30 * * * *` UTC, confirmed live:
+`gcloud scheduler jobs list --location=asia-northeast1` shows `uts-prod-code-tarball-refresh-cron … ENABLED`. It invokes
+a Cloud Run Job (`code-tarball-refresh`) that does ONE sparse-checkout of `deployment-service@live-defi-rollout` at the
+START of each ~1.5min execution, then runs `refresh_code_tarballs.sh`, which calls `create-code-tarballs.sh` once per
+tracked repo whose LDR-tip SHA changed since last tick (typically several of the ~11 tracked repos per tick).
+`create-code-tarballs.sh` (lines ~518-524) unconditionally republishes `vm/setup-data-pipeline-vm.sh` +
+`vm-exec-with-gcs-tee.sh` + `heartbeat_daemon.py` on **every** invocation, regardless of which repo it was asked to
+build — from that execution's single bootstrap-checkout snapshot, with no SHA-gate on the vm/ files themselves. Net
+effect: any manual publish of an uncommitted or just-committed fix can be overwritten by an already-in-flight cron
+execution that bootstrapped its checkout moments earlier, and — because the same stale snapshot is re-uploaded once per
+changed-repo within that one execution — it can look like a fast, repeating, adversarial clobber when it is actually one
+stale execution's loop finishing.
+
+**This is not a correctness bug, it is a self-healing timing window bounded to ≤1 cron tick (~30min):** "Source =
+committed LDR" is the cron's documented, intended behavior (see its own header comment) — any execution that starts
+_after_ a fix lands on `origin/live-defi-rollout` re-checks-out fresh and republishes the correct content. Verified
+directly: `gsutil stat` + full content diff of the live GCS object against the local (fixed) file is byte-identical as
+of this Update, generation `1785107836191943`, unchanged since the last manual publish (`23:17:16Z` on 2026-07-26) —
+several cron ticks have fired since then with no further clobber, confirming convergence.
+
+**A pre-existing, already-built guard closes the race for future interactive verification, no code change needed:**
+`lc_verify_setup_script_freshness()` (`deployment-service/scripts/vm/lib/launcher_common.sh`, called automatically by
+`lc_gcloud_create` for ~80 launchers) was root-caused for this EXACT failure class on 2026-07-12
+(`issues/defi_morpho_lending_indices_never_wired_2026_07_12.md`) and already supports `LC_SETUP_SCRIPT_FRESHNESS=auto`
+(default `warn`, non-blocking) — auto-republishes the local script over GCS via `gcloud storage cp` immediately before
+VM creation, closing the exact race window this issue hit. Used for this session's live-VM confirmation launch below.
+**Recommendation (not actioned — a default-behavior change to shared fleet-wide infra needs explicit operator sign-off,
+out of scope for this issue):** consider flipping the global default from `warn` to `auto` for
+`LC_SETUP_SCRIPT_FRESHNESS` (tarballs' `LC_TARBALL_FRESHNESS` should stay `warn` — auto-republishing full tarballs
+before every launch has a real latency/cost cost the setup-script-only check doesn't).
+
+**Loud-failure propagation — shipped:** `setup-data-pipeline-vm.sh`'s `_self_delete_on_setup_failure` EXIT trap
+previously nested its forensic upload (`vm-setup.log` + `SETUP_EXIT_STATUS`) AND its self-delete inside the SAME
+`VM_SHUTDOWN_ON_COMPLETION=true` gate — so every long-running "live" launcher (`VM_SHUTDOWN_ON_COMPLETION=false` by
+design: `launch-mdps-features-live.sh`, `launch-mtds-live-cefi-consolidated.sh`,
+`launch-mtds-live-prediction-consolidated.sh`, `launch-perp-clob-live.sh`, `launch-prediction-live.sh`,
+`launch-features-cross-cutting.sh`, `launch-cefi-fwd-daily-cron-vm.sh`, `launch-tradfi-fwd-daily-cron-vm.sh`) got
+**zero** signal on a bootstrap failure — exactly this issue's original 2.5h silent stall. Confirmed this trap only ever
+fires pre-launch (disarmed via `trap - EXIT` right before the real task execs, per its own comment: "A non-zero exit of
+this setup script AFTER successful launch must NOT delete the VM"), so `VM_SHUTDOWN_ON_COMPLETION=false`'s real intent
+("don't delete a successfully-launched live consumer when it later restarts") never applies to a bootstrap that never
+reached launch — there is nothing worth preserving by leaving a bootstrap-failed VM running. Fixed: forensics upload +
+self-delete now run unconditionally on any bootstrap failure; the same rc is also written to the canonical
+`vm-logs/<vm>/EXIT_STATUS` blob (`_gcs.EXIT_STATUS_BLOB`) that `exit_code_fleet_monitor.py`'s
+`read_terminal_exit_code()` already polls for terminated VMs — once the VM self-deletes, the _existing_
+`DP_VM_EXIT_NONZERO` alert path picks it up for free, same as any other launcher's task-crash, with no new monitor
+needed. `bash -n` clean, `quality-gates.sh` green. **Ship status**: blocked on the same foreign `unified-api-contracts`
+dirty-dependency state that already blocked `deploy_features_service_cloud_run.sh` earlier this session (another agent's
+active WIP, growing across retries — not safe to touch) — will retry quickmerge once it clears.
+
+## Update 5 — live-VM confirmation: the ORIGINALLY-SCOPED bug is fixed; exposed a separate, already-anticipated bug
+
+Deleted the previous VM (`--force` singleton-lock bypass not needed — nothing was RUNNING) and relaunched
+`mdps-features-live-cefi-20260727-004133` with `LC_SETUP_SCRIPT_FRESHNESS=auto` (this launcher calls
+`gcloud compute instances create` directly rather than through `lc_gcloud_create`, so the auto-freshness guard never
+actually engaged for it — moot here since the live GCS object already matched the committed `0f0e0a7` fix byte-for-byte
+per Update 4's verification).
+
+**Result: dependency install succeeded cleanly for the first time.** `run.log` shows all 6 expected tarballs installed
+(`uac`, `utl`, `deployment-service`, `mdps`, `mtds`, `features`), `uv pip install` completed with no unsatisfiable
+conflict, no archived-repo pull-in — **this issue's two bugs (archived-repo tarball entries + unresolved compound
+VM_SERVICE lookup) are CONFIRMED fixed against a real GCE VM boot**, not just the Update 1 isolated functional test.
+
+The VM then failed one step later, at the actual service launch:
+`python -m market_data_processing_service+features_service` (the raw, unsplit compound `VM_SERVICE` passed literally to
+`python -m`) → `No module named ...`. This is a **separate, previously-unreachable bug** in the exec-dispatch layer
+(never hit before because Gap-1's dependency-install failure always killed every prior attempt first) — filed separately
+as `issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md`, since fixing it requires real design
+work (neither MDPS's nor features-service's CLI today supports the launcher's "one co-located whole-asset-group live
+consumer" premise — confirmed by reading both services' actual `argparse` contracts), not a mechanical patch, and the
+launcher's own docstring already flags full operational launch as deferred pending unfinished Phase-13/15 wiring. VM
+deleted after confirming the failure (no reason to bill an e2-standard-8 on a known-dead exec path).
+
+**Net: this issue is now fully resolved for its own stated scope** (the shared-venv dependency conflict at install
+time). Full end-to-end "MDPS+features actually computing candles live" confirmation is NOT achievable until the
+successor issue's design question is resolved — tracked there, not here.
+
 ## Todos
 
 - [x] [INFRA] P1. ~~Commit + ship (quickmerge) the two fixes~~ — **DONE**: `deployment-service@0f0e0a7`,
       `quality-gates.sh` green, landed on `live-defi-rollout`.
-- [ ] [SCRIPT] P2. Get a genuine live-VM confirmation of the fix (3 attempts so far all hit either the pre-fix bug or a
-      clobbered publish — see Update 3). Retry once whatever is overwriting
-      `gs://deployment-scripts-central-     element-323112/vm/setup-data-pipeline-vm.sh` is identified/quiesced, or once
-      enough time has passed that routine tarball-refresh activity would naturally be sourcing the now-committed
-      `0f0e0a7`+ state. Done when: `run.log` for a fresh `mdps-features-live-cefi-*` VM shows a clean boot + heartbeat
-      within a few minutes, then delete the VM.
-- [ ] [INFRA] P2. `launch-mdps-features-live.sh` (and likely its MTDS/execution siblings sharing this
-      tarball-then-install pattern) should propagate a non-zero `uv pip install` exit into a loud failure signal (an
-      `attempted_failed`-style manifest row, an alert, or at minimum an early VM self-terminate) instead of leaving the
-      VM running indefinitely with no process and no log — this general gap is independent of the two specific bugs
-      above and would have caught either one in minutes instead of 2.5h / requiring a live re-check.
-- [ ] [OPERATOR] P2. Identify what is repeatedly re-publishing
-      `gs://deployment-scripts-central-element-323112/vm/     setup-data-pipeline-vm.sh` with old content — happened
-      twice in this session (once ~4min after a publish, once within roughly the same minute), too fast to catch via
-      `.github/workflows` grep or GCS audit logs (Data Access logging not enabled on this bucket). Needs either enabling
-      Data Access logging on this bucket temporarily to catch the actual writer, or checking for a cron/systemd-timer
-      job on some always-on VM/box that runs `create-code-tarballs.sh --all` or similar on a short interval.
+- [x] [OPERATOR] P2. ~~Identify what is repeatedly re-publishing~~ `setup-data-pipeline-vm.sh` — **DONE**, see Update 4:
+      `uts-prod-code-tarball-refresh-cron` (Cloud Scheduler, `*/30 * * * *`) republishing vm/ scripts unconditionally
+      from a per-execution bootstrap-checkout as a side effect of any tracked repo's tarball rebuild. Self-healing
+      (converges within ≤1 tick of a landed fix); no operator action required.
+- [x] [SCRIPT] P2. ~~Get a genuine live-VM confirmation of the fix~~ — **DONE**, see Update 5: dependency install
+      succeeds cleanly on a real VM boot. (Full live-pipeline confirmation blocked on the separately-filed exec-dispatch
+      design gap, not on anything in this issue's scope.)
+- [x] [INFRA] P2. ~~loud-failure propagation~~ — **DONE**: `deployment-service@c5a716a`, `quality-gates.sh` green,
+      shipped once the foreign `unified-api-contracts` dirty dependency cleared.
+- [ ] [INFRA] P3. Consider flipping `LC_SETUP_SCRIPT_FRESHNESS` default from `warn` to `auto` fleet-wide (see Update 4
+      recommendation) — operator decision, not actioned here (shared-infra default-behavior change, out of scope for
+      this issue's bounded fix).
+
+**Status: RESOLVED** for this issue's scope (shared-venv dependency conflict). Remaining P3 item is an operator-owned
+recommendation, not a blocker; the exec-dispatch gap discovered during verification is tracked in its own issue doc
+(linked above).
