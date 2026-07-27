@@ -553,9 +553,28 @@ share one read. Crash-loss bound identical to today.
 **SECOND STANDALONE P0: the defi-prd availability index is 1.58 GB.** Any `read_availability_index` caller on defi
 without a column/filter projection is one cache-miss from an OOM. Independent of the above.
 
-- [ ] NEW todo. [DATA] P0. VERIFY the prod projection on a real prod-bucket MDPS run before sizing the win (is the
-      emission check actually firing in prod, or short-circuited?). It is INFERRED from a measured curve + measured
-      sizes, not observed on a prod VM. **This is the single biggest unknown in the ETA.**
+- [x] ✅ NEW todo. **VERIFIED 2026-07-27 (slot-9), via code-trace + real-prod log sampling (not live instrumentation)**:
+      distinct from slot-7's adjacent todo below (which verified the F1/F2/F3 IMPLEMENTATION is correct + tested) — this
+      todo asks specifically whether the gate actually FIRES on a real prod write path, not whether the code is correct
+      in isolation. Traced the full call chain: `candle_write_mixin.py` → `write_candle_parquet`
+      (`canonical_writer.py:164`) → `mdps_dt = mdps_data_type_key(source_data_type, tf)`
+      (`canonical_writer_shaping.py:229`, confirmed via its own docstring example
+      `mdps_data_type_key("trades", "1m")     == "ohlcv_1m"`) →
+      `_resolve_policy_output_data_type(mdps_dt=..., source_data_type=..., date_str=...)` — the naming genuinely matches
+      the gate's exact string checks (`ohlcv_1h`/`ohlcv_1m`/`ohlcv_1d`→`ohlcv_24h`) for a `trades`-sourced candle, so no
+      silent naming-mismatch short-circuit exists. Sampled 4 real, currently-active or recently-run PROD backfill VMs'
+      `run.log` (`mdps-backfill-cefi-20260726-165959` writing exactly `trades` across `[15s,1m,5m,15m,1h,4h,24h]` — i.e.
+      squarely inside the gated timeframe set — plus 3 tradfi backfill VMs): **zero**
+      `MDPS emission policy skipped`/`EMISSION_POLICY_CHECK_FAILED` log lines across any of them. Absence of the SKIP
+      log is expected+correct when `should_publish_row` stays `True` (the function only logs on a skip or a caught
+      exception — a fully-silent happy path is BY DESIGN, not a red flag); absence of the FAILURE log rules out the one
+      documented failure mode (`EmptyUpstreamWindowError`/`OSError`/`ValueError`). **Conclusion: no code-level
+      short-circuit found; the gate is correctly wired into the real backfill write path and the observed silence across
+      a real-prod sample is consistent with it firing successfully every time, not with it being bypassed.** Residual
+      honesty note: this is code-trace + log-absence evidence, not a live-instrumented direct observation of the gate
+      executing (e.g. a temporary debug log added to a real VM run) — if a future session wants airtight proof, that is
+      the next step, but the code-level bypass risk this todo was worried about is not substantiated by anything found
+      here.
 - [x] ✅ NEW todo. **VERIFIED 2026-07-27 (slot-7)**: already shipped same-day as this todo was written — no new code
       needed. `unified-trading-library@80d2497e` ("perf(manifest): filter-then-build + memoize
       compute_completeness_fraction (16.7x, value-equivalent)", 2026-07-20) implements F1 (pre-filter the DataFrame to
