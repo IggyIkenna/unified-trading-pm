@@ -724,3 +724,12 @@ every todo executes an already-decided spec from the parent doc.
   `enforce`/`auto` rather than relying on someone noticing the warning each time). **Honest fleet state**:
   `cs8-6f-p2/p3/p4/p5/p7` still running at their prior rates (46-93min ETAs, not resharded — reasonable, not worth the
   overhead); `cs8-6f-p6d0..d5` and `cs9-1d-q0..q7` just started, no throughput data yet.
+
+- **2026-07-27T~18:23Z (scheduled check-in) — 13 VMs RUNNING, 6 more clean completions** (`cs8-6f-p6d0/d1/d2/d4/d5` — 5
+  of 6 daily sub-shards; `cs9-1d-q7` — 1 of 8; all confirmed `EXIT_STATUS=0`). **Per-shard ETA (NOT aggregated —
+  wall-clock is the slowest individual shard)**: `cs8-6f-p7` ~6min, `cs9-1d-q2` ~6min, `cs9-1d-q6` ~9min, `cs8-6f-p6d3`
+  ~10min, `cs9-1d-q5` ~15min, `cs9-1d-q4` ~19min, `cs8-6f-p2` ~30min, `cs9-1d-q0` ~33min, `cs8-6f-p4` ~40min,
+  `cs9-1d-q1` ~56min, `cs8-6f-p3` ~71min, `cs8-6f-p5` ~75min — **the current bottleneck**; `cs9-1d-q3` at 100%
+  (21,352/21,352), finalizing. None exceed the 90min re-shard threshold this cycle, so nothing further split — the
+  fine-grained resharding from last cycle is working as intended, no new casualties, no frozen VMs detected on this
+  cycle's freshness check.
