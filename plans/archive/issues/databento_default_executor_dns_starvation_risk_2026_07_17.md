@@ -79,10 +79,23 @@ defect** — do not cite it as a known TradFi outage cause.
 - [x] ✅ [CODE] P1. **DONE (already landed as `mtds@ac857`, confirmed 2026-07-26, slot-12)**: the Databento chunk pull
       uses a dedicated `_get_dbn_fetch_executor()` (`databento_fetch_executor.py`), not the default pool — verified live
       in `databento_fetch.py` at all 3 named call sites (`:192`, `:394`, `:683`).
-- [x] ✅ [AUDIT] P2. **DONE (confirmed 2026-07-26, slot-12)**: swept all named call sites — `databento_batch_jobs.py`
-      (now `:661`) already uses `_get_dbn_fetch_executor()`; `databento_fetch.py:186/:388/:672` (now `:192/:394/:683`
-      after intervening edits) all use it too. Only `databento_base_client.py:499` (warmup) still uses the default pool,
-      exactly as pre-classified above — one-shot, not holds-for-transfer, no change needed.
+- [x] ✅ [AUDIT] P2. **DONE (confirmed 2026-07-26, slot-12; extended 2026-07-27, tradfi batch2-005)**: swept all named
+      call sites — `databento_batch_jobs.py` (now `:661`) already uses `_get_dbn_fetch_executor()`;
+      `databento_fetch.py:186/:388/:672` (now `:192/:394/:683` after intervening edits) all use it too. Only
+      `databento_base_client.py:499` (warmup) still uses the default pool, exactly as pre-classified above — one-shot,
+      not holds-for-transfer, no change needed. **2026-07-27 repo-wide re-sweep**
+      (`grep -rn "run_in_executor(None" market_tick_data_service/` excluding tests) confirms exactly these 3 sites
+      remain — no others were missed. Classifying the 2 previously-unclassified `live/connectors/databento_tradfi_ws.py`
+      sites: **`:482` (`_do_subscribe`, in `_open_subscriptions`)** — runs `live.subscribe()`'s synchronous connect+auth
+      handshake once per subscribed dataset (small N, tradfi has 1-4 datasets), at connection SETUP only, already
+      bounded by `asyncio.wait_for(..., timeout=handshake_timeout_s)` so a stall degrades to a logged,
+      per-dataset-skipped timeout rather than an unbounded freeze — same latent DNS-starvation-adjacent risk class as
+      the Databento OHLCV chunk-pull above, but LOWER frequency (setup-time only, not per-chunk during an active
+      transfer) — **latent risk, not a live defect, no change needed**. **`:515` (`_do_start`, in `_start_streaming`)**
+      — runs `live.start()` once per connection (arms the background receive thread; the docstring notes it "returns
+      quickly"), also `wait_for`-bounded — **same verdict: latent, setup-time-only, no change needed**. Both sites match
+      the already-accepted `databento_base_client.py:499` warmup pattern (one-shot, not holds-for-transfer) rather than
+      the higher-frequency chunk-pull pattern the [CODE] P1 fix targeted, so no code change is warranted here.
 - [x] ✅ [CODE] P2. **DONE — `market-tick-data-service@889ff829`.** `aiodns` viable (transitively available via ccxt,
       promoted to direct dep). Databento itself has no aiohttp session to switch (synchronous SDK). Fixed the real
       targets: `tardis_stream_client.py` (was hardcoding `ThreadedResolver()`) and `tardis_base_client.py` (was relying
@@ -109,3 +122,10 @@ defect** — do not cite it as a known TradFi outage cause.
   aster/hyperliquid follow-up is out of THIS doc's asset_group (cefi, not tradfi) and was a dangling prose note, not a
   tracked todo — extracted to `issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md` so it stays actionable.
   Flipping `status: resolved`.
+- 2026-07-27 (tradfi_satellite_ao_dispatch_batch2-005): the 2026-07-26 audit sweep's own text listed
+  `databento_batch_jobs.py`/`databento_fetch.py`/`databento_base_client.py` but never mentioned
+  `live/connectors/databento_tradfi_ws.py`'s two `run_in_executor(None, ...)` sites (`_do_subscribe`:482,
+  `_do_start`:515) — classified both here (setup-time-only, already `wait_for`-bounded, same disposition as the accepted
+  `databento_base_client.py:499` warmup pattern, no code change needed) and re-confirmed via a fresh repo-wide grep that
+  exactly these 3 sites remain, nothing else missed. Deliberately did NOT touch the [CODE] P1 checkbox or
+  `status`/`resolved_by` — those stay as this doc's own prior closure recorded them.
