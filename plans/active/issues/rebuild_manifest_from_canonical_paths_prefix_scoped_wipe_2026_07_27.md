@@ -155,10 +155,15 @@ not a caller-side workaround.
       266s under quickmerge's sentinel re-verify), shipped via quickmerge --agent, CI `quality-gates-v2` green
       post-push. `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`'s recommended fix path now points at
       this function.
-- [ ] 3. [SCRIPT] P1. **Audit `rebuild_mtds_manifest.py --from-canonical`'s existing call site** against the fix from
-      todo 2 (or add an explicit docstring/runtime guard refusing a `prefix` narrower than the bucket's full known
-      content) so the standing MTDS-side risk (risk site 2 above) is closed, not just the MDPS-side one that prompted
-      this doc.
+- [x] 3. ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-2)** — `market-tick-data-service@de0ed32f`. Routed
+      `rebuild_mtds_manifest.py::rebuild_from_canonical()` (the `--from-canonical` call site, risk site 2) through UTL's
+      additive `merge_manifest_from_canonical_paths` — the same fix todo 2 shipped for the MDPS side — instead of the
+      wholesale-replacing `rebuild_manifest_from_canonical_paths`. Existing rows outside `raw_tick_data/by_date` (i.e.
+      market-data-processing-service's co-located `processed_candles/` rows) now survive untouched; updated the function
+      docstring + `--from-canonical` CLI help text to describe the additive (not wholesale-replace) semantics. Added 2
+      regression tests (`tests/unit/scripts/test_rebuild_mtds_manifest_from_canonical_safe.py`) pinning that the safe
+      merge function is called (never the wholesale-replacing sibling) and that the call scopes to this script's own
+      prefix. Full `quality-gates.sh` green (529s, 7162 passed).
 - [ ] 4. [DATA] P2. Grep the corpus for any OTHER caller of `rebuild_manifest_from_canonical_paths` that might already
       have been run against a co-located bucket in the past (this session found none besides the two above via
       `grep -rn "rebuild_manifest_from_canonical_paths(" --include="*.py"`, but a shipped one-off VM script invoked via
