@@ -9,8 +9,8 @@ summary: >-
   whole-corpus GCS walk, which is review-blocking. Every row carries its evidence (file:line READ, or a dated live
   probe). Seeded 2026-07-20 from the 9-dimension canonicalisation audit; entries retire only when their disposition is
   EXECUTED and evidenced. Nothing in this doc authorizes a delete on its own — the five-part proof in
-  `gcs-and-manifest-delete-safety-protocol.md` gates every suggestion, and prod-bucket deletes are a human-only hard
-  stop.
+  `gcs-and-manifest-delete-safety-protocol.md` gates every suggestion, and prod-bucket deletes are human-only unless
+  reversibility-qualified (§3a).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -67,7 +67,7 @@ referenced_by:
     /codex/02-data/orphan-object-detection.md,
   ]
 owner:
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-27
 code_refs:
   [
     unified-trading-library/unified_trading_library/config_interface/paths/registry.py,
@@ -87,9 +87,9 @@ code_refs:
 >
 > **What this doc is NOT.** It is **not a delete authorization**. A row's disposition is a _standing hypothesis_
 > carrying its evidence. The five-part proof in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` gates every
-> actual suggestion, and **prod-bucket deletes are a human-only hard stop**. The canonical grammar this register
-> measures against is `cross-asset-canonical-target-ssot.md`; the machine oracle is UAC `canonical_path_violations()`.
-> This doc references both and duplicates neither.
+> actual suggestion, and **prod-bucket deletes are human-only unless reversibility-qualified (§3a)**. The canonical
+> grammar this register measures against is `cross-asset-canonical-target-ssot.md`; the machine oracle is UAC
+> `canonical_path_violations()`. This doc references both and duplicates neither.
 
 ## ✅ RESOLVED 2026-07-21 — `dex_pools/` + `lending_indices/` FOLDED + DELETED (rows 7/8 closed)
 
