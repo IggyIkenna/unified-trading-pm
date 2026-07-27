@@ -134,6 +134,57 @@ potential live-pipeline data-completeness gap, hence P0.
    triggers only (keeps the pre-match/discovery horizon tight while giving post-match room), or (c) something else? This
    is a design decision, not mechanical — needs its own scoped todo/plan, not a blind fix.
 
+## Investigation: Open Question 1 — RESOLVED (2026-07-27, slot-8, data_engineering)
+
+**Verdict: CONFIRMED — Understat/XG live capture is dead (zero live-tagged captures, ever). `features_post_match`
+(derived_features) is also not being served by the live trigger; the data that does exist comes from a lagging batch
+path, not the ~25-26h live window.**
+
+Queried the consolidated availability manifests directly (`read_availability_index()`, no whole-corpus GCS walk),
+slim/column-pushdown reads with explicit `filters=` (the full-schema path silently ignores `filters` — confirmed via
+source read of `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py`, so every query below
+passed `columns=` to keep pushdown active).
+
+**IS manifest** (`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`):
+
+- `data_type=XG`, last 30 days (2026-06-27..2026-07-27): **11,895 / 11,895 rows = `empty_confirmed`; 0 `captured`.**
+- `data_type=XG`, all-time (350,482 rows): 7,714 rows ever `captured` — but **100% of those carry
+  `pipeline_mode=batch_understat`**, and every single one's `written_at` falls inside a narrow 2026-07-13T23:48Z ..
+  2026-07-22T05:23Z window (a one-shot historical backfill run), backfilling old match `date`s (2020, 2023, …) — not
+  live/recent fixtures. Zero rows show any live-pipeline provenance. This is the strongest possible confirmation: not
+  one XG capture, ever, in this manifest's history, came from anything other than that one batch backfill job.
+- `data_type=FIXTURE_STATS` (context/control — the sibling trigger `stats_immediate` DOES have 2,504 real
+  `latency_observations` rows per the parent doc): last-30-days = 72 `captured` / 690 `expected_unattempted` / 11,137
+  `empty_confirmed`; all-time captured rows (42,735) are also **100% `pipeline_mode=batch_api_football`**. So even the
+  trigger empirically known to fire live shows no live-tagged rows in the PRIMARY availability manifest — the live
+  success signal for `stats_immediate` lives only in the separate `_index/latency_observations/` instrumentation, never
+  in this manifest's `pipeline_mode`/`capture_status`. Noted as a manifest-labeling nuance, not load-bearing for the XG
+  verdict above (XG has literally 0 captures in the last 30 days by either signal).
+
+**features-service manifest** (`features-sports-prd-central-element-323112/_index/availability_index.parquet`):
+
+- `feature_group=derived_features`, last 30 days: 583 `captured` / 10 `empty_confirmed` — so NOT literally zero, unlike
+  XG. But the captured rows' `date` (match/business date) tops out at **2026-07-19**, while `written_at` (actual write
+  timestamp) reaches **2026-07-27T09:08Z — today**. That's an **~8-day lag between match date and write date**, far
+  exceeding the ~25.25-26.25h fire window `features_post_match` targets — if the live trigger were producing this, a
+  match's derived features would land within ~26h, not 8+ days.
+- All-time `derived_features`: `date` max is also 2026-07-19 despite `written_at` reaching today — same lag, not a
+  one-off.
+- The SAME `date=2026-07-19` ceiling is shared by 9 other feature_groups in the identical manifest sweep (`fixtures`,
+  `fixture_stats`, `fixture_events`, `standings`, `teams`, `venues`, `leagues`, `injuries`, `fixture_lineups`,
+  `fixture_player_stats`) — while two DIFFERENT feature_groups fed by separate live pipelines (`fixture_features`,
+  `odds_features`) are current through **2026-07-27 (today)**. A cluster of 10 feature_groups all frozen at the exact
+  same stale date, while 2 unrelated ones stay live-current, is the signature of one shared BATCH/catch-up job that
+  hasn't caught up — not the live per-fixture `features_post_match` trigger (which, per the root-cause above, cannot
+  structurally fire at all since it `depends_on: stats_delayed`).
+
+**Conclusion**: this is NOT "reaching GCS through a separate LIVE path" (the question's alternative). It's reaching GCS
+through a separate BATCH path — for XG, a single historical backfill run and nothing since; for derived_features, a
+shared multi-feature-group batch job running days behind the live-window target. The live scheduler's `stats_delayed` /
+`features_post_match` triggers are confirmed dead in production exactly as the fixture-lookback root-cause predicts;
+whatever coverage exists today is backfill-only and, for derived_features, meaningfully stale (~8 days) versus what a
+working live trigger would provide.
+
 ## Recommended decision
 
 File a dedicated fix plan (`assigned_vm: planning`, scoped to deployment-service) once Q1/Q2 above are answered — the
@@ -144,13 +195,17 @@ mechanical constant re-pin).
 
 ## Todos
 
-- [ ] [DATA] P0. Answer Open Question 1 above: query the live sports manifest
+- [x] ✅ [DATA] P0. Answer Open Question 1 above: query the live sports manifest
       (`market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`) for
       `data_type=XG`/`entity=derived_features` capture_status counts over the last 30 days and compare against
       `FIXTURE_STATS` counts for the same fixture population, to determine whether Understat/derived-features capture is
       ALSO silently dead (not just the latency-observation instrumentation) or is reaching GCS through a separate path.
       Repo: instruments-service / market-tick-data-service (read-only). **Done when**: a clear confirmed/refuted verdict
-      is recorded in this doc with the counts cited.
+      is recorded in this doc with the counts cited. — unified-trading-pm (doc-only, no code). See "Investigation: Open
+      Question 1 — RESOLVED" above: CONFIRMED dead for XG (0/11,895 captured last 30d; all-time captures 100%
+      `batch_understat`, one-shot 2026-07-13..22 backfill); derived_features not literally zero but ~8-day stale and
+      tracking a shared batch job, not the live 26h window — consistent with `features_post_match` also never firing
+      live.
 - [ ] [INFRA] P0. If Q1 confirms live capture is dead: design + ship a fix to
       `deployment_service/sports_trigger_state.py::get_upcoming_fixtures()` / `evaluate_post_match_triggers()` so
       post-match triggers with an offset beyond the current ~2h fixture-visibility cutoff can actually fire (see
