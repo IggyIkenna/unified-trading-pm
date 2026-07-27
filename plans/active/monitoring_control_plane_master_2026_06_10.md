@@ -634,7 +634,7 @@ manual session because firing breaking/red/billing states on the live fleet jams
   chasing had inverted into "a page nobody uses, proxying another app." Parity-checked before deletion (one feature —
   per-slot snapshot-age — ported into AO's own `FleetGit.tsx`; two features AO already had that deployment-ui lacked —
   GH-rate-limit + the sustained-red alerting threshold — stay AO-only). Full write-up + evidence:
-  `/plans/active/issues/deployment_ui_fleet_tab_removal_2026_07_27.md`. The CI/CD half of the v2 decision (Repos CI
+  `/plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md`. The CI/CD half of the v2 decision (Repos CI
   page, per-service CI tab staying in deployment-ui) is UNCHANGED. Codex updated:
   `/codex/05-infrastructure/deployment-observability.md` new § "Fleet tab REMOVED entirely."
 - **2026-06-11 (Harsh slot-5, local)** — orchestrator e2e control-plane VALIDATED live (sandboxed local backend+UI from
