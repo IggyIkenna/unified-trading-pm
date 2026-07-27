@@ -58,6 +58,7 @@ source:
   both orphaned patches, and captured this so the finding survives compaction (review role never commits)."
 execution_scope: orchestrator-agent
 drift_direction: advance-code
+depends_on: []
 ---
 
 # Branch-reset-to-origin silently orphans unpushed worker commits (data-loss)
