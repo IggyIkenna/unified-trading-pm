@@ -133,5 +133,18 @@ assigned_role: infra
 
 - **2026-07-27**: Background agent (dispatched pre-compact) completed all 14 delete-safety-set files. Verified via
   ancestor-check + content spot-check, not just trusting its self-report (per this workspace's own "grep-then-READ"
-  discipline). Todo above flipped. Continuing autonomously (`/autonomous`, operator away ~6h) to the broader 29-file
-  classification pass next.
+  discipline). Todo above flipped.
+- **2026-07-27 (correction)**: the "29 files" count in the todo above was a manual-transcription error — the actual
+  set-difference via `comm -23 <(sort all_operator_files) <(sort done_15)` is **34 files** (35 minus this doc itself).
+  The todo's file list above is stale; the correct 34-file list was split 12/10/12 across 3 parallel background agents
+  dispatched 2026-07-27 under `/autonomous` (operator away ~6h): group A = the first 12 files in the todo's list above
+  (session-internal ids not durable — check task notifications, not this doc, for live status); group B = the 10
+  credential/secret-heavy files (`github_actions_deploy_sa_overbroad_secret_access` through
+  `prod_terraform_drift_backlog_reconcile`); group C = the remaining 12 (`qg_sentinel_environment_blind` through
+  `vol_dvol_backtestable_engines`). Each was briefed with the same 5-category classification scheme
+  (delete-safety-reducible-but-missed / VM-launch-authority-reservation / credential-ask / genuine-judgment-call /
+  other) and the same commit-immediately git-safety discipline that fixed the earlier data-loss incident. **If this
+  session compacts before all 3 report back**: check task notifications first; if none arrived, the work may still be
+  running (each was a large, thorough per-file investigation, expect it to take a while) — do not re-dispatch duplicate
+  agents on the same 34 files without first confirming via `git log --oneline -20 -- plans/active/` whether commits
+  already landed.
