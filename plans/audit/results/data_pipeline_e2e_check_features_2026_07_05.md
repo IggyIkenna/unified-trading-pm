@@ -3,7 +3,7 @@ doc_type: audit-result
 title: "Pipeline E2E Check — data_pipeline_e2e_check_features (2026-07-05)"
 summary:
   "data_pipeline_e2e_check_features pipeline-e2e-check 2026-07-05 (merged across multiple driver invocations — see
-  merge_pipeline_e2e_report.py): total=20 passed=0 failed=6 ambiguous=0 skipped=9"
+  merge_pipeline_e2e_report.py): total=22 passed=0 failed=6 ambiguous=0 skipped=11"
 status: fail
 nature: record
 asset_group: [cross-cutting, defi, prediction, sports, tradfi]
@@ -24,7 +24,7 @@ lib_version:
 doc_versions_checked:
 service: data_pipeline_e2e_check_features
 run_date: 2026-07-05
-generated_at: "2026-07-27T09:47:54.833762+00:00"
+generated_at: "2026-07-27T09:49:23.144132+00:00"
 ---
 
 # Pipeline E2E Check — data_pipeline_e2e_check_features (2026-07-05)
@@ -34,7 +34,7 @@ generated_at: "2026-07-27T09:47:54.833762+00:00"
 **Note — merged across multiple driver invocations** via `merge_pipeline_e2e_report.py` (the driver overwrites its
 report per-invocation, does not append across separate `--asset-group`/`--family`-scoped processes).
 
-**Summary:** total=20 passed=0 failed=6 ambiguous=0 skipped=9
+**Summary:** total=22 passed=0 failed=6 ambiguous=0 skipped=11
 
 ## Results
 
@@ -58,6 +58,8 @@ report per-invocation, does not append across separate `--asset-group`/`--family
 | TRADFI:cross_instrument | skip  | failed  | not_applicable | 1    | 0       | -        | cascading failure from TRADFI:delta_one's missing test output: FileNotFoundError No delta-one features found under gs://features-tradfi-test-.../delta_one/by_date/day=2026-07-04/ (identical to the force leg -- driver ran both legs before dying rather than skipping the skip-leg on force failure).                                                                                                                                                                                  |
 | TRADFI:delta_one        | force | failed  | not_applicable | 1    | 0       | -        | dependency_check_failed: Missing market-data-processing-service, Path gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-07-04/, Date 2026-07-04, No data for 2026-07-04/TRADFI                                                                                                                                                                                                                                                                   |
 | TRADFI:delta_one        | skip  | not_run | not_applicable | None | 0       | -        | force already failed on missing input — skip-if-fresh is moot without a successful write                                                                                                                                                                                                                                                                                                                                                                                                  |
+| TRADFI:multi_timeframe  | force | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| TRADFI:multi_timeframe  | skip  | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | TRADFI:volatility       | force | skipped | not_applicable | 0    | 0       | -        | no_captured_input_for_window (window slid to 2026-01-29..2026-01-30 via --auto-day; 872x 'No captured perp' honest-absence warnings, 0 ERROR/CRITICAL, Completed 0/4 groups, exit_code=0 DEPLOYMENT_COMPLETED). Manually recorded — driver process was not actively watched to completion (stopped live-watching per session note), reconstructed from direct gcloud storage cat of the VM's own run.log.                                                                                 |
 | TRADFI:volatility       | skip  | not_run | not_applicable | None | 0       | -        | force produced zero captured rows — skip-if-fresh is moot without a successful write                                                                                                                                                                                                                                                                                                                                                                                                      |
 
@@ -83,6 +85,8 @@ report per-invocation, does not append across separate `--asset-group`/`--family
 | TRADFI:cross_instrument | skip  | `-`                                          | `-`                                          | -            |
 | TRADFI:delta_one        | force | `-`                                          | `-`                                          | -            |
 | TRADFI:delta_one        | skip  | `-`                                          | `-`                                          | -            |
+| TRADFI:multi_timeframe  | force | `-`                                          | `-`                                          | -            |
+| TRADFI:multi_timeframe  | skip  | `-`                                          | `-`                                          | -            |
 | TRADFI:volatility       | force | `-`                                          | `-`                                          | -            |
 | TRADFI:volatility       | skip  | `-`                                          | `-`                                          | -            |
 

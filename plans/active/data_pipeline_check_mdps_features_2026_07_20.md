@@ -961,36 +961,33 @@ on that plan's completion.
 
 ### 2026-07-27 (slot-7) — todo "Run /data-pipeline-check-features across ALL shards" IN FLIGHT, not blocked
 
-Phase 0 passed. Local driver dies silently/often (matches `WorkerLivenessWatchdog`/RAM contention, slot-3 independently
-diagnosed the same class — `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` todo 9;
-their ~240s `/api/slots/<N>/progress` heartbeat mitigation REDUCES but doesn't eliminate it). **Resume**:
-`cd features-service && .venv/bin/python scripts/pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day --asset-group <AG> --family <FAM> --project central-element-323112`,
-backgrounded + Monitor-heartbeated; on driver death check
-`gcloud compute instances list --filter="name~'features-e2e-<ag>'"` first (VM usually outlives the poller), ground-truth
-via its `run.log`. `delta_one` first per-AG. CEFI is slot-3's. Driver OVERWRITES its report per-invocation — merge with
+Phase 0 passed. Local driver dies silently/often (`WorkerLivenessWatchdog`/RAM contention, slot-3 independently
+diagnosed same class — `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` todo 9). On
+death, check `gcloud compute instances list --filter="name~'features-e2e-<ag>'"` first (VM usually outlives the
+poller) + its `run.log`. **Resume**:
+`cd features-service && .venv/bin/python scripts/pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day --asset-group <AG> --family <FAM> --project central-element-323112`;
+`delta_one` first per-AG; CEFI is slot-3's; driver OVERWRITES its report per-invocation — merge with
 `unified-trading-pm@e537bff29` `scripts/plan-hygiene/merge_pipeline_e2e_report.py` after every cell.
 
-**10 cells attempted, 0 in flight, 19 not started**: 5 honest `no_captured_input_for_window` skips (`DEFI:delta_one`,
-`PREDICTION:delta_one`, `DEFI:onchain`, `multi_timeframe:DEFI` — cascades from `delta_one:DEFI`'s own skip, expected —
-`volatility:TRADFI` — the last ground-truthed post-hoc via `run.log`, `DEPLOYMENT_COMPLETED exit_code=0`, 872x honest
-warnings). `TRADFI:delta_one` FAILED (2 identical VM runs,
-`DEPENDENCY CHECK FAILED — Missing market-data-processing-service`; driver's `--require-captured` wrongly accepted the
-window, todo below); `cross_instrument:TRADFI` (both legs) FAILED identically as a direct CASCADE of that same gap
-(`FileNotFoundError: No delta-one features found` — its `--source-bucket` reads `delta_one`'s never-written `-test-`
-output) — not a new bug, expected once the P1 todo below is fixed. `commodity:TRADFI` FAILED cleanly — 3 public/no-auth
-sources 403/timeout/404'd, NOT `BLOCKED-CREDENTIALS` —
-`issues/features_commodity_public_api_403_from_gcp_vm_2026_07_27.md` (P2). **TWO P0 DATA-CORRECTNESS BUGS, same
-root-cause class**: `calendar` (GLOBAL, 0 rows, no damage) and `sports` (SPORTS, 51 REAL fixtures written — worse) both
-wrote to PROD despite `IS_TEST_RUN=true` — each family's `is_test_run` config field is declared but never consulted at
-its actual bucket-resolution call site (delta_one's `get_output_bucket()` via `get_data_sink()` is the correct pattern;
-calendar's fix already shipped `features-service@ba5143fd`, sports' is open). Filed
-`issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` +
-`issues/features_sports_is_test_run_ignored_writes_real_data_to_prod_2026_07_27.md` (both P0, operator-notified). **Do
-NOT re-run `calendar` or `sports` until fixed**; remaining untested families (`volatility`/`onchain`/
-`cross_instrument`/`multi_timeframe`/`commodity`'s AGs) may share this bug — treat every future cell's force leg as
-suspect until its family is checked. Report:
-`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.{md,json}`. This plan is AT its 1000-line hard cap — a
-future session should archive older closed sections before adding more.
+**11 cells attempted, 0 in flight, 18 not started**: 6 honest `no_captured_input_for_window` skips (`DEFI:delta_one`,
+`PREDICTION:delta_one`, `DEFI:onchain`, `multi_timeframe:{DEFI,TRADFI}` — both cascade cleanly from their
+`delta_one:{DEFI,TRADFI}`'s own skip/fail, expected — `volatility:TRADFI`). `TRADFI:delta_one` FAILED (2 identical VM
+runs, `DEPENDENCY CHECK FAILED — Missing market-data-processing-service`; driver's `--require-captured` wrongly accepted
+the window, P1 todo below); `cross_instrument:TRADFI` (both legs) FAILED HARD as the same cascade — but **note the
+asymmetry**: `multi_timeframe:TRADFI` degraded gracefully to a clean skip on the identical missing-input condition,
+`cross_instrument:TRADFI` instead raised an uncaught `FileNotFoundError` — the two derived families handle a missing
+delta_one source inconsistently; worth a follow-up but not filed as its own bug (both are downstream of the same
+already-tracked P1 root cause). `commodity:TRADFI` FAILED cleanly — 3 public/no-auth sources 403/timeout/404'd, NOT
+`BLOCKED-CREDENTIALS` — `issues/features_commodity_public_api_403_from_gcp_vm_2026_07_27.md` (P2). **TWO P0
+DATA-CORRECTNESS BUGS, same root-cause class**: `calendar` (0 rows) and `sports` (51 REAL fixtures — worse) both wrote
+to PROD despite `IS_TEST_RUN=true` — each family's `is_test_run` field is declared but never consulted at its actual
+bucket-resolution call site (delta_one's `get_output_bucket()`/`get_data_sink()` is correct; calendar's fix shipped
+`features-service@ba5143fd`, sports' is open). Filed
+`issues/features_{calendar,sports}_is_test_run_ignored_writes_*_2026_07_27.md` (both P0, operator-notified). **Do NOT
+re-run `calendar` or `sports` until fixed**; `onchain`/`commodity`'s remaining AGs may share this bug — treat every
+future force leg as suspect until its family is checked. Report:
+`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.{md,json}`. Plan AT its 1000-line hard cap — archive
+older closed sections before adding more.
 
 - [ ] NEW todo. [DATA] P1. **Coverage-check discrepancy**: driver's `--require-captured` reported `TRADFI:delta_one`'s
       `2026-07-04..2026-07-05` window covered, but the VM's own dependency check found NO object at the expected candle
