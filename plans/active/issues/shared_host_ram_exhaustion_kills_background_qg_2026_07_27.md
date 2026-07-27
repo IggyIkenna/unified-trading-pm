@@ -245,10 +245,10 @@ defect; it is purely a function of host capacity at any given moment.
   unrelated flake in `test-qg-governor-wait-time.sh`'s "contended acquire" case reproduced identically on a clean
   `git stash` of this change — not caused by this work). Also flipped the corresponding P0 in the owning plan
   (`qg_host_adaptive_resource_governor_2026_07_14.md`) to avoid the fix being tracked as open in two places. Shipping
-  via `quickmerge --agent` next. **Update (post-flip)**: shipping itself then hit 20+ consecutive quickmerge failures
-  on the SAME push-race pattern slot-14 independently corroborated above ("quickmerge process itself vanished
-  mid-STAGE-4/5") — found + fixed a real contributing bug (my commit lacked the `Quickmerge: agent` trailer, so
-  Stage 5 was doing a LATE `git commit --amend` that re-triggered `check-branch-drift`'s pre-commit hook AFTER the
-  full QG re-run, well past my own pre-rebase — pre-stamping the trailer eliminated that specific hurdle), but the
-  residual final-`git push` non-fast-forward race persists under this session's sustained churn. Filed as its own
-  issue: `/plans/active/issues/quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md`.
+  via `quickmerge --agent` next. **Update (post-flip)**: shipping itself then hit 20+ consecutive quickmerge failures on
+  the SAME push-race pattern slot-14 independently corroborated above ("quickmerge process itself vanished
+  mid-STAGE-4/5") — found + fixed a real contributing bug (my commit lacked the `Quickmerge: agent` trailer, so Stage 5
+  was doing a LATE `git commit --amend` that re-triggered `check-branch-drift`'s pre-commit hook AFTER the full QG
+  re-run, well past my own pre-rebase — pre-stamping the trailer eliminated that specific hurdle), but the residual
+  final-`git push` non-fast-forward race persists under this session's sustained churn. Filed as its own issue:
+  `/plans/active/issues/quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md`.
