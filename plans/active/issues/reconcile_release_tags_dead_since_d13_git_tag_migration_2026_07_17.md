@@ -49,7 +49,7 @@ related:
   [
     /plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
     /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
-    /plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
+    /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-17
@@ -105,7 +105,7 @@ depends_on: []
 > **left unticked** — retiring vs rewriting them is a planning call, parked for the operator.
 >
 > **Known rough edge, same hatch-vcs/git-tag subsystem (2026-07-26)**:
-> `/plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` found an adjacent
+> `/plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` found an adjacent
 > failure mode — `main`'s squash-merge history can make a real release tag (`v0.72.0`) unreachable from `main`'s own
 > commit graph even though content is byte-identical, so `git describe`/hatch-vcs on `main` falls back to a stale tag
 > and computes a version below the current floor. Not the same bug as this doc's dead reconciler (that one is about

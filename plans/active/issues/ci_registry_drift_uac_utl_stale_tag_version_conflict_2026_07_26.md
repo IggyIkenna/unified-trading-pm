@@ -24,7 +24,7 @@ tags: [ci, registry-drift, hatch-vcs, dynamic-versioning, pip, cross-repo]
 related:
   [
     /plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
-    /plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
+    /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-26
@@ -101,7 +101,7 @@ proven correct via local reproduction — see that issue doc — but never succe
       (layer 1) — it's a genuine, real, independently valuable fix regardless of layer 2's resolution (correct version
       strings resolve now instead of a nonsense placeholder), full `quality-gates.sh` green.
 - [x] ✅ [CICD] P2. **DONE 2026-07-26 (slot 6)** — root-caused in the sibling doc
-      `/plans/active/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` § "Root cause
+      `/plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` § "Root cause
       diagnosed": `v0.72.0` was a MANUAL one-off D13-migration baseline tag placed on an LDR-side `_backmerge` merge
       commit (`4ac8be3f`), never on `main`'s own graph — not a semver-agent bug, not a stalled promotion (content was
       byte-identical on `main`'s own squash commit `b52aea5d`, ~2h later, which is what should have been tagged). `main`
