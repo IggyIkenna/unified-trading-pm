@@ -201,10 +201,14 @@ not a mechanical column-list copy.
       (`date`/`capture_status`/`instrument_count`/`error_reason` for the skip-mask,
       `venue`/`data_type`/`instrument_id`/`underlying`/`quote_asset`/`margin_type` in the per-row atom loop) — re-verify
       by direct read before shipping, same incident class as `mtds_backfill_vm_startup_oom_rc137_2026_07_14`.
-- [ ] [SCRIPT] P0. **ml-service** — `inference/app/core/manifest_inference_guard.py:46` `check_manifest_for_inference`:
-      project to the columns `_filter_to_day`/`_classify_day_rows` actually read (verify by direct read: likely `date`,
-      `asset_group`, `capture_status` — confirm before shipping). Live inference hot path — highest urgency of the
-      ml-service findings.
+- [x] ✅ [SCRIPT] P0. **ml-service** — `inference/app/core/manifest_inference_guard.py:46`
+      `check_manifest_for_inference` — **SHIPPED 2026-07-27 (slot-10)**, `ml-service@0bd5e6a`. Confirmed by direct read
+      (not the guessed default): `_filter_to_day` reads `date`/`asset_group`; `_classify_day_rows` reads
+      `capture_status` — no other columns touched anywhere in the module. Projected
+      `columns=["date","asset_group","capture_status"]` exactly. Added a regression test
+      (`test_read_availability_index_is_column_projected`) pinning the exact call signature so a future edit to either
+      function is forced to also update the projection. Full test file green (12 tests) + `quality-gates.sh` green
+      (302s).
 - [ ] [SCRIPT] P1. **ml-service** — `training/app/core/manifest_gap_handler.py:54` `apply_manifest_quality_flags`: same
       treatment as the inference guard above.
 - [ ] [SCRIPT] P0. **deployment-api** — `services/manifest_source.py:164`: reuse the already-defined `DRILLDOWN_COLUMNS`
