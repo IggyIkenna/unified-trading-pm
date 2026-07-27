@@ -13,7 +13,7 @@ summary:
   — they must be WIPED (human-only GCS delete), NOT backfilled into the manifest as real coverage. The registry gap
   itself is fixed (`unified-api-contracts@46d865df`); the WIPE disposition for the 83,541 objects is operator-gated and
   NOT executed here.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -29,7 +29,7 @@ related:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-22
-last_updated: 2026-07-22
+last_updated: 2026-07-27
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
@@ -43,7 +43,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: instruments-service@05c6a75f
 source: found while preparing the sports orphan back-fill (estate_orphan_assessment_2026_07_21.md todo 1), 2026-07-22
 depends_on: []
 ---
@@ -125,14 +125,20 @@ durable/as-written per the single-walk discipline.
       confirm at execution time per Part 3/4 discipline).
 - [x] 3. [DATA] P2. Run the delete-safety protocol's proof (per todo 2's re-classification above: fresh
       `gcs_bucket_soft_delete_retention_seconds` re-check + grep-then-READ no-live-writer confirmation) and execute the
-      wipe. No `[OPERATOR]` gate needed given the above — proceed once the fresh checks pass. — already covered by
-      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track V "decision 14" — this doc's own
-      "Duplicate-tracking note" names that bullet canonical for this exact 83,541-row population; see that doc for
-      execution).
+      wipe. No `[OPERATOR]` gate needed given the above — proceed once the fresh checks pass. — **EXECUTED 2026-07-27,
+      `instruments-service@05c6a75f`**, via `plans/active/sports_satellite_ao_dispatch_batch7_2026_07_27.md` todo 2
+      (full evidence there): retention 604800s fresh-checked, no live writer, snapshot-then-delete, 0 errors.
 - [x] 4. [REVIEW] P2. Re-run `migration_orphan_sweep_sports.py --bucket reference --dry-run` after the wipe to confirm
       these 83,541 no longer appear as `E_orphan_real` (either wiped from GCS, or now correctly classified `C3` if any
-      remain pending the wipe) — closes the loop on the registry fix's real-world effect. — already covered by
-      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track V "decision 14"; see that doc for execution).
+      remain pending the wipe) — closes the loop on the registry fix's real-world effect. — **CLOSED 2026-07-27,
+      superseded by a stronger check**: the durable audit parquet this dry-run would read was itself regenerated
+      2026-07-25 (before this wipe ran) and already reclassified this population `C3_pre_launch_window`, excluded from
+      its B/B2/E report — so re-running the sweep would show nothing either way (reclassification, not deletion, would
+      explain a clean report) and is not a valid post-wipe proof. Used a stronger, direct check instead: a fresh bounded
+      prefix-scoped GCS census (872 pre-floor day dirs, entity-filtered) immediately after the delete confirmed **0**
+      `entity=fixtures_schedule`/`entity=fixtures_outcomes` objects remain under any pre-floor day — object-existence
+      proof, not a report-classification proxy. See `sports_satellite_ao_dispatch_batch7_2026_07_27.md` todo 2 for the
+      full evidence.
 
 ## RE-TRIAGE (2026-07-23)
 
@@ -169,3 +175,15 @@ this went undetected for over a week (cutover 2026-07-14, found 2026-07-22).
 This doc's 83,541-row population and disposition (todos 2-4: operator ruling, wipe, re-verify) are the SAME work as
 `sports_consolidated_closeout_2026_07_19.md`'s Track V "decision 14" bullet (the pre-floor wipe todo). That bullet is
 canonical — execute there, then flip todos 2-4 here as done citing the same evidence, rather than executing twice.
+
+## RE-TRIAGE (2026-07-27) — CLOSED
+
+**Verdict: RESOLVED.** All 4 todos are now done. The wipe executed via
+`sports_satellite_ao_dispatch_batch7_2026_07_27.md` todo 2, `instruments-service@05c6a75f`
+(`scripts/wipe_pre_floor_sports_fixtures_2026_07_27.py`): fresh §3a retention check (604800s), no live writer, snapshot
+
+- delete + post-delete census (0 remaining). Note the actual measured population at execution time was 30,182 objects,
+  not the originally-cited 83,541 — the durable audit parquet backing that count was regenerated 2026-07-25 (after the
+  registry fix), reclassifying the population out of its report before a fresh count could be taken from it; the delete
+  target was derived from a fresh, direct GCS census instead, cross-checked against the manifest. See the batch7 plan's
+  todo 2 for full evidence.

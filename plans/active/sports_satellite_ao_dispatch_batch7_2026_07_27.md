@@ -105,7 +105,7 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
       K1/K2 casing-revert migration first, then re-attempt the delete). Source:
       `sports_consolidated_closeout_2026_07_19.md` Track V (K1/K2 + api_football DELETE todo).
 
-- [ ] [DATA] P0. **Execute the operator-ruled (decision 14, 2026-07-23) pre-floor wipe: snapshot-then-delete 83,541
+- [x] ✅ [DATA] P0. **Execute the operator-ruled (decision 14, 2026-07-23) pre-floor wipe: snapshot-then-delete 83,541
       pre-floor (2014-01-01..2020-06-05) `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` rows** that fall before the established
       2020-06-06 sports data floor (`/codex/02-data/sports-2020-06-data-floor.md`). Root-cause fix already shipped
       (`unified-api-contracts@46d865df`); only the wipe execution remains. Mirror the already-run Track F
@@ -116,7 +116,29 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
       do not do the work twice. **Done when**: the wipe executes, a creation-time census (not a content sample) confirms
       0 pre-floor `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` objects remain, and both this doc's todo and the
       duplicate-tracking issue doc's todos 2-4 are flipped citing the same evidence. Source:
-      `sports_consolidated_closeout_2026_07_19.md` Track V (pre-floor wipe, decision 14).
+      `sports_consolidated_closeout_2026_07_19.md` Track V (pre-floor wipe, decision 14). — **DONE 2026-07-27,
+      `instruments-service@05c6a75f`** (`scripts/wipe_pre_floor_sports_fixtures_2026_07_27.py`). Fresh §3a check:
+      `gcs_bucket_soft_delete_retention_seconds(instruments-store-sports-prd-central-element-323112)` = `604800` (same
+      run); confirmed no live writer (launchers `launch-sports-entity-sweep-vm.sh` /
+      `launch-sports-instruments-reference-vm.sh` already clamp `START_DATE` to `2020-06-06`; venue-epoch gate
+      `get_venue_epoch` clamps `api_football`/`soccerfootball_info`/`footystats` to `2020-06-06`; no running sports VM
+      at execution time). **Measured-count correction**: the durable audit parquet cited for the 83,541 figure
+      (`_index/audit/orphan_sweep_sports.parquet`) was regenerated 2026-07-25 — after the registry-gap fix landed — and
+      now classifies this population `C3_pre_launch_window` (a class its own report excludes), so it no longer holds
+      these rows; re-deriving the count from it was not possible. A fresh, bounded, prefix-scoped census at execution
+      time (872 pre-floor day dirs under `sports_reference/by_date/`, delimiter-listed + entity-filtered — not a
+      whole-corpus walk) found the CURRENT real population was **30,182 objects** (15,233 `fixtures_schedule` + 14,949
+      `fixtures_outcomes`), not 83,541 — cross-checked against the manifest (`FIXTURES_SCHEDULE` pre-floor `captured`
+      rows = 25,031, same order of magnitude; the manifest carries 0 pre-floor `FIXTURES_OUTCOMES` rows at all,
+      confirming that entity was fully unmanifested/orphaned, consistent with the original `E_orphan_real`
+      classification). Deleted the MEASURED current population per the data-domain "trust the actual distribution, not
+      the constant" principle, not the stale cited figure. Snapshot (pre-delete object-name list, JSON, 30,182 paths) +
+      post-delete census (0 objects remaining) both captured in the same run; delete verdicts
+      `{DELETED: 30182,     ERROR: 0}`. Post-delete census sampled the 2 remaining pre-floor day dirs and confirmed only
+      unrelated `entity=fixture_events` objects survive there (correctly out of this todo's scope — a different track).
+      Manifest phantom-row cleanup for this population (rows that may still point at now-deleted objects) is explicitly
+      out-of-scope for this todo (GCS-object wipe only, per the floor doc's own DONE/DEFERRED split) and is not claimed
+      done here.
 
 - [ ] [CODE] P1. **Canonicalise `BOOKMAKER_LEAGUE_COVERAGE`** (`unified-api-contracts`) — it is keyed on RAW league
       display names while the sports v2 sentinel (`sentinels.py`) calls it with a CANONICAL league id, a standing
