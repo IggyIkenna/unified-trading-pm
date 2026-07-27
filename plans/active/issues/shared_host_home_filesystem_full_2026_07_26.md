@@ -228,3 +228,24 @@ specific to any one task.
   disk-unrelated promotion-lag bug — see
   [`sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20`](sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md)
   — so once disk pressure clears, that SECOND mechanism may still delay this specific repo's promotion further.
+- 2026-07-27T09:22Z (slot-10, resumed `sports_consolidated_native_ao_extract-029` Track F follow-up after this session's
+  own mid-task crash): a **13th consecutive `features-service` `quality-gates.sh` attempt** for one untracked new script
+  died silently right after a clean `17886 passed, 0 failed` pytest run, before TYPE CHECK even started — no error
+  captured in the log (`fs_qg_final12.log` ends cleanly at the pytest summary line, not mid-write/truncated; process PID
+  gone from `ps aux`). This is attempt #13 in this single session; across the prior 12, 5 DISTINCT root causes were
+  found+fixed via documented env-var opt-outs (`TMPDIR` off the shared tmpfs, `QG_GOVERNOR_DISABLE=true`,
+  `QG_MEM_CAP=0`, `PYTEST_TIMEOUT=180`, `PYRIGHT_TIMEOUT` raised 120→900), yet the run still cannot reach completion —
+  each attempt now dies at a DIFFERENT point (2%→46%→92% flake→clean-pytest-then-die
+  (twice)→past-pytest-into-typecheck-then-pyright-timeout→past-typecheck-into-codex-compliance→back to
+  clean-pytest-then-die again this time), which is the signature of genuine resource contention, not a fixable code
+  defect. Live diagnostics at the moment of this 13th death: `uptime` load average **14.93** (a box this doc's other
+  entries also describe as multi-slot-shared), `free -h` **3.3Gi/30Gi RAM free + 3.8Gi/15Gi swap in use**, `df -h /`
+  **8.9G/290G free (97% used)** — the SAME filesystem this doc tracks, still critically tight though not the <100M-avail
+  extremes of the 07-26/07-27-early entries above. `ps aux` at the same moment showed **slot-8 running its own full
+  `quality-gates.sh --no-fix`** concurrently (its own `pytest -n 1` mid-run) — direct confirmation this is fleet-wide
+  concurrent-QG contention on shared CPU/memory/disk, not something fixable from within one process. Filed `/blocked`
+  (`BLK-0afe051c`, task `sports_consolidated_native_ao_extract-029`) rather than continuing to blind-retry — recommended
+  pausing further attempts until host contention eases, per this doc's own established pattern. The untracked script
+  itself (`features-service/scripts/purge_sports_derived_features_post_floor_residue_2026_07_27.py`) is code-complete
+  and twice independently re-verified against real GCS data this session; it is NOT lost, just blocked on a QG run
+  completing on this host.
