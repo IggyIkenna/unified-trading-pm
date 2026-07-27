@@ -907,3 +907,21 @@ RESUME ORDER, and the 🔑 LESSONS) were extracted **verbatim** 2026-07-24 to
 now owns the migration epic end-to-end (census → executor → per-AG SPOT migration → verify). See that file for the full
 record; nothing here was summarized or lost, only moved. This plan's own remaining work (todo 15) is `depends_on`-gated
 on that plan's completion.
+
+### 2026-07-27 (slot-7) — todo "Run /data-pipeline-check-features across ALL shards" IN FLIGHT, not blocked
+
+Phase 0 bucket check PASSED cleanly (all 6 `features-*-test-*` buckets exist; `cefi`/`defi`/`tradfi`/`pred`/`sports`/
+`calendar` all now carry objects — improved since the 2026-07-20 baseline note that only cefi had objects). First cell
+attempt (`delta_one`/`CEFI`, `--day 2026-07-05`, force+skip, background+watchdog per the async-wait HARD RULE) crashed
+immediately — **NOT the documented shared-host-RAM-exhaustion issue**
+(`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`, still open, gates the SIBLING MDPS todo) — a plain
+env-config gap: direct `pipeline_e2e_check.py` invocation needs `GCP_PROJECT_ID`/`AWS_ACCOUNT_ID` set or `--project`
+passed (`get_project_id()` raises otherwise); this shell only had `GOOGLE_CLOUD_PROJECT=central-element-323112` set, not
+`GCP_PROJECT_ID`. Quick, known fix (`--project central-element-323112`), not a new blocker — retry pending in this same
+session. **Resume here**: rerun
+`cd features-service && .venv/bin/python scripts/pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day --asset-group CEFI --family delta_one --project central-element-323112`
+(delta_one MUST run first — its `-test-` output feeds `multi_timeframe`/`cross_instrument` per the skill's ordering
+rule), backgrounded with a liveness-watchdog Monitor per the async-wait HARD RULE, then proceed cell-by-cell per the
+skill's step 7 (pick next unchecked `(family, asset_group)` cell, append to the same day's report) — 29 viable cells
+total per the SKILL.md matrix. This todo stays OPEN (correctly) until the full matrix is proven or a genuine blocker
+(distinct from the known RAM-exhaustion one) surfaces.
