@@ -75,12 +75,12 @@
     "features-service": "0.68.0",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
-    "instruments-service": "0.91.0",
+    "instruments-service": "0.92.0",
     "market-tick-data-service": "0.97.0",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.73.0",
     "unified-trading-library": "0.60.0",
-    "unified-trading-pm": "1.2.629",
+    "unified-trading-pm": "1.2.630",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 1,
         "warn_file_count": 0,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "coverage_pct": 81.47,
+        "qg_red_reason": null,
+        "large_file_count": 1
       }
     },
     "batch-live-reconciliation-service": {
@@ -274,9 +274,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "warn_file_count": 4,
-        "large_file_count": 0,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "coverage_pct": 74.71,
+        "qg_red_reason": null,
+        "large_file_count": 0
       }
     },
     "deployment-api": {
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": null,
         "warn_file_count": 15,
-        "large_file_count": 6
+        "coverage_pct": 82.55,
+        "large_file_count": 6,
+        "qg_red_reason": null
       }
     },
     "deployment-service": {
@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": null,
-        "warn_file_count": 10,
-        "large_file_count": 3
+        "warn_file_count": 9,
+        "coverage_pct": 73.2,
+        "large_file_count": 4,
+        "qg_red_reason": null
       }
     },
     "execution-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": null,
         "warn_file_count": 10,
-        "large_file_count": 8
+        "coverage_pct": 90.92,
+        "large_file_count": 8,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -821,9 +821,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 89.68,
-        "qg_red_reason": null,
         "warn_file_count": 7,
+        "coverage_pct": 89.76,
+        "qg_red_reason": null,
         "large_file_count": 5
       }
     },
@@ -1011,10 +1011,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 5,
+        "warn_file_count": 10,
         "coverage_pct": 85.82,
-        "qg_red_reason": null,
-        "warn_file_count": 10
+        "large_file_count": 5,
+        "qg_red_reason": "pytest"
       }
     },
     "system-integration-tests": {
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
         "warn_file_count": 23,
-        "qg_red_reason": null,
-        "large_file_count": 7
+        "coverage_pct": 89.21,
+        "large_file_count": 7,
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
@@ -1300,8 +1300,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 73.09,
         "warn_file_count": 0,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 0
       }
@@ -2185,8 +2185,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.60.1.dev2+gf0a012825",
-      "published_at": "2026-07-27T13:05:28Z",
+      "version": "0.60.1.dev3+gc34e2543d",
+      "published_at": "2026-07-27T15:12:16Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
