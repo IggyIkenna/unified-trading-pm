@@ -213,12 +213,10 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       locked-plan-deletion gate correctly blocked their removal). Per CLAUDE.md, unlocking requires an explicit operator
       `[unlock-plan]` — never autonomous — so both copies (stale `plans/active/issues/` + correct
       `plans/archive/issues/`) currently coexist for these 4 pending that decision. New follow-up todo below.
-- [ ] [OPERATOR] P2. **4 duplicate doc pairs need an explicit `[unlock-plan]` decision before the stale
-      `plans/active/issues/` copy can be removed** (the `plans/archive/issues/` copy is already correct and complete —
-      this is purely a leftover-duplicate cleanup, not new content risk): `manifest_hygiene_red_2026_06_27.md`,
-      `manifest_hygiene_red_2026_06_29.md`, `mtds_plan_reconciliation_2026_06_29.md`,
-      `phantom_captures_tradfi_2026_06_28.md`. Once approved, `git rm` the 4 stale `plans/active/issues/` copies with
-      `[unlock-plan]` in the commit message.
+- [x] [OPERATOR] P2. **4 duplicate doc pairs need an explicit `[unlock-plan]` decision before the stale
+      `plans/active/issues/` copy can be removed** — unified-trading-pm@0703cb288 (`[unlock-plan]`, operator-granted).
+      Verified: all 4 stale `plans/active/issues/` copies removed, `plans/archive/issues/` copies confirmed present and
+      correct, 7 live referrers repointed onto the archive path.
 - [ ] [SCRIPT] P3. **Widen `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership rule** — currently
       `parent_epic in DATA_EPICS` alone lets ci/infra-scoped docs sharing `infrastructure_master` leak into
       cross-cutting's candidate pool (confirmed: 37 of 40 cross-cutting candidates in the fresh run were genuinely
