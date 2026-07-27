@@ -162,7 +162,20 @@ THEN re-sync the manifest / data-status. Do not delete the old tree until the tw
       fix. Volatility's real-day proof separately found no canonically-captured `options_chain` input near this window
       for either CEFI(1d) or TRADFI(7d) lookback — a second, independent data-availability gap (not yet filed as its own
       issue; needs investigation of whether options_chain capture exists further back in history). Not checking this box
-      — neither leg of the real-day proof nor the historical migration is complete.
+      — neither leg of the real-day proof nor the historical migration is complete. **2026-07-27 (update) — delta_one
+      leg's blocking bug fixed + re-proven; a SECOND blocking bug was found + fixed along the way.**
+      `delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md` todos 1-3 are done
+      (`features-service@e9430f0d`, `@2c6062ab`, `@615abbaa`). The real-day proof now succeeds end-to-end for
+      delta_one/CEFI: `HYPERLIQUID:PERPETUAL:BTC-USD@LIN`, day=2026-07-19, `candlestick_patterns` feature_group —
+      lookback validation passes, real candles load, and a real partition writes to the canonical
+      `delta_one/by_date/day=2026-07-19/feature_group=candlestick_patterns/` tree (confirmed by direct GCS listing, not
+      inferred), proving the `by_date/day=` writer fix works correctly on real production data. Re-run confirmed
+      idempotent/stable. Still NOT checking this box: (a) only 1 real day currently has backfilled 1h candle data for
+      this instrument (a separate, pre-existing MDPS candle-derivation gap, out of scope — see that issue doc's todo 3
+      for detail), so higher-lookback feature_groups (`technical_indicators` etc.) can't yet be proven on this thin
+      real-data window; (b) the historical `delta_one/day=…` / bucket-root `day=…` object migration this todo also
+      requires has not been attempted; (c) volatility's leg remains separately blocked on the `options_chain`
+      data-availability gap noted above (untouched by this update).
 - [ ] 7. [DATA] P1. Re-sync the availability manifest + data-status render for the migrated features cells so all four
       canonical surfaces agree; verify the coverage surface after the migration.
 - [ ] 8. [REVIEW] P1. On writer ship, record the features `by_date/day=` cutover date in
