@@ -63,6 +63,12 @@ source: SUB_AGENT_MANDATORY_RULES dispatch (slot-3 this session) — "reference 
 > not cite or account for. **Before acting on either doc**, check the closeout's current Track sections (Track C / Track
 > S / Track E / Track V) for the latest state — do not design or ship the manifest-schema extension or the
 > `entity={fixtures,teams,injuries}/` path against a stale read of either plan.
+>
+> **Reciprocal cross-link (2026-07-25, `sports_closeout_track_x_hygiene_2026_07_25.md` todo 1):** the closeout's own
+> Canonical target section (`sports_consolidated_closeout_2026_07_19.md`) now carries the matching note on both shared
+> facts — the `entity={fixtures,teams,injuries}/` collision (already noted there since 2026-07-23) and this plan's
+> manifest-schema-extension / `league_id`-resolution dependency (added 2026-07-25). Neither doc's design is decided by
+> this cross-link.
 
 # Sports reference catalog is intentionally league-grain-only today
 
