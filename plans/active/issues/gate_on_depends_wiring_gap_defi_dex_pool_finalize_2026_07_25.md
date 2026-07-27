@@ -252,3 +252,25 @@ is server-side state, not present in the dev clone — only `backlog.test.yaml` 
 can apply the hand-park (or fix root cause item 1) before a third bounce. Declining to author any reconciliation content
 on the false premise that batch3's work has shipped; skipping this task rather than re-filing/re-blocking on an
 already-answered question.
+
+## 2026-07-27 recurrence note (slot 8, THIRD distinct plan pair)
+
+A third, again genuinely different plan pair: dispatched `data_pipeline_check_mdps_features-036` (todo 11c, "MIGRATE
+existing candle/feature data to zero orphans", `plans/active/data_pipeline_check_mdps_features_2026_07_20.md:235`). Todo
+11c's own prose declares `depends_on: 11b` ("Once 11b lands..."), but this is a **per-todo** `depends_on` inside a
+single plan file (not the finalize-plan-vs-parent-plan shape the two entries above cover) — confirms the gap isn't
+scoped to the two-plan `gate_on_depends: true` frontmatter case; a bare in-body `depends_on: 11b` reference on one todo
+within one plan is equally unenforced, consistent with CLAUDE.md's "no per-todo prereq syntax exists" statement (prereqs
+only come from plan-level `sequential`/`gate_on_depends`, so an in-body per-todo reference was never going to be wired
+mechanically — this is closer to a documentation/authoring-convention gap than a `_wire_gate_on_depends_prereqs` parsing
+bug, though the externally-observable symptom (premature dispatch of a todo whose real prerequisite is unmet) is
+identical). Verified before filing: 11b (`:232`) is a non-checkbox pointer to 4 sub-todos in
+`plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md`, all 4 still `- [ ]` — no
+orphan-detection tooling exists yet for MDPS/features/ml/strategy, so there is nothing for 11c to migrate against. Filed
+`/blocked` (BLK-d42a3dbf) rather than hand-parking (no `backlog.yaml` access from this worker slot, same limitation
+noted in the prior recurrence note). Main confirmed live and applied the park recipe directly
+(`mdps-features-11b-orphan-report-complete=false` prerequisite + `priority: 999` + `priority_override: true` on
+`data_pipeline_check_mdps_features-036`), also noting sub-todo 1 of the 11b issue doc (the MDPS candle sweep) was
+already independently dispatched elsewhere — so at least the routing/dispatch side is otherwise functioning correctly;
+only the specific in-body per-todo `depends_on` reference wasn't mechanically gate-able. Declining to attempt 11c;
+resuming the queue-drain loop per main's directive.
