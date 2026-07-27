@@ -12,7 +12,8 @@ REAL SDK path (``set_status`` / ``get_all`` with the production ``_default_fires
 against a throwaway **Firestore emulator** — so it is credential-free and validates:
 
   * Layer-2 same-repo ordering under real transactional CAS (no-downgrade preserved, FAILING
-    unconditional, main authoritative) — incl. under concurrent writers;
+    persists over an ordinary green but may not clobber MAIN_GREEN from a non-main branch, main
+    authoritative) — incl. under concurrent writers;
   * Layer-1 cross-repo no-contention (disjoint per-repo docs — concurrent multi-repo writes all
     land, none lost);
   * a realistic out-of-order "drain" produces Firestore docs IDENTICAL to an independent
@@ -203,9 +204,27 @@ def test_real_txn_no_downgrade():
 
 
 @pytest.mark.usefixtures("clean_collection")
-def test_real_txn_failing_is_unconditional():
+def test_real_txn_failing_overrides_a_non_main_green():
+    _set("uac", "STAGING_GREEN", "staging")
+    prev, written = _set("uac", "FAILING", "staging")
+    assert (prev, written) == ("STAGING_GREEN", "FAILING")
+    assert get_all(project_id=_PROJECT)["uac"]["status"] == "FAILING"
+
+
+@pytest.mark.usefixtures("clean_collection")
+def test_real_txn_non_main_failing_cannot_clobber_main_green():
+    # End-to-end of the ratchet fix over the REAL SDK path — the unit-test twin
+    # (test_set_status_non_main_failing_does_not_clobber_main_green) covers the same scenario
+    # against a fake store; this exercises the real transactional CAS. A non-main red must not
+    # demote the on-main truth (MAIN_GREEN gates the dep-on-main promotion tier) — measured
+    # 2026-07-16: a 3.3% wall-clock flake on a non-main branch drove MAIN_GREEN → FAILING and paged
+    # a false "CI REGRESSION" while main itself was never red.
     _set("uac", "MAIN_GREEN", "main")
     prev, written = _set("uac", "FAILING", "staging")
+    assert (prev, written) == ("MAIN_GREEN", "MAIN_GREEN")
+    assert get_all(project_id=_PROJECT)["uac"]["status"] == "MAIN_GREEN"
+    # main itself still speaks for main:
+    prev, written = _set("uac", "FAILING", "main")
     assert (prev, written) == ("MAIN_GREEN", "FAILING")
     assert get_all(project_id=_PROJECT)["uac"]["status"] == "FAILING"
 
@@ -222,12 +241,19 @@ def test_real_txn_main_is_authoritative():
 # ── Drain parity: Firestore docs == an independent manifest-rule re-implementation ───────────────
 
 
-def _manifest_rule(prev: str, new: str, branch: str) -> str:
+def _manifest_rule(prev: str, new: str, branch: str, prev_branch: str = "") -> str:
     """Independent re-implementation of the no-downgrade rule (NOT importing the store) so the
-    assertion is a genuine cross-check, not a tautology."""
+    assertion is a genuine cross-check, not a tautology. Mirrors resolve_status()'s two
+    incident-driven carve-outs: a non-main FAILING may not clobber MAIN_GREEN (2026-07-16), and a
+    main-originated FAILING may only be cleared by another main signal (2026-07-20, the symmetric
+    half)."""
     ranks = {"FAILING": 0, "FEATURE_GREEN": 1, "STAGING_GREEN": 2, "SIT_VALIDATED": 3, "MAIN_GREEN": 4}
     if new == "FAILING":
+        if branch != "main" and prev == "MAIN_GREEN":
+            return prev
         return new
+    if prev == "FAILING" and prev_branch == "main" and branch != "main":
+        return prev
     if branch == "main":
         return new
     if ranks.get(new, 0) < ranks.get(prev, 0):
@@ -250,11 +276,15 @@ def test_drain_matches_manifest_semantics():
         ("utl", "MAIN_GREEN", "main"),
         ("mtds", "FEATURE_GREEN", "live-defi-rollout"),  # the fix lands on LDR → clears the FAILING
         ("greeks", "MAIN_GREEN", "main"),
-        ("greeks", "FAILING", "staging"),  # a failure AFTER promotion — must persist at drain end
+        ("greeks", "FAILING", "staging"),  # a non-main red AFTER promotion — must NOT clobber MAIN_GREEN
     ]
     expected: dict[str, str] = {}
+    expected_branch: dict[str, str] = {}
     for repo, status, branch in sequence:
-        expected[repo] = _manifest_rule(expected.get(repo, "NONE"), status, branch)
+        new_status = _manifest_rule(expected.get(repo, "NONE"), status, branch, expected_branch.get(repo, ""))
+        if new_status == status:  # the write actually landed — the doc's branch field advances too
+            expected_branch[repo] = branch
+        expected[repo] = new_status
         _set(repo, status, branch)
 
     docs = get_all(project_id=_PROJECT)
@@ -263,10 +293,11 @@ def test_drain_matches_manifest_semantics():
     # sanity on the tricky cells:
     #   uac    — MAIN_GREEN survives the late staging re-run (no-downgrade);
     #   mtds   — a non-main green re-run (rank 1) AFTER a FAILING (rank 0) clears it → correct recovery;
-    #   greeks — a FAILING that arrives over MAIN_GREEN persists (unconditional, never suppressed).
+    #   greeks — a non-main FAILING arriving over MAIN_GREEN does NOT clobber it (the 2026-07-16
+    #            ratchet fix) — the on-main truth survives a non-main red.
     assert got["uac"] == "MAIN_GREEN"
     assert got["mtds"] == "FEATURE_GREEN"
-    assert got["greeks"] == "FAILING"
+    assert got["greeks"] == "MAIN_GREEN"
 
 
 # ── Concurrency: Layer-2 (same repo serialises) + Layer-1 (cross-repo no contention) ─────────────
