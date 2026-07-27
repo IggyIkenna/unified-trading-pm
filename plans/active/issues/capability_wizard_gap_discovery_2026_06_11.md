@@ -112,8 +112,29 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       `collateral_registry.py`'s 2026-06-12 backfill — fixed those to `registry` too, broker question stays `gap`).
 - [ ] [SPEC] P1. **Simulation assumptions**: simulatable candle granularities, matching/fill assumptions per archetype
       area, backtest-live symmetry nuances per venue/instrument.
-- [ ] [SPEC] P1. **Fund structures**: offerable pooled/SMA/prop structures with subscription/redemption + rebalance
-      cadences (fund-administration state machines are runtime truth; nothing declares what is offerable).
+- [ ] ⚠️ [SPEC] P1. **Fund structures**: offerable pooled/SMA/prop structures with subscription/redemption + rebalance
+      cadences (fund-administration state machines are runtime truth; nothing declares what is offerable). — **CODE
+      COMPLETE + QG-VERIFIED, PUSH BLOCKED 2026-07-27 (slot-13)**:
+      `unified_api_contracts/internal/     architecture_v2/fund_structures.py` was ALREADY FIXED (checkbox was stale) —
+      backfilled 2026-06-13 (commit `5e7d0685`, the SAME commit that fixed Fees above): `OFFERED_FUND_STRUCTURES`
+      declares POOLED + SMA (`FundStructureKind`, cited to `sma-vs-pooled.md`), each carrying
+      `share_classes`/`subscription_cadence`/ `redemption_cadence`/`rebalance_cadence`/`supports_daily_withdraw_deposit`
+      fields; PROP honestly omitted (no documented external offering). A pre-existing test
+      (`tests/unit/test_capability_manifest.py::     test_offered_fund_structures_backfilled`) already locked in the
+      2-entry backfill. **The only real defect found**: the module's own docstring (like `fees_registry.py`'s) still
+      said "intentionally empty" — fixed, committed LOCALLY at `unified-api-contracts@8903683a` (full quality-gates.sh
+      green, sentinel==HEAD), but the quickmerge PUSH failed on a fleet-wide host-disk-full condition (100% used, <2G
+      free — see `BLK-5ce3f18c`, escalated to main). **Checkbox left unflipped until the push actually lands** — do not
+      treat this as shipped until `git log origin/live-defi-rollout` shows `8903683a` (or a rebase-carried equivalent).
+      Also drafted (same local, unpushed state) fixes for the SAME staleness in
+      `codex/09-strategy/architecture-v2/capability-wizard.md`'s status table (the row still cited `UAC@6f31f59`, the
+      pre-backfill commit, for fund-structures/order-semantics/ sim-assumptions/agent-capability — verified the OTHER
+      THREE sibling registries are ALSO already backfilled with real per-venue/per-archetype data despite carrying the
+      identical stale "intentionally empty" docstring; not fixed in THEIR OWN files here — that's todos 113/117/119's
+      own scope, flagged so those dispatches go straight to the fix) and `capability-wizard-question-bank.md` (Stage A
+      fund-structure question status `gap (fund structures)` → `partial`, matching the already-`partial` sibling cadence
+      question). **Next session: once disk recovers, retry `quickmerge` for the UAC commit, confirm the push, THEN flip
+      this checkbox to `[x]` citing the verified-pushed SHA — do not just re-flip off the local commit again.**
 - [ ] [SPEC] P1. **Order semantics per venue adapter**: TIF (FOK/IOC/post-only), make/take, ref-pricing modes (fixed vs
       delta-adjusted to underlying), multi-leg/spread delta-risk ownership, auth-wired status.
 - [ ] [SPEC] P2. **Trading-agent/LLM capability**: no declaration linking trading-agent-service to archetypes (which
@@ -155,6 +176,26 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       VENUE_ORDER_SEMANTICS (`multi_leg_delta_owner=None` for every venue, backfilled 2026-06-13) — honest "no owner".
 
 ## Discovered later (append below; date each entry; pin a test when fixed)
+
+### 2026-07-27 (slot-13) — recurring pattern: 4 of the 5 "missing_registry" Phase-2 items are already backfilled, only the checkbox/docstring is stale
+
+Working todo 115 (Fund structures) surfaced a pattern worth flagging BEFORE picking up 113/117/119 (Simulation
+assumptions / Order semantics / Trading-agent capability — still `- [ ]`, backlog ids `-008`/`-010`/`-011`): all FIVE
+Phase-2 "missing_registry" items (Collateral, Fees, Fund structures, Order semantics, Simulation assumptions) plus
+Trading-agent capability were seeded 2026-06-11 as schema-only, genuinely-empty stubs (`UAC@6f31f594`), then ALL
+backfilled with real data in ONE commit — `unified-api-contracts@5e7d0685` (2026-06-13, "backfill order-semantics +
+sim-assumptions + fees + fund-structures + trading-agent registries"). That commit updated the DATA in each file but did
+**not** update each file's own top-of-file `STATUS: ... is intentionally empty` docstring line — so `order_semantics.py`
+/ `simulation_assumptions.py` / `trading_agent_capability.py` (verified directly, 2026-07-27) all still read as empty in
+their own docstrings despite `VENUE_ORDER_SEMANTICS` / `SIM_ASSUMPTIONS_REGISTRY` / `TRADING_AGENT_CAPABILITIES` each
+carrying real per-venue/per-archetype entries, pre-existing passing tests in `tests/unit/test_capability_manifest.py`,
+and no design work remaining. **Before implementing any of 113/117/119 from scratch:
+`git log --follow -- unified_api_contracts/internal/architecture_v2/<file>.py` first** — if the latest commit is
+`5e7d0685` (or a later backfill), the real work is (a) verify the registry's actual population against the todo's ask
+(it likely already matches — that is what happened for Collateral/Fees/Fund-structures), (b) fix the stale docstring,
+(c) flip the checkbox with the evidence, same as this entry's own todo 115 resolution above. Not fixed here (scope
+discipline — one todo per dispatch, avoid same-file collision with whichever slot picks up 113/117/119 next); flagging
+so that dispatch goes straight to the fix instead of re-deriving this from scratch.
 
 ### 2026-06-11 — capability-manifest v1 quantified the gap surface (exporter, slot-4)
 
