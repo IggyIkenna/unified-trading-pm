@@ -128,9 +128,19 @@ and final verify/reconcile.
       `uv venv .venv && UV_PROJECT_ENVIRONMENT=.venv uv sync     --frozen` in this slot's deployment-service clone (an
       environment/local-venv fix, not a code change — no commit needed). Manifest SHAs verified post-upload via
       `gcloud storage cat`.
-- [ ] 2. [DATA] P0. VERIFY on `-test-` via `/data-pipeline-check-mdps` (force+skip+canonical legs) that the writer now
-      emits the canonical shape (`instrument_type=` present, SOURCE `data_type`, path==manifest). **THIS IS THE GATE
-      before any prod-data executor** — do not start todo 5+ before this passes. (RESUME ORDER step 4b.)
+- [x] ✅ 2. [DATA] P0. VERIFY on `-test-` via `/data-pipeline-check-mdps` (force+skip+canonical legs) that the writer
+      now emits the canonical shape (`instrument_type=` present, SOURCE `data_type`, path==manifest). **THIS IS THE GATE
+      before any prod-data executor** — do not start todo 5+ before this passes. (RESUME ORDER step 4b.) **RE-VERIFIED
+      2026-07-27 (slot-4, this closure):** this exact gate already ran and PASSED 2026-07-21 per
+      `issues/candle_feature_canonical_path_divergence_2026_07_20.md`'s Progress Log (`mdps@752eaff` writer +
+      `mdps@2d720b4` manifest-source fix, real GCS object ground-truthed to the LOCKED shape). Confirmed today the
+      shipped SHAs are still ancestors of LDR tip (no regression/revert since) AND re-checked the SAME `-test-` shard
+      used for that original gate —
+      `gs://market-data-tick-cefi-test-.../processed_candles/by_date/day=2026-06-27/     pipeline_mode=batch_tardis/timeframe=15m/data_type=trades/instrument_type=PERPETUAL/venue=DERIBIT/...parquet`
+      — still carries the exact LOCKED canonical shape live. See the "BIG FINDING" Progress Log entry below: the sibling
+      issue doc's Progress Log shows the ENTIRE P5-P8 migration (todos 3-15 below) also already executed + independently
+      verified clean 2026-07-21→23, one day BEFORE this plan was split out 2026-07-24 carrying a stale pre-completion
+      todo snapshot.
 - [ ] 3. [DATA] P0. VERIFY readers dual-read correctly (features-service delta_one + volatility, unified-trading-api
       `batch_candles.py`, MDPS `build_continuous_engine.py`) against both the canonical and legacy-flat prefixes via
       `candle_read_prefixes`.
@@ -172,6 +182,40 @@ and final verify/reconcile.
       both together, don't duplicate the fix).
 
 ## Progress Log
+
+### 2026-07-27 (slot-4) — 🔴 BIG FINDING: this plan's todos 3-15 likely duplicate ALREADY-COMPLETED work
+
+While closing todo 2 (dispatched task `candle_canonical_path_migration_execution-002`), found that
+`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`'s own Progress Log documents the **entire
+P5-P8 migration** (todos 5-15 below: executor build, drain+snapshot, per-AG SPOT `--apply` for all 4 asset groups,
+verify/reconcile) as **already executed and independently verified clean on 2026-07-21 through 2026-07-23** — that is
+BEFORE this plan (`candle_canonical_path_migration_execution_2026_07_24.md`) was split out on 2026-07-24. The split
+appears to have carried forward a **stale pre-completion snapshot** of the todo list rather than the post-completion
+state.
+
+**Evidence gathered this session** (2026-07-27, read-only, no VM launches, no prod writes):
+
+- `mdps@752eaff` (writer single-derivation), `mdps@2d720b4` (manifest source-key fix), `mdps@6ce1a25` (P5 migration
+  executor) all verified as real commits, ancestors of current LDR tip — nothing reverted since.
+- Live `gcloud storage ls -r` on the SAME `-test-` shard the original 2026-07-21 gate used
+  (`market-data-tick-cefi-test-.../processed_candles/by_date/day=2026-06-27/pipeline_mode=batch_tardis/timeframe=15m/ data_type=trades/instrument_type=PERPETUAL/venue=DERIBIT/`)
+  confirms the LOCKED canonical shape is still live today.
+- Live spot-check of PROD `processed_candles/by_date/` on a recent day for **all 4 asset groups** (cefi
+  `day=2026-07-21`, defi `day=2026-07-26`, tradfi `day=2026-07-22`, prediction `day=2026-01-14`) confirms EVERY one
+  carries the canonical `pipeline_mode=/timeframe=/data_type=/instrument_type=/venue=` shape in PROD right now —
+  corroborating the sibling doc's "P7 per-AG SPOT migration apply, ALL 4 asset groups COMPLETE" claim (defi 1,131,814
+  objects, prediction 1,165,459, cefi 940,606, tradfi 7,646,831 — per that doc's 2026-07-22/23 entries).
+
+**Recommendation (NOT unilaterally actioned — outside this session's assigned scope of todo 2 only):** before AO
+dispatches todos 4-15 to another slot (each of which would launch a real VM fleet — todo 12/14 alone spec "~40 VMs ×
+~120 concurrent"), main/operator should reconcile this plan against
+`issues/candle_feature_canonical_path_divergence_2026_07_20.md`'s Progress Log and flip/close the ones that duplicate
+already-completed work. Leaving them open risks a slot agent actually re-launching a ~40-VM SPOT migration fleet against
+an already-migrated corpus — safe (idempotent) but a real, avoidable cost + multi-hour waste. Genuinely open residual
+items from the sibling doc (TRADFI's ~7.1M quarantined objects = its todo 3; CEFI's 149-object residual = its todo 19)
+are NOT duplicated by this plan's todo list and should stay tracked wherever they already are.
+
+---
 
 > Everything below this line was moved **verbatim** from `/plans/active/data_pipeline_check_mdps_features_2026_07_20.md`
 > (its "2026-07-21 — OPTION-A MIGRATION SCOPED" and "RESUMPTION STATE 2026-07-21" sections) on 2026-07-24, as part of
