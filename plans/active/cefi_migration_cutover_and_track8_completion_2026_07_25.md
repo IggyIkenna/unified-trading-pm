@@ -925,3 +925,9 @@ every todo executes an already-decided spec from the parent doc.
   genuine STALL verdict), `escalation.py::_recover_stalled_vm()`, and `relaunch_stalled_vm.py`. 12 new tests, full QG
   forced-fresh (bypassing the green content-sentinel via `QG_SENTINEL_DISABLE=true` to get a genuine re-run, not a skip)
   — 2889 passed, 0 failed. Shipped via quickmerge (code, not docs) — `02ac568` on `live-defi-rollout`, `ahead=0`.
+
+- **2026-07-27T~14:10Z (scheduled check-in) — 12/42 shards still RUNNING** (`cs10-3e/4b/5d`, `cs3-2d`, `cs4-3d`,
+  `cs6-2d`, `cs7-4d-r2/5f`, `cs8-3f/6f`, `cs9-1d/2e`). **31/42 clean-complete** (3 more since the last snapshot:
+  `cs5-1d`, `cs7-3d`, `cs9-4e`, all confirmed `EXIT_STATUS=0`). No new casualties. `cs7-4d-r2` (the DERIBIT-excluded
+  retry) healthy at 54,600/128,129 files (42.6%), steady ~8.3 files/sec, checkpoint still writing. Nothing to relaunch
+  this cycle.
