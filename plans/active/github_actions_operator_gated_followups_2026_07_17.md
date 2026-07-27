@@ -568,7 +568,14 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
 > the box for every other repo/job sharing it. Doing this "safely" means building fully ephemeral, zero-ambient-
 > credential, per-job sandboxes (torn down after every run) — a real infra project shared by all ~25 repos, not a
 > `runs-on:` flip; one misconfiguration reopens the hole fleet-wide. **Not started, not recommended by default** — this
-> needs an explicit operator call, weighing the real $ upside against a real security posture change.
+> needs an explicit operator call, weighing the real $ upside against a real security posture change. **This is not a
+> hypothetical: verified live 2026-07-27 that the actual ambient identity on this host is account-wide
+> S3/RDS/ECS/DynamoDB `*FullAccess` plus a `self-manage-own-policies` privilege-escalation primitive (any process on the
+> box can attach `AdministratorAccess` to itself) — filed as its own P0, see
+> `plans/active/issues/orchestrator_vm_aws_role_overprivileged_self_escalating_2026_07_27.md`. This is a pre-existing
+> exposure for every self-hosted CI job running there TODAY, not created by moving quality-gates-v2 — but it means the
+> "ambient credentials" risk above is not theoretical, and fixing the IAM scope (that issue's own recommendation) is a
+> prerequisite to this decision looking any different than "full AWS account compromise on one bad test run."**
 
 - [ ] [VERIFY] P1. Extend `classify-glue-workflows.sh`'s MOVE/STAY audit to the non-PM fleet: for each of the ~24 repos,
       inventory the fleet-template copies (`main-backmerge-to-ldr`, `image-build-validate`/`image-build-gate` — **this
@@ -578,11 +585,41 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
       PM's 37 movers were classified — do not assume the PM split transfers unchanged for the REST of this list; some
       are already `KEEP-T`/ `KEEP-R` by design (fleet templates, cross-repo reusables) and need the runner-registration
       fix below before they can move at all.
-- [ ] [INFRA] P1. Register additional self-hosted runner **processes** on existing VM capacity (planning VM /
-      slot-worker VMs already have headroom) — one (or a few) scoped **per target repo** via that repo's own repo-level
-      runner registration token. This does NOT require an org/GitHub-plan change or a repo-ownership migration (that was
-      considered and is a separate, much higher-risk option — see the note below); it only requires running additional
-      runner-agent processes on hardware that already exists, each bound to one repo.
+- [ ] [INFRA] P1. Register additional self-hosted runner **processes** on existing VM capacity — **CORRECTED 2026-07-27:
+      this VM does NOT have headroom, verified live via SSM** (`aws ssm send-command` on `i-0c9b283b31d6b5ca7`,
+      `agent-orchestrator-vm-1`, the box the 8 existing glue-runners already live on): load average **42.2/28.4/26.7 on
+      8 vCPUs** (~5x sustained oversubscription, not a spike), **5.7GB swap in active use**, top processes a mix of
+      heavy python jobs and multiple long-running `claude` slot-worker sessions (some 1-2.5h elapsed) already contending
+      for the same 8 cores. There is only ONE shared box in this architecture (single-VM design, no separate per-slot
+      VMs — the earlier "slot-worker VMs already have headroom" text was an unverified assumption, now corrected). The
+      existing glue jobs tolerate this fine because they're thin/I/O-bound (8-13s runs); this does NOT extend to
+      `quality-gates-v2` or any other CPU-bound real-compute workload — dropping ~9 real CPU-minutes/run onto a box
+      already at 5x oversubscription would plausibly turn that into 30-45+ min wall-clock AND slow down every other
+      agent session sharing the box, directly working against the "don't slow down promotions" goal, independent of the
+      IAM security question already filed.
+
+      **Financial verdict (added 2026-07-27, real AWS pricing, ap-northeast-1) — the upgrade costs more than the
+          savings it's chasing.** `m8i` has no 12-vCPU size (jumps 8→16→32→48→64); at 16 vCPU the oversubscription ratio is
+          still ~2.6x (42÷16), before any new load — genuinely fixing today's contention plus fleet-wide
+          `quality-gates-v2` needs ~32-48 vCPUs. Real pricing: current `m8i.2xlarge` (8vCPU/32GB) = **$399/mo** (730hr).
+          `c8i` (compute-optimized, half the RAM/vCPU of `m8i` — the right family once RAM isn't the bottleneck, per the
+          dashboard's 33% RAM / 94% CPU split) at 32 vCPU (`c8i.8xlarge`, 64GB) = **$1,378/mo, a +$979/mo delta** — the
+          smallest size that plausibly handles both today's contention AND new load. The theoretical CEILING on GHA
+          savings (quality-gates-v2 ≈ 90% of non-PM's ~$693/mo = **~$623/mo max**, moving it to $0) is LESS than that
+          delta. Even `c8i.4xlarge` (16vCPU, +$290/mo, cheaper than the ceiling) is likely under-provisioned per the ratio
+          math above, so it wouldn't actually fix the slowdown. **No size in this family progression makes the move pay
+          for itself** — a third, independent reason (with IAM-accepted-risk and the contention finding) not to self-host
+          `quality-gates-v2`. EBS note: current disk is `gp3` 500GB ($0.096/GB-mo, Tokyo) = $48/mo; 400GB would save
+          $9.60/mo but EBS can't shrink live (snapshot + new-volume migration, not a resize). `c8i` vs staying in `m8i` for
+          the SAME vCPU count is a real, worthwhile saving independent of this decision (e.g. `c8i.8xlarge` is ~$219/mo
+          cheaper than `m8i.8xlarge` for identical 32 vCPU) if this VM is ever resized for any other reason.
+
+          **Phase 7's scope (thin push/repository_dispatch glue only —
+          main-backmerge-to-ldr, image-build-gate's polling wrapper, update-dependency-version, etc.) is still fine to add
+          here** — none of it is CPU-heavy. A dedicated, appropriately-sized runner host (separate from the orchestrator
+          box) would be needed before any CPU-heavy workload could safely self-host, which is its own cost to weigh against
+          the savings.
+
 - [ ] [INFRA] P1. Canary the flip on ONE repo first (same discipline as the original PM migration: edit the template +
       `rollout-workflow-templates.sh`, prove on one caller, only then fan out) — start with whichever of
       features-service/agent-orchestrator has the simplest workflow surface, verify its promote gate still resolves

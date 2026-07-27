@@ -60,10 +60,10 @@ epic._
 | [`sports_consolidated_closeout_2026_07_19`](./sports_consolidated_closeout_2026_07_19.md)                                                                                 | master           | infra     | 33/68      | 49%          | 18.9     | —        |
 | [`deployment_registry_firestore_migration_2026_07_14`](./deployment_registry_firestore_migration_2026_07_14.md)                                                           | master           | infra     | —          | —            | 13.0     | —        |
 | [`crypto_alpha_research_2026_07_24`](./crypto_alpha_research_2026_07_24.md)                                                                                               | master           | research  | 11/33      | 33%          | 12.0     | —        |
+| [`citadel_paper_batch_live_reconciliation_2026_06_19`](./citadel_paper_batch_live_reconciliation_2026_06_19.md)                                                           | master           | infra     | 36/50      | 72%          | 10.6     | —        |
 | [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](./na_docs_validity_and_ao_eligibility_audit_2026_07_26.md)                                                       | master           | research  | 6/21       | 29%          | 10.3     | —        |
 | [`cross_cutting_consolidated_closeout_2026_07_25`](./cross_cutting_consolidated_closeout_2026_07_25.md)                                                                   | master           | infra     | —          | —            | 9.6      | —        |
 | [`prediction_consolidated_closeout_2026_07_18`](./prediction_consolidated_closeout_2026_07_18.md)                                                                         | master           | infra     | —          | —            | 9.6      | —        |
-| [`citadel_paper_batch_live_reconciliation_2026_06_19`](./citadel_paper_batch_live_reconciliation_2026_06_19.md)                                                           | master           | infra     | 36/47      | 77%          | 8.9      | —        |
 | [`org_migration_to_odumresearch_2026_06_07`](./org_migration_to_odumresearch_2026_06_07.md)                                                                               | master           | infra     | 0/27       | 0%           | 8.0      | —        |
 | [`defi_consolidated_closeout_2026_07_18`](./defi_consolidated_closeout_2026_07_18.md)                                                                                     | master           | infra     | 6/25       | 24%          | 7.3      | —        |
 | [`deployment_ui_observability_ux_tracker_2026_07_17`](./deployment_ui_observability_ux_tracker_2026_07_17.md)                                                             | master           | design    | 2/35       | 6%           | 6.8      | —        |
@@ -317,7 +317,7 @@ epic._
 | [`deployment_registry_firestore_p0_unblock_2026_07_14`](./deployment_registry_firestore_p0_unblock_2026_07_14.md)                                                         | master           | infra     | 16/16      | 100%         | 0.0      | —        |
 | [`infra_capture_and_devops_leftovers_finalize_2026_07_25`](./infra_capture_and_devops_leftovers_finalize_2026_07_25.md)                                                   | master           | infra     | 1/1        | 100%         | 0.0      | —        |
 | [`is_daily_enum_capture_heal_2026_07_07`](./is_daily_enum_capture_heal_2026_07_07.md)                                                                                     | master           | infra     | 3/3        | 100%         | 0.0      | —        |
-| **TOTAL** (261 plans)                                                                                                                                                     | 0 orphans, 0 TBD | —         | —          | **44% done** | **449**  | —        |
+| **TOTAL** (261 plans)                                                                                                                                                     | 0 orphans, 0 TBD | —         | —          | **44% done** | **451**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 

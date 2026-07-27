@@ -156,7 +156,7 @@ owner** (this run corrected the "(active)" mislabel in batch3 itself; the owners
 
 ## 6. `phantom_captures_tradfi_2026_06_28.md` — tagged `cross-cutting`, content is 100% tradfi [RECOMMEND OPTION A]
 
-**The two sides.** `plans/active/issues/phantom_captures_tradfi_2026_06_28.md:7` declares
+**The two sides.** `plans/archive/issues/phantom_captures_tradfi_2026_06_28.md:7` declares
 `asset_group: [cross-cutting]`, yet every fact in the doc is tradfi-only — its own summary names
 `gcp://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, its provenance line is
 `reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, and its venue table is CBOE/NYSE/CME/ICE/

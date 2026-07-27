@@ -1,5 +1,10 @@
 # Parallel Execution Guide
 
+> **SUPERSEDED (archived 2026-07-27).** Documents a 4-agent-cap Cursor-CLI bash-script parallel-dispatch pattern
+> (`run-parallel-agents.sh`, `/tmp` log monitoring). Current parallel-agent model is per-slot git worktrees + Claude
+> Code CLI sub-agents (CLAUDE.md 'Agent behavior': max 10 parallel agents) via agent-orchestrator role-based dispatch
+> (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`) — a different cap and a different mechanism.
+
 ## 🚀 The Big Improvement (v10)
 
 **Before**: Sequential, limited context **After**: Parallel (4x), full workspace context

@@ -181,14 +181,44 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       Progress Log), 5 archivable_now candidates found and NOT yet archived (new follow-up todo below), and one real
       corpus-quality finding (cross-cutting membership over-broad for ao/ci content sharing `infrastructure_master`)
       logged as a tooling follow-up, not a data bug.
-- [ ] [REVIEW] P2. **Archive the 5 `archivable_now` docs found by the fresh audit** (not executed this pass — a distinct
-      action needing its own 6-step-ritual verification, see codex `/codex/11-project-management/`):
-      `issues/cefi_perp_rename_donewhen_flawed_and_launcher_missing_2026_07_27.md` (superseded by
-      `cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s subsequent real execution),
-      `issues/defi_lst_rates_migrated_marker_unfiltered_live_reader_2026_07_25.md`,
-      `issues/finalize_plan_coverage_regression_sports_derived_features_2026_07_27.md`,
-      `github_actions_ci_cost_reduction_2026_07_15.md`, `github_actions_cost_reduction_options_analysis_2026_07_15.md` —
-      verify each agent's archivability reasoning still holds (re-read, don't trust blind) before archiving.
+- [x] [REVIEW] P2. **DONE 2026-07-27 — 35 of the 37 archivable_now/ARCHIVABLE candidates actually archived**
+      (`unified-trading-pm@bec54efeb` content + `@42d570211` cleanup, see below), per issue-doc-lifecycle.md (33 issue
+      docs: status->resolved/superseded + resolved_by evidence + banner + git mv to `plans/archive/issues/`) and the
+      fuller plan-archival ritual (2 plan docs: `sports_legacy_bucket_cutover_2026_07_16.md`,
+      `github_actions_cost_reduction_options_analysis_2026_07_15.md` -> `plans/archive/2026_07/`, referrers repointed).
+      **2 of the original 37 candidates were NOT archived on re-verification** (the mandated "don't trust blind" re-read
+      caught real problems): `github_actions_ci_cost_reduction_2026_07_15.md`'s own text explicitly says it's "kept only
+      so existing cross-references still resolve" — a deliberate permanent redirect stub, not an archival candidate
+      (overrides both this session's and the PRIOR session's `/ag-closeout-audit` classification of it);
+      `ao_worker_session_continuity_and_resume_threshold_2026_07_27.md` was found already independently archived by a
+      real concurrent AO worker before I got to it — confirms independent convergence on the same verdict. A
+      concurrent-agent lint violation (`check_na_corpus_ratchet.py`, part of a live in-flight `na-eligibility-audit`
+      skill build, since shipped `unified-trading-pm@f355c0b2a`) blocked the tree-wide QG scan; fixed 2 mechanical
+      issues (line-length, import-at-top) without touching that agent's logic or staging its file. The archival also
+      broke 26 structured referrer links across 8 consolidated-closeout/sources hub docs
+      (`run_validators.py --scope     all` catches this; `check_reference_paths.py` did not — different validators,
+      different scope) — all repointed to the new archive paths in the same commit. **Real defect found + fixed
+      post-land**: `bec54efeb` landed with the delete-side of all 35 renames silently dropped (repeated stash-restore
+      cycles across 10 retry attempts on this one commit — an exceptionally busy branch that night — eventually lost the
+      staged deletion half while the archive/-side content landed correctly), leaving 35 stale duplicate copies live in
+      `plans/active/` alongside the correct `plans/archive/` copies. Caught by directly diffing `git show <sha> --stat`
+      against expectations (a `git log` success message and clean `rev-list` alone were NOT sufficient evidence — this
+      is now the standing verification bar for every future quickmerge on a busy branch: check the actual committed
+      diff, not just the exit code). 31 of the 35 duplicates fixed via a clean pure-deletion follow-up
+      (`unified-trading-pm@42d570211`). **4 duplicates deliberately left unresolved**:
+      `manifest_hygiene_red_2026_06_27.md`, `manifest_hygiene_red_2026_06_29.md`,
+      `mtds_plan_reconciliation_2026_06_29.md`, `phantom_captures_tradfi_2026_06_28.md` carry a genuine pre-existing
+      `locked_by: live-defi-rollout` in their ORIGINAL frontmatter (confirmed real for these 4 specifically, not the
+      wider corpus-wide boilerplate coincidence most `locked_by: live-defi-rollout` values are — the
+      locked-plan-deletion gate correctly blocked their removal). Per CLAUDE.md, unlocking requires an explicit operator
+      `[unlock-plan]` — never autonomous — so both copies (stale `plans/active/issues/` + correct
+      `plans/archive/issues/`) currently coexist for these 4 pending that decision. New follow-up todo below.
+- [ ] [OPERATOR] P2. **4 duplicate doc pairs need an explicit `[unlock-plan]` decision before the stale
+      `plans/active/issues/` copy can be removed** (the `plans/archive/issues/` copy is already correct and complete —
+      this is purely a leftover-duplicate cleanup, not new content risk): `manifest_hygiene_red_2026_06_27.md`,
+      `manifest_hygiene_red_2026_06_29.md`, `mtds_plan_reconciliation_2026_06_29.md`,
+      `phantom_captures_tradfi_2026_06_28.md`. Once approved, `git rm` the 4 stale `plans/active/issues/` copies with
+      `[unlock-plan]` in the commit message.
 - [ ] [SCRIPT] P3. **Widen `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership rule** — currently
       `parent_epic in DATA_EPICS` alone lets ci/infra-scoped docs sharing `infrastructure_master` leak into
       cross-cutting's candidate pool (confirmed: 37 of 40 cross-cutting candidates in the fresh run were genuinely
@@ -196,6 +226,51 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       pre-filter itself over-includes for this one tranche pairing). Fix: for `cross-cutting`, additionally require the
       doc is NOT already cited in `ci`/`infra`/`ao`'s own covering docs before counting it as a cross-cutting candidate
       (mirrors the `peer_cited` exclusion already correct in `generate_na_doc_tranche_inventory.py`).
+- [ ] [REVIEW] P2. **Convert 43 confirmed prose-trap docs to real checkboxes, then re-judge AO-eligibility per item** —
+      the zero-open-todo classification pass (99 docs, 7 agents) found 8 genuine `PERMANENT_REFERENCE` docs (correct
+      as-is, no action) and 16 genuine `KEEP_NA_VALID` (correct as-is), but also 24 `RECLASSIFY_CANDIDATE` (real,
+      bounded, worker-determinable remaining work stated only as numbered prose, never given a checkbox — a stronger
+      signal than plain conversion) and 19 `NEEDS_CHECKBOX_CONVERSION` (real remaining work in prose, AO-eligibility not
+      yet assessed). Neither bucket was executed this pass — converting prose to checkboxes is real editorial judgment
+      per doc (exact wording, `[TAG] P#.`, done-when clause), the same care applied to the 6 orphan candidates above,
+      not a mechanical batch op. RECLASSIFY_CANDIDATE (24):
+      `ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26`,
+      `ao_m3_verify_plan_flip_blind_to_archival_rename_2026_07_26`,
+      `blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18`,
+      `cefi_available_at_wallclock_despite_deterministic_row_timestamp_2026_07_24`,
+      `cefi_backfill_per_day_catalogue_reload_2026_07_20`, `defi_citation_ratchet_tabs_path_exclusion_bug_2026_07_21`,
+      `defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20`,
+      `defi_venue_phase_live_definition_contradiction_2026_07_22`,
+      `digest_drift_sweep_silent_noop_github_token_scope_2026_07_16`, `fixtures_manifest_legacy_backfill_2026_07_24`,
+      `host_root_disk_full_transient_2026_07_13`, `kalshi_live_capture_regression_and_drift_2026_07_13`,
+      `lst_exchange_rate_data_availability_2026_07_21`, `pipeline_smoke_sweep_findings_2026_07_20`,
+      `recon_bucket_missing_nightly_recon_failing_2026_07_13`, `rotate_exchange_keys_stale_venue_registry_2026_07_23`,
+      `silent_wrong_answer_audit_candidates_2026_07_20`,
+      `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26`,
+      `sports_derived_features_fabricated_corpus_scope_2026_07_20`, `sports_league_id_namespace_migration_2026_07_20`,
+      `sports_odds_team_name_alias_gap_south_america_2026_07_09`,
+      `sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20`,
+      `tradfi_manifest_writer_legacy_id_regression_2026_07_21`,
+      `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15` (all `plans/active/issues/`).
+      NEEDS_CHECKBOX_CONVERSION (19): `defi_venue_lst_rates_residual_2026_07_24` (`plans/active/`),
+      `aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26`,
+      `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16`,
+      `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24`,
+      `cross_cutting_manifest_canonicalisation_findings_2026_07_11`,
+      `dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21`,
+      `defi_catalog_engine_config_key_contract_drift_2026_07_23`,
+      `defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25`,
+      `defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23`,
+      `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16`,
+      `e2e_testing_collateral_validation_dead_import_2026_07_23`,
+      `features_onchain_featureless_shards_and_vocabulary_split_2026_07_20`, `human_led_audit_pool_2026_05_21`,
+      `mtds_backfill_vm_startup_oom_rc137_2026_07_14`,
+      `mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23`,
+      `onchain_manifest_dishonest_and_recompute_blocked_2026_07_21`, `phantom_audit_estate_coverage_gap_2026_07_10`,
+      `plan_issue_epic_consolidation_2026_06_30`,
+      `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25` (all `plans/active/issues/` unless
+      noted). Full per-doc reasoning in the workflow journal (`wf_f263f118-37a`, `whqfflv82.output`) — do not re-derive
+      verdicts, re-read each doc against its own cited evidence before converting.
 
 ## Phase 4 — Final QA on everything this plan touched
 

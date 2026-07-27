@@ -1,5 +1,10 @@
 # Parallel sports / manifest program — handover (coordinator SSOT)
 
+> **SUPERSEDED (archived 2026-07-27).** This 2026-04-21 parallel-agent wave's gate (P9
+> `sports_manifest_shard_migration_cleanup`) and its follow-on waves are superseded by
+> `plans/active/sports_consolidated_closeout_2026_07_19.md`, which the codex SSOT
+> (`/codex/02-data/sports-scheduling-and-sharding.md`) now points to instead.
+
 Generated during orchestration. **Plan file paths:** `unified-trading-pm/plans/active/*_2026_04_21.md`. **Codex:**
 `unified-trading-pm/codex/02-data/sports-scheduling-and-sharding.md` §12.
 

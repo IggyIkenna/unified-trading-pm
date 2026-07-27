@@ -81,6 +81,13 @@ resolved_by: ikenna (operator, authenticated as ikenna@odum-research.com)
 depends_on: []
 ---
 
+> **🟢 RESOLVED 2026-07-27** — rotated `GCP_SA_KEY` to a fresh key for
+> `github-deploy@central-element-323112.iam.gserviceaccount.com` (already correctly scoped: `artifactregistry.writer` +
+> `cloudbuild.builds.editor`, nothing more); verified via a real rerun (`gh run rerun 30263923680` → `success`, both
+> WIF-preferred and SA-key-fallback auth steps green). Fleet-wide follow-up sweep the same day confirmed every other
+> repo's `image-build-gate` on its next promote cycle also went green off the same underlying credential path. See §3
+> Progress Log for full detail (IAM grants, WIF note, AWS scope check).
+
 # agent-orchestrator image-build-gate broken — GCP_SA_KEY empty + WIF never provisioned
 
 ## 1. Evidence

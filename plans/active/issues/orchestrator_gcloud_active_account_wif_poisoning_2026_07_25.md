@@ -31,7 +31,7 @@ tags: [gcp, gcloud, workload-identity-federation, self-hosted-runner, credential
 related:
   [
     /plans/archive/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md,
-    /plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md,
+    /plans/archive/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md,
     /codex/07-security/self-hosted-runner-security-posture.md,
     /codex/07-security/gha-wif-migration.md,
   ]

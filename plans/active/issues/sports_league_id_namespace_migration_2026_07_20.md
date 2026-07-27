@@ -647,6 +647,6 @@ The 2026-07-22 manifest swap (`manifest_swap_2026_07_22.py`, raw `TRADES`/`batch
 silently reverted (260,298 stale raw rows back, byte-identical to pre-swap) — its CAS write predated the TOCTOU
 consolidator-race fix (`unified-trading-library@14301571`, 2026-07-24) by 2 days. Re-applied and verified stable across
 5 consolidator cycles (~7.5 min). Full detail:
-`/plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. **Still genuinely outstanding**:
+`/plans/archive/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. **Still genuinely outstanding**:
 `odds_horizon_bucket` (109,312 objects, needs MDPS `reprocess_sports_odds.py` Step-7) + `batch_footystats` (16,970
 objects, needs its own copy+swap pass) + the coverage-registry refresh + the human-gated final delete.

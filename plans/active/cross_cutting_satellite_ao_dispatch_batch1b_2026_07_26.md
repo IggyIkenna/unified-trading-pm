@@ -155,7 +155,7 @@ drift_direction: advance-code
       consumers — downstream_services/cefi_manifest/defi_manifest canonicalisation — are already archived/superseded;
       skip them). Explicitly OUT OF SCOPE: **M-C7** (warm-GCS-parts live-persistence sink) — real new-code architecture
       work the doc states is "decided, NOT yet built — awaiting greenlight to implement"; that stays a separate
-      operator-gated item, not bundled here. Source: `plans/active/issues/mtds_plan_reconciliation_2026_06_29.md`
+      operator-gated item, not bundled here. Source: `plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md`
       (Section A ledger, Section F M-C1/M-C3/M-C4/M-C10, Progress Log). Done when: (a)-(e) each land with a
       commit/evidence citation in the doc's Progress Log, the M7 ledger flip + codex text fix are committed, and the
       doc's `status:` is reassessed (M-C7 remains explicitly open/deferred, not silently dropped).

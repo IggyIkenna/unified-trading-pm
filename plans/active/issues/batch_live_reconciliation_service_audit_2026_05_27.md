@@ -365,22 +365,29 @@ leave). The strategy-service surface is the more complete one and is real today;
 
 ## 6. Gaps / undecided / incomplete (tracked)
 
-- G1 (P1) Resolution API mock-backed; not reading Stage-5 summaries; in-memory resolution store. [→§7.1-4]
+- G1 (P1) Resolution API mock-backed; not reading Stage-5 summaries; in-memory resolution store. **Still genuinely open
+  as of 2026-07-27** — no successor plan tracks this; rehomed as an explicit todo in
+  `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (the live BLRS/determinism-spine plan). A real P1
+  pre-F21-activation blocker: wire `resolution_api.py` to read Stage-5 `summary_*.json`/`index.json` instead of
+  returning hardcoded mock breaks. [→§7.1-4]
 - G2 ✅ DONE (BLRS@07222f6) `stage1` `latency_delta_ms` now a real median |batch−live| `metadata.inference_duration_ms`
   over matched keys + `latency_samples` gate (no-data ≠ pass); 2 unit tests; QG green. [→§7.1-5]
-- G3 (P2) stage4 agent dispatch to trading-agent-service is markdown-only. [→§7.1-6]
-- G4 (P2) `soak_mode` unbuilt. **Re-triage 2026-05-27: cross-repo.** The BLRS config flag alone is inert — the actual
-  CRITICAL→PagerDuty suppression lives in alerting-service's `recon_drift_event_handler`. BLRS is staging-only (F-21
-  gated) so this is low-urgency. Producer-side flag + alerting-side suppression should land together → grouped with the
-  alerting-service recon work (G12-adjacent). [→§7.1-2]
-- G5 (P2) `threshold_distribution` calibration analyzer unbuilt. **Re-triage 2026-05-27:** the **bps** distribution is
-  self-doable now (the bps gate is live; stage3 emits `alpha_pnl_gap_bps_{archetype}`). The **drawdown_pct + fill_rate**
-  distributions depend on D3 (those gates aren't built → routed to Ikenna). Plan: build the bps analyzer now, extend for
-  drawdown/fill once D3 lands. [→§7.1-3, §7.2 D3]
-- G6 (P1) ✅ decision resolved — see §7.2 D3 (was: "(P1/❓)" — corrected 2026-07-14, doc-reconciliation verify-rerun-2
-  finding 18: §7.2 D3 is stamped "✅ SEE BANNER — DECIDED FINAL 2026-06-01", including a 2026-07-12 correction pass,
-  that was never mirrored back to this ❓ marker) drawdown_pct + fill_rate_min green gates unimplemented (no
-  `stage4_risk_recon`) — build now per D3. [→§7.2 D3]
+- G3 (P2) stage4 agent dispatch to trading-agent-service is markdown-only. **Still genuinely open as of 2026-07-27** —
+  no successor plan tracks this; rehomed as an explicit todo in
+  `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`. [→§7.1-6]
+- G4 ✅ DONE (BLRS@43e88ea, shipped via `issue_docs_remediation_sweep_2026_06_02.md` §D3/G4 — corrected 2026-07-27, this
+  doc previously re-litigated it as open for 7 weeks after it shipped) `soak_mode` built: producer-side
+  `ReconConfig.soak_mode` flag + alerting-service `recon_drift_event_handler` CRITICAL→PagerDuty suppression landed
+  together.
+- G5 ✅ DONE (BLRS@cce28d1, shipped via `issue_docs_remediation_sweep_2026_06_02.md` §G5 — corrected 2026-07-27)
+  `threshold_distribution` calibration analyzer built for the bps distribution (stage3 `alpha_pnl_gap_bps_{archetype}`).
+  drawdown_pct/fill_rate extension depends on D3's gates (see G6 — also shipped @43e88ea) — verify the analyzer covers
+  those two distributions too before fully closing; if not, track the extension in
+  `citadel_paper_batch_live_reconciliation_2026_06_19.md`.
+- G6 ✅ DONE (BLRS@43e88ea, shipped via `issue_docs_remediation_sweep_2026_06_02.md` §D3 — corrected 2026-07-27, was
+  stamped "decision resolved" on 2026-07-14 but the description below was never updated to reflect the gate was actually
+  BUILT, not just decided) drawdown_pct + fill_rate_min green gates (was: "unimplemented — build now per D3") — build
+  now per D3. [→§7.2 D3]
 - G7 ✅ decision resolved — see §7.2 D1 (was: "(❓)" — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding
   18: §7.2 D1 is stamped "✅ DECIDED 2026-05-27 = (A)" and was never mirrored back to this ❓ marker) Live recon
   machinery codex assigns to BLRS lives in 3 other repos; BLRS is T+1-only. [→§7.2 D1, §9.1]
@@ -391,7 +398,9 @@ leave). The strategy-service surface is the more complete one and is real today;
 - G9 ✅ RESOLVED (no-op) `AUTO_PAUSE_LIVE` is a **documented routing action** in the codex failure-routing closed set
   (`reconciliation-resolution.md`: alert / auto-pause-live / auto-demote-to-paper) — intentionally defined ahead of
   wiring, not dead code. Keep as-is. (Enum members don't trip unused-symbol lints.)
-- G10 (P3) UI→resolution-API wiring (`unified-trading-system-ui` use-reports.ts hooks) unverified.
+- G10 (P3) UI→resolution-API wiring (`unified-trading-system-ui` use-reports.ts hooks) unverified. **Still genuinely
+  open as of 2026-07-27** — rehomed as a P3 todo in `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`
+  alongside G1/G3; naturally gated behind G1 (no point verifying UI wiring against a still-mock resolution API).
 - G11 (P2) ✅ decision resolved — see §7.2 D4 (was: "(P2/❓)" — corrected 2026-07-14, doc-reconciliation verify-rerun-2
   finding 18: §7.2 D4 is stamped "✅ SEE BANNER — DECIDED FINAL 2026-06-01", including a 2026-07-12 correction pass,
   that was never mirrored back to this ❓ marker) Two `/reconciliation/resolve` APIs (BLRS mock + strategy-service real)
@@ -408,9 +417,11 @@ leave). The strategy-service surface is the more complete one and is real today;
 
 ### 7.1 ✅ Auto-decided (trivial — actioned/queued by auditor)
 
-1. **Un-defer 3-way recon in codex.** `paper-vs-live-execution-seam.md` (Reconciliation §) and
-   `reconciliation-resolution.md` (Stage DAG §) must stop calling `stage3b`/`stage3c` "DEFERRED" — they ship today.
-   Rationale: code is the truth; both files predate the implementation. _Action: codex edit (separate commit)._
+1. ✅ DONE (corrected 2026-07-27) **Un-defer 3-way recon in codex.** `paper-vs-live-execution-seam.md:132` now reads
+   "SHIPPED 2026-05-27... un-deferred per BLRS audit" — confirmed landed. `paper-vs-live-execution-seam.md`
+   (Reconciliation §) and `reconciliation-resolution.md` (Stage DAG §) must stop calling `stage3b`/`stage3c` "DEFERRED"
+   — they ship today. Rationale: code is the truth; both files predate the implementation. _Action: codex edit (separate
+   commit)._
 2. **SOAK_MODE via config not env.** When built, soak suppression must be a `ReconConfig` field (e.g.
    `soak_mode: bool`), never `os.getenv` — the codex calibration snippet shows an `os.getenv` that would violate the
    workspace ban. _Action: correct codex snippet; track build as P2._
@@ -423,8 +434,9 @@ leave). The strategy-service surface is the more complete one and is real today;
    _Action: tracked G2 (P2)._
 6. **stage4 dispatch** remains a Phase-6 stub — consistent with codex "future". Keep markdown, track dispatch as P2.
    _Action: tracked G3._
-7. **data-flow-map repo names** `trading-analytics-api`/`trading-analytics-ui` are stale → should be
-   `unified-trading-api` + `unified-trading-system-ui`. Low-pri, not BLRS-owned. _Action: note for data-flow-map owner._
+7. ✅ DONE (corrected 2026-07-27) **data-flow-map repo names** `trading-analytics-api`/`trading-analytics-ui` are stale
+   → should be `unified-trading-api` + `unified-trading-system-ui`. Confirmed fixed in `separation-of-concerns.md:89-91`
+   (REPO MERGE banner). Low-pri, not BLRS-owned. _Action: note for data-flow-map owner._
 
 ### 7.2 ❓ Needs operator input (material — see § "Decisions for you" in chat)
 

@@ -1,5 +1,9 @@
 # API Contracts Comprehensive Task List (DOs)
 
+> **ARCHIVED (2026-07-27) — implemented.** Spot-check of `unified-api-contracts` confirms the described end-state
+> (external/databento, tardis, yahoo_finance; venue error/quota/endpoint registries; protocol SDKs;
+> `SCHEMA_VERSIONS.md`) is substantially implemented in the current schema/registry corpus. No open gap surfaced.
+
 **Source:** `API_CONTRACTS_AUDIT_ADDENDUM.md` **Goal:** Fill out api-contracts to a verbose understanding of what's
 available and all possible interactions with external APIs. **Scope:** Market data, feed, orders, positions, reference
 data, exchange status, market feed status, error handling, cloud SDKs (GCP, AWS), quotas.

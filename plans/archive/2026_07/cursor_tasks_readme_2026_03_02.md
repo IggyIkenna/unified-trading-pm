@@ -1,5 +1,9 @@
 # Tasks Directory - Execute These
 
+> **SUPERSEDED (archived 2026-07-27).** Indexes `TASK_1/2/3_*.md` files that don't exist in this directory; describes a
+> 'Cursor Task tool sub-agents mandatory' workflow superseded by `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` +
+> agent-orchestrator.
+
 **Purpose**: Executable task documents that **MANDATE** sub-agent usage **For**: Sonnet 4.5 sessions (preserves context
 via sub-agents)
 

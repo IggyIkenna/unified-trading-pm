@@ -901,11 +901,33 @@ every todo executes an already-decided spec from the parent doc.
   **Committed via the pathspec form (`git commit -m "..." -- <2 files>`) after this session's own git-commit skill
   diagnosed the actual cause of ~9 consecutive "branch drift"/foreign-content collisions this cycle: a still-alive
   background sub-agent from earlier in this session (a "review role" agent, visible via `[slot-2·laptop]`-authored
-  commits with unrelated content — `codex/02-data/prediction-data-types-catalog.md`,
-  `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) sharing this SAME un-isolated working tree, not a truly
+  commits with unrelated content — `/codex/02-data/prediction-data-types-catalog.md`,
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) sharing this SAME un-isolated working tree, not a truly
   foreign concurrent slot** — both of its commits were legitimate, independently verified content (one already
   corroborated by `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`'s own Update 6), so nothing was discarded, just
   not bundled into my own commit. **Lesson for future sessions**: spawning monitoring/review sub-agents without
   `isolation: "worktree"` means they share this git tree and WILL occasionally interleave commits under the same slot
   identity — expected, not a bug, and the pathspec commit form (`git commit -m ... -- <my files>`) is the clean way
   through it instead of a stash-restore dance.
+
+- **2026-07-27T~14:15Z — operator follow-up on the "does crash resilience cover all VM runs" question, shipped
+  `deployment-service@02ac568`.** Corrected an earlier claim: `RelaunchBackfillVm` (the OOM/exit-137 actuator) itself
+  has no machine-escalation logic, but `escalation.py::_recover_backfill_vm()` ALREADY did (shipped 2026-06-23, sourced
+  from `launch_budget_registry.MEMORY_TIER_LADDER`, capped at `n2-highmem-32`/256GB — exactly matching the operator's
+  stated cap) — I had looked at the wrong abstraction layer. Two REAL gaps found and fixed this cycle: (1) a successful
+  escalated-memory OOM relaunch previously left NO human-visible trace of why the VM OOM'd in the first place
+  (`route_finding` stayed on the quiet `auto_recover` tier) — now also files an idempotent-per-(vm-prefix, day)
+  "investigate OOM root cause" issue doc, without changing the tier/paging behavior; (2) `RelaunchStalledVm` (the
+  watchdog-kill actuator) had zero checkpoint-resume logic at all, unlike `RelaunchPreemptedVm` — per operator direction
+  ("stale vms should be watchdog killed and relaunched if they weren't complete"), ported the core
+  monotonic-checkpoint-resume + force-run-no-checkpoint-pages logic (NOT the tarball-repin machinery, a separate
+  preemption-specific concern) across `heartbeat_stall_watcher.py` (reads `LAUNCH_PARAMS.json`/`PROGRESS.json` only on a
+  genuine STALL verdict), `escalation.py::_recover_stalled_vm()`, and `relaunch_stalled_vm.py`. 12 new tests, full QG
+  forced-fresh (bypassing the green content-sentinel via `QG_SENTINEL_DISABLE=true` to get a genuine re-run, not a skip)
+  — 2889 passed, 0 failed. Shipped via quickmerge (code, not docs) — `02ac568` on `live-defi-rollout`, `ahead=0`.
+
+- **2026-07-27T~14:10Z (scheduled check-in) — 12/42 shards still RUNNING** (`cs10-3e/4b/5d`, `cs3-2d`, `cs4-3d`,
+  `cs6-2d`, `cs7-4d-r2/5f`, `cs8-3f/6f`, `cs9-1d/2e`). **31/42 clean-complete** (3 more since the last snapshot:
+  `cs5-1d`, `cs7-3d`, `cs9-4e`, all confirmed `EXIT_STATUS=0`). No new casualties. `cs7-4d-r2` (the DERIBIT-excluded
+  retry) healthy at 54,600/128,129 files (42.6%), steady ~8.3 files/sec, checkpoint still writing. Nothing to relaunch
+  this cycle.

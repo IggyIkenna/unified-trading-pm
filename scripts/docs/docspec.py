@@ -43,7 +43,9 @@ DOC_TYPES = frozenset(
     }
 )
 NATURE = frozenset({"ssot", "guideline", "process", "design", "spec", "record", "notes", "issue"})
-ASSET_GROUP = frozenset({"cefi", "defi", "tradfi", "sports", "prediction", "cross-cutting", "infrastructure", "meta"})
+ASSET_GROUP = frozenset(
+    {"cefi", "defi", "tradfi", "sports", "prediction", "cross-cutting", "ao", "ci", "infrastructure", "meta"}
+)
 STAGE = frozenset({"data", "features", "strategy", "backtest", "paper", "live", "execution", "reporting", "meta"})
 SCOPE = frozenset({"engineer", "admin", "sales", "prospect", "investor"})
 PRIORITY = frozenset({"P0", "P1", "P2", "P3"})

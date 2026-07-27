@@ -1,25 +1,27 @@
 ---
 doc_type: issue
 title:
-  /data-pipeline-check-features default --timeout-sec too short for delta_one CEFI/TRADFI — orphaned duplicate VMs +
-  misleading timeout verdict
+  /data-pipeline-check-features default --timeout-sec too short for large-universe shards (CEFI:delta_one,
+  TRADFI:volatility confirmed) — orphaned duplicate VMs + misleading timeout verdict
 summary: >-
-  Running the full-matrix /data-pipeline-check-features check (day=2026-07-05) against CEFI:delta_one, the force leg's
-  VM did not emit EXIT_STATUS within the driver's default --timeout-sec=2400 (40min), even though the VM was
-  independently confirmed still healthily computing (RUNNING, run.log actively growing, iterating per-instrument candle
-  history across multiple venues). The driver gave up waiting, launched a SECOND VM for the SAME shard (the skip leg)
-  without confirming the first VM's true completion, and that second VM ALSO ran past its own 2400s timeout. The driver
-  then abandoned BOTH VMs (neither ever produced EXIT_STATUS) and moved on to shard 2/16 (TRADFI:delta_one) — leaving
-  two orphaned VMs still running with no code ever checking their eventual result, wasting real SPOT compute, and
-  recording a misleading timeout verdict for a shard whose mechanism was never actually disproven (it just needed more
-  than 40 minutes).
+  Running the full-matrix /data-pipeline-check-features check (day=2026-07-05), TWO INDEPENDENT shards (CEFI:delta_one
+  and TRADFI:volatility) hit an identical failure pattern: the force leg's VM did not emit EXIT_STATUS within the
+  driver's default --timeout-sec=2400 (40min), even though the VM was independently confirmed still healthily computing
+  (RUNNING, run.log actively growing/heartbeating, iterating per-instrument across multiple venues). The driver gave up
+  waiting, launched a SECOND VM for the SAME shard (the skip leg) without confirming the first VM's true completion, and
+  that second VM ALSO ran past its own 2400s timeout, triggering the driver to launch a THIRD VM. Every abandoned VM
+  (none ever produced EXIT_STATUS) keeps running with no code ever checking its eventual result, wasting real SPOT
+  compute, and recording a misleading timeout verdict for a shard whose mechanism was never actually disproven (it just
+  needed more than 40 minutes). **Not universal**: TRADFI:delta_one (same family, smaller/faster-covered universe)
+  completed BOTH legs cleanly in ~3.5min each — this is specifically a large-instrument-universe problem, not a blanket
+  driver defect.
 status: open
 nature: issue
 asset_group: [cefi, tradfi]
 stage: [data]
 repos: [unified-trading-library, features-service]
 scope: [engineer, admin]
-tags: [infra, features-service, pipeline-e2e-check, timeout, vm-orphan, duplicate-vm, spot-waste]
+tags: [infra, features-service, pipeline-e2e-check, timeout, vm-orphan, duplicate-vm, spot-waste, delta_one, volatility]
 related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
@@ -72,6 +74,29 @@ At no point did the local driver log an explicit "timed out" message for either 
   no `EXIT_STATUS` object present — i.e. the driver abandoned both without ever learning their true outcome, and nothing
   in the check flow re-polls or reconciles an abandoned VM's eventual result.
 
+### Corroboration: shard 5 (`TRADFI:volatility`) hit the IDENTICAL pattern; shard 2 (`TRADFI:delta_one`) did NOT
+
+Continuing to watch the same run:
+
+| time     | event                                                                                                      |
+| -------- | ---------------------------------------------------------------------------------------------------------- |
+| 12:42:16 | `TRADFI:delta_one` force-leg VM `features-e2e-tradfi-20260727-124216-2b064d` launched                      |
+| 12:46:04 | force leg completed CLEANLY in ~3.5min; skip-leg VM `features-e2e-tradfi-20260727-124604-2b064d` launched  |
+| 12:49:21 | skip leg also completed cleanly; driver moves to `TRADFI:volatility` (window auto-resolved 2026-01-29..30) |
+| 12:49:44 | `TRADFI:volatility` force-leg VM `features-e2e-tradfi-20260727-124921-b1a99f` launched                     |
+| 13:29:23 | (2400s later, IDENTICAL to CEFI:delta_one) driver abandons it, launches skip-leg VM `...-132923-b1a99f`    |
+| ~14:09   | that skip-leg VM's own 2400s window elapses too (same pattern expected to repeat)                          |
+
+Both `features-e2e-tradfi-124921-b1a99f` and `...-132923-b1a99f` were independently confirmed `RUNNING` with no
+`EXIT_STATUS` well after the driver moved on — genuinely still computing (per-instrument TRADFI options/futures
+iteration, e.g. `ECNG`/`ECNQ`/`ECRTY`, plus an active `PIPELINE_HEARTBEAT` line), not stalled or preempted.
+
+**This rules out "CEFI:delta_one specifically" as the scope** — the defect is: any `(family, asset_group)` cell whose
+REAL covered instrument universe is large enough that per-instrument sequential compute exceeds ~40 minutes will hit
+this pattern, regardless of family. `TRADFI:delta_one` completing both legs in ~3.5min each (a MUCH smaller
+window/universe for that specific auto-resolved day) is the useful negative control proving this is a genuine
+universe-size threshold effect, not a blanket timeout-value-too-small-for-anything defect.
+
 ## Why it matters
 
 1. **Wasted SPOT compute, unbounded**: two VMs are left running indefinitely (until their own internal work finishes and
@@ -93,11 +118,14 @@ At no point did the local driver log an explicit "timed out" message for either 
 
 ## Recommended fix path
 
-- [ ] [SCRIPT] P1. Raise (or make per-family-configurable) `--timeout-sec` for instrument-heavy families/asset_groups
-      (delta_one on CEFI/TRADFI in particular) — either a higher default informed by a real full-completion measurement,
-      or a `_FAMILY_TIMEOUT_OVERRIDES` map in `features-service/scripts/pipeline_e2e_check.py` keyed by
-      `(family, asset_group)`. Repo: features-service. **Done when**: a from-scratch CEFI:delta_one force-leg run
-      completes with `EXIT_STATUS=0` observed locally (not abandoned) within the configured timeout.
+- [ ] [SCRIPT] P1. Raise (or make per-family-configurable) `--timeout-sec` for large-instrument-universe cells —
+      confirmed affected: CEFI:delta_one, TRADFI:volatility (the TRADFI:delta_one cell this same run resolved a much
+      smaller day-window for completed cleanly in ~3.5min, so this is universe-size-dependent, not
+      family-name-dependent) — either a higher default informed by a real full-completion measurement, or a
+      `_FAMILY_TIMEOUT_OVERRIDES` map in `features-service/scripts/pipeline_e2e_check.py` keyed by
+      `(family, asset_group)`. Repo: features-service. **Done when**: a from-scratch CEFI:delta_one AND
+      TRADFI:volatility force-leg run each complete with `EXIT_STATUS=0` observed locally (not abandoned) within the
+      configured timeout.
 - [ ] [SCRIPT] P1. When a leg's VM abandons via `timeout_no_exit_status`, do not silently launch the NEXT leg's VM for
       the same shard without at least logging a loud, explicit warning (ideally: check whether the abandoned VM is still
       `RUNNING` before deciding whether launching a concurrent duplicate is safe/wasteful). Repo:
@@ -123,3 +151,13 @@ At no point did the local driver log an explicit "timed out" message for either 
   RUNNING with no code checking their eventual completion — a fresh session picking up the recommended-fix todos should
   first check whether those two VMs eventually self-deleted / wrote EXIT_STATUS, to confirm the mechanism itself is
   sound (just slow) rather than genuinely broken.
+- 2026-07-27 (slot-7, infra, same session, ~2hrs later): **Broadened scope after a second independent hit.** Continuing
+  to watch the same run, `TRADFI:volatility` (shard 5/16) hit the byte-for-byte identical pattern (force leg abandoned
+  at 2400s → duplicate skip-leg VM launched → that ALSO ran past 2400s). Confirmed via `gcloud` both TRADFI VMs
+  (`features-e2e-tradfi-20260727-124921-b1a99f`, `...-132923-b1a99f`) were genuinely still computing (active
+  `PIPELINE_HEARTBEAT` + per-instrument options iteration), not stalled. Crucially, `TRADFI:delta_one` (shard 2, same
+  run, ran IMMEDIATELY before volatility) completed BOTH legs cleanly in ~3.5min each — this is the negative control
+  proving the defect is universe-size-dependent (a function of how many real instruments + how much lookback history a
+  given cell's auto-resolved window covers), not specific to the `delta_one` family or to CEFI. Retitled the doc and
+  widened the recommended-fix todo accordingly; the underlying driver run itself was left running uninterrupted (no VMs
+  deleted, no code changed) so as not to block the in-flight dispatch — this doc is the tracked follow-up.

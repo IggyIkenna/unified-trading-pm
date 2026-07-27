@@ -979,13 +979,22 @@ bad-request, needs a look). Failing instruments are IN-UNIVERSE (e.g. `KRAKEN-FU
       `tradfi/tardis_batch_download.py:171` now passes the correct `available_from`/`available_to`/`day` kwargs (with a
       comment noting the prior wrong-kwargs bug). The 206 `attempted_failed` are HISTORICAL — the relaunch on current
       code won't reproduce them (they re-process correctly).
-- [ ] [SCRIPT] P1. **`Tardis HTTP 400` (20k) is LARGELY SYSTEMATIC — out-of-window + out-of-universe (operator's
-      restriction concern, CONFIRMED)**: samples are (a) **post-expiry fetches** — `CRYPTOFACILITIES:FF_ETHUSD_250228`
-      on 2025-03-01 (after 2025-02-28 expiry), `BYBIT:BTC-21APR23` on 2023-04-22 (after expiry) → instrument delisted →
-      400; (b) **deprecated venue / non-curated instruments** — `OKEX` (old OKX name), `ATOM`/`USDC-TRY` (NOT in the
-      BTC/ETH/x-coin curated universe). The active-window gate `_cefi_is_active_on_date` DOES clip `available_to`, so
-      the post-expiry attempts mean the **IS catalog is missing/wrong `available_to` (expiry)** for those dated futures
-      (gate passes) + a **universe/venue-filter leak** (OKEX/ATOM/USDC-TRY shouldn't be attempted). This is the
-      post-expiry MIRROR of the retired pre-listing NOT_LISTED over-seeding — an upstream IS-catalog-expiry +
-      curated-universe-filter fix, NOT an mtds code bug. ~2k `In CSV column #` decode errors are a separate Tardis-CSV
-      parse class.
+- [x] ✅ [SCRIPT] P1. **`Tardis HTTP 400` (20k) is LARGELY SYSTEMATIC — out-of-window + out-of-universe (operator's
+      restriction concern, CONFIRMED)** — **(a) post-expiry fetches FIXED — instruments-service@a3e90f48**:
+      `CRYPTOFACILITIES:FF_ETHUSD_250228`/`BYBIT:BTC-21APR23` were fetched a day past real expiry because
+      `_extract_meta()` only reads the per-date `expiry` column, never `available_to_datetime` — a row whose expiry
+      never resolved on capture but kept re-appearing in Tardis's reference listing read ACTIVE FOREVER, so the
+      active-window gate never clipped it. Added `_backfill_cefi_missing_expiry_from_wire_symbol` (new cefi rollup
+      Phase-D pass, reuses the existing wire-symbol parsers): backfills a blank `expiry`/`available_to` from the row's
+      own wire symbol, only when both are blank AND the resolved date is already past — never overwrites, never touches
+      non-dated types. Verified against both named examples (backfills to `2025-02-28`/`2023-04-21`); 7 new tests;
+      `quality-gates.sh` green. Self-heals on the next nightly `lifecycle-catalogue-regen-cefi` run. **(b) SPLIT to the
+      follow-up todo below** — `OKEX`/`ATOM`/`USDC-TRY` need real investigation, not a same-shape fix. ~2k
+      `In CSV column #` decode errors remain a separate Tardis-CSV parse class.
+- [ ] [SCRIPT] P2. **Follow-up — CeFi legacy-venue-spelling fold + USDC-TRY quote-bypass check** (split 2026-07-27,
+      investigation-only): (1) `CEFI_VENUE_FOLD` (`unified-api-contracts/.../market_data_categories.py:549-567`, folds
+      `OKEX`/`CRYPTOFACILITIES`/etc.) is wired into an audit script + UI panel only, never the rollup — confirm a raw
+      legacy `venue` reaches `catalog.parquet` first; trace `instrument_id` derivation too — a post-hoc fold could
+      collide with an already-canonical row. (2) Check `_resolve_base_quote()` (tardis/parsing.py) against the real
+      `USDC-TRY` symbol — a failed split bypasses the quote-gate via an empty string, not a genuine leak. (3) **NOT a
+      bug**: `ATOM` in `CEFI_BASE_ASSET_UNIVERSE` is a RULED 2026-06-23 decision — no fix without a fresh ruling.

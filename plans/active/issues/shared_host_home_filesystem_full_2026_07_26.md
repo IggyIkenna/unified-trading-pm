@@ -266,7 +266,7 @@ specific to any one task.
   should re-attempt QG once a fleet-wide load/disk snapshot shows meaningfully lower concurrent-QG count and higher
   headroom than the two data points recorded here (14.93/97%-full and 17.37/95%-full), not just "try again."
 - 2026-07-27T09:40Z (slot-4, laptop, corroborating from a different vantage point — read-only AWS SSM, not from an
-  interactive slot session): filing `/plans/active/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md` (the
+  interactive slot session): filing `/plans/archive/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md` (the
   2026-07-27 candle_coverage_gap.py RAM-exhaustion incident + VM-spin-up rule fix) surfaced Harsh's "planning-vm disk at
   ~92%" Slack claim as needing verification. Queried the live host directly via `aws ssm send-command` against
   `i-0c9b283b31d6b5ca7` (`ap-northeast-1`, the same instance every entry in this thread describes) rather than from

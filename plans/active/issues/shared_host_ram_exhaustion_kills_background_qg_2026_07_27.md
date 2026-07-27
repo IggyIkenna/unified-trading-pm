@@ -138,3 +138,50 @@ defect; it is purely a function of host capacity at any given moment.
   QG-never-completed code (`market-tick-data-service` stash
   `orchestrator-slot-8-read_availability_index_bare_defi_callers-001`) and returned the task to the queue (GATED) rather
   than keep retrying blind.
+
+- 2026-07-27 (slot-14, infra): **5th independent corroboration**, DIFFERENT repo (features-service) and a small,
+  unrelated change (`scripts/pipeline_e2e_check.py` per-family `--timeout-sec` fix,
+  `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`). New detail: the failure signature
+  here is the **TYPE CHECK stage specifically**, not TESTS — 5 consecutive `quality-gates.sh` attempts (3 plain, 2 with
+  `PYRIGHT_TIMEOUT` raised 120s->420s, which had ZERO effect on the outcome): 2 got fully through `[3/6] TESTS` GREEN
+  (17902 passed, 0 failed, twice, byte-identical) then died at `[4/6] TYPE CHECK` with `PYRIGHT_EXIT` nonzero + empty
+  captured output, hitting the exact ambiguous-failure branch the script's own comment (`base-service.sh` ~line 955)
+  already anticipates (`PYRIGHT_EXIT != 0 && ERROR_COUNT==0 && WARN_COUNT==0` -> generic "Type check FAILED/timeout",
+  indistinguishable from a real basedpyright failure without reading the empty `$PYRIGHT_OUT`); 1 attempt hit a
+  DIFFERENT failure mid-TESTS (`test_health_router.py`, pytest's own `mainloop: caught unexpected SystemExit!` handler
+  aborting the whole run early, no final summary) — a 3rd distinct failure shape added to this doc's catalogue (TESTS
+  silent-vanish / TESTS SystemExit-abort / TYPECHECK signaled-before-output). Root-caused that raising `PYRIGHT_TIMEOUT`
+  was chasing the wrong variable: basedpyright run STANDALONE (`.venv/bin/basedpyright features_service/`, no concurrent
+  pytest suite competing) completed in **74.6s wall-clock** — well under even the ORIGINAL 120s default — confirming the
+  kill is NOT the timeout expiring, it is something external (most likely the kernel OOM-killer, since
+  `MEM_WRAP`/`systemd-run` cgroup capping is INACTIVE on this host per this repo's own QG log header: "systemd-run
+  unavailable ... running pytest + basedpyright without hard memory cap") signaling the process before it finishes,
+  exactly when fleet-wide swap usage is climbing. Host samples this session: load 35.87->11.20 (attempt 1 kill) ->12.67
+  (attempt 4 kill) -> **45.64 / 383Mi free / 7.0Gi swap used** (right when I checked before a planned 6th attempt — the
+  worst single sample yet recorded in this doc) confirming the "wild swings, not tied to a fixed threshold"
+  characterization holds. Also confirmed the repo's `BASEDPYRIGHT_MAX_ERRORS` is UNSET for features-service, so even the
+  955 pre-existing (baselined-by-omission) basedpyright errors on the full dir would only WARN, never fail the gate —
+  i.e. a clean type-check pass was never actually blocked by real type errors, only by this infra issue. Not retrying
+  blind into an observed 45.64-load spike; waiting for a calmer window (see this doc's own precedent) before the next
+  attempt.
+
+  **Same session, follow-up**: waited for memory to visibly recover (8.4-8.7Gi free, swap down from a peak 11Gi to
+  4.9-5.0Gi, 1-min load briefly down to 15.15) and retried — got FURTHER (past both prior flake points, deep into the
+  `sports`/`unit` test range) before dying on a **4th distinct failure signature**: `pytest`'s per-test timeout firing
+  mid-`pandas` internals (`test_momentum.py::test_volume_momentum_columns_present`, hung inside
+  `pandas.core.array_algos.take._take_nd_ndarray`) — a plain CPU-starvation stall, nothing to do with numba, SystemExit,
+  or basedpyright this time. Confirms the failure mode is generic host contention, not tied to any one library/stage.
+  Host had spiked AGAIN by the time of this kill: **load 57.23 (worst 1-min avg recorded in this doc yet), 381Mi free,
+  swap back up to 7.2Gi** — the "wild swings" are on a much shorter cycle than the ~10min polling interval used here
+  (memory recovered, then re-spiked worse, within roughly 10-15 minutes). Also hit a NEW variant of the doc-shipping
+  problem itself while trying to commit this very corroboration: 3 consecutive
+  `quickmerge.sh --agent --files <this-doc>` attempts on a **docs-only, ~30s-QG** change (not the multi-minute
+  full-suite runs above) — attempt 1 and 2 failed on `check-branch-drift` (2-4 commits landed on `live-defi-rollout`
+  between fetch and commit, from the same fleet-wide push volume this doc describes; recovered cleanly both times via
+  `git stash push --include-untracked` -> `git fetch`+`merge --ff-only` -> `git stash pop`, zero conflicts since the
+  edit only appends to this Progress Log); attempt 3 got all the way through its OWN internal `quality-gates.sh` re-run
+  (`✅ ALL QUALITY GATES PASSED (34s)`, sentinel written) and then the **quickmerge process itself vanished
+  mid-STAGE-4/5** (no PR/push confirmation, no error, process gone from `ps`) before completing the push — i.e. even a
+  passing, near-instant doc-only QG run is not immune once the outer `quickmerge.sh` orchestrator process itself gets
+  caught by the same external kill mechanism. 3rd corroboration that this is not confined to the heavy TESTS/TYPECHECK
+  phases of a full-suite QG run.

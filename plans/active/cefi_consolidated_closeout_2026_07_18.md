@@ -272,6 +272,11 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
 - `issues/cefi_available_at_wallclock_despite_deterministic_row_timestamp_2026_07_24.md` —
   `deribit_volatility_index_handler.py` and `book_microstructure_handler.py` stamp `available_at` from BATCH-run
   wall-clock instead of a deterministic per-row/`as_of` timestamp. Audit-only finding, code fix not yet started.
+- `issues/cefi_margin_model_hyphenated_instrument_id_misclassification_2026_07_27.md` — `_CefiMarginModelBase.compute()`
+  only strips a colon-delimited prefix, so hyphenated instrument ids from AccountQueryClient/UPI adapters
+  (`BTC-USD-PERP`) never match `CEFI_MARGIN_TIERS`; the tier-miss fallback then self-referentially substitutes
+  `mmr_warning_pct` as the assumed MMR rate, misclassifying healthy positions as WARNING/CRITICAL. Affects every live
+  CeFi margin computation (both `margin_health.py` and the new `emit_live_cefi_margin_events` push path). P1, open.
 
 **Dispatched**: the non-Tardis cefi VM cross-machine-sharding sweep is candidate 2 of
 `cefi_consolidated_native_ao_extract_2026_07_25.md`.

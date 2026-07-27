@@ -1,5 +1,9 @@
 # Task Template - Copy for New Tasks
 
+> **SUPERSEDED (archived 2026-07-27).** A copy-paste template for Cursor-Task-tool sub-agent tasks (no frontmatter,
+> resume/token-tracking sections). Current plan-authoring SSOT is `plans/active/task_template.md` under the
+> `PLAN_FORMAT.md` frontmatter schema — a differently-shaped, current template.
+
 **⚠️ CRITICAL: ALL TASKS MUST USE SUB-AGENTS** - This is MANDATORY, not optional!
 
 **Use this structure for ANY new task - sub-agents are REQUIRED for context preservation**

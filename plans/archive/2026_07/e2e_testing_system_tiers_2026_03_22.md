@@ -1,5 +1,10 @@
 # System Runtime Tiers — Startup & E2E Testing
 
+> **SUPERSEDED (archived 2026-07-27).** The 7-tier (T0-T6) deployment topology this file defines is now the live codex
+> SSOT at `/codex/05-infrastructure/runtime-tiers-and-deployment.md` (created 2026-03-27,
+> `authoritative_for: 7-tier deployment topology`). That doc's stale `.cursor/plans/end-to-end-testing/...` backlinks to
+> this file (and the matching one in `codex/00-SSOT-INDEX.md`) were fixed as part of this archival.
+
 ## Core Invariant
 
 **Mock is always the service running in mock mode.** The ONLY variable between tiers is **topology** — whether calls are
@@ -15,10 +20,10 @@ operable in both mock and real modes.
 
 ### Local Tiers (developer machine, all processes on localhost)
 
-| Tier   | Name                | Topology                    | What runs                        | Calls                                                                                          |
-| ------ | ------------------- | --------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------- |
-| **T0** | UI-only             | Colocated                   | UI (Next.js)                     | No network. In-browser mock store mirrors MockDomainService behavior.                          |
-| **T1** | UI + API            | Network (UI↔API)           | UI + `unified-trading-api`       | UI → HTTP → API gateway. API uses internal MockStateStore. No downstream services.             |
+| Tier   | Name                | Topology                  | What runs                        | Calls                                                                                          |
+| ------ | ------------------- | ------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **T0** | UI-only             | Colocated                 | UI (Next.js)                     | No network. In-browser mock store mirrors MockDomainService behavior.                          |
+| **T1** | UI + API            | Network (UI↔API)          | UI + `unified-trading-api`       | UI → HTTP → API gateway. API uses internal MockStateStore. No downstream services.             |
 | **T2** | UI + API + Services | Network (UI↔API↔Services) | UI + API + all service processes | UI → HTTP → API → HTTP → services. Each service runs in mock mode locally. Full engine parity. |
 
 ### Cloud Tiers (progressive deployment, mock or real)

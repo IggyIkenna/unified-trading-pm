@@ -76,7 +76,7 @@ matching `instrument_ids=["BTCUSDT"]`) described the PRE-D3/D4-migration filenam
 is unchanged, but post-cutover filenames carry the CANONICAL stem, e.g. `.../BINANCE-FUTURES:PERPETUAL:BTC-USDT.parquet`
 matches `instrument_ids=["BINANCE-FUTURES:PERPETUAL:BTC-USDT"]`. A caller still passing bare wire tickers as
 `instrument_ids` will silently match zero canonical-form blobs. Tie-breaker SSOT:
-[`cross-asset-canonical-target-ssot.md`](../02-data/cross-asset-canonical-target-ssot.md) §0/§1.
+[`cross-asset-canonical-target-ssot.md`](/codex/02-data/cross-asset-canonical-target-ssot.md) §0/§1.
 
 ## Why "list, then write-time check" is not defence-in-depth
 

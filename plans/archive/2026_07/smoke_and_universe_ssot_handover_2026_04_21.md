@@ -1,5 +1,9 @@
 # Handover: Smoke Dep-Chain + Universe SSOT Architectural Fix — 2026-04-21
 
+> **ARCHIVED (2026-07-27).** Both plans this handover doc dispatches sub-agents against
+> (`smoke_dep_chain_tactical_fixes_2026_04_20.md`, `universe_ssot_fix_2026_04_20.md`) already shipped and archived
+> through the normal plan lifecycle. This coordinator/handover artifact is the one leftover from that concluded session.
+
 ## Context (read this first)
 
 Two plans landed 2026-04-21 under `plans/active/`:

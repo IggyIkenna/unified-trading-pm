@@ -41,7 +41,7 @@ repos:
   ]
 scope: [engineer, admin]
 tags: [ci, cloudbuild, gcp, substitution, fleet, infra, p1]
-related: [/plans/active/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md]
+related: [/plans/archive/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md]
 created: 2026-07-25
 parent_epic: infrastructure_master
 priority: P1

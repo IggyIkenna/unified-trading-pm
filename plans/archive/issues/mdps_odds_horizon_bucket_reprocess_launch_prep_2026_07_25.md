@@ -23,8 +23,8 @@ tags: [sports, league-id, mdps, vm-launcher, migration, launch-prep]
 related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md,
-    /plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md,
+    /plans/archive/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md,
+    /plans/archive/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
     /plans/active/issues/mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch_2026_07_27.md,
   ]

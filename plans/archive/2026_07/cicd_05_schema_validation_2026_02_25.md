@@ -1,5 +1,11 @@
 # 05: Schema Validation (GCS + BigQuery)
 
+> **SUPERSEDED (archived 2026-07-27).** Schema-drift protection was achieved via a different, QG-compliant design
+> instead: `execution-service/execution_service/data/schema_validator.py` (Parquet SchemaValidator for
+> trades/mbp/ohlcv/swaps) + `/codex/02-data/schema-governance.md`. The BigQuery-centric validator this plan proposed
+> (`from google.cloud import bigquery`) was never built and would violate current coding standards (no direct
+> `google.cloud` imports). No unique content to migrate forward.
+
 **Status**: ⬜ Not Started **Priority**: P2 (Catch data drift early) **Estimated Time**: 2-3 hours **Expected Benefit**:
 10-20 min/day saved, prevent production data issues
 

@@ -23,7 +23,11 @@ stage: [strategy]
 repos: [unified-trading-library, unified-api-contracts, strategy-service]
 scope: [engineer]
 tags: [cefi, margin, risk, correctness, bug]
-related: [/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md]
+related:
+  [
+    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+  ]
 created: "2026-07-27"
 last_updated: "2026-07-27"
 parent_epic: cefi_master
@@ -119,12 +123,16 @@ direction.
 
 ## Recommended decision / Open work
 
-- [ ] 1. [BACKEND] P1. **Fix the asset-symbol extraction** in `_CefiMarginModelBase.compute()`
+- [x] 1. ✅ [BACKEND] P1. **Fix the asset-symbol extraction** in `_CefiMarginModelBase.compute()`
       (`unified-trading-library/unified_trading_library/margin_and_liquidation/margin_model.py:193`) to also handle
       hyphen-delimited instrument ids (e.g. take the first `-`-or-`:`-delimited segment, or add a shared canonical
       instrument-id parser if one already exists elsewhere in UAC/UTL — check before inventing a new one). Repo:
       unified-trading-library. Add a regression test asserting `"BTC-USD-PERP"` and `"BTC:PERP:USDT"` both resolve
-      `asset="BTC"`.
+      `asset="BTC"`. — unified-trading-library@3b13b69e. Checked `unified_trading_library/ml/models.py`'s
+      `extract_base_asset()` first — it expects a different 3-part `VENUE:TYPE:BASE-QUOTE` shape and returns `None` for
+      both our inputs, so it wasn't reusable; used `re.split(r"[:-]", inst_id, maxsplit=1)[0]` instead. Added
+      `test_cefi_hyphenated_instrument_id_resolves_same_tier_as_colon` asserting `"BTC-USD-PERP"` and `"BTC:PERP:USDT"`
+      compute identical `usage_pct` and both grade `OK`. Full quality-gates.sh green.
 - [ ] 2. [BACKEND] P1. **Replace the `mmr_warning_pct`-as-MMR-rate fallback**
       (`unified-trading-library/unified_trading_library/margin_and_liquidation/margin_model.py:196-198`) with a real
       conservative default MMR (e.g. the venue's own worst-case/highest configured tier rate, or a small fixed

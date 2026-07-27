@@ -1,5 +1,11 @@
 # Deployment Orchestration — Batch, Live & Cloud Clusters
 
+> **SUPERSEDED (archived 2026-07-27) — capability built.** Every item in this doc's own 'what needs to be built' list
+> (cluster bootstrap CLI, T+1/thermal batch scheduling, live fleet management, cascade-failure handling) now exists in
+> `deployment-service` (`configs/clusters/{cefi,defi,tradfi,sports,prediction,full}.yaml`; CLI
+> `cluster bootstrap/teardown/status/list`, `batch run`, `live start/stop/status`, `schedule create/list/disable`;
+> cascade-failure tree logic).
+
 ## Context
 
 The deployment service (`deployment-service`) and deployment UI need to handle 4 operational modes:

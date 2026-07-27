@@ -172,7 +172,7 @@ day-1). Target ≤~10–15 values each; past ~15 → consolidate, OR it should h
   move the doc"). A doc in `plans/active/issues/` IS an issue — declaring `doc_type: plan` there was the recurring
   authoring mistake this check kills.
 - `nature` (8): `ssot · guideline · process · design · spec · record · notes · issue`
-- `asset_group` (8): `cefi · defi · tradfi · sports · prediction · cross-cutting · infrastructure · meta`
+- `asset_group` (10): `cefi · defi · tradfi · sports · prediction · cross-cutting · ao · ci · infrastructure · meta`
 - `stage` (9): `data · features · strategy · backtest · paper · live · execution · reporting · meta`
 - `scope` / audience (5): `engineer · admin · sales · prospect · investor`
 - `priority` (4): `P0 · P1 · P2 · P3`

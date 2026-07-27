@@ -1,5 +1,11 @@
 # Workspace Configs Adjustment Plan
 
+> **SUPERSEDED (archived 2026-07-27).** The generator script this plan targets
+> (`.cursor/workspace-configs/create-workspace-files.sh`) no longer exists — workspace configs are now static files in
+> `unified-trading-pm/cursor-configs/*.code-workspace`. The `unified-order-interface` →
+> `unified-trade-execution-interface` rename this plan proposed is moot: that repo was deprecated and pruned entirely
+> (see `/codex/00-getting-started/DEPRECATED_SERVICES.md`), not renamed. No unique content to migrate forward.
+
 **Goal:** Align workspace names and repo blocks with the canonical dependency matrix and current repo set. Fix wrong
 repo names, add new repos from the matrix, and make the setup script the single source of truth.
 

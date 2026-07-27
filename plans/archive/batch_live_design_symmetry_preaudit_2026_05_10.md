@@ -40,7 +40,7 @@ type: pre-audit-manifest
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-companion_to: unified-trading-pm/plans/questions/batch_live_design_symmetry_2026_05_08.md
+companion_to: unified-trading-pm/plans/archive/batch_live_design_symmetry_2026_05_08.md
 related_codex:
   [
     unified-trading-pm/codex/04-architecture/batch-live-architecture.md,

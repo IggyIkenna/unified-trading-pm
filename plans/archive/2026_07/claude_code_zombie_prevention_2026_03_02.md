@@ -1,5 +1,9 @@
 # Zombie Process Prevention (v10.1)
 
+> **SUPERSEDED (archived 2026-07-27).** Scoped entirely to preventing zombie `basedpyright` processes inside the retired
+> `orchestrator-test.sh`/`run-agent.sh` bash-orchestration workflow. That workflow is superseded by agent-orchestrator +
+> `quality-gates.sh` (`/codex/06-coding-standards/quality-gates.md`), which handles timeouts differently.
+
 ## 🧟 The Problem
 
 basedpyright processes can hang and become zombies when:
