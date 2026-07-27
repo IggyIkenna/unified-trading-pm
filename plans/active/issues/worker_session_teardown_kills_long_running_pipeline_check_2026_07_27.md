@@ -63,6 +63,22 @@ Independently, direct `gcloud storage cat .../run.log` + `gcloud storage objects
 real-VM force-leg runs** for the same shard cell all completed with `exit_code=0` and derived the identical 7,615
 candles (`1440×1m, 288×5m, 96×15m, 24×1h, 6×4h, 1×24h`).
 
+**5th reproduction, 2026-07-27 (slot-9), AO-managed persistent worker session (not an ad-hoc interactive session):**
+after fixing the launcher-timeout retry bug (todo 3 below) + a corrupted local pyarrow venv + a missing `GCP_PROJECT_ID`
+env var — none of which explain this — a 3rd relaunch of the same scoped CEFI:BINANCE-FUTURES:trades check via the
+harness's `run_in_background` was reported **`status: "killed"` / "was stopped"** after only **~18 seconds** of real
+work (Phase-0 manifest consolidation had already logged one completed shard-consolidation line), well before reaching
+the VM-launch stage. Two immediately-prior attempts in the SAME session (using the same `run_in_background` mechanism)
+instead ran to natural completion in under a minute each, failing with clean, real, unrelated Python tracebacks (the
+pyarrow `ImportError`, then the `GCP_PROJECT_ID` `ValueError`) — i.e. the harness's background-task mechanism CAN and
+did keep those alive long enough to surface a real error, so this is not a blanket "backgrounding never survives more
+than N seconds" pattern; something specifically ended the 3rd, longer-lived attempt mid-flight. No `dmesg`/`journalctl`
+access from this session (permission denied) and `free -h` showed no memory pressure (22Gi available, no swap thrashing)
+at kill time, so an OOM-kill was not confirmed — but also not ruled out definitively; a kernel-level or
+orchestrator-level killer this session cannot see remains the leading hypothesis. **This is now the 5th independent
+reproduction, across 2 different sessions and both an ad-hoc interactive worker AND an AO-managed persistent slot
+worker** — ruling out "just that one session was unusual" as an explanation.
+
 ## Why it matters
 
 The `/data-pipeline-check-mdps` (and by the same shared-engine construction, `-mtds`/`-is`/`-features`) skills are
