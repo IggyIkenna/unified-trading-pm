@@ -32,10 +32,11 @@ scope: [engineer]
 tags: [artifact-registry, ecr, docker-images, storage-cost, cleanup-policy, retention, cicd]
 related: []
 created: 2026-07-24
-last_updated: 2026-07-24
+last_updated: 2026-07-27
 parent_epic: infrastructure_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
+sequential: true
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 3
@@ -56,9 +57,16 @@ source:
 # Artifact Registry / ECR image retention — audit-first, safe cleanup policy
 
 > **Self-contained** — the diagnosis (§ Diagnosis) and the audit-first, safety-gated todo DAG live here; this plan
-> supersedes the original issue doc. **Local-only — nothing here is dispatched to the fleet; the operator runs the audit
-> and gates every deletion.** No AR soft-delete/undelete exists — deletion is permanent, so the dry-run +
-> deployed-digest cross-check is mandatory before any live flip.
+> supersedes the original issue doc. **`assigned_vm: NA` / `execution_scope: local-only` as of 2026-07-27 — pulled out
+> of AO's backlog** (see Progress log) while Phase A's audit runs locally with the operator. Flip back to
+> `assigned_vm: planning` / `execution_scope: orchestrator-agent` once Phase A is folded in, at which point AO resumes
+> the audit/design/dry-run work — **the operator still gates every actual deletion**, via the `[OPERATOR]`-tagged todos
+> only (7, 8, 13, 17). No AR soft-delete/undelete exists — deletion is permanent, so the dry-run + deployed-digest
+> cross-check is mandatory before any live flip. **`sequential: true` (added 2026-07-27)** — every phase after Phase A
+> consumes the prior phase's actual output as data, not just file-availability (todo 5 needs todos 1+2's real audit
+> numbers; todo 6 needs todo 5's drafted policy; todo 8 needs todo 7's sign-off; …), so this plan runs strictly
+> top-to-bottom by design. **Do not remove this flag** without first splitting the genuinely-independent side-tracks
+> (Phase E todos 10-13, Phase F) into a separate satellite plan — see the Progress log entry below for why it was added.
 
 ## Diagnosis (audit numbers — pulled live via gcloud/aws 2026-07-24, not estimated)
 
@@ -335,6 +343,47 @@ The original audit output lives at the **workspace root, outside any git repo** 
 
 - `/active/unified-trading-system-repos/docker_artifact_storage_audit_2026_07_24.csv` — full 75-row matrix.
 - `/active/unified-trading-system-repos/docker_artifact_storage_audit_2026_07_24.html` — interactive sortable report.
+
+## Progress log
+
+- **2026-07-27 (operator)**: added `sequential: true` (+ corrected the stale "Local-only, nothing dispatched to the
+  fleet" line in the intro blockquote, which — before the next entry below — contradicted `assigned_vm: planning`/
+  `execution_scope: orchestrator-agent`). **Why**: AO had already picked this plan up and surfaced BLOCKED questions on
+  todo 8 (`[OPERATOR]`, flip the policy live) and todo 12 (design the AWS ECR policy, P3) — with only todo 4 actually
+  completed. Neither todo 8 nor 12 has its real prerequisites done yet (Phase A's audit, todo 5's drafted policy, todo
+  6's dry-run, todo 7's sign-off haven't run). Root cause: this plan's phases encode a genuine top-to-bottom data
+  dependency chain (stated in prose — "Operator-driven, run top-to-bottom" — but never encoded in frontmatter), so AO's
+  default same-priority-tier concurrent dispatch reached ahead into Phase C/D and Phase E work before Phase A ever ran.
+  `sequential: true` forces strict top-to-bottom execution across the whole plan, matching what the prose already said.
+  Trade-off accepted: this also serializes the genuinely-independent side-tracks (Phase E todos 10-13, Phase F) behind
+  the main `unified-trading-system` spine, which is safe but not maximally parallel — if that throughput matters later,
+  split those side-tracks into a separate satellite plan instead of removing the flag. No todo checkboxes were changed;
+  todo 4 stays ✅, everything else stays open.
+- **2026-07-27 (operator, same session)**: flipped `assigned_vm: planning` → `NA` and
+  `execution_scope: orchestrator-agent` → `local-only` — **pulling the whole plan out of AO's backlog entirely, not just
+  reordering it**. **Why**: the operator decided Phase A (todos 1-3, the deployed-digest audit) should be run locally
+  this session rather than by AO, then folded into this plan, and only then handed back to AO for Phase B onward — with
+  the genuinely-independent side-tracks (Phase E todos 10-13, Phase F) dispatched to run in parallel with the Phase B-D
+  spine rather than serialized behind it. `sequential: true` (previous entry) was the right fix for ordering _within_ AO
+  dispatch, but doesn't stop AO from picking up todo 1 itself the moment it's next in line — `assigned_vm: NA` is the
+  correct lever to take the whole plan off AO's plate for now. **Next step once Phase A is done locally**: fold the real
+  audit data into Phase A's todos (check them off with evidence), then flip `assigned_vm` back to `planning` /
+  `execution_scope` back to `orchestrator-agent` for the remainder — at that point consider whether to also split Phase
+  E/F into a separate satellite plan so they run in parallel with the Phase B-D spine instead of serialized behind it by
+  `sequential: true`.
+- **2026-07-27 (operator, same session, in-progress finding)**: started Phase A todo 1 (enumerate pinned digests from
+  `stable_versions.yaml`) and found the file the plan calls "the pin oracle" —
+  `unified-trading-pm/configs/stable_versions.yaml` (not in deployment-service; the plan's own path reference is
+  slightly off) — appears **stale/non-functional**: every entry is `deployed_by: "baseline-reset"` dated
+  `2026-02-25T00:00:00Z` with an empty `image` field, and `git log --follow` on the file shows exactly **one** commit
+  ever (2026-03-11, a repo-reorganization move, not a real update), despite the file's own header comment claiming
+  "auto-updated by Cloud Build after successful main-branch builds." **Not yet resolved** — need to determine whether
+  this mechanism was ever wired up, was superseded by something else (e.g. Cloud Build directly querying live revisions,
+  or a Firestore-based `ci_status` record per `/codex/08-workflows/ci-cd-flow.md`), or is simply dead (parallel to the
+  semver-agent being dead, deliberately, per this session's parent artifact-pipeline-observability plan). If it's
+  genuinely dead, todo 2's live-runtime corroboration becomes the PRIMARY source of truth for "what's deployed," not
+  just a corroboration step, and todo 1 should be rewritten to say so rather than treating a broken file as the oracle.
+  Continuing the audit now.
 
 If absent when the next shift picks this up, **regenerate** via the read-only pull that produced them
 (`gcloud artifacts repositories list` across both projects + `aws ecr describe-images` across the 20 repos); the numbers
