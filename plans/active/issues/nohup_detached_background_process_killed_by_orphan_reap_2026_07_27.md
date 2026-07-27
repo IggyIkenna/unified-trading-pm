@@ -1,0 +1,126 @@
+---
+doc_type: issue
+title:
+  "`nohup <cmd> & echo PID` inside a Bash-tool `run_in_background` call gets the real work killed by orphan_reap
+  ~300-355s later — fleet-wide recurring pattern, not a one-off"
+summary: >-
+  Backgrounding a long-running script with `nohup <cmd> & echo "PID:$!"` (so the wrapping Bash-tool call returns
+  immediately) detaches the real process from the tracked session tree. The server's `orphan_reap` sweep
+  (`agent-orchestrator/server/orphan_reap.py`) then classifies it as an orphan and SIGKILLs it ~300-355s later —
+  observed on slot 8 (this session, killed a real VM-launch-and-poll script mid-run) and independently on slots 7, 9,
+  10, 15 in the same hour via `journalctl | grep orphan_reap`, so this is a recurring fleet-wide trap, not an isolated
+  mistake. The correct pattern is to pass the actual long-running command directly to the Bash tool with
+  `run_in_background: true` (no `nohup`/`&` wrapper) — the harness's own backgrounding keeps the process properly
+  parented and tracked, and the harness notifies on real completion.
+status: open
+nature: issue
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: [agent-orchestrator, orphan-reap, background-task, worker-liveness, recurring-bug, lesson]
+related:
+  [
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+  ]
+created: "2026-07-27"
+source: "found while verifying instrument_availability_hive_canonicalisation-001 on real infra, slot-8, 2026-07-27"
+parent_epic: agent_operating_framework_master
+priority: P2
+estimate_class: research
+assigned_vm: planning
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+resolved_by:
+locked_by:
+depends_on: []
+---
+
+# `nohup & echo PID` gets killed by orphan_reap ~300-355s later
+
+## What I found
+
+While proving the `instrument_availability_hive_canonicalisation-001` writer fix green on real infra (real VM launch +
+poll via `instruments-service/scripts/pipeline_e2e_check.py`), I backgrounded the checker with:
+
+```bash
+nohup .venv/bin/python scripts/pipeline_e2e_check.py ... > check.log 2>&1 &
+echo "PID:$!"
+```
+
+wrapped inside a Bash-tool call with `run_in_background: true`. The wrapping Bash-tool call returned almost instantly
+(just the `echo`), which I initially mistook for a real "background task started" signal. The actual
+`pipeline_e2e_check.py` process (PID 700349) kept running detached — and was killed ~323s later:
+
+```
+$ journalctl --since "10 min ago" | grep 700349
+Jul 27 08:58:29 ... orphan_reap sweep: slot 8 pid 700349 age=323s KILLED
+```
+
+This silently discarded a real, in-flight VM-launch-and-poll operation (the force-leg VM had already written real data
+by the time it was killed — I recovered by reading the per-VM manifest shard directly rather than trusting the dead
+checker's own report, but a less careful session would have seen "process vanished, no report" and either wrongly
+concluded failure or silently re-launched a duplicate VM).
+
+**This is not an isolated slot-8 mistake.** A broader `journalctl | grep orphan_reap` sweep over the same session window
+shows the identical `age=3XXs KILLED` pattern hitting slots 7, 9, 10 (multiple times), and 15 — all within about 25
+minutes of each other. The consistent ~300-355s age band matches a single orphan-reap timeout constant, and the volume
+across distinct slots strongly suggests many agents independently reach for the same `nohup & echo PID` idiom when they
+want a Bash-tool call to "return immediately so I can keep working," not realizing the harness's own
+`run_in_background: true` parameter already does exactly that — correctly, without detaching the process from the
+tracked session tree that `orphan_reap` uses to decide what's alive.
+
+## Why it matters
+
+- **Silent work loss**: a killed VM-launch-and-poll script can leave a real GCP VM running with no local observer, or
+  worse, get "cleanly" retried by a subsequent call that duplicates in-flight work (double VM launches, double spend, or
+  a race on the same GCS shard).
+- **Misleading failure signal**: the process just vanishes — no traceback, no exit code in the log, nothing to
+  distinguish "the script crashed" from "the orchestrator killed it." A worker following the async-wait-discipline HARD
+  RULE ("never report a backgrounded task done before its real exit") can be fooled into thinking a real crash occurred
+  and file a wrong root-cause finding.
+- **Recurring, not rare**: 5+ distinct slots hit this in roughly the same hour — this is a fleet-wide idiom trap, not a
+  one-off typo.
+
+## Recommended decision
+
+1. **Immediate (no code change needed)** — add a one-line callout to `unified-trading-pm/agents/RULES.md` § 2 (the ship
+   loop) or `worker.md`'s async-wait section: _"Never `nohup <cmd> & echo $!` inside a `run_in_background: true` Bash
+   call — pass the long-running command directly with `run_in_background: true` and no `&`/`nohup` wrapper; the
+   harness's own backgrounding is what keeps the process correctly parented against `orphan_reap`."_ This is the
+   cheapest fix and would have prevented all 5+ observed occurrences today.
+2. **Investigate (optional, `agent-orchestrator`)**: `orphan_reap.py`'s liveness check currently can't distinguish "a
+   worker's own intentionally-detached background job" from "a genuinely orphaned/leaked process" — if there's a
+   legitimate use case for a worker wanting a script to outlive a single tool call (there might not be; the harness's
+   native `run_in_background` already covers the common case), consider whether the reap sweep should special-case
+   processes whose parent is a tracked worker shell rather than reaping by age alone. Lower priority than (1) since the
+   RULES.md fix addresses the actual root cause (agents shouldn't be using `nohup` here at all).
+
+## Evidence
+
+```
+$ journalctl --since "1 hour ago" | grep orphan_reap
+Jul 27 08:31:39 ... orphan_reap sweep: slot 10 pid 12510 age=354s KILLED
+Jul 27 08:33:44 ... orphan_reap sweep: slot 7 pid 88689 age=323s KILLED
+Jul 27 08:37:51 ... orphan_reap sweep: slot 10 pid 210847 age=310s KILLED
+Jul 27 08:37:52 ... orphan_reap sweep: slot 10 pid 211516 age=306s KILLED
+Jul 27 08:37:53 ... orphan_reap sweep: slot 10 pid 211517 age=305s KILLED
+Jul 27 08:38:55 ... orphan_reap sweep: slot 15 pid 220651 age=314s KILLED
+Jul 27 08:44:03 ... orphan_reap sweep: slot 9 pid 330750 age=324s KILLED
+Jul 27 08:45:04 ... orphan_reap sweep: slot 10 pid 355910 age=331s KILLED
+Jul 27 08:55:23 ... orphan_reap sweep: slot 10 pid 636064 age=355s KILLED
+Jul 27 08:58:29 ... orphan_reap sweep: slot 8 pid 700349 age=323s KILLED   <- this session
+```
+
+Recovery in this session: verified the force-leg's real GCS write + manifest row directly (per-VM shard
+`_index/per_vm/instr-backfill-cefi-pchk-0727085259-f-hyperliquid.parquet`) rather than trusting the killed process's own
+(never-written) report, then re-ran the skip leg using the correct pattern (no `nohup`) and it completed normally.
+
+## Open work
+
+- [ ] [DOC] P2. Add the one-line `nohup`-avoidance callout to `unified-trading-pm/agents/RULES.md` § 2 or `worker.md`'s
+      async-wait section (recommended decision 1 above).
+- [ ] [SCRIPT] P3. Optional — investigate whether `agent-orchestrator/server/orphan_reap.py` should special-case a
+      worker-shell-parented background process (recommended decision 2 above). Lower priority; the RULES.md fix is the
+      primary mitigation.

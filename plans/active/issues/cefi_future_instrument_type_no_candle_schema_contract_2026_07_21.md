@@ -100,13 +100,13 @@ on. Filed separately per the workspace's findings-triage rule (outside the migra
 
 ## Todos
 
-- [ ] 1. [DATA] P1. Decide the CEFI `future` candle policy: register a standalone
-      `_register(_build("cefi", "future", ...))` contract (mirroring TradFi's `_TIMEFRAMES_TRADFI_RE_AGGREGATED` loop)
-      OR confirm CEFI dated futures should ONLY ever be chain-bundled (in which case the raw-tick capture / MDPS
-      instrument-type inference is producing a per-contract `instrument_type=future` shard that should never have
-      reached the candle writer at all — a routing bug, not a missing-contract bug). Read `output_path_helpers.py`'s
-      chain-bundle detection (`CEFI_CHAIN_INSTRUMENT_TYPES`) to see whether DERIBIT dated futures are supposed to route
-      through the bundle path.
+- [x] ✅ 1. [DATA] P1. **DONE 2026-07-27 (slot-5) — unified-api-contracts@4ad3f14f.** Ruled + shipped: registered a
+      standalone `_register(_build("cefi", "future", ...))` contract (mirroring TradFi's standalone `future`
+      registration) — confirmed via `CEFI_CHAIN_INSTRUMENT_TYPES = frozenset({"options_chain", "futures_chain"})` that
+      dated futures are deliberately NOT chain-bundled, so this was a missing-contract oversight, not a routing bug. New
+      regression test `test_cefi_future_trades_candles` (parametrized over all CEFI timeframes); 218 targeted tests +
+      full `quality-gates.sh` green (sentinel-verified). Ruling + patch originally authored by slot-8 (2026-07-27),
+      blocked on the shared-host disk-full incident (BLK-ff0ebe7f); applied verbatim now that disk has recovered.
 - [ ] 2. [DATA] P2. Corpus-wide scan: which CEFI venues/instrument_types besides DERIBIT hit this (or the
       DEFI/PREDICTION equivalent) — is this DERIBIT-specific or systemic.
 - [ ] 3. [SCRIPT] P2. Once ruled, register the contract (or fix the routing) + add a regression test asserting every

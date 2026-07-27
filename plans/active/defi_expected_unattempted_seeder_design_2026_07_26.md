@@ -84,7 +84,10 @@ write a dishonest zero-rows manifest stamp (the exact FLUID failure mode in re-d
       (FLUID confirmed, any others found during `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`'s follow-up
       audit todos) in this plan's Progress Log, with `market-tick-data-service` + `unified-api-contracts` file/symbol
       pointers for the chosen disposition.
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION (gated on the P0 todo above) — design the seeder itself: a
+- [ ] [DATA] P1. **Reclassified 2026-07-27 — sequentially gated on the P0 todo above, NOT itself a fresh
+      operator-decision** (per this plan's own Background: "Once that reconciliation is operator-resolved, the
+      implementation todos below may be converted to `assigned_vm: planning`"). Once P0's per-venue disposition lands,
+      this is an ordinary determinable design task, no further human judgment required. Design the seeder itself: a
       `record_expected_unattempted`-equivalent method on `DefiManifestRecorder`
       (`market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py`), fired from a new DeFi
       enumeration pass mirroring `market_tick_data_service/engine/orchestrator/sentinels.py`'s existing
@@ -94,15 +97,17 @@ write a dishonest zero-rows manifest stamp (the exact FLUID failure mode in re-d
       pass hooks into the DeFi `collect-*` CLI flow, how it avoids double-counting rows a handler already wrote). Done
       when: the design section is written + reviewed, with no open question about how a disposed-exclude venue is
       prevented from getting a stamped row.
-- [ ] [DATA] P2. BLOCKED-OPERATOR-DECISION (gated on the P1 design todo above) — implement the seeder per the design,
-      unit-tested, wired into the DeFi manifest-write path. Done when: `quality-gates.sh` is green on
-      `market-tick-data-service` and a manifest census (deployment-api `_axis_census.py` or equivalent) shows every
-      UAC-declared, non-excluded venue-key carrying at least one manifest row (captured or honest
-      `expected_unattempted`) for its declared instrument_type family.
-- [ ] [DATA] P3. BLOCKED-OPERATOR-DECISION (gated on the P2 implementation todo above) — once the seeder is live,
-      re-open `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s C8 checkbox and flip it referencing this plan + the
-      census evidence (dropping the unsatisfiable DRIFT-SOLANA criterion permanently, per the 2026-07-16 operator ruling
-      that removed DRIFT-SOLANA from every UAC registry).
+- [ ] [DATA] P2. **Reclassified 2026-07-27 — sequentially gated on the P1 design todo above, NOT itself a fresh
+      operator-decision** (same reasoning as P1's reclassification: this is an ordinary implementation task once the
+      design lands). Implement the seeder per the design, unit-tested, wired into the DeFi manifest-write path. Done
+      when: `quality-gates.sh` is green on `market-tick-data-service` and a manifest census (deployment-api
+      `_axis_census.py` or equivalent) shows every UAC-declared, non-excluded venue-key carrying at least one manifest
+      row (captured or honest `expected_unattempted`) for its declared instrument_type family.
+- [ ] [DATA] P3. **Reclassified 2026-07-27 — sequentially gated on the P2 implementation todo above, NOT itself a fresh
+      operator-decision** (a bookkeeping checkbox-flip once the seeder is live, no human judgment needed). Once the
+      seeder is live, re-open `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s C8 checkbox and flip it referencing
+      this plan + the census evidence (dropping the unsatisfiable DRIFT-SOLANA criterion permanently, per the 2026-07-16
+      operator ruling that removed DRIFT-SOLANA from every UAC registry).
 
 ## Codex SSOTs
 

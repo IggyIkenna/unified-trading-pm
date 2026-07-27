@@ -765,3 +765,51 @@ every todo executes an already-decided spec from the parent doc.
   async-wait-discipline rule warns about — no fix applied, none needed.** Standard fleet poll this cycle: still 40
   RUNNING, 42 preemption-ops (unchanged), same 10 `EXIT_STATUS` objects as the last several checks — no new completions
   or OOMs to action via the DERIBIT playbook this cycle.
+- **2026-07-27T08:15Z-08:55Z — operator challenged the deceleration re-diagnosis with a specific number (0.22 files/sec,
+  25x below canary); rigorous re-check confirms per-file THROUGHPUT IS FINE, but uncovers a much more serious REAL
+  problem: a systemic zombie-VM class (9-10 confirmed) that the routine check-ins had been missing entirely.** **Part 1
+  — the throughput math, resolved.** Computed TRUE sustained files/sec for 5 shards two INDEPENDENT ways (the script's
+  own internal `elapsed` clock vs. real GCS-log wall-clock timestamps) — both agree exactly: `cs7-2d`=5.571/s,
+  `cs6-1d`=7.567/s, `cs2d`=3.620/s, `cs5-1d`=5.466/s, `cs9-4e`=5.699/s — all in the SAME range as the original ~5.5
+  files/sec/VM canary, no 25x gap anywhere. **Root cause of the alarming "0.22/sec" figure**: the flagged sub-window
+  (`cs7-2d` 44,200→49,000) was assumed to span "roughly 6 hours" (counting check-in MESSAGES × their nominal "~30-min"
+  label), but the shards' own real log timestamps show it actually spanned **25.1 real minutes** (07:39:02→08:04:09) —
+  the "~30-min check-in" cadence label has NOT corresponded to real 30-minute wall-clock gaps in this session; check-ins
+  have arrived much faster in real time than their nominal label. At the REAL 25-min span, the rate is 3.185 files/sec —
+  close to the shard's own cumulative average, not an alarming outlier. **Part 2 — while investigating, found something
+  genuinely serious the throughput re-check alone would have missed**: doing a full-fleet staleness sweep (comparing
+  every running shard's LAST `Progress:` log line against real wall-clock "now", not just the 2-3 shards originally
+  flagged) surfaced **10 shards silently hung at the OS/VM level** — `cs7-5d`, `cs8-2d`, `cs8-4d`, `cs8-6d`, `cs9-5r`,
+  `cs9-6r`, `cs8-3r`, `cs10-4d`, `cs10-1d`, plus a redundant already-superseded zombie `cs8-1d2` — each confirmed via
+  TWO independent checks: (a) log completely silent (including the heartbeat daemon, which pings every ~60s) for 1-2.5+
+  hours while GCE still reported the instance `RUNNING`; (b) direct SSH timeout (`exit=124`) on EVERY one, re-verified
+  against a KNOWN-HEALTHY VM (`cs7-2d`, which SSH'd instantly) to rule out an SSH-access problem on my end rather than
+  the VMs. Serial-console inspection on a sample found real system-level distress signatures, not clean process kills:
+  `cs9-5r` logged `systemd-resolved: Under memory pressure, flushing caches` followed by a network anomaly; `cs9-6r`
+  showed `DHCP lease lost` / route-drop timeouts — consistent with severe memory pressure destabilizing the whole VM
+  (not just the migration process) rather than the OOM-killer cleanly killing one process (the `rc=137` signature
+  already documented above). **Working theory (not fully proven)**: this is likely the SAME giant-file/memory-pressure
+  class already root-caused for DERIBIT, just manifesting as a total system hang instead of a clean `SIGKILL` depending
+  on how fast the allocation spike hits relative to the kernel OOM-killer's reaction — the script's own internal "wedged
+  worker" warning is powerless here since a truly hung VM stops writing ANY log lines, including that warning. **This is
+  exactly the "looks healthy on shallow inspection" trap the coordinator + CLAUDE.md's async-wait-discipline rule warn
+  about** — `gcloud compute instances list` reporting `RUNNING` was not sufficient evidence of health; only a real
+  staleness-vs-wallclock comparison plus a direct SSH/serial-console check caught it. **All 10 fixed**: deleted each
+  hung VM and relaunched fresh with the identical date range, `ON_DEMAND`, `e2-standard-16`,
+  `--exclude-venues HYPERLIQUID:ASTER:DERIBIT` (DERIBIT excluded defensively on all of these, not just the ones with
+  confirmed landmine files, given the plausible shared root cause) — new names `cs7-5f`, `cs8-2f`, `cs8-4f`, `cs8-6f`,
+  `cs9-5f`, `cs9-6f`, `cs8-3f`, `cs10-1f`; **`cs10-4` (261,903 files, by far the single largest surviving shard) was
+  additionally SPLIT in two** (`cs10-4a` 2026-01-17..01-30, `cs10-4b` 2026-01-31..02-13) to reduce this specific failure
+  mode's blast radius on the biggest remaining shard. **Also found 2 more genuine completions** during the sweep that
+  the routine check-ins had missed: `cs10-8d` (90,506/90,506, `EXIT_STATUS=0`, 1 isolated per-file `error` noted but
+  non-fatal) and `cs6-5d` (89,084/89,084, `EXIT_STATUS=0`, clean) — bringing the genuine-completion count to **6**
+  (`cs1-1r`, `cs10-10d`, `cs7-1d`, `cs10-9r`, `cs10-8d`, `cs6-5d`). **Honest re-baselined ETA**: the original "~5.4h"
+  figure was a FLEET-AVERAGE-throughput number (total files ÷ aggregate fleet files/sec) — it does not model "time until
+  ALL 42 are done," which is gated by the SLOWEST/BIGGEST surviving shard, not the average. The largest shards now
+  running (e.g. `cs10-5d` at 201,581 files, cumulative rate ~5.4/s) project to **~10.4h of their OWN runtime** — these
+  VMs started ~05:40Z, so realistic completion is more like **~16:00Z**, i.e. roughly **7 more real hours from this
+  checkpoint (08:55Z)**, not the original ~5.4h estimate — mainly because per-shard completion time was never actually
+  bounded by the fleet average, compounded by the zombie-hang cycles costing 1-2.5h of wall-clock delay per affected
+  shard before detection. **Process fix going forward**: every check-in must now include a REAL staleness sweep
+  (last-progress-timestamp vs. wall-clock now, flagging anything >45min stale) across the WHOLE fleet, not just
+  spot-checking 2-3 shards — this is now the standing check-in procedure, not optional.

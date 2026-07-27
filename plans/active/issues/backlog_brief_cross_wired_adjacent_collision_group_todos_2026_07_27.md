@@ -109,7 +109,14 @@ time) — it will recur for any other collision-group-mate pair phrased with a s
 - [ ] [OPERATOR] P1. **Manually resolve `cefi_satellite_ao_dispatch_batch1-012`'s dispatched-but-undone state** — the
       work is genuinely complete and verified (market-tick-data-service@94b4aff5, unified-trading-pm@dadf5db6e). Filed
       as `/blocked` question `BLK-35875b16` with the same evidence; this todo exists so the fix is tracked even if the
-      blocked question is answered out-of-band.
+      blocked question is answered out-of-band. **Kept operator-gated on re-triage 2026-07-27**: even though the
+      evidence for THIS row is airtight, the only available fix today is a raw, out-of-band SQL write against the live
+      `state.db` (no `/api/backlog/<id>/reconcile-brief` endpoint exists yet — that's the second todo above, unshipped).
+      `ao_backlog_done_row_disappearance_2026_07_25.md` is an OPEN, unexplained investigation into exactly this class of
+      out-of-band write silently corrupting `done`-row audit history on this same DB — adding another untracked manual
+      UPDATE right now would add noise to that investigation's evidence trail, not just fix one row. Land the
+      reconcile-brief endpoint (or resolve the other investigation) first, then this becomes a normal, audit-logged,
+      non-operator action.
 
 ## Evidence
 

@@ -40,7 +40,7 @@ supersedes:
 superseded_by:
 resolved_by:
 source: operator ruling 2026-07-21 (features data-at-rest root = by_date/day= is the SSOT)
-depends_on: []
+depends_on: [delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27]
 ---
 
 # Features data-at-rest root canonicalisation (2026-07-21)
@@ -147,7 +147,22 @@ THEN re-sync the manifest / data-status. Do not delete the old tree until the tw
       if wired up later — `features-service@57f8b45d`.
 - [ ] 6. [DATA] P1. PROVE the fixed delta_one + volatility writers green on one real day (features write +
       skip-if-fresh), then migrate historical `delta_one/day=…` and bucket-root `day=…` objects UP into the
-      `by_date/day=` tree.
+      `by_date/day=` tree. **2026-07-27 — attempted, BLOCKED on a separate, newly-discovered P0 bug, not yet complete.**
+      Unit-level correctness of the writer fix is independently reconfirmed (30/30 tests green,
+      `tests/volatility/unit/test_feature_writer.py` + `tests/delta_one/unit/test_feature_writer_versioning.py`,
+      explicitly asserting the `delta_one/by_date/` and `volatility/by_date/` prefixes). The REAL-DAY proof itself could
+      not complete: launched the sanctioned `/data-pipeline-check-features` real-VM harness for delta_one CEFI
+      (`--auto-day --require-captured` resolved window 2026-07-19..2026-07-20, confirmed genuinely covered) — the VM ran
+      30+ min across 552 instruments with ZERO successful computations, and a direct scoped CLI reproduction + real-GCS
+      verification root-caused it to a SEPARATE bug: delta_one's CEFI candle reader never threads `pipeline_mode`, so it
+      structurally cannot find ANY current CEFI candle data (all recent MDPS candle writes are
+      pipeline_mode-partitioned; confirmed real candle data exists — 24 real rows verified for
+      `HYPERLIQUID:PERPETUAL:BTC-USD@LIN` on 2026-07-19 — yet the reader reports 0 candles). Filed as
+      `delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md` (P0) — this todo is now BLOCKED on that
+      fix. Volatility's real-day proof separately found no canonically-captured `options_chain` input near this window
+      for either CEFI(1d) or TRADFI(7d) lookback — a second, independent data-availability gap (not yet filed as its own
+      issue; needs investigation of whether options_chain capture exists further back in history). Not checking this box
+      — neither leg of the real-day proof nor the historical migration is complete.
 - [ ] 7. [DATA] P1. Re-sync the availability manifest + data-status render for the migrated features cells so all four
       canonical surfaces agree; verify the coverage surface after the migration.
 - [ ] 8. [REVIEW] P1. On writer ship, record the features `by_date/day=` cutover date in

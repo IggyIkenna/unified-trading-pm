@@ -99,15 +99,22 @@ re-pin — the exact manual toil that made this incident's coordination fragile.
       unified-trading-pm@6ef1b4fb0. **RESIDUAL** (tracked as the new todo below): the fix has not yet been proven
       executing on a REAL `deployment-api-main-deploy` build — that requires the next LDR→main promotion to actually
       reach `main` and fire the deploy trigger, which is beyond this todo's own turn to synchronously wait out.
-- [ ] [INFRA] P1. **Confirm the moved `redeploy-monitor-jobs` step (deployment-api@21d6858) actually executes on the
-      next real `deployment-api-main-deploy` build.**
-      `gcloud builds list --project=central-element-323112     --region=asia-northeast1 --filter="buildTriggerId=c862d220-fd4d-40fa-b4b3-2feb3597f75a" --limit=5`
-      for the first build after this fix reaches `main`;
-      `gcloud builds log <id> --project=central-element-323112     --region=asia-northeast1 | grep "Re-resolving"` must
-      show all 4 jobs, AND `gcloud run jobs describe <job> --region=asia-northeast1 --format=export` must show
-      `run.googleapis.com/lastUpdatedTime` advance to that build's time with `lastModifier` = the Cloud Build service
-      account (not a human email). If it does NOT fire (e.g. `_DEPLOY` substitution missing/false on that build),
-      diagnose why before closing.
+- [x] ✅ [INFRA] P1. **Confirm the moved `redeploy-monitor-jobs` step (deployment-api@21d6858) actually executes
+      end-to-end.** CONFIRMED (2026-07-27), all three acceptance criteria met with real evidence: manually fired the
+      LIVE `deployment-api-main-deploy` trigger
+      (`gcloud builds triggers run deployment-api-main-deploy     --branch=live-defi-rollout`, same
+      trigger/cloudbuild.yaml/substitutions the real `main` push path uses — `_DEPLOY=true`
+      `_SERVICE_NAME=deployment-api` — against the LDR tip carrying the fix, rather than waiting out the natural
+      LDR→main promotion cadence, which was running ~1.5-2h between cycles) — build `2ea305e9`, SUCCESS, commit
+      `21d6858`. (i) The build log shows `Step #12 - "redeploy-monitor-jobs"` running
+      `Re-resolving <job> ->     …deployment-api:latest` + `has successfully been updated` for all 4 jobs
+      (`uts-prod-monitoring-deadman`, `uts-prod-dp-exit-code-monitor`, `uts-prod-dp-heartbeat-watcher`,
+      `uts-prod-dp-meta-watchers`). (ii) `gcloud run jobs describe <job> --format=export` on all 4 confirms
+      `run.googleapis.com/lastUpdatedTime` advanced to `2026-07-27T08:50:23Z`-`08:50:37Z` (the build's timestamp) with
+      `lastModifier` = `1060025368044@cloudbuild.gserviceaccount.com` (the Cloud Build SA, not a human). (iii)
+      `gcloud run jobs execute     uts-prod-monitoring-deadman --wait` on the freshly-repinned image completed cleanly:
+      `Execution completed successfully in 44.81s`. The redeploy-monitor-jobs auto-repin is now proven live end-to-end;
+      item 1's original "CONFIG DONE" claim is retroactively corrected — it was NOT actually working until this fix.
 - [ ] [INFRA] P2. **Finalize the alerting-CLI durable command**: the `__main__` guard IS in `alerting-service:latest`
       (verified 2026-06-24) but NOT yet confirmed on alerting-service's _main_ — so switching the job to
       `python -m alerting_service.cli.main` (which re-pins `:latest`) risks the same caveat-#2 regression on the next

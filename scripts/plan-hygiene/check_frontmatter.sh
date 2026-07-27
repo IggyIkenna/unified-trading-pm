@@ -46,7 +46,7 @@ check_file() {
   # temp file. Using a temp file avoids SIGPIPE when grep -q exits early on large
   # frontmatter blocks piped via echo "$var" with set -o pipefail.
   local fm_file
-  fm_file=$(mktemp /tmp/fm_check_XXXXXX)
+  fm_file=$(mktemp "${TMPDIR:-/tmp}/fm_check_XXXXXX")
   awk 'NR==1{next} /^---$/{exit} {print}' "$f" > "$fm_file"
 
   # Check required fields

@@ -158,10 +158,14 @@ capture of the last 10 minutes of the `orchestrator` systemd journal + a full pr
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Check the watch log periodically** (`ssh`/SSM into the VM,
+- [ ] [SCRIPT] P1. **Check the watch log periodically** (SSM into the VM,
       `cat /home/ubuntu/done_row_disappearance_watch.log`) for an `!!! ANOMALY` line. If one fires, the captured
       journalctl + process-list block immediately following it is the best chance at identifying the actual cause — read
-      it before the trail goes cold (the journal itself eventually rotates).
+      it before the trail goes cold (the journal itself eventually rotates). **Downgraded from [OPERATOR] 2026-07-27** —
+      Category B, read-only: this is a log-tail check via the same read-only AWS SSM path the workspace already uses for
+      orchestrator state (`/check-agent-orchestrator` skill, `check-ao-backlog-status.sh`), not a human-only action — an
+      agent (or an armed `run_in_background` watchdog per the async-wait-and-poll-discipline SSOT) can poll this on a
+      schedule and escalate only if the anomaly marker actually fires.
 - [ ] [BACKEND] P2. Once (if) a recurrence is caught: root-cause the actual code path or process and fix it. Until then,
       do not guess at a fix for an unconfirmed mechanism.
 - [ ] [BACKEND] P3. Consider adding a lightweight SQLite trigger

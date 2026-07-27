@@ -610,8 +610,13 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       (`pipeline_mode=batch_massive/.../data_type=trades/`). The content verifier already classifies them
       TWIN-VERIFIED-SAFE when their `instrument_id` is in same-day canonical `trades` content (8/8 sampled, incl.
       bare-107, 100% covered). So they are NOT a separate straggler class — the verify parquet's TWIN-VERIFIED-SAFE set
-      is the delete-safe list (operator-gated). 0-row/empty legacy = honest no-data, delete-safe once confirmed empty. —
-      e2e-testing
+      is the delete-safe list. 0-row/empty legacy = honest no-data, delete-safe once confirmed empty. **Downgraded from
+      operator-gated 2026-07-27** (reversibility-verified, finding T,
+      /codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a): object/prefix-scoped delete against the named
+      bucket `market-data-tick-tradfi-prd-central-element-323112`, targeting only the already-computed
+      TWIN-VERIFIED-SAFE set (not a whole-bucket destroy). A fresh check confirms the bucket carries 604800s GCS Soft
+      Delete retention — any object this deletes is recoverable within that window, same as an object delete/overwrite.
+      — e2e-testing
 
 ## Phase A — subset violations (MTDS data with no instrument backing)
 
@@ -824,15 +829,22 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       objs / ~9.98 TB, the Phase-D-below procedure) was NOT in this session's audit scope
       (`--ag     defi,tradfi,sports,pred` only, per operator instruction) — its status is UNCONFIRMED by this run, not
       re-asserted as pending or done; re-audit cefi separately before assuming either.]**
-- [ ] [INFRA] P1. **Phase D — DELETE legacy GCS dupes (OPERATOR-GATED, cefi-only today)**: the bare
+- [ ] [INFRA] P1. **Phase D — DELETE legacy GCS dupes (cefi-only today)**: the bare
       `raw_tick_data/by_date/day=*/asset_group={ag}/...` objects are EXACT duplicates of canonical
       `pipeline_mode={mode}_{source}/asset_group={ag}/...` twins (verified: same instrument exists at both). They no
       longer cause UI double-count (data-status reads the cell-reduced manifest + deployment-api@6bcac01 drilldown is
       canonical-only). Procedure: per AG, list bare `day=*/asset_group=` objects → verify each has a `pipeline_mode=`
       twin (via `gcs_describe_object`) → write the delete-list to `_index/audit/legacy_dup_delete_list_{ag}.txt` →
-      **OPERATOR INSPECTS + confirms** → `gcs_delete_object` the confirmed bare twins (in-region VM, workers=32).
-      Storage reclamation only; do NOT delete any bare object lacking a canonical twin (that would be unmigrated →
-      migrate it first). — instruments-service/deployment-service
+      `gcs_delete_object` the confirmed bare twins (in-region VM, workers=32). Storage reclamation only; do NOT delete
+      any bare object lacking a canonical twin (that would be unmigrated → migrate it first). **Downgraded from
+      OPERATOR-GATED 2026-07-27** (reversibility-verified, finding T,
+      /codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a): object/prefix-scoped delete against the named
+      bucket `market-data-tick-cefi-prd-central-element-323112`, restricted to bare objects with a
+      `gcs_describe_object`-verified canonical twin only (not a whole-bucket destroy). A fresh check confirms the bucket
+      carries 604800s GCS Soft Delete retention — any object this deletes is recoverable within that window, same as an
+      object delete/overwrite. Given the scale (~9.98 TB / ~1.08M objects per the Phase-D rescan above), still
+      spot-check a sample of the written delete-list against the twin-verify output before running the delete pass, but
+      a separate human sign-off is no longer a hard prerequisite. — instruments-service/deployment-service
 - [x] ✅ [DATA] P2. **N9c — RESOLVED 2026-06-18** (was: open, "MTDS `_index` is NOT yet v9 for any of the 5 AGs;
       `pipeline_mode` column 100% BLANK" — corrected 2026-07-12, finding id 88, §A2 B-queue ruling; verified
       `mtds@6b9f4b5` present on `live-defi-rollout`). Fixed by the "MARKET-DATA `_index` v9 COLUMN POPULATION — APPLIED
@@ -849,13 +861,13 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
 
       CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-                                                                                                      chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
-                                                                                                      even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
-                                                                                                      UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-                                                                                                      column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-                                                                                                      migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
-                                                                                                      canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
-                                                                                                      AG. — market-tick-data-service
+                                                                                                              chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+                                                                                                              even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
+                                                                                                              UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
+                                                                                                              column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+                                                                                                              migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+                                                                                                              canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
+                                                                                                              AG. — market-tick-data-service
 
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured

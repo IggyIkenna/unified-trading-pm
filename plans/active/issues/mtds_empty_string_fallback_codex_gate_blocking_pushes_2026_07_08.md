@@ -129,8 +129,16 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
       DTZ/TID251/fallback-import precedent) so pre-existing debt doesn't block unrelated pushes while still preventing
       NEW violations. Needs a real per-callsite audit (338 sites) to know which of (a)/(b) applies where — not safe to
       blanket-apply either without reading each one.~~
-- [ ] [SCRIPT] P1. **Once the mechanism is decided, execute it** and get `bash scripts/quality-gates.sh` exiting 0 on
+- [x] ✅ [SCRIPT] P1. **Once the mechanism is decided, execute it** and get `bash scripts/quality-gates.sh` exiting 0 on
       `market-tick-data-service`'s `live-defi-rollout` tip, restoring `.qg_last_passed_sha` to a current commit.
+      CONFIRMED 2026-07-27: no code change needed — the mechanism (STEP 5.101 baseline-ratchet) was already shipped by
+      Todo 1's prior work, and this repo was already comfortably under baseline (90 < 199, banked earlier today). Ran
+      the FULL `bash scripts/quality-gates.sh --no-fix` (not `--scope`-limited, the actual acceptance criterion) on HEAD
+      `94b4aff5` end-to-end: 7106 tests passed / 0 failed / 17 skipped, every STEP 5.x codex-compliance check (including
+      the STEP 5.101 empty-string-fallback ratchet) PASSED, script exited 0. `.qg_last_passed_sha` (gitignored local
+      sentinel) now reads `94b4aff599cb904796addb3b177cc7776c79fe38`, exactly matching current HEAD — confirmed via
+      direct file read + `git rev-parse HEAD` comparison, not inferred from the run's own exit code. No commit needed
+      for this todo (sentinel-only, local, gitignored); the durable fix already landed as part of Todo 1.
 - [x] [VERIFY] P2. ✅ **RUN 2026-07-16 — fleet-wide sweep executed, results below.** **Check whether other repos have
       the same latent gap** (zero-tolerance check with no baseline-ratchet, silently accumulating pre-existing debt
       until it blocks a push) — this class of gate design (hard `max allowed: 0` with no ratchet) is a repeatable

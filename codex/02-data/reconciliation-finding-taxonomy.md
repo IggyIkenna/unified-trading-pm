@@ -67,7 +67,7 @@ referenced_by:
     /codex/02-data/cross-asset-canonical-target-ssot.md,
   ]
 owner:
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-27
 code_refs:
   [
     instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
@@ -203,7 +203,8 @@ emits.
   refinement at `:570-573`).
 - **Severity default** — **LOW**.
 - **Delete-eligible** — **YES**, and it is the least contentious case: an unparseable or zero-row object carries no
-  recoverable data. Still routes through the five-part proof; still a human-only hard stop on a prod bucket.
+  recoverable data. Still routes through the five-part proof; still human-only on a prod bucket unless
+  reversibility-qualified (§3a).
 
 #### `manifest_infra`
 
@@ -419,8 +420,10 @@ Three standing qualifiers:
 
 1. **Eligible ≠ approved.** Eligibility only admits a candidate to the five-part proof in
    `gcs-and-manifest-delete-safety-protocol.md`. Any failed part ⇒ `no-migrate-first`.
-2. **Deletes are SUGGESTIONS.** The reconciliation never deletes. Prod-bucket deletes, legacy-after-copy deletes, the
-   tradfi `batch_massive` purge, and anything touching `instrument_type` casing are **human-only hard stops**.
+2. **Deletes are SUGGESTIONS.** The reconciliation never deletes, regardless. Prod-bucket deletes are human-only unless
+   reversibility-qualified (§3a); legacy-after-copy deletes, the tradfi `batch_massive` purge, and anything touching
+   `instrument_type` casing remain **human-only hard stops** (correctness gates, not reversibility gates — §3a does not
+   apply to these).
 3. **`non_data` (class C2) is a permanent NEVER**, independent of any proof.
 
 ---

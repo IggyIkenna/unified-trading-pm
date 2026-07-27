@@ -122,19 +122,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-                                                                                                                                                                          > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-                                                                                                                                                                          > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-                                                                                                                                                                          > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-                                                                                                                                                                          > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-                                                                                                                                                                          > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-                                                                                                                                                                          > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-                                                                                                                                                                          > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-                                                                                                                                                                          > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-                                                                                                                                                                          > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-                                                                                                                                                                          > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-                                                                                                                                                                          > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-                                                                                                                                                                          > — it caused no canonical-form regression. Recorded in
-                                                                                                                                                                          > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+                                                                                                                                                                              > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+                                                                                                                                                                              > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+                                                                                                                                                                              > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+                                                                                                                                                                              > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+                                                                                                                                                                              > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+                                                                                                                                                                              > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+                                                                                                                                                                              > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+                                                                                                                                                                              > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+                                                                                                                                                                              > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+                                                                                                                                                                              > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+                                                                                                                                                                              > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+                                                                                                                                                                              > — it caused no canonical-form regression. Recorded in
+                                                                                                                                                                              > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
 - [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
       canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144.
@@ -425,14 +425,20 @@ exclusions remain in this loop's termination criteria. [SYNCED 2026-07-14, findi
 - [x] ✅ [DOCS] P2. /codex/02-data/availability-manifest-and-data-status.md — add the 2026-06-21 per-AG snapshot + the
       live-mode-population gap as a tracked baseline. — unified-trading-pm@7c3926f3f
 
-- [ ] [DATA] P1. **defi oracle/pyth — no launcher for `collect-oracle-prices` data_type (BLOCKED-OPERATOR-DECISION)**:
+- [ ] [DATA] P1. **defi oracle/pyth — no launcher run yet for `collect-oracle-prices` data_type.**
       `launch-mtds-pyth-archive-backfill-vm.sh` covers the pre-2023-10 Pyth Hermes gap (2022-11→2023-09, Pythnet RPC
       fallback + CoinGecko), and `launch-mtds-pyth-lst-backfill-vm.sh` covers 2023-10→today for LST feeds — both scripts
-      exist and are ready. pyth-archive launches without an ack requirement; pyth-lst requires operator `[ack]` per the
-      script comment (covers 7+ months; Birdeye paid-tier is the alternative). No `collect-oracle-prices` year-sharded
-      fleet launched yet. **Action**: operator decide whether to launch pyth-archive + pyth-lst now (free tier viable
-      for backfill window; ~1h wall-clock each), then launch year-sharded. Repo: deployment-service.
-      **BLOCKED-OPERATOR-DECISION**.
+      exist and are ready, free-tier viable (~1h wall-clock each; Pyth Hermes rate-limit 100 req/min, 4 feeds × ~960
+      days ≈ 3840 requests), no cost trade-off pending. No `collect-oracle-prices` year-sharded fleet launched yet.
+      **Action**: launch pyth-archive + pyth-lst now, then launch year-sharded. Repo: deployment-service. **Downgraded
+      from BLOCKED-OPERATOR-DECISION 2026-07-27** (finding E, `/codex/05-infrastructure/vm-launcher-runbook.md`): this
+      is an ordinary backfill VM launch (not disaster-drill/DR-cutover/live-strategy-with-wallet-key) — the runbook's
+      current entry for both `launch-mtds-pyth-*-backfill-vm.sh` scripts (§ MTDS launchers) lists no ack/sign-off
+      requirement, only `--start-date`/`--end-date`. The pyth-lst script's own header comment still carries an older "7+
+      months of data needs operator `[ack]`" convention from the 2026-05-14 `solana_lst_native_staking_adapters` plan
+      (now archived) — that convention predates the current default-autonomous VM-launch posture and is not reflected in
+      the runbook SSOT; the Birdeye-paid-tier mention is a fallback-if-free-tier-fails note, not a live cost decision
+      (free tier is confirmed viable). AO-dispatchable now.
 
 > **➡️ EXTRACTED 2026-07-24 (line-cap remediation follow-up) →
 > [`data_completion_to_100_all_ag_history2_2026_07_24`](./data_completion_to_100_all_ag_history2_2026_07_24.md)**. The
@@ -797,8 +803,15 @@ formula.) (v9 `schema_version` uniformity is a SEPARATE P3 axis, HARD-gated on a
       `record_empty`/`record_failed`); `liquidations_handler.py` GraphQL body-error swallow; `polymarket_adapter`
       `_load_instruments_from_gcs` two `except Exception: pass` fallbacks. _(folded from
       `defi_mtds_subgraph_and_adapter_fixes` + `mtds_honest_absence_swallow_remediation`.)_
-- [ ] [HUMAN] P1. **BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification** (Lighter/Pacifica/Extended) +
-      Extended-Starknet unblocking (gated on it).
+- [x] ✅ [HUMAN] P1. **CLOB-on-chain asset_group classification (Lighter/Pacifica/Extended) — RULED, stale gate found +
+      closed 2026-07-27.** This todo's citation was stale: the operator ruling already exists in
+      `/codex/02-data/cross-asset-canonical-target-ssot.md` § "Perp classification + the defi two-id model" (dated
+      `last_reviewed: 2026-07-20`) — **"CLOB (orderbook) on-chain perps → `asset_group=cefi`: HYPERLIQUID, ASTER,
+      EXTENDED, LIGHTER, PACIFICA(culled)"**, part of the broader "2026-06-25 defi→cefi venue reclassification" already
+      referenced corpus-wide (e.g. `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`). Extended-Starknet unblocking —
+      the second half of this todo — is also already done: `cefi_consolidated_closeout_2026_07_18.md` records
+      EXTENDED-STARKNET as **"PROVEN WIRED — live MVP"**. No further operator decision or unblocking action needed;
+      nothing downstream of this todo depends on re-opening it.
 - [ ] [QG] P1. **DEFERRED — restore `dex_swaps_handler.py` adapter-contract baseline** (QG 5.70 regression).
 
 ## Folded-in scope 2026-07-13
@@ -911,11 +924,21 @@ above):**
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION** — only after Phase 3's parity verification is fully green: delete the
-      non-canonical (glued + bare-underlying) originals. Version-aware, snapshot first, same rigor as
-      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase-7. Explicitly NOT bundled with the reshape
-      apply step. (FOLDED IN from bybit_futures_chain_write_shape_migration_2026_07_13, 2026-07-15, plan-reconcile §6
-      operator ruling)
+- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION** — delete the non-canonical (glued + bare-underlying) BYBIT
+      `futures_chain` originals in `market-data-tick-cefi-prd-central-element-323112` once ready. Version-aware,
+      snapshot first, same rigor as `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase-7. Explicitly
+      NOT bundled with the reshape apply step. (FOLDED IN from bybit_futures_chain_write_shape_migration_2026_07_13,
+      2026-07-15, plan-reconcile §6 operator ruling). **Prerequisite CLEARED**: Phase 3.5's parity verification is fully
+      green and doubly-confirmed (835/835 objects, exhaustive not sampled, independently re-run by two slots — see the
+      archived source plan's Phase 3.5). **Gate re-verified 2026-07-27, stays `[OPERATOR]` — this is NOT the Category-C
+      reversibility carve-out** (finding T, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): a fresh
+      check confirms the bucket carries 604800s soft-delete retention, but this delete is a
+      legacy-object-delete-**after-copy** (the reshape script copied these originals into canonical hive form before
+      this step) — that is hard-stop #2 in the protocol's §3 human-only list, and §3a's reversibility exception
+      explicitly overrides ONLY hard-stop #1, never #2, regardless of soft-delete config. Hard-stop #2 additionally
+      requires the full five-part proof (§1, especially Part 5's 100% canonical-twin-coverage invariant) before even a
+      delete SUGGESTION may be emitted — not independently re-verified here — and execution stays human-only either way.
+      Correctly gated; no downgrade.
 
 ## Deferred work — migrated to:
 

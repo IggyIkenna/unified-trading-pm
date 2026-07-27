@@ -12,7 +12,7 @@ QUIET="${1:-}"
 PM_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 BROKEN=0
 CHECKED=0
-SEEN_FILE=$(mktemp /tmp/codex_seen_XXXXXX)
+SEEN_FILE=$(mktemp "${TMPDIR:-/tmp}/codex_seen_XXXXXX")
 trap 'rm -f "$SEEN_FILE"' EXIT
 
 # Extract unique codex paths from plan + epic bodies (outside frontmatter)

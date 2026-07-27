@@ -38,8 +38,8 @@ parent_epic: instruments_master
 source:
   "slot-11 (data_engineering), discovered while confirming cefi_satellite_ao_dispatch_batch1_2026_07_25.md's
   purge-orphaned-blobs todo done-when criteria (fresh enumerate_expected_universe dry-run for asset_group=defi)"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 drift_direction: advance-code

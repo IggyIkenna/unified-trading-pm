@@ -42,7 +42,7 @@ authoritative_for:
   ]
 referenced_by: []
 owner:
-last_reviewed: 2026-07-21
+last_reviewed: 2026-07-27
 code_refs:
   [
     unified-trading-library/unified_trading_library/config_interface/paths/registry.py,
@@ -190,9 +190,9 @@ entire un-migrated corpus. Date-condition against the candle rows of
   fake-canonicalise.
 - **split-brain duplicate copies** → `legacy_duplicate`, content-verified before any dedup suggestion.
 
-All prod-bucket deletes stay human-only hard stops
-([`gcs-and-manifest-delete-safety-protocol.md`](gcs-and-manifest-delete-safety-protocol.md)); the migration's own
-copy→verify(crc32c)→delete purge is the operator-authorised deletion path, NOT this read-only skill's.
+All prod-bucket deletes stay human-only unless reversibility-qualified
+([`gcs-and-manifest-delete-safety-protocol.md`](gcs-and-manifest-delete-safety-protocol.md) §3a); this read-only skill
+never executes either way — the migration's own copy→verify(crc32c)→delete purge is the actual deletion path.
 
 ## 5. Taxonomy delta (candles need almost no new types)
 

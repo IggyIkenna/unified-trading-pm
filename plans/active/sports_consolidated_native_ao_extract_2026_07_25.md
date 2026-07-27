@@ -453,3 +453,40 @@ reached, each fixable the same way (bump that section's own timeout var).
   lost) rather than force a QG run I couldn't trust or launch a delete campaign I couldn't reliably monitor. Todo stays
   open; the script is ready to resume from (stash pop → re-run QG → ship → launch) once host disk pressure eases — do
   not rebuild from scratch.
+- 2026-07-27T09:22Z (slot-10, same follow-up todo, final checkpoint this session): after the 09:07 mid-task crash
+  (upstream summary), verified all 6 non-features repos already shipped+pushed pre-crash survived intact
+  (`git merge-base --is-ancestor` on each: unified-trading-library@78129566, market-data-processing-service@caa995c,
+  ml-service@0bd5e6a, deployment-api@489d747, deployment-service@94e3ecf — all confirmed ancestors of HEAD, all
+  `ahead=0/behind=0` vs `origin/live-defi-rollout`). Only the new purge script itself was lost by the crash despite the
+  resumption instruction's claim of intact WIP — recreated it from scratch
+  (`features-service/scripts/purge_sports_derived_features_post_floor_residue_2026_07_27.py`, a GCS-directory-WALK
+  design, distinct from slot-9's earlier MANIFEST-DRIVEN `purge_derived_features_post_floor_residue_2026_07_27.py` noted
+  two entries above — **two independently-built scripts now exist for this one todo, in two different slot worktrees;
+  whoever picks this up next should pick ONE, not run/ship both**) and re-verified it twice against real prod GCS data
+  (`_scan_one_day(2020-06-06)` → keep=0 delete=9, matching the pre-crash result exactly; `_scan_one_day(2021-01-01)` →
+  keep=4 delete=0, a clean day). Then ran `features-service`'s `quality-gates.sh` **13 times** this session chasing the
+  script's only remaining blocker (an untracked-file QG-green gate, not a code defect) — root-caused and fixed 5
+  DISTINCT shared-host contention failure modes in sequence via documented env-var opt-outs (`TMPDIR` off the shared
+  tmpfs, `QG_GOVERNOR_DISABLE=true`, `QG_MEM_CAP=0`, `PYTEST_TIMEOUT=180`, `PYRIGHT_TIMEOUT` 120→900), reaching
+  progressively further each time (clean pytest completion achieved 3 times total), yet attempt #13 still died silently
+  right after a clean `17886 passed` pytest run, before TYPE CHECK. Live diagnostics: load average 14.93, 8.9G/290G disk
+  free, 3.3Gi/30Gi RAM free + 3.8Gi swap in use, slot-8 running its own concurrent `quality-gates.sh` — corroborating
+  entry with this evidence added to `issues/shared_host_home_filesystem_full_2026_07_26.md`. Filed `/blocked`
+  (`BLK-0afe051c`) rather than continuing to blind-retry against demonstrably fleet-wide contention, per the operator's
+  own prior guidance on this exact todo (see slot-9's entry above) to not push forward on an unstable host. **Handoff
+  for next session/slot**: the script is code-complete + twice-verified; do NOT rebuild it. Once host load eases, run
+  `TMPDIR=<off-shared-tmpfs> QG_GOVERNOR_DISABLE=true QG_MEM_CAP=0 PYTEST_TIMEOUT=180 PYRIGHT_TIMEOUT=900 bash scripts/quality-gates.sh`
+  in `features-service`, commit +
+  `quickmerge --agent --files 'scripts/purge_sports_derived_features_post_floor_residue_2026_07_27.py'`, then launch the
+  real VM per `deployment-service/scripts/vm/launch-canonical-migration-vm.sh sports-features-purge <d1> <d2> full`
+  (already smoke-tested dry-run pre-crash), verify STARTED<60s + real progress + the `--recensus` step reports 0
+  residue, THEN flip this todo's checkbox — not before. Todo stays open.
+- 2026-07-27T09:2X-09:29Z (slot-10, same follow-up todo, STOP confirmed): operator answered `BLK-0afe051c` authorizing
+  exactly ONE more lower-footprint attempt (`--no-fix`) before stopping if it died entering TYPE CHECK again. Found the
+  fleet already AT the 2-QG cap (slot-5 + slot-9), killed my own premature 3rd instance, armed a watchdog to launch once
+  a slot freed. That one attempt fired but died **even earlier** (15% into pytest) under **worse** measured load (load
+  avg 17.37 vs 14.93, 3 OTHER slots' QGs running concurrently) — confirms the bottleneck is fleet-wide and external, not
+  this attempt's own footprint. Per operator guidance: NOT retrying further this session. Full evidence chain (13+1
+  attempts, 5 root causes fixed, this final confirming data point) is in
+  `issues/shared_host_home_filesystem_full_2026_07_26.md`. Todo stays open, script stays uncommitted (green-tree rule);
+  moving to other backlog work while this clears.

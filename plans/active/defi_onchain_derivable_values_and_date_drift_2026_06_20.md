@@ -185,15 +185,25 @@ that workstream.
       Pythnet-RPC replay for the pre-archive (2022-11 → 2023-10) window is NOT pursued (slow + expensive, no archive
       API). Facade re-export wired (`ORACLE_COVERAGE_START` / `get_oracle_coverage_start` now reachable via
       `unified_api_contracts.registry`, mirroring `LST_TOKEN_GENESIS`) + a facade-parity test added. Codex cross-link
-      added at `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` § "On-chain APY derivation". Note:
+      added at `/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` § "On-chain APY derivation". Note:
       no consumer yet derives an actual backtest date-range floor from this SSOT (nothing in the codebase runs a
       pre-2023-10 jitoSOL backtest today, so there is nothing to clip in practice) — wiring an explicit floor into the
       backtest engine is separate, cross-craft follow-on work if/when a consumer needs it. —
       unified-api-contracts@4a29261e (Named successor for the LST-sourcing decision: archived
       `plans/archive/issues/lst_apr_sourcing_method_validated_2026_05_14.md`.)
-- [ ] [SCRIPT] P1. **Latent Bug-class-3 local fallback drift sweep.** Adjacent to case-2 (UAC `PROTOCOL_LAUNCH_DATES` vs
-      the instruments-service local fallback dict). Sweep for any local fallback that overrides a UAC value without an
-      explicit comment; remove the override or document why it survives.
+- [x] ✅ [SCRIPT] P1. **Latent Bug-class-3 local fallback drift sweep.** Adjacent to case-2 (UAC `PROTOCOL_LAUNCH_DATES`
+      vs the instruments-service local fallback dict). Sweep for any local fallback that overrides a UAC value without
+      an explicit comment; remove the override or document why it survives. — **instruments-service@8b02b647**. Traced
+      case-2 to `evm_creation_resolver.LENDING_PROTOCOL_DEPLOY_DATES`; verified pair-by-pair against UAC
+      `PROTOCOL_LAUNCH_DATES` that every entry except `aave_v3`/`GNOSIS` was dead code in the UAC-first cascade, several
+      silently stale (e.g. `spark`/`ETHEREUM` still had the pre-2026-05-08 63-day-over-clip value UAC's own fix
+      superseded; `compound_v3`/`POLYGON` was fiction — Compound V3 isn't deployed there). Removed every dead entry,
+      kept only the one genuine fallback UAC doesn't track (`aave_v3`/`GNOSIS`), added a shape-lock regression test +
+      explicit resolve-via-UAC tests for every formerly-local-only protocol. QG green, shipped via quickmerge. Broader
+      "any local fallback" sweep beyond this concrete precedent (token decimals / chain genesis / factory addresses)
+      filed as its own scoped follow-up:
+      `unified-trading-pm/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`
+      (unified-trading-pm@8c3d335fd).
 
 ## Success criteria
 
