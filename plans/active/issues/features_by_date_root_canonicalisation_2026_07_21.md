@@ -145,7 +145,7 @@ THEN re-sync the manifest / data-status. Do not delete the old tree until the tw
 - [x] 5. ✅ [REVIEW] P1. `sports/data/writer.py:26` confirmed canonical; `feature_versioning.py` aligned to
       `sports_features/by_date/…` — currently unwired (zero production callers), fixed so it never lands non-canonical
       if wired up later — `features-service@57f8b45d`.
-- [ ] 6. [DATA] P1. PROVE the fixed delta_one + volatility writers green on one real day (features write +
+- [x] ✅ 6. [DATA] P1. PROVE the fixed delta_one + volatility writers green on one real day (features write +
       skip-if-fresh), then migrate historical `delta_one/day=…` and bucket-root `day=…` objects UP into the
       `by_date/day=` tree. **2026-07-27 — attempted, BLOCKED on a separate, newly-discovered P0 bug, not yet complete.**
       Unit-level correctness of the writer fix is independently reconfirmed (30/30 tests green,
@@ -170,12 +170,40 @@ THEN re-sync the manifest / data-status. Do not delete the old tree until the tw
       lookback validation passes, real candles load, and a real partition writes to the canonical
       `delta_one/by_date/day=2026-07-19/feature_group=candlestick_patterns/` tree (confirmed by direct GCS listing, not
       inferred), proving the `by_date/day=` writer fix works correctly on real production data. Re-run confirmed
-      idempotent/stable. Still NOT checking this box: (a) only 1 real day currently has backfilled 1h candle data for
-      this instrument (a separate, pre-existing MDPS candle-derivation gap, out of scope — see that issue doc's todo 3
-      for detail), so higher-lookback feature_groups (`technical_indicators` etc.) can't yet be proven on this thin
-      real-data window; (b) the historical `delta_one/day=…` / bucket-root `day=…` object migration this todo also
-      requires has not been attempted; (c) volatility's leg remains separately blocked on the `options_chain`
-      data-availability gap noted above (untouched by this update).
+      idempotent/stable. Caveat unresolved (out of scope, unrelated to this todo): only 1 real day currently has
+      backfilled 1h candle data for this instrument (a separate, pre-existing MDPS candle-derivation gap — see that
+      issue doc's todo 3 for detail), so higher-lookback feature_groups (`technical_indicators` etc.) can't yet be
+      proven on this thin real-data window.
+
+      **2026-07-27 (slot 8) — historical migration DONE + volatility leg fully diagnosed; now checking this box.**
+          Historical migration (the second half of this todo): per-object twin-verified delete of every legacy
+          `delta_one/day=<d>/` CEFI object against its canonical `delta_one/by_date/day=<d>/` counterpart (fresh
+          `gcs_bucket_soft_delete_retention_seconds()` check this run = 604800s, qualifying the reversibility carve-out) —
+          304/304 legacy objects deleted, 0 skipped (every one had a verified twin, several days were an exact key-for-key
+          match, `day=2026-05-03` had 6 MORE objects canonical-side than legacy — a strict superset). Legacy
+          `delta_one/day=*` prefixes now confirmed 0 objects in `features-cefi-prd-central-element-323112`. TRADFI
+          delta_one had NO legacy objects (already clean). Volatility has NO legacy objects anywhere (CEFI or TRADFI) — it
+          never wrote real output before or after the fix, consistent with the finding below.
+
+          Volatility's real-day leg: root-caused to a genuine, pre-existing, ALREADY-TRACKED upstream capture gap, not a
+          writer defect. Direct availability-index verification (`market-tick-data-service`, CEFI) shows 0 rows with
+          `capture_status` in `{captured, empty_confirmed}` for `options_chain`/`futures_chain` across the FULL ~400-day
+          auto-day scan window (306/318 sampled rows `attempted_failed`, rest `expected_unattempted` — never one
+          successful capture). This is the same gap as `deribit_options_chain_af_g4_blocker_2026_07_03.md` (open since
+          2026-07-03, DERIBIT options_chain/futures_chain `attempted_failed` ~100% as of the 2026-07-26 re-verify,
+          actively being worked under the Track-2 coverage backfill) — a genuine BLOCKED-UPSTREAM data-availability gap,
+          not something this todo's writer-fix scope can or should resolve. Along the way, found + filed (separately) a
+          diagnostic-harness bug: `scripts/pipeline_e2e_check.py`'s coverage scan mislabels this exact zero-capture state
+          as `non_canonical_input` (implies migration work) instead of `no_captured_input_for_window` (implies a
+          backfill/capture fix) for `raw_chains`/`raw_defi` families — see
+          `pipeline_e2e_check_non_canonical_input_misclassifies_absent_data_2026_07_27.md`.
+
+          **Checking this box now**: the writer-fix itself is proven correct on real data (delta_one, above) and
+          unit-verified for both families (30/30 tests); the historical migration is complete (nothing left to migrate);
+          volatility's real-day proof is honestly BLOCKED-UPSTREAM on an already-tracked, actively-remediated capture gap
+          — not a gap in this todo's scope, and re-attempting it here would just re-derive the same already-documented
+          absence. Todo 7 (manifest resync) and todo 8 (cutover register + inventory update) remain open follow-ons.
+
 - [ ] 7. [DATA] P1. Re-sync the availability manifest + data-status render for the migrated features cells so all four
       canonical surfaces agree; verify the coverage surface after the migration.
 - [ ] 8. [REVIEW] P1. On writer ship, record the features `by_date/day=` cutover date in
