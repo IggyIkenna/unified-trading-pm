@@ -195,3 +195,69 @@ lands (per the workspace's commit-push-flip + evidence discipline).
   - Next: quickmerge both, verify CI green, trigger the real instruments-service tarball re-upload + honest-coverage VM
     relaunch (regenerate today's coverage.json with the merge fix live) and the deployment-api Cloud Build + Cloud Run
     deploy, then self-verify both live before archiving this doc.
+- **2026-07-27, continued** — Shipped + deploy-triggered:
+  - ✅ `instruments-service@21083716` (`fix(honest-coverage): same-day merge-on-write…`) — quickmerge landed on
+    `live-defi-rollout`, QG green. Tarball re-uploaded (`create-code-tarballs.sh --include instruments-service`):
+    floating manifest now pins `commit_sha=210837161c94c370227790ad8496b7e6a4d1a320` (verified via
+    `gcloud storage cat .../instruments-service-code.manifest.json`).
+  - ✅ `deployment-api@e8fc64a` (`fix(data-status): fail-fast OOM guard on the coverage-summary live-build fallback…`) —
+    quickmerge landed on `live-defi-rollout` with `Build-LDR: true` (opt-in image build trailer), QG green,
+    `quality-gates-v2` CI green (run `30227710284`).
+  - ✅ `unified-trading-pm@78e7947a0` — this issue doc itself, confirmed present on `origin/live-defi-rollout` via
+    `git merge-base --is-ancestor`. Landing this took 4 quickmerge attempts due to a VERY high commit rate on this
+    branch from what is evidently other concurrent agent activity (many `docs(plans):` commits landing every 20-60s
+    throughout this session) — none were content conflicts with this file (a brand-new path); each retry failed only on
+    branch-drift / autostash-pop friction against OTHER sessions' foreign uncommitted WIP (traced to a
+    `hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` archival-and-repoint-referrers
+    operation in progress elsewhere) — left entirely untouched throughout, never mine to resolve. Re-fetch-and-retry (no
+    code changes needed) succeeded once the branch held still long enough.
+  - ⏳ Launched `measure-honest-coverage-20260727-020313` (e2-highmem-4, `--asset-group all`) to regenerate
+    `2026-07-27/coverage.json` with the fixed writer — last observed VM status: `STOPPING` (i.e. finishing up; VMs in
+    this launcher self-delete on completion). NOT YET CONFIRMED: the resulting file actually carries all 5 asset_groups.
+  - ⏳ deployment-api's `*/15` `ldr-to-main-promote-fleet` cron opened promotion PR `IggyIkenna/deployment-api#398` at
+    `2026-07-27T01:06:05Z` (after the fix commit). NOT YET CONFIRMED: PR merged → `image-build-gate` Cloud Build SUCCESS
+    → new Cloud Run revision serving the fix.
+
+## 5. Remaining todos (pick up here after any context reset)
+
+- [x] [SCRIPT] P0. ✅ **CONFIRMED 2026-07-27.**
+      `gcloud storage cat     gs://central-element-323112-honest-coverage/2026-07-27/coverage.json` —
+      `asset_groups_requested` AND `asset_groups_measured` both `[cefi, defi, tradfi, sports, prediction]` (all 5),
+      `partial: false`. The merge-on-write fix (`instruments-service@21083716`) is confirmed working on real prod data —
+      the same-day clobber bug is fixed. VM `measure-honest-coverage-20260727-020313` self-deleted on completion as
+      designed (`gcloud compute instances list --filter="name~measure-honest-coverage"` → empty).
+- [ ] [SCRIPT] P0. `IggyIkenna/deployment-api#398` still **OPEN, unmerged** as of 2026-07-27 (re-checked via
+      `gh pr     view 398 --repo IggyIkenna/deployment-api --json mergedAt,state` → `state=OPEN`, `mergedAt=null`) —
+      awaiting the `*/15` `ldr-to-main-promote-fleet` cron.
+      `gcloud builds list --filter="substitutions.REPO_NAME=deployment-api"     --limit=3` still shows only pre-fix
+      builds (latest `createTime=2026-07-26T20:46:45Z`, before the fix commit); `uts-shared-deployment-api`'s
+      `status.latestReadyRevisionName` is still `uts-shared-deployment-api-00301-gcl` (pre-fix). Re-check after the PR
+      merges: confirm a NEW Cloud Build ran and SUCCEEDED with `createTime` after `2026-07-27T01:06:05Z`, then confirm
+      the Cloud Run revision updated. Cite the build ID as `Evidence: cloudbuild=<id>` per `plans/PLAN_FORMAT.md` § 8b
+      before considering this "deployed".
+- [ ] [SCRIPT] P1. Self-verify live once both above are confirmed: `curl .../api/data-status/honest-coverage` shows 5
+      asset_groups; `curl .../api/data-status/coverage-summary?service=market-tick-data-service` returns EITHER a
+      `refused`/`stale` structured response (fast) OR real data — never a >60s hang, never contributing to another
+      `Memory limit exceeded` log line (`gcloud logging read` on `uts-shared-deployment-api`, `--freshness=10m`, filter
+      `severity>=ERROR`).
+- [ ] [DOCS] P1. Once all three above are confirmed, run the 6-step archival ritual on THIS doc (migrate any leftover
+      DEFERRED items → banner → codex-alignment check — confirm `/codex/02-data/honest-coverage-model.md` doesn't need a
+      same-day-merge-semantics note added → update any referrer corpus-wide (none expected — this doc is brand new) →
+      clear lock — there is none) and move it to `plans/archive/issues/`.
+
+## 6. Lessons for whoever resumes this
+
+- The manifest-status live-build OOM guard (`deployment-api@030779f`, 2026-07-14,
+  `plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md`) is the PROVEN, reusable pattern for
+  "an on-demand fallback can blow the shared container" — before designing a new guard for a different endpoint, check
+  whether that pattern (pre-flight byte estimate + `bounded_subprocess.run_bounded`) already fits, as it did here for
+  coverage-summary.
+- `measure_honest_coverage.py`'s `asset_groups_requested = asset_groups` (set ONCE, pre-loop, from the CLI arg) is a
+  reliable diagnostic: if a served payload's `asset_groups_requested` is narrower than what you know the schedule
+  requests, the run that PRODUCED it was invoked with a literal narrower `--asset-group`, full stop — it can never be an
+  artifact of an "all" run partially failing (that always still lists all 5 as requested, with failures tracked
+  separately via `asset_groups_failed`/`partial`).
+- `unified-trading-pm` was under very heavy concurrent write load this session (commits landing every 20-60s from what
+  is evidently other active agent work). This is expected/normal per the workspace's multi-agent model, not a bug —
+  quickmerge's own retry-on-drift mechanics handle it, just budget for several attempts on this specific repo when the
+  fleet is busy, and never touch a foreign session's uncommitted files while waiting out the drift.
