@@ -513,6 +513,18 @@ failure_modes:
       status: verbose,
       fires: "scheduled audit/consolidator/digest cron missed",
     }
+  - {
+      id: DP-WATCHER-003,
+      category: WATCHER,
+      severity: CRITICAL,
+      event: DP_FLEET_MONITOR_RUN_FAILED,
+      detector: run_lifecycle(service_name="dp-fleet-monitor"),
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires:
+        "dp-fleet-monitor's own run_lifecycle() terminal-failure event (meta, like the watcher-down siblings above)",
+    }
 
   # --- DP-DIGEST (daily summaries, INFO) ---
   - {
@@ -536,4 +548,30 @@ failure_modes:
       escalation: file_issue,
       status: verbose,
       fires: "daily manifest-hygiene-vs-GCS RED/GREEN summary",
+    }
+  - {
+      id: DP-DIGEST-003,
+      category: DIGEST,
+      severity: INFO,
+      event: DP_FLEET_MONITOR_RUN_STARTED,
+      detector: run_lifecycle(service_name="dp-fleet-monitor"),
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires:
+        "routine dp-fleet-monitor sweep start (2026-07-27: previously unregistered, fell through to the generic incident
+        catch-all)",
+    }
+  - {
+      id: DP-DIGEST-004,
+      category: DIGEST,
+      severity: INFO,
+      event: DP_FLEET_MONITOR_RUN_COMPLETED,
+      detector: run_lifecycle(service_name="dp-fleet-monitor"),
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires:
+        "routine dp-fleet-monitor sweep completion (2026-07-27: previously unregistered, fell through to the generic
+        incident catch-all)",
     }

@@ -45,6 +45,15 @@ on:
           Space-separated list of sibling repos to clone (e.g. "unified-trading-library unified-api-contracts")
         type: string
         default: ""
+      self_hosted_runner_labels:
+        description:
+          'JSON array of runner labels for the qg-slices (real test/lint/typecheck) job, e.g.
+          ''["self-hosted","glue"]''. Empty string (default) = ubuntu-latest, unchanged for every caller that doesn''t
+          pass this — github_actions_operator_gated_followups_2026_07_17.md''s quality-gates-v2 self-host decision,
+          canaried per-repo via this input rather than a blanket flip (23 of 24 repos have no self-hosted runner
+          registered yet; a global flip would hang every one of their promotion gates).'
+        type: string
+        default: ""
     outputs:
       metadata_only:
         description:
@@ -227,7 +236,10 @@ jobs:
         # the checks leg runs the SAME two selectors sequentially (see the gate step), so
         # local↔CI slice parity (check_qg_slice_completeness.py) still covers all 4 phases.
         slice: [tests, checks]
-    runs-on: ubuntu-latest
+    # Empty (default) -> ubuntu-latest, byte-identical to before this input existed. Non-empty only
+    # for a canaried caller passing self_hosted_runner_labels (see the input's own doc above).
+    runs-on:
+      ${{ inputs.self_hosted_runner_labels != '' && fromJSON(inputs.self_hosted_runner_labels) || 'ubuntu-latest' }}
     # 135m covers the slowest repo's tests leg + margin; the non-tests legs finish
     # far sooner. A hung/runaway leg is killed cleanly (failure()||cancelled() notify fires).
     timeout-minutes: 135

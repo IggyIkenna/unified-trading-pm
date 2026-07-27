@@ -148,16 +148,22 @@ locked_since:
 
 ## Later-surfaced alert-substrate bugs (triaged 2026-06-23, still open)
 
-- [ ] [CODE] P0. **`get_paging_credentials` batch-fetch is fragile — one missing secret zeroes ALL paging creds** —
+- [x] ✅ [CODE] P0. **`get_paging_credentials` batch-fetch is fragile — one missing secret zeroes ALL paging creds** —
       `config_reloaders._fetch` does `SecretManagerClient.get_secrets(_ALL_PAGING_SM_KEYS)` as ONE batch; 6 Twilio
       secrets + `DEPLOYMENT_SCRIPTS_LOG_BUCKET` are absent in SM → the batch raises → `except` returns empty → EVERY
       paging cred (incl. the #uts-live-alerts webhook) reads blank, so the SM-hot-reload path is dead (worked around by
       the `UTS_LIVE_ALERTS_SLACK_WEBHOOK` env secret on the service). Fix: make `_fetch` tolerate missing secrets
       (per-secret get, skip-missing) OR create the absent secrets as empty placeholders (the `if val:` mapping already
-      skips empties). Then SM-hot-reload works without the env fallback. (alerting-service)
+      skips empties). Then SM-hot-reload works without the env fallback. (alerting-service) — RE-DIAGNOSED + CLOSED
+      2026-07-27: this diagnosis is STALE against the current code — traced the full call chain
+      (`GCPSecretClient.get_secret` → `SecretManagerClient.get_secret`/`get_secrets`) and confirmed via `git blame` that
+      `get_secrets()` has been a per-secret loop since the module's creation (2025-11-06); each `get_secret()` call
+      independently catches `NotFound`/`GoogleAPIError` and returns `None`, so a missing secret was NEVER able to raise
+      and wipe the whole batch. No production fix needed. Added a regression test that drives the REAL
+      `SecretManagerClient.get_secrets()` (not a full mock) to lock this in — alerting-service@545799c.
 
-- [ ] [CODE] P0. **DP telemetry events route through the generic incident path (Telegram→Slack-fallback) — should not**
-      — diagnosis refined 2026-06-23: there is NO `alerting-slack-webhook-url` secret, but
+- [x] ✅ [CODE] P0. **DP telemetry events route through the generic incident path (Telegram→Slack-fallback) — should
+      not** — diagnosis refined 2026-06-23: there is NO `alerting-slack-webhook-url` secret, but
       `alerting-telegram-bot-token` + `alerting-telegram-chat-id` DO exist → the generic path's PRIMARY is Telegram; the
       Slack-fallback secret only fires when Telegram is unconfigured (my local test lacked Telegram → hit the miss; in
       prod the generic path uses Telegram). ~~So this is NOT a missing-secret blocker.~~ **[doc-reconciliation
@@ -174,12 +180,26 @@ locked_since:
       suppressed), not page Telegram/Slack via the incident path. Add a DP-telemetry routing rule so only genuine DP\_\*
       findings (DP_VM_STALL / DP_EVENT_LOOP_STARVED / CONSOLIDATOR_DOWN) reach the incident path. DP\_\* ALERTS already
       work via the data-pipeline mirror (`DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`). Non-fatal (per-message isolation skips
-      it). (alerting-service)
+      it). (alerting-service) — FIXED 2026-07-27: confirmed this real bug lives in `unified-api-contracts`, not
+      alerting-service — `DATA_PIPELINE_ALERT_RULES` never registered `DP_FLEET_MONITOR_RUN_STARTED`/`_COMPLETED`/
+      `_FAILED` (emitted by deployment-service's `dp-fleet-monitor` CLI via
+      `run_lifecycle(service_name="dp-fleet-monitor")`), so `data_pipeline_rule_for()`'s exact-match lookup missed and
+      all three fell through to the generic catch-all (`LIVE_ALERT_RULES` `event_pattern="*"`), paging
+      `#uts-live-alerts` instead of mirroring to `#data-pipeline-alerts`. Registered `DP-DIGEST-003`/`DP-DIGEST-004`
+      (STARTED/COMPLETED → INFO, mirror-only) + `DP-WATCHER-003` (`_FAILED` → CRITICAL, pages — a crashed monitor is
+      meta like `DP_ZOMBIE_WATCHDOG_DOWN`) — unified-api-contracts@92e068ea (yaml/md human-doc mirror updated
+      alongside), router-level regression tests in alerting-service@545799c.
 
-- [ ] [CODE] P0. **Verify the deployment-service heartbeat-stall watcher emit carries
+- [x] ✅ [CODE] P0. **Verify the deployment-service heartbeat-stall watcher emit carries
       `vm_name`+`asset_group`+`message`** so the per-VM DP_VM_STALL alerts render distinguishably (the 13× batch came
       from the OLD alerting revision 00005 @01:38 pre-base-url; confirm the current path renders vm_name). Repo:
-      deployment-service `data_pipeline_monitors/heartbeat_stall_watcher.py`.
+      deployment-service `data_pipeline_monitors/heartbeat_stall_watcher.py`. — MEASURED VERDICT 2026-07-27: RENDERS
+      CORRECTLY today. Traced `heartbeat_stall_watcher._finding_for()` (stamps `vm_name`/`asset_group` into
+      `PipelineFinding.details`) → `escalation.route_finding()` (`event_details = dict(finding.details)`, then injects
+      `message = finding.summary` when absent — `finding.summary` already embeds `vm_name`, e.g. "VM {vm_name} stalled —
+      {reason}") — all three fields reach the emitted event details the alerting-service router consumes. No code fix
+      needed; the 13× batch was confirmed to be from the OLD alerting revision. Added a regression test proving it —
+      deployment-service@c7150e0.
 
 ## Success criteria
 

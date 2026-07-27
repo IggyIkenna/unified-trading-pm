@@ -178,6 +178,25 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 | DP-CATALOG-001  | 🔴  | instrument catalogue for an AG not refreshed in 24h (no enumerator run)              | [S] catalogue-freshness watcher                         | page                                               | verbose |
 | DP-WATCHER-001  | 🔴  | the zombie-VM watchdog itself is down (meta-watcher)                                 | [S] watchdog-liveness probe                             | page                                               | verbose |
 | DP-WATCHER-002  | 🔴  | a scheduled audit/consolidator/digest cron did not fire on schedule                  | [S] cron-alive probe                                    | page                                               | verbose |
+| DP-WATCHER-003  | 🔴  | `dp-fleet-monitor`'s own `run_lifecycle()` terminal-failure event (meta)             | [S] `run_lifecycle(service_name="dp-fleet-monitor")`    | page                                               | verbose |
+
+### DP-DIGEST — routine INFO telemetry (never the incident path)
+
+| ID            | Sev | Fires when                                      | Detector                                             | Escalation | Status  |
+| ------------- | --- | ----------------------------------------------- | ---------------------------------------------------- | ---------- | ------- |
+| DP-DIGEST-001 | ⚪  | daily per-AG completion digest                  | [S] `daily_completion_digest`                        | file issue | verbose |
+| DP-DIGEST-002 | ⚪  | daily manifest-hygiene-vs-GCS RED/GREEN summary | [S] `manifest_hygiene_orchestrator`                  | file issue | verbose |
+| DP-DIGEST-003 | ⚪  | routine `dp-fleet-monitor` sweep start          | [S] `run_lifecycle(service_name="dp-fleet-monitor")` | file issue | verbose |
+| DP-DIGEST-004 | ⚪  | routine `dp-fleet-monitor` sweep completion     | [S] `run_lifecycle(service_name="dp-fleet-monitor")` | file issue | verbose |
+
+> **2026-07-27 fix**: DP-DIGEST-003/004 (`DP_FLEET_MONITOR_RUN_STARTED`/`_COMPLETED`) and DP-WATCHER-003
+> (`DP_FLEET_MONITOR_RUN_FAILED`) were previously UNREGISTERED in `DATA_PIPELINE_ALERT_RULES` even though
+> `deployment-service`'s `dp-fleet-monitor` CLI (`data_pipeline_monitors/cli.py`) already emitted them via
+> `run_lifecycle(service_name="dp-fleet-monitor")`. An unregistered DP\_\* event misses the router's exact-match
+> `data_pipeline_rule_for()` short-circuit and falls through to the generic catch-all rule (`LIVE_ALERT_RULES`
+> `event_pattern="*"`), which pages `#uts-live-alerts` (the incident channel) instead of mirroring to
+> `#data-pipeline-alerts` — every routine fleet-monitor sweep was silently paging the wrong channel, and a genuine
+> fleet-monitor crash (`_RUN_FAILED`) wasn't triggering an incident page at all.
 
 ## Self-heal actuator layer (Layer-0 recovery — `auto_recover` tier)
 

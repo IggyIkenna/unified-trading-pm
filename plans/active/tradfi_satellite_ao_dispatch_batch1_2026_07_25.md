@@ -101,20 +101,20 @@ drift_direction: advance-code
       `plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md` § "2026-07-27 — CBOE terminal-state re-check", replacing
       the "Still in-flight" note and Deferred-work row. No code changes (DIAG-scoped; the fix itself stays tracked at
       the issue doc, not re-attempted here). Source: `tradfi_phase_d_terminal_gate_2026_07_24.md`.
-- [ ] [DOC] P1. Add the two Phase-D pipeline-check launcher name patterns as named candidates in
-      `vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8/9 scoping list. `mtds-backfill-*-pipelinecheck-*`
-      and `instr-backfill-*-pipelinecheck-*` are registered in the fleet relaunch machinery by launcher-prefix match but
-      were never named as candidates for the native-shutdown-script (`lc_write_preemption_signal_file`)
-      early-preemption-blind-window fix that 3 other launchers already carry, despite exhibiting the exact same
-      early-boot `vm_self_deleted_no_exit_status` preemption pattern this Phase-D terminal-gate work measured repeatedly
-      on single-shard smoke-test VMs. This is a doc-only scoping addition (alongside the already-listed
-      `launch-mtds-dex-swaps-backfill-vm.sh` example) — NOT the code fix itself, which remains that issue doc's own
-      future work. Repo: unified-trading-pm. **Done when**:
+- [x] ✅ [DOC] P1. **DONE 2026-07-27 (slot-15)** — Add the two Phase-D pipeline-check launcher name patterns as named
+      candidates in `vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8/9 scoping list.
+      `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` are registered in the fleet relaunch
+      machinery by launcher-prefix match but were never named as candidates for the native-shutdown-script
+      (`lc_write_preemption_signal_file`) early-preemption-blind-window fix that 3 other launchers already carry,
+      despite exhibiting the exact same early-boot `vm_self_deleted_no_exit_status` preemption pattern this Phase-D
+      terminal-gate work measured repeatedly on single-shard smoke-test VMs. This is a doc-only scoping addition
+      (alongside the already-listed `launch-mtds-dex-swaps-backfill-vm.sh` example) — NOT the code fix itself, which
+      remains that issue doc's own future work. Repo: unified-trading-pm. **Done when**:
       `plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8 and/or item 9 candidate list
       explicitly names both `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` as candidates for
       the native-shutdown-script pattern rollout. Source: `tradfi_phase_d_terminal_gate_2026_07_24.md`.
-- [ ] [CODE] P1. **Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders** — mirror
-      the pattern already implemented for CME/CBOE spreads in
+- [x] ✅ [CODE] P1. **DONE 2026-07-27 (slot-8, data_engineering)** — Extend the 1-4 leg hard cap + logged-drop behavior
+      to Deribit's existing combo builders — mirror the pattern already implemented for CME/CBOE spreads in
       `instruments_service/reference_data/adapters/tradfi/databento/symbology.py` (operator spec 2026-07-09: 1-4 real
       legs captured as structured `InstrumentLeg`s; a genuine 5+-leg combo is dropped — NOT captured, NOT truncated —
       with the real leg count logged) onto Deribit's two existing combo leg-parsers:
@@ -135,7 +135,17 @@ drift_direction: advance-code
       with new/updated unit tests in `tests/unit/test_deribit_combo_adapter.py`,
       `tests/unit/test_cefi_deribit_combo_boost.py`, and/or `tests/unit/test_cefi_tradfi_comprehensive.py` asserting the
       5-leg case is dropped-and-logged, not silently truncated to 4; `quality-gates.sh --no-fix` green. Source:
-      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`.
+      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`. **Evidence**: instruments-service@9416be7d —
+      added `_MAX_COMBO_LEGS = 4` to both files; `deribit_combo_adapter.py::_build_legs()` now checks
+      `len(raw_legs) > _MAX_COMBO_LEGS` and drops+logs (with `combo_id` context) before per-leg parsing;
+      `tardis/combos.py::_parse_deribit_combo_legs()` checks `len(structure) > _MAX_COMBO_LEGS` right after resolving
+      the structure code and drops+logs (with `code`/`raw_id` context) — a defensive backstop since every entry in
+      `_DERIBIT_COMBO_STRUCTURES` today tops out at 4 legs. New unit tests added to `test_cefi_deribit_combo_boost.py`
+      (`test_5_legs_dropped_not_truncated`), `test_cefi_tradfi_comprehensive.py`
+      (`test_parse_combo_instrument_5_legs_dropped_not_truncated`,
+      `test_parse_combo_legs_5_leg_structure_dropped_not_truncated` — the latter patches in a fake 5-leg structure code
+      since no real code currently has 5+ legs), all asserting drop-not-truncate. `quality-gates.sh --no-fix` green
+      (114s local + 118s post-commit re-verify), shipped via `quickmerge --agent`.
 
 ## Deferred — conflict-gated (NOT dispatched; queued for operator review)
 

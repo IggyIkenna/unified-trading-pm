@@ -733,3 +733,15 @@ every todo executes an already-decided spec from the parent doc.
   (21,352/21,352), finalizing. None exceed the 90min re-shard threshold this cycle, so nothing further split — the
   fine-grained resharding from last cycle is working as intended, no new casualties, no frozen VMs detected on this
   cycle's freshness check.
+
+- **2026-07-27T~18:52Z (scheduled check-in) — 5 VMs RUNNING, 8 more clean completions** (`cs8-6f-p7`, `cs8-6f-p6d3`,
+  `cs9-1d-q0/q2/q3/q4/q5/q6` — ALL confirmed `EXIT_STATUS=0`). **Every `cs9-1d-q*` sub-shard and every `cs8-6f-p6d*`
+  daily sub-shard is now done.** Only `cs8-6f-p2/p3/p4/p5` and `cs9-1d-q1` remain. **Per-shard ETA**: `cs8-6f-p2` 100%
+  (35,266/35,266), finalizing; `cs8-6f-p4` ~7min; `cs9-1d-q1` ~15min; `cs8-6f-p5` ~43min; `cs8-6f-p3` ~53min — the
+  current bottleneck, still well under the 90min re-shard threshold. No casualties, no frozen VMs. Fleet is converging
+  fast — down to 5 shards from the original 8-way + 8-way + 6-way resharding.
+
+- **2026-07-27T~19:14Z (scheduled check-in) — 2 VMs RUNNING, 3 more clean completions** (`cs8-6f-p2`, `cs8-6f-p4`,
+  `cs9-1d-q1`, all confirmed `EXIT_STATUS=0`). Only `cs8-6f-p3` (83.0%, 4.2 files/sec, ~26min) and `cs8-6f-p5` (80.3%,
+  3.0 files/sec, ~32min — current bottleneck) remain, both fresh/healthy. Fleet not yet fully drained — 2 shards left,
+  converging within the hour.

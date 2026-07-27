@@ -160,16 +160,20 @@ drift_direction: advance-code
       Source: `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (corrected 2026-07-25
       plan-reconcile — this todo's own Done-when already names the real target, todo 15 in that doc; the digest cited
       here as Source has 0 checkboxes).
-- [ ] [DOC] P1. Write the sports features-bucket (`sports_features/`) path-layout SSOT in codex/02-data — document that
-      `odds_features` is day-level (`sports_features/by_date/day=<D>/feature_group=odds_features/features.parquet`)
-      while `derived_features`/`fixture_features` are per-league with RAW api-football numeric ids in the GCS path
+- [x] ✅ [DOC] P1. **DONE 2026-07-27 (slot-13)** — Wrote the sports features-bucket (`sports_features/`) path-layout
+      SSOT in codex/02-data — documents that `odds_features`/`odds_targets` are day-level
+      (`sports_features/by_date/day=<D>/feature_group={odds_features,odds_targets}/features.parquet`) while
+      `derived_features`/`fixture_features` are per-league with RAW api-football numeric ids in the GCS path
       (`league=<raw_af_id>/feature_group={derived,fixture}_features/features.parquet`, historical/addressable,
       deliberately NOT to be renamed in place) but a CANONICAL league NAME in the manifest key (via
-      `_canonical_league_id`), and that readers must handle both layouts. Cite
-      `features-service/features_service/sports/data/writer.py:26-27` +
-      `.../sports/cli/handlers/batch_handler.py:300-323` as ground truth. Repo: unified-trading-pm (codex/02-data/).
-      **Done when**: a new codex/02-data doc exists documenting this exact layout with the cited writer file:line
-      references, and its path is added to `sports_consolidated_closeout_2026_07_19.md`'s Codex SSOTs list. Source:
+      `_canonical_league_id`), and that readers must handle both layouts (dual-probe contract, single bounded prefix
+      list per (date, group) — no corpus walk). Cited `features-service/features_service/sports/data/writer.py:26-27`,
+      `.../sports/cli/handlers/batch_handler.py:93-112,299-361,639-648`, and
+      `ml-service/ml_service/training/app/core/sports_feature_loader.py:52-146` as ground truth (all verified by direct
+      read, not inferred). Repo: unified-trading-pm (codex/02-data/). New doc:
+      `codex/02-data/sports-features-bucket-path-layout.md`. **Done when**: a new codex/02-data doc exists documenting
+      this exact layout with the cited writer file:line references, and its path is added to
+      `sports_consolidated_closeout_2026_07_19.md`'s Codex SSOTs list. Source:
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
 - [ ] [DATA] P1. Audit instruments-service's `odds_api_team_mapping.parquet` (`sports_reference/mappings/`) coverage
       against the distinct `od_team_name` values actually present in MDPS's bucketed-odds shards, and extend the mapping

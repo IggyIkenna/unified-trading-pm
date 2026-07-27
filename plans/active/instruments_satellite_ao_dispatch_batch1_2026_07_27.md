@@ -179,8 +179,8 @@ source doc is untouched (beyond one stale-checkbox citation fix, done directly, 
       MTDS/reference-data conflation risk exists anywhere else..."). Done when: a definitive yes/no is recorded for
       TradFi POLYGON/FRED with the checked evidence cited; if yes, file a follow-up todo/issue doc rather than fixing
       inline (this todo is the audit, not the fix).
-- [ ] [CODE] P1. **Widen the writer-fix scope to Solana DeFi + CURVE-OPTIMISM** — the blank-`instrument_type` bug found
-      on DERIBIT (writer emitting one blended row per venue-day instead of splitting by instrument_type) also hits
+- [x] ✅ [CODE] P1. **Widen the writer-fix scope to Solana DeFi + CURVE-OPTIMISM** — the blank-`instrument_type` bug
+      found on DERIBIT (writer emitting one blended row per venue-day instead of splitting by instrument_type) also hits
       `DRIFT-SOLANA`, `KAMINO-SOLANA`, `MARGINFI-SOLANA`, `MARINADE-SOLANA`, `ORCA-SOLANA`, `RAYDIUM-SOLANA`,
       `SOLEND-SOLANA`, and `CURVE-OPTIMISM` — all have real captured dates but zero `instrument_types` breakdown. Apply
       the SAME already-implemented, already-proven fix pattern (split the manifest row by instrument_type instead of
@@ -189,7 +189,40 @@ source doc is untouched (beyond one stale-checkbox citation fix, done directly, 
       landed). Source: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` ("Widen the writer-fix
       scope to Solana DeFi + CURVE-OPTIMISM..."). Done when: all 8 named venues show a genuine per-instrument_type
       breakdown (no longer blended/blank) using the same fix pattern as DERIBIT, verified against real captured data for
-      each.
+      each. — **read-only, no commit (no code changed)** — audited and found this premise stale, same class of finding
+      as this plan's todo 1 (3/5 CeFi venues had no bug either): `_split_by_instrument_type`
+      (`instruments-service/instruments_service/engine/orchestrator/writers.py:131`) is already venue-agnostic — it is
+      applied unconditionally to EVERY venue passing through `_write_venue` with a manifest, cefi/tradfi/defi alike
+      (`_cat = "defi" if manifest_chain else ...` at `writers.py:286`), so no per-venue "widen" was ever needed in the
+      writer itself. Verified against BOTH the raw manifest index and the live production API for all 8 named venues: 1.
+      **Raw manifest** — downloaded
+      `gs://instruments-store-defi-prd-central-element-323112/_index/availability_index.parquet` (135,829 rows) and
+      computed the `instrument_type` distribution per venue among `capture_status=captured` rows (DeFi manifest rows are
+      keyed `venue=PROTOCOL` + `chain=CHAIN`, per `_canonical_manifest_venue_chain` — so `DRIFT-SOLANA` → `venue=DRIFT`,
+      etc.). Every one of the 8 already carries a clean, fully-accounted per-type split with **zero blank rows among
+      genuinely captured data**: DRIFT (PERPETUAL 1,351 / SPOT_PAIR 1,351), KAMINO (POOL 1,278 / SOLANA_VAULT 9),
+      MARGINFI (A_TOKEN 16 / DEBT_TOKEN 16), MARINADE (STAKING 1,822), ORCA (POOL 936 / SOLANA_AMM_POOL 9), RAYDIUM
+      (POOL 2,348 / SOLANA_AMM_POOL 9), SOLEND (A_TOKEN 16 / DEBT_TOKEN 16), CURVE/OPTIMISM (POOL 1,657, real captured
+      data since its 2022-01-13 mainnet launch per UAC `venue_launch_dates.py`). CURVE/OPTIMISM's only 724 blank rows
+      are `row_count=0` phantom captures dated 2020-01-20→2022-01-12 — entirely BEFORE the venue's mainnet launch, so
+      there is no real (non-zero) data to split; a pre-launch phantom-zero-row issue, unrelated to the
+      instrument_type-split bug this todo targets, not separately filed since it doesn't change this todo's verdict. 2.
+      **Live production API** —
+      `GET /api/data-status/manifest?service=instruments-service&asset_group=DEFI&start_date=2026-06-27&end_date=2026-07-27&secondary_axis=instrument_type`
+      against `https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app`, HTTP 200, confirms the breakdown actually
+      surfaces end-to-end (not just present in the raw index): `venues.CURVE.instrument_types = [POOL]` (96.77%
+      completion), `DRIFT = [PERPETUAL, SPOT_PAIR]` (64.52%), `KAMINO = [POOL, SOLANA_VAULT]` (96.77%),
+      `MARGINFI = [A_TOKEN, DEBT_TOKEN]` (58.06%), `MARINADE = [STAKING]` (96.77%),
+      `ORCA = [POOL,        SOLANA_AMM_POOL]` (96.77%), `RAYDIUM = [POOL, SOLANA_AMM_POOL]` (96.77%),
+      `SOLEND = [A_TOKEN, DEBT_TOKEN]` (58.06%) — none blended/blank. **Secondary observation (not a new finding, no fix
+      needed)**: the API also carries 3 literal `<PROTOCOL>-SOLANA` glued-name venue keys (`MARGINFI-SOLANA`,
+      `SOLEND-SOLANA`, `JITORESTAKING-SOLANA`) at 0.0% completion with `instrument_types=None` — traced to 173
+      raw-manifest rows each where `venue` was stamped as the glued literal string with `chain=None`, but every one of
+      those rows is `capture_status=empty_confirmed`/`row_count=0` (honest zero-row placeholders, not `captured` data),
+      so the blank `instrument_type` on them is CORRECT per the honest-absence contract — not an instance of this todo's
+      bug class, so not separately filed. **Verdict: the registry-derived assumption that these 8 venues inherited
+      DERIBIT's blank-collapse bug does not hold in the real data — the writer fix already covers them, going all the
+      way back to each venue's own capture history.**
 
 ## Conflict-check note (Solana DeFi widen item)
 

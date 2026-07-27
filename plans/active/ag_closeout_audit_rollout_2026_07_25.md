@@ -259,7 +259,8 @@ source: >-
   `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`,
   `issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`,
   `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`,
-  `issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md`,
+  `/plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md` (resolved + archived 2026-07-27 — no
+  longer orphaned, listed here only for the historical snapshot count),
   `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`,
   `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md`,
   `issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`, `issues/tardis_concurrent_ip_lockout_2026_07_12.md`,

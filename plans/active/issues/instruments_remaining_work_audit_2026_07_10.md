@@ -172,9 +172,10 @@ Real code fixes / features needed (not backfills, not pure doc drift).
    open; separately, `deployment-service:latest` doesn't yet carry the wave-launcher sentinel writer (a `tofu apply`
    would silently revert the live pin).
 
-7. **order-book imbalance computed independently in BOTH MTDS and MDPS**
-   `plans/active/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md` Core duplication resolved; 2 open:
-   UAC-side retirement of stale capability/pipeline_mode declarations, historical-agreement verify.
+7. **order-book imbalance computed independently in BOTH MTDS and MDPS** — RESOLVED 2026-07-27
+   `/plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md` Both remaining checkboxes closed
+   (UAC-side retirement shipped `unified-api-contracts@49314f51`; historical-agreement check closed MOOT — zero
+   production rows were ever captured to compare); doc archived, `status: resolved`.
 
 8. **WSFeedConnector Phase-3.5 rollout gap — 73 unregistered venues**
    `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` COINBASE bare-name removal blocked on a

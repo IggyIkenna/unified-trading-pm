@@ -259,10 +259,45 @@ drift_direction: advance-code
       `PREMIER_LEAGUE`) that the manifest-driven move tool could not have enumerated — this is the already-tracked
       defect class in `sports_league_id_namespace_migration_2026_07_20.md` (not new), recorded there as an addendum
       rather than fixed here (single-walk discipline: not re-running a live GCS walk to chase 2 objects).
-- [ ] [DATA] P1. **Reconcile the availability manifest to the new partitions LAST, only after the unambiguous-venue GCS
-      move + dual-read above are proven.** Verify the shard atom is identical across writer/manifest/status/gate. (repo:
-      instruments-service / unified-trading-library). **Done when**: a cross-surface shard-atom check
-      (`/codex/02-data/availability-manifest-and-data-status.md`'s own definition) passes for the new partitions.
+- [x] ✅ [DATA] P1. **Reconcile the availability manifest to the new partitions LAST, only after the unambiguous-venue
+      GCS move + dual-read above are proven.** Verify the shard atom is identical across writer/manifest/status/gate.
+      (repo: instruments-service / unified-trading-library). **Done when**: a cross-surface shard-atom check
+      (`/codex/02-data/availability-manifest-and-data-status.md`'s own definition) passes for the new partitions. ✅
+      **DONE 2026-07-27 — `market-tick-data-service@bc84f6a4`:** todos 5/6's move tools are pure GCS object operations
+      (`gcs_copy_object`/`gcs_delete_object`/`gcs_describe_object` only — confirmed by inspection, neither ever calls
+      `ManifestWriter`/`record_captured`), so the live manifest still carried 60,095 stale `captured` rows at the OLD
+      key (`instrument_type=ODDS`, `data_type=TRADES`) for the 7 migrated venues while the NEW key
+      (`instrument_type=exchange_odds`/`fixed_odds`, `data_type=trades`) had zero rows — confirmed live via
+      `read_availability_index` before touching anything (manifest-only read, no GCS listing; single-walk discipline).
+      Per the codex SSOT's Multi-axis-correction banner, sports shard atom =
+      `(asset_group=sports, venue, data_type, league_id, day)` — `instrument_type` is a row-level display column, NOT a
+      shard axis — but because `data_type` also changed casing (`TRADES`→`trades`) as part of the same move, the old and
+      new keys are genuinely different shard atoms (case-sensitive), so this was a real REMOVE-old-atom + ADD-new-atom
+      reconcile, not an in-place update. Wrote
+      `market-tick-data-service/scripts/sports/exchange_fixed_odds_fork/manifest_reconcile_2026_07_27.py` mirroring
+      `league_id_relocation/manifest_swap_2026_07_22.py`'s REMOVE-then-ADD CAS pattern, deriving the ADD/REMOVE plan
+      directly from the live manifest (the move tools left no durable report artifact — a saved-report-driven plan
+      wasn't available here). Executed `--confirm-prod-write`: mandatory pre-write snapshot
+      (`gs://market-data-tick-sports-prd-central-element-323112/_index/snapshots/pre_exchange_fixed_odds_manifest_reconcile_2026_07_27_20260727T185659Z.parquet`,
+      verified round-trip) → CAS REMOVE 60,095 stale rows → ADD 60,095 rows at the new lowercase key (same
+      date/venue/league_id/row_count) via `ManifestWriter.record_captured` → in-script VERIFY PASSED
+      (`stale_remaining=0 new_present=60,095 new_missing=0 new_mismatched=0`). **Independent re-read** (separate
+      process, fresh `read_availability_index` call): confirms 0 rows remain at the old key for all 7 venues and exactly
+      the expected per-venue row_count at the new key (BETFAIR_EX_EU 2,386,948; BETFAIR_EX_UK 2,407,423; BETFAIR_SB_UK
+      1,073,017; BETMGM 10,890; MATCHBOOK 5,786,903; PINNACLE 4,887,512; SMARKETS 1,113,644 — exactly matching the
+      pre-reconcile old-key totals) — total manifest row count unchanged (516,204 before and after, as expected for a
+      REMOVE=ADD swap of equal size). **Gate surface**: already verified generic in todo 6
+      (`check_upstream_data_per_shard`'s `instrument_type` param is a free string with no hardcoded legacy `odds` token;
+      regression tests lock this in). **Writer surface**: unaffected by construction — any future writer (todo 8's
+      live-writer cutover) using `record_captured` with `data_type=trades` lands at the identical shard atom regardless
+      of which of the three `instrument_type` values it passes, since `instrument_type` isn't part of the atom. **Status
+      surface checked, no fix needed**: grepped deployment-api's sports data-status code for hardcoded `odds`/`ODDS`
+      instrument_type enumerations; the one hit (`_SPORTS_DATA_TYPE_TO_INSTRUMENT_TYPE["trades"] = "odds"` in
+      `data_status_drilldown/_schema.py`) is UI schema-lookup plumbing, not a coverage/display filter — it resolves to
+      the legacy `odds` UAC contract for `data_type=trades` clicks, which correctly reaches the shared
+      `SPORTS_ODDS_TRADES` schema for exchange_odds/fixed_odds rows too via todo 4's dual-read fallback (same columns by
+      design), so this remains functionally correct and was left untouched (no defect to fix). `quality-gates.sh` full
+      green pre- and post-commit (sentinel matched HEAD both times).
 - [ ] [DATA] P2. **Cut the live sports odds writers over to the new instrument_types and un-drain** (reverse of the
       pre-drain todo above). (repo: market-data-processing-service / deployment-service). **Done when**: a fresh live
       write is observed landing under the new instrument_types and the drain flag is confirmed lifted.

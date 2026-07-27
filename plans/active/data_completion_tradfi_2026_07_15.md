@@ -51,7 +51,8 @@ drift_direction: advance-code
 > for legacy GCS until the gated purge. Do not re-action any Massive/Barchart capture todo below without first
 > re-reading it against this banner.
 
-- [ ] [DATA] P1. Verify the corpus venue / data_type strings are underscore-canonical: data-state shows venues
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-6, data_engineering, tradfi_satellite_ao_dispatch_batch2)** — Verify the
+      corpus venue / data_type strings are underscore-canonical: data-state shows venues
       `BARCHART/CBOE/CME/FX/ICE/NASDAQ/NYSE/YAHOO_FINANCE` (canonical) BUT also `UNKNOWN` + blank `''` (drift to
       diagnose); data_types `ohlcv_15m/ohlcv_1m/ohlcv_24h/options_chain/tbbo/trades` + blank `''`. Relabel/diagnose the
       `UNKNOWN`/blank rows in the walk (do NOT bulk-rename ambiguous strings). **✅ DIAGNOSIS DONE (slot-6 2026-06-04,
@@ -74,6 +75,23 @@ drift_direction: advance-code
       count does not silently shrink by ~6,602 (coverage-regression guard). Audit script:
       `/tmp/tradfi_index_drift_audit.py` (read-only, reproducible). **(MIGRATED FROM:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+      **✅ POST-WALK VERIFY HOOK RE-RUN (slot-6, 2026-07-27)**: fresh live read of
+                  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (5,873,616 rows, up
+                  from the 5,553,198-row count confirmed 2026-07-16 in E7 below — a +320,418 GROWTH from continued backfills, no
+                  unexplained ~6,602-row shrink). Result: **0 blank venue, 0 `UNKNOWN` venue, 0 blank data_type, 0
+                  `asset_group=None`** — the 2026-06-04 diagnosis's 6,602-row drift (4,130 venue + 2,472 data_type) is FULLY
+                  RESOLVED by the E5 path-re-derivation walk; venue sample is exactly the canonical set
+                  `{BARCHART,CBOE,CME,FX,ICE,KRX,NASDAQ,NYSE,YAHOO_FINANCE}`, data_type sample fully populated (12 real values, 0
+                  blank). **Residual finding (different axis, NOT part of this candidate's tracked drift)**: `instrument_type` is
+                  blank on 310,386 rows (202,221 `attempted_failed` / 105,936 `empty_confirmed` / 2,229 `captured`), spread across
+                  ALL real venues (CME 219,095 / CBOE 18,032 / NASDAQ 14,805 / NYSE 13,095 / KRX 12,497 / FX 12,102 / ICE 11,641 /
+                  BARCHART 9,119) and real data_types — 85% (262,649) are the aggregated `ohlcv_1s/1m/24h/15m` data_types, matching
+                  the canonical_writer's own by-design omission of per-instrument fields on aggregated (non-per-instrument) shards
+                  (see the E6/line-629 candle-writer fix below); the remainder (`tbbo/trades/macro_result/mbp_10/
+                  corporate_action_confirmed/earnings_result/options_chain`) is not root-caused here — out of this candidate's
+                  scope (blank/`UNKNOWN` venue + blank data_type only), flagged for a future dedicated pass, not a re-open of this
+                  checkbox.
 
 - [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
       top-level trees + nested layouts in the tradfi source + canonical buckets before the walk; classify duplicate
@@ -174,8 +192,12 @@ drift_direction: advance-code
       (`tradfi_v9_stage1_finish_2026_07_06.md`, `market-tick-data-service@4ccf52c6`). **(MIGRATED FROM:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank data_type → canonical (diagnose, don't bulk-rename).
-      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-6, data_engineering)** — E6 CF-7 relabel: `UNKNOWN`/blank venue + blank
+      data_type → canonical (diagnose, don't bulk-rename). Re-verified live against the current `-prd` `_index`
+      (5,873,616 rows): 0 blank/`UNKNOWN` venue, 0 blank data_type remain — the E5 path-re-derivation walk already
+      relabeled every row via object-path re-stamping (per line-54's post-walk verify hook, same evidence). No further
+      relabeling action needed; nothing left to diagnose on this axis. **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
       data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in
@@ -654,12 +676,27 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       0 CME/NASDAQ/NYSE 15m/24h convert. Four parts: (1) ✅ MDPS row_key passed `instrument_id=''` for aggregated
       candles → MalformedRowKeyError — FIXED (omit instrument_id for non-per-instrument shards,
       market-data-processing-service); (2) ✅ MDPS missing `source=` for multi-source tradfi → manifest write rejected —
-      FIXED (thread source from the input `pipeline_mode`); both in canonical_writer, tests green, DEPLOY PENDING
-      (tarball+relaunch). (3) ❌ ~64k of the 1m corpus is OLD migrated data with malformed
+      FIXED (thread source from the input `pipeline_mode`); both in canonical_writer, tests green. **✅ DEPLOYED +
+      LIVE-VERIFIED (slot-6, 2026-07-27, tradfi_satellite_ao_dispatch_batch2):** rebuilt the market-data-processing-
+      service tarball from a clean LDR checkout (`market-data-processing-service@3328ffd0`) and relaunched
+      `mdps-backfill-tradfi-*` twice (`--force`, 2026-07-13..19 then 2026-07-20..24, ~5,400+ instrument-day attempts
+      combined) — ZERO occurrences of `MalformedRowKeyError` or a missing-source rejection in either run, confirming
+      parts (1)+(2) are correctly fixed and deployed. **However, BOTH verification runs still show `Candles: 0` for
+      every date processed** (confirmed via the post-run manifest-consolidator pass:
+      `rows_added: 0, verdict:     "empty", no_op: true`) — two NEW, orthogonal blockers were found live, filed as
+      `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`: (a) NASDAQ/NYSE equity writes are REJECTED
+      at the manifest validation gate (`record_empty(reason=SOURCE_RETURNED_ZERO)` called without the required
+      `FetchEvidence` — 6,650 rejections across both runs, on regular trading Mondays, not weekends); (b) CME
+      combo/chain-bundle candles silently produce ZERO output despite confirmed real raw-tick input being read (no
+      WARNING, no ERROR, no candle file — a genuine silent-failure gap, worse than (a)). Neither blocker is caused by,
+      or fixable within, the row_key/source fix deployed here — both are new root-cause targets tracked in the new issue
+      doc. (3) ❌ ~64k of the 1m corpus is OLD migrated data with malformed
       `instrument_id='ticks_migrated_20260418T143552Z'` → StreamingParquet partition_mismatch on the aggregated DATA
       write (the 167k databento 1m are clean + aggregate fine; only the 64k massive-migrated fail) — needs the migrated
       1m re-keyed/re-backfilled. (4) ❌ the 15m/24h `expected_unattempted` is seeded `source=massive`/blank (legacy —
       massive used to serve aggregated bars) but the real path is now databento→MDPS (`source=databento`), so databento
       15m/24h captures land as NEW rows and the massive-keyed unattempted (103,651 cells) never converts — PHANTOM seeds
-      needing reconcile to databento (IS enumerator). Repo: market-data-processing-service +
-      unified-api-contracts/instruments-service (seeding). Provenance: this Progress Log.
+      needing reconcile to databento (IS enumerator); confirmed live 2026-07-27 that CME has ZERO enumerated
+      ohlcv_15m/24h rows (any status) for 2026-07-13 through 07-15, consistent with this gap. Repo:
+      market-data-processing-service + unified-api-contracts/instruments-service (seeding). Provenance: this Progress
+      Log.
