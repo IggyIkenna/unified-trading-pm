@@ -111,16 +111,31 @@ responses in the journal immediately after). This doc exists so the two real ope
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Determine whether the 18:50–18:53 db-lock storm is a discrete bug or pure load.** Grep for other
-      callers matching the `ensure_review_agents` anti-pattern (a `session_scope()` write transaction held across a slow
-      subprocess/tmux call) — `TmuxPruner`, `WorkerLivenessKicker`, and `AgentKeeper` are the three loops that hit
-      `subprocess.TimeoutExpired` on `tmux has-session` in this exact window; check whether any of them call
-      `tmux has-session`/`capture_pane` from INSIDE an open `session_scope()` rather than outside it (the same class of
-      fix already applied once this session). If none are found, measure whether the concurrent worker count at the time
-      (15 slots, mostly WORKING) is sufficient to explain the storm via ordinary `busy_timeout` exhaustion under load,
-      and if so, consider whether `busy_timeout` (currently 120s, `server/db.py`) needs raising further or whether a
-      different mitigation (e.g. reducing background-loop concurrency, batching writes) is warranted. Report findings
-      before choosing a fix — do not guess at a fix without first confirming which of the two this actually is.
+- [ ] [BACKEND] P2. **CONFIRMED 2026-07-27 — `TmuxPruner.prune_once()` (`server/tmux_pruner.py:190-333`) IS an instance
+      of the `ensure_review_agents` anti-pattern.** It opens ONE `session_scope()` write transaction, then inside it:
+      (1) loops every `SlotRow` with a `tmux_session` set, calling `has_session(name)` (a `tmux` subprocess) per row,
+      plus `resume_lifecycle.classify_dead_worker(...)` and — for each dead slot — `reap_dead_slot_worker_tree(...)`
+      (more subprocess work); (2) loops every `AgentRow` with a `tmux_session` set, calling `has_session(name)` again
+      per row. All of this — potentially dozens of subprocess calls — runs with the SQLite write lock held the whole
+      time, scaling with fleet size (15+ slots + several one-shot agent rows at the time of the storm). This is the
+      exact class already fixed once in `ensure_review_agents` (`ao_review_agent_spawn_db_lock_under_load_2026_07_26`,
+      agent-orchestrator@222a4be) — same repo, same session, not yet applied here. Corroborating LIVE evidence
+      (2026-07-27, separate from the original storm): 3 one-shot `cicd` agents (`agt-b3f1d1`, `agt-cf325c`,
+      `agt-def412`) sitting `ACTIVE` with `0%` context and no progress message for 1-9 minutes — `TmuxPruner`'s own
+      dead-session reaper (`GRACE_PERIOD=30s`, `tmux_prune_interval_seconds=60` default) should catch and archive a
+      genuinely-dead one-shot agent's session within ~90s (`server/tmux_pruner.py:328-357`, the
+      `archive_agent(..., exit_reason="lifecycle-complete")` path) — a 9-minute lingering `ACTIVE` state is consistent
+      with this exact tick either failing/timing out under load or being starved by lock contention, though it could
+      also just be a slow cold-start; not independently confirmed via a live tmux-pane check in this session. - [ ]
+      [BACKEND] P2. **Fix**: restructure `prune_once()` to collect the slot/agent rows needing a liveness check in a
+      read-only pass, close that session, run all `has_session()` / `classify_dead_worker()` /
+      `reap_dead_slot_worker_tree()` calls WITHOUT a session open, then open a fresh `session_scope()` only for the
+      actual field writes + activity logging — mirroring the `ensure_review_agents` fix's shape. This function is larger
+      and more stateful than `ensure_review_agents` was (task-release, resume classification, orphan reaping,
+      context-saturation event logging all interleave with the row mutations) — read the WHOLE function first, plan the
+      read/act/write split before editing, and re-run the existing `tmux_pruner` test suite plus add a regression
+      asserting no `session_scope()` is open during the `has_session()` calls (patch `has_session` to assert
+      `db.in_transaction()` is False, or equivalent).
 - [ ] [BACKEND] P2. **Investigate why the graceful shutdown hung for ~20s with zero log output** before systemd's
       SIGKILL. Check whether any of the orphaned processes found on the next start (`sh`, `node`, `npm exec prettier` —
       PIDs 2961831/2961834/2958093 at the time) correlate with a specific in-flight operation (a worker's own

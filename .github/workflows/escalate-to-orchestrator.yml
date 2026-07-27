@@ -136,9 +136,9 @@ jobs:
 
           # wall_type must be in the orchestrator's closed set (server/escalation.py WALL_TYPES).
           case "$IN_WALL" in
-            merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health | data_pipeline_failure) ;;
+            merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap) ;;
             *)
-              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health | data_pipeline_failure)"
+              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap)"
               exit 1
               ;;
           esac
