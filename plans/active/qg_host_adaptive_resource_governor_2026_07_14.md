@@ -262,12 +262,12 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 - [x] [INFRA] P1. ✅ PM@a6b5e24a5 — Per-repo cgroup cap — wrap each admitted run at `QG_MEM_CAP = 1.2 × baseline_peak`
       (existing base-service hook, currently 0/off) so a runaway/mis-measured run is OOM-killed in its OWN cgroup, not
       the host.
-- [x] [INFRA] P0. ✅ unified-trading-pm@<PENDING-SHA> — Global 80 % valve ✅ PM@a6b5e24a5 (admission side, SHIPPED);
-      runtime ABORT of an already-running >80 % job — SHIPPED (self-scoped v1, see Progress Log 2026-07-27 slot-5): if
-      live host used-RAM crosses `QG_HOST_RAM_ABORT_PCT` (default 80%) for `QG_WATCHDOG_CONSECUTIVE_HITS` (default 2)
-      consecutive polls, the ADMITTED run's own background watchdog SIGTERMs its own process tree + writes a loud marker
-      file + logs. Trades the "pick exactly one offender" refinement described here for a simpler, safer self-scoped
-      design (every admitted run monitors itself; a bug here can only ever hurt its own run, never another slot's) —
+- [x] [INFRA] P0. ✅ unified-trading-pm@761edd205 — Global 80 % valve ✅ PM@a6b5e24a5 (admission side, SHIPPED); runtime
+      ABORT of an already-running >80 % job — SHIPPED (self-scoped v1, see Progress Log 2026-07-27 slot-5): if live host
+      used-RAM crosses `QG_HOST_RAM_ABORT_PCT` (default 80%) for `QG_WATCHDOG_CONSECUTIVE_HITS` (default 2) consecutive
+      polls, the ADMITTED run's own background watchdog SIGTERMs its own process tree + writes a loud marker file +
+      logs. Trades the "pick exactly one offender" refinement described here for a simpler, safer self-scoped design
+      (every admitted run monitors itself; a bug here can only ever hurt its own run, never another slot's) —
       cross-process "kill the newest run" arbitration + Slack alerting remain open refinements (see the still-open
       Phase-4 Slack-alerting todo below). Catches aggregate pressure per-repo caps miss (verified this matters
       concretely: `systemd-run` is unavailable on the slot-5 host, so the per-repo cgroup cap is inactive there too —
@@ -614,8 +614,8 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   directly: YES — admission is a one-time check; nothing re-verifies an admitted run against live RAM pressure that
   develops afterward. That confirmation IS this plan's own already-open P0 above; closing both from one fix rather than
   tracking it twice.
-- **Shipped** `unified-trading-pm@<PENDING-SHA>` — `_qg_watchdog_start`/`_qg_watchdog_loop`/`_qg_watchdog_signal_tree`
-  in `qg-host-governor.sh` (reservation-mode only, gated the same way as the rest of Phase 3/4). Design tradeoff vs the
+- **Shipped** `unified-trading-pm@761edd205` — `_qg_watchdog_start`/`_qg_watchdog_loop`/`_qg_watchdog_signal_tree` in
+  `qg-host-governor.sh` (reservation-mode only, gated the same way as the rest of Phase 3/4). Design tradeoff vs the
   todo's original "abort the offending/newest run": **self-scoped** — each admitted run backgrounds its OWN watchdog,
   which can only ever signal ITS OWN process tree (walked via `pgrep -P`, never a process-group signal). This is
   strictly safer than a cross-process arbiter (no risk of a bug reaching into another slot's PID) at the cost of

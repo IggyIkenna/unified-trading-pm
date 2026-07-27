@@ -92,8 +92,8 @@ defect; it is purely a function of host capacity at any given moment.
 
 ## Recommended fix path
 
-- [x] [INFRA] P1. ✅ unified-trading-pm@<PENDING-SHA> — **Investigate whether the qg-governor's 5500MB RAM reservation
-      is being violated by the OS/cgroup AFTER admission** — i.e., does the governor only gate entry, with no ongoing
+- [x] [INFRA] P1. ✅ unified-trading-pm@761edd205 — **Investigate whether the qg-governor's 5500MB RAM reservation is
+      being violated by the OS/cgroup AFTER admission** — i.e., does the governor only gate entry, with no ongoing
       enforcement that admitted processes stay within their reservation as OTHER processes' demand grows post-admission?
       **CONFIRMED YES.** `_qg_admit_check` (`scripts/quality-gates-base/qg-host-governor.sh`) runs exactly ONCE, at
       `qg_governor_acquire` time — the RAM-reservation ledger records each admitted run's ESTIMATED baseline peak (a
