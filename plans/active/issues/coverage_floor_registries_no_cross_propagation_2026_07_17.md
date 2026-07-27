@@ -150,12 +150,23 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 
 ## Todos
 
-- [ ] [CODE] P1. Add a falsifier test (mirroring `scripts/check_coverage_exclusions.py`'s pattern) that fails CI when a
-      venue/source key present in BOTH `unified_api_contracts/canonical/coverage_starts.py` and
+- [x] ✅ [CODE] P1. Add a falsifier test (mirroring `scripts/check_coverage_exclusions.py`'s pattern) that fails CI when
+      a venue/source key present in BOTH `unified_api_contracts/canonical/coverage_starts.py` and
       `unified_api_contracts/registry/venue_mapping.py` (`venue_start_dates`/`source_data_start_dates`) disagrees on its
       date — normalize the two key schemes first (e.g. `BINANCE` vs `BINANCE-SPOT`/`-FUTURES`/`-DELIVERY`) so the
       comparison is apples-to-apples. This is the permanent backstop against re-divergence. (repo:
-      unified-api-contracts)
+      unified-api-contracts) — **DONE unified-api-contracts@09169cfe** `scripts/check_coverage_floor_registry_drift.py`
+      (+ `tests/unit/test_coverage_floor_registry_drift.py`, wired into `quality-gates.sh` via pytest, mirroring
+      `check_coverage_exclusions.py`'s script+test split). Normalizes via a narrow per-asset_group suffix allowlist
+      (cefi: SPOT/FUTURES/DELIVERY/SWAP/CDE; defi: chain names; tradfi/prediction: exact-match only) — NOT a blind
+      `startswith()`, which false-matched prediction's `POLYMARKET`/`KALSHI` against the unrelated cefi
+      `POLYMARKET-PERP`/`KALSHI-PERP` crypto-perp venues (a different product, per coverage_starts.py's own comment).
+      Sports excluded (already import-linked SSOT with its own falsifier). Ships with a `KNOWN_DIVERGENCES`
+      shrinking-ratchet baseline covering the 16 currently-real mismatches this audit found (8 CeFi P1 + POLYMARKET P2 +
+      7 DeFi P3, each citing this doc) so QG doesn't go red fleet-wide before those [DATA] todos land — a baseline entry
+      whose pair no longer disagrees is itself a failure (`STALE BASELINE`), forcing removal the moment each [DATA] todo
+      below resolves, so the baseline only shrinks. Verified live against the real registries: 0 new findings, 0 stale
+      baseline entries (16/16 still genuinely tracked).
 - [ ] [DATA] P1. Resolve the 8 confirmed multi-year/multi-month CeFi mismatches (BITFINEX, KRAKEN, COINBASE-SPOT,
       DERIBIT, OKX, BINANCE, BYBIT, HYPERLIQUID — table above) per venue: probe the actual manifest min(date) per
       `coverage_starts.py`'s own docstring instruction (`read_availability_index({bucket}).date.min()`) and update
