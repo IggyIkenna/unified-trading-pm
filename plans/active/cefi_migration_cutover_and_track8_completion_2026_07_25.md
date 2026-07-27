@@ -436,3 +436,28 @@ every todo executes an already-decided spec from the parent doc.
       content backfill remains open, its true ~4.5M-object scope now measured and documented as this session's biggest
       finding, needing its own dedicated follow-up campaign. Left as `- [ ]` (not checked) since the todo's own
       done-when requires all 4 scripts, not 3 of 4.
+
+- **2026-07-27 (coordinating interactive session) — reconciling slot-14's `/blocked` escalation above: staleness, not a
+  live contradiction; no collision occurred.** Slot-14 (AO-dispatched, same backlog these 5 todos were sitting `queued`
+  in when this session started) independently found the same evidence gap this doc's "no `[OPERATOR]` tag" framing vs.
+  `cefi_consolidated_native_ao_extract_2026_07_25.md`'s Deferred section's "needs human-coordinated timing" framing,
+  correctly flagged it as a contradiction, and appropriately backed off rather than risk a collision — good judgment,
+  not a false alarm. Resolution: the sibling doc's framing was written 2026-07-25 while todo 1/2 were still open, so it
+  was accurate then and is now stale for 4 of its 6 "stays human" bullets — added a dated correction banner there
+  (verbatim-preserved, nothing deleted, same convention as the analogous defi-casing doc-supersession fix in
+  `cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`). The actual basis for proceeding was never a generic
+  "agent-executable" reading of this doc alone — it is a direct, real-time operator `/autonomous` dispatch (this
+  session, explicit instruction to drive the full 5-todo chain to completion including real applies once dry-runs
+  confirm safety), which supersedes the sibling doc's 2-day-old "needs a human" snapshot. No actual collision occurred:
+  slot-14 found no live process on its own host at check time and stopped before executing anything; this session's
+  drain→apply→verify cycle for Scripts 3/4 completed cleanly before slot-14's check. **Standing risk, not fully
+  eliminated**: this backlog is AO-reachable, so a fresh AO-dispatched worker could pick up todo 3 again concurrently
+  with the still-in-progress Script 1 campaign below. Mitigation: this Progress Log + todo 3's own checkbox text are
+  kept current in real time (not batched) specifically so a concurrent reader sees accurate state, per the same judgment
+  slot-14 already showed once.
+- **2026-07-27 — Script 1 follow-up campaign dispatched** (the one piece of todo 3 still open): a dedicated sub-agent is
+  now running the corpus-wide parquet-content backfill
+  (`market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`, measured ~4.5M files
+  across the 10 shards above) via a multi-VM `SHARD_OF` fan-out, Script-2-style. This will be logged here as it
+  progresses/completes; todo 3 flips only once Script 1 is corpus-wide applied and idempotency- reverified alongside
+  Scripts 2/3/4.
