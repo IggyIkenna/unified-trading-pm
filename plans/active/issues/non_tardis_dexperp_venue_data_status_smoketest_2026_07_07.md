@@ -333,25 +333,27 @@ Two secondary findings:
 
 ### Tracked follow-ups (opened 2026-07-19 from the finding closeout — larger / operator-gated)
 
-- [ ] [INFRA] P2. **HYPERLIQUID trades backfill re-run** — the parser/routing fix (`market-tick-data-service@c48096e7`)
+- [x] [INFRA] P2. **HYPERLIQUID trades backfill re-run** — the parser/routing fix (`market-tick-data-service@c48096e7`)
       is code-correct but NO HL trades backfill has re-run since, so ~12,179 stale
       `empty_confirmed`/`SOURCE_RETURNED_ZERO` manifest rows persist. Re-run HL `trades` shards with the CURRENT code,
       **force/overwrite** (a plain skip-if-fresh launcher would treat the stale rows as already-attempted and skip),
       over the real-coverage window **2025-05-25.. 2025-07-27** (legacy `node_fills`) + **2025-07-28..today**
       (`node_fills_by_block`). 2025-03-22..2025-05-24 is genuine upstream absence — do NOT expect it to populate.
       HYPERLIQUID is exempt from the Tardis cap; use a SPOT backfill launcher, monitored (no fire-and-forget). Deferred
-      from the autonomous session as a real-infra launch that warrants an attended start + progress watch.
+      from the autonomous session as a real-infra launch that warrants an attended start + progress watch. — already
+      covered by defi_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).
 - [ ] [FIX] P3. **HYPERLIQUID k-prefix coin case-sensitivity** — `catalogue_symbols_for_venue`
       (`_onchain_perp_batch_symbols.py:132`) `.upper()`s the segment while `_fill_to_trade_row`
       (`hyperliquid_s3.py:585`) does a case-SENSITIVE exact `coin` match, so `kPEPE`/`kBONK`/`kSHIB`/… requested via the
       ALL-catalogue path become `KPEPE` and drop every real `kPEPE` fill → those instruments record zero even after the
       backfill. Majors (BTC/ETH) unaffected. Fix needs the canonical-vs-native HL coin-case convention resolved (risk of
       a shard-key mismatch), so deferred from the unattended session.
-- [ ] [CODE] P3. **Delete the retired perp_funding DeFi-routing residue** — remove the stale `hyperliquid`/`aster`/
+- [x] [CODE] P3. **Delete the retired perp_funding DeFi-routing residue** — remove the stale `hyperliquid`/`aster`/
       `lighter` entries from `_PROTOCOL_PIPELINE_SOURCE` (perp_funding_handler.py:188-194) + `_chain_map` (:244-249) and
       delete the spent one-off `scripts/backfill_hl_funding_from_s3_asset_ctxs_2026_06_17.py` (its `asset_group=defi`
       hardcode is the drift source; target bucket 404s; past its own `# Delete-when:`), so a re-run can never re-stamp
-      DeFi HL/ASTER perp_funding. (Verify the `protocols` iterable no longer includes them before deleting.)
+      DeFi HL/ASTER perp_funding. (Verify the `protocols` iterable no longer includes them before deleting.) — already
+      covered by defi_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).
 - [ ] [INFRA] P3. **BLOCKED-OPERATOR-DECISION — reconcile the 916 HL + 642 ASTER `defi/perp_funding` legacy rows.** They
       are redundant with `cefi/derivative_ticker.funding_rate`. Two options: (a) DELETE the orphaned defi/perp_funding
       objects + manifest rows + rebuild the defi index (simplest, data is redundant), or (b) re-stamp `defi→cefi` + move

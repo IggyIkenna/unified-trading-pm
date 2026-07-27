@@ -69,9 +69,12 @@ machine sizing for Deribit bundling.
 
 ## Open actions
 
-- [ ] [VERIFY] P0. Verify DERIBIT options_chain af after wave-1 reprobe VMs complete (ETA: 1-3 hours)
-- [ ] [MONITOR] P1. If af > 0 after reprobe: check DERIBIT light VM logs for OOM/preemption evidence
-- [ ] [OPS] P1. Close issue when DERIBIT options_chain af=0 in prd manifest
+- [x] [VERIFY] P0. **[already covered by plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md, see that
+      doc for execution]** Verify DERIBIT options_chain af after wave-1 reprobe VMs complete (ETA: 1-3 hours)
+- [x] [MONITOR] P1. **[already covered by plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md, see that
+      doc for execution]** If af > 0 after reprobe: check DERIBIT light VM logs for OOM/preemption evidence
+- [x] [OPS] P1. **[already covered by plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md, see that doc
+      for execution]** Close issue when DERIBIT options_chain af=0 in prd manifest
 
 > **⚠️ CORRECTION (operator, 2026-07-18): the "structurally-absent channel" premise below is WRONG — do NOT reclass or
 > writer-gate `futures_chain` to `expected_unattempted`/`empty_confirmed`.** `futures_chain`/`options_chain` are NOT

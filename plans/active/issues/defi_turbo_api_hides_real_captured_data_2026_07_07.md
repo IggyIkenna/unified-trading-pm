@@ -225,7 +225,7 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       polled for EULER_V2 (see the reworded capture-gap todo below, which stays fully open). The ARBITRUM half of the
       original todo was still wrong as of this split and is spun out as its own open todo immediately below (the fix
       needed there is NOT "confirm polling then flip," per the original text — see why).
-- [ ] [CODE] P1. **New 2026-07-12 (§A2 finding 113), split from the todo above.** `EULER_V2-ARBITRUM`'s
+- [x] [CODE] P1. **New 2026-07-12 (§A2 finding 113), split from the todo above.** `EULER_V2-ARBITRUM`'s
       `defi_venues.py:457` phase-dict comment is STILL factually wrong:
       `# EULER_V2-ARBITRUM + FLUID-ARBITRUM: no UAC     subgraph_id registered → 0 captured rows.` — but real Goldsky
       `SUBGRAPH_IDS` have been registered for EULER_V2-ARBITRUM and verified GREEN since 2026-06-02
@@ -234,8 +234,9 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       reference-data adapter is Ethereum-only. Fix: correct the ARBITRUM comment to state that real reason, mirroring
       the accurate ETHEREUM comment already in the file (`defi_venues.py:525-527`: "EULER_V2-ARBITRUM stays pipeline:
       euler_v2.py's adapter only supports ETHEREUM (\_DEFAULT_CHAIN, single flat \_MVP_MARKETS list, no per-chain
-      dict)") instead of repeating the stale no-subgraph-id claim.
-- [ ] [CODE] P2. **REWORDED 2026-07-12 (§A2 finding 113) — three concrete gaps, not a single open decision.** Original
+      dict)") instead of repeating the stale no-subgraph-id claim. — already covered by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
+- [x] [CODE] P2. **REWORDED 2026-07-12 (§A2 finding 113) — three concrete gaps, not a single open decision.** Original
       todo text (kept for context): "Decide whether to actually wire EULER_V2 capture given real subgraph infra now
       exists (verified working 2026-06-02, never actually polled) — this is a 'finish what's already 90% built' case,
       same class as the RENZO finding in the tracker's unregistered-handler-audit item." Code-verified breakdown of what
@@ -268,7 +269,8 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       (capability `mtds_operations` repoint, capture trigger) are NOT actioned — nothing to wire against. No code
       changed for this sub-item. Note: `defi_venues.py` currently has `EULER_V2-ETHEREUM: "live"` despite this — a
       pre-existing inconsistency flagged here for whoever next touches that phase dict, not fixed in this pass (out of
-      scope for a capture-wiring todo; the phase-dict fix would be its own small follow-up).
+      scope for a capture-wiring todo; the phase-dict fix would be its own small follow-up). — already covered by
+      defi_satellite_ao_dispatch_batch2_2026_07_26.md (slot-11, BLOCKED-UPSTREAM) (see that doc for execution).
 - [x] ✅ [VERIFY] P3. Resolve which "Plasma" chain UAC's `FLUID-PLASMA`/`AAVE-PLASMA` placeholders are meant to refer to
       (the 2025 Tether-backed Plasma L1, or the unrelated pre-2020 Polygon Plasma bridge) before doing anything else
       with those two entries — UAC's own maintainers have this flagged unresolved. — **DONE (slot-11, 2026-07-26):
@@ -292,12 +294,13 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       HYPERLIQUID/ASTER in UAC's own `ALL_DEFI_VENUES` + `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — is out of scope for a
       deployment-api/deployment-ui-only dispatch; this stopgap unblocks the dashboard today but the registry-level
       declaration (and any UAC-side dual-counting axis decision it still needs) remains a real follow-up.
-- [ ] [OPS] P1. **New 2026-07-10.** Restart/fix the `uts-prod-data-status-rollup` Cloud Run Job — Cloud Scheduler has
+- [x] [OPS] P1. **New 2026-07-10.** Restart/fix the `uts-prod-data-status-rollup` Cloud Run Job — Cloud Scheduler has
       been firing into `UNAVAILABLE` (gRPC code 14) since at least 2026-07-05T15:53Z (confirmed still broken 2026-07-10,
       blob age ~4.8 days at check time). The 2026-07-08 staleness-gate fix (3847d6f) means `/turbo` now degrades to
       correct-but-slow (~3-4 min, one full GCS manifest read) on-demand compute instead of silently serving stale data,
       but the DEFAULT unfiltered `/turbo` view is effectively unusable in that window without the rollup — this is the
-      actual remaining user-facing symptom, not a data-correctness bug anymore.
+      actual remaining user-facing symptom, not a data-correctness bug anymore. — already covered by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (slot-7, DONE) (see that doc for execution).
 
 ## Progress Log
 

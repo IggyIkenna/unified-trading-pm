@@ -142,7 +142,7 @@ per-venue twin-coverage sampling, content-match results, and the writer-side (Pa
       per-instrument leaf + a `_migrated_*` marker at the same shard path and asserting only the real leaf is
       matched/read (the marker's mock raises `AssertionError` if ever downloaded — never fires). `quality-gates.sh`
       green: 17826 passed, 209 skipped, 0 failed, sentinel `.qg_last_passed_sha` == HEAD before quickmerge.
-- [ ] [SCRIPT] P2. **Re-verify + purge, only after the reader fix lands.** Re-run this delete-safety proof (or the
+- [x] [SCRIPT] P2. **Re-verify + purge, only after the reader fix lands.** Re-run this delete-safety proof (or the
       sanctioned `delete_migrated_defi_markers_2026_07_23.py --dry-run`, which already implements the correct per-marker
       SAFE/FLAGGED disposition logic) with the reader fixed, then execute `defi_dex_pool_symbol_fix_backfill_purge-001`
       only for the SAFE population — never a blind glob-delete of "every `_migrated_*` lst_rates object for these 4
@@ -164,4 +164,5 @@ per-venue twin-coverage sampling, content-match results, and the writer-side (Pa
       `604800` (7 days) fresh-checked 2026-07-27 per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a.
       Re-query fresh before running, not from this citation. See
       `plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 1 for the executable form of this same
-      purge.
+      purge. — already covered by defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo 1 (see that doc for
+      execution).

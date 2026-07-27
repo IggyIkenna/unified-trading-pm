@@ -169,13 +169,16 @@ whole suite (1609 passed).
       `scripts/sports/migrate_player_mappings_to_canonical.py:63` — a file this todo never touched. Reverted the
       uncommitted diff cleanly rather than force it through; retry once that unrelated ratchet is resolved. **Gate**:
       same as the existing script's own conventions — the fallback is documented as secondary, never touches disk/argv.
-- [ ] [BACKEND] P2. **Separately flagged**: `scripts/sports/migrate_player_mappings_to_canonical.py:63` breached the
+- [x] [BACKEND] P2. **Separately flagged**: `scripts/sports/migrate_player_mappings_to_canonical.py:63` breached the
       `no_empty_string_fallback_baseline` ratchet (320 > 319) — this blocks EVERY future `unified-trading-pm` CODE
       quickmerge (STEP 5.101 scans the whole workspace root, not just the touching diff) until fixed or explicitly
       exempted. Found as a side effect of an unrelated attempted commit 2026-07-24; not investigated further (out of
       scope, unfamiliar file, not touched by this session). SSOT for the ratchet:
       `plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`. **Gate**: rewrite the
-      site to fail fast, or add `# noqa: qg-empty-fallback` with a one-line reason per that SSOT's own recipe.
+      site to fail fast, or add `# noqa: qg-empty-fallback` with a one-line reason per that SSOT's own recipe. — already
+      covered by plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (measured 2026-07-26:
+      check_no_empty_string_fallback.py --scope unified-trading-pm reports 319 == baseline) (see that doc for
+      execution).
 
 ## Progress Log
 

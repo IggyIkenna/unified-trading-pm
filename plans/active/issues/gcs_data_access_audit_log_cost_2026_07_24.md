@@ -230,12 +230,15 @@ which neither available credential in this session has.** One handoff covers all
       see Progress Log), queried directly. $52.92
       total Cloud Logging cost for 2026-07-01 through 2026-07-24 (all under SKU "Log Storage cost"), tracking the burst
       days identified earlier ($23.18 on 07-19, $5.48 on 07-22).
-- [ ] [DEVOPS] P2. **Remove the `storage.googleapis.com` / `DATA_WRITE` entry from the project's IAM `auditConfigs`**
-      (operator ruling 2026-07-24: assume it was an unneeded/accidental default, no known reason found — see § Operator
-      decisions). Not urgent — the exclusion filter (todo above, already live) already fully stops the Cloud Logging
-      cost; this is a source-level correctness cleanup, not a cost fix. Needs an identity with
-      `resourcemanager.projects.setIamPolicy` (a step beyond the read-only `getIamPolicy` + `logging.admin`/`editor`
-      impersonation chain that resolved the P1 todo — confirmed neither covers a policy WRITE). Hand off with: 1.
+- [x] [DEVOPS] P2. **Remove the `storage.googleapis.com` / `DATA_WRITE` entry from the project's IAM `auditConfigs`** —
+      already covered by plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for
+      execution); this active copy is a stale duplicate of the already-`status: resolved` archived twin
+      plans/archive/2026_07/gcs_data_access_audit_log_cost_2026_07_24.md. (operator ruling 2026-07-24: assume it was an
+      unneeded/accidental default, no known reason found — see § Operator decisions). Not urgent — the exclusion filter
+      (todo above, already live) already fully stops the Cloud Logging cost; this is a source-level correctness cleanup,
+      not a cost fix. Needs an identity with `resourcemanager.projects.setIamPolicy` (a step beyond the read-only
+      `getIamPolicy` + `logging.admin`/`editor` impersonation chain that resolved the P1 todo — confirmed neither covers
+      a policy WRITE). Hand off with: 1.
       `gcloud projects get-iam-policy central-element-323112 --format=json > policy.json` — fetch the LIVE policy
       immediately before writing (do not reuse the `auditConfigs` block already quoted in this doc — re-fetch to avoid a
       stale-etag clobber of any binding changed since 2026-07-24). 2. Edit `policy.json`: remove ONLY the

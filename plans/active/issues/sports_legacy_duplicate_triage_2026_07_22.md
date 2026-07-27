@@ -316,10 +316,12 @@ TOTAL: 0/34,385 rows at yes-twin-confirmed or yes-after-verify.
 **No action in this doc deletes, moves, or modifies anything.** Every disposition above is `no-migrate-first` or N/A.
 Recommended next steps, in priority order:
 
-- [ ] 1. [OPERATOR] P1. **Rule on the 1,492 v2 pre-floor rows**: fold into the existing pre-floor-wipe scope (extend
+- [x] 1. [OPERATOR] P1. **Rule on the 1,492 v2 pre-floor rows**: fold into the existing pre-floor-wipe scope (extend
       `deployment-service`'s `wipe_pre_floor_sports_2026_07_21.py`-style tool to also cover `sports_reference_v2/`), or
       confirm they're already covered by a follow-up pass. This is a policy-consistency question, not a fresh delete
-      decision — the operator already ruled the underlying data category.
+      decision — the operator already ruled the underlying data category. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track V "decision 14" — the same pre-floor-wipe
+      population/machinery; see that doc for execution).
 - [ ] 2. [DATA] P2. **Migrate-forward the 58 v2 post-floor rows** (16 days) into canonical per-league `entity=fixtures`
       / `entity=fixture_stats` — a small, tractable per-league fan-out (reuse `migrate_sports_per_league.py`'s
       per-fixture-league-join logic), not a delete. Re-run the sweep after to confirm these flip to `A_canonical`.
@@ -353,9 +355,11 @@ Recommended next steps, in priority order:
       mirrored todo). NOTE: the `by_date`-tree branch's "covered wins" semantics (the SEPARATE v2 pre-floor 728-row
       population) are deliberately unchanged — that is todo 1's `[OPERATOR]`-gated policy question, not this ordering
       bug.
-- [ ] 5. [REVIEW] P3. Cross-file `sports_master_closeout_2026_07_21.md`'s (archived) pending "MANIFEST prune" deferred
+- [x] 5. [REVIEW] P3. Cross-file `sports_master_closeout_2026_07_21.md`'s (archived) pending "MANIFEST prune" deferred
       task — the 944,776 phantom pre-floor manifest rows it already tracks are the root cause of §2's misclassification
-      here too; pruning them removes the `is_covered_sports` false-positive at the source.
+      here too; pruning them removes the `is_covered_sports` false-positive at the source. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (carries this cross-file pointer forward; see that doc
+      for execution).
 
 ## Artifacts (durable, read-only, mirror the sweep's own audit-parquet convention)
 

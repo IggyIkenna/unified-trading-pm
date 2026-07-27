@@ -81,13 +81,16 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
 
 ## Todos
 
-- [ ] [INFRA] P2. Make `slot-git-status-report.sh` prefer `http://localhost:8765` (trusted-local, no token) when the
+- [x] [INFRA] P2. Make `slot-git-status-report.sh` prefer `http://localhost:8765` (trusted-local, no token) when the
       loopback backend is reachable, falling back to the public `ORCH_URL` + `ORCH_TOKEN_FILE` when it is not (off-VM
       operator laptops). Do NOT unconditionally flip the default `ORCH_URL` — that would break off-VM reporters.
       **Done-when:** on host ip-172-31-5-118, after the next reporter tick `/api/fleet/git-health` shows
       `reporter_stale=false` for the host's slots and `git_staleness_alert_sent` stops firing; off-VM path still uses
       public URL + token (verified by reading the branch, not just on-VM behaviour). Wire into the primary consumer's
-      `quality-gates.sh` if the script isn't already covered.
+      `quality-gates.sh` if the script isn't already covered. — already covered by
+      plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (folded with
+      orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md's item) (see that doc for
+      execution).
 - [ ] [INFRA] P3. Immediate unblock (independent of the code fix): refresh `~/.orch_token` on ip-172-31-5-118 so the
       reporter resumes now, and confirm `reporter_stale` clears within one tick. (Stopgap only — the loopback fix above
       is what stops the recurrence on the next rotation.)

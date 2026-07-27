@@ -92,10 +92,11 @@ compounding it. Operator ruling: leave the project-wide grant in place for now, 
       `gcloud secrets versions access latest --secret=<X> --impersonate-service-account=github-actions-deploy@...` AFTER
       the removal — both exits `0` (values not echoed to any log). The scoped bindings alone are confirmed sufficient;
       this SA can no longer read any OTHER secret in the project.
-- [ ] [BACKEND] P3. Separately noted (not this issue's scope): `deployment-service/configs/gcp_service_accounts.yaml` —
+- [x] [BACKEND] P3. Separately noted (not this issue's scope): `deployment-service/configs/gcp_service_accounts.yaml` —
       the per-service SA/IAM registry — has no entry at all for `unified-trading-sa@central-element-323112`
       (deployment-api's actual runtime SA) and its own footer admits `last_executed: NEVER`. Worth a follow-up pass to
-      sync this registry against live IAM reality rather than leaving it aspirational.
+      sync this registry against live IAM reality rather than leaving it aspirational. — already covered by
+      plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md (see that doc for execution).
 
 ## Progress Log
 

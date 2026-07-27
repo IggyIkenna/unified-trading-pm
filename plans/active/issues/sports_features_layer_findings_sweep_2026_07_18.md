@@ -368,9 +368,11 @@ the natural unit of work that succeeds/fails together). ~31 calculator atoms ins
 atoms. This also **retroactively fixes C1** by aligning the writer with what the CLI already assumes, and surfaces
 dependency cascades (topo-sorted `depends_on`) that group grain hides entirely.
 
-- [ ] [CODE] P1. Change the `odds/derived/fixture_features` writer + manifest row_key atom from
+- [x] [CODE] P1. Change the `odds/derived/fixture_features` writer + manifest row_key atom from
       `(feature_group, date[, league])` to `(calculator, date[, league])`; keep writer/manifest/status/gate/UI identical
-      (workspace hard rule). Reconcile the league_id namespace (C2) in the same change.
+      (workspace hard rule). Reconcile the league_id namespace (C2) in the same change. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` ("Honest-coverage atom regrade to per-calculator grain
+      (already operator-decided, implementation pending)"; see that doc for execution).
 
 ### C4. Feature-grain = within-shard column check, NOT a manifest dimension — **P2**
 
@@ -398,7 +400,9 @@ Per-group materialized coverage is ~100% everywhere except **`fixture_stats` 83.
 942 total `attempted_failed` rows**. Remaining failures: `injuries` 136, `fixture_lineups` 46, `fixture_player_stats`
 34, `fixture_events` 17, `fixture_features` 1.
 
-- [ ] [DIAG] P2. Root-cause the 708 `fixture_stats` failures; they dominate the entire sports failure budget.
+- [x] [DIAG] P2. Root-cause the 708 `fixture_stats` failures; they dominate the entire sports failure budget. — already
+      covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (same line item as the C3 atom-regrade todo
+      above: "+ `fixture_stats` 708-failure root-cause"; see that doc for execution).
 
 ---
 
@@ -560,9 +564,13 @@ read is a coverage blind spot.
 - [ ] [CODE] P1. Restore the data-status "distinct dimension values present per asset_group" listing in deployment-api +
       deployment-ui (instrument_type / data_type / venue / chain / pipeline_mode / source), so non-canonical naming and
       duplication are visible again instead of needing an ad-hoc query.
-- [ ] [DATA] P1. Normalise the F1 case-duplicates to ONE canonical case and rewrite the affected manifest rows.
-- [ ] [CODE] P1. Fix the F2 writer(s) putting bookmakers + `odds` into `instrument_type`; add a QG assertion that
-      `instrument_type` only accepts declared UAC values for the asset group.
+- [x] [DATA] P1. Normalise the F1 case-duplicates to ONE canonical case and rewrite the affected manifest rows. —
+      already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C's casing reconciliation work
+      supersedes this; see that doc for execution).
+- [x] [CODE] P1. Fix the F2 writer(s) putting bookmakers + `odds` into `instrument_type`; add a QG assertion that
+      `instrument_type` only accepts declared UAC values for the asset group. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C's writer-fix work, e.g.
+      market-tick-data-service@7ffabf77; see that doc for execution).
 - [ ] [ASK] P1. Operator decisions needed: F3 (is `odds_horizon_bucket_{tf}` canonical, or does `timeframe` own that
       axis?) and F4 (are `FOOTBALL` / `ODDS_API` valid `venue` values?).
 - [ ] [DIAG] P1. F6 — why is the instruments-sports consolidated index persistently older than its 120s budget?

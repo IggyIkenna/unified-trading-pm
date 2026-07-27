@@ -102,17 +102,19 @@ it.
 
 ## Todos
 
-- [ ] [DATA] P1. Measure the true scale of this legacy population — either extend `rebuild_defi_manifest`'s own
+- [x] [DATA] P1. Measure the true scale of this legacy population — either extend `rebuild_defi_manifest`'s own
       `unparseable` counter into a logged sample of the actual unparseable paths (cheap — the counter already exists, it
       just isn't currently surfacing WHICH paths hit it), or run a manifest-driven cross-check (days/venues with real
       GCS presence per a bounded listing vs. zero manifest rows for that venue/day). Definition-of-done: a real count
       (or a tight bounded estimate) of how many objects across the full date range carry this legacy composite- venue
-      shape, cited against the method used (not a fresh whole-corpus GCS walk — single-walk discipline applies).
-- [ ] [DIAG] P1. Gather the fact needed for the fold-vs-migrate decision below: for a sample of objects in this legacy
+      shape, cited against the method used (not a fresh whole-corpus GCS walk — single-walk discipline applies). —
+      already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
+- [x] [DIAG] P1. Gather the fact needed for the fold-vs-migrate decision below: for a sample of objects in this legacy
       shape (beyond the single ETHENA example already confirmed), read the parquet content directly and confirm whether
       they are all small (1-row-scale) valid-data objects like the ETHENA sample, or whether some carry substantial
       historical data. Definition-of-done: a stated distribution (e.g. "N of M sampled objects are single-row", or a
-      size histogram) that the decision todo below can be answered against.
+      size histogram) that the decision todo below can be answered against. — already covered by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
 - [ ] [OPERATOR] P1. **Decision needed**: fold (migrate each object onto its correct canonical path, parsing the
       parquet's own `instrument_key`/`data_type` columns to re-derive it) vs. some other disposition — gated on the
       scale + sample-distribution facts from the two todos above. This is a genuine judgment call, not a mechanical fix

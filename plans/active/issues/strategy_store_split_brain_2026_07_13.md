@@ -128,7 +128,7 @@ stack was missed by the root-level state-rm:
   the **mount list**: a `terraform apply` of this stack either fails on three non-existent buckets or re-creates them —
   resurrecting exactly the split-brain the Wave-3 fold retired.
 
-- [ ] [INFRA] P1. **Drop the 3 dead per-AG `strategy-store` legs from the strategy-service Terraform stack** — remove
+- [x] [INFRA] P1. **Drop the 3 dead per-AG `strategy-store` legs from the strategy-service Terraform stack** — remove
       `strategy_bucket_{cefi,tradfi,defi}` from
       `deployment-service/terraform/services/strategy-service/gcp/{terraform.tfvars,terraform.tfvars.example,main.tf}`
       (and the AWS `terraform.tfvars.example` equivalents), including the 3 GCSFuse mount entries at `main.tf:234-236`
@@ -136,4 +136,5 @@ stack was missed by the root-level state-rm:
       `strategy-store-prd-${PROJECT_ID}` once instead of three per-AG names. **Done when**:
       `rg     'strategy_bucket_(cefi|tradfi|defi)' deployment-service/terraform/` returns zero hits, `terraform plan` on
       the strategy-service stack is clean, and no plan output proposes creating a `strategy-store-{cefi,tradfi,defi}-*`
-      bucket.
+      bucket. — already covered by plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md (see that doc
+      for execution).

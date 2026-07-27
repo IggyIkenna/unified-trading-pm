@@ -167,21 +167,25 @@ papering over them.
       of this todo's literal scope — todo 4 names "shard-atom (manifest key)" + "available_at bookkeeping", which most
       directly maps to `_row_counts`/`underlying_counts`, already fixed) — flagging as a residual, smaller finding for a
       follow-up rather than expanding scope further.
-- [ ] 5. [DATA] P1. PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip via the
+- [x] 5. [DATA] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc for
+      execution]** PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip via the
       v6-first probe at `reader.py:402`), with the guard raising on a synthetic v5 path. — **Code now SHIPPED
       (`market-tick-data-service@04222eb0`) and the `canonical-migration-cefi-*` VM fleet that originally blocked this
       (interference risk on the same bucket) has since TERMINATED (verified 2026-07-22) — the blocker is cleared.**
       Unit-level proof (mocked writer, no real GCS) is in `tests/unit/test_partitioned_writer_cefi_chain_tail_v6.py` (6
       tests, all passing); the real-day GCS round-trip proof is still **NOT ATTEMPTED** and remains Round 2 work —
       genuinely separate operational verification, not a doc update.
-- [ ] 6. [DATA] P1. Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5),
+- [x] 6. [DATA] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc for
+      execution]** Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5),
       recording any v5 collisions where two logical chains overwrote one object as unrecoverable rather than silently
       merging. — **DEFERRED to Round 2** (out of scope for this session per task instructions; todo 1's finding that W1
       reaches zero live objects means this migration's true source, if any v5 cefi chain objects exist at all in GCS, is
       NOT the W1 path — needs its own enumeration before migrating).
-- [ ] 7. [DATA] P1. Re-sync the manifest / data-status render for the migrated cefi chain cells so all four canonical
+- [x] 7. [DATA] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc for
+      execution]** Re-sync the manifest / data-status render for the migrated cefi chain cells so all four canonical
       surfaces agree post-migration. — **DEFERRED to Round 2** (depends on todo 6).
-- [ ] 8. [REVIEW] P1. On W1 ship, record the cefi chain-tail v6 cutover date in
+- [x] 8. [REVIEW] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc
+      for execution]** On W1 ship, record the cefi chain-tail v6 cutover date in
       `/codex/02-data/canonical-cutover-register.md` (repo@sha) and update the §7 summary cefi `chain tail` cell from
       "v5/v6 dual hazard" to the ruled v6 (migration_pending → EXECUTED). — **DEFERRED**: gated on the MTDS-side W1 code
       actually shipping (todos 2/3's MTDS portion), which did not happen this session.

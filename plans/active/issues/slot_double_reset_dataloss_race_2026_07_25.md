@@ -224,11 +224,12 @@ names this doc in its own subject line. Verified by reading the shipped source +
 
 ## Todos
 
-- [ ] [BACKEND] P3. Close this doc's "Verification once implemented" bullet 2: confirm `head_backward_canary.py` (the
+- [x] [BACKEND] P3. Close this doc's "Verification once implemented" bullet 2: confirm `head_backward_canary.py` (the
       reflog-signature detector/pager) still fires normally on a legitimate single realign after
       `agent-orchestrator@3e5de0e7b`, and confirm it needed no modification. **Done when**: either a test or a live
       observation shows the canary firing on one allowed realign post-fix, recorded here — after which this doc can be
-      closed and archived. (The fix itself is verified above; only this canary-regression check is outstanding.)
+      closed and archived. — already covered by plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (see that doc
+      for execution). (The fix itself is verified above; only this canary-regression check is outstanding.)
 
 ## Minimal fix (two parts — both are needed, each closes a different half of this one incident) — SHIPPED, see the verdict section above
 

@@ -210,8 +210,9 @@ should stop trusting it.
       this doc's own logic option 1 is now correct. Queued as a `scripts/quickmerge.sh`-touching todo for `ci`'s batch 2
       (batch1 already claimed the sole quickmerge.sh slot for its no-op-ship fix — see
       `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred § D3 — do not add a second one to batch1).
-- [ ] [INFRA] P2. Implement the chosen option in `scripts/quickmerge.sh` STAGE 1.6; verify by running a quickmerge in a
+- [x] [INFRA] P2. Implement the chosen option in `scripts/quickmerge.sh` STAGE 1.6; verify by running a quickmerge in a
       repo that depends on `unified-api-contracts` and confirming the spurious "local=0.71.0 < staging/main=0.72.0" line
-      is gone.
+      is gone. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md's Deferred D3/D8 (queued
+      for ci's next batch) (see that doc for execution).
 - [ ] [INFRA] P3. Confirm the wasted auto-heal dispatch (`gh workflow run main-backmerge-to-ldr.yml` at
       `scripts/quickmerge.sh:1046`) no longer fires for this cause — it is a real, if small, CI cost line.

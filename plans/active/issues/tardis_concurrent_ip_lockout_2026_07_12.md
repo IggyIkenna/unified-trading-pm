@@ -260,7 +260,9 @@ Tardis download path) — preserves the parallel-VM wall-clock the plan relies o
       `test_tardis_stream_client.py::TestAsyncIterBytes::test_403_code_274_tagged_as_concurrent_ip_lock` +
       `TestTardisHTTPErrorConcurrentIPLock` (4 cases). This separates lock-403s from genuine honest-absence and DIRECTLY
       de-noises the G4 re-measurement below. (repo: market-tick-data-service)
-- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION (gated on todo #1 + todo #2 above — do NOT run pre-fix).** Once the lock
+- [x] [DATA] P1. **[already covered by
+      plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md, see that doc for
+      execution]** BLOCKED-OPERATOR-DECISION (gated on todo #1 + todo #2 above — do NOT run pre-fix).** Once the lock
       contention is resolved (any path above), RE-RUN this plan's G4 verification from a clean slate — every prior
       session's `attempted_failed` count in this plan's Progress Log should be treated as upper-bound noise until
       re-measured post-fix, not a genuine per-venue gap census. **Verified 2026-07-12 (data_engineering slot-3): gate

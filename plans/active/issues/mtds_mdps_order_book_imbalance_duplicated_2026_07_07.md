@@ -150,7 +150,8 @@ radius) is running; implementation follows once it lands.
       zero remaining references to `book_microstructure`/`BookMicrostructure`/`order_flow_imbalance` anywhere in the
       MTDS repo. Blast-radius check confirmed zero real consumers and zero production rows ever captured for this
       data_type before deleting. Evidence: `market-tick-data-service@a4fb3d13`, quality-gates.sh green (153s).
-- [ ] [CODE] P1. **UAC-side retirement, not yet started**: `data_type_capability.py` (3 sites — the 9-venue block at
+- [x] [CODE] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc for
+      execution]** UAC-side retirement, not yet started**: `data_type_capability.py` (3 sites — the 9-venue block at
       lines ~260-284/287, plus two more at ~470/488 and ~516 not in the original audit's line citation),
       `_source_priority_data.py:130-136,366`, `pipeline_mode.py:112-116,204-205`
       (`BATCH_MTDS_MICROSTRUCTURE`/`LIVE_MTDS_MICROSTRUCTURE`/`REPLAY_MTDS_MICROSTRUCTURE` — needs a usage check before
@@ -160,7 +161,8 @@ radius) is running; implementation follows once it lands.
       `canonical/domain/market/microstructure.py`'s `CanonicalBookMicrostructure`/`CanonicalDepthLevel` schema is shared
       with the still-valid, never-captured `queue_position`/`depth_of_book_10` honest-gap declarations — delete only the
       `order_flow_imbalance`-specific capability entries, not the schema itself.
-- [ ] [VERIFY] P2. Once the SSOT decision fully lands (UAC retirement above), check whether the two (now-one) live
+- [x] [VERIFY] P2. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc for
+      execution]** Once the SSOT decision fully lands (UAC retirement above), check whether the two (now-one) live
       formulas actually agreed numerically on the same real captured data historically (a quick side-by-side computation
       on one venue/day, using whatever historical MTDS order_flow_imbalance rows exist — note: this needs to run BEFORE
       the UAC schema/manifest entries are removed, since it reads MTDS's now-retired output).

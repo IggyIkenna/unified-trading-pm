@@ -146,17 +146,19 @@ Not rogue agents — **the workspace contradicted itself, and the enforcement wa
 
 - [ ] [DEVOPS] P2. Decide whether the 33 laundered commits need any dep-order spot-check beyond the bot's gate, or
       whether this doc closes it. Nothing automated will ever re-surface them.
-- [ ] [DEVOPS] P2. `check_strict_quickmerge.py` **fails OPEN on a bad range** — an unresolvable/invalid range prints "no
+- [x] [DEVOPS] P2. `check_strict_quickmerge.py` **fails OPEN on a bad range** — an unresolvable/invalid range prints "no
       bypassed code commits" (exit 0) rather than erroring. Found while testing the hook with a malformed sha. A typo'd
-      range therefore reads as a pass.
+      range therefore reads as a pass. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
+      (see that doc for execution).
 - [ ] [DEVOPS] P3. `scripts/dev/hooks/pre-push-strict-quickmerge.sh` is now redundant (all three installers point at
       `scripts/hooks/pre-push`). Still referenced by `migrate-slots-to-pathb.sh`, `quickmerge.sh` and two codex docs —
       delete + repoint per "delete deprecated code (no shims)".
 - [ ] [DEVOPS] P3. The two husky UI repos (`deployment-ui`, `unified-trading-system-ui`) are skipped by the self-heal
       (`case "${_hooks_dir}" in */.husky/*) continue`), so they carry no strict guard. Wire it into husky's own
       pre-push.
-- [ ] [DEVOPS] P3. `/codex/08-workflows/ci-cd-flow.md:702` still calls the guard "WARN-default" — stale since it now
-      blocks.
+- [x] [DEVOPS] P3. `/codex/08-workflows/ci-cd-flow.md:702` still calls the guard "WARN-default" — stale since it now
+      blocks. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md (see that doc for
+      execution).
 
 ## Lesson (for agents)
 

@@ -336,9 +336,12 @@ The real cause: that index is **108.45 MiB**, so a merge cycle takes ~1-2 minute
 than `MANIFEST_CONSOLIDATED_STALENESS_SEC=120` when a reader checks it. Reads therefore fail INTERMITTENTLY by racing
 the merge cycle, and the error message ("behind or DOWN") actively misleads the next investigator.
 
-- [ ] [CODE] P1. Raise the staleness budget for large-index buckets via the existing per-bucket resolver
+- [x] [CODE] P1. Raise the staleness budget for large-index buckets via the existing per-bucket resolver
       (`_resolve_consolidated_staleness_sec`) — a budget must exceed that bucket's MEASURED merge duration, not a
-      fleet-wide constant. instruments-sports needs >= ~180-240s at 108 MiB.
+      fleet-wide constant. instruments-sports needs >= ~180-240s at 108 MiB. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (fixed via
+      `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 8, unified-trading-library@fd87daa1, `"sports": 1800` added
+      to `AG_STALENESS_BUDGET_SEC`; see that doc for execution).
 - [ ] [CODE] P2. Soften the error text: distinguish "consolidator DOWN" (no recent successful execution) from "index
       older than budget but consolidator succeeding" (a too-tight budget). They demand opposite responses.
 
@@ -371,22 +374,29 @@ this session (legacy IS bucket deleted), so it now targets partly-nonexistent in
 
 Migrating rows without fixing writers guarantees regression on the next capture. Fix emission, then migrate.
 
-- [ ] [CODE] P1. **DIRECTION CORRECTED — emit UPPER, not lower.** Make every sports writer emit UPPER-CASE `data_type`,
+- [x] [CODE] P1. **DIRECTION CORRECTED — emit UPPER, not lower.** Make every sports writer emit UPPER-CASE `data_type`,
       auditing each `record_captured/record_empty/record_failed` sports call-site for **lower-case** literals. This todo
       previously said "(lower-case) … audit for upper-case literals", which K0-DECISION (b) **reversed** on 2026-07-18:
       sports is UPPER everywhere. Left as written it would have driven the migration of a ~2M-row prod bucket in exactly
       the wrong direction, and K2 below depends on this shipping first — so the stale wording was a live trap, not a
-      typo. CF-7's `_CF7_DATA_TYPE_NORMALISE` (UPPER→lower) is **superseded for sports** and must not be reused here.
-- [ ] [CODE] P1. Make MDPS odds writers stamp `venue = <bookmaker_key>` and `source = odds_api`, instead of
+      typo. CF-7's `_CF7_DATA_TYPE_NORMALISE` (UPPER→lower) is **superseded for sports** and must not be reused here. —
+      already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C — this UPPER-case direction
+      was itself REVERTED back to lower-case fleet-wide; see that doc for execution).
+- [x] [CODE] P1. Make MDPS odds writers stamp `venue = <bookmaker_key>` and `source = odds_api`, instead of
       `venue=ODDS_API`. `_SPORTS_VENUES = frozenset({"ODDS_API"})`
-      (`market_tick_data_service/adapters/umi_tick_provider.py:110`) is the declaration to change.
-- [ ] [CODE] P1. Stop writing bookmakers + `odds` into `instrument_type`; introduce the sports instrument_type
+      (`market_tick_data_service/adapters/umi_tick_provider.py:110`) is the declaration to change. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C; see that doc for execution).
+- [x] [CODE] P1. Stop writing bookmakers + `odds` into `instrument_type`; introduce the sports instrument_type
       vocabulary (betting market: match_odds / over_under / btts / spread). NOTE `canonical_writer_shaping.py:218`
       asserts _"the correct instrument_type IS 'odds'"_ — that claim must be reconciled against the shard atom
-      (`instrument_type` is an INSTRUMENT axis, and `odds` is a data_type) BEFORE changing it. Read it in full first.
-- [ ] [CODE] P1. QG assertion: sports `data_type` ∈ the UAC **UPPER-case** sports vocabulary (per K0-DECISION (b) —
+      (`instrument_type` is an INSTRUMENT axis, and `odds` is a data_type) BEFORE changing it. Read it in full first. —
+      already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C; see that doc for
+      execution).
+- [x] [CODE] P1. QG assertion: sports `data_type` ∈ the UAC **UPPER-case** sports vocabulary (per K0-DECISION (b) —
       corrected from "lower-case" for the same reason as above), `venue` ∉ {vendor names}, and `instrument_type` ∈ the
-      declared sports vocabulary — so this class cannot silently return.
+      declared sports vocabulary — so this class cannot silently return. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C — the vocabulary direction here was reversed to
+      lower-case; see that doc for execution).
 
 ### K2. Phase 2 — MIGRATE the -prd- rows (only after K1 ships)
 
@@ -394,17 +404,25 @@ Measured drift in `market-data-tick-sports-prd` (1,974,679 rows): `ODDS`/`odds` 
 `odds_snapshot` 4+4; `ODDS_MOVEMENT`/`odds_movement` 4+4; `venue=ODDS_API` 306,416; `venue=FOOTBALL` 1,337;
 `instrument_type='odds'` 1,806,527 + ~1,321 bookmaker rows + `PADDYPOWER`/`paddypower`, `PINNACLE`/`pinnacle`.
 
-- [ ] [DATA] P1. New migrator targeting the **-prd-** buckets (the CF-7 script is legacy-only). DRY-RUN default,
-      backup-before-write, per-batch verification. Reuse CF-7's `_CF7_DATA_TYPE_NORMALISE` decisions verbatim.
-- [ ] [DATA] P2. The 1,337-row legacy cohort (`odds_horizon_bucket_{15m,1h,4h,1d}` + `venue=FOOTBALL`, same rows) —
-      superseded horizon naming with NO live writer; re-stamp to canonical or drop. One pass (operator-approved).
-- [ ] [CLEANUP] P2. Delete `migrate_sports_canonical_v9.py` per its own Delete-when marker (E8 is complete).
+- [x] [DATA] P1. New migrator targeting the **-prd-** buckets (the CF-7 script is legacy-only). DRY-RUN default,
+      backup-before-write, per-batch verification. Reuse CF-7's `_CF7_DATA_TYPE_NORMALISE` decisions verbatim. — already
+      covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C — the casing target this migration
+      would move rows TOWARD was itself reverted; see that doc for execution).
+- [x] [DATA] P2. The 1,337-row legacy cohort (`odds_horizon_bucket_{15m,1h,4h,1d}` + `venue=FOOTBALL`, same rows) —
+      superseded horizon naming with NO live writer; re-stamp to canonical or drop. One pass (operator-approved). —
+      already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (already re-stamped per that doc's
+      own Track record: "ALREADY DONE 2026-07-22" via market-tick-data-service@2f3fb7cc; see that doc for evidence).
+- [x] [CLEANUP] P2. Delete `migrate_sports_canonical_v9.py` per its own Delete-when marker (E8 is complete). — already
+      covered by `plans/active/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md` (tracks this exact
+      deletion's residual status; see that doc for execution).
 
 ### K3. Phase 3 — prove it
 
-- [ ] [DATA] P1. Re-run the § F distinct-value audit and show ZERO case-duplicates, no vendor in `venue`, and
+- [x] [DATA] P1. Re-run the § F distinct-value audit and show ZERO case-duplicates, no vendor in `venue`, and
       `instrument_type` within vocabulary. Restore the data-status distinct-values listing (§ F, [CODE] P1) so this is
-      visible in the UI instead of needing an ad-hoc query.
+      visible in the UI instead of needing an ad-hoc query. — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C's own re-audit + restore-listing work; see that
+      doc for execution).
 
 ### K0-CORRECTION (operator challenge: "data_type is lowercase for sports or for all AGs? its uppercase for tradfi so thats weird")
 

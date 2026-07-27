@@ -197,9 +197,10 @@ rule (see Progress Log entry below for the observed outcome).
       today once the relaunched `mtds-dex-pools-backfill` VM (this session) + the running `mtds-dex-swaps-backfill-*`
       fleet finish, to confirm the recent-months gap identified in this issue actually closed. Repo:
       market-tick-data-service.
-- [ ] [INFRA] P3. Apply the same `,`->`;`+`^;^` metadata-delimiter fix to `launch-mtds-lending-indices-backfill-vm.sh`
+- [x] [INFRA] P3. Apply the same `,`->`;`+`^;^` metadata-delimiter fix to `launch-mtds-lending-indices-backfill-vm.sh`
       (`VM_LENDING_PROTOCOLS`) preemptively — identical bug shape, not yet triggered because it's only been used
-      single-protocol so far. Repo: deployment-service.
+      single-protocol so far. Repo: deployment-service. — already covered by
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (slot-7, DONE) (see that doc for execution).
 - [ ] [DATA] P3. Re-run a manifest-level `capture_status` cross-check (the chunked-download pattern from
       `verify_defi_glued_ids_2026_07_24.py`, or the pyarrow dataset+filter approach) once GCS network conditions in an
       agent sandbox are no longer measured at ~100 KB/s, to corroborate this issue's GCS-object-existence-based findings

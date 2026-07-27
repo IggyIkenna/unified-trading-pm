@@ -93,8 +93,12 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 
 ## Todos
 
-- [ ] [CODE] P2. Diagnose tradfi phantom root cause: (a) confirm ICE/FX 309 phantoms predate billing lockdown; (b)
-      confirm blank data_type 1,083 are pre-v9 schema rows. Read triage JSONL. Repo: `market-tick-data-service`.
+- [x] [CODE] P2. Diagnose tradfi phantom root cause: (a) confirm ICE/FX 309 phantoms predate billing lockdown; (b)
+      confirm blank data_type 1,083 are pre-v9 schema rows. Read triage JSONL. Repo: `market-tick-data-service`. —
+      already covered by plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md and
+      plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md (see those docs — this ground is conflict-gated
+      between two tranches; left for the tradfi finalize's own re-check, per those docs' "Deferred — conflict-gated"
+      sections).
 - [x] ✅ [SCRIPT] P2. Apply phantom reconciliation for tradfi. **DONE 2026-06-28T04:32Z**: 1,589 phantoms flipped
       (cap→attempted_failed); manifest uploaded (2,507,790 rows). Count lower than dry-run (1,789 → 1,589): 200 phantoms
       resolved by new captures between scans. CBOE 753, NYSE 173, CME 172, ICE 171, NASDAQ 142, FX 138. Triage JSONL:
