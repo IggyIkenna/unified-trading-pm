@@ -205,9 +205,17 @@ compare case-insensitively in the interim (`migration_pending`).
       lowercase; 30 new unit tests; full QG green. Also fixed an unrelated pre-existing red
       (`unified-trading-library@c1c6cfff`, self-caused by an earlier this-session UAC rename `edf5122d` that never
       updated this repo's `test_point_in_time.py`) so the tree could ship clean.
-- [ ] [DATA] P1. mtds: RE-EXPORT the shared UTL canon and DELETE the local `_tradfi_manifest_canon.py` (no shim); update
-      `venue_fetch.py`/`sentinels.py` imports. REVERT slot-13's `continuous_future` addition to `_BUNDLE_GRAIN_EXCLUDED`
-      (operator ruled FUTURE, not excluded). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. mtds: RE-EXPORT the shared UTL canon and DELETE the local `_tradfi_manifest_canon.py` (no shim);
+      update `venue_fetch.py`/`sentinels.py` imports. REVERT slot-13's `continuous_future` addition to
+      `_BUNDLE_GRAIN_EXCLUDED` (operator ruled FUTURE, not excluded). (repo: market-tick-data-service) — DONE
+      `market-tick-data-service@4122df13`: deleted `_tradfi_manifest_canon.py`; `venue_fetch.py`/`sentinels.py` now call
+      the mtds-specific id-building/venue-gating wrappers (`_resolve_tradfi_manifest_shard`/`_tradfi_manifest_itype`/
+      `_tradfi_sentinel_itype`) which delegate casing lookups to UTL's `canonicalize_manifest_instrument_type` — split
+      into a new shared `engine/orchestrator/_tradfi_manifest_shard.py` module (keeps both files at the 900-line file-
+      size cap); `rebuild_tradfi_manifest.py`/`migrate_cme_monolith_trades_2026_07_26.py`/
+      `migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py` call the UTL function directly.
+      `continuous_future → FUTURE` now applies (bundle-grain exclusion reverted); regression tests added
+      (`tests/unit/engine/test_tradfi_manifest_shard.py`). Full QG green (7223 tests).
 - [ ] [DATA] P1. Verify instruments-service (`engine/orchestrator/writers.py`) + market-data-processing-service
       (`engine/build_continuous_engine.py`) manifest writes inherit the shared UTL casing canon at the record\_\* seam
       (add a live re-read assertion: 0 lowercase tradfi rows written after the seam ships). (repos: instruments-service,
