@@ -144,6 +144,7 @@ jobs:
       build_triggered: ${{ steps.docker-build.outputs.build_triggered }}
       build_exit_code: ${{ steps.docker-build.outputs.build_exit_code }}
       build_failure_reason: ${{ steps.docker-build.outputs.build_failure_reason }}
+      build_error_detail: ${{ steps.docker-build.outputs.build_error_detail }}
       build_region: ${{ steps.docker-build.outputs.build_region }}
       build_log_url: ${{ steps.docker-build.outputs.build_log_url }}
       health_check_passed: ${{ steps.health-check.outputs.health_check_passed }}
@@ -540,9 +541,18 @@ jobs:
             echo "Attempting build trigger in region: $region"
 
             local trigger_output=""
+            # --branch is REQUIRED for a repositoryEventConfig (2nd-gen GitHub-connection) trigger
+            # invoked via API/CLI rather than a real push webhook — without it the call fails
+            # `INVALID_ARGUMENT: source.revision must be specified to run this trigger` (found
+            # 2026-07-27: unified-trading-library-prod is the only fleet trigger both existing AND
+            # CLOUD_BUILD_PROD_DEPLOY_EXPECTED=true, so this call was never actually exercised
+            # against a real trigger before — every other repo's call short-circuits on NOT_FOUND
+            # first. Manual verification during the 2026-07-25 recreation incident passed
+            # `--branch=main` explicitly and worked; this automated path never carried it).
             if gcloud builds triggers run "${REPO}-${ENV}" \
               --project="$GCP_PROJECT" \
               --region="$region" \
+              --branch="$BRANCH" \
               --substitutions="_VERSION=${VERSION},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading,_REPO_NAME=${REPO},_ENV=${ENV}" \
               --format="value(metadata.build.id)" \
               2>/tmp/build_trigger_err.txt; then
@@ -623,6 +633,15 @@ jobs:
               echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
               echo "build_failure_reason=not-configured" >> "$GITHUB_OUTPUT"
               echo "build_region=$ACTIVE_REGION" >> "$GITHUB_OUTPUT"
+              # "not-configured" buckets BOTH a genuinely-missing trigger (NOT_FOUND) AND any other
+              # invocation-shaped failure (e.g. INVALID_ARGUMENT) under one reason — found
+              # 2026-07-27 when a stale hardcoded "trigger NOT_FOUND" alert fired for
+              # unified-trading-library-prod while the trigger actually existed and the real error
+              # was `source.revision must be specified` (the --branch gap fixed above). Surface the
+              # RAW error text so a future genuinely-different failure isn't mis-diagnosed the same
+              # way (single line, capped — this becomes a Slack message body).
+              ERR_DETAIL="$(tr '\n' ' ' < /tmp/build_trigger_err.txt 2>/dev/null | cut -c1-300 || echo "")"
+              echo "build_error_detail=${ERR_DETAIL}" >> "$GITHUB_OUTPUT"
             fi
             exit 0
           fi
@@ -1202,11 +1221,14 @@ jobs:
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
-        "unified-trading-library-prod Cloud Build trigger NOT_FOUND — the base Docker image every service Dockerfile
+        "unified-trading-library-prod Cloud Build trigger did not fire — the base Docker image every service Dockerfile
         FROMs has stopped republishing. This is NEVER an intentional pre-cutover state (unlike other repos' prod
-        triggers). FIX: recreate the `unified-trading-library-prod` trigger in GCP project central-element-323112,
-        region asia-northeast1 (mirror instruments-service-prod's config). See
-        plans/active/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md."
+        triggers). Actual error: `${{ needs.route-build.outputs.build_error_detail }}`. If that says NOT_FOUND, the
+        trigger itself is gone — recreate `unified-trading-library-prod` in GCP project central-element-323112, region
+        asia-northeast1 (mirror instruments-service-prod's config). Any OTHER error (e.g. INVALID_ARGUMENT /
+        source.revision) means the trigger exists but the router's `gcloud builds triggers run` invocation itself is
+        failing — check `cloud-build-router.yml`'s `trigger_build_in_region` first, do NOT assume the trigger is
+        missing. See plans/active/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md."
       subject_repo: unified-trading-library
       severity: "CRITICAL"
       conclusion: "failure"
