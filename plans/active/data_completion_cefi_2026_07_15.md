@@ -46,36 +46,33 @@ drift_direction: advance-code
 
 ### From `cefi_manifest_canonicalisation_2026_06_01.md` (archived 2026-07-13 -- CeFi legacy gap-fill + manifest canonicalisation (single-walk, L3 owner for cefi))
 
-- [ ] [DATA] P0. **⑧ — IS cefi REFERENCE-UNIVERSE gap: catalogue not ⊇ manifest present-set (CF-14, falsely-high
-      coverage). 🟢 ROOT-CAUSE CODE FIX SHIPPED `is@a6bc4d48`; operational backfill re-run + CLOB sub-part remain.**
-      Real-prod (2026-06-08): IS `instruments-store-cefi-prd` `instrument_availability/by_date/day=2026-05-22/` lists
-      only **12 venues** {ASTER, BINANCE-FUTURES/SPOT, BITFINEX-FUTURES, BYBIT, COINBASE-SPOT, DERIBIT, HYPERLIQUID,
-      OKX-FUTURES/SPOT/SWAP, UPBIT}; the MTDS manifest captures **45 venues** ⇒ **29 captured venues absent from IS
-      reference = 108,556 captured rows (8.3%)**. Headline genuine gaps: **KRAKEN-SPOT (75,714) + KRAKEN-FUTURES
-      (31,582)** (KRAKEN-FUTURES verified on disk `day=2026-05-24`), **BITFINEX-SPOT**, **PACIFICA-SOLANA (309)**,
-      **LIGHTER-ZKSYNC (319)**. **ROOT CAUSE FOUND (corrects the earlier "dynamic universe" read):** the IS Tardis
-      reference adapter (`reference_data/adapters/cefi/tardis.py`) had a **hand-maintained `_DEFAULT_EXCHANGES` of 8
-      Tardis exchange-ids** (`binance/binance-futures/bybit/okex/deribit/coinbase/upbit`) that had **silently DRIFTED
-      below the canonical SSOT `VenueMapping.all_tardis_exchanges` (20)** — omitting `kraken`, `cryptofacilities`
-      (=KRAKEN-FUTURES), `bitfinex`, `bitget`, `lighter-zksync`. (My KRAKEN/DERIBIT grep missed it because the list uses
-      lowercase Tardis _exchange-ids_, not canonical venue NAMES — the SSOT already maps `kraken→KRAKEN-SPOT`,
-      `cryptofacilities→KRAKEN-FUTURES` with start-dates.) So the IS reference backfill never queried those venues →
-      catalogue ⊉ present-set → falsely-high coverage. **(1) ✅ CODE FIX SHIPPED `is@a6bc4d48` (QG --no-fix green):**
-      `_DEFAULT_EXCHANGES = list(VenueMapping().all_tardis_exchanges)` (derives from SSOT → no future drift; verified
-      ==SSOT, now includes kraken/cryptofacilities/bitfinex/bitget/lighter-zksync) + extended
-      `_DERIVATIVES_ONLY_EXCHANGES`
-      (cryptofacilities/okex-futures/okex-swap/huobi-dm/bitfinex-derivatives/bitget-futures) so unknown-type instruments
-      aren't mis-defaulted to SPOT + 3 regression tests asserting no-drift-from-SSOT. **(2) OPERATIONAL (owner:
-      `instruments_backfill_phase3` / vm-cross-cutting) — re-run the IS reference backfill with the fixed universe so
-      `instrument_availability/by_date/` ⊇ the MTDS captured present-set (memory-heavy multi-year VM sweep — the adapter
-      cache OOM-killed `cefi-instr-deribit` 2026-05-04, run on a VM).** **(3) CLOB venues PACIFICA-SOLANA +
-      LIGHTER-ZKSYNC are NOT Tardis exchanges — they ride the CLOB adapter path (hyperliquid.py / aster.py); confirm an
-      IS reference adapter enumerates them (only hyperliquid+aster exist today) — separate from the Tardis fix.** **(4)
-      diagnose the ~650 `*F0`/`UNKNOWN`-venue manifest-pollution rows (blank instrument_type/instrument_id) — reconcile
-      or demote.** Gates honest coverage denominator (⑦/⑧), NOT the G4 data/manifest `--apply`. **Big finding — operator
-      notified 2026-06-08.** Provenance: slot-3 pre-apply audit 2026-06-08 (real-prod catalogue vs manifest walk + IS
-      adapter `_DEFAULT_EXCHANGES` root-cause). **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
-      2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ [DATA] P0. **⑧ — IS cefi REFERENCE-UNIVERSE gap: catalogue not ⊇ manifest present-set (CF-14, falsely-high
+      coverage). ALL 4 sub-parts VERIFIED CLOSED 2026-07-27.** Original finding (2026-06-08): IS
+      `instruments-store-cefi-prd` listed only 12 venues vs MTDS manifest's 45, headline gaps KRAKEN-SPOT/FUTURES,
+      BITFINEX-SPOT, PACIFICA-SOLANA, LIGHTER-ZKSYNC — root cause was `reference_data/adapters/cefi/tardis.py`'s
+      hand-maintained `_DEFAULT_EXCHANGES` drifting below the canonical SSOT `VenueMapping.all_tardis_exchanges`. **(1)
+      code fix**: SHIPPED `is@a6bc4d48` (unchanged from prior verification). **(2) operational backfill re-run —
+      CONFIRMED DONE**: live `gcloud storage ls -r` on
+      `gs://instruments-store-cefi-prd-central-element-323112/instrument_availability/by_date/` shows
+      KRAKEN-SPOT/KRAKEN-FUTURES/BITFINEX-SPOT/BITFINEX-FUTURES/BITGET-SPOT/BITGET-FUTURES present as far back as
+      `day=2021-06-01` and through the latest `day=2026-07-26` (22 venues total, up from 12). **(3) CLOB venues —
+      CONFIRMED**: `instruments_service/reference_data/adapters/cefi/lighter.py` + `.../adapters/cefi/extended.py` now
+      exist and LIGHTER-ZKSYNC + EXTENDED-STARKNET both appear in the live `day=2026-07-26` by_date listing;
+      PACIFICA-SOLANA was removed from scope entirely by a later operator ruling
+      (`instruments_service/engine/orchestrator/defi.py` comment: "all Solana perp DEXes dropped except Jupiter, not
+      integrated", 2026-07-16) so its CLOB-enumeration sub-part is now moot. **(4) ~650 UNKNOWN/blank-venue pollution
+      rows — RESOLVED**: read `market-data-tick-cefi-prd`'s `_index/availability_index.parquet` directly (8,764,263
+      rows) — 0 blank-venue rows, 0 `UNKNOWN`-venue rows, 0 `*F0`-suffixed instrument_ids today (was ~650).
+      Corroborating evidence: the first-ever complete `cf_manifest_audit.py` rollup
+      (`plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`, 2026-07-26) reports
+      `instruments-store-cefi-prd` as CF-14 **"(clean)"**. Gates honest coverage denominator (⑦/⑧); does not touch the
+      G4 data/manifest `--apply`. **NEW, separate, minor finding surfaced during this verification** (NOT part of this
+      item — filed as its own follow-up, see `cefi_coinbase_futures_blank_instrument_type_2026_07_27.md`): 354
+      `market-data-tick-cefi-prd` rows on `date=2026-07-25` for venue `COINBASE-FUTURES` carry a null `instrument_type`
+      despite well-formed `instrument_id`s (301 `empty_confirmed` + 53 `attempted_failed`) — a distinct, single-day
+      writer gap, not the venue-pollution class this item tracked. Provenance: slot-3 pre-apply audit 2026-06-08
+      (original finding); slot-4 live-verification 2026-07-27 (this closure). **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [CODE] P1. **execution-service — `data/loaders/defi.py:41,77` DeFi raw-tick reads still legacy (slot-2/defi
       owner).** The shared `candidate_parquet_paths` DeFi branch needs a `chain` kwarg
