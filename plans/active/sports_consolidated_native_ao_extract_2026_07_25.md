@@ -172,8 +172,10 @@ drift_direction: advance-code
       odds_horizon_bucket/odds_snapshot/arbitrage_opportunity/odds_movement — so the bug path was reachable, but the
       live census still shows 0 FOOTBALL rows; likely already-clean by construction or the buggy window produced no
       candle output for sports specifically). This part of the done-when is ALREADY SATISFIED — no action needed.
-      `venue=UNKNOWN` is real but TINY: exactly 12 total manifest shards corpuswide (8 on a single date `2026-04-14`
-      under `batch_odds_api`/odds_movement+odds_snapshot, both casings; 4 more among the 4 candle data_types above), ALL
+      `venue=UNKNOWN` is real but TINY: exactly **8 total** manifest shards corpuswide, all on a single date
+      `2026-04-14` under `batch_odds_api` (`ODDS_MOVEMENT`/`ODDS_SNAPSHOT`/`odds_movement`/`odds_snapshot`, both
+      casings, 2 each — re-verified via re-run of the census script; an earlier draft of this correction double-counted
+      a subset of these same 8 as "4 more" from a second, narrower query and mis-stated the total as 12), ALL
       `capture_status=empty_confirmed` (0/NaN row_count — honest-absence placeholders, no real GCS parquet content at
       risk) — tracked as its own small cleanup, not folded into this todo's main re-stamp mechanics. **EXCLUDES**: the
       cross-AG bleed sub-item (KALSHI, POLYMARKET rows belonging to `asset_group=prediction`) — already tracked as its
