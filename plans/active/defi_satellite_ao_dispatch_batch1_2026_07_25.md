@@ -719,13 +719,37 @@ drift_direction: advance-code
     `quality-gates.sh` runs collide and produce spurious step failures — reproduced repeatedly (a step fails inline, the
     SAME checker invoked standalone with the same args passes clean). Did not attempt the 25-site fix itself (each has a
     paired write+read-back reference; too large for this todo's scope) — filed as a P2 todo in that issue doc instead.
-  - **Next session should**: (1) check whether the backgrounded `quality-gates.sh` run (started with `TMPDIR` overridden
-    to the slot's scratchpad, to sidestep any Python-level tempfile-on-full-/tmp issue) finished — if green, quickmerge
-    the 4 files, THEN run the cleanup script for real (it prints a live count + requires no `--apply` flag, just
-    executes — verify its printed pre-write diff matches the 8-row expectation above before trusting the post-write
-    assertions), THEN flip this todo's checkbox with the shas, THEN `/done`; (2) if QG failed on a
-    canonical-model/architectural-ratchet-style step again, re-run that ONE checker standalone first to distinguish a
-    real regression from the same cross-slot race before concluding anything.
+  - **UPDATE 2026-07-27: code shipped, manifest cleanup EXECUTED AND VERIFIED.** QG passed (497s, sentinel written);
+    code shipped `market-tick-data-service@2aa23de5`. The cleanup script's ORIGINAL pandas-based implementation then hit
+    a severe, real production incident while running for real: the DEFI manifest is ~26.5M rows (~1GB on disk) and both
+    `pandas.read_parquet` (~13GB RSS) and a naive single-shot `pyarrow.Table` load (~12GB RSS) + a `.filter()` call
+    needing BOTH the original and filtered copies alive at once (~24GB peak) made the process a repeated target for a
+    host memory-pressure killer (`earlyoom`) on this concurrently-oversubscribed shared VM (8 cores, load 15-44
+    observed, active swapping) — **4 separate kills**, each silent (SIGTERM, no traceback), before the actual root cause
+    was pinned down via in-process RSS instrumentation. Rewrote the script to stream row-groups
+    (`ParquetFile.iter_batches()` + a streaming `ParquetWriter`, never materializing more than ~500K rows at a time) —
+    peak RSS dropped from ~24GB to ~4.3GB, and the whole run (download, scan, snapshot, stream-write, CAS-write,
+    stream-verify) completed in **72.4s**. Real prod run confirmed: **26,540,325 → 26,540,317 rows (exactly 8
+    removed)**, pre-apply backup snapshot at
+    `gs://market-data-tick-defi-prd-central-element-323112/_index/backups/availability_index.pre_kalshi_polymarket_removal_20260727T013308Z.parquet`,
+    post-write verification asserted zero remaining KALSHI_PERP/POLYMARKET_PERP rows. **This todo's Done-when criteria
+    are now ALL met** (cefi-classified write+manifest path shipped, source fixed, manifest cleanup executed) — the only
+    remaining step is committing the corrected (streaming) version of
+    `scripts/remove_kalshi_polymarket_defi_manifest_rows_2026_07_26.py` itself (the version that actually ran and
+    succeeded, replacing the pandas-based version from the `2aa23de5` commit — QG was re-running against it as this note
+    was written), then flipping this todo's checkbox with both shas + this evidence, then `/done`.
+  - **Lesson for future large-manifest scripts on this fleet**: NEVER `pandas.read_parquet`/single-shot
+    `pyarrow.read_table` a multi-million-row manifest index on this shared host without checking current `free -h` /
+    `uptime` first — prefer `ParquetFile.iter_batches()` streaming by default for any manifest-index script (defi's is
+    26.5M rows and growing; cefi's ~10.5M-row restamp from `2026-07-21` might be getting close to the same danger zone
+    as it grows). A silent SIGTERM with zero output/traceback on this fleet is `earlyoom`, not a bug in your script —
+    check `/proc/<pid>/stat` utime ticks over a real multi-second window (not just `ps %CPU`, which is a lifetime
+    average and misleads once a process has done real work earlier in its life) to tell "genuinely still computing"
+    apart from "hung/about to be killed" before waiting longer.
+  - Also shipped (unified-trading-pm): a follow-up addendum to the tmpfs/QG-race issue doc adding a
+    host-oversubscription root-cause section + a new `[INFRA] P1` todo — **still uncommitted as of this note** (hit
+    branch drift 3x on a very active shared repo; deprioritized in favor of the actually-required manifest cleanup). Low
+    risk — it's a working-tree-only diff, not at risk of loss, just not yet pushed.
 
 ## Deferred
 
