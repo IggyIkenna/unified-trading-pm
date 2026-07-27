@@ -55,12 +55,16 @@ This installs `na-eligibility-auditor.timer`/`.service` (default fire time 07:00
 only reachable via a manual `POST /api/plan-health/dispatch {"mode": "na_eligibility"}` or an interactive
 `/na-eligibility-audit` invocation.
 
-- [ ] [OPERATOR] P2. Run `sudo bash scripts/install-na-eligibility-auditor-timer.sh` on the central orchestrator VM,
-      then verify with `systemctl status na-eligibility-auditor.timer` and a manual
-      `sudo systemctl start na-eligibility-auditor.service` test-fire (mirrors how the other 3 sibling timers were
-      verified live). **Done when**: `systemctl list-timers` shows `na-eligibility-auditor.timer` next-fire ≤24h out,
-      and one real dispatch (`agent_kind=na_eligibility_auditor` in the agents table) has completed
-      `lifecycle-complete`.
+- [x] [OPERATOR] P2. Run `sudo bash scripts/install-na-eligibility-auditor-timer.sh` on the central orchestrator VM —
+      DONE 2026-07-27 via `aws ssm send-command` (instance `i-0c9b283b31d6b5ca7`, region `ap-northeast-1`, operator
+      unlock-authorized this session). `git pull --ff-only` first picked up `agent-orchestrator@f4a116e` clean.
+      Verified: `systemctl status na-eligibility-auditor.timer` → `Loaded: loaded ... enabled`,
+      `Active: active     (waiting)`, `Trigger: Tue 2026-07-28 07:01:01 UTC; 16h left` (well within the ≤24h bar).
+- [ ] [SCRIPT] P3. Confirm the timer's FIRST real scheduled fire (2026-07-28 ~07:01 UTC) actually completes —
+      `agent_kind=na_eligibility_auditor` reaching `lifecycle-complete` in the agents table, same verification the other
+      3 sibling timers got on their own first live run. Not forced manually this session (a manual `systemctl start`
+      would spawn a real opus/effort-max worker doing real corpus writes — out of scope for a pure install-verification
+      step); the natural next-day fire is the intended first real test.
 
 This is an infra/VM-access action (installing a systemd unit on the shared central VM) rather than a repo-code change,
 which is why it's tracked here instead of folded into the code commits above.
