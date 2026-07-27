@@ -160,7 +160,41 @@ drift_direction: advance-code
       the already-extracted `tick_current_index` (~150-200 LOC), captured per-snapshot alongside the existing pool-state
       row, so downstream consumers can compute fill slippage at arbitrary sizes. Repo: market-tick-data-service. **Done
       when**: per-snapshot tick-array state is captured and persisted alongside pool state; new unit tests cover the
-      decode; `quality-gates.sh` green. Source: `data_completion_defi_2026_07_15.md`.
+      decode; `quality-gates.sh` green. Source: `data_completion_defi_2026_07_15.md`. **IN PROGRESS (slot-3,
+      2026-07-26) — supporting pieces landed, handler wiring NOT YET DONE, do not re-derive the research below:**
+      (1) ✅ New UAC contract `DEFI_DEX_POOL_DEX_POOL_TICK_ARRAY` (`unified-api-contracts@<pending>` —
+      `internal/schemas/contracts.py`, key `("defi","pool","dex_pool_tick_array")`) — columns `tick_array_start_index`/
+      `tick_index`/`liquidity_net`/`liquidity_gross` (only INITIALIZED ticks are written; uninitialized always carry
+      liquidity_net=0 and are never a slippage-walk boundary). (2) ✅ New shared module
+      `market_tick_data_service/cli/handlers/_solana_pda.py` (`market-tick-data-service@<pending>`) — pure-Python Solana
+      PDA derivation (base58 codec + SHA-256 + Ed25519 off-curve check), no new dependency. Verified against TWO real
+      on-chain addresses from `orca-so/whirlpools`' own Rust SDK tests (`rust-sdk/client/src/pda/tick_array.rs`): mutable
+      program `whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc` + whirlpool `2kJmUjxWBwL2NGPBV2PiA5hWtmLCqcKY6reQgkrPtaeS` @
+      start_tick=0 → `8PhPzk7n4wU98Z6XCbVtPai2LtXSxYnfjkmgWuoAU8Zy` (bump 255); immutable program
+      `iwhrLHdsgrvmnwU8GF2FSmyabSMjfHwFGJAX2ufJ3ZN` + whirlpool `DcMZ4NEbLkh7aAfy7Q4vPcAWVik6tSwfUf3FHDoRBvTG` @
+      start_tick=0 → `38qJYa1ZPJHa23wN3Azrt6Pkp7vEiV2Xbxzuz5rdotGh` (bump 253) — both reproduce exactly
+      (`test__solana_pda.py`, 8 tests green). **REMAINING work (NOT done)**: extend
+      `orca_whirlpool_state_handler.py` to (a) derive the 3 nearest tick-array PDAs via
+      `get_tick_array_start_tick_index(tick_index, tick_spacing, offset) = (tick_index // (tick_spacing * 88) + offset)
+      * tick_spacing * 88` for offset in {-1, 0, +1} (verified against `orca-so/whirlpools`'
+      `legacy-sdk/whirlpool/src/utils/public/tick-utils.ts::TickUtil.getStartTickIndex`), seeds
+      `[b"tick_array", whirlpool_pubkey_bytes, str(start_tick_index).encode()]` against
+      `WHIRLPOOL_PROGRAM_ID = base58_decode("whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc")`; (b) fetch each via the
+      existing `solana_get_account_info_at_slot`; (c) decode the `TickArray` account
+      (`orca-so/whirlpools@programs/whirlpool/src/state/fixed_tick_array.rs` +
+      `.../state/tick.rs`, verified via `#[repr(C, packed)]`/`Tick::LEN`/`TickArray::LEN` in the on-chain source):
+      8-byte Anchor discriminator, then `start_tick_index: i32` @8, then `ticks: [Tick; 88]` @12 (each `Tick` = 113
+      bytes: `initialized: bool`(1) + `liquidity_net: i128`(16, signed LE) + `liquidity_gross: u128`(16) +
+      `fee_growth_outside_a/b: u128`(16 each, not needed for slippage) + `reward_growths_outside: [u128;3]`(48, not
+      needed) — tick_index of array slot `i` = `start_tick_index + i * tick_spacing`), then `whirlpool: Pubkey`(32) @
+      12+88*113; (d) filter to `initialized=True` ticks only, write via `write_defi_rows(..., data_type
+      ="dex_pool_tick_array", instrument_type=InstrumentType.POOL, symbol_column="symbol")` using the new UAC contract;
+      (e) record a SEPARATE manifest capture (`data_type="dex_pool_tick_array"`) alongside the existing
+      `dex_pool_state` one; (f) add handler-level unit tests (known TickArray byte states, incl. an
+      uninitialized-tick-filtered-out case) + an `ingest_pool_day`-level test proving both data_types get recorded;
+      (g) `quality-gates.sh` green; (h) ship + flip this checkbox with real evidence. Picking this back up: read this
+      note, `_solana_pda.py`, and the new UAC contract FIRST — every fact above is already verified, do not re-fetch
+      from GitHub.
 - [ ] [DATA] P1. **Combined `instruments-service/scripts/enumerate_expected_universe.py` fix (2 sub-items merged into
       one todo — both would EDIT the same file):** (a) locate + fix the DeFi expected-universe seeder that emits
       blank-`chain` venue rows for the oracle-prices/perp-funding sub-buckets — canonicalize `chain` at write time in
