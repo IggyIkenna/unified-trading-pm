@@ -260,7 +260,18 @@ candidates, or the still-open OOM-vs-hang question needs the more robust on-VM m
       (`tests/unit/test_streaming_writer.py::TestFdLifecycle::test_5000_sequential_writers_do_not_leak_fds` —
       deterministically failed when run as part of the full suite vs standalone, confirmed byte-identical on a clean
       stashed tree; fixed with `gc.collect()` around the baseline/after fd samples to remove suite-position-dependent GC
-      jitter, same commit).
+      jitter, same commit). **CORRECTION 2026-07-27 (slot-12): the `gc.collect()` mitigation does NOT actually close
+      this** — re-ran the full `quality-gates.sh` suite 3x on `origin/live-defi-rollout` HEAD (`c927ec58`, which
+      includes `06190d77`'s fix) while trying to ship an unrelated docstring-only commit, and
+      `test_5000_sequential_writers_do_not_leak_fds` failed all 3 times when run as part of the full suite (still passes
+      standalone every time, isolated run + `pytest tests/unit/test_streaming_writer.py` alone both green). The
+      GC-jitter theory was directionally right but insufficient in practice — something about running deep in the
+      6800+-test full suite still pins/leaks FDs past what one `gc.collect()` call clears. This is currently BLOCKING
+      any otherwise-green commit in this repo from shipping via the mandatory `quality-gates.sh`-green-tree rule (no
+      `--skip-tests` escape hatch exists). Not investigated further here (out of scope for the task that found it) —
+      needs its own fix: either a stronger cleanup (retry `gc.collect()`, explicit fd-holding-object teardown between
+      the 5000 iterations) or loosening the baseline/after tolerance to absorb full-suite jitter honestly instead of
+      assuming a single GC pass zeroes it.
 - [ ] [DESIGN] P2. Scope a fix for the `BlobMetadata.size: int` vs GCS's genuinely-`None`-until-eventually-consistent
       size (`cloud_interface/providers/gcp.py:301`, `blob.size or 0`) -- decide whether `size` becomes `int | None`
       workspace-wide (audit every consumer) or whether `list_blobs` should instead retry/refresh metadata for
