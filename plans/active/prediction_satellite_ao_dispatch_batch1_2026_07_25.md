@@ -83,14 +83,17 @@ drift_direction: advance-code
       (`instruments-service/instruments_service/engine/orchestrator/prediction.py:95` passes the full `instrument_key`
       instead of the bare ticker into the classifier) — confirmed for every day 2026-07-12 through 2026-07-26.
       Read-only: no code changed.
-- [ ] [CODE] P1. Add a write-time guardrail in instruments-service so any `*-PERP` venue record must be
-      `instrument_type=PERPETUAL` and pass a perp-ticker sanity check (reject event-contract patterns like
-      `KXMVE*`/`KXMVECROSSCATEGORY*`), rejected at the writer rather than silently accepted — closes the class of bug
-      that let the KALSHI-PERP adapter contaminate cefi with 25,473 fake PERPETUAL rows. Repo: instruments-service
-      (`reference_data/adapters/cefi/kalshi_perp.py`, `reference_data/adapters/cefi/polymarket_perp.py`). **Done when**:
-      a synthetic event-contract record injected into a `-PERP` feed is rejected at write time (not written to the
-      catalogue), proven by a new unit test; `quality-gates.sh` green. Source:
-      `prediction_phase_ab_residuals_2026_07_24.md`.
+- [x] ✅ [CODE] P1. **DONE 2026-07-27 (slot-9)** — `instruments-service@a4137022`. Added a shared
+      `validate_perp_instrument_record()` write-time guardrail (`reference_data/adapters/cefi/_perp_write_guard.py`),
+      wired into both `kalshi_perp.py`'s and `polymarket_perp.py`'s `_parse_market` — rejects any record whose
+      `instrument_type` isn't `PERPETUAL`, or whose ticker matches a known event-contract prefix (`KXMVE*`), independent
+      of the venue's own category field. This is defense-in-depth on top of Kalshi's existing category check: a
+      synthetic market with `category="Crypto"` but a `KXMVECROSSCATEGORY-*` ticker is still rejected (new test
+      `test_event_contract_ticker_rejected_even_with_crypto_category`), proving the guardrail catches what the category
+      field alone would miss. Polymarket's parser previously had NO rejection filter at all — added the same guard + a
+      rejection test (`test_event_contract_ticker_rejected`). New `tests/unit/test_perp_write_guard.py` covers the guard
+      function directly (genuine-perp pass, non-PERPETUAL reject, event-contract-ticker reject, case-insensitive).
+      `quality-gates.sh` green (263s, then re-verified 149s on the quickmerge pass).
 - [ ] [DIAG] P1. Re-measure prediction attempted/captured trajectory on a sampled window now that the pre-fetch
       lifecycle gate (market-tick-data-service@abe0904d) and the active-window catalogue widening
       (instruments-service@41ca79d7) have both shipped, and append the before/after counts. Repo: read-only measurement.
