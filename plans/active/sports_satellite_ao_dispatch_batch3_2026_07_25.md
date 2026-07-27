@@ -234,7 +234,7 @@ drift_direction: advance-code
       (`deployment-service@<see plan flip commit>`), live-applied, and verified with a synthetic impersonated-SA write
       that landed HTTP 200 (no 403) then was cleaned up. Full evidence + the credential gotcha hit along the way in the
       Progress Log below.
-- [ ] [DOC] P1. Re-verify and flip
+- [x] ✅ [DOC] P1. Re-verify and flip
       `plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` to `status: resolved` with
       `resolved_by: instruments-service@ac22305c` populated — it documents the identical 3 oversized sports-domain
       functions (`_AfManifestHooks.emit_empty_gaps_for_entity()` / `_fetch_teams_and_standings()` /
@@ -245,7 +245,13 @@ drift_direction: advance-code
       sibling doc or a fresh independent re-measurement if this doc's own claims need independent reverification first.
       Source: `plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` (corrected
       2026-07-25 plan-reconcile — this todo's subject IS that doc; the digest previously cited as Source has 0
-      checkboxes and isn't the doc actually being flipped).
+      checkboxes and isn't the doc actually being flipped). — RE-VERIFIED 2026-07-27 (slot-12): the target doc's
+      frontmatter is ALREADY `status: resolved` with `resolved_by: instruments-service@a8c0e18e (2026-07-25)` populated
+      (a LATER, more complete closure SHA than this todo's `ac22305c` — that commit only closed the function-size
+      regrowth; `a8c0e18e` closed the doc's remaining 2 P3 follow-ons, per its own "## Resolution (2026-07-25)"
+      section). No further doc edit was needed — this todo's premise ("never itself flipped") was already stale by the
+      time it dispatched. Sibling doc `sports_reference_function_size_qg_regression_2026_07_16.md` cross-checked:
+      `status: resolved`, `resolved_by: instruments-service@ac22305c` — consistent, no drift between the two.
 - [ ] [DIAG] P1. **Verify whether the sports manifest's 2026-vs-prior-year enumeration-grain inconsistency (~10x more
       cells seeded per data_type for 2026 than prior years) still persists** — measure current per-data_type
       cell-seeding counts for a matched 2025 vs 2026 sample window directly against the live
