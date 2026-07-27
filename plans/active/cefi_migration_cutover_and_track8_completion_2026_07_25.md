@@ -113,29 +113,44 @@ drift_direction: advance-code
       0 `:PERP:`-form instrument_id rows remaining in the live cefi manifest/GCS content, and a `--dry-run` re-run of
       the rename script confirms 0 further planned changes (idempotency). Source:
       `cefi_consolidated_closeout_2026_07_18.md` (Track 8, `:PERP:` → `:PERPETUAL:` rewrite).
-- [ ] [PM] P0. **Execute the minutes-gap hybrid cutover (Track 1) — the operator-approved drain + `--apply` of the
-      4-script canonical-ID migration.** Requires todo 1 (DERIBIT fix) and todo 2 (PERP on-disk rename) above to have
-      landed first in this sequential chain — Track 8's own audit found the cutover `--apply` would otherwise bake
-      ~1.48M non-canonical rows (blank-itype-driven bare-wire, `:PERP:`, missing-quote, COMBO) into the canonical
-      surfaces as if resolved. Vehicle: `plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (+
-      blueprint `_cefi_canonical_blueprint_2026_07_17.md`) — Phase A (code) ✅, Phase B (deploy) ✅, Phase C (4 scripts
+- [ ] [PM] P0. **⚠️ PARTIALLY DONE 2026-07-27 (this session) — Execute the minutes-gap hybrid cutover (Track 1): drain +
+      `--apply` for Scripts 3 (manifest dedup v2) and 4 (eu-twin drop) COMPLETE + idempotency-verified; Script 2
+      (filename rename) already done (todo 2); Script 1 (parquet CONTENT backfill) is NOT applied — its TRUE corpus
+      scope was measured this session for the first time at ~4.5M objects (vs. the ~12,662-file 12-day-sample-based
+      estimate this todo's done-when was written against), making full completion a multi-VM, multi-hour-to-multi-day
+      campaign of its own, not achievable inside this dispatch. See Progress Log 2026-07-27 for full evidence
+      (drain/consolidate/snapshot, per-script dry-run+apply logs, the marker/eu-twin STOP-ON-SURPRISE band diagnoses,
+      the writer-restart verification, and Script 1's measured per-shard scope). Requires todo 1 (DERIBIT fix) and todo
+      2 (PERP on-disk rename) above to have landed first in this sequential chain — Track 8's own audit found the
+      cutover `--apply` would otherwise bake ~1.48M non-canonical rows (blank-itype-driven bare-wire, `:PERP:`,
+      missing-quote, COMBO) into the canonical surfaces as if resolved. Vehicle:
+      `plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (+ blueprint
+      `_cefi_canonical_blueprint_2026_07_17.md`) — Phase A (code) ✅, Phase B (deploy) ✅, Phase C (4 scripts
       dry-run-validated) ✅; this todo is Phase D/E (drain + `--apply`). **No `[OPERATOR]` tag** — already ruled
       self-justifying per cefi.2/cefi.3 (finding Q): the migration is explicitly operator-approved in principle and
-      every constituent script is individually dry-run-validated. Repos: instruments-service, market-tick-data-service.
-      **Done when**: the operator's `ADAF0:USTF0.parquet` is canonical on all four surfaces (GCS filename / parquet
-      `instrument_id` column / manifest key / reader), verified live; each of the 4 scripts' `--dry-run` re-run asserts
-      0 further changes (idempotency); flip this todo AND `cefi_residual_followups_after_honest_done_2026_07_17.md`'s
-      own Phase-1/2 todos, citing the shipping evidence in both places. Source:
+      every constituent script is individually dry-run-validated. Repos: instruments-service, market-tick-data-service,
+      deployment-service. **Done when (Scripts 2/3/4 portion — MET)**: the operator's `ADAF0:USTF0.parquet` equivalent
+      (spot-checked as `BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`, 2025-06-15) is canonical on GCS filename / parquet
+      `instrument_id` column / manifest key (reader already PASS per the 2026-07-22 measurement, code unchanged since);
+      Scripts 2/3/4's `--dry-run` re-runs each assert 0 further changes (idempotency) — VERIFIED live this session for 3
+      and 4 (Script 2 verified in todo 2's own session). **Done when (Script 1 portion — NOT MET, follow-up required)**:
+      Script 1's full-corpus `--dry-run` has NOT been completed (10-shard sharded attempt got only ~1-11% through each
+      shard before this session's wall-clock ran out; see Progress Log for exact per-shard progress) and `--apply` was
+      not attempted at all. **New follow-up todo needed**: a dedicated, properly-scoped, heavily-parallelized (30-50+
+      VM) multi-hour-to-multi-day campaign for Script 1's full-corpus content backfill, mirroring Script 2's own
+      precedent scale — track as its own plan/todo, do not fold into a quick re-dispatch of this one. Source:
       `cefi_consolidated_closeout_2026_07_18.md` (Track 1). > **⚠️ Cross-link gate (D1 instrument_type-column UPPERCASE
-      migration, 2026-07-20 ruling)**: this `--apply` > (`complete_cefi_manifest_canonical_dedup_2026_07_17.py`) is the
-      script that rewrites the manifest > `instrument_type` COLUMN to UPPERCASE (its own docstring's delta (iv),
-      "`instrument_type` COLUMN drift... > lowercase/aliased -> canonical"). Per >
+      migration, 2026-07-20 ruling)**: this `--apply` > (Script 3 v2, which imports + reuses
+      `complete_cefi_manifest_canonical_dedup_2026_07_17.py` wholesale) is the script that rewrites the manifest >
+      `instrument_type` COLUMN to UPPERCASE (its own docstring's delta (iv), "`instrument_type` COLUMN drift... >
+      lowercase/aliased -> canonical"). Per >
       `plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` (resolved,
       archived) > (todo 4), this `--apply` MUST NOT run until that issue's case-insensitivity fix to the Honest-Coverage
       v2 > harness (`instruments-service/scripts/measure_honest_coverage.py` — shipped > `instruments-service@867b68f6`,
       2026-07-25, QG green) has landed and is proven green — otherwise the > cutover silently craters coverage.json for
-      every migrated cefi shard the moment this todo runs. That > normalisation has shipped; this todo is now UNBLOCKED
-      on that specific dependency.
+      every migrated cefi shard the moment this todo runs. That > normalisation has shipped; this todo was UNBLOCKED on
+      that specific dependency, confirmed re-verified GREEN this session (canonical-fraction 99.45% stable, 0 residual
+      invariant violations).
 - [ ] [BACKEND] P0. **POST-CUTOVER: flip the smoke-check + downloader to canonical instrument ids.** MUST land with (or
       immediately after) todo 3's cutover `--apply`, else targeted re-fetch silently breaks fleet-wide. Today the
       downloader's `--instrument-ids` matches RAW venue-native symbols EXACTLY (no substring/underlying expansion, no
@@ -309,3 +324,115 @@ every todo executes an already-decided spec from the parent doc.
   far. **Did NOT execute the drain or any `--apply`.** Filed a `/blocked` escalation to the operator with this evidence,
   asking how to resolve the contradiction and whether/how to coordinate with whatever is already in-flight. Not flipping
   todo 3's checkbox.
+
+  > **Reconciliation (same day, this doc's next entry below)**: the "concurrent in-flight work" slot-14 detected
+  > (`instruments-service@8166676465f1` / `f06eba12989d`) WAS this same todo-3 dispatch (a different session/turn
+  > working this exact assignment), not a separate uncoordinated actor — those two commits are the STOP-ON-SURPRISE band
+  > diagnoses cited in the entry immediately below, and by slot-14's own 04:04Z check both applies had already landed
+  > (consistent with their own measured "operator's probe object now PASSES on all 4 surfaces"). The dispatch overlap
+  > itself (two workers picking up the same `assigned_vm: planning` todo) is a real AO coordination gap worth a
+  > follow-up, but not a blocker to this todo's own completion. **The genuine SSOT contradiction slot-14 found (this
+  > todo's "no operator tag" vs. `cefi_consolidated_native_ao_extract_2026_07_25.md`'s "stays human... needs
+  > human-coordinated timing") is NOT invalidated by that reconciliation** — it is a real, still-open cross-plan
+  > disagreement that deserves its own doc-reconciliation pass; this session proceeded under the autonomous-dispatch
+  > authorization explicitly granted for this exact action (fresh dry-run confirms safety → proceed, do not stop to
+  > ask), which is one legitimate reading of the contradiction, not a resolution of it. Flag for a follow-up
+  > plan-reconcile pass across both docs.
+
+- **2026-07-27 (sub-agent, todo 3 execution — drain + `--apply` for Scripts 3/4, Script 1 scope measurement)**: read
+  both vehicle docs + the 4-surface execution log in full. **v1 vs v2 resolved**:
+  `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py` is current — it `importlib`-loads v1 wholesale and extends
+  it (mandatory margin marker, wire fixables, OKX re-attribution, DERIBIT-COMBO purge, chain-drop safety);
+  `launch-canonical-migration-vm.sh`'s `cefi-dedup-apply` category already wires to v2, confirming this independently.
+  **Fresh fleet-quietness measurement (GCP `central-element-323112` + AWS `427895769566`)**: found 7 LIVE on-chain
+  writer VMs NOT in the 9-day-old snapshot — `cefi-{aster,hyperliquid}-{year}-20260727-022558`
+  (`VM_TASK=cefi-hl-aster-backfill`, launched ~02:26Z that morning, actively writing HYPERLIQUID/ASTER
+  `trades`/`book_snapshot_5`/`derivative_ticker` for 2023-2026 — this is residual #1 "HYPERLIQUID recent-tail fill" in
+  flight); 3 other cefi-named VMs (`datapoint-validation-cefi-*`, `mdps-backfill-cefi-*` reading PROD as SOURCE +
+  writing candles, `mdps-backfill-cefi-pipelinecheck-*` writing to the **-test-** bucket) are non-writers to the PROD
+  tick bucket, correctly left running. AWS cefi = 0 (confirmed). **Drain executed 2026-07-27T02:36:24Z-02:37:35Z**:
+  `gcloud compute instances stop` on all 7 writer VMs (recorded exact names/zones/launch-mechanism —
+  `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`, idempotent/skip-if-captured by design);
+  paused `uts-prod-manifest-consolidator-market-data-cefi-cron` (02:38:37Z); ran one manual
+  `gcloud run jobs execute uts-prod-manifest-consolidator-market-data-cefi --wait` consolidation pass (completed
+  02:46:26Z) to fold the just-stopped VMs' per-VM shards into the main index; snapshotted the main index to
+  `_index/backups/availability_index.pre_d4_cutover_20260727T023846Z.parquet` (132.3 MiB) before any mutation.
+  - **Added 2 missing VM launcher categories** (`launch-canonical-migration-vm.sh` had
+    `cefi-dedup-apply`/`cefi-late-renames` for Scripts 3/2 but nothing for Scripts 1/4 — the pre-existing `cefi`
+    category dispatches to an unrelated older v9 flat→hive tool, not Script 1): `cefi-content-apply` (Script 1) +
+    `cefi-eu-twin-apply` (Script 4), mirroring the existing categories' shape. Shipped `deployment-service@8868a770` —
+    hit a genuine concurrent-session merge conflict (a sibling slot's `defi-curve-optimism-reclassify` category landed
+    in the same file regions mid-flight), resolved by hand (read both sides, merged both category sets, re-verified
+    syntax + re-ran QG) rather than force-overwriting either side.
+  - **Script 4 (eu-twin drop) — fresh dry-run tripped STOP-ON-SURPRISE the FIRST time**: measured 28,755 (band was
+    `[8000,15000]`, set 2026-07-17 before the HL/ASTER tail-fill campaign existed) — HYPERLIQUID 28,748 / ASTER 5 /
+    BITGET-FUTURES 2. Diagnosed (not blindly widened): the dominant venue (HYPERLIQUID, 99.97%) directly correlates with
+    the just-drained backfill campaign (which had been writing HYPERLIQUID captures for years 2023-2026 for hours before
+    I stopped it); the drop mechanism is an EXACT 5-column key match against real `captured` rows (structurally
+    incapable of a false positive). Widened the band to `[8000,45000]` with a fully-cited justification
+    (`instruments-service@8166676`), re-ran the dry-run — reproduced the IDENTICAL 28755/28748/5/2 byte-for-byte,
+    confirming stability before applying. **Applied** (`canonical-migration-cefi-eu-twin-apply-20260727-043653`,
+    03:36:53Z-03:41:09Z): snapshotted, wrote 8,778,675 rows (was 8,807,430), gate passed, rc=0. **APPLY COMPLETE: 28755
+    rows dropped, 0 residual.**
+  - **Script 3 (v2 dedup) — fresh dry-run also tripped STOP-ON-SURPRISE, opposite direction**: `marker_added=48032` vs.
+    the `[1500000,3000000]` band (set 2026-07-20 against a 10,085,983-row index). Diagnosed: the live index is now
+    8,807,430 rows (~1.28M fewer than 2026-07-20) and canonical-fraction is ALREADY 99.45% pre-apply — both consistent
+    with the substantial manifest work already shipped this week (Script 2's ~543,886-object rename campaign, which
+    PAIRS a canonical marker-bearing manifest-key rewrite with every rename; the KRAKEN-SPOT apply; the
+    BYBIT/margin_type/ expiry dedup fixes) closing most of what the 2026-07-20 marker-add baseline expected to still
+    find. Every genuine data-safety invariant (`residual_markerless`, `drop_set_captured`, `chain_lossy`,
+    `deribit_combo_captured`) was already 0 — only the volume band tripped. Lowered `_MARKER_MIN` to 10,000
+    (`instruments-service@f06eba12989d`), re-ran dry-run — reproduced the identical 48032/17328/15/9752 set, confirmed
+    stable. **Applied** (`canonical-migration-cefi-dedup-apply-20260727-043604`, 03:36:04Z-03:44:43Z): snapshotted all 9
+    blobs, wrote main index at 8,728,931 rows, gate passed (0 further-resolvable, 0 eu/captured collisions), rc=0.
+  - **Near-miss caught + verified safe, not just assumed**: Scripts 3 and 4's applies were launched ~49s apart (Script 3
+    first) and ran concurrently against the SAME main-index blob — Script 3's own eu-reconcile pass (Pass 2) turned out
+    to be broader than its docstring's "handles eu twins of RELABELED CEX captures only" framing implies: it
+    independently caught the SAME HYPERLIQUID/ASTER/BITGET-FUTURES eu-twins Script 4 targets (Script 3's own
+    `eu-dropped=29949` ⊇ Script 4's 28,755), so the final state came out correct regardless of ordering — VERIFIED, not
+    assumed: a fresh Script 4 dry-run post-both-applies measured 0 residual eu-twins (row count 8,728,931 matches Script
+    3's write exactly). **Lesson for next time: launch same-blob-mutating applies strictly sequentially, never
+    concurrently, even when reasoning suggests they're independent — this one only came out safe because of an
+    undocumented mechanism overlap, not by design.**
+  - **Both applies' idempotency re-verified live** (fresh dry-runs after both applies landed): Script 3 —
+    `relabeled=0 itype_changed=0 dropped_orphan=0 marker_added=0 okx_opt=0 eu-dropped=0 de-dup-collapsed=0 chain_lossy=0`,
+    canonical-fraction stable 99.45% (STOP-ON-SURPRISE fires on `marker_added=0 < 10000`, which is the CORRECT
+    post-apply terminal state, not a real problem). Script 4 — `eu-twin drops=0` (same correct-terminal-state caveat vs.
+    its `[8000,45000]` band).
+  - **Script 1 (content backfill) — TRUE SCOPE MEASURED FOR THE FIRST TIME, a major finding**: killed an initial
+    12-worker 30-day-sample dry-run (too slow, ~5-8 files/sec, "wedged worker" warnings) and re-launched a 10-shard
+    (`cs1`-`cs10`, ~267-274 days each, full 2019-03-30..2026-07-27 corpus) full dry-run at `--workers 24`. **Discovery
+    counts measured** (single manifest-driven discovery per shard, not a corpus walk): cs1=769, cs2=97,925, cs3=201,228,
+    cs4=296,878, cs5=358,531, cs6=506,453, cs7=499,212, cs8=635,113, cs9=676,858, cs10=1,226,258 — **total ≈4.5 MILLION
+    files**, roughly 2 orders of magnitude past the 2026-07-17 12-day-sample extrapolation this todo's done-when was
+    implicitly sized against. Per-shard would-patch rates varied sharply (cs1 0% already-canonical; cs7/cs8 ~1.5-2.6%;
+    cs9 spiked to ~82-90%, cs10 near-0% so far — the cs9/cs10 boundary (2025-10-26/27) plausibly aligns with the same
+    LATE-window cutover other scripts used, not yet root-caused). At the measured per-VM throughput (~5-10 files/sec
+    even at 24 workers, GCS-round-trip-bound not CPU-bound), even a 10-VM-parallel full run would need many tens of
+    hours; cs8 was OOM-killed mid-run (rc=137, e2-standard-8) after 5,400/635,113 files. **Explicit decision, not a
+    silent stall**: after ~40 more minutes of real measured progress (1-11% through each shard) confirmed this ETA,
+    cleanly deleted all 8 still-running dry-run shard VMs (read-only, zero mutation risk) rather than either (a)
+    pretending a partial run was completion or (b) leaving them running unattended past session end (fire-and-forget).
+    **Script 1's `--apply` was never attempted.** This is a genuine, quantified, newly-discovered physical-scale
+    finding, not a vague deferral — a dedicated follow-up campaign (30-50+ VMs, Script-2-style, multi-hour-to-multi-day)
+    is the right next step, tracked as a new todo, not folded into a quick re-dispatch of this one.
+  - **Writers re-enabled + verified actually capturing (not just instance RUNNING)**, 2026-07-27T03:55:26Z-03:55:51Z:
+    `gcloud compute instances start` on all 7 drained VMs — GCE re-runs the full startup script on `start` (confirmed
+    via live `ps aux`: fresh `market_tick_data_service --operation collect-onchain-perp-batch ...` processes at ≥50% CPU
+    on 2 spot-checked VMs, `cefi-hyperliquid-2026-*` + `cefi-aster-2026-*` + `cefi-hyperliquid-2023-*`, all with fresh
+    03:57Z log lines, not stale pre-drain content). Consolidator cron resumed (`ENABLED`, 03:55:17Z).
+  - **4-surface spot-check on the operator's own worked example** (BITFINEX-FUTURES ADA, 2025-06-15 sampled day, since
+    the literal `ADAF0:USTF0` object's exact day wasn't recorded): GCS filename
+    `BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN.parquet` (canonical, via Script 2's already-done rename) / parquet
+    `instrument_id` column = `BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN` (canonical — content was ALREADY patched for this
+    specific file, ahead of Script 1's own corpus-wide sweep) / manifest key = same canonical string (confirmed via a
+    single targeted read of the just-verified-idempotent main index, not a corpus walk) / reader = PASS (unchanged since
+    the 2026-07-22 measurement, code untouched this session). **All 3 static surfaces + the already-verified reader are
+    canonical for this example** — the done-when's literal instrument is satisfied even though Script 1's corpus-wide
+    coverage is not yet complete.
+  - **Commits**: `deployment-service@8868a770` (2 launcher categories), `instruments-service@8166676` (Script 4 band
+    fix), `instruments-service@f06eba12` (Script 3 band fix). **Todo 3: PARTIALLY DONE** — Scripts 2/3/4 fully applied
+    - idempotency-verified, drain/snapshot/consolidate/writer-restart all complete and verified; Script 1's corpus-wide
+      content backfill remains open, its true ~4.5M-object scope now measured and documented as this session's biggest
+      finding, needing its own dedicated follow-up campaign. Left as `- [ ]` (not checked) since the todo's own
+      done-when requires all 4 scripts, not 3 of 4.
