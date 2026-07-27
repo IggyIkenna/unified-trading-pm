@@ -87,14 +87,14 @@ configured strategies). Same manifest, four query styles.
 
 ## Stage E — Data & batch-live symmetry
 
-| Question                                                                                        | Answer source                                                                      | Status             |
-| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------ |
-| Timeframes/granularities? Candle vs tick?                                                       | feature registry timeframes; MTDS/MDPS vs market-tick-data-service                 | registry           |
-| Per source: WS vs REST? batch / live / replay supported?                                        | source-mode capability matrix (to be codified from the 2026-06-07 audit)           | gap (extraction)   |
-| Minimum history to run (features lookback × ML training window) — and do we _actually have it_? | derived manifest edge + live check via deployment-api `/api/data-status/drilldown` | registry (derived) |
-| Which feature groups/versions feed this archetype?                                              | features registry (~1,382 specs / 34 groups, versioned)                            | registry           |
-| What simulation matching/fill assumptions will the backtest use here?                           | **simulation-assumptions registry**; PIT guard (`backtest_pit_guard.py`)           | gap                |
-| Known batch-live asymmetries for this venue/instrument?                                         | batch_live_symmetry_master audits → registry                                       | gap                |
+| Question                                                                                        | Answer source                                                                                         | Status             |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------ |
+| Timeframes/granularities? Candle vs tick?                                                       | feature registry timeframes; MTDS/MDPS vs market-tick-data-service                                    | registry           |
+| Per source: WS vs REST? batch / live / replay supported?                                        | source-mode capability matrix (to be codified from the 2026-06-07 audit)                              | gap (extraction)   |
+| Minimum history to run (features lookback × ML training window) — and do we _actually have it_? | derived manifest edge + live check via deployment-api `/api/data-status/drilldown`                    | registry (derived) |
+| Which feature groups/versions feed this archetype?                                              | features registry (~1,382 specs / 34 groups, versioned)                                               | registry           |
+| What simulation matching/fill assumptions will the backtest use here?                           | **simulation-assumptions registry** (`SIM_ASSUMPTIONS_REGISTRY`); PIT guard (`backtest_pit_guard.py`) | registry           |
+| Known batch-live asymmetries for this venue/instrument?                                         | `SIM_ASSUMPTIONS_REGISTRY.fill_assumptions` (shared divergence note per entry)                        | registry           |
 
 ## Stage F — Execution
 
