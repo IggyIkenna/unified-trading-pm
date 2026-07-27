@@ -156,11 +156,51 @@ consume these paths must be updated in lockstep with the writer.
       so both pre-/post-cutover shapes resolve): `cloud_data_provider.py`, `instrument_lifecycle_loader.py`,
       `manifest_writer/_maintenance.py`, `manifest_writer/_queries.py`, `options_cluster_lookup.py` —
       `unified-trading-library@43fa6f3f`; `tradfi_live.py` reader — `instruments-service@a9be6ce9`.
-- [ ] 7. [DATA] P1. PROVE the fixed writers green on one real day (write + skip-if-fresh + manifest row), then migrate
-      the historical flat `instrument_availability` / `market_lifecycle` / `futures_contracts` objects UP into full hive
-      (copy → verify → human-only purge of the flat tree). **Deferred to Round 2** — likely VM-scale given the volume of
-      prior capture days; size it before attempting.
+- [x] 7a. ✅ [DATA] P1. **PROVE the fixed writers green on one real day — DONE 2026-07-27 (slot-8).** Ran the
+      `/data-pipeline-check-is`-pattern e2e checker
+      (`instruments-service/scripts/pipeline_e2e_check.py --asset-group     CEFI --venue HYPERLIQUID --day 2026-07-26`),
+      test-bucket-scoped (`instruments-store-cefi-test-central-element-323112`, `IS_TEST_RUN=true`, no PROD data
+      touched), both legs on real infra (2 real VM launches: `instr-backfill-cefi-pchk-0727085259-f-hyperliquid` force,
+      `instr-backfill-cefi-pchk-0727090448-s-hyperliquid` skip). **Write**: confirmed via the per-VM manifest shard
+      (`_index/per_vm/instr-backfill-cefi-pchk-0727085259-f-hyperliquid.parquet`) — row
+      `date=2026-07-26 venue=HYPERLIQUID asset_group=cefi pipeline_mode=batch_instruments_service     capture_status=captured row_count=177`;
+      `verify_write()` confirmed the parquet lands at the exact new hive path
+      `instrument_availability/by_date/day=2026-07-26/pipeline_mode=batch_instruments_service/asset_group=cefi/venue=HYPERLIQUID/instruments.parquet`
+      (canonical order per `cross-asset-canonical-target-ssot.md` §8). **Skip-if-fresh**: skip leg
+      `status=passed skip_proof=genuine` — object signature (etag+crc32c+size) unchanged from the force-leg write, and
+      the freshness pre-flight skip signal fired in the VM's `run.log`. **Manifest row**: `capture_status=captured`
+      confirmed both via the per-VM shard and the checker's own report (`data_pipeline_e2e_check_is_2026_07_26.md`:
+      `total=1 passed=1 failed=0`). All 3 required proofs (write / skip / manifest) hold on real infrastructure. (Note:
+      the consolidated `_index/availability_index.parquet` itself lags behind per-VM shards until the next
+      manifest-consolidator tick — this is expected, documented behavior, not a writer defect; per-VM-shard reads are
+      the correct verification path per `unified_trading_library.pipeline_e2e_check.shard_verify`'s own docstring.)
+- [x] 7b. ✅ [DATA] P1. **SIZE the historical migration before attempting — DONE 2026-07-27 (slot-8).** Bounded
+      prefix-listing (metadata-only, not a content walk) of the 5 PROD `instruments-store-{ag}` buckets under
+      `instrument_availability/by_date/` (includes nested `futures_contracts.parquet` — it shares the same root, no
+      separate top-level prefix) + `market_lifecycle/by_canonical_group/` (prediction only):
+
+      | asset_group | instrument_availability (+ futures_contracts) | market_lifecycle |
+          |---|---|---|
+          | cefi | 53,419 | 0 |
+          | defi | 177,346 | 0 |
+          | tradfi | 50,700 | 0 |
+          | sports | 148,691 | 0 |
+          | prediction | 22,637 | 12,582 |
+          | **TOTAL** | **452,793** | **12,582** |
+
+          **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
+          this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
+          in-session action. Sizing now available to scope todo 7c.
+
+- [ ] 7c. [OPERATOR] P2. **EXECUTE the historical migration** (copy the 465,375 flat objects UP into full hive, verify,
+      then human-only purge of the flat tree) — VM-only, never in-session, per the data-pipeline-correctness HARD RULE
+      (migrations run to real completion). Needs a dedicated migration-VM launch (heavy-I/O rule); gate the purge half
+      on delete-safety-protocol §3a (soft-delete retention check) or explicit `[OPERATOR]` sign-off. Split out of the
+      original todo 7 2026-07-27 (slot-8) — same pattern as the mdps_features plan's 11a/11b/11c split — once 7a/7b
+      proved the writer correct and sized the remaining work, "migrate" itself is a separately-dispatchable, properly
+      VM-scoped unit rather than bundled into a single checkbox no one session could honestly complete.
 - [ ] 8. [REVIEW] P1. On writer ship, record the `instrument_availability` full-hive cutover date in
       `/codex/02-data/canonical-cutover-register.md` (repo@sha) and flip the non-canonical-path-inventory row #16 to
-      EXECUTED with a dated post-migration probe. **Deferred to Round 2** (pairs with todo 7 — cutover date should be
-      the historical-migration date, not the writer-ship date, per the register's own convention).
+      EXECUTED with a dated post-migration probe. **Still deferred** (pairs with todo 7c, not 7a/7b — cutover date
+      should be the historical-migration date, not the writer-ship date or the proof/sizing date, per the register's own
+      convention).
