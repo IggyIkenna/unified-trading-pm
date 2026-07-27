@@ -26,6 +26,7 @@ related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /plans/active/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master
