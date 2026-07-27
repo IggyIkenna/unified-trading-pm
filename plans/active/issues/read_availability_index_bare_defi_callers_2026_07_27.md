@@ -292,8 +292,18 @@ not a mechanical column-list copy.
 - [ ] [SCRIPT] P2. **features-service** — `volatility/engine/orchestrator.py:276`,
       `volatility/core/orchestration_service.py:168`, `volatility/core/data_loader.py:364`,
       `delta_one/app/core/dependency_checker.py:619`: project each to its actual column usage.
-- [ ] [SCRIPT] P1. **strategy-service** — `manifest_allocation_guard.py:170` `check_allocation_manifest`: project to its
-      actual column usage.
+- [x] [SCRIPT] P1. ✅ **DONE 2026-07-27 (slot-3)** — `strategy-service@b26bb306`. **strategy-service** —
+      `manifest_allocation_guard.py:170` `check_allocation_manifest`: projected to
+      `columns=["date", "asset_group",     "capture_status", "schema_version"]` + `filters=[("date", "==", date_str)]`.
+      **`asset_group` deliberately KEPT** (unlike the features-service sibling fix's guards) — here it is a REAL
+      functional filter (`matching = manifest[date_mask & (manifest["asset_group"]...)]`), not a presence-only no-op;
+      dropping it would silently widen the match to every asset_group for the date, returning the wrong capture_status —
+      a correctness regression, not a safe exclusion. `asset_group` is not in UTL's `_V8_COLUMNS`, so this projection
+      falls back to a full-schema decode per legacy (pre-v9) shard (`_read_parquet_columns_safe`'s per-shard
+      `ValueError` fallback) — a real, accepted cost while the corpus is still mostly pre-migration; the `filters=` date
+      pushdown is the dominant memory lever regardless (row-group skip, not post-decode) and applies on both paths.
+      Added `test_read_availability_index_is_column_projected` pinning the exact `columns=`/`filters=` call signature —
+      17/17 tests passing. Full `quality-gates.sh` green, shipped via quickmerge --agent.
 - [ ] [SCRIPT] P1. **instruments-service** — `engine/orchestrator/venue_core.py:222` `_get_manifest_high_watermarks`:
       project to its actual column usage (confirmed defi-reachable via `defi.py:229,246` +
       `test_orchestrator_gaps.py:216,238`).
