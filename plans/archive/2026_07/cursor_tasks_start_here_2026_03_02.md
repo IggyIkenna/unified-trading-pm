@@ -1,5 +1,9 @@
 # START HERE - Agent Task Execution
 
+> **SUPERSEDED (archived 2026-07-27).** References non-existent `TASK_1-3_*.md`/`.cursor/plans/tasks/` paths and
+> mandates 'sub-agents are MANDATORY for every task', which current CLAUDE.md does not require. Workflow superseded by
+> agent-orchestrator.
+
 **For**: New Sonnet 4.5 session **Goal**: Execute work via sub-agents ONLY (context preservation + cursor rules
 enforcement) **Structure**: 1 template + 3 executable tasks
 

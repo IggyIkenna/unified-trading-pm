@@ -1,5 +1,8 @@
 # Agent Automation: Two Approaches
 
+> **SUPERSEDED (archived 2026-07-27).** Indexes a `CLAUDE_CODE_TASK.md` file that no longer exists in this directory;
+> describes a Cursor-agent-CLI dispatch workflow superseded by agent-orchestrator + Claude Code CLI sub-agents.
+
 **Fix pyright errors across 24 repos - 100% FREE with your subscriptions!**
 
 ---

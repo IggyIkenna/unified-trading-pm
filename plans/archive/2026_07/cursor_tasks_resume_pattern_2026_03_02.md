@@ -1,5 +1,9 @@
 # Resume Pattern - Iterative Sub-Agent Feedback
 
+> **SUPERSEDED (archived 2026-07-27).** Describes Cursor-CLI-specific 'Task tool resume: agent-id' mechanics with legacy
+> per-task token-cost pricing. Current sub-agent dispatch runs through agent-orchestrator backlog/role routing, not
+> manual resume-by-ID bookkeeping.
+
 **Purpose**: Keep sub-agent context across iterations (massive token savings) **When**: Sub-agent needs corrections,
 improvements, or gets stuck
 

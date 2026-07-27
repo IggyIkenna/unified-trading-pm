@@ -1,5 +1,11 @@
 # Claude Code Configuration
 
+> **SUPERSEDED (archived 2026-07-27).** Documents a manual `~/.claude/config.json dangerouslySkipPermissions` +
+> prompt-injection workaround for reading `.cursorrules`/`.cursor/rules/*.mdc`, pinned to `claude-sonnet-4-5-20250929`.
+> Current mechanism is native CLAUDE.md ingestion + the `cursor-configs/settings.json` symlink chain
+> (`codex/05-infrastructure/claude-code-settings-symlink.md`); model defaults to Sonnet 5 per current CLAUDE.md's
+> model-tier rule.
+
 ## 🚀 Quick Start (TL;DR)
 
 **One-time setup** (already done):

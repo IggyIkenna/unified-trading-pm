@@ -1,5 +1,9 @@
 # Execution Services >50% Quality Gate Coverage Plan
 
+> **ARCHIVED (2026-07-27) — target overtaken.** This plan's goal (execution-service coverage 36% → >50%,
+> `MIN_COVERAGE=50`) is superseded by the current enforced floor: `execution-service/scripts/quality-gates.sh` sets
+> `MIN_COVERAGE=70`, 20 points above this plan's target.
+
 **Status**: ⬜ Ready to Execute **Current Coverage**: 36% **Target Coverage**: >50% **Code Base Size**: 727,860 lines of
 Python **Existing Tests**: 1,068 unit tests **Timeline**: 2-3 days with parallel execution **Priority**: P0 - Critical
 for audit compliance

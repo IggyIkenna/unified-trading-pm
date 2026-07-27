@@ -1,5 +1,10 @@
 # End-to-End Service Testing Procedure
 
+> **SUPERSEDED (archived 2026-07-27).** The manual CLI-flag-matrix E2E methodology this doc prescribes has been
+> superseded by the `/data-pipeline-check-is`, `/data-pipeline-check-mtds`, `/data-pipeline-check-mdps`,
+> `/data-pipeline-check-features`, and `/data-pipeline-reconciliation` skills — automated, repeatable, machine-checkable
+> equivalents run against real `-test` GCS buckets.
+
 ## Purpose
 
 Systematically run each service through every valid infrastructure configuration combination. Find bugs at the service

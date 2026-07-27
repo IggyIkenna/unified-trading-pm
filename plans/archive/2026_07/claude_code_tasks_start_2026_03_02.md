@@ -1,5 +1,9 @@
 # START: Agent Automation (100% FREE!)
 
+> **SUPERSEDED (archived 2026-07-27).** Hardcodes a stale workspace path (`/Users/ikennaigboaka/Documents/repos/...`,
+> current is `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4`) and depends on the non-existent
+> `CLAUDE_CODE_TASK.md`. Workflow superseded by agent-orchestrator.
+
 **Two approaches, both FREE with your subscriptions**
 
 ---

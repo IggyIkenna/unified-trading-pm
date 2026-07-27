@@ -170,6 +170,18 @@ are identified (2) and the ledger exists (3).
 - [CODE] "Match the e2e weighting / per-archetype RANK allocators" — **DUPLICATE of the shipped P11.15** (rank-weighted
   allocations) → closed in this cleanup (flipped ✅).
 
+**E — Rehomed from `issues/batch_live_reconciliation_service_audit_2026_05_27.md` (2026-07-27 pre-June-1 stale-work
+audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked them:**
+
+- [ ] [CODE] P1.BLRS1 (was G1, P1). **Wire BLRS `resolution_api.py` to Stage-5 outputs** — it's mock-backed / in-memory
+      today (hardcoded breaks), never reads `index.json`/`summary_*.json`. Real P1 pre-F21-prod-activation blocker.
+      Repo: batch-live-reconciliation-service.
+- [ ] [CODE] P2.BLRS2 (was G3, P2). **stage4 agent dispatch to trading-agent-service** — currently a markdown-only stub;
+      wire the real dispatch call. Repo: batch-live-reconciliation-service / trading-agent-service.
+- [ ] [UI] P3.BLRS3 (was G10, P3). **Verify UI→resolution-API wiring** (`unified-trading-system-ui` `use-reports.ts`
+      hooks) — unverified against the real API. Gated behind P1.BLRS1 (no point verifying UI wiring against a still-mock
+      resolution API).
+
 ---
 
 ## Phase 2 — Per-trade identity in execution events (G2)

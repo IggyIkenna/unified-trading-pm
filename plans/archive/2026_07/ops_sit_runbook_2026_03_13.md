@@ -2,12 +2,19 @@
 title: SIT (System Integration Tests) Runbook — ops variant
 scope: [engineer, admin]
 last_reviewed: 2026-05-17
+status: superseded
+superseded_by: codex/15-runbooks/sit-runbook.md
 execution:
   owner: "workspace-platform (CI maintainers)"
   cadence: "ad-hoc — when SIT stuck or staging locked"
   verifier: "gh workflow run sit-unlock.yml --repo IggyIkenna/unified-trading-pm"
   last_executed: "documented procedure; force-unlock exercised periodically per CI fail-recovery"
 ---
+
+> **SUPERSEDED (archived 2026-07-27).** A fuller successor exists at `codex/15-runbooks/sit-runbook.md` (created
+> 2026-03-27, `authoritative_for: SIT staging force-unlock procedure, SIT staging-lock lifecycle + starvation detector`)
+> with everything this doc has plus a Recovery Workflow section, a SIT Lock Lifecycle diagram, and 2 extra failure modes
+> (emulator port clash, cassette drift). `codex/00-SSOT-INDEX.md` has been repointed to the codex version.
 
 # SIT (System Integration Tests) Runbook
 
