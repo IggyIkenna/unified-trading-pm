@@ -158,8 +158,8 @@ pinned across the fleet; VM log backup wired; the e2e hardening suite green; the
 ## Track 4 — AO alerting/observability + tooling regressions · P1/P2
 
 **Sources**:
-[agent_orchestrator_alert_channel_cleanup_2026_07_13.md](/plans/active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md)
-(AO alerts Slack channel dedup/lifecycle-churn/BLOCKED-schema redesign) ·
+[agent_orchestrator_alert_channel_cleanup_2026_07_13.md](/plans/archive/2026_07/agent_orchestrator_alert_channel_cleanup_2026_07_13.md)
+(complete, archived 2026-07-27 — AO alerts Slack channel dedup/lifecycle-churn/BLOCKED-schema redesign) ·
 [ao_fleet_observability_kpis_2026_07_20.md](/plans/active/ao_fleet_observability_kpis_2026_07_20.md)
 (dispatch-completion/escalator-efficacy/account-burn observability KPIs) ·
 [issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md](/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md)
