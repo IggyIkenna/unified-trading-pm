@@ -124,3 +124,38 @@ objects across Jun-Dec 2020 + all of 2021-2026) is unknown and requires the full
 - 2026-07-27 (slot-12, `data_engineering`): Plan authored per main-agent ruling on BLK-600e6b68 (2026-07-26) — the
   actual creation of this follow-up plan was deferred past that session's compact boundary; caught and filed during this
   session's `/pre-compact` audit rather than lost. No todos executed yet.
+- 2026-07-27 (slot-13, `data_engineering`), Todo 1 IN PROGRESS (VM not yet launched — do not flip the checkbox until the
+  census manifest exists at the cited path with a reported count):
+  - Discovered `features-service/scripts/purge_sports_derived_features_post_floor_residue_2026_07_27.py` already ships
+    (from a slot-14 2026-07-27 session per its own docstring) — same bucket, same date range, same 2026-07-19 cutoff,
+    same `last_modified`-as-proxy-for-`time_created` approach (documented there: the UTL storage abstraction has no
+    native `time_created` field — `BlobMetadata`/`_GCSBlob` only carry `last_modified`/`updated`; confirmed
+    independently against `unified-trading-library/unified_trading_library/cloud_interface/abstractions.py` and
+    `providers/gcp.py`). For a write-once parquet export, `last_modified` and `time_created` coincide for the current
+    generation unless something metadata-patches the object post-write, which nothing in this pipeline does — so the
+    proxy is accurate here, not just convenient. Extending UTL to expose real `time_created` was considered and
+    explicitly rejected as unplanned scope creep for this todo (the existing shipped script already made this call;
+    re-litigating it would just duplicate work).
+  - The existing script's dry-run/census mode printed to stdout only — it did NOT persist anything to GCS unless
+    `--apply` was passed. Extended it (`features-service@<pending sha>`) to always write the full census (delete
+    candidates + counts) to a STABLE path
+    `gs://features-sports-prd-central-element-323112/_audits/derived_features_postfloor_residue_census_2026_07_27.json`
+    on every invocation (dry-run/`--apply`/`--recensus`) via a new `_write_census_manifest()` — this is the artifact
+    Todo 2 reads. Kept the existing timestamped `_purge_manifests/` snapshot (apply-mode only) unchanged for its own
+    delete-execution audit trail.
+  - Wrote `deployment-service/scripts/vm/launch-sports-derived-features-census-vm.sh` (Tier-2 SPOT VM launcher, modeled
+    on `launch-datapoint-validation-vm.sh`) that runs the census script with NO `--apply` (read-only by construction —
+    this launcher cannot invoke the delete path at all). Registered `sports-derived-features-census-` in
+    `vm_prefix_registry.py` (`bucket=None`, `EPHEMERAL_BATCH` — writes a fixed per-plan report path inside the sports
+    bucket itself, not a per-VM shard, mirroring the `orphan-sweep-*` precedent) + its `launcher_registry.py` twin.
+    **Shipped: `deployment-service@817c6a5`** (quickmerge landed on `live-defi-rollout`, `ahead=0` verified).
+  - Hit + fixed a real QG false-positive: `check_backfill_vm_disk_provisioning.py`'s `TASK_MARKERS` heuristic
+    substring-matches "features" inside `VM_TASK=sports-derived-features-census` and flagged the launcher as a
+    download-heavy backfill needing a 250GB disk. This script is read-only (object-metadata listing only, one small JSON
+    write) — added a `qg-disk-exempt:` comment with justification (the sanctioned opt-out per that checker's own
+    docstring). Re-ran `bash scripts/quality-gates.sh` on deployment-service afterward — genuinely green (`EXIT=0`,
+    verified via a redirect + explicit `echo $?`, NOT via a `| tail` pipe which silently masks the real exit code — hit
+    this exact masking gotcha twice this session, worth remembering for next time).
+  - `features-service` QG also green (`--no-fix`, own named file). Not yet committed as of this entry — commit +
+    quickmerge next, then launch the VM with an armed heartbeat watchdog in the same turn per async-wait discipline,
+    then update this log with the VM name + manifest URI + flagged-object count before flipping Todo 1's checkbox.
