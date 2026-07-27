@@ -86,41 +86,41 @@ assigned_role: infra
       (account `427895769566`).
 
       **Exact runnable commands** (run with an AWS identity OTHER than `uts-orchestrator-epic-role` — your own
-                  root/admin CLI profile, or the AWS Console; running this from a session that assumes the role itself is the
-                  exact problem this todo exists to fix):
+                      root/admin CLI profile, or the AWS Console; running this from a session that assumes the role itself is the
+                      exact problem this todo exists to fix):
 
-                  ```bash
-                  ROLE=uts-orchestrator-epic-role
-                  ACCOUNT=427895769566
+                      ```bash
+                      ROLE=uts-orchestrator-epic-role
+                      ACCOUNT=427895769566
 
-                  # 1. Core service access — mirrors the GCP-side grant (storage/database/container-compute admin,
-                  #    not blanket AdministratorAccess)
-                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
-                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
-                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
+                      # 1. Core service access — mirrors the GCP-side grant (storage/database/container-compute admin,
+                      #    not blanket AdministratorAccess)
+                      aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
+                      aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
+                      aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+                      aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
 
-                  # 2. Optional but recommended: let this role manage its OWN permissions going forward, scoped only to
-                  #    itself, so the next gap doesn't need another human round-trip.
-                  aws iam put-role-policy --role-name $ROLE --policy-name self-manage-own-policies --policy-document '{
-                    "Version": "2012-10-17",
-                    "Statement": [{
-                      "Effect": "Allow",
-                      "Action": [
-                        "iam:GetRolePolicy",
-                        "iam:ListRolePolicies",
-                        "iam:ListAttachedRolePolicies",
-                        "iam:PutRolePolicy",
-                        "iam:AttachRolePolicy",
-                        "iam:DetachRolePolicy"
-                      ],
-                      "Resource": "arn:aws:iam::'"$ACCOUNT"':role/'"$ROLE"'"
-                    }]
-                  }'
-                  ```
+                      # 2. Optional but recommended: let this role manage its OWN permissions going forward, scoped only to
+                      #    itself, so the next gap doesn't need another human round-trip.
+                      aws iam put-role-policy --role-name $ROLE --policy-name self-manage-own-policies --policy-document '{
+                        "Version": "2012-10-17",
+                        "Statement": [{
+                          "Effect": "Allow",
+                          "Action": [
+                            "iam:GetRolePolicy",
+                            "iam:ListRolePolicies",
+                            "iam:ListAttachedRolePolicies",
+                            "iam:PutRolePolicy",
+                            "iam:AttachRolePolicy",
+                            "iam:DetachRolePolicy"
+                          ],
+                          "Resource": "arn:aws:iam::'"$ACCOUNT"':role/'"$ROLE"'"
+                        }]
+                      }'
+                      ```
 
-                  After running, ping any session on the orchestrator/human-planning VM to re-verify the 4 `Done when` checks and
-                  flip this todo with evidence — do not self-flip without a fresh verification run.
+                      After running, ping any session on the orchestrator/human-planning VM to re-verify the 4 `Done when` checks and
+                      flip this todo with evidence — do not self-flip without a fresh verification run.
 
 - [x] [DIAG] P1. ✅ **Verified 2026-07-27** — all 14 files done, commits confirmed on `origin/live-defi-rollout` via
       `git merge-base --is-ancestor` (`cc438a02c`, `1be59b97b`, `1e7f5389a`, `c6ef8cb1f`, `f5232f3e5`) + spot-checked
@@ -248,3 +248,19 @@ else that could be finished, was.
 **Verification of the whole session's work**: every commit referenced above was checked with
 `git merge-base --is-ancestor <sha> origin/live-defi-rollout` (not just `git log`, which can show local-only commits)
 immediately before writing this report — all confirmed on origin, `ahead=0`.
+
+## Addendum (2026-07-27): human-planning VM confirmed to need no separate grant
+
+Operator asked to make sure the human-planning VM's own service account has at least the same permissions. Checked live,
+from that exact machine (`i-0dd9812a96cdda5dc`), rather than assuming: **it shares both identities already fixed above,
+it is not a third one.** `aws sts get-caller-identity` returns
+`arn:aws:sts::427895769566:assumed-role/uts-orchestrator-epic-role/i-0dd9812a96cdda5dc` — same role as the orchestrator
+VM, already fixed. The GCP ADC credentials file on this machine
+(`/home/ubuntu/.config/gcloud/application_default_credentials.json`) is a service-account key for
+`unified-trading-sa@central-element-323112.iam.gserviceaccount.com` — same SA as the orchestrator's GCP identity,
+already fixed. Tested that exact key file directly (bypassing `gcloud`'s own cached config/token, since an earlier
+in-session check of a DIFFERENT cached token showed a stale, narrower permission set before the
+`resourcemanager.projectIamAdmin` grant landed): `testIamPermissions` confirms
+`resourcemanager.projects.{get,set}IamPolicy`, `storage.buckets.get`, `compute.instances.list`,
+`cloudsql.instances.list` all present. AWS S3/RDS/DynamoDB/ECS also re-verified live from this machine. No new grant
+needed — both cloud identities used here are the same ones already fixed in this doc.
