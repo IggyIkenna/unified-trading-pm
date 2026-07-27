@@ -192,7 +192,10 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       distinct but likely-related mechanism from the `WorkerLivenessWatchdog` heartbeat-silent kill documented for the
       original ~19-minute reproduction in `/codex/04-architecture/agent-orchestrator-worker-liveness.md`). Do NOT
       attempt this todo until that condition flips green — re-attempting blind just wastes another cycle on the same
-      wall.
+      wall. **RE-VERIFIED 2026-07-27 (slot-10)**: `issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`
+      is still `status: open`; no evidence the `mdps-e2e-shared-host-teardown-fixed` condition has flipped. Not
+      re-attempted — would be the 6th reproduction of the same known failure mode. Skipped rather than burning another
+      cycle; re-check once the operator/main flips the condition.
 - [ ] 9. [DATA] P0. RUN + VALIDATE `/data-pipeline-check-features` e2e: multi-day input window per family, prove
       force+skip for every MVP feature shard (all families × valid AGs). Report written.
 - [ ] 10. [DATA] P1. Steady-state benchmark VMs (250GB disk) per representative shard-type; measure amortized per-shard-
