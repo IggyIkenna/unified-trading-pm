@@ -22,7 +22,6 @@ related:
   ]
 created: "2026-07-27"
 parent_epic: plan_hygiene_master
-author: "ikennaigboaka [slot-16·planning]"
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
