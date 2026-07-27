@@ -158,3 +158,14 @@ rather than deciding unilaterally:
       `[OPERATOR]` — this is a capacity/scheduling decision, not a code fix. Repo: agent-orchestrator (or infra
       runbook). **Done when**: a root cause (burst vs. structural) is recorded and either a documented
       concurrency-limiting mechanism exists, or a decision to accept the current oversubscription is recorded.
+
+## Progress Log
+
+- 2026-07-27T09:40Z (slot-4, laptop, corroborating from a different vantage point — read-only AWS SSM, not from an
+  interactive slot session): filing `/plans/active/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md` surfaced a
+  Slack claim of "planning-vm disk at ~92%" needing verification. Queried the live host directly via
+  `aws ssm send-command` against `i-0c9b283b31d6b5ca7` (`ap-northeast-1`): `/tmp` tmpfs still `2.0G 2.0G 0 100% /tmp` —
+  unchanged from this doc's original finding, still fully exhausted. `/` at `290G 278G 12G 96% /`, `free -h`
+  `30Gi total / 8.9Gi used / 2.7Gi free`, swap `4.2Gi/15Gi` used, load average `9.40 11.75 13.13`. Confirms the standing
+  condition from an external vantage point independent of any slot session. Not attempting cleanup — same
+  `[OPERATOR]`-gated posture as this doc's existing todos.

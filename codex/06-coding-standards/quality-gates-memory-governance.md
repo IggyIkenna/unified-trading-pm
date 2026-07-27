@@ -12,7 +12,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [quality-gates, oom-prevention, memory, parallel-slot, basedpyright, pytest, infrastructure]
-related: [/codex/06-coding-standards/quality-gates.md]
+related: [/codex/06-coding-standards/quality-gates.md, /codex/05-infrastructure/vm-launcher-runbook.md]
 created: 2026-05-15
 authoritative_for: [quality-gate memory governance (QG_MEM_CAP / PYTEST_WORKERS OOM guardrails)]
 referenced_by: [/codex/06-coding-standards/quality-gates.md, plans/active/_agent_pings.md]
@@ -206,6 +206,15 @@ After landing or relaxing these settings, verify:
 # when you open a single Python file in a 30-repo workspace):
 ps auxf | grep basedpyright-langserver | awk '{print $4, $5/1024/1024 " GB"}'
 ```
+
+## Scope — this is QG-only, not a general ad-hoc-script guardrail
+
+`QG_MEM_CAP` wraps only the `pytest`/`basedpyright` subprocesses `base-service.sh` invokes as part of
+`quality-gates.sh`. It does **not** wrap an agent-authored ad-hoc script run directly (`python3 script.py &`) — that was
+the actual gap behind the 2026-07-27 shared-host RAM-exhaustion incident (an ad-hoc whole-corpus analysis script hit
+15.8GB RSS with no cap in effect at all). For that case, see `/codex/05-infrastructure/vm-launcher-runbook.md` § "Heavy
+COMPUTE/MEMORY on the shared planning-vm" and `scripts/dev/run-bounded-analysis.sh`, which reuses this doc's exact
+`systemd-run` mechanism generalized to any command.
 
 ## Related SSOTs
 
