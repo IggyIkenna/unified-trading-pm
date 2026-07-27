@@ -24,7 +24,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, issue-doc-lifecycle, duplicate-work, backlog-regen, stale-todo, sports, mdps, vm-launcher]
 related:
   [
-    /plans/active/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
+    /plans/archive/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
     /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
