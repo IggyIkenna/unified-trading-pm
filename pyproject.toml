@@ -73,129 +73,28 @@ max-complexity = 26
 "codex/14-customer-journeys/_tools/build_scope_manifest.py" = ["E501"]
 "codex/06-coding-standards/test-templates/test_event_logging.py" = ["E501"]
 
-# ── basedpyright (typecheck) — CONSOLIDATED; pyrightconfig.json deleted ──────────
-# DEVIATION (scripts-only): include = ["scripts"] instead of a package dir.
-# extraPaths ported from deleted pyrightconfig.json (2 sibling repo paths).
-# Existing `ignore` list preserved — covers argparse/json.load() Any boundaries.
+# ── basedpyright (typecheck) — EXCLUDED for this repo (2026-07-27) ──────────────
+# PM's entire Python surface lives under scripts/ (CI/CD + PM tooling), which per the
+# lifecycle-marker SSOT (CLAUDE.md § Script Homes) is ruff-gated, NOT basedpyright-gated.
+# The 2026-06-24 "warn-only" fix (unified-trading-pm@22b2f89d7) removed BASEDPYRIGHT_MAX_ERRORS
+# to end the ratchet-bump trap (1511->1517->1523->1539->1555) but did NOT stop base-service.sh's
+# separate, unconditional zero-warning-policy block from still failing the gate on any
+# basedpyright WARNING — a live path that reddened the LDR->main promotion PR (PR #498,
+# ~3082 reportAny/reportUnknown* diagnostics, three days after the warn-only fix shipped).
+# `exclude` here makes basedpyright analyze ZERO files even though base-service.sh always
+# invokes `basedpyright scripts/` with an explicit CLI path arg — verified empirically
+# (0 errors, 0 warnings, 0 notes) — so the fleet-wide zero-warning-policy in base-service.sh
+# is never touched/weakened; PM's own config genuinely produces nothing for it to fail on.
+# This makes the per-file `ignore` list + rule-severity overrides + extraPaths this section
+# used to carry fully dead (nothing is ever scanned), so they were deleted rather than kept
+# as dead config. Operator ruling 2026-07-12 (finding 87); SSOT:
+# plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md.
 [tool.basedpyright]
 pythonVersion = "3.13"
 typeCheckingMode = "standard"
-include = ["scripts"]
-exclude = ["tests", "**/__pycache__", ".venv*", ".venv-workspace", "build", "dist", "node_modules"]
+exclude = ["scripts", "tests", "**/__pycache__", ".venv*", ".venv-workspace", "build", "dist", "node_modules"]
 venvPath = "."
 venv = ".venv"
-# ── Type-correctness rules → "error" (strict). Canonical full set.
-# ── Owned by ruff (avoid double-reporting) / pragmatic softenings.
-# JSON-parsing / argparse scripts: many scripts use dict values from json.load()
-# and argparse.Namespace attributes that are intentionally Any at the JSON/CLI boundary.
-ignore = [
-    "scripts/propagation/rollout-quality-gates-unified.py",
-    "scripts/propagation/rollout-buildspec.py",
-    "scripts/propagation/rollout-cloudbuild.py",
-    "scripts/propagation/add-cloudbuild-deploy-via-dispatch.py",
-    "scripts/validation/check-integration-dep-coverage.py",
-    "scripts/validation/check_manifest_import_alignment.py",
-    "scripts/validation/check_schema_provenance.py",
-    "scripts/validation/validate-build-auth.py",
-    "scripts/ops/generate-freeze-calendar.py",
-    "scripts/manifest/reverse-dependency-lookup.py",
-    "scripts/manifest/auto-populate-tags.py",
-    "scripts/manifest/check-strategy-instruments.py",
-    "scripts/manifest/check-strategy-maturity.py",
-    "scripts/checkers/check-data-availability.py",
-    "scripts/checkers/check-strategy-maturity.py",
-    "scripts/checkers/check_ui_api_flow_coverage.py",
-    "scripts/checkers/fixture_drift_checker.py",
-    "scripts/checkers/flow_coverage_scorecard.py",
-    "scripts/checkers/network_evidence_parser.py",
-    "scripts/checkers/triad_assertion_checker.py",
-    "scripts/generators/generate_dependency_viz.py",
-    "scripts/generators/generate_strategy_manifest_dag.py",
-    "scripts/generators/reverse-dependency-lookup.py",
-    "scripts/generate-ui-vision-pptx.py",
-    "scripts/ui_vision_pptx",
-    "scripts/agents/rollup_resolved_pings.py",
-    "scripts/cascade/invalidate-ci-status.py",
-    "scripts/catalogue/sync-catalogue-yaml.py",
-    "scripts/catalogue/sync-to-mock.py",
-    "scripts/load-testing/synthetic_load_generator.py",
-    "scripts/manifest/_align_workspace_manifest.py",
-    "scripts/manifest/generate-strategy-instrument-matrix.py",
-    "scripts/manifest/prune_removed_repositories.py",
-    "scripts/manifest/validate-import-deps.py",
-    "scripts/openapi/audit_api_ui_coverage.py",
-    "scripts/openapi/audit_dead_code.py",
-    "scripts/openapi/audit_type_usage.py",
-    "scripts/openapi/generate_config_registry.py",
-    "scripts/openapi/generate_instrument_snapshot.py",
-    "scripts/openapi/generate_system_topology.py",
-    "scripts/openapi/generate_ui_reference_data.py",
-    "scripts/openapi/generate_unified_spec.py",
-    "scripts/prediction/test_prediction_pipeline_e2e.py",
-    "scripts/propagation/generate-strategy-instances-fixture.py",
-    "scripts/propagation/sync_archetype_capability_to_ui.py",
-    "scripts/propagation/sync_questionnaire_response_to_ui.py",
-    "scripts/propagation/sync_restriction_profiles_to_ui.py",
-    "scripts/qg/honest_coverage_ratchet.py",
-    "scripts/quality_gates/audit_workspace_constraints_drift.py",
-    "scripts/quality_gates/check_adapter_contract_regression.py",
-    "scripts/quality_gates/check_banned_placeholder_methods.py",
-    "scripts/quality_gates/check_canonical_futures_construction.py",
-    "scripts/quality_gates/check_emission_policy_paired_callsites.py",
-    "scripts/quality_gates/check_imports_inside_functions.py",
-    "scripts/quality_gates/check_defi_address_citations.py",
-    "scripts/quality_gates/check_inline_bucket_uri.py",
-    "scripts/quality_gates/check_mdps_bar_available_at_stamping.py",
-    "scripts/quality_gates/check_mdps_bar_boundary_compliance.py",
-    "scripts/quality_gates/check_no_blank_asset_group.py",
-    "scripts/quality_gates/check_no_category_kwarg_at_manifest_write.py",
-    "scripts/quality_gates/check_no_empty_string_fallback.py",
-    "scripts/quality_gates/check_no_explicit_project_id_bucket.py",
-    "scripts/quality_gates/check_no_fallback_imports.py",
-    "scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py",
-    "scripts/quality_gates/check_removed_symbols.py",
-    "scripts/quality_gates/check_ruff_rule_ratchet.py",
-    "scripts/quality_gates/check_uac_hard_required_fields.py",
-    "scripts/quality_gates/check_unrouted_source_returned_zero.py",
-    "scripts/quality_gates/qg_audit.py",
-    "scripts/sports/migrate_player_mappings_to_canonical.py",
-    "scripts/sports/migrate_sports_gcs_to_hive.py",
-    "scripts/validation/sync_strategy_manifest_class_exists.py",
-    "scripts/validation/validate-strategy-manifest.py",
-    "scripts/workspace/cleanup-empty-dirs.py",
-    # CI tooling added 2026-06-01 — sibling-script / numpy-pandas imports basedpyright cannot
-    # resolve in CI (same class as the entries above); excluded to keep the strict-mode noise
-    # from breaching the 1511 ratchet without raising the ceiling. See cicd_contract_hardening P0 #3(B).
-    "scripts/quality_gates/audit_source_column_distribution.py",
-    "scripts/plans/audit_model_tier.py",
-    "scripts/repo-management/ci_failure_watcher.py",
-    # gh-API/JSON glue (untyped dicts from `gh api` responses) — same class as ci_failure_watcher;
-    # excluded to keep strict-mode reportUnknownMemberType noise off the 1511 ratchet.
-    "scripts/repo-management/pin_branch_protection_rulesets.py",
-    # Off-GHA dead-man's-switch: argparse Namespace + json.load() Any boundaries (L1583).
-    "scripts/repo-management/cron_liveness_watchdog.py",
-]
-
-# Cross-repo import resolution (ported from deleted pyrightconfig.json extraPaths).
-# DEVIATION (scripts-only): 2 sibling repo paths; internal script subdirs dropped
-# (basedpyright resolves scripts/ sub-dirs from include = ["scripts"] above).
-reportImplicitOverride = "none"
-reportExplicitAny = "none"
-reportAny = "error"
-reportUnknownArgumentType = "error"
-reportUnknownVariableType = "error"
-reportUnknownMemberType = "error"
-reportUnknownParameterType = "error"
-reportUnnecessaryComparison = "warning"
-reportUnreachable = "warning"
-[[tool.basedpyright.executionEnvironments]]
-root = "."
-pythonVersion = "3.13"
-pythonPlatform = "All"
-extraPaths = [
-    "../unified-internal-contracts",
-    "../unified-api-contracts",
-]
 
 # ── pytest ──────────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]

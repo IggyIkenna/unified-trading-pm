@@ -23,20 +23,22 @@ PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by 
 PYTEST_UNIT_DIR="tests/unit/ scripts/quality_gates/ scripts/cicd/ scripts/docs/"
 LOCAL_DEPS=("unified-api-contracts" "unified-trading-library")
 MAX_DURATION=600  # PM: 5 min for local gates + ~5 min for act simulation (--act flag)
-PYRIGHT_TIMEOUT=240  # PM scripts dir is larger — give basedpyright extra time on slow CI runners
-# basedpyright is WARN-ONLY for PM scripts/ (operator decision 2026-06-24). PM's Python lives
-# almost entirely in scripts/ (SOURCE_DIR above), and per the lifecycle-marker SSOT
-# (CLAUDE.md § Script Homes) scripts/ are RUFF-gated, NOT basedpyright/coverage-gated — many are
-# stale one-off scripts that would trip a typecheck ceiling (the operator notes this is true
-# fleet-wide). With NO BASEDPYRIGHT_MAX_ERRORS set, base-service.sh still RUNS basedpyright and
-# reports the count as a WARNING but never FAILS the gate (base-service.sh § "set
-# BASEDPYRIGHT_MAX_ERRORS … to enforce"). This permanently ends the recurring ratchet-bump trap
-# (1511→1517→1523→1539→1555, bumped FOUR times) where PM's metadata-only fast-path masked
-# accumulating scripts/ typing debt until a full run (cache-bust / unblocked drain) surfaced it,
-# reddened PM's LDR→main PR, and starved the whole fleet (2026-06-23, unblock commit 1e6ec188e).
-# DO NOT re-add BASEDPYRIGHT_MAX_ERRORS for scripts/ — it re-creates the trap. The longer-term
-# decision (fully exclude the scan to save the ~240s run vs annotate the debt down vs run the full
-# typecheck on the fast-path) is tracked in plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md.
+# basedpyright is fully EXCLUDED for PM scripts/ (RESOLVED 2026-07-27, operator ruling finding 87,
+# per plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md). History: the 2026-06-24
+# "warn-only" fix (unified-trading-pm@22b2f89d7) removed BASEDPYRIGHT_MAX_ERRORS to end the
+# ratchet-bump trap (1511→1517→1523→1539→1555, bumped FOUR times from PM's metadata-only
+# fast-path masking accumulating scripts/ typing debt until a full run surfaced it all at once —
+# reddened PM's LDR→main PR, starved the fleet, 2026-06-23, unblock commit 1e6ec188e) — but did
+# NOT stop base-service.sh's SEPARATE, unconditional zero-warning-policy block from still failing
+# the gate on any basedpyright WARNING (PR #498 hit exactly this, ~3082 diagnostics, three days
+# after the warn-only fix shipped). The actual fix: `[tool.basedpyright] exclude` in
+# pyproject.toml now includes "scripts" itself, so basedpyright analyzes ZERO files even though
+# this script always invokes `basedpyright scripts/` with an explicit CLI path arg (verified
+# empirically: 0 errors/0 warnings/0 notes) — aligning with the lifecycle-marker SSOT (CLAUDE.md
+# § Script Homes: scripts/ are ruff-gated, NOT basedpyright-gated) with zero risk to the SHARED
+# base-service.sh's zero-warning-policy (untouched — it simply never fires because PM's own
+# config now produces nothing to fail on). DO NOT re-add BASEDPYRIGHT_MAX_ERRORS or narrow the
+# pyproject.toml exclude — both re-create one of the two traps above.
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 
 # Optional codex exclusion arrays (base adds --glob; use "!**/file.py" to exclude)
