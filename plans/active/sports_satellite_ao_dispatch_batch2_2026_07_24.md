@@ -268,6 +268,15 @@ source: >-
       `compute.instances.preempted` events. No OOM/error lines. No relaunch needed. Step 2 still mid-run (~1,143 days of
       2023-06-10→2026-07-27 remaining at this pace, still tracking the prior ~30h-ish ETA order of magnitude), step 3
       stays gated — checkbox correctly unchecked. Next slot: re-verify from scratch, don't trust this note as current.
+      **Check-in 2026-07-27T20:06Z (slot 11, data_engineering)**: re-verified from scratch (default ambient `gcloud`
+      account, no auth workaround needed). All 3 signals fresh: VM `af-backfill-20260727-064958` status=RUNNING (SPOT);
+      `run.log` tail shows `last_completed_date=2023-06-19 monotonic=true` with `PIPELINE_HEARTBEAT`-adjacent log lines
+      through 20:04:42Z (advanced +9 days from this same slot's own prior 2023-06-10 note in ~14min, ~1.55 min/date —
+      steady, consistent with prior pace); per-VM manifest shard (`_index/per_vm/af-backfill-20260727-064958.parquet`)
+      Update Time=20:04:41Z (near-real-time write); `gcloud     compute operations list` filtered to this VM's
+      targetLink for `compute.instances.preempted` returns zero rows. No OOM/error lines. No relaunch needed. Step 2
+      still mid-run, step 3 stays gated — checkbox correctly unchecked. Next slot: re-verify from scratch, don't trust
+      this note as current.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
