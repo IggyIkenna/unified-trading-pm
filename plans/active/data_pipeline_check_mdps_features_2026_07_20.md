@@ -374,9 +374,20 @@ answer by up to ~8x), and (c) the DeFi MVP instrument x data_type shard count. I
 per-instrument-day unit cost above (25.9s serial, write-bound) is the measured input to plug in. Quoting an ETA before
 (b) is resolved would be guessing at the dominant term.
 
-- [ ] NEW todo. [DATA] P0. Verify whether MDPS `max_workers` (8 on e2-standard-8) actually OVERLAPS the GCS writes.
-      Measured `25,948ms/instrument x 2 == 51.9s total` implies SERIAL. If writes are not overlapped, fixing that is the
-      single largest backfill speedup available and it changes the ETA by up to ~8x.
+- [x] NEW todo. [DATA] P0. **ALREADY ANSWERED 2026-07-20 (this plan's own later entry), RE-VERIFIED 2026-07-27
+      (slot-10)**: the `25,948ms x 2 == 51.9s` "serial" reading was a false positive — `processing_stats.py`'s
+      `avg_time = duration_seconds / total_instruments * 1000` is `total/N` BY CONSTRUCTION, true for any N regardless
+      of parallelism (see the "my SECOND hypothesis refuted" entry below, same plan). Direct code read confirms
+      `ThreadPoolExecutor(max_workers=max_workers)` (`batch_workers.py`) genuinely dispatches concurrent futures — the
+      2-file smoke run was UNDER-FED (2 futures into 8 slots), not serialized. The real throughput ceiling is 7
+      independent serialization points found by that same direct-code-read pass (S1 sequential per-instrument timeframe
+      loop — dominant; S2 a process-global per-VM manifest lock; S3 fresh `ManifestWriter`+flush per
+      instrument×timeframe; S4 full parquet read-back per write; S5 GIL at the pandas boundary; S6 a hard cap of 2 on
+      venue-file listing regardless of `MAX_WORKERS`; S7 the emission-policy lookup on 3/7 timeframes), each already
+      tracked as its own follow-up todo in this plan (R1 concurrent date-subprocesses; the shared-seed-context P0
+      concurrency bug, `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`, confirmed still `status: open` —
+      NOT yet fixed, so raising in-process concurrency remains gated on that fix landing first). No new code change from
+      this todo — it was a measurement-methodology question, now closed with the correct answer on record.
 - [ ] NEW todo. [DOC] P2. Correct `/codex/06-coding-standards/performance-targets.md`: `mdps_compute` is WRITE/IO-bound
       (measured ~94% write, ~6% polars), not compute-bound; the c2-standard-16 recommendation does not follow.
 
