@@ -146,13 +146,15 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       (16+16+60+58+1 = 151 docs verified clean across every commit), `check_todo_format.sh` (non-blocking pre-existing
       numbering warnings only, nothing introduced by this pass), `check_line_caps.sh` (one HARD violation caught —
       `instrument_id_format_canonicalization_2026_07_08.md` at 1,309L — fixed via the Phase-3 split, not skipped).
-- [ ] [SCRIPT] P3. Verify every new/touched doc carries correct tags per its tranche (`asset_group`, `stage`, `tags`)
-      and is listed in its tranche's consolidated-closeout Sources — a doc that's been reclassified but not added to its
-      tranche's Sources list is exactly the "orphan invisible to the sweep" bug this session already fixed twice (entry
-      #18/#25 in `autonomous_session_operator_decisions_2026_07_25.md`) recurring in a new form. **NOT done this pass**
-      — genuinely deferred, not silently skipped: the 77 reclassified docs' own `asset_group`/`tags` were verified
-      correct at classification time, but none were added to their tranche's consolidated-closeout Sources list. Flagged
-      as this plan's own next concrete todo.
+- [x] [SCRIPT] P3. **DONE 2026-07-27 (`unified-trading-pm@665a49d21`).** Grep-checked all 77 reclassified docs against
+      their tranche's consolidated-closeout hub: 50 already mentioned somewhere, 27 genuinely NOT — confirming this
+      finding's own predicted bug class actually recurred. Root cause split two ways: 1
+      (`mdps_odds_horizon_bucket_     reprocess_launch_prep`) needed no fix, already claimed+resolved+archived by a real
+      AO worker mid-session; the other 26 got a discoverability-only append (no existing content touched) to their
+      tranche's hub — cefi (2), defi (5), sports (4), cross-cutting (4), meta/infrastructure (11, routed to
+      `infra_consolidated_closeout` per `ag_closeout_audit_scope_widening_triage_2026_07_26.md`'s own precedent for that
+      asset_group pairing). `asset_group`/`tags` on all 77 were already verified correct at classification time (Phase
+      1/2), not re-checked here.
 - [x] [DOC] P3. **DONE** — final tallies recorded in the 2026-07-27 Progress Log entries above (77 reclassified, 64
       stale-checkbox-corrected, 1 split, live-fleet execution proof for at least 1 of the 77).
 
