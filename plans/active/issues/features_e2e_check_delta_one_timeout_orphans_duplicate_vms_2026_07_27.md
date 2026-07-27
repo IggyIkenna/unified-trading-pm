@@ -144,13 +144,13 @@ TRADFI:delta_one's fast exit was a different bug, not evidence either way.
       watch a multi-hour VM would block 700+ other queued tasks for a confirmation that todo 4 below already exists to
       capture. Widened todo 4 to explicitly pick up CEFI:delta_one's real completion time and tighten the override if it
       differs materially from 36000s.
-- [ ] [SCRIPT] P1. When a leg's VM abandons via `timeout_no_exit_status`, do not silently launch the NEXT leg's VM for
-      the same shard without at least logging a loud, explicit warning (ideally: check whether the abandoned VM is still
-      `RUNNING` before deciding whether launching a concurrent duplicate is safe/wasteful). Repo:
+- [x] [SCRIPT] P1. ✅ When a leg's VM abandons via `timeout_no_exit_status`, do not silently launch the NEXT leg's VM
+      for the same shard without at least logging a loud, explicit warning (ideally: check whether the abandoned VM is
+      still `RUNNING` before deciding whether launching a concurrent duplicate is safe/wasteful). Repo:
       unified-trading-library (`pipeline_e2e_check/launcher.py` or the calling engine). **Done when**: a repro of this
       exact scenario either waits longer, refuses to launch a concurrent duplicate, or at minimum emits an explicit
       "shard N: force-leg VM <name> abandoned STILL RUNNING — launching skip-leg VM concurrently, expect duplicate
-      compute" log line.
+      compute" log line. — `features-service@dcf8a3d0`.
 - [ ] [DATA] P2. Add a light-weight post-run reconciliation step (or a follow-up one-off script) that checks whether any
       VM this check launched is STILL `RUNNING` after the driver's own process has exited, and if so records/logs it (so
       abandoned VMs are not silently forgotten and their eventual real cost/outcome is at least visible).
@@ -227,3 +227,21 @@ TRADFI:delta_one's fast exit was a different bug, not evidence either way.
   `issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (a different slot's independent
   discovery of the identical duplicate-launch mechanism, on the same `TRADFI:volatility` shard, via a parallel
   day=2026-07-19 run) so the two don't track the same fix separately.
+- 2026-07-27 (slot-2): Picked up todo 2 ([SCRIPT] P1, loud warning on abandoned-VM duplicate launch). **Found the
+  underlying refuse-to-launch mechanism already shipped**: `features-service@6981b2b8` (earlier this same day, before
+  this todo was dispatched) added `_find_inflight_duplicate_vm` — called at the top of both `_run_force_leg` and
+  `_run_skip_leg` — which detects an already-`RUNNING` VM for the same `(family, asset_group)` cell (a coarser,
+  label-filter-based check, not day-window-scoped) and returns a `skipped`/`duplicate_in_flight` result instead of
+  launching a second VM. This already satisfies the todo's "refuses to launch a concurrent duplicate" bar for the
+  force→skip sequencing that caused this doc's own CEFI:delta_one/TRADFI:volatility incidents (both incidents predate
+  6981b2b8, launched 11:21:59-13:29:23 UTC vs. the fix landing at 12:21:03 UTC). What was still missing: the skip
+  decision was silent at the log level (only visible in the final report row), so an operator watching logs in real time
+  had no visibility. **Shipped**: `features-service@dcf8a3d0` adds an explicit `logger.warning(...)` call at both dup_vm
+  call sites naming the abandoned/in-flight VM, the shard, and that the leg is being SKIPPED rather than launched —
+  satisfying the todo's "at minimum ... log line" bar on top of the already-shipped refusal. 2 new regression tests
+  (`tests/unit/test_pipeline_e2e_check_duplicate_vm_warning.py`) assert the warning fires (via `caplog`) and the leg
+  still resolves to `skipped`/`duplicate_in_flight` for both `_run_force_leg` and `_run_skip_leg`. QG green on the
+  shipped SHA. This also satisfies `issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md`'s
+  todo 1 ("add a concurrency guard") — that doc's own todo already reflects `_find_inflight_duplicate_vm` as the answer;
+  not editing that doc's checkbox here since it wasn't this task's assignment, but flagging the overlap for whoever
+  picks it up next.
