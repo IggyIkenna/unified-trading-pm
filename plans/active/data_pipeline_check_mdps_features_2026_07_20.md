@@ -384,6 +384,33 @@ heavy-I/O rule). The full cross-repo lineage audit (MTDS→MDPS→features→ml/
 not attempted this session. What shipped is a genuine, verifiable safety fix + a corrected measurement that a future
 session's migration work depends on not repeating.
 
+### 2026-07-27 (slot-10) — todo 9b: no new CEFI cell launchable without duplicating in-flight work; billing-waste finding filed
+
+Dispatched to todo 9b (full-matrix features re-run). Fresh-checked live state before launching anything (per the
+duplicate-VM lesson learned mid-session, see below): `gcloud compute instances list --filter="name~'features-e2e-cefi'"`
+showed **5 delta_one:CEFI VMs already RUNNING** from prior sessions (oldest since 06:34 UTC, ~4.7h runtime at check
+time), none complete — `run.log` tails confirm all 5 are genuinely still computing (live-advancing timestamps, not
+stuck), so none qualify for deletion under the VM-delete guardrail. Two are exact-duplicate pairs of each other (same
+family/AG/window, both `--force`) — real billing waste from repeated relaunches with no in-flight check, filed as a new
+todo in `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. Separately confirmed via
+`gcloud compute instances list --filter="name~'features-'"` that slot-3 is concurrently running `--family volatility`
+(all-AG, covers CEFI) since 10:44 UTC, and another slot is running `sports`/`TRADFI:volatility` re-verification (both
+post their respective fixes landing at 10:17/unclear). **Near-miss**: launched a
+`--family volatility --asset-group CEFI` driver myself before checking local processes — `ps aux` immediately after
+caught slot-3's identical in-flight run; killed my own 5-second-old duplicate before it reached VM-launch (confirmed via
+its log: enumeration only, no VM created). Net effect: **zero new VMs launched this session** — every remaining CEFI
+cell (`delta_one`, `volatility`) is already covered by in-flight work, and the two derived cells (`multi_timeframe`,
+`cross_instrument`) are blocked on `delta_one`'s test-bucket output, which none of the 5 in-flight runs have produced
+yet (checked `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-07-19/` — no objects; only the
+still-writing `day=2026-06-28` partition has partial output so far).
+
+**Disposition:** todo 9b stays OPEN. **Next session**: check
+`gcloud compute instances list --filter="name~'features-e2e-cefi'"` FIRST — if all 5 have terminated, check which (if
+any) reached a real completion (non-empty `by_date/day=<window-end>/` output in the test bucket) before launching
+`multi_timeframe`/`cross_instrument` for CEFI (they need `delta_one`'s test output as `--source-bucket`); do NOT launch
+a 6th `delta_one` VM. If `volatility` has a written report from slot-3 by then, fold it into the combined
+`data_pipeline_e2e_check_features_2026_07_05` report via `merge_pipeline_e2e_report.py`.
+
 ## Deferred work after 2026-07-27
 
 | #   | Item                                                                                                                                           | Priority | Where tracked                                                                   | Gating                     |

@@ -179,3 +179,24 @@ tracked here rather than silently claimed complete.
       itself complete todo 8 of the parent plan (the full all-AG matrix + skip-proof still needs a from-scratch run
       under the now-fixed retry path — likely still blocked by the separate P1 session-teardown investigation above),
       but removes one of the two concretely-identified blockers.
+- [ ] [SCRIPT] P1. **NEW 2026-07-27 (slot-10)**: each session-teardown kill (this issue's whole premise) makes the NEXT
+      session re-launch the same cell from scratch rather than resuming — and with no in-flight check first, this
+      produces genuine concurrent-duplicate VM billing waste, observed live:
+      `gcloud compute instances list     --filter="name~'features-e2e-cefi'"` (2026-07-27 11:15 UTC) showed **5
+      simultaneously-RUNNING** delta_one:CEFI VMs from repeated prior-session relaunches — two exact-duplicate pairs
+      computing the IDENTICAL shard (`features-e2e-cefi-20260727-063401` + `-083854`, both `--force` on window
+      2026-07-19..2026-07-20; `-101851` + `-102228`, both `--force` on window 2026-06-28..2026-06-29), all still
+      mid-flight ~1-4.7h after launch (confirmed via `run.log` tails showing live, advancing timestamps — not
+      stuck/zombie, genuinely still computing, so NONE were killed per the VM-delete guardrail). Separately, this
+      session nearly added a **6th** duplicate: launched `--family volatility --asset-group CEFI` before checking for an
+      in-flight LOCAL process, and only a `ps aux` immediately after the launch caught that slot-3 was already running
+      the identical `--family volatility` (all-AG, includes CEFI) driver since 10:44 UTC — killed the 5-second-old
+      duplicate before it reached VM-launch, zero cost, but the near-miss shows the gap is real and easy to hit even
+      when actively watching for it. **Recommended fix** (repo: unified-trading-library, `pipeline_e2e_check` driver
+      entry point): before launching any cell, check BOTH (a)
+      `gcloud compute instances list --filter="name~'features-e2e-<ag>'"` for an existing VM whose
+      `VM_FEATURE_FAMILY`/`VM_ASSET_GROUP`/date-range metadata matches the cell about to be launched, and (b) a local
+      `ps aux | grep pipeline_e2e_check` for an already-running driver targeting the same `(family, asset_group)` —
+      skip/attach rather than relaunch on either hit. This is a distinct, cheaper fix from the `--resume`/checkpoint
+      todo above (that one resumes a KILLED run's remaining cells; this one prevents re-launching a cell that's already
+      alive and progressing, killed or not).
