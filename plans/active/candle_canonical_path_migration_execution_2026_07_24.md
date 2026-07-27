@@ -154,9 +154,33 @@ and final verify/reconcile.
       landed" — `features@99d5554e`/`features@d58b7760` delta_one+volatility dual-read, `uta@8377c98` chart reader
       dual-read), independently re-confirmed by P8 cross-AG verify/reconcile (2026-07-23, all 4 AGs clean). No code
       change needed — closing as verified-via-code-read, not re-implementing.
-- [ ] 4. [SCRIPT] P0. Run the sanctioned Tier-2 spot-VM single-walk census (bounded in-session sampling already
-      estimated ~10-20M candle objects, tradfi-dominated, ±2-3x) to get a precise per-AG object count + dup-shape
-      (`pipeline_mode=` vs naked `timeframe=`) + empty-stem inventory before sizing the migration fleet.
+- [x] ✅ 4. [SCRIPT] P0. **VERIFIED 2026-07-27 (slot-4)**: another duplicate of already-shipped work, confirming
+      slot-4's "BIG FINDING" below yet again (3 of the first 3 dispatched todos on this plan so far — 2, 3, 4 — have all
+      been already-completed duplicates). The P0 census ran to completion **2026-07-22** per
+      `plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`'s Progress Log — 4
+      parallel SPOT VMs (`{cefi,defi,tradfi,prediction}-candle-census`), real GCS enumeration (not inferred),
+      `exit_code=0` on every VM, `ORPHAN=0` on every asset group (the executor's own hard safety invariant — every
+      enumerated object got exactly one disposition or the run aborts loudly):
+
+      | Asset group    |  Total objects |   MIGRATE | SPLIT_BRAIN_DUPLICATE | QUARANTINE_CORRUPT | EMPTY_STEM (w/wo underlying) | NEEDS_CONTENT_ITYPE | NEEDS_CONTENT_TRADFI_ID | CANONICAL_NOOP | ORPHAN |
+          | -------------- | -------------: | --------: | ---------------------: | ------------------: | ---------------------------: | -------------------: | ----------------------: | --------------: | -----: |
+          | defi           |      1,124,849 | 1,123,407 |         (folded into MIGRATE) |               1,442 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
+          | prediction     |      1,165,459 |         1 |              1,165,458 |                   0 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
+          | cefi           |        940,606 |        10 |                804,670 |             130,906 |                2,576 / 2,198 |                  238 |                       0 |               8 |      0 |
+          | tradfi         |      7,646,831 |         0 |                724,214 |                   0 |              428,792 / 6,780 |                    0 |               6,487,045 |               0 |      0 |
+          | **TOTAL**      | **10,877,745** |         — |                      — |                   — |                            — |                    — |                       — |               — |      0 |
+
+          Evidence: each VM's `run.log` at
+          `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-{cat}-candle-census-<ts>/run.log` +
+          staged mapping TSVs at
+          `gs://deployment-scripts-central-element-323112/canonical-migration-candle-census/<ts>/canonical-migration-{cat}-candle-census-<ts>/mappings/`.
+          This satisfies the todo's own ask exactly: precise per-AG object count (replacing the ±2-3x in-session estimate),
+          dup-shape breakdown (`pipeline_mode=` vs naked `timeframe=` split-brain counts per AG), and empty-stem inventory
+          (with/without `underlying=`) — all measured, not estimated. No re-run needed; re-launching 4 more Tier-2 census
+          VMs against an unchanged corpus would be pure duplicate cost. Follow-up findings from that census (cefi's
+          anomalous 13.9% QUARANTINE_CORRUPT rate, the unregistered `pipeline_mode=batch_hyperliquid_rest` value) were
+          filed as that doc's own todos 17/18 — not re-filed here.
+
 - [ ] 5. [SCRIPT] P0. Build the migration executor (P5): clone
       `market-tick-data-service/scripts/migrate_tradfi_canonical_2026_07.py` — idempotent, sharded,
       enumeration-file-driven, `--apply`-gated, PROGRESS.json checkpointed.
