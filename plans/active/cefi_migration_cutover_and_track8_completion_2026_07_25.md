@@ -281,3 +281,31 @@ every todo executes an already-decided spec from the parent doc.
   ran as-is, no bugs found in it); live GCS/manifest state on `market-data-tick-cefi-prd-central-element-323112` +
   `deployment-scripts-central-element-323112` (VM run.logs, all timestamped `2026-07-27T00:53Z`-`02:11Z`,
   `asia-northeast1-c`).
+- **2026-07-27 (slot-14, `data_engineering`) — todo 3 dispatch: STOPPED before executing, filed as a blocked escalation
+  (BLK-<pending>).** Before running the drain+`--apply`, read the vehicle docs
+  (`cefi_residual_followups_after_honest_done_2026_07_17.md`, `_cefi_canonical_blueprint_2026_07_17.md`,
+  `cefi_4surface_migration_execution_log_2026_07_24.md`) and ran the live, read-only
+  `verify_cefi_canonical_4surface_2026_07_20.py` fresh (2026-07-27 04:04Z) to get current-state numbers rather than
+  trust the docs (they proved ~3 days stale relative to actual progress). **Live result**:
+  `OVERALL: FAIL [A=PASS B=FAIL C=PASS D=PASS]` — corpus is now 95.41% canonical on filename (up from a stale 48.04%
+  figure, explained by todo 2's just-completed rename campaign above), 99.50% on manifest, and the operator's own named
+  probe object (`ADAF0:USTF0.parquet` / `BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`) now PASSES on all 4 surfaces — real,
+  substantial progress. Surface B still FAILs for the OTHER probe (`DERIBIT:PERPETUAL:AVAX-USDC@LIN`, 2025-06-15:
+  parquet column still reads the old `AVAX_USDC-PERPETUAL` form), so the todo's idempotency done-when (all 4 scripts'
+  `--dry-run` re-run = 0 further changes) is clearly NOT yet met corpus-wide. **Two things stopped me from proceeding to
+  the drain+`--apply` itself**: (1) a genuine **SSOT contradiction** — this todo asserts "No `[OPERATOR]` tag — already
+  ruled self-justifying" (agent-executable now), while the sibling plan
+  `cefi_consolidated_native_ao_extract_2026_07_25.md`'s own Deferred section explicitly classifies this SAME "Track 1
+  cutover" as "Stays human... needs human-coordinated timing" — two active plans disagree on the human-gating status of
+  the same production action. (2) **Evidence of concurrent in-flight work**: `instruments-service@81666764`
+  (03:57:35+0100) and `f06eba12` (04:18:08+0100) — literally minutes before/after my own live verification run — show
+  another agent actively tuning Script 3/Script 4 STOP-ON-SURPRISE thresholds after real dry-run/apply attempts ("after
+  diagnosing a real, already-explained volume drop/shift"), meaning this exact apply work is ALREADY in-flight elsewhere
+  right now; starting a second, uncoordinated attempt from this interactive dispatch risks a genuine collision on the
+  same prod manifest/GCS state (no live process found on THIS host at check time, but the commits prove very recent
+  activity, likely from another slot). Also confirmed via `cefi_consolidated_native_ao_extract_2026_07_25.md`: the
+  mandatory full writer-fleet DRAIN (blueprint §1 Phase-1, HARD RULE — stop ALL cefi writers both clouds before ANY
+  `--apply`) has never been executed as one coordinated event; only narrower per-attempt cron pausing has happened so
+  far. **Did NOT execute the drain or any `--apply`.** Filed a `/blocked` escalation to the operator with this evidence,
+  asking how to resolve the contradiction and whether/how to coordinate with whatever is already in-flight. Not flipping
+  todo 3's checkbox.
