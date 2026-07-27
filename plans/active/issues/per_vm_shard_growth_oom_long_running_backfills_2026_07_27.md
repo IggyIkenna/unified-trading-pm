@@ -37,8 +37,8 @@ parent_epic: infrastructure_master
 source: >-
   Operator, mid-session while monitoring the sports FIXTURES backfill: "fix the memory accumulation issue seems like a
   leak from the backfill af fixtures."
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: research
 drift_direction: advance-code
 locked_by:
@@ -98,12 +98,12 @@ shows `task=instruments-backfill`, `Chunk 1/25: 2020-06-06 → 2020-09-03`.
       launcher is ever invoked with a wide date range in practice. **Done when**: every such launcher is either
       confirmed low-risk (always invoked with a bounded range) or redirected to a chunked task type the same way this
       one was.
-- [ ] [CODE] P3. **Consider a proper library-level fix** (not attempted here — too risky to rush): cache the merged
-      per-VM shard DataFrame + its GCS generation in the `ManifestWriter` instance across flushes, using a
-      generation-check to detect whether another writer touched the object since this instance's last upload before
-      trusting the cache (falls back to a full read on any mismatch — preserves the existing concurrent-writer
-      correctness guarantee exactly). Would eliminate the redundant download+parse cost for the common
-      single-sequential-writer case without a chunking workaround, but touches `unified-trading-library`'s
-      concurrency-critical shared code (used fleet-wide, not just sports) — needs its own dedicated session with full
-      test coverage of `test_manifest_writer_per_vm.py` / `test_manifest_writer_per_vm_debounce.py`, not a rushed
-      mid-incident change.
+- [ ] [OPERATOR] P3. **Consider a proper library-level fix** (not attempted here — too risky to rush; needs an explicit
+      go-ahead before an AO worker touches fleet-wide concurrency-critical code): cache the merged per-VM shard
+      DataFrame + its GCS generation in the `ManifestWriter` instance across flushes, using a generation-check to detect
+      whether another writer touched the object since this instance's last upload before trusting the cache (falls back
+      to a full read on any mismatch — preserves the existing concurrent-writer correctness guarantee exactly). Would
+      eliminate the redundant download+parse cost for the common single-sequential-writer case without a chunking
+      workaround, but touches `unified-trading-library`'s concurrency-critical shared code (used fleet-wide, not just
+      sports) — needs its own dedicated session with full test coverage of `test_manifest_writer_per_vm.py` /
+      `test_manifest_writer_per_vm_debounce.py`, not a rushed mid-incident change.

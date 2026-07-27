@@ -16,7 +16,7 @@ repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: [infra, spot-vm, preemption, checkpoint, tradfi, migration]
 created: 2026-07-27
-assigned_vm: NA
+assigned_vm: planning
 parent_epic: infrastructure_master
 priority: P2
 execution_scope: orchestrator-agent
