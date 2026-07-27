@@ -211,11 +211,17 @@ isolation, consolidator merge/dedup, stale-blob liveness and the `captured`-outr
       differs).
 - [ ] 6. [DOC] P2. Record in codex that the per-VM manifest flush is ALREADY debounced (50 entries/5.0s, `utl@6b6d53bd`)
       so the "flush is O(n²)" hypothesis is not re-derived by the next reader.
-- [ ] 7. [SCRIPT] P1. Add `columns=`/`filters=` projection to `manifest_completeness.py:375`'s
-      `read_availability_index(bucket)` call — thread the already-available `upstream_window` row keys into a `filters=`
-      predicate (date/data_type/instrument_id, mirroring the proven row-group-pushdown pattern) so the READ itself, not
-      just the post-read map-build, stops paying the full-corpus cost on defi-prd (1.58 GB). Highest-value single fix
-      from todo 5's audit (repo: unified-trading-library).
+- [x] ✅ 7. [SCRIPT] P1. **SHIPPED unified-trading-library@be1bfc22.** Added `columns=`/`filters=` projection to
+      `manifest_completeness.py`'s `read_availability_index(bucket)` call: `columns=` is now the row-key columns +
+      `capture_status` (not the full ~28-column schema), and a new `_window_read_filters` helper threads the
+      `upstream_window`'s coerced keys into a `filters=` predicate — an inclusive `[min, max]` `date` row-group range
+      (mirrors `manifest_freshness._date_range_filters`'s proven pushdown pattern) plus exact-match `data_type`/
+      `instrument_id` filters when every key in the window agrees on one non-empty value for that dim (safe superset
+      otherwise — a window spanning multiple values or omitting a dim just skips that dim's filter rather than risk
+      excluding a real match). `force_refresh` now calls `_invalidate_index_cache(bucket)` (clears both the full AND
+      slim caches) instead of only popping the full-schema cache, since the read now routes through the slim/columns
+      path. 8 new unit tests (`_window_read_filters` behavior + the read-call's actual `columns=`/`filters=` kwargs +
+      force_refresh invalidating both caches); full `quality-gates.sh` green (6810 passed) on the committed SHA.
 - [ ] 8. [SCRIPT] P1. Add `columns=`/`filters=` projection to the `deployment-api` dashboard data-status backend
       (`services/{data_status_hierarchical,data_status_service,manifest_source}.py`,
       `routes/data_status/_live_coverage.py`) — the highest interactive-traffic defi-reachable unfiltered reads found in
