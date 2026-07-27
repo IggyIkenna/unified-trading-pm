@@ -216,8 +216,17 @@ source: >-
       concurrency-critical shared library code, routed this launcher's explicit-date-range runs through the EXISTING
       chunked `instruments-backfill` VM_TASK (already used by 4 sibling sports launchers) — 90-day chunks, each a FRESH
       process, memory resets between chunks — via `deployment-service` (launcher-only change, zero
-      shared-dispatcher-code touched). Relaunched as `af-backfill-20260727-011039`, verified using the chunked path.
-      Current: `af-backfill-20260727-011039`.
+      shared-dispatcher-code touched). Relaunched as `af-backfill-20260727-011039`, verified using the chunked path —
+      ran clean through 2 full chunk boundaries (6→7, 7 dates through 2022-02-09) with zero OOM recurrence before a
+      genuine SPOT preemption (`compute.instances.preempted` 2026-07-27T04:46:58Z, standard vanish-not-terminate
+      pattern, no marker written — unrelated to the OOM fix). **Relaunch hit a NEW, separate issue**: this laptop's
+      interactive `gcloud` account (`ikenna@odum-research.com`) had an expired token needing interactive reauth
+      (`cannot prompt during non-interactive execution`) — the launcher script silently failed (exit 1, zero output)
+      because it shells out to `gcloud` using the ambient active account. Root-caused via `bash -x` trace. Fix:
+      `CLOUDSDK_CORE_ACCOUNT=<working-service-account>` env var scoped to just the launch command (NOT
+      `gcloud config set account`, which mutates global machine-wide state shared by every concurrent slot on this
+      laptop — did that once by mistake mid-diagnosis and immediately reverted it). Relaunched as
+      `af-backfill-20260727-055450`, verified RUNNING + chunked task. Current: `af-backfill-20260727-055450`.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
