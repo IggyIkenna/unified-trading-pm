@@ -268,6 +268,19 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   (`gcloud storage buckets update gs://<bucket> --soft-delete-duration=7d`, a one-line, low-risk config change, same
   action already taken for `instruments-store-sports-prd` 2026-07-26) **and re-check, THEN cite finding T** — do not
   default to `[OPERATOR]` just because the fix hasn't happened yet; make the fix part of the same todo.
+- **A silent, hard-to-detect correctness-regression risk in shared fleet-wide code is a DIFFERENT class from finding
+  T/U's reversibility carve-out — gate it on test coverage, not a human's judgment** _(finding V, 2026-07-27, operator
+  ruling: a proposed `ManifestWriter` per-VM-shard caching optimization touched concurrency-critical code with a
+  documented history of a real lost-entries bug; unlike a GCS delete there is no soft-delete safety net if a subtle bug
+  ships — the risk is silent data loss across every concurrent writer, not something recoverable within a known
+  window)._ This is NOT a business/value judgment (finding U (i)) — a human's opinion doesn't make the code more correct
+  — so it does not default to `[OPERATOR]` either. Instead, state an EXPLICIT strengthened done-when: any existing
+  regression suite covering the invariant at risk must stay green, AND a NEW adversarial test must be added that
+  specifically exercises the failure mode the change could reintroduce (here: a second writer mutating the shard's GCS
+  generation mid-flight, proving the fallback path actually catches it) — `quality-gates.sh` + that new test are the
+  real safety net, the same bar every other shared-library change in this codebase already meets. Reserve actual
+  `[OPERATOR]` for this class only when no test can meaningfully exercise the risk at all (e.g. a genuinely unobservable
+  production race) — state that explicitly if so, don't default to it out of general unease.
 - **When splitting an over-cap plan, correctness beats file count** _(finding R, 2026-07-25, operator ruling: asked
   whether to fork every Track with a real sequential/gating constraint into its own child+finalize even if small, vs.
   merge related Tracks to reduce file count — ruled "correctness over file count")._ Give any Track/section with a real
