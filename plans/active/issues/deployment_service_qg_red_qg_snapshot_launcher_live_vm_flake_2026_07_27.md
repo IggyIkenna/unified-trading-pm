@@ -11,7 +11,7 @@ summary: >-
   any local change) — the real daily qg-snapshot cron VM (qg-snapshot-20260727-232717, terraform schedule "0 6 * * *")
   was genuinely RUNNING at test time, so the launcher's own singleton-lock refusal fired and the "dry run" exited 1
   instead of emitting JSON.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -30,7 +30,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: slot-8 (cicd escalation agt-76277b)
 ---
 
 # deployment-service QG RED — TestQgSnapshotLauncher flakes against live qg-snapshot VM state
@@ -80,7 +80,7 @@ unit tests go red for a reason that has nothing to do with the code under test.
 
 ## Recommended fix path
 
-- [ ] [SCRIPT] P2. Make `launch-qg-snapshot-vm.sh --dry-run-scheduler-body` genuinely side-effect/state-independent —
+- [x] [SCRIPT] P2. Make `launch-qg-snapshot-vm.sh --dry-run-scheduler-body` genuinely side-effect/state-independent —
       either (a) move the `--dry-run-scheduler-body` short-circuit BEFORE the singleton-lock preflight (the
       scheduler-body JSON doesn't need to know whether a VM is currently running to be constructed), or (b) have the 3
       `TestQgSnapshotLauncher` tests above stub/mock `gcloud` (they already do this pattern themselves in
@@ -88,7 +88,8 @@ unit tests go red for a reason that has nothing to do with the code under test.
       project's live fleet state. Repo: deployment-service (`scripts/vm/launch-qg-snapshot-vm.sh` +
       `tests/unit/test_vm_launcher_scripts.py`). **Done when**: the 3 tests pass regardless of whether a real
       `qg-snapshot-` VM happens to be running in the project at test time (verify by running the suite while a real
-      qg-snapshot VM is live, or by mocking `gcloud compute instances list` to return a running instance).
+      qg-snapshot VM is live, or by mocking `gcloud compute instances list` to return a running instance). ✅
+      deployment-service@3eaec93.
 
 ## Progress Log
 
@@ -97,3 +98,12 @@ unit tests go red for a reason that has nothing to do with the code under test.
   `quality-gates.sh` once the real `qg-snapshot-20260727-232717` VM completes its run (auto-shutdown on completion per
   `VM_SHUTDOWN_ON_COMPLETION=true`), which resolves this occurrence without needing the code fix above; the code fix
   above still needs to land so this doesn't recur on the NEXT daily cron window.
+- 2026-07-27 (slot-8, cicd escalation agt-76277b, wall RB-ca8f005d): Took option (a). The singleton-lock preflight
+  (`lc_singleton_check`) plus a whole block of `RUN_TS`/`VM_NAME`/`FULL_METADATA`/`LABELS` sat unconditionally before
+  the `--dry-run-scheduler-body` short-circuit — and were entirely dead code for that path (the dry-run JSON is emitted
+  by a self-contained python heredoc that never reads `FULL_METADATA`/`VM_NAME`/`LABELS`; the real direct-launch path
+  further down the script recomputes its own independent copies of all four). Deleted the dead block outright rather
+  than just reordering it, so `--dry-run-scheduler-body` no longer calls `gcloud` at all. Verified:
+  `TestQgSnapshotLauncher` 6/6 pass; full `quality-gates.sh` green (112s) pre-quickmerge and again post-rebase inside
+  `quickmerge --agent`. Shipped deployment-service@3eaec93 to live-defi-rollout. No open repo-blockers remained for
+  deployment-service after landing.
