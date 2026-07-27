@@ -84,8 +84,9 @@ Current grants (2026-07-27, additive only, never reduced): `storage.admin`, `sto
 `compute.instanceAdmin.v1`, `bigquery.admin`, `bigquery.dataEditor`, `bigquery.jobUser`, `datastore.owner`,
 `datastore.user`, `cloudsql.admin`, `cloudscheduler.admin`, `cloudscheduler.viewer`, `run.admin`, `run.developer`,
 `run.invoker`, `iam.serviceAccountAdmin`, `iam.serviceAccountUser`, `resourcemanager.projectIamAdmin`,
-`secretmanager.secretAccessor`, `pubsub.editor`, `cloudbuild.builds.editor/.viewer`, `artifactregistry.reader`,
-`logging.viewer`, `monitoring.viewer`. Re-verify live via
+`secretmanager.secretAccessor`, `secretmanager.viewer`, `pubsub.admin` (supersedes `.editor`/`.viewer` — plain `.viewer`
+does not cover `topics/subscriptions.getIamPolicy`, discovered by testing, not assumed), `cloudfunctions.viewer`,
+`cloudbuild.builds.editor/.viewer`, `artifactregistry.reader`, `logging.viewer`, `monitoring.viewer`. Re-verify live via
 `gcloud projects get-iam-policy central-element-323112 --flatten="bindings[].members" --filter="bindings.members:unified-trading-sa@..."`
 before assuming a role is present — this list drifts as gaps get closed.
 
