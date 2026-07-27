@@ -476,8 +476,9 @@ drift_direction: advance-code
       per-pipeline_mode, per-day object count + id-form-violation count covering 2026-07-20 through the run date is
       written to a new results file and cross-linked from the source issue doc. Source:
       `issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`.
-- [ ] [BACKEND] P1. Fix `write_defi_rows()`'s filename-leaf construction to use the full `instrument_id`, not the bare
-      `symbol` column — in `market-tick-data-service/.../canonical_write.py`, `write_defi_rows()` currently discards the
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-27 — market-tick-data-service@0fddb95e.** Fix `write_defi_rows()`'s filename-leaf
+      construction to use the full `instrument_id`, not the bare `symbol` column — in
+      `market-tick-data-service/.../canonical_write.py`, `write_defi_rows()` currently discards the
       `df.groupby("instrument_id")` key and rebuilds the leaf from only `group_symbol`. Change it to build the leaf from
       the sanitized `_inst_id` instead, so filename stem == the `instrument_id` column == the manifest key, per
       `cross-asset-canonical-target-ssot.md` §0/§1's hard rule. Scope is limited to the existing `instrument_id` column
@@ -485,7 +486,14 @@ drift_direction: advance-code
       market-tick-data-service. **Done when**: the leaf is built from the sanitized full `instrument_id`; a fresh sample
       of newly-written DeFi objects (all 6 handlers routing through `write_defi_rows`) passes the UAC oracle's id-form
       check with 0 violations; new/updated regression test passes; `quality-gates.sh` green. Source:
-      `issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`.
+      `issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`. Fixed via a new
+      colon-preserving sanitizer (`_sanitize_defi_instrument_id_leaf`) — the UAC oracle's DeFi id-form grammar
+      (`_DEFI_INSTRUMENT_ID_RE`) requires literal `:` separators in the stem, unlike the existing bare-symbol sanitizer
+      which folds `:` to `_`; verified directly against the oracle (`is_canonical_instrument_id()`) in a new regression
+      test. Also fixed the coupled migration script's `leaf_for_instrument_id()` (documented byte-match-with-R1
+      invariant) plus 6 affected unit test files (dex_pools/dex_swaps/lending_indices venue-glue guards narrowed to the
+      partition directory, not the leaf, since the leaf legitimately now contains `VENUE-CHAIN`). Full
+      `quality-gates.sh` green (sentinel-verified against `0fddb95e`'s parent commit).
 - [ ] [DOC] P1. Correct `canonical-cutover-register.md` §5's blanket "DeFi capture is STOPPED / no new defi writes"
       premise — measurably false for the batch lane (`pipeline_mode=batch_onchain_subgraph`/`batch_chainlink`/
       `batch_onchain_rpc`/`batch_aave` objects measured with `time_created=2026-07-24`). Narrow the claim to the
