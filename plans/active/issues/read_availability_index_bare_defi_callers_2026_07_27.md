@@ -265,8 +265,14 @@ not a mechanical column-list copy.
       regression test per function pinning the exact `columns=`/`filters=` call signature so a future edit can't
       silently drop back to a bare call. Full `quality-gates.sh` green (244s-272s, 2 runs), shipped via quickmerge
       --agent.
-- [ ] [SCRIPT] P1. **unified-trading-library** — `manifest_freshness.py:362`: the module's own comment already flags the
-      ~6.5 GB peak risk; confirm current call shape by direct read and project if still bare.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-8)** — no code change needed, already fixed. **unified-trading-library** —
+      `manifest_freshness.py:362` (`ManifestFreshnessCache._refresh_locked`): verified by direct read — the call is
+      ALREADY projected (`columns=[*_ROW_KEY_COLUMNS, "capture_status", "error_reason"], filters=filters`), shipped in a
+      prior commit (`unified-trading-library@0fc088a9`, "fix(manifest): ManifestFreshnessCache uses slim column-pruned
+      read_availability_index, not the ~6.5GB full-schema path" — same `mtds_backfill_vm_startup_oom_rc137_2026_07_14`
+      incident class as the other findings in this audit). A regression test already exists and pins the exact
+      projection (`tests/unit/test_manifest_freshness.py::test_bulk_load_uses_slim_column_path` — asserts `columns=` is
+      present and contains `capture_status`/`error_reason`/the row-key columns). Not bare; nothing to fix.
 - [ ] [SCRIPT] P2. **unified-trading-library** — `manifest_writer/_queries.py` (4 sites) + `_maintenance.py` (4 sites) +
       `_writer_io.py:156`: internal ManifestWriter query/maintenance helpers; lower urgency (less frequently invoked
       than the hot-path findings above) but same fix pattern.
