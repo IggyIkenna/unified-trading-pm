@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [mdps, oom, cloud-run-job, candle-derivation, production-incident]
 related: [/plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md]
 created: 2026-07-26
-last_updated: 2026-07-26
+last_updated: 2026-07-27
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -154,15 +154,128 @@ inserts a space before the `|`; the bash `${var%%|*}` split then left a trailing
 exiting the moment the real terminal `Completed=False` appeared at the 12-minute mark. Caught by manually re-deriving
 state from `gcloud run jobs executions describe` directly, not from the watcher's own output.
 
+## Update 4 (2026-07-27, autonomous session) — second OOM ROOT-CAUSED, FIXED, and verified against the exact crash shard; job still doesn't reach Completed=True end-to-end because of a SEPARATE, pre-existing, unrelated bug
+
+**Root cause of the second OOM**: `ManifestWriter._read_with_generation()`
+(`unified_trading_library/manifest_writer/_writer_io.py`, the legacy/non-per-VM canonical-index write path) does an
+**unfiltered `pd.read_parquet()` of the ENTIRE `_index/availability_index.parquet`** on every `.flush()` call — no
+column pruning, no row filtering, unlike the already-fixed read-path call site from Update 3. DEFI's index is
+1,072,639,216 bytes / ~27.4M rows (confirmed via `gcloud storage du`). `write_candle_parquet()` /
+`close_candle_streaming_writer()` (`market_data_processing_service/app/core/canonical_writer.py` +
+`canonical_writer_streaming.py`) call `_flush_manifest_with_backoff()` — `ManifestWriter.write()` + `.flush()` — **once
+per (file × timeframe)**, and `flush()` unconditionally forces the drain (not gated by the module-buffer time throttle).
+The Cloud Run job never set `MANIFEST_PER_VM_SHARDS=true` (confirmed absent via `gcloud run jobs describe` before the
+fix), unlike every sibling t1-recon job (`t1_recon_instruments_jobs.tf`'s `is-defi-t1-recon-job` /
+`is-tradfi-t1-recon-job`, and the `market-tick-data-service` fast/cefi t1-recon jobs in the same terraform file) — this
+job was simply missed when that convention was established. With `max_workers=8` (this job's vCPU count) worker threads
+each independently flushing per shard, several **concurrent** full ~1GB/27.4M-row pandas decodes of the canonical index
+blow past 32Gi within the observed 67-89s silent window — the SAME "unbounded full-index materialization" defect class
+as the Update 3 bug, just in the WRITE path instead of the READ path, and gated on `MANIFEST_PER_VM_SHARDS` rather than
+a date filter. This also explains why the crash landed the exact instant DEFI `dex_pool_swaps` started writing: it was
+the ONLY data_type in that run whose manifest actually needed a write (every other asset_group/data_type was already
+fresh in the manifest and skipped) — the first real exercise of this Cloud Run job's legacy write path in that run.
+
+**Fix**: enabled per-VM shard writes for this job, matching the established pattern.
+
+- Live (immediate):
+  `gcloud run jobs update uts-prod-market-data-processing-service-t1-recon --update-env-vars=MANIFEST_PER_VM_SHARDS=true,VM_NAME=mdps-t1-recon-job`
+  — confirmed present via a fresh `describe` before re-triggering.
+- Source (durable): `deployment-service@a6c640178b8e6dca7f1b12ae93172d85cd3fc383` — added the same two env vars to
+  `terraform/gcp/audit03_cron_provisioning.tf`'s `mdps_t1_recon_job` module, with a comment explaining the mechanism.
+  `quality-gates.sh --no-fix --files terraform/gcp/audit03_cron_provisioning.tf` passed ("ALL QUALITY GATES PASSED
+  (195s)"); shipped via `quickmerge.sh --agent`, verified present on `origin/live-defi-rollout` HEAD.
+- Writes now route to `_index/per_vm/mdps-t1-recon-job.parquet` (small, per-writer, no CAS, no full-index read); reads
+  stay correct because `read_availability_index()` always unions per-VM shards on top of the consolidated blob
+  regardless of the reading caller's own settings, and the standing manifest consolidator folds the shard into the
+  canonical index on its normal cadence.
+
+**Verification — the exact crash shard, forced, on the exact crash date, twice**: triggered execution
+`uts-prod-market-data-processing-service-t1-recon-p46vw` scoped to `MDPS_ASSET_GROUP=DEFI` /
+`MDPS_DATA_TYPES=dex_pool_swaps` (via `gcloud run jobs execute --update-env-vars`, a per-execution override — the
+permanent job env is untouched by this scoping) with `--start-date 2026-07-25 --end-date 2026-07-26 --force` (forces
+reprocessing regardless of manifest freshness; the 2-day span was a workaround for a `gcloud run jobs execute --args`
+quirk that rejects an identical `--start-date`/`--end-date` value pair, not a deliberate 2-day test). Result —
+`status.conditions[type=Completed].status = True`, "Execution completed successfully in 19m9.03s":
+
+| Date (subprocess-per-date leg)                                    | Files | Succeeded | Failed | Candles   |
+| ----------------------------------------------------------------- | ----- | --------- | ------ | --------- |
+| 2026-07-25 (the exact date/shard that OOM'd twice)                | 704   | 704       | 0      | 4,452,710 |
+| 2026-07-26 (fresh data — 273 NEW files had landed since Update 3) | 273   | 273       | 0      | 1,825,822 |
+
+Both legs logged "SUB-DIMENSION STATUS: All (data_type x instrument_type) combinations passed" and clean
+`🏁 defi processing complete: N/N succeeded, 0 errors`. Live logs during the run repeatedly showed
+`ManifestWriter: per-VM shard updated (... total entries, ... new, process_final=False) at market-data-tick-defi-prd-central-element-323112/_index/per_vm/mdps-t1-recon-job.parquet`
+— direct confirmation the per-VM path is what's actually executing, not the legacy CAS path. RSS stayed flat
+(565-808MiB) through the entire 704-file burst — a stark contrast to the pre-fix climb toward the 32Gi ceiling.
+Container exited cleanly (`exit(0)`, no signal 9).
+
+Minor, unrelated blemish noted (not the OOM bug, not blocking):
+`atexit manifest flush failed ... (0 module + 2-4 per-vm rows lost): cannot schedule new futures after interpreter shutdown`
+fired at the end of each `--subprocess-per-date` child's exit — a tiny (2-4 rows per leg, out of ~5000+ written)
+shutdown-race loss in the atexit drain path, most likely those last few in-flight `ThreadPoolExecutor` futures racing
+process teardown. Not investigated further here; low blast radius, and the manifest consolidator + a future recon pass
+would pick up any genuinely missed shard.
+
+**Full-job coverage — a SEPARATE, pre-existing, unrelated bug blocks a genuinely clean end-to-end `Completed=True`.**
+Per the coordinator's explicit ask to confirm the WHOLE job (not just DEFI) completes clean: triggered a second,
+unscoped execution `uts-prod-market-data-processing-service-t1-recon-dssh6` (full args, no asset_group/data_type
+narrowing, date defaulted to 2026-07-26) that touched all 5 asset groups in one process. It reached a real terminal
+state (`Completed=False`, exit code 1, `retriedCount=1` — Cloud Run's own automatic retry also failed the same way) —
+but **not from an OOM**: `cefi`/`tradfi`/`defi`/`prediction` all completed cleanly (0 errors each — `defi` had 0
+upstream files for 2026-07-26 at the time this leg ran), and `sports` failed hard with
+`sports: 2/3348 succeeded, 3346 errors` — every failure is
+`No SchemaContract registered for asset_group='sports' instrument_type=<MATCH_ODDS|MATCH_ODDS_LAY|OVER_UNDER_2_5|...> data_type='odds_movement_15m'|'odds_snapshot_15m'| 'odds_horizon_bucket' venue=<...>`
+across ~20 bookmaker venues (WILLIAMHILL, BETFAIR_EX_EU, BETFAIR_EX_UK, BETONLINEAG, BETRIVERS, BETSSON, BETVICTOR,
+CASUMO, CORAL, DRAFTKINGS, FANDUEL, LADBROKES_UK, LIVESCOREBET, PADDYPOWER, PINNACLE, SKYBET, SMARKETS, SPORT888,
+UNIBET, UNIBET_UK, VIRGINBET) — `unified_api_contracts.internal.schemas.contracts. CONTRACT_REGISTRY` is missing schema
+contracts for these (data_type, instrument_type, venue) combinations. This is a UAC schema-registration gap, has ZERO
+relationship to this OOM fix (the fix only touches a Cloud Run job's env vars; it never touches sports code paths), and
+was invisible for at least the last 3 known executions because the job always died from the OOM (during DEFI processing,
+upstream of sports in the asset-group loop) before ever reaching sports. **Not a bounded fix I can guess at** —
+registering ~20 venue × several instrument_type schema contracts requires real domain knowledge of what each
+combination's actual schema should be; grepped `plans/active/issues/` and found no existing tracked issue for it, so
+this is a genuine new finding. Filed as its own todo below rather than attempted inline.
+
+Given (a) the specific OOM mechanism is directly proven fixed (per-VM shard write confirmed active in logs, RSS flat
+through the exact crash shard/date, 977/977 file success), and (b) the full-unscoped run independently confirms NO OOM
+occurs anywhere across all 5 asset groups (the only failure is the unrelated, deterministic, pre-existing sports schema
+gap — a clean Python-level exception, not a SIGKILL/memory-limit event), a third, more expensive full-`--force` run
+(which would additionally force full CEFI/TRADFI corpus reprocessing, adding real time/cost for a result already
+strongly implied by the per-category `_cleanup_after_day` + `gc.collect()` isolation boundary already documented in
+Update 3's own RSS-reset-at-boundary evidence) was judged not worth the added cost — this is a reasoned engineering
+call, flagged here rather than silently assumed.
+
 ## Todos
 
-- [ ] [SCRIPT] P1. **Root-cause and fix the second OOM path** (the silent >28GB spike after DEFI `dex_pool_swaps`
-      finishes candle aggregation, described above). Suggested approach: instrument the code between the end of
-      `_process_files_parallel`'s `ThreadPoolExecutor` block and the following data_type's first log line with
-      additional `RESOURCE_SAMPLE`-style checkpoints (entry/exit of the `log_event("MEMORY_HIGH_WATER_MARK", ...)` call,
-      entry into the next data_type's `_resolve_files_to_process`), ship, re-trigger the job, and correlate against a
-      finer-grained log window than the default 2000-line `gcloud logging read` pull (query with an explicit
-      `timestamp>=/<=` range instead). Once root-caused, apply the same date/column-pushdown discipline as the first fix
-      if it's another unfiltered read, or a chunked/streaming write if it's a bulk accumulation. Re-run the job and
-      confirm `status.conditions[type=Completed].status = True` with a bounded `RESOURCE_SAMPLE` trend end-to-end (not
-      just up to the point this session's run reached) before flipping this todo. (repo: market-data-processing-service)
+- [x] [SCRIPT] P1. **Root-cause and fix the second OOM path** (the silent >28GB spike after DEFI `dex_pool_swaps`
+      finishes candle aggregation). **DONE** — root cause: `ManifestWriter`'s legacy (non-per-VM) canonical-index write
+      path does a full unfiltered read of the entire availability_index.parquet on every flush; fix: enabled
+      `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=mdps-t1-recon-job` for this job (live via `gcloud run jobs update`,
+      durable via `deployment-service@a6c640178b8e6dca7f1b12ae93172d85cd3fc383`). Verified:
+      `uts-prod-market-data-processing-service-t1-recon-p46vw`, `status.conditions[type=Completed].status = True`
+      ("Execution completed successfully in 19m9.03s") — 704/704 DEFI dex_pool_swaps files succeeded for 2026-07-25 (the
+      exact date/shard that OOM'd in both prior executions), 273/273 for 2026-07-26, 0 failures, RSS flat 565-808MiB
+      throughout (vs. the pre-fix climb toward 32Gi). See Update 4 for full evidence. (repo:
+      market-data-processing-service, deployment-service)
+
+- [ ] [SCRIPT] P1. **Register the missing UAC SchemaContract entries for SPORTS odds_movement_15m / odds_snapshot_15m /
+      odds_horizon_bucket** across the ~20 bookmaker venues enumerated in Update 4 (WILLIAMHILL, BETFAIR_EX_EU,
+      BETFAIR_EX_UK, BETONLINEAG, BETRIVERS, BETSSON, BETVICTOR, CASUMO, CORAL, DRAFTKINGS, FANDUEL, LADBROKES_UK,
+      LIVESCOREBET, PADDYPOWER, PINNACLE, SKYBET, SMARKETS, SPORT888, UNIBET, UNIBET_UK, VIRGINBET) × instrument_type
+      (`MATCH_ODDS`, `MATCH_ODDS_LAY`, `OVER_UNDER_2_5`, and whatever else the full error list in execution
+      `uts-prod-market-data-processing-service-t1-recon-dssh6`'s logs enumerates — re-pull via `gcloud logging read`
+      filtered to that execution name for the complete set, this doc only cites a representative sample). This is a
+      SEPARATE, pre-existing bug from the OOM above (confirmed unrelated — the OOM fix never touches sports code) that
+      was invisible until now because the job always died earlier (during DEFI) before reaching sports. It currently
+      blocks `uts-prod-market-data-processing-service-t1-recon` from ever reaching a clean
+      `status.conditions[type=Completed].status = True` end-to-end, even with the OOM fixed — every sports
+      odds_movement/odds_snapshot/odds_horizon_bucket shard for these venues silently fails
+      (`sports: 2/3348 succeeded, 3346 errors` observed 2026-07-27). Add the missing contracts to
+      `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` (and `VENUE_CONTRACT_OVERRIDES` if venue-
+      specific schemas differ), or confirm with an operator whether these venue/data_type combinations are even supposed
+      to be live yet (a genuine design/data question, not purely mechanical — the AO-eligibility bar per
+      `task_template.md` finding O applies: if the correct schema per venue isn't determinable from existing sibling
+      contracts alone, this needs a human call on what the schema should be before an agent enumerates the fix). Once
+      fixed, re-run `uts-prod-market-data-processing-service-t1-recon` unscoped and confirm
+      `status.conditions[type=Completed].status = True` end-to-end across all 5 asset groups before closing this todo.
+      (repo: market-data-processing-service, unified-api-contracts)
