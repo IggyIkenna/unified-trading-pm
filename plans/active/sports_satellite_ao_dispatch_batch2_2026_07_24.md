@@ -276,7 +276,13 @@ source: >-
       Update Time=20:04:41Z (near-real-time write); `gcloud     compute operations list` filtered to this VM's
       targetLink for `compute.instances.preempted` returns zero rows. No OOM/error lines. No relaunch needed. Step 2
       still mid-run, step 3 stays gated — checkbox correctly unchecked. Next slot: re-verify from scratch, don't trust
-      this note as current.
+      this note as current. **Check-in 2026-07-27T20:16Z (slot 9, data_engineering) — brief, cross-check only (slot 11
+      re-verified 7min prior, avoiding a redundant full re-verification write-up)**: VM RUNNING; `run.log`
+      `last_completed_date=2023-06-24 monotonic=true`, heartbeat 20:14:30Z (+5 days from slot 11's 2023-06-19 in ~10min,
+      ~2min/date — consistent); manifest shard Update Time=20:16:52Z; 0 preemption events. Fully consistent with slot
+      11's concurrent finding — no drift, no action needed. Step 2 mid-run, step 3 gated, checkbox correctly unchecked.
+      This todo is being actively monitored by multiple slots in close succession right now; next slot should check
+      timestamps before re-verifying to avoid duplicate work.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
