@@ -568,7 +568,14 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
 > the box for every other repo/job sharing it. Doing this "safely" means building fully ephemeral, zero-ambient-
 > credential, per-job sandboxes (torn down after every run) — a real infra project shared by all ~25 repos, not a
 > `runs-on:` flip; one misconfiguration reopens the hole fleet-wide. **Not started, not recommended by default** — this
-> needs an explicit operator call, weighing the real $ upside against a real security posture change.
+> needs an explicit operator call, weighing the real $ upside against a real security posture change. **This is not a
+> hypothetical: verified live 2026-07-27 that the actual ambient identity on this host is account-wide
+> S3/RDS/ECS/DynamoDB `*FullAccess` plus a `self-manage-own-policies` privilege-escalation primitive (any process on the
+> box can attach `AdministratorAccess` to itself) — filed as its own P0, see
+> `plans/active/issues/orchestrator_vm_aws_role_overprivileged_self_escalating_2026_07_27.md`. This is a pre-existing
+> exposure for every self-hosted CI job running there TODAY, not created by moving quality-gates-v2 — but it means the
+> "ambient credentials" risk above is not theoretical, and fixing the IAM scope (that issue's own recommendation) is a
+> prerequisite to this decision looking any different than "full AWS account compromise on one bad test run."**
 
 - [ ] [VERIFY] P1. Extend `classify-glue-workflows.sh`'s MOVE/STAY audit to the non-PM fleet: for each of the ~24 repos,
       inventory the fleet-template copies (`main-backmerge-to-ldr`, `image-build-validate`/`image-build-gate` — **this
