@@ -728,10 +728,33 @@ the original 16Gi OOM). Engine itself is sound (DuckDB memory-bounded + incremen
 incremental cutoff — exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms + RESUME the
 scheduler.
 
-- [ ] [INFRA] P0. **unified-trading-library** — FIX the recurring incremental no-op: the consolidator must NOT freeze
-      when fresh per-VM shards exist. Diagnose whether `consolidator_content_write_at` marker advanced past the shards
-      (idle-touch trap residual) OR `_is_lock_fresh` skips on a stale-but-present lock (paused-cron mid-flight). Add a
-      regression test: canonical@T, shards@T+1 → next cycle MUST merge+write (not no-op). manifest_consolidator.py.
+- [x] ✅ [INFRA] P0. **VERIFIED 2026-07-27 (slot-7)**: already comprehensively fixed by later work — no new code needed.
+      Direct read of `unified_trading_library/manifest_consolidator.py` (current LDR tip `137e219c`) confirms BOTH
+      diagnosed root causes from this todo's 2026-06-24 write-up are closed, with regression coverage: 1) **Idle-touch
+      marker trap** — `consolidate()`'s incremental cutoff (`manifest_consolidator.py:749-813`) reads
+      `_get_content_write_mtime()` (the LAST-REAL-MERGE marker, `consolidator_content_write_at`), NEVER the
+      freshness-only `_get_canonical_mtime()`; the module's own comment names this exact bug class ("the idle-bucket
+      incremental trap") and states an idle `_touch_canonical_mtime()` bumps `consolidator_run_at`/ `blob.updated` but
+      never the content-write marker, so the cutoff can't skip past an unmerged fresh shard. Regression:
+      `test_content_write_marker_stamped_on_real_merge_not_on_idle_touch`
+      (`tests/unit/test_manifest_consolidator.py:587`) asserts a real merge stamps the content-write marker while an
+      idle touch does not. 2) **Stale-but-present lock (`_is_lock_fresh`)** — a fresh-lock skip now runs
+      `_check_stall_on_lock_skip()` (`manifest_consolidator.py:697-733`) which pages after repeated no-progress cycles
+      rather than silently freezing forever; regression `test_consolidate_pages_on_repeated_silent_stall` +
+      `test_consolidate_pages_on_repeated_lock_orphan_stall` (`tests/unit/test_manifest_consolidator.py:2532,2665`). A
+      THIRD failure mode this todo's own diagnosis didn't name but a later incident found — an out-of-band rewrite
+      stripping the content-write marker entirely (2026-07-17,
+      `consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`) — is also closed: a canonical with no
+      marker now FAILS CLOSED (treats every shard as changed, prunes nothing) instead of silently under-merging
+      (`manifest_consolidator.py:814-834`). Plus the 2026-07-13 prune-race fix (content-write marker stamped with the
+      shard-LISTING start time, not the later write time, so a shard written mid-cycle stays above next cycle's cutoff)
+      and the 2026-07-21 TOCTOU-race fix (`14301571`) closing a related CAS gap.
+      `bash scripts/quality-gates.sh     --no-fix` GREEN (263s) on the current tree, including the full
+      `test_manifest_consolidator.py` suite (4,650 lines) — the exact regression-test ask this todo made ("canonical@T,
+      shards@T+1 → next cycle MUST merge+write") is covered by the existing incremental-merge test suite
+      (`test_consolidate_merges_multiple_shards`,
+      `test_consolidate_incremental_self_dedups_untouched_canonical_duplicates`, and siblings), all passing. No code
+      change needed — closing as verified-via-code-read + green regression suite, not re-implementing.
 - [x] ✅ [INFRA] P0. **VERIFIED HELD 2026-07-27 (slot-9)** — all 3 constituent fixes below ((1) clip, (1b) fleet deploy,
       (2) purge) were already shipped/executed 2026-06-24; the remaining open question was whether the fix held over
       time or the canonical re-bloated. **Live check**:
