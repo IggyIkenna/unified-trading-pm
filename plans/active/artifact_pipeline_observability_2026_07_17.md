@@ -490,23 +490,24 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       (early-returns on `rc == 0`), so on a SUCCESSFUL boot it is discarded (probe: recent `vm-logs/<vm>/` hold only
       `run.log`). **No naming/path change is required** — SHA-pinned immutable tarballs (`<name>@<sha>.tar.gz`, selected
       by `*_TARBALL_SHA` VM metadata, fail-closed) ALREADY exist and 5 launchers already use them.
-- [ ] [INFRA] P1. **(A) measured stamp** — 2 additive shell edits in `setup-data-pipeline-vm.sh`, **zero Python
-      changes**: accumulate `_tarball_actual_sha` in the download loop (`:604-648`), then `export GIT_COMMIT` inside
-      `_launch_with_tee()` (`:876-948`) next to the existing `VM_NAME`/`VM_TASK` exports. `GIT_COMMIT` is already the
-      first `AliasChoices` entry on `DeploymentConfig.git_commit`, so `resolve_deployment_bom()` picks it up unchanged.
-      **CONDITIONS (all binding):** (1) 🔴 the file runs under `set -euo pipefail` — write
-      `if [[ -n … ]]; then export     …; fi`, **never** a trailing `[[ … ]] && export` as a function's last statement
-      (returns non-zero → propagates → would break EVERY VM boot at once); place it mid-block. (2) Set `GIT_COMMIT`
-      only; leave `IMAGE_DIGEST` unset — there is no image on this path and `bom.py:58-69` deliberately refuses to
-      invent a digest. (3) Never abort a boot on a missing/garbage SHA — degrade to today's `""`. (4) Do NOT use
-      `extras` as the carrier — `vm_deployments.py:114` pops it, making it invisible to the API and both UIs. (5)
-      Document the semantics precisely: on the floating path the value means "the manifest `commit_sha` this VM read at
-      boot", **not an attestation of the running bytes** (the `*/30` refresh cron can land between the tarball and
-      manifest `gsutil cp` calls). (6) Keep inferred values out of this field. (7) Do NOT touch the AWS lane in the same
-      change. **VERIFICATION GATE — no existing CI covers this file** (bash uploaded straight to GCS, never executed in
-      CI; `deployment-service/quality-gates.sh` will NOT catch a `set -e` regression) — see the dedicated verification
-      todo below; add a unit test that `resolve_deployment_bom` reads `GIT_COMMIT` from env alongside the shell change
-      (covers the Python half; the real risk the live-launch todo below covers is the shell half).
+- [x] [INFRA] P1. ✅ **(A) measured stamp — `deployment-service@d8b1411c` (2026-07-27).** Found the accumulation half
+      already free: `_tarball_actual_sha` is a plain (non-`local`) shell variable set inside the download loop, so it
+      already survives as a global until `_launch_with_tee()` runs later in the same script execution — no code change
+      was needed there, only the read. The actual edit is ONE additive block inside `_launch_with_tee()`, next to the
+      existing `VM_NAME`/`VM_TASK` exports. All 7 binding conditions verified satisfied: (1)
+      `if [[ -n … ]]; then export     …; fi` form, placed mid-block (not the function's last statement) — safe under
+      `set -euo pipefail`. (2) `IMAGE_DIGEST` left untouched — only `GIT_COMMIT` is set. (3) A missing/`"unknown"` SHA
+      degrades silently to no export (same absence as today) — never aborts a boot. (4) Plain `export GIT_COMMIT=`, not
+      `extras`. (5) The semantics are documented inline (manifest `commit_sha` at boot, not a running-bytes
+      attestation). (6) No inferred value — only the measured `_tarball_actual_sha` from the manifest this VM actually
+      downloaded. (7) The AWS lane was not touched. Python half:
+      `test_resolve_bom_reads_git_commit_from_env_via_deployment_config` in `test_bom.py` — uses the REAL
+      `DeploymentConfig` (not the existing tests' `_StubConfig` double) with `GIT_COMMIT` set via
+      `patch.dict(os.environ, …)`, confirming the `AliasChoices` resolution itself works end-to-end through
+      `resolve_deployment_bom()`, not just the passthrough logic the existing tests already covered. Full
+      deployment-service gate green (bash syntax + shellcheck clean, `test_bom.py` 8 tests). **Verification gate not yet
+      satisfied by this alone** — see the live-launch todo below; no CI executes this shell file, so a green unit test
+      is necessary but not sufficient.
 - [ ] [INFRA] P1. **NEW (2026-07-24) — the live-launch verification step itself, split out as its own todo** (was
       previously only a note inside the code-change todo above; called out separately so it can't be silently skipped
       once the shell edit lands). Once the (A) shell change above ships: (1) fire one cheap `EPHEMERAL_BATCH` VM via the
