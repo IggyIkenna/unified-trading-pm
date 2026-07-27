@@ -1,0 +1,140 @@
+---
+doc_type: issue
+title:
+  MDPS tradfi ohlcv_15m/24h conversion is STILL zero after deploying the row_key/source canonical_writer fixes — two
+  NEW, orthogonal blockers found live (record_empty/FetchEvidence rejection for NASDAQ/NYSE; silent zero-candle output
+  for CME combo aggregation)
+summary: >-
+  `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s first todo deployed the two already-shipped
+  `canonical_writer.py` fixes (omit `instrument_id` for aggregated shards; thread `source` from `pipeline_mode`) via a
+  clean-LDR-checkout tarball rebuild (`market-data-processing-service@3328ffd0`) and relaunched `mdps-backfill-tradfi-*`
+  twice to verify. Both live runs (2026-07-13..19, 2026-07-20..24; ~5,400+ instrument-day attempts total, `--force`)
+  confirm the deployed fix works as intended — ZERO occurrences of the two target errors (`MalformedRowKeyError`,
+  missing-`source` rejection) across either run. But BOTH runs also show `Candles: 0` in the processing summary for
+  every single date, and a post-run manifest-consolidator pass reports `rows_added: 0, verdict: empty, no_op: true` —
+  meaning literally nothing new landed in the tradfi manifest from either run. Two distinct, previously-undocumented
+  blockers were found live, causing this: (1) **NASDAQ/NYSE equity writes are REJECTED at the validation gate.**
+  `canonical_writer` calls `manifest_writer.record_empty(reason=SOURCE_RETURNED_ZERO)` for these venues on regular
+  trading days (confirmed 2026-07-13 = Monday, 2026-07-20 = Monday — not weekends) WITHOUT supplying the `FetchEvidence`
+  the gate now requires to prove honest absence (`http_status in 2xx AND response_received AND rows_in_response == 0 AND
+  error_signal == ""`). The gate correctly logs a WARNING and refuses the write (this is the gate working as designed —
+  it is guarding against exactly the "failure masquerading as honest absence" anti-pattern) — 5,470 rejections on
+  2026-07-13/14 alone, 1,180 more on 2026-07-20..24, 100% `reason=SOURCE_RETURNED_ZERO`, 100% venue NASDAQ/NYSE. The
+  orchestration layer's own per-date summary counts these as `Success` (not `Failed`), so nothing surfaces this at the
+  run-level metrics — only the per-row WARNING log line reveals it. (2) **CME combo/chain-bundle candles silently
+  produce zero output**, with no error at all. Both runs show MDPS correctly streaming CME raw tick data (`Streaming
+  chain bundle: N symbol groups in
+  raw_tick_data/.../venue=CME/instrument_type=combo/data_type=ohlcv_1m/underlying=.../ticks.parquet`, hundreds of lines
+  per date, all commodities/futures roots) — so the 1m/1s raw input exists and is read. But zero `ohlcv_15m`/`ohlcv_24h`
+  candle files ever appear under `processed_candles/by_date/day=<D>/.../venue=CME/...` for any processed date, zero
+  WARNING/ERROR lines mention CME at all, and the manifest shows no new CME rows for these dates either (a pre-existing
+  broader query found only 1-2 `empty_confirmed` CME `ohlcv_24h` rows per day scattered across all history — these do
+  not correspond to the dates in either verification window and were not touched by either run). This is a genuine
+  silent-failure/no-signal gap — worse than (1) because there is no log line at all to find it by; it only surfaced by
+  cross-checking `processed_candles/` GCS listing + the manifest-consolidator's own `rows_added: 0` verdict against the
+  "Streaming chain bundle" evidence that real input existed.
+status: open
+nature: issue
+asset_group: [tradfi]
+stage: [data]
+repos: [market-data-processing-service, market-tick-data-service, unified-trading-library]
+scope: [engineer]
+tags:
+  [
+    tradfi,
+    mdps,
+    canonical_writer,
+    ohlcv_15m,
+    ohlcv_24h,
+    manifest,
+    honest-absence,
+    fetch-evidence,
+    silent-failure,
+    data-correctness,
+  ]
+related:
+  [/plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md, /plans/active/data_completion_tradfi_2026_07_15.md]
+created: "2026-07-27"
+parent_epic: tradfi_master
+priority: P1
+assigned_vm: planning
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+source: [tradfi_satellite_ao_dispatch_batch2-001, slot-6 live verification runs 2026-07-27]
+resolved_by:
+locked_by:
+depends_on: []
+---
+
+# What I found
+
+Deploying the two already-shipped `canonical_writer.py` fixes (row_key `instrument_id` omission for aggregated shards;
+`source` threaded from `pipeline_mode`) and relaunching `mdps-backfill-tradfi-*` against two different date windows
+produced ZERO new captured `ohlcv_15m`/`ohlcv_24h` cells for tradfi, despite the two specific target bugs being
+confirmed fixed (no occurrences across ~5,400+ processing attempts). Two NEW, independent blockers explain why:
+
+**Run 1** — `mdps-backfill-tradfi-20260727-183828`,
+`--force --data-types "ohlcv_15m ohlcv_24h" --venues "CME NASDAQ NYSE" tradfi 2026-07-13 2026-07-19 full`. Summary:
+`Success=4572, Failed=0, Skipped=0, Candles=0` across all 7 dates. 5,470 WARNING lines, 100%
+`empty_confirmed manifest write failed ... reason=SOURCE_RETURNED_ZERO ... requires FetchEvidence`, 100% venue NASDAQ
+(270) / NYSE (5,200), 100% `instrument_type` EQUITY/ETF. Zero CME rows were even enumerated for this window (confirmed
+via direct manifest query — 0 rows any `capture_status` for CME `ohlcv_15m`/`ohlcv_24h` on 07-13/14/15) — this specific
+absence is the ALREADY-TRACKED, explicitly out-of-scope "part 4" phantom-seed/expected-universe gap from
+`data_completion_tradfi_2026_07_15.md`'s own 4-part diagnosis (massive-keyed seeds don't cover recent forward dates),
+not a new finding.
+
+**Run 2** — `mdps-backfill-tradfi-20260727-185026`, same flags, `tradfi 2026-07-20 2026-07-24 full` (a window chosen
+specifically because a broader manifest query showed CME `ohlcv_24h` DOES have existing `empty_confirmed` rows on these
+dates, unlike run 1's window). Summary: `Success=808, Failed=0, Skipped=0, Candles=0` across all 5 dates. 1,180 WARNING
+lines, identical pattern (100% NASDAQ/NYSE `SOURCE_RETURNED_ZERO`/FetchEvidence rejection). This time CME WAS processed
+— 336 "Streaming chain bundle" INFO lines confirm real `ohlcv_1m`/`ohlcv_1s` raw tick data was read for every
+commodity/futures root (BTC, CRUDE, GOLD, COPPER, NAT-GAS variants, PLATINUM, SILVER, WTI variants, MBT, ETH) across all
+5 dates — but zero CME WARNING/ERROR lines, zero new `processed_candles/` objects for CME on any of these dates, and the
+post-run manifest-consolidator invocation (`_index/latest.json`, `last_run_at: 2026-07-27T18:55:46Z`) reports
+`shards_scanned: 1, shards_changed: 0, rows_added: 0, verdict: "empty", no_op: true` — proving nothing landed anywhere
+in the manifest from this run, for any venue.
+
+# Why it matters
+
+This is the actual remaining blocker on `data_completion_tradfi_2026_07_15.md`'s 4-part ohlcv_15m/24h conversion goal
+(parts 1+2 of that diagnosis — row_key/source — are now confirmed fixed and deployed; this issue documents that parts
+3/4 alone are NOT sufficient to explain the continued zero-conversion — there are at least two MORE blockers neither
+previously diagnosed). Finding (1) is a validation gate correctly refusing a mis-classified write — but the CALLING code
+(whatever in canonical_writer/orchestration_service decides to call `record_empty(reason= SOURCE_RETURNED_ZERO)` for
+these equities) needs to either supply real `FetchEvidence` or call `record_failed` instead, per the gate's own error
+message. Finding (2) is more serious: a `no silent placeholders` violation in the opposite direction — not a
+false-positive absence stamp, but a totally silent, unsignaled non-write for a case where real input data demonstrably
+exists. Neither finding was on any tracked plan before this verification pass.
+
+# Recommended decision
+
+- [ ] [DATA] P1. Root-cause finding (1): locate the MDPS caller that invokes
+      `manifest_writer.record_empty(reason=     SOURCE_RETURNED_ZERO)` for NASDAQ/NYSE equity ohlcv_15m/24h aggregation
+      without supplying `FetchEvidence` (likely in `canonical_writer.py`'s empty-candle path or its caller in
+      `orchestration_service.py`). Determine whether the "zero rows" condition genuinely reflects "no raw tick input
+      existed for this instrument/day" (in which case the correct fix is threading real `FetchEvidence` — or a
+      raw-tick-derived equivalent — through to the `record_empty` call) or should instead call `record_failed` (if the
+      zero-row condition is actually masking a read/parse error on the input raw-tick parquet). Repo:
+      market-data-processing-service. Done when: the specific call site is identified with file:line, the correct fix
+      (evidence-threading vs record_failed) is determined and shipped, and a re-run of `mdps-backfill-tradfi-*` over a
+      known-affected date shows either a successful `captured`/honest `empty_confirmed` write (not a WARNING-rejected
+      one) or a correctly-classified `record_failed`.
+- [ ] [DATA] P1. Root-cause finding (2): trace why CME combo/chain-bundle `ohlcv_1m`/`ohlcv_1s` raw ticks (confirmed
+      read via "Streaming chain bundle" log lines) never produce an `ohlcv_15m`/`ohlcv_24h` candle write attempt of ANY
+      kind (no captured write, no empty_confirmed write, no WARNING, no ERROR) for CME. Check whether the aggregation
+      step for `instrument_type=combo` shards is silently no-op'ing (e.g., an early-return on an unhandled
+      `instrument_type` branch, a silently-empty resample/rollup producing 0 output rows that never reach a
+      manifest-write call at all) — this is the higher-severity finding since it produces NO signal whatsoever. Repo:
+      market-data-processing-service. Done when: the exact code path that swallows the CME combo aggregation output is
+      identified with file:line, a fix or an explicit loud-fail (so a future recurrence is never silent again) ships,
+      and a re-run over an affected date shows a real `ohlcv_15m`/`ohlcv_24h` candle write attempt for CME (captured,
+      empty_confirmed-with-evidence, or record_failed — anything but silence).
+- [ ] [SCRIPT] P2. Once finding (1) or (2) ships, re-run `mdps-backfill-tradfi-*` (`--force`) over
+      2026-07-20..2026-07-24 and confirm a non-zero `Candles` count in the processing summary AND a non-zero
+      `rows_added` in the next manifest-consolidator pass, closing out `data_completion_tradfi_2026_07_15.md` line-629's
+      part-1/part-2 deploy verification with the positive evidence this issue's own verification runs could not produce.
+
+# Codex SSOTs
+
+None new — this is an implementation-bug finding against the existing honest-absence/FetchEvidence contract
+(`codex/02-data/honest-absence-downstream-handling.md`), not a contract change.
