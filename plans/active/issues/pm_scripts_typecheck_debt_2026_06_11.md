@@ -92,7 +92,7 @@ shipping):
       on `QG slice (typecheck)` with ~3082 `reportAny`/`reportUnknown*` errors, observed 2026-06-27 (`last_updated`) —
       three days AFTER this fix shipped). Aligns with the lifecycle-marker SSOT (scripts = ruff-only). DO-NOT-re-add
       note is in the gate file.
-- [ ] [CICD] P1. **bumped per operator ruling 2026-07-12 (finding 87)** (was: P3 "NICE-TO-HAVE" — no longer accurate:
+- [x] ✅ [CICD] P1. **bumped per operator ruling 2026-07-12 (finding 87)** (was: P3 "NICE-TO-HAVE" — no longer accurate:
       the zero-warning-policy block in `base-service.sh` (see narrowed claim above) means this is a live path to red the
       LDR→main promotion PR, not a no-urgency cleanup). **Longer-term: fully exclude `scripts/` from the basedpyright
       SCAN, or annotate the debt down.** Warn-only (above) ends the `BASEDPYRIGHT_MAX_ERRORS` ratchet-bump trap but
@@ -103,4 +103,24 @@ shipping):
       `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 (finding 87: "Narrow 'can never
       red' claim + bump off P3"). Provenance: same incident. Provenance:
       orchestrator_self_healing_hardening_2026_06_21.md § Operator review (2026-06-23) incident-cluster, verified
-      2026-06-24 (failing step `QG slice (lint-codex)`; unblock commit `1e6ec188e`).
+      2026-06-24 (failing step `QG slice (lint-codex)`; unblock commit `1e6ec188e`). **DONE 2026-07-27 (slot-5)** —
+      `unified-trading-pm@0db8ec5f2`. Chose the exclude-the-scan option (annotating ~3082 `reportUnknown*`/`reportAny`
+      diagnostics down was not remotely feasible as a single bounded task, and the file's own history shows the intent
+      was already "scripts/ doesn't want real type-checking", not merely deferred). `[tool.basedpyright] exclude` now
+      includes `"scripts"` itself. Verified empirically this wins over the explicit CLI path arg base-service.sh always
+      passes (`basedpyright scripts/`): **0 errors, 0 warnings, 0 notes** — closing BOTH traps (the
+      `BASEDPYRIGHT_MAX_ERRORS` ratchet-bump trap the 2026-06-24 fix already closed, AND the separate
+      zero-warning-policy trap this finding narrowed) with **zero changes to the shared `base-service.sh`** (its
+      zero-warning-policy is untouched — it simply never fires because PM's own config now produces nothing to fail on).
+      Deleted the now-fully-dead ~85-entry per-file `ignore` list, rule-severity overrides, and `extraPaths` (nothing is
+      ever scanned, so they were vestigial dead config, not kept as a shim). Full `bash scripts/quality-gates.sh` green,
+      sentinel verified matching HEAD.
+
+- [ ] [SCRIPT] P3. **New side-effect of the exclude-the-scan fix above**:
+      `scripts/manifest/check-pyrightconfig-extrapaths.py` (a standalone, NOT CI-wired, manually-invoked audit tool —
+      confirmed via grep, no `.github/workflows/` or other script calls it) will now flag PM's own repo entry as a
+      "MISSING extraPath" (its Rule 3) the next time someone runs it, since PM's `[tool.basedpyright]` no longer carries
+      `extraPaths` at all (removed as dead config — nothing is ever scanned). Not a QG blocker (tool isn't wired into
+      any gate), but a real false-positive the next manual run will hit. Fix: either add PM to an exemption list in that
+      script (repos whose basedpyright config excludes their own `SOURCE_DIR` have nothing to resolve imports for) or
+      skip repos where `exclude` covers `include`. (repo: unified-trading-pm).
