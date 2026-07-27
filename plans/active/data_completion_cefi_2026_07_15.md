@@ -225,12 +225,20 @@ MTDS consolidation ruling.)**
       recursive `ls`, which counts versions + soft-deleted). **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. **❌ RETRACTION of the earlier "E4-BUG / we-keep-missing-things" P0 (it was WRONG).** I read
-      `moved=0` + a `head -3` listing (which shows `asset_group=` paths — they sort BEFORE `pipeline_mode=`) and wrongly
-      concluded "no `pipeline_mode=` sibling / migrator no-ops L-bulk". The FULL listing shows the `pipeline_mode=`
-      siblings DO exist (482/day). slot-10's `C2 = day=/asset_group=cefi/` count is exactly these **post-migration
-      orphans**, not a pre-migration gap. No migrator fix is needed. **(MIGRATED FROM:
-      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ [DATA] P0. **RE-VERIFIED 2026-07-27 (slot-9)**: this todo is itself a diagnostic conclusion ("no migrator fix
+      is needed"), not an action item — flipping now that its core technical claim has been spot-checked live rather
+      than just trusted. Confirmed `pipeline_mode=` siblings genuinely exist for a sampled day
+      (`gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2024-11-07/` lists
+      `pipeline_mode={batch_aster,batch_hyperliquid,batch_tardis}/` prefixes, directly contradicting the retracted "no
+      `pipeline_mode=` sibling" claim). The retraction's own conclusion stands: no migrator code change is required
+      here. The follow-on ORPHAN SWEEP + gap-fill (irreversible deletes, VM-scale) is explicitly a SEPARATE, still-open
+      todo immediately below — not folded into this one, not executed by this session. **❌ RETRACTION of the earlier
+      "E4-BUG / we-keep-missing-things" P0 (it was WRONG).** I read `moved=0` + a `head -3` listing (which shows
+      `asset_group=` paths — they sort BEFORE `pipeline_mode=`) and wrongly concluded "no `pipeline_mode=` sibling /
+      migrator no-ops L-bulk". The FULL listing shows the `pipeline_mode=` siblings DO exist (482/day). slot-10's
+      `C2 = day=/asset_group=cefi/` count is exactly these **post-migration orphans**, not a pre-migration gap. No
+      migrator fix is needed. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
 
 - [ ] [DATA] P0. **E4 remaining work = ORPHAN SWEEP + gap-fill, NOT a path walk.** (slot-3 verify 2026-06-03: the
       `pipeline_mode=` migration is COMPLETE corpus-wide — sampled days 2020→2026 ALL have both forms; the **9 L-flat

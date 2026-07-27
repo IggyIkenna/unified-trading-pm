@@ -133,13 +133,22 @@ the CeFi contract from being a one-off exception downstream readers have to spec
 
 ## 6. Open work
 
-- [ ] [DESIGN] P1. Decide (a) vs (b) above; if (a), verify the real `timestamp` epoch unit against a live GCS sample
+- [x] ✅ [DESIGN] P1. Decide (a) vs (b) above; if (a), verify the real `timestamp` epoch unit against a live GCS sample
       before writing the `pd.to_datetime(..., unit=?)` call (repo: unified-api-contracts or market-tick-data-service
-      depending on the decision).
-- [ ] [SERVICE] P1. Implement the chosen fix, then turn `validate=True` on both `tardis_cefi_shards.py` write sites
+      depending on the decision). — unified-trading-pm (this doc) @ decision below, § 8. **Decided: (a), unit="us".**
+- [ ] [SERVICE] P1. Implement the chosen fix (rename `amount`→`size`, derive `ts_event` via
+      `pd.to_datetime(df["timestamp"], unit="us", utc=True)`), **plus the price/amount dtype-coercion gap found during
+      verification (§ 8.2)** — add explicit `pyarrow.csv.ConvertOptions(column_types={...})` entries for `price` and
+      `amount` (trades/liquidations) and `bid_price`/`ask_price`/`bid_size`/`ask_size` (quotes) so they land as
+      `float64` regardless of whether the sampled values happen to be all-integer, mirroring the existing v6/v7
+      `funding_rate`/`mark_price`/book-snapshot-level precedent in `tardis_csv_transport.py`'s
+      `_decompress_and_parse_csv_legacy` — the streaming path (`stream_bulk_csv_to_parquet`, called from
+      `download_csv_streaming`) currently passes NO `convert_options` at all, so it needs this typing added from
+      scratch, not just extended. Then turn `validate=True` on both `tardis_cefi_shards.py` write sites
       (`_write_one_cefi_shard` and `_tardis_cefi_shard_router`) — the `finalise_rows_and_path` FATAL-enforcement
       mechanism is already shipped and ready to receive `validate=True`. Verify against a real captured GCS sample (not
-      just synthetic test rows) that a real shard validates clean before shipping.
+      just synthetic test rows) that a real shard validates clean before shipping — reuse the sampling recipe in § 8.1
+      (a `pipeline_mode=batch_tardis` shard from before the 2026-06-29 capture pause).
 
 ## 7. Codex SSOTs
 
@@ -147,3 +156,67 @@ the CeFi contract from being a one-off exception downstream readers have to spec
 - `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md` — the staged fail-hard rollout design this
   todo is Stage-1-adjacent to.
 - `/codex/02-data/data-pipeline-correctness-hard-rule.md` — why this is escalated rather than shipped blind.
+
+## 8. Decision (resolved 2026-07-27)
+
+**Decided: (a) — fix the writer.** Rename `amount`→`size`, derive `ts_event` from `timestamp` via
+`pd.to_datetime(df["timestamp"], unit="us", utc=True)`. Rejected (b) (loosen the contract to accept `timestamp`/
+`amount` verbatim) because: the unit risk that motivated escalating this decision is now closed (§ 8.1); (a) keeps CeFi
+on the same `ts_event`/`size` vocabulary every other asset_group's contracts + downstream readers
+(features-service/strategy-service/ml-service/batch-live-reconciliation-service) already use, instead of creating a
+permanent CeFi-only special case; and (b) would NOT even avoid the implementation work below (§ 8.2) — the dtype gap
+exists in the raw wire parse independent of which column names the contract expects.
+
+### 8.1 Epoch unit — verified against a live GCS sample
+
+Sampled a real pre-pause capture (path verbatim, unwrapped so it stays copy-pasteable):
+
+```
+gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-06-29/pipeline_mode=batch_tardis/asset_group=cefi/venue=BITFINEX-FUTURES/instrument_type=perpetual/data_type=trades/BITFINEX-FUTURES:PERPETUAL:BTC-USDT@LIN.parquet
+```
+
+27,123 rows; `pipeline_mode=batch_tardis` confirms a genuine Tardis-sourced capture, not a synthetic/test fixture.
+Parsed `timestamp` (raw wire int64, e.g. `1782691205021000`) under all four candidate units and checked whether the
+result lands inside the `day=2026-06-29` partition it was written under:
+
+| unit | result                             | verdict                                                              |
+| ---- | ---------------------------------- | -------------------------------------------------------------------- |
+| `s`  | `OverflowError` (out of bounds)    | impossible — rejected                                                |
+| `ms` | `OverflowError` (out of bounds)    | impossible — rejected                                                |
+| `us` | `2026-06-29T00:00:05.021000+00:00` | **lands in day=2026-06-29 — correct**                                |
+| `ns` | `1970-01-21T15:11:31.205021+00:00` | silently wrong (no error — would NOT have been caught by validation) |
+
+Not just the first row: parsing the FULL shard's `timestamp` column with `unit="us"` gives `min=2026-06-29 00:00:05.021`
+/ `max=2026-06-29 23:59:55.921` — every one of the 27,123 rows lands inside the correct calendar day, exactly the shape
+of one day's trades. `local_timestamp` (raw `1782691205033055`) confirms the same result. The derived Series' dtype is
+`datetime64[ns, UTC]` — an exact match for the `_TS_EVENT` contract spec, no further cast needed.
+
+This also resolves the disputed existing helper cited in § 4: `_apply_time_filter` (`tardis_csv_transport.py:354`,
+parses `local_timestamp` with `unit="ns"`) is confirmed WRONG — it silently produces a 1970-01-21 timestamp with no
+error. Traced its blast radius: it only fires when a caller passes `start_time`/`end_time` into `download_csv`; both
+real production call sites (`tardis_batch_download.py:811`, `tardis_bulk_download.py:514`) call `download_csv` WITHOUT
+`start_time`/`end_time`, and the only other route (`TardisAdapter.fetch_trades` → `market_interface/api.py`'s unified
+`fetch_trades`) also never forwards them for Tardis — so this is a real bug but currently dormant/unreachable in
+production, not an active data-correctness incident. Left as-is (out of this todo's scope — no live caller exercises
+it), but noting it here since it's the same wrong-unit failure mode this decision just resolved for the write path;
+worth a P3 cleanup pass if a future caller starts passing `start_time`/`end_time` through to Tardis.
+
+### 8.2 New finding: `price`/`amount` dtype is not guaranteed `float64` (independent of a/b)
+
+While sampling, `price` on the BTC-USDT@LIN shard above came back as `int64`, not `float64` (all 27,123 sampled prices
+happened to be whole numbers, e.g. `59601`) — a THIRD schema-contract gap beyond `ts_event`/`size`, since `_PRICE`
+requires `float64`. Cross-checked against two more real shards from the same day/venue to rule out a one-off: ADA-USDT
+(`price` fractional, e.g. `0.14384`) and AAVE-USDT (`price` fractional, e.g. `92.169`) both came back `float64`. This
+confirms the mechanism is PyArrow's per-column type inference sampling the first block of CSV values — the SAME class of
+bug this file already fixed for `funding_rate`/`mark_price`/`index_price`/book-snapshot price/amount levels via explicit
+`column_types` overrides (see the v6/v7 comments in `_decompress_and_parse_csv_legacy`,
+`tardis_csv_transport.py:270-293`) — but plain `price`/`amount` (trades/liquidations) and `bid_price`/`ask_price`/
+`bid_size`/`ask_size` (quotes) were never added to that explicit-typing list. Worse, the STREAMING write path
+(`stream_bulk_csv_to_parquet`, called from `download_csv_streaming`) passes NO `convert_options` at all — not even the
+existing legacy-path coverage — so it has zero protection for ANY column, including `amount` (which the legacy path at
+least casts post-hoc via `.astype("float64")` on the materialised DataFrame, a step the streaming path never performs
+since it never materialises a DataFrame). Net effect: even after the ts_event/size fix above, `validate=True` would
+still intermittently fail — for any symbol/day/shard where sampled prices happen to be all-integer (BTC-USDT and
+plausibly other high-value-quote pairs, at least in some windows) — invisibly reintroducing the exact silent
+`attempted_failed` failure mode this whole escalation exists to prevent. Folded into item 2 above rather than filed as a
+separate issue doc — same root cause, same fix location, same implementer.

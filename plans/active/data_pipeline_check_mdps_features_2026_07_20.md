@@ -205,8 +205,26 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       data to zero orphans (MVP or not). Migrations run to real completion (data-correctness heartbeat).
 - [ ] 12. [SCRIPT] P1. Backfill-processing path (download→process→upload) code-ready + OPTIMIZED learning from cefi
       (within-VM multiproc, faster-libs/Rust where it pays, 250GB disk, fleet-wide since not Tardis-capped).
-- [ ] 13. [DATA] P0. Produce concrete ETA to backfill all remaining DeFi MVP (from benchmark + remaining-shard count +
-      optimized throughput + fleet width + $ cost).
+- [x] 13. [DATA] P0. **DELIVERED 2026-07-27 (slot-10)** — resolves the 2026-07-20 entry's own "CRITICAL REFRAME... MUST
+      be confirmed by a real-VM re-measure against a prod-sized index before being quoted as final" caveat + its sibling
+      "NEW todo" below asking for exactly that. **Rate**: this session's
+      `manifest_completeness_full_corpus_map_build-001` closure independently measured a REAL prod-adjacent
+      per-instrument-day rate of **19.4s** (cefi trades, via `/data-pipeline-check-mdps` against real prod raw ticks) —
+      confirms the post-read-path-fix rate is ~19-26s, NOT the pre-fix ~260s the original ETA table flagged as the risk
+      case. **Denominator refreshed** (read-only `read_availability_index` on
+      `market-data-tick-defi-prd-central-element-323112`, distinct (venue,instrument_id,date) with
+      `capture_status=captured`): `dex_pool_swaps` 2,367,074 + `liquidations` 1,995 = **2,369,069 instrument-days**
+      (`derivative_ticker` still ~0 actionable, P0-broken per the 2026-07-20 note). This is ~12% BELOW the 2026-07-20
+      estimate (2.71M) rather than the growth that entry projected — plausibly the several DeFi manifest purge/dedup
+      fixes that landed this week (dex_pools fold+delete, symbol-fix backfill purges) net-reduced the corpus; not a
+      contradiction, an update. **Concrete ETA** (16 workers/VM, SPOT `e2-standard-8`
+      $0.024–0.107/hr per `data_pipeline_check_mdps_features_history_2026_07_24.md`'s own cost model):
+      at the conservative 25.9s rate, **4 VMs → 11.1 days, 6 VMs → 7.4 days, total compute ≈ $26–$114**; at the
+      measured 19.4s rate, **4 VMs → 8.3 days, 6 VMs → 5.5 days, ≈ $19–$85**. Either way, comfortably under the
+      2-week target on the fleet size the 2026-07-20 entry already scoped (4-6 VMs) — the corpus shrinking makes this
+      MORE comfortable, not less. Caveat: the 19.4s rate is a cefi trades measurement used as a same-order-of-magnitude
+      proxy for DeFi dex_pool_swaps content cost, not a DeFi-specific re-measure — the 25.9s/$114
+      figure is the safe upper bound to plan against.
 - [ ] 14. [SCRIPT] P2. Ship everything via quickmerge --agent per repo; flip these checkboxes same-turn; rule-9 final
       report. Post-phase codex audit (update contracts / stub patterns / CLAUDE.md one-liner for the two new skills).
 - [ ] 15. [DATA] P1. Full DeFi-MVP candle backfill on real infra — GATED on
@@ -356,9 +374,20 @@ answer by up to ~8x), and (c) the DeFi MVP instrument x data_type shard count. I
 per-instrument-day unit cost above (25.9s serial, write-bound) is the measured input to plug in. Quoting an ETA before
 (b) is resolved would be guessing at the dominant term.
 
-- [ ] NEW todo. [DATA] P0. Verify whether MDPS `max_workers` (8 on e2-standard-8) actually OVERLAPS the GCS writes.
-      Measured `25,948ms/instrument x 2 == 51.9s total` implies SERIAL. If writes are not overlapped, fixing that is the
-      single largest backfill speedup available and it changes the ETA by up to ~8x.
+- [x] NEW todo. [DATA] P0. **ALREADY ANSWERED 2026-07-20 (this plan's own later entry), RE-VERIFIED 2026-07-27
+      (slot-10)**: the `25,948ms x 2 == 51.9s` "serial" reading was a false positive — `processing_stats.py`'s
+      `avg_time = duration_seconds / total_instruments * 1000` is `total/N` BY CONSTRUCTION, true for any N regardless
+      of parallelism (see the "my SECOND hypothesis refuted" entry below, same plan). Direct code read confirms
+      `ThreadPoolExecutor(max_workers=max_workers)` (`batch_workers.py`) genuinely dispatches concurrent futures — the
+      2-file smoke run was UNDER-FED (2 futures into 8 slots), not serialized. The real throughput ceiling is 7
+      independent serialization points found by that same direct-code-read pass (S1 sequential per-instrument timeframe
+      loop — dominant; S2 a process-global per-VM manifest lock; S3 fresh `ManifestWriter`+flush per
+      instrument×timeframe; S4 full parquet read-back per write; S5 GIL at the pandas boundary; S6 a hard cap of 2 on
+      venue-file listing regardless of `MAX_WORKERS`; S7 the emission-policy lookup on 3/7 timeframes), each already
+      tracked as its own follow-up todo in this plan (R1 concurrent date-subprocesses; the shared-seed-context P0
+      concurrency bug, `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`, confirmed still `status: open` —
+      NOT yet fixed, so raising in-process concurrency remains gated on that fix landing first). No new code change from
+      this todo — it was a measurement-methodology question, now closed with the correct answer on record.
 - [ ] NEW todo. [DOC] P2. Correct `/codex/06-coding-standards/performance-targets.md`: `mdps_compute` is WRITE/IO-bound
       (measured ~94% write, ~6% polars), not compute-bound; the c2-standard-16 recommendation does not follow.
 
@@ -405,7 +434,17 @@ the ones already in candles) and do features service across all shards too"_
 
 - [ ] NEW todo. [DATA] P0. Enumerate the candle-coverage GAP per (asset_group, venue, data_type, timeframe): which cells
       ALREADY have candles vs which do not. Drives both "which AGs to run" and the ETA denominator.
-- [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-mdps` across all relevant AGs NOT already in candles.
+- **[DATA] P0. CANCELLED — 2026-07-27 (slot-9): consolidated into todo 8's post-split follow-up todo** (see the "SPLIT
+  2026-07-27 (slot-9, operator-ruled Option B on BLK-243a969b)" entry higher in this Todos section). This todo's scope
+  ("run `/data-pipeline-check-mdps` across all relevant AGs") is a strict SUBSET of that follow-up's scope ("all AGs ×
+  venues × data_types × timeframes") — same skill, same underlying blocker
+  (`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`, gated on prerequisite
+  `mdps-e2e-shared-host-teardown-fixed`), same done-when. Tracking it as a separate todo risked two AO-dispatched
+  workers independently re-attempting the identical blocked skill run without either being aware of the other's findings
+  (the exact collision class flagged elsewhere in this plan's Progress Log). Cancelled here rather than duplicated; the
+  live scope + gate condition live in the one post-split todo. NOT re-attempted this session — no value in a 6th
+  reproduction of an already-diagnosed, still-open P1 blocker. Original text (was
+  `- [ ] NEW todo.     [DATA] P0. Run /data-pipeline-check-mdps across all relevant AGs NOT already in candles.`).
 - [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-features` across ALL shards (8 families x valid AGs).
 
 ### 2026-07-20 — ✅ SPOT preemption auto-recovery was NOT fleet-wide; now it is (`deployment-service@c79f984`)
@@ -517,8 +556,24 @@ without a column/filter projection is one cache-miss from an OOM. Independent of
 - [ ] NEW todo. [DATA] P0. VERIFY the prod projection on a real prod-bucket MDPS run before sizing the win (is the
       emission check actually firing in prod, or short-circuited?). It is INFERRED from a measured curve + measured
       sizes, not observed on a prod VM. **This is the single biggest unknown in the ETA.**
-- [ ] NEW todo. [SCRIPT] P0. Implement F1+F2 (UTL `manifest_completeness.py`) + F3 (MDPS `_publish_emission_check`),
-      with the 1.4M-row perf guard (<0.5s vs 13.14s today).
+- [x] ✅ NEW todo. **VERIFIED 2026-07-27 (slot-7)**: already shipped same-day as this todo was written — no new code
+      needed. `unified-trading-library@80d2497e` ("perf(manifest): filter-then-build + memoize
+      compute_completeness_fraction (16.7x, value-equivalent)", 2026-07-20) implements F1 (pre-filter the DataFrame to
+      candidate rows via an exact superset key match, build `_build_capture_status_map` from that slice — unchanged,
+      value-preserving) + F2 (memoize per-window keyed by `(id, len, frozenset(keys))`, weakref-guarded, bounded
+      FIFO 64) — confirmed still an ancestor of current LDR tip via `git merge-base --is-ancestor`. F3 is
+      `market-data-processing-service/app/core/canonical_writer_stamping.py:445` — `_publish_emission_check` accepts
+      `manifest_index: object = None` and threads it straight to `publish_with_manifest_lookup` (line 492); its
+      docstring documents the correctness nuance (a caller must NOT share a stale snapshot across writes that MUTATE the
+      shard being read — MDPS's own `ohlcv_1m` write is the same shard `ohlcv_1h`/`ohlcv_24h` read for their upstream
+      check) so a naive share-across-timeframes bug can't be reintroduced. Perf-guard regression test confirmed:
+      `tests/unit/test_manifest_completeness.py:658` `test_one_million_rows_under_three_seconds` (1.2M-row corpus,
+      comparable to the todo's 1.45M reference, elapsed asserted `< 3.0s`; the shipping commit's own message cites
+      0.211s measured, well under the todo's 0.5s target — the 3.0s in the test is a CI-safe assertion budget, not the
+      achieved figure). Memoization + value-equivalence also covered: `test_three_calls_one_build` /
+      `test_all_four_states_and_absent_key` / `test_duplicate_key_last_write_wins` (same file).
+      `bash scripts/quality-gates.sh --no-fix` GREEN (263s) on UTL's current tree, full test suite incl. this file. No
+      code change needed — closing as verified-via-code-read + green regression suite.
 - [ ] NEW todo. [DATA] P0. Audit every `read_availability_index` caller on defi for a missing column/filter projection
       (1.58 GB index, OOM risk).
 
@@ -673,8 +728,10 @@ DeFi is NOT Tardis-capped so scale fleet-wide freely; land the derivative_ticker
 turn on R1 `MDPS_DATE_CONCURRENCY` per VM. At the post-fix ~25.9s rate, **all remaining DeFi MVP candles fit in ~2 weeks
 on ~4-6 SPOT VMs**, or comfortably under 2 weeks with the de-pandas per-unit work toward 5s.
 
-- [ ] NEW todo. [DATA] P0. Real-VM re-measure of end-to-end per-instrument-day rate against a PROD-sized index AFTER the
-      read-path fix tarball lands — confirm prod ≈ 25.9s (not 260s), which sets the true DeFi fleet size (~4-6 vs 37).
+- [x] NEW todo. [DATA] P0. **DONE 2026-07-27 (slot-10)** — satisfied by
+      `manifest_completeness_full_corpus_map_build-001`'s closure this session: a real `/data-pipeline-check-mdps` run
+      against real prod raw ticks measured **19.4s** per-instrument-day end-to-end (cefi trades), confirming prod ≈
+      19-26s, NOT 260s. See todo 13 above for the resulting fleet-size/ETA/cost delivery.
 
 ### 2026-07-20 — per-unit latency: safe wins + HFT vectorization SHIPPED; vol_clock + write-I/O floor characterized
 

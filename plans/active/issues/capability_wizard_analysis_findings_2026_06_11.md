@@ -667,8 +667,21 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 - [ ] [SPEC] P1. **F45 — assign an owner for the exposure-normalization / netting pipeline** (LST→underlying net delta;
       primitives exist, no service owns it; multi-leg inter-leg delta unmanaged). BLOCKED-OPERATOR-DECISION (which
       service owns netting). Target: strategy-service or UTL (operator pick).
-- [ ] [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit`≠`DERIBIT`) blocks emission.
-      LOGIC-FREEZE. Target: strategy-service.
+- [x] ✅ [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit`≠`DERIBIT`) blocks emission.
+      LOGIC-FREEZE. Target: strategy-service. — **DONE strategy-service@dac939d6.** FREEZE STATUS: verified lifted —
+      `epics/strategy_master.md` no longer carries any freeze/no-changes-to-engine language (checked directly, zero
+      matches), and `strategy-service` `engine/strategies/v2/` has 15+ recent real feat/fix commits (e.g. `4d1bbb18`
+      "make spot_venue a selectable axis for CARRY_STAKED_BASIS_DATED"), confirming active, ongoing engine development —
+      not honoring a standing freeze. ROOT CAUSE: already fixed at the UAC layer, NOT in `staked_basis.py` —
+      `unified_api_contracts.registry.venue_collateral.venue_accepts_collateral` / `accepted_perp_collateral` /
+      `get_collateral_haircut` all normalize via `.upper()` per the module's own docstring ("F27 fix 2026-06-15"), so
+      `staked_basis.py`'s `_derive_structure` → `accepted_perp_collateral(cfg.perp_venue)` call site now resolves
+      correctly for lowercase input WITHOUT any engine-side change (the finding's second recommended fix option was the
+      one implemented). Verified directly: `accepted_perp_collateral('deribit') == accepted_perp_collateral('DERIBIT')`.
+      No existing test covered the real lowercase-default slot-config path end-to-end through `_derive_structure` —
+      added `tests/unit/engine/strategies/v2/test_carry_staked_basis_f27_venue_case.py` (5 tests: lowercase/mixed/upper
+      all resolve to `LST_AS_MARGIN`, lowercase output exactly matches uppercase, haircut pinned to the real 0.075
+      F28-reconciled value). 150 sibling staked-basis tests + the new 5 all green at strategy-service.
 - [ ] [LOGIC] P2. **F47 — verdict-matrix declares venues the v2 slot-token registry rejects** (unbuildable slot).
       LOGIC-FREEZE. Target: strategy-service.
 - [ ] [LOGIC] P2. _*F48 — 22 VOL*\*/MARKET_MAKING_\* archetypes reachable with no v2 engine.** LOGIC-FREEZE. Target:

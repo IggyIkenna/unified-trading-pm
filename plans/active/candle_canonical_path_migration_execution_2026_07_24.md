@@ -163,23 +163,23 @@ and final verify/reconcile.
       enumerated object got exactly one disposition or the run aborts loudly):
 
       | Asset group    |  Total objects |   MIGRATE | SPLIT_BRAIN_DUPLICATE | QUARANTINE_CORRUPT | EMPTY_STEM (w/wo underlying) | NEEDS_CONTENT_ITYPE | NEEDS_CONTENT_TRADFI_ID | CANONICAL_NOOP | ORPHAN |
-                                                      | -------------- | -------------: | --------: | ---------------------: | ------------------: | ---------------------------: | -------------------: | ----------------------: | --------------: | -----: |
-                                                      | defi           |      1,124,849 | 1,123,407 |         (folded into MIGRATE) |               1,442 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
-                                                      | prediction     |      1,165,459 |         1 |              1,165,458 |                   0 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
-                                                      | cefi           |        940,606 |        10 |                804,670 |             130,906 |                2,576 / 2,198 |                  238 |                       0 |               8 |      0 |
-                                                      | tradfi         |      7,646,831 |         0 |                724,214 |                   0 |              428,792 / 6,780 |                    0 |               6,487,045 |               0 |      0 |
-                                                      | **TOTAL**      | **10,877,745** |         — |                      — |                   — |                            — |                    — |                       — |               — |      0 |
+                                                                      | -------------- | -------------: | --------: | ---------------------: | ------------------: | ---------------------------: | -------------------: | ----------------------: | --------------: | -----: |
+                                                                      | defi           |      1,124,849 | 1,123,407 |         (folded into MIGRATE) |               1,442 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
+                                                                      | prediction     |      1,165,459 |         1 |              1,165,458 |                   0 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
+                                                                      | cefi           |        940,606 |        10 |                804,670 |             130,906 |                2,576 / 2,198 |                  238 |                       0 |               8 |      0 |
+                                                                      | tradfi         |      7,646,831 |         0 |                724,214 |                   0 |              428,792 / 6,780 |                    0 |               6,487,045 |               0 |      0 |
+                                                                      | **TOTAL**      | **10,877,745** |         — |                      — |                   — |                            — |                    — |                       — |               — |      0 |
 
-                                                      Evidence: each VM's `run.log` at
-                                                      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-{cat}-candle-census-<ts>/run.log` +
-                                                      staged mapping TSVs at
-                                                      `gs://deployment-scripts-central-element-323112/canonical-migration-candle-census/<ts>/canonical-migration-{cat}-candle-census-<ts>/mappings/`.
-                                                      This satisfies the todo's own ask exactly: precise per-AG object count (replacing the ±2-3x in-session estimate),
-                                                      dup-shape breakdown (`pipeline_mode=` vs naked `timeframe=` split-brain counts per AG), and empty-stem inventory
-                                                      (with/without `underlying=`) — all measured, not estimated. No re-run needed; re-launching 4 more Tier-2 census
-                                                      VMs against an unchanged corpus would be pure duplicate cost. Follow-up findings from that census (cefi's
-                                                      anomalous 13.9% QUARANTINE_CORRUPT rate, the unregistered `pipeline_mode=batch_hyperliquid_rest` value) were
-                                                      filed as that doc's own todos 17/18 — not re-filed here.
+                                                                      Evidence: each VM's `run.log` at
+                                                                      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-{cat}-candle-census-<ts>/run.log` +
+                                                                      staged mapping TSVs at
+                                                                      `gs://deployment-scripts-central-element-323112/canonical-migration-candle-census/<ts>/canonical-migration-{cat}-candle-census-<ts>/mappings/`.
+                                                                      This satisfies the todo's own ask exactly: precise per-AG object count (replacing the ±2-3x in-session estimate),
+                                                                      dup-shape breakdown (`pipeline_mode=` vs naked `timeframe=` split-brain counts per AG), and empty-stem inventory
+                                                                      (with/without `underlying=`) — all measured, not estimated. No re-run needed; re-launching 4 more Tier-2 census
+                                                                      VMs against an unchanged corpus would be pure duplicate cost. Follow-up findings from that census (cefi's
+                                                                      anomalous 13.9% QUARANTINE_CORRUPT rate, the unregistered `pipeline_mode=batch_hyperliquid_rest` value) were
+                                                                      filed as that doc's own todos 17/18 — not re-filed here.
 
 - [x] ✅ 5. [SCRIPT] P0. **VERIFIED 2026-07-27 (slot-10)**: another duplicate of already-shipped work (5 of the first 5
       dispatched todos on this plan — 2,3,4,5 — now all confirmed already-completed; only todo 1, the tarball rebuild,
@@ -331,7 +331,25 @@ and final verify/reconcile.
       verify/reconcile: all 4 AGs independently confirmed CLEAN" (4 parallel agents, fresh GCS enumeration + `--dry-run`
       classifier, `ORPHAN=0` and `sum(dispositions)==total` on every AG). No code change needed here; any residual
       oracle-scope-extension work (`canonical_path_violations()` → `processed_candles/`) is tracked in that sibling doc
-      directly, not duplicated as a fresh todo on this plan.
+      directly, not duplicated as a fresh todo on this plan. **CORRECTION 2026-07-27 (slot-8)**: slot-10's closure above
+      covers the 4-surface reconciliation and the oracle extension (both genuinely already done — confirmed
+      `unified-api-contracts@6329fc04` ships `_candle_path_violations()` for `processed_candles/`), but this todo's own
+      text ALSO required "a both-axes reader load-test (a derivative/trades slice AND a tradfi 1m slice — a tradfi-only
+      test can false-pass axis-1)", which slot-10's closure did not run. Ran it live against real PROD data via
+      `features_service.delta_one.app.core.     data_loader.DataLoader`: CEFI axis (`ASTER:PERPETUAL:0G-USDT@LIN`,
+      `data_type=trades`, `day=2026-07-20`, `pipeline_mode=batch_aster`) loaded 744 rows cleanly — **PASS**. TradFi axis
+      (`CME:FUTURE:AUD`, `data_type=ohlcv_1m`, `day=2026-07-22`, `pipeline_mode=batch_databento`) returned **0 rows**
+      with a silent "No upstream MDPS data" warning even though the object is directly listable in GCS — **FAIL,
+      confirmed regression**. Root-caused: `DataLoader`'s chain-bundle detection
+      (`is_chain = data_type in {"options_chain", "futures_chain"}`) checks RAW-TICK-only data_type sentinels that never
+      appear on the candle namespace (candle `data_type=` is always `ohlcv_*`/a SOURCE key), so the
+      `underlying=.../ticks.parquet` chain-bundle tail this class already knows how to build can never fire for a real
+      candle read — every TradFi FUTURE/OPTION/COMBO candle bundled by `underlying=` is silently unreadable via this
+      loader. Filed `issues/candle_delta_one_chain_bundle_data_type_detection_silent_miss_2026_07_27.md` (repo:
+      features-service, 2 todos: the `is_chain` fix + a `unified-trading-api` `batch_candles.py` audit for the same
+      pattern). This is exactly the "empty frames, NO errors" blast-radius risk this plan itself called out — leaving
+      item 15 `[x]` since the VERIFY/RECONCILE work is complete and its finding is now a tracked fix, not because the
+      reader is fixed yet.
 - [ ] 16. [DATA] P1. Root-cause + close the candle object↔manifest disconnect (6 degenerate MDPS manifest rows vs 20k+
       objects/day pre-migration) so skip-if-fresh can be trusted at scale post-migration — cross-check against
       `issues/candle_feature_canonical_path_divergence_2026_07_20.md` todo 7 (same finding, tracked there too; close
