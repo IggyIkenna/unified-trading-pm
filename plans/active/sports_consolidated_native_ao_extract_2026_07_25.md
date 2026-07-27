@@ -373,6 +373,14 @@ launch `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh spor
 cosmetic), verify STARTED<60s + real per-day progress + the auto-chained `--recensus` reports 0 residue, THEN flip this
 todo.
 
+**UPDATE (same session, later)**: pytest has now passed CLEANLY a 3rd time and the run got past it entirely (plus the
+integration smoke test + import-patterns check) for the FIRST time — reached `[4/6] TYPE CHECK`, which failed with a
+genuine, non-mysterious cause: `run_timeout "${PYRIGHT_TIMEOUT:-120}"` — basedpyright itself is simply slow under the
+sustained host load and blew the DEFAULT 120s budget (exit=143, a real wall-clock timeout, not a silent kill). Add
+`PYRIGHT_TIMEOUT=400` to the fix set above (5th fix) and retry. This is real, incremental progress through the gate, not
+a repeat of the same failure — expect to find + fix one more slow-step timeout at a time as further sections are
+reached, each fixable the same way (bump that section's own timeout var).
+
 - 2026-07-26 (slot-12, `data_engineering`): **Todo 1 (Track F derived_features purge) — corrected mis-gating + completed
   the worker-safe portion; the delete itself stays human.** The todo's own "Not `[OPERATOR]`-gated" justification was
   WRONG: confirmed the target bucket is `features-sports-prd-central-element-323112` (a genuine `-prd-` production
