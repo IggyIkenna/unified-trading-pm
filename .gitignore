@@ -27,6 +27,14 @@ central-element-323112-*.json
 *.p12
 *.json.bak
 
+# --- Claude Code ephemeral worktrees (Workflow/Agent isolation:"worktree") ---
+# Never track: a worktree is its own git repo, so `git add` records it as a dangling
+# gitlink (mode 160000) with no matching .gitmodules entry -- every checkout of a repo
+# that accidentally committed one prints "fatal: No url found for submodule path ..."
+# (harmless warning, but pure noise on every CI job). See
+# plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md for the symptom.
+.claude/worktrees/
+
 # --- QG sentinels (local-only fingerprints; never committed) ---
 /.qg_last_passed_sha
 /.qg_content_sentinel
