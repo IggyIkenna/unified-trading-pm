@@ -14,7 +14,7 @@ summary: >-
   `volume`/`buy_volume`/`sell_volume` (base-asset-denominated), not `quote_volume` (USD-denominated). This is a
   pre-existing, universal defect that predates and is unrelated to the on-chain-perp venue extension — it would return
   NO_DATA for ANY venue/instrument, always, since the feature shipped.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -43,7 +43,7 @@ source: >-
   data.
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: slot-2, 2026-07-27 -- main ruled Option B (price-multiply at read time); features-service@568c5630
 depends_on: []
 ---
 
@@ -87,13 +87,18 @@ depends_on: []
 
 ## Recommended decision
 
-- [ ] [DATA] P1. **Reconcile the `quote_volume` vs `volume` naming between MDPS's candle writer and features-service's
-      `RollingAdvReader`.** Two candidate fixes (pick one, don't guess — needs a design call): (a) rename/alias the
-      column the ADV reader reads to `volume` if base-asset volume is an acceptable proxy for the USD-cap use case
-      (simplest, but changes the semantic from "USD volume" to "base-asset volume" — may need a price multiply to get
-      true USD notional), or (b) have MDPS's candle writer additionally emit a real `quote_volume` (= `volume × vwap` or
-      `sum(price × qty)` at aggregation time) alongside `volume`. Repos: features-service (+
-      market-data-processing-service if (b) is chosen). **Done when**: `compute_rolling_adv()` called against a real,
-      already-backfilled candle (e.g. the HYPERLIQUID BTC 2026-07-19 candle from this session, or any established
-      venue's) returns a non-`NO_DATA` `AdvStatus` with a real `adv_usd` value, and the existing 19 unit tests are
-      updated/still pass against the corrected schema assumption.
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-2) — main ruling: Option B (price-multiply at read time, no MDPS writer
+      change).** `RollingAdvReader._read_one_day_notional_volume` (and its new helper `_row_notional_volumes`) now
+      derives the USD notional as `volume * price` at read time, preferring `vwap` (genuinely computed by MDPS's
+      `fast_candle_aggregation.py`) and falling back to `close` when `vwap` is null/non-positive/NaN; a row with no
+      usable price is honest absence (unobserved), never a fabricated zero. Rejected option (a) as literally proposed
+      (raw base-asset volume, no price adjustment) — main's rationale: the position-size-cap / illiquidity-gate use case
+      needs USD comparability across instruments (1000 BTC vs 1000 DOGE volume must NOT read as equal). Rejected the
+      write-time-`quote_volume` half of option (b) — cross-repo candle-schema change + historical-backfill +
+      batch=live-determinism-spine risk for a marginal precision gain over `volume*vwap` that doesn't matter at
+      rolling-ADV granularity with only one current consumer; captured as a deferred P2 backlog item instead (revisit if
+      a second consumer ever needs exact per-bar traded notional). `features-service@568c5630`. Extended
+      `tests/cross_instrument/unit/test_adv.py` (now 30 tests, up from 19): USD-scale assertion, vwap-preferred-
+      over-close, cross-instrument comparability (same base-asset volume at different price levels now produces
+      correctly-scaled, distinguishable `adv_usd`), zero/negative/NaN price guarded as unobserved, null-volume-row
+      guarded. `quality-gates.sh` green (sentinel-verified against the committed HEAD).
