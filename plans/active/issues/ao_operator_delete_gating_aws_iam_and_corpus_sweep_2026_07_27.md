@@ -81,32 +81,57 @@ assigned_role: infra
       `iam:{Get,List,Put,Attach,Detach}RolePolicy` scoped to this ONE role's ARN so future gaps are self-serviceable
       without a human round-trip. **Done when**: `aws s3api list-buckets`, `aws rds     describe-db-instances`,
       `aws dynamodb list-tables`, `aws ecs list-clusters` all succeed when run as this role.
-- [ ] [DIAG] P1. **Verify the background sweep agent's actual completion state** (14 files:
-      `sports_consolidated_closeout_2026_07_19.md`, `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`,
-      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, `cefi_track7_candle_namespace_residual_2026_07_25.md`,
-      `sports_consolidated_native_ao_extract_2026_07_25.md`, `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`,
-      `issues/sports_legacy_duplicate_triage_2026_07_22.md`,
-      `issues/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`,
-      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`,
-      `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`,
-      `docker_artifact_registry_cleanup_policy_2026_07_24.md`,
-      `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`,
-      `issues/defi_lst_rates_migrated_marker_unfiltered_live_reader_2026_07_25.md`,
-      `issues/mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md`). Grep each for
-      `reversibility-verified`/`approve-executes` framing (the pattern already applied to
-      `defi_consolidated_closeout_2026_07_18.md` and `sports_legacy_fixtures_path_migration_2026_07_24.md`) and confirm
-      the relevant commits actually landed on `origin/live-defi-rollout` (`git log --oneline -- <path>`) — do NOT assume
-      the agent finished cleanly just because it was dispatched. Any file not yet done: finish it per the same criteria
-      (§3a of the delete-safety protocol), respecting the hard-stop #2-#5 scope boundary (only hard-stop #1, plain
-      prod-bucket delete, is affected by the carve-out).
-- [ ] [DIAG] P1. **Classify every remaining `[OPERATOR]` tag workspace-wide by REASON, not just presence** — the
-      operator's ask was to move as many as possible off a human-blocking path, "unless it's a genuinely unclear
-      investigation for new features." This needs a real per-tag read (grep finds ~182 docs mentioning
-      `[OPERATOR]`/`human-only`/`delete-safety-protocol`/`prod-bucket delete` — most are NOT delete-safety related at
-      all: VM-launch-authority reservations tied to a standing operator ruling for one workstream, credential asks,
-      genuine design-judgment calls that are correctly gated per the dispatch-scope-eligibility rule). Produce a
-      classification (delete-safety-reducible / VM-launch-authority / credential-ask / genuine-judgment-call / other)
-      before touching anything outside the delete-safety subset already covered by the todo above — a blind strip of
-      `[OPERATOR]` tags outside their actual reason would violate dispatch-scope-eligibility
-      (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility") for the
-      genuine-judgment-call cases.
+- [x] [DIAG] P1. ✅ **Verified 2026-07-27** — all 14 files done, commits confirmed on `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor` (`cc438a02c`, `1be59b97b`, `1e7f5389a`, `c6ef8cb1f`, `f5232f3e5`) + spot-checked
+      actual file content (not just trusting the agent's self-report). 6 files downgraded to reversibility-verified (all
+      against buckets fresh-checked at 604800s), 2 re-cited as approve-executes (whole-bucket/non-GCS, correctly stays
+      `[OPERATOR]`), 6 correctly left untouched (hard-stop #2, manifest-row mutations that aren't `gcs_delete_object`
+      calls, or policy/scope decisions rather than delete execution — §3a doesn't apply to any of these). No bucket
+      found below the 604800s threshold. See Progress Log below for detail.
+- [ ] [DIAG] P1. **Classify the remaining `[OPERATOR]` tags workspace-wide by REASON** — precise count as of 2026-07-27:
+      **44 active/issue docs carry 95 open `[OPERATOR]`-tagged todos total**
+      (`grep -rlE '^\s*-\s*\[ \].*\[OPERATOR\]' plans/active plans/active/issues --include="*.md"`); 15 of those 44 are
+      the delete-safety set already resolved by the todo above. **29 files remain unclassified** — read each, classify
+      by reason (delete-safety-reducible-but-missed / VM-launch-authority-reservation / credential-ask /
+      genuine-judgment-call needing a real human decision / other), and only downgrade the
+      delete-safety-reducible-but-missed cases using the exact same fresh-check discipline as the todo above. Do NOT
+      touch VM-launch-authority or genuine-judgment-call cases — removing `[OPERATOR]` from those violates
+      dispatch-scope-eligibility (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §
+      "Dispatch-scope eligibility"). The 29 files (relative to `plans/active/`):
+      `defi_expected_unattempted_seeder_design_2026_07_26.md`, `deployment_ui_observability_ux_tracker_2026_07_17.md`,
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md`,
+      `issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md`,
+      `issues/ao_backlog_done_row_disappearance_2026_07_25.md`,
+      `issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md`,
+      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`,
+      `issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`,
+      `issues/deployment_ui_nav_consolidation_2026_07_17.md`,
+      `issues/fleet_audit_triad_deferred_followups_2026_06_01.md`,
+      `issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md`,
+      `issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md`,
+      `issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`,
+      `issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`,
+      `issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md`,
+      `issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md`,
+      `issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`,
+      `issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md`,
+      `issues/post_cutover_silent_assumption_sweep_2026_07_23.md`,
+      `issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md`,
+      `issues/qg_sentinel_environment_blind_2026_07_23.md`, `issues/shared_host_home_filesystem_full_2026_07_26.md`,
+      `issues/sports_odds_api_key_deactivated_2026_07_26.md`,
+      `issues/sports_player_stats_empty_write_followups_2026_07_26.md`,
+      `issues/sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md`,
+      `issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md`,
+      `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`,
+      `mtds_available_at_cross_asset_backfill_2026_07_13.md`,
+      `prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`, `repo_scripts_governance_audit_2026_06_18.md`,
+      `sports_predictions_live_mode_activation_readiness_2026_07_21.md`, `vol_dvol_backtestable_engines_2026_07_13.md`.
+      **Done when**: every one of these 29 files has a stated classification (either fixed inline in the file itself, or
+      logged in this issue doc's Progress Log if left as-is) — no file silently skipped.
+
+## Progress Log
+
+- **2026-07-27**: Background agent (dispatched pre-compact) completed all 14 delete-safety-set files. Verified via
+  ancestor-check + content spot-check, not just trusting its self-report (per this workspace's own "grep-then-READ"
+  discipline). Todo above flipped. Continuing autonomously (`/autonomous`, operator away ~6h) to the broader 29-file
+  classification pass next.
