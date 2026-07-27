@@ -249,6 +249,16 @@ jobs:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || 'test-project' }}
       # Short-circuit flag — when the content-sentinel hit, the gate steps below skip.
       QG_CONTENT_HIT: ${{ needs.content-gate.outputs.cache_hit }}
+      # Self-hosted "glue" runners can put both matrix legs (tests + checks) on the SAME
+      # physical host (e.g. glue-ip-172-31-5-118-{1,2}) — under that concurrent I/O
+      # contention, `git status --porcelain` inside hatch-vcs/setuptools_scm's dirty-check
+      # can exceed the vcs_versioning library's DEFAULT 40s subprocess timeout, which then
+      # crashes with a secondary library bug (TimeoutExpired.__init__ missing the `timeout`
+      # kwarg) instead of a clean retry/error — root-caused 2026-07-27 on execution-service
+      # (ldr_qg_failure escalation, both slices, PR#501 + a same-signature LDR dispatch).
+      # Raise the ceiling generously; a no-op on ubuntu-latest runners where 40s never binds.
+      SETUPTOOLS_SCM_SUBPROCESS_TIMEOUT: "180"
+      VCS_VERSIONING_SUBPROCESS_TIMEOUT: "180"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
