@@ -212,7 +212,7 @@ cross-AG regression rigor as the original bundle-atom fix)**:
 todo was its own remaining `[OPERATOR]` residual close-out, migrated here (this doc's own source) rather than left
 stranded in `plans/archive/` where the backlog regen (active-plans-only) would never surface it again.
 
-- [ ] [OPERATOR] P1. **Combined residual close-out for this doc's remaining 4 uncovered items** (batch2's OPERATOR todo
+- [ ] [SCRIPT] P1. **Combined residual close-out for this doc's remaining 4 uncovered items** (batch2's OPERATOR todo
       covered only 2 of the doc's 4 residual sets; these are the other 2, all against the SAME prediction manifest
       `_index` — merged into one todo to avoid a concurrent-write race): (a) Diagnose and, only if confirmed
       safe/superseded, purge the 189 blank/UNKNOWN-venue rows against the live prediction `_index`
@@ -226,9 +226,13 @@ stranded in `plans/archive/` where the backlog regen (active-plans-only) would n
       genuine-honest-absence count. (d) Re-run `rebuild_prediction_manifest.py` once more (or confirm a rebuild has
       already run since `market-tick-data-service@3397e7ae` landed) so the ~11,988 KALSHI rows mislabeled
       `pipeline_mode=batch_polymarket_clob`/`source=polymarket_clob` self-correct to the venue-resolved values; verify
-      via a live count of remaining mislabeled KALSHI rows (expect 0). **Tagged `[OPERATOR]`** per `task_template.md` §3
-      delete-risk rule + `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — (a)/(b) purge/mutate live
-      prediction-manifest rows and (c)/(d) rewrite live manifest capture_status/provenance values on the same `_index`;
-      snapshot-then-write is not an adequate substitute for the codex's Part-2 content-verify proof, so human sign-off
-      is required before any `--apply`. Repo: market-tick-data-service. **Done when**: all four sub-items have either
-      landed with evidence or an explicit non-actionable ruling.
+      via a live count of remaining mislabeled KALSHI rows (expect 0). **Downgraded from `[OPERATOR]` 2026-07-27**
+      (reversibility-verified, finding T, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): the
+      prediction `_index` is a Parquet object living IN `market-data-tick-pred-prd-central-element-323112`
+      (`read_availability_index(bucket=...)` reads it as a GCS blob, per `manifest_writer/_read_index.py`), and a fresh
+      check confirms that bucket's GCS Soft Delete retention is `604800s` (7 days) — an overwrite of this object is
+      recoverable within that window exactly like an object delete, so this is object-scoped, not a bucket-level
+      destroy. snapshot-then-write is still required (not a substitute for the codex Part-2 proof, but the reversibility
+      carve-out doesn't need that proof — it needs the fresh bucket check, done here); stop and re-tag `[OPERATOR]` if
+      any sub-item turns out to need a genuinely irreversible action. Repo: market-tick-data-service. **Done when**: all
+      four sub-items have either landed with evidence or an explicit non-actionable ruling.
