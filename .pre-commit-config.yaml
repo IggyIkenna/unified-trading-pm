@@ -16,6 +16,25 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
 
+  # Locked-plan deletion gate — MUST be commit-msg stage (same reason as
+  # conventional-pre-commit above): .git/COMMIT_EDITMSG is not reliably the
+  # message-to-be at the pre-commit stage. Blocks archiving/deleting a
+  # plans/active/*.md doc whose frontmatter carries locked_by: unless the
+  # commit message has [unlock-plan]. The quality-gates.sh copy of this check
+  # never runs for docs(plans): commits (routed to prek-only) — this is the
+  # gate that actually fires for the commit class that archives plans. SSOT:
+  # scripts/hooks/check-locked-plan-deletion.sh.
+  - repo: local
+    hooks:
+      - id: check-locked-plan-deletion
+        name: Locked-plan deletion gate (blocks archiving a locked_by plan without [unlock-plan])
+        entry:
+          bash -c 'HOOK="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." &&
+          pwd)}/unified-trading-pm/scripts/hooks/check-locked-plan-deletion.sh"; [ -f "$HOOK" ] || exit 0; bash "$HOOK"
+          "$@"' --
+        language: system
+        stages: [commit-msg]
+
   # Branch drift check - blocks commit if you're behind origin
   - repo: local
     hooks:

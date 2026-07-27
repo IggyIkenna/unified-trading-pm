@@ -106,7 +106,16 @@ drift_direction: advance-code
       `available_at` fill rate is the ONLY remaining blocker on this item, not two blockers. Detail:
       `sports_cf8_available_at_backfill_regression_2026_07_13.md`. (repo: market-tick-data-service /
       deployment-service). **Done when**: the parent's Track H CF-8 todo is confirmed `[x]` AND a fresh
-      `cf_manifest_audit_2026_06_01.py` run is GREEN on both surfaces.
+      `cf_manifest_audit_2026_06_01.py` run is GREEN on both surfaces. **RE-VERIFIED 2026-07-27 (slot-10), still
+      genuinely blocked, no re-audit run**: parent doc `sports_consolidated_closeout_2026_07_19.md` line 639's Track H
+      CF-8 todo is confirmed still `- [ ]` unchecked; the detail doc's `status:` is still `open`. This is
+      operator-only-gated (the parent todo's own text: "Lift operator stop `BLK-d9137d48` and clear the still-false
+      backlog parking-gate condition `sports-cf8-maintenance-window-scheduled`") — a fresh `/blocked` would be
+      redundant, the operator already answered `BLK-d9137d48` (option A: wait for the repo-blocker) per the detail doc's
+      own Progress Log; what's missing is the operational maintenance-window RUN itself, not a new decision. Per this
+      item's own explicit instruction, did NOT re-run `cf_manifest_audit_2026_06_01.py` (30+ prior identical RED
+      reproductions on record; nothing has changed upstream to make a 31st informative). No forward action possible from
+      this slot — correctly re-parked pending the operator-scheduled window.
 - **[DATA] P0.** Sports IS L6 index regression — **ALREADY RESOLVED, not carried forward as an open todo (finding C,
   2026-07-25).** The parent's Track S2 text described this as a live 3-step fix (base-image rebuild / resume schedulers
   / re-consolidate); the cited detail doc (`sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md`, now

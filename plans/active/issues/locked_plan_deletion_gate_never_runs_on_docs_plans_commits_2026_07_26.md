@@ -102,7 +102,7 @@ lesson, and it silently erodes the one guardrail that is supposed to be un-autom
       governance/authority call, not a determinable fact. **RULED (a) 2026-07-26** — mandatory; CLAUDE.md's own text is
       unambiguous ("ASK, never autonomous"), this isn't really a policy choice up for grabs, just an enforcement gap to
       close. See entry #11 for the recorded ruling.
-- [ ] [SCRIPT] P1. **Move the locked-plan check to the `commit-msg` prek stage, NOT `pre-commit`** — sharpened
+- [x] ✅ [SCRIPT] P1. **Move the locked-plan check to the `commit-msg` prek stage, NOT `pre-commit`** — sharpened
       2026-07-26: `run_hygiene_sweep.sh --precommit` fires at the `pre-commit` stage (`.pre-commit-config.yaml` default
       stages `[pre-commit, commit-msg]`), which for a `git commit -m "..."` invocation runs BEFORE `.git/COMMIT_EDITMSG`
       is reliably populated with the message-to-be (that file is written at `prepare-commit-msg`, validated at
@@ -119,10 +119,24 @@ lesson, and it silently erodes the one guardrail that is supposed to be un-autom
       other repo has a `plans/` tree) before deciding whether a fleet-wide rollout is needed. Keep the
       `quality-gates.sh` copy or delete it, but do not leave two divergent implementations. **Done when**: a test commit
       that deletes a fixture doc carrying `locked_by:` is BLOCKED without `[unlock-plan]` and PASSES with it,
-      demonstrated with the real hook output pasted into this doc's Progress Log.
-- [ ] [SCRIPT] P2. **Fix the `git log -1` commit-message read** in `scripts/quality-gates.sh:410` regardless of which
+      demonstrated with the real hook output pasted into this doc's Progress Log. — **DONE unified-trading-pm** (see
+      Progress Log for shas + real hook output). **CORRECTION on the "second independent bug" claim above**: MEASURED
+      (not assumed) against the real cited historical commit (`57ed9271c`) —
+      `git diff --diff-filter=D --name-only 57ed9271c~1 57ed9271c -- 'plans/active/*.md'` lists
+      `plans/active/issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` IDENTICALLY to the unfiltered
+      deletion list. Git's default pathspec `*` crosses `/` (unlike a shell glob) — `'plans/active/*.md'` was ALREADY
+      correct and already matched `issues/**`. The `**` variant this todo suggested is actually WRONG: measured 433
+      matches vs 696 for the single-star form — `**` requires ≥1 subdirectory, silently EXCLUDING files directly in
+      `plans/active/`. Kept the proven-correct `plans/active/*.md` pattern; see the correction comment in
+      `scripts/hooks/check-locked-plan-deletion.sh`. Only genuine bugs #2 (routing — the actual root cause) and #3
+      (`git log -1` reads the wrong commit) needed fixing.
+- [x] ✅ [SCRIPT] P2. **Fix the `git log -1` commit-message read** in `scripts/quality-gates.sh:410` regardless of which
       direction (a)/(b) is chosen, or delete the block if it moves. **Done when**: the check reads the message of the
-      commit being created, proven by a pre-commit run that sees a `[unlock-plan]` tag typed for THAT commit.
+      commit being created, proven by a pre-commit run that sees a `[unlock-plan]` tag typed for THAT commit. — **DONE**
+      resolved via deletion (the sanctioned P1 path): the `quality-gates.sh:406-422` block is removed entirely (dead
+      code for its own use case, and now fully superseded by the commit-msg hook, which reads `$1` — the real
+      message-to-be — not `git log -1`). Proven by the same P1 verification: the commit-msg hook correctly read
+      `[unlock-plan]` from the message of the commit BEING CREATED (see Progress Log real hook output).
 - [ ] [DOC] P2. **Retro-clean the one doc this already affected** — `plans/archive/issues/`
       `mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` still carries `locked_by: live-defi-rollout` while
       archived; clear the lock (or restore the doc to `plans/active/` if the operator rules the archival was premature).
@@ -135,6 +149,37 @@ lesson, and it silently erodes the one guardrail that is supposed to be un-autom
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-27** — P1+P2 shipped (slot-6). New `scripts/hooks/check-locked-plan-deletion.sh` (commit-msg stage, reads
+  `$1` per prek's commit-msg contract, `plans/active/*.md` pathspec) wired into `.pre-commit-config.yaml` (PM root + the
+  `docs.pre-commit-config.yaml` template, script self-guards as a no-op outside a `plans/` tree) with
+  `stages: [commit-msg]`. Deleted the dead `scripts/quality-gates.sh:406-422` block (P2, resolved via deletion).
+  End-to-end verified with a disposable fixture doc
+  (`plans/active/issues/_test_fixture_locked_plan_deletion_gate_2026_07_27.md`, `locked_by: test-fixture-verification`),
+  real `prek`-driven `git commit` runs, output captured verbatim then the fixture + its throwaway commits discarded
+  (`git reset --mixed` back past them — net-zero file diff, nothing shipped):
+
+  ```
+  # 1) ADD the locked fixture — hook must no-op (nothing deleted yet):
+  Locked-plan deletion gate (blocks archiving a locked_by plan without [unlock-plan])..................................Passed
+
+  # 2) DELETE it WITHOUT [unlock-plan] — must BLOCK:
+  Locked-plan deletion gate (blocks archiving a locked_by plan without [unlock-plan])..................................Failed
+  - hook id: check-locked-plan-deletion
+  - exit code: 1
+
+    ❌ BLOCKED: plans/active/issues/_test_fixture_locked_plan_deletion_gate_2026_07_27.md is locked by 'test-fixture-verification'.
+       To delete a locked plan, include [unlock-plan] in your commit message.
+       This prevents agents from accidentally removing plans that are actively being implemented.
+
+  # 3) Same delete, commit message now carries [unlock-plan] — must PASS:
+  Locked-plan deletion gate (blocks archiving a locked_by plan without [unlock-plan])..................................Passed
+  [live-defi-rollout 18eba1ecb] test: delete locked fixture WITH unlock tag [unlock-plan]
+  ```
+
+  Also disproved (not assumed) the todo's own "`plans/active/*.md` misses `issues/**`" claim by testing the exact
+  historical commit it cites — see the P1 checkbox note above. P3 (retro-clean the one already-affected archived doc)
+  left open — separate file, separate [DOC]-tagged todo, not this dispatch's scope.
 
 - **2026-07-26** — Filed by `/plan-reconcile cross-cutting` (autonomous). Surfaced while parking the `[unlock-plan]` ask
   for `mtds_uac_adapter_contract_baseline_regression_2026_07_09.md`: mid-run, a concurrent escalation-driven remediation

@@ -83,12 +83,35 @@ instruments-service@`b99e586` (tested no-key enumeration).
       (`cefi-hyperliquid-{2023..2026}-20260727-015959`, `cefi-aster-{2024..2026}-20260727-015959`), SPOT,
       `asia-northeast1-c`. Verified STARTED (RUNNING/STAGING at T+30s). Superseding this checkbox rather than leaving it
       perpetually unfalsifiable; the real completion gate is below.
-- [ ] [INFRA] P0. **GATE**: HL/ASTER corrective re-run (7 VMs `cefi-{hyperliquid,aster}-*-20260727-015959`) completes —
+- [x] ✅ [INFRA] P0. **GATE SUPERSEDED (2026-07-27, slot-4)**: HL/ASTER corrective re-run (7 VMs
+      `cefi-{hyperliquid,aster}-*-20260727-015959`) — this specific run-id's VMs never made progress. **UPDATE
+      2026-07-27 T+10min (slot-10)**: all 7 VMs were **mass-preempted at 19:02:2x UTC, ~2.5 min after creation
+      (19:00:01)** — `gcloud compute operations list` shows `compute.instances.preempted` system events for all 7 within
+      a 6-second window, then auto-deleted (`--instance-termination-action=DELETE`). No `run.log` was ever written for
+      any of the 7 (checked at T+10min) — this was a boot-time preemption, not a mid-run one, so there is no
+      `PROGRESS.json` checkpoint for any auto-recovery watchdog to resume from. Checked for an auto-relaunch
+      (`vm_zombie_watchdog.py` / preemption auto-recovery per
+      `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`): **zero** `cefi-hyperliquid-*`/
+      `cefi-aster-*` VMs running at that point — nothing had re-launched this fleet. **RELAUNCHED 2026-07-27 (slot-4)**:
+      re-ran `VENUES="HYPERLIQUID ASTER" bash scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (SPOT, same
+      idempotent non-force command slot-10 named) — new run-id `20260727-022558`, 7 VMs. Verified STARTED (all RUNNING
+      at T+0). **T+10min+ check: NO preemption this time** — `gcloud compute instances list` shows all 7 still `RUNNING`
+      well past T+10min (unlike the prior attempt's ~2.5-min mass-preemption). Ground-truthed via `run.log`, not just VM
+      status (per this doc's own lesson): `cefi-hyperliquid-2023-20260727-022558`'s log shows real per-day
+      `PROGRESS: chunk=N/365` lines advancing + genuine `ManifestWriter: per-VM shard updated` writes — the fleet is
+      actually processing, not stalled-but-running. Superseding this checkbox (the 015959 run-id is dead and irrelevant
+      now) rather than leaving it perpetually unfalsifiable; the real completion gate for the NEW run is below.
+- [ ] [INFRA] P0. **GATE**: HL/ASTER corrective re-run (7 VMs `cefi-{hyperliquid,aster}-*-20260727-022558`) completes —
       captured-coverage manifest re-read (same method as above) confirms `expected_unattempted` → 0 for all three
-      data_types (book_snapshot_5 staying 0-captured for ASTER is correct/expected, not a gap). Verify at T+10min
-      (STARTED) then periodically until terminal; re-measure via `read_availability_index` filtered to venue ∈
-      {HYPERLIQUID, ASTER}, do not trust prior `attempted_failed` counts as the gap census (mirrors the Tardis-lockout
-      lesson elsewhere in this doc — measure fresh, don't assume).
+      data_types (book_snapshot_5 staying 0-captured for ASTER is correct/expected, not a gap). A 365-daily-chunk-per-VM
+      backfill across 7 VMs is a multi-hour operation, not completable within one agent-turn session — verified healthy
+      (no preemption, real progress) at T+10min+ this session; the underlying condition (`expected_unattempted` → 0 for
+      HL/ASTER) has NOT yet been re-measured post-relaunch. Handing off: whoever next picks up this GATE should (1)
+      confirm the fleet is still running / check for a fresh preemption, (2) once all 7 report terminal
+      (`gcloud compute instances list` shows none, or a per-VM `EXIT_STATUS` in `run.log`), re-measure via
+      `read_availability_index` filtered to venue ∈ {HYPERLIQUID, ASTER}, do not trust prior `attempted_failed` counts
+      as the gap census (mirrors the Tardis-lockout lesson elsewhere in this doc — measure fresh, don't assume) — do not
+      flip this checkbox until that fresh measurement confirms 0 `expected_unattempted`.
 - [x] ✅ [DEPLOY] P1. Redeployed the IS fixes — built `instruments-service:latest`=7489ed1/0.43.0 from LDR (no-auth
       b99e586 + full-universe 0fe8e71 + dated-future quote fix 7489ed1) via Cloud Build d215d55a (SUCCESS); created the
       missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00 IS scheduler).

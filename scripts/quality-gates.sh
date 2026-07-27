@@ -403,23 +403,14 @@ if [ -f "$STRATEGY_MANIFEST" ] && [ -f "$STRATEGY_VALIDATOR" ]; then
     fi
 fi
 
-# ── Locked plan deletion check ──────────────────────────────────────────
-# Prevent agents from deleting locked plans without [unlock-plan] tag
-DELETED_PLANS=$(git diff --cached --diff-filter=D --name-only -- 'plans/active/*.md' 2>/dev/null || :)
-if [ -n "$DELETED_PLANS" ]; then
-    COMMIT_MSG=$(git log -1 --format=%B 2>/dev/null || :)
-    for plan_file in $DELETED_PLANS; do
-        # Check if the deleted plan had locked_by in its frontmatter
-        # Read from the old version (before deletion)
-        LOCKED_BY=$(git show "HEAD:$plan_file" 2>/dev/null | grep -oP '^\s*locked_by:\s*\K.*' | head -1 || :)
-        if [ -n "$LOCKED_BY" ] && ! echo "$COMMIT_MSG" | grep -q '\[unlock-plan\]'; then
-            echo "❌ BLOCKED: $plan_file is locked by '$LOCKED_BY'."
-            echo "   To delete a locked plan, include [unlock-plan] in your commit message."
-            echo "   This prevents agents from accidentally removing plans that are actively being implemented."
-            exit 1
-        fi
-    done
-fi
+# ── Locked plan deletion check — MOVED to the commit-msg prek stage ──────
+# (scripts/hooks/check-locked-plan-deletion.sh, wired via .pre-commit-config.yaml
+# stages: [commit-msg]). This block was dead for its own primary use case: a pure
+# docs(plans): archival commit is routed to prek-only (CLAUDE.md's QG-batching
+# rule), so quality-gates.sh never ran for it — and even when it did run, this
+# block read `git log -1` (the PREVIOUS commit), not the message being written.
+# unified-trading-pm@57ed9271c archived a locked_by: doc through exactly that gap.
+# See plans/active/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md.
 
 # ── WS-0 accumulate-and-report (cicd_consolidated_remaining_2026_06_24 § WS-0 #1) ─────────
 # The ratchet/codex/governance post-gates below collect their failures into POST_GATE_FAILURES

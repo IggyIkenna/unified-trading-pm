@@ -48,10 +48,15 @@ source:
 
 ## Todos
 
-- [ ] [BACKEND] P0. C — deployment-api: surface `reason_category` + `reason_summary` on the hierarchical drilldown tree
-      nodes. Data already exists (`error_reason` projected into the df); wire prod's OWN
-      `compute_empty_reason_counts`/`compute_failure_pillar_counts` (`services/data_status/coverage_metrics.py`) into
-      `DrilldownNode.to_dict()` (`services/data_status_hierarchical.py`). NOT Harsh's classifier. Unit-test. Ship+flip.
+- [x] ✅ [BACKEND] P0. C — deployment-api: surface `reason_category` + `reason_summary` on the hierarchical drilldown
+      tree nodes. **VERIFIED 2026-07-27 (slot-10)**: already shipped — `deployment-api@c503d35` ("feat(data-status):
+      surface reason_category + reason_summary on hierarchical drilldown tree nodes"), same day this plan was created,
+      explicitly cites this plan in its commit message. `DrilldownNode` carries both fields; `_children_for_axis` wires
+      prod's own `compute_empty_reason_counts`/`compute_failure_pillar_counts` into each node (NOT Harsh's classifier,
+      per the todo's own instruction) via `_dominant_reason_category`; `to_dict()` serializes both. Unit tests present
+      (`tests/unit/test_data_status_hierarchical.py::TestReasonCategoryAndSummary` — mixed-failure dominant-pillar
+      case + fully-captured null-category case). This plan's checkbox simply never got flipped after the code shipped —
+      no further code change needed.
 - [ ] [BACKEND] P1. D — deployment-api: mock-mode fixes. `/coverage-summary` returns all-zeros in mock because
       `_status_core.get_coverage_summary` (registered first, wins) has a zero mock while the rich mock lives in the
       unreachable `_deploy_turbo.get_data_coverage_summary`. Port the rich per-asset-group mock INTO the winning

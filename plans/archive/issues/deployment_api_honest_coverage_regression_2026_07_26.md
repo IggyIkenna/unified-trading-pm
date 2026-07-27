@@ -68,7 +68,7 @@ summary: >
   `data_status_cell_grid_rearchitecture_2026_07_18.md`). This only prevents a single request from taking down the whole
   shared container, and stops a dev/debug honest-coverage run from silently erasing other asset_groups' data for the
   day.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -109,10 +109,14 @@ drift_direction: advance-code
 last_updated: 2026-07-27
 locked_by:
 resolved_by:
+  ikennaigboaka [slot-1·laptop], 2026-07-27 — both fixes shipped, deployed, and live-verified (see § 7 Resolution).
 depends_on: []
 ---
 
 # Data Status honest-coverage + coverage-summary regression for MTDS/IS
+
+> **✅ RESOLVED 2026-07-27** — both bugs fixed, shipped, deployed, and live-verified against the running production
+> service (not inferred from build status alone). See § 7 Resolution for the closing evidence. Archived.
 
 ## 1. Symptom (operator-observed, live)
 
@@ -226,35 +230,30 @@ lands (per the workspace's commit-push-flip + evidence discipline).
       `partial: false`. The merge-on-write fix (`instruments-service@21083716`) is confirmed working on real prod data —
       the same-day clobber bug is fixed. VM `measure-honest-coverage-20260727-020313` self-deleted on completion as
       designed (`gcloud compute instances list --filter="name~measure-honest-coverage"` → empty).
-- [ ] [SCRIPT] P0. `IggyIkenna/deployment-api#398` still **OPEN, unmerged** as of 2026-07-27
-      (`mergeStateStatus=BLOCKED`, `mergeable=MERGEABLE`) — but NOT because of anything in this fix. Checks
-      (`gh pr checks 398`): `quality-gates-v2` ✅, `validate / GCP Cloud Build — deployment-api` ✅ **SUCCESS (completed
-      2026-07-27T01:06:34Z)** — the image for `deployment-api@e8fc64a` already built cleanly, satisfying the "builds an
-      image" requirement independent of the merge. The ONLY failing required check is `sit-gate/fleet-green`
-      (`https://github.com/IggyIkenna/system-integration-tests/actions/runs/30227188482`), and its failed job
-      (`cross-repo-invariants`) is a **fleet-wide, unrelated flake**: `ci-status-update.yml` dispatch timed out for 6
-      DIFFERENT repos (`market-tick-data-service`, `ml-service`, `strategy-service`, `trading-agent-service`,
-      `unified-trading-library`, `unified-trading-system-ui` — deployment-api is not among them), so the SIT-wide stamp
-      step failed and blocks EVERY repo's promotion, not just this one. Root-causing/fixing that fleet SIT flake is
-      explicitly OUT OF SCOPE for this issue (it's infra-wide, not a Data Status regression, and per the commit churn on
-      this branch other concurrent agent work already appears to be actively triaging fleet CI/registry health — do not
-      duplicate). **Action: wait for the next `sit-gate/fleet-green` run to go green and the `*/15` promote cron to
-      auto-merge #398**, then re-check (`gcloud builds list --filter="substitutions.REPO_NAME=deployment-api" --limit=3`
-      for a NEW build with `createTime` after `2026-07-27T01:06:05Z`, and
-      `gcloud run services describe uts-shared-deployment-api     --region=asia-northeast1 --format='value(status.latestReadyRevisionName)'`
-      for a revision newer than `uts-shared-deployment-api-00301-gcl`). Cite the build ID as `Evidence: cloudbuild=<id>`
-      per `plans/PLAN_FORMAT.md` § 8b before considering this "deployed". If `sit-gate/fleet-green` is STILL failing on
-      the SAME unrelated repos after a few more cron cycles, that is itself worth a fresh, separately-scoped issue doc
-      (or checking whether one already exists) — but do not fold it into THIS doc, which is scoped to Data Status only.
-- [ ] [SCRIPT] P1. Self-verify live once both above are confirmed: `curl .../api/data-status/honest-coverage` shows 5
-      asset_groups; `curl .../api/data-status/coverage-summary?service=market-tick-data-service` returns EITHER a
-      `refused`/`stale` structured response (fast) OR real data — never a >60s hang, never contributing to another
-      `Memory limit exceeded` log line (`gcloud logging read` on `uts-shared-deployment-api`, `--freshness=10m`, filter
-      `severity>=ERROR`).
-- [ ] [DOCS] P1. Once all three above are confirmed, run the 6-step archival ritual on THIS doc (migrate any leftover
-      DEFERRED items → banner → codex-alignment check — confirm `/codex/02-data/honest-coverage-model.md` doesn't need a
-      same-day-merge-semantics note added → update any referrer corpus-wide (none expected — this doc is brand new) →
-      clear lock — there is none) and move it to `plans/archive/issues/`.
+- [x] [SCRIPT] P0. ✅ **CONFIRMED 2026-07-27T02:04:16Z.** `IggyIkenna/deployment-api#398` MERGED (the
+      `sit-gate/fleet-green` flake cleared on a later fleet SIT run — no action needed from this doc, as predicted).
+      Merge triggered Cloud Build `34593227-e79e-41e8-a1ca-c5bfb5917a4c` (started `02:04:19Z`) → Cloud Run revision
+      `uts-shared-deployment-api-00302-xv5` created `02:14:03Z`, serving `100%` traffic, image digest
+      `sha256:4effcfbd579f6e9e3cadea02615df55f03391a7eb45a1123c2239a5352d48b20` (differs from the pre-fix digest
+      `sha256:34d4ff3a…`). **Caveat worth recording**: `gcloud builds describe 34593227…` reports overall status
+      `TIMEOUT`, not `SUCCESS` — but all 12 steps up to and including `push` show `SUCCESS`, and the final `deploy`
+      step's own Cloud Run revision-creation timestamp (`02:14:03Z`) is BEFORE the build's `finishTime` (`02:15:39Z`),
+      i.e. the deploy had already completed and migrated 100% traffic before some trailing post-deploy check inside that
+      same step ran past the build's overall wall-clock budget and got marked `CANCELLED`. Not treating the bare Cloud
+      Build status as sufficient evidence either way — see the next item for the actual proof this was a real, working
+      deploy. (Worth a LIGHT follow-up outside this doc's scope: the `deploy` step's trailing verification may need a
+      shorter internal timeout or the overall build timeout may need headroom — but it did not block or corrupt this
+      deploy.)
+- [x] [SCRIPT] P1. ✅ **CONFIRMED 2026-07-27T02:2xZ — live runtime proof, not just build-status inference** (the
+      workspace's "run it, don't read it" bar):
+      `curl https://uts-shared-deployment-api-1060025368044.asia-northeast1.run.app/api/data-status/coverage-summary?service=market-tick-data-service`
+      → **0.56s**, `HTTP 200`,
+      `{"mode":"live_build_refused","refused":true,"detail":"On-demand build estimated at     ~83209 MB, over the 768 MB safety budget…"}`
+      — the exact intended behavior: instant, graceful refusal instead of the prior 81.8s hang that OOM-killed the
+      container. `curl .../api/data-status/honest-coverage` → `date=2026-07-27`, `by_asset_group` keys =
+      `[cefi, defi, tradfi, sports, prediction]` (all 5), `partial=False` — confirms the merge-on-write fix through the
+      LIVE API, not just the raw GCS file. Both original symptoms (honest-coverage missing asset_groups; "Request was
+      cancelled" from an OOM cascade) are resolved and verified on the currently-deployed revision.
 
 ## 6. Lessons for whoever resumes this
 
@@ -272,3 +271,30 @@ lands (per the workspace's commit-push-flip + evidence discipline).
   is evidently other active agent work). This is expected/normal per the workspace's multi-agent model, not a bug —
   quickmerge's own retry-on-drift mechanics handle it, just budget for several attempts on this specific repo when the
   fleet is busy, and never touch a foreign session's uncommitted files while waiting out the drift.
+
+## 7. Resolution (archival closing note, 2026-07-27)
+
+Both bugs are fixed, shipped, deployed, and verified against the LIVE running service — not inferred from a build status
+or a unit test alone:
+
+- `instruments-service@21083716` (merge-on-write) — verified via the actual GCS object AND the live
+  `/api/data-status/honest-coverage` endpoint: `2026-07-27/coverage.json` carries all 5 asset_groups, `partial: false`.
+- `deployment-api@e8fc64a` (coverage-summary OOM guard) — merged via `#398`, deployed to
+  `uts-shared-deployment-api-00302-xv5` (100% traffic). Verified via a live `curl` against
+  `/api/data-status/coverage-summary?service=market-tick-data-service`: **0.56s**, HTTP 200, structured `refused: true`
+  response — down from the original 81.8s hang that OOM-killed the container.
+
+**6-step archival checklist:**
+
+1. Migrate DEFERRED items → none outstanding; all todos in § 5 are `[x]`.
+2. Banner → added above (RESOLVED, links to this section).
+3. Codex-alignment check → `/codex/02-data/honest-coverage-model.md` reviewed: it documents the coverage DATA MODEL
+   (capture_status grain, Layer-1/Layer-2 semantics) and does not describe GCS write-conflict handling at the
+   operational level — the same-day merge-on-write behavior is fully documented in `measure_honest_coverage.py`'s own
+   docstrings (`_read_existing_payload`, `_merge_with_existing`) and this issue doc. Judged NOT to need a codex update;
+   this is an operational robustness fix, not a data-model change.
+4. Update CLAUDE.md/codex on a new contract → N/A, no new contract introduced (both fixes reuse existing, already-
+   documented patterns: same-day GCS merge is local to the writer script; the coverage-summary guard reuses the
+   already-codified manifest-status OOM-guard pattern verbatim).
+5. Update every referrer corpus-wide → N/A, this doc was created this session; nothing references it yet.
+6. Clear lock → N/A, `locked_by` was never set.

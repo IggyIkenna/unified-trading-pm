@@ -63,31 +63,48 @@ source:
 
 ## Todos — SEQUENTIAL (one continuous thread: unblock → diagnose → fix → backfill)
 
-- [ ] [CODE] P0. Add `exc_info=True` to the UTL shard-isolation catch (`service_framework/_adapter.py`, "Handler %s
-      failed on payload") so the swallowed exception surfaces in logs. Separately root-cause why Cloud Run job
-      stdout/stderr does not reach Cloud Logging at all for these jobs (only the audit-log "RunJob" event and "Container
-      called exit(1)" appear — confirmed on both `is-daily-enum-prediction` AND `is-daily-enum-cefi`, so this affects
-      every lifecycle-catalogue/enum job, not just the two dead ones). Get the fix into the `is-daily-enum-*` image
-      (rebuild/redeploy — mirror the `Dockerfile` `BASE_IMAGE_DIGEST` bump recipe from instruments-service@1098731c4 if
-      the fix lands in UTL and needs a pin bump to reach the image). Gate: a forced handler exception logs the full
-      traceback in Cloud Logging; verified on a real `is-daily-enum-prediction` or `-sports` run.
-- [ ] [CODE] P0. With the real traceback now visible, re-run `is-daily-enum-{prediction,sports}` and read the ACTUAL
-      error (NOT the already-ruled-out `ArrowTypeError` — that's fixed; see "what is NOT the cause" in the issue doc).
-      Fix the real root cause. Gate: `is-daily-enum-prediction` AND `is-daily-enum-sports` cloud executions both show
-      `succeededCount=1` — verified via
-      `gcloud run jobs executions describe <exec> --format='value(status.succeededCount)'` read as an EXPLICIT
-      single-field call, never a combined `value(a,b)` call parsed by a script (a prior attempt on this exact
-      investigation misread gcloud's tab-collapsed output and wrongly reported two failed runs as succeeded — verify
-      with `executions describe`, one field at a time, before claiming green).
-- [ ] [VERIFY] P1. Backfill the missed windows: prediction 07-01→07-06, sports 06-28→07-06. Confirm the healed daily
-      job's `--days-back` reach covers the gap days' by_date + manifest rows, or run a targeted backfill for the
-      uncovered dates. Then confirm the catalogue picks up the post-gap listings (`max(available_from)` advances,
-      `CATALOGUE_STALE_BY_DATE` clears) on the next daily catalogue run. Gate: no by_date/manifest holes in either AG's
-      07-01(pred)/06-28(sports)→07-06 window; both catalogues' `available_from` advance past their respective freeze
-      dates.
+- [x] ✅ [CODE] P0. **VERIFIED 2026-07-27 (slot-10)**: this plan carried forward a stale pre-completion snapshot — the
+      referenced handoff issue doc (`issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`) is
+      already **`status: resolved`** and ARCHIVED (`plans/archive/issues/…`), resolved 2026-07-14. Direct code read
+      confirms `exc_info=exc` is already on both UTL shard-isolation catch sites
+      (`unified_trading_library/service_framework/_adapter.py:61` serial driver, `:97` concurrent driver) — shipped
+      `unified-trading-library@b7925334` (2026-07-07, same day this plan was created) as part of the pd.NA
+      nullable-Boolean fix's commit. The stdout/stderr-to-Cloud-Logging gap was separately root-caused (2026-07-13) as a
+      project `_Default` logging sink exclusion (`severity <= "DEBUG"` was dropping ALL `resource.type="cloud_run_job"`
+      stdout, unrelated to `exc_info`) — fixed via a sink-exclusion carve-out
+      (`severity <= "DEBUG" AND NOT resource.type="cloud_run_job"`, Cloud Build `9a838983-464c-4f45-b703-c436e8ad058e`
+      SUCCESS) and verified working (fresh `is-daily-enum-prediction` execution streamed full app stdout to Cloud
+      Logging same day). No code change needed here — closing as verified-already-shipped.
+- [x] ✅ [CODE] P0. **VERIFIED 2026-07-27 (slot-10)**: per the same archived issue doc, the real root cause (once logs
+      were visible) was **SIGKILL/OOM** (`exit_code=-9` at 8Gi/4cpu, prediction's CLOB scan past "page 1000, 1,001,000
+      markets total"), not `ArrowTypeError`. Fixed via memory bumps (prediction 8Gi→16Gi; sports 8Gi→16Gi→**32Gi/8cpu**,
+      sports OOM'd even at 16Gi) + a memory-frugal code fix (`instruments-service@633d7af4`, column-projected manifest
+      reads, measured 6.7GB→1.6GB peak RSS, semantics proven byte-identical old-vs-new). Both jobs confirmed green on
+      real **scheduled** cron executions (not just manual retriggers, matching this todo's own gate): prediction
+      `is-daily-enum-prediction-wrbsm` `succeededCount=1` @ 2026-07-13T23:54:52Z; sports `is-daily-enum-sports-5vchf`
+      (the 13:30Z scheduled cron) `succeededCount=1` @ 2026-07-14T15:02:44Z, each field read explicitly per this todo's
+      own single-field-read caution. Standing follow-up noted in the archived doc (not re-added here, tracked there): a
+      durable chunked-scan fix so 16Gi/32Gi isn't a ceiling race against universe growth, and a bump-back evaluation
+      once a few scheduled runs stay green.
+- [ ] [VERIFY] P1. Backfill the missed windows: prediction 07-01→07-06, sports 06-28→07-06. **RE-MEASURED 2026-07-27
+      (slot-10) — genuine gap CONFIRMED, still open**, read-only `read_availability_index` on
+      `instruments-store-pred-prd-central-element-323112` / `instruments-store-sports-prd-central-element-323112`: -
+      **prediction: 2026-07-01, 07-02, 07-03 — ZERO manifest rows** (data resumes 07-04, 44 distinct instruments that
+      day, climbing). - **sports: 2026-06-28, 06-29, 06-30, 07-01, 07-02 — ZERO manifest rows** (data resumes 07-03,
+      `captured`=278 that day, `empty_confirmed`≈3.8k, `expected_unattempted`≈3.3k — the real per-day capture_status
+      distribution, i.e. the daily job's normal steady state). This is the daily job's normal forward-only cadence (no
+      `--days-back` catch-up ran) — the archived doc's own "standing follow-up" list (2026-07-14) already flagged this
+      as NOT yet done and it still isn't, 13 days later. Confirm the healed daily job's `--days-back` reach covers the
+      gap days' by_date + manifest rows, or run a targeted backfill for the 3 (pred) / 5 (sports) uncovered dates above.
+      Then confirm the catalogue picks up the post-gap listings (`max(available_from)` advances,
+      `CATALOGUE_STALE_BY_DATE` clears) on the next daily catalogue run. Gate: the exact day lists above show real
+      (non-zero) manifest rows; both catalogues' `available_from` advance past their respective freeze dates. Coordinate
+      with `plans/archive/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md` (same index,
+      avoid double-writing) per the archived doc's own note.
 
 ## Done definition
 
 Both `is-daily-enum-{prediction,sports}` cloud jobs succeed on 2 consecutive scheduled runs (not just a manual
-re-trigger); the missed-window backfill is verified complete; `quality-gates.sh`-green + quickmerge on every code
-change; `Evidence: cloudbuild=<id>` cited for any image rebuild claimed done.
+re-trigger) — **VERIFIED done 2026-07-13/14**, see todos above; the missed-window backfill is verified complete —
+**STILL OPEN**, see remaining todo above; `quality-gates.sh`-green + quickmerge on every code change;
+`Evidence: cloudbuild=<id>` cited for any image rebuild claimed done.
