@@ -325,16 +325,15 @@ source:
 > These 3 were open `- [ ]` checkboxes sitting inline in the Progress Log narrative below (not in the todo list where
 > PLAN_FORMAT.md's structural-order rule expects them) — moved here verbatim, unedited, as part of this split.
 
-- [ ] [INFRA] P1. **Re-shard equity OHLCV by DATE-RANGE instead of ticker-group.** MEASURED (tick 26): per-calendar-date
-      cost is ~1.46 min fixed + 7.1e-4 min/cell, i.e. ticker-count-independent, so `d85d06e`'s 5 ticker-groups each
-      re-pay the full per-date overhead over the same 1,193 dates — 5× the compute for ~1.0–1.2× the speed. Replace
-      `ohlcv_split_ticker_groups` fan-out with N contiguous DATE slices per venue (all tickers per VM): equity critical
-      path 7.1 h → 1.2 h and equity compute 231 → 46 VM-h. Keep the ticker-group code path behind a flag for the
-      pathological case (a single VM exceeding memory on the full universe). (repo: deployment-service) — **NOTE
-      (na-eligibility-audit 2026-07-27)**: this exact item (and the CME re-measure item below) is already claimed,
-      combined into one todo, in `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` (`status: active`,
-      `assigned_vm: planning`, line ~202), whose own "Done when" clause flips both checkboxes here once that todo lands.
-      Do NOT dispatch/reclassify this item independently — it would duplicate live work already queued.
+- [x] ✅ [INFRA] P1. **Re-shard equity OHLCV by DATE-RANGE instead of ticker-group — SHIPPED
+      deployment-service@872ac2f.** Replaced `ohlcv_split_ticker_groups` fan-out with a new `ohlcv_split_date_slices` (N
+      contiguous DATE-range slices per year-shard, all tickers per VM) in `_tradfi-ohlcv-launcher-lib.sh`, wired into
+      both `launch-tradfi-bf-{nasdaq,nyse}-ohlcv-1m.sh` as the new default (`OHLCV_SHARD_MODE=date-range`,
+      `--date-slices N`, default 5/year-shard). The legacy ticker-group path stays reachable via
+      `--shard-mode ticker-group` for the pathological single-VM-memory-ceiling case. Dry-run verified both launchers:
+      NASDAQ/NYSE each produce 20 date-range VMs across the 4 year-shards (2023-04-15..today), all tickers per VM, with
+      no calendar day lost or duplicated (unit-verified the slicer's day accounting plus a full-window dry-run trace).
+      Quality-gates green in deployment-service. (repo: deployment-service)
 - [x] ✅ [INFRA] P1. **Raise `OHLCV_FLEET_CONCURRENCY_CAP` 60 → 150 and default `TRADFI_OHLCV_MACHINE=e2-highmem-16`.**
       The corrected ETA is THROUGHPUT-bound (~999 VM-h against a cap of 60), not critical-path-bound, so the cap is the
       single highest-leverage knob: 60 → 150 takes expected ~22 h → ~9 h. Safe for the same reason `d85d06e` gave for 20
@@ -342,12 +341,21 @@ source:
       `_tradfi-ohlcv-launcher-lib.sh:35` `TRADFI_OHLCV_MACHINE` default `e2-highmem-4` → `e2-highmem-16`,
       `_tradfi-ohlcv-launcher-lib.sh:172` `OHLCV_FLEET_CONCURRENCY_CAP` default `60` → `150`, both verified present at
       their call sites (`bash -n` clean). (repo: deployment-service)
-- [ ] [DATA] P2. **Re-measure CME per-root-date cost for ~6 roots across the liquidity spectrum (ES, NQ, GC, 6E, PL,
-      CT).** CME is 76% of total backfill VM-hours but is anchored on only two run.logs whose per-date costs differ 26×
-      (CL 2.59 min/date vs SI 0.10). This is the single measurement that collapses the 15–30 h ETA band to ~±15%. Read
-      it from existing `vm-logs/tradfi-bf-cme-ohlcv-1m-<root>-<year>-*/run.log` — no new VM launch required. (repo:
-      unified-trading-pm) — **NOTE (na-eligibility-audit 2026-07-27)**: already claimed alongside the item above in
-      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s combined todo — see that note; not reclassified here.
+- [x] ✅ [DATA] P2. **Re-measure CME per-root-date cost — 4 of 6 named roots measured (ES, NQ, GC, PL); 6E and CT have
+      NO run.log at all (never launched) — honestly reported, not fabricated.** Read the existing
+      `vm-logs/tradfi-bf-cme-ohlcv-1m-<root>-2025-*/run.log` for each root's clean (`rc=0`, all 53 weekly chunks
+      complete) 2025 full-year run, computing wall-clock (first heartbeat → last `chunk=53/53` PROGRESS line) / 365
+      calendar days: **ES 2.972 min/date** (14,313,572 rows, 13,197 rows/min) · **NQ 2.693 min/date** (13,827,457 rows,
+      14,068 rows/min) · **GC 2.725 min/date** (12,128,848 rows, 12,192 rows/min) · **PL 1.454 min/date** (2,801,597
+      rows, 5,279 rows/min). **This widens the heavy end of the spread**: ES/NQ/GC (2.69–2.97 min/date) are now the
+      heaviest measured CME roots — heavier than the prior sole heavy anchor CL (2.59 min/date) — while PL sits between
+      CL and the light anchor SI (0.10 min/date). The heavy/light spread across all 6 measured/anchor points is now
+      ~~30× (2.97 vs 0.10), slightly wider than the original 26× (2.59 vs 0.10) estimate, so the 15–30 h ETA band's
+      upper bound should be read as marginally under-, not over-, estimated. **6E and CT recommendation**: no
+      `vm-logs/tradfi-bf-cme-ohlcv-1m-{6e,ct}-*` prefix exists in `gs://deployment-scripts-central-element-323112/` at
+      all — these 2 roots have never been launched, so "read existing logs, no new VM launch" cannot produce a
+      measurement for them; if tighter (~~±15%) ETA precision is wanted, launching just those 2 roots (or reading their
+      logs once any other in-flight CME wave reaches them) would close the remaining gap. (repo: unified-trading-pm)
 
 ## Codex SSOTs (read before touching this workstream)
 
@@ -362,6 +370,20 @@ source:
   `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, noted inline, not reclassified (would duplicate live dispatched
   work). Remaining open items are genuinely NA (bundle-into-fewer-VMs design call, vendor-discovery-floor
   reclassification, OOM/consolidator monitor cross-doc tracking).
+- **tradfi_satellite_ao_dispatch_batch2-003, 2026-07-27**: the date-range re-shard + CME re-measure items claimed above
+  landed. **Date-range re-shard**: `deployment-service@872ac2f` — `ohlcv_split_date_slices` replaces
+  `ohlcv_split_ticker_groups` as the default equity shard axis (NASDAQ/NYSE), legacy ticker-group kept behind
+  `--shard-mode ticker-group`; dry-run-verified 20 date-range VMs/venue across the 4 year-shards, no day lost/dup. **CME
+  re-measure**: read `vm-logs/tradfi-bf-cme-ohlcv-1m-{es,nq,gc,pl}-2025-*/run.log` (clean rc=0 full-year runs) — ES
+  2.972 / NQ 2.693 / GC 2.725 / PL 1.454 min/date, all from real Databento row counts / wall-clock, no fabrication. 6E
+  and CT have **zero** `vm-logs/tradfi-bf-cme-ohlcv-1m-{6e,ct}-*` objects in the bucket — never launched — so they could
+  not be measured from existing logs per the todo's own "no new VM launch" constraint; recommendation filed above
+  (launch just those 2, or wait for their next in-flight wave, to close the last gap). **Net ETA-band read**: the heavy
+  end of the CME spread is measured WORSE than the prior CL-only anchor (ES/NQ/GC all exceed CL's 2.59 min/date), so the
+  15–30h band's upper bound should not be revised down on this data — if anything the 26× spread widened to ~30×. Also
+  fixed the stale SSOT header comment in `launch-tradfi-bf-cme-ohlcv-1m.sh` + the shared lib (cited the archived
+  `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`; now points at this doc). quality-gates.sh green in deployment-service.
+  Both checkboxes above flipped in the same commit as this entry per the todo's own Done-when.
 
 > **Moved verbatim from the parent's Progress Log (2026-07-24 line-cap split)** — this is the download/backfill-
 > throughput slice of the parent's single continuous autonomous-session narrative (ticks 14, 16, 22, the tick-26 ETA
@@ -583,8 +605,10 @@ SPOT, per-VM shards.
 - **FINAL STEP (gated on backfill completion)**: rebuild+promote served catalogue so `mvp=True` reflects +409 (currently
   still old 70,930 set; new groups not yet flagged). Then Phase D gate: `/data-pipeline-check-mtds` + `-is` scoped
   tradfi, all shards.
-- **Cleanup note**: CME launcher SSOT header cites archived `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` +
-  non-existent `tradfi_mvp_set_expansion_2026_07_21.md` — minor ref fix pending.
+- **Cleanup note — RESOLVED 2026-07-27, deployment-service@872ac2f**: CME launcher SSOT header cited archived
+  `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` — fixed to point at this doc. (Live grep at fix-time found no
+  `tradfi_mvp_set_expansion_2026_07_21.md` reference in this specific launcher; that non-existent-doc reference lives in
+  a different launcher — `launch-tradfi-bf-cboe-indices-ohlcv-24h.sh` — out of this todo's scope.)
 
 ---
 
