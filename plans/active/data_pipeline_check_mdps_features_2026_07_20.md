@@ -598,8 +598,19 @@ without a column/filter projection is one cache-miss from an OOM. Independent of
       `test_all_four_states_and_absent_key` / `test_duplicate_key_last_write_wins` (same file).
       `bash scripts/quality-gates.sh --no-fix` GREEN (263s) on UTL's current tree, full test suite incl. this file. No
       code change needed — closing as verified-via-code-read + green regression suite.
-- [ ] NEW todo. [DATA] P0. Audit every `read_availability_index` caller on defi for a missing column/filter projection
-      (1.58 GB index, OOM risk).
+- [x] ✅ NEW todo. **AUDITED 2026-07-27 (slot-7)** — full-corpus audit complete, ~35-40 bare + defi-reachable call sites
+      found across 8 repos, filed as `issues/read_availability_index_bare_defi_callers_2026_07_27.md` with a per-caller
+      fix todo list (P0-P3, concrete file:line + column-usage guidance) + a proposed new QG gate to close the "no
+      enforcement" gap for good. Highest-risk findings: deployment-api `manifest_source.py:164` (single chokepoint
+      feeding ~10 dashboard endpoints), ml-service `manifest_inference_guard.py:46` (live-inference hot path), MTDS
+      `reader.py:839` + `orchestrator/__init__.py:509` (per-shard-read + per-backfill-VM-startup, same incident class as
+      `mtds_backfill_vm_startup_oom_rc137_2026_07_14`). Confirmed via `codex/02-data/` grep: the projection pattern is
+      prose-only guidance, no QG gate enforces it. Did NOT ship the ~15 individual fixes in this session (each needs its
+      own direct-read column-usage verification — the audit's own first-pass proposal for `reader.py:839` initially
+      omitted `pipeline_mode`, which IS read downstream for the CF-3 lift; a mechanical columns-list copy without
+      independent verification risks silent behavior regressions across 8 repos in one sitting). Per the audit-scope
+      convention, filed as tracked per-caller todos for individual dispatch rather than one oversized fix-everything
+      session.
 
 ### 2026-07-20 — my SECOND hypothesis refuted, and a P0 concurrency bug that BLOCKS the speed lever
 
