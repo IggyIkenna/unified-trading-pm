@@ -22,7 +22,7 @@ assigned_vm:
 resolved_by:
 locked_by:
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

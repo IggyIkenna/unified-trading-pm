@@ -15,7 +15,7 @@ summary: >-
   but not yet on `origin/main`; the next `*/15` LDR→main promote cycle would carry an unratified change to main.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

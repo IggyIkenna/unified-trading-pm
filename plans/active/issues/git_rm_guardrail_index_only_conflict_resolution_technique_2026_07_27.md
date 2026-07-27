@@ -29,7 +29,7 @@ summary: >
   re-verified 0 violations, `ahead=0`/`behind=0` confirmed after.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer]

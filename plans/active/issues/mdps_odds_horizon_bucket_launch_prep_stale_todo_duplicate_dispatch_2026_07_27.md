@@ -17,7 +17,7 @@ summary: >-
   "ready-to-execute" recipe gets run ad-hoc without closing that SAME doc's own todo.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

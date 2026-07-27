@@ -43,6 +43,16 @@ the post-`--apply` id-form reality (nuance: paths/catalogue canonical since this
 > measured 30.8% canonical; only GCS paths + the catalogue are genuinely canonical so far). Apply those 3 once the
 > content-migration lands.
 
+> **NOTE (na-eligibility-audit 2026-07-27)**: these same 3 residual findings are already restated verbatim as one
+> combined todo in `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (`status: active`, `assigned_vm: planning`, line
+> ~245-261), which also flags that its own L460 citation should be RE-DERIVED, not trusted verbatim ("that content
+> forked to `tradfi_manifest_content_recovery_completion_2026_07_24.md`"). Not reclassified independently — the
+> checkboxes here stay open until batch4's todo actually lands and flips them. Separately:
+> `canonical-cutover -register.md` §4 (the L237 target) has since been rewritten entirely with a resolved evidence table
+> ("effective-from: 2026-07-19") — the exact "canonical on filenames only" text this doc's L237 finding quotes no longer
+> exists verbatim in that file, so that specific finding may already be moot; re-verify before applying it rather than
+> assuming the original quoted text is still there.
+
 ## Findings by document (apply the `fix` field from the JSON)
 
 ### `plans/active/tradfi_consolidated_closeout_2026_07_18.md` — 5 (P1,P1,P1,P2,P2)

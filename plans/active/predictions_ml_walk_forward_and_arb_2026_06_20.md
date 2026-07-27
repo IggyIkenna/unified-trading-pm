@@ -86,9 +86,23 @@ downstream of the sports-half FSS feature production (the Group E gate).
 
 - [ ] [ANALYSIS] P1. Persist model + metrics to the ml-models registry; tag `model_family=sports_arb_v1`. (BLOCKED-ON
       the walk-forward run.)
-- [ ] [AGENT] P1. Predictions MTDS completion-% slice — per-(canonical_question_group, day) completion %: HOURLY = 24
-      expected/day, DAILY = 1, ELECTION = 1 over months/years. (BLOCKED-ON the Phase-1 lifecycle ingestion + classifier,
-      which shipped per the epic body.)
+- [x] ✅ [AGENT] P1. **DONE 2026-07-27 (slot-6).** Predictions MTDS completion-% slice — per-(canonical_question_group,
+      day) completion %: HOURLY = 24 expected/day, DAILY = 1, ELECTION = 1 over months/years. (Phase-1 lifecycle
+      ingestion + classifier confirmed shipped — CANONICAL_GROUP_METADATA is live in UAC.) Read-only analysis (no code
+      change); repo: unified-trading-pm. Full per-cadence completion-% table + methodology in the Progress Log below.
+      **Finding surfaced (not fixed here, mirrors the sports MTDS-slice precedent's "TRANSFERMARKT_LEAGUES 100% empty —
+      needs P0 triage" callout)**: the `hourly`/`5min`/`intraday`/`single` cadences — 8 registered groups
+      (`BTC_UP_DOWN_HOURLY`, `ETH_UP_DOWN_HOURLY`, `BTC_UP_DOWN_5MIN`, `ETH_UP_DOWN_5MIN`, `BTC_UP_DOWN_INTRADAY`,
+      `ETH_UP_DOWN_INTRADAY`, `ELECTION_PRESIDENT_2028`, `OSCARS_BEST_PICTURE`) — have **ZERO** manifest rows in the
+      live prediction manifest as of 2026-07-27T16:01:28Z; completion % for the todo's own named HOURLY/ELECTION
+      examples is undefined (0/0), not merely low.
+- [ ] [DIAG] P2. Investigate why
+      `BTC_UP_DOWN_HOURLY`/`ETH_UP_DOWN_HOURLY`/`*_5MIN`/`*_INTRADAY`/`ELECTION_PRESIDENT_2028`/ `OSCARS_BEST_PICTURE`
+      have zero `prediction_canonical_question_group` manifest rows (captured, empty_confirmed, attempted_failed, AND
+      expected_unattempted all zero) — is this a genuinely-not-yet-listed market (honest-absence, no action needed) or a
+      classifier/writer gap silently dropping these 8 groups before any manifest row is ever emitted (a correctness
+      bug). Repo: market-tick-data-service. Source: this todo's completion-% slice, recorded 2026-07-27 (slot-6) in the
+      Progress Log below.
 
 ## Success criteria
 
@@ -98,6 +112,55 @@ downstream of the sports-half FSS feature production (the Group E gate).
   pairs / duration.
 - Model + metrics persisted to ml-models registry; predictions MTDS completion-% slice surfaced per
   (canonical_question_group, day).
+
+## Progress Log
+
+### 2026-07-27 (slot-6) — Predictions MTDS `canonical_question_group` completion-% slice done, checkbox flipped
+
+Picked up via `/boot` (`prediction_satellite_ao_dispatch_batch2-003`). Read-only analysis, no code shipped, per the
+todo's own scope.
+
+**Method**: single-walk, column-pruned, filter-pushdown read of the live prediction availability manifest
+(`market-data-tick-pred-prd-central-element-323112`, resolved via
+`resolve_bucket_name(cloud="gcp", kind="market-data-tick-prediction")`) using
+`unified_trading_library.manifest_writer.read_availability_index(bucket, columns=[...], filters=[("data_type", "==", "prediction_canonical_question_group")])`
+— the same slim/filtered pattern used for todo 2's instrument_type census earlier in
+`prediction_satellite_ao_dispatch_batch2_2026_07_25.md`. `instrument_id` on these bundle rows carries the
+`canonical_question_group` string verbatim (per
+`market_tick_data_service/engine/orchestrator/manifest_finalize.py::_finalize_prediction_bundles`'s `row_key`). Grouped
+by `(instrument_id, date)` → the per-(canonical_question_group, day) table the todo names, joined against UAC's
+`CANONICAL_GROUP_METADATA` for each group's registered `cadence`. Read timestamp: 2026-07-27T16:01:28Z.
+
+**Scale**: 68,667 `prediction_canonical_question_group` manifest bundle rows → 36,039 distinct (cqg, day) rows; 82 of 97
+registered canonical_question_groups have ≥1 live manifest row.
+
+**Per-cadence completion % table** (captured / empty_confirmed / attempted_failed / expected_unattempted counts, and
+`reachable_coverage_pct = captured / (captured + attempted_failed + expected_unattempted)` — empty_confirmed EXCLUDED
+from the numerator per the RULED formula, `codex/02-data/availability-manifest-and-data-status.md` line 1054):
+
+| cadence                           | captured | empty_confirmed | attempted_failed | expected_unattempted | total rows | reachable_coverage % | distinct CQGs |
+| --------------------------------- | -------: | --------------: | ---------------: | -------------------: | ---------: | -------------------: | ------------: |
+| irregular                         |    7,713 |          24,722 |                4 |                1,614 |     34,053 |                82.66 |            44 |
+| daily                             |    8,556 |          16,468 |                0 |                1,058 |     26,082 |                89.00 |            29 |
+| monthly                           |    1,136 |           3,070 |                0 |                  134 |      4,340 |                89.45 |             5 |
+| BLANK_INSTRUMENT_ID*              |        0 |           2,280 |                0 |                    0 |      2,280 |                  n/a |             1 |
+| weekly                            |      173 |             922 |                0 |                  217 |      1,312 |                44.36 |             2 |
+| 15min                             |       14 |             582 |                0 |                    4 |        600 |                77.78 |             2 |
+| hourly / 5min / intraday / single |        0 |               0 |                0 |                    0 |          0 |                  n/a |             0 |
+
+\* `BLANK_INSTRUMENT_ID` = 2,280 rows where `instrument_id` is an empty string rather than a registered
+`CanonicalQuestionGroup` value — all `empty_confirmed`, not a registered group; a data-quality footnote, not part of the
+completion-% denominator for any named cadence.
+
+**Finding — 8 registered groups have ZERO manifest rows of any capture_status** (not low completion — genuinely absent):
+`BTC_UP_DOWN_HOURLY`, `ETH_UP_DOWN_HOURLY` (the todo's own "HOURLY = 24 expected/day" example), `BTC_UP_DOWN_5MIN`,
+`ETH_UP_DOWN_5MIN`, `BTC_UP_DOWN_INTRADAY`, `ETH_UP_DOWN_INTRADAY`, `ELECTION_PRESIDENT_2028` (the todo's own "ELECTION
+= 1" example), `OSCARS_BEST_PICTURE`. Filed as a new `[DIAG] P2` todo above (mirrors the sports MTDS-slice precedent's
+"TRANSFERMARKT_LEAGUES 100% empty — needs P0 triage" callout in `sports_master.md` — surfaced, not fixed inline, since
+root-causing a possible classifier/writer gap is outside this read-only todo's scope).
+
+Full per-(cqg, day) table (36,039 rows) generated to a local scratchpad CSV during this analysis (not committed —
+ephemeral, reproducible from the method above on demand).
 
 **Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE): the walk-forward actually runs on real
 infra against the sports-FSS feature matrix once the Group E gate is GREEN; acceptance metrics are computed and

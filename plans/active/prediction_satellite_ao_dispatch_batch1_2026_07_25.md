@@ -107,7 +107,7 @@ drift_direction: advance-code
       concentrated on `date=2026-07-26`) and was filed as its own issue doc rather than absorbed into this todo's scope:
       `plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`. Source:
       `prediction_phase_ab_residuals_2026_07_24.md`.
-- [ ] [DIAG] P1. **Combined investigation for
+- [x] ✅ [DIAG] P1. **Combined investigation for
       `prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` (2 sub-items merged into one todo
       since both append findings to that same doc):** (a) Grep-then-READ the MTDS Polymarket adapter
       (`market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py`),
@@ -121,7 +121,17 @@ drift_direction: advance-code
       commit/script is identified for each of the 3 path shapes plus a live-vs-historical verdict, AND (b) a yes/no
       title/slug-recoverability verdict with evidence (the specific row(s) checked) — both recorded in
       `plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`'s Progress Log in
-      the same commit. Source: `prediction_phase_ab_residuals_2026_07_24.md`.
+      the same commit. Source: `prediction_phase_ab_residuals_2026_07_24.md`. — `unified-trading-pm@<pending-sha>`.
+      **(a)** all three shapes are HISTORICAL, none written by any live code path today: #3/#3b are the Polymarket
+      adapter's pre-2026-04-19 drifted output (fixed forward by `da270f9b`/`ca246a9b`, zero live `"prediction_trades"`
+      references at HEAD); #4 was produced solely by the now-DELETED one-off `migrate_polymarket_canonical.py` (added
+      `da270f9b` 2026-04-19, deleted `bce12993` 2026-06-10) — superseded by UAC's actual flat canonical grammar
+      (`build_prediction_partition_path`, verified 2026-04-29/2026-06-02). The manifest's recent `prediction_trades`
+      `written_at` is a re-walk-tool artifact (`rebuild_prediction_manifest.py` re-emitting legacy values verbatim), not
+      new capture. **(b)** MIXED: slug fully recoverable (`raw_symbol`, 0% NULL corpus-wide, populated for the sampled
+      condition_id), but title/question is NOT reliable (93.2% NULL corpus-wide, NULL for the sampled row despite a
+      2026-07-17 questionbackfill attempt), and eventSlug is recoverable NOWHERE (no persisted column). Full evidence in
+      the issue doc's Progress Log.
 - [ ] [CODE] P1. Route every prediction `instrument_id`/`underlying`/`canonical_question_group` writer
       (instruments-service `reference_data/adapters/prediction/kalshi.py` + `.../prediction/polymarket/`,
       market-tick-data-service `market_interface/adapters/prediction/`) through UAC's shared canonical-id-builder

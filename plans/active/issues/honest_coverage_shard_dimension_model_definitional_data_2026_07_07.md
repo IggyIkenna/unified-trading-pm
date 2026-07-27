@@ -415,10 +415,15 @@ longer has its own download button.
       `MARINADE-SOLANA`, `ORCA-SOLANA`, `RAYDIUM-SOLANA`, `SOLEND-SOLANA`, and `CURVE-OPTIMISM` — all have real captured
       dates but zero `instrument_types` breakdown. Same fix (split the manifest row by instrument_type instead of
       writing one blended row per venue-day), applied wherever this recurs, not a Deribit-only patch.
-- [ ] [CODE] P2. **Extend the "CLOB-on-chain asset_group classification" item** (tracker Stage 5, currently scoped to
+- [x] ✅ [CODE] P2. **CLOSED 2026-07-27 (na-eligibility-audit) — already shipped elsewhere, checkbox never flipped.**
+      Extend the "CLOB-on-chain asset_group classification" item (tracker Stage 5, currently scoped to
       Lighter/Pacifica/Extended-Starknet) to explicitly include **HYPERLIQUID and ASTER** (Update §3 above) —
       operator-confirmed same hybrid pattern: CEFI holds the instrument definitions, DEFI holds the chain-level
-      classification. Not a new bug; just widening an existing todo's scope to match reality.
+      classification. `infra_capture_and_devops_leftovers_2026_07_06.md`'s own checkbox (item citing this exact doc's §3
+      ruling) confirms this landed 2026-07-14: `market-tick-data-service@1fff193b88d3331471ed01519e02e79071e74b81` added
+      `_route_hyperliquid`/`_route_aster` chain-annotation wrappers mirroring the existing Pacifica/Extended/Lighter
+      ones, 181 unit tests green, full quality-gates green. Not a new bug; just widening an existing todo's scope to
+      match reality — and that widening is done.
 - [ ] [CODE] P1. Pull the real per-instrument_type breakdown for DERIBIT live (the comparison built for this doc used
       illustrative numbers pending this) and confirm whether OPTION coverage is actually healthy or is itself a live gap
       once visible.
@@ -464,6 +469,23 @@ longer has its own download button.
 
 ## Progress Log
 
+- **2026-07-27 (na-eligibility-audit)** — Full re-read of all 14 open items for `/na-eligibility-audit`'s first
+  interactive dry-run (tradfi tranche). Verdict: mixed doc. 8 items confirmed genuine judgment-call/operator-gated NA
+  (Finding 1's SPORTS/PREDICTION leaf re-verify — paced to the operator's own mockup-review cadence; the phantom
+  `OPTION` removal on bare OKX/OKX_FUTURES — explicitly deferred pending a go-ahead not yet given; the CEFI
+  instrument-definition parquet resharding design — operator-gated pending a mockup review; the BINANCE-DELIVERY GAP
+  tooltip copy change — low-priority/cosmetic, left as-is; retiring DERIBIT-COMBO as its own venue key — needs its own
+  unscoped consumer-impact audit first; moving `market_metadata` off the MTDS axis — a genuine two-option judgment call;
+  renaming the "Instrument breakdown" venue-detail link — a genuine naming call gated on other work landing; the
+  historical CeFi/TradFi manifest backfill — approach depends on a not-yet-confirmed generic reprocessing utility). 5
+  items were bounded/worker-determinable and never assessed against the AO dispatch-scope bar — extracted to
+  `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` (checkboxes here left open per convention; that batch's
+  finalize twin reconciles them once actually done): the 5-venue spot-check, the `missing_dates`/`dates_found_list`
+  breakdown fields, the DERIBIT-live breakdown pull, the TradFi POLYGON/FRED conflation audit, and widening the
+  blank-`instrument_type` writer fix to Solana DeFi + CURVE-OPTIMISM. 1 item (extending the CLOB-on-chain classification
+  to HYPERLIQUID/ASTER) turned out to already be shipped — closed directly above with citation, no extraction needed.
+  Process note: the dry-run's first-pass sonnet classification sub-agent under-read this doc (only surfaced 6 of the 14
+  open items on its first pass); this entry reflects a full direct re-read that caught the gap.
 - **2026-07-07 (mockup review, round 3 — instruments-only scope correction + real fixes shipped)** — Operator called out
   a bigger version of the round-1/2 conflation: the mockup's `data_type` CHIP CONTENT (not just the leaf structure) was
   still sourced from MTDS's market-data capability lists (`trades`/`book_snapshot_5`/etc.) across CEFI/TRADFI/DEFI, when

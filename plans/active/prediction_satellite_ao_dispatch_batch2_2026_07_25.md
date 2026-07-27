@@ -123,17 +123,17 @@ drift_direction: advance-code
       or 2026-07-20) snapshot as current. Source: `prediction_phase_ab_residuals_2026_07_24.md` (item 9).
 
       **Result**: fresh live read (2026-07-27T15:28:46Z) of `market-data-tick-pred-prd-central-element-323112`'s
-          `availability_index.parquet` `instrument_type` column (785,035 rows) found **176 genuinely malformed, non-casing
-          rows (0.0224%)** — non-zero, so item 9's checkbox stays `[ ]` (explained, not flipped): 76 rows literally
-          `prediction` (singular, unchanged since the 2026-07-20 baseline — dead residue) + 100 blank/null rows, which are
-          **NOT static** — 30 (2026-07-20) → 70 (2026-07-24) → 100 (2026-07-27), a consistent ~10 rows/day linear growth,
-          evidence of an ACTIVE writer defect. Filed a new `[DIAG] P2` todo in `prediction_phase_ab_residuals_2026_07_24.md`
-          (Phase B) to track finding the responsible writer path, and recorded the full read (count breakdown + casing-
-          variant context + timestamp) in that doc's Progress Log — `unified-trading-pm@<pending>`.
+                              `availability_index.parquet` `instrument_type` column (785,035 rows) found **176 genuinely malformed, non-casing
+                              rows (0.0224%)** — non-zero, so item 9's checkbox stays `[ ]` (explained, not flipped): 76 rows literally
+                              `prediction` (singular, unchanged since the 2026-07-20 baseline — dead residue) + 100 blank/null rows, which are
+                              **NOT static** — 30 (2026-07-20) → 70 (2026-07-24) → 100 (2026-07-27), a consistent ~10 rows/day linear growth,
+                              evidence of an ACTIVE writer defect. Filed a new `[DIAG] P2` todo in `prediction_phase_ab_residuals_2026_07_24.md`
+                              (Phase B) to track finding the responsible writer path, and recorded the full read (count breakdown + casing-
+                              variant context + timestamp) in that doc's Progress Log — `unified-trading-pm@<pending>`.
 
-- [ ] [AGENT] P1. **Predictions MTDS `canonical_question_group` completion-% slice** — compute per-
-      (canonical_question_group, day) completion % against the live manifest's `prediction_canonical_question_group`
-      bundle rows
+- [x] ✅ [AGENT] P1. **DONE 2026-07-27 (slot-6).** **Predictions MTDS `canonical_question_group` completion-% slice** —
+      compute per-(canonical_question_group, day) completion % against the live manifest's
+      `prediction_canonical_question_group` bundle rows
       (`asset_group=prediction, venue, data_type=prediction_canonical_question_group,     canonical_question_group, day`),
       using the already-shipped UAC `CANONICAL_GROUP_METADATA` per-group cadence/expected-count table
       (`unified_api_contracts.canonical.domain.predictions.canonical_groups`): HOURLY = 24 expected/day, DAILY = 1,
@@ -148,6 +148,17 @@ drift_direction: advance-code
       captured/empty_confirmed/expected_unattempted counts and the resulting %, broken out by HOURLY/DAILY/ELECTION
       cadence — is recorded in `predictions_ml_walk_forward_and_arb_2026_06_20.md`'s Progress Log (or a linked dated
       analysis doc), and that item's checkbox is flipped. Source: `predictions_ml_walk_forward_and_arb_2026_06_20.md`.
+
+      **Result**: 68,667 `prediction_canonical_question_group` bundle rows read (single-walk, column-pruned,
+                          filter-pushdown) from `market-data-tick-pred-prd-central-element-323112` at 2026-07-27T16:01:28Z → 36,039 distinct
+                          (cqg, day) rows; 82/97 registered canonical_question_groups have ≥1 live manifest row. Per-cadence
+                          captured/empty_confirmed/attempted_failed/expected_unattempted counts + reachable_coverage % recorded in
+                          `predictions_ml_walk_forward_and_arb_2026_06_20.md`'s Progress Log; its own line-89 checkbox flipped
+                          (unified-trading-pm@9df4924c0). Finding surfaced (new `[DIAG] P2` todo filed in that same doc, not fixed here):
+                          8 registered groups (`BTC_UP_DOWN_HOURLY`/`ETH_UP_DOWN_HOURLY`/`*_5MIN`/`*_INTRADAY`/`ELECTION_PRESIDENT_2028`/
+                          `OSCARS_BEST_PICTURE`) have ZERO manifest rows of any capture_status — genuinely absent, not merely low
+                          completion.
+
 - [ ] [SCRIPT] P1. **Prediction sentinel fan-out for zero-trading-day CQGs** — market-tick-data-service's prediction
       manifest finalize function `_finalize_prediction_bundles`
       (`market_tick_data_service/engine/orchestrator/manifest_finalize.py`) only emits a
@@ -226,11 +237,11 @@ drift_direction: advance-code
       `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
 
       **Evidence**: all 3 SHAs confirmed on `live-defi-rollout` (`git merge-base --is-ancestor`) AND `main`
-                      (content-diff, since these repos squash-merge on promote — distinctive marker lines from each commit found
-                      live in `origin/main`'s copies). Production capture proof re-verified live: `venue=KALSHI, data_type=trades,
-                      date=2026-07-09` in the prediction manifest returns exactly 423 `captured` rows summing to 6,407 — an exact
-                      match to the cited 2026-07-14T11:00Z proof, still holding. `status` flipped to `resolved`, `resolved_by`
-                      populated, dated Progress Log entry added — unified-trading-pm@`<pending>`.
+                                          (content-diff, since these repos squash-merge on promote — distinctive marker lines from each commit found
+                                          live in `origin/main`'s copies). Production capture proof re-verified live: `venue=KALSHI, data_type=trades,
+                                          date=2026-07-09` in the prediction manifest returns exactly 423 `captured` rows summing to 6,407 — an exact
+                                          match to the cited 2026-07-14T11:00Z proof, still holding. `status` flipped to `resolved`, `resolved_by`
+                                          populated, dated Progress Log entry added — unified-trading-pm@`<pending>`.
 
 ## Deferred — still genuinely blocked after re-check (NOT dispatched)
 

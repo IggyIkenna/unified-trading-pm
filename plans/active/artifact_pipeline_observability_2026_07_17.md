@@ -411,10 +411,13 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 - [x] [UI] P1. ✅ Vitest (19 for the page, 1097 total) + `pw:L2` smoke spec (10 cases) covering all five views, the
       running-drift flags, the deploy change-type, the failure drawer, and per-column sort/filter/multi-select on every
       table. No UI tick without `pw:L2 ✓` + a cited regression spec — both satisfied.
-- [ ] [UI] P2. **DECIDED 2026-07-24 (operator): default view = What's running — implement it.** The plan locked this
-      shape 2026-07-17 (line 127); it was never implemented because Pipeline shipped first and nothing since had flipped
-      `useState<TabId>` back. Re-confirmed 2026-07-24 ("keep this one") rather than re-opened — the remaining work is
-      purely mechanical: flip the default tab state in `ArtifactPipeline.tsx` to `running`, no further decision needed.
+- [x] [UI] P2. ✅ **DECIDED 2026-07-24 (operator): default view = What's running — implemented 2026-07-27.**
+      `deployment-ui@fb1da34` — flipped `useState<TabId>("pipe")` → `useState<TabId>("run")`
+      (`ArtifactPipeline.tsx:2749`). Updated the 10 Vitest cases + the 6 `pw:L2` cases that implicitly relied on
+      Pipeline being the default-rendered tab (added an explicit `artifact-tab-pipe` click before their
+      Pipeline-specific assertions), rewrote the "defaults to…" test to assert the new default, and added a dedicated
+      `pw:L2` case asserting the page opens on What's running. Full deployment-ui gate green (101 Vitest + `pw:L2`);
+      both suites re-run clean post-edit.
 - [x] [UI] P1. ✅ **NEW (operator ask 2026-07-23) — per-column sort + filter on every live table, multi-select on each
       view's identity column.** `deployment-ui@3126b1b` (Pipeline + Deploy timeline) + `@3210bb5` (Artifacts, What's
       running, Health). Shared `ColumnHeader`/`MultiSelectFilter`/`TextFilterInput` primitives, client-side over the
@@ -425,16 +428,23 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 > **🟢 UNBLOCKED 2026-07-23** — this phase was gated on the What's running view landing (the version row that would
 > deep-link); it shipped as `deployment-ui@3210bb5`/`deployment-api@a13c667` this session. Recommended next phase.
 
-- [ ] [BACKEND] P1. Carry the image/tarball version on the Deployments inventory row so it can be filtered on.
-      **Additive only** — `DeploymentItem` today carries no image URI / digest / commit; adding fields must not break
-      any existing consumer or field-set assertion. Respect the 45s SWR cache + the 4 GiB / WORKERS=2 budget (report the
-      payload delta before shipping). **AUDITED 2026-07-17 — cheaper than assumed: the data is already in hand.**
-      `DeploymentRegistryEntry` already declares `image_digest`/`git_commit`
-      (`unified_trading_library/deployment_registry.py:205-206`) and `_vm_item()` (`deployments_inventory.py:689-721`)
-      **already receives that entry object** — it simply never copies the fields onto the row. So this is a ~2-line
-      addition with **zero new I/O / census cost**; no join to write. Payload delta measured at **<20 KB** across ~200
-      targets. `_unmanaged_vm_item` (live-GCE-but-unregistered) correctly stays `None`. **No test anywhere asserts a
-      closed field set**, so additive fields are safe.
+- [x] [BACKEND] P1. ✅ **Carried the image/tarball version onto the Deployments inventory row — `deployment-api@24070d9`
+      (2026-07-27).** Added `image_digest`/`git_commit` (both `str | None`) to `DeploymentItem`, populated in
+      `_vm_item()` from `entry.image_digest or None` / `entry.git_commit or None` (honest `None` on a pre-BoM `""`,
+      never a fabricated empty string). Two pre-existing test fake-entry stand-ins
+      (`test_route_deployments_inventory.py`'s module-level `_FakeEntry` dataclass,
+      `test_route_deployments_inventory_aws.py`'s inline per-test `_FakeEntry`) needed the two new attributes added
+      since `_vm_item()` now reads them unconditionally — caught by a full-gate run, not assumed; one new unit test
+      (`test_build_inventory_surfaces_image_digest_and_git_commit`) pins both the stamped and the honest-`None`
+      legacy-row cases. Full deployment-api gate green (4985 tests). **Additive only** — `DeploymentItem` today carries
+      no image URI / digest / commit; adding fields must not break any existing consumer or field-set assertion. Respect
+      the 45s SWR cache + the 4 GiB / WORKERS=2 budget (report the payload delta before shipping). **AUDITED 2026-07-17
+      — cheaper than assumed: the data is already in hand.** `DeploymentRegistryEntry` already declares
+      `image_digest`/`git_commit` (`unified_trading_library/deployment_registry.py:205-206`) and `_vm_item()`
+      (`deployments_inventory.py:689-721`) **already receives that entry object** — it simply never copies the fields
+      onto the row. So this is a ~2-line addition with **zero new I/O / census cost**; no join to write. Payload delta
+      measured at **<20 KB** across ~200 targets. `_unmanaged_vm_item` (live-GCE-but-unregistered) correctly stays
+      `None`. **No test anywhere asserts a closed field set**, so additive fields are safe.
 - [ ] [UI] P1. Deployments view accepts a **pre-loaded filter via URL param** (e.g. `?git_commit=<sha>`), so an
       /ops/artifacts version row deep-links to exactly the hosts running that artifact. **AUDITED — the page was built
       for this**: every filter already reads `useSearchParams()` via one `setParam` helper, and the module docstring
@@ -951,7 +961,7 @@ ready whenever picked back up.
 | Snapshot worker (GCS parquet + DuckDB, the OOM-safe long-window read path)             | **Not started** — the live-scan cache (300s TTL) covers today's needs; the worker is for long-history + concurrent-load headroom                                                                                                                                                                  | —                                      |
 | (A) tarball commit stamp (Phase 3c Option A)                                           | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                                                                                                                                                                | a deliberate operator-scheduled launch |
 | Phase 3b cross-links (Deployments URL-param filter, console deep-links)                | 🟢 **UNBLOCKED, next recommended** — audited cheap (2-line + reuse `consoleUrl()`); its one gate (Running view landing) is now clear                                                                                                                                                              | —                                      |
-| "Default view = What's running" (locked 2026-07-17, DECIDED 2026-07-24)                | 🟢 **DECIDED, not yet implemented** — operator re-confirmed 2026-07-24 ("keep this one"); page still defaults to Pipeline, purely mechanical `useState<TabId>` flip remains                                                                                                                       | —                                      |
+| "Default view = What's running" (locked 2026-07-17, DECIDED 2026-07-24)                | ✅ **DONE 2026-07-27** — `deployment-ui@fb1da34`                                                                                                                                                                                                                                                  | —                                      |
 | Phase 3d live-launch verification step (split out as its own todo, 2026-07-24)         | **Cannot be done yet** — needs (A)'s shell edit to ship first, then a live `EPHEMERAL_BATCH` launch + T+10min check                                                                                                                                                                               | (A) shell edit landing first           |
 | Issue doc for the pipeline bugs                                                        | ✅ **DONE 2026-07-21** — `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; only #4/#7 (AWS-deferred) + #3 (GCP, minor) open — **#1 RESOLVED 2026-07-24** (semver-agent confirmed deliberately dead; issue doc itself still needs the same correction as a follow-up) | Ikenna (his active CI files)           |
 | Stale "Staging-first" quickmerge.sh messaging                                          | ✅ **RESOLVED — no action needed (operator 2026-07-24)**: cosmetic only, left as-is unless it starts causing real problems                                                                                                                                                                        | —                                      |

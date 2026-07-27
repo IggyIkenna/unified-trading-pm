@@ -8,7 +8,7 @@ summary:
   trading-agent-service has no e2e test directory at all.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, deployment-service, trading-agent-service]
 scope: [engineer]

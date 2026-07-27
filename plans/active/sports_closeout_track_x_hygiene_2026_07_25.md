@@ -64,17 +64,24 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DOC] P1. **Cross-link `sports_catalog_league_grain_only_scope_2026_07_08.md`'s active fixture-grain work against
-      this closeout's own FROZEN-legacy-path declaration and league_id-migration status — do NOT implement either
-      resolution.** Add a tracking-section note in BOTH docs stating: (1) the `entity=fixtures` naming collision —
-      `sports_catalog_league_grain_only_scope_2026_07_08.md` writes reference data under a bare
+- [x] [DOC] P1. ✅ **Cross-link `sports_catalog_league_grain_only_scope_2026_07_08.md`'s active fixture-grain work
+      against this closeout's own FROZEN-legacy-path declaration and league_id-migration status — do NOT implement
+      either resolution.** Add a tracking-section note in BOTH docs stating: (1) the `entity=fixtures` naming collision
+      — `sports_catalog_league_grain_only_scope_2026_07_08.md` writes reference data under a bare
       `entity={fixtures,teams,injuries}/` path, a second collision on the string this closeout declares FROZEN since
       2026-05-23 (see the parent's Canonical target section); (2) the competing manifest-schema-extension design — that
       plan independently designs a per-fixture-grain capture-tracking schema extension that depends on `league_id`
       resolution, which this closeout's Track V still tracks as unresolved. Neither doc's design is decided by this
       todo; it only makes the collision/dependency visible in both places for whoever resolves it next. (repo:
       unified-trading-pm, doc edit only). **Done when**: both docs' own tracking sections carry the cross-link note,
-      worded identically on the shared facts.
+      worded identically on the shared facts. — **DONE 2026-07-27, `unified-trading-pm` (this commit)**: fact (1) was
+      already present in `sports_consolidated_closeout_2026_07_19.md`'s Canonical target section (dated 2026-07-23) and
+      in `sports_catalog_league_grain_only_scope_2026_07_08.md`'s 🟡 SCOPE OVERLAP banner (also dated 2026-07-23, which
+      already covered both facts). Added the missing reciprocal: fact (2) (the manifest-schema-extension /
+      `league_id`-dependency note, citing Track V's still-open raw-keyed `league_id` DELETE) to
+      `sports_consolidated_closeout_2026_07_19.md`'s Canonical target section, plus a short provenance pointer in
+      `sports_catalog_league_grain_only_scope_2026_07_08.md` confirming the reciprocal link. Both docs' tracking
+      sections now carry both facts, consistently worded.
 - [ ] [DATA] P1. **Reconcile the league_id canonical-form conflict between
       `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` and this closeout's Track V.** That plan's own text
       treats raw display strings (`PREMIER_LEAGUE`/`BUNDESLIGA`/`SERIE_A`/`LA_LIGA`) as canonical, while this closeout's

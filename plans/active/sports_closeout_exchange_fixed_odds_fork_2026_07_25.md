@@ -142,9 +142,21 @@ drift_direction: advance-code
       reachability sweep; added `"trades"` to that frozenset. New unit tests added in
       `test_sports_prediction_contracts.py` (registration, lookup, shared- schema, sample-dataframe validation for both
       new entries; legacy-entry-still-present regression). Full `quality-gates.sh` green (sentinel = `4b28b340`).
-- [ ] [DATA] P1. **Dual-read `odds` + `EXCHANGE_ODDS`/`FIXED_ODDS` in `lookup_contract` during the migration window; add
-      a UAC unit test covering both paths.** (repo: unified-api-contracts). **Done when**: the new unit test passes for
-      both the legacy `odds` path and the new EXCHANGE_ODDS/FIXED_ODDS paths.
+- [x] ✅ [DATA] P1. **Dual-read `odds` + `EXCHANGE_ODDS`/`FIXED_ODDS` in `lookup_contract` during the migration window;
+      add a UAC unit test covering both paths.** (repo: unified-api-contracts). **Done when**: the new unit test passes
+      for both the legacy `odds` path and the new EXCHANGE_ODDS/FIXED_ODDS paths. ✅ **DONE 2026-07-27 —
+      `unified-api-contracts@39d8440b`:** only `("sports", "exchange_odds"/"fixed_odds", "trades")` has its own
+      `CONTRACT_REGISTRY` entry (todo 3) — every other sports odds `data_type` (`sports_odds_snapshot`,
+      `sports_odds_movement`, `sports_arbitrage`, ...) is still registered only under the legacy `odds` instrument_type.
+      Added a new resolution step 5 to `lookup_contract` (`unified_api_contracts/internal/schemas/contracts.py`): for
+      `asset_group == "sports"` and `instrument_type` in `{"exchange_odds", "fixed_odds"}`, on a registry miss fall back
+      to `CONTRACT_REGISTRY[(asset_group, "odds", data_type)]` — safe because the fork shares
+      `SPORTS_ODDS_TRADES.columns` by reference (row schema identical, only the partition key differs). New unit tests
+      in `test_sports_prediction_contracts.py`: legacy `odds` path still resolves directly; the fork-specific `trades`
+      entries still win when they exist; `exchange_odds`/`fixed_odds` + `sports_odds_snapshot` dual-reads to the legacy
+      `SPORTS_ODDS_SNAPSHOT` contract via both new instrument_types; the fallback is sports-scoped only (a non-sports
+      asset_group with the same instrument_type/data_type still raises `SchemaContractNotFoundError`). Full
+      `quality-gates.sh` green (sentinel = `39282596`).
 - [ ] [DATA] P1. **Move the `instrument_type=odds/` GCS objects for the 5 already-unambiguous venues ONLY**
       (`BETFAIR_EX_UK`, `BETFAIR_EX_EU`, `SMARKETS`, `MATCHBOOK` → `exchange_odds/`; `BETFAIR_SB_UK`, `BETMGM` →
       `fixed_odds/`) via UTL `gcs_copy_object`/`gcs_delete_object` (never subprocess gsutil); snapshot → move →

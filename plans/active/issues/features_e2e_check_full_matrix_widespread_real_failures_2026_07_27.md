@@ -187,11 +187,18 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
 
 ## Recommended fix path
 
-- [ ] [DATA] P0. **Root cause A — TRACKED IN A SIBLING DOC, not duplicated here**: see
+- [x] [DATA] P0. **Root cause A — TRACKED IN A SIBLING DOC, not duplicated here**: see
       `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` for the fix-todo (same
       underlying disagreement between `--require-captured --auto-day`'s coverage check and the VM-side
       `check_dependencies()`, confirmed on 3 independent occurrences across 2 different days now). Reconcile there, not
-      here, to avoid two parallel fix attempts.
+      here, to avoid two parallel fix attempts. — ✅ features-service@ecd548b8 + features-service@c06a9bbf (sibling doc
+      has full detail). Root cause was neither phantom-capture nor a coverage-check gap: 2026-07-04 (the delta_one
+      lookback window's start day) is an honest TradFi weekend/holiday (`empty_confirmed` in the real manifest, no
+      backing object by design) — the coverage-check already handled it correctly; the VM-side `check_dependencies()`
+      had zero manifest awareness and hard-failed on the honest-empty day. Fixed by making `DependencyChecker`
+      manifest-aware. Also caught + fixed a live regression in a different slot's concurrently-shipped phantom-capture
+      guard (features-service@696768c7) that was over-applying its new object-existence check to `empty_confirmed` days
+      too, which would have broken coverage for nearly every multi-day TradFi window.
 - [ ] [SCRIPT] P0. **Root cause B** — fix `features-multi-timeframe-service`'s delta_one-input lookup to use the
       requested `--start-date`/`--end-date` (or the per-day date it's currently processing), not the current wall-clock
       date. Repo: features-service (`features_service/multi_timeframe/` or wherever the delta_one input loader lives).

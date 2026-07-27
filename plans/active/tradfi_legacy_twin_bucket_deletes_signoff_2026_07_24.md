@@ -79,7 +79,11 @@ restated here.
       against the 995 legacy-B candidate rows (see "Where the dry-run evidence already lives" above). This is NOT the
       operator-gated delete — `--apply` stays hard-stopped on Ikenna's sign-off per the banner above; this todo only
       produces the verified-delete candidate list + byte-verify evidence the BLOCKED todo below needs to post.
-      Definition-of-done: dry-run output cited (report path + row count), ready for the sign-off ask.
+      Definition-of-done: dry-run output cited (report path + row count), ready for the sign-off ask. **NOTE
+      (na-eligibility-audit 2026-07-27)**: this exact dry-run is already claimed as
+      `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 2nd todo (`status: active`, `assigned_vm: planning`) — still
+      open there too as of this audit. Not reclassified independently; this checkbox stays open until that batch's todo
+      lands and its finalize twin flips it here.
 - [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION — legacy-twin bucket DELETES (defi / tradfi / pred).** After the tradfi
       apply + orphan-sweep E=0 + a byte-verify, the legacy-path twin objects can be deleted in a quiet window (cefi
       previously reported done; **sports is NOT done** — 0 of 34,385 `B_legacy_duplicate` rows pass the 5-part proof,

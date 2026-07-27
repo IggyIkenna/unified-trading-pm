@@ -16,7 +16,7 @@ summary: >-
   every self-hosted CI job already running there today, not a hypothetical future risk.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

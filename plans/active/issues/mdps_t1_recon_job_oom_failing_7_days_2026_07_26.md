@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [mdps, oom, cloud-run-job, candle-derivation, production-incident]
 related: [/plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md]
 created: 2026-07-26
-last_updated: 2026-07-27 (Update 9)
+last_updated: 2026-07-27 (Update 10)
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -383,22 +383,11 @@ explicitly ruled out guessing at.
 ### Where the error is actually raised
 
 `prediction: 0/2170 succeeded, 2170 errors` at every timeframe traces to
-`BaseCandleAdapter._get_local_timestamp_column()`
-(`market_data_processing_service/app/adapters/base_adapter.py:169-188`):
-
-```python
-def _get_local_timestamp_column(self, df: pd.DataFrame) -> str:
-    # Priority: ts_init → local_timestamp → ts_event → timestamp
-    ...
-    else:
-        raise ValueError("No timestamp column found in data")  # line 188
-```
-
-Called from `_convert_to_processing_dt` (same file, ~line 213) → called from `CefiTradesAdapter._prepare_tick_data`
-(`app/adapters/cefi/trades_adapter.py:109-145`) — `PredictionTradesAdapter`
-(`app/adapters/prediction/trades_adapter.py`) has NO override of `process_to_candles`'s tick-preparation step; it
-delegates straight to `CefiTradesAdapter.process_to_candles` via `super()` (line 129) once past its own empty/Category-D
-handling. So every prediction "trades" file goes through the CeFi base class's column-name assumptions unchanged.
+`BaseCandleAdapter._get_local_timestamp_column()` (`base_adapter.py:169-188`, priority
+`ts_init → local_timestamp → ts_event → timestamp`, else `raise ValueError("No timestamp column found in data")`) —
+called via `_convert_to_processing_dt` → `CefiTradesAdapter._prepare_tick_data`. `PredictionTradesAdapter` had no
+override of the tick-preparation step at the time, delegating straight to `CefiTradesAdapter.process_to_candles` via
+`super()`, so every prediction "trades" file went through CeFi's column-name assumptions unchanged.
 
 ### Real raw schema pulled directly from GCS (not assumed from the docstring)
 
@@ -417,112 +406,54 @@ canonical_question_group, available_at, underlying
 ```
 
 **No column named `timestamp`, `ts_event`, `ts_init`, or `local_timestamp` exists anywhere in KALSHI's raw schema** —
-hence the ValueError, unconditionally, on 100% of KALSHI shards. Also confirmed (same file):
+hence the ValueError, unconditionally, on 100% of KALSHI shards. Also confirmed (same file): `created_time` (ISO8601
+string) == `available_at` (proper `timestamp[ns, tz=UTC]`) exactly for all 54,295 rows (44,077 distinct values — real
+intraday granularity, not a coarse batch stamp); no `price`/`size`/`side`/`amount` column — instead `yes_price_dollars`
 
-- `created_time` (string ISO8601) == `available_at` (proper `timestamp[ns, tz=UTC]` column) **exactly, for all 54,295
-  rows** (`(created_time - available_at).abs().max() == 0.0s`) — `available_at` is a genuine per-row-accurate stamp of
-  the trade's real event time, not a coarse batch/fetch-time artifact (44,077 distinct values across the file, spread
-  02:00:10-05:20:30 UTC — real intraday granularity).
-- No column named `price`, `size`, `side`, or `amount` — instead: `yes_price_dollars` + `no_price_dollars` (sum to
-  **exactly 1.00 for every row**, genuine complementary YES/NO probability pricing), `count_fp` (string-typed, cleanly
-  float-parseable, presumably contract count), and THREE side-like columns — `taker_side`/`taker_outcome_side`
-  (identical to each other: `yes`=42,340 / `no`=11,955) and `taker_book_side` (`bid`=42,340 / `ask`=11,955, perfectly
-  correlated with the other two) — none of which is a `BUY`/`SELL` string the base adapter's `_resolve_price_size_cols`
-  understands.
+- `no_price_dollars` (sum to exactly 1.00 every row), `count_fp` (cleanly float-parseable), and three side-like columns
+  (`taker_side`/`taker_outcome_side` identical: yes=42,340/no=11,955; `taker_book_side` bid=42,340/ask=11,955, perfectly
+  correlated) — none a `BUY`/`SELL` string the base adapter understands.
 
-**POLYMARKET**
-(`.../day=2026-07-22/pipeline_mode=batch_polymarket_clob/.../data_type=trades/POLYMARKET:PREDICTION_MARKET:0x3d5c...da0.parquet`):
-
-```
-side, asset, conditionId, amount, price, outcome, outcomeIndex, transactionHash, timestamp, condition_id,
-data_type, symbol, instrument_id, instrument_type, data_source, chain, asset_group, underlying,
-market_type, resolution_period, canonical_question_group, available_at
-```
-
-This DOES have `price` (double), `amount` (the base adapter's own `_resolve_price_size_cols` already falls back
-`size→amount`, `app/adapters/cefi/trades_adapter.py:158-163`), `side` (`BUY`/`SELL` string, matches the adapter's
-`.str.lower() == "buy"` check), and a proper `timestamp` column — i.e. **Polymarket's raw schema matches every
-assumption `CefiTradesAdapter`/`PredictionTradesAdapter` makes, column-for-column.** The adapter's own docstring
-("Polymarket raw parquet columns: price ..., timestamp (int64 unix seconds)") was written against exactly this shape.
+**POLYMARKET** (real 2026-07-22 file): schema includes `side, amount, price, timestamp, condition_id, ...` — i.e.
+`price` (double), `amount` (adapter's existing `size→amount` fallback), `side` (`BUY`/`SELL`, matches
+`.str.lower() == "buy"`), and a proper `timestamp` column. **Polymarket's raw schema matches every assumption
+`CefiTradesAdapter`/`PredictionTradesAdapter` makes, column-for-column** — the adapter's own docstring was written
+against exactly this shape.
 
 ### Regression vs. never-built — resolved via a bounded, targeted GCS probe (not a new whole-corpus walk)
 
-- `gcloud storage ls` on `raw_tick_data/by_date/day={2026-07-20,22,24,25,26}/` shows `pipeline_mode=batch_kalshi`
-  present on ALL five probed days, while `pipeline_mode=batch_polymarket_clob` is present only on 07-20 and 07-22 (NOT
-  07-24/25/26 — the exact days this issue's OOM-recon runs touched). **On the days this bug was actually observed,
-  Kalshi was the only venue with any data at all** — this is why the failure count was 0/2170 (100%), not a partial
-  Polymarket-succeeds/Kalshi-fails split.
-- `processed_candles/by_date/` (the candle OUTPUT path — confirmed via `config.py`'s
-  `get_output_bucket_for_asset_group()` that candle writes default to the SAME bucket as the raw-tick source bucket, no
-  override env var set for prediction) DOES contain real historical prediction candle output — but a bounded probe found
-  the **last day with ANY prediction candle output is `day=2026-01-14`, and every object under it is
-  `venue=POLYMARKET`**
-  (`pipeline_mode=batch_polymarket_clob/timeframe=15m/data_type=trades/instrument_type=PREDICTION_MARKET/venue=POLYMARKET/...`).
-  A parallel probe of `day=2026-07-22` (a day with real raw Polymarket data, confirmed above) found **zero**
-  `processed_candles` output — `gcloud storage ls` returned "matched no objects." No `venue=KALSHI` object was found
-  under `processed_candles/` on any probed day.
-- Zero test coverage anywhere in the repo references Kalshi's actual column names (`yes_price_dollars`,
-  `no_price_dollars`, `count_fp`, `taker_side`, `taker_book_side`, `taker_outcome_side`) — grepped
-  `tests/unit/test_prediction_adapter_category_d.py` and the full `tests/` tree; zero hits. The adapter's full git
-  history (`e197da8` "feat: read hive-partitioned tick data ... prediction adapter" through `792ae5e` "fix(prediction):
-  3-segment instrument_keys") shows no commit ever touching Kalshi-shaped columns.
-- Corroborating context: `/codex/02-data/prediction-schema-paths.md` documents a
-  `[DELTA 2026-05-22 — KALSHI API MIGRATION]` with Kalshi integration verification `BLOCKED-CREDENTIALS` as of that date
-  — consistent with real Kalshi trade data only starting to flow in this bucket some time after that (first observed
-  here on 2026-07-20, the earliest of the 5 probed days).
+- KALSHI raw data present on all 5 probed days (07-20/22/24/25/26); Polymarket raw data only on 07-20/22 — NOT the
+  07-24/25/26 days this issue's OOM-recon runs touched, explaining the 0/2170 (100%, not partial) failure count.
+- `processed_candles/` DOES have real historical prediction output, but the last day with ANY prediction candles is
+  `day=2026-01-14`, exclusively `venue=POLYMARKET` — zero `venue=KALSHI` output on any probed day, and zero output at
+  all for `day=2026-07-22` despite real raw Polymarket data existing that day.
+- Zero test coverage anywhere in the repo references Kalshi's real column names; full adapter git history shows no
+  commit ever touching Kalshi-shaped columns.
+- `/codex/02-data/prediction-schema-paths.md` documents Kalshi integration as `BLOCKED-CREDENTIALS` as of 2026-05-22 —
+  consistent with real Kalshi data only starting to flow around 2026-07-20.
 
-**Conclusion: this is NOT a regression.** Polymarket's candle path is proven to have worked (real historical output
-through 2026-01-14) and its raw schema still matches the adapter's assumptions today (confirmed on a fresh 2026-07-22
-file). **KALSHI's candle path has never worked, because it was never built** — `PredictionTradesAdapter` was written and
-tested exclusively against Polymarket's schema; Kalshi was added as a second venue at the MTDS/data layer with a
-structurally different upstream API response shape (dual yes/no dollar-pricing vs. single price; string contract-count
-vs. numeric size; three-way bid/ask/outcome side encoding vs. BUY/SELL; ISO-string `created_time`+`available_at` vs. a
-`timestamp`/`ts_event` column) and the MDPS candle-adapter side was never updated to handle it. The "masked by whichever
-bug was fatal earlier" framing in the original todo undersold this — even with the OOM and sports bugs both fixed, this
-failure mode was never going to self-resolve; it needs a real design pass.
+**Conclusion: NOT a regression.** Polymarket's candle path is proven to have worked (real output through 2026-01-14) and
+its raw schema still matches the adapter today. **KALSHI's candle path has never worked, because it was never built** —
+`PredictionTradesAdapter` was written/tested exclusively against Polymarket's schema; Kalshi was added as a second venue
+at the MTDS/data layer with a structurally different API shape and the MDPS candle-adapter side was never updated.
 
-### SSOT-vs-code contradiction found along the way (flagging, not resolving — outside this todo's scope)
+### SSOT-vs-code contradiction found along the way — **RESOLVED in Update 10** (was: flagged, not resolved)
 
-`/codex/02-data/prediction-data-types-catalog.md` (§ NEEDS_CANDLE_PROCESSING) states: _"`trades` has NEEDS_CANDLE=False
-for the prediction asset_group — the UAC override for prediction means raw trades are not processed into OHLCV candles.
-Only CeFi/TradFi `trades` have NEEDS_CANDLE=True."_ The **actual running code** contradicts this:
-`unified_api_contracts/registry/market_data_categories.py:640` declares `NEEDS_CANDLE_PROCESSING: dict[str, bool]` as a
-**flat, data_type-keyed dict with no asset_group axis at all** — `"trades": True` — and the adjacent inline comment
-(line 697) reads _"Prediction — uses canonical 'trades' / 'book_snapshot_5' (same keys as CeFi)"_, i.e. the code's own
-comment says prediction intentionally shares CeFi's `True` value. `orchestration_service.py:646`'s gate
-(`if not needs_candle_processing(data_type): ... skip`) calls this with `data_type` only, never `asset_group` — so there
-is no code path that could apply a prediction-specific override even if one were intended. Either the codex doc is stale
-(describing an override that was never implemented, or was reverted) or the code is missing an intended
-asset-group-scoped exception. Not resolved here — genuinely out of this todo's scope (this issue is about MDPS's
-candle-derivation _result_, not about whether MDPS should attempt it at all for prediction), but whoever designs the
-real Kalshi fix should resolve this contradiction first, since if the codex doc is actually right, the correct fix might
-be "stop attempting candle derivation for prediction trades entirely" rather than "build a Kalshi adapter."
+`/codex/02-data/prediction-data-types-catalog.md` (§ NEEDS_CANDLE_PROCESSING) claimed `trades` had a prediction-specific
+`NEEDS_CANDLE=False` override; the actual code (`unified_api_contracts/registry/market_data_categories.py:640`, a flat
+dict with no asset_group axis) sets `"trades": True` uniformly, with an adjacent comment confirming prediction
+intentionally shares CeFi's value. Update 10 (Decision 1, operator-settled) fixed the stale codex claim.
 
-### Why this is NOT a mechanical rename (why no fix was implemented this session)
+### Why this is NOT a mechanical rename — **the 4 open questions below are RESOLVED in Update 10**
 
-Fixing only the immediate `ValueError` (e.g. adding `available_at` to `_get_local_timestamp_column`'s priority list —
-which the evidence above shows WOULD be timestamp-safe on its own) would not produce a working pipeline: the very next
-step, `_resolve_price_size_cols`, would then fail on the missing `price` column (`_derive_price_column` only knows
-DeFi's `amountUSD`/`amount0`/`amount1` swap-style fallbacks, none of which exist here either) — just trading one error
-for another, `MalformedTickFieldError`, with nothing actually fixed. A real fix requires product-level decisions this
-session is not positioned to make unilaterally:
-
-1. **Which price series is "the" OHLCV price for a two-sided YES/NO market?** `yes_price_dollars` and `no_price_dollars`
-   are complementary (sum to 1.00) — candling one, the other, or both as separate series is a product choice, not
-   inferable from the data.
-2. **What does `taker_side`/`taker_outcome_side`/`taker_book_side` map to for buy/sell-style features** (buy/sell volume
-   split, VWAP direction, whale detection all assume `is_buy`)? Kalshi's bid/ask/yes/no encoding isn't a BUY/SELL string
-   swap — it needs an actual mapping decision.
-3. **Is `count_fp` genuinely the trade size (contract count)?** It parses cleanly as float, but its semantic meaning
-   (vs. a notional-dollar quantity) hasn't been confirmed against Kalshi's API docs.
-4. **Timestamp choice**: `available_at` is evidenced-safe (see above), but `_get_local_timestamp_column`'s existing
-   4-column priority list is otherwise a genuine HFT local-vs-exchange-time convention (`ts_init`/`local_timestamp` =
-   local receive time, `ts_event`/`timestamp` = exchange time, feeding the synthetic 200ms delay logic) — Kalshi has no
-   analogous local/exchange split, so wiring in `available_at` needs a decision about whether/how the synthetic-delay
-   step still makes sense for it.
-
-Per the operator's explicit standard for this task ("if it turns out to need a genuine judgment call about data
-semantics, stop at a well-documented todo instead of guessing"), no code was changed. See the replaced todo below.
+Fixing only the immediate `ValueError` would not produce a working pipeline (the next step, price/size resolution, would
+just trade one error for `MalformedTickFieldError`). Four product-level decisions were needed: (1) which price series is
+canonical for OHLCV — **resolved: `yes_price_dollars`** (operator-settled Decision 2); (2) what maps to `is_buy` —
+**resolved: `taker_outcome_side == "yes"`** (Update 10, Question A); (3) is `count_fp` genuine trade size — **resolved:
+yes, confirmed via Kalshi's docs + real-data cross-check** (Update 10, Question B); (4) how to wire `available_at` into
+the local/exchange timestamp convention — **resolved: as the exchange-time fallback, uniform +200ms delay** (Update 10).
+Per the operator's standard ("if it needs a genuine judgment call, stop at a well-documented todo instead of guessing"),
+no code was changed in Update 6 — see Update 10 for the actual implementation.
 
 ## Update 7 (2026-07-27, attended session) — sports market-mixing fix VERIFIED end-to-end against real production data; TWO further, unrelated pre-existing bugs found blocking clean `Completed=True`
 
@@ -821,6 +752,76 @@ genuinely NOT yet market-filtered (in which case a blind generalization could tu
 per CLAUDE.md's data-pipeline-correctness-is-the-heartbeat / big-finding-notify-operator rule, since this silently drops
 real market data across most of the sports odds product, apparently for its entire history.
 
+## Update 10 (2026-07-27, attended session) — KALSHI trades→candle schema mapping BUILT, shipped, and verified end-to-end against real production data; job still doesn't reach `Completed=True` because of a NEW, unrelated subprocess-timeout bug
+
+Implements the `[DESIGN] P2` KALSHI todo below on top of Update 6's investigation. Full reasoning lives in the shipped
+code's docstrings (`PredictionTradesAdapter._get_local_timestamp_column`/`_resolve_price_size_cols`,
+`market-data-processing-service@890748f`) — this update is a condensed summary + the production verification evidence.
+
+**Question A (`is_buy` mapping) — investigated, not guessed.** Traced the downstream consumer: `is_buy` is CeFi's
+standard taker-aggression-direction convention (same pattern as `liquidations_adapter.py`'s `aggressor_side`), feeding
+`buy_volume`/`sell_volume` consumed by `strategy-service/cloud_data_provider.py` (BigQuery),
+`unified-trading-api/ batch_candles.py` (UI charts), and mirrored by `ml-service`'s `taker_buy_sell_ratio` feature
+(CEFI-perp, same concept). WebFetched Kalshi's own docs (`docs.kalshi.com/changelog` +
+`/api-reference/market/get-trades`) rather than guessing: `taker_book_side` is documented as **"the same directional bit
+as taker_outcome_side... 'bid'≡'yes', 'ask'≡'no'"** — i.e. it is NOT an independent aggressor-crossed-bid/ask signal the
+way CeFi's `aggressor_side` is, just a relabeling (confirmed perfectly co-varying on Update 6's 54,295-row sample).
+**Decision: `is_buy = (taker_outcome_side == "yes")`** — since `yes_price_dollars` is the canonical priced instrument
+(Decision 2), a taker profiting on "yes" is economically buying it; "no" is selling it. Implemented with a
+`taker_book_side` fallback.
+
+**Question B (`count_fp`) — CONFIRMED genuine trade size.** Kalshi's docs define it verbatim: "String representation of
+the number of contracts bought or sold in this trade"; the `_fp` suffix documents support for **fractional** contract
+sizes (so the ~38.5%-integer-like real-data finding is expected, not corruption). Re-inspected Update 6's real
+54,295-row file: 0 parse failures, 0 negatives, notional (`count_fp × price`) distribution plausible (median
+~$10, max ~$28.8k). Used directly as `size`.
+
+**Implementation**: two overrides in `PredictionTradesAdapter` only, gated on `_is_kalshi_shaped(df)` (KALSHI-only
+`yes_price_dollars` column — Polymarket's schema lacks it, so untouched, regression-tested).
+`_get_local_timestamp_column` returns `available_at` for KALSHI (same role as the base chain's exchange-time fallback,
+still gets the +200ms delay uniformly). `_resolve_price_size_cols` maps `yes_price_dollars`→price, `count_fp`→size,
+`taker_outcome_side`→is_buy; non-KALSHI frames delegate to `CefiTradesAdapter` via `super()` (one
+`# pyright: ignore[...]` — the shared `CandleAdapterRegistry.register()` decorator's non-generic return type erases
+`CefiTradesAdapter`'s identity for basedpyright's `super()`/`cast()` analysis from a subclass; a basedpyright
+limitation, not a type hole; not fixed per this todo's file-scope contract). `CefiTradesAdapter`/`base_adapter.py`
+untouched. Tests: `tests/unit/test_prediction_kalshi_trades_adapter.py`, real KALSHI column shapes.
+
+**Codex fix** (Decision 1): `/codex/02-data/prediction-data-types-catalog.md` § NEEDS_CANDLE_PROCESSING corrected — the
+claimed prediction-specific `False` override for `trades` was stale; UAC's registry is flat/asset-group-blind with
+`"trades": True` uniformly. Flagged (not resolved) `prediction_canonical_question_group` may share the same drift class.
+
+**Shipped**: `market-data-processing-service@890748f` (→ `main@b3f3f96`, QG green), `unified-trading-pm@0c427d472`
+(codex fix). Fresh image confirmed built/tagged (`b3f3f96`/`latest`, 13:18:54Z) before verification.
+
+### Verification — real production run, watched to a genuine terminal state (~2 hours)
+
+Triggered `uts-prod-market-data-processing-service-t1-recon-pr268`
+(`MDPS_ASSET_GROUP=PREDICTION --start-date 2026-07-25 --end-date 2026-07-26 --force`), polled the actual
+`status.conditions[type=Completed]` object to a genuine terminal state at 15:35:22Z: `Completed=False`,
+`reason=NonZeroExitCode`, exit 1 — a clean Python-level failure, RSS healthy (565MiB-6.9GB) throughout, never near the
+32Gi limit (NOT the OOM class this doc otherwise chases).
+
+**Schema mapping conclusively proven correct**: zero `MalformedTickFieldError`/`No timestamp column`/`ValueError`/
+`UpstreamTimestampBiasError` anywhere across the ~2h run (previously 100% instant failure on every KALSHI row). Manifest
+entries climbed 1→1558+ with continuous `POLARS AGGREGATED` output throughout.
+
+**Real written candle output pulled from GCS**: `KXBTC-26JUL2421-B63850` (single trade, bounded `close=0.01`,
+`volume=400` matching `count_fp`, `buy_volume=400/sell_volume=0` correctly classified); `KXBNB-26JUL2421-B562` (1m)
+shows **genuine price movement across 3 real trades** (`close` ∈ {0.76, 0.89, 0.98}, bounded [0,1]) with
+`buy_volume=8/sell_volume=1` correctly summing to `volume=9` — a real, non-degenerate buy/sell mix. Two more
+single-trade files checked, all bounded, zero NaN/inf garbage.
+
+**`Completed=False` is a NEW, unrelated bug — not the KALSHI mapping**:
+`subprocess-per-date: date=2026-07-26 TIMED OUT after 1800s (FAILED, child killed)`. The per-date subprocess
+architecture (Update 4) gives each date a fixed 30-min budget; with KALSHI now genuinely processing ~2,170 instruments ×
+7 timeframes (previously never observed since every row crashed instantly), a full day now exceeds that budget — both
+dates timed out, retried once, timed out again (14:04/14:34/15:05/15:35). **Not fixed here** — a capacity-planning
+decision, not a guessable fix. Filed as its own P2 todo below.
+
+**Conclusion**: the KALSHI todo is genuinely resolved with real evidence (not guessed), scoped entirely to
+`PredictionTradesAdapter`, and verified against real production data via both an absence-of-errors proof and a
+positive-output proof. The remaining `Completed=False` is a newly-surfaced, unrelated capacity issue.
+
 ## Todos
 
 - [x] [SCRIPT] P1. **Root-cause and fix the second OOM path** (the silent >28GB spike after DEFI `dex_pool_swaps`
@@ -872,29 +873,29 @@ real market data across most of the sports odds product, apparently for its enti
       ONE group, not every group written under it.
 
       **Fix**: added `no_real_chain_root` (true only for the legacy-sentinel, no-underlying case) to
-                                                                      `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
-                                                                      (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
-                                                                      own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
-                                                                      original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
-                                                                      so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
+                                                                                                      `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
+                                                                                                      (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
+                                                                                                      own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
+                                                                                                      original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
+                                                                                                      so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
 
-                                                                      **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
-                                                                      batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
-                                                                      id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
-                                                                      green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files).
+                                                                                                      **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
+                                                                                                      batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
+                                                                                                      id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
+                                                                                                      green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files).
 
-                                                                      **Re-verified end-to-end against real production data (Update 7, 2026-07-27)**: execution
-                                                                      `uts-prod-market-data-processing-service-t1-recon-86jbn` (the exact repro command below, against the fixed image
-                                                                      rebuilt on `main`@`eaf8127`), watched to a genuine `Completed=False`/`NonZeroExitCode` terminal state (failing for
-                                                                      two unrelated, already-triaged reasons, not the mixing bug — see Update 7). Zero `partition_mismatch`/
-                                                                      `instrument_type mismatch` occurrences anywhere in the run's logs, and two independent freshly-written
-                                                                      MATCH_ODDS/MATCH_ODDS_LAY output pairs for the same fixture (BETFAIR_EX_EU ALLSVENSKAN KALMAR-MJALLBY;
-                                                                      BETFAIR_EX_EU MLS COLUMBUS_CREW_SC-CINCINNATI) were pulled directly from GCS and confirmed uncontaminated
-                                                                      (`instrument_id.unique()` per file contains only that file's own market). See Update 7 for full evidence.
+                                                                                                      **Re-verified end-to-end against real production data (Update 7, 2026-07-27)**: execution
+                                                                                                      `uts-prod-market-data-processing-service-t1-recon-86jbn` (the exact repro command below, against the fixed image
+                                                                                                      rebuilt on `main`@`eaf8127`), watched to a genuine `Completed=False`/`NonZeroExitCode` terminal state (failing for
+                                                                                                      two unrelated, already-triaged reasons, not the mixing bug — see Update 7). Zero `partition_mismatch`/
+                                                                                                      `instrument_type mismatch` occurrences anywhere in the run's logs, and two independent freshly-written
+                                                                                                      MATCH_ODDS/MATCH_ODDS_LAY output pairs for the same fixture (BETFAIR_EX_EU ALLSVENSKAN KALMAR-MJALLBY;
+                                                                                                      BETFAIR_EX_EU MLS COLUMBUS_CREW_SC-CINCINNATI) were pulled directly from GCS and confirmed uncontaminated
+                                                                                                      (`instrument_id.unique()` per file contains only that file's own market). See Update 7 for full evidence.
 
-                                                                      Repro command used for this verification pass:
-                                                                      `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
-                                                                      (repo: market-data-processing-service)
+                                                                                                      Repro command used for this verification pass:
+                                                                                                      `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
+                                                                                                      (repo: market-data-processing-service)
 
 - [x] [SCRIPT] P2. **Scope MDPS's per-asset-group candle timeframe iteration** — `config.py`'s `default_timeframes`
       (`["15s","1m","5m","15m","1h","4h","24h"]`) was applied uniformly to every asset_group; sports only has
@@ -920,41 +921,23 @@ real market data across most of the sports odds product, apparently for its enti
       and a documented residual gap in `LiveModeHandler` (out of scope, low risk, not fixed). (repo:
       market-data-processing-service)
 
-- [ ] [DESIGN] P2. **Build a genuine KALSHI trades→candle schema mapping in `PredictionTradesAdapter` — NOT a rename, a
-      real venue-schema design decision.** Deepened investigation in Update 6 (2026-07-27) supersedes the original
-      one-line todo. Confirmed via real GCS files: KALSHI's raw `trades` schema
-      (`count_fp, created_time, is_block_trade, no_price_dollars, taker_book_side, taker_outcome_side, taker_side,     ticker, trade_id, yes_price_dollars, ...`)
-      shares almost no column names with what `CefiTradesAdapter`/`PredictionTradesAdapter`
-      (`market_data_processing_service/app/adapters/prediction/trades_adapter.py`, inheriting from
-      `app/adapters/cefi/trades_adapter.py`) expects (`price`/`size`or`amount`/`side`/one of
-      `ts_init`|`local_timestamp`|`ts_event`|`timestamp` — the immediate crash site is
-      `base_adapter.py:169-188 _get_local_timestamp_column`, `ValueError: No timestamp column found in data`).
-      **Confirmed NOT a regression**: Polymarket's raw schema (`price`, `amount`, `side` ∈ {BUY,SELL}, `timestamp`) DOES
-      match the adapter's assumptions (verified on a real 2026-07-22 file) and Polymarket candle output genuinely
-      existed historically (real objects found under `processed_candles/by_date/day=2026-01-14/.../venue=POLYMARKET/` —
-      the most recent day with ANY prediction candle output found in a bounded probe). **KALSHI's candle path has never
-      worked — it was never built**: zero test coverage of Kalshi's real columns anywhere in the repo, zero git history
-      touching them, and Kalshi raw ticks only start appearing in this bucket around 2026-07-20 (consistent with the
-      `[DELTA 2026-05-22 — KALSHI API MIGRATION]` `BLOCKED-CREDENTIALS` banner in
-      `/codex/02-data/prediction-schema-paths.md`).
-
-      **Real open design decisions the next implementer must make** (see Update 6 for full detail + evidence):
-                                                                  (1) which of `yes_price_dollars`/`no_price_dollars` is the OHLCV price for a two-sided YES/NO market (they sum to
-                                                                  exactly 1.00 — confirmed on 54,295 real rows); (2) how `taker_side`/`taker_outcome_side`/`taker_book_side`
-                                                                  (yes/no/bid/ask, not BUY/SELL) map to the adapter's `is_buy` buy/sell-split and whale-detection features;
-                                                                  (3) whether `count_fp` (string-typed, cleanly float-parseable) is genuinely trade size/contract count;
-                                                                  (4) timestamp source — `available_at` is evidence-backed safe (confirmed byte-exact match against `created_time`
-                                                                  across all 54,295 rows of a real file, genuine per-trade granularity, 44,077 distinct values across one day) but
-                                                                  wiring it into `_get_local_timestamp_column`'s existing local-vs-exchange-time HFT-delay convention needs a
-                                                                  decision since Kalshi has no local/exchange timestamp split.
-
-                                                                  **Also flag before starting**: a genuine SSOT-vs-code contradiction — `/codex/02-data/prediction-data-types-catalog.md`
-                                                                  claims `NEEDS_CANDLE_PROCESSING["trades"]` has a prediction-specific `False` override, but the actual UAC
-                                                                  registry (`unified_api_contracts/registry/market_data_categories.py:640`, flat/non-asset-group-keyed) sets it
-                                                                  `True` for `trades` uniformly, with a comment explicitly stating prediction shares CeFi's `True` value. Resolve
-                                                                  this FIRST — if the codex doc's intent is correct, the right fix may be "stop attempting prediction candle
-                                                                  derivation entirely" rather than building a Kalshi adapter. (repo: market-data-processing-service,
-                                                                  unified-api-contracts if the NEEDS_CANDLE contradiction is resolved as a code fix)
+- [x] [DESIGN] P2. **Build a genuine KALSHI trades→candle schema mapping in `PredictionTradesAdapter` — NOT a rename, a
+      real venue-schema design decision.** **DONE, verified (Update 10, 2026-07-27)** — both open design questions
+      resolved with real evidence: (A) `is_buy = (taker_outcome_side == "yes")`, per Kalshi's own API docs (confirmed
+      `taker_book_side` is the SAME axis, not an independent aggressor signal) + a downstream-consumer trace
+      (strategy-service BigQuery reader, unified-trading-api chart schema, ml-service's `taker_buy_sell_ratio` pattern);
+      (B) `count_fp` confirmed genuine trade size via Kalshi's own docs ("number of contracts... fixed-point...
+      fractional contract sizes") + a real-data cross-check (0/54,295 parse failures, plausible notional distribution).
+      Implemented in `PredictionTradesAdapter` only (`market-data-processing-service@890748f`) —
+      `CefiTradesAdapter`/`base_adapter.py` untouched, Polymarket path regression-tested unaffected. Codex doc fixed
+      (Decision 1) — `unified-trading-pm@0c427d472`. **Verified against real production data**: execution
+      `uts-prod-market-data-processing-service-t1-recon-pr268` ran ~2 hours with ZERO schema-related errors (previously
+      100% instant failure) and real written KALSHI candle output pulled from GCS confirmed bounded [0,1] OHLCV, correct
+      `count_fp`-derived volume, genuine buy/sell mix, and real price movement. Job's `Completed=False` is due to a NEW,
+      unrelated subprocess-per-date timeout bug (see the new todo below) — not the schema mapping, which is conclusively
+      proven correct. See Update 10 for full evidence (Update 6 has the original crash-site investigation this
+      superseded: KALSHI's raw schema vs. `CefiTradesAdapter`'s assumptions, confirmed-not-a-regression vs. Polymarket,
+      and the original open design questions this update answered).
 
 - [x] [SCRIPT] P2. **Investigate + fix `MalformedTickFieldError` for `bm_minutes_to_kickoff_or_h2h_columns` — a large
       fraction of sports MATCH_ODDS instruments fail with "ticks present but downstream calc dropped all rows due to
@@ -998,3 +981,14 @@ real market data across most of the sports odds product, apparently for its enti
       data-pipeline-correctness-is-the-heartbeat — this silently drops real market data across most of the sports
       odds_horizon_bucket product. See Update 9 for full evidence. (repo: market-data-processing-service) — Update 10:
       see `issues/mdps_sports_odds_horizon_bucket_h2h_anchor_fix_2026_07_27.md`.
+
+- [ ] [DESIGN] P2. **`subprocess-per-date`'s fixed 1800s (30-min) timeout is too short for a full day of PREDICTION
+      candle derivation now that the KALSHI schema mapping actually works** — newly discovered 2026-07-27 (Update 10)
+      verifying the KALSHI todo above. With ~2,170 instruments × 7 timeframes now genuinely processing (previously every
+      row crashed instantly, so real throughput was never observed), both dates timed out twice each
+      (`subprocess-per-date: date=<d> TIMED OUT after 1800s`, 14:04/14:34/15:05/15:35) against execution
+      `uts-prod-market-data-processing-service-t1-recon-pr268`, ending `Completed=False` despite healthy RSS (NOT the
+      OOM class this doc otherwise chases) and zero schema errors. Real candle output DID get written for whichever
+      instruments finished before each kill (see Update 10). **Not fixed here** — needs a capacity-planning decision
+      (raise the 1800s constant? split PREDICTION into narrower per-venue/per-cqg subprocess units? profile the real HFT
+      feature compute cost?), not a guessable fix. (repo: market-data-processing-service)

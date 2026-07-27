@@ -22,6 +22,8 @@ related:
     /codex/05-infrastructure/live-deployment-monitoring.md,
     plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
     /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
+    /plans/active/issues/deployment_ui_fleet_tab_removal_2026_07_27.md,
+    /plans/active/monitoring_control_plane_master_2026_06_10.md,
     /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
   ]
@@ -43,7 +45,7 @@ referenced_by:
     plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
   ]
 owner:
-last_reviewed: 2026-07-24
+last_reviewed: 2026-07-27
 code_refs:
   [
     deployment-api/deployment_api/services/cost_observability/service.py,
@@ -58,7 +60,6 @@ code_refs:
     unified-trading-library/unified_trading_library/lifecycle/daemon.py,
     deployment-ui/src/pages/Deployments.tsx,
     deployment-ui/src/pages/DeploymentDetail.tsx,
-    deployment-ui/src/pages/FleetGit.tsx,
     deployment-ui/src/pages/Cockpit.tsx,
     deployment-ui/src/components/RunLogPanel.tsx,
     deployment-ui/src/components/StreamingLogsPanel.tsx,
@@ -163,6 +164,36 @@ Anti-pattern this closes: a capability existing on TWO surfaces with divergent f
 SEE idle spend but not ACT on it; Fleet could act but wasn't the inventory-of-record) — the fix is always
 MERGE-then-remove-the-duplicate, never a blind delete of the less-complete side without checking what it uniquely
 offered.
+
+## Fleet tab REMOVED entirely — supersedes the 2026-06-10 v2 decision (2026-07-27)
+
+Issue: `deployment_ui_fleet_tab_removal_2026_07_27.md`. Deployment-ui's `/fleet` page (git-health-only since the
+2026-07-21 consolidation above) is now DELETED — route, nav entry, `FleetGit.tsx`, the `getFleetGitHealth()` API
+client + its types, the deployment-api proxy route (`GET /repo-ci/fleet-git-health`, `_repo_ci_fleet.py`,
+`_mock_fleet_git_health`), all gone. **This explicitly REVERSES, for fleet git-health specifically, the "operator
+decision v2" (2026-06-10, `monitoring_control_plane_master_2026_06_10.md`) that made deployment-ui the primary pane** —
+that decision predates the single-VM architecture (2026-06-27); with only one orchestrator VM left (was ~11), the
+cross-VM Landing page nobody navigates to anymore was the only place the AO-side page's nav lived, so the "consolidated
+single pane" the v2 decision was chasing had already inverted into "a page nobody uses, proxied through another app."
+Fleet git-health's only home now is agent-orchestrator's own dashboard — surfaced as a **top-bar popover**
+(`FleetKpisMenu`/`FleetGitMenu` in `agent-orchestrator/dashboard/src/layout.tsx`) on the per-VM Dashboard page itself
+(no navigation needed from wherever the operator already is), not a page reachable only via the retired Landing
+click-path.
+
+**Parity check before deletion** (the reason this wasn't a blind delete): deployment-ui's copy had exactly one thing
+AO's own `FleetGit.tsx` lacked — per-slot snapshot-age (`reported_at` rendered as "Xm ago" + an absolute-time tooltip).
+Ported into `agent-orchestrator/dashboard/src/FleetGit.tsx`'s `SlotRow` (a `snap:` chip next to the existing `ff:`
+cron-result chip) before removal, so nothing regressed. AO's own copy already had two things deployment-ui's page lacked
+(a GH-rate-limit widget and the `git_red_sustain_secs`-gated red/amber sustain threshold matching the Slack pager
+exactly, which deployment-ui's copy never read off the wire despite it being present in the proxied payload) — those
+stay AO-only, no reason to duplicate them into a page that no longer exists.
+
+`RepoCi.tsx`'s repo-detail "Fleet Git" cross-link now points externally to
+`https://agent-orchestrator.odum-research.com/` (was an internal `<Link to="/fleet">`) — same
+`data-testid="repo-detail-fleet-link"`, so nothing else in the corpus needs to change to find it. The CockpitHealth
+landing tile labeled "Fleet VMs (GCP+AWS)" (VM-census framing, not git-health) now points at `/deployments` instead of
+the deleted `/fleet` — its own metric text (running/zombie/OOM/ unknown) already described data that lived at
+`/deployments` since the 2026-07-21 consolidation above, so this was a stale link fixed in passing, not a new decision.
 
 ## Date-range filter, kind multi-select, always-on treatment (WS-2/WS-3, 2026-07-21)
 

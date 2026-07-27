@@ -19,7 +19,7 @@ created: 2026-07-13
 authoritative_for: [agent-orchestrator Slack alert routing, daily-summary digest, git-health guard dedup]
 referenced_by:
 owner:
-last_reviewed: 2026-07-14
+last_reviewed: 2026-07-27
 code_refs:
   - agent-orchestrator/server/notifications/slack.py
   - agent-orchestrator/server/daily_summary.py
@@ -61,6 +61,12 @@ Automatic backend lifecycle events — the orchestrator handled them, no human i
   `agent-orchestrator@9c73579`**: the condition is now `count_queued_walls() > 0 or count_queued_backlog_tasks() > 0`,
   and `notify_slot_quarantined`'s Slack copy names whichever queue(s) triggered it — see
   `plans/archive/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md`.
+- **A backward-HEAD discard already preserved on `wip-preserve/orchestrator-slot-<N>-<sha>`** — `HeadBackwardCanary`
+  (2026-07-27 fix): the orphan-wip inherit flow (`_orphan.py`) always pushes a discarded commit to that ref BEFORE its
+  own `git checkout -B` realign, so the content is safe forever, not merely reflog-recoverable — this is the routine
+  by-design outcome of a task-less slot handoff, not a data-loss event. Logged INFO only
+  (`HeadBackwardCanary.tick_once`'s `preserved_hits`); `notify_head_backward_dataloss` is only ever called with the
+  remaining `real_hits` (no matching preserve ref found) — see the "DOES page" entry below.
 
 Each of these calls `logger.info(...)` (the "D11 downgrade" convention) instead of `slack._post(...)`. Their events are
 recorded in the DB **activity log** (`log_activity`) by the callers, which is what the digest reads.
@@ -81,7 +87,13 @@ recorded in the DB **activity log** (`log_activity`) by the callers, which is wh
   commit was discarded by an out-of-band `branch: Reset to origin` and is now recoverable only via reflog; the page
   carries the per-clone `git cherry-pick <sha>` recovery. Fired by the `HeadBackwardCanary`
   (`server/head_backward_canary.py`), first-tick-baselined + persisted-seen deduped so it pages each new loss exactly
-  once; the detection sister to the `slot11_silent_branch_reset_data_loss` realign-guard fix).
+  once; the detection sister to the `slot11_silent_branch_reset_data_loss` realign-guard fix). **CALLER-FILTERED
+  (2026-07-27 follow-up to `agent_orchestrator_alert_channel_cleanup_2026_07_13`)**: `HeadBackwardCanary` checks each
+  discarded SHA for a matching `wip-preserve/orchestrator-slot-<N>-<sha>` ref on origin BEFORE calling this notifier —
+  the orphan-wip inherit flow (`worktree_clean_check/_orphan.py`) always pushes there before its own realign, so that
+  case is safe forever, not merely reflog-recoverable, and is logged INFO only (see "does NOT page" above). Measured
+  live 2026-07-27: ~80% of all backward-HEAD discards fleet-wide are this benign preserve-then-realign case; only the
+  ~20% with no matching preserve ref (a genuinely wedged/misclassified worker) still page here.
 - **Alert-lifecycle closure bookends** — an actionable alert's CLOSE is posted in-channel so the operator can tell an
   OPEN page from a resolved one (see the dedicated section below).
 

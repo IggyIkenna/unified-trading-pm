@@ -22,7 +22,7 @@ assigned_vm:
 resolved_by:
 locked_by:
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

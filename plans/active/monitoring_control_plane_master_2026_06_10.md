@@ -6,7 +6,7 @@ summary:
   orchestrator, providing a single-pane view of repo pipeline state and slot health.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]
@@ -74,6 +74,14 @@ per-slot badges or by SSHing around.
    v2 successor, NOT silently dropped.
 
 ## Operator decision REVISION (2026-06-10 v2 — single devops pane)
+
+> **🟡 PARTIALLY SUPERSEDED (2026-07-27)** — the fleet-git-health half of this decision (deployment-ui as the primary
+> operator view) is reversed by `deployment_ui_fleet_tab_removal_2026_07_27.md`: deployment-ui's `/fleet` page is
+> DELETED; fleet git-health's only home is now agent-orchestrator's own dashboard (a top-bar popover on the per-VM
+> Dashboard). Reason: this v2 decision predates the single-VM architecture (2026-06-27) — with ~11 VMs down to 1, the
+> cross-VM Landing page whose nav this decision's click-through relied on stopped being a daily-use screen, so the "one
+> pane" this decision chased had inverted into "a page nobody visits, proxying another app." The CI/CD half of this
+> decision (Repos CI page, per-service CI tab) is UNCHANGED — this reversal is fleet-git-health-scoped only.
 
 **deployment-ui is THE devops surface — one host/port, fewer panes.** Supersedes the v1 split for the FRONTEND only:
 fleet git-health (sub-plan B) still ingests/aggregates in the agent-orchestrator backend (it owns slot/host state), but
@@ -617,6 +625,18 @@ manual session because firing breaking/red/billing states on the live fleet jams
 
 ## Progress log
 
+- **2026-07-27 — fleet-git-health half of the 2026-06-10 v2 decision SUPERSEDED** (operator instruction, interactive
+  session). deployment-ui's `/fleet` page — the "primary operator view" this v2 decision moved fleet git-health into —
+  is deleted; the feature's only home is now agent-orchestrator's own dashboard (top-bar popovers on the per-VM
+  Dashboard, reached with no navigation from wherever the operator already is). Root cause the operator surfaced: since
+  the single-VM architecture (2026-06-27) dropped the fleet from ~11 VMs to 1, the cross-VM Landing page whose nav
+  button this v2 decision's click-through relied on stopped being visited daily, so the "one consolidated pane" it was
+  chasing had inverted into "a page nobody uses, proxying another app." Parity-checked before deletion (one feature —
+  per-slot snapshot-age — ported into AO's own `FleetGit.tsx`; two features AO already had that deployment-ui lacked —
+  GH-rate-limit + the sustained-red alerting threshold — stay AO-only). Full write-up + evidence:
+  `/plans/active/issues/deployment_ui_fleet_tab_removal_2026_07_27.md`. The CI/CD half of the v2 decision (Repos CI
+  page, per-service CI tab staying in deployment-ui) is UNCHANGED. Codex updated:
+  `/codex/05-infrastructure/deployment-observability.md` new § "Fleet tab REMOVED entirely."
 - **2026-06-11 (Harsh slot-5, local)** — orchestrator e2e control-plane VALIDATED live (sandboxed local backend+UI from
   the slot-5 checkout): plan→regen→dispatch→execute→done→blocked→**main-agent auto-answer (31 s)**→resume→done. SHIPPED
   agent-orchestrator@05be1e0+6b63a77+a658519: **MainAgentKeeper** (main agent auto-spawned at backend start — closes the
