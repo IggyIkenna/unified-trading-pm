@@ -215,20 +215,21 @@ dead worker's task or process stranded.
   independently backstops a session that ignores the directive (kills it once genuinely stuck, WIP-preserved first;
   AutoSpawn respawns fresh — see worker-liveness.md).
 - **A SECOND, independent persistence gate — plan continuity, not just context**
-  (`ao_worker_session_continuity_and_resume_threshold_2026_07_27`, feature-flagged
-  `tuning.plan_continuity_reset_enabled`, **default False**). The context-pct gate above asks "is this session still fit
-  to continue?"; this one asks "does the NEXT task actually continue what this session was just doing?" When enabled,
-  `done_slot` additionally withholds the picked next task (same "stays `queued`, untouched" contract) whenever it
-  differs from the just-completed task in `plan_ref`, OR `assigned_role`, OR its `repos` set — logs
-  `worker_plan_switch_reset`, kills this slot's own tmux session off-thread (the same established daemon-thread pattern
-  the one_shot-reap branch already uses), and returns `directive="reset_before_next"` (worker takes no action — the
-  server has already scheduled the teardown). This closes the gap between the blanket "same live session drains the next
-  task" behavior above and the operator's actual intent: a persistent session should only be kept alive for genuine
-  same-plan continuation; an unrelated/parallel task should get a fresh session, per
+  (`ao_worker_session_continuity_and_resume_threshold_2026_07_27`, archived, feature-flagged
+  `tuning.plan_continuity_reset_enabled`, **default True** — shipped gated `False`, operator-approved-flipped True
+  same-day, 2026-07-27). The context-pct gate above asks "is this session still fit to continue?"; this one asks "does
+  the NEXT task actually continue what this session was just doing?" When enabled, `done_slot` additionally withholds
+  the picked next task (same "stays `queued`, untouched" contract) whenever it differs from the just-completed task in
+  `plan_ref`, OR `assigned_role`, OR its `repos` set — logs `worker_plan_switch_reset`, kills this slot's own tmux
+  session off-thread (the same established daemon-thread pattern the one_shot-reap branch already uses), and returns
+  `directive="reset_before_next"` (worker takes no action — the server has already scheduled the teardown). This closes
+  the gap between the blanket "same live session drains the next task" behavior above and the operator's actual intent:
+  a persistent session should only be kept alive for genuine same-plan continuation; an unrelated/parallel task should
+  get a fresh session, per
   [worker-liveness.md § "Conversational context-resume is an explicit NON-GOAL"](/codex/04-architecture/agent-orchestrator-worker-liveness.md)
-  — durable state was never supposed to depend on the conversation anyway. Ships OFF by default, mirroring the
+  — durable state was never supposed to depend on the conversation anyway. Shipped gated OFF, mirroring the
   `context_burn_kill` precedent (a new fleet-wide dispatch-behavior change gets an explicit operator flip once verified,
-  not an unreviewed default-on).
+  not an unreviewed default-on) — the flip itself was that same explicit operator approval, verbatim "Flip to True now".
 - **Account failover**: usage-cap / auth-failure evicts a slot off a dead/exhausted account onto a headroom account
   (resume-preserving where a `claude_session_id` exists). Health is a poller verdict, never a heartbeat inference. Full
   contract:
