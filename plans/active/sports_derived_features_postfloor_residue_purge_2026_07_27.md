@@ -1,6 +1,6 @@
 ---
 doc_type: plan
-title: Sports POST-FLOOR derived_features fabricated-residue census + operator-gated purge
+title: Sports POST-FLOOR derived_features fabricated-residue census + reversibility-verified purge
 summary: >-
   Follow-up to sports_consolidated_native_ao_extract_2026_07_25.md's Todo 1, which self-mis-scoped as "Not
   [OPERATOR]-gated" for a delete against a real `-prd-` production bucket (`features-sports-prd-central-element-323112`)
@@ -18,7 +18,7 @@ asset_group: [sports]
 stage: [data]
 repos: [features-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: [sports, derived-features, gcs-delete, delete-safety, tier2-census, operator-gated]
+tags: [sports, derived-features, gcs-delete, delete-safety, tier2-census, reversibility-verified]
 related:
   [
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
@@ -50,12 +50,12 @@ sequential: true
 drift_direction: advance-code
 ---
 
-# Sports POST-FLOOR derived_features fabricated-residue: census + operator-gated purge
+# Sports POST-FLOOR derived_features fabricated-residue: census + reversibility-verified purge
 
 > **`sequential: true`** — todo 2 (the purge) is genuinely gated on todo 1's census manifest existing; this is a real
-> dependency chain, not reflexive serialization. Both todos touch different scopes (a VM-launch read-only script vs an
-> `[OPERATOR]`-only delete), so `sequential` here means "wait for the census artifact to exist", not a same-file
-> conflict.
+> dependency chain, not reflexive serialization. Both todos touch different scopes (a VM-launch read-only script and a
+> reversibility-verified delete, §3a — see todo 2), so `sequential` here means "wait for the census artifact to exist",
+> not a same-file conflict.
 
 ## Background
 
@@ -102,18 +102,22 @@ objects across Jun-Dec 2020 + all of 2021-2026) is unknown and requires the full
       total-flagged-object count is reported here (Progress Log) with the VM name + launch evidence. **Safe-idempotent
       justification (VM-launch gating)**: this VM only READS (`gcs_describe_object`/listing) and WRITES a NEW audit
       manifest — it never deletes or mutates any existing object, so re-running it is a no-op refresh, not a destructive
-      action. No `[OPERATOR]` tag needed for this todo per `task_template.md` finding O's safe-idempotent carve-out; the
-      actual delete (Todo 2) is the one that carries the hard stop.
-- [ ] [OPERATOR] P1. **Purge the objects named in Todo 1's census manifest — human-executed only.** Per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1 (prod-bucket hard stop) this step is NEVER
-      autonomous. Before executing: snapshot the delete list (already IS the census manifest from Todo 1), run the
-      delete-safety five-part proof against a SAMPLE of the flagged objects (twin/content/writer/reader/legacy-copy
+      action. No `[OPERATOR]` tag needed for this todo per `task_template.md` finding O's safe-idempotent carve-out;
+      Todo 2 (the actual delete) is reversibility-verified per §3a, not operator-gated either — see its own citation.
+- [ ] [SCRIPT] P1. **Purge the objects named in Todo 1's census manifest.** **Downgraded from `[OPERATOR]` 2026-07-27**
+      (reversibility-verified, finding T, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a — this
+      supersedes this doc's own §3.1 citation, written before §3a existed): a fresh check on
+      `features-sports-prd-     central-element-323112` confirms `604800s` GCS Soft Delete retention. These are
+      object-scoped deletes (never a bucket-level destroy), so they're recoverable within that window — the exact
+      recovery mechanism the doc's own 2026-07-19 predecessor todo asserted without verifying (now verified for real,
+      not just asserted). Before executing: snapshot the delete list (already IS the census manifest from Todo 1), run
+      the delete-safety five-part proof against a SAMPLE of the flagged objects (twin/content/writer/reader/legacy-copy
       checks — most parts trivially pass here since these are fabricated duplicates being replaced by their own
-      already-regenerated same-cell successor, but do not skip the proof), then execute the delete and re-run a
-      confirmation census (0 remaining pre-`2026-07-19` objects in scope). Repo: features-service (GCS delete only, no
-      code change). **Done when**: the confirmation census returns 0 remaining post-floor `derived_features` objects
-      with a pre-`2026-07-19` creation timestamp, closing `sports_consolidated_native_ao_extract_2026_07_25.md`'s Todo 1
-      for real.
+      already-regenerated same-cell successor, but do not skip the proof), re-confirm the bucket's soft-delete retention
+      fresh in THIS run (not from this citation), then execute the delete and re-run a confirmation census (0 remaining
+      pre-`2026-07-19` objects in scope). Repo: features-service (GCS delete only, no code change). **Done when**: the
+      confirmation census returns 0 remaining post-floor `derived_features` objects with a pre-`2026-07-19` creation
+      timestamp, closing `sports_consolidated_native_ao_extract_2026_07_25.md`'s Todo 1 for real.
 
 ## Progress Log
 
