@@ -101,17 +101,25 @@ instruments-service@`b99e586` (tested no-key enumeration).
       `PROGRESS: chunk=N/365` lines advancing + genuine `ManifestWriter: per-VM shard updated` writes — the fleet is
       actually processing, not stalled-but-running. Superseding this checkbox (the 015959 run-id is dead and irrelevant
       now) rather than leaving it perpetually unfalsifiable; the real completion gate for the NEW run is below.
-- [ ] [INFRA] P0. **GATE**: HL/ASTER corrective re-run (7 VMs `cefi-{hyperliquid,aster}-*-20260727-022558`) completes —
-      captured-coverage manifest re-read (same method as above) confirms `expected_unattempted` → 0 for all three
-      data_types (book_snapshot_5 staying 0-captured for ASTER is correct/expected, not a gap). A 365-daily-chunk-per-VM
-      backfill across 7 VMs is a multi-hour operation, not completable within one agent-turn session — verified healthy
-      (no preemption, real progress) at T+10min+ this session; the underlying condition (`expected_unattempted` → 0 for
-      HL/ASTER) has NOT yet been re-measured post-relaunch. Handing off: whoever next picks up this GATE should (1)
-      confirm the fleet is still running / check for a fresh preemption, (2) once all 7 report terminal
-      (`gcloud compute instances list` shows none, or a per-VM `EXIT_STATUS` in `run.log`), re-measure via
-      `read_availability_index` filtered to venue ∈ {HYPERLIQUID, ASTER}, do not trust prior `attempted_failed` counts
-      as the gap census (mirrors the Tardis-lockout lesson elsewhere in this doc — measure fresh, don't assume) — do not
-      flip this checkbox until that fresh measurement confirms 0 `expected_unattempted`.
+- [ ] [INFRA] P0. **GATE — STILL BLOCKED, 3rd interruption (2026-07-27, slot-12)**: HL/ASTER corrective re-run (7 VMs
+      `cefi-{hyperliquid,aster}-*-20260727-022558`) did NOT complete — all 7 now show `TERMINATED`
+      (`gcloud compute instances list`). This is **NOT a preemption**: `gcloud compute operations list` shows a plain
+      `stop` operation (not `compute.instances.preempted`) issued by `user: ikenna@odum-research.com` at
+      `2026-07-27T02:36:26Z` (the shared gcloud identity every agent slot runs under — does not identify which
+      slot/session). `run.log` for all 7 VMs (checked via `gcloud storage cat`, ground-truth per this doc's own method)
+      shows **genuinely healthy, actively-advancing work right up to the stop**: `ManifestWriter: per-VM shard updated`
+      entries incrementing every ~10-15s, real per-symbol downloads in flight (e.g. ASTER `SYRUPUSDT`/`XRPUSDT`,
+      HYPERLIQUID `book_snapshot_5/BTC/AVAX` captures), all cut off mid-work within the same ~60s window
+      (02:35:xx-02:36:26 UTC) that the stop operation landed. Because these VMs are
+      `--instance-termination-action=DELETE` only on preemption (not on an explicit `stop`), the 7 instances still EXIST
+      in `TERMINATED` state (not deleted) — a `gcloud compute instances start` MAY be able to resume them, but whether
+      the startup-script is idempotent/safe to re-trigger on a plain restart (vs. only handling the SPOT-preemption
+      resume path) is unverified and is exactly the kind of judgment call
+      `/codex/12-agent-workflow/...VM-delete guardrail` class incidents warn against guessing on. **This is the SAME
+      fleet's 2nd distinct interruption in under 24h** (1st: mass-preemption of the prior `20260727-015959` run-id; 2nd:
+      this unexplained manual `stop` of `20260727-022558`) — a recurring-kill pattern worth a human decision before
+      spending a 3rd relaunch's compute. **Escalated via `/blocked`** — did NOT restart or relaunch unilaterally.
+      Handing off: whoever next picks this up should read the `/blocked` answer first.
 - [x] ✅ [DEPLOY] P1. Redeployed the IS fixes — built `instruments-service:latest`=7489ed1/0.43.0 from LDR (no-auth
       b99e586 + full-universe 0fe8e71 + dated-future quote fix 7489ed1) via Cloud Build d215d55a (SUCCESS); created the
       missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00 IS scheduler).
