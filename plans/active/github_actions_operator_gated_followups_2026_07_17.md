@@ -630,38 +630,75 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
       is retired in favour of it — do not judge this off a single point-in-time SSM check.
 
               **Phase 7's scope (thin push/repository_dispatch glue only —
-                                                  main-backmerge-to-ldr, image-build-gate's polling wrapper, update-dependency-version, etc.) is still fine to add
-                                                  here** — none of it is CPU-heavy. A dedicated, appropriately-sized runner host (separate from the orchestrator
-                                                  box) would be needed before any CPU-heavy workload could safely self-host, which is its own cost to weigh against
-                                                  the savings.
+                                                      main-backmerge-to-ldr, image-build-gate's polling wrapper, update-dependency-version, etc.) is still fine to add
+                                                      here** — none of it is CPU-heavy. A dedicated, appropriately-sized runner host (separate from the orchestrator
+                                                      box) would be needed before any CPU-heavy workload could safely self-host, which is its own cost to weigh against
+                                                      the savings.
 
-- [ ] [INFRA] P0. **BLOCKING finding (2026-07-27) — `setup-glue-runners.sh` cannot safely register a second repo's
-      runner pool on this host TODAY, and this blocks every todo below it.** Read the live script in full (not just its
-      header) before attempting a canary: `OWNER`/`REPO`/`RUNNER_BASE`/`GLUE_COUNT`/`WRITER_COUNT` are already
-      env-tunable (no code change needed for those), but THREE things are hardcoded GLOBALLY and shared by every
-      instance regardless of which repo's `install` last ran: `ENV_FILE=/etc/github-glue-runner.env` (every
-      `glue-N`/`writer-N` unit re-reads this on EVERY restart — and `glue-N` are JIT-ephemeral, restarting after every
-      single job), and the systemd unit FILENAMES themselves (`github-glue-runner@.service` template,
-      `github-glue-runner.slice`, `github-glue-slot-refresh.service/.timer`, `github-glue-token-refresh.service/.timer`
-      — all under `/etc/systemd/system`, all singular). Running `install` a second time with `REPO=agent-orchestrator`
-      would silently rewrite `ENV_FILE` to say `REPO=agent-orchestrator`, and PM's currently-running
-      `glue-1..5`/`writer-1..3` units would pick that up on their NEXT restart (minutes away, not hours) and re-register
-      themselves to `agent-orchestrator` — breaking PM's entire self-hosted CI with no warning. **Not attempted this
-      session** — verified against the live script text, not executed against the live 8-runner pool, given the box had
-      just come back from the RAM/CPU resize above with reduced margin for error. The actual fix: parameterize
-      `ENV_FILE` + all six unit filenames by a `POOL_TAG` (default empty ⇒ byte-identical paths/names to today, zero
-      behavior change for PM), check whether the `.slice`/`.service`/ `.timer` file CONTENTS cross-reference each other
-      by the exact current names (`Slice=github-glue-runner.slice` etc. — if so those need updating too, not just the
-      install-time `install -m 0644` destination paths). This is a real, scoped, but delicate multi-file live-infra
-      change — do it in its own focused pass with full attention, not appended to an already-large session.
-- [ ] [INFRA] P1. Canary the flip on ONE repo first (same discipline as the original PM migration: edit the template +
-      `rollout-workflow-templates.sh`, prove on one caller, only then fan out) — start with whichever of
-      features-service/agent-orchestrator has the simplest workflow surface (**agent-orchestrator confirmed simpler,
-      2026-07-27**: 12 workflow files vs features-service's 14, ~2828 vs ~3016 lines; neither currently has ANY
-      self-hosted runner registered — `gh api repos/IggyIkenna/agent-orchestrator/actions/runners` → `total_count: 0`),
-      verify its promote gate still resolves (`gh run list` green, required check posts), THEN roll the template change
-      to the rest of the MOVE set. **Blocked on the runner-registration fix immediately above — do not attempt to
-      register agent-orchestrator's runner until that lands.**
+- [x] ✅ **DONE 2026-07-27 — `setup-glue-runners.sh` multi-tenancy fix, shipped + verified live
+      (`unified-trading-pm@30872b269` + 2 same-day follow-ups `ab418de3a`/`dafa68ec4`).** Implemented the `POOL_TAG`
+      parameterization exactly as scoped: `ENV_FILE`/`RUNNER_BASE` + all six systemd unit names/paths now derive from
+      `POOL_TAG` (default empty ⇒ verified BYTE-IDENTICAL to every pre-existing installed unit — diffed locally against
+      the checked-in templates before shipping). Unit-file CONTENT (not just filenames) needed substitution too, exactly
+      as this todo predicted — `render_unit()` (sed-based) replaces `/opt/github-glue-runners`,
+      `/etc/github-glue-runner.env`, `Slice=github-glue-runner.slice`, and (found live, not in the original scoping)
+      `Unit=github-glue-slot-refresh.service` (the slot-refresh timer's explicit pairing line) +
+      `RuntimeDirectory=github-glue-runner`/`GH_TOKEN_FILE`/ `GLUE_GCLOUD_CONFIG` (previously unset on 2 of 6 units,
+      silently defaulting to PM's shared paths — harmless with one pool, load-bearing with two). Two more REAL bugs
+      surfaced only by actually running a fresh install (not caught by reading the script): (1) the WIF cred-config
+      write failed EPERM on a genuinely fresh `RUNNER_BASE` (root:root 0755) — pre-created the file first, same pattern
+      already used for `repo.refreshed-at`; (2) `runner_path()` (used by `preflight`) read the checked-in template's
+      literal PATH regardless of `POOL_TAG`, giving a false-positive python3/uv check against PM's already-built venv.
+      Both fixed same session, both verified.
+- [x] ✅ **DONE 2026-07-27 — agent-orchestrator canary runner pool live + verified healthy, PM's pool unaffected.**
+      `setup-glue-runners.sh POOL_TAG=ao OWNER=IggyIkenna REPO=agent-orchestrator GLUE_COUNT=2 WRITER_COUNT=1     GH_TOKEN_SECRET=GH_PAT install`
+      on `i-0c9b283b31d6b5ca7` — 2 glue + 1 writer, all `active running`, all `online` via `gh api .../actions/runners`
+      (`glue-ip-172-31-5-118-1/-2`, `writer-ip-172-31-5-118-1`). PM's original 8-runner pool re-verified `status`
+      immediately after — all 8 still `active running`/`online`, completely untouched.
+- [x] ✅ **DONE 2026-07-27 — Phase 7 canary: 8 glue workflows flipped to self-hosted for agent-orchestrator, 2 live
+      triggers verified green +
+      $0 billed.** The 7 fleet-templated MOVE workflows (main-backmerge-to-ldr,
+      major-bump-issue-handler + its Slack-failure job, request-major-bump + its Slack-failure job,
+      staging-backmerge-to-ldr, update-dependency-version + its Slack-failure job, version-registry-notify,
+      semver-agent) edited in the SHARED templates + rolled out via `rollout-workflow-templates.sh --repo
+      agent-orchestrator --template <name>` (scoped to this ONE repo, not the other 23 — confirmed via dry-run first).
+      Plus `deploy-dashboard.yml` (agent-orchestrator-owned, no shared template) hand-edited directly.
+      `detect_template_drift.py --workflows` correctly flagged the resulting 23-repos-not-yet-rolled-out drift;
+      baselined via `--baseline-write-allow-additions` (140 entries, `unified-trading-pm@b06abdf96`) as the documented,
+      intentional, TEMPORARY canary-phase state — ratchet down as each repo gets its own runner + rollout. Live
+      verification: triggered `main-backmerge-to-ldr` (run 30296962972, 13s) and `staging-backmerge-to-ldr` (run
+      30297012634, 11s) via `gh workflow run`, both green; `gh api .../jobs/<id>` confirms `runner_name:
+      glue-ip-172-31-5-118-1`, `labels: [self-hosted, glue]`; `gh api .../timing` confirms `billable: {}` ($0).
+- [x] ✅ **DONE 2026-07-27 — quality-gates-v2 canary: the REAL pytest/lint/typecheck job (qg-slices) verified running on
+      self-hosted infra, green,
+      $0 billed.** This is the operator's actual "migrate the expensive CI job" ask (Phase
+      7 above is the thin-glue 90%-is-NOT-this remainder). Cannot be a blanket `runs-on:` flip in the shared reusable
+      workflow (`unified-trading-pm/.github/workflows/python-quality-gates-v2.yml`) — it is called via `uses:` by ALL 24
+      non-PM repos, and only PM + agent-orchestrator have a self-hosted pool; a global flip would hang every other
+      repo's promotion gate waiting for a runner that never appears. Fix: added an opt-in `self_hosted_runner_labels`
+      `workflow_call` input (default `''` ⇒ `ubuntu-latest`, byte-identical for every caller that doesn't pass it —
+      `unified-trading-pm@5058dca8`, actionlint-clean), touching ONLY the `qg-slices` matrix job (the ~90%+-of-billed-
+      minutes one per this doc's own measurement above) — the file's other thin glue jobs (content-gate,
+      supersede-check, etc.) are untouched, separate scope. **Verified the default path is unaffected first**:
+      deployment-api's quality-gates-v2 (run 30297826469, doesn't pass the new input) ran green on `ubuntu-latest` as
+      always. Then agent-orchestrator's own `quality-gates-v2.yml` got a clearly-commented, deliberate, TEMPORARY
+      hand-set `self_hosted_runner_labels: '["self-hosted","glue"]'` override (`agent-orchestrator@f2266e8`+push) —
+      **run 30298445269: `QG slice (checks)` + `QG slice (tests)` both `conclusion: success`**, `runner_name:
+      glue-ip-172-31-5-118-1`/`-2`, `labels: [self-hosted, glue]`, `billable: {}` ($0).
+      The known P0 ambient-AWS- overprivilege finding
+      (`orchestrator_vm_aws_role_overprivileged_self_escalating_2026_07_27.md`) remains UNRESOLVED and now has real (not
+      hypothetical) exposure surface via this one repo's test runs — flagged, not fixed, per the operator's explicit
+      override of the prior security deferral.
+- [ ] [INFRA] P1. **Fan out Phase 7 + the quality-gates-v2 self-host flip from the now-fully-verified agent-orchestrator
+      canary to the remaining 23 repos.** Per-repo: register a `POOL_TAG=<repo-slug>` runner pool (capacity-plan against
+      the 16 vCPU box — agent-orchestrator's canary used 2 glue + 1 writer; 23× that is NOT a straight multiply, size
+      down for low-traffic repos), roll out the 7 already-edited templates via
+      `rollout-workflow-templates.sh --repo     <name>`, add its own `quality-gates-v2.yml` override (ideally replacing
+      the hand-set canary pattern with a real per-repo templated substitution — a new `rollout-workflow-templates.sh`
+      placeholder + allowlist, not 23 more hand-edits), verify a live trigger, ratchet the drift baseline down as each
+      repo lands. NOT started — this is a much larger-aggregate-risk action than the single-repo canary (23 repos'
+      REQUIRED promotion-gate check moving at once) and was deliberately paused here for an operator scope/pacing
+      decision (all-at-once vs staged vs a smaller first batch) rather than assumed.
 - [ ] [VERIFY] P2. One week after the first repo's flip lands, re-pull the Enhanced-Billing usage report (method above)
       scoped to that repo; confirm its `Actions Linux` line drops and no new billed line replaces it (self-hosted bills
       $0, same as PM's STEP 2c verification: `billable: {}` is the honest self-hosted check, not `/timing.total_ms`).
