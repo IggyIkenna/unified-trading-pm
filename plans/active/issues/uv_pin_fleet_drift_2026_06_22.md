@@ -8,7 +8,7 @@ summary:
   `uv.lock` files are `revision = 3`, the serialization 0.10.8 produces). But the...
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos:
   [

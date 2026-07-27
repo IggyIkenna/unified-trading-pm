@@ -10,7 +10,7 @@ summary:
   `managed_by`.
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, deployment-api]
 scope: [engineer, admin]

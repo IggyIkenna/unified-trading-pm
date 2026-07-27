@@ -8,7 +8,7 @@ summary:
   surfaced deterministically by the hygiene sweep + health digest. Neither is mechanic...
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: []
 scope: [engineer, admin]

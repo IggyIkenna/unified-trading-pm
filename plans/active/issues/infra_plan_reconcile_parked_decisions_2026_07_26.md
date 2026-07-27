@@ -11,7 +11,7 @@ summary: >-
   with the recommendation marked [WORKER REC]. Operator: answer inline under each entry; unanswered entries stay open.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm, deployment-service, e2e-testing, execution-service]
 scope: [engineer, admin]

@@ -6,7 +6,7 @@ summary:
   (canonical SSOT in `workspace-constraints.toml` + `canonical-dependency-manifest....
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos:
   [

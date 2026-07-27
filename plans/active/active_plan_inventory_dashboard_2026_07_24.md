@@ -7,7 +7,7 @@ summary: >-
   per the plan line-cap remediation) so the daily auto-regeneration keeps a live, non-archived host.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: []
 scope: [engineer, admin]

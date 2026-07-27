@@ -6,7 +6,7 @@ summary:
   **execution-service is the lone holdout**, held on aiohttp **3.13.5** via a `[to...
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [execution-service, unified-trading-pm]
 scope: [engineer, admin]

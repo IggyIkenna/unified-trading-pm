@@ -12,7 +12,7 @@ summary: >-
   `data_pipeline_e2e_milestones_gate_2026_07_24.md` §4.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, market-tick-data-service, instruments-service, unified-api-contracts]
 scope: [engineer, admin]

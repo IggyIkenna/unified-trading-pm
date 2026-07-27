@@ -6,7 +6,7 @@ summary:
   code (with git-log dates, since docs predate today). Outcome: a large fraction of "...'
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos:
   [

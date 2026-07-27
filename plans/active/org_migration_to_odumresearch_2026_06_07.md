@@ -6,7 +6,7 @@ summary:
   Cloud Build triggers, Workload Identity Federation, and deploy pipelines.
 status: paused
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos:
   [

@@ -13,7 +13,7 @@ summary: >-
   tarballs do NOT have this problem — they self-heal via lc_verify_tarball_freshness at launch.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]

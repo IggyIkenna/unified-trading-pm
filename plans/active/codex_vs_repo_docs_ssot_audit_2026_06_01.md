@@ -6,7 +6,7 @@ summary:
   content into codex.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos:
   [

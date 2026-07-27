@@ -13,7 +13,7 @@ summary: >-
   `ci_consolidated_closeout_2026_07_25.md`'s Progress Log for that subset; the remainder is unmeasured.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]

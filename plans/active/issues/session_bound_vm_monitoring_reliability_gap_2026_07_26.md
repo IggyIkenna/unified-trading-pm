@@ -18,7 +18,7 @@ summary: >-
   an out-of-band watchdog that does not depend on any particular Claude Code session staying connected.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, instruments-service]
 scope: [engineer, admin]

@@ -10,7 +10,7 @@ summary: >-
   beyond the original 10-doc sample still needs a sweep.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

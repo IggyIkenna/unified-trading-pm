@@ -14,7 +14,7 @@ summary: >-
   plus the separate finding that CLAUDE.md's 5-step archival ritual never actually named a reference-update step.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
