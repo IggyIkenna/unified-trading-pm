@@ -163,9 +163,17 @@ from scope).
       (2026-07-23: a non-determinable operator gate must not keep an otherwise-complete, worker-determinable phase open
       indefinitely / re-dispatching). Phase 3 (redirect + slim) can proceed on schedule.
 - [ ] [DOCS] P1. **Phase 3 — redirect + slim.** Convert REDIRECT docs to the S5.11 template; slim KEEP-ESSENTIAL docs to
-      repo-local + codex links. Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service).
+      repo-local + codex links. Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service). >
+      **🛑 GATE (2026-07-27): the REDIRECT/DELETE APPLY here is BLOCKED-OPERATOR-DECISION — do NOT execute it yet.** >
+      This plan's registries say the apply "stays under the operator's standing 2026-06-01 FIX-STALE-only hold", yet >
+      the plan was reclassified NA→planning (dispatching this todo) the same day — a self-contradiction. A worker >
+      cannot infer the hold is lifted. ALSO opus-gated (redirect/slim judgment must run on opus, not sonnet). Await
+      the > operator ruling in >
+      `/plans/active/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md` (server block >
+      `BLK-d1b29089`). The mechanical FIX-STALE archived-mirror sweep (line ~519) IS permitted and already DONE.
 - [ ] [DOCS] P1. **Phase 4 — delete pure-dups.** Remove DELETE-class docs (migration already done in Phase 2). Update
-      any `INDEX.md` / README doc-index links.
+      any `INDEX.md` / README doc-index links. **🛑 Same GATE as Phase 3 — DELETE-class apply is
+      BLOCKED-OPERATOR-DECISION (see the Phase-3 gate note + issue doc above).**
 - [ ] [DOCS] P2. **Phase 5 — verify + enforce.** Run S5.7 audit per repo; add a QG/CI check that flags repo docs
       duplicating a codex table/contract (or hardcoding a resolver-owned literal); confirm all redirect links resolve.
 
