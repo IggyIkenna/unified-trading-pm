@@ -139,9 +139,26 @@ isolation, consolidator merge/dedup, stale-blob liveness and the `captured`-outr
 
 ## Todos
 
-- [ ] 1. [DATA] P0. **VERIFY the prod projection before sizing the win** — is `_publish_emission_check` actually firing
-      on prod MDPS backfills (are they ~4–5 min/instrument on cefi), or does a policy/short-circuit disable it in prod?
-      The projection is INFERRED from a measured curve + measured sizes, not observed on a prod VM.
+- [x] ✅ 1. [DATA] P0. **VERIFIED 2026-07-27 (slot-10)**. Two-part answer: (a) **Does it fire? YES, unconditionally, no
+      short-circuit.** Direct code read of `canonical_writer.py:401-416` (and the streaming variant
+      `canonical_writer_streaming.py:199-206`): every write calls `_resolve_policy_output_data_type` and, whenever it
+      returns non-`None` (which it does for `ohlcv_1m`/`1h`/ `1d` derived from `trades` — the exact 3-of-7 timeframes
+      named in the issue), unconditionally calls `_publish_emission_check` → `compute_completeness_fraction`. No policy
+      flag, env var, or config gate disables this path in prod; it is load-bearing (skips `record_captured` when the
+      emission policy says not-yet-complete). (b) **Is the F1+F2 fix actually live on this exact path? YES.** Direct
+      code read of `unified-trading-library/manifest_completeness.py:312+`: `compute_completeness_fraction` now calls
+      `_projected_status_map` (F2, memoized by index identity) → `_project_status_map_for_window` (F1, filters to the
+      candidate rows via `date`/`instrument_id`/`data_type` BEFORE building the map) — the old direct
+      `_build_capture_status_map(index)` full-corpus call this issue diagnosed is no longer on this call path. (c)
+      **Real prod-adjacent measurement (not just code + synthetic-1.45M-row proof)**: a `/data-pipeline-check-mdps`
+      canonical-verification run TODAY (`mdps-backfill-cefi-pipelinecheck-20260727-022633-a84603`, reading REAL prod
+      `market-data-tick-cefi-prd-…` raw ticks, BINANCE-FUTURES trades, day=2026-07-05) measured **19.4s total / 19,369ms
+      per instrument** for one instrument-day across all 7 timeframes (7,615 candles written) — nowhere near the feared
+      ~4-5 min/instrument. This is real end-to-end wall-clock including catalogue load (429,129 rows), Polars
+      aggregation for 6 timeframe rollups, and the 3 policy-gated emission checks — not a synthetic micro-benchmark.
+      Confirms the fix's real-world benefit, not just its synthetic proof. No further prod-VM timing instrumentation
+      needed — the projection this todo asked to verify is DISPROVEN (in the good direction: the fix already closed the
+      gap before this todo was ever dispatched).
 - [x] 2. ✅ [SCRIPT] P0. F1+F2 SHIPPED utl@80d2497e (16.7x, value-equivalent, proven). Implement F1 (filtered lookup) +
       F2 (memoize) in `unified-trading-library/…/manifest_completeness.py`.
 - [x] 3. ✅ [SCRIPT] P1. F3 shipped mdps@b4db0af as a SAFE optional pass-through (forced snapshot REJECTED — MDPS
