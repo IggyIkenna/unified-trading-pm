@@ -257,14 +257,22 @@ a verdict). Heaviest:
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [SCRIPT] P1. **BLOCKED — `[OPERATOR]`-gated; do NOT start until every Phase-0 + Phase-1 repo above is ✅** (else
-      it reds the whole fleet on still-unstamped repos). Build + wire the lifecycle-marker QG checker so the 3-field
-      marker is enforced like other frontmatter'd filetypes: a checker
-      (`scripts/quality_gates/check_script_lifecycle_markers.py`) that FAILS when a `scripts/` file is missing any of
-      `# Epic:` / `# Lifecycle:` / `# Delete-when:`, or has an invalid `Lifecycle` value, or an `Epic:` not in
+- [ ] [SCRIPT] P1. **BLOCKED — condition-gated, do NOT start until every Phase-0 + Phase-1 repo above is ✅** (else it
+      reds the whole fleet on still-unstamped repos). Downgraded from `[OPERATOR]` 2026-07-27 (category B/6 — the
+      unblock condition is a plain read-only grep, not a human value-judgment, so it does not need operator authority;
+      it stays BLOCKED right now purely because the condition itself is unmet): a fresh fleet-wide check today
+      (`grep -rL '^# Delete-when:' */scripts/ --include='*.py' --include='*.sh'` across all 28 repo checkouts) is
+      **NOT** empty — 11+ repos still have unstamped scripts (unified-trading-pm 11, deployment-service /
+      deployment-service-sports-wt 5 each, deployment-ui 4, e2e-testing 2, instruments-service 2,
+      market-tick-data-service (+ its `-cid-migration`/`-sports-wt` worktrees) 2 each, plus one each in
+      client-reporting-api / features-service / fund-administration-service / greeks-service / unified-api-contracts).
+      Build + wire the lifecycle-marker QG checker so the 3-field marker is enforced like other frontmatter'd filetypes:
+      a checker (`scripts/quality_gates/check_script_lifecycle_markers.py`) that FAILS when a `scripts/` file is missing
+      any of `# Epic:` / `# Lifecycle:` / `# Delete-when:`, or has an invalid `Lifecycle` value, or an `Epic:` not in
       `orchestrator_vm_registry.yaml`'s epic set, or a non-`permanent` carrying `Delete-when: NA`. Wire it into the
       PM-sourced `base-service.sh` + `base-library.sh` so it rides fleet-wide with NO per-repo rollout (mirror STEP
-      5.94/5.95). The operator unblocks this ONLY after confirming `grep -rL '^# Delete-when:' */scripts/` is empty
-      fleet-wide. Update `/codex/06-coding-standards/quality-gates.md` + `script-homes.md` § "What gates a scripts/
-      file" in the same unit. Target: **unified-trading-pm** (checker + base wiring) → fleet. (FOLDED IN from
-      scripts_lifecycle_marker_rollout_2026_06_18, 2026-07-15, plan-reconcile §6 operator ruling)
+      5.94/5.95). This unblocks (any agent may confirm — no operator sign-off needed for the check itself) once a re-run
+      of the same grep above comes back empty fleet-wide. Update `/codex/06-coding-standards/quality-gates.md` +
+      `script-homes.md` § "What gates a scripts/ file" in the same unit. Target: **unified-trading-pm** (checker + base
+      wiring) → fleet. (FOLDED IN from scripts_lifecycle_marker_rollout_2026_06_18, 2026-07-15, plan-reconcile §6
+      operator ruling)
