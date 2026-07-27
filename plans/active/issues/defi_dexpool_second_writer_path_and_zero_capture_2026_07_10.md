@@ -17,7 +17,7 @@ tags: [instrument-id, canonicalization, defi, dex-pool, writer-path, capture-gap
 related: [/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md]
 created: 2026-07-10
 parent_epic: instruments_master
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 source:
   "Real findings surfaced by the DEX-pool migrate-stage agent (wf_118d8268-18c, 2026-07-09) while landing the

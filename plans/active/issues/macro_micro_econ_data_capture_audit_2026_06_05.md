@@ -24,7 +24,7 @@ source:
     "unified-trading-pm/codex/02-data/{mtds-data-source-coverage-matrix,tradfi-data-types-catalog,defi-data-types-catalog,sports-data-source-coverage-matrix,prediction-data-types-catalog,honest_coverage_baseline_2026_05}.md",
     News-data-vendor research 2026-06-05 (prior; ETF-flow + macro vendor landscape),
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 estimate_class: infra

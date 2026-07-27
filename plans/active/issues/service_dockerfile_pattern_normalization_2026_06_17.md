@@ -33,7 +33,7 @@ source:
     (/plans/archive/2026_07/test_fleet_image_builds_from_current_code_2026_06_17.md) — local amd64 sweep of all 15
     Python service images surfaced two divergent Dockerfile build contracts,
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

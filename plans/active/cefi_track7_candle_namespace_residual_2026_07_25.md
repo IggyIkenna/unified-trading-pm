@@ -72,15 +72,28 @@ drift_direction: advance-code
       todo, which this plan is gated on). Deleting before the bundles are verified complete causes permanent,
       unrecoverable data loss — 93 BYBIT `futures_chain` + 56 DERIBIT `options_chain` objects are real, distinct
       per-contract-leg candle files that lost a bundle-target-collision race, with no other copy anywhere. Tagged
-      `[OPERATOR]` per `task_template.md` §3 finding F +
-      `/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md` (2026-07-24 AO-flip-safety audit finding —
-      this delete previously sat untagged in the parent, which under AO's same-priority concurrent-dispatch default
-      could have raced it against the verify/backfill work instead of strictly following it). Repo:
-      market-data-processing-service. **Done when**: the regenerated `ticks.parquet` bundles for all 8 affected
-      `(day, venue)` cells are independently confirmed to contain every leg's data (row/ symbol count check against the
-      pre-delete per-leg object count — re-verify this yourself, do not just trust the upstream plan's own claim), the
-      149 listed objects are deleted, and `candle_feature_canonical_path_divergence_2026_07_20.md` todo 19 is updated to
-      reference this track's resolution.
+      `[OPERATOR]` per `task_template.md` §3 finding F + `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
+      (2026-07-24 AO-flip-safety audit finding — this delete previously sat untagged in the parent, which under AO's
+      same-priority concurrent-dispatch default could have raced it against the verify/backfill work instead of strictly
+      following it). Repo: market-data-processing-service. **Done when**: the regenerated `ticks.parquet` bundles for
+      all 8 affected `(day, venue)` cells are independently confirmed to contain every leg's data (row/ symbol count
+      check against the pre-delete per-leg object count — re-verify this yourself, do not just trust the upstream plan's
+      own claim), the 149 listed objects are deleted, and `candle_feature_canonical_path_divergence_2026_07_20.md` todo
+      19 is updated to reference this track's resolution. **READINESS CHECK (2026-07-26, answering the AO
+      operator-question card — correctly stays open, not a stale block):** (1) the gating prerequisite, candidate-7 of
+      `cefi_consolidated_native_ao_extract_2026_07_25.md` (raw-tick presence verify + `--force` MDPS backfill for the 8
+      affected `(day, venue)` cells), is still `[ ]` unchecked — only 2 of 8 days have even raw-tick presence confirmed,
+      and the delete-safety protocol's Part 2 "content verify, not mere existence" proof has not run.
+      `candle_feature_canonical_path_divergence_2026_07_20.md` todo 19 is a DIFFERENT, unreconciled proposed fix for the
+      same 149 objects (a retry-idempotency patch to the migration script's `_copy_verify_delete()`, not a bundle
+      re-derivation) — the two have not been reconciled into one plan, a pre-existing gap this readiness check surfaces
+      but does not resolve. (2) Independent of (1): the delete-safety protocol's hard-stop #2 ("any legacy-object delete
+      after copy") applies to this exact object class with **no §3a reversibility carve-out** — §3a only bypasses
+      hard-stop #1 (soft-delete-retention-gated prod deletes), not #2. This means even a fully-verified version of this
+      delete remains human-execution-only regardless of AO progress — correctly `[OPERATOR]`-tagged, not a candidate for
+      auto-unblocking once the prerequisite lands. **This todo stays open and gated** — the correct resolution of the
+      operator question is "not ready, here is exactly what's missing," not a forced premature answer. Unblocks when:
+      candidate-7 lands AND a human executes the delete per hard-stop #2.
 
 ## Reconciliation
 
@@ -91,5 +104,5 @@ companion `cefi_track7_candle_namespace_residual_finalize_2026_07_25.md`
 
 ## Codex SSOTs
 
-`/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md`,
-`/codex/02-data/availability-manifest-and-data-status.md`. No new durable contract is created by this plan.
+`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, `/codex/02-data/availability-manifest-and-data-status.md`.
+No new durable contract is created by this plan.

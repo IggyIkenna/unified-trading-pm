@@ -28,7 +28,7 @@ source:
     market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py,
     market-tick-data-service/market_tick_data_service/live/connectors/ (18 per-venue WS connectors),
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

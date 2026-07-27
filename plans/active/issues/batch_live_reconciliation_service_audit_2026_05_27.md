@@ -40,7 +40,7 @@ source:
     /codex/04-architecture/separation-of-concerns.md,
     /codex/04-architecture/data-flow-map.md,
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

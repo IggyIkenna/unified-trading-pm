@@ -20,7 +20,7 @@ related:
 created: "2026-07-25"
 last_updated: "2026-07-26"
 parent_epic: agent_operating_framework_master
-assigned_vm:
+assigned_vm: planning
 priority: P1
 locked_by:
 resolved_by:

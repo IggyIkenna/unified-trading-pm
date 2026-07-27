@@ -46,7 +46,7 @@ source: >-
   a read-only, targeted GCP infra check per the skill's own "grep-then-READ, not grep-then-conclude" discipline.
 resolved_by:
 locked_by:
-assigned_vm:
+assigned_vm: planning
 code_refs:
   [
     market-tick-data-service (op=download mode=batch handler,

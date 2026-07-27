@@ -69,10 +69,11 @@ drift_direction: advance-code
 
 # Sports closeout Track S2 — fold-in absorption
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule, flip to `active` only after operator review.
-> `sequential: false` — every item below touches a distinct file/doc/population; the several `BLOCKED-PREREQUISITES`/
-> `[OPERATOR]` tags below make real cross-item and cross-plan ordering non-dispatchable explicitly rather than relying
-> on file position, so serializing the whole plan is unnecessary.
+> **Status corrected 2026-07-26: this plan is `active`** (frontmatter has said so since creation; this banner was stale
+> — the operator review it said to wait for is the 2026-07-26 rulings recorded in the two `[OPERATOR]` items below, both
+> now closed). `sequential: false` — every item below touches a distinct file/doc/population; the several
+> `BLOCKED-PREREQUISITES`/ `[OPERATOR]` tags below make real cross-item and cross-plan ordering non-dispatchable
+> explicitly rather than relying on file position, so serializing the whole plan is unnecessary.
 >
 > **Overlap reconciliation (2026-07-25)**: `sports_consolidated_native_ao_extract_2026_07_25.md` already extracted, as
 > its own AO-eligible candidates: (1) the mis-keyed-duplicate-bug mdps-surface check (excluding the sibling "88 orphan
@@ -116,12 +117,24 @@ drift_direction: advance-code
   already tracked in `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s digest — not re-created here.
 - **[DATA] P0.** Legacy no-env instruments-store-sports bucket decommission - tracked in
   sports_legacy_bucket_cutover_2026_07_16.md, not here.
-- [ ] [OPERATOR] P2. **Manual review of the 88 mis-keyed-duplicate orphan rows' disposition** (0.01% of the 2026-07-13
-      683,592-row dedup cleanup that had no canonical twin to dedupe against, left untouched during
-      `market-tick-data-service@55f9e961`'s fix). No defined disposition target exists yet (delete? relabel? leave?) —
-      stays human until the operator states the intended outcome, per task_template.md finding S. (repo:
-      instruments-service, read-only until scoped). **Done when**: the operator has named a disposition (or a bounded
-      per-row rule), at which point a follow-up dispatchable todo can execute it.
+- **[OPERATOR] P2.** Manual review of the 88 mis-keyed-duplicate orphan rows' disposition — **ALREADY RESOLVED, not
+  carried forward as an open todo (2026-07-26, same "finding C" staleness pattern this plan already flags for 4 other
+  items above).** These 88 rows (0.01% of the 2026-07-13 683,592-row dedup cleanup that had no canonical twin to dedupe
+  against, left untouched during `market-tick-data-service@55f9e961`'s fix) are genuinely-captured, unique API-Football
+  `PLAYER_STATS` rows (100% `capture_status=captured`, spread across 21 leagues, 2020-2026) mis-stamped with
+  `service_name=market-tick-data-service` and a blank `asset_group` by the same root-cause bug — real data, not
+  corrupted/redundant, so deletion was never the right disposition. The disposition was decided and **executed** the
+  same week this bug was found, before this 2026-07-25 plan was even written: `instruments-service@9ce3450e`'s
+  `scripts/restamp_orphan_mtds_player_stats_rows_2026_07_13.py` did a direct canonical rewrite (re-stamp
+  `service_name→instruments-service`, `asset_group→sports`), matching this incident family's established rule (twin
+  exists → drop the mis-keyed copy; no twin → relabel, never drop — same pattern used by
+  `dedup_mtds_instruments_surface_duplicate_rows_2026_07_13.py` and `drop_stale_xg_shots_shot_rows_2026_07_09.py`).
+  Independently re-verified live 2026-07-14
+  (`plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md:111-116`): a fresh manifest read
+  confirmed 0 remaining `service_name=market-tick-data-service` + `source=api_football` rows. Detail:
+  `instruments-service/scripts/restamp_orphan_mtds_player_stats_rows_2026_07_13.py`,
+  `plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md:56-77,111-129`. No further action
+  needed.
 - [ ] [DOC] P1. **Move the mis-filed DEFI tracking item out of the sports corpus entirely: add "features-service: ban
       `category=defi` in on-disk GCS path reads (`mtds_canonical_reader.py::_legacy_twin()`,
       `eigen_rewards_calculator.py`)" as a tracked `- [ ]` todo in `data_completion_to_100_all_ag_2026_06_21.md`'s own
@@ -159,11 +172,20 @@ drift_direction: advance-code
       P2a/P2b/P2c items above.** R3-daily/R4/R5 sub-items already shipped/verified; R1/R2/R3-history remain blocked
       pending P2a+P2b+P2c — re-run this gate once those land, don't mark it DONE early. (repo: unified-trading-pm).
       **Done when**: P2a/P2b/P2c are all confirmed done AND the gate re-run passes.
-- [ ] [OPERATOR] P2. **Unresolved cefi-before-sports gate TENSION, never ruled** (flagged 2026-07-14, still open).
+- [x] ✅ [OPERATOR] P2. **Unresolved cefi-before-sports gate TENSION, never ruled** (flagged 2026-07-14, still open).
       `instruments_foundation_completeness_2026_06_24.md` states sports does NOT start its G1→G5 until cefi is DONE, but
       cefi's own G4/G5 were still open when this coordinator's G1 noise-wipe work executed (2026-06-28). Unclear whether
       the 2026-06-27 re-homing was an implicit operator override. (repo: unified-trading-pm, decision record). **Done
-      when**: the operator has ruled on whether the re-homing was an intended override.
+      when**: the operator has ruled on whether the re-homing was an intended override. ✅ **RULING (2026-07-26):
+      retroactively BLESSED as an intended exception, not remediated.** The 2026-06-27 re-homing was a workspace-wide
+      infra migration (epic VMs → role-based dispatch), not a sports-specific override, but a direct 2-days-earlier
+      TRADFI precedent (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md:169-171`, operator-dispatched ahead of
+      cefi-first ordering 2026-06-25) already establishes the standing rule: reversible/audit-class work proceeds
+      regardless of cefi's gate state; irreversible/expensive operations stay gated on cefi DONE. The sports G1 wipe
+      matched that pattern exactly (snapshot-first, reversible). cefi/sports share no storage/manifest surface, so no
+      contamination was possible by construction, and no harm traceable to the sequencing has surfaced since. Full
+      ruling + standing rule recorded at the source SSOT: `instruments_foundation_completeness_2026_06_24.md`'s
+      TENSION-flag section (now marked RESOLVED). No remediation needed — the already-executed G1 work stands.
 - **[REVIEW] P0.** Fixtures-entity-split live-freeze contradiction (`instruments-service@e1524d21`'s
   `_read_fixtures_entity_with_schedule_fallback`) — tracked to completion in
   `sports_legacy_fixtures_path_migration_2026_07_24.md`, not here; that plan's Phase 1 measures the exact load-bearing

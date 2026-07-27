@@ -45,7 +45,7 @@ priority: P0
 resolved_by:
 locked_by:
 source: [operator-ruling, solana_perp_dex_cull_drift_pacifica_2026_07_16]
-assigned_vm:
+assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

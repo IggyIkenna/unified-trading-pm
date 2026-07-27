@@ -26,7 +26,7 @@ source:
     deployment-service/terraform/gcp/main.tf,
     "first-ever live MTDS launch (mtds-live-cefi-hyperliquid-trades, 2026-06-21)",
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

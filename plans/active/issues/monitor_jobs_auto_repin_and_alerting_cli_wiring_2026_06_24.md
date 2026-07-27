@@ -18,7 +18,7 @@ priority: P2
 source:
   - dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md (the two "honest caveats")
   - { live incident: alerting-paging SPOF down (exec-fail) + deadman digest-pin coordination }
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-06-24

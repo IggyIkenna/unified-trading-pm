@@ -58,7 +58,7 @@ source:
     "Group-C Cloud Run job-failure triage, 2026-07-16 (utl_uac_skew_fleet_audit_2026_07_15.md follow-up)",
   ]
 status: open
-assigned_vm:
+assigned_vm: planning
 resolved_by:
   [
     "instruments-service@24f84e86 (sports)",

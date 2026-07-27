@@ -21,7 +21,7 @@ created: 2026-06-11
 parent_epic: strategy_master
 priority: P2
 source: [gaps surfaced by capability wizard/manifest work 2026-06-11]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

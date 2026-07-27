@@ -202,8 +202,15 @@ source: >-
       a ~4.5hr gap in the monitoring cadence (missed/delayed wakeup) left the VM unwatched but it ran fine throughout —
       no preemption, steady ~1.85min/date pace. One isolated `attempted_failed` cluster (383 rows, all
       `date=2021-07-07`, all within an 8ms window — a single transient API-side blip) self-resolved with zero further
-      failures across 8+ subsequent days; not logged as an incident, monitor for recurrence. Current:
-      `af-backfill-20260726-110610`, healthy.
+      failures across 8+ subsequent days; not logged as an incident, monitor for recurrence. **New OOM pattern
+      2026-07-26T23:37Z**: `af-backfill-20260726-110610` `exit_code=137` at `date=2021-08-28`, after running cleanly
+      ~20.5hrs / 2,400+ dates (NOT a repeat of the pre-fix unfiltered-read bug — 0 enrichment calls were queued this
+      whole run) — looks like gradual memory accumulation over a long single-process runtime rather than a per-call
+      trigger. Shutdown-script self-deleted cleanly, no zombie. Relaunched (default `e2-standard-8`, singleton-lock
+      verified clear first) as `af-backfill-20260727-004325`; UAC tarball flagged 1-commit stale but confirmed the
+      MVP-scope fix is included and irrelevant anyway (FIXTURES-only path). Watch: if this recurs at a similarly-timed
+      ~20hr mark, that's a real leak needing proper profiling, not just another relaunch. Current:
+      `af-backfill-20260727-004325`.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 

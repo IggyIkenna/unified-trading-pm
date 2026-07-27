@@ -21,7 +21,7 @@ source:
     unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
     unified-trading-library/unified_trading_library/manifest_writer/_state.py,
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

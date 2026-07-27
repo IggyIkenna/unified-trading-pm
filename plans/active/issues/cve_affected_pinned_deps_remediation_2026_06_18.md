@@ -25,7 +25,7 @@ source:
     exact transitive that pins aiohttp<3.14 fleet-wide), and UAC QG passed with it",
     base-service.sh / base-library.sh sanctioned `--ignore-vuln` block (20 advisory IDs as of 2026-06-15),
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

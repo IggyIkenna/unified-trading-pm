@@ -28,7 +28,7 @@ source:
     cefi manifest audit 2026-06-22 (per-data_type breakdown via consolidated + per-VM shards),
     cefi-hyperliquid-2024-resume / cefi-aster-* run.log runtime evidence,
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

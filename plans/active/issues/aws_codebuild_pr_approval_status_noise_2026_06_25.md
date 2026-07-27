@@ -23,7 +23,7 @@ source:
     UTL,
     "deployment-service/terraform/modules/cloud-build/aws/main.tf (webhook NOTE, lines 263–275)",
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

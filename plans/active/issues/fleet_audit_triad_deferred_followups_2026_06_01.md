@@ -26,7 +26,7 @@ source:
     ../cefi_venue_backfill_coverage_remediation_2026_05_27.md,
     ../deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md,
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: harsh-fleet-audit
 execution_scope: orchestrator-agent

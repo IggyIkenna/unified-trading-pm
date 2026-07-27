@@ -27,7 +27,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-assigned_vm:
+assigned_vm: planning
 resolved_by: mtds@f645ea02+uac@7e179ae8 (recovery+guard, 2026-07-20); root-cause doc uac@8080b645+mtds@377dd90c
   (2026-07-26) # all 3 Remediation items now struck through/done; locked_by blocks archival — leave status/lock as-is
 ---

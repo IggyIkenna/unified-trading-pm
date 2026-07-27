@@ -24,7 +24,7 @@ source:
     unified-api-contracts/openapi/capability-verdict-matrix.json,
     unified-trading-system-ui/lib/registry/capability-manifest.json,
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

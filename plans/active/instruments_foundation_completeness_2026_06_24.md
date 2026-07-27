@@ -130,7 +130,24 @@ pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempte
 carries no reference to this cefi-completion gate, and cefi is still NOT DONE per this same doc (GATE G4 OPEN pending
 D2, GATE G5 only SUB-SIGNED) — yet coordinator-child G1 work (league-noise wipe) already executed 2026-06-28. Unclear
 whether the 2026-06-27 re-homing was also an implicit operator override of this cefi-block rule; flagging for an
-operator ruling rather than asserting either reading.]**
+operator ruling rather than asserting either reading.]** **[✅ RESOLVED 2026-07-26 (operator ruling, answering the AO
+question card in `sports_closeout_track_s2_foldin_2026_07_25.md`): the 2026-06-27 re-homing was a workspace-wide infra
+migration (epic VMs → role-based single-VM dispatch, same-day system-wide change) that swept sports in as one of many
+asset groups — not a deliberate sports-specific override of this gate, but retroactively BLESSED as an intended
+exception rather than remediated. Reasoning: (1) direct precedent exists 2 days earlier —
+`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md:169-171` records the operator personally dispatching TRADFI G1→G5
+ahead of cefi-first ordering on 2026-06-25, with the explicit rule "reversible work driven to done,
+expensive/irreversible HARD-PAUSE for operator confirm"; (2) the sports G1 league-noise wipe that ran 2026-06-28
+followed that exact same pattern — snapshot-first, reversible
+(`_index/snapshots/pre_noncanonical_leagues_delete_index_20260628_...`); (3) cefi/sports share no storage, manifest, or
+denominator surface, so cefi's open gates could not have contaminated sports data by construction; (4) no harm traceable
+to the sequencing itself has surfaced in the 4 weeks since — the data-quality issues that did occur post-2026-06-28
+(FIXTURES re-fetch, season-boundary shortfall, phantom `expected_unattempted` rows) were internal sports-pipeline bugs
+unrelated to cefi's gate state. **Standing rule going forward** (cefi is still not DONE as of 2026-07-26):
+reversible/audit-class sports or tradfi work (snapshot-first audits, non-destructive fixes, diagnosis-only todos) is
+cefi-first-gate-EXEMPT; irreversible/expensive operations (real fleet launches, permanent GCS purges/deletes) stay gated
+on cefi DONE and need direct operator confirm, matching the TRADFI precedent's own distinction. No remediation required
+— the already-executed G1 work stands.]**
 
 > **🔱 SPORTS G1→G5 RE-HOMED (2026-06-27) — the sports G-gate todos above are flipped `[x]` here; they run via the
 > golden-window-first sports plan set (`assigned_vm: NA`, role-based dispatch).** The work (G1 league-noise wipe · G2

@@ -32,7 +32,7 @@ source:
     "scripts/setup.sh:387-401 (the broken bootstrap-uv fallback)",
     "scripts/quality-gates-base/base-service.sh:297 + base-library.sh:167",
   ]
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

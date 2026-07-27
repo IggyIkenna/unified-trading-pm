@@ -28,7 +28,7 @@ created: 2026-05-21
 parent_epic: plan_hygiene_master
 priority: P0
 source: [operator note to Harsh ahead of meet 2026-05-21]
-assigned_vm:
+assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
