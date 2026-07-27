@@ -14,7 +14,7 @@ status: open
 nature: issue
 asset_group: [tradfi]
 stage: [data]
-repos: [market-tick-data-service, unified-api-contracts, deployment-api, unified-trading-library]
+repos: [market-tick-data-service, unified-api-contracts, deployment-api, unified-trading-library, instruments-service]
 scope: [engineer]
 tags:
   [
@@ -124,9 +124,27 @@ exactly such ad-hoc per-wrapper hardcodes.
       verifiable worklist. Confirm each counted cell is genuinely strictly-before its UAC floor — an off-by-one at the
       boundary date would silently reclass a real, fillable day into expected-absent, which is the one dangerous failure
       mode of this change.
-- [ ] [BACKEND] P1. **Teach the sentinel/enumerator path the discovery floor** so NEW pre-floor cells materialise as
+- [x] ✅ [BACKEND] P1. **Teach the sentinel/enumerator path the discovery floor** so NEW pre-floor cells materialise as
       `expected_unattempted` at write time rather than as `todo`. Resolve the floor from UAC
-      (`get_instrument_discovery_start`) at runtime; no hardcoded per-venue dates.
+      (`get_instrument_discovery_start`) at runtime; no hardcoded per-venue dates. **DONE 2026-07-27 (slot-5)** —
+      `instruments-service@31cf3952`. **Correction to the todo's target**: the actual bulk expected-universe enumerator
+      that materialises these cells does NOT live in market-tick-data-service's sentinel path (that path only fans out
+      sentinels for shards already attempted during a live run) — it lives in
+      `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_tradfi`. That function's per-instrument
+      loop now resolves `VenueMapping().get_instrument_discovery_start(instr.venue)` once per instrument (never
+      hardcoded per-venue) and, for any date before that floor, reclassifies the cell out of the generic blank-reason
+      `expected_unattempted` ("todo") bucket into `EXPECTED_PRE_SOURCE_COVERAGE_START`
+      (`capture_status="empty_confirmed"`) — reusing an EXISTING UAC reason whose own docstring already covers "sports /
+      databento registries", so **zero unified-api-contracts changes were needed** (repos frontmatter above corrected to
+      add instruments-service, the repo actually touched). The check sits alongside the existing
+      NOT_LISTED/DELISTED/ARCX-lag lifecycle branches and fires independent of `present_set` (both v1-compat legacy mode
+      and v2 mode), because a long-listed instrument (e.g. an equity listed in 1980) has no `available_from` gap to
+      otherwise catch a pre-floor date. 3 new unit tests (pre-floor / on-floor-unaffected / unknown-venue-unaffected) +
+      3 pre-existing tests updated (their fixtures span dates before the real NASDAQ floor, so they now correctly emit
+      an additional honest-absence row instead of silently under-counting — verified this is the CORRECT behavior, not a
+      regression). Full `bash scripts/quality-gates.sh` green (177s after a first attempt timed out purely on
+      shared-host contention, not a correctness issue). The remaining [DATA] P1 (corrective reclassification of the
+      existing 182,407 cells) and [BACKEND]/[DATA] P2 todos below are separate, out of this todo's scope.
 - [ ] [DATA] P1. **Run the corrective reclassification** over the existing 182,407 cells, writer-side. Verify the
       before/after counts and that tradfi coverage % moves by the expected amount and no more.
 - [ ] [BACKEND] P2. **Assert the invariant in the aggregator's fairness checks** — no cell below a venue's UAC discovery
