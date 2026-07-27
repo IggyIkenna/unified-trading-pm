@@ -180,13 +180,45 @@ drift_direction: advance-code
       re-baseline the canonical-set decision, reconcile §U's exact population against a raw-content read, update this
       plan's figures once fixed). (repo: instruments-service). Census + discrepancy recorded — no purge executed, per
       the todo's own "if genuinely different, do not purge" branch.
-- [ ] [DIAG] P1. **Sports P2a sub-item (b) — G2 2015-2017 zero-captured diagnosis ONLY, do NOT implement a fix.**
-      Determine whether the 2015-2017 zero-captured seasons are a subscription-tier limit or a backfill bug. The source
-      todo bundled an undecided "then fix" after diagnosis (subscription-tier-limit-vs-backfill-bug fix paths differ) —
-      that fork stays human; this todo is diagnosis-only, mirroring the same diagnosis-only pattern already used
-      elsewhere in this doc family (e.g. Track O's `[DIAG]` items). (repo: instruments-service, read-only). **Done
-      when**: a written finding states which of the two causes applies, citing evidence — does NOT implement either fix
-      path.
+- [x] ✅ [DIAG] P1. **Sports P2a sub-item (b) — G2 2015-2017 zero-captured diagnosis — DONE 2026-07-27, read-only, no
+      fix implemented.** **FINDING: subscription-tier limit (high confidence), not a backfill bug.** This question was
+      already investigated by the source plan (`sports_p2_history_apifootball_2015_to_present_2026_06_27.md`, archived,
+      todo 2 / G2 diagnosis, lines 133-143 + 468-492): `unified-api-contracts@d858f67d` recorded "VERDICT: SUBSCRIPTION
+      FLOOR" — 35,889 rows, 100% `capture_status=empty_confirmed`, across 76 MVP leagues, all of 2015-2017. Re-verified
+      live against current code this session: 1. **`empty_confirmed` cannot mask a fetch error by construction** —
+      `instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football.py:1001-1116`.
+      API-Football signals plan/quota/auth/param errors INSIDE the 200-OK JSON envelope
+      (`{"errors": {"plan": "..."},        "response": []}`), never via HTTP status. `_raise_on_api_errors()`
+      (line 1034) raises `ApiFootballResponseError` whenever `errors` is a non-empty dict/list; `_extract_response()`
+      (line 1101) calls it BEFORE returning rows, routing any error to `attempted_failed` via the `RuntimeError` branch
+      in `_fetch_one_venue`. A clean `empty_confirmed` for these rows can therefore only mean the vendor was actually
+      called and returned `{"errors": [], "response": []}` — a genuine empty, not a swallowed error. 2. **Uniformity** —
+      76 leagues × 3 full years, not a scattered/partial failure pattern a backfill bug would produce. 3. **Independent
+      re-affirmation in current UAC code** —
+      `unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py:86-96`
+      (`SOURCE_COVERAGE_START`) comment, dated 2026-07-15, states: "Earlier probes had already shown the subscription
+      returns empty for seasons 2015-2017 (35,889 all-empty_confirmed across 76 MVP leagues — subscription floor, not a
+      backfill bug). CONFIRMED CORRECT — unchanged." — a later, independent audit reached the same conclusion (this
+      constant was since raised again to the 2020-06-06 sports data floor per
+      `/codex/02-data/sports-2020-06-data-floor.md`, which supersedes but does not contradict this 2015-2017
+      sub-finding). 4. **Prior-code corroboration**: `instruments-service/scripts/audit_fixtures_via_api_football.py:93`
+      hardcodes `_DEFAULT_SEASON_RANGE: tuple[int, int] = (2018, 2026)`;
+      `scripts/run_fixture_completeness_audit_2026_06_25.py:31` comments "the 2014-2018 range pre-dates the registry (no
+      expected counts seeded yet)" — both reflect the same prior institutional finding. 5. **No evidence anywhere in the
+      corpus supports the backfill-bug hypothesis** — no `attempted_failed` rows for 2015-2017 (which a code-level error
+      would produce instead of clean empties), no exception-swallowing pattern in the adapter, and no
+      incident/regression doc referencing 2015-2017 specifically. **Residual gap (does not change the verdict, but the
+      diagnosis is not 100% vendor-confirmed)**: no script or log in the corpus has ever captured the live `/status`
+      endpoint's `subscription` field (the field that would give a direct vendor-stated plan/history-limit confirmation)
+      — `_parse_status_body()` (`api_football.py:1063-1099`) only reads `response.requests.limit_day/current` for quota
+      math and never inspects `response.subscription`, even though `/status` is called routinely in production for quota
+      purposes (`data_completion_sports_2026_07_24.md:486-497`). Per this todo's explicit scope (diagnosis-only, no
+      fix), this residual gap is noted but not closed here — a follow-up live
+      `curl -H "x-apisports-key: <KEY>"     https://v3.football.api-sports.io/status` from a credentialed VM, inspecting
+      `response.subscription`, would fully vendor-confirm rather than strongly infer. The
+      subscription-tier-limit-vs-backfill-bug fork this todo exists to resolve is answered: **subscription-tier limit**
+      — any future fix-path decision (e.g., whether to upgrade the API-Football plan) should proceed on that basis. No
+      fix implemented; no code changed. (repo: instruments-service, read-only — verified.)
 - [ ] [DATA] P1. **Sports P2b — reference sources + odds history 2015→present, never started.** Extend the
       golden-window-proven honest-coverage recipe (weather, soccerfootball_info, transfermarkt, understat, footystats,
       odds-api) to full 2015→present within each source's own `coverage_start`; season-aware smart-skip only (typed
