@@ -748,3 +748,37 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       already oversaturated, operator-gated), TRADFI/DEFI's attempts hit genuine upstream gaps rather than measuring
       compute. Full "project full-history time + SPOT cost + parallelization headroom" needs at least one real number
       per family, not just calendar+sports.
+
+### 2026-07-27 (slot-3, continued) — todo 10: full round across 7 families complete; 1 real code bug found + filed
+
+Extended the benchmark sweep to `TRADFI:volatility`, `PREDICTION:delta_one`, and `TRADFI:commodity` — all 3 failed on
+genuine, individually root-caused issues (none a driver bug):
+
+- `TRADFI:volatility`: real upstream gap — "no captured options_chain or futures_chain shards found" for 2026-07-12 (raw
+  tick data, not candles — same class as the delta_one candle gap, different data type).
+- `PREDICTION:delta_one`: **a real, confirmed CODE BUG**, not a data gap — the dependency checker resolves
+  `market-data-tick-prediction-...` (a bucket that has never existed) instead of the real
+  `market-data-tick-pred-prd-...` (PREDICTION is the one asset_group whose bucket token is abbreviated to `pred`).
+  Root-caused via direct code read of `features_service/delta_one/app/core/dependency_checker.py`'s
+  `_format_template_vars` (naive `asset_group.lower()`, no abbreviation map) — the exact same bug class this file's own
+  comments show was ALREADY found+fixed on the output-bucket side, just never ported to the input side. Filed
+  `issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md`. Separately confirmed (via
+  `gcloud storage ls` on the real bucket) that PREDICTION MDPS candles have a genuine ~6-month production gap
+  (2026-01-14 through ~2026-07-24), only just resuming — day=2026-07-19 falls inside that gap regardless of the naming
+  bug, so a future re-test needs both the code fix AND a day ≥2026-07-25.
+- `TRADFI:commodity`: reproduces the already-known Baker Hughes vendor issue (timeout + "unexpected file format"),
+  correctly failing each day rather than emitting a partial/fake signal (`ManifestWriter.record_empty` itself refused to
+  record a false "empty" verdict without real `FetchEvidence` — the honest-absence guard working as designed).
+
+**Full round now complete**: 7 families/AGs attempted this session (calendar, sports, TRADFI:delta_one, DEFI:onchain,
+TRADFI:volatility, PREDICTION:delta_one, TRADFI:commodity) — 2 measured (calendar ~8s/shard-day, sports
+~244s/shard-day), 5 honestly diagnosed failures (4 real upstream-data gaps across 3 different data-type classes + 1 real
+code bug). CEFI:delta_one remains deliberately untouched (8-VM billing-waste situation, unchanged, still awaiting an
+operator decision). `multi_timeframe`/`cross_instrument` weren't attempted — both are DERIVED families reading
+`delta_one`'s own `-test-` output as source, and since delta_one hasn't successfully produced test output for
+TRADFI/DEFI/PREDICTION this session, they would very likely just re-hit the same upstream gaps.
+
+- [ ] [DATA] P2. Re-test `TRADFI:volatility`/`TRADFI:commodity` once their respective upstream gaps close (raw
+      options/futures tick backfill; Baker Hughes vendor fix) to get genuine benchmark measurements.
+- [ ] [SCRIPT] P2. See `issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` — fix
+      the PREDICTION bucket-token bug before any further PREDICTION:delta_one testing.
