@@ -237,7 +237,8 @@ Two independent gates because Group A and Group B are at different stages:
       SAs + CI/CD + developer identities → objectViewer broadly" from the original text: the CI/CD + developer-identity
       half is NOT addressed (no such identity is terraform-managed in this repo today — out of scope for a mechanical
       implementation, flagged as its own todo in the SSOT-contradiction issue doc).
-- [ ] [TERRAFORM] P1.2b. **BLOCKED-CREDENTIALS 2026-07-27 (slot-12).** `objectAdmin` on `*-prd-*`/`*-test-*` for
+- [ ] [TERRAFORM] P1.2b. **BLOCKED-CREDENTIALS 2026-07-27 (slot-12).** Ping filed: `ikenna_orchestrator/pings/slot_5.md`
+      (2026-07-27, slot-5, CREDENTIAL APPROVAL REQUEST). `objectAdmin` on `*-prd-*`/`*-test-*` for
       `uts-prd-sa`/`uts-test-sa` + `objectViewer` broadly for all 5 SAs are DECLARED in
       `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf` (`tofu validate` + `tofu fmt` clean, targeted
       `tofu plan` showed exactly 8 adds/2 changes/0 destroys) but NOT YET APPLIED — this session's active credential

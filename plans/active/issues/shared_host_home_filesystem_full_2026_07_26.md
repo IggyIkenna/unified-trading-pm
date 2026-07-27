@@ -89,6 +89,10 @@ specific to any one task.
       orphaned `.venv` directories from decommissioned/renamed slots, stale `node_modules`, build artifacts, or
       duplicate git objects that `git gc`/`git prune` could reclaim — WITHOUT touching any repo's actual tracked content
       or another slot's live worktree. Read-only audit first; any actual cleanup needs its own scoped, reviewed todo.
+      **Supporting data (slot-4, 2026-07-27T~07:20Z)**: a `du -sh` top-consumer pass (killed early by host pressure
+      before completing, so partial) already shows the pattern this todo anticipates — `unified-trading-system-ui`
+      (`node_modules`) at 1.8-3.3G repeated across at least 7 different `.tabs/N/` slots, `features-service` `.venv`s at
+      1.7-1.8G repeated across at least 5 slots — real duplicated build-artifact weight per slot, not one bad actor.
 - [ ] [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G) and
       `/home/ubuntu/tmp/` (413M, generic — lower confidence than the named slot dirs) before proposing any action on
       either.
@@ -154,3 +158,52 @@ specific to any one task.
   has headroom (4.3G at measurement time) even while `/tmp` tmpfs is fully exhausted — worth knowing for any tool that
   defaults to `/tmp` and fails hard when it's full, not just for tofu specifically. Did not attempt any cleanup/delete;
   same posture as every prior entry.
+- 2026-07-27T~07:20Z (slot-4, another corroborating hit, still worsening): hit the identical condition mid-task
+  (`features_by_date_root_canonicalisation-001`, todo 6). `features-service` had no `.venv` in this slot;
+  `uv venv .venv && UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen` hard-failed installing `polars-runtime-32` with
+  `No space left on device (os error 28)` mid wheel-copy. Fresh `df -h /`: `290G 290G 3.9M 100% /` — worse than every
+  prior measurement in this thread (down to single-digit MB free). Did not attempt any delete; same posture as every
+  prior entry. Not opening a new BLOCKED question (would be the 5th+ for this same standing condition) — deferring my
+  own dispatched task back to the queue instead, since it cannot proceed past venv setup until this clears.
+- 2026-07-27T~08:1x (slot-15, WORSE — genuinely at the floor now, and a hard task-blocker): hit this mid-task
+  (`instrument_availability_hive_canonicalisation-001`, needing a fresh `instruments-service` `.venv` build to run
+  `pipeline_e2e_check.py`). `df -h`: BOTH `/` and `/home` at `290G 290G 3.7M 100% ` (3.7 MEGABYTES free, not GB — the
+  worst reading in this thread's history) and `/tmp` tmpfs still `2.0G 2.0G 0 100%`. The `uv pip install -e` re-pin step
+  failed with the same `No space left on device (os error 28)` signature already documented above, this time on
+  `basedpyright`'s wheel copy. Attempted to free space by deleting my own just-created, broken/useless
+  `instruments- service/.venv` (my own artifact, created this session, zero value) — correctly BLOCKED by
+  `block_destructive_commands.py` ("recursive rm (tree delete)... forbidden for autonomous workers") even for a
+  self-owned, confirmed-junk directory. Did not attempt to circumvent. Same posture as every prior entry: no
+  delete/cleanup attempted on anything not unambiguously mine, and even mine was refused by the guardrail. This specific
+  dispatched task cannot proceed without a working venv build — filing `/blocked` for that task rather than forcing a
+  result I can't trust, per this issue's own established escalation channel (not re-opening a new BLOCKED question for
+  the standing host-wide condition itself, only for my task's inability to proceed).
+- 2026-07-27T07:32-07:36Z (slot-12, escalation — qualitatively worse, a TOTAL Bash-tool blocker not a fluctuating one):
+  ~30 min after the previous entry, `df -h /home` read `290G 290G 1.2M` then `1.9M` free across two checks 4 min apart
+  (still shrinking). Then EVERY subsequent Bash tool invocation — including trivial no-ops (`echo test`, `true`) with
+  zero real disk need — failed outright:
+  `Command output was lost: the temp filesystem at .../cc-tmpdir/.../tasks is full (0MB free). ... Free up space or set CLAUDE_CODE_TMPDIR`.
+  This is distinct from every prior entry in this thread: those describe _some_ commands succeeding amid fluctuating
+  pressure; this is 100% of attempts failing for several consecutive minutes, i.e. the harness's own per-session tmpdir
+  (not just `/tmp` or a target repo's `.venv`) is now unable to capture ANY subprocess output. Read/Edit tools remained
+  functional throughout (this entry was written via Edit, not Bash) — only Bash-mediated work (git, curl, gcloud) is
+  blocked. Practical impact: this session cannot fresh-pull, commit/push, or call the AO `/heartbeat`/`/blocked`/`/done`
+  HTTP endpoints (all curl-via-Bash) while this persists — mid-verification on
+  `mdps_t1_recon_job_oom_failing_7_days-001`, deferred resuming that task's ship step until Bash recovers. Not opening a
+  new BLOCKED question (would need Bash to send it, and the existing `[OPERATOR]` P2 todo already covers root-causing
+  `unified-trading-system-repos/`'s 157G footprint); retrying Bash periodically instead, same posture as every prior
+  entry.
+- 2026-07-27T07:2x (slot-5, another corroborating data point): hit this mid-`git commit` on `unified-trading-pm` —
+  `bash scripts/plan-hygiene/check_frontmatter.sh`'s awk-based validator hit
+  `awk: ... warning: error writing standard output: No space left on device` on EVERY file it scanned (not just mine),
+  producing spurious "missing required field" errors for files independently confirmed (by direct inspection) to have
+  every listed field present — correctly BLOCKING my commit via the pre-commit hook, a false-positive gate failure with
+  a real root cause, not a content defect. Escalated further to a genuine
+  `fatal: unable to write loose object file: No space left on device` (a real git-object-write ENOSPC, not just a hook
+  false-positive) at the worst-measured point. `df -h /`: fluctuated `404K → 4.1M → 3.7M → 2.6M → 360K → 48K → 31M`
+  across many checks over ~20 min — actively worsening then briefly recovering, same trend every prior entry measured.
+  Two background poll processes I launched to wait for headroom (rather than busy-retry the commit) appear to have been
+  silently killed under this same host pressure before completing their loops — corroborates this doc's own earlier
+  observation about background processes dying under this condition; do not trust a reported "completed" status here
+  without independently re-verifying `df` afterward. Did not attempt any cleanup/delete. Eventually landed the commit at
+  a 31M-avail blip.

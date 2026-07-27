@@ -33,6 +33,10 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  "§9 [DESIGN] P1 cross-check + [WRITER] P1 guard-widen both DONE — unified-api-contracts@11adf279 (DERIBIT-COMBO
+  deregistration) + market-tick-data-service@2ddc6d4a (bare-DERIBIT combo classifier fix, both ingestion paths),
+  independently re-verified 2026-07-27 (slot-15), no conflict between the two efforts. The [DATA] P2. partition-MOVE
+  --apply remains unstarted and operator-gated per §7."
 ---
 
 # DERIBIT combo instruments mispartitioned as perpetual/future — design of record
@@ -312,12 +316,31 @@ or implemented here.
 
 ## 9. Todos
 
-- [ ] [DESIGN] P1. Cross-check this doc's root-cause fix (§3, §6) against the concurrent DERIBIT-COMBO venue-registry
-      purge (§8) before either lands.
-- [ ] [WRITER] P1. Widen the combo-shape guard: hoist an `is_deribit_combo_symbol_shape`-style check above
-      `_classify_row_instrument_type`'s venue-label branch (bare `DERIBIT`, not just `DERIBIT-COMBO`) AND port the
-      existing `_filter_bulk_rows_for_deribit_split` fix (or an equivalent) into `tardis_cefi_shards.py`, which
-      currently has none.
+- [x] [DESIGN] P1. **DONE 2026-07-27 (slot-15)** — Cross-checked this doc's root-cause fix (§3, §6) against the
+      concurrent DERIBIT-COMBO venue-registry purge (§8); independently re-verified the finding already recorded in
+      `cefi_4surface_migration_execution_log_2026_07_24.md` row 7 (that entry covers this todo but the checkbox here was
+      never flipped). **Verdict: NO CONFLICT — synergistic, not conflicting.** Verified directly: 1.
+      `unified-api-contracts@11adf279` (2026-07-21 17:24:44+01:00) deregistered `DERIBIT-COMBO` from every UAC registry
+      (0 captured rows, operator-ruled legacy venue). 2. `market-tick-data-service@2ddc6d4a` (2026-07-22 18:28:09+01:00
+      — the DAY AFTER) shipped this doc's §9 `[WRITER] P1` guard-widen: hoists `is_deribit_combo_symbol_shape` above
+      `_classify_row_instrument_type`'s venue-label branch for the BARE `DERIBIT` venue, plus the required
+      `finalise_rows_and_path`/ `SINGLE_INSTRUMENT_TYPES` COMBO-case companion fixes traced in §3. 3. **Both ingestion
+      paths confirmed covered** — `tardis_cefi_shards.py:298,590` calls `self._classify_row_instrument_type(s, venue)`,
+      the SAME shared method `2ddc6d4a` fixed on `TardisAdapter`; there is no separate/duplicate classifier to port the
+      fix into, resolving §3's "leak not closed in the primary ingestion path" concern. 4.
+      `_filter_bulk_rows_for_deribit_split`'s `DERIBIT-COMBO` branch (§3/§8's flagged routing target) is now dead code
+      for a deregistered venue, but harmlessly so — its bare-`DERIBIT` branch (`is_bare_option` isolation) is untouched
+      and still correct, and post-`2ddc6d4a` any bare-`DERIBIT` combo-shaped row is classified `COMBO` directly rather
+      than needing the old DERIBIT-COMBO-venue routing detour. This IS the "new mechanism" §8 anticipated would be
+      needed — it already shipped, just not framed as answering §8. No further code action needed for this cross-check;
+      the `[WRITER] P1` sibling todo below is DONE (already shipped, confirmed above). The `[DATA] P2.` partition-MOVE
+      `--apply` remains fully unstarted and operator-gated per §7 — this cross-check does not touch or unblock that.
+- [x] [WRITER] P1. **DONE — `market-tick-data-service@2ddc6d4a`** (2026-07-22, independently re-verified 2026-07-27
+      slot-15, see the todo above). Widened the combo-shape guard: hoists `is_deribit_combo_symbol_shape` above
+      `_classify_row_instrument_type`'s venue-label branch for bare `DERIBIT`. The second half ("port into
+      `tardis_cefi_shards.py`") needed no separate port — that file calls the same shared
+      `self._classify_row_instrument_type(s, venue)` method the fix modified, confirmed by direct grep/read
+      (`tardis_cefi_shards.py:298,590`), so both ingestion paths share one fixed classifier already.
 - [ ] [DATA] P2. Implement + dry-run the partition-move script per §5-6 against the 15,119-row scope measured in §2b;
       canary on the two objects named in §6 before any full `--apply`.
 - [ ] [DATA] P2. Operator review of §7 (widened scope, live-fleet sequencing, code-fix-first ordering) before any

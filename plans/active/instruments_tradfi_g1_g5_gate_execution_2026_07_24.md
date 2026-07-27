@@ -415,10 +415,11 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       sibling ICE/CME-futures-options and CME-futures-reference-gap bullets immediately below, which already track the
       credential/upstream blockers on the actual data recovery. Source:
       `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` todo 3.
-- [ ] [DATA] P1. **FINDING — ICE futures + CME futures-options not on Massive → BLOCKED-CREDENTIALS.** Massive covers
-      CME-group only, no options-on-futures product; old databento ~16-18K/day was CME ES futures-options. **Operator
-      ask**: an ICE-futures + CME-futures-options reference source, or unblock Databento billing. Repo:
-      instruments-service. assigned_vm: vm-tradfi. (MIGRATED FROM: same.)
+- [ ] [DATA] P1. **FINDING — ICE futures + CME futures-options not on Massive → BLOCKED-CREDENTIALS.** Ping filed:
+      `ikenna_orchestrator/pings/slot_5.md` (2026-07-27, slot-5, CREDENTIAL APPROVAL REQUEST). Massive covers CME-group
+      only, no options-on-futures product; old databento ~16-18K/day was CME ES futures-options. **Operator ask**: an
+      ICE-futures + CME-futures-options reference source, or unblock Databento billing. Repo: instruments-service.
+      assigned_vm: vm-tradfi. (MIGRATED FROM: same.)
 - [ ] [DATA] P1. **tradfi CME futures reference gap from 2026-06-08** — Massive `/futures/vX/{products,contracts}` 404
       (worked 2026-06-07). `BLOCKED-UPSTREAM-OUTAGE`: re-probe, on restore re-run
       `--asset-group TRADFI --source massive` for missing days so `venue=CME` refills, then regen the tradfi catalogue.

@@ -786,17 +786,18 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
 > `ao_fleet_observability_kpis_2026_07_20.md`'s "Phase 7 (AF-1…AF-5)" provenance citation resolves to. This section
 > becomes Phase 9 (next free number after Phase 8) to disambiguate.
 
-- [ ] [UI] P0. **Blocked-question option buttons submit on click instead of select-then-submit.**
-      `agent-orchestrator/dashboard/src/layout.tsx::BlockedCard` renders each of a blocked question's `options[]` as a
-      button whose `onClick` calls `submit(opt)` directly — one click both picks AND commits the answer (POSTs it,
-      removes the question from the queue), with no chance to review or change the choice first. The free-text path
-      right below it (the `<input>` + "Send" button) already has the correct two-step shape: typing doesn't submit
-      anything, only Enter/Send does. Fix: clicking an option should only SELECT it (visually highlighted state, no
-      `onAnswer` call); add an explicit Submit control that commits the currently-selected option via
-      `onAnswer`/`submit()`. Re-clicking a different option before submitting just changes the selection. No existing
-      test covers this (`dashboard/src/layout.test.ts` has no `Blocked`-prefixed case). **Gate**: a new `layout.test.ts`
-      case that fails against the current code (an option click alone must NOT invoke `onAnswer`) and passes once the
-      fix lands (option click + Submit invokes it exactly once with the selected option); `npm run build`/`tsc` clean.
+- [x] ✅ [UI] P0. **Blocked-question option buttons submit on click instead of select-then-submit.** — **DONE via
+      `agent-orchestrator@1badd41`.** `BlockedCard` now tracks `selectedOption` state: clicking a lettered option only
+      highlights it (`.opt.selected`, no `onAnswer` call); a new explicit Submit button (shown once an option is
+      selected) commits it. Re-clicking a different option swaps the selection; typing in the free-text input or
+      clicking "Other" clears any lettered selection (mutually exclusive). **Gate actually used**: not `layout.test.ts`
+      as originally scoped (that harness is deliberately jsdom-free / pure-function-only — no React render, per
+      `vitest.config.ts`'s own header comment — so it can't exercise a click/callback interaction); instead added
+      `dashboard/tests/e2e/blocked-questions.spec.ts` (2 cases) against the dashboard's existing real Playwright+backend
+      e2e infra. Verified fail-before/pass-after by hand: stashed the fix and reran the new spec — both cases failed,
+      one option click fired `slot-blocked-answered` immediately, exactly the reported bug; restored the fix and reran —
+      both passed. Full `quality-gates.sh` green (1791 passed), full e2e suite green (14/14, including the 3
+      pre-existing specs — unaffected).
 
 ## Externally blocked (tracked, not actionable here)
 

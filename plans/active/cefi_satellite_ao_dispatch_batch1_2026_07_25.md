@@ -134,30 +134,30 @@ drift_direction: advance-code
       `_finalize_session_grid` routing:
 
       | Adapter | Verdict |
-                                                                                              | --- | --- |
-                                                                                              | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
-                                                                                              | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
-                                                                                              | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
-                                                                                              | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
-                                                                                              | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
-                                                                                              | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
+                                                                                                          | --- | --- |
+                                                                                                          | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
+                                                                                                          | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
+                                                                                                          | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
+                                                                                                          | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
+                                                                                                          | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
+                                                                                                          | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
 
-                                                                                              **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
-                                                                                              intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
-                                                                                              **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
-                                                                                              (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
-                                                                                              `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
-                                                                                              snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
-                                                                                              absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
-                                                                                              `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
-                                                                                              non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
-                                                                                              documented the OLD (reversed) behavior, contradicting the shipped code —
-                                                                                              `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
-                                                                                              `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
-                                                                                              a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
-                                                                                              provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
-                                                                                              unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
-                                                                                              (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
+                                                                                                          **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
+                                                                                                          intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
+                                                                                                          **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
+                                                                                                          (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
+                                                                                                          `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
+                                                                                                          snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
+                                                                                                          absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
+                                                                                                          `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
+                                                                                                          non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
+                                                                                                          documented the OLD (reversed) behavior, contradicting the shipped code —
+                                                                                                          `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
+                                                                                                          `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
+                                                                                                          a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
+                                                                                                          provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
+                                                                                                          unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
+                                                                                                          (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
 
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
       candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
@@ -366,20 +366,23 @@ drift_direction: advance-code
       duplicate/not-duplicate verdict for every day the Phase-1 scope audit classified
       bare_flat_only/bundled_flat_only/mixed, closing the "sample-based, not exhaustive" caveat. Source:
       `issues/bybit_futures_chain_write_shape_2026_07_13.md`.
-- [ ] [DIAG] P1. **Combined investigation for `cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md` (3
-      sub-items merged into one todo since all 3 append findings to that same doc):** (a) Pull the FULL unfiltered Cloud
-      Logging output for the 2026-07-21 and 2026-07-22 executions of `uts-prod-market-tick-data-service-cefi-t1-recon`
-      and determine whether those two days show the same signal-9/OOM crash-loop pattern confirmed for 2026-07-23/24, or
-      a distinct earlier-stage failure. (b) Confirm whether the PAUSED `market-tick-cefi-daily-download` Cloud Scheduler
-      job (paused since 2026-07-16) is dead/superseded — `gcloud scheduler jobs describe`, cross-reference against the
-      two confirmed-live cefi triggers, grep market-tick-data-service + deployment-service for any live reference; if
-      dead, delete it, if live, record why. (c) Check whether the recon job's download path (`hyperliquid_s3.py`'s
-      `HyperliquidS3Downloader`) and the Surface-C cefi manifest-dedup scripts share a common heavy-import code path
-      that could connect this OOM to the separately-documented dedup-script OOMs — static code-read comparison only, no
-      execution. Repos: market-tick-data-service, instruments-service. **Done when**: all three sub-verdicts
-      (same-pattern-vs-different for the two days; dead-vs-live for the scheduler job, with delete or kept-reason
-      recorded; shared-import verdict named or ruled out) are recorded in the issue doc's Progress Log. Source:
-      `issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`.
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-5).** All three sub-verdicts recorded in
+      `issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md` § "Combined investigation (2026-07-27,
+      slot-5)": **(a)** 07-21/07-22 DO show the same OOM/"configured memory limit was reached" failure class as later
+      days (full JSON Cloud Logging read of all 4 real executions; the "bare ERROR" was the execution's own audit-log
+      completion record, not a stdout-log gap) — one continuous regression since >=2026-07-21, not two failure modes;
+      timing (~2m to OOM) is a third point on the spectrum between the 07-23/24 (~10-40s) and 07-25/26 (~13-14min)
+      signatures. **(b)** `market-tick-cefi-daily-download` confirmed DEAD via 3 independent evidence threads (its
+      Cloud-Function target's own 4+-months-zero-success audit history; the 2026-07-16 outage doc's independent
+      re-confirmation; `launch-cefi-fwd-daily-cron-vm.sh`'s own header documenting the replacement) — **DELETED**
+      (`gcloud scheduler jobs delete`, verified `NOT_FOUND` on re-describe); flagged a new P3 follow-up (is the
+      documented VM-cron-host replacement actually running? zero instances/insert-log hits found) rather than expanding
+      scope. **(c)** NO shared heavy-import code path — `hyperliquid_s3.py` has zero pandas/pyarrow imports (only
+      `unified_trading_library.get_storage_client` overlaps, a lightweight factory); the dedup script's own documented
+      root cause (Finding 6 in the sibling issue doc) was shared-host `earlyoom` contention, explicitly NOT a code
+      memory-footprint defect — the two OOM incidents are unrelated by both infra class and imports. Repos:
+      market-tick-data-service, instruments-service, deployment-service (read/investigate only, no code shipped — GCP
+      infra change only). Source: `issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`.
 - [ ] [DATA] P1. **Conflict-check (2026-07-25 plan-reconcile): shares `partitioned_writer.py`'s `write_chunk`→
       `_update_cluster_and_chain_counts` call chain with the P2 cluster-counts-widen todo below. Do NOT dispatch
       concurrently — run the P2 widen FIRST so this proof validates the final, post-widen code, not a

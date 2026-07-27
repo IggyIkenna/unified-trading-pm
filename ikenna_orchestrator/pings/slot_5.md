@@ -452,8 +452,38 @@ the object-bundle "Target" was superseded). — slot-6 (Ikenna)
 - **What's needed**: Attach managed policy `AmazonSSMReadOnlyAccess` + inline `ssm:SendCommand` /
   `ssm:GetCommandInvocation` (scoped to the orchestrator fleet, e.g. `resource: arn:aws:ec2:*:*:instance/*`) to the
   `harsh-worker` IAM role/user used in automated VM e2e verify scripts.
-- **Workarounds in place**: AMI resolution uses hardcoded `AMI_ID=ami-0bf052f8a9dd8bf42`; SSH fallback (`agent-orchestrator-key`)
-  replaces SSM `SendCommand` for verify harness connectivity. Both degrade the automation.
+- **Workarounds in place**: AMI resolution uses hardcoded `AMI_ID=ami-0bf052f8a9dd8bf42`; SSH fallback
+  (`agent-orchestrator-key`) replaces SSM `SendCommand` for verify harness connectivity. Both degrade the automation.
 - **What it unblocks**: `verify_vm_e2e.sh` SSM probe for Ubuntu-AMI lookup + `ssm:DescribeInstanceInformation` /
   `ssm:SendCommand` for headless worker-verify — removes hardcoded AMI and SSH workarounds.
 - **Plan ref**: `plans/active/monitoring_control_plane_master_2026_06_10.md` [CREDS] P2 — found 2026-06-12 live run.
+
+---
+
+## CREDENTIAL APPROVAL REQUEST — 2026-07-27 (slot-5, filed to close a credential-ask-orphan QG regression)
+
+Found while shipping an unrelated diagnostic task — the `check_credential_ask_orphans.py` QG gate flagged 2 open
+`BLOCKED-CREDENTIALS` plan items (neither authored this session) with no ping citation, blocking the repo-wide gate for
+every commit. Filing both asks here so the operator can action them and the gate returns to baseline.
+
+- **Vendor/service**: GCP IAM (internal project, no external vendor).
+- **What's needed**: `resourcemanager.projects.setIamPolicy` on `central-element-323112` for a credential that can run
+  `ENV=prod ./tofu.sh apply` for the per-tier bucket IAM Terraform (`unified-trading-sa` or an operator-elevated
+  credential) — the currently-active `github-actions-deploy` SA lacks `getIamPolicy`/`setIamPolicy` entirely (confirmed
+  via a live 403 on `gcloud projects get-iam-policy central-element-323112`, plus ~15 unrelated pre-existing resources
+  hitting the same error class in a full untargeted plan, confirming a whole-project permission gap).
+- **Workarounds in place**: none — the Terraform is declared + validated (`tofu validate`/`tofu fmt` clean, targeted
+  `tofu plan` shows exactly 8 adds/2 changes/0 destroys) but NOT applied.
+- **What it unblocks**: `objectAdmin` on `*-prd-*`/`*-test-*` for `uts-prd-sa`/`uts-test-sa` + `objectViewer` broadly
+  for all 5 SAs (the per-tier bucket-IAM protection this plan implements).
+- **Plan ref**: `plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md` P1.2b — found 2026-07-27 (slot-12's
+  work, orphaned without this citation).
+
+- **Vendor/service**: Databento (data vendor) or an ICE-futures/CME-futures-options reference-data vendor.
+- **What's needed**: either unblock Databento billing (the account that previously supplied ~16-18K/day of CME ES
+  futures-options reference data), or a distinct ICE-futures + CME-futures-options reference source — Massive covers
+  CME-group only and has no options-on-futures product.
+- **Workarounds in place**: none — this is a genuine reference-data gap for these two product classes.
+- **What it unblocks**: TradFi G1-G5 gate execution's ICE-futures/CME-futures-options coverage.
+- **Plan ref**: `plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` — found 2026-07-27 (a carried-
+  forward item, orphaned without this citation).
