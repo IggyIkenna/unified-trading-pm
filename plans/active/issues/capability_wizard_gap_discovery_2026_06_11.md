@@ -112,29 +112,27 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       `collateral_registry.py`'s 2026-06-12 backfill — fixed those to `registry` too, broker question stays `gap`).
 - [ ] [SPEC] P1. **Simulation assumptions**: simulatable candle granularities, matching/fill assumptions per archetype
       area, backtest-live symmetry nuances per venue/instrument.
-- [ ] ⚠️ [SPEC] P1. **Fund structures**: offerable pooled/SMA/prop structures with subscription/redemption + rebalance
-      cadences (fund-administration state machines are runtime truth; nothing declares what is offerable). — **CODE
-      COMPLETE + QG-VERIFIED, PUSH BLOCKED 2026-07-27 (slot-13)**:
-      `unified_api_contracts/internal/     architecture_v2/fund_structures.py` was ALREADY FIXED (checkbox was stale) —
+- [x] ✅ [SPEC] P1. **Fund structures**: offerable pooled/SMA/prop structures with subscription/redemption + rebalance
+      cadences (fund-administration state machines are runtime truth; nothing declares what is offerable). —
+      **SHIPPED 2026-07-27 (slot-13)** — `unified-api-contracts@8903683a`, verified on
+      `origin/live-defi-rollout` after a fleet-wide host-disk-full condition (100% used, <2G free — `BLK-5ce3f18c`,
+      resolved by main clearing regenerable caches) delayed the push by ~25 min; the commit itself was QG-verified
+      (sentinel==HEAD, full `quality-gates.sh` green) before the disk emergency, unaffected by it.
+      `unified_api_contracts/internal/architecture_v2/fund_structures.py` was ALREADY FIXED (checkbox was stale) —
       backfilled 2026-06-13 (commit `5e7d0685`, the SAME commit that fixed Fees above): `OFFERED_FUND_STRUCTURES`
       declares POOLED + SMA (`FundStructureKind`, cited to `sma-vs-pooled.md`), each carrying
-      `share_classes`/`subscription_cadence`/ `redemption_cadence`/`rebalance_cadence`/`supports_daily_withdraw_deposit`
+      `share_classes`/`subscription_cadence`/`redemption_cadence`/`rebalance_cadence`/`supports_daily_withdraw_deposit`
       fields; PROP honestly omitted (no documented external offering). A pre-existing test
-      (`tests/unit/test_capability_manifest.py::     test_offered_fund_structures_backfilled`) already locked in the
+      (`tests/unit/test_capability_manifest.py::test_offered_fund_structures_backfilled`) already locked in the
       2-entry backfill. **The only real defect found**: the module's own docstring (like `fees_registry.py`'s) still
-      said "intentionally empty" — fixed, committed LOCALLY at `unified-api-contracts@8903683a` (full quality-gates.sh
-      green, sentinel==HEAD), but the quickmerge PUSH failed on a fleet-wide host-disk-full condition (100% used, <2G
-      free — see `BLK-5ce3f18c`, escalated to main). **Checkbox left unflipped until the push actually lands** — do not
-      treat this as shipped until `git log origin/live-defi-rollout` shows `8903683a` (or a rebase-carried equivalent).
-      Also drafted (same local, unpushed state) fixes for the SAME staleness in
+      said "intentionally empty" — fixed. Also fixed the SAME staleness in
       `codex/09-strategy/architecture-v2/capability-wizard.md`'s status table (the row still cited `UAC@6f31f59`, the
       pre-backfill commit, for fund-structures/order-semantics/ sim-assumptions/agent-capability — verified the OTHER
       THREE sibling registries are ALSO already backfilled with real per-venue/per-archetype data despite carrying the
       identical stale "intentionally empty" docstring; not fixed in THEIR OWN files here — that's todos 113/117/119's
       own scope, flagged so those dispatches go straight to the fix) and `capability-wizard-question-bank.md` (Stage A
       fund-structure question status `gap (fund structures)` → `partial`, matching the already-`partial` sibling cadence
-      question). **Next session: once disk recovers, retry `quickmerge` for the UAC commit, confirm the push, THEN flip
-      this checkbox to `[x]` citing the verified-pushed SHA — do not just re-flip off the local commit again.**
+      question).
 - [ ] [SPEC] P1. **Order semantics per venue adapter**: TIF (FOK/IOC/post-only), make/take, ref-pricing modes (fixed vs
       delta-adjusted to underlying), multi-leg/spread delta-risk ownership, auth-wired status.
 - [ ] [SPEC] P2. **Trading-agent/LLM capability**: no declaration linking trading-agent-service to archetypes (which
