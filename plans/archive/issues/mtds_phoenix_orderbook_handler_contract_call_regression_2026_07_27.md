@@ -29,6 +29,7 @@ related:
   [
     /plans/active/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 last_updated: 2026-07-27
