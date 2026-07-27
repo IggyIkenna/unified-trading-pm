@@ -227,9 +227,10 @@ source: >-
       below; do not re-launch until checked. Then `assert_tradfi_derivative_ids_canonical` proves 0 raw on all four
       surfaces (regex per Surface B todo above).
 - [ ] [VERIFY] P0. **GATE — STILL OPEN. `20260727-041704` CONFIRMED ALL-8-PREEMPTED 2026-07-27 (slot-9, zero
-      `EXIT_STATUS`, ops events confirm) — relaunched as `20260727-061325`, all 8 `RUNNING`.** No checkpoint exists
-      (safe restart-from-0, wasteful — follow-up `mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md`). Do
-      NOT re-launch again until terminal state verified (ETA ~5-6h), THEN run `assert_tradfi_derivative_ids_canonical`.
+      `EXIT_STATUS`) — relaunched as `20260727-061325`, all 8 `RUNNING`.** No checkpoint exists (restart-from-0 safe —
+      follow-up `mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md`). **Re-checked 06:35Z (slot-13):
+      healthy, ~3.9% done, ETA ~12:30Z.** Do not re-check before then; THEN run
+      `assert_tradfi_derivative_ids_canonical`.
 - [ ] [DECISION] P1. **ICE qualifier variants (`BRN_Z`/`BRN!`/`BRN_MD1`) = BLOCKED-OPERATOR-DECISION** — the
       classifier + current writer emit `ICE:FUTURE:BRN_Z-USD@LIN-...` with banned chars (`_`,`!`);
       `EXCHANGE_CODE_TO_NAME` only maps the bare root. Non-MVP (ICE not in MVP universe) so quarantine-with-tracking
