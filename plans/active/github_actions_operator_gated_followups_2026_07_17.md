@@ -532,6 +532,25 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
 > pytest/lint/typecheck job is explicitly OUT of scope** — it stays hosted per the existing security ADR (no self-hosted
 > runner may carry a `pull_request` trigger) and touching it is not part of this phase.
 
+> **Expected savings — measured, NOT the ~35-56% PM got.** Pulled real per-JOB billed minutes
+> (`gh api .../actions/runs/{id}/jobs`, counting jobs not `/timing.total_ms` — the same trap the 2026-07-17 session
+> already documented) for one `quality-gates-v2` run and one `image-build-gate` run on features-service:
+> `quality-gates-v2` bills **~14 min/run** (`content sentinel` 1 + `QG slice (checks)` 3 + `QG slice (tests)` 9 + rollup
+> 1 — ALL of it inside the SAME pull_request-triggered workflow file, so none of it is separable from the security
+> boundary; the 5 conditional glue jobs in that file were `skipped`/unbilled on this run). `image-build-gate` bills **~2
+> min/run**. `main-backmerge-to-ldr` bills **~1 min/run**. At measured daily run-rates (~43-49/day quality-gates-v2,
+> ~15-17/day image-build-gate, ~13-15/day main-backmerge-to-ldr, plus smaller items), the confidently **movable** glue
+> (`main-backmerge-to-ldr` + `update-dependency-version` + `version-registry-notify` + `major-bump-issue-handler` — all
+> push/repository_dispatch/issue_comment triggered, none `pull_request`) is only **~4-5% of one busy repo's total billed
+> minutes**; `image-build-gate` (~9%) is a SEPARATE, larger pool but its own security review is still open (it DOES fire
+> on `pull_request` — the first todo below covers this, don't assume it passes). **quality-gates-v2's real test/lint job
+> alone is ~90%+ of a plain service repo's billed minutes** — far higher than PM's own ~18-20% pre-migration share,
+> because service repos don't run PM's extra automation (`ci-status-consolidator`, `cloud-build-router`, monitors, etc.)
+> that diluted PM's own quality-gates-v2 share. **Net read: Phase 7, even fully executed, plausibly nets only ~5-10% off
+> each non-PM repo's own spend** (~3-6% off the fleet total, since non-PM is 62% of it) — genuine and worth doing, but
+> the 50% target is NOT reachable through this lever alone. Getting there needs the real-test-compute lever flagged as
+> its own item below (P3), not this phase.
+
 - [ ] [VERIFY] P1. Extend `classify-glue-workflows.sh`'s MOVE/STAY audit to the non-PM fleet: for each of the ~24 repos,
       inventory the fleet-template copies (`main-backmerge-to-ldr`, `image-build-validate`/`image-build-gate`,
       `semver-agent`, `major-bump-issue-handler`, `request-major-bump`, `update-dependency-version`,
@@ -555,11 +574,19 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
       — the naive fleet aggregate is what masked PM's real win before) and compare against this week's baseline (fleet
       ~$37/day, non-PM ~$23/day, measured Jul23-26 2026) — this is the number the original plan's own "fleet
       ~$1,000/mo → ~$300-400/mo" target was about, and the one that has never yet moved.
-- [ ] [REVIEW] P3. NOT started this phase, flagged for later only: if fleet spend is still high after Phase 7 lands, the
-      remaining lever is real test-compute volume itself (quality-gates-v2 runs scale with commit/PR volume, which rises
-      with agent parallelism) — options there (test-impact analysis / selective test execution, debounced batching of
-      rapid LDR pushes) carry real correctness risk and are a distinct, harder milestone; do not reach for them before
-      Phase 7's structurally-safe win is measured.
+- [ ] [REVIEW] P3. **This is the actual path to 50%, not Phase 7** (see the Expected-savings note above — Phase 7 nets
+      ~3-6% of the fleet total on its own). `quality-gates-v2`'s real test/lint job is ~90%+ of a service repo's billed
+      minutes and scales with commit/PR volume, which rises with agent parallelism. Two angles, both
+      correctness-adjacent so scope carefully: **(a) run-frequency** — features-service's `quality-gates-v2` fired via
+      `workflow_dispatch` ~15×/day this week, ALL triggered by actor `IggyIkenna` (a token/bot identity, not a human
+      clicking re-run) at roughly hourly cadence; NOT yet root-caused — could be the promote-fleet cron's own
+      re-verification (legitimate) or redundant re-dispatch on top of the `push`/`pull_request` runs that already cover
+      the same commit (waste). Root-cause this FIRST, cheaply (grep the dispatching workflow's
+      `gh workflow run quality-gates-v2` call sites), before assuming it's either. **(b) per-run duration** —
+      test-impact/selective execution (skip tests the diff can't affect) cuts the ~9min `QG slice (tests)` leg directly
+      but carries real risk of silently under-testing; do not attempt without a design that a missed regression is
+      structurally impossible, not just unlikely. Do not reach for either before Phase 7's smaller, structurally-safe
+      win is measured and confirmed.
 - [ ] [REVIEW] P3. Longer-horizon alternative to per-repo runner registration, NOT recommended to start now: migrating
       the personal-account repos (`IggyIkenna/*`) into a GitHub organization to unlock a shared org-level runner group
       (free on GitHub's org tier — no Team/Enterprise upgrade needed for runner groups themselves). This would let ONE
