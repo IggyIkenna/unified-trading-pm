@@ -220,7 +220,20 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       targets VERIFIED-EXIST — none need creating) · systemic FIX-STALE = archived-mirror `unified-trading-codex/`
       links + a stale `POST_PLAN_BANNER_2026_05_06` replicated across ~30 files. Redirect/delete APPLY stays Phase-3/4
       (operator's FIX-STALE-only hold, line ~224).
-- [ ] [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`.
+- [x] ✅ [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`. **AUDIT VERIFIED +
+      FIX-STALE APPLIED 2026-07-27** (Appendix-A UAC registry HOLDS, ground-truthed against live code): confirmed
+      `canonical/normalize/` + `schemas/` dirs are GONE (normalizers now `normalize_utils/{trades,orderbooks,…}.py`;
+      `_venue_errors_*` now `normalize_utils/errors`) and the 4 DELETE-class docs (`ICLOUD_REPO_MIGRATION_PROMPT`,
+      `SCHEMA_NORMALIZATION_GAPS_AUDIT`, `UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY`, `VIX_LIVE_RESEARCH`) each
+      already have a `docs/archive/` twin. Applied the operator-hold-PERMITTED FIX-STALE sweep only: 3 archived-mirror
+      `unified-trading-codex/` refs → verified-live PM `/codex` (`vcr-cassette-ownership.md`,
+      `contracts-scope-and-layout.md`, `contracts-integration.md`) in `docs/{README,MOCKS_AND_VCR,SCHEMA_GOVERNANCE}.md`
+      — **unified-api-contracts@25085037**. Sonnet-scoped to the mechanical literal sweep (plan §"Execution model"
+      permits sonnet ONLY for FIX-STALE literal sweeps). Held to Phase-3/4 (operator FIX-STALE-only hold + opus-gated):
+      REDIRECT `PACKAGE_LAYOUT_AND_SCOPE`/ `BATCH_LIVE_SYMMETRY`/`canonical-instrument-ids`; DELETE the 4 `docs/` twins;
+      `SCHEMA_GOVERNANCE` placement-table rewrite; 3 residual mirror refs with NO 1:1 live target (`SCHEMA_CHANGELOG`
+      L13 `canonical-schema-versioning.md`; `BATCH_LIVE_SYMMETRY` L208 + `UAC_FULL_GAP…` L278 `batch-live-symmetry.md` →
+      pick live equivalent).
 - [x] ✅ [DOCS] P0. **market-data-processing-service** (22→25) — path/manifest/candle docs vs `codex/02-data`. **AUDIT
       REFRESHED 2026-07-27** (registry in **Appendix B**): Appendix-A largely HOLDS but drifted — `GCS_PATHS.md` is NO
       LONGER un-tiered (edited 2026-07-21, now `{env}`-carrying; residual staleness is only inline `gs://`/`gsutil` vs
