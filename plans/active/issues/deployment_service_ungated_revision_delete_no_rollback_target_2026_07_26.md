@@ -24,7 +24,7 @@ priority: P2
 parent_epic: infrastructure_master
 source:
   ["operator question 2026-07-26: does CI/CD auto-rebuild+redeploy, and does cleanup ever leave zero rollback target"]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:

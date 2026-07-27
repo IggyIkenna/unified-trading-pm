@@ -47,8 +47,8 @@ parent_epic: orchestrator_master
 source:
   "review worker (agt-57e3f4) live-observed FYI in msg 2041; main (agt-52bb99) confirmed AgentRow registry read-only,
   2026-07-25 ~22:29Z"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: refactor
 drift_direction: advance-code
 resolved_by:

@@ -33,9 +33,9 @@ related:
   ]
 created: 2026-07-26
 parent_epic: plan_hygiene_master
-assigned_vm: NA
+assigned_vm: planning
 source: [/plan-reconcile cross-cutting (autonomous, 2026-07-26)]
-execution_scope: local-only
+execution_scope: orchestrator-agent
 priority: P1
 drift_direction: advance-code
 depends_on: []

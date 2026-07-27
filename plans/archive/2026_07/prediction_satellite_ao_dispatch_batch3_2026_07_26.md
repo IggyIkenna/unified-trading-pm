@@ -144,7 +144,7 @@ drift_direction: advance-code
 
 ## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION, not batchable)
 
-- **`plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`**: Confirmed via
+- **`plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`**: Confirmed via
   full doc read: the doc is `status: open` (ROUND 7, 2026-07-24) with the operator-gate stated explicitly in its own
   text — "BLOCKED-OPERATOR-DECISION on scheduling that work... Do NOT re-attempt manifest remediation until it ships"
   and "this needs operator sign-off before any code/job change, not an autonomous patch." Uncovered items:... **RE-CHECK

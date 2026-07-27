@@ -36,9 +36,9 @@ source:
     "gs://cf-manifest-audit-central-element-323112/cf_audit/2026-07-26.json (execution uts-prod-cf-manifest-audit-qsp6r)",
     "Cloud Logging for uts-prod-cf-manifest-audit, 2026-07-26T21:14-21:18Z",
   ]
-assigned_vm: NA
+assigned_vm: planning
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 estimate_class: research
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.2

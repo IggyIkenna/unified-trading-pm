@@ -25,9 +25,9 @@ related:
     /plans/active/issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md,
   ]
 created: 2026-07-25
-assigned_vm: NA
+assigned_vm: planning
 parent_epic: sports_master
-execution_scope: local-only
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 source: sports_satellite_ao_dispatch_batch2_2026_07_24.md, league_id casing migration todo, step (3) execution

@@ -19,10 +19,10 @@ related: [plans/archive/2026_07/deployment_full_estate_cost_provenance_2026_07_0
 created: 2026-07-13
 parent_epic: observability_master
 priority: P3
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 source: [deployment_full_estate_cost_provenance_2026_07_09 DEFERRED managed_by_label item]

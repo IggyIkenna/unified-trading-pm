@@ -16,8 +16,8 @@ tags: [defi, backfill, optimization, thegraph, pagination, spot, preemption, eta
 related: [defi_consolidated_closeout_2026_07_18, defi_available_at_clobbered_by_wallclock_2026_07_20]
 created: 2026-07-20
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
@@ -47,24 +47,27 @@ watch the 429 rate before any wide wave.**
 
 ## Correctness defects (fix these FIRST — they are bugs, not optimizations)
 
-- [x] [SCRIPT] P0. **evm_defi history queries are UNPAGINATED (`first: 1000`)** — SHIPPED `mtds@6e2677b9` (QG green, 6544 passed; +2 tests prove 1500 rows across 2 pages vs single-shot 1000). `_paginate_history` mirrors `lending_indices_subgraph._paginate`. — `_AAVE_V3_HISTORY_QUERY`,
-      `_COMPOUND_V3_MESSARI_HISTORY_QUERY`, `_COMPOUND_V3_CUSTOM_HISTORY_QUERY` in
-      `market-tick-data-service/.../cli/handlers/evm_defi_handler.py` (`:333/:354/:374`) query
-      `reserveParamsHistoryItems`/`marketDailySnapshots` with `first: 1000` and no `skip:`/cursor. The Graph caps
-      `first` at 1000, so a busy AAVE/Compound day (>1000 items) is **silently truncated**. FIX: route them through a
-      timestamp-cursor paginator — **mirror the proven `_paginate` in `lending_indices_subgraph.py:95`** (cursor on
-      `timestamp_gte`, dedup by `record_id`, stop at `len<page_size`, `max_pages=50` safety cap,
-      `LENDING_INDICES_PAGINATED`- style event). Add a unit test: mock the subgraph returning >1000 items across 2 pages
-      → assert all captured, no dup. Captured counts will go UP on busy shards — that is the fix landing, not a
-      regression.
-- [ ] [SCRIPT] P0. **Both DeFi launchers MISS the SPOT preemption contract** —
-      `deployment-service/scripts/vm/launch-mtds-solana-defi-backfill-vm.sh` + `launch-defi-backfill-vm.sh` have ZERO
-      `lc_write_preemption_signal_file` / `lc_write_launch_params` calls (cefi's
-      `launch-cefi-sharded-backfill.sh:568-589` has 6). Standing HARD-RULE gap: a SPOT preemption today relaunches blind
-      (replays START_DATE, restarting a `--force` run at day one forever). FIX: mirror the cefi block —
-      `lc_write_preemption_signal_file`; `lc_write_launch_params` persisting the exact scope + knobs;
-      `--metadata-from-file="shutdown-script=${PREEMPTION_SIGNAL_FILE}"`;
-      `--instance-termination-action=DELETE --no-restart-on-failure`. Must land before ANY wide SPOT wave.
+- [x] [SCRIPT] P0. **evm_defi history queries are UNPAGINATED (`first: 1000`)** — SHIPPED `mtds@6e2677b9` (QG green,
+      6544 passed; +2 tests prove 1500 rows across 2 pages vs single-shot 1000). `_paginate_history` mirrors
+      `lending_indices_subgraph._paginate`. — `_AAVE_V3_HISTORY_QUERY`, `_COMPOUND_V3_MESSARI_HISTORY_QUERY`,
+      `_COMPOUND_V3_CUSTOM_HISTORY_QUERY` in `market-tick-data-service/.../cli/handlers/evm_defi_handler.py`
+      (`:333/:354/:374`) query `reserveParamsHistoryItems`/`marketDailySnapshots` with `first: 1000` and no
+      `skip:`/cursor. The Graph caps `first` at 1000, so a busy AAVE/Compound day (>1000 items) is **silently
+      truncated**. FIX: route them through a timestamp-cursor paginator — **mirror the proven `_paginate` in
+      `lending_indices_subgraph.py:95`** (cursor on `timestamp_gte`, dedup by `record_id`, stop at `len<page_size`,
+      `max_pages=50` safety cap, `LENDING_INDICES_PAGINATED`- style event). Add a unit test: mock the subgraph
+      returning >1000 items across 2 pages → assert all captured, no dup. Captured counts will go UP on busy shards —
+      that is the fix landing, not a regression.
+- [x] ✅ [SCRIPT] P0. **Both DeFi launchers MISS the SPOT preemption contract** — SHIPPED `deployment-service@684813a`
+      (already on `origin/live-defi-rollout`). Both `launch-mtds-solana-defi-backfill-vm.sh` (`:175-194`) and
+      `launch-defi-backfill-vm.sh` (`:153-173`) now call `lc_write_preemption_signal_file` + `lc_write_launch_params`
+      (persisting START_DATE/END_DATE/protocols/force), set
+      `--metadata-from-file="shutdown-script=${PREEMPTION_SIGNAL_FILE}"`, and carry
+      `--instance-termination-action=DELETE --no-restart-on-failure` on the SPOT provisioning flags — mirrors
+      `launch-cefi-sharded-backfill.sh:568-589` exactly. `launch-defi-backfill-vm.sh`'s START_DATE/END_DATE were also
+      fixed to read from an inherited env so a PROGRESS-checkpoint-resumed relaunch round-trips instead of being
+      clobbered by the hardcoded default. Verified by reading both launchers' current HEAD; checkbox was outstanding
+      only because the code-ship commit never flipped it.
 - [ ] [DATA] P0. **`available_at` clobbered by wall-clock `now()`** — filed separately as
       `defi_available_at_clobbered_by_wallclock_2026_07_20.md` (BIG FINDING, breaks batch==live ε=0). Needs an operator
       ruling on the intended semantics before the fix.

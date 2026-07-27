@@ -28,7 +28,7 @@ related:
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
 priority: P2
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [ui_codex_gate_blind_to_app_router_layout-003]

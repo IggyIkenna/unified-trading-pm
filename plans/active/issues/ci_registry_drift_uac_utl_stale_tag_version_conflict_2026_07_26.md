@@ -150,3 +150,30 @@ history of not always taking effect on the same regen tick a plan is authored/ed
 gets re-dispatched again with `blockers` still reporting "ready," that issue doc's wiring-gap investigation is the next
 place to look, not a fresh re-diagnosis here. Declining to run/verify the CI job or flip the checkbox against a fix that
 hasn't landed; skipping this task (`reason_code: GATED`).
+
+## 2026-07-27 tag-ancestry gap now closed — first re-verification (session-3)
+
+The sibling doc's fix direction resolved: the operator directly force-moved `unified-api-contracts`' `v0.72.0` tag from
+the LDR-only commit to the correct main-side squash-promote commit (`b52aea5d`, byte-identical tree) — see
+`/plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` § "Resolution" for
+the full command trail. Re-ran this doc's own P3 todo (`gh run rerun 30217824955 --failed` on
+`unified-trading-system-ui`'s `registry-drift` job, the same run cited above as still-broken pre-fix):
+
+- **`pip install -e` now SUCCEEDS** — log shows
+  `Successfully installed ... unified-api-contracts-0.72.1.dev165+gb6b92922b unified-trading-library-0.58.1.dev6+g1ef0ffb53 ...`
+  (full dependency tree resolved, no version-conflict error). This is the FIRST successful install since the regression
+  window opened — the tag-ancestry root cause is confirmed fixed end-to-end, not just fixed-in-theory.
+- **BUT the job still fails — two DIFFERENT, unrelated blockers now surface** (invisible before, because the job never
+  got past `pip install` to reach them):
+  1. `registry-drift` step itself:
+     `##[error]lib/registry/ui-reference-data.json content is stale vs UAC. Regenerate it...` — plus a WARNING
+     `Failed to extract MVP_CME_EXCHANGE_CODES: cannot import name 'MVP_CME_EXCHANGE_CODES' from 'unified_api_contracts.registry'`
+     (a genuine UAC/UI content drift, unrelated to hatch-vcs/tags).
+  2. Separate `e2e` job: `Error: ENOENT: no such file or directory, stat '.../unified-trading-system-ui/.gitleaks.toml'`
+     — a missing config file, also unrelated to tags/versioning.
+- **Verdict**: this doc's own scope (tag-ancestry-caused registry-drift breakage) is RESOLVED and confirmed via live CI
+  evidence. The "3 consecutive green pushes" bar in the P3 todo above cannot be met as originally worded because TWO
+  NEW, genuinely separate issues now block green — re-scoping that todo to "3 consecutive greens once the 2
+  newly-exposed blockers are independently fixed" rather than re-diagnosing tags again. Not filing new issue docs for
+  the 2 new blockers in this pass (out of this doc's scope, no further investigation done on either) — flagging here so
+  the next picker-upper doesn't mistake them for a tag-fix regression.

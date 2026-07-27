@@ -16,8 +16,8 @@ tags: [quickmerge, tooling-gap, ci-cd, worker-lifecycle]
 related: []
 created: 2026-07-26
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: refactor
 drift_direction: worsening-slowly

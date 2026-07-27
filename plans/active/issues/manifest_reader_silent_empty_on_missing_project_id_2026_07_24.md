@@ -19,7 +19,7 @@ related: [/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md]
 parent_epic: manifest_master
 priority: P3
 created: "2026-07-24"
-assigned_vm: NA
+assigned_vm: planning
 source: [sports_closeout_batch1_ao_ready_2026_07_24.md todo 4]
 locked_by:
 resolved_by:

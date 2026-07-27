@@ -30,10 +30,10 @@ created: 2026-07-12
 parent_epic: infrastructure_master
 priority: P2
 source: [pipeline_e2e_check todo-25 triage, real concurrent-launch reproduction, 2026-07-12]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.5

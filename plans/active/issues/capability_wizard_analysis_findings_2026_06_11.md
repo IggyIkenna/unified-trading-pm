@@ -636,10 +636,19 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 
 **Actionable now (registry / config / infra — NOT engine-frozen):**
 
-- [ ] [SPEC] P1. **F28 — reconcile the two collateral-haircut SSOTs** (`venue_collateral.py` vs
+- [x] ✅ [SPEC] P1. **F28 — reconcile the two collateral-haircut SSOTs** (`venue_collateral.py` vs
       `lst_collateral_resolver.py`): pick the correct per-venue LST haircut, delete the duplicate SSOT (4 known
       conflicts: HL wstETH accept?; Bybit stETH 10% vs 15%; Deribit 7.5% vs 20%; OKX 15% vs absent). Data-correctness
-      risk. Target: confirm owner repo (UTL/strategy-service) + whether freeze-gated before flipping.
+      risk. Target: confirm owner repo (UTL/strategy-service) + whether freeze-gated before flipping. — RESOLVED: fix
+      already shipped execution-service@8a3c6ab7 (2026-06-15), commit message "fix(collateral): F28 — consume UAC
+      venue_collateral SSOT, delete local `_LST_REGISTRY`, fix haircut units at boundary" (reachable on
+      origin/live-defi-rollout). The local `_LST_REGISTRY` hardcode in `lst_collateral_resolver.py` was deleted entirely
+      — the resolver now derives every `LSTCollateralConfig` from UAC's
+      `venue_accepts_collateral()`/`get_collateral_haircut()` against the canonical `VENUE_COLLATERAL_MATRIX`, with an
+      explicit fraction→whole-percent boundary conversion documented in `_lst_config_from_uac()` to prevent a 100x units
+      mismatch. `venue_collateral.py` is the single SSOT; no duplicate registry remains. Verified 2026-07-27 by reading
+      execution-service/execution_service/services/lst_collateral_resolver.py — module docstring records the same
+      resolution.
 - [ ] [SCRIPT] P2. **F42 — register the 6 adapter-backed venues** (FX + BITFINEX/BITGET/KRAKEN spot+futures) in
       `VENUE_CATEGORY_MAP` + `ENDPOINT_REGISTRY`. Target: unified-api-contracts.
 - [x] [SCRIPT] P2. **F43 — add NASDAQ/NYSE to a leg's `eligible_venue_ids`** (TradFi equities adapters exist, no leg

@@ -61,8 +61,8 @@ source:
   hard_count=17 in scripts/plan-hygiene/line_caps_baseline.yaml as of today) and the RULE-11 blast-radius line-cap gate
   blocks ANY staged touch to an over-cap file, not just growth — touching them to add even a few lines is blocked until
   they are split, which is out of scope for this directive."
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 locked_by:
 resolved_by:
 drift_direction: advance-code

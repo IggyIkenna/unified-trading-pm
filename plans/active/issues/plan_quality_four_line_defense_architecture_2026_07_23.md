@@ -41,8 +41,8 @@ related:
 created: "2026-07-23"
 parent_epic: agent_operating_framework_master
 priority: P1
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [operator request, sports_consolidated_closeout hygiene audit session 2026-07-23]
 resolved_by:

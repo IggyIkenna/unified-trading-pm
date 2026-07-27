@@ -29,8 +29,8 @@ parent_epic: defi_master
 source:
   "Surfaced while re-running defi_satellite_ao_dispatch_batch2-010's null-aware shape-B reconciliation (worker, slot 6,
   2026-07-26)"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: research
 drift_direction: advance-code
 depends_on: []

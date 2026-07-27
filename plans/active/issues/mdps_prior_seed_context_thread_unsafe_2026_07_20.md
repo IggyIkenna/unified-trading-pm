@@ -29,8 +29,8 @@ related:
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 1

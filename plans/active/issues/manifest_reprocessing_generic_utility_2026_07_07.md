@@ -29,10 +29,10 @@ priority: P2
 source:
   "ASTER/CEFI instrument-service data-status audit, 2026-07-07 -- prompted by the question of whether the ASTER 05-14
   base-URL fix needed a follow-up reprocessing run"
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 thinking_tier: medium
 estimate_class: infra

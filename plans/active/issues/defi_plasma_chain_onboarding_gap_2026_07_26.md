@@ -30,8 +30,8 @@ related:
   ]
 created: 2026-07-26
 parent_epic: defi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: brand-new
 drift_direction: advance-code

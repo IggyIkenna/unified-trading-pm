@@ -346,6 +346,19 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       default (scaled by repo size / measured baseline, same spirit as the RAM/CPU admission work above) or at minimum
       document the override in `/codex/06-coding-standards/quality-gates.md` so slots stop rediscovering it
       independently.
+- [ ] [INFRA] P2. NEW FINDING (2026-07-27, slot 5): pytest-xdist's SINGLE worker (`PYTEST_WORKERS` default is already 1,
+      not a multi-worker coordination bug) can itself die under sustained severe host load, crashing the whole run with
+      `xdist.dsession: RuntimeError: Unexpectedly no active workers available` (an `INTERNALERROR`, not a test assertion
+      failure) — observed repeatedly on market-tick-data-service at load average 30-50 (fleet-wide, 7+ concurrent
+      `quality-gates.sh` processes at once, well over the documented "≤2 full QGs at once" host budget). One run got
+      partway (`1 failed, 5316 passed`) before the worker died; a second, later run under similar load completed clean.
+      Distinct from the already-tracked `PYRIGHT_TIMEOUT` issue above (different subsystem, worker death not timeout)
+      but same root cause (host-wide QG concurrency exceeding the documented budget — the CLAUDE.md "Shared-host ≤2 full
+      QGs at once" rule is evidently not being honoured fleet-wide in practice). No fix attempted — flagging for whoever
+      owns this plan; a `pytest-timeout`-triggered SIGALRM landing during an already-CPU-starved worker's teardown
+      looked like the proximate trigger in the captured traceback (worker died handling its OWN 60s per-test timeout,
+      not an external kill). Possible directions: retry-once-on-worker-death in `base-service.sh`'s pytest invocation,
+      or a stricter host-wide admission enforcement (the governor's own budget is being exceeded, not just reported).
 
 ## Progress Log
 

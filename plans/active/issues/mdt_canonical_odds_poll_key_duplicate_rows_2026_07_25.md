@@ -34,8 +34,8 @@ source:
   "Loose-end #5 of the OR-5b legacy→canonical MDT investigation (mdt_legacy_canonical_row_gap_2026_07_16.md, 2026-07-16
   read-only pass), documented per that doc's own triage as requiring a standalone issue doc; filed as
   sports_satellite_ao_dispatch_batch2-013 (2026-07-25, slot 9)."
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: refactor
 drift_direction: advance-code
 resolved_by:

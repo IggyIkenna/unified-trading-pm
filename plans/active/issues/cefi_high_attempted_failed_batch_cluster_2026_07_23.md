@@ -48,8 +48,8 @@ related:
   ]
 created: 2026-07-23
 parent_epic: cefi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: research
 estimate_baseline_ai_days: 0.5

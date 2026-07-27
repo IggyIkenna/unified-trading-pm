@@ -21,8 +21,8 @@ related:
   - plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
 created: 2026-07-21
 parent_epic: cefi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: design
 assigned_role: data-pipeline

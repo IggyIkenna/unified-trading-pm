@@ -32,8 +32,8 @@ parent_epic: cefi_master
 source:
   "worker, slot 6, 2026-07-26, defi_satellite_ao_dispatch_batch2-007 -- verifying whether the sharded --apply fleet
   completed before deciding whether to delete the migration script"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: refactor
 drift_direction: advance-code
 depends_on: []
