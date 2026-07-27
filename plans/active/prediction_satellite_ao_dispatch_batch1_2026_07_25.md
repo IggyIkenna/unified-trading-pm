@@ -152,17 +152,23 @@ drift_direction: advance-code
       keeping `polymarket_adapter.py` under the 900-line file cap). Existing regression test
       `test_kalshi_adapter_instrument_id_wrap.py` updated to assert the corrected uppercase value. All 3 repos'
       `quality-gates.sh` green. Source: `prediction_phase_ab_residuals_2026_07_24.md`.
-- [ ] [DIAG] P1. **Conflict-check (2026-07-25 plan-reconcile)**: `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`
-      todo 2 ALSO writes to `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log (and flips a checkbox there).
-      Do not dispatch/commit concurrently with that todo — this batch (batch1) was drafted first, run this todo before
-      batch2 todo 2 if both are active. Verify whether the existing `lifecycle-catalogue-regen-prediction-daily` cron
-      has already carried the shipped underlying + cross-venue `canonical_instrument_id` fields into the live
-      `prod/catalog.parquet` for prediction (it already regenerates the catalogue on schedule for other fixes), to
-      determine whether the staged full manual regen (gated on the in-flight shared canonical-identity migration
-      settling) is actually still needed. Repo: instruments-service (`prod/catalog.parquet`, read-only). **Done when**:
-      a yes/no verdict with the checked column names + a row sample is recorded in
-      `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. Source:
-      `prediction_phase_ab_residuals_2026_07_24.md`.
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-10).** **Conflict-check (2026-07-25 plan-reconcile)**:
+      `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 2 ALSO writes to
+      `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log (and flips a checkbox there). Do not dispatch/commit
+      concurrently with that todo — this batch (batch1) was drafted first, run this todo before batch2 todo 2 if both
+      are active. **Collision check before starting**: batch2's own conflicting todo was already `[x]` DONE 2026-07-27
+      (slot-4) at boot time — no concurrent-dispatch risk. Verify whether the existing
+      `lifecycle-catalogue-regen-prediction-daily` cron has already carried the shipped underlying + cross-venue
+      `canonical_instrument_id` fields into the live `prod/catalog.parquet` for prediction (it already regenerates the
+      catalogue on schedule for other fixes), to determine whether the staged full manual regen (gated on the in-flight
+      shared canonical-identity migration settling) is actually still needed. Repo: instruments-service
+      (`prod/catalog.parquet`, read-only). **Done when**: a yes/no verdict with the checked column names + a row sample
+      is recorded in `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. **Result: YES** — the cron already
+      carries the fix through (code proof + execution history + a live read of `prod/catalog.parquet` showing a 40x/15x
+      population jump for `underlying`/`canonical_instrument_id` exactly at the fix's 2026-07-09 landing date); the
+      staged full manual regen is redundant with what the weekly full job already does. Full evidence (columns checked,
+      row samples, execution history) in `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. Read-only: no
+      code changed, no GCS writes. Source: `prediction_phase_ab_residuals_2026_07_24.md`.
 
 ## Deferred — conflict-gated or excluded (NOT dispatched; queued for operator review)
 
