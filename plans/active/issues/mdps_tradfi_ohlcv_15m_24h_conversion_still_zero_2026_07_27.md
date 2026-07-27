@@ -115,36 +115,36 @@ exists. Neither finding was on any tracked plan before this verification pass.
       market-data-processing-service.
 
       **Root cause identified**: `market_data_processing_service/app/core/batch_workers.py`'s `_handle_empty_tick_data`
-                              (the batch-mode empty-tick-data handler) unconditionally defaulted `empty_reason =
-                              EmptyConfirmedReason.SOURCE_RETURNED_ZERO` for every non-SPORTS asset_group and called
-                              `record_empty_for_shard(...)` (→ `canonical_writer_manifest.py:182`'s `manifest_writer.record_empty(...)`) with no
-                              `fetch_evidence` — the function's own signature doesn't even accept one. This is a DERIVATION step (reading
-                              already-captured raw tick parquet), not a live vendor fetch, so there is no `FetchEvidence` to supply — the call
-                              always violated the `SOURCE_RETURNED_ZERO` hard-requirement (operator decision 2026-06-22,
-                              `mtds_honest_absence_swallow_remediation_2026_06_10` Phase 2 KEYSTONE) the moment that gate landed. The code's
-                              own pre-existing comment (`writegate_phase_3.D.5_wave3`) already stated the correct target behavior:
-                              cefi/defi/tradfi instrument-day-grain empty is NOT a legitimate `empty_confirmed` state (only venue-level
-                              calendar rules are) — it should flip to `attempted_failed`; `record_empty_for_shard` was only ever the
-                              "conservative interim" until a catalog-aware writer-side guard (full "Wave 3", still unbuilt) could ship.
+                                  (the batch-mode empty-tick-data handler) unconditionally defaulted `empty_reason =
+                                  EmptyConfirmedReason.SOURCE_RETURNED_ZERO` for every non-SPORTS asset_group and called
+                                  `record_empty_for_shard(...)` (→ `canonical_writer_manifest.py:182`'s `manifest_writer.record_empty(...)`) with no
+                                  `fetch_evidence` — the function's own signature doesn't even accept one. This is a DERIVATION step (reading
+                                  already-captured raw tick parquet), not a live vendor fetch, so there is no `FetchEvidence` to supply — the call
+                                  always violated the `SOURCE_RETURNED_ZERO` hard-requirement (operator decision 2026-06-22,
+                                  `mtds_honest_absence_swallow_remediation_2026_06_10` Phase 2 KEYSTONE) the moment that gate landed. The code's
+                                  own pre-existing comment (`writegate_phase_3.D.5_wave3`) already stated the correct target behavior:
+                                  cefi/defi/tradfi instrument-day-grain empty is NOT a legitimate `empty_confirmed` state (only venue-level
+                                  calendar rules are) — it should flip to `attempted_failed`; `record_empty_for_shard` was only ever the
+                                  "conservative interim" until a catalog-aware writer-side guard (full "Wave 3", still unbuilt) could ship.
 
-                              **Fix shipped**: (1) added a new closed-taxonomy `RecordFailedReason.NO_RAW_TICK_DATA_FOR_SHARD` value
-                              (`unified-api-contracts@349795f4`, `unified_api_contracts/canonical/crosscutting/honest_coverage.py`). (2)
-                              `batch_workers.py`'s `_handle_empty_tick_data` now routes cefi/defi/tradfi through `record_failed_for_shard`
-                              with this reason instead of `record_empty_for_shard(SOURCE_RETURNED_ZERO)`; SPORTS is unchanged (already has its
-                              own typed calendar-aware `classify_sports_empty_reason` path) — `market-data-processing-service@b6079c5`,
-                              with 2 new unit tests (`test_tradfi_empty_routes_to_record_failed_not_record_empty`,
-                              `test_sports_empty_still_routes_to_record_empty`) + updated docstrings/comments. Both repos: full
-                              `quality-gates.sh` green, `basedpyright`/`ruff` clean.
+                                  **Fix shipped**: (1) added a new closed-taxonomy `RecordFailedReason.NO_RAW_TICK_DATA_FOR_SHARD` value
+                                  (`unified-api-contracts@349795f4`, `unified_api_contracts/canonical/crosscutting/honest_coverage.py`). (2)
+                                  `batch_workers.py`'s `_handle_empty_tick_data` now routes cefi/defi/tradfi through `record_failed_for_shard`
+                                  with this reason instead of `record_empty_for_shard(SOURCE_RETURNED_ZERO)`; SPORTS is unchanged (already has its
+                                  own typed calendar-aware `classify_sports_empty_reason` path) — `market-data-processing-service@b6079c5`,
+                                  with 2 new unit tests (`test_tradfi_empty_routes_to_record_failed_not_record_empty`,
+                                  `test_sports_empty_still_routes_to_record_empty`) + updated docstrings/comments. Both repos: full
+                                  `quality-gates.sh` green, `basedpyright`/`ruff` clean.
 
-                              **Live re-verification (Done-when satisfied)**: rebuilt the TRADFI tarball from a clean LDR checkout (both fixes
-                              included) and relaunched `mdps-backfill-tradfi-20260727-194704` (`--force`, CME/NASDAQ/NYSE ohlcv_15m/24h,
-                              2026-07-13 — the exact date that previously produced 5,470 rejection warnings). Result: 2,284/2,284 succeeded, 0
-                              errors, **ZERO** `canonical_writer` WARNING lines (vs. the prior run's thousands) — only normal, auto-retried
-                              GCS 429 backoffs. Read the VM's own per-VM manifest shard directly (`_index/per_vm/mdps-backfill-tradfi-
-                              20260727-194704.parquet`, pre-consolidation ground truth — the shared consolidator's next cycle hadn't run yet):
-                              **2,735 rows (135 NASDAQ + 2,600 NYSE), 100% `capture_status=attempted_failed`,
-                              `error_reason=NO_RAW_TICK_DATA_FOR_SHARD`** — exactly the intended classification, correctly written, no
-                              rejection. Fix confirmed working end-to-end in production.
+                                  **Live re-verification (Done-when satisfied)**: rebuilt the TRADFI tarball from a clean LDR checkout (both fixes
+                                  included) and relaunched `mdps-backfill-tradfi-20260727-194704` (`--force`, CME/NASDAQ/NYSE ohlcv_15m/24h,
+                                  2026-07-13 — the exact date that previously produced 5,470 rejection warnings). Result: 2,284/2,284 succeeded, 0
+                                  errors, **ZERO** `canonical_writer` WARNING lines (vs. the prior run's thousands) — only normal, auto-retried
+                                  GCS 429 backoffs. Read the VM's own per-VM manifest shard directly (`_index/per_vm/mdps-backfill-tradfi-
+                                  20260727-194704.parquet`, pre-consolidation ground truth — the shared consolidator's next cycle hadn't run yet):
+                                  **2,735 rows (135 NASDAQ + 2,600 NYSE), 100% `capture_status=attempted_failed`,
+                                  `error_reason=NO_RAW_TICK_DATA_FOR_SHARD`** — exactly the intended classification, correctly written, no
+                                  rejection. Fix confirmed working end-to-end in production.
 
 - [ ] [DATA] P1. Root-cause finding (2): trace why CME combo/chain-bundle `ohlcv_1m`/`ohlcv_1s` raw ticks (confirmed
       read via "Streaming chain bundle" log lines) never produce an `ohlcv_15m`/`ohlcv_24h` candle write attempt of ANY
@@ -158,22 +158,22 @@ exists. Neither finding was on any tracked plan before this verification pass.
       empty_confirmed-with-evidence, or record_failed — anything but silence).
 
       **Root cause identified + fix shipped (slot-16, data_engineering, 2026-07-27) — `market-data-processing-service@21aa1af`.**
-          Exact silent-swallow: `market_data_processing_service/app/core/live_workers_streaming.py`
-          `_streaming_write_per_tf` — the loop's `if not tf_candles: continue` (pre-fix ~line 555) skipped a timeframe that
-          accumulated ZERO candles with NO manifest write and NO log of any kind. CME combo/chain-bundle files dispatch to
-          the STREAMING path (`_maybe_dispatch_chain_streaming` → `_process_chain_bundle_streaming`, because they are
-          `underlying={ROOT}/ticks.parquet` chain bundles), NOT the eager path — and the eager path's per-timeframe
-          `_write_or_record_empty_timeframe` (which DOES emit a signal on empty) has no streaming-path equivalent. That
-          asymmetry is the silence. **Fix**: new `_record_streaming_empty_timeframe` helper emits an honest manifest signal
-          per empty timeframe, mirroring `batch_workers._handle_empty_tick_data` (finding 1): SPORTS →
-          `record_empty_for_shard` (calendar-aware typed reason); cefi/defi/tradfi → `record_failed_for_shard`
-          (`NO_RAW_TICK_DATA_FOR_SHARD`, `attempted_failed`; `SOURCE_RETURNED_ZERO` empty would be FetchEvidence-gate
-          rejected). A loud WARNING fires even in the degenerate no-`instrument_id` case (never silent again). 3 unit tests
-          added (`test_empty_tf_candles_records_failed_signal`, `_sports_records_empty`, `_no_instrument_id_no_manifest_row`),
-          full `quality-gates.sh` GREEN (`.qg_last_passed_sha=0e4f5b3`). **REMAINING (this todo stays open):** the done-when's
-          live re-run — launch a narrow CME `mdps-backfill-tradfi-*` (`--force --venues CME --data-types "ohlcv_15m ohlcv_24h"`)
-          over an affected date (e.g. 2026-07-20) once the MDPS tarball for `@21aa1af` is CI-built on LDR, and confirm the
-          per-VM manifest shard now carries a real CME `ohlcv_15m`/`ohlcv_24h` `attempted_failed` row instead of silence.
+              Exact silent-swallow: `market_data_processing_service/app/core/live_workers_streaming.py`
+              `_streaming_write_per_tf` — the loop's `if not tf_candles: continue` (pre-fix ~line 555) skipped a timeframe that
+              accumulated ZERO candles with NO manifest write and NO log of any kind. CME combo/chain-bundle files dispatch to
+              the STREAMING path (`_maybe_dispatch_chain_streaming` → `_process_chain_bundle_streaming`, because they are
+              `underlying={ROOT}/ticks.parquet` chain bundles), NOT the eager path — and the eager path's per-timeframe
+              `_write_or_record_empty_timeframe` (which DOES emit a signal on empty) has no streaming-path equivalent. That
+              asymmetry is the silence. **Fix**: new `_record_streaming_empty_timeframe` helper emits an honest manifest signal
+              per empty timeframe, mirroring `batch_workers._handle_empty_tick_data` (finding 1): SPORTS →
+              `record_empty_for_shard` (calendar-aware typed reason); cefi/defi/tradfi → `record_failed_for_shard`
+              (`NO_RAW_TICK_DATA_FOR_SHARD`, `attempted_failed`; `SOURCE_RETURNED_ZERO` empty would be FetchEvidence-gate
+              rejected). A loud WARNING fires even in the degenerate no-`instrument_id` case (never silent again). 3 unit tests
+              added (`test_empty_tf_candles_records_failed_signal`, `_sports_records_empty`, `_no_instrument_id_no_manifest_row`),
+              full `quality-gates.sh` GREEN (`.qg_last_passed_sha=0e4f5b3`). **REMAINING (this todo stays open):** the done-when's
+              live re-run — launch a narrow CME `mdps-backfill-tradfi-*` (`--force --venues CME --data-types "ohlcv_15m ohlcv_24h"`)
+              over an affected date (e.g. 2026-07-20) once the MDPS tarball for `@21aa1af` is CI-built on LDR, and confirm the
+              per-VM manifest shard now carries a real CME `ohlcv_15m`/`ohlcv_24h` `attempted_failed` row instead of silence.
 
 - [ ] [DATA] P2. Deeper root cause (discovered by finding-2 investigation, slot-16 2026-07-27): CME combo produces ZERO
       candles in the FIRST place (my finding-2 fix makes that VISIBLE as `attempted_failed`, it does NOT make combo
@@ -205,10 +205,30 @@ exists. Neither finding was on any tracked plan before this verification pass.
     bar (only weekends/holidays → CLOSED), so weekday combo bars are NOT dropped on that basis. The zero-candle cause is
     upstream of market-state (the data_type filter or the missing 1s/1m→15m aggregation writer — see the new
     deeper-root-cause P2 todo).
-  - **Resume here**: do the done-when's live re-run (finding-2 todo REMAINING) — narrow CME `mdps-backfill-tradfi-*`
-    `--force --venues CME --data-types "ohlcv_15m ohlcv_24h"` for one affected date, after the MDPS `@21aa1af` tarball
-    is CI-built on LDR; read the per-VM manifest shard for a CME `attempted_failed` row. Then flip finding-(2) to
-    `- [x] ✅`.
+  - **Lesson / trap 3 (tarball refresh, 2026-07-27)**: the MDPS tarball is NOT auto-built by CI on LDR push — the
+    floating `gs://deployment-scripts-central-element-323112/code/market-data-processing-service-code.manifest.json` was
+    3 commits stale (pointed at `f8cb0216`, pre-fix). The refresh is the DOCUMENTED manual step
+    `bash deployment-service/scripts/vm/create-code-tarballs.sh --include market-data-processing-service`
+    (vm-tarball-deployment.md § refresh cycle). Two gotchas hit: (a) the upload path needs `deployment-service/.venv`
+    (imports `deployment_service.vm.gcs_upload_cli` via UTL's ADC StorageClient — the codex-mandated non-gsutil path); a
+    fresh slot has no DS venv → `uv sync` in deployment-service first. (b) `SKIP_PREFLIGHT=true` to bypass the
+    non-blocking UAC/UTL pyproject-floor WARNINGs. After refresh, floating + `@21aa1af` pinned tarball/manifest both
+    present; all 5 core repos were clean at LDR-tip so the refresh advanced them safe-forward (UAC@25085037,
+    MTDS@a6c8e29e, deployment@5b5d227d, MDPS@21aa1af; UTL skipped, already deployed).
+  - **2026-07-27 20:36 UTC — live re-run LAUNCHED (in flight).** VM `mdps-backfill-tradfi-20260727-203609` (SPOT,
+    e2-standard-8, asia-northeast1-c),
+    `--force --venues CME --data-types "ohlcv_15m ohlcv_24h" tradfi 2026-07-20 2026-07-20 full`, MDPS_TARBALL_SHA pinned
+    to `21aa1af`; launcher confirmed "all 5 tarball(s) current". 2026-07-20 = a confirmed affected date (run 2 above:
+    336 "Streaming chain bundle" CME lines, zero candle output, zero WARNING/ERROR). Logs:
+    `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-tradfi-20260727-203609/` (`run.log`,
+    `EXIT_STATUS`). Watchdog armed (scratchpad `watch_cme_vm.sh`, bg id byp59ywio, 45-min cap, polls VM status +
+    EXIT_STATUS + preemption).
+  - **Resume here**: when the VM terminates, read `run.log` for the new loud `_record_streaming_empty_timeframe`
+    WARNING + `record_failed_for_shard(NO_RAW_TICK_DATA_FOR_SHARD)` on CME `ohlcv_15m`/`ohlcv_24h`, and confirm the CME
+    `attempted_failed` (or `captured`/`empty_confirmed`) row lands in the tradfi availability manifest for
+    day=2026-07-20 — anything but silence satisfies done-when part 3. Then flip finding-(2) to
+    `- [x] ✅ — market-data-processing-service@21aa1af + <evidence>` (`docs(plans):` commit) and POST
+    `/api/slots/16/done`. If the VM is preempted, `RelaunchPreemptedVm`/re-launch (SPOT, idempotent `--force`).
 
 # Codex SSOTs
 
