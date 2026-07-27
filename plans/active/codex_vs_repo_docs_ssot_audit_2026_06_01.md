@@ -221,7 +221,13 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       links + a stale `POST_PLAN_BANNER_2026_05_06` replicated across ~30 files. Redirect/delete APPLY stays Phase-3/4
       (operator's FIX-STALE-only hold, line ~224).
 - [ ] [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`.
-- [ ] [DOCS] P0. **market-data-processing-service** (22) — path/manifest/candle docs vs `codex/02-data`.
+- [x] ✅ [DOCS] P0. **market-data-processing-service** (22→25) — path/manifest/candle docs vs `codex/02-data`. **AUDIT
+      REFRESHED 2026-07-27** (registry in **Appendix B**): Appendix-A largely HOLDS but drifted — `GCS_PATHS.md` is NO
+      LONGER un-tiered (edited 2026-07-21, now `{env}`-carrying; residual staleness is only inline `gs://`/`gsutil` vs
+      `resolve_bucket_name`), and the count was undercounted 22→25
+      (+`CONFIGURATION`/`ERROR_HANDLING`/`SCHEMA_VALIDATION` carry retired `{category}` vocab; +`specs/README` DELETE;
+      +root `README` archived-mirror FIX-STALE). 5 DELETE · 7 FIX-STALE · 3 REDIRECT (all codex targets VERIFIED-EXIST)
+      · no MIGRATE. Apply stays Phase-3/4.
 - [ ] [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`, `codex/02-venues`.
 - [ ] [DOCS] P0. **instruments-service** (19) — IS→MTDS contract/path docs vs `codex/04-architecture`, `codex/02-data`.
 - [ ] [DOCS] P1. **strategy-service** (15) — archetype/promote docs vs `codex/09-strategy`, `codex/04-architecture`.
@@ -524,3 +530,26 @@ CPU/mem/timeout/cost/VM-override per service incl. COINBASE c2-standard-60; cont
 (KEEP content, fix refs), `infra/ibkr-gateway/FIRST_TIME_LOGIN.md`. **Runbooks: 4/4 FULLY frontmatter-compliant**
 (`owner`/`cadence`/`verifier`/`last_executed`; two staging runbooks carry `last_executed: never` but the field is
 present).
+
+### market-data-processing-service refreshed registry (2026-07-27) — supersedes the Appendix-A `(22)` entry
+
+> Read-only re-audit verifying the initial-pass classification against current repo docs + codex. Count corrected 22→25.
+> All REDIRECT targets VERIFIED-EXIST. Apply stays Phase-3/4 under the operator FIX-STALE-only hold.
+
+**market-data-processing-service (25)** — DELETE: `DEPLOYMENT_GUIDE.md` (stub → FEMI), `TESTING.md` (stub, `pytest`
+direct → TESTING_GUIDE), `REFACTORING_STANDARDS_COMPLIANCE.md` (one-off + archived-mirror refs),
+`specs/PLANS_ALIGNMENT.md` + `specs/README.md` (stale plan map — archived plans). FIX-STALE: `DEPENDENCIES.md`
+(`{category}` vocab + `gs://market-data-tick-{category}`), `DEPLOYMENT_GUIDE_FEMI.md` (`{category}` + hyphen partition
+`day-{date}/`; its `{env}` bucket refs ARE tiered), `CONFIGURATION.md` (`{category}` + un-tiered processed bucket),
+`ERROR_HANDLING.md` (`category="CEFI"` arg), `SCHEMA_VALIDATION.md` (`category` schema-column "spot/perp/future" retired
+vocab), `GCS_PATHS.md` (inline `gs://`/`gsutil ls` vs `resolve_bucket_name` — NO LONGER un-tiered, now `{env}`-carrying
+since 2026-07-21), root `README.md` (archived-mirror ref). REDIRECT (targets exist):
+`TIMEFRAME_AGGREGATION_SPECIFICATION.md` (→ `/codex/02-data/bar-boundary-candle-edge-convention.md` +
+`/codex/02-data/mdps-candle-canonical-reconciliation.md`), `SCHEMA_VALIDATION_AND_TIMEFRAME_SUFFIXING_E2E.md` (→
+`/codex/02-data/schema-governance.md` + `/codex/02-data/canonical-schema-groups.md`),
+`UNIFIED_SCHEMA_AND_CLIENT_USAGE_GUIDE.md` (→ `/codex/02-data/canonical-schema-groups.md`). KEEP: `ARCHITECTURE.md`,
+`HFT_FEATURES_TIER1_ADDITIONS.md`, `batch_processing/NAN_HANDLING_DESIGN_SPECIFICATION.md`, `SETUP_GUIDE.md`,
+`USAGE_GUIDE.md`, `TESTING_GUIDE.md`, `VERIFICATION_GUIDE.md`, `CONTRIBUTING.md`, `QUALITY_GATE_BYPASS_AUDIT.md`,
+`docs/README.md`. No MIGRATE (candle-edge/schema material codex needs already lives in the REDIRECT targets).
+`TIMEFRAME_AGGREGATION`'s `resample(closed='right', label='right')` is ALIGNED with the codex right/close-edge
+convention (genuine duplication → REDIRECT, not FIX-STALE).
