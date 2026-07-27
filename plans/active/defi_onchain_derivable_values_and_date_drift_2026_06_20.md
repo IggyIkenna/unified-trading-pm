@@ -185,7 +185,7 @@ that workstream.
       Pythnet-RPC replay for the pre-archive (2022-11 → 2023-10) window is NOT pursued (slow + expensive, no archive
       API). Facade re-export wired (`ORACLE_COVERAGE_START` / `get_oracle_coverage_start` now reachable via
       `unified_api_contracts.registry`, mirroring `LST_TOKEN_GENESIS`) + a facade-parity test added. Codex cross-link
-      added at `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` § "On-chain APY derivation". Note:
+      added at `/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` § "On-chain APY derivation". Note:
       no consumer yet derives an actual backtest date-range floor from this SSOT (nothing in the codebase runs a
       pre-2023-10 jitoSOL backtest today, so there is nothing to clip in practice) — wiring an explicit floor into the
       backtest engine is separate, cross-craft follow-on work if/when a consumer needs it. —
