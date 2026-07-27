@@ -642,9 +642,18 @@ serial `while` over dates). ~K x wall-clock, and **LOW risk precisely because se
 `self` bug entirely** while keeping the C-arena reclaim `--subprocess-per-date` exists for. That is the months->weeks
 lever, and it does NOT require raising in-process `max_workers` first.
 
-- [ ] NEW todo. [SCRIPT] P0. Fix the shared seed context (per-call immutable value object + collision-proof frame-cache
-      key) + a regression test that FAILS today (heterogeneous file list, assert each instrument resolves its OWN seed
-      path). PREREQUISITE for raising in-process concurrency.
+- [x] ✅ NEW todo. [SCRIPT] P0. **VERIFIED 2026-07-27 (slot-8): already shipped, duplicate of already-completed work.**
+      `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`'s own todos 1+2 are `[x]` SHIPPED
+      `market-data-processing-service@b3376b8` ("fix(mdps): thread-safe per-call seed context (P0) + opt-in concurrent
+      date-subprocesses (R1)"), confirmed still an ancestor of current LDR tip (`git merge-base --is-ancestor`). Direct
+      code read of `market_data_processing_service/app/core/candle_write_mixin.py` confirms zero remaining
+      `self._seed_*` writes — replaced by a frozen `SeedContext` value object threaded per-call through
+      `_process_instrument_file` → `_seed_adapter_for_instrument`, exactly the fix direction that issue doc specified.
+      `tests/unit/test_seed_context_thread_safety.py` exists (the regression test that fails-on-old/passes-on-new +
+      meta-guard the issue doc's todo 2 describes). No code change needed. The issue doc's own todo 3 (blast-radius
+      assessment on existing candle data) remains separately open — not this todo's scope, tracked at
+      `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md` directly, matching the "NEW todo. [DATA] P1. Blast
+      radius..." item just below.
 - [ ] NEW todo. [DATA] P1. Blast radius: did any PAST prod MDPS run use max_workers>1 over a heterogeneous list? If so
       those shards may carry wrong leading-bin seeds and need re-derivation.
 - [ ] NEW todo. [SCRIPT] P0. Implement R1 (concurrent date-subprocesses) — the months->weeks lever that is SAFE today.
