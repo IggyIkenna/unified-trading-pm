@@ -249,6 +249,25 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   `[OPERATOR]`-gated regardless of bucket policy) or when the fresh check returns below the threshold — those still need
   `[OPERATOR]`, but citing §3a's approve-executes flow (a FINAL operator answer authorizes the SAME worker session to
   execute immediately) rather than the old assume-a-human-runs-it-elsewhere framing.
+- **`[OPERATOR]` is for genuine ambiguity or an external dependency — not reflexive caution on scale/prod/hard-to-
+  reverse** _(finding U, 2026-07-27, operator ruling: a corpus-wide audit of 65 active plans/issues found dozens of
+  `[OPERATOR]` tags on todos that were actually clear-scope and either read-only or reversibility-qualifiable — the gate
+  had drifted from "genuine judgment call" to "anything that touches prod," defeating the point of unattended dispatch:
+  the resolution was always pasting the already-approved command into an agent anyway)._ Positive test — tag
+  `[OPERATOR]` ONLY when the todo is genuinely one of: **(i)** a business/spend/value judgment with no data-derivable
+  answer (e.g. "activate a paid third-party tier", "accept this compliance risk") — a _standing_ answer already on
+  record (e.g. a dated operator-decision-ledger entry) is NOT a live gate, cite the ruling and leave it as a record,
+  don't re-ask; **(ii)** work that structurally requires a credential/access only a human holds (an API key, an OAuth
+  grant) — tag as a credential-ask, not a blanket `[OPERATOR]`, once the credential exists the todo is dispatchable;
+  **(iii)** a whole-bucket destroy or a target that fails a fresh reversibility check (finding T). Everything else
+  defaults to NOT gated: **read-only/audit/census todos** ("count how many X need migration", "identify which rows are
+  affected" — write a NEW artifact, touch nothing existing) can never hurt anything and must never carry `[OPERATOR]`,
+  regardless of corpus size or bucket sensitivity; a **named-bucket, named-scope delete/migration/`--apply`** qualifies
+  under finding T once reversibility-verified. **If the target bucket's soft-delete retention is missing or below
+  604800s, that is not itself a reason to gate the todo — enable it**
+  (`gcloud storage buckets update gs://<bucket> --soft-delete-duration=7d`, a one-line, low-risk config change, same
+  action already taken for `instruments-store-sports-prd` 2026-07-26) **and re-check, THEN cite finding T** — do not
+  default to `[OPERATOR]` just because the fix hasn't happened yet; make the fix part of the same todo.
 - **When splitting an over-cap plan, correctness beats file count** _(finding R, 2026-07-25, operator ruling: asked
   whether to fork every Track with a real sequential/gating constraint into its own child+finalize even if small, vs.
   merge related Tracks to reduce file count — ruled "correctness over file count")._ Give any Track/section with a real
