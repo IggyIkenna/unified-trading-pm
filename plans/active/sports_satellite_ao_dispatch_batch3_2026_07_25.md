@@ -315,19 +315,19 @@ drift_direction: advance-code
       is a separate, still-open bug — filed as
       `issues/sports_odds_horizon_bucket_instrument_type_partition_mismatch_2026_07_27.md` (not fixed here, out of this
       DIAG todo's declared scope).
-- [ ] [DOC] P1. Apply this doc's own already-specified §4.5 self-correction to itself: in
-      `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s original "Why it is wrong" section, bullet 5 (~lines
-      117-119: "Coverage is not universal even where it IS meaningful ... There is no per-(venue, fixture/market)
-      expectation gate") is FALSE per the doc's own later VERIFIED DIAGNOSIS section — a per-(bookmaker,league)
-      applicability gate DOES exist and IS consulted
+- [x] ✅ [DOC] P1. Apply this doc's own already-specified §4.5 self-correction to itself — DONE 2026-07-27,
+      `unified-trading-pm@836202a79` (+ this same-turn archive-table-flip/plan-flip commit). Struck the false bullet 5
+      claim in `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s "Why it is wrong" section with an inline "⚠️
+      CORRECTION 2026-07-27" note (matching the doc's existing banner convention) pointing to the verified
+      per-(bookmaker,league) applicability gate
       (`unified-api-contracts/unified_api_contracts/registry/sports_bookmaker_league_coverage.py`, wired at
-      `sentinels.py:321`, materialised on 606,772 prod rows). Add an inline correction note at that bullet (matching the
-      doc's existing top-of-file "⚠️ CORRECTION" banner convention) striking/superseding the false claim and pointing to
-      the verified finding. Also re-verify via `grep -n '538,098\|369,272'` in the doc that no OTHER live
-      (non-audit-trail) citation of those stale reason-split figures remains uncorrected. Repo: unified-trading-pm.
-      **Done when**: bullet 5 carries an inline correction/strike note pointing to the verified finding; a fresh grep
-      for the stale figures shows only the already-corrected audit-trail citation; the doc's own Deferred-work table row
-      for §4.5 is flipped from "Not done" to a dated done-state citing the commit SHA. Source:
+      `sentinels.py:321`, 606,772 prod rows); condensed the now-applied §4.5 section to a done-state to stay under the
+      1000-line hard cap. Re-verified via `grep -n '538,098\|369,272'`: the only remaining hit is the already-corrected
+      audit-trail citation in §4.5's own text (explicitly states the figures are wrong). Flipped the archive doc's
+      (`plans/archive/2026_07/sports_shard_enumeration_cartesian_blowup_deferred_history_2026_07_22.md`) Deferred-work
+      table row for §4.5 from "Not done" to a dated done-state citing the correction commit. Incidentally discovered and
+      filed an unrelated pre-existing `check_plan_discipline.py` false-positive:
+      `issues/plan_discipline_unquoted_deferred_by_design_false_positive_2026_07_27.md`. Source:
       `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`.
 
 ## Deferred — conflict-gated (NOT dispatched; queued for operator review)
