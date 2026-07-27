@@ -78,9 +78,9 @@
     "instruments-service": "0.92.0",
     "market-tick-data-service": "0.97.0",
     "system-integration-tests": "0.15.0",
-    "unified-api-contracts": "0.73.0",
+    "unified-api-contracts": "0.74.0",
     "unified-trading-library": "0.60.0",
-    "unified-trading-pm": "1.2.630",
+    "unified-trading-pm": "1.2.631",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
@@ -2190,8 +2190,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.73.1.dev5+gf6345966a",
-      "published_at": "2026-07-27T13:03:32Z",
+      "version": "0.73.1.dev6+g7dc48a0a3",
+      "published_at": "2026-07-27T16:09:52Z",
       "registry": "artifact-registry"
     }
   }
