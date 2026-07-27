@@ -202,7 +202,20 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       day throughput (RX + rows/s + wall-clock); project full-history time (honest floor + flat 2019) + SPOT cost +
       parallelization/optimization headroom.
 - [ ] 11. [DATA] P0. Cross-repo orphan/lineage audit (MTDS→MDPS→features→ml/strategy) + MIGRATE existing candle/feature
-      data to zero orphans (MVP or not). Migrations run to real completion (data-correctness heartbeat).
+      data to zero orphans (MVP or not). Migrations run to real completion (data-correctness heartbeat). Todo itself
+      stays OPEN (full lineage audit + real migration NOT run this session) — see the 2026-07-27 (slot-12) Progress Log
+      entry + sub-todo 11a below for the concrete, verifiable slice completed this session.
+- [x] 11a. ✅ [SCRIPT] P0. **DONE 2026-07-27 (slot-12)** — `unified-trading-library@2352e7c8`. Caught (before any VM
+      launched) a P0 data-loss bug in the previously-recommended candle-manifest orphan reconciliation:
+      `rebuild_manifest_from_canonical_paths()` wholesale-replaces a shared bucket's WHOLE manifest index on a
+      sub-prefix call, which would have deleted essentially the entire CEFI raw-tick manifest to backfill a small
+      candle-orphan set. Shipped the fix — `merge_manifest_from_canonical_paths()`, an additive sibling that only adds
+      genuinely-missing shard keys and preserves every other row — with 2 regression tests proving the safety property
+      directly. QG green (1144s) + CI `quality-gates-v2` green. Full detail:
+      `issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`. This unblocks
+      `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (corrected in the same session) for its
+      next session's actual Tier-2 SPOT VM run — todo 11's real migration work is NOT complete, this closes only the
+      blocking-bug sub-slice.
 - [ ] 12. [SCRIPT] P1. Backfill-processing path (download→process→upload) code-ready + OPTIMIZED learning from cefi
       (within-VM multiproc, faster-libs/Rust where it pays, 250GB disk, fleet-wide since not Tardis-capped).
 - [x] 13. [DATA] P0. **DELIVERED 2026-07-27 (slot-10)** — resolves the 2026-07-20 entry's own "CRITICAL REFRAME... MUST
