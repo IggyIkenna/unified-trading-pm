@@ -8,7 +8,7 @@ summary: >-
   then `waitForURL('**/dashboard**')`) times out at login, never reaching the app.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]

@@ -9,7 +9,7 @@ summary: >-
   6-step archival ritual on the batch plan itself.
 status: draft
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]

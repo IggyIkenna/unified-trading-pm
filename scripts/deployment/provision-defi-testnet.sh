@@ -4,7 +4,7 @@
 # Delete-when: NA
 # provision-defi-testnet.sh — Stub documenting what Terraform would need for DeFi testnet infra.
 #
-# SSOT: unified-trading-pm/docs/defi-venue-matrix.md (venue + testnet details)
+# SSOT: unified-trading-pm/codex/02-data/defi-venue-protocol-catalogue.md (venue + testnet details, folded 2026-07-27)
 # Plan: deploy-defi-testnet task in live-defi-rollout
 #
 # This script is a placeholder. Actual provisioning is done via Terraform in
@@ -43,7 +43,7 @@
 #      - Testnet health dashboard (separate from prod)
 #      - Alert on testnet wallet balance < 0.1 ETH
 #
-# Testnet RPC endpoints (from defi-venue-matrix.md):
+# Testnet RPC endpoints (from codex/02-data/defi-venue-protocol-catalogue.md):
 #   Sepolia:          https://rpc.sepolia.org
 #   Holesky:          https://rpc.holesky.ethpandaops.io
 #   Arbitrum Sepolia: https://sepolia-rollup.arbitrum.io/rpc
@@ -61,6 +61,6 @@ echo "To provision DeFi testnet infrastructure:"
 echo "  cd deployment-service/terraform/gcp"
 echo "  terraform apply -var=\"environment=testnet\" -var=\"project_id=\${PROJECT_ID}\""
 echo ""
-echo "See: unified-trading-pm/docs/defi-venue-matrix.md for venue details."
+echo "See: unified-trading-pm/codex/02-data/defi-venue-protocol-catalogue.md for venue details."
 echo "See: deployment-service/docs/dev-environment.md for Terraform usage."
 exit 0

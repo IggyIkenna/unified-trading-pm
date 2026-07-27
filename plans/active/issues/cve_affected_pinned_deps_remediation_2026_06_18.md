@@ -6,7 +6,7 @@ summary:
   breaks                                                                                                                                          ..."
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, execution-service, features-service, strategy-service]
 scope: [engineer, admin]

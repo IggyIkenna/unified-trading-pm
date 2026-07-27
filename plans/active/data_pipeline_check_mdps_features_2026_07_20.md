@@ -218,10 +218,12 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `deployment-service/scripts/vm/create-code-tarballs.sh --include features-service     --force`. Full detail + the
       tarball-staleness finding:
       `issues/features_universe_filter_settlement_suffix_and_vm_     tarball_staleness_2026_07_27.md`.
-- [ ] 9b. [DATA] P0. The full-matrix run — remains open. Re-run `/data-pipeline-check-features` across the complete
-      ~29-cell `(family × asset_group)` matrix now that 9a's fix is shipped (the CEFI:delta_one force-leg begun
-      2026-07-27/slot-3 was still completing the full 18-feature-group compute at session handoff — a separate slot/
-      session should let it finish or re-run and write the combined report). Report written per family/AG cell.
+- [x] ✅ 9b. **DONE 2026-07-27 (slot-7)** — [DATA] P0. The full-matrix run — CLAIMING closure (per slot-3's own
+      disposition below: "check if slot-7's run finished; then decide whether the day-19 CEFI proof suffices or the 4
+      CEFI cells need a same-day (07-05) re-run before flipping 9b" — slot-7's day=2026-07-05 run DID finish, all 16
+      cells (the real viable matrix, not ~29 — see driver enumeration), including all 4 CEFI cells slot-3 asked about,
+      same day throughout). Report: `plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md` (total=32
+      passed=3 failed=17 skipped=12). Full completion entry + 2 new issue docs below.
 - [x] 9b-coordination-check. ✅ [DATA] P2. **DONE 2026-07-27 (slot-10)** — before launching any CEFI cell, verified live
       fleet state first: 5 delta_one:CEFI VMs already in-flight (2 exact-duplicate pairs) + slot-3 already running
       `volatility` (all-AG, covers CEFI) — made **zero new VM launches** this session, catching and killing my own
@@ -245,6 +247,18 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       another billable VM. QG green, quickmerge shipped. Launched zero new VMs this session; did not touch slot-7's (or
       any other slot's) in-flight VMs. 9b's own full-matrix completion remains genuinely open, now owned by slot-7's
       in-flight run — see the disposition note below.
+- [x] 9b-duplicate-vm-guard-mdps. ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-2)** —
+      `market-data-processing-service@6cd96e8` + `deployment-service@c8ee47e`. Re-checked live fleet state on pickup of
+      9b: slot-7's driver (PID 3665121, started 11:21 UTC) still running, 1h18m+ elapsed, genuinely progressing — stood
+      down rather than launch a competing run, same precedent as `9b-duplicate-vm-guard` above. Ported the identical
+      `_find_inflight_duplicate_vm` guard (labels- based `aggregated_list_instances` check, no raw gcloud/subprocess)
+      into MDPS's own `pipeline_e2e_check.py` (force + skip legs), keyed on `(asset_group, venue, data_type)`; also
+      found and fixed a launcher-label insufficiency the port surfaced — `launch-mdps-backfill-vm.sh` wasn't stamping
+      venue/data_type labels the guard needs, so extended it to do so for the single-value (non-multi-filter) launch
+      case. 11 new tests across both repos, QG green both, shipped via quickmerge. Full detail:
+      `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. Launched zero new VMs; did not
+      touch slot-7's in-flight run. 9b's own full-matrix completion remains genuinely open, still owned by slot-7 — see
+      the disposition note below.
 - [ ] 10. [DATA] P1. Steady-state benchmark VMs (250GB disk) per representative shard-type; measure amortized per-shard-
       day throughput (RX + rows/s + wall-clock); project full-history time (honest floor + flat 2019) + SPOT cost +
       parallelization/optimization headroom.
@@ -466,424 +480,45 @@ see the other open todo in the same issue doc), resume from whichever shard it r
 `Starting compute:` line) rather than restarting all 16 from shard 1 — the new duplicate-guard fix will now correctly
 skip any of the 7 already-running CEFI VMs / 2 TRADFI VMs it encounters again instead of adding an 8th/9th/10th.
 
+### 2026-07-27 (slot-2) — todo 9b: slot-7 still in-flight; closed the MDPS-parity duplicate-VM-guard followup instead
+
+Dispatched to todo 9b. Re-checked live fleet state: slot-7's driver (PID 3665121, started 11:21 UTC) STILL RUNNING,
+1h18m+ elapsed, alive not zombie. Per the slot-6/slot-10 resolution, did NOT launch anything.
+
+Used the dispatch productively to close the MDPS-parity followup flagged in
+`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (full detail there — confirmed
+vulnerable + the launcher-label insufficiency finding + both fixes): `market-data-processing-service@6cd96e8` (ports
+`_find_inflight_duplicate_vm` into both force/skip legs, 6 new tests, QG green 118s) + `deployment-service@c8ee47e`
+(extends `launch-mdps-backfill-vm.sh` labels with venue/data_type, 5 new tests).
+
+**Disposition:** todo 9b remains OPEN, still owned by slot-7's in-flight run — this closed an ADJACENT gap, not 9b
+itself. **Next session**: `ps aux | grep pipeline_e2e_check` for slot-7 first; if finished, read its report; if died
+mid-matrix, resume from its last shard (both drivers now duplicate-guarded).
+
 ## Deferred work after 2026-07-27
 
-| #   | Item                                                                                                                                           | Priority | Where tracked                                                                   | Gating                     |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------- | -------------------------- |
-| 1   | Root-cause / fix worker-session teardown killing long-running check-skill drivers                                                              | P1       | `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`       | none                       |
-| 2   | Add `--resume`/checkpoint to `pipeline_e2e_check` so a killed run doesn't restart the whole matrix                                             | P2       | same issue doc                                                                  | depends on #1's root cause |
-| 3   | ✅ DONE 2026-07-27 (slot-9) — Loosen/backoff `launch_vm_and_wait`'s launcher-script timeout under fleet contention (`utl@137e219c`)            | P2       | same issue doc                                                                  | none                       |
-| 7   | Run the CEFI candle-manifest orphan reconciliation via the new safe `merge_manifest_from_canonical_paths` (Tier-2 SPOT VM, never in-session)   | P1       | `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`                 | none                       |
-| 8   | Audit `rebuild_mtds_manifest.py --from-canonical`'s existing call site for the same prefix-scoped-wipe risk (already-shipped permanent script) | P1       | `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 3 | none                       |
-| 9   | Re-measure cefi/tradfi/prediction candle-manifest coverage with the CORRECT vocabulary before trusting todo 7's "never populated" framing      | P1       | `candle_feature_canonical_path_divergence_2026_07_20.md` todo 7                 | none                       |
-| 10  | Run todo 11b (cross-repo lineage audit) then 11c (migrate to zero orphans, [OPERATOR]) — the ex-todo-11 rollup split                           | P0       | this plan, todos 11b/11c                                                        | 11c depends_on 11b         |
-| 4   | Root-cause non-deterministic instrument_type path segment for identical force re-runs                                                          | P3       | `mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`       | none                       |
-| 5   | Complete todo 8's actual scope (skip-proof + defi/tradfi/sports/prediction reps) once #1/#2 land                                               | P0       | this plan, todo 8                                                               | #1                         |
-| 6   | Complete todo 9 (`/data-pipeline-check-features`) — not yet attempted this session                                                             | P0       | this plan, todo 9                                                               | #1                         |
+| #   | Item                                                                                                                                                                                     | Priority | Where tracked                                                                     | Gating                     |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------- | -------------------------- |
+| 1   | Root-cause / fix worker-session teardown killing long-running check-skill drivers                                                                                                        | P1       | `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`         | none                       |
+| 2   | Add `--resume`/checkpoint to `pipeline_e2e_check` so a killed run doesn't restart the whole matrix                                                                                       | P2       | same issue doc                                                                    | depends on #1's root cause |
+| 3   | ✅ DONE 2026-07-27 (slot-9) — Loosen/backoff `launch_vm_and_wait`'s launcher-script timeout under fleet contention (`utl@137e219c`)                                                      | P2       | same issue doc                                                                    | none                       |
+| 7   | Run the CEFI candle-manifest orphan reconciliation via the new safe `merge_manifest_from_canonical_paths` (Tier-2 SPOT VM, never in-session)                                             | P1       | `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`                   | none                       |
+| 8   | Audit `rebuild_mtds_manifest.py --from-canonical`'s existing call site for the same prefix-scoped-wipe risk (already-shipped permanent script)                                           | P1       | `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 3   | none                       |
+| 9   | Re-measure cefi/tradfi/prediction candle-manifest coverage with the CORRECT vocabulary before trusting todo 7's "never populated" framing                                                | P1       | `candle_feature_canonical_path_divergence_2026_07_20.md` todo 7                   | none                       |
+| 10  | Run todo 11b (cross-repo lineage audit) then 11c (migrate to zero orphans, [OPERATOR]) — the ex-todo-11 rollup split                                                                     | P0       | this plan, todos 11b/11c                                                          | 11c depends_on 11b         |
+| 4   | Root-cause non-deterministic instrument_type path segment for identical force re-runs                                                                                                    | P3       | `mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`         | none                       |
+| 5   | Complete todo 8's actual scope (skip-proof + defi/tradfi/sports/prediction reps) once #1/#2 land                                                                                         | P0       | this plan, todo 8                                                                 | #1                         |
+| 6   | ✅ DONE 2026-07-27 (slot-7) — Complete todo 9 (`/data-pipeline-check-features` full-matrix run + report)                                                                                 | P0       | this plan, todos 9/9b + 2 new issue docs (below)                                  | none                       |
+| 11  | Fix the 6 distinct genuine root causes behind 17/32 failed legs (coverage/dependency-check mismatch, multi_timeframe date bug, OOM, manifest-staleness/env-parity, external-vendor auth) | P0       | `issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md`    | none                       |
+| 12  | Fix the timeout/orphaned-duplicate-VM defect for large-universe shards — **PARTIALLY DONE 2026-07-27 (slot-6)**, `features-service@4d71b1b5`                                             | P1       | `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` | none                       |
 
-### 2026-07-20 — OPERATOR CONTRACT: "empty window" vs "not fetched yet" are TWO signals (durable rule)
-
-Operator, verbatim: _"the key is knowing what is empty data because theres nothing to aggregate in the window vs not
-fetched yet that's where the manifest needs to help and different consumers live and batch will have different ways of
-handling depending on their needs"_
-
-**The contract (durable — belongs in `/codex/02-data/honest-absence-downstream-handling.md` at the post-phase codex
-audit; journaled here so it is not lost first):**
-
-| Question a consumer asks                   | Which surface answers it        | Representation                                                                                    |
-| ------------------------------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------- |
-| "Was this WINDOW active?"                  | the **parquet**, per bin        | row EXISTS on the session grid with **NaN price-like + 0 volume** = covered, nothing to aggregate |
-| "Was this SHARD-DAY ever fetched/derived?" | the **manifest**, per shard-day | 4-state `capture_status`                                                                          |
-
-- `captured` — derived, ≥1 bin had a real observation.
-- `empty_confirmed` + a **typed** `EmptyConfirmedReason` — derived, but the WHOLE shard-day legitimately had nothing.
-- `attempted_failed` + `error_reason` — we tried and it broke.
-- `expected_unattempted` / no row — **never attempted**. There is no parquet to be NaN.
-
-**Why it matters:** NaN alone cannot carry both meanings. A consumer must never infer "was this fetched?" from NaN in a
-parquet, nor "was this window active?" from the manifest alone. Live and batch consumers handle each case differently
-per their own needs, so the pipeline's job is to PRESERVE the distinction faithfully, never to paper over it. This is
-exactly why LOCF (carry-forward) is wrong for `derivative_ticker`: it fabricates an observation in a window that had
-none, destroying signal (1) and making the gap invisible.
-
-**Two failure modes this rule makes checkable (NEW checks for both skills):**
-
-1. manifest `captured` but NO parquet object = **phantom capture** (already checked — this is the MTDS-documented
-   `PHANTOM_CAPTURED_NO_OBJECT`).
-2. parquet present but **100% NaN bins** while the manifest says `captured` = should have been `empty_confirmed` with a
-   typed reason. An all-NaN "capture" is the INVERSE phantom and is equally misleading. **Add this assertion to the MDPS
-   driver's content check** (todo below).
-
-**Applied immediately to the in-flight P0 fix** (`issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`):
-the fix must (a) leave empty bins NaN/0 rather than LOCF-filling them, (b) record `empty_confirmed` + typed reason when
-the ENTIRE shard-day is empty rather than writing an all-NaN parquet as `captured`, and (c) document the two-signal
-contract in-code so nobody "helpfully" re-adds carry-forward.
-
-- [ ] NEW todo. [SCRIPT] P1. Add the all-NaN-parquet-vs-`captured` assertion to `/data-pipeline-check-mdps` (and the
-      features twin where a family can emit an all-null feature frame) as a distinct `content_check=` verdict, so the
-      inverse-phantom is caught the same way the phantom is.
-- [ ] NEW todo. [DOC] P2. Promote the two-signal table above into `/codex/02-data/honest-absence-downstream-handling.md`
-      at the post-phase codex audit (SSOT direction: codex, not this plan).
-
-### 2026-07-20 — MEASURED throughput overturns the codex's compute-bound assumption (ETA input)
-
-Authoritative VM summaries (e2-standard-8, pd-balanced 250GB, cefi DERIBIT, one day, 7 timeframes each):
-
-| run                                 | per-instrument-day | writes        | evidence                                       |
-| ----------------------------------- | ------------------ | ------------- | ---------------------------------------------- |
-| `trades` (writes SUCCEEDED)         | **25,948 ms**      | ✅ 14 objects | `cefi 51.9s 2 success 0 failed 15,230 candles` |
-| `derivative_ticker` (writes FAILED) | 2,105 ms           | ❌ 0 objects  | 12x "faster" ONLY because it never wrote       |
-
-**The candle pipeline is WRITE/IO-BOUND, not compute-bound.** Of the ~25.9s per instrument-day, the polars aggregation
-is only **~1.5s** (measured: the `POLARS AGGREGATED: 1440 1m … 1 24h` cascade spans 13:52:30.763→13:52:32.235). The
-other ~94% is GCS write + manifest. Per instrument-day the writer emits **7 separate small parquet objects** (one per
-timeframe) — small-object overhead dominates.
-
-**This CONTRADICTS `/codex/06-coding-standards/performance-targets.md`**, which classifies `mdps_compute` as
-"compute-bound, sublinear-70%" and recommends `c2-standard-16` for the <6h target. On this measurement a bigger CPU SKU
-buys almost nothing. **Correct optimization levers, re-ranked by the measurement:**
-
-1. **Write parallelism** — MDPS `max_workers` auto-resolves to `min(cpu_count,16)` = 8 on e2-standard-8, but the
-   observed instrument cascade ran effectively serial (`25,948ms/instrument x 2 = 51.9s total`, i.e. sum == total). **If
-   the 8 workers are not actually overlapping the writes, that is the single biggest win available** — verify and fix
-   before sizing any fleet. (Explains why the codex's serial-day estimate is so large.)
-2. **Disk throughput** — pd-balanced 250GB gives ~70 MB/s; `BOOT_DISK_TYPE=pd-ssd` (0.48 MB/s per GB vs 0.28) or a
-   larger pd-balanced buys proportionally more write bandwidth. Directly attacks the dominant cost.
-3. **Fewer/larger objects** — 7 small parquets per instrument-day is small-object-overhead-heavy. Batching timeframes
-   (or instruments) per object would cut write count materially. NOTE: any such change interacts with the chain-bundle
-   rule and the canonical path shape — do not change layout without the operator's A/B/C canonical ruling.
-4. **Fleet width** — still the reliable multiplier (MDPS is NOT Tardis-capped), but it multiplies a write-bound unit, so
-   per-VM disk/write-parallelism must be fixed first or you just buy N x the same bottleneck.
-5. **Rust / faster libs** — LOWEST priority for candles on this evidence: the compute is already polars and is only ~6%
-   of wall-clock. (The Python-loop hot spots B1 found — whale-detection O(n_intervals x n_ticks), `_carry_forward_ohlc`
-   — matter for the `trades` HFT-feature path specifically, not the write-bound aggregate.)
-
-**ETA caveat (honest):** a defensible DeFi-MVP ETA needs (a) the P0 derivative_ticker fix landed (that data_type
-currently writes nothing), (b) confirmation of whether the 8 workers actually overlap writes (item 1 — it changes the
-answer by up to ~8x), and (c) the DeFi MVP instrument x data_type shard count. Items (a) and (b) are in flight; the
-per-instrument-day unit cost above (25.9s serial, write-bound) is the measured input to plug in. Quoting an ETA before
-(b) is resolved would be guessing at the dominant term.
-
-- [x] NEW todo. [DATA] P0. **ALREADY ANSWERED 2026-07-20 (this plan's own later entry), RE-VERIFIED 2026-07-27
-      (slot-10)**: the `25,948ms x 2 == 51.9s` "serial" reading was a false positive — `processing_stats.py`'s
-      `avg_time = duration_seconds / total_instruments * 1000` is `total/N` BY CONSTRUCTION, true for any N regardless
-      of parallelism (see the "my SECOND hypothesis refuted" entry below, same plan). Direct code read confirms
-      `ThreadPoolExecutor(max_workers=max_workers)` (`batch_workers.py`) genuinely dispatches concurrent futures — the
-      2-file smoke run was UNDER-FED (2 futures into 8 slots), not serialized. The real throughput ceiling is 7
-      independent serialization points found by that same direct-code-read pass (S1 sequential per-instrument timeframe
-      loop — dominant; S2 a process-global per-VM manifest lock; S3 fresh `ManifestWriter`+flush per
-      instrument×timeframe; S4 full parquet read-back per write; S5 GIL at the pandas boundary; S6 a hard cap of 2 on
-      venue-file listing regardless of `MAX_WORKERS`; S7 the emission-policy lookup on 3/7 timeframes), each already
-      tracked as its own follow-up todo in this plan (R1 concurrent date-subprocesses; the shared-seed-context P0
-      concurrency bug, `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`, confirmed still `status: open` —
-      NOT yet fixed, so raising in-process concurrency remains gated on that fix landing first). No new code change from
-      this todo — it was a measurement-methodology question, now closed with the correct answer on record.
-- [ ] NEW todo. [DOC] P2. Correct `/codex/06-coding-standards/performance-targets.md`: `mdps_compute` is WRITE/IO-bound
-      (measured ~94% write, ~6% polars), not compute-bound; the c2-standard-16 recommendation does not follow.
-
-> The "CORRECTION: the candle write bottleneck is NOT the MTDS 50GB-disk issue" entry (2026-07-20, no open todos) was
-> extracted verbatim to `/plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md`.
-
-### 2026-07-20 — operator: manifest durability is a FALSE tradeoff + scope expansion
-
-**(1) "must be a better way to do this right? without killing the data loss think hard"**
-
-My earlier framing ("durability-vs-throughput tradeoff") was WRONG and I corrected it. The cost is not flush FREQUENCY —
-it is that each flush does a **read-modify-write of a GROWING file** (`_index/per_vm/{vm}.parquet`), so total flush work
-is **O(n^2) in shards-per-VM** while STILL only guaranteeing "SIGKILL loses <= 1 shard". **The current design is
-strictly dominated: simultaneously slow AND lossy.** A better design is faster AND loses nothing. Dedicated design agent
-dispatched to validate against the code and rank:
-
-- **A. Per-shard immutable object** (`_index/per_vm/{vm}/shard-{seq}.parquet`) — O(1) per shard, O(n) total; durability
-  IMPROVES to **zero shards lost**. Extends the EXISTING `_index/per_vm/` merge-on-read pattern one level down. Key
-  check: does the consolidator/`read_availability_index` glob a PREFIX (nearly free) or expect exactly one file per VM?
-- **B. Write-ahead receipt + single materialisation** — tiny O(1) receipt per shard; full parquet once; replay on crash.
-- **C. Async flush off the critical path** — keeps per-shard durability, overlaps flush with the next shard's compute.
-  ORTHOGONAL, combinable with A/B; changes the guarantee not at all.
-- **D. Co-locate the manifest row with the candle write** (no extra round-trip) — biggest layout change, GATED on the
-  pending canonical A/B/C ruling.
-- **E. Batch per instrument** — FALLBACK only (this was my original, inferior suggestion); requires stating a new
-  crash-loss bound.
-
-HARD CONSTRAINT carried into the design: manifest COMPLETENESS is already a live problem (cefi day=2026-04-14 has 20,734
-candle objects vs 6 MDPS manifest rows corpus-wide), so the design must cut flush COST without ever reducing row COUNT
-or making rows easier to lose.
-
-**(2) Scope expansion (operator):** _"keep going and improving mdps and dont forget to do all AG that are relevant (not
-the ones already in candles) and do features service across all shards too"_
-
-- MDPS must be exercised across **ALL relevant asset_groups**, prioritising the ones that do **NOT** already have
-  candles (i.e. the REMAINING work) rather than re-proving the covered ones. Requires first enumerating the
-  candle-coverage gap per (ag, venue, data_type, timeframe) from the manifest — that enumeration is also the ETA
-  denominator, so it does double duty.
-- features-service must be exercised across **ALL shards** (all 8 families x their valid asset_groups, ~29 viable cells
-  per the launcher's `_is_viable_cell` matrix).
-- Sequencing reality: the features sweep is partly gated on candles existing (candle-dependent families will honestly
-  report `no_captured_input_for_window` until the candle backfill runs) — so MDPS coverage leads, features follows, and
-  the honest-gap verdicts in between are themselves the signal, not a failure.
-
-- [x] NEW todo. ✅ [DATA] P0. **DELIVERED 2026-07-27 (slot-15)** — Enumerate the candle-coverage GAP per (asset_group,
-      venue, data_type, timeframe): which cells ALREADY have candles vs which do not. **Denominator**
-      (`enumerate_mdps_shards` × `_valid_timeframes`, all 5 AGs): **3,125 candle-eligible cells** — CEFI 819, DEFI
-      1,974, TRADFI 273, SPORTS 30, PREDICTION 29. **Real GCS ground truth** (bounded delimiter-descent under
-      `processed_candles/by_date/` — NOT a full-corpus walk; used instead of a pure manifest census because the manifest
-      is KNOWN to undercount — todo 3 above found 20,734 real cefi candle objects vs 6 manifest rows on one day),
-      day-partitions / most-recent-day / MDPS-service manifest rows (axis-census) per AG: DEFI 1,148 days / 2026-07-26
-      (producing daily) / 503 manifest-too-large-for-one-request (see below); SPORTS 1,941 days / 2026-07-26 (producing
-      daily) / 120,792 rows; TRADFI 884 days / 2026-07-22 / 23,810 rows (CME 22,086/NYSE 1,651/FX 73); CEFI 342 days /
-      2026-07-21 / 75 rows (HYPERLIQUID 73/BITGET-FUTURES 2); PREDICTION 247 days / **2026-01-14 — STALLED ~6mo, no new
-      days since** / 15,558 rows (KALSHI/POLYMARKET, all historical). Per-day breadth is narrow vs. the denominator:
-      DEFI's 2026-07-26 sample covers only `pipeline_mode=batch_onchain_subgraph` + `data_type=dex_pool_swaps` +
-      `instrument_type=POOL`, for 2 venues (PANCAKESWAP_V3, UNISWAP_V3) across 7 timeframes (DEFI's other data_types
-      show ~0 recent activity); CEFI's 75 manifest rows cover only 2 of many venues and 2 of 6 candle data_types.
-      **Verdict**: DEFI (63% of all cells, narrow real coverage) and CEFI (819 cells, near-empty manifest) are the
-      biggest genuine gaps — prioritize these for the next `/data-pipeline-check-mdps` run + todo 15's backfill.
-      TRADFI/SPORTS are comparatively well-covered (daily production current through this week). PREDICTION's pipeline
-      appears to have STOPPED producing new days since 2026-01-14 — an operational question, filed below. **Known
-      limitation (honest, not swept)**: a full per-cell DEFI census could not be completed safely this session — an
-      in-process `read_availability_index` attempt grew to 15.8 GB RSS and was SIGTERM'd by main-agent (shared-host load
-      avg hit 50); the deployment-api `axis-value-census` Cloud Run endpoint also 503'd on DEFI's manifest size. Per
-      `reconciliation-census-and-compute-tiers.md`, this belongs on a Tier-2 SPOT VM — filed below.
-
-- [ ] NEW todo (surfaced 2026-07-27, slot-15). [DATA] P1. Run a DEFI-specific per-cell (venue,data_type,timeframe)
-      candle-coverage census on a Tier-2 SPOT VM — both the in-process `read_availability_index` read and the
-      deployment-api `axis-value-census` endpoint failed on DEFI's manifest size this session (see todo above).
-- [ ] NEW todo (surfaced 2026-07-27, slot-15). [DATA] P2. Investigate why PREDICTION's MDPS candle pipeline stopped
-      producing new `processed_candles/by_date/day=` partitions after 2026-01-14 (247 total days, none since) — an
-      operational question, not a backfill-scope gap (only 29 cells total for this AG).
-- **[DATA] P0. CANCELLED — 2026-07-27 (slot-9): consolidated into todo 8's post-split follow-up todo** (see the "SPLIT
-  2026-07-27 (slot-9, operator-ruled Option B on BLK-243a969b)" entry higher in this Todos section). This todo's scope
-  ("run `/data-pipeline-check-mdps` across all relevant AGs") is a strict SUBSET of that follow-up's scope ("all AGs ×
-  venues × data_types × timeframes") — same skill, same underlying blocker
-  (`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`, gated on prerequisite
-  `mdps-e2e-shared-host-teardown-fixed`), same done-when. Tracking it as a separate todo risked two AO-dispatched
-  workers independently re-attempting the identical blocked skill run without either being aware of the other's findings
-  (the exact collision class flagged elsewhere in this plan's Progress Log). Cancelled here rather than duplicated; the
-  live scope + gate condition live in the one post-split todo. NOT re-attempted this session — no value in a 6th
-  reproduction of an already-diagnosed, still-open P1 blocker. Original text (was
-  `- [ ] NEW todo.     [DATA] P0. Run /data-pipeline-check-mdps across all relevant AGs NOT already in candles.`).
-- [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-features` across ALL shards (8 families x valid AGs). **`--day`
-      RULED 2026-07-27 (BLK-f2039422, main)**: `--day 2026-07-05` — matches the sibling `/data-pipeline-check-mdps` run
-      in this plan that auto-resolved to + direct-GCS-verified this exact day 4-5x (a settled, high-coverage day, no
-      feature-computation-lag risk); NOT a synthesized default (honors the skill's own hard rule). If the shared-host
-      session-teardown (`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`, still open) hits mid-run,
-      `/progress` it as the known P1 rather than blind-retrying.
-
-### 2026-07-20 — ✅ SPOT preemption auto-recovery was NOT fleet-wide; now it is (`deployment-service@c79f984`)
-
-Operator: _"vms are SPOT and need to recover themselves if they go down via auto recovery think we have that for some
-vms already so propagate if not there."_ **They were right to doubt it — and the gap was much wider than "some".**
-
-**MEASURED (I verified the headline myself, independently of the agent): 58 launchers pass `--provisioning-model=SPOT`;
-only ~10 emitted the `vm-logs/{vm}/PREEMPTED` blob. ~48 SPOT launchers were preemption-BLIND.** The
-`RelaunchPreemptedVm` machinery is well-built and correct — but its **trigger** was missing, so a preempted VM
-classified as `EXIT_NONZERO`/`GONE_NO_CAPTURE` and **PAGED a human** instead of auto-recovering.
-`/codex/05-infrastructure/spot-vms-for-backfill.md` asserts the signal is "wired fleet-wide via `launcher_common.sh`" —
-**that claim is false and the codex is now stale** (todo below).
-
-**The mechanism (verified end-to-end):** VM shutdown checks `instance/preempted` → writes `PREEMPTED` blob →
-`_gcs.is_vm_preempted` + `read_launch_params` + `read_progress_checkpoint` → `classify_terminated_vm` checks `preempted`
-BEFORE exit_code → `DP_VM_PREEMPTED` (AUTO_RECOVER, DP-VM-007) → `RelaunchPreemptedVm.relaunch()` replays
-`LAUNCH_PARAMS.json`, re-resolves `*_TARBALL_SHA` pins, budget 48/day/prefix. Resume overrides `START_DATE` to
-`last_completed_date` **only if `monotonic=true`**; a `--force` run with non-monotonic/absent checkpoint still **PAGEs**
-`force_run_not_replayable` — never silent. `PROGRESS.json` emission was ALREADY fleet-wide (UTL `record_vm_progress` +
-`vm-exec-with-gcs-tee.sh`), which is why only the trigger was missing.
-
-**CORRECTION (2026-07-25):** "ALREADY fleet-wide" is not exceptionless —
-`plans/active/lst_rate_honest_coverage_2026_07_21.md` (2026-07-21/22) documents a concrete production counter-example:
-`launch-mtds-pyth-lst-backfill-vm.sh` does NOT write a `PROGRESS.json` checkpoint (that session's own correction:
-"unlike the newer PROGRESS-checkpoint contract referenced in CLAUDE.md — that's a DIFFERENT, newer launcher family"),
-and the VM preempted after ~10hrs requiring a manual manifest-derived resume rather than an auto-resume via checkpoint.
-Root cause of why this specific launcher lacks coverage despite booting via the shared `setup-data-pipeline-vm.sh` seam
-is not yet diagnosed anywhere in the corpus — flagged here rather than swept into
-`issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` (that doc tracks the separate early-shutdown-script
-`PREEMPTED`-signal blind spot, not this checkpoint-emission gap).
-
-**Fix:** `setup-data-pipeline-vm.sh` now installs `uts-preemption-signal.service`, a systemd unit mirroring Google's own
-`google-shutdown-scripts.service`, writing the same blob with the same `preempted=true` gate. Chosen because gcloud
-accepts only ONE metadata `shutdown-script`, so a unit **composes** with the ~10 launchers already emitting it inline
-rather than colliding. Every blind launcher boots from this one seam — including **both launchers I extended for these
-skills** (`launch-mdps-backfill-vm.sh`, `launch-features-vm.sh`) and `launch-mdps-sharded-backfill.sh`. Also registered
-**`mdps-sports-`** in BOTH registries (previously emitted by the sharded launcher but registered in neither →
-unmonitored AND unrecoverable; sports confirmed genuinely in scope via its dedicated `STALL_TIMEOUT_SEC` +
-`STALL_PROGRESS_REGEX` against a live run.log). New guard test: **no SPOT launcher may be preemption-blind**. **Safety
-is structural** — inert on live/forward/cron/paper VMs because they are on-demand and GCE never sets `preempted=true` on
-them; no exclusion list needed. QG GREEN (339s, 2781 passed/5 skipped).
-
-**Shipped by DIRECT PUSH under the closed dirty-deps carve-out** (UAC concurrently mid-edit by my own P0 agent, so
-quickmerge's dep pre-flight could not pass). **Multi-agent hazard hit and handled**: a concurrent agent had staged 13
-foreign files into the shared index (17 staged, 1,556 insertions); caught it via the mandatory no-path-arg
-`git status`/`git diff --cached --stat`, `git reset`, re-staged ONLY my 4 by name. Foreign work never entered the
-commit.
-
-**RESIDUAL RISKS (carried forward, not swept):**
-
-1. **Arg-required launchers still cannot actually recover** — `launch-features-vm.sh` exits 2 without
-   `--feature-family`/`--asset-group`, and the relauncher passes ENV only. Result is a loud CRITICAL
-   `DP_VM_PREEMPTED_NO_RELAUNCH`, not silence — but not recovery either. **This directly affects the features backfill**
-   and is the next thing to close (needs `lc_write_launch_params` adoption or env-arg support).
-2. **Manual delete ≈ preemption exposure now spans ~48 more launchers.** A prior incident (manual delete → relaunch →
-   two VMs 469ms apart → Tardis 403 lockout, 1181 rejections) is the precedent. Mitigated by the `preempted=true`
-   metadata gate (a manual delete does not set it), the Tardis guard, and the 48/day budget — but worth review before
-   the next wide SPOT wave.
-3. **Relaunch scope amplification**: `launch-mdps-sharded-backfill.sh` with no args defaults to all 5 AGs x all years —
-   a preempted shard could relaunch dozens of VMs. Absorbed by presence-skip (cost, not corruption); real fix is the
-   `lc_write_launch_params` rollout.
-4. **Not runtime-proven**: `bash -n` clean + guard tests pass, but only a live SPOT reclaim proves the unit fires.
-5. `launch-prediction-features-vm.sh` (broken: packages a deleted repo, no SPOT, 50GB disk) deliberately NOT touched —
-   it is operator-gated A/B/C in `issues/mdps_features_deadcode_consolidation_2026_07_20.md`.
-
-- [ ] NEW todo. [DOC] P1. Correct `/codex/05-infrastructure/spot-vms-for-backfill.md`: the preemption signal was NOT
-      wired fleet-wide via `launcher_common.sh`; it is now installed by `setup-data-pipeline-vm.sh` as a systemd unit.
-- [ ] NEW todo. [SCRIPT] P1. Close residual risk 1 — make arg-required launchers relaunchable (features especially).
-
-### 2026-07-20 — my SECOND hypothesis refuted, and a P0 concurrency bug that BLOCKS the speed lever
-
-**Refuted (again, by measurement — recording plainly):** I claimed `25,948ms x 2 == 51.9s` was a "smoking gun" for
-serial execution. **It is an arithmetic identity.** `processing_stats.py:468`:
-`avg_time = stats.duration_seconds / stats.total_instruments * 1000` — the log line is `total/N` by construction, true
-for ANY N. It proves nothing about serial-vs-parallel. **Verified by direct read.** Two of my hypotheses have now been
-killed by measurement (the O(n^2) flush, and this) — both times the corrected answer was more valuable.
-
-**What is ACTUALLY true (measured from code):**
-
-- The `ThreadPoolExecutor` IS used (`batch_workers.py:370`) and was **UNDER-FED, not serialised** — 2 futures into 8
-  slots, 6 workers idle.
-- Parallel axis is the instrument FILE only. **Dates, asset_groups, data_types and TIMEFRAMES are all serial loops.**
-- **The 7 timeframe writes per instrument ARE strictly sequential** (`live_workers_chain.py:314`) — each iteration does
-  encode -> finalize -> read-back -> upload -> manifest -> flush before the next starts. **That is the 10.7s gap.**
-- Serialisation points found: S1 timeframe loop (dominant) · S2 a process-global per-VM manifest shard LOCK (one path
-  per VM, so every worker thread contends on ONE lock; critical section = download+read_parquet+merge+to_parquet+upload)
-  · S3 a fresh ManifestWriter + flush per (instrument x timeframe) · S4 a full parquet READ-BACK per write (14x on this
-  run) · S5 the GIL at the pandas adapter boundary · S6 a hard cap of 2 on venue-file listing regardless of MAX_WORKERS
-  (`cloud_data_provider.py:277`) · S7 the emission-policy manifest lookup on 3 of 7 timeframes — **independently
-  corroborating the other agent's `compute_completeness_fraction` finding**.
-
-**🔴 P0 CONCURRENCY BUG — filed `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`. I VERIFIED BOTH HALVES BY
-DIRECT READ.** `candle_write_mixin.py:406-411` `_set_prior_seed_context` writes
-`self._seed_category / _seed_date_str / _seed_input_venue / _seed_underlying / _seed_pipeline_mode / _seed_frame_cache`
-onto the **SHARED** orchestrator instance, while `batch_workers.py:332-335` submits `self._process_instrument_file` to
-the pool. With `max_workers>1` over a HETEROGENEOUS file list (multiple venues/underlyings/pipeline_modes in one
-data_type — the NORMAL backfill shape) a thread reads another thread's context and resolves the prior-day carry seed
-from the **WRONG GCS path**. **SILENT** — wrong leading-bin prices, no crash, no `attempted_failed`, no manifest signal.
-
-**Why this matters more than a normal bug: it BLOCKS the primary speed lever.** The pool being under-fed means the
-obvious fix is "raise concurrency" — and raising concurrency is EXACTLY what triggers this corruption. So the
-correctness fix is a hard PREREQUISITE for the throughput work, not a parallel task. It was invisible in my own smoke
-run only because both files were DERIBIT/same-day/same-mode, so the clobbered values were identical — any homogeneous
-single-venue test passes. The adapter itself is safe (`base_adapter.py:802` returns a fresh adapter per call).
-
-**Biggest lever (R1, from the probe):** run K **date-subprocesses** concurrently (`process_handler.py:783-807` is a
-serial `while` over dates). ~K x wall-clock, and **LOW risk precisely because separate processes sidestep the shared-
-`self` bug entirely** while keeping the C-arena reclaim `--subprocess-per-date` exists for. That is the months->weeks
-lever, and it does NOT require raising in-process `max_workers` first.
-
-- [x] ✅ NEW todo. [SCRIPT] P0. **VERIFIED 2026-07-27 (slot-8): already shipped, duplicate of already-completed work.**
-      `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`'s own todos 1+2 are `[x]` SHIPPED
-      `market-data-processing-service@b3376b8` ("fix(mdps): thread-safe per-call seed context (P0) + opt-in concurrent
-      date-subprocesses (R1)"), confirmed still an ancestor of current LDR tip (`git merge-base --is-ancestor`). Direct
-      code read of `market_data_processing_service/app/core/candle_write_mixin.py` confirms zero remaining
-      `self._seed_*` writes — replaced by a frozen `SeedContext` value object threaded per-call through
-      `_process_instrument_file` → `_seed_adapter_for_instrument`, exactly the fix direction that issue doc specified.
-      `tests/unit/test_seed_context_thread_safety.py` exists (the regression test that fails-on-old/passes-on-new +
-      meta-guard the issue doc's todo 2 describes). No code change needed. The issue doc's own todo 3 (blast-radius
-      assessment on existing candle data) remains separately open — not this todo's scope, tracked at
-      `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md` directly, matching the "NEW todo. [DATA] P1. Blast
-      radius..." item just below.
-- [ ] NEW todo. [DATA] P1. Blast radius: did any PAST prod MDPS run use max_workers>1 over a heterogeneous list? If so
-      those shards may carry wrong leading-bin seeds and need re-derivation.
-- [x] ✅ NEW todo. [SCRIPT] P0. **WIRED 2026-07-27** — R1 shipped (mdps@b3376b8) but unused; wired opt-in
-      `--date-concurrency` into both launchers, default=serial. deployment-service@96be4cf
-
-> The "✅ P0 derivative_ticker FIXED + shipped" entry (2026-07-20, no open todos) was extracted verbatim to
+> The chain of entries from "OPERATOR CONTRACT: empty window vs not fetched yet" through "per-unit latency: safe wins +
+> HFT vectorization SHIPPED" (all 2026-07-20, already-closed technical narrative — the honest-absence two-signal
+> contract, the write/IO-bound throughput measurement, the manifest-durability design options, the SPOT preemption
+> auto-recovery fix, the GIL/multiprocessing measurement, and the per-unit latency vectorization work; every open todo
+> from this range is already tracked in its own cited issue doc, nothing lost) was extracted verbatim 2026-07-27
+> (slot-3, mid todo-9b ship, plan was over its 1000-line hard cap) to
 > `/plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md`.
-
-### 2026-07-20 — GIL question ANSWERED with measurement: yes it's the GIL; the throughput fix is MULTIPROCESSING (R1)
-
-Operator: _"check if could be GIL in which case code needs refactor to use multi processes rather than concurrency
-within a single python process."_ **Measured, decisive: YES.**
-
-**The decisive benchmark** (real UTL `_build_capture_status_map` — VERIFIED a pure-Python `for` loop over
-`_ROW_KEY_COLUMNS`, `manifest_completeness.py:169 — on ThreadPool vs ProcessPool, K=1..8):**
-
-- Case A (the pure-Python map-build, GIL-HELD): **threads get WORSE with more workers — per-worker speed 0.67 → 0.11x
-  (~1/K), wall EXPLODES 6.4s→41.5s** for the same work. Processes stay near full speed (0.86→0.52x); K=4 processes 12.3s
-  vs threads 21.2s (**1.7x**). Textbook GIL. The thread-side degradation is the proof and needs no process-pool (the
-  process side just confirms the alternative works; I independently confirmed the thread-side result is unambiguous).
-- Case B (polars `group_by_dynamic`) + Case C (pandas numeric `.agg`): on the SAME thread pool, walls stay FLAT — they
-  RELEASE the GIL. **So threads help the GIL-released fraction (I/O, polars, numeric agg) and do NOTHING for the held
-  fraction.** Correction to a prior assumption: vectorized pandas numeric `.agg` RELEASES the GIL; the genuinely
-  GIL-held pandas cost is the Python-callback/loop code (`_scatter_series`, `_carry_forward_ohlc`, HFT helpers) + the
-  **3 redundant `.to_pandas()` per write** (`candle_write_mixin.py:519/571/618` — confirmed).
-
-**Architecture (recommended):**
-
-- **R1 (PRIMARY) — date-level multiprocessing:** the machinery ALREADY exists (`_run_date_as_subprocess`,
-  `process_handler.py:675`) but the date loop dispatches SERIALLY (`:785`, blocking `subprocess.run`). Change serial →
-  bounded-concurrent dispatch (Popen/ProcessPool of size K over dates). Separate processes → no cross-date GIL
-  contention; C-arena reclaimed per child; **dates (~2400 multi-year) >> cores so it saturates any VM/fleet**; LOW risk
-  (reuses tested subprocess code, only the dispatch loop changes). This is the "2 weeks" throughput lever.
-- Keep the in-date `ThreadPoolExecutor(8)` — it profitably overlaps the GIL-RELEASED work within a date (Case B proves
-  it).
-- **R2 (secondary) — instrument-level ProcessPool** at `batch_workers.py:370`, only for single-DATE-heavy latency
-  (one-day recompute), where date fan-out = 1.
-
-**⚠️ NUANCE I must correct in the GIL agent's report:** it said R1 "fixes the shared-`self` seed bug for free." That is
-only PARTLY true. R1 fixes CROSS-date races (different dates = different processes), but WITHIN one date the in-date
-thread pool still runs over the shared `self`, so a date with heterogeneous files (multi-venue/underlying) still races.
-**The seed-context fix (per-call value object) is REQUIRED independently of R1** — do not rely on R1 to cover it. (R2
-WOULD cover it, since each instrument gets its own process, but R2 isn't the backfill recommendation.)
-
-**The two operator targets are DIFFERENT problems — stated explicitly:**
-
-- **"5s PER instrument-day" (LATENCY): multiprocessing buys 0% of this.** It needs per-unit Python-cost cuts: (1) the
-  emission-check read-path fix (removes ~9-40s of GIL-held Python per PROD instrument — measured ~3-13s x ~3 calls),
-  then (2) de-pandas the adapter (collapse the 3 redundant `.to_pandas()`, vectorize `_scatter_series`/
-  `_carry_forward_ohlc`/HFT callbacks). 5s is a per-unit optimization program, reachable via those fixes.
-- **"everything in 2 weeks" (THROUGHPUT): exactly what multiprocessing buys.** R1 at K workers x M VMs → per-unit /
-  (K.M). Even at the un-optimized ~25.9s TEST residual, 16 workers ≈ 1.6s amortized; add VMs linearly. Reachable — BUT
-  the emission-check read-path fix is a PREREQUISITE, because under a process pool each of K processes rebuilds its own
-  1.45M-row dict → K copies in RAM → RAM caps K and stalls the fan-out. Multiprocessing AMPLIFIES the read-path bug.
-
-**Sequencing that follows from the measurement:** (1) emission-check read-path fix [IN FLIGHT] — prerequisite for both
-targets; (2) seed-context per-call fix — correctness prerequisite for in-date concurrency; (3) R1 concurrent
-date-subprocess dispatch — the 2-week throughput lever; (4) de-pandas the adapter — the remaining per-unit latency to
-hit 5s; (5) re-measure on a real VM against a PROD-sized index to PROVE the numbers.
-
-- [ ] NEW todo. [SCRIPT] P1. Implement R1: bounded-concurrent `_run_date_as_subprocess` dispatch (the 2-week throughput
-      lever). Gated on the seed-context fix for in-date safety.
-- [ ] NEW todo. [SCRIPT] P2. De-pandas the per-write path: collapse the 3 redundant `.to_pandas()`
-      (`candle_write_mixin.py:519/571/618`) + vectorize `_scatter_series`/`_carry_forward_ohlc`/HFT callbacks — the
-      remaining per-unit latency cut toward 5s.
-
-### 2026-07-20 — per-unit latency: safe wins + HFT vectorization SHIPPED; vol_clock + write-I/O floor characterized
-
-De-pandas / HFT vectorization work, all BYTE-IDENTICAL (these feed the batch=live ε=0 spine, so allclose is not enough):
-
-- `mdps@0ba3a72`: collapse redundant `to_pandas` 3->2 (schema+write share one conversion) + vectorize `_scatter_series`
-  (170x, 9 edge cases proven). Honest note: safe plumbing alone = ~0.12% — it does not move the needle.
-- `mdps@09da08c`: vectorize `_detect_whale_trades` (148x at 15s; **removes an O(n_intervals x n_ticks) throughput
-  CLIFF** — a liquid instrument's whale loop measured 1791ms and scales with ticks, a real backfill hazard, not just
-  latency) + `_calculate_tick_direction_momentum` (3.4x). 87/87 byte-identical each. **The agent caught + corrected its
-  own spec: the prescribed `np.add.at` momentum vectorization is NOT bit-exact (few-ULP drift vs np.average on nearly
-  every multi-tick group); only a per-interval numpy `.sum()` on the contiguous slice is 0-ULP.** ~2-2.5s saved per
-  liquid instrument-day.
-
-**Honest per-unit accounting (measured):** ~25.9s -> ~20-22s after the HFT vectorizations. **The 5s per-unit target is
-NOT reachable without also attacking the ~20s per-write GCS/manifest I/O floor** (batch the 7 timeframe writes into
-fewer objects) — which interacts with the canonical A/B/C ruling and is a bigger architectural change.
-`_carry_forward_ohlc` (1.9ms, coupled honest-absence logic) and `_calculate_volume_clock_features` (biggest single
-callback ~2.5s but the most intricate milestone-crossing logic) are left as REVIEWED follow-ups — deliberately not
-gambling the just-fixed working adapters for the last seconds. **The 2-week THROUGHPUT target is already met by R1 + the
-read-path fix (4-6 VMs); the 5s LATENCY target is a separate, fully-characterized optimization program (HFT done,
-write-batching + vol_clock remaining).**
-
-- [ ] NEW todo. [SCRIPT] P2 (reviewed follow-up). Vectorize `_calculate_volume_clock_features` (~2.5s, the largest
-      single HFT callback) WITH a dedicated byte-identity test for the milestone-crossing edge cases (single-tick
-      groups, zero total volume, <2 milestones). Prototype/plan in `de-pandas` agent output.
-- [ ] NEW todo. [SCRIPT] P2. Write-batching: collapse the 7 per-timeframe parquet writes per instrument-day into fewer
-      objects to attack the ~20s I/O floor (the remaining bulk of the 5s-target gap). GATED on the canonical A/B/C
-      ruling (it changes the object layout).
 
 > The chain of entries from "LOOP-CLOSE: derivative_ticker fix PROVEN CORRECT on a real VM" through "✅
 > derivative_ticker P0 CLOSED END-TO-END on a real VM" (all 2026-07-20, no open todos — the loop-close investigation,
@@ -964,9 +599,78 @@ re-run `calendar` or `sports` until fixed**; `onchain`'s AG may share this bug (
 session**: either pick up the 4 CEFI cells (coordinate with slot-3 first) or re-run `calendar`/`sports` once their P0
 fixes land. Plan AT its 1000-line hard cap — archive older closed sections before adding more.
 
-- [ ] NEW todo. [DATA] P1. **Coverage-check discrepancy**: driver's `--require-captured` reported `TRADFI:delta_one`'s
-      `2026-07-04..2026-07-05` window covered, but the VM's own dependency check found NO object at the expected candle
-      path (2 independent runs, identical). Determine: phantom manifest row claiming `captured` with no backing object,
-      or a cross-checker vocabulary mismatch (same class as the already-fixed
-      `mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`). Evidence:
-      `plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md` Note section.
+- [ ] NEW todo. [DATA] P0. **Coverage-check discrepancy — FOLDED 2026-07-27 (slot-7)**: same root cause independently
+      hit 3x now (this occurrence + slot-3's day=2026-07-19 occurrence + the fuller writeup) — tracked in ONE place,
+      `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`, not here.
+
+### 2026-07-27 (slot-3) — todo 9b: day=2026-07-19 CEFI-inclusive 8-family sweep complete; NOT claiming 9b closed
+
+Ran `/data-pipeline-check-features` for day=2026-07-19 across all 8 families (30 force+skip rows: 3 passed/13 failed/14
+skipped) — `plans/audit/results/data_pipeline_e2e_check_features_2026_07_19.{md,json}`. Covers the 4 CEFI cells slot-7's
+entry above asked "next session" to pick up (delta_one/volatility/multi_timeframe/cross_instrument), just on a different
+calendar day (07-19 vs slot-7's 07-05) — do NOT merge into slot-7's report file as-is, the day mismatch would
+misrepresent it. 2 new real driver bugs found+fixed+shipped:
+`issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` (P2) and
+`issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (P2 — root cause independently also
+fixed by slot-6's `features-service@6981b2b8`). Also incidentally answers the sports `IS_TEST_RUN` issue's own P2
+audit-todo for volatility/cross_instrument/multi_timeframe/commodity: every cell that produced real output wrote to the
+correct `-test-` bucket (no PROD-pollution bug found); `onchain` never got real output to check. Real findings not
+separately filed given time: OOM kill (rc=137) on `cross_instrument:CEFI` loading a 115,584×4,476 dataset for
+`regime_detection`; genuine upstream 404 (`baker_hughes_rig_count`) on `commodity:TRADFI`.
+
+**Discovered mid-session**: slots 6/7/10 were concurrently working this SAME todo without my awareness (see their
+entries above). Slot-7's day=2026-07-05 non-CEFI driver (PID 3665121) confirmed STILL RUNNING at this check, so per
+slot-6's own disposition 9b's closure isn't mine to claim — **9b left OPEN**. Live fleet check also found **9**
+`features-e2e-*` VMs still RUNNING right now (oldest ~9h) — billing-waste addendum filed on
+`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (P1, recommends
+`/vm-preemption-billing-waste-audit`). **Next session**: check if slot-7's run finished; then decide whether the day-19
+CEFI proof suffices or the 4 CEFI cells need a same-day (07-05) re-run before flipping 9b.
+
+### 2026-07-27 (slot-7, same slot, PID 3665121 finished) — todo 9b + standalone todo DONE: full 16-shard matrix completed; calendar/sports re-run confirmed SAFE; cross-linked with slot-3's parallel findings
+
+The day=2026-07-05 driver (PID 3665121, referenced above and by slot-3/6/10/2) ran to completion: **~3h56min wall-clock
+(11:21:49 → 15:15:07 UTC)**, via `run_in_background` + a companion heartbeat loop every ~200s (the confirmed
+session-teardown mitigation) — **zero session-teardown kills**. Report:
+`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md` — **total=32 passed=3 failed=17 skipped=12** (all
+16 real viable cells per the driver's own enumeration, not the ~29 estimate elsewhere in this plan).
+
+**Claiming 9b's closure now** per slot-3's own explicit disposition ("check if slot-7's run finished... before flipping
+9b") — it finished, covering the same 4 CEFI cells slot-3 asked about, on the operator-ruled day (07-05) throughout. The
+standalone "Run `/data-pipeline-check-features` across ALL shards" todo above is the same underlying goal (a
+pre-existing collision risk this plan's own Progress Log already flagged) — both flipped from this one completed run.
+
+**Before trusting the calendar/sports re-run** (a prior slot-7 entry above explicitly warned "Do NOT re-run `calendar`
+or `sports` until fixed" — sports' `IS_TEST_RUN` bug was open at that point), verified `features-service@48a255cd` (the
+sports fix) was live and ground-truthed both writes directly against GCS: `features-sports-test-...`'s `day=2026-07-05`
+fixtures object shows `creation_time=2026-07-27T14:47:45Z` (matching this run) while the PROD equivalent is untouched
+since the original incident's `2026-07-27T09:03:54Z` (`metageneration: 1` unchanged) — no new PROD pollution. Same check
+for calendar: TEST object created `2026-07-27T14:58:41Z`, no PROD equivalent exists. **Both families confirmed safe.**
+
+**Two follow-up issue docs filed** (findings triage — this todo's job was RUN + REPORT, not fix):
+
+1. `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` — CEFI:delta_one AND
+   TRADFI:volatility both hit the driver's 2400s per-VM timeout despite genuinely still computing, causing an orphaned
+   duplicate VM each time. **Already fixed same-day by slot-6** (`features-service@4d71b1b5`,
+   `_FAMILY_TIMEOUT_OVERRIDES`) — TRADFI:volatility's fix is fully verified (real `EXIT_STATUS=0` observed at 4788s);
+   CEFI:delta_one's override (36000s) is evidence-based but not yet directly observed completing.
+2. `issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md` (**P0, big finding**) — direct VM
+   `run.log` inspection of the 17 failed (non-timeout) legs surfaced 6 distinct GENUINE root causes across ≥3 repos: (A)
+   the coverage-check/dependency-check disagreement for TRADFI candles (independently corroborated by slot-3 on a
+   different day — tracked in ONE place,
+   `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`, not duplicated); (B)
+   `multi_timeframe` reads TODAY's wall-clock date instead of the requested window, hit IDENTICALLY by both CEFI and
+   TRADFI — the highest-value fix, asset_group-agnostic; (C) a genuine OOM (exit=137) during CEFI:cross_instrument's
+   `regime_detection` HMM fit (also independently seen by slot-3); (D) SPORTS:sports skip-leg hit a stale manifest
+   consolidator + a local/VM env-parity gap; (E) TRADFI:commodity's external vendors (EIA/CFTC/Baker Hughes) 403/404'd —
+   credential/config, `[OPERATOR]`-tagged (also independently seen by slot-3); (F) a cascade of (A). 12 skips were
+   honest and correctly not counted as failures.
+
+**Cross-referenced all 4 issue docs** (this session's 2 + slot-3's 2) so root causes A and the timeout defect each have
+exactly ONE tracked fix-todo. **Corrected an error made mid-session**: an earlier version of the timeout doc mistook
+`TRADFI:delta_one`'s fast EXIT (a real dependency-check failure, root cause A) for a fast clean pass and called it a
+"negative control" — fixed in that doc's own Progress Log once caught; did not affect the shipped timeout fix, which
+targeted the two independently-confirmed cells on their own merits.
+
+**Disposition**: DONE. **Next session**: work the 6 fix-path todos in the widespread-failures doc (root cause B — the
+`multi_timeframe` date bug — is the highest-value/lowest-effort fix, asset_group-agnostic), then re-run for just the
+affected shards to confirm genuine (non-error) verdicts.

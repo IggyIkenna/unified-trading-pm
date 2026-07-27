@@ -276,9 +276,19 @@ not a mechanical column-list copy.
 - [ ] [SCRIPT] P2. **unified-trading-library** — `manifest_writer/_queries.py` (4 sites) + `_maintenance.py` (4 sites) +
       `_writer_io.py:156`: internal ManifestWriter query/maintenance helpers; lower urgency (less frequently invoked
       than the hot-path findings above) but same fix pattern.
-- [ ] [SCRIPT] P1. **features-service** — `common/__init__.py:99`, `common/manifest_window_guard.py:115`,
-      `common/manifest_leg_guard.py:98`: project each to its actual column usage (shared across ALL feature families
-      including onchain/defi).
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-12)** — `features-service@e23d4da7`. **features-service** —
+      `common/__init__.py:99`, `common/manifest_window_guard.py:115`, `common/manifest_leg_guard.py:98`: projected each
+      to its actual column usage, confirmed by direct read (not a mechanical shared list):
+      `resolve_latest_captured_date` → `columns=["date","capture_status","data_type"]`; `check_window_manifest` →
+      `columns=["date","capture_status","schema_version"]` (`schema_version` required so `_warn_on_v9_schema_drift`'s
+      GAP-4 mixed-version WARN keeps firing — dropping it would silently disable that drift check);
+      `_read_single_leg_status` → `columns=["date","capture_status"]`. `asset_group` deliberately excluded from all
+      three: it is not in UTL's reader-side `_V8_COLUMNS` full-schema list, so requesting it would trigger the slim
+      reader's costly full-schema-fallback on any shard lacking it (defeating the projection) — both guards already
+      treat its absence as a no-op (own docstring: "the bucket already scopes to one asset_group"), so exclusion matches
+      existing production behavior, not a regression. Added a regression test per call site
+      (`test_read_availability_index_is_column_projected`) pinning the exact `columns=` call signature. Full
+      `quality-gates.sh` green (2 runs — pre-commit + post-commit sentinel re-verify), shipped via quickmerge --agent.
 - [ ] [SCRIPT] P2. **features-service** — `volatility/engine/orchestrator.py:276`,
       `volatility/core/orchestration_service.py:168`, `volatility/core/data_loader.py:364`,
       `delta_one/app/core/dependency_checker.py:619`: project each to its actual column usage.

@@ -8,7 +8,7 @@ summary: >-
   criterion" rule; not fixed here to avoid scope creep on an unrelated dispatch.
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]

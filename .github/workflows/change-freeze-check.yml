@@ -32,10 +32,18 @@ on:
         description: "Description of the blocking freeze window (empty if not blocked)"
         value: ${{ jobs.check.outputs.reason }}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
+# NO concurrency group (removed 2026-07-27, cloud_build_router_concurrency_drops_dispatch_2026_07_27.md):
+# this is a workflow_call reusable invoked by 4+ unrelated callers (cloud-build-router.yml,
+# cloud-build-router-aws.yml, freeze-deferred-build-replay.yml, overnight-agent-orchestrator.yml),
+# all firing on the same default-branch ref. `${{ github.workflow }}-${{ github.ref }}` resolved to
+# ONE shared group ("Change Freeze Check-refs/heads/main") across every caller regardless of which
+# repo's build it was gating, so `cancel-in-progress: true` cancelled one caller's in-progress
+# freeze-check (and therefore its whole run, since route-build needs: freeze-check) the moment ANY
+# other caller's freeze-check started — this is what actually dropped instruments-service's build
+# dispatch on 2026-07-27, not cloud-build-router.yml's own concurrency group (that was already
+# correctly scoped per-repo since 3dadfdbd9, 2026-06-25). The check itself is a stateless, read-only
+# CSV/time comparison with no shared state to protect, so there is no correctness reason to serialize
+# it at all — every invocation can simply run to completion independently.
 jobs:
   check:
     # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET

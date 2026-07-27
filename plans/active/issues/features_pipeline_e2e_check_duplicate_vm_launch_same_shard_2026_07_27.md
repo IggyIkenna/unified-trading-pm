@@ -93,3 +93,19 @@ parquet/manifest look sane, not just "some VM exited 0") until this is confirmed
 - [ ] [DATA] P3. Once both VMs for this incident complete, spot-check the written TRADFI:volatility parquet/manifest for
       the 2026-01-29..2026-01-30 window to confirm no partial-write corruption from the concurrent writes (the
       determinism assumption above is unverified).
+
+## Progress Log
+
+- 2026-07-27 (slot-7): **Independently corroborated — same shard, same failure signature, different run.** The
+  day=2026-07-05 full-matrix run hit the byte-identical pattern for the SAME `TRADFI:volatility` shard (force-leg VM
+  timed out at exactly 2400s with no EXIT_STATUS while genuinely still computing, driver launched a second VM for the
+  same shard without checking the first's liveness) AND separately for `CEFI:delta_one` (confirming this is not
+  TRADFI:volatility-specific — any large-enough real instrument universe triggers it). Also directly confirmed via
+  `gcloud` that the abandoned VMs remain RUNNING with no code ever checking their eventual result after the driver moves
+  on — an orphaned-compute angle this doc's own findings didn't explicitly call out. Full writeup + the CEFI:delta_one
+  occurrence + a negative control (TRADFI:delta_one, a smaller/faster-covered window, completed both legs cleanly in
+  ~3.5min, proving this is universe-size-dependent):
+  `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`. Recommend tracking the actual fix
+  in ONE of these two docs going forward (this one has the deeper root-cause trace to `utl@137e219c`'s sibling fix; the
+  other has the broader multi-shard evidence) rather than splitting effort — not merged outright here to avoid
+  clobbering either author's in-progress doc.

@@ -13,7 +13,7 @@ summary:
   cron reliability, local↔CI parity)."
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]

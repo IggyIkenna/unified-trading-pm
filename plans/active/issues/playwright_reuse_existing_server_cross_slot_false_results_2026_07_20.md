@@ -10,7 +10,7 @@ summary:
   Failure is silent — Playwright reports a normal pass/fail with no indication the code under test was not yours."
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [deployment-ui, unified-trading-system-ui, unified-trading-pm]
 scope: [engineer]

@@ -18,7 +18,7 @@ summary: >-
   10 repos + the broken sweep remain.
 status: open
 nature: notes
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos:
   [

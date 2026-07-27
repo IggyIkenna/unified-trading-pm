@@ -68,27 +68,33 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DIAG] P1. Verify + flip the stale `manifest_master.md` P2 "Prediction bucket naming migration" checkbox
-      (currently `[ ]` unchecked at `plans/epics/manifest_master.md:261`). The target legacy prediction buckets
-      (`market-data-tick-prediction-*`, `instruments-store-prediction-*`) were already purge-deleted 2026-07-13 per
-      `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md` ("prediction: ✅ DONE 2026-07-13" — confirmed
-      404, both live + noncurrent versions purged). Grep `market-tick-data-service` + `instruments-service` prediction
-      code paths for any remaining inline legacy bucket-name string literal not routed through `resolve_bucket_name()`
-      (STEP 5.69). Repo: unified-trading-pm docs (read-only verification against market-tick-data-service,
-      instruments-service). **Resolution note**: originally excluded from batch1 because the source doc
-      (`issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`) logged 2 conflicts — but both conflicts are
-      about that doc's OTHER 2 prose-only items (the raw_tick_data stall + the dead Kalshi host, already covered by
-      batch1 todo 1), not about this checkbox-flip candidate, which has zero conflicts of its own. **Done when**:
-      `plans/epics/manifest_master.md`'s "Prediction bucket naming migration" P2 line is either flipped to `[x]` with
-      the grep result + decommission-plan citation as evidence, or left open with a dated note naming the exact
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-11).** Verify + flip the stale `manifest_master.md` P2 "Prediction bucket
+      naming migration" checkbox (currently `[ ]` unchecked at `plans/epics/manifest_master.md:261`). The target legacy
+      prediction buckets (`market-data-tick-prediction-*`, `instruments-store-prediction-*`) were already purge-deleted
+      2026-07-13 per `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md` ("prediction: ✅ DONE
+      2026-07-13" — confirmed 404, both live + noncurrent versions purged). Grep `market-tick-data-service` +
+      `instruments-service` prediction code paths for any remaining inline legacy bucket-name string literal not routed
+      through `resolve_bucket_name()` (STEP 5.69). Repo: unified-trading-pm docs (read-only verification against
+      market-tick-data-service, instruments-service). **Resolution note**: originally excluded from batch1 because the
+      source doc (`issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`) logged 2 conflicts — but both
+      conflicts are about that doc's OTHER 2 prose-only items (the raw_tick_data stall + the dead Kalshi host, already
+      covered by batch1 todo 1), not about this checkbox-flip candidate, which has zero conflicts of its own. **Done
+      when**: `plans/epics/manifest_master.md`'s "Prediction bucket naming migration" P2 line is either flipped to `[x]`
+      with the grep result + decommission-plan citation as evidence, or left open with a dated note naming the exact
       non-compliant file:line(s) found — never silently dropped. Source:
-      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`.
-- [ ] [DIAG] P1. **Conflict-check (2026-07-25 plan-reconcile)**: `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`
-      todo 7 ALSO writes to `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. Do not dispatch/commit
-      concurrently with that todo — batch1 was drafted first, run batch1 todo 7 before this todo if both are active.
-      **Re-verify the `instrument_type` casing/canonicalisation residual with the CORRECT (case-insensitive) comparison
-      rule, and reconcile `prediction_phase_ab_residuals_2026_07_24.md`'s item-9 checkbox.** Run a fresh READ-ONLY live
-      read of the prediction manifest (`availability_index.parquet` / the live
+      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`. **Result: flipped to `[x]`** — every LIVE
+      production code path in both repos already routes through `resolve_bucket_name()`; the only raw legacy-literal
+      hits are in dated, already-completed one-off migration/reconciliation/purge scripts targeting the now-deleted
+      bucket. See `plans/epics/manifest_master.md`'s flipped line for the full grep-result citation.
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-4).** **Conflict-check (2026-07-25 plan-reconcile)**:
+      `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 7 ALSO writes to
+      `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. Do not dispatch/commit concurrently with that todo —
+      batch1 was drafted first, run batch1 todo 7 before this todo if both are active. **Collision check before
+      starting**: verified via the live backlog (`prediction_satellite_ao_dispatch_batch1-007`) that batch1 todo 7 was
+      `status: queued`, `dispatched_to: null` — not concurrently active — so no same-file collision risk at execution
+      time; proceeded. **Re-verify the `instrument_type` casing/canonicalisation residual with the CORRECT
+      (case-insensitive) comparison rule, and reconcile `prediction_phase_ab_residuals_2026_07_24.md`'s item-9
+      checkbox.** Run a fresh READ-ONLY live read of the prediction manifest (`availability_index.parquet` / the live
       `GET /data-status/catalogue-filter-options` endpoint), comparing the `instrument_type` column
       **case-insensitively** — per the RULED codex standard (`/codex/02-data/reconciliation-finding-taxonomy.md` §5.1:
       C2a is RULED UPPERCASE-target, `migration_pending`, operator D1 2026-07-20 — "the reconciliation does NOT REFUSE
@@ -115,6 +121,16 @@ drift_direction: advance-code
       `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log, and its item-9 checkbox (lines 276-286) is flipped
       `[x]` if the count is 0 or explained if non-zero — citing the read, never re-citing either historical (2026-07-19
       or 2026-07-20) snapshot as current. Source: `prediction_phase_ab_residuals_2026_07_24.md` (item 9).
+
+      **Result**: fresh live read (2026-07-27T15:28:46Z) of `market-data-tick-pred-prd-central-element-323112`'s
+          `availability_index.parquet` `instrument_type` column (785,035 rows) found **176 genuinely malformed, non-casing
+          rows (0.0224%)** — non-zero, so item 9's checkbox stays `[ ]` (explained, not flipped): 76 rows literally
+          `prediction` (singular, unchanged since the 2026-07-20 baseline — dead residue) + 100 blank/null rows, which are
+          **NOT static** — 30 (2026-07-20) → 70 (2026-07-24) → 100 (2026-07-27), a consistent ~10 rows/day linear growth,
+          evidence of an ACTIVE writer defect. Filed a new `[DIAG] P2` todo in `prediction_phase_ab_residuals_2026_07_24.md`
+          (Phase B) to track finding the responsible writer path, and recorded the full read (count breakdown + casing-
+          variant context + timestamp) in that doc's Progress Log — `unified-trading-pm@<pending>`.
+
 - [ ] [AGENT] P1. **Predictions MTDS `canonical_question_group` completion-% slice** — compute per-
       (canonical_question_group, day) completion % against the live manifest's `prediction_canonical_question_group`
       bundle rows
@@ -210,11 +226,11 @@ drift_direction: advance-code
       `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
 
       **Evidence**: all 3 SHAs confirmed on `live-defi-rollout` (`git merge-base --is-ancestor`) AND `main`
-              (content-diff, since these repos squash-merge on promote — distinctive marker lines from each commit found
-              live in `origin/main`'s copies). Production capture proof re-verified live: `venue=KALSHI, data_type=trades,
-              date=2026-07-09` in the prediction manifest returns exactly 423 `captured` rows summing to 6,407 — an exact
-              match to the cited 2026-07-14T11:00Z proof, still holding. `status` flipped to `resolved`, `resolved_by`
-              populated, dated Progress Log entry added — unified-trading-pm@`<pending>`.
+                      (content-diff, since these repos squash-merge on promote — distinctive marker lines from each commit found
+                      live in `origin/main`'s copies). Production capture proof re-verified live: `venue=KALSHI, data_type=trades,
+                      date=2026-07-09` in the prediction manifest returns exactly 423 `captured` rows summing to 6,407 — an exact
+                      match to the cited 2026-07-14T11:00Z proof, still holding. `status` flipped to `resolved`, `resolved_by`
+                      populated, dated Progress Log entry added — unified-trading-pm@`<pending>`.
 
 ## Deferred — still genuinely blocked after re-check (NOT dispatched)
 
@@ -276,3 +292,49 @@ finalize pattern.
 `/codex/02-data/reconciliation-finding-taxonomy.md` §5.1 (C2a instrument_type-casing ruling, load-bearing for todo 2's
 resolution — read before touching that todo). No new durable contract is created by this plan — every todo executes an
 already-decided spec from its source doc or an already-RULED codex standard.
+
+## Progress Log
+
+### 2026-07-27 (slot-11) — Todo 1 done: prediction bucket naming migration verified complete, checkbox flipped
+
+Picked up todo 1 via `/boot`. Confirmed the legacy prediction buckets are purge-deleted (404) per
+`legacy_bucket_dual_write_decommission_2026_07_24.md`. Grepped both `market-tick-data-service` and `instruments-service`
+for remaining inline legacy prediction bucket-name literals not routed through `resolve_bucket_name()`: every live
+production code path (`reader.py`, `live/websocket_runner.py`, `engine/orchestrator/__init__.py`,
+`market_interface/adapters/prediction/*`, `cli/handlers/websocket_streaming_handler.py`,
+`instruments_service/engine/orchestrator/catalogue.py`) already calls
+`resolve_bucket_name(kind="market-data-tick-prediction"/"instruments-store-prediction", ...)` — the dedicated flat-kind
+SSOT pattern. Spot-checked the two most ambiguous hits (`engine/orchestrator/__init__.py:806-815`,
+`instruments_service/engine/orchestrator/catalogue.py:37-53`) directly to confirm the `kind=` string is passed INTO
+`resolve_bucket_name()`, not used to construct a raw bucket name. The only raw f-string/literal bucket-name
+constructions found (`f"market-data-tick-prediction-{PROJECT_ID}"` / `f"instruments-store-prediction-{project_id}"`) are
+confined to dated one-off scripts under `scripts/*_2026_0[5-7]_*.py` (e.g. `migrate_prediction_to_pred_prd_v9.py`,
+`purge_prediction_index_final_residuals_2026_07_11.py`, `reconcile_legacy_blank_to_typed_reason.py`) whose entire
+purpose was migrating away from / auditing / purging the legacy bucket itself — verified one representative
+(`migrate_prediction_to_pred_prd_v9.py`'s docstring) is the already-completed E2 migration step from
+`prediction_manifest_canonicalisation_2026_06_01.md` (source plan for the decommission that already shipped 2026-07-13).
+Flipped `plans/epics/manifest_master.md`'s P2 "Prediction bucket naming migration" checkbox to `[x]` with the full
+grep-result citation, and this todo's own checkbox above. No code changed (read-only verification, as scoped). Repo:
+unified-trading-pm only.
+
+### 2026-07-27 (slot-4) — Todo 2 done: instrument_type casing residual re-verified case-insensitively, checkbox flipped
+
+Picked up todo 2 via `/boot` (resumed session — task was `already_in_progress`). Per the todo's own collision-avoidance
+note, first checked the live backlog for `prediction_satellite_ao_dispatch_batch1-007` (the mirror conflict-check in
+batch1 that also writes to `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log): `status: queued`,
+`dispatched_to: null` — not concurrently active, so no same-file collision risk; proceeded.
+
+Read `/codex/02-data/reconciliation-finding-taxonomy.md` §5.1 for the C2a ruling context, then wrote a small ad-hoc
+read-only script (scratchpad, not committed) reusing `unified_trading_library.read_availability_index` +
+`resolve_bucket_name` — the same slim, column-pruned, single-walk pattern deployment-api's `_axis_census.py` uses — to
+census the live prediction manifest's `instrument_type` column at `market-data-tick-pred-prd-central-element-323112`.
+
+**Result**: 785,035 total rows; 775,139 exact-uppercase `PREDICTION_MARKET` + 9,720 lowercase `prediction_market`
+casing-variant (correctly excluded from the malformed count, `migration_pending` per C2a) + 176 genuinely malformed
+non-casing rows (76 `prediction` singular, unchanged since 2026-07-20 — dead residue; 100 blank/null, which is NOT
+static — 30→70→100 across 2026-07-20→07-24→07-27, a consistent ~10 rows/day growth, i.e. an active writer defect, not
+closed history). Recorded the full read + this composition analysis in `prediction_phase_ab_residuals_2026_07_24.md`'s
+Progress Log (item 9's checkbox stays `[ ]`, explained, since the count is non-zero — this todo's done-when only
+required recording+explaining, not a zero result). Filed a new `[DIAG] P2` Phase-B todo in that same doc to track
+identifying the writer path responsible for the growing blank count. This todo's own checkbox above is flipped `[x]` —
+done-when met. No code changed (read-only measurement, as scoped). Repo: unified-trading-pm only (both edited docs).

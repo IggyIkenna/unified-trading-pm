@@ -15,7 +15,7 @@ summary:
   ignore is TEMPORARY and should be removed once the bump lands."
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [e2e-testing, instruments-service, market-tick-data-service]
 scope: [engineer, admin]

@@ -10,7 +10,7 @@ summary:
   installed; journald is VM-local too).'
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [deployment-service, agent-orchestrator]
 scope: [engineer, admin]

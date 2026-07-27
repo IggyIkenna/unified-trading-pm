@@ -16,7 +16,7 @@ summary:
   drift_violation. Operator was already notified via the server's own unpushed_plans_alert_sent (06:02Z).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]

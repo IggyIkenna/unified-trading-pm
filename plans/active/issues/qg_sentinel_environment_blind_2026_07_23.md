@@ -16,7 +16,7 @@ summary: >-
   tsc-red tree landed on LDR); that fix closed the tree-drift dimension but not the environment dimension.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, unified-trading-library, deployment-api, strategy-service, market-tick-data-service]
 scope: [engineer, admin]

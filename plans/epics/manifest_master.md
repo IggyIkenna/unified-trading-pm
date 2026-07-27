@@ -258,9 +258,22 @@ _(no plans currently assigned at this priority)_
       — operator must approve the migration date + window before execution. Flat-bucket data still in
       `unified-trading-defi-*` style buckets; env-tiered target is `uts-prod-defi-*`. Full migration playbook in
       `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0d.
-- [ ] [OPERATOR+AGENT] P2. **Prediction bucket naming migration** (DEFERRED-OPERATOR-DECISION) — prediction service uses
-      legacy bucket naming pattern; migrate to `resolve_bucket_name()` pattern per STEP 5.69. Requires operator decision
-      on migration window + dry-run first.
+- [x] ✅ [OPERATOR+AGENT] P2. **DONE 2026-07-27 (slot-11).** **Prediction bucket naming migration** — verified, not just
+      grep-confirmed. The legacy prediction buckets (`market-data-tick-prediction-*`, `instruments-store-prediction-*`)
+      are already purge-deleted (`plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md` — "prediction: ✅
+      DONE 2026-07-13", both live + noncurrent versions removed, confirmed 404). A fresh grep of
+      market-tick-data-service + instruments-service found every LIVE production code path (`reader.py`,
+      `live/websocket_runner.py`, `engine/orchestrator/__init__.py`, `market_interface/adapters/prediction/*`,
+      `cli/handlers/websocket_streaming_handler.py`, `instruments_service/engine/orchestrator/catalogue.py`) already
+      routes through `resolve_bucket_name(kind="market-data-tick-prediction"/"instruments-store-prediction", ...)` per
+      STEP 5.69 — the dedicated flat-kind pattern, by design (see `catalogue.py`'s `resolve_instruments_store_kind()`
+      docstring). The only remaining raw legacy-bucket-name literals are confined to dated one-off
+      migration/reconciliation/purge scripts under `scripts/*_2026_0[5-7]_*.py` (e.g.
+      `migrate_prediction_to_pred_prd_v9.py`, `purge_prediction_index_final_residuals_2026_07_11.py`) whose entire
+      purpose was migrating away from / auditing / purging that now-deleted legacy bucket — expected historical residue
+      of already-completed one-off tooling (source plan `prediction_manifest_canonicalisation_2026_06_01.md` E7/E8/E8b,
+      also DONE), not an open migration gap. No operator decision needed — the migration itself is already complete.
+      Source: `plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 1.
 - [ ] [AGENT] P2. **Workspace-grep audit for legacy bucket references** — run workspace-wide grep to verify zero inline
       `gs://` f-strings remain after bucket SSOT rollout. Generate audit table confirming all call sites use
       `resolve_bucket_name()`. Update QG ratchet baseline.

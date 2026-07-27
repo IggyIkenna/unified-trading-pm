@@ -8,7 +8,7 @@ summary:
   digest) split cleanly into **two build contracts**:"
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [
     alerting-service,

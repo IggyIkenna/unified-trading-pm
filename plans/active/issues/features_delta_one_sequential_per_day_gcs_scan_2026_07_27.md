@@ -99,11 +99,19 @@ None of the 8 running VMs (`features-e2e-cefi-*` x6, `features-e2e-tradfi-*` x2 
       `(data_type, timeframe)` fan-out per instrument, to get an exact "GCS round trips per instrument" count and
       confirm it explains the observed ~19 lines/sec sustained rate. Repo: features-service. — **CONFIRMED, slot-14,
       2026-07-27** — see `## Confirmation findings (2026-07-27)` below.
-- [ ] [SCRIPT] P1. If confirmed, batch/parallelize the per-day existence probes in `_collect_daily_frames`
+- [x] [SCRIPT] P1. ✅ If confirmed, batch/parallelize the per-day existence probes in `_collect_daily_frames`
       (`asyncio.gather` over the day range, or a single prefix-listing GCS call instead of N per-day `blob_exists` round
       trips) — the SAME class of fix already applied elsewhere in this codebase for candle writes (S1). Repo:
       features-service. **Done when**: a from-scratch CEFI:delta_one force-leg run's wall-clock drops materially
-      (target: well under the raised `_FAMILY_TIMEOUT_OVERRIDES` value) with identical output.
+      (target: well under the raised `_FAMILY_TIMEOUT_OVERRIDES` value) with identical output. — **SHIPPED, slot-13,
+      2026-07-27, `features-service@1ad44550`**: `_collect_daily_frames` now fires per-day probes concurrently via
+      `asyncio.gather` + `asyncio.to_thread` (bounded by a new `_DAILY_FRAME_PROBE_CONCURRENCY=20` semaphore), extracted
+      into `_probe_one_day` to stay under the method-size QG cap. Mirrors the existing
+      `FeatureWriter._write_daily_partitions`/`check_exists` pattern in this same package (prefix-listing was ruled out:
+      `day=` sits mid-path, not as a suffix, so no single GCS prefix isolates one instrument's date range). Full
+      QG-green (17,908 tests passed) + quickmerge shipped. The end-to-end from-scratch wall-clock re-measurement in the
+      "Done when" clause is the SAME work as the next todo below (re-measure real per-shard completion time) — not
+      re-run separately here since it requires a real multi-hour VM backfill, out of scope for this code-change todo.
 - [ ] [DATA] P2. Once fixed, re-measure the real per-shard completion time and correct `_FAMILY_TIMEOUT_OVERRIDES` in
       `features-service/scripts/pipeline_e2e_check.py` (likely lowerable back toward the generic default) and the
       SKILL.md benchmark section — same "Done when" the companion timeout issue's P2 todo already asks for.
@@ -176,3 +184,16 @@ independently prove it. **Next**: P1 batch/parallelize todo (below) is unblocked
   `resolve_lookback.py`'s `min_lookback_days=1` vs the internal buffer's 240-348d is now root-caused to the
   1m-vs-actual-output-timeframe divide. See `## Confirmation findings` above for full detail + caveats. No code changed
   this session — pure investigation per the todo's scope; the P1 batch/parallelize fix todo is next.
+- 2026-07-27 (slot-13): P1 batch/parallelize todo shipped (`features-service@1ad44550`). Investigated the storage client
+  shape first (sub-agent): `blob_exists`/`download_bytes`/`list_blobs` are sync (`StorageClient` ABC), an
+  `AsyncStorageClient` variant exists but has zero concrete implementations (dead scaffolding), and prefix-listing is
+  impractical for this path shape (`day=` is a mid-path partition segment, not a suffix — one prefix can't isolate a
+  single instrument's date range). Mirrored the existing `asyncio.gather`+`asyncio.to_thread` pattern already used in
+  this package (`FeatureWriter._write_daily_partitions`/`check_exists`) rather than inventing a new one. Extracted
+  `_probe_one_day` out of `_collect_daily_frames` to stay under the QG method-size cap (50L) after the first draft hit
+  62L. Bounded concurrency at a new `_DAILY_FRAME_PROBE_CONCURRENCY=20` semaphore (no existing config field for this;
+  the only other precedent in `delta_one` is `batch_handler`'s CLI `--max-workers`, default 4, group-level — not
+  reusable here since this bound is per-call). Full `quality-gates.sh` green (17,908 passed, 0 new violations) on the
+  committed SHA before quickmerge. Did NOT re-run the full from-scratch CEFI wall-clock measurement described in the
+  todo's "Done when" — that requires a real multi-hour VM backfill and is the same work as the next todo (re-measure +
+  correct `_FAMILY_TIMEOUT_OVERRIDES`), left for that todo rather than duplicated here.

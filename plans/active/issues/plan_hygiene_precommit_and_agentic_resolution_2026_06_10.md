@@ -4,7 +4,7 @@ title: Plan-hygiene → prek (staged-only) + fold-to-QG + 24h agentic contradict
 summary: "Plan-health today is split across two mechanisms in `.github/workflows/plan-health-agent.yml`:"
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-pm]
 scope: [engineer, admin]

@@ -16,7 +16,7 @@ summary: >-
   and background checks ensuring plans/issues never conflict with each other in content.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]

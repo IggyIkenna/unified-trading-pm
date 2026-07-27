@@ -158,8 +158,8 @@ pinned across the fleet; VM log backup wired; the e2e hardening suite green; the
 ## Track 4 — AO alerting/observability + tooling regressions · P1/P2
 
 **Sources**:
-[agent_orchestrator_alert_channel_cleanup_2026_07_13.md](/plans/active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md)
-(AO alerts Slack channel dedup/lifecycle-churn/BLOCKED-schema redesign) ·
+[agent_orchestrator_alert_channel_cleanup_2026_07_13.md](/plans/archive/2026_07/agent_orchestrator_alert_channel_cleanup_2026_07_13.md)
+(complete, archived 2026-07-27 — AO alerts Slack channel dedup/lifecycle-churn/BLOCKED-schema redesign) ·
 [ao_fleet_observability_kpis_2026_07_20.md](/plans/active/ao_fleet_observability_kpis_2026_07_20.md)
 (dispatch-completion/escalator-efficacy/account-burn observability KPIs) ·
 [issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md](/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md)
@@ -177,8 +177,9 @@ posts; dead code refs restored or removed cleanly; Playwright port-collision fix
 ## Track 5 — Session/remediation meta-plans · P2
 
 **Sources**:
-[ao_issue_docs_consolidated_remediation_2026_07_23.md](/plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md)
-(held/blocked residual todos from an AO-scope remediation sweep) ·
+[ao_issue_docs_consolidated_remediation_2026_07_23.md](/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md)
+(archived 2026-07-27 — the Q2-held todos shipped and 2 of 4 non-dispatchable items resolved; the remaining 2,
+route-collision + backlog-relations-view, are DEFERRED per operator instruction rather than held open) ·
 [issues/ao_recovery_audit_layer1_deleted_2026_07_15.md](/plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md)
 (AO custom recovery-audit-signoff role/agent deleted as cleanup collateral) ·
 [ao_open_issues_consolidated_close_out_2026_07_17.md](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)

@@ -10,7 +10,7 @@ summary:
   narrow per-service tab. Mock-first is done (real probed data); this plan wires the real API + UI.
 status: active
 nature: design
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-ui, deployment-api, unified-trading-pm]
 scope: [engineer, admin]

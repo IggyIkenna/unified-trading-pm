@@ -17,7 +17,8 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [alerts, slack, ci-cd, ci-failures, dedup, observability, notifications]
-related: [/plans/active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md, /plans/epics/observability_master.md]
+related:
+  [/plans/archive/2026_07/agent_orchestrator_alert_channel_cleanup_2026_07_13.md, /plans/epics/observability_master.md]
 created: "2026-07-13"
 last_updated: 2026-07-13
 parent_epic: observability_master

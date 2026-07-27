@@ -20,7 +20,7 @@ summary: >-
   artifact_pipeline Phase 3c.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, deployment-service, deployment-api]
 scope: [engineer, admin]

@@ -38,10 +38,10 @@ codex_ssots:
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
   ]
 related_plans:
-  - ../active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md
+  - ../active/ao_consolidated_closeout_2026_07_25.md
   - ../active/ao_fleet_observability_kpis_2026_07_20.md
-  - ../active/ao_issue_docs_consolidated_remediation_2026_07_23.md
   - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
+  - ../active/ao_satellite_ao_dispatch_batch1_2026_07_26.md
 last_updated: 2026-07-16
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -308,32 +308,31 @@ the single audit trail.
 
 ## Assigned active plans
 
-_4 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
+_5 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
-
-_(no plans currently assigned at this priority)_
-
-## P1 — important; post-current-gate
-
-### [`agent_orchestrator_alert_channel_cleanup_2026_07_13`](../active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
 
 ### [`ao_fleet_observability_kpis_2026_07_20`](../active/ao_fleet_observability_kpis_2026_07_20.md)
 
 **status**: active · **estimate**: 2.8 cal AI-days (class: infra) **title**: AO fleet observability — make efficiency,
 escalator efficacy and account burn visible
 
-### [`ao_issue_docs_consolidated_remediation_2026_07_23`](../active/ao_issue_docs_consolidated_remediation_2026_07_23.md)
-
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: AO issue-docs remediation — held +
-blocked residual (the parts NOT dispatched to AO)
-
 ### [`ao_open_issues_consolidated_close_out_2026_07_17`](../active/ao_open_issues_consolidated_close_out_2026_07_17.md)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
+
+## P1 — important; post-current-gate
+
+### [`ao_consolidated_closeout_2026_07_25`](../active/ao_consolidated_closeout_2026_07_25.md)
+
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: AO consolidated close-out —
+agent-orchestrator dispatch, worker/slot lifecycle, and framework tooling
+
+### [`ao_satellite_ao_dispatch_batch1_2026_07_26`](../active/ao_satellite_ao_dispatch_batch1_2026_07_26.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: refactor) **title**: AO satellite AO batch 1 — first dispatch
+batch extracted from the AO tranche's satellite docs
 
 ## P2 — useful; opportunistic
 

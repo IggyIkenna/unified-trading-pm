@@ -29,7 +29,7 @@ summary: >-
   retries hit spawn_retry_cap before a kick verified-submitted.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

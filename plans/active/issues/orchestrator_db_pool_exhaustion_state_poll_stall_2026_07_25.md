@@ -16,7 +16,7 @@ summary: >-
   with no restart. Confirmed on-host 2026-07-25 by main orchestrator (agt-52bb99) during the poll loop.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

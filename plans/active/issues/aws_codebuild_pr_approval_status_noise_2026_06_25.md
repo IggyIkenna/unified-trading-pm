@@ -8,7 +8,7 @@ summary:
   real CI failure."
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]

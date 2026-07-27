@@ -633,3 +633,33 @@ pairs stay honest-unresolved (reported, never guessed).
   belongs here, not inline in the plan). **Next check-in should verify**: `captured` continuing to climb toward the
   ~21,304 total-attempted target, `attempted_failed` still ~3, and eventual `DEPLOYMENT_COMPLETED exit_code=0` — then
   flip the parent checkbox.
+
+- **2026-07-27 (slot-5) — HYPERLIQUID recent-tail gap: prior VM preempted, relaunched, verified healthy, still open.**
+  Picked up the same still-open `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` HL recent-tail todo. **Fleet-check
+  first**: `gcloud compute instances list` showed `cefi-hyperliquid-2026-20260727-123922` (slot-6/11's VM) no longer
+  running. `gcloud compute operations list` confirmed a `compute.instances.preempted` system event at
+  `2026-07-27T14:02:54Z` (~1h23m after its 12:39:25Z launch), auto-deleted per `--instance-termination-action=DELETE`;
+  no `PROGRESS.json` checkpoint exists for this one-off launch (not wired into the fleet auto-recovery watchdog per
+  data_engineering craft-file guidance), so no automated resume was possible. **Pre-relaunch measurement**: `run.log`
+  ground-truthed the VM's last real write at `14:01:32Z` (book_snapshot_5/PENGU/2026-06-26), consistent with the
+  preemption timestamp. `read_availability_index()` hit a transient auth token-refresh error at check time
+  (`Unable to retrieve Identity Pool subject token`) — retried once, still empty; bypassed via a direct
+  `google.cloud.storage` read of the consolidated `_index/availability_index.parquet` (same source data, same window
+  venue=HYPERLIQUID 2026-06-24..2026-07-25): `captured`=6,725 (up from slot-11's 5,987, +738 — genuine climb from the
+  VM's work before preemption), `attempted_failed`=3 (unchanged — no regression), `expected_unattempted`=15,376,
+  `empty_confirmed`=9,504. **Relaunched** `cefi-hyperliquid-2026-20260727-150820` via the identical idempotent non-force
+  SPOT command slot-6 used
+  (`VENUES="HYPERLIQUID" YEARS="2026" OVERRIDE_START_DATE=2026-06-24 OVERRIDE_END_DATE=2026-07-25 bash scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`,
+  dry-run verified the window first). Kept the SPOT default (this VM's own preemption count is 1, not the 3-in-a-day
+  threshold that justified the sibling historical fleet's `ON_DEMAND=true` escalation) — idempotent skip means the
+  relaunch resumes correctly regardless. **Verified started + healthy, not fire-and-forget**: serial console showed
+  startup-script completed exit status 0 at `15:11:03Z` (code deployed, deps installed, backfill process launched);
+  `run.log` then showed the correct catalogue-driven universe
+  (`OnchainPerpBatch: catalogue-driven universe for HYPERLIQUID on 2026-06-24 = 174 symbols`, matching slot-6's original
+  figure) and, by `15:14:13Z`, 33+ genuine `captured` rows lines across distinct symbols (AVAX/AVNT/AXS/.../BSV) for day
+  2026-06-24. **Disposition**: parent todo stays genuinely open — same multi-hour-to-multi-day completion profile as
+  before. **Did NOT flip the parent plan checkbox** (completion criterion not met; plan file still at its 1000-line hard
+  cap per slot-6's structural finding). **Next check-in should verify**: `captured` continuing to climb from the 6,725
+  baseline toward the ~21,604 total-attempted target (expected_unattempted+empty_confirmed+captured), `attempted_failed`
+  still ~3, no further preemption on this run-id, and eventual `DEPLOYMENT_COMPLETED exit_code=0` — then flip the parent
+  checkbox.

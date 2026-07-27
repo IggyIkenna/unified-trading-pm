@@ -8,7 +8,7 @@ summary: >-
   ruff-only); optional debt-paydown / scan-exclusion todos remain P3.
 status: open
 nature: notes
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

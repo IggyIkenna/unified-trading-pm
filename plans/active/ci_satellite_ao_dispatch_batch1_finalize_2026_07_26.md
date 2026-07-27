@@ -10,7 +10,7 @@ summary: >-
   since cleared, and archives batch 1 via the standard 6-step ritual.
 status: draft
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

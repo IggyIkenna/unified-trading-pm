@@ -28,6 +28,10 @@ last_updated: 2026-05-22
 
 # Client Isolation + Governance Master — Audit Instructions
 
+> **⚠️ KNOWN GAP (flagged 2026-07-27, from `human_led_audit_pool_2026_05_21.md` row #12 close-out):** this instructions
+> file has never actually been run — `plans/audit/results/` has zero dated results under this epic name, and the pool's
+> "multi-client dynamic add/remove" concern has no coverage under any name. Next cadence run should close this gap.
+
 ## Epic Scope
 
 Per-client subprocess isolation (`multiprocessing.Process` under `StrategySupervisor`), cross-client funds isolation

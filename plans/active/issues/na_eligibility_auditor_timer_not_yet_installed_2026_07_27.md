@@ -1,11 +1,12 @@
 ---
 doc_type: issue
-title: na-eligibility-auditor daily timer is shipped but not yet installed on the central orchestrator VM
+title: na-eligibility-auditor daily timer installed, first real scheduled fire not yet verified
 summary:
-  All code for the new /na-eligibility-audit daily dispatch (plan_health.py mode, agents/na_eligibility_auditor.md,
-  install-na-eligibility-auditor-timer.sh) is committed and pushed to live-defi-rollout, but the systemd timer/service
-  units themselves have not been installed on the real central orchestrator VM — that install step needs to run there,
-  not from a dev checkout.
+  All code for the new /na-eligibility-audit daily dispatch is shipped, and the systemd timer is installed + enabled on
+  the central orchestrator VM (verified active/waiting, next fire 2026-07-28 07:01 UTC). Unit tests now cover the
+  plan_health.py dispatch wiring (agent-orchestrator@a935dcd85), but the skill's own Phase 0-5 procedure has never
+  actually run against the live corpus — neither via the cron's first fire nor an interactive dry-run. That's the one
+  open question left for whoever picks this up.
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -34,7 +35,7 @@ drift_direction: advance-code
 depends_on: []
 ---
 
-# na-eligibility-auditor timer not yet installed
+# na-eligibility-auditor: installed + unit-tested, procedure itself never run
 
 **What's shipped** (verify with `git log`, not this doc, before acting — these are point-in-time citations):
 
@@ -43,17 +44,14 @@ depends_on: []
   baseline, `agents/na_eligibility_auditor.md`, cross-references in the sibling skills.
 - `agent-orchestrator@f4a116e` — `mode="na_eligibility"` in `server/plan_health.py`, `server/models/escalation.py` doc
   update, `scripts/install-na-eligibility-auditor-timer.sh`.
+- `agent-orchestrator@a935dcd85` — unit tests for the `na_eligibility` dispatch mode (smart-tier forcing, tranche
+  threading, report-gate exemption, `agent_kind` registration), mirroring the existing per-mode pattern. This closed a
+  real gap: the mode shipped without dedicated tests, only riding along on a full-suite pass that didn't exercise it.
 
-**What's NOT done**: the install script has never been run. On the central VM:
-
-```bash
-cd agent-orchestrator && sudo bash scripts/install-na-eligibility-auditor-timer.sh
-```
-
-This installs `na-eligibility-auditor.timer`/`.service` (default fire time 07:00 UTC, staggered 2h after
-`ag-closeout-auditor.timer`'s 05:00 UTC). Until this runs, the daily NA-eligibility audit never fires on its own — it's
-only reachable via a manual `POST /api/plan-health/dispatch {"mode": "na_eligibility"}` or an interactive
-`/na-eligibility-audit` invocation.
+**What's still open — not a code gap, a verification gap**: no agent has ever actually run the skill's own Phase 0-5
+procedure against the live corpus. The timer's first natural fire is 2026-07-28 ~07:01 UTC (unsupervised, autonomous
+mode). An interactive dry-run on one small tranche first (so the output can be reviewed before the cron's first
+unsupervised swing) was offered in the building session but not yet actioned.
 
 - [x] [OPERATOR] P2. Run `sudo bash scripts/install-na-eligibility-auditor-timer.sh` on the central orchestrator VM —
       DONE 2026-07-27 via `aws ssm send-command` (instance `i-0c9b283b31d6b5ca7`, region `ap-northeast-1`, operator
@@ -65,6 +63,11 @@ only reachable via a manual `POST /api/plan-health/dispatch {"mode": "na_eligibi
       3 sibling timers got on their own first live run. Not forced manually this session (a manual `systemctl start`
       would spawn a real opus/effort-max worker doing real corpus writes — out of scope for a pure install-verification
       step); the natural next-day fire is the intended first real test.
+- [ ] [REVIEW] P2. **Alternative to the above, if picked up before 2026-07-28 07:01 UTC**: run `/na-eligibility-audit`
+      interactively on ONE small tranche (e.g. `mtds_mdps`/`observability` — smallest NA population per
+      `generate_na_doc_tranche_inventory.py`) with the operator present to review verdicts before anything is applied,
+      rather than letting the cron's first-ever run be fully unsupervised. Offered mid-session, not yet
+      answered/actioned — do this OR the P3 above, not necessarily both.
 
 This is an infra/VM-access action (installing a systemd unit on the shared central VM) rather than a repo-code change,
 which is why it's tracked here instead of folded into the code commits above.

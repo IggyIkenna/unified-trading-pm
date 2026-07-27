@@ -126,11 +126,22 @@ drift_direction: advance-code
       `/plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (P0, operator-notify) —
       **read that doc before dispatching the two "Move the GCS objects" todos below**, since their current venue list
       may be incomplete.
-- [ ] [DATA] P1. **Add UAC contract entries for EXCHANGE_ODDS/FIXED_ODDS BEFORE touching data** (contracts-first,
+- [x] ✅ [DATA] P1. **Add UAC contract entries for EXCHANGE_ODDS/FIXED_ODDS BEFORE touching data** (contracts-first,
       deliberately — manifest-first previously caused the tradfi CME manifest↔disk↔registry divergence, repaired
       `@bd115230`, must not repeat). Keep the legacy `odds` contract entry live for the dual-read window. (repo:
       unified-api-contracts). **Done when**: both EXCHANGE_ODDS and FIXED_ODDS contract entries exist in UAC alongside
-      the still-live legacy `odds` entry.
+      the still-live legacy `odds` entry. ✅ **DONE 2026-07-27 — `unified-api-contracts@4b28b340`:** registered
+      `CONTRACT_REGISTRY[("sports", "exchange_odds", "trades")]` = `SPORTS_EXCHANGE_ODDS_TRADES` and
+      `[("sports", "fixed_odds", "trades")]` = `SPORTS_FIXED_ODDS_TRADES` in `_sports_prediction_contracts.py`,
+      re-exported via `contracts.py`, both sharing `SPORTS_ODDS_TRADES`'s row schema (frozen `ColumnSpec`/
+      `SchemaContract` — the fork splits the instrument_type partition, not the columns). Legacy
+      `("sports", "odds", "trades")` stays registered unchanged. **Adjacent fix (findings-triage, same commit)**:
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("sports", "fixed_odds")]` in `market_data_categories.py` was missing
+      `"trades"` (its `exchange_odds` sibling already had it) — without this the new `fixed_odds/trades` registry entry
+      would have failed the existing `test_every_sports_odds_family_contract_registry_entry_is_matrix_reachable`
+      reachability sweep; added `"trades"` to that frozenset. New unit tests added in
+      `test_sports_prediction_contracts.py` (registration, lookup, shared- schema, sample-dataframe validation for both
+      new entries; legacy-entry-still-present regression). Full `quality-gates.sh` green (sentinel = `4b28b340`).
 - [ ] [DATA] P1. **Dual-read `odds` + `EXCHANGE_ODDS`/`FIXED_ODDS` in `lookup_contract` during the migration window; add
       a UAC unit test covering both paths.** (repo: unified-api-contracts). **Done when**: the new unit test passes for
       both the legacy `odds` path and the new EXCHANGE_ODDS/FIXED_ODDS paths.

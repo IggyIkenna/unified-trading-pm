@@ -11,7 +11,7 @@ summary: >-
   Every todo below targets files disjoint from every sibling todo, so the plan needs no `sequential` gate.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm, deployment-ui, unified-trading-system-ui]
 scope: [engineer]
@@ -276,8 +276,8 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
 - **Regen positional task-ids** —
   `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md` BACKEND P3 duplicates
   `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`, which
-  `/plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md` records as a parked decision "deferred until a
-  new incident forces it". A new incident arguably HAS occurred (the 2026-07-25
+  `/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md` (archived 2026-07-27) records as a
+  parked decision "deferred until a new incident forces it". A new incident arguably HAS occurred (the 2026-07-25
   `sync_backlog_to_db: REFUSING to reset task id` collisions), but whether that meets the deferral's own trigger is the
   operator's call. **BLOCKED-OPERATOR-DECISION.**
 - **`slack-read-channel.py` env-var token fallback** —
@@ -312,10 +312,11 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
   needed right now … Revive by scheduling these todos".
 - `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` — all three open todos are operator-gated (two `[CREDS]`
   secret/IAM writes, one `[DESIGN]` dirty-worktree policy including an operator-sanctioned hard reset).
-- `/plans/active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md` and
-  `/plans/active/ao_fleet_observability_kpis_2026_07_20.md` — both carry an explicit "NOT AO-dispatched /
-  operator-driven" declaration in prose, not just the `assigned_vm: NA` default. Both of their remaining todos are now
-  genuinely actionable (see this run's report) — extracting them needs the operator to lift that declaration.
+- `/plans/archive/2026_07/agent_orchestrator_alert_channel_cleanup_2026_07_13.md` — **RESOLVED 2026-07-27**: all todos
+  closed with evidence, plan archived; no longer a candidate here.
+- `/plans/active/ao_fleet_observability_kpis_2026_07_20.md` — carries an explicit "NOT AO-dispatched / operator-driven"
+  declaration in prose, not just the `assigned_vm: NA` default. Its remaining todos are now genuinely actionable (see
+  this run's report) — extracting them needs the operator to lift that declaration.
 - `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` `[OPERATOR]` P1
   (pin the JWT secret; needs a maintenance-window restart of the shared orchestrator) and
   `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` `[INFRA]` P3 (re-mint
@@ -325,8 +326,9 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
   — each needs foreign-worktree access plus a judgment call on whether specific commits are superseded.
 - `/plans/active/issues/ao_backlog_done_row_disappearance_2026_07_25.md` `[OPERATOR]` P1 (watch-log check) and its
   `[BACKEND]` P2 (root-cause once a recurrence is caught) — the latter is time-gated on an unobserved recurrence.
-- `/plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md` — both open items are `BLOCKED-OPERATOR-DECISION`
-  / `BLOCKED-UPSTREAM-DESIGN` by their own labels.
+- `/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md` (archived 2026-07-27) — both open items
+  were `BLOCKED-OPERATOR-DECISION` / `BLOCKED-UPSTREAM-DESIGN` by their own labels and are now marked DEFERRED rather
+  than held open.
 
 ## Codex SSOTs (read before starting a todo)
 

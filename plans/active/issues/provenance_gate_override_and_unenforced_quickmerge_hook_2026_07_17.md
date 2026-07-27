@@ -15,7 +15,7 @@ summary: |
 status: open
 resolved_by:
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, market-tick-data-service, deployment-api]
 scope: [engineer, admin]

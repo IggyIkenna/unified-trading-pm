@@ -130,25 +130,39 @@ parked conflicts).
 
 ## Todos
 
-- [ ] [DATA] P1. **Re-base the prediction cqg-classifier coverage census post-decision-338 (read-only; does NOT make the
-      extend-vs-ratify call).** `prediction_cqg_residual_2026_07_24.md` todo 1 rests on a 2026-06-11 measurement
-      (542,169/573,536 objects = 94.5% routing to `attempted_failed[ClassifierConfidenceLow]`, captured cqg bundles
-      ending 2026-04-14) taken five days BEFORE decision 338's registry extension landed in UAC and before
-      `classify_polymarket_to_canonical_group` was changed to return `OTHER` instead of `None`. Re-measure against
-      today's UAC registry + the live prediction manifest and record: (a) the current
-      `attempted_failed[ClassifierConfidenceLow]` row/object share, broken out **per venue** (the two venues take
-      genuinely different code paths — `rebuild_prediction_manifest.py:409-429` calls
-      `classify_kalshi_to_canonical_group` for KALSHI, which still returns `None` for unmatched, versus
-      `classify_polymarket_to_canonical_group` for POLYMARKET, which now returns `OTHER`); (b) the current share bundled
-      into `canonical_question_group=OTHER`; (c) whether captured cqg bundles still end 2026-04-14 or now extend later.
-      Repo: unified-trading-pm (analysis only; reads unified-api-contracts' registry + the live prediction
-      `availability_index.parquet`). **Read-only — no `--apply`, no manifest mutation, no VM launch, no delete.**
-      Source: `prediction_cqg_residual_2026_07_24.md` (todo 1). **Done when**: (a), (b) and (c) are recorded as dated
-      measured numbers with the method and read timestamp in that doc's Progress Log, and todo 1's inline "94.5% /
-      2026-06-11" premise is annotated in place as either re-based (citing the new numbers) or confirmed-still- accurate
-      — never left implying the stale figure is current. **Explicitly out of scope**: choosing between "extend the
-      registry further" and "ratify out-of-registry-stays-failed". That fork is the operator's (see Deferred — parked
-      conflicts); this todo only supplies the numbers the choice needs.
+- [x] ✅ [DATA] P1. **Re-base the prediction cqg-classifier coverage census post-decision-338 (read-only; does NOT make
+      the extend-vs-ratify call).** — unified-trading-pm@(this commit), 2026-07-27T15:25:50Z.
+      `prediction_cqg_residual_2026_07_24.md` todo 1 rests on a 2026-06-11 measurement (542,169/573,536 objects = 94.5%
+      routing to `attempted_failed[ClassifierConfidenceLow]`, captured cqg bundles ending 2026-04-14) taken five days
+      BEFORE decision 338's registry extension landed in UAC and before `classify_polymarket_to_canonical_group` was
+      changed to return `OTHER` instead of `None`. Re-measure against today's UAC registry + the live prediction
+      manifest and record: (a) the current `attempted_failed[ClassifierConfidenceLow]` row/object share, broken out
+      **per venue** (~~the two venues take genuinely different code paths — `rebuild_prediction_manifest.py:409-429`
+      calls `classify_kalshi_to_canonical_group` for KALSHI, which still returns `None` for unmatched, versus
+      `classify_polymarket_to_canonical_group` for POLYMARKET, which now returns `OTHER`~~ — **this premise is ITSELF
+      STALE, corrected during execution**: reading `classifiers.py` at current HEAD,
+      `classify_kalshi_to_canonical_group` is ALSO `-> CanonicalQuestionGroup` (non-Optional, never returns `None` —
+      confirmed by reading the full function body, not just a docstring); the module docstring even states this
+      explicitly for BOTH venues as of decision 338's 2026-07-26 ratification
+      (`autonomous_session_operator_decisions_2026_07_25.md` entry #14). `rebuild_prediction_manifest.py`'s
+      `if k_result is not None else None` guard is now dead code, matching `prediction_cqg_residual_2026_07_24.md`'s own
+      already-re-scoped todo 1 leg (2)); (b) the current share bundled into `canonical_question_group=OTHER`; (c)
+      whether captured cqg bundles still end 2026-04-14 or now extend later. Repo: unified-trading-pm (analysis only;
+      reads unified-api-contracts' registry + the live prediction `availability_index.parquet`). **Read-only — no
+      `--apply`, no manifest mutation, no VM launch, no delete.** Source: `prediction_cqg_residual_2026_07_24.md` (todo
+      1). **Done when**: (a), (b) and (c) are recorded as dated measured numbers with the method and read timestamp in
+      that doc's Progress Log, and todo 1's inline "94.5% / 2026-06-11" premise is annotated in place as either re-based
+      (citing the new numbers) or confirmed-still- accurate — never left implying the stale figure is current.
+      **Explicitly out of scope**: choosing between "extend the registry further" and "ratify
+      out-of-registry-stays-failed". That fork is the operator's (see Deferred — parked conflicts); this todo only
+      supplies the numbers the choice needs. **Results**: (a) `ClassifierConfidenceLow` = 0.0000% for BOTH venues
+      (KALSHI 0/22,054 shards; POLYMARKET 0/46,613 shards) — the classifier contract is confirmed venue-symmetric, not
+      asymmetric as this todo originally assumed; (b) `OTHER` share on captured rows = KALSHI 49.85%, POLYMARKET 56.63%,
+      combined 55.24% (by row count) / 11.06% (by shard count) — materially BELOW the naive "~94.5% just moved to OTHER"
+      expectation, because the registry now routes most of that mass to real named groups (alt-coins, weather, macro,
+      ~17 sports leagues); (c) captured cqg bundles extend to 2026-07-26 (KALSHI) / 2026-07-22 (POLYMARKET), NOT still
+      2026-04-14. Full method + numbers recorded in `prediction_cqg_residual_2026_07_24.md`'s Progress Log
+      (2026-07-27T15:25:50Z entry).
 
 - [ ] [CODE] P2. **Wire the canonical-question-group into the instruments-service catalogue-rollup loader so
       `prediction_canonical_question_group` cqg-grain rows emit — the gate on this provably cleared 2026-06-16.**
@@ -299,3 +313,10 @@ measurements and todo 2 executes an already-ruled decision (338).
   Orthogonality HARD CHECK: 0 single-AG+cross-cutting mistags corpus-wide. Phase 3 extracted 3 conflict-clear bounded
   todos from the 2 orphans that had any, PARKED 2 genuine conflicts, and routed 1 process finding to its own issue doc.
   Left `status: draft` per the autonomous-mode safety rail — operator flips to `active` to dispatch.
+- 2026-07-27T15:25:50Z (slot-9 worker, `data_engineering`): todo 1 shipped — read-only re-basing of the cqg-classifier
+  coverage census, per `read_availability_index()` against the live `market-data-tick-pred-prd-central-element-323112`
+  manifest (single consolidated-object read, not a corpus walk). Numbers + method recorded in
+  `prediction_cqg_residual_2026_07_24.md`'s Progress Log. Also corrected this todo's own stale premise (KALSHI vs
+  POLYMARKET classifier-path asymmetry) — both venue classifiers are confirmed non-Optional at current HEAD, and both
+  measured 0.0000% `ClassifierConfidenceLow` in the live manifest. Todos 2 and 3 remain open (todo 2 sequencing note vs
+  batch4 todo 3 still applies; todo 3 is an unrelated live-capture-stall diagnosis, independently dispatchable).

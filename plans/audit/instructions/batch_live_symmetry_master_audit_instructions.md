@@ -32,6 +32,10 @@ last_updated: 2026-06-03
 
 # Batch=Live Symmetry Master — Audit Instructions
 
+> **⚠️ KNOWN GAP (flagged 2026-07-27, from `human_led_audit_pool_2026_05_21.md` row #14 close-out):** this instructions
+> file has never actually been run — `plans/audit/results/` has zero dated results under this epic name. Next cadence
+> run should close this gap.
+
 > **🔄 ALIGNED 2026-06-08 — batch=live symmetry is now ⑪, the no-regression KEYSTONE of the per-AG pre-apply audit.**
 > Each AG must PROVE the LIVE writer and the MIGRATED batch data emit the IDENTICAL canonical v9 form: schema ·
 > `data_types` · fields · source-aware `pipeline_mode={mode}_{source}[_{transport}]` · **Era-B**

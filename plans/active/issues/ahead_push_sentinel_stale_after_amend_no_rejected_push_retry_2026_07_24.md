@@ -18,7 +18,7 @@ summary:
   a human, with zero retry logic and no test coverage for this branch."
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]

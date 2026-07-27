@@ -14,7 +14,7 @@ summary:
   the live orchestrator VM after the pipeline promotes it.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer]

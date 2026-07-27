@@ -17,7 +17,7 @@ summary: |
   on top is unrelated noise that makes the PR read `UNSTABLE`).
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, market-tick-data-service, deployment-ui]
 scope: [engineer]

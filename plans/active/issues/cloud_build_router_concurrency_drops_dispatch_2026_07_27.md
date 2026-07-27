@@ -82,11 +82,26 @@ affects the LAST mile (does the fix actually run in prod) with zero observabilit
 
 ## Recommended decision
 
-- [ ] [INFRA] P1. Scope `cloud-build-router.yml`'s concurrency group per-repo (e.g.
-      `group: cloud-build-router-${{ github.event.client_payload.repo || github.event.client_payload.REPO }}`, matching
-      whatever field name the dispatch payload actually uses — repo: unified-trading-pm) so concurrent dispatches from
-      DIFFERENT repos queue/run independently instead of cancelling each other. Keep same-repo dispatches serialized
-      (that part of the design is fine) if a repo can double-dispatch.
+- [x] [INFRA] P1. ✅ — unified-trading-pm@\<sha\>. RE-DIAGNOSED during implementation: `cloud-build-router.yml`'s own
+      top-level `concurrency: group: ${{ github.workflow }}` was ALREADY fixed to
+      `cloud-build-router-${{ github.event.client_payload.repo || github.run_id }}` (`cancel-in-progress: false`) back
+      on 2026-06-25 (3dadfdbd9) — verified identical on `main` (blob `3f5d0919f` matches live GitHub HEAD). Yet
+      `gh run list` confirmed cancellations STILL occurring on 2026-07-27 (e.g. runs 30268363605/30268379563/... in the
+      13:01-13:17Z window), and every cancelled run's job list showed ONLY `freeze-check / check` — it never reached
+      `route-build`. Root cause: the shared `change-freeze-check.yml` reusable workflow (called via `uses:` by
+      `cloud-build-router.yml`, `cloud-build-router-aws.yml`, `freeze-deferred-build-replay.yml`, and
+      `overnight-agent-orchestrator.yml`) carried its OWN top-level
+      `concurrency: group: ${{ github.workflow }}-${{     github.ref }}` with `cancel-in-progress: true` — since
+      `repository_dispatch` always fires against the same default-branch ref, EVERY caller (regardless of which repo's
+      build it was gating) collided into ONE shared group (`Change Freeze Check-refs/heads/main`), so any new caller's
+      freeze-check cancelled whichever OTHER caller's freeze-check was still in-progress, cancelling that caller's
+      entire run (`route-build` needs: freeze-check). This is the actual mechanism that dropped instruments-service's
+      dispatch, not the top-level group this todo originally named. Fix: removed the concurrency block from
+      `change-freeze-check.yml` entirely — it's a stateless, read-only CSV/time check with no shared state to protect,
+      so there is no correctness reason to serialize it, and confirmed no other `workflow_call` reusable in this repo
+      shares this footgun (grepped for `group:.*github.workflow.*github.ref` + `workflow_call:` co-occurrence — only
+      this file matched with multiple distinct callers). Same-repo dispatches still serialize via
+      `cloud-build-router.yml`'s own per-repo group, unaffected by this change.
 - [ ] [INFRA] P2. Add a loud failure signal for a cancelled/dropped dispatch — e.g. a scheduled reconciliation check
       that compares each `ldr_main` repo's main-branch HEAD commit timestamp against its `:latest` image's push
       timestamp in Artifact Registry, and pages if an image is stale by more than the expected build+dispatch latency

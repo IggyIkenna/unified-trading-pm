@@ -16,7 +16,7 @@ summary: |
   findings-triage HARD RULE. Read-only investigation; no code or contract changed.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]

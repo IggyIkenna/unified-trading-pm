@@ -73,12 +73,25 @@ source: >-
       `None`) and route every unmatched market to `OTHER`, not `attempted_failed[ClassifierConfidenceLow]`. The "extend
       registry vs ratify out-of-registry-stays-failed" decision this todo poses is now MOOT — there is no
       out-of-registry-stays-failed path left to ratify. **Re-scoped to**: (1) re-run the coverage measurement against
-      current HEAD (expect ~0% `ClassifierConfidenceLow`, ~94.5% `OTHER` instead — confirm, don't assume); (2) verify
+      current HEAD — **DONE 2026-07-27, see Progress Log**: `ClassifierConfidenceLow` is confirmed 0.0000% for BOTH
+      venues (not just "expected"), but the `~94.5% OTHER` expectation in this todo's own text was WRONG — measured
+      `OTHER` share is ~55.2% of captured rows / ~11.1% of captured shards (per-venue split differs materially: KALSHI
+      49.8% rows / POLYMARKET 56.6% rows), because the registry has been extended far beyond just the OTHER-catch-all
+      since 2026-06-11 (alt-coins, weather, macro, ~17 sports leagues per decision 338 pass 2), so most of the
+      formerly-`ClassifierConfidenceLow` mass now routes to REAL named groups, not just `OTHER`. **This todo's own
+      re-scope premise is itself now annotated re-based, not left implying `~94.5% OTHER` is current.** (2) verify
       `market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py`'s `compute_object_atom`
       (its `None`-branch dead code + stale "the rebuild follows the [None→failed] contract" docstring/comment, ~lines
       329-354, 411-429) matches the now-unreachable-`None` reality — clean up the dead branches and the comment, don't
-      leave them describing an impossible path. Repos: unified-api-contracts, market-tick-data-service. Original
-      provenance: /tmp/r7_proj/prediction2.log 2026-06-11 (now superseded).
+      leave them describing an impossible path. **STILL OPEN** — read-only re-measurement (leg 1) does not include this
+      code-cleanup leg; also found (2026-07-27, same read-only pass):
+      `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py` carries the SAME stale pattern —
+      its module docstring (lines 21-29) still documents "a sub-threshold classification returns `None`" and its
+      `_add_canonical_question_group`-equivalent call site (line 591) still guards
+      `group.value if group is not None else None`, both now describing an unreachable path (confirmed:
+      `classify_kalshi_to_canonical_group` return type is `-> CanonicalQuestionGroup`, never `Optional`) — add to leg
+      (2)'s cleanup scope when that leg is picked up. Repos: unified-api-contracts, market-tick-data-service. Original
+      provenance: /tmp/r7_proj/prediction2.log 2026-06-11 (now superseded — see 2026-07-27 re-based numbers below).
 - [ ] [DATA] P2. **249-b — prediction cqg grain (`prediction_canonical_question_group`) — re-scoped 2026-07-26, decision
       338 resolved (OTHER for all).** The cqg grain needs deriving the canonical-question-group per conditionId; per the
       re-scoped todo above, virtually every object now classifies (to a real group or `OTHER`, never unclassified), so
@@ -98,3 +111,34 @@ source: >-
 
 - 2026-07-24 — plan forked from `migration_verification_orphan_safety_2026_06_10.md` (line-cap remediation split); no
   work done yet on either todo beyond what the parent's archived Progress Log already recorded.
+- 2026-07-27T15:25:50Z — **todo 1 leg (1) re-measurement complete** (dispatched via
+  `prediction_satellite_ao_dispatch_batch5_2026_07_26.md` todo 1, read-only, no `--apply`/no mutation). **Method**:
+  single consolidated-object read of the live prediction availability manifest via UTL
+  `read_availability_index("market-data-tick-pred-prd-central-element-323112", columns=[...])` (NOT a corpus walk —
+  single-walk discipline respected; `_index/latest.json` confirmed the consolidator had just run,
+  `last_run_at=2026-07-27T15:19:27Z`, `verdict=produced`, so the read was fresh, not stale-fallback). Filtered to
+  `data_type == "prediction_canonical_question_group"` (68,667 shard rows total). Verified against
+  `unified-api-contracts` HEAD `classifiers.py` (`classify_polymarket_to_canonical_group` /
+  `classify_kalshi_to_canonical_group` — both `-> CanonicalQuestionGroup`, non-Optional, confirmed by reading the full
+  function bodies, not just the docstring). **(a) `attempted_failed[ClassifierConfidenceLow]` share, per venue**: KALSHI
+  0/22,054 bundled shards (0.0000%); POLYMARKET 0/46,613 bundled shards (0.0000%); combined 0/68,667 (0.0000%). The
+  bundled data_type carries only 4 `attempted_failed` rows total (2 KALSHI + 2 POLYMARKET, both dated 2026-06-27/28),
+  and every one of them has `error_reason="missing_available_at_envelope"`, NOT `ClassifierConfidenceLow` — the
+  `ClassifierConfidenceLow` failure mode is empirically extinct for BOTH venues at current HEAD, not just theoretically
+  unreachable. **(b) `OTHER`-group share** (exact `instrument_id == "OTHER"` on `capture_status == "captured"` rows —
+  NOT a substring match, which would have wrongly also caught `GEO_OTHER_BY_DATE`; and NOT the `underlying` column,
+  which is unpopulated/`None` on 17,592 of 17,592 sampled captured cqg rows for this MTDS raw-tick manifest —
+  `instrument_id` is confirmed the correct column per `rebuild_prediction_manifest.py`'s own documented contract
+  "`instrument_id=cqg`" and directly verified by reading real values off this manifest, e.g. `ADA_PRICE_RANGE_DAILY`,
+  `BNB_UP_DOWN_DAILY`): KALSHI 1,617/10,301 captured shards (15.70%) / 74,473,736 of 149,410,266 captured rows (49.85%);
+  POLYMARKET 329/7,291 captured shards (4.51%) / 326,510,683 of 576,523,999 captured rows (56.63%); combined
+  1,946/17,592 captured shards (11.06%) / 400,984,419 of 725,934,265 captured rows (55.24%). **This is materially below
+  the `~94.5% OTHER` this todo's own re-scoped text predicted** — the registry extensions since 2026-06-11 (alt-coins,
+  weather, macro releases, ~17 sports leagues, all decision-338-pass-2 granular sub-type routing) absorbed most of the
+  formerly-unclassified mass into REAL named groups, not just into `OTHER`. **(c) max captured day for the bundled
+  data_type**: NOT still 2026-04-14 — KALSHI captured cqg bundles now extend to **2026-07-26** (min 2021-06-30),
+  POLYMARKET to **2026-07-22** (min 2025-03-14); the bundled data_type's overall max `date` across all capture_status
+  values is 2026-07-27. capture_status distribution on the 68,667 bundled shards: `empty_confirmed`=48,044,
+  `captured`=17,592, `expected_unattempted`=3,027, `attempted_failed`=4 (sums to 68,667). **Explicitly out of scope for
+  this measurement** (per `prediction_satellite_ao_dispatch_batch5_2026_07_26.md` todo 1): the extend-vs-ratify
+  registry-coverage decision — these numbers only supply the inputs that decision needs, they don't make the call.

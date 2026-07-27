@@ -5,7 +5,7 @@ summary:
   Keep the UI quality-gate build cache warm so incremental rebuilds only recompile changed code, not the full app.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [deployment-ui, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]

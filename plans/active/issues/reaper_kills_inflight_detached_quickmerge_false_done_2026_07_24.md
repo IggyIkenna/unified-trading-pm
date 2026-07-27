@@ -15,7 +15,7 @@ summary: >-
   quickmerge PID 2949777 (PPID=1) reaped after 5+min of progressing QG with no /tmp/qm_detached2.exit written.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]

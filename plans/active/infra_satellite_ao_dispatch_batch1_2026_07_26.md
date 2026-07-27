@@ -18,7 +18,7 @@ summary: >-
   side had already shipped or an operator had already ruled) rather than re-drafted as a competing claim.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos:
   [
