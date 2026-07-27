@@ -373,11 +373,15 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 > session** — do not close this todo on the DEFI spot-check alone; re-measure each AG with the correct vocabulary before
 > flipping.
 
-- [x] ✅ 7. [DATA] P0. **ROOT-CAUSED + CODE FIX SHIPPED 2026-07-27 (slot-10)** — owned + closed on
-      `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md` per that doc's `source:` note (this plan
-      does not own MDPS writer work). Full write-up + evidence lives there (Todo 1 Findings + Todo 2 Progress Log
-      entry); linking here per the "flip with evidence, don't duplicate the writeup" convention. **Verdict**: structural
-      root cause is the `ohlcv_1m` emission-policy gate's self-referential upstream-completeness check
+- [x] ✅ 7. [DATA] P0. **ROOT-CAUSED + CODE FIX SHIPPED 2026-07-27 (slot-10); FULLY CLOSED 2026-07-27 (slot-8, todo 7 of
+      the disconnect plan)** — owned + closed on `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md`
+      per that doc's `source:` note (this plan does not own MDPS writer work). Full write-up + evidence lives there
+      (Todo 1 Findings + Todo 2 Progress Log entry); linking here per the "flip with evidence, don't duplicate the
+      writeup" convention. **Update**: the disconnect plan has since progressed past the fix alone — the historical
+      corpus backfill (its todo 5: 86,252 manifest cells recorded across all 4 asset_groups) and the 3-surface
+      object/manifest/parquet spot check (its todo 6: live-write + backfill samples, no disagreement found) are BOTH
+      DONE as of 2026-07-27, so the disconnect this todo tracks is closed end-to-end, not just root-caused. **Verdict**:
+      structural root cause is the `ohlcv_1m` emission-policy gate's self-referential upstream-completeness check
       (`_build_ohlcv_1m_upstream_window` keyed at the SAME shard tuple as the row being written), permanently
       STRICT_FAIL-locking every `trades`-sourced `ohlcv_1m:current`/`ohlcv_1h:current`/`book_snapshot_5` shard's
       first-ever write — confirmed by direct code read (`canonical_writer_stamping.py`), not inferred. Fixed + shipped

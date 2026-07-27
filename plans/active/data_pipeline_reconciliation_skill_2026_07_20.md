@@ -573,15 +573,20 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       recovered spec tests + 85 pre-existing raw-tick tests pass; full QG green — `unified-api-contracts@6329fc04`.
       Skill §3h re-pointed at the oracle (see below).
 - [x] 40. ✅ [DATA] P0. **Fix the candle object↔manifest disconnect (candle-manifest population)** — filed as its own
-      MDPS-owned plan, `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md` (`status: draft`,
-      `assigned_vm: NA` per the ask-before-creating default; the doc itself recommends the operator consider AO-dispatch
-      for its todo-1 diagnostic, without deciding it). Scoping found the original framing stale: a `record_captured`
-      call now EXISTS in the writer (`market-data-processing-service@752eaff` + same-day `@2d720b4`, 2026-07-21) and was
-      proven working against `-test-`, yet a fresh 2026-07-25 re-measurement shows the PROD manifest is still unchanged
-      (defi 0 / cefi 6 / tradfi 73 / prediction 168 rows, byte-identical to 2026-07-20/2026-07-23) — **and, newly
-      measured this pass, zero rows on any of the 4 asset_groups carry a `written_at` after the fix's 2026-07-21 17:01
-      UTC+1 landing time.** The new plan scopes root-causing this (3 undistinguished hypotheses) ahead of the fix +
-      historical backfill — `unified-trading-pm` (this batch).
+      MDPS-owned plan, `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md` (at filing time:
+      `status: draft`, `assigned_vm: NA` per the ask-before-creating default; the doc itself recommends the operator
+      consider AO-dispatch for its todo-1 diagnostic, without deciding it). Scoping found the original framing stale: a
+      `record_captured` call now EXISTS in the writer (`market-data-processing-service@752eaff` + same-day `@2d720b4`,
+      2026-07-21) and was proven working against `-test-`, yet a fresh 2026-07-25 re-measurement shows the PROD manifest
+      is still unchanged (defi 0 / cefi 6 / tradfi 73 / prediction 168 rows, byte-identical to 2026-07-20/2026-07-23) —
+      **and, newly measured this pass, zero rows on any of the 4 asset_groups carry a `written_at` after the fix's
+      2026-07-21 17:01 UTC+1 landing time.** The new plan scopes root-causing this (3 undistinguished hypotheses) ahead
+      of the fix + historical backfill — `unified-trading-pm` (this batch). **Pointer confirmed accurate post-completion
+      (2026-07-27, slot-8)**: the operator later did flip the doc to `assigned_vm: planning` / `status: active`
+      (AO-dispatched); root cause was named (the `ohlcv_1m` emission-policy gate's self-referential completeness check),
+      the writer fix shipped (`mdps@caa995c`), the historical corpus backfilled (86,252 manifest cells across all 4
+      asset_groups), and a 3-surface spot check confirmed no disagreement — the disconnect this todo's pointer targets
+      is now closed end-to-end; the path itself needed no correction.
 - [x] 41. ✅ [DATA] P1. **Ran the MDPS candle audit per-AG against the Option-A target** —
       `/data-pipeline-reconciliation --asset-group <ag> --layer candles`, sequenced defi → prediction → cefi → tradfi. 4
       reports (+ JSON siblings) at
