@@ -141,4 +141,15 @@ input gap didn't change.
   `_window_is_covered("2026-07-05", 1, scan.canonical_days) == True` for the exact TRADFI:delta_one window from the
   original bug report. Both fixes are complementary, not duplicative — one closes the runtime dependency-check's
   manifest blindness, the other prevents a second check's phantom-guard from over-firing on legitimate honest-empty
-  days. P3 (an actual VM re-run for a genuine force+skip proof) is left open below — not run this session.
+  days. P3 (an actual VM re-run for a genuine force+skip proof) is left open below — not run this session. **Lesson for
+  the next session touching `_scan_input_coverage`**: THREE different slots independently modified this exact function
+  in the same session (features-service@696768c7 phantom-capture guard, this session's @c06a9bbf exemption fix, and a
+  THIRD in-flight fix from another slot titled "require the TARGET day to have real captured MDPS candle data" touching
+  the same file + the same `tests/unit/test_pipeline_e2e_check_candle_phantom_capture.py`, still shipping via quickmerge
+  as of this entry). None of these were coordinated in advance — each slot discovered the collision only via
+  `git pull --rebase` mid-quickmerge. If you land here next: (1) re-read the CURRENT `_scan_input_coverage` body rather
+  than assuming any single commit message describes the whole function, (2) re-run
+  `tests/unit/test_pipeline_e2e_check_candle_phantom_capture.py` in full (not just the tests you'd expect your own
+  change to touch) before trusting the combined behavior, (3) if you find another edge case, re-verify against the REAL
+  manifest/GCS first (this is what caught the empty_confirmed regression — a plausible-sounding fix commit message was
+  NOT sufficient evidence on its own).
