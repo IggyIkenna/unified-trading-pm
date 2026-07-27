@@ -560,3 +560,38 @@ every todo executes an already-decided spec from the parent doc.
   all 4 scripts + the enumeration audit; (5) the HYPERLIQUID/ASTER follow-up pass above stays open regardless. **For any
   concurrent reader**: 42 real `canonical-migration-cefi-content-apply-055803-*` VMs are live in `asia-northeast1-c`
   right now — check `gcloud compute instances list` before assuming this campaign hasn't started.
+- **2026-07-27T05:28Z — first ~25 min of live monitoring: 1 SPOT preemption wave (10 shards) hit + fully recovered, 1
+  genuine completion, fleet stable, throughput measured.** Actively re-checked (direct
+  `run.log`/`gcloud compute instances describe`/`operations list` reads, not passive waiting) at ~3-4 min intervals.
+  **Preemption wave**: 10 of the 39 fan-out shards were SPOT-preempted within the first ~20 min
+  (`cs1-1, cs4-2, cs6-3, cs6-4, cs8-3, cs9-3, cs9-4, cs9-5, cs9-6, cs10-9` — a ~26% preemption rate on `e2-standard-16`
+  SPOT in `asia-northeast1-c` right now, real zone capacity contention, not a bug;
+  `--instance-termination-action=DELETE` means each preempted VM was gone, not just stopped). **Recovered per the
+  idempotent-resume contract** (this script has no PROGRESS.json checkpoint, but every already-patched file resolves to
+  `already_canonical_skipped` on a fresh pass, so a full same-date-range re-run is safe and correct, not wasted work):
+  relaunched all 10 with IDENTICAL date sub-ranges, this time `ON_DEMAND=true` (justified per-shard: already preempted
+  once — the spot-vms-for-backfill HARD RULE's stated opt-out reason) as `*-1r`/`*-2r`/etc. suffixed VMs. Fleet back to
+  the full 42 within ~10 min of the first preemption detected. **First genuine completion**: `cs1-1r` (smallest shard,
+  769 files, 2019-03-30..2019-12-21) finished cleanly — `EXIT_STATUS=0`, `769/769` processed, `rows_changed=0` (this
+  narrow window was already fully canonical from an earlier partial pass), 0 errors, self-deleted per
+  `VM_SHUTDOWN_ON_COMPLETION`. **Direct content-mutation spot-check** (not just trusting the log): downloaded a real
+  object BEFORE it was touched by this campaign is not possible to re-fetch after the fact, so instead compared the
+  migration's own `_migration_backups/cefi_content_catalogue_2026_07_17/` copy (pre-patch) against the live current
+  object for `BYBIT:PERPETUAL:BTC-USDT@LIN.parquet` (day=2024-05-15, within `cs81c`'s range): backup `instrument_id` =
+  `BYBIT:PERPETUAL:BTCUSDT` (raw wire form) → live `instrument_id` = `BYBIT:PERPETUAL:BTC-USDT@LIN` (canonical) —
+  1,723,117 rows in both, every OTHER column byte-identical. **Real measured `--apply` throughput** (7-shard sample,
+  diverse profiles): 2.9-9.9 files/sec/VM, ~5.5 avg; at 42 VMs ≈ 231 files/sec aggregate ⇒ ~5.4h projected for the full
+  ~4.5M-file corpus if no further major preemption churn (revised down from the naive dry-run-throughput extrapolation —
+  real `--apply` costs ~4x the GCS round-trips of a dry-run read for every file that needs a write). **Per-shard
+  discovered-file counts differ from the day-range-proportional estimate** (e.g. `cs3-1` discovered 75,236 vs. the
+  ~100,614 estimate, `cs10-5` discovered 201,581 vs. ~122,626) — expected, since the estimate assumed uniform density
+  within each cs-window; discovery itself is exhaustive and exact per shard, so this doesn't affect correctness, only
+  the original load-balancing estimate's accuracy. **Fleet state at 05:28Z**: 41 RUNNING + `cs1-1r`
+  completed-and-self-deleted = 42 accounted for, 0 further preemptions since the 10-shard fix, 0 verify_failed/error
+  signals anywhere. A background health-monitor (this session's scratchpad, `fleet_health_monitor.sh`, 13 rounds × 3 min
+  ≈ 39 min bounded window) continues sampling preemptions/EXIT_STATUS every ~3 min. **Status: IN FLIGHT.** Whoever
+  continues this: re-run the same preemption-check + narrowed-same-range-relaunch cycle above for any NEW preemptions
+  found
+  (`gcloud compute operations list --filter="operationType=compute.instances.preempted AND targetLink~canonical-migration-cefi-content-apply-055803"`),
+  and keep checking `EXIT_STATUS` objects for genuine completions — do not wait for a "notification," GCE VMs don't page
+  this conversation, poll directly.
