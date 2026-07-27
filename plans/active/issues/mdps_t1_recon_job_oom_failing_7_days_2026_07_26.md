@@ -873,29 +873,29 @@ positive-output proof. The remaining `Completed=False` is a newly-surfaced, unre
       ONE group, not every group written under it.
 
       **Fix**: added `no_real_chain_root` (true only for the legacy-sentinel, no-underlying case) to
-                                                                                                      `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
-                                                                                                      (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
-                                                                                                      own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
-                                                                                                      original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
-                                                                                                      so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
+                                                                                                          `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
+                                                                                                          (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
+                                                                                                          own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
+                                                                                                          original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
+                                                                                                          so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
 
-                                                                                                      **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
-                                                                                                      batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
-                                                                                                      id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
-                                                                                                      green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files).
+                                                                                                          **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
+                                                                                                          batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
+                                                                                                          id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
+                                                                                                          green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files).
 
-                                                                                                      **Re-verified end-to-end against real production data (Update 7, 2026-07-27)**: execution
-                                                                                                      `uts-prod-market-data-processing-service-t1-recon-86jbn` (the exact repro command below, against the fixed image
-                                                                                                      rebuilt on `main`@`eaf8127`), watched to a genuine `Completed=False`/`NonZeroExitCode` terminal state (failing for
-                                                                                                      two unrelated, already-triaged reasons, not the mixing bug — see Update 7). Zero `partition_mismatch`/
-                                                                                                      `instrument_type mismatch` occurrences anywhere in the run's logs, and two independent freshly-written
-                                                                                                      MATCH_ODDS/MATCH_ODDS_LAY output pairs for the same fixture (BETFAIR_EX_EU ALLSVENSKAN KALMAR-MJALLBY;
-                                                                                                      BETFAIR_EX_EU MLS COLUMBUS_CREW_SC-CINCINNATI) were pulled directly from GCS and confirmed uncontaminated
-                                                                                                      (`instrument_id.unique()` per file contains only that file's own market). See Update 7 for full evidence.
+                                                                                                          **Re-verified end-to-end against real production data (Update 7, 2026-07-27)**: execution
+                                                                                                          `uts-prod-market-data-processing-service-t1-recon-86jbn` (the exact repro command below, against the fixed image
+                                                                                                          rebuilt on `main`@`eaf8127`), watched to a genuine `Completed=False`/`NonZeroExitCode` terminal state (failing for
+                                                                                                          two unrelated, already-triaged reasons, not the mixing bug — see Update 7). Zero `partition_mismatch`/
+                                                                                                          `instrument_type mismatch` occurrences anywhere in the run's logs, and two independent freshly-written
+                                                                                                          MATCH_ODDS/MATCH_ODDS_LAY output pairs for the same fixture (BETFAIR_EX_EU ALLSVENSKAN KALMAR-MJALLBY;
+                                                                                                          BETFAIR_EX_EU MLS COLUMBUS_CREW_SC-CINCINNATI) were pulled directly from GCS and confirmed uncontaminated
+                                                                                                          (`instrument_id.unique()` per file contains only that file's own market). See Update 7 for full evidence.
 
-                                                                                                      Repro command used for this verification pass:
-                                                                                                      `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
-                                                                                                      (repo: market-data-processing-service)
+                                                                                                          Repro command used for this verification pass:
+                                                                                                          `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
+                                                                                                          (repo: market-data-processing-service)
 
 - [x] [SCRIPT] P2. **Scope MDPS's per-asset-group candle timeframe iteration** — `config.py`'s `default_timeframes`
       (`["15s","1m","5m","15m","1h","4h","24h"]`) was applied uniformly to every asset_group; sports only has
@@ -959,8 +959,9 @@ positive-output proof. The remaining `Completed=False` is a newly-surfaced, unre
       new todo below for why ASIAN_HANDICAP/OVER_UNDER/MATCH_ODDS_LAY never appeared here — a separate, larger bug, not
       this one). See Update 9 for full evidence. (repo: market-data-processing-service)
 
-- [x] [SCRIPT] P1. ✅ DONE (partial, 2026-07-27, slot-11) — see Update 10 below. **Fix sports `odds_horizon_bucket`'s
-      Path A½ honest-absence check silently suppressing ALL non-MATCH_ODDS candle output
+- [x] [SCRIPT] P1. ✅ DONE — RESOLVED 2026-07-27, all 3 layers fixed + verified against real production data, see
+      `issues/mdps_sports_odds_horizon_bucket_h2h_anchor_fix_2026_07_27.md`. **Fix sports `odds_horizon_bucket`'s Path
+      A½ honest-absence check silently suppressing ALL non-MATCH_ODDS candle output
       (MATCH_ODDS_LAY/ASIAN_HANDICAP\__/OVER_UNDER\__), always, regardless of whether real market data exists.** Newly
       discovered 2026-07-27 (Update 9) while investigating the `af_fixture_id` bug above — a SEPARATE root cause/code
       path, not fixed there. `process_to_candles`'s Path A½ check (`tick_data["market_key"] == "h2h"`) was written
@@ -979,8 +980,7 @@ positive-output proof. The remaining `Completed=False` is a newly-surfaced, unre
       legitimately co-occur with another market in one slice, is there a call path where `tick_data` is genuinely NOT
       yet market-filtered) before guessing, same standard as the KALSHI investigation (Update 6). Flagged per
       data-pipeline-correctness-is-the-heartbeat — this silently drops real market data across most of the sports
-      odds_horizon_bucket product. See Update 9 for full evidence. (repo: market-data-processing-service) — Update 10:
-      see `issues/mdps_sports_odds_horizon_bucket_h2h_anchor_fix_2026_07_27.md`.
+      odds_horizon_bucket product. See Update 9 for full evidence. (repo: market-data-processing-service)
 
 - [ ] [DESIGN] P2. **`subprocess-per-date`'s fixed 1800s (30-min) timeout is too short for a full day of PREDICTION
       candle derivation now that the KALSHI schema mapping actually works** — newly discovered 2026-07-27 (Update 10)
