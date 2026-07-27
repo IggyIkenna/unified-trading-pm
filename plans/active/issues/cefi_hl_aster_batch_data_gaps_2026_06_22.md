@@ -732,20 +732,30 @@ scheduler.
       when fresh per-VM shards exist. Diagnose whether `consolidator_content_write_at` marker advanced past the shards
       (idle-touch trap residual) OR `_is_lock_fresh` skips on a stale-but-present lock (paused-cron mid-flight). Add a
       regression test: canonical@T, shards@T+1 → next cycle MUST merge+write (not no-op). manifest_consolidator.py.
-- [ ] [INFRA] P0. **market-data-tick-cefi bucket + enumerator** — PURGE the out-of-window over-seeding. MEASURED on the
-      fresh full-rebuild index 2026-06-24 (gcsfs read): index is **48.0M rows / 1.02 GiB**; **45.0M empty_confirmed
-      (93.8%)** of which **44.2M `EXPECTED_INSTRUMENT_NOT_LISTED`** — DERIBIT 36.3M, OKX-FUTURES 2.3M, BINANCE-FUTURES
-      2.2M, BYBIT 1.2M, KRAKEN-FUTURES 1.0M, … and **43.9M carry BLANK instrument_type** (the over-seed signature: dated
-      options/futures emitted for every day across their range, not clipped to listing window). captured=2.09M (+60%
-      from the 1.31M 2026-06-21 start — backfill IS expanding real coverage). **ORDER MATTERS (the canonical purge alone
-      is FUTILE — the `--force */5` cron re-merges the per-VM shards every 5 min → re-bloats):** (1) FIX the
-      enumerator/writer to clip dated-instrument seeding to `[available_from,available_to]` so new shards stop emitting
-      blank-instrument_type NOT_LISTED outside the window; (2) purge the existing cells from the **per-VM shards**
-      (`_index/per_vm/*.parquet`) not just the canonical — then the next rebuild produces a lean ~3.8M-row/~100MB index;
-      (3) lean canonical → honest-cov denominator becomes real (~55-60% via the query-time out_of_window exclusion).
-      (Prior worker `a19169b2` died on rate-limit — redo, idempotent.) Seeding source to fix: grep who emits
-      `EXPECTED_INSTRUMENT_NOT_LISTED` with no instrument_type (IS `enumerate_expected_universe.py` / MTDS capture
-      preflight). COORDINATE with the out_of_window/dated-instrument work (other agent overlap).
+- [x] ✅ [INFRA] P0. **VERIFIED HELD 2026-07-27 (slot-9)** — all 3 constituent fixes below ((1) clip, (1b) fleet deploy,
+      (2) purge) were already shipped/executed 2026-06-24; the remaining open question was whether the fix held over
+      time or the canonical re-bloated. **Live check**:
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` is **133.78 MiB**, last
+      written **2026-07-27T04:43:54Z** (~15 min before this check, i.e. actively still being maintained by the `*/5`
+      incremental consolidator cron) — consistent with the post-purge ~117-137MB figure and NOT the pre-purge
+      1.02GB/49.7M-row bloated state, over a full month (2026-06-24 → 2026-07-27) of continuous incremental merges. This
+      confirms clip (1)/(1b) is genuinely stopping new bloat at the seed source (not just a one-time purge that would
+      have silently re-bloated under the ongoing `*/5` cron otherwise). (3)'s outcome (honest-coverage denominator
+      reflecting the lean canonical) follows directly and was not independently re-measured this session (out of scope —
+      no separate action item). **market-data-tick-cefi bucket + enumerator** — PURGE the out-of-window over-seeding.
+      MEASURED on the fresh full-rebuild index 2026-06-24 (gcsfs read): index is **48.0M rows / 1.02 GiB**; **45.0M
+      empty_confirmed (93.8%)** of which **44.2M `EXPECTED_INSTRUMENT_NOT_LISTED`** — DERIBIT 36.3M, OKX-FUTURES 2.3M,
+      BINANCE-FUTURES 2.2M, BYBIT 1.2M, KRAKEN-FUTURES 1.0M, … and **43.9M carry BLANK instrument_type** (the over-seed
+      signature: dated options/futures emitted for every day across their range, not clipped to listing window).
+      captured=2.09M (+60% from the 1.31M 2026-06-21 start — backfill IS expanding real coverage). **ORDER MATTERS (the
+      canonical purge alone is FUTILE — the `--force */5` cron re-merges the per-VM shards every 5 min → re-bloats):**
+      (1) FIX the enumerator/writer to clip dated-instrument seeding to `[available_from,available_to]` so new shards
+      stop emitting blank-instrument_type NOT_LISTED outside the window; (2) purge the existing cells from the **per-VM
+      shards** (`_index/per_vm/*.parquet`) not just the canonical — then the next rebuild produces a lean
+      ~3.8M-row/~100MB index; (3) lean canonical → honest-cov denominator becomes real (~55-60% via the query-time
+      out_of_window exclusion). (Prior worker `a19169b2` died on rate-limit — redo, idempotent.) Seeding source to fix:
+      grep who emits `EXPECTED_INSTRUMENT_NOT_LISTED` with no instrument_type (IS `enumerate_expected_universe.py` /
+      MTDS capture preflight). COORDINATE with the out_of_window/dated-instrument work (other agent overlap).
   - [x] ✅ **(1) CLIP SHIPPED — mtds@7b18433b** (QG-green, on LDR; Tier-C drain → staging):
         `cefi_catalog_reader._iter_not_yet_listed` skips `_DATED_INSTRUMENT_TYPES={FUTURE,OPTION}` in pre-listing
         seeding (a dated option listing months out is not-in-universe, not honest-absence). Persistent
