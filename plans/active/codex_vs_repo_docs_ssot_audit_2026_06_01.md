@@ -291,9 +291,9 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       sole Elysium ref is a legit link to the client-pod onboarding doc. Nothing to scrub.
 - [x] ✅ [DOCS] P2. **gcs_hive partition-path doc FIX-STALE** — VERIFIED already-canonical 2026-07-27 (Phase-2), no
       codex change needed. Sampled the codex hive-partition path examples
-      (`codex/02-data/sports-data-source-coverage-matrix.md`, `sports-data-types-catalog.md`, et al.); all use canonical
-      `key=value` segments (`by_date/day=…/entity=…/league=…`, `data_type=odds`). No malformed non-`key=value` example
-      survives in codex. (Operator note preserved from
+      (`/codex/02-data/sports-data-source-coverage-matrix.md`, `sports-data-types-catalog.md`, et al.); all use
+      canonical `key=value` segments (`by_date/day=…/entity=…/league=…`, `data_type=odds`). No malformed non-`key=value`
+      example survives in codex. (Operator note preserved from
       `archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`: doc-fix only; the GCS DATA
       remediation stays operator-deferred and is out of scope here.)
 - **Parked — features-service**: another agent active; LDR branch-protected. Docs commit `b9b4103e` on

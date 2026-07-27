@@ -150,8 +150,8 @@ drift_direction: advance-code
       `plans/active/issues/     sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` measured SMARKETS at
       **1,113,644-1,652,384 row_count** (two independent live manifest census passes, 2026-07-27) across 480-6,958
       shards through 2026-07-26 — i.e. actively captured production data, not a small residual.
-      `codex/01-domain/sports-instruments.md` §"VENUE COUNT CORRECTED 2026-07-24" independently lists SMARKETS among the
-      28 live, individually-registered bookmaker venues captured through ODDS_API — it was NEVER "removed from all
+      `/codex/01-domain/sports-instruments.md` §"VENUE COUNT CORRECTED 2026-07-24" independently lists SMARKETS among
+      the 28 live, individually-registered bookmaker venues captured through ODDS_API — it was NEVER "removed from all
       repos" as the source todo asserted. A purge here would have destroyed over a million rows of genuine live
       betting-exchange data. **Corrected scope — now that the parts[]-index parser fix has shipped
       (`market-data-processing-service@51502c3` + `instruments-service@f46e553e`, verified via `git log`), re-stamp
