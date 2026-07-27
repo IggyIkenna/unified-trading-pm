@@ -39,6 +39,17 @@ locked_since: 2026-05-21
 
 # Backfill-VM data-correctness findings — 2026-06-29
 
+> **🟢 REHOMED 2026-07-27** (plan-vintage-audit corrected-citation fix): F1-F3 fixed (see Progress Log). F4/F6 rehomed
+> to [`defi_consolidated_closeout_2026_07_18.md`](/plans/active/defi_consolidated_closeout_2026_07_18.md)'s Open
+> follow-ups; F5 rehomed to
+> [`cefi_consolidated_closeout_2026_07_18.md`](/plans/active/cefi_consolidated_closeout_2026_07_18.md) Track 6; F7
+> rehomed to [`tradfi_consolidated_closeout_2026_07_18.md`](/plans/active/tradfi_consolidated_closeout_2026_07_18.md)
+> (operator decision applied: gate TradFi capture by `is_mvp`). This doc is otherwise resolved — 4 closeout plans
+> previously cited it as "0 open todos" (a checkbox-counting miscount; F4-F7 were prose findings, not checkboxes), now
+> corrected to point at the real open items above. **Still `locked_by: live-defi-rollout` — archive only after an
+> explicit `[unlock-plan]` grant** (not yet asked; this doc's substantive content is fully migrated, so archival is now
+> just a formality pending that ask).
+
 ## Context
 
 While auditing the running GCP backfill VMs (`central-element-323112`, zone `asia-northeast1-c`) for spend, a deeper
@@ -252,3 +263,8 @@ Top-5-European MVP — scope, tracked in `gcp_vm_spend_audit.md`.
   financial / DeFi non-MVP data_types) needing a cron-active check. **INVENTORY ONLY per operator** — no code changed.
   Operator scope decisions recorded in F7: CME crypto/micros OUT; `ohlcv_1s` + DeFi extra data_types KEEP pending
   per-item review. Open keystone: confirm whether the TradFi `expected_unattempted` enumerator is `is_mvp`-gated.
+- 2026-07-27: **F4/F6 rehomed** to `defi_consolidated_closeout_2026_07_18.md`, **F5 rehomed** to
+  `cefi_consolidated_closeout_2026_07_18.md`, **F7 rehomed** to `tradfi_consolidated_closeout_2026_07_18.md` (with the
+  operator's 2026-07-27 is_mvp-gating decision applied) — corrects 4 closeout plans that had falsely cited this doc as
+  "0 open todos / closed" (checkbox-counting miscount; F4-F7 were prose findings, not `- [ ]` items). Doc content is now
+  fully migrated; remains open pending an explicit `[unlock-plan]` grant to archive.

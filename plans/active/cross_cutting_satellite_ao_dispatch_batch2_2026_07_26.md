@@ -471,9 +471,17 @@ drift_direction: advance-code
   carry/reversion trio is research-harness work. The consolidated closeout already nominates Track 24 as the first
   extraction candidate if that doc needs a line-cap split — that extraction plus a dedicated triage is the right next
   move for this family, not another batch slot.
-- **`mdps_features_reduced_artifact_tracker_2026_06_28.md`** (`status: draft`, 0 checkbox todos). Its blocking gap is
-  that "Plan 3 — `mvp_for_mdps_and_features_universe_uac` — was **never authored**", holding up 3 downstream plans. That
-  is a human UAC-universe scoping pass, which the dispatch-scope rule excludes outright.
+- **`mdps_features_reduced_artifact_tracker_2026_06_28.md`** (`status: draft`, 0 checkbox todos). **CORRECTED
+  2026-07-27**: Plan 3 (`mvp_for_mdps_and_features_universe_uac`) was NOT never-authored — it shipped in full and was
+  archived 2026-06-30 (`plans/archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md`, all 6 items
+  content-verified): `mdps_mvp_universe` (unified-api-contracts@682cffb5), `feature_perp_representative`
+  (unified-api-contracts@6f0c4bf8), `execution_spot_representative` (unified-api-contracts@6cf967c2), the 5-AG test
+  matrix (unified-api-contracts@6a2f6aab, 56/56 green), consumed by features-service@48fa8377. None of the 3 downstream
+  mini-plans were actually blocked on it: Plan 2 (`features_read_book_columns_not_snapshots`) was already complete
+  independently; Plan 9 (`execution_fidelity_tiers_uac_governed`) was already active, tracked separately; Plan 6
+  (`honest_coverage_smoke_harness`) has a stable v10 dependency contract to consume whenever it's authored — it just
+  hasn't been implemented yet (unrelated to Plan 3). This tracker doc itself has 0 own checkbox todos and is slated for
+  archival in §2 of `june_2026_vintage_audit_findings_2026_07_27.md`.
 - **`data_status_cell_grid_rearchitecture_2026_07_18.md`** (7 open) — todo 2 is an explicit design gate ("evaluate the
   three directions … pick one (or a hybrid) and record the decision + the projection schema"), and todos 3-7 are all
   downstream of it. Todo 1 (**measure + profile** the current cell-grid build to baseline the per-service memory

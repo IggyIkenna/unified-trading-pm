@@ -2,9 +2,10 @@
 doc_type: plan
 title: MTDS/MDPS tech-debt & coverage — file-size splits + polars seam + coverage/QG residuals (survivor M-2)
 summary:
-  Deferred MTDS/MDPS tech-debt plan — split 15 pre-existing >900-line source files, apply pandas-to-polars adapter seam,
-  and clear QG residuals after per-AG data migrations complete.
-status: paused
+  MTDS/MDPS tech-debt plan — split 15 pre-existing >900-line source files, apply pandas-to-polars adapter seam, and
+  clear QG residuals after per-AG data migrations complete. Resumed 2026-07-27 (operator directive, interactive
+  operator-gate session).
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -43,12 +44,10 @@ drift_direction: advance-code
 
 # MTDS file-size refactor — split the 15 pre-existing >900-line source files
 
-> **⏸️ DEFERRED 2026-06-26 (operator) — non-essential, parked.** This is pure tech-debt (file-size splits + the
-> pandas→polars adapter seam + coverage/QG residuals) and is already self-gated behind the per-AG data migration. The
-> operator deprioritised it — it does NOT block instruments/MTDS data correctness or the backfill-to-100% path. The
-> folded residuals stay captured here so nothing is lost; pick it up when the MTDS commit-quality-boundary
-> (`.qg_last_passed_sha`) actually needs restoring. **NOTE the live blocker is elsewhere (was: "stays a live blocker" —
-> corrected 2026-07-12, finding 186, §A2 B-queue ruling):** the issue
+> **🟢 RESUMED 2026-07-27 (operator, interactive operator-gate session)** — was ⏸️ DEFERRED 2026-06-26, non-essential,
+> parked. This is pure tech-debt (file-size splits + the pandas→polars adapter seam + coverage/QG residuals) and is
+> already self-gated behind the per-AG data migration (now complete for all 5 AGs). **NOTE the live blocker is elsewhere
+> (was: "stays a live blocker" — corrected 2026-07-12, finding 186, §A2 B-queue ruling):** the issue
 > `issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md` (which blocked ALL MTDS ships) was a
 > SEPARATE doc and was NOT deferred by this — but that blocker is now RESOLVED (2026-06-30, QG green + Cloud Build
 > SUCCESS, archived at `../archive/issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md`),
@@ -189,9 +188,8 @@ byte-identical output before/after).
 
 ## Deferred work — migrated to:
 
-**Not yet identified** — this whole plan (`status: paused`, tagged `deferred`) IS the designated survivor/receptacle for
-the parked MTDS/MDPS file-size-splits + pandas→polars adapter-seam + coverage/QG-residual scope (per the top-of-doc "⏸️
-DEFERRED 2026-06-26 (operator) — non-essential, parked" banner). There is no external successor to point to because the
-work was never migrated elsewhere — it stays captured here so nothing is lost, and resumes in-place (this same plan)
-once the MTDS commit-quality-boundary needs restoring or the operator reprioritises it. This plan itself remains the
-owner.
+**Not yet identified** — this whole plan (`status: active` as of 2026-07-27, was `paused`/tagged `deferred`) IS the
+designated survivor/receptacle for the MTDS/MDPS file-size-splits + pandas→polars adapter-seam + coverage/QG-residual
+scope (was parked per the top-of-doc "⏸️ DEFERRED 2026-06-26 (operator) — non-essential, parked" banner — **operator
+directive 2026-07-27: resume**). There is no external successor to point to because the work was never migrated
+elsewhere — it stays captured here so nothing is lost. This plan itself remains the owner.

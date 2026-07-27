@@ -277,6 +277,12 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   (`BTC-USD-PERP`) never match `CEFI_MARGIN_TIERS`; the tier-miss fallback then self-referentially substitutes
   `mmr_warning_pct` as the assumed MMR rate, misclassifying healthy positions as WARNING/CRITICAL. Affects every live
   CeFi margin computation (both `margin_health.py` and the new `emit_live_cefi_margin_events` push path). P1, open.
+- `issues/vm_backfill_data_correctness_findings_2026_06_29.md` F5 (rehomed here 2026-07-27, was falsely cited "0 open
+  todos" there) — bybit dated-futures fetches (`BTC-26DEC25`, `MNTUSDT-29MAY26`) time out en masse against
+  `datasets.tardis.dev` (~2,600 failures/VM across `cefi-bybit-2025-light`/`cefi-bybit-2026-light`) while perps succeed;
+  the date is marked OK regardless. Open question: are these failures recorded as honest-absence (`record_captured`
+  failed/unattempted) or silently dropped — verify before deciding whether it's a vendor-gap skip-list fix or a
+  recording-correctness bug. P2, open.
 
 **Dispatched**: the non-Tardis cefi VM cross-machine-sharding sweep is candidate 2 of
 `cefi_consolidated_native_ao_extract_2026_07_25.md`.

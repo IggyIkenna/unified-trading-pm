@@ -54,23 +54,27 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
 
 ## §1 — Fix first (2 cross-plan false-citation bugs, P1)
 
-- [ ] [DATA] P1. **Fix false "0 open todos/closed" citation for
-      `plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md`** across FOUR AG closeout plans
-      simultaneously (`tradfi_consolidated_closeout_2026_07_18.md`, `defi_consolidated_closeout_2026_07_18.md`,
-      `cefi_consolidated_closeout_2026_07_18.md`, `sports_consolidated_closeout_2026_07_19.md` — verify exact filenames
-      before editing). The doc has 4 genuinely open findings with NO checkboxes (that's why checkbox-counting indexes
-      miscounted it closed): F4 (Curve subgraph dead, BLOCKED-CREDENTIALS), F5 (bybit dated-futures timeouts), F6 (DeFi
-      lending-indices ~39% zero-row), F7 (TradFi capture un-gated by `is_mvp`, inventory-only). F1-F3 are done (commits
-      a4dfa6b, 7da5f6ad, 75c8f148). Action: rehome F4+F6 as real `- [ ]` todos in the defi closeout, F5 into the cefi
-      closeout, F7 into the tradfi closeout; correct all 4 false "closed" citations to point at the real open items;
-      archive the F1-F3 portion of the source doc once F4-F7 have a home.
-- [ ] [DATA] P1. **Fix stale "Plan 3 never authored" claim from
-      `plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`** that propagated unverified into
-      `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` Track 10 and
-      `plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` — Plan 3 actually shipped 2026-06-30
-      (`unified-api-contracts@6bcff215`). Action: correct both citations; re-check whether Plans 2/6/9 (referenced by
-      the same tracker) are actually unblocked as a result of Plan 3 having shipped — that dependency chain was never
-      re-verified.
+- [x] ✅ [DATA] P1. **Fix false "0 open todos/closed" citation for
+      `plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md`** — unified-trading-pm (this commit).
+      **CORRECTED SCOPE on execution**: the false citation only existed in `tradfi_consolidated_closeout_2026_07_18.md`
+      (lines 684-685) — defi/cefi/sports closeouts never cited this doc at all (verified via grep before editing, the
+      "across FOUR AG closeout plans" framing was itself stale). F7 rehomed into `tradfi_consolidated_closeout` with the
+      operator's 2026-07-27 is_mvp-gating decision applied (§5#13); F4+F6 rehomed into
+      `defi_consolidated_closeout_2026_07_18.md` Open follow-ups; F5 rehomed into
+      `cefi_consolidated_closeout_2026_07_18.md` Track 6. Source doc annotated REHOMED, still
+      `locked_by: live-defi-rollout` — archival needs an explicit `[unlock-plan]` grant (not yet asked, not done here).
+- [x] ✅ [DATA] P1. **Fix stale "Plan 3 never authored" claim** — unified-trading-pm (this commit). **CORRECTED SCOPE on
+      execution**: the false claim lived only in the 2 downstream docs
+      (`cross_cutting_consolidated_closeout_2026_07_25.md` Track 10,
+      `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`) — the source tracker itself never claims "never
+      authored". Also corrected the evidence citation itself: the prior "unified-api-contracts@6bcff215" SHA is real but
+      misleading (a QG-verification-timing commit unrelated in content to the feature work) — the actual shipping
+      commits are uac@682cffb5/6f0c4bf8/6cf967c2/6a2f6aab + features-service@48fa8377, all verified against the archived
+      plan doc `plans/archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md`. Re-verified Plans 2/6/9:
+      none were actually blocked — Plan 2 already complete independently, Plan 9 already active/tracked separately, Plan
+      6 has a stable v10 dependency contract but simply hasn't been implemented yet (unrelated to Plan 3). Bonus: also
+      flipped `mtds_file_size_refactor_2026_06_08.md` `status: paused` → `active` per the operator's 2026-07-27 resume
+      decision (§5#31), referenced inline in the same closeout fix.
 
 ---
 
