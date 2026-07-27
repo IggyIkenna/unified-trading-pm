@@ -437,7 +437,14 @@ cmd_install() {
   : "${GLUE_WIF_FILE:=${RUNNER_BASE}/glue-runner-wif.json}"
   : "${GLUE_WIF_PROVIDER:=projects/1060025368044/locations/global/workloadIdentityPools/aws-glue-runners/providers/ec2-instance-role}"
   : "${GLUE_WIF_SA:=glue-runner-gh-pat@central-element-323112.iam.gserviceaccount.com}"
+  # Pre-create the file (empty, runner-owned) before gcloud tries to write it — CREATING a new file
+  # in the root-owned ${RUNNER_BASE} (0755 root:root, see step 3 above) is denied for ${RUNNER_USER};
+  # rewriting an EXISTING file only needs write on the FILE, not the parent dir. Same fix already
+  # applied to repo.refreshed-at above; this exact ordering bug was latent here too until the
+  # agent-orchestrator canary install (2026-07-27) hit it on genuinely FRESH ${RUNNER_BASE} — PM's own
+  # ${GLUE_WIF_FILE} predates this code path and was never re-verified against a clean install.
   if [ ! -s "${GLUE_WIF_FILE}" ]; then
+    [ -e "${GLUE_WIF_FILE}" ] || install -o "${RUNNER_USER}" -g "${RUNNER_USER}" -m 0600 /dev/null "${GLUE_WIF_FILE}"
     sudo -u "${RUNNER_USER}" gcloud iam workload-identity-pools create-cred-config \
       "${GLUE_WIF_PROVIDER}" \
       --service-account="${GLUE_WIF_SA}" \
