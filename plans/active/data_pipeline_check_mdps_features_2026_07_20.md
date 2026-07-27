@@ -731,10 +731,11 @@ data) and `player_lineup` (74/74 all-zero columns — missing squad-depth/lineup
 **every single day** processed across both sports runs (13 days total observed) — consistently reproducible, not
 transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged but non-fatal).
 
-- [ ] [SCRIPT] P3. Add `(sports, SPORTS)` to `_FAMILY_TIMEOUT_OVERRIDES` in
+- [x] [SCRIPT] P3. ✅ Add `(sports, SPORTS)` to `_FAMILY_TIMEOUT_OVERRIDES` in
       `features-service/scripts/pipeline_e2e_check.py` (measured ~244s/shard-day means the 2400s default caps out around
-      9-10 benchmark-days) — or document that a 30-day `--legs benchmark` run for sports needs an explicit
-      `--timeout-sec` override.
+      9-10 benchmark-days) — `features-service@3cf2b674`. Set to 10800s (~48% margin over the 30-day-benchmark
+      prediction of ~7320s), mirroring the same measured-completion methodology as the existing
+      `("volatility",     "TRADFI")` and `("delta_one", "CEFI")` overrides.
 - [ ] [DATA] P2. File a consolidated issue doc for the `multisource_xg`/`player_lineup` missing-source-data gaps —
       confirmed reproducible across 13 distinct days this session, both calculators degrade gracefully but the
       underlying source coverage (Understat/FootyStats/API-Football xG feeds, squad/lineup data) is a real, standing gap
