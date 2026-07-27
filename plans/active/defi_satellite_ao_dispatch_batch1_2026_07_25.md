@@ -273,24 +273,27 @@ drift_direction: advance-code
       broader, cross-adapter version of the same gap (~12 adapters' `{"success": False, ...}` signal is never read by
       the same caller): `issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md`. Source:
       `issues/defi_adapter_dead_code_audit_2026_07_24.md`.
-- [ ] [SCRIPT] P1. **Combined `market-tick-data-service/.../dex_swaps_handler.py` fix (2 sub-items merged into one todo
-      — both would EDIT the same file, different venues/bugs):** (a) classify the CURVE/OPTIMISM "no allocations"
-      GraphQL response as a distinct terminal condition at fetch time — detect a 200-status response whose `errors[]`
-      message matches `subgraph not found: no allocations` (or any non-schema-drift GraphQL error repeating identically
-      across all 5 cascade schema attempts) inside `_execute_subgraph_query`/`_run_cascade`, raise a typed terminal
-      error (reuse `SubgraphNotFoundError` or add `_SubgraphDeindexedError`) instead of falling through to the generic
-      RuntimeError, wire the manifest writer to `record_empty(reason=     EXPECTED_SUBGRAPH_DEINDEXED)` instead of
-      `record_failed`; (b) fix the TRADER_JOE_V2 TheGraph query-schema-cascade failure (subgraph
-      `H2VGe2tYavUEosSjomHwxbvCKy3LaNaW8Kjw2KhhHs1K`, confirmed 0% capture 2023-2026, all 5 cascade schemas fail with
-      `bad indexers`) via a new/updated query schema variant or a deployment-ID swap per the live GraphQL error, then —
-      once real TRADER_JOE_V2 rows confirmed flowing — launch a dedicated `dex_pool_swaps` backfill
-      (`deployment-service/scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh`) for TRADER_JOE_V2 + VELODROME_V2 covering
-      2023-01-01 through 2024-10-06. Repos: market-tick-data-service, deployment-service. **Done when**: (a) a live
-      probe (or a simulating unit test) against CURVE/OPTIMISM's dex_pool_swaps cascade results in
-      `record_empty(reason=EXPECTED_SUBGRAPH_DEINDEXED)`, not `record_failed`; a fresh backfill VM run produces no new
-      `attempted_failed` rows for this cause; (b) TRADER_JOE_V2/AVALANCHE queries return real non-empty swap rows on 3+
-      sample dates; the scoped SPOT backfill VM is launched and T+10min health-verified RUNNING; `quality-gates.sh`
-      green. Source: `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-11).** **Combined `market-tick-data-service/.../dex_swaps_handler.py` fix
+      (2 sub-items merged into one todo — both would EDIT the same file, different venues/bugs):** (a) classify the
+      CURVE/OPTIMISM "no allocations" GraphQL response as a distinct terminal condition at fetch time — SHIPPED
+      `market-tick-data-service@dddd1b21`: `_execute_subgraph_query` now detects the `"no allocations"` fingerprint and
+      raises `_SubgraphDeindexedError` (fails fast on the first cascade attempt instead of burning all 5 — the condition
+      is subgraph-level, not query-shape), caught in `_collect_one_shard` and routed to
+      `record_empty(reason=EmptyConfirmedReason.EXPECTED_SUBGRAPH_DEINDEXED)` instead of `record_failed`. Proven via 9
+      new unit tests (fingerprint detector, `_execute_subgraph_query` raising, `_run_cascade` fail-fast propagation, the
+      full outer-loop `process()` → `record_empty` path) — all green, plus the live-reproduced exact CURVE/OPTIMISM
+      GraphQL error confirmed via direct `gateway-arbitrum.network.thegraph.com` probe. (b) TRADER_JOE_V2 —
+      **live-verified NO code fix was actually needed**: the existing cascade's 2nd variant (`messari_from`) already
+      matches the live subgraph schema exactly (introspection-confirmed) and returns real, non-empty swap rows on 3
+      sample dates spanning the target range (2023-01-15, 2023-09-01, 2024-09-01, direct `gateway.thegraph.com` probe
+      with a Secret-Manager TheGraph key). Launched the scoped SPOT backfill VM `mtds-dex-swaps-historical`
+      (`--protocols trader_joe_v2,velodrome_v2 --start 2023-01-01 --end 2024-10-06`), T+10min health-verified RUNNING
+      and actively writing manifest shards. `quality-gates.sh` green (market-tick-data-service, full run). Along the
+      way, live-reproduced a SEPARATE, still-open "bad indexers" transient-indexer-health failure (not schema drift)
+      affecting VELODROME_V2/OPTIMISM + others — folded as corroborating evidence into the existing 2026-07-27 (slot-2)
+      scope-extension todo in the source issue doc rather than treated as blocking this todo's own "done when" bar
+      (which names TRADER_JOE_V2/AVALANCHE specifically). Repos: market-tick-data-service, deployment-service. Source:
+      `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
       `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`.
 - [ ] [SCRIPT] P1. Spot-check live subgraph health for the remaining un-investigated `dex_pool_swaps` long-tail
       `attempted_failed` buckets (`UNISWAP_V3` TimeoutError×25, `UNISWAP_V3`/POLYGON schema-drift×24, 1-5-row long-tail

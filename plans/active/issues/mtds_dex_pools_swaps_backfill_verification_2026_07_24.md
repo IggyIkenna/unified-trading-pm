@@ -184,15 +184,32 @@ rule (see Progress Log entry below for the observed outcome).
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix the TRADER_JOE_V2 TheGraph subgraph schema-cascade failure for `dex_pool_swaps`
-      (`market_tick_data_service/cli/handlers/dex_swaps_handler.py` / `_dex_swaps_query_strings.py`,
-      subgraph=`H2VGe2tYavUEosSjomHwxbvCKy3LaNaW8Kjw2KhhHs1K`) — confirmed 0% capture across the entire sampled
-      2023-2026 range; "bad indexers ... Unavailable(too far behind) / BadResponse(400)" on ALL 5 cascade schemas. May
-      need a new/updated query schema variant or a subgraph deployment-ID swap. Repo: market-tick-data-service.
-- [ ] [DATA] P2. Once the TRADER_JOE_V2 code fix lands, launch a dedicated `dex_pool_swaps` historical backfill for
-      TRADER_JOE_V2 + VELODROME_V2 covering **2023-01-01 through 2024-10-06** — the range NOT covered by the
-      currently-running `mtds-dex-swaps-backfill-1/2/3` sharded fleet (which starts at 2024-10-07). Repo:
-      deployment-service.
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-27 (slot-11) — no code fix needed; live-verified the existing schema is already
+      correct.** Live-reproduced the exact production cascade against subgraph
+      `H2VGe2tYavUEosSjomHwxbvCKy3LaNaW8Kjw2KhhHs1K` (direct `gateway.thegraph.com` POST, TheGraph key from Secret
+      Manager): the 1st cascade attempt (`messari`, `account { id }`) correctly fails schema-drift ("has no field
+      `account`") and falls through to the 2nd attempt (`messari_from`, `from`/`pool { id, name }`) — introspecting the
+      live `Swap` type confirms `messari_from`'s field set is an EXACT match for the current schema. The unfiltered
+      `messari_from` query returned real, non-empty swap rows (verified on 3 sample dates spanning the target range:
+      2023-01-15, 2023-09-01, 2024-09-01 — e.g. "Trader Joe JoeToken/Wrapped AVAX" swaps with real tx amounts). So
+      `dex_swaps_handler.py`'s cascade already has the correct schema variant — nothing to fix there. Root cause of the
+      2026-07-23 100%-failure log is a SEPARATE, still-live condition (see finding below), not a permanent schema bug.
+      Repo: market-tick-data-service. **New finding (not a schema bug — folded into the scope-extension todo below, not
+      a new doc):** the PRODUCTION path additionally filters via `pool_in: $poolIds` (the IS catalogue's 112 MVP pools
+      for trader_joe_v2/AVALANCHE) using `_MESSARI_SWAPS_FROM_QUERY_FILTERED` et al. — live-probing that exact filtered
+      query (same 5 catalogue pool addresses, confirmed real entities with genuine but small $30K-$100K lifetime
+      `cumulativeVolumeUSD` each) hits `"bad indexers: {...: BadResponse(...), ...: Timeout}"` — the SAME transient
+      indexer-health class already confirmed on VELODROME_V2/OPTIMISM below, not a code/schema issue. This explains why
+      the launched backfill VM (see next todo) is recording mostly
+      `empty_confirmed(SOURCE_RETURNED_ZERO/EXPECTED_NOT_ENOUGH_TVL)` for trader_joe_v2 on early dates rather than
+      `attempted_failed` — cascade eventually succeeds (on this venue) with a genuine zero-swaps-that-day result for
+      these niche, low-volume catalogue pools, which is honest, not masked.
+- [x] ✅ [DATA] P2. **DONE 2026-07-27 (slot-11)** — launched the scoped historical backfill VM (SPOT, e2-standard-4,
+      `--force` since the unrelated `mtds-dex-swaps-backfill-1/2` sharded fleet was already running under the same
+      `mtds-dex-swaps-` prefix): `mtds-dex-swaps-historical`,
+      `--protocols trader_joe_v2,velodrome_v2 --start     2023-01-01 --end 2024-10-06`. T+10min health-verified RUNNING,
+      actively processing shards + writing per-VM manifest entries (no crash-loop). VM: `mtds-dex-swaps-historical`,
+      zone `asia-northeast1-c`. Repo: deployment-service.
 - [ ] [DATA] P2. Spot-check `dex_pool_state`/`dex_pool_swaps` coverage again for all 4 protocols across 2026-03 through
       today once the relaunched `mtds-dex-pools-backfill` VM (this session) + the running `mtds-dex-swaps-backfill-*`
       fleet finish, to confirm the recent-months gap identified in this issue actually closed. Repo:
@@ -222,7 +239,25 @@ rule (see Progress Log entry below for the observed outcome).
       above). Diagnose per venue/chain in `market_tick_data_service/cli/handlers/dex_swaps_handler.py` /
       `_dex_swaps_query_strings.py` (likely more rotated/dead subgraph deployment IDs or missing cascade-schema
       variants, mirroring the TRADER_JOE_V2 root cause) and fix or file per-venue follow-ups. Repo:
-      market-tick-data-service.
+      market-tick-data-service. **Corroborating evidence, 2026-07-27 (slot-11) — CURVE/OPTIMISM item now code-fixed;
+      VELODROME_V2/OPTIMISM confirmed a DIFFERENT (non-schema) failure class than "add a schema variant":** (1)
+      CURVE/OPTIMISM's 338 rows are the SAME `"subgraph not found: no allocations"` condition as the original
+      (now-archived) `defi_curve_optimism_subgraph_no_allocations_2026_07_15.md` finding recurring live —
+      `dex_swaps_handler.py` now detects this at fetch time and raises `_SubgraphDeindexedError` →
+      `record_empty(EXPECTED_SUBGRAPH_DEINDEXED)` instead of `record_failed` (shipped
+      `market-tick-data-service@dddd1b21`, unit-tested); NEW `attempted_failed` rows for this specific cause should stop
+      accumulating once this fix reaches the next backfill/live VM. (2) VELODROME_V2/OPTIMISM (subgraph
+      `A4Y1A82YhSLTn998BVVELC8eWzhi992k4ZitByvssxqA`) is NOT schema drift — live-probed directly: `_meta` returns a
+      fresh block (indexers ARE allocated), but every `messari_from`/filtered swaps query returns
+      `"bad indexers: {...: Unavailable(...), ...: BadResponse(...)}"`. Reproduced this LIVE via the
+      `mtds-dex-swaps-historical` backfill VM launched for the sibling TRADER_JOE_V2 todo above: 26/26 processed days
+      (2023-01-01 through 2023-01-26) failed identically with this exact error on all 5 cascade schemas — a
+      persistent-so-far indexer-health condition, not a one-off blip, and not addressable by "add a matching query
+      schema" (no schema variant avoids a `bad indexers` response). A real fix (out of this todo's scope) would be a
+      retry-with-backoff specifically for the `bad indexers` GraphQL-error fingerprint (mirroring
+      `async_post_to_subgraph`'s existing HTTP-level retry, extended to this GraphQL-level condition) or a subgraph
+      deployment-ID swap if the condition doesn't self-heal. Left UNCHECKED — still needs a real fix for
+      VELODROME_V2/OPTIMISM + the other listed pairs.
 
 ## Progress Log
 
@@ -231,3 +266,11 @@ rule (see Progress Log entry below for the observed outcome).
 - 2026-07-27 (slot-2) — scoping `defi_satellite_ao_dispatch_batch3-003` D2 required a live manifest read that surfaced 6
   more venue/chain pairs hitting the same subgraph-cascade failure class as TRADER_JOE_V2, all currently active (not
   stale). Added as a new P1 todo above rather than a duplicate issue doc.
+- 2026-07-27 (slot-11) — worked `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s combined dex_swaps_handler.py todo
+  (CURVE/OPTIMISM classification + TRADER_JOE_V2 fix/backfill). Shipped the CURVE/OPTIMISM `_SubgraphDeindexedError`
+  classification fix (`market-tick-data-service@dddd1b21`). Live-verified TRADER_JOE_V2/AVALANCHE's existing
+  `messari_from` cascade schema is already correct (no code fix needed) and returns real swap rows on 3+ sample dates.
+  Launched + T+10min health-verified the scoped `mtds-dex-swaps-historical` backfill VM (trader_joe_v2 + velodrome_v2,
+  2023-01-01→2024-10-06). Along the way, live-reproduced VELODROME_V2/OPTIMISM's "bad indexers" failure (100% across 26
+  processed days) and confirmed it's the same class already tracked in the 2026-07-27 (slot-2) scope-extension todo
+  above — folded findings into that todo rather than filing a duplicate. See both todos above for full evidence.
