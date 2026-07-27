@@ -211,9 +211,12 @@ not a mechanical column-list copy.
       (302s).
 - [ ] [SCRIPT] P1. **ml-service** — `training/app/core/manifest_gap_handler.py:54` `apply_manifest_quality_flags`: same
       treatment as the inference guard above.
-- [ ] [SCRIPT] P0. **deployment-api** — `services/manifest_source.py:164`: reuse the already-defined `DRILLDOWN_COLUMNS`
-      (line 74, already used on the pushdown branch) on the bare fallback branch too. Single highest-blast-radius fix
-      (feeds ~10 downstream dashboard endpoints transitively).
+- [x] ✅ [SCRIPT] P0. **deployment-api** — `services/manifest_source.py:164` — **SHIPPED 2026-07-27 (slot-10)**,
+      `deployment-api@489d747`. Reused the already-defined `DRILLDOWN_COLUMNS` (line 74) on the bare fallback branch,
+      matching the pushdown branch above it exactly (no `filters=` — this IS the unfiltered stale-tolerant full read).
+      Single highest-blast-radius fix in this audit (feeds ~10 downstream dashboard endpoints transitively). Updated the
+      one existing test asserting the exact call signature (`test_live_mode_delegates_to_utl_reader`); full test file
+      green (9 tests) + `quality-gates.sh` green (260s).
 - [ ] [SCRIPT] P1. **deployment-api** — `routes/data_status/_catalogue.py:186` +
       `routes/data_status/_live_coverage.py:457`: project both raw-UTL-import call sites; read each caller's actual
       downstream column usage first.
