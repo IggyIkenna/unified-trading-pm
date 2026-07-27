@@ -232,10 +232,33 @@ drift_direction: advance-code
       describes): **target OK=15,570 MISSING=0 MISMATCH=0, source objects still present=0** — exactly this todo's
       done-when. Added a corresponding note to `sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md`
       confirming these 3 venues are not among that doc's ~19 unmapped-venue list (doc stays open for those).
-- [ ] [DATA] P1. **Update MDPS `dependency_checker`'s hive-token matcher for the new instrument_type partitions** —
+- [x] ✅ [DATA] P1. **Update MDPS `dependency_checker`'s hive-token matcher for the new instrument_type partitions** —
       confirm no consumer of the legacy `odds` hive token goes orphaned. (repo: market-data-processing-service). **Done
       when**: a `dependency_checker` run against the post-move bucket state shows 0 orphaned consumers of the legacy
-      `odds` hive token.
+      `odds` hive token. ✅ **DONE 2026-07-27 — `market-data-processing-service@0814424`:** investigated every caller of
+      `check_upstream_data_per_shard` (the one function with an `instrument_type` hive-token matcher) plus the sports
+      raw_tick_data scanner (`orchestration_scanner.py`) and the date-level `check_dependencies` gate. Found: (1)
+      `check_upstream_data_per_shard`'s `instrument_type` param is a free string, matched as
+      `instrument_type={instrument_type}/` — never hardcoded to the legacy `odds`/`ODDS` value; (2) its only production
+      caller (`process_handler.py::_filter_shards_by_per_shard_check`) passes `instrument_type=None` ("not known at
+      handler level"), so it doesn't discriminate by instrument_type at all; (3) the sports scanner filters by
+      `data_type=` only (`_list_instrument_files`), also instrument_type-agnostic; (4) `check_dependencies`'s SPORTS
+      gate checks only the date-level `raw_tick_data/by_date/day={date}/` prefix, no instrument_type token.
+      **Conclusion: no production code hardcodes the legacy `odds` hive token anywhere in MDPS's dependency-gating path,
+      so no code change was required** — the matcher was already generic. Verified live against the post-move bucket
+      state: ran `check_dependencies(date, asset_group='sports')` — both required deps (`market-tick-data-service`,
+      `instruments-service`) report `available=True`; ran
+      `check_upstream_data_per_shard(..., instrument_type='fixed_odds',     data_type='trades')` directly for a migrated
+      PINNACLE shard — returns `True` (matcher correctly finds the new partition with zero code changes). Added 3
+      regression tests to `tests/unit/test_dependency_checker_sports_prediction.py` (new class
+      `TestCheckUpstreamDataPerShardExchangeFixedOdds`) locking in the matcher finds `exchange_odds`/`fixed_odds` shards
+      and that a legacy-only `ODDS`/`TRADES` shard does NOT satisfy a `fixed_odds` request post-cutover (exclusivity
+      guard) — so a future refactor reintroducing a hardcoded `odds` literal would be caught. **Adjacent finding, out of
+      this todo's scope**: while probing the post-move bucket state directly, found 2 manifest-UNREGISTERED legacy
+      `ODDS`/`TRADES` objects for PINNACLE under raw (non-canonical) `league_id` values (`CHAMPIONSHIP`,
+      `PREMIER_LEAGUE`) that the manifest-driven move tool could not have enumerated — this is the already-tracked
+      defect class in `sports_league_id_namespace_migration_2026_07_20.md` (not new), recorded there as an addendum
+      rather than fixed here (single-walk discipline: not re-running a live GCS walk to chase 2 objects).
 - [ ] [DATA] P1. **Reconcile the availability manifest to the new partitions LAST, only after the unambiguous-venue GCS
       move + dual-read above are proven.** Verify the shard atom is identical across writer/manifest/status/gate. (repo:
       instruments-service / unified-trading-library). **Done when**: a cross-surface shard-atom check
