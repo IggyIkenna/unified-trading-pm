@@ -174,3 +174,15 @@ action or further work remains. This plan is ready for its own finalize/archival
 `ao_worker_context_lifecycle_gap` precedent uses a separate gated finalize plan; this plan is small enough that a future
 archival pass can fold the standard 6-step ritual directly here, or a dedicated finalize plan can be authored per the
 operator's usual preference for AO-dispatched plans — this one is LOCAL, so either is fine).
+
+## Deferred work after 2026-07-27
+
+| Item                                                                                                                              | State              | Blocked on                                                                                                                     |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Run the standard 6-step archival ritual on this plan (banner, codex-alignment re-check, referrer fixup, move to `plans/archive/`) | Not done           | Nobody — all 7 todos are done; this is routine closeout, not new work                                                          |
+| Watch live `worker_plan_switch_reset` volume now that `plan_continuity_reset_enabled=True` is deployed                            | Cannot be done yet | Elapsed time — needs the fleet to actually dispatch across plan/role boundaries post-deploy before there's anything to observe |
+
+**Recommended next item**: nothing needs a human right now — both remaining items are routine/observational, not
+blocking. When picked up again, the archival ritual is the quick one (few minutes); the live-volume watch is better
+suited to a future `/check-agent-orchestrator`-style read-only pass once the fleet has run for a while under the new
+flag.
