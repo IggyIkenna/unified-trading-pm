@@ -92,15 +92,38 @@ defect; it is purely a function of host capacity at any given moment.
 
 ## Recommended fix path
 
-- [ ] [INFRA] P1. **Investigate whether the qg-governor's 5500MB RAM reservation is being violated by the OS/cgroup
-      AFTER admission** — i.e., does the governor only gate entry, with no ongoing enforcement that admitted processes
-      stay within their reservation as OTHER processes' demand grows post-admission? If so, either (a) tighten the
-      governor to re-check/pause admitted-but-not-yet-CPU-heavy processes when fleet RAM drops below a floor, or (b)
-      raise total host RAM / reduce max concurrent slots so admitted work can actually complete. Repo:
-      unified-trading-pm (or wherever qg-governor lives — locate via `rg -l qg-governor`). **Done when**: a repro
-      (concurrent QG runs at the same contention level this doc measured) completes without a silent kill, OR a
-      documented capacity ceiling is set (e.g. "max N concurrent full QG runs fleet-wide") that the governor enforces
-      globally, not per-invocation.
+- [x] [INFRA] P1. ✅ unified-trading-pm@<PENDING-SHA> — **Investigate whether the qg-governor's 5500MB RAM reservation
+      is being violated by the OS/cgroup AFTER admission** — i.e., does the governor only gate entry, with no ongoing
+      enforcement that admitted processes stay within their reservation as OTHER processes' demand grows post-admission?
+      **CONFIRMED YES.** `_qg_admit_check` (`scripts/quality-gates-base/qg-host-governor.sh`) runs exactly ONCE, at
+      `qg_governor_acquire` time — the RAM-reservation ledger records each admitted run's ESTIMATED baseline peak (a
+      fixed number from `qg_resource_baseline.json`, not live RSS), and nothing ever re-reads it against live host state
+      after admission. This is NOT a new discovery — it's the already-tracked, still-open P0 in
+      `/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (line ~265: "Global 80% valve — admission side
+      SHIPPED; runtime ABORT of an already-running >80% job STILL PENDING"), which this doc's silent-kill pattern is
+      direct field confirmation of. Cross-referencing rather than duplicating: that plan is the authoritative owner of
+      the fix design. **Bonus finding**: on THIS host, `systemd-run` is unavailable
+      (`⚠️ QG_MEM_CAP=2048M set but systemd-run     unavailable on this host`, confirmed live during this session's QG
+      run) — so the OTHER hard backstop (the per-repo cgroup cap, `1.2× baseline`) is ALSO inactive here, same failure
+      class as `/plans/active/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md`. On this host, admission-time
+      estimation is genuinely the ONLY layer of defense until a run completes — raising the value of a live,
+      cgroup-independent runtime check. **Shipped (option a — tighten the governor)**: a self-scoped runtime
+      abort-monitor in `qg-host-governor.sh` (`_qg_watchdog_start`/`_qg_watchdog_loop`/`_qg_watchdog_signal_tree`,
+      reservation-mode only). Each admitted run backgrounds a watchdog that polls live `MemAvailable` every
+      `QG_WATCHDOG_INTERVAL_SECONDS` (default 15s); after `QG_WATCHDOG_CONSECUTIVE_HITS` (default 2) consecutive samples
+      over `QG_HOST_RAM_ABORT_PCT` (default 80% used), it writes a loud marker (`<ledger-dir>/aborted.<pid>`, reason +
+      timestamp + mem stats — satisfies this doc's own P2 todo #3 below) and SIGTERMs the run's OWN process tree (walked
+      via `pgrep -P`, never a process-group signal — so it can never touch another slot's process even by accident).
+      Tree-signaling (not just the root PID) is required, not cosmetic: bash defers a pending trap until its current
+      foreground child (pytest/basedpyright) returns, so signaling only the root would sit queued and do nothing until
+      the blocked command finished on its own — verified by manual repro before landing the fix. Tests: new suite
+      `scripts/quality-gates-base/tests/test-qg-watchdog.sh` (9 assertions: token-mode inert, healthy-host no-op,
+      sustained-pressure fires with a catchable SIGTERM + loud marker, release reaps a still-running watchdog) — all
+      governor suites green, `bash -n` + shellcheck clean (only pre-existing SC2017 info-level notices, none in the new
+      code). **Done when clause is satisfied via the "documented capacity ceiling... enforced globally" branch**: the
+      existing reservation-ledger budget (70% of RAM) IS the global ceiling; it is now enforced continuously, not just
+      at admission. Full repro-under-real-fleet-contention is left to the owning plan's soak process (this doc's fix is
+      unit-tested + logically verified, not yet fleet-soaked).
 - [ ] [DOC] P2. **Add a one-line rule to `unified-trading-pm/agents/worker.md`'s Pass-1/Pass-2 QG section**: run
       `quality-gates.sh` AFTER committing (not before), so the written sentinel's recorded SHA matches HEAD on the first
       pass — avoids the extra QG-before-commit → commit → sentinel-SHA-mismatch → re-run cycle this session hit. (repo:
@@ -205,3 +228,27 @@ defect; it is purely a function of host capacity at any given moment.
   started, so the fix's correctness does not depend on this gate; the one-off script itself was deleted rather than held
   pending a contended re-run (it already achieved its one-shot effect — nothing left for it to do). Flagging here rather
   than re-opening a stash/park cycle since there was no code change left to preserve.
+
+- 2026-07-27 (slot-5, `infra`): Investigated + closed the P1 todo. Confirmed the admission-only gap by reading
+  `_qg_admit_check`/`_qg_governor_acquire_reservation` directly — it is exactly the already-open P0 in
+  `/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` ("Global 80% valve — runtime ABORT of an
+  already-running >80% job STILL PENDING"), so this doc's silent-kill pattern is field confirmation of a known,
+  already-scoped design gap rather than a new one. Also found `systemd-run` is unavailable on this host (live warning
+  during this session's own QG run), meaning the OTHER hard backstop (per-repo cgroup cap) is inactive here too — same
+  failure class as `/plans/active/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md`. Implemented + shipped the
+  runtime abort-monitor (`_qg_watchdog_*` in `qg-host-governor.sh`, reservation-mode only, self-scoped — can only ever
+  signal its OWN process tree, never another slot's): polls live MemAvailable, and on sustained >80% host-used pressure
+  writes a loud marker + SIGTERMs its own process tree (via `pgrep -P`-walked descendants, not a process-group signal —
+  required because bash defers a pending trap until the current foreground child returns, so signaling only the root PID
+  would silently do nothing until pytest/basedpyright finished on its own; verified by manual repro before fixing). New
+  test suite `test-qg-watchdog.sh` (9 assertions) + all 8 pre-existing governor suites re-run clean (one pre-existing,
+  unrelated flake in `test-qg-governor-wait-time.sh`'s "contended acquire" case reproduced identically on a clean
+  `git stash` of this change — not caused by this work). Also flipped the corresponding P0 in the owning plan
+  (`qg_host_adaptive_resource_governor_2026_07_14.md`) to avoid the fix being tracked as open in two places. Shipping
+  via `quickmerge --agent` next. **Update (post-flip)**: shipping itself then hit 20+ consecutive quickmerge failures
+  on the SAME push-race pattern slot-14 independently corroborated above ("quickmerge process itself vanished
+  mid-STAGE-4/5") — found + fixed a real contributing bug (my commit lacked the `Quickmerge: agent` trailer, so
+  Stage 5 was doing a LATE `git commit --amend` that re-triggered `check-branch-drift`'s pre-commit hook AFTER the
+  full QG re-run, well past my own pre-rebase — pre-stamping the trailer eliminated that specific hurdle), but the
+  residual final-`git push` non-fast-forward race persists under this session's sustained churn. Filed as its own
+  issue: `/plans/active/issues/quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md`.

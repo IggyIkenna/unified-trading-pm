@@ -262,10 +262,16 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 - [x] [INFRA] P1. ✅ PM@a6b5e24a5 — Per-repo cgroup cap — wrap each admitted run at `QG_MEM_CAP = 1.2 × baseline_peak`
       (existing base-service hook, currently 0/off) so a runaway/mis-measured run is OOM-killed in its OWN cgroup, not
       the host.
-- [ ] [INFRA] P0. Global 80 % valve ✅ PM@a6b5e24a5 (admission side, SHIPPED); runtime ABORT of an already-running >80 %
-      job STILL PENDING (= the "runtime abort-monitor" hardening item, why this stays open). — if live host used-RAM
-      crosses 80 %, ABORT the offending/newest run + Slack-alert. Catches aggregate pressure per-repo caps miss; doubles
-      as the fast rollback.
+- [x] [INFRA] P0. ✅ unified-trading-pm@<PENDING-SHA> — Global 80 % valve ✅ PM@a6b5e24a5 (admission side, SHIPPED);
+      runtime ABORT of an already-running >80 % job — SHIPPED (self-scoped v1, see Progress Log 2026-07-27 slot-5): if
+      live host used-RAM crosses `QG_HOST_RAM_ABORT_PCT` (default 80%) for `QG_WATCHDOG_CONSECUTIVE_HITS` (default 2)
+      consecutive polls, the ADMITTED run's own background watchdog SIGTERMs its own process tree + writes a loud marker
+      file + logs. Trades the "pick exactly one offender" refinement described here for a simpler, safer self-scoped
+      design (every admitted run monitors itself; a bug here can only ever hurt its own run, never another slot's) —
+      cross-process "kill the newest run" arbitration + Slack alerting remain open refinements (see the still-open
+      Phase-4 Slack-alerting todo below). Catches aggregate pressure per-repo caps miss (verified this matters
+      concretely: `systemd-run` is unavailable on the slot-5 host, so the per-repo cgroup cap is inactive there too —
+      this watchdog is now the ONLY live post-admission defense on that host).
 - [x] [INFRA] P2. ✅ base-service.sh:610-617 acquire guard (shipped w/ the contention work) — Light-slice bypass — only
       TESTS + TYPE CHECK acquire; `QG_SLICE=lint-codex` acquires nothing.
 - [x] [INFRA] P3. ✅ PM@3de0ee74d (SOLO_ADMIT/SOLO_WAIT) — Oversize guard (defensive) — peak > `QG_RAM_BUDGET` waits for
@@ -599,3 +605,39 @@ on the current fleet" over-claim was THIS plan's own "Net:" summary above, now c
 [`ao_host_disk_pressure_2026_07_16`](../archive/2026_07/ao_host_disk_pressure_2026_07_16.md) (Phase 3, archived
 2026-07-17) recorded the drift here and deliberately did **not** touch governor code — this plan owns it. Also recorded
 there: the governor gates **RAM/CPU admission, not disk**, so it must not be cited as a disk-pressure mitigation.
+
+### 2026-07-27 — Runtime abort-monitor shipped (self-scoped v1) — closes the P0 (slot 5, `infra`)
+
+- **Trigger**: dispatched to investigate
+  `/plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s P1 ("does the governor only gate
+  entry, with no ongoing enforcement..."). Confirmed by reading `_qg_admit_check`/`_qg_governor_acquire_reservation`
+  directly: YES — admission is a one-time check; nothing re-verifies an admitted run against live RAM pressure that
+  develops afterward. That confirmation IS this plan's own already-open P0 above; closing both from one fix rather than
+  tracking it twice.
+- **Shipped** `unified-trading-pm@<PENDING-SHA>` — `_qg_watchdog_start`/`_qg_watchdog_loop`/`_qg_watchdog_signal_tree`
+  in `qg-host-governor.sh` (reservation-mode only, gated the same way as the rest of Phase 3/4). Design tradeoff vs the
+  todo's original "abort the offending/newest run": **self-scoped** — each admitted run backgrounds its OWN watchdog,
+  which can only ever signal ITS OWN process tree (walked via `pgrep -P`, never a process-group signal). This is
+  strictly safer than a cross-process arbiter (no risk of a bug reaching into another slot's PID) at the cost of
+  possibly over-aborting when several admitted runs' watchdogs all trip in the same pressure window — an acceptable v1
+  tradeoff; a true single-offender arbiter (using the ledger's per-row timestamp, currently hardcoded to `0` and unused
+  for this purpose) is a natural follow-up, not done here.
+- **Real bug caught during implementation, not just design**: a naive `kill -TERM $target_pid` does nothing while the
+  target is blocked in `wait()` on a foreground child (pytest/basedpyright) — bash defers a pending trap until the
+  current foreground command returns, so the signal would sit queued until the blocked command finished on its own,
+  silently defeating the whole point. Fixed by signaling the target's live descendant tree bottom-up (child dies →
+  `wait()` returns → bash promptly runs the pending EXIT trap) — verified by a manual before/after repro, not just
+  inferred from docs.
+- **Tests**: new `scripts/quality-gates-base/tests/test-qg-watchdog.sh` (9 assertions — token-mode inert, healthy-host
+  no-op, sustained-pressure fires with a catchable SIGTERM + loud marker file, release reaps a still-running watchdog).
+  All other governor suites re-run green; `test-qg-governor-wait-time.sh`'s "contended acquire" case failed both before
+  and after this change (pre-existing host-timing flake, reproduced on a clean `git stash`, not caused by this work).
+  `bash -n` clean; shellcheck clean (only pre-existing SC2017 info-level notices elsewhere in the file).
+- **Bonus finding, relevant to prioritization**: `systemd-run` is unavailable on the slot-5 host (live warning during
+  this session's own QG run: `QG_MEM_CAP=2048M set but systemd-run unavailable`), so the OTHER hard backstop (the
+  per-repo cgroup cap) is inactive there too — same failure class as
+  `/plans/active/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md`. On hosts in that state, this watchdog is now
+  the ONLY live post-admission RAM defense — raises this fix's value above "hardening, not flip-blocker."
+- **Remaining** (documented, not done here): Slack alerting on abort (existing Phase-4 todo), single-offender
+  arbitration via the ledger's currently-unused per-row timestamp, and a real multi-slot fleet soak under measured
+  contention (this session's verification is unit-test + manual-repro level, not a live fleet soak).

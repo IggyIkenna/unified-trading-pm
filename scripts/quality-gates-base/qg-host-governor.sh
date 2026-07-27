@@ -44,6 +44,10 @@
 #   QG_GOVERNOR_DIR       token dir (default ${TMPDIR:-/tmp}/qg-host-governor)
 #   QG_GOVERNOR_DISABLE   set to "true" to make acquire/release no-ops (CI / single-run)
 #   QG_GOVERNOR_NICE      nice increment applied to the QG tree (default 10)
+#   QG_HOST_RAM_ABORT_PCT       runtime-abort-monitor trip point, host-used % (default 80)
+#   QG_WATCHDOG_INTERVAL_SECONDS  poll interval for the runtime abort-monitor (default 15)
+#   QG_WATCHDOG_CONSECUTIVE_HITS  consecutive over-threshold samples before abort (default 2)
+#   QG_GOVERNOR_WATCHDOG_DISABLE  set to "true" to disable the runtime abort-monitor (reservation mode only)
 #
 # Safe to source repeatedly; functions are idempotent. No effect on correctness — purely
 # a scheduling throttle, so a missing flock(1) degrades gracefully to "no governor".
@@ -352,11 +356,116 @@ _qg_governor_acquire_reservation() {
                 _qg_governor_deprioritise
                 QG_GOVERNOR_WAIT_SECONDS=$(( ${QG_GOVERNOR_WAIT_SECONDS:-0} + waited ))
                 [[ "$waited" -gt 0 ]] && echo "[qg-governor] ${repo} reserved ${this}MB (${decision}) after ${waited}s" >&2
+                _qg_watchdog_start "$repo"
                 return 0 ;;
         esac
         sleep 2; waited=$(( waited + 2 ))
         (( waited % 30 == 0 )) && echo "[qg-governor] ${repo} (${this}MB) waiting: ${decision} ${waited}s" >&2
     done
+}
+
+# ── RUNTIME ABORT-MONITOR (Phase 4 hardening) ────────────────────────────────
+# Closes the gap named in plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+# ("Global 80% valve — admission side SHIPPED; runtime ABORT of an already-running >80%
+# job STILL PENDING") and confirmed live by
+# plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md: the
+# dual-gate admission check (_qg_admit_check) runs ONCE, at acquire time — nothing
+# previously re-checked an ALREADY-ADMITTED run against host RAM pressure that develops
+# from OTHER processes (admitted or non-QG) after admission. The only thing that ever
+# intervened was the kernel oom-killer's SIGKILL: uncatchable (no EXIT trap fires), so
+# the kill is silent — a worker polling for completion cannot tell "still running" from
+# "already dead" (the exact failure mode the issue doc measured 7 times).
+#
+# SELF-SCOPED BY DESIGN: this watchdog can only ever signal the ONE PID it was started
+# for (its own caller's $$, captured before backgrounding) and that PID's OWN descendant
+# tree — never another slot's process. A bug here cannot kill someone else's legitimate
+# work; worst case it self-aborts its own run early. This trades the plan's "pick exactly
+# one offender" refinement for a much simpler, safer, fully self-contained mechanism:
+# every admitted run monitors host pressure and, if it stays above QG_HOST_RAM_ABORT_PCT
+# for QG_WATCHDOG_CONSECUTIVE_HITS consecutive samples, sends itself (+ its live children)
+# a SIGTERM (catchable — unlike SIGKILL, the caller's existing EXIT trap fires, releasing
+# the reservation) after writing a loud marker file so a poller can distinguish this from
+# a live run.
+_qg_watchdog_pressure_hit() {
+    local mt ma abort_pct min_avail
+    mt="$(_qg_mem_total_kb)"; ma="$(_qg_mem_available_kb)"
+    abort_pct="${QG_HOST_RAM_ABORT_PCT:-80}"
+    min_avail=$(( mt * (100 - abort_pct) / 100 ))
+    (( ma < min_avail ))
+}
+
+# SIGTERM the root's live descendants (bottom-up) THEN the root itself. Necessary, not
+# cosmetic: bash defers running a pending trap until its CURRENT foreground command
+# returns — a bare `kill -TERM $root` while $root is blocked in `wait()` on a foreground
+# child (pytest/basedpyright/systemd-run --scope) would sit queued and do nothing until
+# that child finishes on its own, defeating the whole point. Killing the child directly
+# makes `wait()` return immediately (child died), so bash promptly processes the pending
+# trap. Walked via `pgrep -P` (own descendants only — never a process-group signal, which
+# could hit unrelated siblings sharing the same PGID, e.g. an interactive tmux pane).
+# Missing pgrep degrades to root-only (best-effort, same as the rest of this file's
+# graceful-degradation posture).
+_qg_watchdog_signal_tree() {
+    local root="$1" child
+    if command -v pgrep >/dev/null 2>&1; then
+        for child in $(pgrep -P "$root" 2>/dev/null || true); do
+            _qg_watchdog_signal_tree "$child"
+        done
+    fi
+    kill -TERM "$root" 2>/dev/null || true
+}
+
+# Background loop body — polls until either the target dies on its own (nothing left to
+# protect) or pressure trips the abort. Never touches any PID but $target_pid.
+_qg_watchdog_loop() {
+    local target_pid="$1" repo="$2" interval hits_needed hits=0 marker_dir marker
+    interval="${QG_WATCHDOG_INTERVAL_SECONDS:-15}"
+    hits_needed="${QG_WATCHDOG_CONSECUTIVE_HITS:-2}"
+    marker_dir="$(_qg_ledger_dir)"; mkdir -p "$marker_dir" 2>/dev/null
+    marker="${marker_dir}/aborted.${target_pid}"
+    while true; do
+        kill -0 "$target_pid" 2>/dev/null || return 0   # target already gone — nothing to protect
+        if _qg_watchdog_pressure_hit; then
+            hits=$(( hits + 1 ))
+            if (( hits >= hits_needed )); then
+                {
+                    echo "aborted_by=qg-governor-watchdog"
+                    echo "target_pid=${target_pid}"
+                    echo "repo=${repo}"
+                    echo "reason=host_ram_pressure_ge_${QG_HOST_RAM_ABORT_PCT:-80}pct_for_${hits_needed}_consecutive_checks"
+                    echo "mem_total_kb=$(_qg_mem_total_kb)"
+                    echo "mem_available_kb=$(_qg_mem_available_kb)"
+                    echo "aborted_at_epoch=$(date +%s 2>/dev/null || echo 0)"
+                } > "$marker" 2>/dev/null
+                echo "[qg-governor-watchdog] ${repo} pid=${target_pid}: host RAM pressure >= ${QG_HOST_RAM_ABORT_PCT:-80}% for ${hits_needed} consecutive checks — sending SIGTERM to its process tree (self-scoped, loud abort; marker: ${marker})" >&2
+                _qg_watchdog_signal_tree "$target_pid"
+                return 0
+            fi
+        else
+            hits=0
+        fi
+        sleep "$interval"
+    done
+}
+
+# Start the watchdog for the CURRENT process ($$), in the background. Reservation mode
+# only (token mode has no live ledger/pressure math to hook into). Idempotent.
+_qg_watchdog_start() {
+    [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]] || return 0
+    [[ "${QG_GOVERNOR_WATCHDOG_DISABLE:-}" == "true" ]] && return 0
+    [[ -n "${_QG_WATCHDOG_PID:-}" ]] && return 0   # already running
+    local repo="${1:-${QG_GOVERNOR_REPO:-${SERVICE_NAME:-unknown}}}"
+    ( _qg_watchdog_loop "$$" "$repo" ) &
+    _QG_WATCHDOG_PID=$!
+    disown "$_QG_WATCHDOG_PID" 2>/dev/null || true
+}
+
+# Stop a running watchdog (normal release path — nothing left to protect once the
+# reservation itself is released). Safe no-op if none is running.
+_qg_watchdog_stop() {
+    [[ -n "${_QG_WATCHDOG_PID:-}" ]] || return 0
+    kill "$_QG_WATCHDOG_PID" 2>/dev/null || true
+    wait "$_QG_WATCHDOG_PID" 2>/dev/null || true
+    _QG_WATCHDOG_PID=""
 }
 
 # Acquire one host token (blocks until free). Holds an flock'd fd for the run's lifetime.
@@ -407,6 +516,7 @@ qg_governor_acquire() {
 # reservations by PID-liveness sweep, tokens by flock auto-drop on close).
 qg_governor_release() {
     if [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]]; then
+        _qg_watchdog_stop
         [[ -n "${_QG_RESERVED_PID:-}" ]] || return 0
         _qg_ledger_remove "$_QG_RESERVED_PID"
         _QG_RESERVED_PID=""
