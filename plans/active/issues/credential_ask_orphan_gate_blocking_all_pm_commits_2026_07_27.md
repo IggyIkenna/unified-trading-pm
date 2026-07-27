@@ -9,7 +9,7 @@ summary:
   the checker requires. Because this check runs against the WHOLE tree on every quickmerge's re-gate (not scoped to the
   committer's own changeset), it is currently blocking every slot's commits to unified-trading-pm, not just the
   finding's own author."
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -25,7 +25,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-trading-pm@bb6a25da7
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -68,9 +68,13 @@ ratchet-down.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Either (a) slot-12 (or whoever owns the bucket-IAM finding) files the ping and cites it inline, or
-      (b) an operator reviews both findings and re-baselines
-      (`python3 scripts/quality_gates/check_credential_ask_orphans.py --baseline-write`) if the debt is accepted as-is.
+- [x] [OPERATOR] P1. ✅ **RESOLVED 2026-07-27 (already done by another session before this todo was re-surfaced)** —
+      `unified-trading-pm@bb6a25da7` filed pings for both findings inline (`ikenna_orchestrator/pings/slot_5.md`,
+      "CREDENTIAL APPROVAL REQUEST — 2026-07-27 (slot-5, filed to close a credential-ask-orphan QG regression)").
+      Verified live, this session: `python3 scripts/quality_gates/check_credential_ask_orphans.py` →
+      `OK — 0 orphan BLOCKED-CREDENTIALS (at-or-below baseline 2)`. The repo-wide commit block is over; this was option
+      (a), not a re-baseline. No operator action was actually needed once the pings landed — the [OPERATOR] tag should
+      have been closed the moment `bb6a25da7` shipped, not left open for a future dashboard cycle to re-ask.
 - [ ] [SCRIPT] P2. Consider scoping `check_credential_ask_orphans.py` to the committer's own `--files` changeset (like
       most other Pass-1 checks) rather than the whole tree, OR moving it to a scheduled/nightly sweep instead of a
       per-commit gate — a repo-wide, unscoped ratchet check that can be tripped by an unrelated slot's finding is a
