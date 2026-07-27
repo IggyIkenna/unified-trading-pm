@@ -91,3 +91,23 @@ pipeline actually writes real `instrument_type=odds` data for them.
       on both `batch_odds_api` and `live_odds_api`, with zero real odds trades. Done when: the owner has either
       root-caused + fixed the upstream gap (and the 4 dates can be re-backfilled) or confirmed it's a permanent, honest
       upstream absence (no action possible).
+
+## Investigation attempt 2026-07-27 (classification sweep, no root cause found — log retention expired)
+
+Attempted to root-cause via live GCP Cloud Logging before leaving the `[OPERATOR]` tag as-is (per the operator's
+2026-07-27 instruction that even audits should be agent-driven where feasible). Confirmed
+`uts-prod-market-tick-data-service-fast-t1-recon` (the same job class as
+`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`'s future-date-guard finding) DID fire at
+~00:30-00:32 UTC on all 4 affected dates (2026-06-21..24), and its Cloud Run Job execution genuinely **failed** (exit
+code 1, `protoPayload.status.message`: "... has failed to complete, 0/1 tasks were a success"). However, this is
+**business-as-usual, not unique to the 4 problem dates** — the same job fails with the identical message on 2026-06-20,
+2026-06-25, and 2026-06-26 too (checked for comparison), so it is very likely an unrelated pre-existing retry/exit-code
+quirk, not the cause of the meta-only-write anomaly. The actual container stdout/stderr for these executions (which
+would show the real per-league fetch path / `odds_api_adapter.py` error, if any) is **no longer retained** — only the
+`cloudaudit.googleapis.com%2Fsystem_event` audit-log entry survives; the project's `_Default` logging bucket retention
+is 2 days, and these dates are 33-36 days old at investigation time. **Conclusion: further root-cause from this
+session's tooling is infeasible — the direct evidence has already expired.** Leaving the `[OPERATOR]` tag in place is
+correct here not because of an authority/credential gate, but because the remaining path (if any) is either a
+longer-retention log export this session didn't find, or contacting Odds-API's vendor-side incident history directly —
+both need a human decision on how much effort to spend chasing a month-old, already-cold gap versus accepting it as
+permanent honest absence.
