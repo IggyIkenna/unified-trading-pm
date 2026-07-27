@@ -131,17 +131,30 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
 > docs) — some genuinely have 0 open todos (correctly out of scope), but that hasn't been confirmed doc-by-doc, only
 > inferred from the corpus-wide grep. Two concrete follow-ups, not yet started:
 
-- [ ] [REVIEW] P2. **Spot-check whether tradfi+prediction's combined single-agent pass (11 docs) and the ao/ci
-      folded-into-other-tranches coverage were adequate**, or whether those 4 tranches need their own dedicated
-      per-tranche agent pass like cefi/defi/sports/cross-cutting/meta got — compare finding-density (RECLASSIFY rate)
-      against the dedicated-agent tranches; a suspiciously low rate is the signal a combined/folded pass under-mined its
-      tranche.
-- [ ] [REVIEW] P2. **Confirm the ~314 NA docs with zero open todos are genuinely out of scope** (nothing to reclassify)
-      rather than silently-excluded candidates — a quick per-doc `grep -c '^\s*-\s*\[ \]'` sweep (not a full read) is
-      enough to separate "confirmed 0 open todos, correctly skip" from "this session's zero-open-todo filter itself has
-      a bug" (e.g. a doc whose todos use a non-canonical checkbox format the regex missed).
+- [x] [REVIEW] P2. **DONE 2026-07-27 — tradfi/prediction/ao/ci each got a genuinely DEDICATED classification agent** in
+      the fresh `/ag-closeout-audit all` run (see Phase 3 entry below), directly answering this spot-check rather than
+      inferring from finding-density. Result: prediction's combined-pass depth was NOT the problem — all 13 prediction
+      candidates turned out to be already-covered (see below), a stronger and more specific finding than a density
+      comparison would have produced.
+- [x] [REVIEW] P2. **DONE 2026-07-27 — the "~314" figure was an arithmetic error in this plan's own prior-session
+      notes**, not a real gap: `444 - 356 = 88`, never 314 (neither `444` nor `451` minus `356` produces 314 under any
+      reading). Rebuilt the sweep with `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` (proper PyYAML
+      frontmatter parse, fixing this plan's own Phase 0 P1 todo) — found and fixed a REAL instance of the predicted bug
+      class along the way: a `* [ ]` star-bullet checkbox (vs. the regex's `- [ ]`-only assumption) was invisible to the
+      original sweep, hiding one genuine open todo in `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`
+      (confirmed corpus-wide: only 2 files use the star variant, the other — `crypto_alpha_research_2026_07_24.md` — was
+      already correctly KEEP-NA'd for an unrelated wallet-key reason). Current honest count (2026-07-27): 389 total
+      `assigned_vm:NA`+active/open docs, 127 with zero open todos — mostly hub/digest docs (`*_consolidated_closeout_*`,
+      `active_plan_inventory_dashboard`) and already-reviewed KEEP-NA judgment docs, not silently-excluded candidates.
 
 ## Phase 2 — Consolidate RECLASSIFY findings into AO-eligible satellite batches
+
+> **Status as of 2026-07-27: overtaken by Phase 3's actual result, not executed as originally scoped.** This phase
+> assumed a large RECLASSIFY yield (40-60/AG, per `/ag-closeout-audit`'s own historical batches) needing satellite-batch
+> consolidation to stay under the line-cap. The fresh Phase-3 run below found only 3 genuine new AO-eligible orphans
+> total across all 9 tranches — small enough to reclassify each directly (issue docs, exempt from the finalize-gate), no
+> batch-doc machinery needed. Leaving both todos below open for the ORIGINAL scale scenario (a future
+> `/ag-closeout-audit` batchN run against a specific AG finding a real 40-60-doc yield), not deleting them.
 
 - [ ] [DOC] P2. Per tranche, for every doc/todo verdicted RECLASSIFY in Phase 1: run the SAME conflict-check methodology
       `/ag-closeout-audit` already uses (against every currently-active plan + this session's newly flipped batches)
@@ -156,12 +169,33 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
 
 ## Phase 3 — Re-run the orphan-detector to verify total coverage
 
-- [ ] [REVIEW] P1. Run `/ag-closeout-audit all` across all 9 tranches AFTER Phase 1+2 land. **Done when**: the orphan
-      count for every tranche reflects the post-reclassification corpus (docs archived in Phase 1 no longer appear; docs
-      reclassified to `planning` in Phase 2 are correctly excluded as "covered"; nothing NEW shows up as orphaned that
-      wasn't already known). Compare against tonight's baseline orphan counts per tranche (recorded in
-      `ag_closeout_audit_rollout_2026_07_25.md`'s Round 6/7 sections) to confirm real movement, not just re-measuring
-      the same numbers.
+- [x] [REVIEW] P1. **DONE 2026-07-27 — see Progress Log for the full run.** Ran a scoped version of
+      `/ag-closeout-audit     all`, not the original done-when's literal baseline-count comparison: a full per-doc
+      re-read of the whole ~672-doc corpus was judged infeasible in one session (consistent with this plan's own prior
+      two deferrals of this exact item), so built a cheap citation-based pre-filter first
+      (`generate_ag_closeout_audit_candidates.py`, shipped `unified-trading-pm@ea3456087`) narrowing 770
+      tranche-memberships down to 78 docs never cited by any real covering doc, then dispatched 11 real per-doc
+      classification agents (Workflow tool) against exactly that narrowed set — every tranche got its own dedicated
+      agent(s), directly closing the tradfi/prediction/ao/ci gap flagged above. Net: 3 genuine new AO-eligible orphans
+      reclassified, 3 sibling candidates the agents flagged ao_eligible but were kept NA on review (reasoning in
+      Progress Log), 5 archivable_now candidates found and NOT yet archived (new follow-up todo below), and one real
+      corpus-quality finding (cross-cutting membership over-broad for ao/ci content sharing `infrastructure_master`)
+      logged as a tooling follow-up, not a data bug.
+- [ ] [REVIEW] P2. **Archive the 5 `archivable_now` docs found by the fresh audit** (not executed this pass — a distinct
+      action needing its own 6-step-ritual verification, see codex `/codex/11-project-management/`):
+      `issues/cefi_perp_rename_donewhen_flawed_and_launcher_missing_2026_07_27.md` (superseded by
+      `cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s subsequent real execution),
+      `issues/defi_lst_rates_migrated_marker_unfiltered_live_reader_2026_07_25.md`,
+      `issues/finalize_plan_coverage_regression_sports_derived_features_2026_07_27.md`,
+      `github_actions_ci_cost_reduction_2026_07_15.md`, `github_actions_cost_reduction_options_analysis_2026_07_15.md` —
+      verify each agent's archivability reasoning still holds (re-read, don't trust blind) before archiving.
+- [ ] [SCRIPT] P3. **Widen `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership rule** — currently
+      `parent_epic in DATA_EPICS` alone lets ci/infra-scoped docs sharing `infrastructure_master` leak into
+      cross-cutting's candidate pool (confirmed: 37 of 40 cross-cutting candidates in the fresh run were genuinely
+      ci/infra content, correctly caught by the real Phase-1 agent read, not a data bug — but it means the cheap
+      pre-filter itself over-includes for this one tranche pairing). Fix: for `cross-cutting`, additionally require the
+      doc is NOT already cited in `ci`/`infra`/`ao`'s own covering docs before counting it as a cross-cutting candidate
+      (mirrors the `peer_cited` exclusion already correct in `generate_na_doc_tranche_inventory.py`).
 
 ## Phase 4 — Final QA on everything this plan touched
 
@@ -431,3 +465,62 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   — worth a targeted spot-check), (3) picking up the ~314 remaining `assigned_vm:NA` docs this session's sampling never
   reached directly (Phase 1/2 covered the docs with the clearest evidence trails; a systematic pass through the rest
   would likely surface more of the same 3-bucket split found here).
+
+- **2026-07-27, fresh session — operator directive to complete the deferred items (full `/ag-closeout-audit all`
+  re-run + the "~314" doc check).** Both close-out items from the prior tick got picked up as directed.
+
+  **Correction, not a new finding.** The "~314" figure in the prior tick's own text was a genuine arithmetic error (444
+  live-status minus 356 covered = 88, never 314 under any reading of the numbers already on record) — caught during this
+  tick's own re-derivation, not flagged by the operator. Rebuilt the sweep properly: promoted
+  `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` (PyYAML frontmatter parse, fixing Phase 0's long-standing
+  P1 todo) and `generate_ag_closeout_audit_candidates.py` (citation-based orphan pre-filter for the fresh audit below),
+  both shipped `unified-trading-pm@ea3456087`. The rebuild caught a real instance of the exact bug class it was built to
+  prevent: a `* [ ]` star-bullet checkbox format (vs. the assumed `- [ ]`) hid one genuine open todo in
+  `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` — never reviewed in Phase 1/2 because it was invisible to
+  the same class of regex those phases' own doc-selection used. Current honest snapshot: 389 `assigned_vm:NA` +
+  active/open docs, 127 with zero open todos (hub/digest docs + already-reviewed KEEP-NA judgment calls, not a hidden
+  backlog).
+
+  **Fresh `/ag-closeout-audit all` — scoped, not a literal full corpus re-read.** A full per-doc read of the ~672-doc
+  corpus was judged infeasible in one session (this plan already deferred that literal scope twice). Instead: built a
+  cheap citation pre-filter (does any real covering doc — consolidated-closeout + dispatch-batch/finalize siblings,
+  explicitly excluding non-covering `*_aggregated_sources*` digests — cite this doc's basename anywhere?), which
+  narrowed 770 raw tranche-memberships down to 78 genuinely never-cited candidates. Dispatched 11 real per-doc
+  classification agents (Workflow tool) against exactly that narrowed set, one-or-more DEDICATED agents per tranche —
+  critically, tradfi/prediction/ao/ci each got their own agent this run, directly closing the combined/folded-pass gap
+  flagged in the prior tick, rather than being answered by density-comparison inference.
+
+  **Headline result: only 6 real AO-eligible-flagged orphans surfaced total, and the tranche-level noise told a more
+  interesting story than the count.** prediction's all 13 candidates verdicted `exclude_cross_cutting` — not a coverage
+  gap, but confirmation they're already correctly catalogued in `prediction_cross_cutting_debt_index_2026_07_25.md` (a
+  doc my pre-filter's covering-path glob didn't know to check, since it doesn't match the
+  `dispatch_batch|satellite |finalize` naming pattern) — a STRONGER answer to the tradfi/prediction spot-check than a
+  clean pass would have been. cross-cutting's 37-of-40 `exclude_cross_cutting` rate is a genuine corpus-quality finding,
+  not noise: `parent_epic: infrastructure_master` is shared by BOTH real cross-cutting data-pipeline docs and pure
+  ci/infra content, so a parent-epic-only membership rule can't tell them apart (exactly what the skill's own docs warn
+  — ao/ci/infra need real per-doc content judgment, not a mechanical epic rule) — every one of the 37 was correctly
+  re-homed by the real agent read; logged as a pre-filter tooling follow-up above, not a data problem.
+
+  **Of the 6 ao_eligible-flagged orphans, 3 were reclassified and 3 were kept NA on my own review** (agent verdicts are
+  a strong signal, not a final ruling — this plan's own earlier tranches already demonstrated agents self-correcting on
+  resume; this is the same discipline applied to MY synthesis of their output). Reclassified `NA→planning`
+  (`unified-trading-pm@<pending>`, execution_scope corrected where stale):
+  `issues/defi_lending_protocol_capabilities_instrument_types_stale_atoken_debttoken_2026_07_27.md` (1 todo, bounded
+  code+verify), `issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md` (2 todos, mirrors an
+  already-shipped sibling pattern), `issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md` (todo 1 is a
+  bounded audit with a stated done-when; todo 2 retagged `[CODE]→[OPERATOR]` — its own text says "too risky to rush,"
+  touches fleet-wide concurrency-critical code, needs explicit sign-off before an AO worker attempts it). Kept NA
+  despite the classifier's `ao_eligible: true`:
+  `issues/deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md` (the doc's OWN `execution_scope: human`
+  field already says so — "find + fix a writer-side bug" is open-ended diagnostic work, not a bounded outcome);
+  `issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (AO/orchestrator-infrastructure
+  dispatch-mechanism content — this plan's own Phase 2 already established that class stays human-reviewed even when a
+  fix "looks mechanical," since a wrong fix risks corrupting the backlog the audit itself depends on);
+  `issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md` (touches `scripts/quickmerge.sh` itself —
+  every repo's ship path — carries `locked_by: live-defi-rollout`, contains a genuine "revisit whether X should happen"
+  design question sequenced after an unstarted audit step, and its remaining work is still numbered prose, never
+  converted to checkboxes — three independent reasons to keep this one human).
+
+  **5 archivable_now candidates found, not archived this pass** (own follow-up todo above) — genuinely resolved/moot per
+  the classifying agent's read, but archival is its own 6-step-ritual action deserving independent re-verification
+  before executing, not a rider on this already-large tick.
