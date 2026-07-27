@@ -108,10 +108,16 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P1. Relaunch the 21 dead/incomplete shards (13-26, 28, 29, 40-44) — ideally resuming from each shard's
-      own checkpoint/progress state if the script supports it, otherwise re-running those date ranges from scratch
-      (idempotent per the script's own `already_canonical_skipped` counter design). Tagged `[OPERATOR]` because this is
-      a new VM-launch decision on a stalled migration, not a bounded verification outcome.
+- [ ] [SCRIPT] P1. **No `[OPERATOR]` gate needed** — VM launches are AO-dispatchable by default per
+      `/codex/05-infrastructure/vm-launcher-runbook.md` (only
+      `launch-disaster-drill-cron-vm.sh`/`launch-dr-drill-cutover-vm.sh` and `launch-strategy-live-vm.sh` require
+      explicit human sign-off; ordinary backfill/migration relaunches do not). This is a bounded, checkable relaunch of
+      21 NAMED dead/incomplete shards (13-26, 28, 29, 40-44) via an EXISTING idempotent script
+      (`already_canonical_skipped` counter design), not a new design/scope decision — the original `[OPERATOR]` tag's
+      own justification ("a new VM-launch decision... not a bounded verification outcome") misapplied the runbook's
+      default posture. Resume from each shard's own checkpoint/progress state if the script supports it, otherwise
+      re-run those date ranges from scratch. **Done when**: all 21 shards' `run.log` show the terminal summary (feeds
+      directly into the P2 todo below).
 - [ ] [SCRIPT] P2. Once relaunched shards complete, re-run this same corpus-wide `run.log` grep to confirm all 44/44
       show the terminal summary, THEN delete `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` per its own
       `# Delete-when:` marker. Repo: market-tick-data-service.
