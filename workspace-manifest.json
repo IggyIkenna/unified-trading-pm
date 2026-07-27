@@ -68,7 +68,7 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.0",
-    "deployment-api": "0.54.0",
+    "deployment-api": "0.56.0",
     "deployment-service": "0.107.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.39.0",
@@ -78,9 +78,9 @@
     "instruments-service": "0.93.0",
     "market-tick-data-service": "0.97.0",
     "system-integration-tests": "0.15.0",
-    "unified-api-contracts": "0.74.0",
+    "unified-api-contracts": "0.75.0",
     "unified-trading-library": "0.60.0",
-    "unified-trading-pm": "1.2.632",
+    "unified-trading-pm": "1.2.634",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 16,
         "qg_red_reason": null,
-        "warn_file_count": 15,
-        "large_file_count": 6,
-        "coverage_pct": 82.59
+        "large_file_count": 6
       }
     },
     "deployment-service": {
@@ -529,10 +529,10 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "large_file_count": 1,
-        "warn_file_count": 13,
+        "warn_file_count": 14,
+        "coverage_pct": 85.73,
         "qg_red_reason": null,
-        "coverage_pct": 85.69
+        "large_file_count": 1
       },
       "ldr_ci_status": "GREEN"
     },
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "qg_red_reason": null,
+        "warn_file_count": 44,
         "coverage_pct": null,
-        "warn_file_count": 43
+        "qg_red_reason": null,
+        "large_file_count": 0
       }
     },
     "ml-service": {
@@ -1212,10 +1212,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 27,
         "warn_file_count": 31,
+        "coverage_pct": null,
         "qg_red_reason": null,
-        "coverage_pct": 96.42
+        "large_file_count": 27
       }
     },
     "unified-trading-library": {
@@ -1300,9 +1300,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 0,
-        "coverage_pct": null,
         "qg_red_reason": null,
+        "warn_file_count": 0,
+        "coverage_pct": 73.09,
         "large_file_count": 0
       }
     },
@@ -2190,8 +2190,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.73.1.dev6+g7dc48a0a3",
-      "published_at": "2026-07-27T16:09:52Z",
+      "version": "0.75.0",
+      "published_at": "2026-07-27T17:34:55Z",
       "registry": "artifact-registry"
     }
   }
