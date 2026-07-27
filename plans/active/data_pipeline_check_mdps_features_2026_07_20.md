@@ -230,6 +230,21 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` new todo. 9b's own full-matrix
       completion remains genuinely open per the disposition below — this checkbox covers only the
       coordination/no-duplicate-launch slice.
+- [x] 9b-duplicate-vm-guard. ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-6)** — `features-service@6981b2b8`. Re-checked live
+      fleet state on pickup of 9b: **7** `features-e2e-cefi-*` VMs RUNNING (up from the 5 slot-10 found) + 2
+      `features-e2e-tradfi-*`, all confirmed live-advancing. Found slot-7 already ~35min into the exact 9b full-matrix
+      driver (`pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day`, no
+      `--family`/`--asset-group`), shard 1/16 — stood down rather than launch a competing run (same double-dispatch
+      pattern main already ruled on once this session for a different task). Root-caused that slot-7's own launch
+      (`-112159`, window 2026-06-28..2026-06-29) was itself a NEW 3rd duplicate of a window `-101851`/`-102228` were
+      already computing — live proof the
+      `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` P1 duplicate-VM-launch bug was
+      still unfixed and costing money on the very run meant to close 9b. Shipped the fix: `_find_inflight_duplicate_vm`
+      (labels-based `aggregated_list_instances` check, no raw gcloud/subprocess) on both the force and skip leg
+      VM-launch paths in `features-service/scripts/pipeline_e2e_check.py` — a hit skips the launch instead of creating
+      another billable VM. QG green, quickmerge shipped. Launched zero new VMs this session; did not touch slot-7's (or
+      any other slot's) in-flight VMs. 9b's own full-matrix completion remains genuinely open, now owned by slot-7's
+      in-flight run — see the disposition note below.
 - [ ] 10. [DATA] P1. Steady-state benchmark VMs (250GB disk) per representative shard-type; measure amortized per-shard-
       day throughput (RX + rows/s + wall-clock); project full-history time (honest floor + flat 2019) + SPOT cost +
       parallelization/optimization headroom.
