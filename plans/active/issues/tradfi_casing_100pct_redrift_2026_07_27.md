@@ -144,15 +144,21 @@ with — though not proven to be — the same "a shipped code fix does not mean 
 this plan's Progress Log, except for a Cloud Run JOB image rather than a VM tarball. **Follow-up todo added below**
 rather than asserting this as confirmed root cause.
 
-- [ ] [DATA] P1. Re-run `migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py --apply` for the residual — but only
-      AFTER confirming the `uts-prod-market-tick-data-service-tradfi-databento-t1-recon` Cloud Run job's `:latest` image
-      actually contains the current `_tradfi_manifest_canon.py` (byte-grep the pulled image or re-check after its next
-      daily 00:35 UTC run lands with a definitely-post-fix image) — re-running the restamp before confirming the daily
-      job is fixed just re-hides the symptom on the next 00:35 UTC run. (repo: market-tick-data-service)
-- [ ] [DATA] P2. Confirm whether `market-tick-data-service`'s Cloud Run job image build is triggered automatically on
-      every `main` merge (should be, per the standard CI/CD flow) or has its own gap — if the latter, this is a second,
-      independent deployment-staleness class distinct from the VM-tarball one already documented, and needs its own
-      codex note. (repo: market-tick-data-service or deployment-service, whichever owns the Cloud Run deploy trigger)
+**SUPERSEDED (2026-07-27, slot-12, `BLK-a27aa7e4` — main ruling Option A, per `BLK-f3950c25`):** the two items below are
+superseded by the "Additive root-cause + operator ruling" section right below — live-repo verification (all 4 repos
+fresh-pulled to `origin/live-defi-rollout`: UTL@0d1a2257, mtds@a6c8e29e, instruments-service@20778e98,
+market-data-processing-service@21aa1af) confirmed the dominant root cause is NOT the mtds Cloud Run job image (at most a
+minor contributor) but `instruments-service`/`writers.py` +
+`market-data-processing-service`/`build_continuous_engine.py` writing with ZERO casing canon at all. Re-running the
+casing `--apply` script is now correctly scoped as the FINAL `[OPERATOR]`-only todo in that section (`-007`, gated on
+the UTL seam shipping + fleet redeploy), never this Cloud-Run-image precondition check. Resolved-via-reconciliation, NOT
+executed — the real fix chain is `-004`/`-005`/ `-006` immediately below.
+
+1. ~~Re-run `migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py --apply` for the residual — but only AFTER
+   confirming the `uts-prod-market-tick-data-service-tradfi-databento-t1-recon` Cloud Run job's `:latest` image actually
+   contains the current `_tradfi_manifest_canon.py`~~ (repo: market-tick-data-service) — SUPERSEDED, see note above.
+2. ~~Confirm whether `market-tick-data-service`'s Cloud Run job image build is triggered automatically on every `main`
+   merge or has its own gap~~ (repo: market-tick-data-service or deployment-service) — SUPERSEDED, see note above.
 
 ## Additive root-cause + operator ruling (2026-07-27, slot-10)
 
