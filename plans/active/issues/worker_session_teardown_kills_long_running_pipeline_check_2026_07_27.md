@@ -202,29 +202,29 @@ tracked here rather than silently claimed complete.
       alive and progressing, killed or not).
 
       **SHIPPED 2026-07-27 (slot-6)**: `features-service@6981b2b8`. Re-checked live fleet state on pickup of todo 9b —
-                              the waste had gotten WORSE since this todo was filed: **7** simultaneously-RUNNING `features-e2e-cefi-*` VMs (up
-                              from 5) + 2 `features-e2e-tradfi-*` VMs, confirmed via fresh `run.log` tails all live-advancing (none
-                              stalled/zombie). Root-caused one of the two NEW VMs launched after the 11:15 UTC check
-                              (`features-e2e-cefi-20260727-112159-025349`, window 2026-06-28..2026-06-29): it is slot-7's OWN legitimate
-                              full-matrix driver (`pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day`, no
-                              `--family`/`--asset-group` restriction, enumerating all 16 shards for todo 9b) — its `run.log` shows it launched
-                              that exact VM at 11:21:59 UTC for shard 1/16 (`CEFI:delta_one`), auto-day-resolved to the SAME window
-                              2026-06-28..2026-06-29 that `-101851`/`-102228` were ALREADY running. **This is live proof of the bug**: even a
-                              legitimate, freshly-dispatched full-matrix run has no in-flight check and silently launched a 3rd duplicate for a
-                              window two other VMs were already computing. Implemented the recommended metadata-based check in
-                              `features-service/scripts/pipeline_e2e_check.py` (`_find_inflight_duplicate_vm`): before either the force or skip
-                              leg launches a VM, query `aggregated_list_instances` (via UTL's `get_compute_engine_client`, no raw
-                              `gcloud`/subprocess) with `filter_str='status = "RUNNING" AND labels.purpose = "features-backfill" AND
-                              labels.family = "<dashed>" AND labels.category = "<ag-lower>"'` — every launch already stamps these labels
-                              (`launch-features-vm.sh`), so this needed no launcher changes. A hit returns `status="skipped"` with reason
-                              `duplicate_in_flight: <vm> ...` and launches nothing; a transport error fails OPEN (returns `None`, launch
-                              proceeds) so a Compute API blip can never block a real run. Deliberately coarser than day-window (family+AG
-                              only) — the observed waste was always same-cell/different-window duplication, and a same-cell VM already running
-                              will itself produce this cell's result, so the coarser check never loses coverage. QG green (`features-service`),
-                              shipped via quickmerge. **NOT done**: the identical launcher-side gap exists in
-                              market-data-processing-service's own `pipeline_e2e_check.py` driver (same launch pattern, not yet checked for
-                              this guard) — follow-up todo below. Did NOT touch slot-7's already-running VMs (all genuinely progressing per
-                              the VM-delete guardrail) and launched zero new VMs this session.
+                                          the waste had gotten WORSE since this todo was filed: **7** simultaneously-RUNNING `features-e2e-cefi-*` VMs (up
+                                          from 5) + 2 `features-e2e-tradfi-*` VMs, confirmed via fresh `run.log` tails all live-advancing (none
+                                          stalled/zombie). Root-caused one of the two NEW VMs launched after the 11:15 UTC check
+                                          (`features-e2e-cefi-20260727-112159-025349`, window 2026-06-28..2026-06-29): it is slot-7's OWN legitimate
+                                          full-matrix driver (`pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day`, no
+                                          `--family`/`--asset-group` restriction, enumerating all 16 shards for todo 9b) — its `run.log` shows it launched
+                                          that exact VM at 11:21:59 UTC for shard 1/16 (`CEFI:delta_one`), auto-day-resolved to the SAME window
+                                          2026-06-28..2026-06-29 that `-101851`/`-102228` were ALREADY running. **This is live proof of the bug**: even a
+                                          legitimate, freshly-dispatched full-matrix run has no in-flight check and silently launched a 3rd duplicate for a
+                                          window two other VMs were already computing. Implemented the recommended metadata-based check in
+                                          `features-service/scripts/pipeline_e2e_check.py` (`_find_inflight_duplicate_vm`): before either the force or skip
+                                          leg launches a VM, query `aggregated_list_instances` (via UTL's `get_compute_engine_client`, no raw
+                                          `gcloud`/subprocess) with `filter_str='status = "RUNNING" AND labels.purpose = "features-backfill" AND
+                                          labels.family = "<dashed>" AND labels.category = "<ag-lower>"'` — every launch already stamps these labels
+                                          (`launch-features-vm.sh`), so this needed no launcher changes. A hit returns `status="skipped"` with reason
+                                          `duplicate_in_flight: <vm> ...` and launches nothing; a transport error fails OPEN (returns `None`, launch
+                                          proceeds) so a Compute API blip can never block a real run. Deliberately coarser than day-window (family+AG
+                                          only) — the observed waste was always same-cell/different-window duplication, and a same-cell VM already running
+                                          will itself produce this cell's result, so the coarser check never loses coverage. QG green (`features-service`),
+                                          shipped via quickmerge. **NOT done**: the identical launcher-side gap exists in
+                                          market-data-processing-service's own `pipeline_e2e_check.py` driver (same launch pattern, not yet checked for
+                                          this guard) — follow-up todo below. Did NOT touch slot-7's already-running VMs (all genuinely progressing per
+                                          the VM-delete guardrail) and launched zero new VMs this session.
 
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-27 (slot-2)** — `market-data-processing-service@6cd96e8` +
       `deployment-service@c8ee47e`. Confirmed vulnerable: `pipeline_e2e_check.py`'s force/skip legs had no
@@ -238,3 +238,31 @@ tracked here rather than silently claimed complete.
       per-shard call pattern — 5 new regression tests extract + evaluate the real snippet in isolation (no `gcloud` call
       ever invoked). Full detail: `plans/active/data_pipeline_check_mdps_features_2026_07_20.md` todo 9b's 2026-07-27
       (slot-2) Progress Log entry.
+
+- [ ] [SCRIPT] P2. **NEW 2026-07-27 (slot-6)**: port the identical `_find_inflight_duplicate_vm` duplicate-in-flight
+      guard (labels.purpose/family/category filter via `aggregated_list_instances`) into
+      `market-data-processing-service/scripts/pipeline_e2e_check.py`'s force/skip leg VM launch — its
+      `launch-mdps-vm.sh`-equivalent launcher likely stamps analogous labels already (verify), and the driver has the
+      same unchecked-relaunch shape that caused this whole finding for features. Not yet checked/confirmed vulnerable,
+      just not yet protected either — do the same live-fleet check first before assuming it needs the fix.
+- [ ] [OPERATOR] P1. **NEW 2026-07-27 (slot-3)**: the `_find_inflight_duplicate_vm` fix (`features-service@6981b2b8`) is
+      confirmed WORKING on new launches — my own todo-9b day=2026-07-19 run shows it firing twice live
+      (`TRADFI:cross_instrument skip` and `TRADFI:multi_timeframe skip`, both `duplicate_in_flight: <vm> ...` skips,
+      zero new VMs launched for those cells). But the fix only stops NEW duplicates — it does nothing for the PRE-FIX
+      fleet already running. Fresh `gcloud compute instances list --filter="name~'features-e2e'"` at todo-9b handoff
+      time (2026-07-27, ~13:00 UTC) shows **9 VMs still simultaneously RUNNING**, spanning slot-3/6/7/10's overlapping
+      sessions: 8 `features-e2e-cefi-*` (creation timestamps 2026-07-26T23:34 PDT through 2026-07-27T05:02 PDT — the
+      oldest is **~9 hours old**) + 1 `features-e2e-tradfi-*` (05:49 PDT). At least 3 of these are confirmed exact-
+      duplicate pairs/triples on the SAME shard+window from this issue's own earlier findings above
+      (`-063401`/`-083854`; `-101851`/`-102228`; `-112159`). None have been stopped — per the VM-delete guardrail (only
+      kill a VM confirmed genuinely dead, never one still progressing) none of the sessions that found them chose to
+      delete them, so they have been silently accumulating real `e2-standard-8` on-demand spend (**--day.268/hr each**
+      per the `/data-pipeline-check-features` skill's own cost table) for hours, un-actioned, because no session's scope
+      included "go clean up the fleet." **Recommended**: run `/vm-preemption-billing-waste-audit` (already a standing
+      codex HARD RULE — "every agent watching VMs should use it, not just when an incident is already suspected")
+      against this exact VM set to (a) confirm which are genuinely still progressing vs. silently stalled (this session
+      independently confirmed the original `-101851` VM went from healthy-progressing to byte-identical-stalled at ~2.5h
+      runtime — see the parent plan's Progress Log), and (b) get an operator decision on stopping the
+      confirmed-redundant/stalled ones rather than leaving a 9-VM, multi-hour fleet running unobserved. Not actioned in
+      this session — flagging for the next session/operator rather than unilaterally deleting VMs outside this task's
+      scope.
