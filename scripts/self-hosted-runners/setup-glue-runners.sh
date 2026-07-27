@@ -506,6 +506,7 @@ cmd_install() {
       -e "s#/run/github-glue-runner/#/run/${RUNTIME_DIR_NAME}/#g" \
       -e "s#RuntimeDirectory=github-glue-runner\$#RuntimeDirectory=${RUNTIME_DIR_NAME}#" \
       -e "s#Before=github-glue-runner@\\.service#Before=${TEMPLATE_UNIT}#" \
+      -e "s#Unit=github-glue-slot-refresh\\.service#Unit=${SLOT_REFRESH_SERVICE}#" \
       -e "s#Environment=GH_TOKEN_SECRET=GH_PAT#Environment=GH_TOKEN_SECRET=${GH_TOKEN_SECRET:-GH_PAT}#" \
       -e "s#Environment=GCP_PROJECT=central-element-323112#Environment=GCP_PROJECT=${GCP_PROJECT:-central-element-323112}#" \
       -e "s#IggyIkenna/unified-trading-pm#${OWNER}/${REPO}#g" \
