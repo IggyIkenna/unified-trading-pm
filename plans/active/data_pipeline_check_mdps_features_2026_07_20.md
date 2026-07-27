@@ -556,8 +556,24 @@ without a column/filter projection is one cache-miss from an OOM. Independent of
 - [ ] NEW todo. [DATA] P0. VERIFY the prod projection on a real prod-bucket MDPS run before sizing the win (is the
       emission check actually firing in prod, or short-circuited?). It is INFERRED from a measured curve + measured
       sizes, not observed on a prod VM. **This is the single biggest unknown in the ETA.**
-- [ ] NEW todo. [SCRIPT] P0. Implement F1+F2 (UTL `manifest_completeness.py`) + F3 (MDPS `_publish_emission_check`),
-      with the 1.4M-row perf guard (<0.5s vs 13.14s today).
+- [x] ✅ NEW todo. **VERIFIED 2026-07-27 (slot-7)**: already shipped same-day as this todo was written — no new code
+      needed. `unified-trading-library@80d2497e` ("perf(manifest): filter-then-build + memoize
+      compute_completeness_fraction (16.7x, value-equivalent)", 2026-07-20) implements F1 (pre-filter the DataFrame to
+      candidate rows via an exact superset key match, build `_build_capture_status_map` from that slice — unchanged,
+      value-preserving) + F2 (memoize per-window keyed by `(id, len, frozenset(keys))`, weakref-guarded, bounded
+      FIFO 64) — confirmed still an ancestor of current LDR tip via `git merge-base --is-ancestor`. F3 is
+      `market-data-processing-service/app/core/canonical_writer_stamping.py:445` — `_publish_emission_check` accepts
+      `manifest_index: object = None` and threads it straight to `publish_with_manifest_lookup` (line 492); its
+      docstring documents the correctness nuance (a caller must NOT share a stale snapshot across writes that MUTATE the
+      shard being read — MDPS's own `ohlcv_1m` write is the same shard `ohlcv_1h`/`ohlcv_24h` read for their upstream
+      check) so a naive share-across-timeframes bug can't be reintroduced. Perf-guard regression test confirmed:
+      `tests/unit/test_manifest_completeness.py:658` `test_one_million_rows_under_three_seconds` (1.2M-row corpus,
+      comparable to the todo's 1.45M reference, elapsed asserted `< 3.0s`; the shipping commit's own message cites
+      0.211s measured, well under the todo's 0.5s target — the 3.0s in the test is a CI-safe assertion budget, not the
+      achieved figure). Memoization + value-equivalence also covered: `test_three_calls_one_build` /
+      `test_all_four_states_and_absent_key` / `test_duplicate_key_last_write_wins` (same file).
+      `bash scripts/quality-gates.sh --no-fix` GREEN (263s) on UTL's current tree, full test suite incl. this file. No
+      code change needed — closing as verified-via-code-read + green regression suite.
 - [ ] NEW todo. [DATA] P0. Audit every `read_availability_index` caller on defi for a missing column/filter projection
       (1.58 GB index, OOM risk).
 
