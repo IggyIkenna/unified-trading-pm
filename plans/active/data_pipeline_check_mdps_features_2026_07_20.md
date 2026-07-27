@@ -201,10 +201,14 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
 - [ ] 10. [DATA] P1. Steady-state benchmark VMs (250GB disk) per representative shard-type; measure amortized per-shard-
       day throughput (RX + rows/s + wall-clock); project full-history time (honest floor + flat 2019) + SPOT cost +
       parallelization/optimization headroom.
-- [ ] 11. [DATA] P0. Cross-repo orphan/lineage audit (MTDS→MDPS→features→ml/strategy) + MIGRATE existing candle/feature
-      data to zero orphans (MVP or not). Migrations run to real completion (data-correctness heartbeat). Todo itself
-      stays OPEN (full lineage audit + real migration NOT run this session) — see the 2026-07-27 (slot-12) Progress Log
-      entry + sub-todo 11a below for the concrete, verifiable slice completed this session.
+- **[DATA] P0. 11.** Cross-repo orphan/lineage audit (MTDS→MDPS→features→ml/strategy) + MIGRATE existing candle/feature
+  data to zero orphans (MVP or not). Migrations run to real completion (data-correctness heartbeat). **Non-checkbox
+  rollup header — restructured 2026-07-27 (slot-12) per BLK-1db5424c** (mirrors the identical fix main applied for
+  slot-14/cefi-020, BLK-e002d3cb): the original single-checkbox-with-broad-scope shape let a dispatched worker complete
+  a real, verifiable slice (11a below) yet have nothing to honestly flip, since the parent's own checkbox correctly
+  requires the FULL audit + FULL migration to zero orphans. Split into 11a (done this session, promoted to a first-class
+  top-level todo) and the genuinely-remaining work (11b audit, 11c migrate), split by execution class since they gate
+  differently — see immediately below.
 - [x] 11a. ✅ [SCRIPT] P0. **DONE 2026-07-27 (slot-12)** — `unified-trading-library@2352e7c8`. Caught (before any VM
       launched) a P0 data-loss bug in the previously-recommended candle-manifest orphan reconciliation:
       `rebuild_manifest_from_canonical_paths()` wholesale-replaces a shared bucket's WHOLE manifest index on a
@@ -214,8 +218,28 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       directly. QG green (1144s) + CI `quality-gates-v2` green. Full detail:
       `issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`. This unblocks
       `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (corrected in the same session) for its
-      next session's actual Tier-2 SPOT VM run — todo 11's real migration work is NOT complete, this closes only the
-      blocking-bug sub-slice.
+      next session's actual Tier-2 SPOT VM run. **(Promoted 2026-07-27 from a nested sub-item to a first-class,
+      independently-dispatchable todo per BLK-1db5424c.)**
+- [ ] 11b. [DATA] P0. **Cross-repo orphan/lineage audit** (MTDS→MDPS→features→ml/strategy) — read-only, single-walk,
+      runs on a Tier-2 SPOT VM (never in-session per the heavy-I/O rule), agent-doable. Scope: for each asset_group,
+      trace an instrument/day through the full pipeline (raw MTDS capture → MDPS candle derivation → features-service
+      output → ml/strategy consumption) and enumerate every orphan class found along the way (objects with no manifest
+      row, manifest rows with no object, and — the newly-discovered class this session — manifest coverage measured
+      under the WRONG `data_type` vocabulary producing false "never populated" verdicts, per
+      `issues/candle_feature_canonical_path_divergence_2026_07_20.md` todo 7's correction). Write a report enumerating
+      the corpus-wide orphan counts per asset_group per lineage stage. References:
+      `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (now unblocked, CEFI-scoped candle-manifest
+      slice), `issues/estate_orphan_assessment_2026_07_21.md` (raw MTDS orphan sweep, prior art for defi/cefi/tradfi/
+      prediction). Feeds 11c's denominator.
+- [ ] 11c. [DATA] P0. [OPERATOR] **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS
+      manifest (via the safe additive `merge_manifest_from_canonical_paths()` shipped in 11a, never the destructive
+      `rebuild_manifest_from_canonical_paths`), so it needs delete-safety/reversibility review before any `--apply` even
+      though the additive path only ADDS rows (per `task_template.md` finding O's safe-idempotent carve-out, once
+      confirmed against 11b's actual findings — do not assume every orphan class 11b finds is additive-only; some may
+      require a real GCS data migration, not just a manifest backfill, which IS destructive/hard-to-reverse and needs
+      the full delete-safety protocol). Runs on a VM, never in-session. `depends_on: 11b` (the audit's findings are the
+      actual work list — do not launch a migration VM before the audit report exists). Migrations run to real completion
+      per the data-pipeline-correctness HARD RULE — no asset_group skipped, no deadline deferral.
 - [ ] 12. [SCRIPT] P1. Backfill-processing path (download→process→upload) code-ready + OPTIMIZED learning from cefi
       (within-VM multiproc, faster-libs/Rust where it pays, 250GB disk, fleet-wide since not Tardis-capped).
 - [x] 13. [DATA] P0. **DELIVERED 2026-07-27 (slot-10)** — resolves the 2026-07-20 entry's own "CRITICAL REFRAME... MUST
@@ -341,7 +365,7 @@ session's migration work depends on not repeating.
 | 7   | Run the CEFI candle-manifest orphan reconciliation via the new safe `merge_manifest_from_canonical_paths` (Tier-2 SPOT VM, never in-session)   | P1       | `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`                 | none                       |
 | 8   | Audit `rebuild_mtds_manifest.py --from-canonical`'s existing call site for the same prefix-scoped-wipe risk (already-shipped permanent script) | P1       | `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 3 | none                       |
 | 9   | Re-measure cefi/tradfi/prediction candle-manifest coverage with the CORRECT vocabulary before trusting todo 7's "never populated" framing      | P1       | `candle_feature_canonical_path_divergence_2026_07_20.md` todo 7                 | none                       |
-| 10  | Complete todo 11's actual scope (full MTDS→MDPS→features→ml/strategy lineage audit + real migration to zero orphans) once the above land       | P0       | this plan, todo 11                                                              | #7                         |
+| 10  | Run todo 11b (cross-repo lineage audit) then 11c (migrate to zero orphans, [OPERATOR]) — the ex-todo-11 rollup split                           | P0       | this plan, todos 11b/11c                                                        | 11c depends_on 11b         |
 | 4   | Root-cause non-deterministic instrument_type path segment for identical force re-runs                                                          | P3       | `mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`       | none                       |
 | 5   | Complete todo 8's actual scope (skip-proof + defi/tradfi/sports/prediction reps) once #1/#2 land                                               | P0       | this plan, todo 8                                                               | #1                         |
 | 6   | Complete todo 9 (`/data-pipeline-check-features`) — not yet attempted this session                                                             | P0       | this plan, todo 9                                                               | #1                         |
