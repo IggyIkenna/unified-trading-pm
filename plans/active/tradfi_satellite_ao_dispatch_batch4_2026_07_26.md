@@ -284,18 +284,19 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       (its 13-native-todo AO-eligibility triage, referencing lines ~218+), not the Ground-truth-verdict/digest lines
       (~97-159) this todo edited — no overlap. Source: `issues/tradfi_docs_reconciliation_findings_2026_07_21.md`.
 
-- [ ] [DATA] P1. **Two uncovered residuals in `data_completion_tradfi_2026_07_15.md`, combined into ONE todo because
-      both edit that same doc.** (1) **Manifest-verify the NASDAQ/NYSE 2023-2026 equity/ETF window** — the doc's
-      COVERAGE-GAP todo was narrowed by `/plan-reconcile` on 2026-07-26 from "track against this running backfill" to a
-      pure manifest verification, because the fleet it tracked is gone (the last NASDAQ/NYSE ohlcv-1m shard was deleted
-      2026-07-21T17:34:04Z; zero `tradfi-bf-*` instances exist as of 2026-07-26T02:20Z). Read the live tradfi `_index`
-      (single-object read, no walk) and report captured / `attempted_failed` / `expected_unattempted` counts for venue
-      NASDAQ and NYSE, `data_type` `ohlcv_1m` and `ohlcv_1s`, dates 2023-04-15 through 2026, by year, and state plainly
-      whether the window is filled, partially filled, or still substantially empty. **Scope note**: this is a
-      MANIFEST-COUNT verification only and does NOT discharge `tradfi_consolidated_closeout_2026_07_18.md`'s own open P2
-      todo, which asks for a fresh `data-pipeline-check-is` / `data-pipeline-check-mtds` RUN per MVP cell — a different,
-      heavier method; say so explicitly in the write-up so the two are never conflated. (2) **Close the stale
-      `base-library.sh` sentinel item** — the doc's own "Deferred work" section already records that
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-5, data_engineering)** — Two uncovered residuals in
+      `data_completion_tradfi_2026_07_15.md`, combined into ONE todo because both edit that same doc. (1)
+      **Manifest-verify the NASDAQ/NYSE 2023-2026 equity/ETF window** — the doc's COVERAGE-GAP todo was narrowed by
+      `/plan-reconcile` on 2026-07-26 from "track against this running backfill" to a pure manifest verification,
+      because the fleet it tracked is gone (the last NASDAQ/NYSE ohlcv-1m shard was deleted 2026-07-21T17:34:04Z; zero
+      `tradfi-bf-*` instances exist as of 2026-07-26T02:20Z). Read the live tradfi `_index` (single-object read, no
+      walk) and report captured / `attempted_failed` / `expected_unattempted` counts for venue NASDAQ and NYSE,
+      `data_type` `ohlcv_1m` and `ohlcv_1s`, dates 2023-04-15 through 2026, by year, and state plainly whether the
+      window is filled, partially filled, or still substantially empty. **Scope note**: this is a MANIFEST-COUNT
+      verification only and does NOT discharge `tradfi_consolidated_closeout_2026_07_18.md`'s own open P2 todo, which
+      asks for a fresh `data-pipeline-check-is` / `data-pipeline-check-mtds` RUN per MVP cell — a different, heavier
+      method; say so explicitly in the write-up so the two are never conflated. (2) **Close the stale `base-library.sh`
+      sentinel item** — the doc's own "Deferred work" section already records that
       `scripts/quality-gates-base/base-library.sh` "already writes `.qg_last_passed_sha` on a full green run … the exact
       fix this item describes has landed separately. **Already resolved** — the checklist item text is stale". Re-verify
       that against the live file and flip the stale `[SCRIPT] P2` PM-template-gap checkbox with the citation.
@@ -306,6 +307,24 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       the explicit "manifest-count only, not a pipeline-check run" caveat, the COVERAGE-GAP todo is either flipped or
       restated with the measured remainder, and the `base-library.sh` checkbox is flipped citing the live file. Source:
       `data_completion_tradfi_2026_07_15.md`.
+
+      **Evidence**: (1) DONE — single-object read of the live `-prd` `_index`
+                  (`market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, 5,876,351 total rows,
+                  no bucket walk) via `unified_trading_library`'s `get_storage_client().download_bytes(...)` +
+                  `pandas.read_parquet` (matches the sanctioned single-object pattern, not `read_availability_index()` — that
+                  reader is separately known to return 0 rows on this bucket per
+                  `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md:734`). Scoped to venue∈{NASDAQ,NYSE} ×
+                  data_type∈{ohlcv_1m,ohlcv_1s} × date≥2023-04-15 (2,087,240 cells); full per-year `capture_status` table + the
+                  "manifest-count only" caveat recorded in `data_completion_tradfi_2026_07_15.md`'s COVERAGE-GAP item.
+                  **Verdict: PARTIALLY FILLED, asymmetric by venue** — NYSE 72-76% `captured`; NASDAQ mostly `empty_confirmed`
+                  (79-87%, ~9-10% `captured`); real `expected_unattempted` remainder both venues (NASDAQ 71,183 / NYSE 62,327
+                  combined cells); `attempted_failed` negligible (170 rows, all NYSE 2026). Restated the COVERAGE-GAP todo with
+                  this remainder rather than flipping it — real fetch work is still outstanding. (2) DONE — re-verified
+                  `unified-trading-pm/scripts/quality-gates-base/base-library.sh` live: lines 1476-1491 confirm the "SENTINEL
+                  CONTRACT (parity with base-service.sh, WS-L #1014)" block writes `.qg_last_passed_sha` on a complete green run.
+                  Found the `[SCRIPT] P2` checkbox (line 422 of `data_completion_tradfi_2026_07_15.md`) was **already flipped**
+                  by a prior na-eligibility-audit pass (2026-07-27, before this task dispatched) citing the same live evidence —
+                  no further edit needed, confirmed correct as-is. Shipped: `unified-trading-pm` doc updates (this commit).
 
 ## Deferred — conflict-gated (do NOT draft a competing todo; parked for the operator)
 
