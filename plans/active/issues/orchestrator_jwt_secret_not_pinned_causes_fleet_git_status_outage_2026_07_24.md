@@ -142,8 +142,15 @@ message. Fixed in `unified-trading-pm@<pending — see commit that ships this fi
       orchestrator, so this needs an operator-chosen maintenance window, not a silent agent action. **Done when**: a
       restart of `orchestrator.service` no longer invalidates existing `.orch_token` files (verify: capture a token,
       restart the service, re-use the same token, confirm it still validates).
-- [ ] [SCRIPT] P2. **Point `slot-git-status-report.sh`'s default `ORCH_URL` at `http://localhost:8765` when running ON
-      the orchestrator VM itself** (keep the public URL default for any future non-central host), so the existing
-      `_is_trusted_loopback` escape hatch actually protects this caller against the interim staleness window between
-      restarts even before the P1 fix lands. Needs care: must not break the same script's use on worker/laptop hosts
-      that are NOT the orchestrator VM itself (loopback only works for same-box callers).
+- [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@421262a`.** Point `slot-git-status-report.sh`'s
+      default `ORCH_URL` at `http://localhost:8765` when running ON the orchestrator VM itself (keep the public URL
+      default for any future non-central host), so the existing `_is_trusted_loopback` escape hatch actually protects
+      this caller against the interim staleness window between restarts even before the P1 fix lands. Needs care: must
+      not break the same script's use on worker/laptop hosts that are NOT the orchestrator VM itself (loopback only
+      works for same-box callers). Implementation is auto-probe-based rather than a static VM-identity check: the script
+      hits `LOOPBACK_ORCH_URL` (default `http://localhost:8765`) `/api/healthz` (1s connect-timeout) whenever `ORCH_URL`
+      was NOT explicitly set (no `--orch-url`, no `ORCH_URL` env var) — this generalizes correctly to "running on the
+      orchestrator VM itself" without hardcoding a hostname/VM-id check, and an explicit override always wins so an
+      off-VM operator laptop is unaffected even if it happened to have something on local port 8765. Combined fix +
+      evidence detailed in the sibling doc's matching todo:
+      `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`.

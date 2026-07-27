@@ -81,16 +81,30 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
 
 ## Todos
 
-- [x] [INFRA] P2. Make `slot-git-status-report.sh` prefer `http://localhost:8765` (trusted-local, no token) when the
-      loopback backend is reachable, falling back to the public `ORCH_URL` + `ORCH_TOKEN_FILE` when it is not (off-VM
-      operator laptops). Do NOT unconditionally flip the default `ORCH_URL` — that would break off-VM reporters.
-      **Done-when:** on host ip-172-31-5-118, after the next reporter tick `/api/fleet/git-health` shows
-      `reporter_stale=false` for the host's slots and `git_staleness_alert_sent` stops firing; off-VM path still uses
-      public URL + token (verified by reading the branch, not just on-VM behaviour). Wire into the primary consumer's
-      `quality-gates.sh` if the script isn't already covered. — already covered by
-      plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (folded with
-      orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md's item) (see that doc for
-      execution).
+- [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@421262a`.** Make `slot-git-status-report.sh` prefer
+      `http://localhost:8765` (trusted-local, no token) when the loopback backend is reachable, falling back to the
+      public `ORCH_URL` + `ORCH_TOKEN_FILE` when it is not (off-VM operator laptops). Do NOT unconditionally flip the
+      default `ORCH_URL` — that would break off-VM reporters. **Done-when:** on host ip-172-31-5-118, after the next
+      reporter tick `/api/fleet/git-health` shows `reporter_stale=false` for the host's slots and
+      `git_staleness_alert_sent` stops firing; off-VM path still uses public URL + token (verified by reading the
+      branch, not just on-VM behaviour). Wire into the primary consumer's `quality-gates.sh` if the script isn't already
+      covered. Implementation: a top-level probe (skipped entirely when `--orch-url`/`ORCH_URL` is explicit) hits
+      `LOOPBACK_ORCH_URL` (default `http://localhost:8765`) `/api/healthz` with a 1s connect-timeout; on 200 it sets
+      `ORCH_URL`+`IS_LOOPBACK=1` for the whole run. `resolve_token_for_slot` now succeeds with an EMPTY token in
+      loopback mode when no token file exists (instead of skip-with-no-POST); `post_snapshot`/`post_starve_ping` omit
+      the `Authorization` header entirely when the token is empty (not `Bearer ` with nothing after) so the request
+      qualifies for the server's `_is_trusted_loopback` anonymous fallback. Live-verified against the real orchestrator
+      (not just unit tests): ran the reporter with `ORCH_TOKEN_FILE` pointed at a deliberately garbage token, restricted
+      to slot 11 — `[loopback] http://localhost:8765 reachable...` fired, POST succeeded
+      (`[ok] slot 11 — 25 repos reported`), and `/api/fleet/git-health` confirmed `reporter_stale=false` for slot 11
+      immediately after. 7 new hermetic bats tests in `tests/test_slot_git_status_loopback_preference.bats` (explicit
+      URL/env override still wins; loopback-reachable vs unreachable; `resolve_token_for_slot` loopback-tolerant vs
+      off-VM-strict; `post_snapshot` sends no Authorization header on an empty token) — all pass, plus the 7
+      pre-existing `test_slot_git_status_dirty_count.bats` tests unaffected. `quality-gates.sh` green (sentinel matches
+      HEAD). **"Wire into quality-gates.sh"**: NOT done — discovered `bats tests/` is not actually invoked anywhere in
+      this repo's QG pipeline (bats-core is installed by CI tooling but never run), a pre-existing gap spanning every
+      `.bats` file and the shared `base-service.sh` framework, out of scope for this one-script fix. Filed as
+      `/plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`.
 - [ ] [INFRA] P3. Immediate unblock (independent of the code fix): refresh `~/.orch_token` on ip-172-31-5-118 so the
       reporter resumes now, and confirm `reporter_stale` clears within one tick. (Stopgap only — the loopback fix above
       is what stops the recurrence on the next rotation.)

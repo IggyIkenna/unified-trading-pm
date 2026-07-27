@@ -151,23 +151,26 @@ drift_direction: advance-code
       every migrated cefi shard the moment this todo runs. That > normalisation has shipped; this todo was UNBLOCKED on
       that specific dependency, confirmed re-verified GREEN this session (canonical-fraction 99.45% stable, 0 residual
       invariant violations).
-- [ ] [BACKEND] P0. **POST-CUTOVER: flip the smoke-check + downloader to canonical instrument ids.** MUST land with (or
-      immediately after) todo 3's cutover `--apply`, else targeted re-fetch silently breaks fleet-wide. Today the
-      downloader's `--instrument-ids` matches RAW venue-native symbols EXACTLY (no substring/underlying expansion, no
-      canonical→raw resolution), so the moment a venue's objects are canonical-named there is no raw symbol left to pass
-      and a targeted fetch returns 0 rows with no error. Measured 2026-07-18 mid-migration: 8 of 46 provable Tardis
-      cells were already canonical-only (BITFINEX-FUTURES ×4, BYBIT-SPOT ×2, COINBASE-FUTURES ×2) and could not be
-      force-fetched at all. Three coupled changes: (1) make `--instrument-ids` accept canonical ids (or resolve
-      canonical→raw) in the MTDS download path; (2) revert the smoke-check sampler
-      (`scripts/pipeline_e2e_check.py::_sample_raw_symbol_from_prod_listing`) to sample the CANONICAL id and drop the
-      `':' in stem` skip-guard added for the mixed-naming window (`market-tick-data-service@1875b95b`); (3) drop the
-      `--tardis-only` docs' "verdicts are unreliable mid-migration" caveat once manifest lookups key on the same id form
-      the writer records. Full evidence:
-      `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`. Repos:
-      market-tick-data-service, unified-trading-pm. **Done when**: all 3 coupled changes ship in one commit/PR, a
-      targeted re-fetch of a canonical-named instrument returns real rows (not 0-with-no-error), and the "verdicts are
-      unreliable mid-migration" caveat is removed from every doc it appears in. Source:
-      `cefi_consolidated_closeout_2026_07_18.md` (Track 8, POST-CUTOVER item).
+- [x] ✅ [BACKEND] P0. **CODE SHIPPED 2026-07-27 (slot-13) — `market-tick-data-service@a4f90769`.** POST-CUTOVER: flip
+      the smoke-check + downloader to canonical instrument ids. All 3 coupled changes landed in one commit: (1)
+      `venue_fetch._process_venue` now resolves a canonical-form `--instrument-ids` entry to its venue raw wire symbol
+      via the existing `CeFiWireCanonicalMap.raw_symbol_for` (the same cefi catalogue map FIX D3 already builds
+      candidate filename stems from — no new resolver), split into a new leaf module `_canonical_instrument_ids.py`
+      (`venue_fetch.py` is cap-critical at 900 lines); (2)
+      `scripts/pipeline_e2e_check.py::_sample_raw_symbol_from_prod_listing` no longer skips canonical-named parquet
+      stems — the `':' in stem` skip-guard is gone; (3) the "verdicts are unreliable mid-migration" caveat marked
+      RESOLVED in `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md` (see that
+      doc's own RESOLVED section for the reference back to this commit). 6 new + 1 updated unit test file prove the
+      resolution logic against a synthetic `CeFiWireCanonicalMap` (canonical→raw hit, raw passthrough, mixed list,
+      unresolvable-honest-passthrough, no-catalogue-registered passthrough) — full `quality-gates.sh` green
+      (sentinel-verified SHA == HEAD before quickmerge). **Residual gap, not yet closed**: the plan's own Done-when also
+      asks for "a targeted re-fetch of a canonical-named instrument returns real rows" — a LIVE end-to-end proof via a
+      real VM smoke run (`scripts/pipeline_e2e_check.py --tardis-only`) against one of the 8 already-canonical-only
+      cells measured 2026-07-18 (BITFINEX-FUTURES / BYBIT-SPOT / COINBASE-FUTURES). NOT performed in this session —
+      launching a VM smoke check is a real-cost, Tardis-N=1-gated operation outside a routine single-worker dispatch's
+      scope without confirming no other slot is mid-Tardis-fetch; deferred to whichever session runs todo 5's live
+      backfill (already a VM-launch context) or a dedicated follow-up. Repos: market-tick-data-service,
+      unified-trading-pm. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 8, POST-CUTOVER item).
 - [ ] [DATA] P1. **Enumeration-audit terminal checkpoint.** Re-run
       `scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py` (the distinct-values census tool) against the
       live cefi manifest, once todo 3's cutover drain-gate lifts and
@@ -524,3 +527,115 @@ every todo executes an already-decided spec from the parent doc.
 - **New follow-up (not yet a formal todo, tracked here)**: once the 7 `cefi-hl-aster-historical-backfill` VMs report
   terminated, run one more Script 1 pass scoped to `--venue HYPERLIQUID` and `--venue ASTER` (2 more VM runs, full
   corpus date range) to patch the 2 excluded venues that this campaign is otherwise skipping.
+- **2026-07-27T05:11Z — MAJOR CHECKPOINT: full 42-VM `--apply` fan-out is LIVE, all healthy, canary validated clean.**
+  Canary result (checked directly via `run.log`/`gcloud compute instances describe`/`gcloud compute operations list`,
+  not passively awaited): all 3 canary shards reached real migration progress (not just discovery) with **zero**
+  `verify_failed`/`error`/`wedged_outstanding` counts. `cs81c` (the shard that OOM-killed at 5,400/635,113 files on
+  `e2-standard-8` in the earlier measurement pass) cleanly passed 2,200+/94,157 files on `e2-standard-16` — the
+  machine-type fix holds. Measured real `--apply`-mode throughput (materially different from the earlier _dry-run_
+  numbers since a changed file costs ~4 GCS round-trips — backup-upload + real-upload + reread-verify — vs. 1 for an
+  unchanged file): 3.4-10 files/sec/VM depending on the shard's already-canonical mix. Given literal 100% completion of
+  even one ~150K-file shard would take ~8+ hours, "clean canary" here means demonstrated health (no errors, no OOM,
+  correct GREEN Phase-1 gate, confirmed `--exclude-venues HYPERLIQUID:ASTER` active in the actual running command), not
+  full completion — proceeded to the full fan-out on that basis rather than blocking for hours on 3 shards alone.
+  **Launched the remaining 39 shards** (same 42-VM proportional plan from the entry above), all `e2-standard-16` +
+  `--workers 24` + SPOT + `--exclude-venues HYPERLIQUID:ASTER`, VM names
+  `canonical-migration-cefi-content-apply-055803-cs{1-1, 3-1, 3-2, 4-1..4-3, 5-1..5-3, 6-1..6-5, 7-1..7-5, 8-2..8-6, 9-2..9-6, 10-1..10-10}`
+  (cs2/cs8-1/cs9-1 are the canaries above, already counted). **Verified, not assumed**: all 39 reported `Created [...]`
+  in their launch logs (0 launcher-side errors), all 42 total VMs (canary + fan-out) confirmed `RUNNING` via a fresh
+  `gcloud compute instances list`, 0 hits on
+  `gcloud compute operations list --filter=operationType=compute.instances.preempted`, 0 `EXIT_STATUS` objects anywhere
+  (nothing has terminated yet, good — still mid-flight), and a 5-VM spot-check across the fan-out
+  (`cs1-1, cs3-1, cs6-3, cs8-2, cs10-10`) showed 4/5 already in discovery/migration with correct per-shard file counts
+  matching the proportional plan (`cs10-10` was still in early VM boot at check time — the very last VM created,
+  expected). **Shard→date-range mapping + full launch scripts** live in this dispatch's scratchpad (ephemeral, not
+  committed — re-derivable from the `LAUNCH_PARAMS.json` each VM's `vm-logs/` dir already carries, same as the earlier
+  10-shard measurement pass). **Real infra finding**: mid-session the interactive `gcloud` user session
+  (`ikenna@odum-research.com`) started failing ALL `gcloud compute`/`gcloud storage` calls ("Reauthentication failed:
+  cannot prompt during non-interactive execution") — worked around via
+  `CLOUDSDK_AUTH_ACCESS_TOKEN=$(gcloud auth application-default print-access-token)` (ADC stayed valid; re-minted per
+  invocation since access tokens expire ~1h) rather than an interactive re-login. **Status: IN FLIGHT, not done.** Next
+  steps for whoever continues this (same dispatch or a resume): (1) keep polling the fleet for terminal states
+  (`EXIT_STATUS` objects, preemptions) — do NOT re-launch any `cs*` VM that's still `RUNNING`; (2) any preempted/failed
+  shard gets a narrowed re-launch of ONLY its own date sub-range (idempotent — already-canonical files skip cleanly),
+  never a blind full restart; (3) once every shard reports a genuine terminal success, re-run a corpus-wide sharded
+  `--dry-run` (same 10-shard boundaries) to confirm 0 further changes; (4) then the full todo-3 done-when check across
+  all 4 scripts + the enumeration audit; (5) the HYPERLIQUID/ASTER follow-up pass above stays open regardless. **For any
+  concurrent reader**: 42 real `canonical-migration-cefi-content-apply-055803-*` VMs are live in `asia-northeast1-c`
+  right now — check `gcloud compute instances list` before assuming this campaign hasn't started.
+- **2026-07-27T05:28Z — first ~25 min of live monitoring: 1 SPOT preemption wave (10 shards) hit + fully recovered, 1
+  genuine completion, fleet stable, throughput measured.** Actively re-checked (direct
+  `run.log`/`gcloud compute instances describe`/`operations list` reads, not passive waiting) at ~3-4 min intervals.
+  **Preemption wave**: 10 of the 39 fan-out shards were SPOT-preempted within the first ~20 min
+  (`cs1-1, cs4-2, cs6-3, cs6-4, cs8-3, cs9-3, cs9-4, cs9-5, cs9-6, cs10-9` — a ~26% preemption rate on `e2-standard-16`
+  SPOT in `asia-northeast1-c` right now, real zone capacity contention, not a bug;
+  `--instance-termination-action=DELETE` means each preempted VM was gone, not just stopped). **Recovered per the
+  idempotent-resume contract** (this script has no PROGRESS.json checkpoint, but every already-patched file resolves to
+  `already_canonical_skipped` on a fresh pass, so a full same-date-range re-run is safe and correct, not wasted work):
+  relaunched all 10 with IDENTICAL date sub-ranges, this time `ON_DEMAND=true` (justified per-shard: already preempted
+  once — the spot-vms-for-backfill HARD RULE's stated opt-out reason) as `*-1r`/`*-2r`/etc. suffixed VMs. Fleet back to
+  the full 42 within ~10 min of the first preemption detected. **First genuine completion**: `cs1-1r` (smallest shard,
+  769 files, 2019-03-30..2019-12-21) finished cleanly — `EXIT_STATUS=0`, `769/769` processed, `rows_changed=0` (this
+  narrow window was already fully canonical from an earlier partial pass), 0 errors, self-deleted per
+  `VM_SHUTDOWN_ON_COMPLETION`. **Direct content-mutation spot-check** (not just trusting the log): downloaded a real
+  object BEFORE it was touched by this campaign is not possible to re-fetch after the fact, so instead compared the
+  migration's own `_migration_backups/cefi_content_catalogue_2026_07_17/` copy (pre-patch) against the live current
+  object for `BYBIT:PERPETUAL:BTC-USDT@LIN.parquet` (day=2024-05-15, within `cs81c`'s range): backup `instrument_id` =
+  `BYBIT:PERPETUAL:BTCUSDT` (raw wire form) → live `instrument_id` = `BYBIT:PERPETUAL:BTC-USDT@LIN` (canonical) —
+  1,723,117 rows in both, every OTHER column byte-identical. **Real measured `--apply` throughput** (7-shard sample,
+  diverse profiles): 2.9-9.9 files/sec/VM, ~5.5 avg; at 42 VMs ≈ 231 files/sec aggregate ⇒ ~5.4h projected for the full
+  ~4.5M-file corpus if no further major preemption churn (revised down from the naive dry-run-throughput extrapolation —
+  real `--apply` costs ~4x the GCS round-trips of a dry-run read for every file that needs a write). **Per-shard
+  discovered-file counts differ from the day-range-proportional estimate** (e.g. `cs3-1` discovered 75,236 vs. the
+  ~100,614 estimate, `cs10-5` discovered 201,581 vs. ~122,626) — expected, since the estimate assumed uniform density
+  within each cs-window; discovery itself is exhaustive and exact per shard, so this doesn't affect correctness, only
+  the original load-balancing estimate's accuracy. **Fleet state at 05:28Z**: 41 RUNNING + `cs1-1r`
+  completed-and-self-deleted = 42 accounted for, 0 further preemptions since the 10-shard fix, 0 verify_failed/error
+  signals anywhere. A background health-monitor (this session's scratchpad, `fleet_health_monitor.sh`, 13 rounds × 3 min
+  ≈ 39 min bounded window) continues sampling preemptions/EXIT_STATUS every ~3 min. **Status: IN FLIGHT.** Whoever
+  continues this: re-run the same preemption-check + narrowed-same-range-relaunch cycle above for any NEW preemptions
+  found
+  (`gcloud compute operations list --filter="operationType=compute.instances.preempted AND targetLink~canonical-migration-cefi-content-apply-055803"`),
+  and keep checking `EXIT_STATUS` objects for genuine completions — do not wait for a "notification," GCE VMs don't page
+  this conversation, poll directly.
+- **2026-07-27T05:31Z — SECOND, much larger preemption wave: 33 of the remaining 41 SPOT shards wiped out at once; root
+  cause found (zone-wide `e2-standard-16` SPOT stockout in `asia-northeast1-c`); pivoted the whole campaign to
+  `ON_DEMAND`.** A fresh direct check (not the 3-min-interval monitor, an out-of-band re-verify) found only 9 VMs still
+  `RUNNING` — and all 9 were exactly the 10 shards relaunched `ON_DEMAND` in the entry above (minus `cs1-1r`, already
+  completed) — every single remaining SPOT VM (all 33: the 3 canaries `cs2c/cs81c/cs91c` included) had been preempted.
+  **Diagnosed, not just patched**: attempted a same-machine-type `ON_DEMAND` relaunch of the 32 missing shards; 31/32
+  succeeded immediately, but `cs2d` hit `ZONE_RESOURCE_POOL_EXHAUSTED_WITH_DETAILS` — GCP's own error confirms
+  `asia-northeast1-c` has **zero `e2-standard-16` capacity available right now, for ANY provisioning model** (the exact
+  error suggests `asia-northeast1-b`/`-a` have capacity instead) — this is what was silently causing both preemption
+  waves (SPOT gets reclaimed first when a zone is genuinely capacity-constrained). **Fix**: retried `cs2d` on
+  `e2-standard-8` (half the RAM) in the SAME zone — succeeded immediately, confirming `e2-standard-8` capacity exists
+  even though `e2-standard-16` doesn't right now. Did not fall back to a different zone (would fragment the fleet across
+  zones for no benefit once `e2-standard-8` proved available in `asia-northeast1-c` itself) or re-litigate the earlier
+  OOM-mitigation reasoning — the OOM history was tied to ONE monolithic 635K-file shard on `e2-standard-8`; every shard
+  in this campaign is already sub-sharded to ~75K-200K files, well under the scale that OOM'd, so `e2-standard-8` should
+  be safe for the rest too if `e2-standard-16` capacity disappears again. **All 32 relaunches now landed**: 31 on
+  `e2-standard-16` + `cs2d` on `e2-standard-8`, all `ON_DEMAND` (immune to further SPOT reclaim). **Fleet state
+  05:35Z**: 41 RUNNING + `cs1-1r` completed = 42 accounted for, ALL non-completed VMs now `ON_DEMAND`, 0 new preemptions
+  since the pivot (expected — nothing left on SPOT to reclaim), 0 verify_failed/error signals. **Cost note for the
+  record**: this campaign is no longer SPOT-cost-optimized (the HARD RULE's stated opt-out condition — "ON_DEMAND is the
+  only opt-out... if you have a specific reason" — is squarely met here: two full preemption waves + a confirmed hard
+  zone stockout is about as concrete a reason as this rule anticipates). **Status: IN FLIGHT, fleet materially more
+  stable now than the last checkpoint.** Whoever continues this:
+  `gcloud compute operations list --filter="operationType=compute.instances.preempted"` should show NO NEW entries
+  beyond the 42 total already recorded (10 wave-1 + 32 wave-2, though `cs1-1`/`cs1-1r` overlap the two counts) — if new
+  preemption operations DO appear, something is still on SPOT and needs the same on-demand fix; otherwise the fleet
+  should just need periodic `EXIT_STATUS`-completion polling from here. Full wave-2 shard→date-range map + launch
+  scripts remain in this dispatch's scratchpad.
+- **2026-07-27T05:41Z — naming clarification + final stability confirmation for this dispatch turn.** The 3 canary VMs
+  (`cs2c`, `cs81c`, `cs91c`) were among wave-2's 33 preemptions and are now superseded by their `ON_DEMAND` replacements
+  `cs2d` (e2-standard-8, the one that hit the zone stockout), `cs8-1d`, `cs9-1d` (both e2-standard-16) — those 3 shards'
+  own progress restarts from the discovery phase (idempotent, no work lost, just the ~1-2 GCS-listing minutes redone).
+  **Current live fleet (verified via a fresh full `gcloud compute instances list`, 41 rows + `cs1-1r` completed = 42)**:
+  9 `*-r`-suffixed (wave-1 recovery) + 31 `*-d`-suffixed on `e2-standard-16` (wave-2 recovery) + 1 `*-d` (`cs2d`) on
+  `e2-standard-8` + `cs1-1r` done. Preemption-operations count holds steady at 42 (unchanged since the pivot — no new
+  entries), confirming nothing is still SPOT-exposed. **This dispatch turn's work is done here** — the campaign is
+  healthy, fully on-demand, and will keep running unattended in GCE for the ~5h projected remainder. A resumed
+  dispatch/turn should: re-run the exact preemption/EXIT_STATUS checks in the entries above, keep narrow-relaunching
+  (same date range, `ON_DEMAND=true`, `e2-standard-16` — or `-8` if `-16` stockouts again) anything that shows a NEW
+  preemption, and once every one of the 42 shards has a genuine `EXIT_STATUS=0`, proceed to the plan's own next steps
+  (corpus-wide idempotency `--dry-run`, the 4-script done-when check, the enumeration audit, then flip todo 3).

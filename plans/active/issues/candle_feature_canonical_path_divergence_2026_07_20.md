@@ -358,6 +358,21 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 `## Migration worklist (canonical-shape gaps)` section. Three failure modes on one cell never collapse into one bit.
 `rg 'non_canonical|content_check' <report>` yields the worklist.
 
+> **⚠️ CORRECTION 2026-07-27 (slot-12) — this todo's own measurement methodology is the SAME "wrong vocabulary" mistake
+> already root-caused for cefi in `plans/archive/issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`.** That
+> doc found the cefi "0 rows, ever" verdict was produced by querying the aggregated `ohlcv_*` family instead of MDPS's
+> actual `data_type=<SOURCE data_type>` + real `timeframe` axis (a deliberate, operator-ruled design). This todo's
+> 2026-07-23 cross-AG table below (`cefi 6`, `defi 0`, `tradfi 73`, `prediction 168`) was almost certainly measured the
+> same wrong way — re-verified DEFI directly this session (`read_availability_index` with
+> `service_name= market-data-processing-service`, column-projected, no vocabulary filter): **7,913 real candle-manifest
+> rows exist today** (`data_type=dex_pool_swaps`, real timeframes `15s/1m/5m/15m/1h/4h/1d`, ~1,129-1,133 each), not 0.
+> So this todo's headline claim ("candle manifest was never systematically populated") is likely STALE for the
+> going-forward emission path — genuine remaining gap, if any, is far smaller than the 20,734-vs-6 framing suggests and
+> is probably now the SAME narrower class as `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (PAST
+> OOM-era orphans only), not a total non-population defect. **Not fully re-verified for cefi/tradfi/prediction this
+> session** — do not close this todo on the DEFI spot-check alone; re-measure each AG with the correct vocabulary before
+> flipping.
+
 - [ ] 7. [DATA] P0. **Root-cause the object↔manifest disconnect** (20,734 cefi candle objects on 2026-04-14 vs 6 MDPS
       manifest rows corpus-wide). Either `record_captured` is not firing on the candle write path or per-VM shards never
       consolidated. Blocks trustworthy skip-if-fresh, honest coverage, and features input-gating. **MEASURED +

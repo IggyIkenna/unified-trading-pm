@@ -113,18 +113,27 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       `/plans/active/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md`
       (BACKEND P2 ×2 — combined here because both change the same prune path in the same file). That doc's third todo
       (positional task-ids) is NOT in scope — see this plan's Deferred section.
-- [ ] [INFRA] P2. **Make `unified-trading-pm/scripts/dev/slot-git-status-report.sh` prefer `http://localhost:8765`**
-      (trusted-local, no bearer token) when the loopback backend is reachable, falling back to the public `ORCH_URL` +
-      `ORCH_TOKEN_FILE` when it is not, so an expired/rotated `~/.orch_token` can no longer silence a whole host's
-      git-health view. Do NOT unconditionally flip the default `ORCH_URL` — off-VM operator laptops MUST keep the public
-      URL + token path. **Done when**: after one reporter tick on the orchestrator host, `/api/fleet/git-health` reports
-      `reporter_stale=false` for that host's slots and `git_staleness_alert_sent` stops firing; the off-VM branch is
-      proved still to use the public URL + token by reading the code (not only by on-VM behaviour); and the script is
-      wired into its primary consumer's `quality-gates.sh` if it was not already. **Two sources prescribe this identical
-      fix in the identical direction and are folded into this one todo**:
+- [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@<pending, see this commit>`.** Made
+      `unified-trading-pm/scripts/dev/slot-git-status-report.sh` prefer `http://localhost:8765` (trusted-local, no
+      bearer token) when the loopback backend is reachable, falling back to the public `ORCH_URL` + `ORCH_TOKEN_FILE`
+      when it is not, so an expired/rotated `~/.orch_token` can no longer silence a whole host's git-health view. Did
+      NOT unconditionally flip the default `ORCH_URL` — off-VM operator laptops still get the public URL + token path
+      (only skipped when `ORCH_URL` was never explicitly set via env or `--orch-url`). **Done when, verified**: ran the
+      reporter live against the real orchestrator with `ORCH_TOKEN_FILE` pointed at a deliberately garbage token, scoped
+      to slot 11 — `[loopback] http://localhost:8765 reachable...` fired and the POST succeeded
+      (`[ok] slot 11 — 25 repos reported`); `/api/fleet/git-health` immediately showed `reporter_stale=false` for
+      slot 11. Off-VM branch verified BY READING THE CODE (not just on-VM behaviour): `_ORCH_URL_EXPLICIT` gates the
+      probe off entirely when `--orch-url`/`ORCH_URL` is set, so a laptop reporter keeps the public URL + token path
+      unconditionally. **"Wired into quality-gates.sh"**: partially — added 7 new hermetic bats tests
+      (`tests/test_slot_git_status_loopback_preference.bats`) covering the new logic, all passing (14/14 total with the
+      pre-existing `test_slot_git_status_dirty_count.bats`), but discovered `bats tests/` is not actually invoked by
+      `quality-gates.sh`/`base-service.sh` for ANY `.bats` file in this repo — a pre-existing, cross-cutting gap bigger
+      than this todo (touches the shared fleet-wide `base-service.sh`). Filed as its own properly-scoped finding rather
+      than absorbed here: `/plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`. Both source
+      docs' matching todos flipped with evidence:
       `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` (INFRA P2) and
       `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` (SCRIPT
-      P2). Flip BOTH source docs' todos when this lands.
+      P2).
 - [ ] [INFRA] P2. **Gate the git-health dirty signal on `dirty_consecutive_ticks >= 2` at BOTH decision sites** — the
       `not_clean_since` clear plus the sync-nudge in `agent-orchestrator/server/routes/git_health.py`, and the FF-pull
       skip decision in `unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh` — so a one-tick phantom-dirty reading can
