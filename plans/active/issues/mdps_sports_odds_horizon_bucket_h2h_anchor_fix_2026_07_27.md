@@ -1,23 +1,28 @@
 ---
 doc_type: issue
 title:
-  sports odds_horizon_bucket's pivot treats h2h as a mandatory anchor — real 3-layer trace, 1 of 3 layers fixed, 1 layer
-  deliberately deferred as a genuine schema-design decision
+  sports odds_horizon_bucket's pivot treats h2h as a mandatory anchor — real 3-layer trace, ALL 3 layers fixed +
+  verified against real production data
 summary: >-
   Deep-traced `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`'s open "Path A½ silently suppresses ALL
   non-MATCH_ODDS candle output" todo (that doc is at its 999/1000-line hard cap, zero headroom — this doc carries the
-  full investigation + fix instead of editing it in place). The bug is actually THREE independent h2h-anchoring points,
+  full investigation + fix instead of editing it in place). The bug was actually THREE independent h2h-anchoring points,
   not the one the source doc named: (1) `process_to_candles`'s Path A½ short-circuit (the one already named), (2)
   `pivot_mtds_to_wide`'s own hardcoded `if h2h_wide.empty: return pd.DataFrame()` — a SEPARATE, deeper anchor that would
   have defeated a Path A½ fix on its own, and (3) `CandleOutput`'s open/high/low/close fields being hardcoded to
-  home/away/draw_odds (the h2h-only repurposing of a generic OHLCV container) — which has no defined mapping for
-  spreads/totals/btts values at all. Fixed (2) — a clean, judgment-free correctness fix with 4 new/updated regression
-  tests. Deliberately did NOT touch (1) or attempt (3): generalizing (1) alone, now that (2) is fixed, would make
-  `process_to_candles` silently emit non-empty-looking CandleOutputs with ALL-NaN prices for non-h2h instruments — WORSE
-  than today's honest `empty_confirmed`, because (3) has no real value to put in those 4 slots yet. (3) is a genuine
-  schema-design decision (extend CandleOutput with market-specific fields vs. branch the OHLCV mapping by instrument
-  type), not something to guess at, mirroring this same doc-family's own KALSHI-adapter precedent.
-status: open
+  home/away/draw_odds (the h2h-only repurposing of a generic OHLCV container) — which had no defined mapping for
+  spreads/totals/btts values at all. Layer 2 fixed first session (4 regression tests). Layers 1+3 fixed together in a
+  follow-up session per operator ruling BLK-4f4309e2 (Option B: market-aware OHLCV branching, no new UAC fields) —
+  implemented as a coalesce-broadcast (open=high=low=close = the one real price available per call, since production is
+  provably single-market-AND-single-outcome per call) rather than a fixed per-market slot table, which ALSO fixed a
+  newly-discovered 4th sub-bug: h2h's own AWAY/DRAW-selection candles had `close=NaN` always, pre-existing and
+  independent of this generalization. Verified end-to-end against real production data: a live `t1-recon` re-trigger
+  reached `Completed=True` with `odds_horizon_bucket` 100%/0-errors on both dates (first time ever), and real
+  `ASIAN_HANDICAP_*`/`OVER_UNDER_*` `odds_horizon_bucket` output now exists in GCS for the first time, with bounded
+  plausible O=H=L=C prices. Residual, deliberately-not-fixed gap: `h2h_lay` (MATCH_ODDS_LAY) has no pivot logic in
+  `pivot_mtds_to_wide` at all — flagged, not fixed, correctly still returns `empty_confirmed` rather than a false
+  positive or a false failure.
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -40,9 +45,11 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  "market-data-processing-service@d6f99b8 (main@9cc084e), verified via
+  uts-prod-market-data-processing-service-t1-recon-jsghk, 2026-07-27"
 ---
 
-# sports odds_horizon_bucket — real 3-layer h2h-anchoring bug, layer 2 of 3 fixed
+# sports odds_horizon_bucket — real 3-layer h2h-anchoring bug, ALL 3 layers fixed + verified against real production data
 
 ## What I found
 
@@ -170,11 +177,141 @@ All three are ≤2 legs, so none currently trip the re-block trigger.
       ruling via BLK-4f4309e2, 2026-07-27. See "Decision" section above for full rationale + required mitigation +
       re-block trigger. No code shipped for this todo — it is pure decision-of-record (task `repos: []`); todo 2 below
       implements it.
-- [ ] [SCRIPT] P2. Now unblocked: generalize `process_to_candles`'s Path A½ check (the same
-      `_RECOGNIZED_MARKET_KEYS`-style generalization drafted and reverted this session) + implement the Option-B
-      candle-value mapping (explicit market-type → slot table per the required mitigation above), with a live production
-      repro proving real non-NaN prices for a spreads/totals/btts instrument. STOP + re-block if any market needs >2
-      meaningful odds legs. (repo: market-data-processing-service)
+- [x] [SCRIPT] P2. Now unblocked: generalize `process_to_candles`'s Path A½ check + implement the Option-B candle-value
+      mapping. **DONE, verified end-to-end against real production data** — `market-data-processing-service@d6f99b8`
+      (`main@9cc084e`). See Update 2 for full evidence: real WILLIAMHILL/production-shaped regression tests, and a live
+      `t1-recon` re-trigger (`uts-prod-market-data-processing-service-t1-recon-jsghk`, sports-scoped, `--force`,
+      2026-07-25..26) that reached `Completed=True` in 16m23.8s with `odds_horizon_bucket: 505/505` and `837/837`
+      succeeded (0 errors, both dates) — the first time this data_type has EVER hit 100% in this doc-family's history.
+      Real GCS output confirmed: `instrument_type=MATCH_ODDS` (already-working) PLUS 14-18 distinct `ASIAN_HANDICAP_*`
+      variants and 9 `OVER_UNDER_*` variants now exist for the first time ever on both dates (461+ non-MATCH_ODDS
+      objects on day 1 alone; zero existed pre-fix), with real bounded O=H=L=C prices (e.g. `ASIAN_HANDICAP_0_5::HOME`
+      close=2.1; `OVER_UNDER_2_5::OVER` close=2.27/2.35; `::UNDER` close=1.68/1.65). (repo:
+      market-data-processing-service)
+
+## Update 2 (2026-07-27, attended session) — Path A½ generalized + a THIRD, previously-unknown sub-bug found and fixed in the same change: h2h's own AWAY/DRAW-selection candles had `close=NaN` always
+
+Picked up todo 2 above. Per the operator's explicit standard for this doc-family ("investigate for real, don't guess"),
+traced both open safety questions from scratch before implementing, then found and fixed one more thing along the way.
+
+### (a) Could `btts` ever legitimately co-occur with another `market_key` in the same slice?
+
+**No — proven at the code level, not just observed.** `build_instrument_id()`
+(`unified_api_contracts/canonical/domain/sports/canonical_ids.py`) embeds the market type as a segment derived 1:1 from
+`ODDS_API_MARKET_TO_CANONICAL` (`h2h`→`MATCH_ODDS`, `h2h_lay`→`MATCH_ODDS_LAY`, `spreads`→`ASIAN_HANDICAP`,
+`totals`→`OVER_UNDER`, `btts`→`BOTH_TEAMS_TO_SCORE`, ... — 11 raw keys, 11 distinct canonical values, confirmed
+injective) — two different `market_key` raw values can never collide into the same `instrument_id` MARKET segment.
+Stronger than what was asked: `build_instrument_id` ALSO embeds the **selection/outcome**
+(`{SPORT}:{VENUE}:{MARKET}: {LEAGUE}:{SEASON}:{HOME}-{AWAY}::{SELECTION}`), so a slice grouped by one `instrument_id`
+value (`_iter_chain_symbol_dfs`, confirmed the sole production dispatch path for sports — see (b)) is not just
+single-market but single-OUTCOME (e.g. `MATCH_ODDS::HOME`, `MATCH_ODDS::AWAY`, `MATCH_ODDS::DRAW` are 3 separate
+instrument_ids, never merged in one raw-file group). This closed-set, injective mapping is what makes the Path A½
+generalization and the OHLCV coalesce below both safe.
+
+### (b) Is there a call path where `tick_data` reaches `process_to_candles` genuinely NOT yet market-filtered?
+
+**No, for `process_to_candles` specifically — confirmed by reading every call site, not just the ones already traced.**
+All 4 real call sites (`live_workers_streaming.py::_process_chain_bundle_streaming` →
+`_streaming_process_slice_timeframes`; `live_workers_chain.py::_process_chain_timeframe` [groups by `instrument_key`],
+`_process_chain_timeframe_by_symbol` [groups by `symbol`], `_process_standard_timeframe` [file itself is
+single-instrument]) slice/filter to ONE instrument before calling `process_to_candles`. For sports specifically:
+`_is_chain_data()` (`live_workers_chain.py`) always returns `True` for any `.../ticks.parquet` path when the file has no
+`symbol` column (true for every sports odds raw file, confirmed via `market_tick_data_service`'s `odds_api_adapter.py`
+row schema), so sports odds ALWAYS routes through the streaming path, which groups by `instrument_id` (the only
+chain-group candidate sports files carry) — never falls through to a path that could hand `process_to_candles` an
+unsliced bundle.
+
+**`process_to_bucketed_df` is the genuine multi-market-bundle path — but it doesn't have Path A½ at all.**
+`scripts/reprocess_sports_odds.py::reprocess_date()` reads a WHOLE DAY's raw odds (`_read_raw_odds`, no per-instrument
+slicing) and calls `adapter.process_to_bucketed_df(raw_df)` directly — a real, genuinely-unsliced multi-market,
+multi-fixture, multi-selection bundle. Confirmed this method has **no Path A½ short-circuit anywhere** (it goes straight
+to `_prepare_tick_data`/`pivot_mtds_to_wide`, unaffected by anything in this fix) and doesn't do OHLCV assembly either
+(returns the wide dataframe with `home_odds`/`away_odds`/... columns intact, no repurposing) — so neither part of
+today's fix touches its behavior. This is the "genuinely NOT yet market-filtered" path the original todo asked about; it
+exists, but for a different method than the one being generalized.
+
+### A third sub-bug found while implementing: h2h's OWN AWAY/DRAW-selection candles were already broken the same way
+
+Given (a)/(b) confirm every `process_to_candles` call is single-market AND single-outcome, the OLD hardcoded OHLCV
+mapping (`open=close=home_odds`, `high=away_odds`, `low=draw_odds`) could only ever populate 1-2 of its 4 slots per call
+— home/away/draw are never simultaneously present in one real call, so the "combine 3 selections into one row" premise
+`pivot_mtds_to_wide`'s docstring describes was never actually exercised in production. **Verified directly against real
+written output** (day=2026-07-25,
+`processed_candles/.../data_type=odds_horizon_bucket/ instrument_type=MATCH_ODDS/venue=BETFAIR_EX_EU/...KALMAR-MJALLBY::{HOME,AWAY,DRAW}.parquet`,
+pulled + inspected with pandas): HOME-selection rows had real `open`/`close` but `high`/`low` NaN; **AWAY-selection rows
+had real `high` (away odds correctly placed there) but `open`/`low`/`close` NaN**; **DRAW-selection rows had real `low`
+(draw odds) but `open`/`high`/`close` NaN**. `close` — the field a downstream reader looks at first — was silently NaN
+for 2 of every 3 MATCH_ODDS candles in production, for the product's entire history, independent of and prior to the
+generalization being implemented here.
+
+### Fix implemented (`market-data-processing-service@d6f99b8`, `bucket_assignment_adapter.py`)
+
+1. **Path A½ generalized**: `_RECOGNIZED_MARKET_KEYS = frozenset({"h2h", "spreads", "totals", "btts"})` — exactly the 4
+   markets `pivot_mtds_to_wide()`'s `_pivot_market()` calls actually implement. Deliberately excludes `"h2h_lay"`:
+   grepped `pivot_mtds_to_wide()` and confirmed there is no `_pivot_market(df, "h2h_lay", ...)` call at all —
+   MATCH_ODDS_LAY has a real UAC SchemaContract but no pivot logic here, a genuinely separate, not-yet-investigated gap
+   (flagged, not fixed — an h2h_lay-only slice still correctly short-circuits to empty_confirmed, never a false
+   MalformedTickFieldError).
+2. **Option-B OHLCV mapping, implemented as a coalesce-broadcast** (not a fixed per-market slot table, once (a)/(b)
+   proved at-most-one-column-populated is a hard invariant, not a heuristic): `_PRICE_COLS_BY_PRIORITY` coalesces
+   `home_odds → away_odds → draw_odds → asian_handicap_home/away_odds → over/under_odds → btts_yes/no_odds` (priority
+   order preserves the pre-existing "home is primary" convention for the defensive/synthetic multi-outcome case) into
+   ONE real price per bucket, broadcast to all 4 slots (`open=high=low=close`). This is explicit/documented (module +
+   method docstrings updated) per the ruling's required mitigation, fixes the newly-found h2h AWAY/DRAW `close=NaN` bug
+   as a side effect, and never trips the ">2 legs" re-block trigger (coalescing doesn't care how many conceptual legs a
+   market has, only that at most one is ever populated per call).
+3. Module + method docstrings updated to document the O=H=L=C convention explicitly.
+
+**Tests** (`tests/unit/test_bucket_assignment_adapter.py`, 3 new classes, all using real market_key shapes):
+`TestGeneralizedPathAHalfRecognizedMarkets` — a byte-accurate real WILLIAMHILL `market_key="totals"` 12-row slice
+(pulled directly from the exact GCS object Update 9 cited, `fixture_id=1494218`, sliced to the real `::OVER`
+instrument_id) that pre-fix force-emptied and post-fix produces real bounded candles; btts-only and spreads-only
+single-outcome slices; an `h2h_lay`-only slice confirming it correctly STAYS empty_confirmed (documents the known gap,
+doesn't silently regress it); a genuinely-unrecognized-market-key slice confirming true absence still empty_confirmed.
+`TestH2hSingleSelectionOhlcNoLongerNan` — HOME/AWAY/DRAW single-selection slices proving `close` is no longer
+permanently NaN for AWAY/DRAW. Full suite: 2315 passed, 87.12% coverage. `quality-gates.sh --no-fix` → ALL QUALITY GATES
+PASSED. Shipped via `quickmerge.sh --agent`.
+
+### Production verification — real, watched-to-terminal-state, both absence-of-errors AND positive-output proof
+
+LDR→main promotion (PR #515) merged, fresh Cloud Build (`a7edb06f`, confirmed building `main@9cc084e`) published digest
+`sha256:e65835ea...`; confirmed the triggered execution's container actually resolved to this exact digest before
+trusting the result. Triggered `uts-prod-market-data-processing-service-t1-recon-jsghk`
+(`MDPS_ASSET_GROUP=SPORTS --start-date 2026-07-25 --end-date 2026-07-26 --force`), polled
+`status.conditions[type=Completed]` directly via the JSON condition object (not a naive string match — checked for
+`status ∈ {"True","False"}` specifically, not merely non-empty, after an initial polling-script bug treated the
+in-flight `status="Unknown"` condition as a false-positive terminal state and was caught before being reported). Reached
+a genuine terminal state: **`Completed=True`, "Execution completed successfully in 16m23.8s."**
+
+**Absence-of-errors**: `🏁 sports processing complete: 2020/2020 succeeded, 0 errors` (day 1) and
+`3348/3348 succeeded, 0 errors` (day 2), `SUB-DIMENSION STATUS: All (data_type x instrument_type) combinations passed`
+for both. `odds_horizon_bucket` specifically: `505/505 succeeded` (39,000 candles) and `837/837 succeeded` (58,845
+candles) — **100%, zero errors, the first time this data_type has ever reached full success in this doc-family's
+history** (every prior run — Updates 4/5/7/8/9/10 of the parent OOM doc — hit SOME failure class here).
+
+**Positive output, pulled directly from GCS and inspected (not inferred from log absence)**: before this run,
+`processed_candles/.../data_type=odds_horizon_bucket/` for both dates contained ONLY `instrument_type=MATCH_ODDS/`
+(confirmed via a pre-run baseline listing). After: `MATCH_ODDS` PLUS 14 (day 1) / 18 (day 2) distinct `ASIAN_HANDICAP_*`
+point-parameterised variants PLUS 9 `OVER_UNDER_*` variants on EACH date — real non-MATCH_ODDS `odds_horizon_bucket`
+output for the first time ever (461+ objects on day 1 alone by partial count, timed out counting day 2 exhaustively but
+the per-instrument_type listing above already proves the shape). Downloaded 2 real files and inspected with pandas:
+
+- `FOOTBALL:BETONLINEAG:ASIAN_HANDICAP_0_5:ALLSVENSKAN:2026-27:DEGERFORS-DJURGARDEN::HOME` — bucket 0:
+  `open=high=low=close=2.10` (real, bounded, O=H=L=C broadcast confirmed working exactly as designed); other 7 buckets
+  correctly NaN (no bookmaker quote in that horizon window — genuine sparse coverage, not a bug).
+- `FOOTBALL:BETONLINEAG:OVER_UNDER_2_5:ARGENTINA_PRIMERA:2026-27:RIVER_PLATE-BARRACAS_CENTRAL::OVER` — 2 populated
+  buckets, `close=2.27`/`2.35`; the sibling `::UNDER` instrument — `close=1.68`/`1.65` — both real, plausible decimal
+  soccer odds, O=H=L=C matching in every populated bucket.
+
+`MATCH_ODDS_LAY` correctly absent (as expected — `h2h_lay` is deliberately not in `_RECOGNIZED_MARKET_KEYS`, the
+documented, not-yet-fixed gap). No `BOTH_TEAMS_TO_SCORE` objects observed on these 2 particular dates — consistent with
+btts being a genuinely sparser market (not every bookmaker/fixture offers it; not investigated further as a possible
+issue since the mechanism (Path A½ + coalesce) is proven correct on the 2 markets that DID have real data this run, and
+`TestGeneralizedPathAHalfRecognizedMarkets::test_btts_only_slice_produces_real_output` already proves the code path in
+isolation).
+
+This is the direct, real-production evidence the task mandate asked for on both counts: absence of errors AND positive,
+bounded, plausible output for the newly-unblocked markets.
 
 ## Codex SSOTs
 
