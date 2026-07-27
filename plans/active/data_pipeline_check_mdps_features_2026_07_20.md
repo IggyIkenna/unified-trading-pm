@@ -963,34 +963,31 @@ on that plan's completion.
 
 ### 2026-07-27 (slot-7) — todo "Run /data-pipeline-check-features across ALL shards" IN FLIGHT, not blocked
 
-Phase 0 bucket check passed (all 6 `features-*-test-*` buckets carry objects now). 4 retries this session, condensed:
-(1) `CEFI/delta_one` crashed on a plain env gap (`--project central-element-323112` needed, not RAM-exhaustion); (2)
-retry launched a real VM then was silently killed ~66s into polling (zero traceback) — matches `WorkerLivenessWatchdog`,
-independently diagnosed live by slot-3 on the SAME shard (todo 9,
-`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`); their proven fix: heartbeat
-`/api/slots/<N>/progress` ~240s (under the ~900s threshold) via a `Monitor` loop while the driver runs; (3)
-`DEFI/delta_one` (avoiding slot-3's CEFI collision) completed cleanly in 11s — honest `no_captured_input_for_window`.
-Report: `plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.{md,json}`. (4) `TRADFI/delta_one` — local
-driver died silently TWICE MORE despite the heartbeat mitigation, but both underlying VMs
-(`features-e2e-tradfi-20260727-054450-2b064d`, `...-060813-2b064d`) completed independently; ground-truthed via direct
-`gcloud storage cat` of `run.log` (not the driver's never-written report): reproducible
-`DEPENDENCY CHECK FAILED — Missing market-data-processing-service, Path gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-07-04/, No data`,
-exit_code=1. The driver's `--require-captured` pre-check wrongly accepted this window as covered — filed as todo below.
+Phase 0 bucket check passed (all 6 `features-*-test-*` buckets carry objects). The local driver process dies silently
+and often (zero traceback) — matches `WorkerLivenessWatchdog`/shared-host RAM contention, independently diagnosed live
+by slot-3 on the same class of run (`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`
+todo 9; their mitigation — heartbeat `/api/slots/<N>/progress` ~240s via a `Monitor` loop while the driver runs —
+REDUCES but does not eliminate it). **Resume pattern**: invoke
+`cd features-service && .venv/bin/python scripts/pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day --asset-group <AG> --family <FAM> --project central-element-323112`
+backgrounded + Monitor-heartbeated; on a local-driver death, check
+`gcloud compute instances list --filter="name~'features-e2e-<ag>'"` FIRST — the VM usually outlives the poller and
+completes on its own; ground-truth via
+`gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` rather than re-launching blind.
+`delta_one` runs first per-AG (feeds derived families). CEFI is slot-3's — avoid collision. **The driver OVERWRITES its
+report per-invocation, does not append** — merge with `unified-trading-pm@e537bff29`
+`scripts/plan-hygiene/merge_pipeline_e2e_report.py`
+(`--prior <git-show-of-prior> --fresh <overwritten> --out <same> --prior-md <prior .md>`) AFTER every cell, BEFORE
+committing.
 
-**Resume**:
-`cd features-service && .venv/bin/python scripts/pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day --asset-group <AG> --family <FAM> --project central-element-323112`,
-backgrounded + Monitor-heartbeated (~120-150s to `/api/slots/<N>/progress`) — this REDUCES but does not eliminate silent
-kills (2/4 still died with it active; likely genuine shared-host RAM contention per
-`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`). **On a local-driver death, check
-`gcloud compute instances list --filter="name~'features-e2e-<ag>'"` first** — the VM often outlives the poller;
-ground-truth via its `run.log` directly rather than re-launching blind. `delta_one` runs first per-AG. CEFI is slot-3's
-— avoid collision. `PREDICTION:delta_one` + `DEFI:onchain` also done (clean, honest skips). **IMPORTANT: the driver
-OVERWRITES its report per-invocation, does not append.** Tooling shipped to fix this — `unified-trading-pm@e537bff29`
-`scripts/plan-hygiene/merge_pipeline_e2e_report.py` (dedups by `(shard_label, leg)`, fresh wins, regenerates `.md` from
-merged JSON, preserves `## Note` sections). Usage: `git show HEAD:<report>.json > prior.json` then
-`python3 scripts/plan-hygiene/merge_pipeline_e2e_report.py --prior prior.json --fresh <just-overwritten .json> --out <same path> --prior-md prior.md`
-— run AFTER every cell, BEFORE committing. 29 viable cells total; 4 done (DEFI delta_one skip, TRADFI delta_one failure,
-PREDICTION delta_one skip, DEFI onchain skip), 25 open. Stays OPEN.
+**4 cells DONE this session**: `DEFI:delta_one` skip, `PREDICTION:delta_one` skip (both honest
+`no_captured_input_for_window`), `DEFI:onchain` skip, `TRADFI:delta_one` FAILED (2 independent VM runs,
+`DEPENDENCY CHECK FAILED — Missing market-data-processing-service, Path .../processed_candles/by_date/day=2026-07-04/, No data`,
+exit_code=1 both times — driver's `--require-captured` wrongly accepted this window as covered, filed as todo below).
+Report: `plans/audit/results/ data_pipeline_e2e_check_features_2026_07_05.{md,json}`. **1 cell IN FLIGHT**:
+`volatility:TRADFI`, VM `features-e2e-tradfi-20260727-065459-b1a99f`, genuinely computing (not hung) but slow (~1.5
+underlyings/min × 109 × 4 groups); first ~20 sampled were 100% `No captured perp...No data` (near-certain all-skip) —
+stopped live-watching (saturated diagnostic value), VM self-terminates on its own; verify its final `run.log` state
+before assuming an outcome. 29 cells total; 4 done, 1 in flight, 24 not started.
 
 - [ ] NEW todo. [DATA] P1. **Coverage-check discrepancy**: driver's `--require-captured` reported `TRADFI:delta_one`'s
       `2026-07-04..2026-07-05` window covered, but the VM's own dependency check found NO object at the expected candle

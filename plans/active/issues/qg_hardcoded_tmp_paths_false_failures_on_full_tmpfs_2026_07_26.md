@@ -180,3 +180,15 @@ unfixable-by-me) cause was clear each time. Not filing a new todo — the existi
 crons on this host) is the correct remedy already tracked above; flagging here only because it's evidence the condition
 is both broader (root disk, not just tmp) and actively worsening, which raises the urgency of that existing todo. No
 content of this doc's existing Todos changes.
+
+## Update 2026-07-27 (slot-7) — SAME root-disk ENOSPC on the identical `awk` frontmatter parser, 7 consecutive hits
+
+Hit the identical failure shape (plan-hygiene pre-commit awk parser at the same FNR-line-numbered
+`No space left on device` warning, on a routine `docs(plans):` checkpoint commit — no code, no VM launches) 7 times
+across ~15 minutes on this same host class. `df -h /` fluctuated `3.1G`→`3.5G`→`3.1G` available across retries (never
+meaningfully recovering), matching slot-4's "actively worsening, not a one-off blip" observation above rather than a
+quick transient blip. Retrying (with a short gap + a `git pull --rebase --autostash` in between, since branch drift was
+also firing concurrently on this busy branch) eventually succeeded each time disk momentarily had enough headroom. No
+new remedy found beyond what's already tracked — corroborating that the P2 operator cron-registration ask above is still
+the correct, still-unactioned fix; the workaround (retry with brief spacing, verify `df -h /` isn't the real story
+before assuming a genuine content/logic bug) remains the only in-session mitigation available to a worker.
