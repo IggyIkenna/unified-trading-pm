@@ -104,20 +104,21 @@ this specific host, and it is far more severe than a general "some cloud access"
   infra/CI-adjacent ones) — full access means it structurally could, but which buckets exist and what's in them was not
   enumerated here.
 
-## Recommendation (not executed — this is a security-posture change, operator call)
+## Operator decision — ✅ DECIDED 2026-07-27: ACCEPTED AS KNOWN RISK, do not remediate
 
-1. **Remove `self-manage-own-policies` entirely** if nothing legitimately needs it (grep for any script that actually
-   calls `iam:AttachRolePolicy`/`PutRolePolicy` against its own role at runtime — if nothing does, this is unused attack
-   surface with no offsetting benefit).
-2. **Replace the four `*FullAccess` AWS-managed policies with scoped, resource-level policies** naming the specific
-   buckets/tables/clusters this VM's actual workload touches (mirroring the least-privilege pattern already used for the
-   GCP-side `glue-runner-gh-pat` SA and for `uts-orchestrator-epic-policy`'s own Secrets Manager statement, which IS
-   correctly resource-scoped — the FullAccess policies are the outlier, not the norm, in this same role).
-3. Re-run this exact `aws iam` verification after any change, and cite the fresh output rather than trusting a
-   comment/docstring describing the intended scope (the setup script's own comment about the GCP side was accurate, but
-   said nothing about the AWS side being this broad — a good example of why the workspace's own "verify, don't propagate
-   a sub-agent's description" lesson applies to security scoping too).
+Operator ruling: these permissions are genuinely load-bearing — the same VM uses this identity for other legitimate
+end-of-day operations (deploying, deleting data) that need this breadth. **Do not narrow the IAM policy; do not re-raise
+this as an open remediation item.** The exposure described above is real and known, not a bug to fix.
 
-Do not action 1-3 without the operator — this changes what the orchestrator VM can do, and if any of these `FullAccess`
-grants is genuinely load-bearing (e.g. a script that provisions new DynamoDB tables or S3 buckets on the fly), removing
-it blind would break that workflow. Flagging + proposing, not executing.
+This changes the calculus for the adjacent `quality-gates-v2` self-hosting question
+(`github_actions_operator_gated_followups_2026_07_17.md`): since the IAM scope is staying as-is, moving the real test
+suite to this host means accepting the full blast radius above (not a narrower, post-remediation version of it) as the
+standing cost of that move — see that doc's operator-decision note for the still-open call on whether to proceed there.
+
+## Recommendation (SUPERSEDED by the operator decision above — kept for reference, do not action)
+
+~~1. Remove `self-manage-own-policies` entirely if nothing legitimately needs it.~~ ~~2. Replace the four `*FullAccess`
+AWS-managed policies with scoped, resource-level policies.~~ ~~3. Re-run this `aws iam` verification after any change.~~
+
+These three steps are what a remediation pass WOULD look like if the operator ever revisits this — kept as reference,
+not as an active todo. Do not action them; the operator has ruled the current scope stays.
