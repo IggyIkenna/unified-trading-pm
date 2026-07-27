@@ -61,8 +61,34 @@ instruments-service@`b99e586` (tested no-key enumeration).
 
 ### Gated sequence (each step waits on the prior)
 
-- [ ] [INFRA] P0. **GATE**: HL/ASTER since-genesis re-run (7 VMs `cefi-*-20260623-113700`) completes — captured-coverage
-      manifest re-read confirms full per-day universe captured. (Monitored; ~25–60% as of write.)
+- [x] ✅ [INFRA] P0. **GATE SUPERSEDED, re-verified + relaunched (2026-07-27, slot-10)**: the named
+      `cefi-*-20260623-113700` 7-VM fleet no longer exists (`gcloud compute instances list` — zero matches;
+      `deployment-scripts-.../vm-logs/` raw logs expired past the 14-day retention, so no per-VM `EXIT_STATUS` is
+      recoverable) — this checkbox's literal condition is unfalsifiable at this remove. **Re-verified against the LIVE
+      manifest instead** (read-only `read_availability_index` on `market-data-tick-cefi-prd-central-element-323112`,
+      filtered venue ∈ {HYPERLIQUID, ASTER}): the goal ("full per-day universe captured") is genuinely **NOT met** —
+      most of the gap is the survivorship-bias-free 493-base-asset universe expansion (shipped AFTER the 113700 fleet
+      launched, same day) widening the denominator faster than any HL/ASTER-specific re-run has caught up: - ASTER
+      `trades`: captured=**1** / empty_confirmed=18,152 / attempted_failed=100 / **expected_unattempted=372,943** (out
+      of 391,196 mvp cells — **95.3% never attempted**). - ASTER `derivative_ticker`: captured=108,350 /
+      expected_unattempted=188,787 (well-covered, 36.5% still open). - ASTER `book_snapshot_5`: 0 captured — CORRECT
+      (live-only per BUG#4 A, excluded from batch by design). - HYPERLIQUID `trades`: captured=70,347 /
+      expected_unattempted=91,525 (49.3% never attempted). - HYPERLIQUID `book_snapshot_5`: captured=12,445 /
+      expected_unattempted=59,423 (78.4% never attempted). - HYPERLIQUID `derivative_ticker`: captured=12,924 /
+      expected_unattempted=58,473 (77.6% never attempted). No HL/ASTER VMs were running at time of check
+      (`gcloud compute instances list --filter="name~'hyperliquid|aster'"` — zero results) — nothing currently in flight
+      was closing this gap. **Relaunched** a fresh corrective fleet via `launch-cefi-hl-aster-historical-backfill.sh`
+      (idempotent, non-force → skips the already-captured cells above, catalogue-driven `SYMBOLS=ALL` picks up the
+      current 493-base universe automatically): 7 VMs, run-id `20260727-015959`
+      (`cefi-hyperliquid-{2023..2026}-20260727-015959`, `cefi-aster-{2024..2026}-20260727-015959`), SPOT,
+      `asia-northeast1-c`. Verified STARTED (RUNNING/STAGING at T+30s). Superseding this checkbox rather than leaving it
+      perpetually unfalsifiable; the real completion gate is below.
+- [ ] [INFRA] P0. **GATE**: HL/ASTER corrective re-run (7 VMs `cefi-{hyperliquid,aster}-*-20260727-015959`) completes —
+      captured-coverage manifest re-read (same method as above) confirms `expected_unattempted` → 0 for all three
+      data_types (book_snapshot_5 staying 0-captured for ASTER is correct/expected, not a gap). Verify at T+10min
+      (STARTED) then periodically until terminal; re-measure via `read_availability_index` filtered to venue ∈
+      {HYPERLIQUID, ASTER}, do not trust prior `attempted_failed` counts as the gap census (mirrors the Tardis-lockout
+      lesson elsewhere in this doc — measure fresh, don't assume).
 - [x] ✅ [DEPLOY] P1. Redeployed the IS fixes — built `instruments-service:latest`=7489ed1/0.43.0 from LDR (no-auth
       b99e586 + full-universe 0fe8e71 + dated-future quote fix 7489ed1) via Cloud Build d215d55a (SUCCESS); created the
       missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00 IS scheduler).

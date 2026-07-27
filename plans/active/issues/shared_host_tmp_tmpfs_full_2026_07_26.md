@@ -89,6 +89,31 @@ service code) — but fixing all 25 occurrences correctly requires updating each
 (the log is `cat`'d and `grep`'d after the `if`), which is a substantially larger, more invasive change than fits this
 session's assigned task. Filed here rather than attempted inline.
 
+## Update (2026-07-27): the parent phenomenon — this host is severely oversubscribed
+
+While waiting to re-run a manifest-cleanup script for an unrelated todo, a simple `gcs_describe_object` metadata-only
+GCS call (no data body, previously returned in under a second) started reproducibly timing out at 20-30s. `uptime` /
+`vmstat` on this same VM showed:
+
+```
+load average: 23.66, 36.79, 35.16     # nproc = 8 — i.e. 3-4.6x oversubscribed
+Mem: 30Gi total, 11Gi used, 10Gi free; Swap: 15Gi total, 7.3Gi used
+vmstat: si (swap-in) up to 5276 KB/s in a 3-sample/1s window — actively thrashing, not just holding swap
+```
+
+`ps --sort=-pcpu` at the same moment showed a dozen-plus concurrent full-CPU processes across at least 6 different slots
+(`.tabs/4`, `.tabs/5`, `.tabs/6`, `.tabs/12`, plus `unified-trading-pm`/`agent-orchestrator` root-clone cron jobs) —
+full pytest suites, a `check_ag_closeout_linkage.py` audit, `gen_doc_index.py`, GH Actions runner workers, and this
+session's own manifest read, all competing for 8 cores and 30GB RAM at once.
+
+This is very likely the SAME root mechanism behind the `/tmp` STEP 5.93-class QG race documented above (a genuinely
+overloaded host makes every timing-sensitive shared-file/network operation more likely to collide or hang) and behind a
+background process of mine being killed outright (SIGTERM, exit 143) partway through a 30-minute run with no error of my
+own — plausibly an OOM-adjacent reaper (`earlyoom` is present per `/tmp/systemd-private-*-earlyoom.service-*` in the
+tmpfs listing above) or some other resource-pressure-triggered kill, though I did not directly prove which mechanism did
+it. The `/tmp` capacity issue and the QG temp-file race are real and worth fixing on their own, but they are symptoms of
+this host running well past its safe concurrent-workload capacity, not the root cause by themselves.
+
 ## Recommended decision
 
 This is an infra/fleet hygiene gap, not a code defect in any single repo — routing it to the operator / infra role
@@ -122,4 +147,14 @@ rather than deciding unilaterally:
       same checker with no concurrent QG running passes clean). Repo: unified-trading-pm. **Done when**: none of the 25
       redirects share a filename across two concurrent same-host QG runs (e.g. `$$`/`mktemp` suffixed), every paired
       read-back site is updated to the same variable, and a real concurrent-QG repro (two `quality-gates.sh` runs on the
-      same host hitting the same STEP simultaneously) no longer races.
+      same host hitting the same STEP simultaneously) no longer races. **Note (2026-07-27): slot-11 appears to already
+      be working a fix touching `base-service.sh` and a similarly-named issue doc
+      (`qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md`) — check that doc before duplicating work.**
+- [ ] [INFRA] P1. Investigate this VM's sustained oversubscription (2026-07-27 sample: `nproc=8`,
+      `load average: 23.66, 36.79, 35.16`, active swap-in up to 5276 KB/s, a dozen-plus concurrent full-CPU processes
+      across 6+ slots) — determine whether this is a one-off burst (many slots' scheduled full-suite QG runs overlapping
+      by chance) or a standing capacity shortfall for the number of slots this VM hosts, and whether a concurrency cap
+      (e.g. the existing "≤2 full QGs at once" convention) is actually being enforced anywhere or is purely advisory.
+      `[OPERATOR]` — this is a capacity/scheduling decision, not a code fix. Repo: agent-orchestrator (or infra
+      runbook). **Done when**: a root cause (burst vs. structural) is recorded and either a documented
+      concurrency-limiting mechanism exists, or a decision to accept the current oversubscription is recorded.

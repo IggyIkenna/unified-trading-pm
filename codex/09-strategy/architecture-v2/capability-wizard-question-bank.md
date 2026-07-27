@@ -56,11 +56,11 @@ configured strategies). Same manifest, four query styles.
 | Initial deposit asset(s) & schedule (multi-tranche: BTC today, USDT tomorrow)? Show conversion path preview | `capital_router.py` AllocationTargets + wallet hierarchy → fund-flow mermaid | registry |
 | Custody: Copper (DeFi) / CEFFU (CeFi) / self-custody?                                                       | defi_master + cefi_master epic scopes; custody adapters in execution-service | partial  |
 | Treasury vs trading-wallet split — accept default (DeFi 20/80, CeFi 0/100) or override?                     | wallet-hierarchy doc; deployment wallet config                               | registry |
-| How much collateral stays on each exchange — explicit, or assumed from policy?                              | **collateral registry**                                                      | gap      |
-| Which collateral does each venue accept, at what haircut?                                                   | **collateral registry**                                                      | gap      |
+| How much collateral stays on each exchange — explicit, or assumed from policy?                              | **collateral registry**                                                      | registry |
+| Which collateral does each venue accept, at what haircut?                                                   | **collateral registry**                                                      | registry |
 | Margin mode per venue: isolated / cross?                                                                    | `MarginMode` (architecture_v2 enums)                                         | registry |
-| Leverage cap; target LTV vs max/liquidation LTV; maintenance vs liquidation margin per venue?               | **collateral registry**                                                      | gap      |
-| Which brokers are usable (TradFi)?                                                                          | **collateral registry** (broker list)                                        | gap      |
+| Leverage cap; target LTV vs max/liquidation LTV; maintenance vs liquidation margin per venue?               | **collateral registry**                                                      | registry |
+| Which brokers are usable (TradFi)?                                                                          | **collateral registry** (`BROKER_REGISTRY`)                                  | gap      |
 
 ## Stage C — Strategy selection
 
@@ -98,16 +98,16 @@ configured strategies). Same manifest, four query styles.
 
 ## Stage F — Execution
 
-| Question                                                                                       | Answer source                                                                         | Status        |
-| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------- |
-| Which instruction/account actions does this strategy emit?                                     | `InstructionActionV2` / `AccountActionV2`; `instruction_type.py`                      | registry      |
-| Algo per instruction type?                                                                     | `algorithms/registry.py` (SOR, sor_twap, swap_twap, atomic_bundle_executor, selector) | registry      |
-| Multi-leg (basis/spread/combo): atomic or legged? Who owns inter-leg delta risk while filling? | `AtomicExecutionMode`; **order-semantics declarations**                               | partial / gap |
-| TIF: FOK / IOC / post-only? Make or take?                                                      | order_types enums; **per-venue honor matrix**                                         | partial / gap |
-| Ref pricing: fixed entry, or delta-adjusted to underlying (premium-on-delta)?                  | **order-semantics declarations**                                                      | gap           |
-| Partial-fill compensation policy?                                                              | `CompensationPolicy` enum                                                             | registry      |
-| Full fee stack at my size (exchange/gas/broker/clearing, maker-taker tier)?                    | **fees registry** + execution cost prediction (strategy_master scope)                 | gap           |
-| Transfer/rebalance cadence and routing (incl. daily withdraw/deposit)?                         | `capital_router.py`; transfer handlers in execution-service                           | registry      |
+| Question                                                                                       | Answer source                                                                                                                          | Status        |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Which instruction/account actions does this strategy emit?                                     | `InstructionActionV2` / `AccountActionV2`; `instruction_type.py`                                                                       | registry      |
+| Algo per instruction type?                                                                     | `algorithms/registry.py` (SOR, sor_twap, swap_twap, atomic_bundle_executor, selector)                                                  | registry      |
+| Multi-leg (basis/spread/combo): atomic or legged? Who owns inter-leg delta risk while filling? | `AtomicExecutionMode`; **order-semantics declarations**                                                                                | partial / gap |
+| TIF: FOK / IOC / post-only? Make or take?                                                      | order_types enums; **per-venue honor matrix**                                                                                          | partial / gap |
+| Ref pricing: fixed entry, or delta-adjusted to underlying (premium-on-delta)?                  | **order-semantics declarations**                                                                                                       | gap           |
+| Partial-fill compensation policy?                                                              | `CompensationPolicy` enum                                                                                                              | registry      |
+| Full fee stack at my size (exchange/gas/broker/clearing, maker-taker tier)?                    | **fees registry** (`FEES_REGISTRY` — exchange+gas cited; broker/clearing/tier gap) + execution cost prediction (strategy_master scope) | partial       |
+| Transfer/rebalance cadence and routing (incl. daily withdraw/deposit)?                         | `capital_router.py`; transfer handlers in execution-service                                                                            | registry      |
 
 ## Stage G — Risk & circuit breakers
 

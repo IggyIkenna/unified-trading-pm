@@ -253,6 +253,28 @@ class FileScan:
     count: int
 
 
+def present_repo_names(workspace_root: Path) -> frozenset[str]:
+    """Top-level dir names under ``workspace_root`` that are actual repo checkouts (have ``.git``).
+
+    A single-repo CI checkout (GitHub Actions) only ever has ONE repo present under
+    ``--workspace-root`` (the parent of the checked-out repo) — every OTHER repo's baseline
+    entries are structurally unreachable there, not evidence of a regression. Scoping baseline
+    evaluation to only present repos is what makes this check meaningful in both the multi-repo
+    local/PM workspace (all repos present, nothing filtered) and single-repo CI (only that repo's
+    own entries are checked).
+    """
+    names: set[str] = set()
+    for child in sorted(workspace_root.iterdir()):
+        if not child.is_dir():
+            continue
+        if child.name in EXCLUDE_DIR_NAMES or child.name.startswith("."):
+            continue
+        if not (child / ".git").exists():
+            continue
+        names.add(child.name)
+    return frozenset(names)
+
+
 def scan_workspace(workspace_root: Path) -> list[FileScan]:
     """Walk every immediate sub-dir with a ``.git`` + return per-file counts."""
     results: list[FileScan] = []
@@ -293,6 +315,7 @@ def main(argv: Iterable[str] | None = None) -> int:
 
     scans = scan_workspace(workspace_root)
     observed: dict[str, int] = {s.file_key: s.count for s in scans}
+    present_repos = present_repo_names(workspace_root)
 
     if regenerate:
         write_baseline(observed, baseline)
@@ -305,8 +328,15 @@ def main(argv: Iterable[str] | None = None) -> int:
     failures: list[str] = []
     new_files: list[str] = []
     ok_count = 0
+    out_of_scope_count = 0
 
     for file_key, required in sorted(baseline.counts.items()):
+        repo_name = file_key.split("/", 1)[0]
+        if repo_name not in present_repos:
+            # This baseline entry's repo isn't checked out under --workspace-root at all (the
+            # normal case for a single-repo CI checkout) — not evidence of a regression, skip it.
+            out_of_scope_count += 1
+            continue
         actual = observed.get(file_key, 0)
         if actual < required:
             absent = " (file missing or renamed)" if file_key not in observed else ""
@@ -316,6 +346,12 @@ def main(argv: Iterable[str] | None = None) -> int:
             )
         else:
             ok_count += 1
+
+    if out_of_scope_count:
+        print(
+            f"[INFO] {out_of_scope_count} baseline entry(ies) skipped — their repo isn't present "
+            f"under --workspace-root ({workspace_root}); present repos: {', '.join(sorted(present_repos)) or 'none'}."
+        )
 
     for file_key in sorted(observed):
         if not baseline.has(file_key):
