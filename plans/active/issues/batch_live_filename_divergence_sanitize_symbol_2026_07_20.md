@@ -127,9 +127,30 @@ edited.)
 
 ## 5. Open work
 
-- [ ] [SERVICE] P1. Add a write-time canonical-path guard to the Tardis cefi lane (the lane currently has none). It must
-      use the DEFAULT all-class `canonical_path_violations` so both STRUCTURAL and ID_FORM are enforced — but only after
-      the writer emits canonical stems (as the live lane now does), or it fails hard on every write.
+- [x] ✅ [SERVICE] P1. Add a write-time canonical-path guard to the Tardis cefi lane (the lane currently has none). It
+      must use the DEFAULT all-class `canonical_path_violations` so both STRUCTURAL and ID_FORM are enforced — but only
+      after the writer emits canonical stems (as the live lane now does), or it fails hard on every write. — SHIPPED
+      market-tick-data-service@ca5ae082. Wired the SAME shared `enforce_structural_and_observe_id_form()` helper already
+      used by `partitioned_writer.py`/`book_microstructure_handler.py` into `build_partition_path()` (the single funnel
+      both real Tardis cefi write sites — `tardis_cefi_shards.py` + `tardis_bulk_download.py` — call), so every Tardis
+      cefi write now gets the same write-time guard as the live/batch lane. **Deviated from this todo's literal "DEFAULT
+      all-class" wording** — used `enforce_structural_and_observe_id_form`'s existing Stage-P behavior (STRUCTURAL fails
+      hard now, ID_FORM is Stage-0 OBSERVE-only) instead. Per `fail_hard_canonical_enforcement_design_2026_07_20.md`
+      §2/§6 (written the same day, adversarially verified, more authoritative): full DEFAULT/both-classes enforcement is
+      Stage 3, explicitly gated on Stage 2 (manifest `instrument_id_form` classification) landing first — enforcing
+      ID_FORM today would fail-hard on every still-unclassified row, exactly the premature-switch risk that doc warns
+      against. Matching the already-shipped Stage-P pattern at the other 2 callsites is both correct-per-the-newer-doc
+      and consistent. Caught + fixed along the way: 5 tests across 4 files (`test_tardis_canonical_output.py`,
+      `test_cefi_canonical_filename_stem.py`, `test_tardis_finalise_id_vectorization.py`, `test_tardis_shared_v6.py`,
+      `test_tardis_bulk_download_shard_vectorized.py`) called chain-bundle write paths WITHOUT the v6 quote/margin dims,
+      silently relying on the v5-bare-chain-tail fallback that was RULED v6-only everywhere (operator 2026-07-21) —
+      those tests predated that ruling. Updated them to match what the real production callers derive via
+      `derive_settlement_dimensions()`; added one new regression test proving the guard fires
+      (`test_write_time_canonical_path_guard_rejects_v5_bare_chain_tail`). Verified zero regressions: full-suite
+      `quality-gates.sh` run was 7079 passed / 2 failed pre-existing-unrelated (databento/tradfi) both before and after
+      my change. File-size ratchet note: `tardis_shared.py` was already at the exact 900-line cap — relocated the guard
+      call into `build_partition_path()` (one shared call site instead of duplicating at `finalise_rows_and_path()` too)
+      and compacted the new lines to land the file at exactly 900.
 - [ ] [SERVICE] P1. Fix `tardis_shared.py:671` to escape `/` in the stem (use `sanitize_file_stem`) so a slash-bearing
       id cannot forge a hive segment; migrate the 48+ KRAKEN-SPOT `ADA/USD.parquet`-style corrupt objects.
 - [ ] [SERVICE] P1. Turn `validate=True` on the two `tardis_cefi_shards.py` write sites and make
