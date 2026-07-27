@@ -100,15 +100,15 @@ depends_on: []
       first, append repo-specific extensions after) — cosmetic-only now that exit codes are correct (bash's own exit
       code, not banner text, is what quickmerge/CI actually gate on), and NOT changed here; flagged below as a genuinely
       separate, bigger-blast-radius follow-up. (repo: market-tick-data-service)
-- [ ] [PM] P3. **Follow-up (new, discovered during the fix above): audit the other 4 repos'
-      `no_adapter_contract_regression.sh` call-sites** (`execution-service`, `instruments-service`,
-      `features-service`, + MTDS-family worktree copies —
-      `grep -rln "no_adapter_contract_regression.sh" --include=quality-gates.sh .`) for the same warn-only wiring; flip
-      each to hard-fail (matching this issue's MTDS fix) ONLY after confirming that repo's current fleet-wide baseline
-      compliance is clean (re-run `check_adapter_contract_regression.py --workspace-root <ws>` — it's a single
-      fleet-wide scan, not per-repo, so one clean run covers all of them) so the flip doesn't retroactively break
-      someone else's already-green CI. (repo: unified-trading-pm, execution-service, instruments-service,
-      features-service)
+- [x] [PM] P3. **Follow-up audit of the other 3 repos' `no_adapter_contract_regression.sh` call-sites** — ✅ DONE.
+      Confirmed all 3 (`execution-service`, `instruments-service`, `features-service`) had the identical
+      `|| log_warn "..."` wiring (the MTDS-family worktree copies — `market-tick-data-service-sports-wt`,
+      `market-tick-data-service-cid-migration` — are other slots' worktrees of the SAME repo, not separate targets, so
+      left untouched). Re-verified the fleet-wide scan was clean (0 files below baseline) immediately before each flip.
+      Flipped each to `log_fail` + `exit 1`, ran each repo's full `quality-gates.sh` (all exit 0, STEP 5.83 confirmed OK
+      in each run), shipped via quickmerge: - `execution-service@6e99468f` - `instruments-service@2a489458` -
+      `features-service@c08e1bb3` All four repos in the fleet now hard-fail on this ratchet. (repo: unified-trading-pm,
+      execution-service, instruments-service, features-service)
 
 ## Evidence
 
@@ -148,3 +148,7 @@ Root cause was NOT the suspected `cddb1226` (a pure refactor, count unchanged) b
 decode implementation replacing the STUB) — and even then, `classify_venue_error`/`ADAPTER_FETCH_FAILED` had never
 existed in this file; the old baseline-6 was inflated by stub-era docstring prose. Full root-cause trail + design
 reasoning in the flipped todos above.
+
+**Follow-up audit closed (2026-07-27)**: `execution-service@6e99468f`, `instruments-service@2a489458`,
+`features-service@c08e1bb3` — same warn-only → hard-fail flip applied fleet-wide. All shipped from a
+fleet-wide-confirmed-clean baseline scan (0 files below minimum) immediately before each flip.
