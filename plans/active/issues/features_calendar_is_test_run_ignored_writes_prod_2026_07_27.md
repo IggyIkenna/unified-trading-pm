@@ -129,7 +129,7 @@ ALL, not even for the success path.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P0. **features-service** — `features_service/calendar/config.py`: wire `get_source_bucket()` (or add a
+- [x] ✅ [SCRIPT] P0. **features-service** — `features_service/calendar/config.py`: wire `get_source_bucket()` (or add a
       new `get_sink_bucket()`, matching delta_one's naming) to honour `PROTOCOL_DATA_SINK_BUCKET`/
       `PROTOCOL_DATA_SINK_BUCKET_GLOBAL` via `get_data_sink(routing_key=...)` FIRST, falling back to
       `resolve_bucket(kind="features-calendar")` only when no override is set — mirroring
@@ -138,7 +138,14 @@ ALL, not even for the success path.
       launcher's `PROTOCOL_DATA_SINK_BUCKET_GLOBAL` env var name is derived, to route them consistently). Add a
       regression test asserting `IS_TEST_RUN=true` (or a `PROTOCOL_DATA_SINK_BUCKET` override) actually changes the
       resolved bucket — the exact class of test the June 2026-06-01 incident's fix presumably added for delta_one;
-      mirror it here.
+      mirror it here. — **features-service@ba5143fd**. `routing_key="global"` confirmed via 3 independent sources (the
+      repro's own env vars, SKILL.md's "calendar collapses to a single GLOBAL cell", and `launch-features-vm.sh`'s own
+      comment "`get_data_sink(routing_key=ag.lower())` ... AG-keyed + base fallback both set (calendar=GLOBAL)").
+      `get_source_bucket()` now calls `get_data_sink(routing_key="global")` first, falls back to
+      `resolve_bucket(kind="features-calendar")`; 2 regression tests added in `tests/unit/test_config.py`
+      (override-honoured + SSOT-fallback), mirroring
+      `test_get_output_bucket_honours_data_sink_override`/`_falls_back_to_ssot`. Full `quality-gates.sh` green
+      (sentinel-verified by quickmerge --agent); shipped via quickmerge, landed on `live-defi-rollout`.
 - [ ] [DATA] P1. **features-service / operator** — audit
       `gs://features-calendar-prd-central-element-323112/     calendar/{time_features,economic_events}/` for objects
       written by prior test/smoke-check invocations (anomalous zero-row parquets, or objects whose `written_at`/manifest
