@@ -30,6 +30,7 @@ related:
     /plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md,
     /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
+    /plans/active/deployment_durable_operational_data_bigquery_2026_07_21.md,
   ]
 created: "2026-07-24"
 last_updated: 2026-07-27
@@ -599,26 +600,26 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
       IAM security question already filed.
 
       **Financial verdict (added 2026-07-27, real AWS pricing, ap-northeast-1) — the upgrade costs more than the
-          savings it's chasing.** `m8i` has no 12-vCPU size (jumps 8→16→32→48→64); at 16 vCPU the oversubscription ratio is
-          still ~2.6x (42÷16), before any new load — genuinely fixing today's contention plus fleet-wide
-          `quality-gates-v2` needs ~32-48 vCPUs. Real pricing: current `m8i.2xlarge` (8vCPU/32GB) = **$399/mo** (730hr).
-          `c8i` (compute-optimized, half the RAM/vCPU of `m8i` — the right family once RAM isn't the bottleneck, per the
-          dashboard's 33% RAM / 94% CPU split) at 32 vCPU (`c8i.8xlarge`, 64GB) = **$1,378/mo, a +$979/mo delta** — the
-          smallest size that plausibly handles both today's contention AND new load. The theoretical CEILING on GHA
-          savings (quality-gates-v2 ≈ 90% of non-PM's ~$693/mo = **~$623/mo max**, moving it to $0) is LESS than that
-          delta. Even `c8i.4xlarge` (16vCPU, +$290/mo, cheaper than the ceiling) is likely under-provisioned per the ratio
-          math above, so it wouldn't actually fix the slowdown. **No size in this family progression makes the move pay
-          for itself** — a third, independent reason (with IAM-accepted-risk and the contention finding) not to self-host
-          `quality-gates-v2`. EBS note: current disk is `gp3` 500GB ($0.096/GB-mo, Tokyo) = $48/mo; 400GB would save
-          $9.60/mo but EBS can't shrink live (snapshot + new-volume migration, not a resize). `c8i` vs staying in `m8i` for
-          the SAME vCPU count is a real, worthwhile saving independent of this decision (e.g. `c8i.8xlarge` is ~$219/mo
-          cheaper than `m8i.8xlarge` for identical 32 vCPU) if this VM is ever resized for any other reason.
+              savings it's chasing.** `m8i` has no 12-vCPU size (jumps 8→16→32→48→64); at 16 vCPU the oversubscription ratio is
+              still ~2.6x (42÷16), before any new load — genuinely fixing today's contention plus fleet-wide
+              `quality-gates-v2` needs ~32-48 vCPUs. Real pricing: current `m8i.2xlarge` (8vCPU/32GB) = **$399/mo** (730hr).
+              `c8i` (compute-optimized, half the RAM/vCPU of `m8i` — the right family once RAM isn't the bottleneck, per the
+              dashboard's 33% RAM / 94% CPU split) at 32 vCPU (`c8i.8xlarge`, 64GB) = **$1,378/mo, a +$979/mo delta** — the
+              smallest size that plausibly handles both today's contention AND new load. The theoretical CEILING on GHA
+              savings (quality-gates-v2 ≈ 90% of non-PM's ~$693/mo = **~$623/mo max**, moving it to $0) is LESS than that
+              delta. Even `c8i.4xlarge` (16vCPU, +$290/mo, cheaper than the ceiling) is likely under-provisioned per the ratio
+              math above, so it wouldn't actually fix the slowdown. **No size in this family progression makes the move pay
+              for itself** — a third, independent reason (with IAM-accepted-risk and the contention finding) not to self-host
+              `quality-gates-v2`. EBS note: current disk is `gp3` 500GB ($0.096/GB-mo, Tokyo) = $48/mo; 400GB would save
+              $9.60/mo but EBS can't shrink live (snapshot + new-volume migration, not a resize). `c8i` vs staying in `m8i` for
+              the SAME vCPU count is a real, worthwhile saving independent of this decision (e.g. `c8i.8xlarge` is ~$219/mo
+              cheaper than `m8i.8xlarge` for identical 32 vCPU) if this VM is ever resized for any other reason.
 
-          **Phase 7's scope (thin push/repository_dispatch glue only —
-          main-backmerge-to-ldr, image-build-gate's polling wrapper, update-dependency-version, etc.) is still fine to add
-          here** — none of it is CPU-heavy. A dedicated, appropriately-sized runner host (separate from the orchestrator
-          box) would be needed before any CPU-heavy workload could safely self-host, which is its own cost to weigh against
-          the savings.
+              **Phase 7's scope (thin push/repository_dispatch glue only —
+              main-backmerge-to-ldr, image-build-gate's polling wrapper, update-dependency-version, etc.) is still fine to add
+              here** — none of it is CPU-heavy. A dedicated, appropriately-sized runner host (separate from the orchestrator
+              box) would be needed before any CPU-heavy workload could safely self-host, which is its own cost to weigh against
+              the savings.
 
 - [ ] [INFRA] P1. Canary the flip on ONE repo first (same discipline as the original PM migration: edit the template +
       `rollout-workflow-templates.sh`, prove on one caller, only then fan out) — start with whichever of
