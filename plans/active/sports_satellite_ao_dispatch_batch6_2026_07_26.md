@@ -54,10 +54,11 @@ drift_direction: advance-code
 
 # Sports satellite AO batch 6 — post-batch5 orphans
 
-> **⚠️ `status: draft` — NOT dispatched.** Drafted autonomously per the `/ag-closeout-audit` skill's Autonomous-mode
-> rule: drafting a `status: draft` pair is safe unattended, but flipping it to `active` is the operator's call. Do not
-> flip without explicit approval. Its gated companion is
-> `/plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26_finalize.md` (also `status: draft`).
+> **✅ `status: active` — dispatched.** This banner previously said `status: draft — NOT dispatched`, stale ever since
+> the frontmatter was flipped `active` (found + corrected 2026-07-27 while using this doc as the format template for
+> `sports_satellite_ao_dispatch_batch7_2026_07_27.md`). Its companion,
+> `/plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26_finalize.md`, is machine-gated via
+> `depends_on`/`gate_on_depends: true` regardless of its own `status`.
 
 > **Why a batch6 exists one day after batch5.** `batch5_finalize` todo 2's own text names the destination: _"extract it
 > as a new tracked todo in a follow-up `batch6`"_. batch5 is `status: active`, mid-dispatch, and already at its
