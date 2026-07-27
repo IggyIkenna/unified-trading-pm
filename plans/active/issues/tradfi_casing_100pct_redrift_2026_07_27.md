@@ -31,6 +31,13 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+# 2026-07-27 (slot-12, main ruling on BLK-a27aa7e4/BLK-f3950c25): the 4
+# remaining open todos (UTL casing-canon seam -> mtds re-export+revert ->
+# IS/MDPS inherit-verify -> [OPERATOR] repair) are a REAL dependency chain
+# (each writes/depends on the prior step's shipped code), not independent
+# parallel work — sequential=true wires prereqs.completed_tasks in plan_order
+# so the backlog dispatcher cannot fan them out onto the unshipped UTL seam.
+sequential: true
 ---
 
 ## What I found
