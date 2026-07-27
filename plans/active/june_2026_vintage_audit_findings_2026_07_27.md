@@ -132,30 +132,41 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       "currently-running revision is built from that image" claim is NOT independently confirmed (no live
       `gcloud run     services describe` check run this session). Flipped Gap 1 only; left Gaps 2-4 open with corrected
       annotations. Doc stays open in `plans/active/issues/`. **Flagging per findings-triage HARD RULE.**
-- [ ] [PLAN] P2. `plans/active/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` — 4/5 [x] (2 dated
-      2026-07-27, build 2ea305e9 SUCCESS); 5th already done too — alerting-service@e111843 ancestor of main, live job
-      shows durable command (updated 2026-07-12), matches terraform. Flip last checkbox citing evidence, flip status
-      resolved, archive.
-- [ ] [PLAN] P2. `plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md` — pure tracker (0 own todos), all 9
-      linked mini-plans confirmed archived. Archive — no orphaned scope (do this AFTER §1's citation fix, since this doc
-      IS the source of that bug).
-- [ ] [PLAN] P2 (superseded). `plans/active/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` — both
-      architecture asks SHIPPED+PROVEN+QG-GREEN (mtds@0aa6163+deployment-service@b5246a6;
-      mtds@1e4dfb2+deployment-service@b04cfcc); "run launcher over full ranges" ask executed via archived
-      `mvp_backfill_cefi_tick_v10_2026_06_27.md` → `cefi_completion_program_2026_07_15.md`; ongoing work continues in
-      still-active `cefi_hl_aster_batch_data_gaps_2026_06_22.md`. Archive with a banner naming the absorption chain —
-      first quick-check `cefi_hl_aster_batch_data_gaps_2026_06_22.md` to confirm the noted "2-day live-health check in
-      progress" didn't fall through the cracks.
-- [ ] [PLAN] P2 (superseded). `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` — RESOLVED
-      2026-06-23 banner: 17/18 repos bumped (`workspace-constraints.toml` confirms aiohttp>=3.14.1). Sole remaining P2
-      fully owned by `issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md` (confirmed open,
-      operator-gated — see §5). Archive with a pointer to that doc as sole successor.
-- [ ] [PLAN] P3 (superseded, unclear-adjacent). `plans/active/issues/empty_reprobe_disagreement_2026_06_22.md` — single
-      dated snapshot (4 defi cells, ORACLE_EXPECTS_DATA), no recurring instance found; reprobe mechanism has since
-      industrialized into a scheduled auto-flip system, but that system never auto-flips ORACLE_EXPECTS_DATA verdicts —
-      so the 4 cells were never mechanically re-resolved. Default: archive as stale. If certainty wanted first: run one
-      fresh `reprobe_new_empty_confirmed.py` pass on the 4 named cells (ALCHEMY gas_fees, CHAINLINK oracle_prices, CURVE
-      dex_pool_state, PANCAKESWAP_V3 dex_pool_state) before archiving.
+- [x] ✅ [PLAN] P2. `plans/active/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` — ARCHIVED
+      2026-07-27 — unified-trading-pm@1cfe7ad15. 5th checkbox flipped citing verified evidence: build `2ea305e9` (full
+      id `2ea305e9-483c-4665-a78d-93d01ef8295d`) confirmed SUCCESS via `gcloud builds list`; alerting-service@e111843
+      confirmed ancestor of `origin/main`; live `uts-prod-alerting-paging` Cloud Run job (asia-northeast1) inspected
+      directly — runs the durable `python -m alerting_service.cli.main` command (not the `-c` bridge), label
+      `lastUpdatedTime=2026-07-12T22:00:00Z`, matches `deployment-service/terraform/gcp/audit03_cron_provisioning.tf`.
+      Now at `plans/archive/issues/`.
+- [x] ✅ [PLAN] P2. `plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md` — ARCHIVED 2026-07-27 —
+      unified-trading-pm@1cfe7ad15. All 9 mini-plans confirmed archived/complete by direct file lookup (the doc's own
+      "mini-plans" table was stale for 4 of 9 rows — corrected in the same pass); Plan 6's live follow-on issue
+      (`honest_coverage_smoke_harness_4ag_verify_2026_07_06.md`) confirmed actively tracked elsewhere, not orphaned. 0
+      orphaned scope. Now at `plans/archive/2026_07/`. Also corrected a stale `status: active` frontmatter field found
+      on already-archived Plan 9 (`execution_fidelity_tiers_uac_governed_2026_06_28.md`, content was 6/6 done).
+- [x] ✅ [PLAN] P2 (superseded). `plans/active/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` —
+      ARCHIVED 2026-07-27 — unified-trading-pm@1cfe7ad15. All 4 SHAs (mtds@0aa6163/1e4dfb2,
+      deployment-service@b5246a6/b04cfcc) confirmed present on both `origin/main` and `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor`. Absorption chain confirmed: both `mvp_backfill_cefi_tick_v10_2026_06_27.md` and
+      `cefi_completion_program_2026_07_15.md` are themselves archived/complete.
+      **`cefi_hl_aster_batch_data_gaps_2026_06_22.md` checked** (lives at `plans/active/issues/`, not `plans/active/`) —
+      the "2-day live-health check in progress" note is NOT tracked there (that doc is batch-backfill-gap scope, a
+      different surface) and no `mtds-live-*` VM is currently running (`gcloud compute instances list` — zero matches).
+      Treated as a stale, time-bound check from the original 2026-06-21/22 session (superseded by the later full
+      CEX-live-provenance fix in §6 of the same doc) — noted as a known, accepted gap in the archive banner, not
+      re-opened. Now at `plans/archive/issues/`.
+- [x] ✅ [PLAN] P2 (superseded). `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` — ARCHIVED
+      2026-07-27 — unified-trading-pm@1cfe7ad15. `workspace-constraints.toml` confirmed `aiohttp>=3.14.1,<4.0.0`. **Big
+      finding**: the successor `execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md` was NOT just
+      "unblocked" — it was ALREADY DONE by another session (execution-service@9ce159a7, 2026-07-27 20:40 UTC, ~1h before
+      this pass started) following the §5-RESOLVED #18/19 gate-lift. Archived BOTH docs together (the successor too —
+      its sole todo was fully complete, archiving it alone would have left a done-but-unarchived doc). Both now at
+      `plans/archive/issues/`.
+- [x] ✅ [PLAN] P3 (superseded, unclear-adjacent). `plans/active/issues/empty_reprobe_disagreement_2026_06_22.md` —
+      ARCHIVED 2026-07-27 — unified-trading-pm@1cfe7ad15. Archived as stale per the default disposition (did not re-run
+      `reprobe_new_empty_confirmed.py`); banner notes the 4 cells as a known, accepted gap rather than a false-positive.
+      Now at `plans/archive/issues/`.
 
 ---
 
