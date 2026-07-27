@@ -409,22 +409,38 @@ errors) per Update 4 and this session's own full-unscoped run.
       (no new call-site parameter), sports-shape split added, 4 regression tests. Verified inside the rebuilt production
       image before re-wiring. See Update 5.
 
-- [ ] [SCRIPT] P1. **Root-cause + fix MDPS's own candle-write batching mixing DIFFERENT sports markets into one
-      partition-scoped write** (surfaced immediately once the UTL todo above cleared — this is now the dominant
-      remaining sports failure, `2/3348 succeeded, 3346 errors`, unchanged count from before either of the two fixes
-      above, just a different `[partition_mismatch]` sub-reason: `instrument_type mismatch` instead of
-      `venue     mismatch`). Confirmed NOT a raw-file grouping bug (pulled a real `ticks.parquet` from GCS — its schema
-      has only `instrument_id`, no `symbol`/`instrument_key`, and `instrument_id` DOES correctly distinguish
-      `MATCH_ODDS` from `MATCH_ODDS_LAY`) — the mixing happens downstream of the per-instrument_id raw-file grouping,
-      most likely in how a sports candle adapter
-      (`odds_movement_adapter.py`/`odds_snapshot_adapter.py`/`bucket_assignment_adapter.py`/ `arbitrage_adapter.py`) or
-      `live_workers_streaming.py`/`live_workers_chain.py`'s per-slice write dispatch aggregates multiple
-      per-instrument_id `CandleOutput`s before a single `write()` call that declares one partition. NOT a bounded,
-      mechanically-obvious fix — needs real adapter-level tracing (a genuine investigation, not a registration gap or a
-      one-line validator fix like the two todos above) before touching code; guessing at the fix risks silently
-      cross-contaminating written candle data. Reproduce via:
-      `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS     --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
-      (repo: market-data-processing-service)
+- [x] [SCRIPT] P1. **Root-cause + fix MDPS's own candle-write batching mixing DIFFERENT sports markets into one
+      partition-scoped write**. **DONE** — `market-data-processing-service@1390312` (`live-defi-rollout`). Root cause:
+      `_streaming_write_per_tf` (`app/core/live_workers_streaming.py`) accumulated EVERY batch for a timeframe into one
+      list and derived the write partition's `instrument_type` from just the FIRST batch (`tf_candles[0]`), then
+      force-wrote every other batch under that same partition — for sports' legacy-sentinel `ticks.parquet` bundles (no
+      genuine `underlying=` chain root), one raw file legitimately holds rows for DIFFERENT markets (MATCH_ODDS vs
+      MATCH_ODDS_LAY), so this force-write is exactly what the pre-write `[partition_mismatch]` validator was correctly
+      rejecting. Traced further than Update 5 left off: the shared outer `instrument_id` for this code path gets
+      "recovered" from whichever slice is processed FIRST when both `instrument_id` and `input_underlying` start empty
+      (`_process_chain_bundle_streaming`'s sentinel-recovery block) — for a TRUE chain (options_chain/futures_chain/DeFi
+      reserves) `input_underlying` is always genuinely set from the path, so this recovery never fires and every batch
+      already shares one real instrument_type; for sports it fires and the recovered id is only ever representative of
+      ONE group, not every group written under it.
+
+      **Fix**: added `no_real_chain_root` (true only for the legacy-sentinel, no-underlying case) to
+          `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
+          (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
+          own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
+          original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
+          so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
+
+          **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
+          batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
+          id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
+          green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files). Not yet re-verified against a live
+          `t1-recon` execution (that would need the fixed image to reach `main`/be rebuilt first, then a scoped sports
+          re-run mirroring Update 4/5's methodology) — the fix is code-verified + unit-tested but the "reproduce via"
+          command below has not been re-run against it this session.
+
+          Repro command for the next verification pass:
+          `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
+          (repo: market-data-processing-service)
 
 - [ ] [SCRIPT] P2. **Scope MDPS's per-asset-group candle timeframe iteration** — `config.py`'s `default_timeframes`
       (`["15s","1m","5m","15m","1h","4h","24h"]`) is applied uniformly to every asset_group; sports only has
