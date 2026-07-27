@@ -25,7 +25,7 @@ summary: >
   unnecessarily.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [deployment-api, deployment-service]
 scope: [engineer, admin]

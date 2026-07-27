@@ -10,7 +10,7 @@ summary: >
   than leave the claim theoretical.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]

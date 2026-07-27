@@ -6,7 +6,7 @@ summary:
   orchestrator, providing a single-pane view of repo pipeline state and slot health.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]

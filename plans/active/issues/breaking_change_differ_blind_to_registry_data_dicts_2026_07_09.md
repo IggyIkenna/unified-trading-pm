@@ -16,7 +16,7 @@ summary: |
   and was caught only by a human running local `quality-gates.sh` on IS.
 status: open
 nature: notes
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, system-integration-tests, unified-api-contracts, instruments-service]
 scope: [engineer, admin]

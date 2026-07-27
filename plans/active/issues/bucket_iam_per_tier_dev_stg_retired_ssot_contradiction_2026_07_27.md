@@ -22,7 +22,7 @@ summary: >-
   stale design.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]

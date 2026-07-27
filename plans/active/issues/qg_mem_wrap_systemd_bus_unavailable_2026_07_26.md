@@ -26,7 +26,7 @@ summary: >-
   connect to bus: No medium found` failure with zero basedpyright output.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
