@@ -134,30 +134,30 @@ drift_direction: advance-code
       `_finalize_session_grid` routing:
 
       | Adapter | Verdict |
-                                                                                                                                      | --- | --- |
-                                                                                                                                      | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
-                                                                                                                                      | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
-                                                                                                                                      | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
-                                                                                                                                      | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
-                                                                                                                                      | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
-                                                                                                                                      | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
+                                                                                                                                          | --- | --- |
+                                                                                                                                          | `trades_adapter.py` | routes through `_finalize_session_grid` ✓ |
+                                                                                                                                          | `book_snapshot_adapter.py` | routes through `_finalize_session_grid(state_col="mid_price")` ✓ |
+                                                                                                                                          | `futures_chain_adapter.py` | routes through `_finalize_session_grid(state_col="close")` ✓ |
+                                                                                                                                          | `options_chain_adapter.py` | routes through `_finalize_session_grid(state_col="mark_price")` ✓ |
+                                                                                                                                          | `derivative_adapter.py` | does **NOT** route — but this is a SECOND intentional exception, not a bug |
+                                                                                                                                          | `liquidations_adapter.py` | no-grid event-count design — the ORIGINAL named exception, confirmed |
 
-                                                                                                                                      **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
-                                                                                                                                      intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
-                                                                                                                                      **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
-                                                                                                                                      (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
-                                                                                                                                      `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
-                                                                                                                                      snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
-                                                                                                                                      absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
-                                                                                                                                      `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
-                                                                                                                                      non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
-                                                                                                                                      documented the OLD (reversed) behavior, contradicting the shipped code —
-                                                                                                                                      `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
-                                                                                                                                      `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
-                                                                                                                                      a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
-                                                                                                                                      provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
-                                                                                                                                      unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
-                                                                                                                                      (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
+                                                                                                                                          **`derivative_adapter.py` finding**: the task's premise ("liquidations_adapter.py's no-grid design is the SOLE
+                                                                                                                                          intentional exception") is now factually outdated. The adapter's own module docstring documents an explicit
+                                                                                                                                          **2026-07-20 operator ruling** that REVERSED the 2026-06-01/06-09 Option-A decision
+                                                                                                                                          (`issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, which HAD routed derivative_adapter through
+                                                                                                                                          `_finalize_session_grid(state_col="mark_price")`) specifically for `derivative_ticker`: carrying the last
+                                                                                                                                          snapshot forward into an empty window was judged to conflate "window had nothing to aggregate" (honest per-bin
+                                                                                                                                          absence) with "not yet fetched" — so it now deliberately stays NaN (`supports_prior_day_seed=False`, no
+                                                                                                                                          `state_col`). This is a well-reasoned, explicitly-dated, non-buggy design decision — NOT a "non-routing,
+                                                                                                                                          non-exempt adapter" requiring a follow-up fix. **Found + fixed the real residual**: two codex docs still
+                                                                                                                                          documented the OLD (reversed) behavior, contradicting the shipped code —
+                                                                                                                                          `/codex/02-data/honest-absence-downstream-handling.md`'s carry-forward table (`derivative_ticker` row) and
+                                                                                                                                          `/codex/06-coding-standards/adapter-finalization-contract.md`'s per-adapter table (both corrected in place with
+                                                                                                                                          a dated banner, not silently rewritten — the historical Option-A row is struck through and kept for
+                                                                                                                                          provenance). No code change needed; the audit's actual deliverable was closing this codex/code drift.
+                                                                                                                                          unified-trading-pm@f332e179c. Repo: market-data-processing-service (read-only audit) + unified-trading-pm
+                                                                                                                                          (codex fix). Source: `data_completion_cefi_2026_07_15.md`.
 
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — FAIL verdict, follow-up filed.** Verified MDPS cefi
       candle-manifest faithfulness for 2026-05-03 (and the whole corpus, to be sure). **Manifest side**: querying the
@@ -426,7 +426,7 @@ drift_direction: advance-code
       `test_cme_options_chain_bundle_finalize.py` tests' key-unpacking (3-tuple → variadic). All 6978 unit tests green,
       full `quality-gates.sh` green (sentinel-verified against HEAD). Repo: market-tick-data-service. Source:
       `issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`.
-- [ ] [DATA] P1. **Corpus-wide scan for the missing-candle-SchemaContract failure class.** Enumerate every CEFI (and,
+- [x] ✅ [DATA] P1. **Corpus-wide scan for the missing-candle-SchemaContract failure class.** Enumerate every CEFI (and,
       per the doc's own scope, the DeFi/Prediction equivalent) venue x instrument_type combination that emits a
       non-chain-bundled `instrument_type=future` (or structurally-equivalent standalone dated-instrument) raw tick and
       hits "No SchemaContract registered" on an MDPS candle write. Read
@@ -436,7 +436,13 @@ drift_direction: advance-code
       Repos: unified-api-contracts, market-data-processing-service. **Done when**: a written list of every affected
       (asset_group, venue, instrument_type) combination beyond DERIBIT that hits this gap is produced (or an explicit
       confirmed-empty finding), giving the pending human policy decision the systemic-vs-DERIBIT-specific fact it needs.
-      Source: `issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`.
+      — ✅ DONE 2026-07-27 (slot-11): written findings in
+      `issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` todo 2 (real GCS sampling, 4 days).
+      CEFI: NOT DERIBIT-specific (OKX-FUTURES also emits standalone `future`), but todo 1's venue-agnostic fix already
+      covers it — no further CEFI action needed. DeFi: 2 unregistered types found (`spot_asset`, `lending`) but MDPS
+      source never references either — a different, lower-priority pipeline-coverage gap, not this failure class.
+      Prediction: not fully verified (no dedicated bucket found). No code shipped (pure research/audit todo). Source:
+      `issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`.
 - [ ] [DATA] P1. **Trace the fresh 2026-07-21 DERIBIT/COINBASE-FUTURES/BITFINEX-FUTURES/OKX-FUTURES `expiry_date`
       recurrence to specific symbols.** Pull the real run.log for the 2026-07-21 book_snapshot_5/trades writes (the
       ~4,655-row recurrence hitting `market_interface/adapters/cefi/tardis_shared.py`'s expiry-parsing fallback at lines
