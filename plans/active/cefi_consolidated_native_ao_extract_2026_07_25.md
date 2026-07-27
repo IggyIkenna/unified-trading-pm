@@ -105,7 +105,7 @@ items explicitly "FENCED" to another named agent/live process).
       rationale as the `-is` baseline above — a real dated run distinct from any prior skill-upgrade-only todo). Repo:
       market-tick-data-service (skill run, no code change). **Done when**: the skill's report path + run date is cited
       in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 2 checkpoint cadence).
-- [ ] [BACKEND] P1. **Land the already-shipped deployment-api "data status" axis-value-census restoration via
+- [x] ✅ [BACKEND] P1. **Land the already-shipped deployment-api "data status" axis-value-census restoration via
       quickmerge, once its blocking dirty deps are actually clear.** Code is COMPLETE and `quality-gates.sh`-green
       already (`.qg_last_passed_sha` written at a specific HEAD — re-verify the sentinel still matches current HEAD
       before running anything, since the working tree may have moved since the parent doc's note was written). First:
@@ -117,7 +117,18 @@ items explicitly "FENCED" to another named agent/live process).
       record the still-blocked status instead and leave the parent todo open. Repo: deployment-api. **Done when**:
       either the quickmerge lands (cite the resulting commit + a green CI run per `gh run list`), or a recorded
       confirmation that the dep is still genuinely live (with evidence) and the todo remains blocked. Source:
-      `cefi_consolidated_closeout_2026_07_18.md` (Track 8, POST-CUTOVER "data status" enumeration item).
+      `cefi_consolidated_closeout_2026_07_18.md` (Track 8, POST-CUTOVER "data status" enumeration item). ✅ — found
+      ALREADY LANDED, not newly shippable, 2026-07-27: `deployment-api@09656f42` ("feat(data-status): add
+      axis-value-census backend endpoint — non-canonical-naming/duplication detector (Track-6 backend)") touches exactly
+      the 4 cited files, carries the `Quickmerge: agent` trailer, and shipped 2026-07-18 — well before this triage plan
+      (2026-07-25) was even written. Verified: (1) `git merge-base --is-ancestor 09656f42 …` confirms it's already on
+      current `live-defi-rollout`; (2) its commit status shows green `sit-gate/fleet-green` + `semver-agent/label-check`
+      from 2026-07-18, and `gh run list --repo IggyIkenna/deployment-api --branch     live-defi-rollout` shows repeated
+      green `quality-gates-v2` runs since, latest 2026-07-27T11:04:48Z (run 30260538467); (3) the `.qg_last_passed_sha`
+      sentinel (`b1028e6`) is stale/behind current HEAD (`d143a44`, an unrelated later cloudbuild commit) but
+      `git diff b1028e6 HEAD -- <4 files>` is empty, proving nothing was left uncommitted; (4) all 3 previously-cited
+      dirty deps (unified-trading-library, unified-api-contracts, deployment-service) are clean on fresh-pull. No new
+      commit was possible or needed — the "land via quickmerge" step had already happened.
 - [ ] [DATA] P2. **Confirm UPBIT's live-wiring status in the cefi manifest.** UPBIT is codex-MVP
       (`/codex/02-data/mvp-scope-canonical.md`) but has zero mentions anywhere in the parent plan's audit trail. Query
       the live cefi manifest for `venue=UPBIT` captured-row counts and check for any open backfill/issue doc. Repo:

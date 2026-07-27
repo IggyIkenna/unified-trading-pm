@@ -80,12 +80,19 @@ dropped/flagged as a single bad-row anomaly.
 
 ## Recommended decision
 
-- [ ] [DATA] P1. **market-data-processing-service** — locate the candle aggregator's timestamp construction path for
+- [x] ✅ [DATA] P1. **market-data-processing-service** — locate the candle aggregator's timestamp construction path for
       TRADFI trades and add a bounds-check (or a coercion using `errors="coerce"`+drop) before the
       `pd.Timestamp`/`datetime64[ns]` conversion, so ONE corrupted tick is dropped/flagged as a per-row anomaly
       (increment a `dropped_out_of_bounds_timestamp` counter, emit a WARNING) rather than crashing the whole
       instrument's derivation. Add a regression test with a synthetic corrupted-timestamp row proving the crash no
-      longer propagates.
+      longer propagates. — market-data-processing-service@c10425d. Root-cause fix in the shared
+      `BaseCandleAdapter._convert_to_processing_dt`/`_series_to_datetime` (`errors="coerce"` alone is insufficient — a
+      float64 column carrying one absurd magnitude raises a raw `OverflowError` before pandas' own coerce logic runs, so
+      the raw numeric column is bounds-pre-filtered to NaN before `pd.to_datetime`); `TradfiTradesAdapter` drops rows
+      whose `processing_dt` coerced to NaT, logging `dropped_out_of_bounds_timestamp` with the instrument_id, before
+      deriving `main_date`/`interval_idx`. Regression test `test_corrupted_out_of_bounds_timestamp_dropped_not_crashed`
+      added (verified it reproduces the exact `OverflowError` crash pre-fix, passes post-fix). Full `quality-gates.sh`
+      green (sentinel=c10425d716e5... — full SHA `c10425d3aaaebc11ce912d77075b677b78971ea0`).
 - [ ] [DATA] P2. **market-tick-data-service** — trace the corrupted `58317-01-15` timestamp back to its raw source
       object (`NASDAQ:EQUITY:IBIT`/`ETHA`, day=2026-05-07) to determine if this is a one-off vendor glitch or a systemic
       unit/encoding bug (e.g. an epoch-microseconds value misread as epoch-nanoseconds, or a sentinel/NULL value not

@@ -230,6 +230,21 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` new todo. 9b's own full-matrix
       completion remains genuinely open per the disposition below — this checkbox covers only the
       coordination/no-duplicate-launch slice.
+- [x] 9b-duplicate-vm-guard. ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-6)** — `features-service@6981b2b8`. Re-checked live
+      fleet state on pickup of 9b: **7** `features-e2e-cefi-*` VMs RUNNING (up from the 5 slot-10 found) + 2
+      `features-e2e-tradfi-*`, all confirmed live-advancing. Found slot-7 already ~35min into the exact 9b full-matrix
+      driver (`pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day`, no
+      `--family`/`--asset-group`), shard 1/16 — stood down rather than launch a competing run (same double-dispatch
+      pattern main already ruled on once this session for a different task). Root-caused that slot-7's own launch
+      (`-112159`, window 2026-06-28..2026-06-29) was itself a NEW 3rd duplicate of a window `-101851`/`-102228` were
+      already computing — live proof the
+      `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` P1 duplicate-VM-launch bug was
+      still unfixed and costing money on the very run meant to close 9b. Shipped the fix: `_find_inflight_duplicate_vm`
+      (labels-based `aggregated_list_instances` check, no raw gcloud/subprocess) on both the force and skip leg
+      VM-launch paths in `features-service/scripts/pipeline_e2e_check.py` — a hit skips the launch instead of creating
+      another billable VM. QG green, quickmerge shipped. Launched zero new VMs this session; did not touch slot-7's (or
+      any other slot's) in-flight VMs. 9b's own full-matrix completion remains genuinely open, now owned by slot-7's
+      in-flight run — see the disposition note below.
 - [ ] 10. [DATA] P1. Steady-state benchmark VMs (250GB disk) per representative shard-type; measure amortized per-shard-
       day throughput (RX + rows/s + wall-clock); project full-history time (honest floor + flat 2019) + SPOT cost +
       parallelization/optimization headroom.
@@ -418,6 +433,38 @@ any) reached a real completion (non-empty `by_date/day=<window-end>/` output in 
 `multi_timeframe`/`cross_instrument` for CEFI (they need `delta_one`'s test output as `--source-bucket`); do NOT launch
 a 6th `delta_one` VM. If `volatility` has a written report from slot-3 by then, fold it into the combined
 `data_pipeline_e2e_check_features_2026_07_05` report via `merge_pipeline_e2e_report.py`.
+
+### 2026-07-27 (slot-6) — todo 9b: found slot-7 ALREADY driving the full matrix; shipped the duplicate-VM billing-waste fix instead of launching
+
+Dispatched to todo 9b. Per the disposition above, checked live fleet state FIRST:
+`gcloud compute instances list --filter="name~'features-e2e'"` showed **7** `features-e2e-cefi-*` VMs RUNNING (up from
+the 5 slot-10 found) + 2 `features-e2e-tradfi-*`, all confirmed live-advancing via fresh `run.log` tails (none stalled).
+`ps aux` found slot-7 actively running
+`.venv/bin/python scripts/pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day` (no
+`--family`/`--asset-group` — the genuine unrestricted full-matrix driver todo 9b calls for) since 11:21 UTC, whose own
+`run.log` showed it had just launched one of the 7 CEFI VMs (`-112159`, shard 1/16 = `CEFI:delta_one`) — i.e. **slot-7
+is already doing exactly this todo**, ~35 min in, correctly progressing. This is the same slot-6/slot-7 double-dispatch
+pattern main already ruled on once this session for a different task (`sports_satellite_ao_dispatch_batch5-026` — "stand
+down, the other slot already implemented it"); applying the same resolution here: did NOT start a competing full-matrix
+run (would duplicate VM spend on top of an already-running one) and did NOT touch slot-7's VMs (all genuinely
+progressing, none eligible for the delete guardrail).
+
+Instead used the dispatch productively: slot-7's own `-112159` launch was itself a NEW duplicate of the
+2026-06-28..2026-06-29 window `-101851`/`-102228` were already computing — live proof that the P1 duplicate-VM-launch
+bug filed in `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` was still unfixed and
+actively costing money on the very run meant to close todo 9b. Shipped the fix: `features-service@6981b2b8` adds
+`_find_inflight_duplicate_vm` (labels-based `aggregated_list_instances` check, no raw gcloud/subprocess) to both the
+force and skip leg launch paths — a hit skips the launch with `status=skipped, reason=duplicate_in_flight: ...` instead
+of creating another billable VM. QG green, quickmerge shipped. Full detail + a follow-up MDPS-parity todo (not yet
+confirmed vulnerable, not yet fixed) in the same issue doc.
+
+**Disposition:** todo 9b remains OPEN, now owned by slot-7's in-flight run (started 11:21 UTC, shard 1/16 of 16, window
+`--day 2026-07-05 --auto-day`). **Next session**: check `ps aux | grep pipeline_e2e_check` for slot-7's process FIRST —
+if it completed, read its written report (`data_pipeline_e2e_check_features_2026_07_05*`) and fold in any still-separate
+`volatility` report from slot-3 via `merge_pipeline_e2e_report.py`; if it died mid-matrix (no `--resume` support yet —
+see the other open todo in the same issue doc), resume from whichever shard it reached (check `run.log`'s last
+`Starting compute:` line) rather than restarting all 16 from shard 1 — the new duplicate-guard fix will now correctly
+skip any of the 7 already-running CEFI VMs / 2 TRADFI VMs it encounters again instead of adding an 8th/9th/10th.
 
 ## Deferred work after 2026-07-27
 
