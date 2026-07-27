@@ -39,7 +39,7 @@ for f in "$PM_DIR/plans/active"/*.md; do
   [[ "$name" == _* ]] && continue
   [[ "$name" == *.HANDOVER.md ]] && continue
 
-  fm_file=$(mktemp /tmp/sup_check_XXXXXX)
+  fm_file=$(mktemp "${TMPDIR:-/tmp}/sup_check_XXXXXX")
   awk 'NR==1{next} /^---$/{exit} {print}' "$f" > "$fm_file"
   parent=$(grep "^parent_epic:" "$fm_file" 2>/dev/null | sed 's/parent_epic: *//' | tr -d '"' || true)
   rm -f "$fm_file"
