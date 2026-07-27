@@ -222,6 +222,14 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       ~29-cell `(family × asset_group)` matrix now that 9a's fix is shipped (the CEFI:delta_one force-leg begun
       2026-07-27/slot-3 was still completing the full 18-feature-group compute at session handoff — a separate slot/
       session should let it finish or re-run and write the combined report). Report written per family/AG cell.
+- [x] 9b-coordination-check. ✅ [DATA] P2. **DONE 2026-07-27 (slot-10)** — before launching any CEFI cell, verified live
+      fleet state first: 5 delta_one:CEFI VMs already in-flight (2 exact-duplicate pairs) + slot-3 already running
+      `volatility` (all-AG, covers CEFI) — made **zero new VM launches** this session, catching and killing my own
+      5-second-old accidental duplicate `volatility:CEFI` launch before it reached VM-launch. Filed the concrete
+      duplicate-VM billing-waste finding + fix recommendation:
+      `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` new todo. 9b's own full-matrix
+      completion remains genuinely open per the disposition below — this checkbox covers only the
+      coordination/no-duplicate-launch slice.
 - [ ] 10. [DATA] P1. Steady-state benchmark VMs (250GB disk) per representative shard-type; measure amortized per-shard-
       day throughput (RX + rows/s + wall-clock); project full-history time (honest floor + flat 2019) + SPOT cost +
       parallelization/optimization headroom.
