@@ -151,3 +151,48 @@ rather than asserting this as confirmed root cause.
       every `main` merge (should be, per the standard CI/CD flow) or has its own gap — if the latter, this is a second,
       independent deployment-staleness class distinct from the VM-tarball one already documented, and needs its own
       codex note. (repo: market-tick-data-service or deployment-service, whichever owns the Cloud Run deploy trigger)
+
+## Additive root-cause + operator ruling (2026-07-27, slot-10)
+
+Slot-13's diagnosis (above) root-caused two mtds bypasses (the `migrate_cme_monolith_trades` script → 23,428 combo rows;
+`rebuild_tradfi_manifest` latent) and shipped mtds@a1729bb4, but explicitly flagged the **dominant ~39.7K
+equity/etf/future/index/spot_pair population as NOT fully root-caused**, suspecting the mtds Cloud Run recon job's
+`:latest` image staleness. A per-`service_name`/`enumerator_run_id` provenance read (same single index object,
+gen 1785182686866562) identifies the actual writers — it is **NOT (only) the mtds Cloud Run job**:
+
+|  rows | `service_name`                 | writer path                                                                                  |
+| ----: | ------------------------------ | -------------------------------------------------------------------------------------------- |
+| 39500 | instruments-service            | universe enumerator `engine/orchestrator/writers.py:381-390` (raw `_itype`)                  |
+| 19184 | market-data-processing-service | `engine/build_continuous_engine.py` stamps `"continuous_future"` (lines 336/374/397/460/496) |
+| 23627 | market-tick-data-service       | the `migrate_cme_monolith_trades` script bypass slot-13 already fixed                        |
+
+`instruments-service/engine/orchestrator/writers.py:381-390` stamps `instrument_type=_itype` where `_itype` is the raw
+adapter-df token from `_split_by_instrument_type` (line 151-153) — for tradfi the databento adapter carries lowercase
+hive tokens, and there is NO tradfi UPPERCASE canonicalization on the IS side. These are the `enum-universe-tradfi-*`
+runs. This is the ~39.7K slot-13 could not explain. The mtds Cloud Run recon job is at most a minor contributor.
+
+**Operator ruling (BLK-f3950c25, main, 2026-07-27) — Option A: centralize at the UTL seam.** Add the tradfi/cefi
+`instrument_type` UPPERCASE casing canon to UTL, co-located with UTL's existing canonical derivation
+(`canonical/_derive_instrument_id.py`) and applied ADDITIVELY at the shared `ManifestWriter` write seam every service
+depends on (mtds/IS/MDPS inherit it for free), kept SEPARATE from the path-validation wrapper. **`continuous_future`
+maps to catalogue type `FUTURE`** (databento classifier + build-continuous engine both settle this) — this SUPERSEDES
+slot-13's shipped `_BUNDLE_GRAIN_EXCLUDED` addition (which keeps it lowercase); that add must be reverted in favour of
+the FUTURE mapping. The 82,311 already-written rows are a SEPARATE repair follow-up (seam fix stops NEW drift only);
+compare case-insensitively in the interim (`migration_pending`).
+
+- [ ] [DATA] P1. UTL: add tradfi/cefi `instrument_type` UPPERCASE casing canon co-located with
+      `canonical/_derive_instrument_id.py`, applied additively at the `ManifestWriter` record\_\* write seam (separate
+      from `manifest_writer_normalising.py`); include `continuous_future → InstrumentType.FUTURE`. All-AG blast radius →
+      QG green + SIT/fleet-green before ship; quickmerge UTL FIRST. (repo: unified-trading-library)
+- [ ] [DATA] P1. mtds: RE-EXPORT the shared UTL canon and DELETE the local `_tradfi_manifest_canon.py` (no shim); update
+      `venue_fetch.py`/`sentinels.py` imports. REVERT slot-13's `continuous_future` addition to `_BUNDLE_GRAIN_EXCLUDED`
+      (operator ruled FUTURE, not excluded). (repo: market-tick-data-service)
+- [ ] [DATA] P1. Verify instruments-service (`engine/orchestrator/writers.py`) + market-data-processing-service
+      (`engine/build_continuous_engine.py`) manifest writes inherit the shared UTL casing canon at the record\_\* seam
+      (add a live re-read assertion: 0 lowercase tradfi rows written after the seam ships). (repos: instruments-service,
+      market-data-processing-service)
+- [ ] [OPERATOR] P2. AFTER the UTL seam ships AND all writer fleets redeploy, re-run
+      `migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py --apply` to repair the 82,311 pre-fix lowercase rows
+      (heavy-I/O → VM/in-region; prod-manifest CAS mutation = delete-safety-adjacent, snapshot-first; human-only). Add
+      `continuous_future → FUTURE` to the restamp's canonical map first so its self-verify does not refuse. (repo:
+      market-tick-data-service)
