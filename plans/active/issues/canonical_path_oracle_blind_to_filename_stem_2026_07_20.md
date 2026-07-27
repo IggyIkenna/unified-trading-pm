@@ -46,12 +46,12 @@ parent_epic: infrastructure_master
 source:
   "Operator-ratified finding 2026-07-20: the wire-named-file defect caught by eye would be reported FALSE-CLEAN by the
   official reconciliation procedure. Reproduced independently against the installed UAC before any change."
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-docs
 depends_on: []
 locked_by:
 locked_since:
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
   "uac@d40c5d7d (default-on stem check) + mtds@953679de (sanitize_file_stem writers + reader fallback) + uac@502ef57e
   (colon-guard fail-loud on build_instrument_id + defi ID_FORM widening, § 7 items 2+4); residual followups tracked in §

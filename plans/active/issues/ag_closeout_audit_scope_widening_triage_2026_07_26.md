@@ -28,7 +28,7 @@ related:
 created: "2026-07-26"
 last_updated: "2026-07-26"
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
+assigned_vm: planning
 priority: P2
 locked_by:
 resolved_by:
@@ -36,7 +36,7 @@ source: >-
   ci tranche audit (2026-07-26), Phase-3 conflict-check — "four tranche members listed in NO consolidated closeout at
   all, found by sweeping beyond asset_group: cross-cutting." Generalized to all 9 tranches, resolved as
   autonomous_session_operator_decisions_2026_07_25.md entry #32.
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---

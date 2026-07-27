@@ -35,10 +35,10 @@ source:
   require re-running dependent T1 sources?"
 locked_by:
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 drift_direction: advance-code
-assigned_vm: NA
+assigned_vm: planning
 depends_on: []
 ---
 

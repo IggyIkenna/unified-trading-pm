@@ -14,7 +14,7 @@ created: 2026-06-28
 parent_epic: observability_master
 priority: P2
 source: [reconcile_phantom_manifest_rows_all.py, mvp_catalogue_finalization_v10_2026_06_27.md (G3 phantom audit task)]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

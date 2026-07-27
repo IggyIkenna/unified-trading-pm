@@ -22,7 +22,7 @@ source:
     unified-trading-pm quality-gates-v2 main run 27355114310 (typecheck slice FAILED),
     "unified-trading-pm/scripts/openapi/{_capability_extract,_capability_gaps,_capability_orphan,generate_capability_manifest}.py",
   ]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

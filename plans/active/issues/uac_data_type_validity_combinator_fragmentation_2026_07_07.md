@@ -32,10 +32,10 @@ priority: P1
 source:
   "ASTER/CEFI instrument-service audit follow-up, 2026-07-07 -- 5-way parallel audit (one per asset group + a cross-repo
   writer-duplication scan), operator-scoped to exclude Sports/Prediction from the combinator redesign"
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 model_tier: opus-required
 thinking_tier: high
 estimate_class: design

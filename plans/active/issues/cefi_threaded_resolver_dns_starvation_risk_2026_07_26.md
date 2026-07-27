@@ -29,7 +29,7 @@ source:
   - Flagged as a same-pattern follow-up in `databento_default_executor_dns_starvation_risk_2026_07_17.md`'s todo 3
     (slot-12, 2026-07-26) while fixing the shared Tardis clients for tradfi; extracted here per findings-closure rule so
     it doesn't stay a dangling prose note in a tradfi-scoped doc that's otherwise fully closed.
-assigned_vm: NA
+assigned_vm: planning
 assigned_role: data_engineering
 priority: P3
 estimate_class: refactor
@@ -37,7 +37,7 @@ estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.1
 drift_direction: advance-code
 parent_epic: infrastructure_master
-execution_scope: local-only
+execution_scope: orchestrator-agent
 depends_on: []
 last_updated: 2026-07-26
 locked_by:

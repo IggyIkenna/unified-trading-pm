@@ -27,8 +27,8 @@ source:
   single-venue-fetch convenience function and wanting to confirm --venues was a safe real replacement (confirmed it is).
   The audit's other finding, --trigger, is self-documented in the code as pending Phase B.1+ work — not a regression.
   --run-tag is a real, undocumented gap."
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 thinking_tier: medium
 estimate_class: refactor

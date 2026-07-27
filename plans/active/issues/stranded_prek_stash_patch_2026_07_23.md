@@ -23,8 +23,8 @@ estimate_baseline_ai_days: 0.1
 estimate_calibrated_ai_days: 0.1
 assigned_role: data_engineering
 drift_direction: none
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 locked_by:
 locked_since:
 supersedes:

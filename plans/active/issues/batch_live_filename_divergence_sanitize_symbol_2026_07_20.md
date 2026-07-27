@@ -41,12 +41,12 @@ parent_epic: infrastructure_master
 source:
   "Surfaced while fixing the canonical-path-oracle blindness (measured the live write path by execution); corroborated
   by an independent write-path audit (KRAKEN-SPOT ADA/USD.parquet structural corruption)."
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-docs
 depends_on: []
 locked_by:
 locked_since:
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 ---
 

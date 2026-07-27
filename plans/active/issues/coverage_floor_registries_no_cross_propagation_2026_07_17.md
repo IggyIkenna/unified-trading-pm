@@ -54,10 +54,10 @@ source:
   cross-verified via an independent Explore sub-agent covering the same three files + git history."
 locked_by:
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 drift_direction: advance-code
-assigned_vm: NA
+assigned_vm: planning
 depends_on: []
 ---
 

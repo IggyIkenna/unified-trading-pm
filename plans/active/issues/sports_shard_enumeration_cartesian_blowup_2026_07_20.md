@@ -37,8 +37,8 @@ tags: [sports, shard-enumeration, expected-universe, honest-coverage, data-compl
 related: [/plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md]
 created: 2026-07-20
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 1.5

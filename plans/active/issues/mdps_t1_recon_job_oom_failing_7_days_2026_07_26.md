@@ -17,8 +17,8 @@ related: [/plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md]
 created: 2026-07-26
 last_updated: 2026-07-27
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.3

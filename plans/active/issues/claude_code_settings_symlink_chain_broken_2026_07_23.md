@@ -38,10 +38,10 @@ source:
     unified-trading-pm/.gitignore lines ~206-212 (untrack rationale comment),
     git log cursor-configs/settings.json (commits 692fcf969..007fd72ea9),
   ]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-23

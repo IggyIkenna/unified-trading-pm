@@ -33,10 +33,10 @@ source:
   over ADC; repro scripts scratchpad/apifootball_reverify.py + apifootball_findings_char.py."
 locked_by:
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 drift_direction: advance-code
-assigned_vm: NA
+assigned_vm: planning
 depends_on: []
 ---
 

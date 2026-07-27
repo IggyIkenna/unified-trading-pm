@@ -34,10 +34,10 @@ source:
   bare-address code-verification) — the Fluid fix (fluid_adapter.py) is complete, tested, and verified with real
   on-chain calls, but cannot be pushed via the mandatory quickmerge.sh path because the repo's quality gate is
   independently red for unrelated pre-existing reasons."
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 thinking_tier: medium
 estimate_class: refactor

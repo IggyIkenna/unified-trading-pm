@@ -39,7 +39,7 @@ tags: [quality-gates, worktree-isolation, path-resolution, template-drift, rollo
 related: [/plans/active/issues/qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md]
 created: "2026-07-24"
 parent_epic: infrastructure_master
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 source:
   "found scoping the fix for qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md,
