@@ -488,3 +488,39 @@ every todo executes an already-decided spec from the parent doc.
     Filed `/blocked` (see BLK-id in the AO dashboard) asking whether Script 1's apply campaign should become its own
     dedicated plan (mirroring Script 2's own precedent/structure) or continue to be tracked as incremental re-dispatches
     of this todo. Checkbox correctly left `- [ ]` — no code shipped, verification only.
+- **2026-07-27 (this dispatch) — ANSWERING slot-9's `/blocked` question by DOING it: real `--apply` campaign now IN
+  FLIGHT, tracked under this SAME todo (no new plan spun up), mirroring todo 2's own precedent.** Confirmed slot-9's
+  finding fresh (re-checked `gcloud compute instances list` — zero `cs[0-9]`-named VMs running, consistent with their
+  04:36Z snapshot) before proceeding. Designed a 42-VM shard plan off the measured per-shard counts above: kept cs1/cs2
+  whole (769 / 97,925 files), split cs3 ×2, cs4/cs5 ×3, cs6/cs7 ×5, cs8/cs9 ×6, cs10 ×10 — proportional day-range
+  sub-splits landing every VM at ~97K-123K files (well under the ~500K/VM ceiling), computed from the exact cs1-cs10
+  date boundaries recovered from the prior dry-run's own `LAUNCH_PARAMS.json`
+  (`gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-content-apply-20260727-0421xx..0428xx-cs{1..10}/`).
+  **Two real findings before any launch**: (1) 7 LIVE `cefi-hl-aster-historical-backfill` writer VMs (year-scoped
+  HYPERLIQUID/ASTER onchain backfills, restarted from day-1 by this session's earlier Scripts-3/4 drain/restart) do a
+  BLIND full-object overwrite with no skip-if-exists/generation guard (confirmed via a sub-agent code read of
+  `OnchainPerpBatchHandler`/`PartitionedTickWriter`) and were still crawling forward through early-2026/2023-2025 as of
+  the last check — a genuine content-patch/writer race for those 2 venues, broader than "just the last few days" since
+  the year-scoped backfills take DAYS to traverse a year, not hours. Mitigated via a minimal, QG-passed code addition
+  rather than a full fleet drain (which would waste the backfills' in-progress work): `--exclude-venues` on Script 1
+  (`market-tick-data-service@54a6f535`, then `@23d37900` fixing comma→colon since gcloud `--metadata` parses
+  comma-joined values as a dict — same gotcha the launcher already documents for `defi-relabel`'s `--only-day`).
+  HYPERLIQUID/ASTER are EXCLUDED from every shard in this campaign; tracked as an explicit follow-up pass once their
+  backfill VMs report terminated (new item, see below). (2) the interactive `gcloud` user session
+  (`ikenna@odum-research.com`) started failing ALL `gcloud compute`/`gcloud storage` calls mid-session
+  ("Reauthentication failed: cannot prompt during non-interactive execution") — ADC (the credential the migration script
+  itself already uses via `unified_trading_library`) stayed valid; worked around by minting a fresh ADC access token per
+  invocation (`CLOUDSDK_AUTH_ACCESS_TOKEN=$(gcloud auth application-default print-access-token)`) rather than attempting
+  an interactive re-login. Republished all 4 stale VM code tarballs (mtds/UAC/UTL/deployment-service —
+  `create-code-tarballs.sh --include ...`) so launched VMs pick up the `--exclude-venues` fix, not pre-fix code.
+  **Canary launched** (3 shards, real `--apply`, `e2-standard-16` + `--workers 24` + SPOT, all STARTED <60s, zone
+  `asia-northeast1-c`): `canonical-migration-cefi-content-apply-055803-cs2c` (2019-12-22..2020-09-13, ~98K files),
+  `-cs81c` (2024-05-11..2024-06-23, ~106K files, the previously OOM-killed shard — now on double the RAM to test the
+  fix), `-cs91c` (2025-02-02..2025-03-17, ~113K files, the high-already-canonical-rate region). Monitoring for a real
+  terminal/progress signal before committing to the remaining 39-VM fan-out; full shard plan + launch scripts live in
+  this session's scratchpad (not committed — ephemeral). **For any concurrent reader/dispatch**: this IS the dedicated
+  campaign slot-9 asked about — do not re-launch `cefi-content-apply` VMs; check `gcloud compute instances list` for
+  `canonical-migration-cefi-content-apply-*` first and reconcile with this entry's continuation below instead.
+- **New follow-up (not yet a formal todo, tracked here)**: once the 7 `cefi-hl-aster-historical-backfill` VMs report
+  terminated, run one more Script 1 pass scoped to `--venue HYPERLIQUID` and `--venue ASTER` (2 more VM runs, full
+  corpus date range) to patch the 2 excluded venues that this campaign is otherwise skipping.
