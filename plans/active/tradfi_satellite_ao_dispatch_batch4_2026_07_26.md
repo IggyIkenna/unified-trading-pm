@@ -137,25 +137,38 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       resolution + live re-verification) in the same commit. Source:
       `issues/tradfi_t1_no_working_mtds_job_2026_07_17.md`.
 
-- [ ] [DATA] P1. **Re-measure tradfi manifest `instrument_id` canonicality now that the backfill fleet has actually
-      drained.** `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md` carries ZERO checkboxes but its
-      "Recommended sequencing (do not skip ahead)" step 3 states the remaining work explicitly: "Re-measure the
-      canonical % after both the writer fix AND the backfill fleet has drained, not before — an in-flight measurement
-      will keep moving." Step 1 (the writer fix) shipped `mtds@56d39325` on 2026-07-21 for equity/etf/index. The drain
-      condition is now MEASURED SATISFIED: zero `tradfi-bf-*` instances exist in `central-element-323112` in any state
-      as of 2026-07-26T02:20Z, and the last equity shard self-deleted 2026-07-21T17:34:04Z. Read the live
-      `market-data-tick-tradfi-prd` `_index/availability_index.parquet` (single-object download plus pandas — NOT a
-      bucket walk, the same method the legacy-bucket census used) and report the canonical-vs-bare-ticker
-      `instrument_id` share for `instrument_type` in {equity, etf, index}, split by `written_at` before/after the
-      2026-07-21T16:20Z fix landing, so the post-fix cohort's canonicality is isolated from the historical backlog. Also
-      settle the doc's two explicitly-unverified scopes by measurement: FX cash types, and CME derivatives (its
-      2026-07-21T16:40Z log entry claims CME `futures_chain`/`options_chain` null-id is by-design — confirm or refute
-      against the live index). **Scope guard**: this todo MEASURES and records in that issue doc's own Progress Log
-      ONLY. It must NOT run, schedule, or modify the historical content-migration pass — that is
-      `tradfi_manifest_content_recovery_completion_2026_07_24.md`'s Surfaces C+D todo, deliberately excluded from every
-      tradfi batch as too-large-or-risky. Repo: market-tick-data-service (read-only manifest census). **Done when**: a
-      dated measurement section in that issue doc reports the post-drain canonical share for equity/etf/index (split
-      pre/post-fix), a verdict for FX cash types and CME derivatives, and a stated recommendation on whether the
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-4, data_engineering)** — measured live (single-object read of
+      `_index/availability_index.parquet`, 5,873,616 rows scanned, no bucket walk; VM census re-confirmed zero
+      `tradfi-bf-*` instances running). Post-fix equity/etf/index canonicality is **99.57%** (863,781/867,493), up from
+      the 30.8% pre-fix baseline (equity 99.53%, etf 99.95%, index 4.76%). Settled both explicitly-unverified scopes: FX
+      cash-type CASING is fixed (0 lowercase `SPOT_PAIR` rows remain) but FX `instrument_id` POPULATION is **NOT** fixed
+      for live captures — contradicts this same plan's todo-4 "already shipped" claim; CME derivatives confirmed still
+      unaffected (underlying correctly translated, null-id-by-design holds). Found 3 new residuals not present at the
+      07-21 measurement, all on the LIVE (non-backfill) write path and none inside the 07-21 fix-to-drain window: (1)
+      3,612 NASDAQ/NYSE equity/ETF rows with canonical type but NULL id, all written 2026-07-27; (2) 103 CBOE
+      `ohlcv_15m` INDEX/OPTION rows with NULL id, all written 2026-07-27; (3) the FX write-path gap above. Also found
+      the doc's `future`/`FUTURE` characterization ("static, 2,023 rows") is stale — now 9,126 rows, still growing.
+      Recorded a full dated measurement section + 4 new follow-up todos in the issue doc; verdict: doc stays OPEN,
+      residual is small (<0.5%) but real and actively growing — needs its own scoped fix, not the heavyweight
+      content-recovery plan. Repo: unified-trading-pm (doc-only; read-only census against market-tick-data-service's
+      live GCS manifest, no code touched). `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md` carries
+      ZERO checkboxes but its "Recommended sequencing (do not skip ahead)" step 3 states the remaining work explicitly:
+      "Re-measure the canonical % after both the writer fix AND the backfill fleet has drained, not before — an
+      in-flight measurement will keep moving." Step 1 (the writer fix) shipped `mtds@56d39325` on 2026-07-21 for
+      equity/etf/index. The drain condition is now MEASURED SATISFIED: zero `tradfi-bf-*` instances exist in
+      `central-element-323112` in any state as of 2026-07-26T02:20Z, and the last equity shard self-deleted
+      2026-07-21T17:34:04Z. Read the live `market-data-tick-tradfi-prd` `_index/availability_index.parquet`
+      (single-object download plus pandas — NOT a bucket walk, the same method the legacy-bucket census used) and report
+      the canonical-vs-bare-ticker `instrument_id` share for `instrument_type` in {equity, etf, index}, split by
+      `written_at` before/after the 2026-07-21T16:20Z fix landing, so the post-fix cohort's canonicality is isolated
+      from the historical backlog. Also settle the doc's two explicitly-unverified scopes by measurement: FX cash types,
+      and CME derivatives (its 2026-07-21T16:40Z log entry claims CME `futures_chain`/`options_chain` null-id is
+      by-design — confirm or refute against the live index). **Scope guard**: this todo MEASURES and records in that
+      issue doc's own Progress Log ONLY. It must NOT run, schedule, or modify the historical content-migration pass —
+      that is `tradfi_manifest_content_recovery_completion_2026_07_24.md`'s Surfaces C+D todo, deliberately excluded
+      from every tradfi batch as too-large-or-risky. Repo: market-tick-data-service (read-only manifest census). **Done
+      when**: a dated measurement section in that issue doc reports the post-drain canonical share for equity/etf/index
+      (split pre/post-fix), a verdict for FX cash types and CME derivatives, and a stated recommendation on whether the
       residual is small enough to close the doc or large enough to hand to the content-recovery plan — plus at least one
       canonical unchecked todo if any residual remains, so the doc stops reading as "0 open" to the digest. Source:
       `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`.
