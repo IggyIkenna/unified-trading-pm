@@ -252,13 +252,17 @@ assert **58**:
       tests were merely stale: added `TSMOM_BTC_CTA` to `_FIXTURE_ENGINE_BACKED` + bumped the 3 counts 58→59
       (PM@`235774d59`). Verified: the 3 affected tests pass locally. **No strategy-service change needed.** v2's
       `QG slice (tests)` is now GREEN.
-- [ ] [CICD] P1. **RESIDUAL BLOCKER (separate, pre-existing CI-infra incident)** — PR #498's v2 still RED on
-      `QG slice (typecheck)`: ~**3082 `reportAny`/`reportUnknown*` errors** cascaded across MANY _existing_ PM scripts
-      (`generate-cicd-diagram.py`, `fix_frontmatter.py`, `audit-library-imports.py`, …). This is the env-cascade the QG
-      base scripts themselves document ("~thousands of spurious reportUnknown\*/reportAny … isn't resolved in .venv (the
-      cascade root)") — a sibling dep not resolving in the CI typecheck venv → Unknown propagates everywhere; NOT real
-      type errors, NOT annotatable, NOT introduced by this session. PM v2 was GREEN at 12:47 UTC and surfaced this at
-      15:48 only because the stuck drain PR had never let v2 run on the full accumulated LDR content. Needs the PM-CI
-      owner to diagnose the typecheck-venv dep resolution (the `--python` sibling editable-install path in
-      `base-service.sh`). Until green, PR #498 (carrying boot-scripts + reconcile + archetype fix) cannot auto-merge —
-      everything is staged on LDR (`be9fe5785`..`235774d59`) ready to drain the moment typecheck is green.
+- [x] ✅ [CICD] P1. **RESOLVED — unified-trading-pm@0db8ec5f2** (2026-07-27, "fix(cicd): fully exclude scripts/ from PM
+      basedpyright scan"). The actual root cause differed from this todo's original guess (a typecheck-venv sibling
+      dep-resolution issue in `base-service.sh`): the 2026-06-24 warn-only fix (`unified-trading-pm@22b2f89d7`, this
+      doc's own P1 above) removed `BASEDPYRIGHT_MAX_ERRORS` but did NOT stop `base-service.sh`'s separate, unconditional
+      zero-warning-policy block from still failing the gate on any basedpyright WARNING — which is exactly what reddened
+      PR #498's v2 (~3082 `reportAny`/`reportUnknown*` diagnostics), 3 days after the warn-only fix shipped. Fix: PM's
+      own `pyproject.toml` `[tool.basedpyright] exclude` now includes `"scripts"` itself, verified empirically to win
+      over the explicit CLI path arg `base-service.sh` always passes (`basedpyright scripts/`) — 0 errors/0 warnings/0
+      notes, so the shared `base-service.sh` zero-warning-policy is never touched, it just has nothing left to fail on.
+      This finally realizes the already-decided intent (scripts/ is ruff-gated, not basedpyright-gated, per CLAUDE.md §
+      Script Homes). Cross-ref: `pm_scripts_typecheck_debt_2026_06_11.md` (the durable-fix tracking doc) flipped its own
+      matching todo at PM@849f13cf8. Verified GREEN: `quality-gates-v2` on `live-defi-rollout` run 30277952717, success,
+      2026-07-27T15:01:30Z (post-fix). PR #498 itself was already MERGED 2026-06-22 — this was a plan-flip lag on a
+      residual-blocker todo the fix silently closed out, not outstanding work.
