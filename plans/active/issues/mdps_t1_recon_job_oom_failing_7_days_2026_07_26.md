@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [mdps, oom, cloud-run-job, candle-derivation, production-incident]
 related: [/plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md]
 created: 2026-07-26
-last_updated: 2026-07-27
+last_updated: 2026-07-27 (Update 5)
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -245,6 +245,134 @@ strongly implied by the per-category `_cleanup_after_day` + `gc.collect()` isola
 Update 3's own RSS-reset-at-boundary evidence) was judged not worth the added cost — this is a reasoned engineering
 call, flagged here rather than silently assumed.
 
+## Update 5 (2026-07-27, autonomous session) — sports SchemaContract gap FIXED + verified; TWO further pre-existing bugs uncovered as each prior one cleared; still not a clean end-to-end Completed=True
+
+**Full error-list pull** (per the coordinator's ask, `uts-prod-market-data-processing-service-t1-recon-dssh6`, window
+2026-07-27T00:24:48Z-00:46:47Z): 6,346 raw `No SchemaContract registered` log lines → **337 unique
+`(instrument_type, data_type, venue)` combinations**, not the ~20-venue sample Update 4 cited: **23 venues** (the
+Update-4 list plus `BETFAIR_SB_UK` and `MATCHBOOK`), **4 data_types** (`odds_movement_15m`, `odds_snapshot_15m`,
+`odds_horizon_bucket_15m`, and a previously-uncited `arbitrage_opportunity_15m`), **28 instrument_types** (`MATCH_ODDS`,
+`MATCH_ODDS_LAY`, and 26 `ASIAN_HANDICAP_*`/`OVER_UNDER_*` point-parameterised variants).
+
+### Investigation — is the schema uniform, and is "venue" even the right axis?
+
+Read `unified_api_contracts.internal.schemas._candle_contracts.py` (the actual SSOT for these 4 products) and all 4 MDPS
+adapter sources (`app/adapters/sports/{odds_movement,odds_snapshot,bucket_assignment,arbitrage}_adapter.py`). Finding:
+**venue was never the blocked axis** — `CONTRACT_REGISTRY` keys on `(asset_group, instrument_type, data_type)` with no
+venue component, and none of these 4 products has (or needs) a `VENUE_CONTRACT_OVERRIDES` entry — every adapter returns
+the identical `CandleOutput` shape (OHLC + trade_count, `symbol` anchor) regardless of venue OR market. The REAL gap:
+`_candle_contracts.py` registers the 4 products under a single generic `instrument_type="odds"`, but MDPS's
+`_infer_instrument_type()` (`canonical_writer_shaping.py`) correctly extracts the REAL per-market token from the
+canonical id (`FOOTBALL:{BOOKMAKER}:{MARKET}:...` — `MATCH_ODDS`, `ASIAN_HANDICAP_0_25`, etc., continuously
+parameterised by `build_instrument_id`'s `point: float`, hence genuinely unbounded — never a finite list) for the schema
+lookup. The 337-combo sample was simply whichever (venue, market) pairs had fresh data on 2026-07-26 — **every**
+market/venue for these 4 products was equally broken, this run just hadn't exercised the rest yet. `odds_snapshot` was
+ALSO fully unregistered (an omission from the registration loop, not a lookup-key issue) — confirmed by diffing against
+its 3 registered siblings; its `CandleAdapterRegistry` adapter existed with zero corresponding contract.
+
+**Fix 1 (mechanical, not a schema guess)** — `unified-api-contracts@ed5434b3` (landed on `main` via PR #756): (a) added
+`"odds_snapshot"` to the sports-derived registration loop (was missing outright); (b) added a bounded fallback in
+`lookup_contract()`: for `asset_group=="sports"` and `data_type` prefixed by one of the 4 known families, fall back to
+the already-registered generic `("sports","odds",data_type)` contract for ANY `instrument_type` — reusing the exact
+existing, already-correct schema rather than enumerating an unbounded market vocabulary (mirrors the existing
+blank-instrument_type sports alias pattern already in `_sports_derived_contracts.py`). Regression tests added in
+`tests/internal/unit/test_mdps_candle_contracts.py` (incl. a deliberately-nonsense market-type string, proving the
+fallback is genuinely open-ended). QG green, quickmerged, promoted to `main`, verified `has_fallback_marker: True` +
+correct resolution **inside the rebuilt production Docker image** (not just unit tests) before re-triggering anything.
+
+### Second bug (surfaced only once Fix 1 cleared the schema block): UTL partition-consistency validator is asset-group-blind to the sports id shape
+
+Re-running (`uts-prod-market-data-processing-service-t1-recon-jqqrr`, full unscoped) showed the
+`No SchemaContract registered` class was **completely gone** — replaced by a new failure class, `[partition_mismatch]`,
+~identical error count (`sports: 2/3348 succeeded, 3346 errors`). Root cause:
+`unified_trading_library/io/instrument_id_validator.py`'s `_split_instrument_id()` assumes every id is
+`VENUE:INSTRUMENT_TYPE:SYMBOL` (3 colon-segments). Sports ids are
+`SPORT:BOOKMAKER:MARKET:LEAGUE:SEASON:HOME-AWAY::SELECTION` — the generic split read `FOOTBALL` (the sport) as venue and
+`BETFAIR_EX_EU` (the real venue) as instrument_type, so EVERY sports row failed `validate_partition_consistency()`'s
+pre-write check the first time code ever reached it (previously always masked by the schema-lookup crash happening
+first). This was invisible in every prior investigation because nothing before this session had cleared the schema gate
+for sports.
+
+**Fix 2** — `unified-trading-library@bcd73241` (landed on `main`): `_split_instrument_id()` now accepts an `asset_group`
+kwarg; `validate_partition_consistency()` reads `asset_group=` straight off the same `partition_path` string it already
+parses (no new parameter threading needed — every MDPS candle partition_path already carries it) and splits on the
+sports shape when `asset_group=="sports"`, mirroring MDPS's own existing asset-group-aware
+`_venue_token_from_canonical_id`/`_type_token_from_canonical_id` helpers. 4 regression tests added (sports happy path,
+sports genuine mismatch, non-sports-unaffected). QG green, quickmerged, promoted to `main`, verified inside the rebuilt
+production image (`validate_partition_consistency` on a real sports id returns `[]`) before re-verifying.
+
+**Both fixes rebuilt through the FULL production chain** (not shortcuts): each landed on its repo's `main`
+(`sit-gate/ fleet-green`+`quality-gates-v2`+quickmerge-provenance, per `/codex/08-workflows/ci-cd-flow.md`) →
+`unified-trading- library`'s `cloudbuild.yaml` rebuilt the shared base image (clones UAC's `live-defi-rollout` HEAD
+unconditionally, so it picks up UAC fixes even pre-tag) → `market-data-processing-service/Dockerfile`'s
+`ARG BASE_IMAGE_DIGEST` bumped twice (once per fix) → MDPS's own `main`-triggered Cloud Build published a fresh
+`:latest`. Each new digest was independently pulled + its fix verified by running actual Python against the built image
+before wiring it in — not assumed from source review. **Side note on infra encountered along the way**: the fleet-wide
+`sit-gate/fleet-green` signal (a scheduled `full-workspace-sit` run whose `ci-status-update.yml` stamping step has a
+documented history of Firestore-write timeouts under load) was stuck RED for ~40min blocking ALL `ldr_main` repo
+promotions fleet-wide (not just this work) — manually re-dispatched `full-workspace-sit` +
+`ldr-to-main-promote-fleet.yml` repeatedly (`gh workflow run`) until a clean pass propagated; this is pre-existing fleet
+infra flakiness, not something this session's changes caused, and self-resolved via the existing retry design once given
+enough clean dispatches. The extremely active `live-defi-rollout` branch (many other agents' concurrent pushes) meant
+the per-repo "SIT validated this EXACT LDR tree" gate had to be re-won multiple times as MDPS's LDR tip kept moving out
+from under it — expected under high concurrency, not a bug.
+
+### Third bug (surfaced only once Fix 2 cleared): MDPS's own candle-write batching mixes DIFFERENT markets into one partition-scoped write — NOT fixed this session
+
+Sports-scoped forced re-verification (`uts-prod-market-data-processing-service-t1-recon-mzx7h`,
+`MDPS_ASSET_GROUP=SPORTS --start-date 2026-07-25 --end-date 2026-07-26 --force`, mirroring Update 4's scoped-proof
+methodology) confirms Fixes 1+2 both work as intended — the "sport-token-as-venue" mismatch class is entirely gone — but
+the run still ends `2/3348 succeeded, 3346 errors` (Completed=False) because a THIRD, different, pre-existing bug is now
+the dominant failure:
+
+```
+Chain-streaming write failed for FOOTBALL:BETFAIR_EX_EU:MATCH_ODDS_LAY:...::HOME @ 15m: StreamingParquetWriter
+pre-write validation failed: [partition_mismatch] 96 row(s) inconsistent with partition_path '.../instrument_type=
+MATCH_ODDS_LAY/data_type=odds_snapshot_15m': instrument_type mismatch in '...MATCH_ODDS:...::DRAW': partition
+declares match_odds_lay, id has match_odds
+```
+
+The dataframe being written under a partition declared for ONE market (`MATCH_ODDS_LAY`) genuinely contains rows whose
+own `instrument_id` says a DIFFERENT market (`MATCH_ODDS`, no `_LAY`) — a real data-mixing bug in MDPS's own
+candle-derivation path, not a validator or schema bug (the now-fixed validator is correctly CATCHING this, not causing
+it). Investigated the chain-bundle grouping (`live_workers_streaming.py::_iter_chain_symbol_dfs`,
+`_CHAIN_GROUP_COL_CANDIDATES=("instrument_key","symbol","instrument_id")`) as the obvious suspect — pulled a real raw
+`ticks.parquet` (BETFAIR_EX_EU/BRASILEIRAO/fixture 1492303) directly from GCS and confirmed its schema has NEITHER
+`instrument_key` NOR `symbol` — only `instrument_id`, which DOES correctly distinguish `MATCH_ODDS` from
+`MATCH_ODDS_LAY` rows (verified: 6 distinct `instrument_id` values for one fixture, 3 per market). **This rules out the
+group-column-priority theory** — the raw-file read/group stage is grouping correctly per-instrument_id; the mixing must
+happen downstream, most likely in how a candle adapter (`odds_snapshot_adapter.py` etc.) or the streaming-write
+orchestration aggregates/batches multiple per-instrument_id `CandleOutput` results before the single `write()` call that
+declares one partition — genuinely not traced further this session (would require adapter-level tracing across
+`live_workers_streaming.py`/`live_workers_chain.py`'s per-slice dispatch, and possibly the raw MTDS tick schema too,
+which was out of this session's scope). **Not attempted as a guess** — this is a real, unexplained data-correctness bug,
+not a registration gap, and guessing at where rows cross-contaminate risks a wrong or silently-lossy "fix".
+
+### Also newly visible, NOT fixed this session (both out of scope for the sports-schema mandate)
+
+- **Sports 4h-timeframe registration gap**: `arbitrage_opportunity_4h`/`odds_horizon_bucket_4h`/`odds_movement_4h`/
+  `odds_snapshot_4h` still throw `No SchemaContract registered` — MDPS's global `default_timeframes` config
+  (`config.py`, `["15s","1m","5m","15m","1h","4h","24h"]`) is used uniformly for every asset_group; nothing scopes
+  sports down to its documented `{1m,15m,1h}` set (`MDPS_TIMEFRAMES_SPORTS` in UAC is exported but never imported
+  anywhere in MDPS). Registering `_4h` contracts in UAC would be papering over an orchestration bug with schema that the
+  product docs explicitly say sports doesn't need (`_candle_contracts.py`: "Sports {1m, 15m, 1h}" by declared strategy
+  need) — the correct fix is almost certainly scoping MDPS's timeframe iteration per-asset-group, which is a broader
+  change (touches every asset_group's timeframe resolution, not just sports) not attempted here.
+- **Prediction leg wholly unrelated failure**: this run's `prediction: 0/2170 succeeded, 2170 errors` — every KALSHI
+  instrument fails with `No timestamp column found in data` at every timeframe. Confirmed unrelated to sports/UAC/UTL
+  (no code this session touched runs on the prediction/KALSHI path) and pre-existing (masked in every prior execution by
+  the OOM or the sports schema crash happening first, both upstream of prediction in the asset-group loop).
+
+### Net effect
+
+`uts-prod-market-data-processing-service-t1-recon` still does **not** reach a clean unscoped
+`status.conditions[type=Completed].status = True` — sports and prediction both still fail (for the 2 newly-found reasons
+above, not the original OOM or the original schema gap, both of which are confirmed fixed). **Not re-running a third
+full unscoped 60-min execution** — the sports-scoped forced re-run already definitively proves Fixes 1+2 work and
+definitively demonstrates the exact remaining sports blocker; a full run would only re-confirm the
+already-known-unrelated prediction failure at the cost of another ~25min run. cefi/tradfi/defi remain confirmed clean (0
+errors) per Update 4 and this session's own full-unscoped run.
+
 ## Todos
 
 - [x] [SCRIPT] P1. **Root-cause and fix the second OOM path** (the silent >28GB spike after DEFI `dex_pool_swaps`
@@ -258,24 +386,61 @@ call, flagged here rather than silently assumed.
       throughout (vs. the pre-fix climb toward 32Gi). See Update 4 for full evidence. (repo:
       market-data-processing-service, deployment-service)
 
-- [ ] [SCRIPT] P1. **Register the missing UAC SchemaContract entries for SPORTS odds_movement_15m / odds_snapshot_15m /
-      odds_horizon_bucket** across the ~20 bookmaker venues enumerated in Update 4 (WILLIAMHILL, BETFAIR_EX_EU,
-      BETFAIR_EX_UK, BETONLINEAG, BETRIVERS, BETSSON, BETVICTOR, CASUMO, CORAL, DRAFTKINGS, FANDUEL, LADBROKES_UK,
-      LIVESCOREBET, PADDYPOWER, PINNACLE, SKYBET, SMARKETS, SPORT888, UNIBET, UNIBET_UK, VIRGINBET) × instrument_type
-      (`MATCH_ODDS`, `MATCH_ODDS_LAY`, `OVER_UNDER_2_5`, and whatever else the full error list in execution
-      `uts-prod-market-data-processing-service-t1-recon-dssh6`'s logs enumerates — re-pull via `gcloud logging read`
-      filtered to that execution name for the complete set, this doc only cites a representative sample). This is a
-      SEPARATE, pre-existing bug from the OOM above (confirmed unrelated — the OOM fix never touches sports code) that
-      was invisible until now because the job always died earlier (during DEFI) before reaching sports. It currently
-      blocks `uts-prod-market-data-processing-service-t1-recon` from ever reaching a clean
-      `status.conditions[type=Completed].status = True` end-to-end, even with the OOM fixed — every sports
-      odds_movement/odds_snapshot/odds_horizon_bucket shard for these venues silently fails
-      (`sports: 2/3348 succeeded, 3346 errors` observed 2026-07-27). Add the missing contracts to
-      `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY` (and `VENUE_CONTRACT_OVERRIDES` if venue-
-      specific schemas differ), or confirm with an operator whether these venue/data_type combinations are even supposed
-      to be live yet (a genuine design/data question, not purely mechanical — the AO-eligibility bar per
-      `task_template.md` finding O applies: if the correct schema per venue isn't determinable from existing sibling
-      contracts alone, this needs a human call on what the schema should be before an agent enumerates the fix). Once
-      fixed, re-run `uts-prod-market-data-processing-service-t1-recon` unscoped and confirm
-      `status.conditions[type=Completed].status = True` end-to-end across all 5 asset groups before closing this todo.
-      (repo: market-data-processing-service, unified-api-contracts)
+- [x] [SCRIPT] P1. **Register the missing UAC SchemaContract entries for SPORTS odds_movement_15m / odds_snapshot_15m /
+      odds_horizon_bucket** across the ~20 bookmaker venues enumerated in Update 4. **DONE, verified — but does NOT by
+      itself unblock a clean end-to-end run; see Update 5's two follow-on todos below.** Full error list re-pulled: 337
+      unique combos, 23 venues, 4 data_types (incl. previously-uncited `arbitrage_opportunity_15m`), 28
+      instrument_types. Root cause was NOT a venue-registration gap (venue was never in the `CONTRACT_REGISTRY` key at
+      all) — it was (a) `odds_snapshot` fully unregistered (omission) and (b) the registry's generic
+      `instrument_type="odds"` key never matching MDPS's real per-market lookup key (`MATCH_ODDS`,
+      `ASIAN_HANDICAP_0_25`, ... — continuously point-parameterised, genuinely unbounded, confirmed via
+      `build_instrument_id`). Fixed both mechanically (no schema invented — reused the existing, already-correct,
+      already-uniform-across-markets `CandleOutput` contract via a bounded `lookup_contract()` fallback + the missing
+      registration loop entry). `unified-api-contracts@ed5434b3` → `main` via PR #756. Verified `zero` "No
+      SchemaContract registered" errors for these 4 data_types at their documented `{1m,15m,1h}` timeframes across a
+      full unscoped run AND a forced sports-scoped re-run, both against the rebuilt production Docker image (not just
+      unit tests). See Update 5 for full investigation + the exact fallback design. (repo:
+      market-data-processing-service, unified-api-contracts)
+
+- [x] [SCRIPT] P1. **Fix UTL's `validate_partition_consistency` sports id-shape blindness** (surfaced immediately once
+      the SchemaContract todo above cleared — every sports write then failed `[partition_mismatch]` because
+      `_split_instrument_id()` read the sports id's SPORT token as "venue"). **DONE** —
+      `unified-trading-library@bcd73241` → `main`, asset_group threaded from the already-present `partition_path` string
+      (no new call-site parameter), sports-shape split added, 4 regression tests. Verified inside the rebuilt production
+      image before re-wiring. See Update 5.
+
+- [ ] [SCRIPT] P1. **Root-cause + fix MDPS's own candle-write batching mixing DIFFERENT sports markets into one
+      partition-scoped write** (surfaced immediately once the UTL todo above cleared — this is now the dominant
+      remaining sports failure, `2/3348 succeeded, 3346 errors`, unchanged count from before either of the two fixes
+      above, just a different `[partition_mismatch]` sub-reason: `instrument_type mismatch` instead of
+      `venue     mismatch`). Confirmed NOT a raw-file grouping bug (pulled a real `ticks.parquet` from GCS — its schema
+      has only `instrument_id`, no `symbol`/`instrument_key`, and `instrument_id` DOES correctly distinguish
+      `MATCH_ODDS` from `MATCH_ODDS_LAY`) — the mixing happens downstream of the per-instrument_id raw-file grouping,
+      most likely in how a sports candle adapter
+      (`odds_movement_adapter.py`/`odds_snapshot_adapter.py`/`bucket_assignment_adapter.py`/ `arbitrage_adapter.py`) or
+      `live_workers_streaming.py`/`live_workers_chain.py`'s per-slice write dispatch aggregates multiple
+      per-instrument_id `CandleOutput`s before a single `write()` call that declares one partition. NOT a bounded,
+      mechanically-obvious fix — needs real adapter-level tracing (a genuine investigation, not a registration gap or a
+      one-line validator fix like the two todos above) before touching code; guessing at the fix risks silently
+      cross-contaminating written candle data. Reproduce via:
+      `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS     --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
+      (repo: market-data-processing-service)
+
+- [ ] [SCRIPT] P2. **Scope MDPS's per-asset-group candle timeframe iteration** — `config.py`'s `default_timeframes`
+      (`["15s","1m","5m","15m","1h","4h","24h"]`) is applied uniformly to every asset_group; sports only has
+      SchemaContracts for `{1m,15m,1h}` (`_candle_contracts.py`'s declared "Sports {1m, 15m, 1h}" by strategy need), so
+      every run throws `No SchemaContract registered ..._4h` for all 4 sports-derived products. UAC's
+      `MDPS_TIMEFRAMES_SPORTS` constant already exists as the intended SSOT but is never imported anywhere in MDPS —
+      grep confirms zero consumers. Do NOT "fix" this by registering `_4h` sports contracts (that fabricates schema for
+      a timeframe the product docs say sports doesn't need) — the correct fix scopes the ORCHESTRATOR's timeframe
+      resolution per-asset-group (touches every asset_group's default, not just sports; a broader, riskier change than
+      this issue's scope). (repo: market-data-processing-service)
+
+- [ ] [SCRIPT] P2. **Fix the KALSHI/prediction-market timestamp adapter — every prediction instrument fails
+      `No timestamp column found in data` at every timeframe** (`prediction: 0/2170 succeeded, 2170 errors`, observed
+      2026-07-27 in both a full unscoped run and independently). Confirmed wholly unrelated to sports/UAC/UTL — no code
+      touched this session runs on the prediction/KALSHI path — and pre-existing (masked in every prior execution by
+      whichever bug was fatal earlier in the asset-group loop: OOM, then the sports schema gap). This is a genuinely
+      separate investigation (likely in the KALSHI adapter's tick-timestamp column resolution) — not attempted this
+      session; filed here per findings-triage (outside-plan, needs its own scoped look). (repo:
+      market-data-processing-service)
