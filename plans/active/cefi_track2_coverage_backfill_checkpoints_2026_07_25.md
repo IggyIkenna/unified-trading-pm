@@ -65,12 +65,34 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P1. **Resume the cefi Tardis COVERAGE backfill on the fixed code.** **N=1 Tardis cap, both clouds** — count
-      the live fleet with `tardis-concurrency-guard.sh` FIRST; scale on the one IP via `SINGLE_VM_QUEUE=1` +
-      `TARDIS_MAX_CONCURRENT_DOWNLOADS`, NEVER more VMs. SPOT (idempotent backfill — preemption-safe per the
-      PROGRESS-checkpoint contract). Repos: deployment-service, market-tick-data-service. **Done when**: the backfill VM
-      is launched, confirmed running (progress climbing on 2+ successive checks, not flat), and the N=1 concurrency
-      guard is confirmed satisfied throughout the launch.
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-6, data_engineering)** — Resume the cefi Tardis COVERAGE backfill on the
+      fixed code. **N=1 Tardis cap, both clouds** — count the live fleet with `tardis-concurrency-guard.sh` FIRST; scale
+      on the one IP via `SINGLE_VM_QUEUE=1` + `TARDIS_MAX_CONCURRENT_DOWNLOADS`, NEVER more VMs. SPOT (idempotent
+      backfill — preemption-safe per the PROGRESS-checkpoint contract). Repos: deployment-service,
+      market-tick-data-service. **Done when**: the backfill VM is launched, confirmed running (progress climbing on 2+
+      successive checks, not flat), and the N=1 concurrency guard is confirmed satisfied throughout the launch.
+
+      **Evidence**: pre-launch baseline coverage measured via `instruments-service/scripts/measure_honest_coverage.py
+              --asset-group cefi`: **44.96%** (3,136,068/6,975,460 reachable). Confirmed 0 running Tardis-consuming VMs both
+              clouds (GCP `gcloud compute instances list` + AWS `describe-instances`, both empty) before launch — N=1 cap
+              clear. Launched `bash scripts/vm/launch-cefi-sharded-backfill.sh` with `START_DATE=2026-02-01
+              SINGLE_VM_QUEUE=1 LAUNCH_GROUPS=heavy TARDIS_MAX_CONCURRENT_DOWNLOADS=32 TARDIS_CONCURRENCY_LEASE=1` (targets
+              the actual 2026-02..2026-07 gap window per the doc's own by-day cross-tab, not a wasteful year-granular walk).
+              Enumerated all 17 main venues × years 2020-2026 (SINGLE_VM_QUEUE bucketing requires evaluating every combo
+              regardless of scope filters — confirmed via `bash -x` trace, not a bug), then flushed into ONE combined VM:
+              `[tardis-guard] slot reserved for 'cefi-queue-heavy-binancefutu-x17-20260727-210013' (1/1 Tardis VMs; 1 created
+              by this launcher)` — **N=1 cap satisfied by the guard's own reservation mechanism throughout**. VM confirmed
+              `RUNNING` (`gcloud compute instances describe`, machine `e2-highmem-16`). **Progress climbing confirmed over
+              2+ successive checks**: run.log grew 136→391 lines within ~5 min, with `Tardis lease ACQUIRED by
+              cefi-queue-heavy-binancefutu-x17-...` (confirms this VM — and only this VM — holds the shared single-IP Tardis
+              lease) and 69+ `Tardis streaming success: N rows...` entries (real data landing, not just retries/skips);
+              CPU 100%, RSS climbing (10.9GB→12.0GB), `PIPELINE_HEARTBEAT` emitting normally. **Minor non-blocking finding**:
+              the VM's `RESOURCE_SAMPLE` metric emission hits a `pubsub.topics.publish` permission error on
+              `projects/central-element-323112/topics/resource-samples` — a telemetry-only gap (the actual backfill/Tardis
+              work is unaffected); not fixed here as it's outside this todo's launch-and-confirm scope, flagged for a future
+              pass. Full backfill completion (not required by this todo's done-when) is tracked by the MID/POST checkpoint
+              todos below.
+
 - [ ] [DATA] P1. **Run `/data-pipeline-check-is` for cefi as the MID-BACKFILL SPOT-CHECK**, partway through the coverage
       backfill launched in the todo above. Repo: instruments-service (skill run, no code change). **Done when**: the
       skill's report path + run date is cited in this plan's Progress Log.
