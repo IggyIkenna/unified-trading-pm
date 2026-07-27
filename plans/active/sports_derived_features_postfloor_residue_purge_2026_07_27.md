@@ -159,3 +159,45 @@ objects across Jun-Dec 2020 + all of 2021-2026) is unknown and requires the full
   - `features-service` QG also green (`--no-fix`, own named file). Not yet committed as of this entry — commit +
     quickmerge next, then launch the VM with an armed heartbeat watchdog in the same turn per async-wait discipline,
     then update this log with the VM name + manifest URI + flagged-object count before flipping Todo 1's checkbox.
+- 2026-07-27 (slot-15, `data_engineering`), Todo 1 IN PROGRESS — resumed from slot-13's handoff (VM still not launched —
+  do not flip the checkbox until the census manifest exists at the cited path with a reported count):
+  - slot-13's `_write_census_manifest()` edit to `purge_sports_derived_features_post_floor_residue_2026_07_27.py` was
+    never committed in their session (their own log said "not yet committed as of this entry") and each slot is its own
+    `git clone` (Path-B topology) — so this slot's `features-service` clone did not carry that diff; re-implemented it
+    independently as `_write_stable_census_manifest()`, called unconditionally after `scan()` for every mode
+    (dry-run/`--apply`/`--recensus`), writing to the same cited stable path
+    `gs://features-sports-prd-central-element-323112/_audits/derived_features_postfloor_residue_census_2026_07_27.json`.
+    QG green (`--no-fix`). **Shipped: `features-service@a90256f5`** (quickmerge hit a branch-drift rejection on first
+    push — another slot landed a commit first — recovered per RULES.md via `git pull --rebase --autostash`, re-ran QG to
+    refresh the sentinel SHA, re-quickmerged clean; `ahead=0` verified).
+  - Launched the census VM: `sports-derived-features-census-20260727-173244` (`asia-northeast1-c`, SPOT
+    `e2-standard-4`). First launch attempt failed `lc_verify_tarball_freshness` (`auto` mode) because
+    `deployment-service`'s `.venv` did not exist in this slot clone (`gcs_upload_via_adc.py` —
+    `ModuleNotFoundError: deployment_service`) — ran `uv sync` in `deployment-service` (158G free on `/home`, no
+    disk-pressure concern) to build it, then re-ran the launcher; it auto-republished the stale `features-service` +
+    `unified-api-contracts` tarballs and launched clean. Armed a `run_in_background` heartbeat watchdog (30-min cap,
+    polls VM status + run.log size + the manifest's `generated_at`/`total_delete`/`days_scanned` every 30s) in the same
+    turn per async-wait discipline.
+  - **Watchdog caught a real bug**: the VM self-deleted (`gcloud compute instances delete`, issued from the VM's own IP,
+    `rc=1`) ~3 minutes after launch, before ever producing a `run.log` or the census manifest. Diagnosed per the SPOT-VM
+    guardrail (checked `gcloud compute operations list` FIRST — confirmed a `delete` op, not a preemption) then pulled
+    `vm-setup.log` + `SETUP_EXIT_STATUS=1` from GCS: `setup-data-pipeline-vm.sh` had **no `VM_TASK` dispatch branch**
+    for `sports-derived-features-census` — the launcher's `VM_BACKFILL_CMD` metadata was present, but with no matching
+    `elif` branch it hit the generic-fallback guard (the same recurring bug class as the
+    `datapoint-validation`/`orphan-sweep`/`backfill-orphan-e` branches already document in that file), logged a loud
+    `ERROR`, and self-deleted via the script's bootstrap-failure `EXIT` trap — the census script itself never ran. Fixed
+    by adding the missing `elif [[ "$VM_TASK" == "sports-derived-features-census" ]]` branch (mirrors `orphan-sweep`'s
+    shape, `cd`s into `$WORKSPACE/features` instead of `$WORKSPACE/instruments`). QG green. **Shipped:
+    `deployment-service@dae295f`** (two more branch-drift rejections during this session from a very active repo — each
+    recovered via `git pull --rebase --autostash` + QG re-run + re-quickmerge, per RULES.md; `ahead=0` verified).
+  - Relaunched: `sports-derived-features-census-20260727-175711`. Hit one more transient failure on this attempt —
+    `lc_verify_tarball_freshness auto`'s republish step briefly raised
+    `ImportError: cannot import name 'FlatEventPublisher' from 'unified_trading_library.events'` inside
+    `deployment-service`'s freshly-synced venv while importing the live `unified-trading-library` workspace clone;
+    re-ran the same import standalone immediately after and it succeeded cleanly (module file on disk was already
+    correct, exports the name at the expected line) — treated as a one-off race with this slot's periodic
+    `slot-cron-ff-pull.sh` auto-fast-forward landing mid-import rather than a real UTL defect (not reproduced on retry,
+    no code fix needed). Re-ran the launcher; tarball fresh, launched clean. Armed a second `run_in_background` watchdog
+    (same 30-min-cap shape, now ALSO polling `SETUP_EXIT_STATUS` so a repeat bootstrap failure surfaces immediately
+    instead of only via the VM-disappeared branch) in the same turn. Awaiting completion before flipping the checkbox —
+    will report the VM name + manifest URI + flagged-object count here once the watchdog confirms the manifest exists.

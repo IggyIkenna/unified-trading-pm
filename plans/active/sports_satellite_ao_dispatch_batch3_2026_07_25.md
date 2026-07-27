@@ -67,11 +67,11 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P1. **Build the alias→canonical league_id mapping for the 85 contaminated
-      `day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule` league folders and check GCS for
-      existing canonical-folder fixtures data (read-only, no PROD write/delete).** For each of the 85 raw folder names
-      (e.g. `ARGENTINA_RESERVE_LEAGUE`, `ENGLAND_CHAMPIONSHIP`, `ITALY_SERIE_B`, `SAUDI_ARABIA_PRO_LEAGUE`, ... — full
-      list re-derivable via a bounded listing of
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-10)** — **Build the alias→canonical league_id mapping for the 85
+      contaminated `day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule` league folders and check
+      GCS for existing canonical-folder fixtures data (read-only, no PROD write/delete).** For each of the 85 raw folder
+      names (e.g. `ARGENTINA_RESERVE_LEAGUE`, `ENGLAND_CHAMPIONSHIP`, `ITALY_SERIE_B`, `SAUDI_ARABIA_PRO_LEAGUE`, ... —
+      full list re-derivable via a bounded listing of
       `sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule/` and
       identifying the instrument-catalogue-shaped shards, same method the issue doc used), compute the UAC
       prediction-tier league registry's own `build_league_id(country, league_name)` value for every registered league
@@ -88,30 +88,45 @@ drift_direction: advance-code
       this issue doc or a linked scratch doc) lists, for each of the 85 affected league folder names: (1) the matched
       canonical league_id or "no match", and (2) whether canonical-folder `day=2026-04-14` fixtures data already exists
       and its schema-correctness. No PROD GCS object is written, moved, or deleted. Source:
-      `issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`.
-- [ ] [CODE] P1. **Close the PRIMERA_DIVISION (Chile) Odds-API team-name alias gap** — re-run the shipped
-      `FixtureIdResolver`/`validate_team_resolution()` match-rate measurement (mirroring this doc's own methodology)
-      against every real captured `pipeline_mode=batch_odds_api` PRIMERA_DIVISION day currently in bucket
-      `market-data-tick-sports-prd-central-element-323112` (not just the original 4-day sample) to enumerate the
-      COMPLETE current roster of `UNRESOLVED_TEAM_NAME` team-name strings (known as of the doc's 2026-07-23 RE-TRIAGE:
-      `Coquimbo Unido`, `Deportes Concepción`, `Deportes Limache`, `Universidad de     Concepción` — confirmed still
-      absent from the alias dict via direct repo grep; re-verify the list is still current/complete since it may have
-      grown or shrunk with newer captured days). For each unresolved name, look up its correct AF-verified canonical
-      spelling + EXISTING canonical_team_id via the already-checked-in crosswalk
-      `unified_api_contracts/canonical/domain/sports/data/team_mapping.csv` (already has rows
-      `COQUIMBO_UNIDO`/`CONCEPCION`/`DEPORTES_LIMACHE`/`UNIVERSIDAD_DE_CONCEPCION` with verified AF team names/ids — no
-      live API-Football pull or new canonical-id minting needed), cross-checked against the real
-      `af_home_name`/`af_away_name` fields in the captured
-      `sports_reference/.../entity=fixtures/league=PRIMERA_DIVISION/fixtures.parquet` for the same fixtures — the exact
-      verification method the already-landed `OHIGGINS`/`UNIVERSIDAD_CATOLICA` Phase-E L2a fix used per its own code
-      comments. Add the missing entries to `CHILE_PRIMERA_TEAM_ALIASES` / `API_FOOTBALL_TO_CANONICAL_CHILE_PRIMERA` /
-      `_CROSS_PROVIDER_ALIASES` in `unified_api_contracts/external/api_football/team_mappings.py`, add regression tests
-      in `unified-api-contracts/tests/unit/test_team_mappings.py` mirroring the existing accent/bare/suffix
-      disambiguator cases, then re-run the match-rate measurement to confirm PRIMERA_DIVISION's rate improves from the
-      57% baseline. (repo: unified-api-contracts). **Done when**: `validate_team_resolution()` resolves all 4
-      currently-known unresolved names (plus any others the fuller-date-range re-measurement surfaces) without raising
-      `TeamResolutionError`; new regression tests pass; PRIMERA_DIVISION's `UNRESOLVED_TEAM_NAME` count is zero or every
-      residual is explicitly documented; `quality-gates.sh` green. Source:
+      `issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`. **This exact gate-(b)/(c) investigation was
+      already fully completed by slot 11 (mapping) and slot 2 (GCS check) on 2026-07-25T05:45Z, and the corresponding
+      remediation write already shipped (`instruments-service@a9f42320`, DATA P2 in the same issue doc, DONE
+      2026-07-25T11:16Z) — the source issue doc had since moved to `plans/archive/issues/` with all 4 of its own todos
+      checked, which the 2026-07-25 orphan-audit apparently missed before drafting this batch. Rather than re-deriving
+      the 85-name mapping from scratch (duplicate work — and the todo's own suggested "iterate every registered league
+      entry through `build_league_id()`" method is less robust than gate-(b)'s already-verified reverse-catalog
+      approach, which achieved a clean 0-unmatched result), ran a bounded, read-only re-verification of the two things
+      that could have drifted since: (1) confirmed 0/35 unregistered leagues have since been registered and 0/50
+      previously-matched canonical league_ids have dropped out of `LEAGUE_REGISTRY`; (2) live-checked all 50 registered
+      canonical `day=2026-04-14` fixtures_schedule shards — all 50 now read with the correct schema (confirming the
+      instruments-service@a9f42320 write genuinely landed, not just the checkbox claim), zero contaminated/missing/
+      errors. Full written report appended as a new dated section to the archived issue doc
+      (`plans/archive/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` §"Post-remediation verification of
+      the 85-league mapping + GCS state (2026-07-27, slot-10, data_engineering)"). No PROD GCS object was written,
+      moved, or deleted — verification only.**
+- [x] ✅ [CODE] P1. **DONE 2026-07-27 (slot-13)** — **Close the PRIMERA_DIVISION (Chile) Odds-API team-name alias gap**
+      — unified-api-contracts@96d15ba7. Re-ran the `validate_team_resolution()` match-rate measurement against every
+      real captured `pipeline_mode=batch_odds_api` day for the league across the full manifest history in
+      `market-data-tick-sports-prd-central-element-323112` (411 captured days via the
+      `_index/availability_index.parquet` manifest — not just the original 4-day sample; note the canonical `league_id`
+      for this league is `CHILE_PRIMERA` per `unified_api_contracts/canonical/domain/sports/league_data_prediction.py` —
+      "PRIMERA_DIVISION" is the league's display name used in this doc's title/prose, and a stale non-canonical
+      `league_id=PRIMERA_DIVISION` folder also exists in GCS with 0 manifest rows, superseded by `CHILE_PRIMERA`).
+      Baseline: 64.1% match rate (84,492 total rows), 9 distinct `UNRESOLVED_TEAM_NAME` strings — the 4 the issue doc
+      originally cited (`Coquimbo Unido`, `Deportes Concepción`, `Deportes Limache`, `Universidad de Concepción`) plus 5
+      more the fuller 411-day range surfaced (`CD Cobreloa` — a short-form gap on the pre-existing `COBRELOA` canonical
+      — plus 4 genuinely new canonical entries: `Deportes Copiapó`→`DEPORTES_COPIAPO`, `La Serena`→`D_LA_SERENA`,
+      `Magallanes`→`MAGALLANES`, `Antofagasta`→`ANTOFAGASTA`). Every canonical_team_id already existed in
+      `unified_api_contracts/canonical/domain/sports/data/team_mapping.csv` — no live API-Football pull or new
+      canonical-id minting needed. Cross-checked each against the real `af_home_name`/`af_away_name` fields in the
+      captured `instruments-store-sports-prd-central-element-323112`
+      `sports_reference/.../entity=fixtures/league=CHILE_PRIMERA/fixtures.parquet` for matching fixtures (same method
+      the `OHIGGINS`/`UNIVERSIDAD_CATOLICA` Phase-E L2a fix used). Added all 9 alias entries (extended the existing
+      `COBRELOA` entry + 8 new canonical entries) to `CHILE_PRIMERA_TEAM_ALIASES` in
+      `unified_api_contracts/external/api_football/team_mappings.py`; added 22 regression tests (parametrized +
+      no-regression cases) to `unified-api-contracts/tests/unit/test_team_mappings.py`. Re-measured post-fix: **100%
+      match rate, 0 unresolved names**, across all 411 real captured days. `quality-gates.sh` green
+      (`.qg_last_passed_sha=e052d16d` → shipped `96d15ba7`). Source:
       `issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`.
 - [ ] [DATA] P1. Re-pin unified-api-contracts's `source_data_latency.py` 5 p95-lag constants (SFI/API-Football/
       FootyStats/Understat/Open-Meteo) from empirical `latency_observations` data — the ~2-week accrual window has
@@ -291,6 +306,17 @@ written up, not just pointed at). The 2 `doc_too_large_or_risky_for_batch` docs 
 dedicated pass.
 
 ## Progress Log
+
+- **2026-07-27 (slot-10)** — Worked the "85-contaminated-league alias→canonical mapping" todo. Found the source issue
+  doc (`sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`) had already moved to `plans/archive/issues/` with all
+  4 of its own todos checked — gate (b) mapping + gate (c) GCS check (this todo's exact ask) were done by slot 11/slot 2
+  on 2026-07-25T05:45Z, and the remediation write already shipped (`instruments-service@a9f42320`). Ran a bounded,
+  read-only re-verification instead of re-deriving from scratch: confirmed no `LEAGUE_REGISTRY` drift on either side of
+  the 85 (0/35 newly registered, 0/50 dropped), and live-checked all 50 registered canonical `day=2026-04-14` shards —
+  all 50 now read with the correct fixtures schema, confirming the prior remediation genuinely landed. Report appended
+  to the archived issue doc's new "Post-remediation verification" section. No PROD write/delete; no code shipped (this
+  was a read-only investigation todo by design — see the todo's own "covers ONLY the read-only investigation" text). No
+  file collision with any other in-flight batch3/batch4 todo (touched only the archived issue doc + this plan file).
 
 - **2026-07-26 (slot-7)** — Worked the `lifecycle-catalogue-regen` events-sink IAM-grant todo. Confirmed the bucket name
   ambiguity in the todo's own text resolves to `central-element-323112-events` (the `live_event_log` Terraform module's

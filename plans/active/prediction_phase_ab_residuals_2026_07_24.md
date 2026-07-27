@@ -193,15 +193,15 @@ source: >-
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                          `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                          **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                          `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                          2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                          either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                          launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                          operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                          availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                          see its own Progress Log.
+                                      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                                      **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                                      `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                                      2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                                      either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                                      launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                                      operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                                      availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                                      see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -412,3 +412,47 @@ source: >-
   - **Did NOT run** `canonicalize_prediction_manifest_2026_07_18.py --remove-stragglers --apply` (out of this todo's
     scope per its source batch2 plan — that `--apply` still needs its own separate D1-migration-execution sign-off).
     Read-only: no code changed, no manifest mutation.
+- **2026-07-27T18:00Z (slot-10, `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 7) — verdict: YES, the
+  `lifecycle-catalogue-regen-prediction` cron already carries the shipped `underlying` + cross-venue
+  `canonical_instrument_id` fields (instruments-service@0d0c3742, landed 2026-07-09) into the live
+  `prod/catalog.parquet` — the staged full manual regen adds nothing beyond what the existing daily/weekly cron already
+  does automatically.**
+  - **Collision check**: verified via the live plan text that batch2's own conflicting todo
+    (`prediction_satellite_ao_dispatch_batch2_2026_07_25.md`, its "Conflict-check" item citing this same doc) is already
+    marked `[x]` **DONE 2026-07-27 (slot-4)** — no concurrent-dispatch risk at execution time.
+  - **Checked columns**: `underlying`, `canonical_instrument_id` (both present in the live schema, 40 columns total,
+    `instrument_type=PREDICTION_MARKET` only — venues `KALSHI`/`POLYMARKET`).
+  - **Code proof** (`instruments-service/scripts/build_instrument_catalogue.py:2081-2088`): the roll-up does NOT
+    re-derive these fields — it carries them straight through from whatever the per-date
+    `instrument_availability/by_date/day=…/venue=…/instruments.parquet` snapshot recorded, which is `""` (honest
+    absence) for any snapshot captured before the 2026-07-09 fix and real values for any snapshot captured after. So
+    "does the cron carry the fix through" reduces to "has the cron run since 2026-07-09, on windows that include
+    post-fix by-date snapshots" — confirmed both ways below.
+  - **Execution proof** (`gcloud run jobs executions list`, read via the ambient `unified-trading-sa` identity, live
+    2026-07-27): the DAILY `lifecycle-catalogue-regen-prediction` job has completed successfully every day 2026-07-16
+    through 2026-07-27 (the 2026-07-13/14/15 OOM failures pre-date the 16Gi/cpu4 memory bump — already fixed, see the
+    terraform comment); the WEEKLY `lifecycle-catalogue-full-prediction` (`--mode full`, a genuine whole-history by_date
+    re-walk) succeeded 2026-07-11, 2026-07-18, and 2026-07-25 — all after the fix landed.
+  - **Data proof**: downloaded the live `gs://instruments-store-pred-prd-central-element-323112/prod/catalog.parquet`
+    (211MB, last-modified 2026-07-27T11:04:06Z — matches that day's 11:00 UTC daily-job execution) and read it directly
+    (pandas/pyarrow, instruments-service `.venv`). 3,040,264 rows total (KALSHI 205,341 / POLYMARKET 2,834,923).
+    Splitting on `available_to` vs. the fix's landing date shows the exact expected step-change:
+    | segment                                                                                                           | rows      | `underlying` populated | `canonical_instrument_id` populated |
+    | ----------------------------------------------------------------------------------------------------------------- | --------- | ---------------------- | ----------------------------------- |
+    | `available_to` < 2026-07-09 (pre-fix legacy)                                                                      | 2,573,214 | 2.0%                   | 0.3%                                |
+    | `available_to` >= 2026-07-09 (post-fix)                                                                           | 467,050   | 78.3%                  | 4.6%                                |
+    | Row samples: post-fix KALSHI — `KALSHI:PREDICTION_MARKET:KXBNB15M-26JUL171000-00` → `underlying="BNB"`,           |
+    | `canonical_instrument_id="PRICE::BNB::UP_DOWN::2026-07-17::DIR"`; post-fix POLYMARKET (sports market) —           |
+    | `underlying="OTHER"`, `canonical_instrument_id="ELITESERIEN:FREDRIKSTAD_FK_EXACT_SCORE_v_FK_BOD_GLIMT:20260717"`; |
+    | pre-fix legacy row `ELON_STATEMENTS` (POLYMARKET, `available_to=2026-05-25`) — both fields `""`, honest absence,  |
+    | exactly as the code comment documents.                                                                            |
+  - **Verdict on "is the staged full manual regen still needed?" — NO.** Whatever that manual run would do
+    (`build_instrument_catalogue.py --asset-group prediction` against real GCS data), the WEEKLY job already does it
+    automatically (last ran 2026-07-25, 2 days ago) — a manual invocation would re-read the identical by-date snapshot
+    files and produce the same result. **Residual not solved by either the cron or the staged manual regen**: the 85%
+    pre-fix legacy rows are permanently `""` for these two fields — the per-date snapshot files themselves were written
+    before the fix and are never retroactively regenerated (neither the daily incremental merge nor the weekly full
+    re-walk re-derives from raw; both only read what's already in the by-date parquets). Closing that residual, if ever
+    wanted, is a distinct retroactive-backfill of historical by-date snapshots — out of scope for this todo and not
+    something the parent A2 todo's "full catalogue regen" line was ever going to fix either. Read-only: no code changed,
+    no GCS writes.

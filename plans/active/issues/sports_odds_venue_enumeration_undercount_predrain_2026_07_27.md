@@ -106,6 +106,34 @@ THIS fork (they may already have a home under a different asset_group/instrument
 Flagging only that the discrepancy exists, is large, and touches the exact set of GCS-move todos that would otherwise
 proceed against the narrower list.
 
+## PARTIAL RECONCILIATION (2026-07-27, slot-8) — the 6 already-unambiguous venues ONLY, NOT closing this doc
+
+Before executing `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` todo 5 ("Move the `instrument_type=odds/` GCS
+objects for the 5 already-unambiguous venues ONLY" — the plan's title says "5", its own venue list names 6:
+`BETFAIR_EX_UK`, `BETFAIR_EX_EU`, `SMARKETS`, `MATCHBOOK`, `BETFAIR_SB_UK`, `BETMGM`), re-measured live against the
+manifest specifically for these 6 venues:
+
+- None of these 6 venues are among the ~19 unmapped venues this doc lists (`BETONLINEAG`, `UNIBET`, `BETRIVERS`,
+  `WILLIAMHILL`, `CASUMO`, `SPORT888`, `CORAL`, `PADDYPOWER`, `DRAFTKINGS`, `UNIBET_UK`, `SKYBET`, `BETSSON`, `FANDUEL`,
+  `VIRGINBET`, `LIVESCOREBET`, `BETVICTOR`, `LADBROKES_UK`, `BOVADA`, `BETWAY`, `UNIBET_EU`) — confirmed by
+  set-difference against the per-venue list above. So this doc's core concern (venues with no EXCHANGE_ODDS/FIXED_ODDS
+  destination getting silently orphaned by a later legacy-contract retirement) does not apply to these 6: they already
+  had a resolved class before this doc was filed, and moving them does not touch, retire, or otherwise affect the ~19
+  unmapped venues' data or the legacy `odds` contract (retirement is a separate, later, explicitly-gated todo).
+- Real live scope for these 6 (via `read_availability_index`, manifest-derived, no GCS walk): **44,525 manifest shards /
+  12,778,825 summed `row_count`** across `instrument_type=ODDS, data_type=TRADES` (both fields uppercase-cased on
+  disk/manifest for these 6 venues — 0 lowercase-cased manifest rows found for them). This does not match either this
+  doc's cited 54.8M-corpus-wide figure (expected — that's the full ~27-venue corpus) or the plan's own cited
+  561,260/32,616-etc. figures (neither reconciled here — still an open question for the OTHER venues/this doc's todo 1).
+  Todo 5 was executed against this FRESH live count, not either stale figure.
+- Result: todo 5 executed 2026-07-27 — 44,525/44,525 shards copied to `instrument_type=exchange_odds`/`fixed_odds`
+  (lowercase, per the final sports casing doctrine), independently re-verified (crc32c+size match, 0 missing, 0
+  mismatch), and the old `instrument_type=ODDS/data_type=TRADES` source objects deleted (0 remaining). See
+  `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` todo 5 for the evidence citation.
+- **This doc STAYS OPEN** — the ~19-unmapped-venue question (this doc's actual main subject) is untouched by the above
+  and still needs the operator/data_engineering follow-up steps below before the legacy `odds` contract can be safely
+  retired.
+
 ## Suggested next step (not performed here — scope belongs to the plan's own mapping-ruling pattern, i.e. an `[OPERATOR]` decision, per `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` todo 1's precedent)
 
 1. Reconcile where the plan's 561,260 / per-venue figures came from (grep `sports_consolidated_closeout_2026_07_19.md`

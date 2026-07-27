@@ -1568,6 +1568,15 @@ if [ -n "$FILES_ARG" ]; then
       # (half-shipped removals, e.g. instruments-service polygon 2026-06-10).
       git add -- "$f"
       ADDED_ANY=1
+    elif git diff --cached --name-only -- "$f" 2>/dev/null | grep -qFx "$f"; then
+      # Already staged as a deletion (e.g. the caller ran `git rm`/committed via a
+      # pre-existing index before invoking quickmerge). `git ls-files` no longer lists
+      # it — removing a path from the INDEX also removes it from ls-files' output, not
+      # just the worktree — so the check above alone misreads a legitimate, already-staged
+      # deletion as an untracked/invalid path. A --files argument consisting ENTIRELY of such
+      # paths (a pure-deletion diff) previously left ADDED_ANY=0 and hard-failed with
+      # "No valid paths from --files" despite there being a real, ready-to-commit deletion.
+      ADDED_ANY=1
     else
       echo "[$REPO_NAME] ⚠️  Path not found (and not tracked): $f"
     fi
@@ -1613,64 +1622,147 @@ fi
 # run). When --files is set, only THOSE paths need to be clean to conclude "already
 # committed, safe to push" — the unscoped path is unaffected and still requires a fully
 # clean tree (the caller owns the whole tree there).
-_QM_ALREADY_COMMITTED=0
-if [ -z "$(git diff --cached --name-only)" ]; then
+# Re-stage helper (deletion-aware, --files-scoped when set) — shared by the
+# reformat-retry below AND the branch-drift retry loop, so both retry paths
+# re-stage identically instead of drifting into two slightly different rules.
+_qm_restage_target_files() {
   if [ -n "$FILES_ARG" ]; then
-    # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
-    [ -z "$(git status --porcelain -- $FILES_ARG)" ] && _QM_ALREADY_COMMITTED=1
-  elif [ -z "$(git status --porcelain)" ]; then
-    _QM_ALREADY_COMMITTED=1
-  fi
-fi
-
-if [ "$_QM_ALREADY_COMMITTED" = 1 ]; then
-  # Nothing staged and (--files paths | whole tree) clean — changes were already committed
-  # in a previous quickmerge run (or by a worker that commits before calling quickmerge, per
-  # the documented --agent flow). That pre-existing commit never passed through the trailer
-  # stamp above, so check_strict_quickmerge.py/pre-push-strict-quickmerge.sh will reject the
-  # push unless HEAD already carries a Quickmerge: trailer — amend it on now if missing.
-  if git log -1 --format=%B | grep -q '^Quickmerge:'; then
-    echo "[$REPO_NAME] ℹ️  Working tree clean (scoped to --files, if set) — changes already committed. Proceeding to push."
+    for f in $FILES_ARG; do
+      if [ -e "$f" ] || git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then git add -- "$f"; fi
+    done
   else
-    _QM_AMEND_MSG_FILE=$(mktemp "${TMPDIR:-/tmp}/qm-amend-msg.XXXXXX")
-    { git log -1 --format=%B; printf '\nQuickmerge: %s\n' "$_QM_TRAILER_KIND"; } >"$_QM_AMEND_MSG_FILE"
-    git commit --amend -F "$_QM_AMEND_MSG_FILE" --quiet
-    rm -f "$_QM_AMEND_MSG_FILE"
-    echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed but missing the Quickmerge trailer; amended HEAD to add 'Quickmerge: ${_QM_TRAILER_KIND}'. Proceeding to push."
+    git add -A
   fi
-elif ! git commit -m "$_QM_COMMIT_MSG" --quiet; then
+}
+
+# Bounded retry for a commit-time branch-drift race (ao_quickmerge_stage5_
+# branch_drift_retry_2026_07_27): STAGE 0.4 already pulled us current before QG
+# ran, but on a busy shared branch a peer can push AGAIN in the seconds between
+# that pull and this commit, so the check-branch-drift pre-commit hook fails
+# here — previously a hard, uninformative exit requiring the calling agent to
+# manually pull + re-stage + re-invoke quickmerge from scratch (observed: 20+
+# consecutive manual retries in one session under heavy live-defi-rollout
+# traffic, each burning a full quickmerge re-run). This is a pure GIT-REF race,
+# not a content/QG-validity race (contrast the sentinel retry above, which
+# re-gates because the TREE may have changed) — our staged --files paths were
+# already Pass-1-QG-verified, and a peer's commit landing on unrelated files
+# doesn't invalidate that, so recovery here is just "pull, re-stage, recommit",
+# never a re-gate. _qm_stage_0_4_not_behind_gate is reused verbatim (same
+# ff-only-then-rebase-autostash-then-QUICKMERGE_BLOCKED contract already
+# trusted elsewhere in this script) so a GENUINE same-file conflict still hard-
+# blocks with the structured error instead of this loop papering over it.
+_QM_COMMIT_RETRY_MAX=15
+_QM_COMMIT_ATTEMPT=0
+while true; do
+  _QM_ALREADY_COMMITTED=0
+  if [ -z "$(git diff --cached --name-only)" ]; then
+    if [ -n "$FILES_ARG" ]; then
+      # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
+      [ -z "$(git status --porcelain -- $FILES_ARG)" ] && _QM_ALREADY_COMMITTED=1
+    elif [ -z "$(git status --porcelain)" ]; then
+      _QM_ALREADY_COMMITTED=1
+    fi
+  fi
+
+  if [ "$_QM_ALREADY_COMMITTED" = 1 ]; then
+    # Nothing staged and (--files paths | whole tree) clean — changes were already committed
+    # in a previous quickmerge run (or by a worker that commits before calling quickmerge, per
+    # the documented --agent flow). That pre-existing commit never passed through the trailer
+    # stamp above, so check_strict_quickmerge.py/pre-push-strict-quickmerge.sh will reject the
+    # push unless HEAD already carries a Quickmerge: trailer — amend it on now if missing.
+    if git log -1 --format=%B | grep -q '^Quickmerge:'; then
+      echo "[$REPO_NAME] ℹ️  Working tree clean (scoped to --files, if set) — changes already committed. Proceeding to push."
+    else
+      _QM_AMEND_MSG_FILE=$(mktemp "${TMPDIR:-/tmp}/qm-amend-msg.XXXXXX")
+      { git log -1 --format=%B; printf '\nQuickmerge: %s\n' "$_QM_TRAILER_KIND"; } >"$_QM_AMEND_MSG_FILE"
+      git commit --amend -F "$_QM_AMEND_MSG_FILE" --quiet
+      rm -f "$_QM_AMEND_MSG_FILE"
+      echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed but missing the Quickmerge trailer; amended HEAD to add 'Quickmerge: ${_QM_TRAILER_KIND}'. Proceeding to push."
+    fi
+    break
+  fi
+
+  if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+    break
+  fi
+
   # Pre-commit may have modified files (e.g. Prettier). Re-stage and retry once.
   # RE-ASSERT --files SCOPE: a hook that reformats files must NOT let `git add -A`
   # sweep FOREIGN modified files (another agent's WIP, an inventory regen, a concurrent
   # edit) into a scoped commit — that is the prek-auto-stage-vs-`--files` foot-gun. When
   # --files is set, re-stage ONLY those paths (the hook's edits to YOUR files re-stage;
   # foreign modified files stay out of the index). Only the unscoped path uses `git add -A`.
-  if [ -n "$FILES_ARG" ]; then
-    for f in $FILES_ARG; do
-      # Deletion-aware re-stage (same rule as the primary loop): tracked-but-absent = deletion.
-      if [ -e "$f" ] || git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then git add -- "$f"; fi
-    done
-  else
-    git add -A
+  _qm_restage_target_files
+  if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+    if [ -n "$FILES_ARG" ]; then
+      echo "[$REPO_NAME] Pre-commit modified files; re-staged (scoped to --files) and committed on retry" >&2
+    else
+      echo "[$REPO_NAME] Pre-commit modified files; staged and committed on retry" >&2
+    fi
+    break
   fi
-  if ! git commit -m "$_QM_COMMIT_MSG" --quiet; then
+
+  # Still failing after the reformat-retry. Distinguish a branch-drift RACE
+  # (retryable — pull and try again) from a genuine content-level pre-commit
+  # failure (lint/type/etc — pulling can never fix this, so fail fast, never
+  # loop blindly).
+  _QM_DRIFT_UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
+  if [ -n "$_QM_DRIFT_UPSTREAM" ]; then
+    git fetch "${_QM_DRIFT_UPSTREAM%%/*}" --quiet 2>/dev/null || true
+    _QM_STILL_BEHIND=$(git rev-list "HEAD..$_QM_DRIFT_UPSTREAM" --count 2>/dev/null || echo 0)
+  else
+    _QM_STILL_BEHIND=0
+  fi
+  if [ "${_QM_STILL_BEHIND:-0}" = "0" ]; then
     echo "[$REPO_NAME] ❌ Commit failed (pre-commit may have failed). Run: pre-commit run --all-files; git add -A; git commit -m \"...\"" >&2
     exit 1
   fi
-  if [ -n "$FILES_ARG" ]; then
-    echo "[$REPO_NAME] Pre-commit modified files; re-staged (scoped to --files) and committed on retry" >&2
-  else
-    echo "[$REPO_NAME] Pre-commit modified files; staged and committed on retry" >&2
-  fi
-fi
 
-git push -u origin "$BRANCH" --quiet 2>/dev/null
+  _QM_COMMIT_ATTEMPT=$((_QM_COMMIT_ATTEMPT + 1))
+  if [ "$_QM_COMMIT_ATTEMPT" -gt "$_QM_COMMIT_RETRY_MAX" ]; then
+    echo "[$REPO_NAME] ❌ Commit still losing the branch-drift race after ${_QM_COMMIT_RETRY_MAX} retries — sustained" >&2
+    echo "  contention, not a one-off. Run: git pull --ff-only ; git add <your files> ; retry quickmerge.sh" >&2
+    exit 1
+  fi
+  _QM_COMMIT_BACKOFF=$((1 + RANDOM % 3))
+  echo "[$REPO_NAME] ⏳ commit lost the branch-drift race (peer pushed mid-commit, behind=${_QM_STILL_BEHIND}) — retry ${_QM_COMMIT_ATTEMPT}/${_QM_COMMIT_RETRY_MAX} in ${_QM_COMMIT_BACKOFF}s"
+  sleep "$_QM_COMMIT_BACKOFF"
+  _qm_stage_0_4_not_behind_gate
+  _qm_restage_target_files
+done
+
+# quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27: under sustained
+# branch churn (commits landing every 20-90s), the remote can move again during the ~45-300s
+# Pass-1 QG re-verification that already ran above — by the time we reach THIS push, it loses
+# the non-fast-forward race. The content hasn't changed, only the base commit has, so retrying
+# the whole pipeline (re-running the full QG suite) per collision is pure waste — measured at
+# 16+ attempts / 70+ min for one non-conflicting change. Retry just the cheap rebase+push here,
+# bounded, before ever asking the caller to re-invoke quickmerge. Also fixes a real pre-existing
+# bug: the old bare `git push ... 2>/dev/null` never checked its own exit code, so a failed push
+# silently fell through into PR creation as if it had succeeded.
+_QM_PUSH_RETRIES="${QUICKMERGE_PUSH_RETRIES:-5}"
+_qm_push_attempt=0
+_qm_push_ok=0
+while [ "$_qm_push_attempt" -lt "$_QM_PUSH_RETRIES" ]; do
+  _qm_push_attempt=$((_qm_push_attempt + 1))
+  _qm_push_err=$(git push -u origin "$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
+  echo "[$REPO_NAME] ⚠️  push rejected (attempt $_qm_push_attempt/$_QM_PUSH_RETRIES) — rebasing onto the new remote tip and retrying (no QG re-run needed, content unchanged)..." >&2
+  if ! git pull --rebase --autostash origin "$BRANCH" --quiet 2>/dev/null; then
+    echo "[$REPO_NAME] ❌ rebase during push-retry hit a real conflict — resolve manually (git status)." >&2
+    exit 1
+  fi
+done
+if [ "$_qm_push_ok" != 1 ]; then
+  echo "[$REPO_NAME] ❌ push to $BRANCH failed after $_qm_push_attempt attempts (non-fast-forward race under high churn). Last error: $_qm_push_err" >&2
+  exit 1
+fi
 
 # Extract issue references from commit message for PR body
 ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+" || echo "")
 
 # Determine PR base branch
 # Staging-first model: all human commits target staging; [skip ci] automation goes direct to main.
+PM_OPTION_B=false
 if [ "$SKIP_CI" = true ]; then
   PR_BASE="main"
   echo "[$REPO_NAME] [skip ci] detected: PR targets main directly (automation commit)"
@@ -1685,7 +1777,8 @@ elif [ "$REPO_NAME" = "unified-trading-pm" ]; then
   # repos building on staging still get PM via the dep-clone fallback (clone -b staging → -b main),
   # so PM having no staging branch is transparent to them. SSOT: codex/08-workflows/ci-cd-flow.md.
   PR_BASE="main"
-  echo "[$REPO_NAME] Option B: PR targets main directly (PM has no staging; v2 on the main PR is the gate)"
+  PM_OPTION_B=true
+  echo "[$REPO_NAME] Option B: lands on LDR trunk; ldr-to-main-promote.yml drains to main (v2 on that PR is the gate)"
 else
   PR_BASE="staging"
   echo "[$REPO_NAME] Staging-first: PR targets staging (semver-agent will validate label vs API diff)"
@@ -1748,6 +1841,23 @@ fi
 if [ "$PR_BASE" = "staging" ] && [ "$HOTFIX" != true ]; then
   echo "[$REPO_NAME] ✅ Landed on $BRANCH. Tier-C drain (≤15min) promotes LDR→staging (v2-gated, dep-order-checked)."
   echo "[$REPO_NAME]    Need it on staging now? re-run with --hotfix (opens a staging PR; respects the staging lock)."
+  exit 0
+fi
+
+# ldr_to_main_promote_churn_fix_verification_2026_07_27: quickmerge used to open its OWN
+# direct-to-main PR here (--head "$BRANCH", i.e. live-defi-rollout) for every PM ship. That PR's
+# head is the live, ever-moving LDR branch — under fleet commit velocity (every 20-90s) it
+# re-triggers a fresh quality-gates-v2 run on EVERY subsequent commit anyone ships, fleet-wide,
+# for as long as it stays open (measured: 22 runs in ~45min on one such PR). The standing
+# ldr-to-main-promote.yml bot already drains PM→main on its own ~15min tick via an IMMUTABLE
+# per-SHA ref (frozen snapshot, no re-trigger churn — the fix shipped earlier this same day,
+# commit 48800b7ad) — so quickmerge opening a second, unfrozen, competing PR on top of that was
+# pure waste, not an additional safety net. Land on LDR and let the bot own 100% of the
+# promotion, same as every other (staging-first) repo already does above. --hotfix is kept as an
+# escape hatch for a case that genuinely needs the old immediate-PR behavior.
+if [ "$PM_OPTION_B" = true ] && [ "$HOTFIX" != true ]; then
+  echo "[$REPO_NAME] ✅ Landed on $BRANCH (LDR trunk). ldr-to-main-promote.yml drains PM→main (frozen-per-SHA-ref, ~15-30min SLA) — quickmerge no longer opens a direct PR here (churn fix, 2026-07-27)."
+  echo "[$REPO_NAME]    Need it on main immediately? re-run with --hotfix (opens a direct PR, old behavior)."
   exit 0
 fi
 

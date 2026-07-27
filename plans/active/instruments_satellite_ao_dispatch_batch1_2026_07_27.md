@@ -138,12 +138,40 @@ source doc is untouched (beyond one stale-checkbox citation fix, done directly, 
       block, `openShardDetail` wired with `instrument_type`/`underlying`/`data_type: ""`). Verified: `tsc --noEmit`
       clean, `eslint` clean, full `npm run build` clean, full `vitest run` (1099 passed / 16 skipped, no regressions),
       both repos' `quality-gates.sh` green pre-commit.
-- [ ] [DATA] P1. **Pull the real per-instrument_type breakdown for DERIBIT live** (the comparison built for the source
-      doc used illustrative numbers pending this) and confirm whether OPTION coverage is actually healthy or is itself a
-      live gap once visible. Repo: market-tick-data-service. Source:
+- [x] ✅ [DATA] P1. **Pull the real per-instrument_type breakdown for DERIBIT live** (the comparison built for the
+      source doc used illustrative numbers pending this) and confirm whether OPTION coverage is actually healthy or is
+      itself a live gap once visible. Repo: market-tick-data-service. Source:
       `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` ("Pull the real per-instrument_type
       breakdown for DERIBIT live..."). Done when: a real, current per-instrument_type breakdown for DERIBIT live is
-      recorded (not inferred), cited against the live source data, with an explicit OPTION-coverage verdict.
+      recorded (not inferred), cited against the live source data, with an explicit OPTION-coverage verdict. —
+      read-only, no commit (no code changed). Pulled
+      `GET /api/data-status/manifest?service=instruments-service&asset_group=CEFI&start_date=2026-06-27&end_date=2026-07-27&secondary_axis=instrument_type`
+      live against the real prod deployment-api Cloud Run endpoint
+      (`https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app`), 2026-07-27, HTTP 200 — pulled twice independently
+      (a sub-agent fetch, then a direct curl reproducing byte-identical numbers) and confirmed against the parsed JSON
+      response. Real, current DERIBIT `instrument_types` breakdown (30-day window,
+      `deployment-api/deployment_api/services/data_status/breakdowns_core.py:395` `_build_instrument_type_breakdown`):
+      **OPTION 2,676/2,677 dates (99.96%)**, FUTURE 2,676/2,677 (99.96%), PERPETUAL 2,676/2,677 (99.96%), COMBO
+      1,434/1,435 (99.93%), SPOT_PAIR 1,190/1,191 (99.92%) — all five types near-identical and near-100%, each missing
+      exactly ONE day (2026-07-27, today, `expected_unattempted_pending_fetch` — not yet fetched, not a failure).
+      **Verdict: OPTION coverage is healthy — not a live gap.** The venue-level blend this doc originally flagged
+      (`instrument_types: null`, 2026-07-07) is resolved in production: the writer-split fix
+      (`_split_by_instrument_type`, shipped same day) is confirmed live-visible — an OPTION-specific outage would now
+      show up distinctly instead of hiding inside one blended venue-level number (venue-level completion_pct in this
+      same pull: 96.77% over the 30-day window / 99.99% cumulative honest_coverage, consistent with the per-type
+      numbers, not blending them). **Repo-tag note**: the data actually pulled + verified is instruments-service's
+      reference-data breakdown, not an MTDS market-tick-data-service pull — `market-tick-data-service`'s own DERIBIT
+      OPTION adapter (`tardis_options_adapter.py`) is `BLOCKED-CREDENTIALS`/not live, so there is nothing to check on
+      the MTDS side; the source doc's own text (`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`
+      section discussing the two as separate pipelines) and its own "OPTION coverage... blended into one 99%+ number"
+      framing both refer only to the instruments-service breakdown throughout — this todo's `Repo:` tag reads as
+      inherited from the source doc's multi-repo `repos:` frontmatter, not a substantive claim. Noted here rather than
+      filed as a separate issue doc since it doesn't change the verdict or require any fix. Residual, out-of-scope
+      cosmetic gap also noted in passing: the top-level `instrument_types.OPTION` entry doesn't itself carry
+      `missing_dates`/`dates_found_list` (only its nested `data_types.instruments` child does — the data_type-weighted
+      aggregation override at `breakdowns_core.py:472-495` rewrites `dates_found`/`dates_expected`/`completion_pct` at
+      the parent level but not the missing-date lists) — a display nuance downstream of the already-shipped
+      missing_dates/dates_found_list todo above, not a new correctness bug, so not separately filed.
 - [ ] [VERIFY] P2. **Audit whether the same MTDS/reference-data conflation risk exists anywhere else** — e.g. the TradFi
       `POLYGON`/`FRED` reference-data-in-the-wrong-registry smell noted at `market_data_categories.py:1279-1286` (not
       yet confirmed live). A precisely-scoped "does X match Y" check, not a design call. Repo: instruments-service.

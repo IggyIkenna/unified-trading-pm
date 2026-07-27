@@ -68,13 +68,12 @@ looking like a gap.
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Add `ldr_main_qg_failure` and `sit_retry_cap` to `agent-orchestrator/server/escalation.py`'s
-      `WALL_TYPES` set** (with whatever handling/role-routing the other wall_types get — read how `ldr_qg_failure` is
-      handled as the closest analog for `ldr_main_qg_failure`, and how `sit_failure` is handled as the closest analog
-      for `sit_retry_cap`) AND to `unified-trading-pm/.github/workflows/escalate-to-orchestrator.yml`'s case-statement
-      validation (lines ~138-144) in the SAME change — the two must stay in lockstep or this exact bug recurs. Add a
-      regression test confirming both wall_types now validate and reach the escalation dispatch path (not just a
-      lint-level check that the strings match).
+- [x] [BACKEND] P2. **Add `ldr_main_qg_failure` and `sit_retry_cap` to `agent-orchestrator/server/escalation.py`'s
+      `WALL_TYPES` set** — DONE, `agent-orchestrator@63f5cbd` (also added `stuck_promotion_pr`, found missing from the
+      set too). `unified-trading-pm/.github/workflows/escalate-to-orchestrator.yml`'s case-statement validation fixed in
+      lockstep, `unified-trading-pm@b3b4183a5`. Both route to the generic `cicd` prompt template, confirmed via
+      `escalation._prompt_template_for()`. Regression test added asserting both wall_types validate and route correctly
+      (not just a lint-level string match).
 - [ ] [BACKEND] P3. **Audit for a THIRD class of this bug**: grep every `.github/workflows/*.yml` across the fleet for
       `wall_type:` literals, diff against `escalation.py`'s `WALL_TYPES` set, and confirm no other dispatcher emits an
       unrecognized value. If found, fold into the same fix above rather than filing a new doc.

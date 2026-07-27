@@ -121,6 +121,19 @@ worktree reflog or re-derive from this doc.)
       Likely same disruption window as the related per-slot-cron-staleness issue (disk resize + 2 orchestrator restarts,
       same day).
 
+### Related symptom — corrupted `/done` evidence SHA in the recovery race window (review, 2026-07-27T17:21Z)
+
+A downstream effect of this bug also corrupts evidence-backed completion: task
+`sports_consolidated_native_ao_extract-002` (slot-14) posted `/done` citing sha `017f33c73` as its evidence, but that
+sha is slot-11's UNRELATED commit — the commit that actually carries this task's work (Track C K1/K2 re-verify) is
+`ae03d60ab` (main's recovered cherry-pick of the orphaned `0aa00b715`). The revived-post-kill worker found its work
+already landed by the recovery and echoed whatever `HEAD` happened to be at that moment (which by then included
+slot-11's just-landed commit) rather than its own SHA. Net outcome is correct (checkbox genuinely flipped, content on
+origin), but the self-reported evidence SHA is WRONG — a worker capturing `HEAD` in the post-recovery race window
+instead of the SHA it authored. This is a second reason to fix the reset (it doesn't just orphan commits — it also
+pollutes the audit trail QG relies on for evidence-backed completion). Fold into the root-cause fix: a worker's `/done`
+evidence must cite the SHA it authored, verified against the task's touched files, not a bare `HEAD` snapshot.
+
 ## Why this matters
 
 `pull --ff-only` can never drop an ahead commit; only a `reset`/`branch -f` to origin can. Any fleet automation that

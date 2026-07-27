@@ -157,7 +157,7 @@ drift_direction: advance-code
       `SPORTS_ODDS_SNAPSHOT` contract via both new instrument_types; the fallback is sports-scoped only (a non-sports
       asset_group with the same instrument_type/data_type still raises `SchemaContractNotFoundError`). Full
       `quality-gates.sh` green (sentinel = `39282596`).
-- [ ] [DATA] P1. **Move the `instrument_type=odds/` GCS objects for the 5 already-unambiguous venues ONLY**
+- [x] ✅ [DATA] P1. **Move the `instrument_type=odds/` GCS objects for the 5 already-unambiguous venues ONLY**
       (`BETFAIR_EX_UK`, `BETFAIR_EX_EU`, `SMARKETS`, `MATCHBOOK` → `exchange_odds/`; `BETFAIR_SB_UK`, `BETMGM` →
       `fixed_odds/`) via UTL `gcs_copy_object`/`gcs_delete_object` (never subprocess gsutil); snapshot → move →
       independent re-read count; idempotent + resumable. **Self-justified, not `[OPERATOR]`-gated**: mirrors the same
@@ -165,7 +165,29 @@ drift_direction: advance-code
       league_id relocation) — reversible via the snapshot, and scoped only to the venues whose class is already decided.
       **Excludes** the 3 still-ambiguous venues (see the follow-on todo below). (repo: instruments-service /
       market-data-processing-service). **Done when**: an independent re-read count of the moved objects matches the
-      pre-move snapshot count for exactly these 5 venues, with 0 objects lost.
+      pre-move snapshot count for exactly these 5 venues, with 0 objects lost. ✅ **DONE 2026-07-27 —
+      `market-tick-data-service@cee67ac0`:** before executing, read
+      `issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (P0, open) per this plan's own todo-2
+      pointer and confirmed none of these 6 venues (title says "5", the venue list itself names 6) are among the ~19
+      unmapped venues that doc's banner protects against — added a PARTIAL RECONCILIATION section to that doc recording
+      this (doc stays open for the other venues). Wrote
+      `market-tick-data-service/scripts/sports/exchange_fixed_odds_fork/move_odds_unambiguous_venues_2026_07_27.py`
+      (snapshot/migrate/verify modes, manifest-derived enumeration — no live GCS walk, no per-row content rewrite since
+      `instrument_type`/`data_type` are pure partition keys not row-content columns per `SPORTS_ODDS_TRADES.columns`).
+      Real live scope (manifest-measured, not the plan's stale 561,260/32,616 figures): **44,525 shards / 12,778,825
+      rows**, all currently `instrument_type=ODDS/data_type=TRADES` (uppercase) on disk — confirmed fresh soft-delete
+      retention = 604800s (qualifies for self-authorized delete per delete-safety-protocol §3a path (c)). Snapshot
+      phase: 44,525/44,525 sources confirmed on disk, 0 target collisions. Migrate phase (real PROD write, `--confirm`):
+      **44,525 copied, 44,525 deleted, 0 FAIL** — server-side `gcs_copy_object` rewrite to lowercase
+      `instrument_type=exchange_odds`/`fixed_odds`, `data_type=trades` (matches the UAC contract keys shipped in todo
+      3 + the final sports casing doctrine), each copy verified (crc32c+size match) before its source was deleted.
+      Independent re-read verification (separate `verify` pass, fresh describes): **target OK=44,525 MISSING=0
+      MISMATCH=0, source objects still present=0** — exactly this todo's done-when. **Adjacent finding** (out of this
+      todo's scope, not fixed here): a pre-existing, manifest-UNREGISTERED lowercase
+      `instrument_type=odds/data_type=trades` duplicate also exists on disk for these 6 venues (residue of the
+      now-superseded K1/K2 UPPER-casing migration, which copied but never deleted) — left untouched; recorded as an
+      addendum on `sports_consolidated_closeout_2026_07_19.md`'s open K1/K2-revert todo (Step 3) since it's already
+      tracked there.
 - [ ] [DATA] P1. **Now that the mapping todo above is ruled (2026-07-26: bare `BETFAIR`→EXCHANGE_ODDS,
       `ODDS_API`→FIXED_ODDS, `PINNACLE`→FIXED_ODDS), move those 3 venues' GCS objects the same way** (same snapshot →
       move → independent re-read count pattern as the unambiguous-venue todo above: `BETFAIR`→`exchange_odds/`;

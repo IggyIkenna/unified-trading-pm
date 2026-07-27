@@ -58,33 +58,21 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P1. **Verify footystats MATCHES/PREDICTIONS/ODDS `pending_fetch` is still 0 and close the stale todo #4
-      checkbox in this issue doc.** Read the live `_index/availability_index.parquet` (single-walk discipline,
-      shard-merged via `_merge_shard_frames`, same dedup key the reader/consolidator use) and confirm
-      `(footystats,     MATCHES)` + `(footystats, PREDICTIONS)` + `(footystats, ODDS)` `pending_fetch == 0` still holds.
-      This was already verified 0 on 2026-07-12 per the now-archived
-      `plans/archive/2026_07/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` (`status: complete`,
-      `instruments-service@e54ffc2a`'s `footystats_residual_closer_2026_07_12.py`, run to completion, explicitly citing
-      THIS issue doc's own todo #4 as the closing mechanism) and item #7 (the cross-source VERIFY gate, also closed
-      2026-07-12) — the underlying work already happened under a different plan's task dispatch, so this doc's own
-      checkbox was never flipped to match. **Conflict-check clearance (2026-07-25 re-check):** the flagged conflict was
-      `sports_consolidated_closeout_2026_07_19.md`'s own "Sports P2b" line (still reads "reference sources ... never
-      started", inherited unedited from the superseded top-level coordinator) — provably stale for footystats
-      specifically, per the archived plan's `status: complete` + explicit closing citation (re-verified current
-      2026-07-25: archived plan still `status: complete`, this doc's todo #4 still `[ ]`, no drift). Do NOT re-run the
-      typing pass or re-dispatch a backfill VM as a first move — that would only reproduce/waste-spend on an
-      already-closed residual per this doc's own documented lesson. A single fresh manifest read is sufficient to
-      confirm no regression. If the fresh read confirms zero across all three, flip this doc's own
-      `- [ ] [DATA] P2. BLOCKED-PREREQUISITES ... Re-verify + re-dispatch footystats backfill VM after the above land`
-      checkbox to `[x]`, citing both the fresh read and the 2026-07-12 archived-plan evidence chain, and flip this doc's
-      frontmatter `status: open` → `status: resolved`. If the fresh read instead shows a genuine regression, do NOT
-      silently re-close the checkbox — report the regression as a distinct new finding per the findings-triage rule
-      instead of papering over it. (repo: unified-trading-pm doc edit; read-only manifest check against
-      instruments-service sports data, no code change expected either way). **Done when**: a live manifest read is
-      recorded showing the current (footystats, MATCHES/PREDICTIONS/ODDS) `pending_fetch` counts, AND either (a) all
-      three read 0 and this doc's todo #4 checkbox + frontmatter `status` are flipped citing both the fresh read and the
-      2026-07-12 archived-plan evidence, or (b) a nonzero count is found and filed as its own new finding (not silently
-      re-closed). Source: `issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md`.
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (data_engineering slot) — outcome (b): genuine regression found, NOT silently
+      re-closed.** A fresh single-walk read of `_index/availability_index.parquet` shows the 2026-07-12
+      zero-verification no longer holds: `(footystats, MATCHES)` pending_fetch=35,151, `(footystats, PREDICTIONS)`
+      pending_fetch=35,151, `(footystats, ODDS)` pending_fetch=35,349. Root-caused (not just reported): the sports
+      canonical universe grew to include ~300+ additional footystats-non- covered leagues since the last typing pass;
+      the existing non-covered-league typing scripts
+      (`type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py`,
+      `type_footystats_odds_non_covered_leagues_2026_06_29.py`) haven't been re-run against the larger universe — live
+      dry-run of both confirms they'd close 105,370 of the 105,651-row live total (99.7%). NOT a regression of the
+      2026-07-08 write-path fixes (still correct/unaffected). Per this todo's own instruction,
+      `footystats_matches_predictions_fetch_gaps_2026_07_08.md`'s todo #4 checkbox + `status: open` are left UNCHANGED
+      (not silently re-closed) — filed as its own actionable finding:
+      `issues/footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md` (4 todos: re-run both
+      existing typing scripts with `--apply`, root-cause the small ~281-row remainder, then re-verify + close out the
+      source doc's todo #4). unified-trading-pm doc-only change, no code touched either repo.
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — plus a genuine NEW finding+fix beyond the doc-sync scope.**
       Reconcile the stale last todo in `plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md` — a
       doc-sync gap, not a real conflict: (1) re-run the sanctioned census —
@@ -111,15 +99,15 @@ drift_direction: advance-code
       unchanged. Source: `issues/fixtures_manifest_legacy_backfill_2026_07_24.md`.
 
       **Evidence + a genuine new finding beyond scope**: re-ran the census live — `FIXTURES` is 100,801 (NOT the
-          expected stable 55,233), because it's actively GROWING: 44,889 of the 100,801 rows were written TODAY
-          (2026-07-26, single burst ~01:30 UTC) via `enumerator_run_id='enum-universe-sports-20260726-013031'` —
-          the sports expected-universe enumerator (`enumerate_expected_universe.py`) has a 10th, previously-missed
-          call site that seeds legacy `"FIXTURES"` `expected_unattempted` rows (its `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`
-          map had `ODDS_HORIZON_BUCKET` but no `FIXTURES` entry). This is a genuine, small, clear root-cause fix
-          (one dict entry, directly analogous to the existing pattern) — fixed inline (not just documented) per
-          findings-triage: added `"FIXTURES": "FIXTURES_SCHEDULE"` to the override map + a regression test (184/184
-          pass) — `instruments-service@ca8bd7b3ab`. Full writeup + census output in the target doc's new
-          `## Update (2026-07-26)` section (the doc's original `[DATA] P0` todo also flipped `[x]` citing the 3 SHAs).
+                      expected stable 55,233), because it's actively GROWING: 44,889 of the 100,801 rows were written TODAY
+                      (2026-07-26, single burst ~01:30 UTC) via `enumerator_run_id='enum-universe-sports-20260726-013031'` —
+                      the sports expected-universe enumerator (`enumerate_expected_universe.py`) has a 10th, previously-missed
+                      call site that seeds legacy `"FIXTURES"` `expected_unattempted` rows (its `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`
+                      map had `ODDS_HORIZON_BUCKET` but no `FIXTURES` entry). This is a genuine, small, clear root-cause fix
+                      (one dict entry, directly analogous to the existing pattern) — fixed inline (not just documented) per
+                      findings-triage: added `"FIXTURES": "FIXTURES_SCHEDULE"` to the override map + a regression test (184/184
+                      pass) — `instruments-service@ca8bd7b3ab`. Full writeup + census output in the target doc's new
+                      `## Update (2026-07-26)` section (the doc's original `[DATA] P0` todo also flipped `[x]` citing the 3 SHAs).
 
 - [ ] [DIAG] P1. **market-tick-data-service: sweep the manifest-driven `odds_horizon_bucket` index to size the extent of
       the stale/zombie-tick contamination that predates the now-confirmed-shipped 2026-07-25 staleness-cap fix

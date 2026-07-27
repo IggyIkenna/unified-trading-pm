@@ -262,3 +262,27 @@ stranded in `plans/archive/` where the backlog regen (active-plans-only) would n
       `rebuild_prediction_manifest.py`'s per-capture write site) and correct the provenance stamp at the write site,
       then re-emit or directly correct the historical rows following the same snapshot-then-write, stop-on-surprise
       precedent as this doc's prior purges.
+
+## Update 2026-07-27 (slot-16) — combined residual-row diagnosis (batch2 todo): both sub-items already resolved, 0 rows to purge/backfill
+
+> Read-only live re-diagnosis against `market-data-tick-pred-prd-central-element-323112`'s
+> `_index/availability_index.parquet` (786,644 rows, fresh single-walk read — not cached), per
+> `plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md`'s "Combined residual-row diagnosis" todo. Script:
+> `instruments-service/scripts/diagnose_blank_data_type_and_polymarket_source_residuals_2026_07_27.py` (lifecycle:
+> oneoff, delete after this diagnosis's gate is confirmed GREEN). No writes were made — both predicates measured 0 rows,
+> so the snapshot-then-write purge/backfill machinery was never exercised.
+
+- **(a) 17 blank-`data_type` phantom aggregate-marker rows — ALREADY RESOLVED, 0 remain.** `df["data_type"]` has exactly
+  5 distinct values across all 786,644 rows (`book_snapshot_5`, `trades`, `prediction_canonical_question_group`,
+  `prediction_trades`, `market_lifecycle`) — zero nulls, zero blank strings. The 17 rows this todo described are gone
+  (superseded by a subsequent full manifest rebuild — the same pattern as the 2026-07-26/07-27 `slot-11` finding that
+  the 189 blank/UNKNOWN-venue rows and the 2,414 v4/v5 rows had already self-resolved via later rebuilds). Nothing to
+  diagnose or purge — explicit non-actionable ruling: already clean.
+- **(b) `batch_polymarket_clob` blank-`source` rows — ALREADY RESOLVED, 0 remain.** Of 711,544 live
+  `pipeline_mode=batch_polymarket_clob` rows, 100% carry `source=polymarket_clob` — zero nulls, zero blank strings. This
+  confirms the 2026-07-19 `canonicalize_prediction_manifest_2026_07_18.py --dry-run` measurement (2, down from the
+  source issue's original 27,292 on 2026-07-10) has since fully closed to 0 via subsequent rebuild/canonicalize passes.
+  No backfill needed — explicit non-actionable ruling: already resolved.
+
+Both sub-items of the combined todo are confirmed closed by live measurement; no code/data change was required beyond
+the diagnostic script itself (kept for lifecycle-marker traceability, delete-when as declared in its header).

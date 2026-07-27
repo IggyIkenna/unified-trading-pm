@@ -1,25 +1,40 @@
 ---
 doc_type: issue
-title: Verify the no-preempt-in-flight-validation fix actually cuts promote-PR quality-gates-v2 churn
+title: >-
+  Promote-bot fix verified for its own mechanism, but measurement found the ACTUAL dominant churn source is
+  quickmerge.sh's Option-B direct PR (head=live-defi-rollout) — still unfixed
 summary: >
-  Tracking note for the fix shipped this session in `ldr-to-main-promote.yml` / `ldr-to-main-promote-fleet.yml` (commit
-  `48800b7ad`, merged to `main` via PR #1674): the promote bots no longer supersede an open `chore(promote)` PR the
-  moment LDR's tip moves — they now wait until that PR's `quality-gates-v2` run reaches a terminal state before cutting
-  a fresh snapshot. Prior behavior measured ~15-20 wasted `quality-gates-v2` runs before one attempt survived long
-  enough to merge (observed on PM directly). This doc exists to record the first live before/after measurement rather
-  than leave the claim theoretical.
+  Started as a verification tracking note for the `ldr-to-main-promote.yml` / `ldr-to-main-promote-fleet.yml` fix
+  (commit `48800b7ad`, merged via PR #1674) — that fix is real and correct FOR ITS OWN MECHANISM (the standing cron
+  bot's frozen-per-SHA-ref promote PRs no longer get superseded mid-validation). But the live measurement this doc set
+  out to make found something more important: PM's `quickmerge.sh` Option-B path (`scripts/quickmerge.sh` ~line 1802,
+  `--head "$BRANCH"` where `$BRANCH=live-defi-rollout`) opens its OWN separate PR straight to `main` with
+  head=`live-defi-rollout` — a branch that moves every 20-90s under fleet commit velocity. That PR (`gh pr create --base
+  main --head live-defi-rollout`, "Automated PR. Will auto-merge once quality gates pass.") is NOT frozen to a snapshot
+  SHA the way the bot's PRs are — it just sits open and absorbs every subsequent commit via `pull_request: synchronize`,
+  each one re-triggering a fresh `quality-gates-v2` run. **Measured directly on PR #1675** (opened 13:51:54Z): **22
+  `quality-gates-v2` runs in ~45 minutes** (14 success, 7 cancelled, 1 in-flight at measurement time) — this is the SAME
+  symptom the operator originally reported, and my earlier fix does not touch it, because it's a structurally different
+  code path.
+
+  The standing bot's own "bug#7 guard" already recognizes this exact shape (`head=live-defi-rollout, base=main`) as a
+  stale land-mine and closes it on its next tick (~15-45min cadence) — so the churn window is bounded, not infinite, but
+  every quickmerge ship that happens to find no such PR already open re-creates it, and the fleet ships constantly. This
+  is the actual dominant churn source, not the bot mechanism I fixed earlier this session.
 status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
-tags: [ci-cd, quality-gates-v2, promote-bot, verification]
+tags: [ci-cd, quality-gates-v2, quickmerge, promote-bot, verification, root-cause-correction]
 related: [/codex/08-workflows/ci-cd-flow.md]
 created: 2026-07-27
 parent_epic: infrastructure_master
-priority: P3
-source: operator request, 2026-07-27 — "ship a small change then confirm churn has improved"
+priority: P1
+source:
+  operator request, 2026-07-27 — "ship a small change then confirm churn has improved"; the measurement itself surfaced
+  this correction
 assigned_vm: NA
 execution_scope: local-only
 assigned_role: infra
@@ -30,12 +45,58 @@ resolved_by:
 depends_on: []
 ---
 
-# Verifying the promote-PR churn fix
+# Promote-PR churn — corrected root cause
+
+## What was measured
+
+- PR #1675 (`IggyIkenna/unified-trading-pm`, opened `2026-07-27T13:51:54Z`, head=`live-defi-rollout`, base=`main`, body
+  "Automated PR. Will auto-merge once quality gates pass." — quickmerge's own template, not the bot's) —
+  `gh pr view 1675` confirms author `IggyIkenna` (PAT-driven, i.e. quickmerge itself, not the `uts-ci-poller` App bot).
+- `gh run list --repo IggyIkenna/unified-trading-pm --workflow=quality-gates-v2.yml` filtered to
+  `event=pull_request AND headBranch=live-defi-rollout AND createdAt >= 2026-07-27T13:51:54Z`: **22 runs** in the ~45
+  minutes since the PR opened (14 `success`, 7 `cancelled`, 1 still running) — one fresh run per commit landing on
+  `live-defi-rollout` from ANY concurrent slot/agent, not just PM-authored ones.
+- Confirmed via `scripts/quickmerge.sh` (~lines 1797-1841): PM's "Option B" path (`PR_BASE=main` when
+  `REPO_NAME=unified-trading-pm`) builds `gh pr create --base main --head "$BRANCH"` where `$BRANCH` is always
+  `live-defi-rollout` for PM — there is no per-SHA freeze here, unlike the bot workflows. `gh pr create` silently fails
+  (swallowed by `2>/dev/null`) once such a PR already exists, so subsequent quickmerge invocations just leave the
+  existing one to auto-merge whenever CI happens to pass on whatever head SHA is current at that moment — this IS the
+  mechanism, not a bug in error handling.
+- Contrast: every OTHER (non-PM) repo's quickmerge path (`PR_BASE=staging`) does NOT open a PR itself for the normal
+  case at all — it just lands on LDR and exits, relying entirely on the periodic `ldr-to-main-promote`-style drain bot
+  (see `scripts/quickmerge.sh` ~line 1748-1751, "Landed on $BRANCH... Tier-C drain... promotes"). PM's Option-B path is
+  the ONE place that still opens its own unfrozen, moving-head PR.
+
+## Why this session's earlier fix didn't catch it
+
+The earlier fix (this session, commit `48800b7ad`) patched `ldr-to-main-promote.yml` / `-fleet.yml`'s own
+supersede-on-new-tip logic — that mechanism is real and does fire (its frozen-per-SHA-ref PRs, e.g. #1670/#1674, merge
+cleanly), but it only becomes the ACTIVE promotion path when no live-branch-headed PR is already open. In practice,
+since quickmerge.sh's Option-B path opens one on nearly every ship (whenever the bot hasn't already closed the prior
+one), the fleet spends most of its time being drained through the churning path, not the fixed one. The earlier fix is
+not wrong — it's just gating a mechanism that rarely gets the chance to be the bottleneck.
+
+## Proposed fix (NOT executed — touches quickmerge.sh, the fleet's core shipping gatekeeper)
+
+Make PM's Option-B path behave like every other repo's path already does: **land on `live-defi-rollout` and exit,
+without quickmerge itself opening a direct PR to `main`.** Let the (now-fixed) `ldr-to-main-promote.yml` bot own 100% of
+PM's main-ward promotion via its frozen-per-SHA-ref mechanism (bot ticks every ~15min; PM's LDR→main SLA comment already
+targets ~30min). This removes the churning PR-open path entirely rather than papering over it, and is structurally
+consistent with the rest of the script.
+
+**Why this needs explicit confirmation before shipping**: `quickmerge.sh` gates every commit across the entire fleet.
+This specific branch (Option-B, PM only) is narrower blast-radius than touching the shared staging-first path, but it
+directly changes what "did my quickmerge succeed" looks like for PM specifically (no more immediate PR link in the
+quickmerge output; the commit shows up on main only after the next bot tick, ~15-30min later instead of
+near-immediately). That is a real behavior change worth the operator seeing before it ships, not something to silently
+change mid-loop.
 
 ## Todos
 
-- [ ] [VERIFY] P3. This commit itself is the test case: ship via quickmerge, then count how many `quality-gates-v2` runs
-      fire against the resulting `chore(promote)` PR's head SHA before it merges
-      (`gh run list --repo IggyIkenna/unified-trading-pm --workflow=quality-gates-v2.yml --json headSha,createdAt`
-      filtered to that PR's head). Expect ~1-2 runs (vs. the pre-fix 15-20) — record the actual count here once
-      observed, then archive this doc with the result.
+- [ ] [VERIFY] P1. Get operator confirmation, then remove quickmerge.sh's Option-B direct-PR-open step for PM
+      (~scripts/quickmerge.sh lines 1784-1845) and replace with the same "land on LDR, exit, bot drains it" behavior
+      every other repo already uses. Re-measure `quality-gates-v2` run count against a subsequent PM shipment window to
+      confirm the churn actually drops once quickmerge stops opening this PR.
+- [ ] [VERIFY] P2. Re-run this exact measurement (count `pull_request` `quality-gates-v2` runs on any open
+      `head=live-defi-rollout, base=main` PR over a 45min window) after the fix ships, to get a genuine before/after
+      pair instead of a single-sided measurement.

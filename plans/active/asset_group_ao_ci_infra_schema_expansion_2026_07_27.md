@@ -120,21 +120,37 @@ drift_direction: advance-docs
 
 ## Phase 3 — Follow-ups intentionally NOT in this plan (tracked, not silently dropped)
 
-- [ ] [DOC] P3. Add the 3 residual never-cited-but-genuinely-cross-cutting docs found by Phase 2's verification pass to
-      `cross_cutting_consolidated_closeout_2026_07_25.md`'s own Sources/Tracks lists (an editorial call about which
-      Track each belongs under, not a mechanical retag — that's why it's not folded into Phase 2 itself):
-      `instruments_service_e2e_live_mock_observability_2026_07_27.md`,
-      `issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md`,
-      `issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md`.
-- [ ] [REVIEW] P3. Once the concurrent `na-eligibility-audit`/`ag-closeout-audit` skill work (see coordination note
-      above) has landed and stabilized, revisit whether `ag-closeout-audit` SKILL.md's classification-mechanism section
-      needs a follow-up edit now that ao/ci have real enum values (its current "no dedicated asset_group value — read
-      the closeout doc's Sources list instead" workaround section becomes obsolete once Phase 1+2 land).
-- [ ] [REVIEW] P3. Once `plan_health.py` is confirmed not mid-edit by the concurrent agent, resume the
-      `federated-wishing-lovelace` scheduling design (retime `ag-closeout-auditor`/`docs-reconcile`/`plan-reconciler`
-      nightly timers to 2h gaps; shard `/ag-closeout-audit all` into 9 parallel per-tranche AO workers via a new
-      `tranche` field threaded through `PlanHealthDispatchRequest` -> `autospawn._do_spawn` -> a single-tranche STEP 1
-      variant in `agents/ag_closeout_auditor.md`) — full design already scoped, not re-derived here.
+- [x] [DOC] P3. Investigated the 3 residual never-cited docs — 1 was genuinely cross-cutting and simply new (added to
+      `cross_cutting_consolidated_closeout_2026_07_25.md`'s Track 9), but the other 2 turned out to be Orthogonality
+      HARD CHECK violations, not missing-citation cases:
+      `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` was dual-tagged `[cefi, cross-cutting]` (the
+      verification VM happened to be a CeFi run, but the underlying bug — `setup-data-pipeline-vm.sh` exec-dispatch — is
+      asset-group-agnostic; retagged to `[cross-cutting]`, added to Track 17) and
+      `issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md` was dual-tagged `[cross-cutting, infrastructure]`
+      (its own summary already said "not a data-pipeline-hardening concern"; retagged to `[infrastructure]` only —
+      turned out to already be correctly listed in `infra_consolidated_closeout_2026_07_25.md`'s Track 2, so no
+      Sources-list addition was needed there, just the tag fix). Re-verified after:
+      `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` now reports 0/99 never-cited (down from 3),
+      `check_ag_closeout_linkage.py`: 0 orphans (681 docs scanned).
+- [x] [REVIEW] P3. `ag-closeout-audit` SKILL.md's classification-mechanism section updated — the concurrent
+      `na-eligibility-audit` skill work landed and stabilized (confirmed stable, no live edits, minor non-conflicting
+      touches only) well before this check. Replaced the "no dedicated asset_group value for ao/ci/infra — read the
+      closeout doc's Sources list instead" workaround (now retired) with: `asset_group` containing
+      `ao`/`ci`/`infrastructure` is the PRIMARY membership signal for those 3 tranches as of 2026-07-27 (Phase 1+2
+      above), Sources lists remain a secondary cross-check/fallback for docs the retag pass didn't cover (created after
+      2026-07-27, or mistagged). Also fixed an adjacent stale claim in the same section (the "Total-coverage gap"
+      paragraph previously said `asset_group: infrastructure` needed special fold-in handling — it's now a direct
+      tranche-name match, no special-case needed; `asset_group: meta` remains the one genuine still-open gap,
+      re-measured at 65 docs corpus-wide, `infrastructure` separately re-measured at 59).
+- [x] [REVIEW] P3. `plan_health.py` confirmed free (clean, no uncommitted changes, mtime ~4.5h old at check time) — and
+      the `federated-wishing-lovelace` scheduling design turned out to be ALREADY SHIPPED by a concurrent session before
+      this check, not merely unblocked: `agent-orchestrator@afe2635` (2026-07-26, "shard ag-closeout-audit dispatch by
+      tranche; retime nightly gaps to 2h") added the `tranche` field to `PlanHealthDispatchRequest` + sharded
+      per-tranche dispatch + widened `plan-reconciler`(01:00)/`docs-reconciler`(03:00) to a 2h gap;
+      `agent-orchestrator@f4a116e` (2026-07-27) added the same tranche-sharded dispatch mode for `/na-eligibility-audit`
+      plus its own `na-eligibility-auditor.timer` (07:00, 2h after `ag-closeout-auditor.timer`'s 05:00). Full chain
+      verified live in the timer install scripts: 01:00 -> 03:00 -> 05:00 -> 07:00, all 2h apart, all tranche-sharded.
+      Nothing left to resume.
 
 ## Codex SSOTs
 
@@ -170,3 +186,14 @@ drift_direction: advance-docs
   content gaps tracked as a Phase 3 follow-up. `check_ag_closeout_linkage.py`: 0 orphans. Cross-cutting citation
   false-positive rate: 92.5% -> 3%. Remaining work is Phase 3 only (both items explicitly deferred, see their own
   entries for why).
+- **2026-07-27 (operator check-in)** — Operator asked whether `plan_health.py` was free yet, and separately whether
+  `status: draft -> active` is "the orphan-detection skill's" mechanism and whether any draft `ao` plans were lying
+  around. Answered: `plan_health.py` was not just free — the whole `federated-wishing-lovelace` scheduling design it was
+  blocking had ALREADY shipped (`agent-orchestrator@afe2635`/`@f4a116e`, see the now-flipped item above; not a "resume",
+  nothing left). On draft->active: clarified it's not exclusive to `/ag-closeout-audit` — it's `task_template.md`'s
+  general draft-gated-finalize-twin convention, used by BOTH `/ag-closeout-audit` (Phase 3 carve- out) and
+  `/na-eligibility-audit` (Phase 2 reclassify) whenever either creates a new gated companion doc. Checked the corpus for
+  stuck/forgotten `ao`-topic drafts (`asset_group` containing `ao` OR `parent_epic` in
+  `{orchestrator_master, agent_operating_framework_master}`, `status: draft`): exactly ONE match,
+  `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, and it is correctly still-draft (its source batch has 3/11
+  todos done, not yet complete) — not stuck, working as designed. No action needed.
