@@ -159,3 +159,23 @@ objects across Jun-Dec 2020 + all of 2021-2026) is unknown and requires the full
   - `features-service` QG also green (`--no-fix`, own named file). Not yet committed as of this entry — commit +
     quickmerge next, then launch the VM with an armed heartbeat watchdog in the same turn per async-wait discipline,
     then update this log with the VM name + manifest URI + flagged-object count before flipping Todo 1's checkbox.
+- 2026-07-27 (slot-15, `data_engineering`), Todo 1 IN PROGRESS — resumed from slot-13's handoff (VM still not launched —
+  do not flip the checkbox until the census manifest exists at the cited path with a reported count):
+  - slot-13's `_write_census_manifest()` edit to `purge_sports_derived_features_post_floor_residue_2026_07_27.py` was
+    never committed in their session (their own log said "not yet committed as of this entry") and each slot is its own
+    `git clone` (Path-B topology) — so this slot's `features-service` clone did not carry that diff; re-implemented it
+    independently as `_write_stable_census_manifest()`, called unconditionally after `scan()` for every mode
+    (dry-run/`--apply`/`--recensus`), writing to the same cited stable path
+    `gs://features-sports-prd-central-element-323112/_audits/derived_features_postfloor_residue_census_2026_07_27.json`.
+    QG green (`--no-fix`). **Shipped: `features-service@a90256f5`** (quickmerge hit a branch-drift rejection on first
+    push — another slot landed a commit first — recovered per RULES.md via `git pull --rebase --autostash`, re-ran QG to
+    refresh the sentinel SHA, re-quickmerged clean; `ahead=0` verified).
+  - Launched the census VM: `sports-derived-features-census-20260727-173244` (`asia-northeast1-c`, SPOT
+    `e2-standard-4`). First launch attempt failed `lc_verify_tarball_freshness` (`auto` mode) because
+    `deployment-service`'s `.venv` did not exist in this slot clone (`gcs_upload_via_adc.py` —
+    `ModuleNotFoundError: deployment_service`) — ran `uv sync` in `deployment-service` (158G free on `/home`, no
+    disk-pressure concern) to build it, then re-ran the launcher; it auto-republished the stale `features-service` +
+    `unified-api-contracts` tarballs and launched clean. Armed a `run_in_background` heartbeat watchdog (30-min cap,
+    polls VM status + run.log size + the manifest's `generated_at`/`total_delete`/`days_scanned` every 30s) in the same
+    turn per async-wait discipline. Awaiting completion before flipping the checkbox — will report the VM name +
+    manifest URI + flagged-object count here once the watchdog confirms the manifest exists.
