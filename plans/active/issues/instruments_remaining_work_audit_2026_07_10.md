@@ -452,12 +452,12 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
     `plans/active/issues/empty_reprobe_disagreement_2026_06_22.md` Auto-filed daily-audit doc; candidate CSV referenced
     but disposition/trace not done.
 
-17. **Manifest hygiene RED — 2026_06_27** — `plans/active/issues/manifest_hygiene_red_2026_06_27.md` 1 unchecked
+17. **Manifest hygiene RED — 2026_06_27** — `plans/archive/issues/manifest_hygiene_red_2026_06_27.md` 1 unchecked
     diagnose+fix todo (defi: schema_version_not_v9, oracle_expects_but_empty, noncanonical paths, phantom_captured,
     shard_4pillar_fail), untouched since filing.
 
-18. **Manifest hygiene RED — 2026_06_29** — `plans/active/issues/manifest_hygiene_red_2026_06_29.md` Same pattern, cefi.
-    1 unchecked todo, untouched.
+18. **Manifest hygiene RED — 2026_06_29** — `plans/archive/issues/manifest_hygiene_red_2026_06_29.md` Same pattern,
+    cefi. 1 unchecked todo, untouched.
 
 ---
 

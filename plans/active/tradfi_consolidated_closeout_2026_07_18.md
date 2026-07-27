@@ -377,7 +377,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DESIGN] P3.** Taxonomy decision: add `EXPECTED_SOURCE_NOT_AVAILABLE`/`EXPECTED_CHAIN_META_ROW_NOT_DOWNLOADABLE`
       to UAC's closed-set `EmptyConfirmedReason` enum
     - **[INVESTIGATE] P3.** The actual writer that produced the original 34,260 misclassified rows was never identified
-  - [`plans/active/issues/phantom_captures_tradfi_2026_06_28.md`](/plans/archive/issues/phantom_captures_tradfi_2026_06_28.md)
+  - [`plans/archive/issues/phantom_captures_tradfi_2026_06_28.md`](/plans/archive/issues/phantom_captures_tradfi_2026_06_28.md)
     - **[CODE] P2.** Diagnose tradfi phantom root cause (ICE/FX 309 phantoms predate billing lockdown; blank data_type
       1,083 pre-v9 rows)
   - [`plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`](/plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md)

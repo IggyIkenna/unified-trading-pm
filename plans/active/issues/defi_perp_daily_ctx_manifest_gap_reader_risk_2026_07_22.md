@@ -41,7 +41,7 @@ related:
     plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
     plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     plans/active/issues/downstream_funding_staking_canonical_reader_audit_2026_07_21.md,
-    plans/active/issues/mtds_plan_reconciliation_2026_06_29.md,
+    plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md,
   ]
 created: "2026-07-22"
 last_updated: "2026-07-22"
