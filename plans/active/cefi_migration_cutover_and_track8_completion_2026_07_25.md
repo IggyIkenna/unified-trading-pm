@@ -945,3 +945,8 @@ every todo executes an already-decided spec from the parent doc.
   beyond this cycle's job — the currently-RUNNING list plus per-drop exit-code checks is the operationally sufficient
   signal); noting this here so a future reader isn't confused by the running-count arithmetic not summing to a clean 42.
   Nothing to relaunch this cycle.
+
+- **2026-07-27T~15:25Z (scheduled check-in) — 6 VMs still RUNNING** (`cs10-5d`, `cs3-2d`, `cs4-3d`, `cs7-4d-r2`,
+  `cs8-6f`, `cs9-1d`). 2 more clean completions (`cs10-4b`, `cs9-2e`, both confirmed `EXIT_STATUS=0`). No new
+  casualties. `cs7-4d-r2` healthy at 88,200/128,129 files (68.8%), steady ~7.9 files/sec. Fleet is converging — down to
+  6 shards. Nothing to relaunch this cycle.
