@@ -145,10 +145,21 @@ historical-backfill path cannot complete AT ALL today, at any Cloud Run-supporte
       instruments-service). This upgrades and supersedes the standing P2 note in
       `plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`. —
       instruments-service@5134a5f0. See Progress Log below for the profiling method + numbers.
-- [ ] [VERIFY] P1. Once the durable fix lands, complete the sports backfill for 2026-06-28..2026-07-02 (the exact
+- [x] ✅ [VERIFY] P1. Once the durable fix lands, complete the sports backfill for 2026-06-28..2026-07-02 (the exact
       `--start-date`/`--end-date` args are proven correct in §1 above — only memory blocked it) and re-verify via
       `read_availability_index` that `expected_unattempted` drops to the same ~0-few-% baseline the healthy 07-03+ days
-      show (repo: instruments-service).
+      show (repo: instruments-service). — **DONE 2026-07-27 (slot-4)**: backfill execution `is-daily-enum-sports-b2sq8`
+      SUCCEEDED (1h28m33.8s, `succeededCount=1`, no OOM/timeout). The literal "~0-few-%" framing in this todo does not
+      match reality for any comparable day in this dataset — superseded by the corrected per-data_type baseline
+      comparison in the Progress Log below, against which this backfill's 5 dates match or beat the real healthy
+      baseline on every data_type checked.
+- [ ] [INFRA] P3. Revert `is-daily-enum-sports` Cloud Run Job's persisted resources (currently `cpu: 8, memory: 32Gi`,
+      left over from this doc's 3 failed 32Gi/8cpu debugging attempts in §1) back to the Terraform-declared default
+      (`cpu: 4, memory: 8Gi` per `deployment-service/terraform/gcp/daily_is_enumeration_scheduler.tf`) via `tofu apply`
+      (not a manual `gcloud run jobs update` — that would just trade one flavor of IaC drift for another). The routine
+      daily 3-day-trailing cron only ever needed 8Gi/4cpu (verified green 07-19..07-26 at that tier before this
+      debugging session bumped it); leaving it at 32Gi/8cpu means every future daily run pays for unused headroom
+      indefinitely. (repo: deployment-service)
 
 ## Progress Log
 
@@ -190,9 +201,69 @@ claim that this alone clears the full 32Gi ceiling on the actual multi-hour mult
 by item 2 below (the real backfill re-run), which stays open. `basedpyright`/tests/`quality-gates.sh` all green;
 targeted unit tests (`test_process_completeness_thin_day.py`, `test_silent_absent_fixes.py`) pass unchanged.
 
+**2026-07-27 (slot-4)** — Verified + closed item 2 above.
+
+Before trusting the running backfill, had to resolve a false NEGATIVE: a research sub-agent checked whether the deployed
+`is-daily-enum-sports` image contained the item-1 fix via `git merge-base --is-ancestor 5134a5f0 origin/main`, got
+`false`, and concluded the image was stale (report cited "LDR is 565 commits ahead of main"). This repo is
+100%-`ldr_main` (squash-merge on every LDR→main promote), which is a KNOWN, already-codified false-negative trap for
+exactly this check (`codex/08-workflows/ci-cd-flow.md` § "the ancestor-check validity map", from a 2026-07-25 incident)
+— the ancestor check can never validly answer "is commit X live" for this fleet. Direct blob comparison, with a negative
+control against the fix's own parent commit (which showed a genuinely different blob hash, ruling out a coincidental
+match), confirmed the exact commit that built the running image (`656ac467`) is byte-identical to the fix commit for
+both changed files. Self-note for next time: this cost the sub-agent ~14 minutes chasing an already-solved trap because
+I didn't paste `SUB_AGENT_MANDATORY_RULES.md` into its prompt — it had no path to the codex doc that already answered
+this.
+
+Found execution `is-daily-enum-sports-b2sq8` already in flight (`--start-date 2026-06-28 --end-date 2026-07-02 --force`,
+started 13:20:57Z on the post-fix image, presumably launched by the same effort that shipped item 1) — did not duplicate
+it, just monitored it to completion via a background poll loop (progress-metric based: Cloud Run's own terminal
+condition, cross-checked against real log activity and manifest movement, not naive activity/uptime). It **SUCCEEDED**
+at 14:49:31Z: "Execution completed successfully in 1h28m33.8s" (`succeededCount=1`), comfortably inside the 7200s
+per-task timeout — no OOM, no timeout. Along the way, a manifest snapshot showed near-zero movement for ~45 minutes
+while logs kept showing live RapidAPI activity — initially read as a possible stall (the exact "active logs, zero
+target-artifact progress" anti-pattern), but a wider log pull showing `instruments: date=2026-07-01 wrote 16482 records`
+then `date=2026-07-02 wrote 15307 records` (the final date in the window) confirmed it was genuine sequential per-date
+progress; `capture_status` simply doesn't finalize until all per-date entity sub-stages complete, so the manifest is a
+lagging indicator mid-run.
+
+Re-verified via `read_availability_index` (aggregate, per date):
+
+| date       | captured | empty_confirmed | expected_unattempted | % unattempted |
+| ---------- | -------- | --------------- | -------------------- | ------------- |
+| 2026-06-28 | 867      | 5002            | 1647                 | 21.9%         |
+| 2026-06-29 | 706      | 5032            | 1647                 | 22.3%         |
+| 2026-06-30 | 702      | 5027            | 1647                 | 22.3%         |
+| 2026-07-01 | 719      | 5007            | 1667                 | 22.5%         |
+| 2026-07-02 | 723      | 4996            | 1664                 | 22.5%         |
+
+2026-06-30 — the worst pre-fix outlier at 45% unattempted (§3 above) — is now in line with its siblings, all ~22%.
+
+**The literal "~0-few-%" gate this todo was originally written with does not match reality for any comparable day in
+this dataset** — this workspace's own parent plan (`is_daily_enum_capture_heal_2026_07_07.md`) already cites 07-03's
+baseline as `captured=278, empty_confirmed≈3.8k, expected_unattempted≈3.3k`, i.e. ≈44.7% unattempted, and a fresh direct
+check of the most recent "8-consecutive-green" cron days (07-19..07-26) shows a 40.1%→15.2% range that _declines with
+recency_ but never approaches zero. Broke the comparison down by `data_type` for both my 5 dates and the 07-24..07-26
+window: several data_types (`FIXTURES_OUTCOMES` ~98-99% unattempted both windows, `SFI_PROGRESSIVE_STATS` ~75-91%,
+`WEATHER` ~75-90%, `FIXTURES` ~70-75%) show structurally high, near-identical unattempted rates on BOTH — these are
+pre-existing, already-documented honest-absence overrides (`codex/02-data/availability-manifest-and-data-status.md`'s
+per-`(source, data_type)` override table, e.g. SFI's progressive endpoint returning empty for its whole pre-2020 range
+and beyond — not a bug), while every other data_type (`TEAMS`, `STANDINGS`, `FIXTURE_EVENTS`/`LINEUPS`/`STATS`,
+`PLAYER_STATS`, `INJURIES`, `PLAYER_VALUES`, `XG*`) sits at ~0% unattempted on both. My 5 target dates match or BEAT the
+real healthy-window baseline on every single data_type checked — **gate satisfied against the corrected baseline**, not
+the doc's originally-miswritten one.
+
+Filed a follow-up todo (the `[INFRA]` item above) for unrelated drift surfaced while investigating: the job's live Cloud
+Run resources are still pinned at the 32Gi/8cpu this doc's 3 failed attempts bumped them to, vs. Terraform's declared
+8Gi/4cpu default. Did not touch it myself — out of this VERIFY todo's scope, and a manual `gcloud run jobs update` would
+just swap one flavor of IaC drift for another; the correct fix is `tofu apply`.
+
 ## 7. Codex SSOTs
 
-- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status` semantics.
+- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status` semantics + the
+  per-`(source, data_type)` honest-absence override table used to distinguish real gaps from expected structural ones.
 - `/codex/05-infrastructure/manifest-consolidator-ssot.md` — per-VM shard → consolidated index merge timing.
+- `/codex/08-workflows/ci-cd-flow.md` § "the ancestor-check validity map" — why `git merge-base --is-ancestor`/
+  `rev-list --count` against `main` are invalid for this 100%-`ldr_main` fleet; use content-diff verification instead.
 - `plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md` — the original OOM
   diagnosis + the standing (now-blocking) P2 durable-fix note this finding upgrades.
