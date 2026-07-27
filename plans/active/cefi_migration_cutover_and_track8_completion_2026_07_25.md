@@ -740,3 +740,8 @@ every todo executes an already-decided spec from the parent doc.
   (35,266/35,266), finalizing; `cs8-6f-p4` ~7min; `cs9-1d-q1` ~15min; `cs8-6f-p5` ~43min; `cs8-6f-p3` ~53min — the
   current bottleneck, still well under the 90min re-shard threshold. No casualties, no frozen VMs. Fleet is converging
   fast — down to 5 shards from the original 8-way + 8-way + 6-way resharding.
+
+- **2026-07-27T~19:14Z (scheduled check-in) — 2 VMs RUNNING, 3 more clean completions** (`cs8-6f-p2`, `cs8-6f-p4`,
+  `cs9-1d-q1`, all confirmed `EXIT_STATUS=0`). Only `cs8-6f-p3` (83.0%, 4.2 files/sec, ~26min) and `cs8-6f-p5` (80.3%,
+  3.0 files/sec, ~32min — current bottleneck) remain, both fresh/healthy. Fleet not yet fully drained — 2 shards left,
+  converging within the hour.
