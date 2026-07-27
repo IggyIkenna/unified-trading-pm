@@ -466,6 +466,21 @@ see the other open todo in the same issue doc), resume from whichever shard it r
 `Starting compute:` line) rather than restarting all 16 from shard 1 — the new duplicate-guard fix will now correctly
 skip any of the 7 already-running CEFI VMs / 2 TRADFI VMs it encounters again instead of adding an 8th/9th/10th.
 
+### 2026-07-27 (slot-2) — todo 9b: slot-7 still in-flight; closed the MDPS-parity duplicate-VM-guard followup instead
+
+Dispatched to todo 9b. Re-checked live fleet state: slot-7's driver (PID 3665121, started 11:21 UTC) STILL RUNNING,
+1h18m+ elapsed, alive not zombie. Per the slot-6/slot-10 resolution, did NOT launch anything.
+
+Used the dispatch productively to close the MDPS-parity followup flagged in
+`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (full detail there — confirmed
+vulnerable + the launcher-label insufficiency finding + both fixes): `market-data-processing-service@6cd96e8` (ports
+`_find_inflight_duplicate_vm` into both force/skip legs, 6 new tests, QG green 118s) + `deployment-service@c8ee47e`
+(extends `launch-mdps-backfill-vm.sh` labels with venue/data_type, 5 new tests).
+
+**Disposition:** todo 9b remains OPEN, still owned by slot-7's in-flight run — this closed an ADJACENT gap, not 9b
+itself. **Next session**: `ps aux | grep pipeline_e2e_check` for slot-7 first; if finished, read its report; if died
+mid-matrix, resume from its last shard (both drivers now duplicate-guarded).
+
 ## Deferred work after 2026-07-27
 
 | #   | Item                                                                                                                                           | Priority | Where tracked                                                                   | Gating                     |
