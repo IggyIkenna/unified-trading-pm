@@ -92,7 +92,7 @@ time) — it will recur for any other collision-group-mate pair phrased with a s
 
 ## Recommended decision
 
-- [x] ✅ [SCRIPT] P2. **DONE 2026-07-27 (slot-11) — agent-orchestrator@8f58166.** **Root-caused
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-27 (slot-11) — agent-orchestrator@5623ee6.** **Root-caused
       `regen_backlog_from_plan.py`'s brief-extraction — the suspected "nearby/pattern-based text grab" is REFUTED.**
       `_parse_open_todos` (`server/regen_backlog_from_plan.py:990`) matches `_UNCHECKED_RE` against ONE `raw_line` at a
       time and sets `description = m.group(1)` from THAT line's own capture only — it cannot cross into a neighbouring
