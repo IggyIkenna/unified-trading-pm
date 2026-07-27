@@ -149,12 +149,17 @@ def get_output_bucket(self, asset_group: str) -> str:
       that no longer exists post-fix) plus `test_main_batch_prune.py` and `test_ml_readiness_check.py` (patched
       `resolve_bucket` in `ml_readiness_check`'s own module) to patch at the new `features_service.sports.config` call
       site instead. Full `quality-gates.sh` green.
-- [ ] [DATA] P1. **operator** — decide whether to leave or delete the 2026-07-05 sports-features objects this run
-      created in `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-05/` (content is
-      real/valid — computed from real upstream reference data, not fabricated — but its provenance is an unintended test
-      invocation, not a tracked production backfill). Not auto-deleted here: unlike calendar's 0-row case, this content
-      is real and a normal production backfill for this day may legitimately want to compute the exact same rows anyway
-      — deleting it isn't obviously safer than leaving it, that call belongs to the operator, not to this audit.
+- [ ] [OPERATOR] P1. **RETAGGED 2026-07-27 (slot-10)** — was mistagged `[DATA]`, which made it AO-auto-dispatchable
+      despite the body text itself saying "that call belongs to the operator, not to this audit"; a worker cannot
+      determine this outcome alone (open-ended judgment call on real PROD content, not a checkable fact), so per
+      `task_template.md`'s AO-eligibility rule it needs the `[OPERATOR]` tag to route correctly. Surfaced as
+      BLK-features-sports-prod-objects (see this plan's dispatch history) rather than resolved unilaterally. Decide
+      whether to leave or delete the 2026-07-05 sports-features objects this run created in
+      `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-05/` (content is real/valid —
+      computed from real upstream reference data, not fabricated — but its provenance is an unintended test invocation,
+      not a tracked production backfill). Not auto-deleted here: unlike calendar's 0-row case, this content is real and
+      a normal production backfill for this day may legitimately want to compute the exact same rows anyway — deleting
+      it isn't obviously safer than leaving it, that call belongs to the operator, not to this audit.
 - [ ] [SCRIPT] P2. **features-service** — the remaining families the calendar issue's audit-todo named but this finding
       hasn't reached yet: `volatility`, `onchain`, `cross_instrument`, `multi_timeframe`, `commodity` — check each one's
       actual bucket-resolution call site (not just whether `is_test_run` is declared, the calendar finding's own
