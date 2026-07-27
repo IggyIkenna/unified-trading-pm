@@ -92,12 +92,38 @@ time) — it will recur for any other collision-group-mate pair phrased with a s
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P2. **Root-cause `regen_backlog_from_plan.py`'s brief-extraction for todos in the same
-      `collision_group`/adjacent-in-plan family** — confirm whether the extraction anchors on the todo's OWN checkbox
-      line position (correct) or does a nearby/pattern-based text grab that can cross adjacent todos sharing an opening
-      phrase convention (the suspected bug here). Add a regression test: two adjacent todos, same `collision_group`,
-      both opening with an identical "Conflict-check (...): shares ..." phrase — assert each generated task's `brief` is
-      anchored to ITS OWN checkbox line, not the sibling's. Repo: agent-orchestrator.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-27 (slot-11) — agent-orchestrator@\<pending\>.** **Root-caused
+      `regen_backlog_from_plan.py`'s brief-extraction — the suspected "nearby/pattern-based text grab" is REFUTED.**
+      `_parse_open_todos` (`server/regen_backlog_from_plan.py:990`) matches `_UNCHECKED_RE` against ONE `raw_line` at a
+      time and sets `description = m.group(1)` from THAT line's own capture only — it cannot cross into a neighbouring
+      bullet's text, by construction. Proved this against the REAL repro text from `unified-trading-pm@35591f5c3` (the
+      commit that produced -012's wrong brief): two new tests, `test_parse_adjacent_same_opening_phrase_todos_anchor_to_
+      own_line` (direct `_parse_open_todos` check) and `test_regen_adjacent_same_collision_group_todos_get_distinct_
+      briefs` (end-to-end `regen()` check, both todos auto-deriving the identical `script:partitioned_writer.py`
+      collision_group), both PASS today — each todo's brief is correctly anchored to its own line. **The actual
+      mechanism is a different, already-tracked bug class**: task ids are derived POSITIONALLY
+      (`_make_task_id`/`next_index = max(used)+1`), not from content — fully documented in
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md`. Commit 35591f5c3 reworded BOTH adjacent todos'
+      opening lines in one edit (prepending the Conflict-check sentence), which orphans the OLD single-line brief for
+      each (the hard-wrap boundary shifted — the same "reworded todo = fresh id" A2 design already documented in
+      `_migrate_parking_state`'s docstring) and mints fresh tasks for the post-edit text. If a freed positional id later
+      gets reused for a DIFFERENT todo while a WORKER is still `dispatched` under it (id-slot reuse,
+      `backlog_regen_id_reuse_stale_status_2026_07_15`), `sync_backlog_to_db` (`server/bootstrap.py:354-374`) silently
+      resets `status`→`queued` and overwrites `brief_hash` to the NEW content on brief-hash mismatch — this reset guard
+      protects `done` rows (refuses to reset, per `ao_backlog_regen_integrity_2026_07_20.md` todo 1, confirmed live by
+      `test_sync_refuses_to_reset_a_done_row_on_id_reuse`) but has **NO equivalent protection for a `dispatched` row**
+      (confirmed live by the EXISTING `test_sync_resets_terminal_fields_when_id_reused_for_different_checkbox`, which
+      asserts the reset DOES fire for `status="dispatched"`) and sends **no notification to the in-flight worker** (no
+      `cancel_task` signal, unlike the operator-removal path in `_prune_stale`'s dispatched-orphan-cancel logic). A
+      worker (slot-5) dispatched under the OLD, correct understanding of its own todo keeps working — legitimately — and
+      only discovers the mismatch at `/done` time, when the live stored `brief` has already been silently repointed to
+      a different todo. This is a genuinely NEW gap beyond what `regen_positional_task_ids_not_content_stable_2026_07_17.md`
+      already covers (that doc's guard analysis was scoped to `done`-row sibling-reset destroying audit history, not the
+      `dispatched`-row silent-reset-with-no-worker-notification case) — added as a new todo there rather than
+      re-implemented here, since that doc is the correct SSOT home for this bug class and any fix (guard the dispatched
+      row too, or emit `cancel_task`) is a runtime-dispatch-safety change deserving its own scoped review, not a
+      same-commit addendum to this root-cause todo. Tests: `agent-orchestrator/tests/test_regen_backlog_from_plan.py`
+      (2 new, both green); full `quality-gates.sh` pending. Repo: agent-orchestrator.
 - [ ] [SCRIPT] P2. **Add an escape hatch to `/done`'s cross-repo verification for this exact failure mode** — when
       neither `_diff_flips_checkbox` nor `_brief_is_currently_checked` can match (a real backlog-brief bug, not a
       missing flip), the worker currently has NO path to complete other than a human manually reconciling the DB row.
