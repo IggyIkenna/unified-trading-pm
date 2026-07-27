@@ -42,12 +42,14 @@ check_file() {
     errs+=("jammed frontmatter: first line is '$first' not '---'")
   fi
 
-  # Extract frontmatter block only (lines between the two --- delimiters) to a
-  # temp file. Using a temp file avoids SIGPIPE when grep -q exits early on large
-  # frontmatter blocks piped via echo "$var" with set -o pipefail.
-  local fm_file
-  fm_file=$(mktemp "${TMPDIR:-/tmp}/fm_check_XXXXXX")
-  awk 'NR==1{next} /^---$/{exit} {print}' "$f" > "$fm_file"
+  # Extract frontmatter block only (lines between the two --- delimiters) into a
+  # variable and match with bash builtins (no external temp file, no pipe to grep)
+  # — avoids both the SIGPIPE hazard of `echo "$var" | grep -q` under pipefail AND
+  # any dependency on a writable system temp dir (a real host disk/tmpfs-exhaustion
+  # incident 2026-07-27 made `mktemp /tmp/...` a false-failure single point of
+  # failure for every plan-hygiene check on this shared host).
+  local fm_content
+  fm_content=$'\n'"$(awk 'NR==1{next} /^---$/{exit} {print}' "$f")"
 
   # Check required fields
   local required=()
@@ -58,19 +60,17 @@ check_file() {
   fi
 
   for field in "${required[@]}"; do
-    if ! grep -q "^${field}:" "$fm_file" 2>/dev/null; then
+    if [[ "$fm_content" != *$'\n'"${field}:"* ]]; then
       errs+=("missing required field: ${field}")
     fi
   done
 
   # Check deprecated fields (frontmatter block only)
   for field in "${DEPRECATED_FIELDS[@]}"; do
-    if grep -q "^${field}:" "$fm_file" 2>/dev/null; then
+    if [[ "$fm_content" == *$'\n'"${field}:"* ]]; then
       errs+=("deprecated field present: ${field}")
     fi
   done
-
-  rm -f "$fm_file"
 
   if [ "${#errs[@]}" -gt 0 ]; then
     echo "  $name:"

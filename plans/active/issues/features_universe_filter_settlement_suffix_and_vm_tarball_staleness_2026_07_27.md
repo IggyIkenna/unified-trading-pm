@@ -1,0 +1,100 @@
+---
+doc_type: issue
+title:
+  "features-service MVP universe filter dropped every CeFi perpetual (unstripped @LIN/@INV suffix) + VM code-tarball
+  staleness gap"
+summary:
+  Two independent findings from running /data-pipeline-check-features against CEFI:delta_one. (1) mvp_universe_filter.py
+  never stripped the canonical @LIN/@INV settlement suffix, so the quote-suffix match failed for every real CeFi
+  perpetual/future — universe_filter retained 0/588 instruments, silently zeroing out CEFI feature computation. Fixed +
+  shipped. (2) VMs deploy from a pre-built code tarball that is NOT rebuilt on every push — a VM launched minutes after
+  the fix landed still ran the pre-fix code because the tarball was 5+ hours stale. Manually rebuilt; the propagation
+  gap itself remains open as a workspace-wide risk.
+status: open
+nature: issue
+asset_group: [cefi]
+stage: [data]
+repos: [features-service, deployment-service]
+scope: [engineer, admin]
+tags: [universe-filter, canonical-id, vm-tarball, deployment-propagation, data-correctness]
+related: [data_pipeline_check_mdps_features_2026_07_20]
+created: 2026-07-27
+priority: P0
+parent_epic: infrastructure_master
+source: "/data-pipeline-check-features driver run against CEFI:delta_one, 2026-07-27 (slot-3)"
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+assigned_vm: planning
+resolved_by:
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
+---
+
+# features-service universe filter + VM tarball staleness (2026-07-27)
+
+## Finding 1 — universe filter dropped every real CeFi instrument (FIXED, shipped)
+
+`features_service/delta_one/universe/mvp_universe_filter.py::_extract_base_asset()` matched a symbol against a set of
+known bare quote suffixes (`USDT`, `USD`, ...) to derive the base asset. It never accounted for the canonical
+`BASE-QUOTE@LIN|@INV[-YYYYMMDD]` shape that `build_instrument_id()` actually produces for CeFi perpetuals/futures — the
+`@LIN`/`@INV` segment (and any trailing expiry) was left attached, so the suffix match always failed for these
+instruments.
+
+Measured impact (real run, CEFI:delta_one, day-window 2026-07-19..2026-07-20, pre-fix):
+
+```
+universe_filter [technical_indicators]: retained 0/588; excluded 588 (base_not_in_universe=199, unknown_quote=389)
+```
+
+389/588 candidates — every perpetual/future carrying the canonical settlement suffix — were misclassified as
+`unknown_quote` and dropped. Since `delta_one`'s filter is shared across feature groups, this zeroed out ALL 18 feature
+groups for CEFI on every run (the pre-fix VM run failed all 18 groups: `ALL feature groups failed`).
+
+**Fix**: strip everything from the first `@` onward before the quote-suffix match. Shipped `features-service@02155a55`
+with 4 new regression tests (`BASE-QUOTE@LIN`, `@INV`, `@LIN-{expiry}`, venue-prefixed form).
+
+**Proved live** on VM `features-e2e-cefi-20260727-063401-025349` (force-leg, same day-window, fresh code):
+
+```
+universe_filter [technical_indicators]: retained 552/588; excluded 36 (base_not_in_universe=33, unknown_quote=3)
+```
+
+`unknown_quote` dropped from 389 → 3 (an acceptable residual — likely genuinely unmapped quote assets, not a suffix
+bug). This is the fix's live-fire proof.
+
+## Finding 2 — VM code tarball is not rebuilt on push (propagation gap, NOT fixed at the root — worked around this session)
+
+`deployment-service/scripts/vm/launch-features-vm.sh` deploys a pre-built tarball from
+`gs://deployment-scripts-{project}/code/features-service-code.tar.gz` (`create-code-tarballs.sh`), not a live git
+checkout. There is no CI hook that rebuilds this tarball on every push to `live-defi-rollout` — it is rebuilt on some
+other cadence (manually, or a schedule not tied to individual pushes).
+
+**Measured**: the tarball's own manifest (`features-service-code.manifest.json`) showed `commit_sha: 568c56303d...`,
+`created_at: 2026-07-27T01:29:26Z` — over 5 hours before the `02155a55` fix landed (~06:18 UTC). A VM launched at
+06:17-06:21 UTC to validate the fix ran the STALE pre-fix code and reproduced the exact same `retained 0/588` failure,
+which read (at first) as "the fix doesn't work" — it was actually "the VM never ran the fix."
+
+`lc_verify_tarball_freshness()` (`deployment-service/scripts/vm/lib/launcher_common.sh:662`) exists and runs on every
+launch, but defaults to `LC_TARBALL_FRESHNESS=warn` — it does not block a launch on a stale tarball, it only logs a
+warning (which is easy to miss in a driver's captured stdout).
+
+**Workaround applied this session**: manually ran
+`bash scripts/vm/create-code-tarballs.sh --include features-service --force` (from a local clone with the fix already
+checked out) to rebuild + upload a fresh tarball (`commit_sha: 36e274ac...`, an ancestor-inclusive descendant of
+`02155a55`). Confirmed via the manifest and the second VM run's live `retained 552/588` result.
+
+**Not fixed at the root**: this propagation gap affects EVERY VM-based fix-validation cycle in this workspace, not just
+features-service — any code fix shipped to LDR is invisible to a freshly-launched VM until its tarball is separately
+rebuilt. `LC_TARBALL_FRESHNESS=enforce` would turn the existing (currently silent) staleness check into a hard abort,
+which would at least fail loud instead of silently running stale code — worth considering as the default, or wiring an
+automatic tarball rebuild into the quickmerge/promote pipeline for repos with VM-based test harnesses.
+
+## Todos
+
+- [ ] [DATA] P2. Consider defaulting `LC_TARBALL_FRESHNESS=enforce` (or auto-rebuilding the affected repo's tarball) as
+      part of the quickmerge/promote pipeline for any repo with a VM-based e2e-check skill, so a fresh push is never
+      silently invisible to the next VM launch. Scope: `deployment-service/scripts/vm/lib/launcher_common.sh`,
+      `create-code-tarballs.sh`, and whichever CI hook (if any) should trigger the rebuild.
+- [ ] [DATA] P1. Investigate the remaining `unknown_quote=3` residual on CEFI (post-fix) — likely a handful of genuinely
+      non-standard symbols, not a suffix-parsing bug, but not yet confirmed which 3 instruments or why.

@@ -15,7 +15,7 @@ summary: >-
   (observed live: slot 9, ~14 "proceed now" kicks over 30min at 100% context, ping_advanced=false on nearly all,
   eventually crashed/killed). Companion, independently-dispatchable plan ao_fleet_throughput_incident_2026_07_25.md
   covers the fleet-capacity-refill side of the same live incident.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -55,6 +55,10 @@ sequential: true
 ---
 
 # AO plain-worker context lifecycle gap
+
+> **🟢 ARCHIVED 2026-07-27** — all 13 dispatchable todos shipped + live-verified; closed out by
+> `ao_worker_context_lifecycle_gap_finalize_2026_07_25.md`. See that finalize plan's Progress Log for the independent
+> re-verification (full `quality-gates.sh` re-run: 1791 passed, 2 skipped) and the codex-alignment updates it made.
 
 > **Why `sequential: true`**: todos 1-2 (config + response-model schema) are load-bearing for todos 3-4 (the actual
 > gates, which use that schema) and todo 5 (worker.md, which documents the exact field names todos 2-4 define); todo 7

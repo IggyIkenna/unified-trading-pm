@@ -196,8 +196,32 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       is still `status: open`; no evidence the `mdps-e2e-shared-host-teardown-fixed` condition has flipped. Not
       re-attempted — would be the 6th reproduction of the same known failure mode. Skipped rather than burning another
       cycle; re-check once the operator/main flips the condition.
-- [ ] 9. [DATA] P0. RUN + VALIDATE `/data-pipeline-check-features` e2e: multi-day input window per family, prove
-      force+skip for every MVP feature shard (all families × valid AGs). Report written.
+- **[DATA] P0. 9.** RUN + VALIDATE `/data-pipeline-check-features` e2e: multi-day input window per family, prove
+  force+skip for every MVP feature shard (all families × valid AGs). Report written. **Non-checkbox rollup header —
+  restructured 2026-07-27 (slot-3)**, same pattern as todo 11's split: the run against CEFI:delta_one surfaced and
+  required fixing a real P0 code bug before any shard could pass, which is a real, verifiable, independently-shippable
+  slice (9a below) — but the parent's own checkbox correctly requires the FULL matrix (all families × valid AGs), which
+  is not yet done. Split into 9a (done this session) and 9b (genuinely-remaining full-matrix run).
+- [x] 9a. ✅ [DATA] P0. **DONE 2026-07-27 (slot-3)** — running the driver against CEFI:delta_one surfaced a P0 bug:
+      `mvp_universe_filter.py`'s `_extract_base_asset()` never stripped the canonical `@LIN`/`@INV` settlement suffix
+      (`build_instrument_id` grammar), so every real CeFi perpetual/future instrument failed the quote-suffix match —
+      `universe_filter: retained 0/588; excluded 588 (unknown_quote=389)` — silently zeroing out CEFI feature
+      computation for `delta_one` and (by the shared filter) likely other CEFI-scoped families too. Fixed + shipped
+      `features-service@02155a55` (4 new regression tests covering `BASE-QUOTE@LIN`, `@INV`, `@LIN-{expiry}`, and the
+      venue-prefixed form). **Proved live on a real VM**: force-leg on `features-e2e-cefi-20260727-063401-025349`
+      (day-window 2026-07-19..2026-07-20) now shows
+      `universe_filter [technical_indicators]: retained 552/588; excluded     36 (unknown_quote=3)` — up from 0/588
+      pre-fix. Separately discovered + fixed an unrelated infra gap while launching that VM: the `features-service` code
+      tarball VMs pull (`gs://deployment-scripts-{project}/code/     features-service-code.tar.gz`) was 5+ hours stale
+      (built 01:29 UTC, hours before the 06:18 UTC fix push), so the first post-fix VM run still failed on the OLD code
+      — root-caused via the tarball manifest's `commit_sha`, fixed by manually rebuilding via
+      `deployment-service/scripts/vm/create-code-tarballs.sh --include features-service     --force`. Full detail + the
+      tarball-staleness finding:
+      `issues/features_universe_filter_settlement_suffix_and_vm_     tarball_staleness_2026_07_27.md`.
+- [ ] 9b. [DATA] P0. The full-matrix run — remains open. Re-run `/data-pipeline-check-features` across the complete
+      ~29-cell `(family × asset_group)` matrix now that 9a's fix is shipped (the CEFI:delta_one force-leg begun
+      2026-07-27/slot-3 was still completing the full 18-feature-group compute at session handoff — a separate slot/
+      session should let it finish or re-run and write the combined report). Report written per family/AG cell.
 - [ ] 10. [DATA] P1. Steady-state benchmark VMs (250GB disk) per representative shard-type; measure amortized per-shard-
       day throughput (RX + rows/s + wall-clock); project full-history time (honest floor + flat 2019) + SPOT cost +
       parallelization/optimization headroom.
@@ -276,6 +300,12 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
 > canonical-verdict split, and the first real e2e VM runs) were moved VERBATIM to
 > `/plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md` — none carried an open todo. Read
 > that file for the full record; continuing below picks up at the next entry that carried live open-todo checkboxes.
+>
+> **History extracted 2026-07-27 (slot-3, same remediation — parent had grown back to 1021 lines, hard cap 1000).** Two
+> more dated entries had since closed out (zero open `- [ ]` todos each): the manifest-flush-hypothesis refutation
+> follow-through, and the DeFi-MVP backfill ETA measurement writeup. Moved VERBATIM to the same archive file (appended
+> at its end); nothing summarized or lost. Entries still carrying an open todo (SECOND hypothesis/concurrency bug, GIL
+> measurement, per-unit latency) were left in place below.
 
 ### 2026-07-27 — todo 8 PARTIAL: CEFI force-leg mechanism re-proven 4x; skip-proof + other AGs blocked by session teardown
 
@@ -625,98 +655,6 @@ commit.
       wired fleet-wide via `launcher_common.sh`; it is now installed by `setup-data-pipeline-vm.sh` as a systemd unit.
 - [ ] NEW todo. [SCRIPT] P1. Close residual risk 1 — make arg-required launchers relaunchable (features especially).
 
-### 2026-07-20 — my manifest-flush hypothesis was REFUTED by measurement; the real cost is 1000x bigger
-
-**I was wrong, and the correction is more valuable than the original hypothesis.** I suspected the per-shard manifest
-flush was doing an O(n^2) read-modify-write. **Measurement refuted it:**
-
-- `ManifestWriter.flush()` deliberately does NOT force the per-VM rewrite — it DEBOUNCES (50 entries OR 5.0s,
-  `_writer_io.py:291` -> `_state.py:706`); only `close()`/atexit force it. Shipped 2026-06-21 as `utl@6b6d53bd`.
-- The live log line `(8 total entries, 7 new)` **proves the debounce worked** — 7 rows coalesced into ONE rewrite,
-  not 7.
-- Measured on the actual shard the profiled run produced: **14 rows / 23,438 bytes**, `to_parquet` = **0.010s**, ~2
-  rewrites for the whole run, **~47 KB total rewritten**. The manifest WRITE is ~**0.02s** of a 51.9s run.
-- => "Batch the flush" (my Option E) was ALREADY SHIPPED; per-shard-object / WAL / async-flush (A/B/C) would optimise
-  **0.02s** while adding durability-relevant moving parts. **All rejected on evidence.** The operator's instinct that
-  there must be a better way was right — but the better way is not on the write path at all.
-
-**The REAL cost is a READ amplification** (filed `issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`):
-`_publish_emission_check` -> `compute_completeness_fraction` -> `_build_capture_status_map(index)` builds a
-**full-corpus python dict over EVERY manifest row x 25 key columns** to serve a lookup whose `upstream_window` is a
-literal **1-element list** — **3x per instrument** (ohlcv_1m/1h/1d are policy-gated from `trades`), **unmemoized**, and
-each flush calls `_invalidate_index_cache` forcing the next check to re-merge.
-
-Measured scaling: 22,719 rows 0.11s -> 1,454,016 rows **13.14s** (super-linear, 9.04 us/row).
-
-**I VERIFIED the prod index sizes myself** (`gcloud storage ls -l`): **defi 1,579.3 MB**, cefi 159.1 MB, tradfi 77.4 MB,
-sports 46.1 MB — against the **0.44 MB TEST index every timing was measured on**.
-
-**⚠️ THIS INVALIDATES MY OWN ETA INPUT.** The 25.9s/instrument-day was measured against a **0.44 MB** index; defi-prd is
-**3,614x** larger. On cefi-prd the same path projects to ~75-100s per policy-gated timeframe ~= **4-5 minutes per
-instrument**. **Any backfill ETA built on the 25.9s number is optimistic by roughly 10x until this is fixed or the
-projection is disproved.** Do not quote the 25.9s-derived ETA to anyone without this caveat.
-
-**Fix is read-path ONLY** (so durability/honest-absence/layout are untouched): F1 filter-then-build instead of
-full-corpus map; F2 memoize by index identity; F3 thread the ALREADY-EXISTING `manifest_index=` kwarg so 3 timeframes
-share one read. Crash-loss bound identical to today.
-
-**SECOND STANDALONE P0: the defi-prd availability index is 1.58 GB.** Any `read_availability_index` caller on defi
-without a column/filter projection is one cache-miss from an OOM. Independent of the above.
-
-- [x] ✅ NEW todo. **VERIFIED 2026-07-27 (slot-9), via code-trace + real-prod log sampling (not live instrumentation)**:
-      distinct from slot-7's adjacent todo below (which verified the F1/F2/F3 IMPLEMENTATION is correct + tested) — this
-      todo asks specifically whether the gate actually FIRES on a real prod write path, not whether the code is correct
-      in isolation. Traced the full call chain: `candle_write_mixin.py` → `write_candle_parquet`
-      (`canonical_writer.py:164`) → `mdps_dt = mdps_data_type_key(source_data_type, tf)`
-      (`canonical_writer_shaping.py:229`, confirmed via its own docstring example
-      `mdps_data_type_key("trades", "1m")     == "ohlcv_1m"`) →
-      `_resolve_policy_output_data_type(mdps_dt=..., source_data_type=..., date_str=...)` — the naming genuinely matches
-      the gate's exact string checks (`ohlcv_1h`/`ohlcv_1m`/`ohlcv_1d`→`ohlcv_24h`) for a `trades`-sourced candle, so no
-      silent naming-mismatch short-circuit exists. Sampled 4 real, currently-active or recently-run PROD backfill VMs'
-      `run.log` (`mdps-backfill-cefi-20260726-165959` writing exactly `trades` across `[15s,1m,5m,15m,1h,4h,24h]` — i.e.
-      squarely inside the gated timeframe set — plus 3 tradfi backfill VMs): **zero**
-      `MDPS emission policy skipped`/`EMISSION_POLICY_CHECK_FAILED` log lines across any of them. Absence of the SKIP
-      log is expected+correct when `should_publish_row` stays `True` (the function only logs on a skip or a caught
-      exception — a fully-silent happy path is BY DESIGN, not a red flag); absence of the FAILURE log rules out the one
-      documented failure mode (`EmptyUpstreamWindowError`/`OSError`/`ValueError`). **Conclusion: no code-level
-      short-circuit found; the gate is correctly wired into the real backfill write path and the observed silence across
-      a real-prod sample is consistent with it firing successfully every time, not with it being bypassed.** Residual
-      honesty note: this is code-trace + log-absence evidence, not a live-instrumented direct observation of the gate
-      executing (e.g. a temporary debug log added to a real VM run) — if a future session wants airtight proof, that is
-      the next step, but the code-level bypass risk this todo was worried about is not substantiated by anything found
-      here.
-- [x] ✅ NEW todo. **VERIFIED 2026-07-27 (slot-7)**: already shipped same-day as this todo was written — no new code
-      needed. `unified-trading-library@80d2497e` ("perf(manifest): filter-then-build + memoize
-      compute_completeness_fraction (16.7x, value-equivalent)", 2026-07-20) implements F1 (pre-filter the DataFrame to
-      candidate rows via an exact superset key match, build `_build_capture_status_map` from that slice — unchanged,
-      value-preserving) + F2 (memoize per-window keyed by `(id, len, frozenset(keys))`, weakref-guarded, bounded
-      FIFO 64) — confirmed still an ancestor of current LDR tip via `git merge-base --is-ancestor`. F3 is
-      `market-data-processing-service/app/core/canonical_writer_stamping.py:445` — `_publish_emission_check` accepts
-      `manifest_index: object = None` and threads it straight to `publish_with_manifest_lookup` (line 492); its
-      docstring documents the correctness nuance (a caller must NOT share a stale snapshot across writes that MUTATE the
-      shard being read — MDPS's own `ohlcv_1m` write is the same shard `ohlcv_1h`/`ohlcv_24h` read for their upstream
-      check) so a naive share-across-timeframes bug can't be reintroduced. Perf-guard regression test confirmed:
-      `tests/unit/test_manifest_completeness.py:658` `test_one_million_rows_under_three_seconds` (1.2M-row corpus,
-      comparable to the todo's 1.45M reference, elapsed asserted `< 3.0s`; the shipping commit's own message cites
-      0.211s measured, well under the todo's 0.5s target — the 3.0s in the test is a CI-safe assertion budget, not the
-      achieved figure). Memoization + value-equivalence also covered: `test_three_calls_one_build` /
-      `test_all_four_states_and_absent_key` / `test_duplicate_key_last_write_wins` (same file).
-      `bash scripts/quality-gates.sh --no-fix` GREEN (263s) on UTL's current tree, full test suite incl. this file. No
-      code change needed — closing as verified-via-code-read + green regression suite.
-- [x] ✅ NEW todo. **AUDITED 2026-07-27 (slot-7)** — full-corpus audit complete, ~35-40 bare + defi-reachable call sites
-      found across 8 repos, filed as `issues/read_availability_index_bare_defi_callers_2026_07_27.md` with a per-caller
-      fix todo list (P0-P3, concrete file:line + column-usage guidance) + a proposed new QG gate to close the "no
-      enforcement" gap for good. Highest-risk findings: deployment-api `manifest_source.py:164` (single chokepoint
-      feeding ~10 dashboard endpoints), ml-service `manifest_inference_guard.py:46` (live-inference hot path), MTDS
-      `reader.py:839` + `orchestrator/__init__.py:509` (per-shard-read + per-backfill-VM-startup, same incident class as
-      `mtds_backfill_vm_startup_oom_rc137_2026_07_14`). Confirmed via `codex/02-data/` grep: the projection pattern is
-      prose-only guidance, no QG gate enforces it. Did NOT ship the ~15 individual fixes in this session (each needs its
-      own direct-read column-usage verification — the audit's own first-pass proposal for `reader.py:839` initially
-      omitted `pipeline_mode`, which IS read downstream for the CF-3 lift; a mechanical columns-list copy without
-      independent verification risks silent behavior regressions across 8 repos in one sitting). Per the audit-scope
-      convention, filed as tracked per-caller todos for individual dispatch rather than one oversized fix-everything
-      session.
-
 ### 2026-07-20 — my SECOND hypothesis refuted, and a P0 concurrency bug that BLOCKS the speed lever
 
 **Refuted (again, by measurement — recording plainly):** I claimed `25,948ms x 2 == 51.9s` was a "smoking gun" for
@@ -835,53 +773,6 @@ hit 5s; (5) re-measure on a real VM against a PROD-sized index to PROVE the numb
 - [ ] NEW todo. [SCRIPT] P2. De-pandas the per-write path: collapse the 3 redundant `.to_pandas()`
       (`candle_write_mixin.py:519/571/618`) + vectorize `_scatter_series`/`_carry_forward_ohlc`/HFT callbacks — the
       remaining per-unit latency cut toward 5s.
-
-### 2026-07-20 — DeFi-MVP backfill ETA (MEASURED denominator) + the read-path-fix reframes the fleet size
-
-**THE DELIVERABLE the operator asked for. Denominator MEASURED from UAC SSOT + PROD manifests; per-unit rate is the
-measured input; caveats stated.**
-
-**DeFi-MVP candle-backfill denominator ≈ 2.71M instrument-days** (unit = instrument × data_type × day; all 7 timeframes
-in ONE pass, so NOT × timeframe). Of DeFi's 27 data_types only 3 produce candles (`needs_candle_processing`):
-
-- `dex_pool_swaps` **2,703,497** (99.8% of the work; UNISWAP_V3 alone = 2.07M = **76%**, then PANCAKESWAP_V3 194k,
-  BALANCER 132k, SUSHISWAP_V3 108k, CURVE 72k, AERODROME_V3 31k)
-- `liquidations` **6,254**
-- `derivative_ticker` **16** (P0-broken → excluded until the fix's tarball lands; only 16 for DeFi anyway)
-- **Already-derived (MDPS manifest rows) = 0 → REMAINING = ALL.** (Physical candle objects exist under
-  `processed_candles/` untracked by the manifest — the object↔manifest disconnect I filed; the in-flight
-  canonical-migration-defi-rebuild may be reconciling it.)
-- The naive "instruments × flat-days" (346M) OVERSTATES by ~128× — MDPS only derives days with captured raw ticks, so
-  the measured captured-instrument-day count (2.71M) is the honest denominator. It is a GROWING lower bound (raw capture
-  still in progress; measured off an immutable mid-migration snapshot, live index ~13% larger).
-
-**CeFi reference ≈ 3.23M total / 2.06M workable** (excl. broken derivative_ticker's 1.17M), already-derived = **6**
-(confirms my earlier figure).
-
-**ETA (16 workers/VM = MDPS default; wall = N×rate/(16×fleet)):**
-
-| rate/unit                                 | DeFi 1 VM×16w | DeFi 10 VMs | **DeFi: min VMs for 2 WEEKS** |
-| ----------------------------------------- | ------------- | ----------- | ----------------------------- |
-| 25.9s (test-measured)                     | 50.8 d        | 5.1 d       | **4 VMs**                     |
-| ~260s (prod-projected, PRE read-path-fix) | 507 d         | 50.8 d      | **37 VMs**                    |
-| 5s (operator target, needs de-pandas too) | 9.8 d         | ~1 d        | **1 VM**                      |
-
-**🔑 CRITICAL REFRAME — the read-path fix I shipped today collapses this.** The ETA agent used ~260s as the "prod rate"
-BECAUSE the `compute_completeness_fraction` full-corpus map-build added ~9-40s/instrument on the prod-sized index.
-**That is exactly the term `utl@80d2497e` + `mdps@b4db0af` (16.7x, value-equivalent) removed.** So the realistic
-post-fix prod rate is ~25.9s + prod-I/O residual, NOT ~260s → **the DeFi 2-week target now needs ~4-6 VMs, not 37.**
-This MUST be confirmed by a real-VM re-measure against a prod-sized index (queued) before being quoted as final — the
-16.7x was measured on the map-build in isolation, not yet end-to-end per-instrument on a prod VM.
-
-**Practical backfill plan implied by the numbers:** shard by venue (UNISWAP_V3 is 76% → give it its own fleet lane);
-DeFi is NOT Tardis-capped so scale fleet-wide freely; land the derivative_ticker tarball before counting its cefi 1.17M;
-turn on R1 `MDPS_DATE_CONCURRENCY` per VM. At the post-fix ~25.9s rate, **all remaining DeFi MVP candles fit in ~2 weeks
-on ~4-6 SPOT VMs**, or comfortably under 2 weeks with the de-pandas per-unit work toward 5s.
-
-- [x] NEW todo. [DATA] P0. **DONE 2026-07-27 (slot-10)** — satisfied by
-      `manifest_completeness_full_corpus_map_build-001`'s closure this session: a real `/data-pipeline-check-mdps` run
-      against real prod raw ticks measured **19.4s** per-instrument-day end-to-end (cefi trades), confirming prod ≈
-      19-26s, NOT 260s. See todo 13 above for the resulting fleet-size/ETA/cost delivery.
 
 ### 2026-07-20 — per-unit latency: safe wins + HFT vectorization SHIPPED; vol_clock + write-I/O floor characterized
 

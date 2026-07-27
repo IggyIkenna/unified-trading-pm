@@ -120,6 +120,15 @@ Two independent things worth operator attention:
    VM-creation calls could benefit from the same kind of concurrency-aware backoff the Tardis-cap guard already uses for
    downloads.
 
+**2026-07-27 (slot-3) — the heartbeat-cadence mitigation WORKS, confirmed on a real run.** Running todo 9
+(`/data-pipeline-check-features`, CEFI:delta_one, day auto-resolved to 2026-07-19..2026-07-20), the driver was
+backgrounded via `run_in_background` and a companion `Monitor` loop sent an `/api/slots/<N>/progress` heartbeat every
+240s (well under the 900s watchdog threshold) while tailing the log. The driver ran ~9 minutes end-to-end (2 VM
+launch+poll cycles) and completed naturally, writing a real report — **zero session-teardown kills**, the first clean
+automated round-trip since this issue was opened. Confirms the procedural fix in the first todo below actually closes
+the gap for a run in this duration range; the still-open `--resume`/checkpoint todo remains the harder fix for
+multi-hour full-matrix runs.
+
 Given this session could not reliably keep the driver alive long enough to produce a genuine automated skip-proof
 verdict, the honest disposition for `data_pipeline_check_mdps_features_2026_07_20.md` todo 8 is: **force-leg mechanism
 independently proven correct on real infra (4x)**; the skill's own automated round-trip + the other AGs remain undone,
