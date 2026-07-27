@@ -57,17 +57,18 @@ author: ikenna-claude-subagent
 
 ## Central API VM (EC2 — `13.113.200.22`)
 
-| Resource       | Value                                                                                              |
-| -------------- | -------------------------------------------------------------------------------------------------- |
-| Instance       | `i-0c9b283b31d6b5ca7` — `m8i.4xlarge` (16 vCPU / 64 GB Intel Granite Rapids)                       |
-| Region / AZ    | `ap-northeast-1` / `ap-northeast-1c`                                                               |
-| Elastic IP     | `13.113.200.22` (allocation `eipalloc-07b7bfe509d63c477`)                                          |
-| OS             | Ubuntu 24.04 LTS, kernel 6.17                                                                      |
-| Service        | systemd unit `orchestrator.service`, runs as user `ubuntu`                                         |
-| Listen         | `127.0.0.1:8765` behind nginx (`api.agent-orchestrator.odum-research.com` :443 with Let's Encrypt) |
-| Workspace root | `/home/ubuntu/unified-trading-system-repos/`                                                       |
-| Slot worktrees | `.tabs/1..12/` (currently 12 bootstrapped, code-only ~3.7 GB)                                      |
-| Cost           | ~$1/hr on-demand; AWS credits cover. Stop the instance when idle to halt compute                   |
+| Resource       | Value                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Instance       | `i-0c9b283b31d6b5ca7` — `m8i.4xlarge` (16 vCPU / 64 GB Intel Granite Rapids)                                                    |
+| Region / AZ    | `ap-northeast-1` / `ap-northeast-1c`                                                                                            |
+| Elastic IP     | `13.113.200.22` (allocation `eipalloc-07b7bfe509d63c477`)                                                                       |
+| OS             | Ubuntu 24.04 LTS, kernel 6.17                                                                                                   |
+| Service        | systemd unit `orchestrator.service`, runs as user `ubuntu`                                                                      |
+| Listen         | `127.0.0.1:8765` behind nginx (`api.agent-orchestrator.odum-research.com` :443 with Let's Encrypt)                              |
+| Workspace root | `/home/ubuntu/unified-trading-system-repos/`                                                                                    |
+| Slot worktrees | `.tabs/1..17/` (code-only ~3.7 GB each)                                                                                         |
+| Root EBS       | `vol-0b4f0237fa0f5cd0f` — `gp3`, 500 GB / 3000 IOPS / 125 MB/s baseline (raised from 300 GB 2026-07-27, see Disk hygiene below) |
+| Cost           | ~$1/hr on-demand; AWS credits cover. Stop the instance when idle to halt compute                                                |
 
 ### SSH access
 
@@ -124,6 +125,38 @@ Full root-cause + fix audit: `plans/archive/issues/orchestrator_spawn_tmux_silen
 - Cert issued via
   `sudo certbot --nginx -d api.agent-orchestrator.odum-research.com --email ikenna@odum-research.com --agree-tos --non-interactive --redirect`;
   auto-renew via `certbot.timer`
+
+### Disk hygiene
+
+**2026-07-27 incident**: root disk hit 96% used (278/290 GB). Two independent accumulation patterns, both now fixed:
+
+- **Docker image sprawl**: repeated local builds of `market-tick-data-service` / `deployment-api` /
+  `unified-trading-library` (each 4-6 GB) left ~15 old `<none>`-tagged images sitting alongside the current one —
+  `docker system df` showed 61 GB total / 14 GB reclaimable. `docker image prune -f` only recovers a modest amount in
+  practice (old images often share underlying layers with the current tag, so the naive per-image size sum overstates
+  real reclaimable space). No automated prune is wired up yet — **re-run `docker image prune -f` periodically** (or wire
+  it into whatever build step produces these images) rather than treating one cleanup as permanent.
+- **`/tmp` (2 GB tmpfs, RAM-backed, separate from the root EBS volume) filled to 100%**: the stock systemd `tmp.conf`
+  ships a 30-day cleanup age, but this VM's 17 concurrent worker slots create scratch files (mktemp dirs, QG artifacts,
+  ad-hoc check outputs) that are done within minutes to hours — 30 days let it accumulate for weeks before the daily
+  `systemd-tmpfiles-clean.timer` tick ever had a reason to delete anything. Fixed with a local override,
+  `/etc/tmpfiles.d/tmp-aggressive-cleanup.conf` (`D /tmp 1777 root root 1d`), which takes precedence over the stock
+  `/usr/lib/tmpfiles.d/tmp.conf` without editing the shipped file. The existing daily timer now actually does something;
+  no new cron/timer needed.
+- **Root volume resized 300 GB → 500 GB** (live, `aws ec2 modify-volume` + `growpart` + `resize2fs`, no downtime) as
+  headroom against future recurrence — +$19.20/mo (gp3 is $0.096/GB-month in ap-northeast-1, confirmed via the AWS
+  Pricing API). Deliberately NOT sized back down despite the above fixes: even post-cleanup usage sat at 280 GB, which
+  would leave only ~20 GB of headroom in a 300 GB volume — the same tight margin that caused this incident. EBS volumes
+  can only grow live; shrinking back would require a full new-volume data migration on the live root disk, a materially
+  riskier operation than the $19/mo it would save.
+- **Gotcha hit while resizing**: `growpart` internally shells out to `sfdisk --list` and captures its output via a temp
+  file — with `/tmp` already full, that capture silently failed, so `growpart` errored with a confusing
+  `failed [sfd_list:1]` that had nothing to do with the partition table itself. Free `/tmp` space first if `growpart`
+  fails this way. Also needed one GPT-specific step first: after growing a GPT-partitioned disk, `sgdisk -e <device>`
+  must relocate the backup GPT header to the new end-of-disk before `growpart` will succeed (`sfdisk --list` warns
+  `GPT PMBR size mismatch` until this is done).
+
+Full incident write-up: `plans/archive/issues/ao_vm_disk_and_tmp_cleanup_2026_07_27.md`.
 
 ### CORS + SPA cross-origin
 
