@@ -163,23 +163,23 @@ and final verify/reconcile.
       enumerated object got exactly one disposition or the run aborts loudly):
 
       | Asset group    |  Total objects |   MIGRATE | SPLIT_BRAIN_DUPLICATE | QUARANTINE_CORRUPT | EMPTY_STEM (w/wo underlying) | NEEDS_CONTENT_ITYPE | NEEDS_CONTENT_TRADFI_ID | CANONICAL_NOOP | ORPHAN |
-              | -------------- | -------------: | --------: | ---------------------: | ------------------: | ---------------------------: | -------------------: | ----------------------: | --------------: | -----: |
-              | defi           |      1,124,849 | 1,123,407 |         (folded into MIGRATE) |               1,442 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
-              | prediction     |      1,165,459 |         1 |              1,165,458 |                   0 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
-              | cefi           |        940,606 |        10 |                804,670 |             130,906 |                2,576 / 2,198 |                  238 |                       0 |               8 |      0 |
-              | tradfi         |      7,646,831 |         0 |                724,214 |                   0 |              428,792 / 6,780 |                    0 |               6,487,045 |               0 |      0 |
-              | **TOTAL**      | **10,877,745** |         — |                      — |                   — |                            — |                    — |                       — |               — |      0 |
+                  | -------------- | -------------: | --------: | ---------------------: | ------------------: | ---------------------------: | -------------------: | ----------------------: | --------------: | -----: |
+                  | defi           |      1,124,849 | 1,123,407 |         (folded into MIGRATE) |               1,442 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
+                  | prediction     |      1,165,459 |         1 |              1,165,458 |                   0 |                        0 / 0 |                    0 |                       0 |               0 |      0 |
+                  | cefi           |        940,606 |        10 |                804,670 |             130,906 |                2,576 / 2,198 |                  238 |                       0 |               8 |      0 |
+                  | tradfi         |      7,646,831 |         0 |                724,214 |                   0 |              428,792 / 6,780 |                    0 |               6,487,045 |               0 |      0 |
+                  | **TOTAL**      | **10,877,745** |         — |                      — |                   — |                            — |                    — |                       — |               — |      0 |
 
-              Evidence: each VM's `run.log` at
-              `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-{cat}-candle-census-<ts>/run.log` +
-              staged mapping TSVs at
-              `gs://deployment-scripts-central-element-323112/canonical-migration-candle-census/<ts>/canonical-migration-{cat}-candle-census-<ts>/mappings/`.
-              This satisfies the todo's own ask exactly: precise per-AG object count (replacing the ±2-3x in-session estimate),
-              dup-shape breakdown (`pipeline_mode=` vs naked `timeframe=` split-brain counts per AG), and empty-stem inventory
-              (with/without `underlying=`) — all measured, not estimated. No re-run needed; re-launching 4 more Tier-2 census
-              VMs against an unchanged corpus would be pure duplicate cost. Follow-up findings from that census (cefi's
-              anomalous 13.9% QUARANTINE_CORRUPT rate, the unregistered `pipeline_mode=batch_hyperliquid_rest` value) were
-              filed as that doc's own todos 17/18 — not re-filed here.
+                  Evidence: each VM's `run.log` at
+                  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-{cat}-candle-census-<ts>/run.log` +
+                  staged mapping TSVs at
+                  `gs://deployment-scripts-central-element-323112/canonical-migration-candle-census/<ts>/canonical-migration-{cat}-candle-census-<ts>/mappings/`.
+                  This satisfies the todo's own ask exactly: precise per-AG object count (replacing the ±2-3x in-session estimate),
+                  dup-shape breakdown (`pipeline_mode=` vs naked `timeframe=` split-brain counts per AG), and empty-stem inventory
+                  (with/without `underlying=`) — all measured, not estimated. No re-run needed; re-launching 4 more Tier-2 census
+                  VMs against an unchanged corpus would be pure duplicate cost. Follow-up findings from that census (cefi's
+                  anomalous 13.9% QUARANTINE_CORRUPT rate, the unregistered `pipeline_mode=batch_hyperliquid_rest` value) were
+                  filed as that doc's own todos 17/18 — not re-filed here.
 
 - [x] ✅ 5. [SCRIPT] P0. **VERIFIED 2026-07-27 (slot-10)**: another duplicate of already-shipped work (5 of the first 5
       dispatched todos on this plan — 2,3,4,5 — now all confirmed already-completed; only todo 1, the tarball rebuild,
@@ -196,9 +196,19 @@ and final verify/reconcile.
       workspace's generic day-frontier `PROGRESS.json`). Matches the sibling doc's Progress Log ("P5 migration executor
       shipped `mdps@6ce1a25`, 951 lines + 23 tests — a 3-lens adversarial review caught a CRITICAL pre-prod bug...
       before any real object was touched"). No code change needed.
-- [ ] 6. [SCRIPT] P0. Implement the path transform in the executor: backward-add `instrument_type=` via
-      `build_canonical_candle_path`, keep SOURCE `data_type` (no re-aggregation), tf-normalise where needed,
-      `pipeline_mode=` insert where missing.
+- [x] ✅ 6. **VERIFIED 2026-07-27 (slot-4)**: another duplicate of already-shipped work (6 of the first 6 dispatched
+      todos on this plan — 2,3,4,5,6 — now all confirmed already-completed; only todo 1 was genuinely new). Direct read
+      of `market-data-processing-service/scripts/migrate_candle_canonical_2026_07.py` (shipped `mdps@6ce1a25`, confirmed
+      ancestor of LDR tip) confirms the exact transform this todo asks for is already implemented: its docstring states
+      the LOCKED canonical shape
+      (`.../pipeline_mode={pm}/timeframe={tf}/data_type={SOURCE}/     instrument_type={it}/venue={v}/...`) and that the
+      migration "ADDS a missing `instrument_type=` segment, ADDS/normalises a missing `pipeline_mode=` segment (default
+      `BATCH_DATABENTO` when absent, matching the writer's own `resolve_pipeline_mode_from_source` convention)... NEVER
+      rewrites `data_type`" (i.e. SOURCE `data_type` kept, no re-aggregation) — reusing `_infer_instrument_type`,
+      `_renormalize_legacy_instrument_ids`, `_normalise_timeframe` (tf-normalise), `resolve_pipeline_mode_from_source`
+      VERBATIM from the writer's own `canonical_writer_shaping` module (not re-implemented by hand, per the migration
+      design's explicit instruction). This is the exact same executor already independently verified in todo 5. No code
+      change needed.
 - [ ] 7. [SCRIPT] P0. Implement DEDUP in the executor for the split-brain candle layout (same object present under both
       `pipeline_mode=` AND a naked `timeframe=` prefix on cefi/tradfi/prediction, ~2x inflation).
 - [ ] 8. [SCRIPT] P0. Implement PURGE of empty-stem objects (`venue={V}/.parquet` with no leaf id, ~0.6-0.8% defect
