@@ -626,3 +626,16 @@ every todo executes an already-decided spec from the parent doc.
   preemption operations DO appear, something is still on SPOT and needs the same on-demand fix; otherwise the fleet
   should just need periodic `EXIT_STATUS`-completion polling from here. Full wave-2 shard→date-range map + launch
   scripts remain in this dispatch's scratchpad.
+- **2026-07-27T05:41Z — naming clarification + final stability confirmation for this dispatch turn.** The 3 canary VMs
+  (`cs2c`, `cs81c`, `cs91c`) were among wave-2's 33 preemptions and are now superseded by their `ON_DEMAND` replacements
+  `cs2d` (e2-standard-8, the one that hit the zone stockout), `cs8-1d`, `cs9-1d` (both e2-standard-16) — those 3 shards'
+  own progress restarts from the discovery phase (idempotent, no work lost, just the ~1-2 GCS-listing minutes redone).
+  **Current live fleet (verified via a fresh full `gcloud compute instances list`, 41 rows + `cs1-1r` completed = 42)**:
+  9 `*-r`-suffixed (wave-1 recovery) + 31 `*-d`-suffixed on `e2-standard-16` (wave-2 recovery) + 1 `*-d` (`cs2d`) on
+  `e2-standard-8` + `cs1-1r` done. Preemption-operations count holds steady at 42 (unchanged since the pivot — no new
+  entries), confirming nothing is still SPOT-exposed. **This dispatch turn's work is done here** — the campaign is
+  healthy, fully on-demand, and will keep running unattended in GCE for the ~5h projected remainder. A resumed
+  dispatch/turn should: re-run the exact preemption/EXIT_STATUS checks in the entries above, keep narrow-relaunching
+  (same date range, `ON_DEMAND=true`, `e2-standard-16` — or `-8` if `-16` stockouts again) anything that shows a NEW
+  preemption, and once every one of the 42 shards has a genuine `EXIT_STATUS=0`, proceed to the plan's own next steps
+  (corpus-wide idempotency `--dry-run`, the 4-script done-when check, the enumeration audit, then flip todo 3).
