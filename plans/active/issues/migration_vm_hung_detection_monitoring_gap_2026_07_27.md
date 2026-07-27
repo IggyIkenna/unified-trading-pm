@@ -220,13 +220,38 @@ automatic, and depends entirely on someone deciding to look and knowing to look 
 
 ## What's NOT done / follow-up needed
 
-- [ ] [HUMAN] P1. **Add `"hung"` to `deployments_inventory.py`'s `_ALERT_HEALTH_STATES` (currently
+- [x] [HUMAN] P1. **Add `"hung"` to `deployments_inventory.py`'s `_ALERT_HEALTH_STATES` (currently
       `frozenset({"oom-risk", "stalled"})`), or wire an equivalent dedicated paging path for it.** Weigh whether "hung"
       at 15-minute heartbeat staleness pages too eagerly for legitimately-quiet workloads before flipping it on for the
       whole fleet (may need a per-VM-class threshold, not just adding the literal to the set). Done when: a VM whose
       `composite_health_status` transitions into `"hung"` produces a `_persist_alert(...)` call (verified via a
       deliberately-induced stale-heartbeat test VM or a unit test around `_alert_on_health_transition`), with no new
-      false-positive-page complaint from a legitimately-quiet live/paper VM in the following week of operation.
+      false-positive-page complaint from a legitimately-quiet live/paper VM in the following week of operation. —
+      **deployment-api@ea594d60d60f4a55ef56a0ecace70beba6d66d87** (2026-07-27). A same-session false-positive-risk
+      investigation (traced every `VM_TASK` launched via `setup-data-pipeline-vm.sh`) found the flat 15-minute
+      `_STALE_HEARTBEAT_MINUTES` threshold is SAFE to page fleet-wide as-is — **no per-VM-class threshold was needed or
+      added**: every VM class (live/backfill/canonical-migration alike) installs the SAME 60s-interval HeartbeatDaemon
+      unconditionally, so 15 minutes is a uniform ~15x margin over that fixed write cadence for every class. The
+      legitimately-slower classes found (live-capture sparse WS logging; `af-backfill-*`'s ~54s-throttled API-Football
+      chunks) are slow on a DIFFERENT signal (run-log/manifest-shard freshness, workload-paced) that
+      `heartbeat_stall_watcher.py`'s own `PREFIX_IDLE_THRESHOLDS`/`_is_backfill_vm` gate already carves out separately —
+      duplicating that per-prefix-override pattern into `_vm_health.py`/`deployments_inventory.py` would solve a problem
+      this signal doesn't have. `_ALERT_HEALTH_STATES` is now `frozenset({"oom-risk", "stalled",     "hung"})`. Added
+      `test_alert_on_health_transition_fires_on_hung_transition` (deployment-api
+      `tests/unit/test_route_deployments_inventory.py`) proving a fresh `hung` transition fires `_persist_alert(...)`
+      (severity `WARNING`), that repeated polls / an already-alerted VM do not re-page (existing dedup-by-transition
+      behavior, now verified against this state too), and that recovery-then-re-hang fires again as a fresh transition;
+      also removed `"hung"` from `test_alert_on_health_transition_ignores_non_alertable_states`'s non-alertable list,
+      since it no longer is one. Full `quality-gates.sh --no-fix` green (sentinel
+      `aff52ca6af97d9c9e769da2ffb66b6df727cd5f3`). **One residual gap surfaced by the investigation and filed separately
+      (outside this todo's literal scope — it's about the surrounding SCHEDULE, not this gate's own logic):**
+      `plans/active/issues/deployment_api_inventory_alert_gate_ondemand_only_2026_07_27.md` — deployment-api's inventory
+      computation (and therefore this alert gate) is on-demand/cache-driven only (45s TTL, no dedicated Cloud Scheduler
+      cron unlike `heartbeat_stall_watcher.py`/`vm_zombie_watchdog.py`), so today its real page-firing cadence is
+      bounded by whoever has the deployment-ui dashboard open or the once-daily digest cron — not yet the
+      fully-automatic, schedule-independent safety net the parent investigation's intent implies. The "no new
+      false-positive-page complaint... in the following week" half of this todo's done-when criterion is therefore still
+      open pending real-world observation; the unit-test half is shipped and green.
 - [x] [HUMAN] P1. **Wire `canonical-migration-*` (and any other one-off migration VM prefixes launched via
       `deployment-service/scripts/vm/launch-*-vm.sh` that behave like backfill VMs) into `heartbeat_stall_watcher.py`'s
       `_is_backfill_vm()` matching**, so the run-log-freshness liveness signal applies to them instead of the
