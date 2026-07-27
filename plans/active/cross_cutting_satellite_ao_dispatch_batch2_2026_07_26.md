@@ -157,7 +157,7 @@ drift_direction: advance-code
       `row_key` and stamps `venue`/`data_type`/`day` + a human-readable `error_message` into the emitted details. 8 new
       regression tests (`tests/unit/test_manifest_writer_phase4_writer_invariants.py`); full UTL suite green (4689
       passed, 0 failed); `quality-gates.sh` green (sentinel matches HEAD).
-- [ ] [CODE] P1. **alerting-service reliability trio — one repo, three verbatim residuals** (Sources:
+- [x] ✅ [CODE] P1. **alerting-service reliability trio — one repo, three verbatim residuals** (Sources:
       `data_pipeline_alert_substrate_residual_2026_07_24.md` "Later-surfaced alert-substrate bugs"). (a) Make
       `config_reloaders._fetch` tolerate missing secrets — today it calls
       `SecretManagerClient.get_secrets(_ALL_PAGING_SM_KEYS)` as ONE batch, so the 6 absent Twilio secrets +
@@ -175,7 +175,26 @@ drift_direction: advance-code
       motivated this came from the OLD alerting revision 00005; confirm the CURRENT path renders `vm_name`) — repo
       `deployment-service` `data_pipeline_monitors/heartbeat_stall_watcher.py`. **Done when**: (a) and (b) land with
       tests and `quality-gates.sh` green in alerting-service, (c) is recorded as a measured verdict (renders / does not
-      render, with the fix if not), and all three source checkboxes are flipped.
+      render, with the fix if not), and all three source checkboxes are flipped. — DONE 2026-07-27. **(a) MEASURED
+      ALREADY-CORRECT, no production fix needed**: traced the full call chain (`GCPSecretClient.get_secret` →
+      `SecretManagerClient.get_secret`/`get_secrets`, blame-verified since the module's creation 2025-11-06) —
+      `get_secrets()` has always been a per-secret loop, each `get_secret()` call independently catches
+      `NotFound`/`GoogleAPIError` and returns `None`, so a missing secret was NEVER able to raise and wipe the whole
+      batch; the issue doc's diagnosis was stale. Added a regression test driving the REAL
+      `SecretManagerClient.get_secrets()` (not a full mock) to lock this in — alerting-service@545799c. **(b) REAL BUG,
+      FIXED**: `DP_FLEET_MONITOR_RUN_STARTED`/`_COMPLETED`/`_FAILED` (emitted by deployment-service's `dp-fleet-monitor`
+      CLI via `run_lifecycle(service_name="dp-fleet-monitor")`) were never registered in UAC's
+      `DATA_PIPELINE_ALERT_RULES`, so all three missed the router's exact-match short-circuit and fell through to the
+      generic incident catch-all. Registered `DP-DIGEST-003`/`DP-DIGEST-004` (STARTED/COMPLETED, INFO, mirror-only) +
+      `DP-WATCHER-003` (`_FAILED`, CRITICAL, pages — the monitor itself crashing is meta like `DP_ZOMBIE_WATCHDOG_DOWN`)
+      — unified-api-contracts@92e068ea (+ human-doc/yaml mirror updated in this same PM commit), regression tests in
+      alerting-service@545799c. **(c) MEASURED VERDICT: RENDERS CORRECTLY today** — traced
+      `heartbeat_stall_watcher._finding_for()` (stamps `vm_name`/`asset_group` into `PipelineFinding.details`) →
+      `escalation.route_finding()` (`event_details = dict(finding.details)`, then injects `message = finding.summary`
+      when absent, and `finding.summary` already embeds `vm_name` e.g. "VM {vm_name} stalled — {reason}") — all three
+      fields reach the emitted event. Added a regression test proving it — deployment-service@c7150e0. No code fix
+      needed for (c); the 13× batch was measured to be from the OLD alerting revision 00005, and the current path is
+      confirmed clean.
 - [x] ✅ [INFRA] P1. **Consolidate the THREE competing `data_pipeline_audit_scheduler.tf` todos into one change, and
       correct a false prod claim measured this pass.** Three todos across two sibling source docs all edit
       `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`; drafting them separately would collide on one
