@@ -16,7 +16,7 @@ summary: >-
   2026-05-15) caps pytest/basedpyright memory but ONLY when invoked through quality-gates.sh. An ad-hoc script run
   directly, outside both, had no guard at all. Two people in the Slack thread each recalled a DIFFERENT one of these two
   rules as "the" rule that should have prevented this — both were half right, which is exactly the gap.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -41,8 +41,12 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: unified-trading-pm@3aa871da0
 ---
+
+> **🟢 RESOLVED 2026-07-27** — all 4 Slack action items closed: rule gap fixed + wrapper built + verified live
+> (`unified-trading-pm@3aa871da0`), UI panel confirmed already shipped (`agent-orchestrator@97a8334`), disk usage
+> cross-linked to its existing P1 docs rather than duplicated. Archived per issue-doc-lifecycle (ACKED-INTO-CODE).
 
 # "When to spin up a VM" rule gap — heavy compute/memory on the shared planning-vm
 
