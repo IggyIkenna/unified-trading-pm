@@ -260,3 +260,66 @@ venue.
   the trader-identity columns. Operator ruled: extend the canonical schema, don't drop the metadata or leave it
   permanently forked. Todos above rewritten from a generic "register or migrate" placeholder into the actual 3-step
   design→writer/migrate→register sequence this ruling implies.
+- 2026-07-27 (`prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 5, combined investigation, read-only —
+  slot-12): **(a) Named commit/script per path shape + live-vs-historical verdict — ALL THREE (#3/#3b/#4) are
+  HISTORICAL, none written by any code path live today:**
+  - **Shapes #3/#3b** (bundle-per-underlying, `chain=POLYGON` + non-canonical `data_type=prediction_trades`, or
+    `instrument_type={BTC|ETH|OTHER}` overload): this is the Polymarket adapter's ORIGINAL pre-fix output — commit
+    `da270f9bbf7bdb8802e4b9bc48be5bd9c4067a66`'s message (2026-04-19 11:03 +0100, "feat(polymarket): re-shard tick data
+    to 6-dim canonical layout") explicitly describes finding these as one of "two drifted layouts" already live at that
+    time. Commit `ca246a9b27f8d74114d294bb6d16b0eb27064c9f` (2026-04-19 17:51 +0100, "retire prediction_trades alias")
+    confirms the Polymarket adapter had ALREADY switched to writing canonical `data_type="trades"` by that date (only
+    Kalshi needed the fix in that commit) — grep of the current HEAD's `polymarket_adapter.py`/ `kalshi_adapter.py`
+    confirms zero live references to the string `"prediction_trades"` today. Not still live.
+  - **Shape #4** (10-segment
+    `data_source=POLYMARKET_CLOB/.../market_category=/underlying=/market_type=/ resolution_period=/data_type=trades/{cid}.parquet`):
+    produced by the ONE-OFF migration script `market_tick_data_service/scripts/migrate_polymarket_canonical.py`, ADDED
+    by commit `da270f9bbf7bdb8802e4b9bc48be5bd9c4067a66` (2026-04-19) as what it believed at the time was the "new
+    canonical 6-dim layout." This was later superseded: the ACTUAL final canonical grammar is the flat shape UAC's
+    `build_prediction_partition_path` (`unified_api_contracts/canonical/partition_paths.py:376`, docstring "verified
+    2026-04-29" against the live adapter + `PartitionedTickWriter`) emits —
+    `day=/asset_group=prediction/venue=/instrument_type=/data_type=/ {condition_id}.parquet`, with NO
+    `chain=`/`data_source=`/`market_category=`/`underlying=`/`market_type=`/ `resolution_period=` path segments (those
+    classifier values are only PARQUET COLUMNS in the canonical file — confirmed live in the current
+    `polymarket_adapter.py::_annotate_cid_dataframe`, lines 662-674, which sets `data_type="trades"` and attaches
+    `underlying`/`market_type`/`resolution_period`/`canonical_question_group` as DataFrame columns, never as path
+    segments). `market_tick_data_service/scripts/rebuild_prediction_manifest.py`'s own header comment (lines 192-213)
+    independently documents this same flat shape as the "post-migration canonical layout... verified 2026-06-02," i.e.
+    the 6-dim scheme shape #4 represents was abandoned before that date. `migrate_polymarket_canonical.py` itself was
+    DELETED by commit `bce12993cd3e75a76ce4150b19040b61add45a05` (2026-06-10, "chore(orphan-wip): inherit prior-session
+    migration cleanup") as one of ~15 obsolete one-off migration scripts removed in that sweep. Not still live — no
+    writer for this shape exists in the tree today.
+  - **The manifest's `data_type=prediction_trades` axis (2,477 rows, `written_at` as recent as 2026-07-23)** is NOT
+    evidence of a live writer either — it is a manifest-metadata artifact of REPAIR tooling, not new capture.
+    `rebuild_prediction_manifest.py` is a manually-invoked GCS re-walk/repair script (not a cron — no workflow/cron
+    reference found anywhere in the repo; ~8 fix commits touching it in the last few weeks confirm it gets run ad hoc by
+    agents doing manifest repairs) whose `_LEGACY_PRED_RE` fallback path (line ~314,
+    `data_type=kv.get("data_type") or ""`) re-emits a manifest row carrying WHATEVER `data_type=` value is baked into an
+    old object's legacy path, verbatim — so a re-walk run around 2026-07-23 touching historical `prediction_trades`
+    objects would refresh `written_at` without any new capture event. Corroborating: a dedicated fix-in-progress script,
+    `scripts/canonicalize_prediction_manifest_2026_07_18.py` (created 2026-07-18, last touched 2026-07-19), exists
+    SPECIFICALLY to fold these `prediction_trades` manifest rows into `trades` — its own checklist item 6 ("VERIFY: a
+    fresh read shows 0 `prediction_trades` rows...") is still unchecked, i.e. the migration is real but not yet
+    confirmed complete; this is the P2 todo already tracked below, not new scope.
+  - **(b) title/slug/eventSlug recoverability from instruments-service's `prod/catalog.parquet`** — MIXED verdict,
+    checked against the exact sampled `condition_id=0x7ed4abfdcfd6f80808a69c6b6e988374c2940de32ef1ce3c60d2a90d11a888b8`
+    (bucket `instruments-store-pred-prd-central-element-323112`, resolved via the dedicated flat kind
+    `instruments-store-prediction` — NOT `instruments-store`/`asset_group=prediction`, which raises `BucketNamingError`;
+    see `instruments_service/engine/orchestrator/catalogue.py::resolve_instruments_store_kind`):
+    - **Slug: YES, fully recoverable.** The sampled row's `raw_symbol` column = `"bitcoin-above-84000-on-april-11"`
+      (matches the legacy tree's `slug`/title in slug form). Corpus-wide over all `venue=POLYMARKET, data_type=trades`
+      catalogue rows (1,417,424 rows): `raw_symbol` is **0% NULL** — always populated.
+    - **Title/question: NO, not recoverable for the sampled row**, and unreliable corpus-wide. The sampled row's
+      `question` column = `None` despite the column existing in the schema and despite a dedicated backfill having been
+      attempted (`prod/catalog.20260717T172057Z.questionbackfill.pred.bak.parquet` backup object present in the bucket,
+      dated 2026-07-17). Corpus-wide: `question` is **93.2% NULL** (1,321,095 of 1,417,424 POLYMARKET-trades rows) — the
+      questionbackfill pass reached only ~6.8% of rows. So a delete-suggestion for shape #4 CANNOT rely on "title
+      survives in the catalogue" as a blanket justification; slug alone survives.
+    - **eventSlug: NO, not recoverable anywhere.** No `event_slug`/`eventSlug` column exists in the catalogue schema at
+      all (confirmed via the full 39-column schema dump) — `market.event_slug` is used only transiently inside
+      `classify_polymarket_to_canonical_group()` classification
+      (`reference_data/adapters/prediction/polymarket/ parsing.py:105`) and is never persisted to any `InstrumentRecord`
+      field.
+  - Read-only throughout: no GCS/manifest writes made; `.venv` synced via `uv sync` (instruments-service had none) to
+    read the catalogue with `pyarrow.fs.GcsFileSystem` + predicate pushdown (no whole-corpus walk — targeted
+    `venue=`/`data_type=` column reads only).
