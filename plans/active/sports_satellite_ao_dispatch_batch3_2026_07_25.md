@@ -252,12 +252,12 @@ drift_direction: advance-code
       section). No further doc edit was needed — this todo's premise ("never itself flipped") was already stale by the
       time it dispatched. Sibling doc `sports_reference_function_size_qg_regression_2026_07_16.md` cross-checked:
       `status: resolved`, `resolved_by: instruments-service@ac22305c` — consistent, no drift between the two.
-- [ ] [DIAG] P1. **Verify whether the sports manifest's 2026-vs-prior-year enumeration-grain inconsistency (~10x more
-      cells seeded per data_type for 2026 than prior years) still persists** — measure current per-data_type
-      cell-seeding counts for a matched 2025 vs 2026 sample window directly against the live
-      `instruments-store-sports-prd/_index/availability_index.parquet` manifest. The diagnosed cause (over-seeding,
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-9)** — **Verify whether the sports manifest's 2026-vs-prior-year
+      enumeration-grain inconsistency (~10x more cells seeded per data_type for 2026 than prior years) still persists**
+      — measure current per-data_type cell-seeding counts for a matched 2025 vs 2026 sample window directly against the
+      live `instruments-store-sports-prd/_index/availability_index.parquet` manifest. The diagnosed cause (over-seeding,
       "Cause A") was substantially addressed by the 2026-06-23 `enumerate_expected_universe.py` fix
-      (instruments-service@0bcf727) and the subsequent write-gate/dereg/canonicalize program —
+      (instruments-service@0bcf727) and the subsequent write-gate/dereg/ canonicalize program —
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s own "Post-backfill entity-coverage relabel" todo measured a
       ~30x reduction in the closely-related phantom-seed count (1,027,396 → 33,905 rows) as a side effect of that same
       program. If the 2025-vs-2026 ratio is now ~1x, annotate this line "resolved as side effect" citing the measurement
@@ -267,6 +267,20 @@ drift_direction: advance-code
       per-data_type 2025-vs-2026 cell-seeding ratio has been measured and reported against the live `-prd-` manifest,
       AND either (a) this item is annotated "resolved as side effect" with the measurement cited, or (b) a new scoped
       issue doc is filed under `plans/active/issues/` with the measurement + root-cause hypothesis (no fix implemented).
+      — **(b): STILL PERSISTS, NOT resolved.** Ran a single-download read of the live prod manifest (6,847,192 rows)
+      grouped by `data_type` over a matched H1 window (2025-01-01..2025-06-30 vs 2026-01-01..2026-06-30): overall ratio
+      **3.13x** (363,842 → 1,137,706 cells); most data_types cluster 2.2x-3.6x; 3 outliers — `FIXTURES` 16.6x,
+      `FIXTURES_OUTCOMES` 15.7x, `ODDS` 6.0x. Root cause identified by code read (a DIFFERENT mechanism than the fixed
+      Cause A): every 2025 H1 row is `capture_status ∈ {captured, empty_confirmed}` only (zero `expected_unattempted`),
+      while 2026 H1 rows carry a real 3-way split including a large `expected_unattempted` share — because
+      `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`'s v2 enumerator `--start-date`
+      (`var.     expected_universe_start_date`) is a STATIC, never-overridden Terraform default `"2026-02-20"`
+      (verified: only declaration + only usage in `terraform/`), so the entire 2025 H1 window falls before the
+      enumerator's bounded 120-day window and structurally never gets `expected_unattempted` seeded — an artifact of the
+      bounded-window design, not a live over-seeding regression. Full measurement + root-cause writeup + 2 follow-up
+      todos (1 `[OPERATOR]` window-policy decision, 1 `[DATA]` league-count-growth investigation) filed:
+      `issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Measurement script:
+      `instruments-service/scripts/sports_manifest_enumeration_grain_check_2026_07_27.py` (read-only, single-walk).
       Source: `data_completion_sports_2026_07_24.md`.
 - [ ] [DIAG] P1. Determine whether the free-text `error_reason` pattern documented in this doc's §2.5
       ("record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says ...") is still live-writing
