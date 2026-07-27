@@ -26,6 +26,7 @@ related:
     /plans/active/monitoring_control_plane_master_2026_06_10.md,
     /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    /plans/active/deployment_durable_operational_data_bigquery_2026_07_21.md,
   ]
 created: 2026-06-22
 authoritative_for:
@@ -588,6 +589,39 @@ Three layers, each independent of the one it watches (so a dead watcher is never
 > **No terraform-apply pipeline for `terraform/gcp/`** — there is NO auto-apply. New infra there (uptime checks,
 > schedulers) needs a deliberate `tofu apply` (remote GCS state `uts-terraform-state-{pid}`, prefix
 > `terraform/state/prod` — a `-target`ed apply is safe + lock-protected). A shipped `.tf` is NOT live until applied.
+
+## Durable operational data — BigQuery via the event spine (2026-07-27)
+
+The live/current Resources column above (Firestore, `host_metrics_window` — last ~10 samples) is unchanged and stays the
+source for point-in-time reads. Alongside it, `deployment_operational_data` (BigQuery, `central-element-323112`,
+`asia-northeast1`) is the DURABLE side — full detail + design rationale in
+`/plans/active/deployment_durable_operational_data_bigquery_2026_07_21.md`; this section is the short reference.
+
+**Tables** (all partitioned `DATE(ts)`/`DATE(completed_at)`, clustered): `resource_samples` (per-VM cpu/mem/disk,
+~1/min), `run_ledger` (one row per completed/failed run — the durable answer past the 30-day `deployments/archive/` GCS
+TTL), `idle_spend` (daily rollup + per-resource idle rows), `reap_events` (one row per reaped VM), `process_samples`
+(per-process category breakdown — worker_agent/orchestrator/ci/ao_plan_work/other — scoped to genuinely multi-tenant
+hosts only; **table exists, nothing publishes into it yet** as of 2026-07-27).
+
+**Write path**: dedicated Pub/Sub topics (`resource-samples`, `run-ledger`) + NATIVE BigQuery subscriptions
+(`--use-table-schema --drop-unknown-fields`) — a flat JSON payload matching the target table's columns exactly,
+deliberately bypassing the generic `log_event()`/`PubSubEventSink` nested envelope (which cannot produce typed BQ
+columns). `unified_trading_library.lifecycle.daemon.HeartbeatDaemon` stays consumer-agnostic — callers pass
+`resource_sample_publisher`/`run_summary_publisher` (implementing `events.flat_event_publisher.FlatEventPublisher`)
+
+- their own payload builders; deployment-service's `heartbeat_cli.py` and the standalone
+  `scripts/vm/deployment_heartbeat.py` both wire this. Idle-spend/reap-event writes go through deployment-api's
+  `operational_data_writer.py` (UTL `insert_rows`, never raw `google.cloud.bigquery`).
+
+**Read path**: `deployment-api` `GET /api/vm-resources/rolling` (avg/min/max/p95 per VM per window, 1h/4h/24h/1wk; omit
+`vm_name` for the cross-VM view) and `GET /api/vm-resources/process-category`; `deployment-ui`'s `WorkHealthCard`
+(window selector alongside the live snapshot) and the `/ops/vm-resources` comparison page consume them.
+
+**Known gaps** (tracked in the plan, not repeated here): partition-expiration TTL isn't set on any table (the UTL
+`create_table` wrapper has no expiration parameter); process-category has no publisher yet (the bridge cron
+`agent-orchestrator/scripts/orchestrator/resource-monitor.sh` on the orchestrator VM is still the only source, writing
+to a local JSONL, not BigQuery); the cross-VM comparison page filters by service-name text only, not the full
+service×asset_group×mode facet set.
 
 ## Anti-patterns (banned)
 

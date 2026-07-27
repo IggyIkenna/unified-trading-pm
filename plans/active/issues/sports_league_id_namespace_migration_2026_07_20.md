@@ -708,3 +708,20 @@ in that plan):
 
 Cross-reference: `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` § "Gap analysis from P1c Todo 4 cluster
 validation" + § "P1 — gap-analysis follow-ups".
+
+## Adjacent finding 2026-07-27 (slot-14) — 2 raw-league_id shards manifest-unregistered, missed by the EXCHANGE_ODDS/FIXED_ODDS GCS move
+
+While verifying `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` todo 7 (MDPS `dependency_checker` hive-token
+check against the post-move bucket state), a direct GCS listing for `day=2020-07-07` found 2 objects still under the
+legacy `venue=PINNACLE/instrument_type=ODDS/data_type=TRADES` partition, keyed on the raw (non-canonical) `league_id`
+values this doc already tracks: `CHAMPIONSHIP` and `PREMIER_LEAGUE`. Neither appears in `read_availability_index()`'s
+output for that date/venue (the manifest enumerates only the canonical `ENG_CHAMPIONSHIP` etc. for PINNACLE that day) —
+so these 2 shards are manifest-UNREGISTERED, exactly this doc's core defect class, not a new one. Because the
+EXCHANGE_ODDS/FIXED_ODDS fork's GCS-move tooling is manifest-driven by design (single-walk discipline — never a live GCS
+walk), it correctly could not and did not enumerate these 2 shards; they were left untouched under the legacy
+`instrument_type=ODDS` partition. Out of scope to fix here (not this doc's todo, not the fork plan's todo) — flagging so
+whichever future pass migrates this doc's 214,842 non-canonical-`league_id` rows also re-partitions any of them still
+sitting under the legacy sports `odds` instrument_type into `exchange_odds`/ `fixed_odds` per the fork's now-shipped
+venue→class mapping (PINNACLE → FIXED_ODDS). Not re-running the fork's migration tool against a live GCS walk to catch
+these — that would violate single-walk discipline for a 2-object find; they'll be swept up naturally once this doc's own
+manifest-registration fix lands and re-enumeration includes them.

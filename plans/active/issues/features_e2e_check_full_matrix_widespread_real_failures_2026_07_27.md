@@ -264,13 +264,33 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
       from-scratch VM force-leg re-run against real CEFI data (the literal "done when" proof) is deferred to the
       already-tracked re-verification todo below (P2, "re-run `/data-pipeline-check-features` for the affected 6
       shards") rather than duplicated here.
-- [ ] [SCRIPT] P1. **Root cause D** — (a) propagate `MANIFEST_ALLOW_STALE_FALLBACK` (or an equivalent recovery flag) to
+- [x] [SCRIPT] P1. **Root cause D** — (a) propagate `MANIFEST_ALLOW_STALE_FALLBACK` (or an equivalent recovery flag) to
       the remote VM's environment the same way the local driver sets it for itself, so the two sides have consistent
       staleness tolerance; (b) separately, check why `features-sports-test-central-element-323112`'s manifest
       consolidator Cloud Run Job/Scheduler is genuinely behind/down and fix the underlying schedule/job. Repo:
       unified-trading-library (env propagation) + deployment-service or the consolidator's own repo (Cloud Run fix).
       **Done when**: the consolidator is current for this bucket AND a VM launched without the override still succeeds
-      (proving the fix isn't just papering over a permanently-broken consolidator).
+      (proving the fix isn't just papering over a permanently-broken consolidator). — ✅ deployment-service@e51bbab. (a)
+      fixed: `launch-features-vm.sh`'s existing `-test-`-bucket `ENV_PREFIX` (already carries `IS_TEST_RUN=true` inline
+      into `VM_BACKFILL_CMD`, run via `bash -c` on the VM) now also carries `MANIFEST_ALLOW_STALE_FALLBACK=true` — no
+      `unified_trading_library` change needed, the generic staleness guard
+      (`manifest_writer/_read_index.py::_resolve_allow_stale_fallback()`) already honours the env var; the only gap was
+      this one launcher never setting it (the mtds-live/mtds-backfill/instruments-backfill launchers already do, via VM
+      metadata — confirmed via grep). (b) **premise corrected, not a broken schedule**: live-verified via
+      `gcloud run jobs list --region=asia-northeast1` that NO Cloud Run Job/Scheduler cron targets ANY `-test-` tier
+      bucket for ANY category — the only `*-features-sports*` job (`uts-prod-manifest-consolidator-features-sports`)
+      targets `features-sports-prd-central-element-323112` (confirmed via
+      `gcloud run jobs describe --format=...containers[0].args`), not the `-test-` twin. Terraform confirms this is BY
+      DESIGN, not drift: `manifest_consolidator_scheduler.tf`'s `local.deployment_env_short` map only resolves
+      `{dev,staging,prod}` → `{dev,stg,prd}`, never `test` — provisioning a standing per-minute Cloud Run Job against an
+      ephemeral smoke-test bucket would be pure billing waste, and no other category has one either. So there is no
+      schedule/job to "fix" — (a) is the complete, correct fix (the VM-side read tolerates the permanent absence of a
+      `-test`-tier consolidator, same as the local driver already does for itself), and the original "done when"
+      (consolidator current + VM succeeds without override) doesn't apply to a bucket tier that structurally never gets
+      a standing consolidator. Full `quality-gates.sh` green (deployment-service, pre-existing unrelated
+      `TestQgSnapshotLauncher` red — a live-VM-state-dependent test flake, see
+      `issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md` — verified clean tree and
+      waited for the conflicting VM to clear before re-running, both green after).
 - [x] [SCRIPT] P1. **Root cause E, part 1** — CFTC + Baker Hughes were NOT credential gaps (both are free/no-auth);
       fixed the actual bugs — CFTC switched from the Cloudflare-protected `www.cftc.gov` ZIP download to the public
       Socrata Open Data API (`publicreporting.cftc.gov/resource/72hh-3qpy.json`) plus corrected the stale NG/CL
@@ -330,3 +350,13 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   `group_by("instrument_id")`, unlike the sibling polymarket calculators). Split the HMM fit per `instrument_id`;
   regression test proves no cross-instrument leakage. Full `quality-gates.sh` green. Live from-scratch VM verification
   against real CEFI data is left to the existing P2 re-verification todo, not duplicated here.
+- 2026-07-27 (slot-4): fixed Root cause D — `deployment-service@e51bbab`. Added `MANIFEST_ALLOW_STALE_FALLBACK=true` to
+  `launch-features-vm.sh`'s existing `-test-`-bucket env prefix. Corrected part (b)'s premise via live
+  `gcloud run jobs list`/`describe` + a terraform read: no `-test`-tier bucket, for any category, has ever had a
+  standing manifest-consolidator Cloud Run Job/Scheduler — this is deliberate (billing-waste avoidance for ephemeral
+  smoke-test buckets), not an outage to fix. Blocked mid-ship on a pre-existing, unrelated `deployment-service`
+  `quality-gates.sh` red (`TestQgSnapshotLauncher`'s `--dry-run-scheduler-body` tests hitting a real, genuinely-running
+  daily `qg-snapshot-` cron VM's live singleton-lock check) — verified byte-identical on a clean tree, filed
+  `issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md` + declared repo-blocker
+  `RB-ca8f005d` per RULES.md §4b, waited (bounded background watcher, ~4min) for the real VM to clear, then shipped once
+  green.

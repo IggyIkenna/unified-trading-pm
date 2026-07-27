@@ -90,15 +90,25 @@ drift_direction: advance-code
       assume this split (`unified-api-contracts/tests/unit/test_mvp_scope.py`, multiple
       `is_mvp("sports",       "ODDS_API", "FIXED_ODDS", ...)` calls). `ODDS_API` remains a legitimate real venue for
       `markets`/`outcomes`/ `settlements` going forward — only these 33 legacy `odds`-type rows are in scope for this
-      migration. - **`PINNACLE` (32,616 rows) → FIXED_ODDS, no special case.** `PINNACLE_AS_LINE`
-      (`_sports_prediction_contracts.py:       213,248`) is an orthogonal schema-column tag (which venues populate the
-      optional `max_bet` column on `SPORTS_ODDS_SNAPSHOT`) — it operates at a different layer than the
-      `EXCHANGE_ODDS`/`FIXED_ODDS` `InstrumentType` split (`_instrument_enums.py:95-109` documents these as separate
-      layers) and does not conflict with it. PINNACLE is already classified FIXED_ODDS everywhere else in the codebase
-      (`venue_constants.py:184,500` `SPORTS_BOOKMAKER_API_VENUES`; `bookmaker_registry.py` `BOOKMAKER_API`;
-      `system-integration-tests/.../test_instrument_alignment.py:240-241` asserts
-      `"FIXED_ODDS" in       venue_types["PINNACLE"]`). - **Adjacent bug found + fixed while investigating (not one of
-      the 3 target venues, findings-triage "adjacent" fix)**: `venue_constants.py:180`'s `SPORTS_EXCHANGE_VENUES`
+      migration. **Cross-checked 2026-07-27** (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phase 0-4, which
+      fixed a genuine, DIFFERENT `venue=ODDS_API` conflation in MDPS's `reprocess_sports_odds.py`): this ruling is NOT
+      the same bug — `markets`/`outcomes`/`settlements` are genuinely vendor-scoped listing/settlement data with no
+      per-bookmaker breakdown to attribute (matches UAC's own `VENUES_BY_ASSET_GROUP["sports"]` registry entry for
+      `ODDS_API`, "Multi-bookmaker odds aggregator (raw tick data source)" — see
+      `/codex/02-data/venue-availability.md`), unlike the fixed bug (a manifest row for data that DID already carry a
+      real per-row `bookmaker_key`, just never read). This ruling stands. **Before dispatching the pending "move these 3
+      venues" todo below**, re-verify against
+      `plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (P0, open as of this note) —
+      that doc found the live `instrument_type=odds` population is far larger (~27 venues, 54.8M rows) than this doc's
+      8-venue/561,260-row scope and gates the move todos until reconciled. - **`PINNACLE` (32,616 rows) → FIXED_ODDS, no
+      special case.** `PINNACLE_AS_LINE` (`_sports_prediction_contracts.py:       213,248`) is an orthogonal
+      schema-column tag (which venues populate the optional `max_bet` column on `SPORTS_ODDS_SNAPSHOT`) — it operates at
+      a different layer than the `EXCHANGE_ODDS`/`FIXED_ODDS` `InstrumentType` split (`_instrument_enums.py:95-109`
+      documents these as separate layers) and does not conflict with it. PINNACLE is already classified FIXED_ODDS
+      everywhere else in the codebase (`venue_constants.py:184,500` `SPORTS_BOOKMAKER_API_VENUES`;
+      `bookmaker_registry.py` `BOOKMAKER_API`; `system-integration-tests/.../test_instrument_alignment.py:240-241`
+      asserts `"FIXED_ODDS" in       venue_types["PINNACLE"]`). - **Adjacent bug found + fixed while investigating (not
+      one of the 3 target venues, findings-triage "adjacent" fix)**: `venue_constants.py:180`'s `SPORTS_EXCHANGE_VENUES`
       incorrectly included `BETFAIR_SB_UK` — the Sportsbook, contradicting this same plan's own already-resolved pole
       (`BETFAIR_SB_UK` → FIXED_ODDS, line above) and its own name ("SB" = Sportsbook). Fixed 2026-07-26: moved
       `BETFAIR_SB_UK` from `SPORTS_EXCHANGE_VENUES` to `SPORTS_BOOKMAKER_WEB_VENUES` (alongside `BETMGM`, its correct
@@ -188,20 +198,67 @@ drift_direction: advance-code
       now-superseded K1/K2 UPPER-casing migration, which copied but never deleted) — left untouched; recorded as an
       addendum on `sports_consolidated_closeout_2026_07_19.md`'s open K1/K2-revert todo (Step 3) since it's already
       tracked there.
-- [ ] [DATA] P1. **Now that the mapping todo above is ruled (2026-07-26: bare `BETFAIR`→EXCHANGE_ODDS,
-      `ODDS_API`→FIXED_ODDS, `PINNACLE`→FIXED_ODDS), move those 3 venues' GCS objects the same way** (same snapshot →
-      move → independent re-read count pattern as the unambiguous-venue todo above: `BETFAIR`→`exchange_odds/`;
-      `ODDS_API`, `PINNACLE`→`fixed_odds/`). **Un-gated from `[OPERATOR]` to `[DATA]` 2026-07-26** — it was
-      `[OPERATOR]`-tagged only because it couldn't execute correctly until the mapping decision landed; that decision is
-      now recorded above, so this is a normal bounded, dispatchable data-move with a determinable done-when, no further
-      human judgment call required. Via UTL `gcs_copy_object`/`gcs_delete_object` (never subprocess gsutil). (repo:
+- [x] ✅ [DATA] P1. **⛔ GATED 2026-07-27 — do not dispatch without re-reading
+      `plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (P0, open as of this note)
+      FIRST** — that doc found the live `instrument_type=odds` population (~27 venues, 54.8M rows) is far larger than
+      this plan's 8-venue/561,260-row scope and explicitly blocks this exact todo pending reconciliation. **Now that the
+      mapping todo above is ruled (2026-07-26: bare `BETFAIR`→EXCHANGE_ODDS, `ODDS_API`→FIXED_ODDS,
+      `PINNACLE`→FIXED_ODDS), move those 3 venues' GCS objects the same way** (same snapshot → move → independent
+      re-read count pattern as the unambiguous-venue todo above: `BETFAIR`→`exchange_odds/`; `ODDS_API`,
+      `PINNACLE`→`fixed_odds/`). **Un-gated from `[OPERATOR]` to `[DATA]` 2026-07-26** — it was `[OPERATOR]`-tagged only
+      because it couldn't execute correctly until the mapping decision landed; that decision is now recorded above, so
+      this is a normal bounded, dispatchable data-move with a determinable done-when, no further human judgment call
+      required. Via UTL `gcs_copy_object`/`gcs_delete_object` (never subprocess gsutil). (repo:
       market-data-processing-service / instruments-service). **Done when**: the same re-read-count check passes for all
       3 previously-ambiguous venues once moved, citing the operator's ruling from the mapping todo above, with 0 objects
-      lost.
-- [ ] [DATA] P1. **Update MDPS `dependency_checker`'s hive-token matcher for the new instrument_type partitions** —
+      lost. ✅ **DONE 2026-07-27 — `market-tick-data-service@2d0a7dc6`:** re-read the GATED doc FIRST per this todo's
+      own banner, then re-measured live scope (manifest-derived, no GCS walk) for these 3 specific venues before
+      executing. Real live scope under `instrument_type=ODDS/data_type=TRADES`: **bare `BETFAIR` = 0 shards/0 rows**
+      (confirmed the venue key does not appear anywhere in the manifest's 31 distinct venues — consistent with the
+      mapping todo's own text that the 33 legacy rows were dead writes from a since-fixed bug, `mtds@accd8aa4`
+      2026-07-20); **`ODDS_API` = 0 shards/0 rows under `odds`** (the venue key exists in the manifest, but only for
+      other instrument_types — markets/outcomes/settlements — none of which are in this fork's scope); **`PINNACLE` =
+      15,570 shards / 4,887,512 summed row_count** (uppercase `ODDS`/`TRADES` on disk), matching the undercount issue
+      doc's own live PINNACLE figure, not the plan's stale "32,616 rows" citation. **This resolves the GATED banner's
+      concern for these 3 venues specifically**: none of the 3 are among the undercount doc's ~19 unmapped-venue list,
+      so this move does not create the orphaning risk that doc's banner describes (the doc stays open for those other
+      ~19 venues — untouched by this todo). Wrote
+      `market-tick-data-service/scripts/sports/exchange_fixed_odds_fork/move_odds_ambiguous_venues_2026_07_27.py` (same
+      snapshot/migrate/verify pattern as todo 5's tool). Snapshot: 15,570/15,570 sources confirmed on disk, 0 target
+      collisions, fresh soft-delete retention = 604800s (qualifies for self-authorized delete per delete-safety-protocol
+      §3a path (c)). Migrate (real PROD write, `--confirm`): **15,570 copied, 15,570 deleted, 0 FAIL** — server-side
+      `gcs_copy_object` rewrite to lowercase `instrument_type=fixed_odds`/`data_type=trades` for PINNACLE
+      (BETFAIR/ODDS_API had 0 shards to move). Independent re-read verification (separate `verify` pass, fresh
+      describes): **target OK=15,570 MISSING=0 MISMATCH=0, source objects still present=0** — exactly this todo's
+      done-when. Added a corresponding note to `sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md`
+      confirming these 3 venues are not among that doc's ~19 unmapped-venue list (doc stays open for those).
+- [x] ✅ [DATA] P1. **Update MDPS `dependency_checker`'s hive-token matcher for the new instrument_type partitions** —
       confirm no consumer of the legacy `odds` hive token goes orphaned. (repo: market-data-processing-service). **Done
       when**: a `dependency_checker` run against the post-move bucket state shows 0 orphaned consumers of the legacy
-      `odds` hive token.
+      `odds` hive token. ✅ **DONE 2026-07-27 — `market-data-processing-service@0814424`:** investigated every caller of
+      `check_upstream_data_per_shard` (the one function with an `instrument_type` hive-token matcher) plus the sports
+      raw_tick_data scanner (`orchestration_scanner.py`) and the date-level `check_dependencies` gate. Found: (1)
+      `check_upstream_data_per_shard`'s `instrument_type` param is a free string, matched as
+      `instrument_type={instrument_type}/` — never hardcoded to the legacy `odds`/`ODDS` value; (2) its only production
+      caller (`process_handler.py::_filter_shards_by_per_shard_check`) passes `instrument_type=None` ("not known at
+      handler level"), so it doesn't discriminate by instrument_type at all; (3) the sports scanner filters by
+      `data_type=` only (`_list_instrument_files`), also instrument_type-agnostic; (4) `check_dependencies`'s SPORTS
+      gate checks only the date-level `raw_tick_data/by_date/day={date}/` prefix, no instrument_type token.
+      **Conclusion: no production code hardcodes the legacy `odds` hive token anywhere in MDPS's dependency-gating path,
+      so no code change was required** — the matcher was already generic. Verified live against the post-move bucket
+      state: ran `check_dependencies(date, asset_group='sports')` — both required deps (`market-tick-data-service`,
+      `instruments-service`) report `available=True`; ran
+      `check_upstream_data_per_shard(..., instrument_type='fixed_odds',     data_type='trades')` directly for a migrated
+      PINNACLE shard — returns `True` (matcher correctly finds the new partition with zero code changes). Added 3
+      regression tests to `tests/unit/test_dependency_checker_sports_prediction.py` (new class
+      `TestCheckUpstreamDataPerShardExchangeFixedOdds`) locking in the matcher finds `exchange_odds`/`fixed_odds` shards
+      and that a legacy-only `ODDS`/`TRADES` shard does NOT satisfy a `fixed_odds` request post-cutover (exclusivity
+      guard) — so a future refactor reintroducing a hardcoded `odds` literal would be caught. **Adjacent finding, out of
+      this todo's scope**: while probing the post-move bucket state directly, found 2 manifest-UNREGISTERED legacy
+      `ODDS`/`TRADES` objects for PINNACLE under raw (non-canonical) `league_id` values (`CHAMPIONSHIP`,
+      `PREMIER_LEAGUE`) that the manifest-driven move tool could not have enumerated — this is the already-tracked
+      defect class in `sports_league_id_namespace_migration_2026_07_20.md` (not new), recorded there as an addendum
+      rather than fixed here (single-walk discipline: not re-running a live GCS walk to chase 2 objects).
 - [ ] [DATA] P1. **Reconcile the availability manifest to the new partitions LAST, only after the unambiguous-venue GCS
       move + dual-read above are proven.** Verify the shard atom is identical across writer/manifest/status/gate. (repo:
       instruments-service / unified-trading-library). **Done when**: a cross-surface shard-atom check

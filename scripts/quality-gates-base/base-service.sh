@@ -3555,6 +3555,53 @@ else
     fi
 fi
 
+# ── STEP 5.105: subprocess/os.system GCS/S3 object-CLI ratchet ────────────────
+#
+# Enforces CLAUDE.md "Writing STORAGE code?": GCS/S3 OBJECT operations go through
+# UTL's `gcs_copy_object`/`gcs_delete_object`/`gcs_describe_object`/`list_blobs`
+# (unified_trading_library.cloud_interface) — never a subprocess/os.system call
+# shelling out to `gcloud storage`/`gsutil`/`aws s3`/`aws s3api` for cp/mv/rm/
+# rsync/sync/ls/cat/*-object. A DIFFERENT, narrower concern than STEP 5.69
+# (inline gs://|s3:// f-string URI construction): that check excludes scripts/
+# entirely and never inspects subprocess call arguments at all. Found
+# 2026-07-27 via behavioral testing of the delete-reversibility governance work
+# (destructive_command_hook_blind_to_sdk_delete_path_2026_07_27.md) — a
+# workspace grep surfaced real, live violations, including production service
+# code (deployment_service/cli/handlers/maintenance_handler.py) running
+# `gsutil rm` in a loop.
+#
+# Deliberately does NOT exclude scripts/ (unlike 5.69) — that's exactly where
+# most of the real violations live. Object-level ops only; BUCKET-admin CLI
+# usage (buckets/mb/rb/versioning/lifecycle/iam/label/...) is out of scope by
+# design (no UTL equivalent, legitimate infra/ops usage).
+#
+# Same shrinking-ratchet-baseline shape as STEP 5.69/5.101/5.103:
+# `subprocess_gcs_object_cli_baseline.yaml` records the CURRENTLY-KNOWN count of
+# unmarked (no `# noqa: gcs-cli`) call sites per repo. A repo whose live count
+# EXCEEDS its baseline fails CI; BELOW its baseline -> WARNING (ratchet down via
+# --update-baseline). Repos not in the baseline default to count=0.
+_SUBPROC_GCS_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_subprocess_gcs_object_cli.py"
+if [ -f "$_SUBPROC_GCS_CHECKER" ]; then
+    _SGC_REPO=$(basename "$PROJECT_ROOT")
+    _SGC_WS="$REPO_ROOT"
+    if $PYTHON_CMD "$_SUBPROC_GCS_CHECKER" \
+            --workspace-root "$_SGC_WS" --scope "$_SGC_REPO" >${TMPDIR:-/tmp}/subprocess_gcs_object_cli_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/subprocess_gcs_object_cli_qg.log 2>/dev/null; then
+            log_warn "STEP 5.105: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/subprocess_gcs_object_cli_qg.log) repo(s) BELOW the subprocess-GCS/S3-CLI baseline — ratchet subprocess_gcs_object_cli_baseline.yaml DOWN (re-run --update-baseline)"
+        else
+            log_success "STEP 5.105: No new subprocess gcloud/gsutil/aws-s3 object-CLI call sites (baseline-ratchet, storage-code SSOT)"
+        fi
+    else
+        log_fail "STEP 5.105: NEW subprocess/os.system GCS/S3 object-CLI call site(s) above the per-repo baseline. Route through unified_trading_library.cloud_interface's gcs_copy_object()/gcs_delete_object()/gcs_describe_object()/list_blobs(), or add '# noqa: gcs-cli' with a one-line reason (CLAUDE.md 'Writing STORAGE code?'):"
+        cat ${TMPDIR:-/tmp}/subprocess_gcs_object_cli_qg.log
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/subprocess_gcs_object_cli_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_subprocess_gcs_object_cli.py --workspace-root $_SGC_WS --scope $_SGC_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.105: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call

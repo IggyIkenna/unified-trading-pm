@@ -508,13 +508,27 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       deployment-service gate green (bash syntax + shellcheck clean, `test_bom.py` 8 tests). **Verification gate not yet
       satisfied by this alone** — see the live-launch todo below; no CI executes this shell file, so a green unit test
       is necessary but not sufficient.
-- [ ] [INFRA] P1. **NEW (2026-07-24) — the live-launch verification step itself, split out as its own todo** (was
-      previously only a note inside the code-change todo above; called out separately so it can't be silently skipped
-      once the shell edit lands). Once the (A) shell change above ships: (1) fire one cheap `EPHEMERAL_BATCH` VM via the
-      normal launcher; (2) run the codex T+10min post-launch check; (3) assert a registry row appears in
-      `deployments/active/` with a **non-empty `git_commit`**; (4) spot-check the value against the VM's own boot log /
-      manifest `commit_sha` to confirm it's the right SHA, not just non-empty; (5) only then flip this todo — a green
-      unit test alone does NOT satisfy this gate, per the VERIFICATION GATE note above (no CI executes this shell file).
+- [x] [INFRA] P1. ✅ **Live-launch verification COMPLETE — 2026-07-27.** Real VM
+      `measure-honest-coverage-20260727-234251` (`launch-measure-honest-coverage-vm.sh prediction`,
+      `VM_SERVICE=instruments_service`, both registered — see the dated Progress Log entry above for why the first two
+      attempts via `launch-qg-snapshot-vm.sh` were abandoned: one had a stale setup script, the other hit an unrelated
+      pre-existing "unregistered VM_SERVICE → install all 28 repos" launcher bug, unconnected to this fix). Ran to
+      completion (`exit_code=0`, self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true` — confirmed gone via
+      `gcloud compute instances describe` 404 post-run, no manual cleanup needed). **All 4 verification steps passed:**
+      (1) codex T+10min check — `run.log` present + growing, `DEPLOYMENT_STARTED`/`DEPLOYMENT_COMPLETED` events fired.
+      (2) Registry row confirmed at
+      `gs://deployment-scripts-central-element-323112/deployments/archive/2026-07-27/9dc3e0c9-6634-4f6c-a2cb-54d1d8786a46.json`
+      (a completed run archives immediately — no separate `deployments/active/` check needed). (3)
+      **`"git_commit": "f06eba12989dddff58831d26bf6977f92b57994e"` — non-empty, real 40-char SHA.** (4) **Spot-checked
+      against the VM's own serial console** (`vm-setup.log` isn't uploaded on a SUCCESSFUL boot — confirmed the audit's
+      own finding about the failure-only EXIT trap still holds — so the serial console, which captures unconditionally,
+      was the right source): the LAST of the 4 tarballs this task needed (unified-api-contracts →
+      unified-trading-library → deployment-service → **instruments-service**, in that order) logged
+      `manifest: sha=f06eba12989d version=v0.91.0-563-gf06eba12` — the 12-char prefix matches the registry's stored
+      40-char SHA EXACTLY. This confirms end-to-end: the download loop's `_tarball_actual_sha` correctly held the
+      last-processed tarball's manifest commit → `_launch_with_tee()`'s new `export GIT_COMMIT=` correctly read it →
+      `resolve_deployment_bom()`'s pre-existing `AliasChoices("GIT_COMMIT", …)` correctly resolved it with zero Python
+      changes → the registry entry correctly persisted it. **Phase 3c is fully DONE.**
 
 > ❌ **Option (B) — inferred-from-manifest-timeline — is DROPPED** (operator decision 2026-07-17). Rationale recorded
 > under "Honest gaps" above. Pre-(A) VMs render as ⚪ **unknown with the reason**, and age out as the fleet recycles. Do
@@ -782,6 +796,89 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   - **Not addressed this round** (still open, no new instruction given): the CPU-throttling test itself (still paused)
     and the "no documented fallback if CPU-throttling isn't the answer" gap — both remain exactly as Phase 7 already
     states them.
+- **2026-07-27 — Phase 3b, 3d, and 3c (including the live-launch verification) ALL shipped in one session.** Operator
+  dispatch: complete the plan's remaining todos autonomously. Shipped, each verified landed on
+  `origin/live-defi-rollout` by content (not just exit code — this repo was under heavy concurrent-agent contention all
+  session; several pushes needed 2-4 pull-rebase-retry cycles, and one retry silently dropped a staged edit that a
+  content-diff check caught before it would have shipped an incomplete commit):
+  - **Default tab flip** — `deployment-ui@fb1da34`. `useState<TabId>("pipe")` → `"run"`; fixed 10 Vitest + 6 `pw:L2`
+    cases that assumed Pipeline was the default-rendered tab.
+  - **Phase 3b (all 3 todos)** — `deployment-api@24070d9`, `deployment-ui@74c0a7d`. `image_digest`/`git_commit` added to
+    the Deployments `DeploymentItem` (a real bug caught here: two pre-existing test fake-entry doubles needed the new
+    attributes since `_vm_item()` now reads them unconditionally). `?git_commit=<sha>` deep-link filter on the
+    Deployments view (client-side, first param with no owning dropdown, so a visible chip + clear link was added).
+    Artifact Registry/ECR console-link builder (`artifactConsoleUrl()`), wired into both the Artifacts tab and the
+    What's running tab's expanded detail (which now cross-links to both the registry console AND the Deployments commit
+    filter — the operator's original 2026-07-17 ask).
+  - **Phase 3d (all 5 todos)** — `deployment-api@3525bce`, `deployment-ui@05a087d`. Live-verified the tarball bucket
+    path first (`gcloud storage ls`, ~4966 manifests/~1046 tarballs, matches the cited `.tf` comment exactly). Built
+    `gcp_tarball_manifest_builds()`/`gcp_tarball_manifest_images()` reading ZERO manifest bodies (SHA is in the
+    filename; every other field is `list_blobs` metadata) — a deliberate deviation from the original spec's "read each
+    manifest" framing, kept the ~5000-object scan genuinely cheap. **A real bug a test caught before shipping**: the
+    first draft fell back to the manifest JSON's OWN byte size when no matching `.tar.gz` existed, fabricating a
+    plausible-but-wrong size for an orphaned manifest — fixed to honest `None`. **A stale claim caught and corrected**:
+    this exact Phase 3d banner said "Deploy timeline ALREADY treats a GCE VM launch as the tarball-lane deploy event" —
+    re-verifying the CITED commit's own message showed the opposite; no VM-launch deploy provider exists anywhere, so
+    `running()`'s tarball coverage is genuinely zero, not partially built. Corrected in-place rather than left to
+    mislead a future session. Pipeline/Artifacts UI needed zero production code changes (both already generic over the
+    data), confirmed with new regression coverage.
+  - **Phase 3c shell edit + Python test** — `deployment-service@d8b1411c`. One additive block in `_launch_with_tee()`
+    (`if [[ -n … ]]; then export GIT_COMMIT=…; fi` — never a trailing `&&`, which would abort every VM boot under
+    `set -euo pipefail`); all 7 audit conditions re-verified satisfied. Discovered the "accumulate
+    `_tarball_actual_sha`" half of the plan's "2 additive edits" framing needs no code change at all — it's a plain
+    (non-`local`) shell variable that already survives as a global from the download loop to `_launch_with_tee()`; only
+    the read-and-export was net-new. Added `test_resolve_bom_reads_git_commit_from_env_via_deployment_config` in
+    `test_bom.py` using the REAL `DeploymentConfig` (not the file's existing `_StubConfig` double) so the
+    `AliasChoices("GIT_COMMIT", …)` resolution itself is exercised, not just `resolve_deployment_bom`'s passthrough.
+  - Every plan-checkbox flip landed as its own `docs(plans):` commit, each independently content-verified against
+    `origin/live-defi-rollout` — see the individual commit SHAs on each todo above.
+  - **The Phase 3c live-launch verification — RESOLVED, took 3 attempts** (todo below Phase 3c's shell-edit todo).
+    **First attempt (`qg-snapshot-20260727-232216`) deleted pre-work** — GCS copy of `setup-data-pipeline-vm.sh` was
+    stale (predated this session's fix); deleted before it did any work, then republished both the setup script and the
+    stale `deployment-service`/`unified-api-contracts` tarballs
+    (`gcloud storage cp … + create-code-tarballs.sh --include …`), confirmed via the launcher's own freshness check
+    ("setup script fresh" + "all 3 tarball(s) current"). **Second attempt (`qg-snapshot-20260727-232717`) launched clean
+    but FAILED for an unrelated, pre-existing reason, unconnected to this plan's fix** — `SETUP_EXIT_STATUS=1`,
+    `vm-setup.log` shows `SETUP FAILED rc=1` during `uv pip install` of ALL 28 repos simultaneously. Root cause:
+    `VM_SERVICE=qg_snapshot` (the qg-snapshot launcher's own hardcoded metadata) matches no entry in `SERVICE_TARBALLS`,
+    so `setup-data-pipeline-vm.sh` falls back to "installing all available tarballs" — a dependency-resolution conflict
+    across the full 28-repo install, not anything this plan's `GIT_COMMIT` change touches (the failure happens during
+    `uv pip install`, BEFORE `_launch_with_tee()` — where the new export lives — is ever reached). **A DIFFERENT agent
+    (slot-4) independently found this same running VM** and filed
+    `issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md`, but misattributed it as "the
+    real daily qg-snapshot cron" — it was actually this session's ad-hoc verification launch; that doc needs a
+    correction noting the true origin (not yet applied — a small, low-priority follow-up, tracked as a new P3 todo below
+    rather than silently left wrong). **Third attempt — pivoted to a properly-registered `VM_SERVICE` instead of
+    fighting the qg-snapshot launcher's fallback bug**: `deployment_service` (this exact repo) IS a registered
+    `SERVICE_TARBALLS` entry, so any launcher using it takes the normal single-tarball path. Chose
+    `launch-measure-honest-coverage-vm.sh prediction` (`VM_SERVICE=instruments_service`, also registered; `prediction`
+    picked as the smallest asset group to keep the run short) — a legitimate, already-scheduled (00:30 UTC daily)
+    production task, e2-highmem-4, launched as `measure-honest-coverage-20260727-234251` (~2026-07-27T23:42:51 JST /
+    ~14:42 UTC). Confirmed no singleton-lock conflict before launching. **Tarball staleness warnings on THIS launch are
+    expected noise, not a blocker**: the launcher warned `instruments-service`/`unified-api-contracts`/
+    `deployment-service` tarballs are stale relative to the ABSOLUTE latest commit on each repo — irrelevant here, since
+    (a) `deployment-service`'s tarball manifest (`dae295f916b5…`) is a confirmed DESCENDANT of this session's fix commit
+    (`d8b1411c`) regardless of being behind the latest HEAD, and (b) this specific task doesn't even need the
+    `deployment-service` tarball (`VM_SERVICE=instruments_service` only pulls `instruments-service-code` + its
+    UTL/UAC/MTDS dependency chain) — what matters for THIS verification is only that the VM correctly stamps WHATEVER
+    commit_sha its manifest says, not which specific commit that is. **RESOLVED — this VM completed successfully,
+    `exit_code=0`, self-deleted cleanly.** Registry row at
+    `deployments/archive/2026-07-27/9dc3e0c9-6634-4f6c-a2cb-54d1d8786a46.json` carries
+    `"git_commit": "f06eba12989dddff58831d26bf6977f92b57994e"` — non-empty, and spot-checked correct: the serial console
+    (used instead of `vm-setup.log`, which the audit already noted only uploads on failure) shows the LAST of the 4
+    tarballs this task needed — `instruments-service-code` — logged
+    `manifest: sha=f06eba12989d version=v0.91.0-563-gf06eba12` immediately before "Code deployed from GCS (4 repos)", a
+    12-char prefix match against the registry's full 40-char SHA. **All 4 verification-gate steps pass; see the Phase 3c
+    live-launch todo above, now flipped `[x]`, for the complete evidence trail.**
+- [ ] [SCRIPT] P3. **Correct the misattributed VM origin in
+      `issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md`** — that issue doc (filed by a
+      different agent/slot-4, independently) states `qg-snapshot-20260727-232717` was "the actual daily qg-snapshot cron
+      VM (terraform schedule '0 6 * * *')"; it was actually this session's ad-hoc Phase 3c verification launch
+      (confirmed: this session ran `bash launch-qg-snapshot-vm.sh` directly at that exact timestamp). The doc's actual
+      finding (the launcher's singleton-lock preflight breaking `--dry-run-scheduler-body`'s statelessness) is still
+      correct and still worth fixing — only the "which VM was this" attribution is wrong. Low-priority since it doesn't
+      change the recommended fix, but leaving a wrong provenance claim in a filed issue doc could mislead whoever picks
+      it up next about how often this collision actually happens in production.
 
 ## Deferred work after 2026-07-23
 
@@ -790,33 +887,34 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 > `deployment-ui@3210bb5`), plus per-column sort/filter/multi-select workspace-wide on the page. This is the current
 > state.
 
-**Recommended NEXT (updated 2026-07-24): Phase 7's CPU-throttling test** (toggle `--no-cpu-throttling` on deployment-api
-and re-verify the images endpoint) is the fastest path to closing out today's still-open production symptom, but is
-**operator-paused** as of 2026-07-24 ("let's check the locally running one first"). With that parked, **Phase 3d
-(tarball-bucket provider)** is the next-highest-value real gap — the other half of what the operator's own "in local
-version as well i cannot see anything in tarball lane" surfaced today, and unlike Phase 3c it needs no audit gate, just
-a new provider. **Phase 3b cross-links** (Deployments URL-param filter + console deep-links) remains audited-cheap and
-ready whenever picked back up.
+**Updated 2026-07-27 (later): Phase 3b, 3c, and 3d are now ALL DONE** — the Phase 3c live-launch verification (the last
+open piece below Phase 7) completed successfully via `measure-honest-coverage-20260727-234251` (`git_commit` confirmed
+correctly stamped + spot-checked against the serial console). **Recommended NEXT**: Phase 7's CPU-throttling test (still
+**operator-paused** since 2026-07-24 — "let's check the locally running one first") is now the only non-stretch,
+non-AWS-gated item left in the whole plan. Beyond that: the Phase 6 stretch items (all P3, optional), the new P3
+issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-gated).
 
-| Item                                                                                   | State / why deferred                                                                                                                                                                                                                                                                              | Blocked on                             |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Tarball-bucket provider (Phase 3d) — Pipeline/Artifacts rows                           | ✅ **DONE 2026-07-27** — `deployment-api@3525bce`, `deployment-ui@05a087d`. Running-tab tarball rows remain out of scope — no VM-launch deploy provider exists (see Phase 3d's P3 todo)                                                                                                           | a VM-launch deploy provider (net-new)  |
-| Phase 7 — prod-vs-local parity: root causes #1/#2/#3 (IAM/logging/buffering)           | ✅ **FIXED 2026-07-24** — `deployment-service@74306a1`, `deployment-api@f27a8f1`/`@6518e82` — but prod endpoint STILL empty on a fresh revision after all 3                                                                                                                                       | —                                      |
-| Phase 7 — CPU-throttling test (leading untested hypothesis for the still-open symptom) | **Paused 2026-07-24 — operator ask** ("let's check the locally running one first")                                                                                                                                                                                                                | operator resume                        |
-| GCS Data Access audit-log cost finding (Cloud Logging, ~151 GB/7d, MTDS buckets)       | ✅ **Issue doc FILED 2026-07-24** — `plans/archive/2026_07/gcs_data_access_audit_log_cost_2026_07_24.md`; operator to route to Ikenna (or pick up Monday)                                                                                                                                         | Ikenna / operator                      |
-| Whole-mock sign-off, all 5 tabs, tarball stamp scope                                   | ✅ **DONE 2026-07-21** — operator: "good to start … on all the tabs 1 to 5"; DO-NOT-START banner lifted (`pm@161200196`)                                                                                                                                                                          | —                                      |
-| Pipeline (builds) view — backend + live UI tab                                         | ✅ **DONE** — `deployment-api@8eda1f8`/`0a920c2`, `deployment-ui@47e6379`/`038038e`                                                                                                                                                                                                               | —                                      |
-| Deploy timeline view — backend + live UI tab                                           | ✅ **DONE 2026-07-23** — `deployment-api@72a0108`, `deployment-ui@797180c`                                                                                                                                                                                                                        | —                                      |
-| Date-range picker + 7d default (both windowed live views)                              | ✅ **DONE 2026-07-23** — operator ask, same turn as the Deploy timeline ship (`deployment-ui@797180c`)                                                                                                                                                                                            | —                                      |
-| **What's running** view (the headline runtime join + drift classifier)                 | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Scoped to the Cloud Run (image) lane; `fragmented` always 0 for now (no traffic-split detection)                                                                                                                      | —                                      |
-| Artifacts (registry inventory) view                                                    | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. GCP AR only; AWS ECR stays parked/unread                                                                                                                                                                              | —                                      |
-| Health (measured conditions) view                                                      | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Derives every condition from the other four views' own facts, zero new cloud calls                                                                                                                                    | —                                      |
-| Per-column sort + filter + multi-select on every live table                            | ✅ **DONE 2026-07-23** — operator ask, same day as the last 3 views; `deployment-ui@3126b1b` + `@3210bb5`                                                                                                                                                                                         | —                                      |
-| Snapshot worker (GCS parquet + DuckDB, the OOM-safe long-window read path)             | **Not started** — the live-scan cache (300s TTL) covers today's needs; the worker is for long-history + concurrent-load headroom                                                                                                                                                                  | —                                      |
-| (A) tarball commit stamp (Phase 3c Option A)                                           | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                                                                                                                                                                | a deliberate operator-scheduled launch |
-| Phase 3b cross-links (Deployments URL-param filter, console deep-links)                | ✅ **DONE 2026-07-27** — `deployment-ui@74c0a7d`                                                                                                                                                                                                                                                  | —                                      |
-| "Default view = What's running" (locked 2026-07-17, DECIDED 2026-07-24)                | ✅ **DONE 2026-07-27** — `deployment-ui@fb1da34`                                                                                                                                                                                                                                                  | —                                      |
-| Phase 3d live-launch verification step (split out as its own todo, 2026-07-24)         | **Cannot be done yet** — needs (A)'s shell edit to ship first, then a live `EPHEMERAL_BATCH` launch + T+10min check                                                                                                                                                                               | (A) shell edit landing first           |
-| Issue doc for the pipeline bugs                                                        | ✅ **DONE 2026-07-21** — `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; only #4/#7 (AWS-deferred) + #3 (GCP, minor) open — **#1 RESOLVED 2026-07-24** (semver-agent confirmed deliberately dead; issue doc itself still needs the same correction as a follow-up) | Ikenna (his active CI files)           |
-| Stale "Staging-first" quickmerge.sh messaging                                          | ✅ **RESOLVED — no action needed (operator 2026-07-24)**: cosmetic only, left as-is unless it starts causing real problems                                                                                                                                                                        | —                                      |
-| AWS resume (App Runner + ECS + ECR)                                                    | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                                                                                                                                      | AWS credits                            |
+| Item                                                                                      | State / why deferred                                                                                                                                                                                                                                                                              | Blocked on                            |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Tarball-bucket provider (Phase 3d) — Pipeline/Artifacts rows                              | ✅ **DONE 2026-07-27** — `deployment-api@3525bce`, `deployment-ui@05a087d`. Running-tab tarball rows remain out of scope — no VM-launch deploy provider exists (see Phase 3d's P3 todo)                                                                                                           | a VM-launch deploy provider (net-new) |
+| Phase 7 — prod-vs-local parity: root causes #1/#2/#3 (IAM/logging/buffering)              | ✅ **FIXED 2026-07-24** — `deployment-service@74306a1`, `deployment-api@f27a8f1`/`@6518e82` — but prod endpoint STILL empty on a fresh revision after all 3                                                                                                                                       | —                                     |
+| Phase 7 — CPU-throttling test (leading untested hypothesis for the still-open symptom)    | **Paused 2026-07-24 — operator ask** ("let's check the locally running one first")                                                                                                                                                                                                                | operator resume                       |
+| GCS Data Access audit-log cost finding (Cloud Logging, ~151 GB/7d, MTDS buckets)          | ✅ **Issue doc FILED 2026-07-24** — `plans/archive/2026_07/gcs_data_access_audit_log_cost_2026_07_24.md`; operator to route to Ikenna (or pick up Monday)                                                                                                                                         | Ikenna / operator                     |
+| Whole-mock sign-off, all 5 tabs, tarball stamp scope                                      | ✅ **DONE 2026-07-21** — operator: "good to start … on all the tabs 1 to 5"; DO-NOT-START banner lifted (`pm@161200196`)                                                                                                                                                                          | —                                     |
+| Pipeline (builds) view — backend + live UI tab                                            | ✅ **DONE** — `deployment-api@8eda1f8`/`0a920c2`, `deployment-ui@47e6379`/`038038e`                                                                                                                                                                                                               | —                                     |
+| Deploy timeline view — backend + live UI tab                                              | ✅ **DONE 2026-07-23** — `deployment-api@72a0108`, `deployment-ui@797180c`                                                                                                                                                                                                                        | —                                     |
+| Date-range picker + 7d default (both windowed live views)                                 | ✅ **DONE 2026-07-23** — operator ask, same turn as the Deploy timeline ship (`deployment-ui@797180c`)                                                                                                                                                                                            | —                                     |
+| **What's running** view (the headline runtime join + drift classifier)                    | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Scoped to the Cloud Run (image) lane; `fragmented` always 0 for now (no traffic-split detection)                                                                                                                      | —                                     |
+| Artifacts (registry inventory) view                                                       | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. GCP AR only; AWS ECR stays parked/unread                                                                                                                                                                              | —                                     |
+| Health (measured conditions) view                                                         | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Derives every condition from the other four views' own facts, zero new cloud calls                                                                                                                                    | —                                     |
+| Per-column sort + filter + multi-select on every live table                               | ✅ **DONE 2026-07-23** — operator ask, same day as the last 3 views; `deployment-ui@3126b1b` + `@3210bb5`                                                                                                                                                                                         | —                                     |
+| Snapshot worker (GCS parquet + DuckDB, the OOM-safe long-window read path)                | **Not started** — the live-scan cache (300s TTL) covers today's needs; the worker is for long-history + concurrent-load headroom                                                                                                                                                                  | —                                     |
+| (A) tarball commit stamp (Phase 3c Option A) — the shell edit itself                      | ✅ **DONE 2026-07-27** — `deployment-service@d8b1411c` + `test_bom.py` Python-half test. All 7 audit conditions re-verified                                                                                                                                                                       | —                                     |
+| Phase 3b cross-links (Deployments URL-param filter, console deep-links)                   | ✅ **DONE 2026-07-27** — `deployment-ui@74c0a7d`                                                                                                                                                                                                                                                  | —                                     |
+| "Default view = What's running" (locked 2026-07-17, DECIDED 2026-07-24)                   | ✅ **DONE 2026-07-27** — `deployment-ui@fb1da34`                                                                                                                                                                                                                                                  | —                                     |
+| Phase 3d (all 5 todos) — tarball provider, health condition, Pipeline/Artifacts verify    | ✅ **DONE 2026-07-27** — `deployment-api@3525bce`, `deployment-ui@05a087d`                                                                                                                                                                                                                        | —                                     |
+| **Phase 3c live-launch verification (the shell edit's own verification gate)**            | ✅ **DONE 2026-07-27** — `measure-honest-coverage-20260727-234251` completed rc=0, `git_commit=f06eba12989d…` confirmed non-empty + matched against the serial console's manifest log. Phase 3c is now fully closed                                                                               | —                                     |
+| Misattributed VM origin in the qg-snapshot-launcher-flake issue doc (another agent's doc) | **Not started** — low-priority correction, doesn't change that doc's recommended fix, see the new P3 todo above                                                                                                                                                                                   | —                                     |
+| Issue doc for the pipeline bugs                                                           | ✅ **DONE 2026-07-21** — `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; only #4/#7 (AWS-deferred) + #3 (GCP, minor) open — **#1 RESOLVED 2026-07-24** (semver-agent confirmed deliberately dead; issue doc itself still needs the same correction as a follow-up) | Ikenna (his active CI files)          |
+| Stale "Staging-first" quickmerge.sh messaging                                             | ✅ **RESOLVED — no action needed (operator 2026-07-24)**: cosmetic only, left as-is unless it starts causing real problems                                                                                                                                                                        | —                                     |
+| AWS resume (App Runner + ECS + ECR)                                                       | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                                                                                                                                      | AWS credits                           |

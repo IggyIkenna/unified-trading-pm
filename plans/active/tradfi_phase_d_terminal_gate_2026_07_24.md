@@ -363,6 +363,15 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   path or copy-aside first). The CBOE mixed-venue fix is now verified correct at both the unit-test and
   live-infrastructure level.
 
+  **CORRECTION (2026-07-27) — "4/4 passed" was true of the checker's report but not a clean pass on inspection.** This
+  "CONFIRMED GREEN" text was written before the launched VM's `run.log`s were actually read — see § "2026-07-27 — CBOE
+  terminal-state re-check" below. The `mtds@0205eaab` fix (`_is_bundled_chain_shard` routing + `CBOE → "VIX"` in
+  `_CHAIN_UNDERLYING_FALLBACK`) is correct for shard-classification, but the sampled underlying `"VIX"` is not a symbol
+  Databento's CBOE/`XCBF.PITCH` curated list recognizes (`VX`/`VX.FUT` are) — both CBOE force legs wrote 0 records and
+  only read `passed` because a pre-existing captured shard already satisfied the manifest check. The skip legs'
+  `genuine` proof stands (unaffected — pre-flight reads the manifest, not a live fetch). Tracked as a new confirmed
+  instance in `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4.
+
 - `- [ ] [SCRIPT] P3. Add TestIsBundledChainShardCboeCorrection (3 tests, verified passing in isolation) to tests/unit/test_pipeline_e2e_check.py once mtds_deployment_env_race_survives_single_worker_2026_07_23.md is resolved.`
 - `~~- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label~~` — **SUPERSEDED 2026-07-23**: rather than relabel the
   honest-absence status, built the actual missing adapter. `instruments-service` had zero reference-data adapter for FX
@@ -410,16 +419,54 @@ launched against the current code tarball `mtds-code@0205eaab...` which the per-
 by the time of launch — no manual rebuild needed). Whoever resumes this should check that run's `run.log` / manifest
 fingerprint before either trusting a stale "known-flaky-network" verdict or re-launching a duplicate VM.
 
+### 2026-07-27 — CBOE terminal-state re-check (resolves the item above)
+
+**Definitive verdict: MIXED — skip legs genuinely pass; force legs do not genuinely re-verify.** The VM run described
+above as "still in-flight" had in fact already completed by the time this check happened (it finished within ~20 min of
+its 2026-07-24 12:43 UTC launch — well before session-end); no re-launch was needed, per the source todo's own
+
+> 24h-elapsed guidance. Read directly from source, not trusted from the checker's summary label alone:
+
+- The 4 per-leg VMs: `mtds-backfill-tradfi-pipelinecheck-20260724-{124343,124852,125331,125749}-{3b5c3d,e7f533}`, all
+  `EXIT_STATUS=0`, self-deleted on completion (`VM_SHUTDOWN_ON_COMPLETION=true` — this is why none show up in a current
+  `gcloud compute instances list`).
+- Checker's own report: `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_13_cboe_reverify.md`
+  (`generated_at: 2026-07-24T13:03:32Z`) reads `total=4 passed=4 failed=0` — all 4 legs `passed`, `parquet=2`,
+  `manifest=captured`.
+- **But the raw `run.log` for BOTH force legs tells a different story**: `ohlcv_1s` force
+  (`.../mtds-backfill-tradfi-pipelinecheck-20260724-124343-3b5c3d/run.log`) and `ohlcv_1m` force
+  (`.../mtds-backfill-tradfi-pipelinecheck-20260724-125331-e7f533/run.log`) both log the identical warning:
+  `DatabentoAdapter: instrument_ids filter ['VIX'] matched nothing for venue=CBOE dataset(s)=['XCBF.PITCH'] — 2 curated symbol(s) available (['VX', 'VX.FUT'])`
+  → `DatabentoAdapter.download_batch_df: CBOE 2026-07-13 — 0 records` →
+  `SHARD_INCOMPLETE ... expected 1 venues, wrote 0` → `Manifest updated: ... total_records=0 complete=False`. Both force
+  legs wrote **zero** fresh records this run. The checker's "passed" for these two legs reflects a PRE-EXISTING captured
+  shard from an earlier run (there have been several prior CBOE pipelinecheck runs on this test bucket, per the
+  launcher-history search) satisfying the manifest/parquet check — not proof this run's force-fetch actually worked.
+  This is a checker methodology gap (it doesn't distinguish "this leg wrote fresh data" from "the manifest was already
+  satisfied before this leg ran"), layered on top of a real, unfixed data-pipeline defect.
+- The 2 skip legs (`.../124852-3b5c3d/run.log`, `.../125749-e7f533/run.log`) ARE genuine: both log
+  `Pre-flight: venue=CBOE date=2026-07-13 — all requested data_types fully covered (atoms ⊆ captured), skipping` — a
+  real manifest-driven skip, unaffected by the force-leg symbol bug (pre-flight never calls the Databento adapter).
+- **Root cause, not new**: this is the exact same canonical-root (`VIX`) vs raw-Databento-symbol (`VX`/`VX.FUT`)
+  mismatch already tracked as an open item in `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4 — that doc's
+  own exhaustive diff lists `VX`/`VIX` as an agreed match in both UAC registries, confirming this is the same bug class,
+  now shown to hit CBOE (not just CME). `mtds@0205eaab` fixed shard _classification_ (routing CBOE ohlcv_1s/1m into
+  bundled-chain sampling, correctly) but not the reverse translation needed to actually fetch with it — logged as a new
+  confirmed instance there rather than a separate issue doc, since it's the identical open-and-blocked design question
+  (§4: needs the `EXCHANGE_CODE_TO_NAME` SSOT resolved first).
+- No further action taken here (out of this DIAG-scoped todo's remit) — the fix itself is tracked at
+  `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`, not re-scoped or re-attempted in this session.
+
 **Deferred work after 2026-07-24**:
 
-| Item                                                                       | State / why deferred                                                                                                                                                             | Blocked on                                                                                                             |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| CBOE live force+skip re-verification terminal result                       | In-flight at session end (see above)                                                                                                                                             | Nothing — just needs the VM to finish + `run.log` read                                                                 |
-| 3 `TestIsBundledChainShardCboeCorrection` regression tests                 | Written, verified in isolation, withheld from the shipped commit                                                                                                                 | `mtds_deployment_env_race_survives_single_worker_2026_07_23.md` resolution                                             |
-| `DEPLOYMENT_ENV` pytest race root cause                                    | Narrowed to quickmerge's cascade/pull step this session (5 dirty / 1 clean via quickmerge vs. 1 clean via direct `quality-gates.sh` back-to-back); exact mechanism still unknown | Needs someone to instrument the cascade step itself (env diff before/after `STAGE 0`), not another blind-retry session |
-| Chain-bundle canonical-root→raw-Databento-symbol reverse translation (CME) | Genuinely open, blocked on an `EXCHANGE_CODE_TO_NAME` SSOT contradiction across two UAC files                                                                                    | Operator input, per `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4                                       |
-| VM fleet preemption early-boot blind window for smoke-test VMs             | Tracked, not yet actioned                                                                                                                                                        | `vm_fleet_preemption_autorecovery_gap_2026_07_23.md` items 8-9                                                         |
-| Retire-phase 50,520-row `--apply`                                          | Untouched all session, correctly                                                                                                                                                 | Operator review — hard stop, never autonomous                                                                          |
+| Item                                                                       | State / why deferred                                                                                                                                                             | Blocked on                                                                                                                                                 |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CBOE live force+skip re-verification terminal result                       | **RESOLVED 2026-07-27 — MIXED, not a clean pass.** Skip legs genuinely passed; force legs did not genuinely re-verify (see § "2026-07-27 — CBOE terminal-state re-check" below)  | `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4 (canonical-root→raw-symbol translation, now confirmed to also cover CBOE `VIX`→`VX`/`VX.FUT`) |
+| 3 `TestIsBundledChainShardCboeCorrection` regression tests                 | Written, verified in isolation, withheld from the shipped commit                                                                                                                 | `mtds_deployment_env_race_survives_single_worker_2026_07_23.md` resolution                                                                                 |
+| `DEPLOYMENT_ENV` pytest race root cause                                    | Narrowed to quickmerge's cascade/pull step this session (5 dirty / 1 clean via quickmerge vs. 1 clean via direct `quality-gates.sh` back-to-back); exact mechanism still unknown | Needs someone to instrument the cascade step itself (env diff before/after `STAGE 0`), not another blind-retry session                                     |
+| Chain-bundle canonical-root→raw-Databento-symbol reverse translation (CME) | Genuinely open, blocked on an `EXCHANGE_CODE_TO_NAME` SSOT contradiction across two UAC files                                                                                    | Operator input, per `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4                                                                           |
+| VM fleet preemption early-boot blind window for smoke-test VMs             | Tracked, not yet actioned                                                                                                                                                        | `vm_fleet_preemption_autorecovery_gap_2026_07_23.md` items 8-9                                                                                             |
+| Retire-phase 50,520-row `--apply`                                          | Untouched all session, correctly                                                                                                                                                 | Operator review — hard stop, never autonomous                                                                                                              |
 
 **Recommended next item**: read the CBOE VM's `run.log` first (cheapest, already in flight) before picking up anything
 else — it's the only item above that doesn't need new investigation, just a status check.

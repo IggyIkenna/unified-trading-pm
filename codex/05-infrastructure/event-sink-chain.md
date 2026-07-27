@@ -3,9 +3,11 @@ doc_type: codex-ssot
 title: Deployment-Service Event Sink Chain
 summary:
   "Deployment-service runs two concurrent event chains: Chain A orchestrator/CLI null-sink (sink=None, local log only),
-  Chain B VM heartbeat PubSubEventSink → `deployment-events` topic (7-day Pub/Sub TTL; monitor.py pulls →
-  deployment-status GCS registry), Chain C vm-exec-gcs-tee (run.log + EXIT_STATUS, permanent). Known gap: no GCS export
-  sub for permanent VM-event archival. Includes the canonical sink decision tree for new emitters."
+  Chain B VM heartbeat PubSubEventSink → `deployment-events` topic (7-day Pub/Sub TTL), Chain C vm-exec-gcs-tee (run.log
+  + EXIT_STATUS, permanent). CORRECTED 2026-07-27: `monitor.py` does NOT pull `deployment-events` — it reads the GCS
+  deployment registry directly (no pubsub import at all); the `deployment-events-monitor` pull subscription was orphaned
+  (zero consumers, verified by code search) and has been DELETED. Known gap: no GCS export sub for permanent VM-event
+  archival. Includes the canonical sink decision tree for new emitters."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +25,7 @@ created: 2026-05-15
 authoritative_for: [deployment-service event sink chain]
 referenced_by:
 owner: deployment-platform
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-27
 code_refs:
 type: infrastructure
 ---
@@ -45,7 +47,7 @@ different sinks with different retention policies and should not be confused.
 | -------------------- | --------------------------------------------- | ---------------------------------------------------- | ---------------- | -------------- |
 | A — Orchestrator     | `orchestrator.py`, `cli/main.py`              | `sink=None` (UTL null sink)                          | local log only   | no             |
 | B — VM heartbeat     | `heartbeat_cli.py`, `deployment_heartbeat.py` | `PubSubEventSink("deployment-events")`               | 7 days (Pub/Sub) | yes (pull sub) |
-| B2 — Monitor consume | `monitor.py`                                  | GCS direct write                                     | permanent        | yes            |
+| B2 — Monitor consume | `monitor.py`                                  | GCS direct read (NOT Pub/Sub — no pubsub import)     | permanent        | yes            |
 | C — GCS tee          | `vm-exec-with-gcs-tee.sh`                     | `gs://{bucket}/vm-logs/{vm}/run.log` + `EXIT_STATUS` | permanent        | yes            |
 
 ---
@@ -92,10 +94,12 @@ VM startup (gcloud instances create --metadata startup-script=...)
 ```
 
 **Pub/Sub topic**: `deployment-events` (project `central-element-323112`) **Retention**: 7 days (Pub/Sub default)
-**Active subscriptions**:
-
-- `deployment-events-monitor` — pull, consumed by `monitor.py` → writes deployment registry to
-  `gs://deployment-status-{project}/deployments/{deploy_id}/...`
+**Active subscriptions**: NONE as of 2026-07-27. The `deployment-events-monitor` pull subscription this section used to
+list was DELETED — verified zero consumers (`monitor.py` has no `pubsub` import and reads the GCS deployment registry
+directly via `get_storage_client`, not via this subscription; no other code anywhere pulls it either). Two new dedicated
+topics now exist alongside `deployment-events` for BQ-bound signals — see
+`/codex/05-infrastructure/deployment-observability.md` for `resource-samples`/`run-ledger` and their native BigQuery
+subscriptions (deployment_durable_operational_data_bigquery_2026_07_21.md).
 
 **Gap**: No push subscription exports events to `gs://central-element-323112-events/` for permanent archival. All other
 services use `GCSEventSink` directly and land in that bucket. VM heartbeat events have 7-day TTL only. See
@@ -152,15 +156,16 @@ permanent (no lifecycle rule on this bucket as of 2026-05-15) **Consumers**:
                                                                              │
                                                ┌─────────────────────────────┘
                                                ▼
-                                  subscription: deployment-events-monitor
-                                               │
-                                               ▼ (monitor.py pulls)
-                               gs://deployment-status-*/deployments/{id}/...
-                               (permanent registry)
+                                  ❌ NO consumer subscription (2026-07-27:
+                                     deployment-events-monitor DELETED — zero
+                                     consumers, verified)
 
                                   ❌ NO export sub to
                                   gs://central-element-323112-events/
-                                  (gap — heartbeat events ephemeral)
+                                  (gap — heartbeat events ephemeral, 7-day TTL only)
+
+  (monitor.py's GCS registry write is a SEPARATE, direct GCS read/write path —
+   it never touches this Pub/Sub topic at all; see Chain B2 above)
 ```
 
 ---
@@ -197,7 +202,7 @@ Is this emitted FROM A VM (running as a startup script)?
 | VM heartbeat daemon        | `deployment_service/vm/heartbeat_cli.py`                             |
 | VM-side lifecycle helper   | `scripts/vm/deployment_heartbeat.py`                                 |
 | GCS tee wrapper            | `scripts/vm/vm-exec-with-gcs-tee.sh`                                 |
-| PubSub consumer            | `deployment_service/monitor.py`                                      |
+| GCS registry writer (B2)   | `deployment_service/monitor.py` (direct GCS read/write, NOT PubSub)  |
 | Orchestrator events setup  | `deployment_service/orchestrator.py:227`                             |
 | CLI events setup           | `deployment_service/cli/main.py:90`                                  |
 | Smoke-verified event trace | `../../plans/audit/results/vm_deployment_events_audit_2026_05_15.md` |

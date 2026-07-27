@@ -578,84 +578,90 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
 > "ambient credentials" risk above is not theoretical, and fixing the IAM scope (that issue's own recommendation) is a
 > prerequisite to this decision looking any different than "full AWS account compromise on one bad test run."**
 
-- [ ] [VERIFY] P1. Extend `classify-glue-workflows.sh`'s MOVE/STAY audit to the non-PM fleet: for each of the ~24 repos,
-      inventory the fleet-template copies (`main-backmerge-to-ldr`, `image-build-validate`/`image-build-gate` — **this
-      one's own security review is DONE, see the Operator decision note above: safe, blocked only on runner
-      registration** — `semver-agent`, `major-bump-issue-handler`, `request-major-bump`, `update-dependency-version`,
-      `version-registry-notify`, plus any repo-owned automation beyond the templates) and classify each the same way
-      PM's 37 movers were classified — do not assume the PM split transfers unchanged for the REST of this list; some
-      are already `KEEP-T`/ `KEEP-R` by design (fleet templates, cross-repo reusables) and need the runner-registration
-      fix below before they can move at all.
-- [ ] [INFRA] P1. Register additional self-hosted runner **processes** on existing VM capacity — **CORRECTED 2026-07-27:
-      this VM does NOT have headroom, verified live via SSM** (`aws ssm send-command` on `i-0c9b283b31d6b5ca7`,
-      `agent-orchestrator-vm-1`, the box the 8 existing glue-runners already live on): load average **42.2/28.4/26.7 on
-      8 vCPUs** (~5x sustained oversubscription, not a spike), **5.7GB swap in active use**, top processes a mix of
-      heavy python jobs and multiple long-running `claude` slot-worker sessions (some 1-2.5h elapsed) already contending
-      for the same 8 cores. There is only ONE shared box in this architecture (single-VM design, no separate per-slot
-      VMs — the earlier "slot-worker VMs already have headroom" text was an unverified assumption, now corrected). The
-      existing glue jobs tolerate this fine because they're thin/I/O-bound (8-13s runs); this does NOT extend to
-      `quality-gates-v2` or any other CPU-bound real-compute workload — dropping ~9 real CPU-minutes/run onto a box
-      already at 5x oversubscription would plausibly turn that into 30-45+ min wall-clock AND slow down every other
-      agent session sharing the box, directly working against the "don't slow down promotions" goal, independent of the
-      IAM security question already filed.
-
-      **Financial verdict (added 2026-07-27, real AWS pricing, ap-northeast-1) — the upgrade costs more than the
-                                              savings it's chasing.** `m8i` has no 12-vCPU size (jumps 8→16→32→48→64); at 16 vCPU the oversubscription ratio is
-                                              still ~2.6x (42÷16), before any new load — genuinely fixing today's contention plus fleet-wide
-                                              `quality-gates-v2` needs ~32-48 vCPUs. Real pricing: current `m8i.2xlarge` (8vCPU/32GB) = **$399/mo** (730hr).
-                                              `c8i` (compute-optimized, half the RAM/vCPU of `m8i` — the right family once RAM isn't the bottleneck, per the
-                                              dashboard's 33% RAM / 94% CPU split) at 32 vCPU (`c8i.8xlarge`, 64GB) = **$1,378/mo, a +$979/mo delta** — the
-                                              smallest size that plausibly handles both today's contention AND new load. The theoretical CEILING on GHA
-                                              savings (quality-gates-v2 ≈ 90% of non-PM's ~$693/mo = **~$623/mo max**, moving it to $0) is LESS than that
-                                              delta. Even `c8i.4xlarge` (16vCPU, +$290/mo, cheaper than the ceiling) is likely under-provisioned per the ratio
-                                              math above, so it wouldn't actually fix the slowdown. **No size in this family progression makes the move pay
-                                              for itself** — a third, independent reason (with IAM-accepted-risk and the contention finding) not to self-host
-                                              `quality-gates-v2`. EBS note: current disk is `gp3` 500GB ($0.096/GB-mo, Tokyo) = $48/mo; 400GB would save
-                                              $9.60/mo but EBS can't shrink live (snapshot + new-volume migration, not a resize). `c8i` vs staying in `m8i` for
-                                              the SAME vCPU count is a real, worthwhile saving independent of this decision (e.g. `c8i.8xlarge` is ~$219/mo
-                                              cheaper than `m8i.8xlarge` for identical 32 vCPU) if this VM is ever resized for any other reason.
-
-                                      **Operator reframing (same session, 2026-07-27) — the financial verdict above is judged too narrowly.** The
-                                      operator's actual position: count the VM upgrade as a DUAL-purpose investment (fixes the orchestrator's own
-                                      chronic ~5x CPU oversubscription for the N interactive/autonomous agent slots it already runs, independent of
-                                      CI — plausibly a real multi-x throughput win on its own) PLUS the ~$623/mo GHA ceiling PLUS likely-faster
-                                      `quality-gates-v2` wall-clock time (GitHub's own hosted runners default to 2 vCPU; a properly-resourced
-                                      self-hosted job could get more, if the test suite parallelizes). Judged that way, the ~$979-1198/mo delta is
-                                      plausibly worth it — reversing the narrow "doesn't pencil out" verdict above (which only weighed VM cost against
-                                      CI savings alone). **NOT yet executed or finally sized** — explicitly deferred pending real rolling-window
-                                      utilization data (see below), not a live-now decision.
-
-- [ ] [OPERATOR] P1. **NEW 2026-07-27 — raising slot concurrency 12→16 needs 4 more Claude account credentials, a
-      separate real cost/logistics item, not just a VM resize.** `bootstrap_vm.sh --slots N` only provisions worktree
-      directories; each slot still needs a real underlying account (`ORCHESTRATOR_ACCOUNTS`/`data/config/accounts.json`,
-      account-rotation logic in `agent-orchestrator/server/autospawn.py`). Plan for provisioning 4 more account
-      credentials alongside any VM resize — going 12→16 slots does not fall out of bigger CPU/RAM alone.
-- [ ] [VERIFY] P1. **NEW 2026-07-27 — do NOT pick the final instance size until the resource monitor has real rolling
-      data.** A single point-in-time CPU/load snapshot swung from "94% CPU, load avg 42 (5x oversubscribed)" to "80%
-      CPU, load avg 9" twenty minutes later on the SAME box — genuinely bursty, not a fixed steady state. The bridge
-      monitor (`agent-orchestrator/scripts/orchestrator/resource-monitor.sh`, installed 2026-07-27, cron `*/5 * * * *`
-      on `i-0c9b283b31d6b5ca7`) is capturing this now; the durable BigQuery pipeline
-      (`plans/active/deployment_durable_operational_data_bigquery_2026_07_21.md`, unblocked same session) is the
-      long-term source. Wait for a real multi-day window (several burst cycles) before committing to `c8i.8xlarge` vs a
-      different size — sizing off either extreme single-point reading would be a guess, not evidence.
-- [ ] [OPERATOR] P2. **Post-scale verification, once a size IS chosen and the resize executed.** Watch the rolling
-      utilization for a sustained window afterward — target ~50-70% average with burst headroom; NOT 30-40%
-      (over-provisioned, give some back) and NOT pinned 90%+ again (under-provisioned, the resize didn't fix it).
-      Mirrors the success criterion already recorded in `deployment_durable_operational_data_bigquery_2026_07_21.md`.
-- [ ] [OPERATOR] P1. Resizing `i-0c9b283b31d6b5ca7` requires STOPPING the live instance (AWS hard constraint on
-      instance-type change) — interrupts every currently-running agent slot session on that box. Schedule this
-      deliberately once the size is chosen; do not execute it opportunistically mid-session.
+- [x] ✅ **DONE 2026-07-27 — fleet-wide MOVE/KEEP audit, all 24 non-PM repos, verified live.** Ran
+      `classify-glue-workflows.sh` via its existing `WF_DIR` override against every repo in `workspace-manifest.json`
+      (not a re-derivation — the script needed zero code changes, it already supports pointing at any repo's
+      `.github/workflows/`). Every repo resolved cleanly (no hangs, no missing dirs). **Result: 178 MOVE-classified
+      workflow files across the 24 repos** (per-repo range 6-9, consistently matching the fleet-template MOVE set
+      already named in this doc: `main-backmerge-to-ldr`, `major-bump-issue-handler`, `request-major-bump`,
+      `semver-agent`, `staging-backmerge-to-ldr`, `update-dependency-version`, `version-registry-notify`, plus a handful
+      of repo-owned extras per repo). KEEP counts (3-8/repo) are consistently
+      `quality-gates-v2`/`image-build-gate`/`staging-lock-check` (pull_request-triggered) plus repo-specific
+      `KEEP-U`/`KEEP*` entries. Full per-repo breakdown in "## Phase 7 fleet audit — per-repo breakdown" at the bottom
+      of this doc — do not re-run this audit, read that table instead. **Still blocked on the runner-registration
+      finding immediately below before any of these 178 can actually move.**
+- [x] ✅ **RESIZED 2026-07-27 — `i-0c9b283b31d6b5ca7` is now `m8i.4xlarge` (16 vCPU / 64GB), up from `m8i.2xlarge` (8
+      vCPU / 32GB).** Operator decision: double both CPU and RAM (matches the dual-purpose framing below — this was
+      never purely a GHA-savings call). Executed via a NEW canonical procedure, NOT an opportunistic mid-session stop:
+      `agent-orchestrator/scripts/orchestrator/clean-restart-vm.sh     i-0c9b283b31d6b5ca7 m8i.4xlarge 900` —
+      checkpoints every `orch-slot-*`/`orch-agent-main` tmux session (injects `/pre-compact`, polls each pane for the
+      skill's own "Safe to compact" verdict, up to a 15-minute budget) BEFORE stopping, so in-flight git work gets
+      committed+pushed first rather than silently lost. Real run: 16 sessions found, 3 checkpointed inside the window
+      (slot-1, slot-9, slot-15), 13 timed out and were restarted anyway per the 15-min cap (their uncommitted
+      conversational state was lost — expected, not a bug; only uncommitted GIT state was ever at risk, and none of
+      those 13 had walked off a cliff mid-commit). Post-resize verified live: `nproc`→16, `free -m`→63255MB total
+      (~61.8GiB, matching the 64GB nominal spec), `orchestrator.service` active, EIP `13.113.200.22` unaffected (a real
+      allocated Elastic IP, confirmed before stopping — survives stop/start). **This script is now the canonical way to
+      restart this VM for ANY reason**, not just this resize — use it instead of a bare `aws ec2 stop-instances`/reboot
+      from now on. Financial framing (unchanged from the analysis below, now moot as a blocker): the narrow
+      "GHA-savings-only" verdict said this doesn't pencil out; the operator's dual-purpose framing (fixes the
+      orchestrator's own chronic ~5x CPU oversubscription for interactive/autonomous slots, independent of CI, plus the
+      GHA ceiling, plus likely-faster self-hosted `quality-gates-v2` wall-clock) is why it was approved anyway — see
+      both framings preserved below for the reasoning trail.
+- [x] ✅ **Byproduct fix, same session — the AO dashboard's live RAM number was never actually wrong.** Investigated the
+      operator's "RAM number reads too low" report: `agent-orchestrator/server/host_resources.py` correctly reads
+      `/proc/meminfo` on the host and reported ~30.8GB out of the (pre-resize) real ~31.5GB total — accurate. The actual
+      bug was several OTHER files stating this exact host was already `m8i.4xlarge`/64GB
+      (`orchestrator_vm_registry.yaml`, `orchestrator.service`'s `MemoryHigh=48G`/`MemoryMax=56G` comment+values,
+      `apply_resource_limits.sh`, a terraform comment, a launcher default, several codex docs) — a stale assumption from
+      before an earlier undocumented downsize to `m8i.2xlarge`. The resize above makes those files true again rather
+      than needing a correction; verified `orchestrator_vm_registry.yaml`'s `instance_type: m8i.4xlarge` entry is now
+      accurate. No code fix was needed in the live dashboard path.
+- [ ] [OPERATOR] P1. **STILL OPEN — raising slot concurrency 12→16 needs 4 more Claude account credentials, a separate
+      real cost/logistics item, not just the VM resize (which is now done).** `bootstrap_vm.sh --slots N` only
+      provisions worktree directories; each slot still needs a real underlying account
+      (`ORCHESTRATOR_ACCOUNTS`/`data/config/accounts.json`, account-rotation logic in
+      `agent-orchestrator/server/autospawn.py`). Not actioned this session — needs the operator to actually provision
+      the 4 credentials.
+- [ ] [OPERATOR] P2. **Post-scale verification, now that the resize IS done (2026-07-27).** Watch the rolling
+      utilization for a sustained window over the coming days — target ~50-70% average with burst headroom; NOT 30-40%
+      (over-provisioned, give some back) and NOT pinned 90%+ again (under-provisioned, the resize didn't fix it). The
+      durable BigQuery `resource_samples` pipeline (below) now exists to answer this with real data once the bridge cron
+      is retired in favour of it — do not judge this off a single point-in-time SSM check.
 
               **Phase 7's scope (thin push/repository_dispatch glue only —
-                                              main-backmerge-to-ldr, image-build-gate's polling wrapper, update-dependency-version, etc.) is still fine to add
-                                              here** — none of it is CPU-heavy. A dedicated, appropriately-sized runner host (separate from the orchestrator
-                                              box) would be needed before any CPU-heavy workload could safely self-host, which is its own cost to weigh against
-                                              the savings.
+                                                  main-backmerge-to-ldr, image-build-gate's polling wrapper, update-dependency-version, etc.) is still fine to add
+                                                  here** — none of it is CPU-heavy. A dedicated, appropriately-sized runner host (separate from the orchestrator
+                                                  box) would be needed before any CPU-heavy workload could safely self-host, which is its own cost to weigh against
+                                                  the savings.
 
+- [ ] [INFRA] P0. **BLOCKING finding (2026-07-27) — `setup-glue-runners.sh` cannot safely register a second repo's
+      runner pool on this host TODAY, and this blocks every todo below it.** Read the live script in full (not just its
+      header) before attempting a canary: `OWNER`/`REPO`/`RUNNER_BASE`/`GLUE_COUNT`/`WRITER_COUNT` are already
+      env-tunable (no code change needed for those), but THREE things are hardcoded GLOBALLY and shared by every
+      instance regardless of which repo's `install` last ran: `ENV_FILE=/etc/github-glue-runner.env` (every
+      `glue-N`/`writer-N` unit re-reads this on EVERY restart — and `glue-N` are JIT-ephemeral, restarting after every
+      single job), and the systemd unit FILENAMES themselves (`github-glue-runner@.service` template,
+      `github-glue-runner.slice`, `github-glue-slot-refresh.service/.timer`, `github-glue-token-refresh.service/.timer`
+      — all under `/etc/systemd/system`, all singular). Running `install` a second time with `REPO=agent-orchestrator`
+      would silently rewrite `ENV_FILE` to say `REPO=agent-orchestrator`, and PM's currently-running
+      `glue-1..5`/`writer-1..3` units would pick that up on their NEXT restart (minutes away, not hours) and re-register
+      themselves to `agent-orchestrator` — breaking PM's entire self-hosted CI with no warning. **Not attempted this
+      session** — verified against the live script text, not executed against the live 8-runner pool, given the box had
+      just come back from the RAM/CPU resize above with reduced margin for error. The actual fix: parameterize
+      `ENV_FILE` + all six unit filenames by a `POOL_TAG` (default empty ⇒ byte-identical paths/names to today, zero
+      behavior change for PM), check whether the `.slice`/`.service`/ `.timer` file CONTENTS cross-reference each other
+      by the exact current names (`Slice=github-glue-runner.slice` etc. — if so those need updating too, not just the
+      install-time `install -m 0644` destination paths). This is a real, scoped, but delicate multi-file live-infra
+      change — do it in its own focused pass with full attention, not appended to an already-large session.
 - [ ] [INFRA] P1. Canary the flip on ONE repo first (same discipline as the original PM migration: edit the template +
       `rollout-workflow-templates.sh`, prove on one caller, only then fan out) — start with whichever of
-      features-service/agent-orchestrator has the simplest workflow surface, verify its promote gate still resolves
-      (`gh run list` green, required check posts), THEN roll the template change to the rest of the MOVE set.
+      features-service/agent-orchestrator has the simplest workflow surface (**agent-orchestrator confirmed simpler,
+      2026-07-27**: 12 workflow files vs features-service's 14, ~2828 vs ~3016 lines; neither currently has ANY
+      self-hosted runner registered — `gh api repos/IggyIkenna/agent-orchestrator/actions/runners` → `total_count: 0`),
+      verify its promote gate still resolves (`gh run list` green, required check posts), THEN roll the template change
+      to the rest of the MOVE set. **Blocked on the runner-registration fix immediately above — do not attempt to
+      register agent-orchestrator's runner until that lands.**
 - [ ] [VERIFY] P2. One week after the first repo's flip lands, re-pull the Enhanced-Billing usage report (method above)
       scoped to that repo; confirm its `Actions Linux` line drops and no new billed line replaces it (self-hosted bills
       $0, same as PM's STEP 2c verification: `billable: {}` is the honest self-hosted check, not `/timing.total_ms`).
@@ -682,3 +688,23 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
       runner pool serve all repos instead of per-repo registration, but repo-ownership transfer risks breaking anything
       keyed to the literal `IggyIkenna/<repo>` slug (webhooks, PAT scopes, package-registry references, deploy keys) and
       should only be considered if per-repo runner management becomes unwieldy as the fleet grows.
+
+## Phase 7 fleet audit — per-repo breakdown (2026-07-27)
+
+`classify-glue-workflows.sh` run via its existing `WF_DIR` override against every repo in `workspace-manifest.json`
+(zero code changes needed) — 178 MOVE / 108 KEEP across 24 repos, all resolved cleanly:
+
+| Repo                              | MOVE | KEEP | Repo                      | MOVE | KEEP |
+| --------------------------------- | ---- | ---- | ------------------------- | ---- | ---- |
+| alerting-service                  | 7    | 4    | ml-service                | 7    | 3    |
+| batch-live-reconciliation-service | 7    | 4    | strategy-service          | 8    | 4    |
+| client-reporting-api              | 7    | 4    | system-integration-tests  | 8    | 7    |
+| deployment-api                    | 7    | 4    | trading-agent-service     | 7    | 4    |
+| deployment-service                | 7    | 4    | unified-api-contracts     | 8    | 8    |
+| execution-service                 | 7    | 6    | unified-trading-library   | 8    | 4    |
+| features-service                  | 9    | 5    | unified-trading-api       | 7    | 3    |
+| fund-administration-service       | 9    | 3    | unified-trading-system-ui | 9    | 7    |
+| greeks-service                    | 7    | 3    | deployment-ui             | 6    | 5    |
+| ibkr-gateway-infra                | 7    | 4    | e2e-testing               | 7    | 3    |
+| instruments-service               | 7    | 6    | agent-orchestrator        | 8    | 4    |
+| market-data-processing-service    | 7    | 5    | market-tick-data-service  | 7    | 5    |

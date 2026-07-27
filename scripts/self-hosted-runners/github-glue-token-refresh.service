@@ -21,6 +21,7 @@ RuntimeDirectoryPreserve=yes
 Environment=GH_TOKEN_SECRET=GH_PAT
 Environment=GCP_PROJECT=central-element-323112
 Environment=GH_TOKEN_FILE=/run/github-glue-runner/gh_token
+Environment=GLUE_GCLOUD_CONFIG=/opt/github-glue-runners/.gcloud
 Environment=PATH=/opt/github-glue-runners/venv/bin:/home/ubuntu/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin
 
 ExecStart=/opt/github-glue-runners/refresh-gh-token.sh

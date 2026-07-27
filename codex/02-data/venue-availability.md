@@ -32,7 +32,7 @@ referenced_by:
     /codex/03-services/venue-capability-registry.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-27
 code_refs:
 ---
 
@@ -57,7 +57,15 @@ audits (CF-1/CF-2/CF-3, DF-3, SP-3, PR-1 per `catalogue_audit_*_2026_05_12.md`) 
 on the legacy `venue_mapping.py` helper:
 
 1. **`market_data_categories.py:VENUES_BY_ASSET_GROUP`** — primary venue catalogue per asset_group: 21 cefi / 8 tradfi /
-   2 prediction / ~10 sports venue ids (UPPERCASE: `BINANCE-SPOT`, `ODDS_API`, `POLYMARKET`).
+   2 prediction / ~10 sports venue ids (UPPERCASE: `BINANCE-SPOT`, `ODDS_API`, `POLYMARKET`). `ODDS_API`'s registry
+   membership here is DELIBERATE and confirmed correct (2026-07-27, `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`
+   Phase 4) — it is the "Multi-bookmaker odds aggregator (raw tick data source)" venue-class entry, i.e. the
+   vendor-level identity for the coarse meta-snapshot raw capture shape (no per-bookmaker breakdown exists at that row
+   grain) and manifest AGGREGATE-SENTINEL rows. **Do NOT read this as license to stamp `venue=ODDS_API` on a
+   per-row/per-shard basis wherever a REAL bookmaker is knowable from the data** — that was a genuine, now-fixed bug in
+   MDPS's `reprocess_sports_odds.py` (its FINE per-shard `odds_horizon_bucket` manifest rows conflated the vendor with
+   the bookmaker despite the underlying parquet already carrying a real `bookmaker_key` column per row; see that fix +
+   the codex-audit trail in the cited issue doc).
 2. **`defi_venues.py:ALL_DEFI_VENUES`** + `DEFI_VENUE_PHASE` / `MTDS_DEFI_VENUES` — ~70 DeFi venue ids (UPPERCASE per
    the same case convention).
 3. **`venue_launch_dates.py`** — per-venue `launch_date` for the `EXPECTED_PRE_VENUE_LAUNCH` reason taxonomy member

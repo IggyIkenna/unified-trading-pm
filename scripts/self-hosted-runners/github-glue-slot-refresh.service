@@ -14,6 +14,7 @@ Wants=network-online.target
 Type=oneshot
 User=ubuntu
 Slice=github-glue-runner.slice
+Environment=RUNNER_BASE=/opt/github-glue-runners
 ExecStart=/opt/github-glue-runners/refresh-slot-repo.sh
 # A failed refresh must be visible in `systemctl status`, not silently retried into oblivion.
 Restart=no

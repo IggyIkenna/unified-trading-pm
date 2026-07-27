@@ -81,17 +81,17 @@ serialise all 9): todo 3 (P2) flips a checkbox inside part3, which todo 2 (P1) a
 
 ## Todos
 
-- [ ] [DOC] P1. **Reconcile `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`'s 24 open checkboxes
-      against their real current state — and neutralise the reversed-casing hazard in its § K block FIRST.** This doc
-      was created 2026-07-26 by batch5's own § A2 line-cap split of the 1,843-line parent; every covering-plan citation
-      still names the PRE-split filename, so §§ G-N's 24 open todos are structurally uncovered. **Safety-critical
-      sub-part, do this before anything else in this todo**: § K1/§ K2 still carry open todos reading _"DIRECTION
-      CORRECTED — emit UPPER, not lower"_ and _"QG assertion: sports `data_type` ∈ the UAC **UPPER-case** sports
-      vocabulary (per K0-DECISION (b))"_, citing the operator's 2026-07-18 K0-DECISION. That decision was **REVERSED
-      2026-07-23** — `sports_consolidated_closeout_2026_07_19.md`'s Canonical-target section states _"data_type =
-      LOWER-case everywhere for sports — FINAL, reconciled 2026-07-23"_ and _"This REVERTS Track C's K1/K2 work below"_.
-      A worker picking up part2 § K1 today ships the WRONG casing direction — **this exact failure has already happened
-      once**, recorded in
+- [x] ✅ [DOC] P1. **Reconcile `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`'s 24 open
+      checkboxes against their real current state — and neutralise the reversed-casing hazard in its § K block FIRST.**
+      This doc was created 2026-07-26 by batch5's own § A2 line-cap split of the 1,843-line parent; every covering-plan
+      citation still names the PRE-split filename, so §§ G-N's 24 open todos are structurally uncovered.
+      **Safety-critical sub-part, do this before anything else in this todo**: § K1/§ K2 still carry open todos reading
+      _"DIRECTION CORRECTED — emit UPPER, not lower"_ and _"QG assertion: sports `data_type` ∈ the UAC **UPPER-case**
+      sports vocabulary (per K0-DECISION (b))"_, citing the operator's 2026-07-18 K0-DECISION. That decision was
+      **REVERSED 2026-07-23** — `sports_consolidated_closeout_2026_07_19.md`'s Canonical-target section states
+      _"data_type = LOWER-case everywhere for sports — FINAL, reconciled 2026-07-23"_ and _"This REVERTS Track C's K1/K2
+      work below"_. A worker picking up part2 § K1 today ships the WRONG casing direction — **this exact failure has
+      already happened once**, recorded in
       `/plans/archive/issues/sports_satellite_batch2_casing_direction_contradicts_k1k2_revert_2026_07_25.md`. Annotate
       every § K todo with a dated `⛔ SUPERSEDED 2026-07-23 (lowercase revert)` marker pointing at the closeout's Track
       C revert todo; do NOT delete them (they are the historical record of what shipped and why it is being undone, the
@@ -105,29 +105,41 @@ serialise all 9): todo 3 (P2) flips a checkbox inside part3, which todo 2 (P1) a
       `[x]` with cited evidence, an owner annotation, or a stated reason they remain open; every § K todo carries the
       superseded-direction marker; and the doc stays under the 1,000L hard cap (it is ~600L, so there is room — verify
       with `bash scripts/plan-hygiene/check_line_caps.sh` before committing). Source:
-      `issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`.
+      `issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`. — DONE:
+      `unified-trading-pm@d20df1288`. All 16 checkboxes still open at pickup time (8 of the original 24 had already been
+      flipped by an intervening `docs(plans): stale-checkbox correction pass` commit, `77766e441`) classified: 9 flipped
+      `[x]` with cited evidence (round-writer-fix duplicate, watchdog-artifact lesson codified into
+      `async-wait-and-poll-discipline.md`/CLAUDE.md, § H false-`attempted_failed` self-heal, singleton-bypass
+      root-caused as by-design + oversubscription damage closed via the registry, enrichment-fleet relaunch-on-429 loop
+      closed, § K0 ASK answered by K0-DECISION, RelaunchPreemptedVm re-derive superseded by § M-FIXED, full-force
+      FIXTURES run superseded by the surgical script + independently-verified live round/competition_phase state); 7
+      left open with a one-line reason (2 owned by Track V's still-open catalogue re-roll, 4 genuinely unresolved —
+      error-text softening, residual-61-rows re-verification, mid-flight fleet re-throttling, the surgical-filler
+      process lesson never codified — plus the MVP-denominator gap on `emit_empty_gaps_for_entity`). Safety-critical §
+      K1/K2/K3 sub-part: added an explicit `⛔ SUPERSEDED 2026-07-23 (lowercase revert)` marker to all 8 already-flipped
+      § K checkboxes (they carried an "already covered by" citation but not the requested marker text). Doc stays at
+      752L, under the 1,000L cap (`check_line_caps.sh` verified clean).
 
-- [ ] [DOC] P1. **Reconcile `sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md`'s 31 open checkboxes
-      against their real current state.** Same split origin and same structural orphaning as todo 1, for §§ O-AA. This
-      part is the higher-yield half because the doc contains its own terminal-state evidence: the **"Round work —
-      TERMINAL STATE (2026-07-19)"** table records § Q's derivation (115,715 rows, ZERO api-football calls), § T's
-      194-pair backfill (10,438 rows, 191/194 pairs cleared) and § W's 159-pair backfill (16,435 rows, 158/159) as all
-      complete and corpus-re-scan-verified, and then states _"Every remaining in-window blank is accounted for — nothing
-      is unexplained"_ with a reconciling 11,276-row table — yet the § Q/§ T/§ W `[ ]` todos that the table closes are
-      still unchecked. Flip those against that table. Then route the rest by owner rather than re-deriving: § R's
-      ~9-stale-entity-consumer audit is owned by the closeout's **Track E** (which cites _"sweep § R's ~9-file list, now
-      7"_ verbatim); § S/§ X/§ Z-FIXED's features re-run items are owned by the closeout's **Track F** (§ Z-FIXED's own
-      todo already says _"Tracked in `sports_consolidated_closeout_2026_07_19.md` FEATURES track"_); § O's catalogue
-      rebuild is owned by Track V's `build_instrument_catalogue.py --asset-group sports --since     2019-01-01` re-roll;
-      § T's pre-2019 `[DECISION]` and § U's 489-non-registry-pair `[DECISION]` were both **ANSWERED 2026-07-20** by
-      Track V's § T and § U operator decisions (out-of-scope / excluded-from-denominator respectively) — flip both
-      citing those. **Leave § Y's `[CODE] P2` launcher-hint todo OPEN and annotate it `owned by batch6 todo 3`** — todo
-      3 ships that fix and flips it; do not flip it here or you will race todo 3's evidence line. **Leave § Z's
-      `[DATA] P3` matchday-regex-recovery todo OPEN and annotate it as parked** — see this plan's Deferred section, it
-      is a genuine mechanism conflict with Track F's re-run, not a stale checkbox. Repo: unified-trading-pm. **Done
-      when**: all 31 checkboxes carry an `[x]` with cited evidence, an owner annotation, or a stated reason they remain
-      open; § Y and § Z carry the two named annotations; `check_line_caps.sh` still passes on the file. Source:
-      `issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md`.
+- [x] ✅ [DOC] P1. **DONE — `unified-trading-pm@<see plan-flip commit>`.** Reconciled
+      `sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md`'s open checkboxes (§§ O-AA) against real
+      current state. **Count correction found at pickup**: only **29**, not 31, were open — same class as todo 1's
+      finding, an intervening `docs(plans): stale-checkbox correction pass` commit (`77766e441`) had already flipped 2
+      before this todo ran; verified via `git log` on the file. Classified all 29: **25 flipped `[x]`** citing the
+      terminal-state table (§ Q/§ T/§ W's own already-flipped asks) plus the design/measurement sections that answered
+      each earlier ask in full (§ O's catalogue-rebuild hypothesis test, § P/P-SIZING/P-ERA's derive-then-fetch design —
+      all superseded by § Q's shipped script — § R's entity repoint, § S/§ V/§ X's features re-run — superseded by
+      Z-FIXED's later consolidation into Track F — § T/§ U's decision items citing the closeout's ANSWERED-2026-07-20
+      operator decisions verbatim, verified by reading Track V directly); **2 owner-annotated, left open** (§ R's
+      `[DIAG] P0` ~9-consumer audit + its R-FIXED duplicate, owned by the closeout's Track E, confirmed still open
+      there); **1 left open as genuinely unresolved** (§ R's `[PROCESS] P1` entity-migration rule — checked
+      `codex/12-agent-workflow/` and `codex/04-architecture/` for an existing codification, found none; not batchable,
+      same class as this plan's own todo 7 Deferred item); **1 left open per instruction** (§ Y, annotated
+      `owned by     batch6 todo 3`). **§ Z correction**: the plan's own text asked to "leave § Z's `[DATA] P3` OPEN and
+      annotate it as parked" — but that checkbox was ALREADY `[x]` SUPERSEDED in the doc at pickup time (line ~781,
+      resolved via `autonomous_session_operator_decisions_2026_07_25.md` entry #15, "deleted as redundant, not
+      executed"), so this plan's own Deferred-section premise (a live mechanism conflict) was stale before this todo
+      even ran — no action taken since there was no open checkbox to annotate; noted here rather than silently ignored.
+      `check_line_caps.sh` clean (879L, no new violations — `1 pre-existing violation(s), within baseline (17)`).
 
 - [ ] [CODE] P2. **Fix `launch-features-vm.sh`'s post-backfill hint — it names a bucket that 404s, and that already
       produced a 20-minute false-stall reading.** The launcher's closing instructions tell the operator to run

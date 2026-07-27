@@ -102,20 +102,27 @@ drift_direction: advance-code
       sports** — recheck `mtds-backfill-odds-*` ODDS_API source-completeness (item #4: manifest flags
       `complete=False missing=['ODDS_API']` despite 8.5K rows across 22 bookmaker shards) and verify the sports-odds
       SOURCE_PRIORITY entry is correct; fix if the completeness-check itself is wrong, or the cred/source registration
-      if that's the real gap. **(b) sports** — item #5's `footystats-fwd-*` 0-byte `run.log` (VM startup/log-upload
-      never emitted): check a current footystats forward-fetch VM's startup + heartbeat-uploader path; fix the bug if
-      still reproducible, or confirm-and-log if it self-resolved. **(c) unified-api-contracts** — fix the
-      `book_snapshot` vs `book_snapshot_5` SOURCE_PRIORITY key mismatch (live connectors emit
-      `data_type="book_snapshot_5"` but `SOURCE_PRIORITY` keys `("cefi","book_snapshot")`, leaving book writes
-      source-unvalidated): register `("cefi","book_snapshot_5")` additively (or rename to one canonical spelling), and
-      sweep other asset_groups for the same book_snapshot/book_snapshot_5 key-drift pattern. **(d)
-      market-tick-data-service** — verify whether the mtds pyproject↔manifest version-surface drift that blocked
-      LDR→staging `quality-gates.sh` on 2026-06-21 (pyproject 0.31.0 vs workspace-manifest 0.25.0 vs repositories.mtds
-      0.20.0) is still reproducible today; if still blocking, run the sanctioned
-      `scripts/repo-management/run-version-alignment.sh --fix` (never hand-bump); if already resolved by routine
-      semver-agent automation, cite evidence it's clear. Source: `fleet_data_acquisition_health_2026_06_21.md`. Done
-      when: each of the 4 items has either a shipped fix (repo@sha cited) or a confirmed-resolved/no-longer-reproducible
-      note, logged into the doc's body/Progress Log, and its `status:` frontmatter updated to `resolved` if all 4 close.
+      if that's the real gap. **Hint (2026-07-27, `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phases 0-4)**:
+      not investigated here, but worth checking first — this MIGHT be a symptom of the same conflation class that todo
+      just fixed elsewhere (MDPS's `reprocess_sports_odds.py`): if this specific completeness check filters manifest
+      rows on `venue="ODDS_API"` (the vendor) when the real captured rows now correctly carry per-bookmaker venues (real
+      bookmaker fan-out, as this row's own text says — "22 bookmaker shards"), the check itself is looking at the wrong
+      axis (`source="odds_api"` is what MTDS's raw fan-out correctly stamps per `/codex/02-data/venue-availability.md`,
+      not `venue`). Confirm which axis this specific checker reads before assuming a cred/registration gap. **(b)
+      sports** — item #5's `footystats-fwd-*` 0-byte `run.log` (VM startup/log-upload never emitted): check a current
+      footystats forward-fetch VM's startup + heartbeat-uploader path; fix the bug if still reproducible, or
+      confirm-and-log if it self-resolved. **(c) unified-api-contracts** — fix the `book_snapshot` vs `book_snapshot_5`
+      SOURCE_PRIORITY key mismatch (live connectors emit `data_type="book_snapshot_5"` but `SOURCE_PRIORITY` keys
+      `("cefi","book_snapshot")`, leaving book writes source-unvalidated): register `("cefi","book_snapshot_5")`
+      additively (or rename to one canonical spelling), and sweep other asset_groups for the same
+      book_snapshot/book_snapshot_5 key-drift pattern. **(d) market-tick-data-service** — verify whether the mtds
+      pyproject↔manifest version-surface drift that blocked LDR→staging `quality-gates.sh` on 2026-06-21 (pyproject
+      0.31.0 vs workspace-manifest 0.25.0 vs repositories.mtds 0.20.0) is still reproducible today; if still blocking,
+      run the sanctioned `scripts/repo-management/run-version-alignment.sh --fix` (never hand-bump); if already resolved
+      by routine semver-agent automation, cite evidence it's clear. Source:
+      `fleet_data_acquisition_health_2026_06_21.md`. Done when: each of the 4 items has either a shipped fix (repo@sha
+      cited) or a confirmed-resolved/no-longer-reproducible note, logged into the doc's body/Progress Log, and its
+      `status:` frontmatter updated to `resolved` if all 4 close.
 - [ ] [UTL] P2. **Bound the un-evicted `_CANONICAL_CACHE` to stop the manifest-read OOM (Option A, lowest-risk)** — in
       `unified_trading_library/manifest_writer/_state.py`'s `_invalidate_index_cache` (~L142-166), cap
       `_CANONICAL_CACHE` to the single current bucket: on a bucket-change, `del` the prior bucket's cached DataFrame

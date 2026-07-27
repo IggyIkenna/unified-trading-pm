@@ -687,3 +687,64 @@ targeted the two independently-confirmed cells on their own merits.
 **Disposition**: DONE. **Next session**: work the 6 fix-path todos in the widespread-failures doc (root cause B — the
 `multi_timeframe` date bug — is the highest-value/lowest-effort fix, asset_group-agnostic), then re-run for just the
 affected shards to confirm genuine (non-error) verdicts.
+
+### 2026-07-27 (slot-3, after session resume) — todo 10 PARTIAL: 2 real measured benchmarks + 2 honestly-diagnosed data-gap failures; CEFI deliberately deferred
+
+Ran the `/data-pipeline-check-features` benchmark leg (`--legs benchmark`) against 4 representative shard-types
+(day=2026-07-19), avoiding CEFI:delta_one entirely — it already has **8 confirmed-duplicate VMs running** (billing-waste
+audit filed + operator notified same session,
+`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`).
+
+**2 real, complete, measured throughput numbers (both PASSED, exit=0):**
+
+| Shard             | Window | Wall-clock | Per-shard-day | Objects |
+| ----------------- | ------ | ---------- | ------------- | ------- |
+| `GLOBAL:calendar` | 30d    | 230s       | **~8s**       | 1       |
+| `SPORTS:sports`   | 7d     | 1708s      | **~244s**     | 23      |
+
+A **30x spread** between the fastest and slowest measured family — exactly the parallelization-headroom signal todo 10
+asks for. Rough full-history (flat-2019, ~2757d) serial projections at these rates: calendar ≈ 6.1 VM-hours
+(≈$1.63 on-demand, trivial); sports ≈ 186.9 VM-hours (≈$50 on-demand / ≈$4.50-20 SPOT, single VM — divide by fleet width
+for wall-clock). Both are single-family bounds, not a full-matrix total (see gaps below).
+
+**2 honest failures, both real upstream-data gaps, neither a driver bug:**
+
+- `TRADFI:delta_one` (30d window): dependency-check failure for 2026-06-19 — `No data for 2026-06-19/TRADFI` (MDPS
+  processed_candles gap, same class as
+  `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`).
+- `DEFI:onchain` (retried at 30d AND 3d, both failed identically): **not a window-size issue** — direct root cause:
+  `no MTDS manifest in market-data-tick-defi-prd-... — MTDS has not run for vault_share_price/lst_rates/lending_indices/oracle_prices/perp_funding`.
+  MTDS has never ingested these DeFi raw-tick bypass-grain data types at all, for any date. A structural gap, not a
+  benchmark-day-window problem.
+
+Both VMs self-terminated cleanly (`VM_SHUTDOWN_ON_COMPLETION=true`) — zero added billing-waste.
+
+**Real driver finding**: `SPORTS:sports`'s first attempt (30-day window) hit the driver's own hardcoded 2400s default
+timeout at ~9 days in (NOT a crash — directly observed steady real progress the whole time, day-by-day, via `run.log`).
+Confirmed via direct code read that `_FAMILY_TIMEOUT_OVERRIDES` (`features-service@4d71b1b5`, shipped same day by
+slot-6) only covers `(volatility, TRADFI)` and `(delta_one, CEFI)` — sports isn't in it. At the measured ~244s/day rate,
+anything past ~9-10 days needs either an explicit `--timeout-sec` override or a `(sports, SPORTS)` entry added to that
+dict.
+
+**Also confirms**: the `multisource_xg` (21/28 all-NaN columns — missing understat/footystats/api_football xG source
+data) and `player_lineup` (74/74 all-zero columns — missing squad-depth/lineup-quality inputs) calculator gaps recur on
+**every single day** processed across both sports runs (13 days total observed) — consistently reproducible, not
+transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged but non-fatal).
+
+- [ ] [SCRIPT] P3. Add `(sports, SPORTS)` to `_FAMILY_TIMEOUT_OVERRIDES` in
+      `features-service/scripts/pipeline_e2e_check.py` (measured ~244s/shard-day means the 2400s default caps out around
+      9-10 benchmark-days) — or document that a 30-day `--legs benchmark` run for sports needs an explicit
+      `--timeout-sec` override.
+- [ ] [DATA] P2. File a consolidated issue doc for the `multisource_xg`/`player_lineup` missing-source-data gaps —
+      confirmed reproducible across 13 distinct days this session, both calculators degrade gracefully but the
+      underlying source coverage (Understat/FootyStats/API-Football xG feeds, squad/lineup data) is a real, standing gap
+      worth its own tracked finding.
+- [ ] [DATA] P2. MTDS has never ingested DeFi
+      `vault_share_price`/`lst_rates`/`lending_indices`/`oracle_prices`/`perp_funding` raw-tick bypass-grain data types
+      (confirmed via direct dependency-check error, both a 30d and a 3d window) — blocks `DEFI:onchain` entirely until
+      MTDS backfill/ingestion for these data_types starts.
+- [ ] [DATA] P1. Remaining todo-10 scope: CEFI/TRADFI/DEFI/PREDICTION `delta_one`, `volatility`, `multi_timeframe`,
+      `cross_instrument`, `commodity` still need real benchmark measurements — CEFI was deliberately deferred (fleet
+      already oversaturated, operator-gated), TRADFI/DEFI's attempts hit genuine upstream gaps rather than measuring
+      compute. Full "project full-history time + SPOT cost + parallelization headroom" needs at least one real number
+      per family, not just calendar+sports.

@@ -67,7 +67,14 @@ QG_SCRIPT_DIR="$(cd "$(dirname "$_QG_CALLER")" && pwd)"
 _qg_walk_up_to_pyproject() {
     local d="$1"
     while [[ "$d" != "/" && -n "$d" ]]; do
-        [[ -f "$d/pyproject.toml" ]] && { echo "$d"; return 0; }
+        # `.git` is the universal repo-boundary marker (every repo has one, Python or
+        # not); `pyproject.toml` alone under-detects UI/Node repos, which have neither —
+        # the walk would then continue PAST the repo root and match a workspace-level
+        # pyproject.toml several directories up (e.g. the bare workspace root's own
+        # `.venv-workspace` config), misresolving PROJECT_ROOT to the wrong clone
+        # entirely under the per-tab worktree layout. Checked together (not `.git` alone)
+        # so existing Python repos keep matching at the same directory as before.
+        [[ -f "$d/pyproject.toml" || -e "$d/.git" ]] && { echo "$d"; return 0; }
         d="$(dirname "$d")"
     done
     return 1

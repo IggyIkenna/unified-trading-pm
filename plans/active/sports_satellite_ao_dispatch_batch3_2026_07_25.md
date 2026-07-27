@@ -128,23 +128,23 @@ drift_direction: advance-code
       match rate, 0 unresolved names**, across all 411 real captured days. `quality-gates.sh` green
       (`.qg_last_passed_sha=e052d16d` → shipped `96d15ba7`). Source:
       `issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`.
-- [ ] [DATA] P1. Re-pin unified-api-contracts's `source_data_latency.py` 5 p95-lag constants (SFI/API-Football/
-      FootyStats/Understat/Open-Meteo) from empirical `latency_observations` data — the ~2-week accrual window has
-      passed (recorder shipped + wired to the live sports-scheduler 2026-06-22/24). Run
-      `instruments-service/scripts/aggregate_source_latency_observations.py --emit-constants` (add
-      `--first-success-only` if the polling-retry enhancement has landed) against `instruments-store-sports-prd`'s
-      `_index/latency_observations/day=*/*.parquet`, review the per-source p50/p95/max-vs-assumed verdict (the script
-      floors at the current assumed value unless `--allow-lower`, and reports UNDER-SAMPLED below `--min-samples=20`
-      rather than a spurious re-pin), then update the 5 `Final[int]` constants in
-      `unified_api_contracts/unified_api_contracts/registry/source_data_latency.py` from the observed p95 and ship via
-      quickmerge. Historical rows need no migration (write-time stamps only). Repo: unified-api-contracts. **Done
-      when**: the aggregator's emitted constants (or an explicit UNDER-SAMPLED verdict per source, with sample count
-      cited) are recorded; `source_data_latency.py`'s 5 constants are updated to the empirical p95 wherever samples are
-      sufficient; and `sports_live_availability_and_source_latency_2026_07_24.md`'s Source-latency Step-2 verdict table
-      is flipped from UNVALIDATABLE-FROM-BACKFILL to VALIDATED, citing sample sizes. Source:
-      `sports_live_availability_and_source_latency_2026_07_24.md` (corrected 2026-07-25 plan-reconcile — the digest
-      cited here as Source has 0 checkboxes and is not the real dispatch/reconciliation target; the actual open checkbox
-      for this work lives in the doc now cited).
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-15)** — Re-pin unified-api-contracts's `source_data_latency.py` 5 p95-lag
+      constants (SFI/API-Football/FootyStats/Understat/Open-Meteo) from empirical `latency_observations` data. Ran
+      `instruments-service/scripts/aggregate_source_latency_observations.py --emit-constants` and `--first-success-only`
+      against `instruments-store-sports-prd`'s 552 `_index/latency_observations/day=*/*.parquet` files
+      (2026-07-14..2026-07-27, ~13-day accrual). Only `api_football` accrued samples (n=2504, first-ATTEMPT ceiling only
+      — `first_success` is 0/2504); observed p95=673s < assumed 1800s, so per the aggregator's fail-safe the constant is
+      retained unchanged (CONFIRM, not a re-pin). The other 4 sources read n=0 (UNDER-SAMPLED), each for a distinct root
+      cause now diagnosed and documented (no live trigger for SFI; a confirmed scheduler bug for Understat's
+      `stats_delayed` trigger — filed `issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`, P0;
+      FootyStats/Open-Meteo never instrumented in `ENTITY_TO_OBSERVATION_TARGET`). All 5 constants in
+      `source_data_latency.py` now carry per-source empirical-review docstrings citing sample counts + root causes
+      (unified-api-contracts@37611070); no numeric value changed this cycle — that is the correct, evidence-based
+      outcome, not a rubber-stamped VALIDATED. `sports_live_availability_and_source_latency_2026_07_24.md`'s Step-2
+      verdict table updated accordingly (NOT a blanket VALIDATED — 4/5 sources remain genuinely un-validated pending the
+      filed follow-up). `quality-gates.sh` green. Source: `sports_live_availability_and_source_latency_2026_07_24.md`
+      (corrected 2026-07-25 plan-reconcile — the digest cited here as Source has 0 checkboxes and is not the real
+      dispatch/reconciliation target; the actual open checkbox for this work lives in the doc now cited).
 - [ ] [DATA] P1. Determine the disposition of `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/
       `empty_confirmed`/`row_count=0` rows (paired with `source=polymarket_clob`, dates 2020-06-06..2026-05-21) —
       classify as (a) an independent instance of the same writer/consolidator asset_group-mislabeling class the
@@ -306,6 +306,24 @@ written up, not just pointed at). The 2 `doc_too_large_or_risky_for_batch` docs 
 dedicated pass.
 
 ## Progress Log
+
+- **2026-07-27 (slot-15)** — Worked the `source_data_latency.py` re-pin todo. Ran the aggregator against 552 live
+  `_index/latency_observations` parquets (13-day accrual). Only api_football had samples (n=2504, ceiling-only,
+  first_success never confirmed); the other 4 sources read n=0. Investigated WHY rather than accepting a blanket
+  UNDER-SAMPLED: found sfi has no live trigger wired at all, footystats/open_meteo were never added to
+  `ENTITY_TO_OBSERVATION_TARGET`, and — the significant one — understat's `stats_delayed` trigger (offset_hours=24) is
+  configured but can **structurally never fire**, root-caused to `get_upcoming_fixtures()`'s ~2h-post-kickoff
+  fixture-visibility cutoff (`sports_trigger_state.py:44-176`) closing long before a 24h-offset trigger becomes due.
+  Since that same trigger dispatches the REAL Understat/FootyStats XG capture (not just the latency proxy), this is a
+  potential live data-completeness gap beyond this todo's scope — filed as a P0 issue doc
+  (`issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) with two follow-up todos (confirm whether real
+  XG/derived-features capture is also dead; design+ship the scheduler fix) rather than attempting the fix inline
+  (different repo focus/testing surface than a constants re-pin). Updated `source_data_latency.py` with per-source
+  empirical-review docstrings (no numeric value changed — api_football's ceiling p95 floors at the existing constant per
+  the aggregator's own fail-safe; the other 4 remain UNDER-SAMPLED). Deliberately did NOT flip the source doc's Step-2
+  table to a blanket VALIDATED since 4/5 sources are still genuinely unvalidated — flipped it to an accurate per-source
+  empirical verdict instead. No file collision with other in-flight batch3/batch4 todos (touched only
+  `source_data_latency.py`, this plan, the source doc, and the new issue doc).
 
 - **2026-07-27 (slot-10)** — Worked the "85-contaminated-league alias→canonical mapping" todo. Found the source issue
   doc (`sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`) had already moved to `plans/archive/issues/` with all

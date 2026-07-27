@@ -143,7 +143,7 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
       out-of-scope for this todo (GCS-object wipe only, per the floor doc's own DONE/DEFERRED split) and is not claimed
       done here.
 
-- [ ] [CODE] P1. **Canonicalise `BOOKMAKER_LEAGUE_COVERAGE`** (`unified-api-contracts`) — it is keyed on RAW league
+- [x] ✅ [CODE] P1. **Canonicalise `BOOKMAKER_LEAGUE_COVERAGE`** (`unified-api-contracts`) — it is keyed on RAW league
       display names while the sports v2 sentinel (`sentinels.py`) calls it with a CANONICAL league id, a standing
       coverage false-negative (a covered league reads as uncovered whenever the raw-name key doesn't match). Fix:
       regenerate the registry JSON from `ODDS_API_DISPLAY_TO_CANONICAL`, or re-run
@@ -153,7 +153,20 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
       leagues previously confirmed captured under their canonical id, and a regression test locks the canonical-id
       lookup path (not just the raw-name one) so this can't silently regress. Source:
       `sports_consolidated_closeout_2026_07_19.md` Track H (BOOKMAKER_LEAGUE_COVERAGE canonicalisation, "RESTORED
-      2026-07-24").
+      2026-07-24"). — **DONE 2026-07-27, `unified-api-contracts@804858c9`.** Root cause: 25 leagues (Argentina Primera,
+      A-League, Austrian Bundesliga, EPL, Ligue 1, Bundesliga, Greek Super League, Serie A, J1 League, K League 1, Liga
+      MX, Eredivisie, Eliteserien, Ekstraklasa, Primeira Liga, La Liga, Allsvenskan, Swiss Super League, Super Lig, UCL,
+      MLS, and more) were double-keyed in the committed JSON under BOTH their canonical id and the raw Odds-API
+      `sport_key` (e.g. `SOCCER_EPL` alongside `EPL`) — 358 of 1129 (book, league) pairs were raw-keyed duplicates.
+      Added `canonicalize_odds_api_league_id()` (`provider_league_ids.py`, resolves a raw sport_key through
+      `DEFAULT_CLASSIFICATION_REGISTRY` -> `api_football_id` -> canonical `league_id`), applied it at
+      `BOOKMAKER_LEAGUE_COVERAGE` load time (`sports_bookmaker_league_coverage.py`) so a future non-canonicalising
+      `--write` refresh can't reintroduce the bug, and regenerated the committed JSON (1129 -> 771 deduplicated pairs;
+      verified zero non-canonical league values remain via `get_league()`). New regression test
+      `tests/unit/test_sports_bookmaker_league_coverage_canonical.py` (10 cases) locks: raw sport_key -> canonical
+      resolution, idempotency, unresolvable-key passthrough, zero non-canonical leakage into the loaded registry, and
+      `is_bookmaker_league_covered(bookmaker, canonical_league_id)` returning `True` for a sample of 5 bookmakers. Full
+      quality-gates.sh green; pre-existing `test_sports_bookmaker_league_coverage_exact.py` (6 cases) unaffected.
 
 - [ ] [DIAG] P2. **Investigate 2 unowned data anomalies (operator decision 16, 2026-07-23 — investigate now, not defer,
       since both are currently unowned and could be actively recurring):** (1) standings/teams season-2026 data being

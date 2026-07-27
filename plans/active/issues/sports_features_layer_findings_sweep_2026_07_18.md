@@ -571,8 +571,21 @@ read is a coverage blind spot.
       `instrument_type` only accepts declared UAC values for the asset group. — already covered by
       `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C's writer-fix work, e.g.
       market-tick-data-service@7ffabf77; see that doc for execution).
-- [ ] [ASK] P1. Operator decisions needed: F3 (is `odds_horizon_bucket_{tf}` canonical, or does `timeframe` own that
-      axis?) and F4 (are `FOOTBALL` / `ODDS_API` valid `venue` values?).
+- [x] [ASK] P1. Operator decisions needed: F3 (is `odds_horizon_bucket_{tf}` canonical, or does `timeframe` own that
+      axis?) and F4 (are `FOOTBALL` / `ODDS_API` valid `venue` values?). **F3 answered elsewhere**: `timeframe` owns
+      that axis — bare `odds_horizon_bucket` + populated `timeframe` is canonical (F3 timeframe migration DONE per
+      `sports_consolidated_audit_2026_07_19.md` § 1.3). **F4 answered 2026-07-27**
+      (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phases 0-4, cross-referenced against the parent OOM issue
+      doc's own Update 5 investigation): NEITHER is valid as a per-row `venue` value on a candle/manifest row where a
+      real bookmaker is knowable. **`FOOTBALL`**: a genuine BUG, not a valid venue — the sport token
+      (`FOOTBALL:{BOOKMAKER}:{MARKET}:...`) was being misread as `venue` by a generic (non-sports-aware) instrument-id
+      splitter; fixed `unified-trading-library@bcd73241` (`mdps_t1_recon...` Update 5). **`ODDS_API`**: valid ONLY (a)
+      as a UAC registry-level vendor/aggregate-class venue entry (`VENUES_BY_ASSET_GROUP["sports"]`, "Multi-bookmaker
+      odds aggregator (raw tick data source)" — see `/codex/02-data/venue-availability.md`) and (b) as the
+      `reprocess_sports_odds.py` manifest's COARSE per-day AGGREGATE SENTINEL row (deliberate, unchanged). It is
+      **invalid** as a FINE per-shard/per-row venue stand-in wherever the real bookmaker is already present in the data
+      — that was a genuine, now-fixed conflation in `reprocess_sports_odds.py`'s fine manifest rows
+      (`market-data-processing-service@6f7422e` forward fix + `@a047b29` backfill migration).
 - [ ] [DIAG] P1. F6 — why is the instruments-sports consolidated index persistently older than its 120s budget?
 - [ ] [AUDIT] P2. Extend this audit to leagues / fixtures / betting-market identifiers (operator: "in sports case
       leagues and fixtures and betting market canonicals are relevant too") and fold the result into the migration so

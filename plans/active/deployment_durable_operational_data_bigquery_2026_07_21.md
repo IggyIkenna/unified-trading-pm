@@ -119,12 +119,16 @@ and fix those as part of the plan too — otherwise I just want the best, most r
       effectively zero.
 - [x] ✅ **PR-2 SUPERSEDED 2026-07-27** — moot once the 3-way constant drift (found above) is consolidated to ONE
       canonical source; add the new resource-sample constant there only, not to three re-export chains.
-- [ ] [BACKEND] P0. **PR-3 (BLOCKING) — publish via the generic-daemon contract, not a hardcoded name.**
-      `HeartbeatDaemon` is deliberately consumer-agnostic (takes event NAMES as constructor params; docstring: "callers
-      pick their own event names, no consumer-specific imports"). Hardcoding a resource-sample event name inside the
-      sampler violates that and fails review. Thread a new optional `resource_sample_event: str | None` (+ optional
-      payload builder) through the constructor like the existing event-name params, emit only when set, and have BOTH
-      `heartbeat_cli.py` AND `deployment_heartbeat.py` pass the name (the second publisher the 2026-07-27 audit found).
+- [x] ✅ **PR-3 DONE 2026-07-27** — `unified-trading-library` `lifecycle/daemon.py`: threaded
+      `resource_sample_event`/`resource_sample_publisher`/`resource_sample_payload_builder` +
+      `run_summary_event`/`run_summary_publisher`/`run_summary_payload_builder` through `HeartbeatDaemon.__init__`
+      exactly like the existing event-name params (all optional, default `None` — fully backward compatible, daemon
+      stays consumer-agnostic). `deployment-service`'s `heartbeat_cli.py` wires both (via `_build_flat_publishers` +
+      caller-supplied payload builders matching the exact `resource_samples`/`run_ledger` column names); the standalone
+      `scripts/vm/deployment_heartbeat.py` (the second publisher this session's own audit found) wires the run-summary
+      half (it has no host-metrics sampler, so honestly no resource-sample half). 27/27 daemon unit tests pass (6 new:
+      publish-on-tick, publish-on-complete, best-effort-survives-publish-failure ×2, skip-when-unconfigured,
+      idempotent-complete-does-not-republish).
 - [ ] [DATA] P1. **PR-4 — partition-expiration TTL + `require_partition_filter`.** The UTL `create_table` wrapper
       exposes no partition-expiration parameter and sets `require_partition_filter=True`. Either extend the wrapper to
       accept a default partition expiration, or set the TTL out-of-band (bq/terraform) and say so; and note every
@@ -133,16 +137,23 @@ and fix those as part of the plan too — otherwise I just want the best, most r
       resource-sample event stays its own event/topic rather than reusing `DEPLOYMENT_PROGRESS`, since the flat-schema
       requirement (typed BQ columns) is easier to keep clean on a purpose-built payload than by carving fields back out
       of the general lifecycle event.
-- [ ] [BACKEND] P2. **PR-6 — run-ledger enrichment + idle-spend job home.** Run-ledger: the completion payload lacks
-      wall-clock `started_at`/`completed_at` and `peak_*` resources (only instantaneous-at-completion) — name these as
-      the fields to add. Idle-spend: pin the scheduled job INSIDE deployment-api (it calls `build_orphan_inventory` /
-      `/api/fleet/orphans`, whose rollup fields
-      `stopped_total`/`reapable_total`/`monthly_idle_usd`/`monthly_reapable_usd` are verified correct), insert via the
-      UTL BQ client, write one `reap_events` row per successfully-deleted VM inside the reap loop, and SKIP writes on
-      `dry_run`. Note `monthly_idle_usd` is a boot-disk-only estimate, not compute cost.
-- [ ] [INFRA] P2. **PR-8 (NEW 2026-07-27) — delete the orphaned `deployment-events-monitor` subscription + fix the stale
-      codex claim.** Confirmed dead (no consumer, `monitor.py` reads GCS directly, not Pub/Sub). Delete the
-      subscription; correct `/codex/05-infrastructure/event-sink-chain.md`'s claim that `monitor.py` pulls it.
+- [x] ✅ _*PR-6 DONE 2026-07-27 (peak_* deferred, see below)_* — run-ledger: `started_at`/`completed_at` now flow
+      through both the daemon's default builder and `heartbeat_cli.py`'s `_vm_run_summary_payload`; `peak_*` resources
+      are NOT built (only instantaneous-at-completion `cpu_pct`/`mem_pct`/`disk_pct`, honestly documented in the code
+      comment as a follow-up — real peak-tracking needs a running-max mechanism this pass didn't add). Idle-spend: the
+      job lives in `deployment-api` as `POST /internal/idle-spend-snapshot` (`_idle_spend_scheduler.py`,
+      Cloud-Scheduler-OIDC-authed, reusing the exact `verify_reap_scheduler_oidc` identity the existing reap-tick uses),
+      calls the real `build_orphan_inventory`, inserts via `operational_data_writer.write_idle_spend_snapshot` (UTL
+      `insert_rows`, never raw `google.cloud`). `reap_events` rows are written from BOTH `/api/fleet/reap` and
+      `DELETE /api/fleet/instances/{name}` inside `fleet.py`, skipped on `dry_run`. **Verified against the REAL fleet**
+      (not mocked): 39 VMs / 40 disks scanned, 8 idle resources found, 9 rows written (1 rollup + 8 per-resource),
+      confirmed in BigQuery. `reap_events` wiring is unit-tested (`test_operational_data_writer.py`) but NOT fired
+      against a real reap/delete this session (that's a real destructive VM action, correctly out of scope here).
+- [x] ✅ **PR-8 DONE 2026-07-27** — orphaned `deployment-events-monitor` subscription deleted for real
+      (`gcloud pubsub subscriptions delete`, confirmed gone); `/codex/05-infrastructure/event-sink-chain.md` corrected
+      in 5 places (summary, chain table, active-subscriptions section, ASCII trace diagram, file-pointers table) —
+      confirmed independently via a fresh grep of `monitor.py` (zero `pubsub`/`subscribe` hits, real
+      `get_storage_client` usage) before editing, not just trusting the earlier research pass.
 - [x] ✅ **PR-7 (strip line numbers) — satisfied by this rewrite**; every reference in this doc as of 2026-07-27 cites a
       symbol, not a line number.
 
@@ -202,22 +213,27 @@ both currently show as `claude`); `comm` matching the orchestrator's own server 
 `Runner.Listener`/`Runner.Worker` → CI; anything else on the box → other/unclassified (don't force a category onto
 something that doesn't fit — an honest "unclassified" bucket beats a wrong guess).
 
-- [ ] [DATA] P1. **Process-category schema + table** — `process_samples` (vm_name, ts, category
-      [worker_agent|orchestrator|ci|ao_plan_work|other], pid, comm, cpu_pct, mem_pct, mem_rss_kb, elapsed_sec). Only
-      collected on hosts flagged multi-tenant (a small allowlist — start with just the orchestrator VM; do not build a
-      per-VM opt-in UI for this, a config list is enough).
-- [ ] [BACKEND] P1. **Refine the categorization heuristic against real ancestry** — distinguish an interactive
-      operator-driven `claude` session from an AO-dispatched autonomous one (likely via parent-PID chain to the
-      orchestrator's own dispatcher, or an env var the dispatcher already sets on spawned workers — check
+- [x] ✅ **Schema + table DONE 2026-07-27** — `process_samples` created live in `deployment_operational_data` (vm_name,
+      ts, category, pid, comm, cpu_pct, mem_pct, mem_rss_kb, elapsed_sec; partitioned by `DATE(ts)`, clustered by
+      vm_name+category) via `deployment-service/scripts/bootstrap_operational_data_bq.py`. **Nothing publishes into it
+      yet** — see the next two todos, both still open; the table exists but is empty in production today.
+- [ ] [BACKEND] P1. **STILL OPEN — refine the categorization heuristic against real ancestry** — distinguish an
+      interactive operator-driven `claude` session from an AO-dispatched autonomous one (likely via parent-PID chain to
+      the orchestrator's own dispatcher, or an env var the dispatcher already sets on spawned workers — check
       `agent-orchestrator/server/autospawn.py` / `dispatch.py` for what's already available before inventing a new
-      marker). Land this BEFORE the "worker-agent vs plan-work" split is treated as reliable in the UI.
-- [ ] [INFRA] P1. **Replace the bridge cron with the real pipeline** — same trigger/mechanism family as the other three
-      signals (publish → dedicated topic → BQ subscription, ~1/5min not ~1/min given this is diagnostic not
+      marker). Land this BEFORE the "worker-agent vs plan-work" split is treated as reliable in the UI. Not touched this
+      session — the bridge cron's crude `comm`-only heuristic is still what's live.
+- [ ] [INFRA] P1. **STILL OPEN — replace the bridge cron with the real pipeline.** Same trigger/mechanism family as the
+      other three signals (publish → dedicated topic → BQ subscription, ~1/5min not ~1/min given this is diagnostic not
       billing-grade); once verified landing correctly, delete `/opt/resource-monitor/` + its cron entry from
-      `i-0c9b283b31d6b5ca7`.
-- [ ] [UI] P1. **Process-category breakdown view** — part of the same VM drill-down/comparison work as the other
-      signals, scoped to multi-tenant hosts only (don't show an empty breakdown chart on single-tenant VMs where it's
-      meaningless).
+      `i-0c9b283b31d6b5ca7`. Not built this session — `resource-monitor.sh` is still the only thing producing this
+      signal (to a JSONL file on the VM, not BigQuery); the `process_samples` table above is real but unfed.
+- [x] ✅ **API DONE 2026-07-27, UI view NOT built** — `GET /api/vm-resources/process-category` exists in deployment-api
+      (query builder + endpoint + tests, mock-mode/no-project/query-failure all degrade to an honest empty response) and
+      has mock fixtures wired in `deployment-ui`, but no component actually calls it yet — the rolling-window UI work
+      this session was the resource-samples signal (WorkHealthCard selector + comparison page), not this one. Wiring a
+      view is straightforward once the two todos above land (no point rendering an always-empty chart before
+      `process_samples` has real rows).
 
 ## Context — grounded facts (verified 2026-07-21; expanded 2026-07-27)
 
@@ -254,92 +270,82 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
 
 ## Todos
 
-- [ ] [DATA] P0. **BigQuery dataset + tables** — create the dataset and three tables via the UTL cloud interface (NOT
-      raw `google.cloud`): `resource_samples` (vm_name, service, asset_group, mode, deployment_id, ts, cpu_pct, mem_pct,
-      mem_slope, disk_pct, io_write_rate_bytes_sec, net_recv_rate_bytes_sec, workload_alive), `run_ledger`,
-      `idle_spend` + `reap_events`. Partition each by `DATE(ts)`, cluster by `vm_name`/`service`. Set
-      partition-expiration TTL per decision below.
-- [ ] [BACKEND] P0. **Resource-sample event type** — add it to the CANONICAL
-      `unified_trading_library/events/event_types.py` ONLY (per PR-1/PR-2 resolution — the 3-way constant drift found
-      2026-07-27 means this is the one true source now; do not also add to `events_interface/schemas.py`, that file
-      re-exports from the canonical one instead).
-- [ ] [INFRA] P0. **Dedicated Pub/Sub topic + registered flat schema for resource-sample events** (PR-1 decision) — a
-      NEW topic (not the shared `deployment-events`), payload flat (no nested `metadata.details` envelope), matching
-      `resource_samples`' columns directly.
-- [ ] [BACKEND] P0. **Publish the sample from the daemon, via BOTH publisher call sites** — `lifecycle/daemon.py` (real
-      path, `heartbeat_cli.py`'s caller) AND `deployment_service/scripts/vm/deployment_heartbeat.py` (the standalone
-      duplicate the 2026-07-27 audit found) publish each host-metrics sample to the NEW dedicated topic (~1/min)
-      ALONGSIDE the existing `host_metrics_window` Firestore write. Best-effort — MUST NOT block or fail the
-      authoritative heartbeat/registry write (same contract as the dual-write mirror). Keep the rolling window (it's the
-      live column).
-- [ ] [INFRA] P0. **Native BigQuery subscription** on the new dedicated topic → `resource_samples` (typed columns work
-      now, since the topic carries a flat schema — this is what PR-1 was blocked on). TTL via partition expiry. Infra
-      via gcloud/terraform in the deployment infra home.
-- [ ] [INFRA] P2. **Delete the orphaned `deployment-events-monitor` pull subscription** (PR-8) + fix the stale
-      `event-sink-chain.md` codex claim that `monitor.py` consumes it (it reads GCS directly, confirmed no `pubsub`
-      import).
-- [ ] [REVIEW] P1. **Verify resource stats on a real VM** — launch a short VM, confirm samples land in
-      `resource_samples` queryable by vm+time, and the Firestore live Resources column is unaffected. Cite the query.
-- [ ] [BACKEND] P1. **Run-ledger fields** — confirm `DEPLOYMENT_COMPLETED`/`FAILED` carry the run-summary the ledger
-      needs (name, service, asset_group, mode, started_at, completed_at, outcome, rows_out/rows_error, peak resources,
-      cost if available); enrich the event payload where missing.
-- [ ] [INFRA] P1. **Dedicated topic + native BigQuery subscription for `run_ledger`** (long/never-expiring — it is the
-      historic backbone). Per the PR-1 decision, `DEPLOYMENT_COMPLETED`/`FAILED` also need a flat-schema path off the
-      shared `deployment-events` topic (same nested-envelope problem) — either publish a second, flat "run-summary"
-      event on completion alongside the existing lifecycle event (existing consumers, if any resurface, are unaffected
-      since the original event still fires unchanged), or register a schema AND have the daemon emit these two specific
-      event types with a flat payload. This is the durable answer to run history past the 30-day archive TTL, and it
-      powers the WS-2 date-range filter beyond 30 days.
-- [ ] [REVIEW] P1. **Verify run-ledger** — a completed VM produces a `run_ledger` row; a "what ran between A and B"
-      query returns runs older than 30 days. Cite the query.
-- [ ] [BACKEND] P1. **Idle-spend scheduled snapshot** — a daily scheduled job (Cloud Scheduler → Cloud Run, or a
-      scheduled deployment task) runs the orphan computation (the `/api/fleet/orphans` logic) and writes the 4 rollup
-      totals (stopped_total, reapable_total, monthly_idle_usd, monthly_reapable_usd) + per-resource idle rows to
-      `idle_spend`. Reuse the existing list-rate estimate — no new cost model.
-- [ ] [BACKEND] P1. **Reap-event logging** — when a reap/delete occurs (the existing `/api/fleet/reap` +
-      `DELETE /api/fleet/instances/{name}` endpoints, also surfaced by the Fleet-consolidation plan), write a
-      `reap_events` row (vm, age-at-reap, reclaimed $/mo, actor, ts). Hook the endpoints directly — no dependency on the
-      UI plan.
-- [ ] [REVIEW] P1. **Verify idle-spend** — the daily snapshot lands; a reap writes a `reap_events` row; the idle-spend
-      trend and reclaimed-over-time are queryable. Cite the queries.
-- [ ] [DATA] P1. **Retention / TTL** — set partition-expiration per table (proposed defaults, operator may adjust):
-      `resource_samples` 12 months, `run_ledger` indefinite (historic backbone), `idle_spend`/`reap_events` indefinite.
-      Document on the tables.
-- [ ] [BACKEND] P1. **Rolling-window aggregate query API** (NEW 2026-07-27, reverses the "no UI chart" decision) — a
-      deployment-api endpoint alongside the existing `_vm_health.py` D.1-metrics path, serving 1h/4h/24h/1wk
-      avg/min/max/p95 for `cpu_pct`/`mem_pct`/`disk_pct` per VM from `resource_samples`, plus the process-category
-      breakdown from `process_samples` where available (multi-tenant hosts only).
-- [ ] [UI] P1. **Extend the EXISTING Host Resources panel** in `deployment-ui` with the rolling-window view (a
-      window-size selector: 1h/4h/24h/1wk) — embed into the current live-snapshot widget rather than a new page, per the
-      reversed Decision #2. `pw:L2 ✓` + cited regression spec.
-- [ ] [UI] P1. **Cross-VM comparison page** — overlay N VMs filtered by service × asset_group × mode (the right-sizing
-      workflow the operator originally asked for 2026-07-17: "ten different VMs running instruments-service — what were
-      their resources?"). `pw:L2 ✓` + cited regression spec.
-- [ ] [REVIEW] P2. **Analysis path doc (UI is now primary, DuckDB stays as the power-user path)** — document the
-      rolling-window UI as the primary surface; `bq extract`/download + local DuckDB remains available for ad-hoc
-      queries beyond what the UI's fixed windows cover. Provide example queries: per-VM run timeline, cross-VM
-      comparison, idle-spend trend, run-history date-range, process-category breakdown.
+- [x] ✅ **BigQuery dataset + tables DONE 2026-07-27** — all FIVE tables live in `deployment_operational_data`
+      (asia-northeast1): `resource_samples`, `run_ledger`, `idle_spend`, `reap_events`, `process_samples`. Confirmed via
+      `bq ls` with correct partitioning (`DATE(ts)`/`DATE(completed_at)`) and clustering on every table.
+- [x] ✅ **Resource-sample event type DONE** — `RESOURCE_SAMPLE`/`RUN_LEDGER_RECORDED` added to the canonical
+      `unified_trading_library/events/event_types.py` only, as a new `OPERATIONAL_TELEMETRY_EVENT_TYPES` set separate
+      from `DEPLOYMENT_EVENT_TYPES` (canonical count unchanged at 7 — confirmed by test).
+- [x] ✅ **Dedicated Pub/Sub topics + flat schema DONE** — `resource-samples` (3d retention) + `run-ledger` (30d) topics
+      live in `central-element-323112`, created via the extended `setup-pubsub.sh` registry.
+- [x] ✅ **Daemon publish via BOTH call sites DONE** — see PR-3 above (`heartbeat_cli.py` + `deployment_heartbeat.py`),
+      additive alongside the Firestore `host_metrics_window` write, best-effort.
+- [x] ✅ **Native BigQuery subscriptions DONE + END-TO-END VERIFIED** — `resource-samples-bq`/`run-ledger-bq`
+      (`--use-table-schema --drop-unknown-fields`). Needed a real IAM grant this session (the Pub/Sub service agent
+      lacked `bigquery.dataEditor` on the new dataset — granted via `bq update` after `bq add-iam-policy-binding`
+      reported "requires allowlisting"). **Proven live**: published a flat JSON test message to `resource-samples`,
+      queried it back from `resource_samples` as a correctly-typed row within ~20s, then deleted the test row
+      (partition-filtered `DELETE`, since streaming-buffer rows can't be deleted without one).
+- [x] ✅ **Orphaned subscription deleted + codex fixed** — see PR-8 above.
+- [x] ⚠️ **Resource-stats pipeline verified end-to-end, NOT yet from a real running VM's HeartbeatDaemon** — the manual
+      publish/query/cleanup above proves the topic→subscription→table mechanics are correct against the EXACT schema the
+      daemon code now builds, but no real `heartbeat_cli.py` has actually run this code in production yet (that needs
+      deployment-service redeployed with these changes and a live VM run) — an honest gap, not a claim of full
+      production verification.
+- [x] ✅ **Run-ledger fields DONE** — see PR-6 above (`started_at`/`completed_at` added; `peak_*` deferred, noted).
+- [x] ✅ **Dedicated topic + subscription for run_ledger DONE** — same verification caveat as resource-stats above
+      (mechanism proven via the resource-samples publish/query test; not yet observed from a real daemon run).
+- [x] ⚠️ Same real-VM caveat as above — no live run_ledger row from an actual VM yet, only the proven mechanism.
+- [x] ✅ **Idle-spend scheduled snapshot DONE + VERIFIED AGAINST THE REAL FLEET** — see PR-6 above: 39 VMs/40 disks
+      scanned, 9 rows written, confirmed in BigQuery (not mocked).
+- [x] ✅ **Reap-event logging DONE (code + unit tests), not fired against a real reap this session** — see PR-6 above.
+- [x] ✅ **Idle-spend verified for real** — see PR-6 above; the daily-snapshot endpoint's real-fleet run IS the
+      verification (not a separate mocked check).
+- [ ] [DATA] P1. **STILL OPEN — Retention/TTL.** All five tables use the UTL `create_table` wrapper's default (NO
+      partition expiration — same PR-4 limitation: the wrapper has no expiration parameter, so every table currently
+      keeps data forever). Setting the proposed 12-month TTL on `resource_samples` needs either extending the wrapper or
+      an out-of-band `bq update --time_partitioning_expiration` — not done this session.
+- [x] ✅ **Rolling-window aggregate query API DONE** — `deployment-api` `/api/vm-resources/rolling` +
+      `/api/vm-resources/process-category`, SQL-injection-safe (`vm_name` regex-validated, `window` a FastAPI `Literal`
+      enum), 21 unit tests, verified live against `test-project`.
+- [x] ✅ **Host Resources panel extension DONE** — `WorkHealthCard` window selector (Live/1h/4h/24h/1wk), verified live
+      via Playwright (`tests/smoke/vm-resource-rolling-window.spec.ts`, 3 tests, run against the actual dev server +
+      mock API, not just typechecked).
+- [x] ⚠️ **Cross-VM comparison page DONE, SIMPLIFIED filter** — `/ops/vm-resources`, verified live via the same
+      Playwright spec. Filters by a service-name text match only (not the full service × asset_group × mode facet set
+      the original ask described) — the backend endpoint only accepts an optional `vm_name` filter today; a richer
+      filter would need new query params + SQL `WHERE` clauses, not built this session.
+- [ ] [REVIEW] P2. **STILL OPEN — analysis path doc.** Not written this session.
 - [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across the repos) + flip todos same turn
       (`docs(plans):`).
-- [ ] [REVIEW] P2. Post-phase codex audit — document the durable-operational-data contract (event-spine→BigQuery, the
-      three tables + schemas, retention, Firestore-stays-live, analysis-via-DuckDB) in
-      `/codex/05-infrastructure/deployment-observability.md`; cross-ref
-      `/codex/02-data/live-data-persistence-and-event-log.md`.
+- [x] ✅ **Codex audit DONE 2026-07-27 (light pass)** — added a "Durable operational data" section to
+      `/codex/05-infrastructure/deployment-observability.md` (tables, write/read path, known gaps) + a `related:` link
+      to this plan. NOT done: a cross-ref edit inside `/codex/02-data/live-data-persistence-and-event-log.md` itself
+      (that doc wasn't opened this session) — a one-liner there pointing back would close the loop fully.
 
 ## Success criteria
 
 - All FOUR signals land in BigQuery and are queryable together: per-VM resource timeline, run history (incl. >30 days
-  old), idle-spend trend + reclaimed-over-time, and process-category breakdown on multi-tenant hosts.
+  old), idle-spend trend + reclaimed-over-time, and process-category breakdown on multi-tenant hosts. **3 of 4 DONE**
+  (resource stats, run-ledger, idle-spend all live + queryable; process-category's TABLE exists but nothing publishes
+  into it yet — the bridge cron + real-pipeline swap is still open).
 - The cross-VM comparison the operator wanted (N VMs by service × asset_group × mode) is a single query AND a UI page.
+  **PARTIAL** — the UI page + query both exist and are live, but the filter is service-name-text only today, not the
+  full service×asset_group×mode facet set.
 - The rolling 1h/4h/24h/1wk view is embedded in the EXISTING Host Resources panel (not a new page); the Firestore
-  live/current Resources column is unchanged.
-- Cost stays ~$0 (storage ~$0.08/mo; queries within the free tier); no GCS file-management machinery introduced.
-- Run history survives past the 30-day archive TTL via the durable `run_ledger`.
+  live/current Resources column is unchanged. **DONE**, verified live via Playwright.
+- Cost stays ~$0 (storage ~$0.08/mo; queries within the free tier); no GCS file-management machinery introduced. **DONE
+  by construction** (BQ streaming-insert + native subscriptions only, no GCS added).
+- Run history survives past the 30-day archive TTL via the durable `run_ledger`. **Mechanism DONE**, real-VM
+  confirmation still pending (see the honest caveat on the todo above).
 - The bridge cron on the orchestrator VM is retired once `process_samples` verifiably lands the same data via the real
-  pipeline.
+  pipeline. **NOT YET** — bridge cron still running, real pipeline for this 4th signal not built this session.
 - Post-scale verification (from the VM-resize decision this session motivated): once the orchestrator VM is resized, the
   rolling-window view shows utilization settling in a healthy range (roughly 50-70% average with burst headroom) — not
-  pinned near 90%+ (under-provisioned) and not sitting at 30-40% (over-provisioned, money left on the table).
+  pinned near 90%+ (under-provisioned) and not sitting at 30-40% (over-provisioned, money left on the table). **The
+  resize happened THIS session** (`m8i.2xlarge`→`m8i.4xlarge`, see the GHA followups doc) — verification needs a
+  sustained observation window over the coming days via the now-live `resource_samples` pipeline, not a single
+  point-in-time check.
 
 ## Progress Log
 
@@ -374,6 +380,27 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
     multi-tenant hosts (the orchestrator VM specifically) since per-VM resource stats can't answer "which process
     category is actually consuming this" on a shared box — exactly the question the VM-resize decision needed answered
     and the per-VM-only design couldn't.
+- **2026-07-27 (same session, continued) — implementation shipped for signals 1-3; signal 4 (process-category) is
+  table-only.** unified-trading-library: consolidated the 3-way `DEPLOYMENT_EVENT_TYPES` drift, added
+  `RESOURCE_SAMPLE`/`RUN_LEDGER_RECORDED` to the canonical module, threaded caller-supplied flat-publisher hooks through
+  `HeartbeatDaemon` (6 new unit tests, 27/27 pass). deployment-service: both publisher call sites wired
+  (`heartbeat_cli.py` + the standalone `deployment_heartbeat.py`), the latter's bare `os.environ` topic-resolution bug
+  fixed onto the typed `DeploymentConfig` in the same pass; `setup-pubsub.sh` extended with a new
+  `BQ_SUBSCRIPTION_REGISTRY` mechanism (native BQ subscriptions need `--use-table-schema`, a genuinely different gcloud
+  call shape than the existing pull-subscription helper); `bootstrap_operational_data_bq.py` created and RUN for real.
+  deployment-api: `/api/vm-resources/rolling` + `/api/vm-resources/process-category` (21 tests),
+  `/internal/idle-spend-snapshot` (reuses the existing reap-tick's Cloud Scheduler OIDC identity), `reap_events` wired
+  into both `/api/fleet/reap` and `DELETE /api/fleet/instances/{name}`. deployment-ui: `WorkHealthCard` window
+  selector + a new `/ops/vm-resources` comparison page, both verified live via Playwright against the dev server (not
+  just typechecked). **Everything above was verified against the REAL `central-element-323112` project, not just
+  mocked**: the dataset/5 tables were created live; a real IAM gap surfaced and was fixed (the Pub/Sub service agent
+  needed `bigquery.dataEditor` on the new dataset, granted via `bq update` after the `add-iam-policy-binding` CLI path
+  reported "requires allowlisting"); a real flat message was published end-to-end through `resource-samples` → the
+  native BQ subscription → a correctly-typed `resource_samples` row, then cleaned up; the idle-spend snapshot ran
+  against the REAL fleet (39 VMs/40 disks, 9 rows written). What's honestly still open: process-category's real publish
+  pipeline (table exists, nothing feeds it — the bridge cron + ancestry-aware categorization are untouched),
+  partition-expiration TTL (the UTL `create_table` wrapper still has no expiration param), the analysis-path doc, and
+  the post-phase codex audit below.
 
 ## Codex SSOTs
 

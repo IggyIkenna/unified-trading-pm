@@ -1,0 +1,74 @@
+# Baseline for QG STEP 5.105 — subprocess/os.system GCS/S3 object-CLI ratchet.
+#
+# SHRINKING ratchet. `repos[<repo>].count` is the number of subprocess/os.system
+# call sites invoking an OBJECT-level gcloud storage/gsutil/aws s3/s3api operation
+# (WITHOUT a `# noqa: gcs-cli` marker) this gate tolerates in that repo. A repo
+# whose live count EXCEEDS its baseline fails CI -- migrate to UTL's
+# gcs_copy_object/gcs_delete_object/gcs_describe_object/list_blobs
+# (unified_trading_library.cloud_interface), or add `# noqa: gcs-cli` with a
+# one-line reason. NEVER raise a count.
+#
+# Repos not listed default to count=0 (zero tolerance -- any new site fails).
+#
+# SSOT: CLAUDE.md "Writing STORAGE code?" + /codex/05-infrastructure/gcs-object-operations.md
+# + plans/active/issues/destructive_command_hook_blind_to_sdk_delete_path_2026_07_27.md (provenance).
+note: Seeded 2026-07-27 (behavioral-testing follow-up).
+repos:
+  agent-orchestrator:
+    count: 0
+  alerting-service:
+    count: 0
+  batch-live-reconciliation-service:
+    count: 0
+  client-reporting-api:
+    count: 0
+  deployment-api:
+    count: 0
+  deployment-service:
+    count: 11
+  deployment-service-sports-wt:
+    count: 11
+  deployment-ui:
+    count: 0
+  e2e-testing:
+    count: 3
+  execution-service:
+    count: 0
+  features-service:
+    count: 0
+  fund-administration-service:
+    count: 0
+  greeks-service:
+    count: 0
+  ibkr-gateway-infra:
+    count: 0
+  instruments-service:
+    count: 1
+  market-data-processing-service:
+    count: 0
+  market-tick-data-service:
+    count: 3
+  market-tick-data-service-cid-migration:
+    count: 3
+  market-tick-data-service-sports-wt:
+    count: 3
+  ml-service:
+    count: 0
+  mtds-scratch-test:
+    count: 0
+  strategy-service:
+    count: 0
+  system-integration-tests:
+    count: 0
+  trading-agent-service:
+    count: 0
+  unified-api-contracts:
+    count: 0
+  unified-trading-api:
+    count: 0
+  unified-trading-library:
+    count: 3
+  unified-trading-pm:
+    count: 11
+  unified-trading-system-ui:
+    count: 0

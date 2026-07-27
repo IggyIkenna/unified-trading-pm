@@ -60,7 +60,7 @@ drift_direction: advance-code
 parent_epic: infrastructure_master
 execution_scope: local-only
 depends_on: []
-last_updated: 2026-07-26
+last_updated: 2026-07-27
 locked_by:
 locked_since:
 ---
@@ -126,11 +126,20 @@ out-of-canonical-write-universe. Candidate causes, NOT yet distinguished:
       check; AND bypass the old-path shortcut under `redo_all` (that parquet is pre-migration OLD-writer data, so
       copying it forward would re-materialise the stale blank-`round` rows `--force` was meant to replace). 2 regression
       tests pin both. Evidence: QG green (4,579 passed / 0 failed).
-- [ ] [DIAG] P0. Verify whether the round writer fix (instruments-service@19ae5890) is even reachable — it is in the
+- [x] [DIAG] P0. Verify whether the round writer fix (instruments-service@19ae5890) is even reachable — it is in the
       tarball (@d9ca1c0c, freshness-gate verified), but if the FIXTURES shard never writes, `round` can never populate
-      regardless of the writer being correct.
-- [ ] [PROCESS] P1. Watchdogs on a backfill MUST key on the target artifact (objects of the expected entity created
-      today), never on log-line growth. Both failures here were invisible to a log-line watchdog for hours.
+      regardless of the writer being correct. — SUPERSEDED (stale duplicate): § G-RESOLVED below (same doc, dated
+      2026-07-18 14:35Z) already answers this exact question and its own copy of this checkbox is flipped: "YES,
+      confirmed end-to-end: writer fix @19ae5890 + gate fix @7d49d096 + fresh tarball → `fixtures_schedule` rows with
+      `round` populated 100% in every sampled shard."
+- [x] [PROCESS] P1. Watchdogs on a backfill MUST key on the target artifact (objects of the expected entity created
+      today), never on log-line growth. Both failures here were invisible to a log-line watchdog for hours. — CODIFIED:
+      § G-RESOLVED below states this was "Codified as a refinement in
+      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`: an artifact check is only as good as its ENTITY
+      NAME"; the workspace `CLAUDE.md` § "Async-wait / poll / background-task discipline" HARD RULE now states this
+      exact lesson verbatim ("backfill/migration progress = count of TARGET artifacts created (entity-scoped,
+      `time_created` not `updated`), NEVER activity") citing this same incident (a 3.5h run heartbeating healthily while
+      writing ZERO `entity=fixtures`). Process lesson is durably codified, not just a one-off note.
 
 ### G-update (2026-07-18 13:2xZ) — ruled OUT, so the next session doesn't re-chase
 
@@ -191,7 +200,16 @@ in 2019 and check whether `entity=fixtures` is written there.
       pending the run.
 - [ ] [OPS] P0. Step 4 — after the backfill completes:
       `build_instrument_catalogue.py --asset-group sports     --since 2019-01-01`, then verify `competition_phase` is no
-      longer ~100% UNKNOWN and `is_promotion_relegation` is a real signal rather than a constant False.
+      longer ~100% UNKNOWN and `is_promotion_relegation` is a real signal rather than a constant False. — PARTIALLY
+      SUPERSEDED, left OPEN: the underlying question (is `competition_phase` still ~100% UNKNOWN?) was independently
+      answered live 2026-07-21 via direct GCS/derived_features reads in
+      `/plans/archive/issues/sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md` (status:
+      resolved) — `competition_phase` now shows a real early/mid/late spread, not UNKNOWN; `is_promotion_relegation` is
+      still constant `False` but that residual is reassigned to Track F P2 in the closeout, not this todo. The literal
+      catalogue-snapshot re-roll command itself has NOT been re-run, though — it remains a distinct, still-open item
+      owned by `plans/active/sports_consolidated_closeout_2026_07_19.md` Track V (line ~761: "Re-roll
+      `build_instrument_catalogue.py --asset-group sports --since 2019-01-01` to pick up the +26,894 round rows... the
+      catalogue snapshot predates all of them"). Not duplicated here — left open, owned by Track V.
 
 ### G-RESOLVED (2026-07-18 14:35Z) — fix confirmed working; my verification metric was wrong
 
@@ -221,7 +239,13 @@ good as its ENTITY NAME — enumerate what a run actually created (unfiltered by
 - [x] [DIAG] P0. Verify the round writer fix is reachable — **YES, confirmed end-to-end**: writer fix @19ae5890 + gate
       fix @7d49d096 + fresh tarball → `fixtures_schedule` rows with `round` populated 100% in every sampled shard.
 - [ ] [OPS] P0. Let the backfill run to completion (watchdog v4 keyed on `entity=fixtures_schedule` created today), then
-      run the catalogue rollup `--since 2019-01-01` and verify `competition_phase` is no longer ~100% UNKNOWN.
+      run the catalogue rollup `--since 2019-01-01` and verify `competition_phase` is no longer ~100% UNKNOWN. —
+      PARTIALLY SUPERSEDED, left OPEN: the "let the backfill run to completion" premise is moot — § N (below) records
+      that this exact full-`--force` FIXTURES backfill was STOPPED entirely ("nothing to unwind") in favour of the
+      surgical round-filler script, so it never completed in this form. The underlying `competition_phase` question was
+      answered by other means (see the identical annotation on the [OPS] P0 "Step 4" todo directly above — live-verified
+      2026-07-21, resolved). The catalogue-snapshot re-roll command itself is the same still-open Track V item cited
+      above — not duplicated here.
 
 ### G-ops (2026-07-18 15:04Z) — `--force` + SPOT has NO resume; the LOOP is the resume mechanism
 
@@ -287,12 +311,27 @@ documented HARD RULE, so taken autonomously.
 `FIXTURES_FETCH_FAILED` 92 + **`rateLimit` 61**. The `rateLimit` rows are the concurrency signature and are FALSE
 failures (the data is fetchable; the key was simply saturated).
 
-- [ ] [DATA] P1. Repair the 153 false `attempted_failed` rows once the singleton run completes. FIXTURES-scoped ones
+- [x] [DATA] P1. Repair the 153 false `attempted_failed` rows once the singleton run completes. FIXTURES-scoped ones
       self-heal (the running VM is `--force` over that range); the enrichment-entity ones do NOT — their VMs are stopped
-      — so re-attempt those (date, entity) cells explicitly and confirm they flip to captured/empty_confirmed.
-- [ ] [OPS] P1. The singleton is documented but was violable — four VMs launched anyway. Find out why the launcher's
+      — so re-attempt those (date, entity) cells explicitly and confirm they flip to captured/empty_confirmed. —
+      PARTIALLY resolved, flipping on the § H-UPDATE evidence below (same doc, 2026-07-18 19:12Z): 92 of the 153
+      (`FIXTURES_FETCH_FAILED`) self-healed via the auto-relaunched enrichment VMs re-attempting those cells — "No new
+      failures since containment". The residual 61 `rateLimit` rows are tracked by their own separate open todo in § H-
+      UPDATE (below, in this doc) — not duplicated here, left open there.
+- [x] [OPS] P1. The singleton is documented but was violable — four VMs launched anyway. Find out why the launcher's
       "API-Football VM already running" guard did not block them (lock bypass? `--force` on the fleet launcher? a
-      scheduled job that predates the guard?) and close it, otherwise this recurs every time two actors touch sports.
+      scheduled job that predates the guard?) and close it, otherwise this recurs every time two actors touch sports. —
+      ROOT-CAUSED, current live code confirms: `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh`
+      documents this as INTENTIONAL, not a bug — `if ! $FORCE && ! $SKIP_LOCK` gates the singleton check, and
+      `--force`/`--skip-lock` are documented bypass flags (a single-VM redo_all launch, or a deliberate `--fleet-vms`
+      fan-out, is meant to skip the lock). The loophole itself was not closed (still by design), but the
+      OVERSUBSCRIPTION DAMAGE it enabled was closed separately: the same launcher now unconditionally (regardless of
+      `--force`) measures `RUNNING_AF_COUNT` via `gcloud compute instances list` and auto-derives
+      `FLEET_VMS = count + 1` before computing this VM's rate share — see § M-FIXED item 1 below (same doc) +
+      `plans/active/data_completion_sports_2026_07_24.md`'s "Registry-driven launch parameters"
+      (deployment-service@e754c9f), which replaced the whole ad-hoc divisor with a fail-closed
+      `assert_fleet_within_budget` registry. So concurrent launches under `--force` no longer silently oversubscribe the
+      key even though the lock itself remains bypassable by design.
 
 ---
 
@@ -311,9 +350,17 @@ failure.
 
 This needs cross-actor coordination, not unilateral VM deletion:
 
-- [ ] [OPS] P0. Identify what re-launches the 4-entity enrichment fleet (exit-code actuator? a cron? another slot?) and
+- [x] [OPS] P0. Identify what re-launches the 4-entity enrichment fleet (exit-code actuator? a cron? another slot?) and
       give api-football ONE owner. Until then, any agent enforcing the singleton is fighting an automation that wins by
-      default, and the key stays oversubscribed (measured earlier: 153 false `attempted_failed` rows in ~30min).
+      default, and the key stays oversubscribed (measured earlier: 153 false `attempted_failed` rows in ~30min). —
+      IDENTIFIED + the specific relaunch-on-429 loop CLOSED: `plans/active/data_completion_sports_2026_07_24.md`'s
+      "Match auto-recover actuator to failure MODE" (deployment-service@7b579ee) confirms the exit-code-monitor
+      auto-recovery actuator was the mechanism (§ I's own hypothesis), and fixes it so a rate-limit failure now emits
+      `DP_SOURCE_RATE_LIMITED` (WARN) with NO wired relaunch actuator — it falls through to backoff/file_issue, it does
+      NOT trigger a blind relaunch that re-hits the same saturated key. Combined with the "Update 2026-07-26" MVP-scope
+      bound directly below (already in this doc) and the measured-concurrency divisor (§ M-FIXED item 1, this doc), a
+      single formal "owner" was never assigned, but the concrete failure mode this todo exists to prevent (relaunch →
+      re-oversubscribe → repeat) is structurally closed.
 
 **Update 2026-07-26**: whoever/whatever relaunches this fleet, it is now MVP-scoped by construction — see
 `/plans/archive/issues/sports_enrichment_mvp_scope_leak_2026_07_26.md` (shipped `unified-api-contracts@f674033f` +
@@ -321,9 +368,15 @@ This needs cross-actor coordination, not unilateral VM deletion:
 no longer fan out past the 96-league MVP set even if URDI's fixture_ids span the wider 383-league curated universe. Does
 NOT resolve the ownership/control-conflict question above — only bounds its blast radius.
 
-- [ ] [OPS] P0. Resume the FIXTURES `--force` run once the key has a single owner — relaunch from
+- [x] [OPS] P0. Resume the FIXTURES `--force` run once the key has a single owner — relaunch from
       `last_completed_day + 1` (loop-resume contract, § G-ops). 350 `fixtures_schedule` objects were written before
-      preemption; `round` is confirmed populating.
+      preemption; `round` is confirmed populating. — SUPERSEDED: this full-`--force` FIXTURES run was never resumed — §
+      N (below, same doc) records the decision to STOP it entirely ("The `--force` VM was already preempted and NOT
+      relaunched, so nothing to unwind") in favour of the ~1,800x-cheaper surgical round-filler script. The
+      round-population goal this todo was chasing was achieved via that surgical script + a zero-API-cost
+      sibling-derivation pass instead, independently verified live 2026-07-21 — see
+      `/plans/archive/issues/sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md` (status:
+      resolved). "Single owner" is moot because this run path was abandoned, not resumed.
 
 ## J. F6 RESOLVED — the instruments-sports consolidator is HEALTHY; the 120s staleness budget is too tight
 
@@ -343,7 +396,12 @@ the merge cycle, and the error message ("behind or DOWN") actively misleads the 
       `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 8, unified-trading-library@fd87daa1, `"sports": 1800` added
       to `AG_STALENESS_BUDGET_SEC`; see that doc for execution).
 - [ ] [CODE] P2. Soften the error text: distinguish "consolidator DOWN" (no recent successful execution) from "index
-      older than budget but consolidator succeeding" (a too-tight budget). They demand opposite responses.
+      older than budget but consolidator succeeding" (a too-tight budget). They demand opposite responses. — GENUINELY
+      OPEN: checked `sports_manifest_read_staleness_budget_missing_2026_07_15.md` and
+      `manifest_consolidator_cadence_cost_audit_2026_07_20.md` (both `status: open`, both about staleness-budget config,
+      the closest related docs) — neither addresses this specific error-message-text distinction, and no other doc or
+      code hit surfaced for it. The staleness-budget VALUE was already fixed (§ J item above), but the misleading
+      "behind or DOWN" wording itself is unchanged. Not reverified against live code this session.
 
 ---
 
@@ -380,23 +438,42 @@ Migrating rows without fixing writers guarantees regression on the next capture.
       sports is UPPER everywhere. Left as written it would have driven the migration of a ~2M-row prod bucket in exactly
       the wrong direction, and K2 below depends on this shipping first — so the stale wording was a live trap, not a
       typo. CF-7's `_CF7_DATA_TYPE_NORMALISE` (UPPER→lower) is **superseded for sports** and must not be reused here. —
-      already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C — this UPPER-case direction
-      was itself REVERTED back to lower-case fleet-wide; see that doc for execution).
+      ⛔ SUPERSEDED 2026-07-23 (lowercase revert) — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C — this UPPER-case direction was itself REVERTED
+      back to lower-case fleet-wide; see that doc for execution).
 - [x] [CODE] P1. Make MDPS odds writers stamp `venue = <bookmaker_key>` and `source = odds_api`, instead of
-      `venue=ODDS_API`. `_SPORTS_VENUES = frozenset({"ODDS_API"})`
-      (`market_tick_data_service/adapters/umi_tick_provider.py:110`) is the declaration to change. — already covered by
-      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C; see that doc for execution).
+      `venue=ODDS_API`. ~~`_SPORTS_VENUES = frozenset({"ODDS_API"})`
+      (`market_tick_data_service/adapters/umi_tick_provider.py:110`) is the declaration to change.~~ — **CORRECTED
+      2026-07-27, was falsely closed** (supersedes a concurrent "⛔ SUPERSEDED 2026-07-23 (lowercase revert)" pass on
+      this same line — that marker was about an unrelated data_type-casing revert, not this venue conflation, and
+      pre-dates the real fix below): this checkbox was marked `[x]` "already covered by Track C" but (a) Track C never
+      actually shipped this fix (its own text said "Do NOT touch the deliberate `mdps_odds_horizon_bucket`
+      `venue=ODDS_API` aggregate... that's a different, intentional aggregate identity, not this bug" — now corrected,
+      see that doc), and (b) the cited target (`_SPORTS_VENUES` in `umi_tick_provider.py`) was the WRONG symbol entirely
+      — that's a CLI/dispatch-level venue selector ("which adapter category to invoke for a `--venue ODDS_API` backfill
+      job"), not a per-row manifest stamp; changing it wouldn't make sense (the vendor endpoint genuinely is invoked at
+      the ODDS_API level, then internally fans out to real per-bookmaker rows). **The REAL fix, now genuinely done
+      (2026-07-27, `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phase 1-2)**: MDPS's
+      `market-data-processing-service/scripts/reprocess_sports_odds.py` — the actual odds_horizon_bucket manifest writer
+      — was stamping every FINE per-`(league_id, timeframe)` manifest row `venue=ODDS_API`. Fixed forward
+      (`market-data-processing-service@6f7422e`, fine rows now split per real `bookmaker_key`, one manifest row per
+      distinct bookmaker present in the underlying shard) + backfilled for existing rows
+      (`market-data-processing-service@a047b29`, VM-applied migration — see the issue doc's closing Update for the real
+      row-count evidence). `source` stays `odds_api`'s SIBLING derived-product identity `mdps_odds_horizon_bucket`
+      (investigated + confirmed correct, NOT `odds_api` — see the issue doc Phase 0/4). The COARSE per-day summary row
+      deliberately keeps `venue=ODDS_API` as a documented aggregate sentinel (not a per-row conflation) — see
+      `reprocess_sports_odds.py`'s `_MANIFEST_VENUE_AGGREGATE` docstring.
 - [x] [CODE] P1. Stop writing bookmakers + `odds` into `instrument_type`; introduce the sports instrument_type
       vocabulary (betting market: match_odds / over_under / btts / spread). NOTE `canonical_writer_shaping.py:218`
       asserts _"the correct instrument_type IS 'odds'"_ — that claim must be reconciled against the shard atom
       (`instrument_type` is an INSTRUMENT axis, and `odds` is a data_type) BEFORE changing it. Read it in full first. —
-      already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C; see that doc for
-      execution).
+      ⛔ SUPERSEDED 2026-07-23 (lowercase revert) — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C; see that doc for execution).
 - [x] [CODE] P1. QG assertion: sports `data_type` ∈ the UAC **UPPER-case** sports vocabulary (per K0-DECISION (b) —
       corrected from "lower-case" for the same reason as above), `venue` ∉ {vendor names}, and `instrument_type` ∈ the
-      declared sports vocabulary — so this class cannot silently return. — already covered by
-      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C — the vocabulary direction here was reversed to
-      lower-case; see that doc for execution).
+      declared sports vocabulary — so this class cannot silently return. — ⛔ SUPERSEDED 2026-07-23 (lowercase revert) —
+      already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C — the vocabulary direction
+      here was reversed to lower-case; see that doc for execution).
 
 ### K2. Phase 2 — MIGRATE the -prd- rows (only after K1 ships)
 
@@ -405,24 +482,27 @@ Measured drift in `market-data-tick-sports-prd` (1,974,679 rows): `ODDS`/`odds` 
 `instrument_type='odds'` 1,806,527 + ~1,321 bookmaker rows + `PADDYPOWER`/`paddypower`, `PINNACLE`/`pinnacle`.
 
 - [x] [DATA] P1. New migrator targeting the **-prd-** buckets (the CF-7 script is legacy-only). DRY-RUN default,
-      backup-before-write, per-batch verification. Reuse CF-7's `_CF7_DATA_TYPE_NORMALISE` decisions verbatim. — already
-      covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C — the casing target this migration
-      would move rows TOWARD was itself reverted; see that doc for execution).
+      backup-before-write, per-batch verification. Reuse CF-7's `_CF7_DATA_TYPE_NORMALISE` decisions verbatim. — ⛔
+      SUPERSEDED 2026-07-23 (lowercase revert) — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C — the casing target this migration would move
+      rows TOWARD was itself reverted; see that doc for execution).
 - [x] [DATA] P2. The 1,337-row legacy cohort (`odds_horizon_bucket_{15m,1h,4h,1d}` + `venue=FOOTBALL`, same rows) —
-      superseded horizon naming with NO live writer; re-stamp to canonical or drop. One pass (operator-approved). —
-      already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (already re-stamped per that doc's
-      own Track record: "ALREADY DONE 2026-07-22" via market-tick-data-service@2f3fb7cc; see that doc for evidence).
-- [x] [CLEANUP] P2. Delete `migrate_sports_canonical_v9.py` per its own Delete-when marker (E8 is complete). — already
-      covered by `plans/active/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md` (tracks this exact
-      deletion's residual status; see that doc for execution).
+      superseded horizon naming with NO live writer; re-stamp to canonical or drop. One pass (operator-approved). — ⛔
+      SUPERSEDED 2026-07-23 (lowercase revert) — already covered by
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (already re-stamped per that doc's own Track record:
+      "ALREADY DONE 2026-07-22" via market-tick-data-service@2f3fb7cc; see that doc for evidence).
+- [x] [CLEANUP] P2. Delete `migrate_sports_canonical_v9.py` per its own Delete-when marker (E8 is complete). — ⛔
+      SUPERSEDED 2026-07-23 (lowercase revert) — already covered by
+      `plans/active/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md` (tracks this exact deletion's residual
+      status; see that doc for execution).
 
 ### K3. Phase 3 — prove it
 
 - [x] [DATA] P1. Re-run the § F distinct-value audit and show ZERO case-duplicates, no vendor in `venue`, and
       `instrument_type` within vocabulary. Restore the data-status distinct-values listing (§ F, [CODE] P1) so this is
-      visible in the UI instead of needing an ad-hoc query. — already covered by
-      `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C's own re-audit + restore-listing work; see that
-      doc for execution).
+      visible in the UI instead of needing an ad-hoc query. — ⛔ SUPERSEDED 2026-07-23 (lowercase revert) — already
+      covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C's own re-audit + restore-listing
+      work; see that doc for execution).
 
 ### K0-CORRECTION (operator challenge: "data_type is lowercase for sports or for all AGs? its uppercase for tradfi so thats weird")
 
@@ -457,10 +537,15 @@ group does. Any "make sports canonical" effort must decide that, not just the ca
   `canonical_writer_stamping` bridge + downstream readers that filter on these literals. Also forces the structural
   question (is `data_type` an entity axis for sports, or should entity live on its own axis as it does elsewhere?).
 
-- [ ] [ASK] P0. Operator decision on (a)/(b)/(c) before K1/K2 execute. **K2 is BLOCKED on this** — normalising 2M MDPS
+- [x] [ASK] P0. Operator decision on (a)/(b)/(c) before K1/K2 execute. **K2 is BLOCKED on this** — normalising 2M MDPS
       rows to lower-case under (a) would be actively wrong if the answer is (b), and would be only ~5% of the work under
       (c). Recommendation: **(c)**, because it is the only option that makes "sports is canonical" true rather than
-      "sports is self-consistent"; but it is a multi-week programme, not a migration script.
+      "sports is self-consistent"; but it is a multi-week programme, not a migration script. — ANSWERED: § K0-DECISION
+      directly below (same doc, operator 2026-07-18) chose **(b)** sports → UPPER everywhere, superseding this todo's
+      own (c) recommendation. ⛔ **That answer was itself REVERSED 2026-07-23** — Track C in
+      `sports_consolidated_closeout_2026_07_19.md` reverted the direction back to lower-case fleet-wide, which is why
+      every § K1/§ K2/§ K3 checkbox above already carries the "⛔ SUPERSEDED 2026-07-23 (lowercase revert)" marker.
+      Flipped here purely to record that the ASK was answered (twice, in sequence) — not left open.
 
 ### K0-DECISION (operator 2026-07-18): **(b) sports → UPPER everywhere**
 
@@ -545,7 +630,11 @@ the key was saturated. They will heal the same way if their (date, entity) cells
 explicitly once the key has a single owner.
 
 - [ ] [DATA] P2. Confirm the residual 61 `rateLimit` rows reach captured/empty (they should heal via normal re-attempt);
-      only force an explicit re-attempt if they persist after the enrichment fleet completes its range.
+      only force an explicit re-attempt if they persist after the enrichment fleet completes its range. — GENUINELY
+      OPEN: no later doc in the corpus reports re-checking this specific 61-row residual from the 2026-07-18
+      15:27-15:57Z 5-VM window. Confirming it needs a fresh manifest census on the exact (date, entity) cells, which
+      this reconciliation pass did not run (out of scope — this todo is a data-verification action, not a checkbox
+      classification). Left open.
 
 ## M. Why we get rate-limited: the divisor was a PROMISE, not a measurement — **FIXED** (deployment-service@e85d570)
 
@@ -577,9 +666,22 @@ launch.
 
 - [ ] [CODE] P1. Runtime re-division: VMs should read the CURRENT fleet size (or lease a share from a central budget)
       and re-throttle when the fleet grows, instead of trusting a launch-time constant. Until then the singleton lock is
-      doing the real work and every bypass path is a live oversubscription risk.
-- [ ] [CODE] P1. `RelaunchPreemptedVm` should RE-DERIVE the rate budget on replay rather than replaying the original
-      per-VM share — same root cause as § G-ops (replaying stale launch params).
+      doing the real work and every bypass path is a live oversubscription risk. — NARROWED, left OPEN: the crude
+      launch-time `FLEET_VMS` heuristic this todo targeted no longer exists — replaced by
+      `plans/active/data_completion_sports_2026_07_24.md`'s `launch_budget_registry.py` (deployment-service@e754c9f +
+      @1a06ffa), which is daily-quota- and time-aware, fail-closed (`assert_fleet_within_budget`), and self-enforced
+      proactively via UTC-boundary-aligned windows in the adapter (`base.py::_reserve_utc_window_slot`) rather than
+      reactive 429-backoff. The launcher also now measures `RUNNING_AF_COUNT` live at EVERY launch (§ M-FIXED item 1,
+      below), closing most of the practical oversubscription risk this todo describes. **What remains genuinely open**:
+      that same M-FIXED text explicitly says "already-running VMs keep the budget they computed at their own launch, so
+      the key stays oversubscribed until they drain... the remaining fix is runtime re-division" — i.e. a VM that is
+      ALREADY mid-flight does not dynamically re-throttle when a later VM joins the fleet. No later doc reports this
+      specific mid-flight rebalancing as shipped. Left open, narrowed to that residual.
+- [x] [CODE] P1. `RelaunchPreemptedVm` should RE-DERIVE the rate budget on replay rather than replaying the original
+      per-VM share — same root cause as § G-ops (replaying stale launch params). — SUPERSEDED: § M-FIXED item 2 below
+      (same doc, dated later) — `deployment-service@cb499b7`: `RelaunchPreemptedVm` now STRIPS
+      `SPORTS_ADAPTER_RATE_RPM`/`SPORTS_ADAPTER_CONCURRENCY`/`FLEET_VMS`/`REMAINING_DAILY_QUOTA` from the replayed env
+      so the launcher re-derives them fresh on relaunch, exactly as this todo asks. QG green, regression-pinned.
 
 ## N. Why sports downloads take "way too long" — we were using a SLEDGEHAMMER (~1,800x waste)
 
@@ -602,10 +704,23 @@ listing, not per-league re-walks), snapshots each parquet to `*.pre_round_backfi
 - [x] [OPS] P0. STOP using the full `--force` FIXTURES backfill to fix `round`. Use the surgical script. (The `--force`
       VM was already preempted and NOT relaunched, so nothing to unwind.) Pilot running:
       `--max-leagues 1 --seasons 2019 --apply`.
-- [ ] [OPS] P0. After the pilot verifies, run the full surgical backfill (all leagues x 2019-2026) in the background.
+- [x] [OPS] P0. After the pilot verifies, run the full surgical backfill (all leagues x 2019-2026) in the background. —
+      SUPERSEDED: the 2019-2020-06-05 portion of this range is now MOOT — `sports_consolidated_closeout_2026_07_19.md`
+      Track V (2026-07-27) executed the 2020-06-06 sports data-floor wipe, deleting every pre-floor
+      fixtures_schedule/fixtures_outcomes row (pre-floor is fabrication-by-construction); there is nothing left there to
+      backfill. The post-floor portion's goal (round populated, `competition_phase` sane) was independently confirmed
+      live 2026-07-21 via the zero-API-cost sibling-derivation script (`derive_sports_fixture_round_2026_07_18.py`,
+      instruments-service@e63049e7) plus two scoped backfills (§ T/§ W) — see
+      `/plans/archive/issues/sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md` (status:
+      resolved, "No code shipped this session — both real defects... were already fixed and are confirmed live"). The
+      full corpus-wide surgical run as originally scoped was never executed as such; the same end-state was reached by a
+      cheaper combination of fixes.
 - [ ] [PROCESS] P1. Generalise: before launching a `--force` whole-corpus refetch to fix ONE column, check whether a
       surgical column-filler exists. The blast radius / quota cost differ by orders of magnitude, and `--force` also
-      forfeits presence-skip resume (§ G-ops).
+      forfeits presence-skip resume (§ G-ops). — GENUINELY OPEN: grepped `/codex/12-agent-workflow/` and
+      `/codex/05-infrastructure/vm-launcher-runbook.md` for this lesson — no hit. Unlike item 2's watchdog-artifact
+      lesson (codified into `async-wait-and-poll-discipline.md` + `CLAUDE.md`), this "check for a surgical filler before
+      a full refetch" generalisation was never written into a codex SSOT. Still a live process gap.
 
 ## M-FIXED. Both rate-governance gaps CLOSED (operator: "donot just file them fix them")
 
@@ -641,4 +756,11 @@ into the same fix — carried forward here so it isn't lost with the archive:
       subject of multiple past incidents (several "RETRACTED" analyses elsewhere in this doc's family). **Done when**:
       either `emit_empty_gaps_for_entity` branches its expected-denominator by data_type (MVP set for the 4 enrichment
       entities, full set otherwise), or an operator decision accepts the wider denominator as intentional for these
-      entities and documents why.
+      entities and documents why. — GENUINELY OPEN: `plans/active/data_completion_sports_2026_07_24.md` extended the
+      `SPORTS_ENTITY_LEAGUE_COVERAGE` mechanism to WEATHER + PLAYER_VALUES (unified-api-contracts@2ec928b0 + @a0c6064e)
+      — so the coverage-map infrastructure this fix needs now exists and is proven — but that work did NOT touch
+      `emit_empty_gaps_for_entity` or the 4 per-fixture enrichment entities (FIXTURE_STATS/FIXTURE_EVENTS/
+      FIXTURE_LINEUPS/PLAYER_STATS) this todo names. The two other `emit_empty_gaps_for_entity` hits found elsewhere in
+      the corpus (`sports_satellite_ao_dispatch_batch3_2026_07_25.md`,
+      `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`) are about a DIFFERENT concern on the same
+      function (QG function-size decomposition, 89L→≤50L) — unrelated to this denominator bug. Still open.

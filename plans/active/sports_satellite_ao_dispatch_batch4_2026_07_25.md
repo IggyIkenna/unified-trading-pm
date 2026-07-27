@@ -99,40 +99,40 @@ drift_direction: advance-code
       unchanged. Source: `issues/fixtures_manifest_legacy_backfill_2026_07_24.md`.
 
       **Evidence + a genuine new finding beyond scope**: re-ran the census live — `FIXTURES` is 100,801 (NOT the
-                      expected stable 55,233), because it's actively GROWING: 44,889 of the 100,801 rows were written TODAY
-                      (2026-07-26, single burst ~01:30 UTC) via `enumerator_run_id='enum-universe-sports-20260726-013031'` —
-                      the sports expected-universe enumerator (`enumerate_expected_universe.py`) has a 10th, previously-missed
-                      call site that seeds legacy `"FIXTURES"` `expected_unattempted` rows (its `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`
-                      map had `ODDS_HORIZON_BUCKET` but no `FIXTURES` entry). This is a genuine, small, clear root-cause fix
-                      (one dict entry, directly analogous to the existing pattern) — fixed inline (not just documented) per
-                      findings-triage: added `"FIXTURES": "FIXTURES_SCHEDULE"` to the override map + a regression test (184/184
-                      pass) — `instruments-service@ca8bd7b3ab`. Full writeup + census output in the target doc's new
-                      `## Update (2026-07-26)` section (the doc's original `[DATA] P0` todo also flipped `[x]` citing the 3 SHAs).
+                          expected stable 55,233), because it's actively GROWING: 44,889 of the 100,801 rows were written TODAY
+                          (2026-07-26, single burst ~01:30 UTC) via `enumerator_run_id='enum-universe-sports-20260726-013031'` —
+                          the sports expected-universe enumerator (`enumerate_expected_universe.py`) has a 10th, previously-missed
+                          call site that seeds legacy `"FIXTURES"` `expected_unattempted` rows (its `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`
+                          map had `ODDS_HORIZON_BUCKET` but no `FIXTURES` entry). This is a genuine, small, clear root-cause fix
+                          (one dict entry, directly analogous to the existing pattern) — fixed inline (not just documented) per
+                          findings-triage: added `"FIXTURES": "FIXTURES_SCHEDULE"` to the override map + a regression test (184/184
+                          pass) — `instruments-service@ca8bd7b3ab`. Full writeup + census output in the target doc's new
+                          `## Update (2026-07-26)` section (the doc's original `[DATA] P0` todo also flipped `[x]` citing the 3 SHAs).
 
-- [ ] [DIAG] P1. **market-tick-data-service: sweep the manifest-driven `odds_horizon_bucket` index to size the extent of
-      the stale/zombie-tick contamination that predates the now-confirmed-shipped 2026-07-25 staleness-cap fix
-      (`market-data-processing-service@aa6e8ac`, verified via `git log` — added `STALENESS_CAP_SECONDS`/
-      `KICKOFF_PAST_CAP_SECONDS` to `_prepare_tick_data()`, 67/67 tests pass).** Scan
-      `processed/by_date/*/pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/data_type=odds_horizon_bucket/`
-      — via the availability-manifest index (single-walk discipline; no fresh whole-corpus GCS walk) — for repeated
-      `(fixture_id, bookmaker_key, kickoff_utc)` tuples spanning multiple `day=` partitions. Classify each hit using the
-      doc's own already-specified discriminator: zombie (`staleness_seconds` = `fetch_utc − bm_time`, or
-      `|fetch_utc − kickoff_utc|`, years-scale) vs. genuine single-snapshot real fixture (≤~26h) — do NOT flag the
-      real-fixture class (e.g. the 2025-10-23 China Superleague pair) as contamination. Read-only: produce a report
-      only, do NOT delete, overwrite, or re-derive any GCS object or manifest row. **Conflict-check clearance
-      (2026-07-25 re-check):** the flagged conflict was `sports_consolidated_closeout_2026_07_19.md`'s own Track O
-      "T-12h↔T-24h dead-zone / widen the T-24h staleness cap" item (line 494-496, still `[ ]` open, re-verified
-      2026-07-25) — this is a DIFFERENT cap in a DIFFERENT file/mechanism entirely (Track O's is a per-horizon-target
-      deviation cap in `bucket_assignment_adapter.py`'s TIER1_HORIZONS spacing logic; this todo's is the already-shipped
-      fetch-based `STALENESS_CAP_SECONDS` zombie-tick rejection). This candidate is read-only and touches neither Track
-      O's target file nor its mechanism, so it cannot regress or race that still-open item — provably no overlap, not
-      just "not literally the same fix." NOTE FOR THE DISPATCHED WORKER: do not conflate the two staleness caps in your
-      report — explicitly name which one you mean if the term comes up. (repo: market-tick-data-service, new read-only
-      scan script; reads market-data-tick-sports-prd + the sports availability-manifest index only). **Done when**: a
-      written report (scratchpad or a new read-only script under market-tick-data-service) cites total contaminated
-      `day=` shard/row counts, the affected `league_id` list, and the zombie/genuine split for the 7 named control dates
-      (Russia-Premier-League 2025-09-02/03/09, 10-07, 11-11; Australia-A-League 09-03/09-09; the 2025-10-23 real-fixture
-      control), with the 2025-10-23 pair correctly excluded from the contamination count. Source:
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (data_engineering slot-10) — market-tick-data-service@76ca401f.** Sweep executed
+      via a new read-only script
+      (`market-tick-data-service/scripts/sweep_sports_odds_horizon_bucket_zombie_contamination_2026_07_27.py`):
+      manifest-driven (single bounded `read_availability_index()` read, zero fresh corpus walk), then a bounded
+      day-scoped `list_blobs` per in-scope `day=` partition (PATH DISCOVERY, not construction — live-confirmed the
+      manifest's own `league_id` column value does NOT reliably match the real GCS path segment for this data_type, e.g.
+      manifest `soccer_russia_premier_league` vs. real path `league_id=RUSSIA_PREMIER_LEAGUE`; both an uppercase
+      short-code convention and a lowercase `soccer_x_y` convention coexist as SEPARATE real objects on some days).
+      **Scope (deliberate, not silent)**: full sweep of the 17 "sparse" leagues (<=30 distinct captured days — 3,838
+      shard rows across 24 distinct `day=` partitions, matching the root-cause mechanism: a board only goes idle/frozen
+      when nobody is fetching fresh markets for it). The 26 actively-fetched leagues (114,015 shard rows, 85–996
+      distinct days each, consistent daily volume — the opposite signature of a frozen board) were explicitly NOT swept
+      this pass; a full-corpus sweep is ~118k GCS-object reads, squarely HEAVY I/O belonging on a dedicated VM per
+      CLAUDE.md, not an interactive DIAG task — recommend a follow-up VM-run full sweep if population-wide certainty
+      across all 43 leagues is ever needed. **Findings**: `RUSSIA_PREMIER_LEAGUE` zombie CONFIRMED STILL LIVE, spanning
+      18 distinct `day=` partitions (wider than the 5 originally documented) — 3 bookmakers
+      (bovada/williamhill/pinnacle) × 18 days = 54 contaminated rows / 20 contaminated shards, `staleness_seconds`
+      ≈1349.8 days (≈3.7 years, using the shard's own materialised `staleness_seconds` column, no recompute needed).
+      `AUSTRALIA_ALEAGUE`'s originally-documented zombie instance is NO LONGER PRESENT — live-verified
+      `object_present     = False` for both control dates (2025-09-03, 2025-09-09); already resolved by intervening work
+      between the 2026-07-14 diagnosis and this sweep. `CHINA_SUPER_LEAGUE` 2025-10-23 genuine-fixture control correctly
+      EXCLUDED — object present, 0 repeated/zombie rows attributed to that league. Downstream P2 (purge/re-derive the
+      contaminated `RUSSIA_PREMIER_LEAGUE` shards) is unblocked by this sizing but NOT started this pass (read-only DIAG
+      scope only — zero GCS objects or manifest rows deleted/overwritten/re-derived). Source:
       `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`.
 
 ## Deferred — still genuinely conflict-gated (re-checked 2026-07-25, NOT dispatched)

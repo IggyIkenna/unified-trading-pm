@@ -43,6 +43,15 @@
 # Lock file at ${XDG_RUNTIME_DIR:-/tmp}/slot-cron-ff-pull.$(id -u).lock prevents overlapping cron
 # runs (per-uid so a root run and an ubuntu run never collide on the same lock).
 #
+# Per-repo min-interval throttle (widen-pm-cron-cadence_2026_07_27, cron-repo-min-interval.txt,
+# same directory/format as cron-branch-overrides.txt: "repo_name seconds" per line, # and blank
+# lines ignored). This cron's whole job is keeping an otherwise-IDLE repo from going stale —
+# a repo under constant active shipping (PM specifically) already gets that from its own commit
+# traffic, so running the full FF-pull dance on it every single tick is pure extra git-state
+# churn on an already-busy repo, not additional freshness. State is a per-clone-identity temp
+# file (mirrors the dirty-streak gate's own repo_key convention below), so throttling one slot's
+# clone never affects another slot's clone of the same repo name.
+#
 # Codex SSOT: codex/05-infrastructure/per-tab-worktrees.md
 
 set -euo pipefail
@@ -85,6 +94,38 @@ branch_for_repo() {
         fi
     done
     echo "${INTEGRATION_BRANCH}"
+}
+
+# Per-repo min-interval throttle config (widen-pm-cron-cadence_2026_07_27) — same
+# directory/format/parsing shape as the branch-overrides file above, deliberately, so both
+# configs stay discoverable together. "repo_name seconds" per line; a repo with no entry
+# here has 0 = never throttled (today's default for everything except the operator-set entry).
+MIN_INTERVAL_FILE="$(dirname "${BASH_SOURCE[0]}")/cron-repo-min-interval.txt"
+MIN_INTERVAL_REPOS=()
+MIN_INTERVAL_SECONDS=()
+if [[ -f "${MIN_INTERVAL_FILE}" ]]; then
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+        line="${line%%#*}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        [[ -z "${line// }" ]] && continue
+        repo=""; secs=""
+        read -r repo secs <<< "${line}"
+        if [[ -n "${repo}" && -n "${secs}" ]]; then
+            MIN_INTERVAL_REPOS+=("${repo}")
+            MIN_INTERVAL_SECONDS+=("${secs}")
+        fi
+    done < "${MIN_INTERVAL_FILE}"
+fi
+
+min_interval_for_repo() {
+    local repo_name="$1" i
+    for i in "${!MIN_INTERVAL_REPOS[@]}"; do
+        if [[ "${MIN_INTERVAL_REPOS[$i]}" == "${repo_name}" ]]; then
+            echo "${MIN_INTERVAL_SECONDS[$i]}"
+            return 0
+        fi
+    done
+    echo "0"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -329,6 +370,26 @@ ff_one() {
     repo_key="$(pwd)"
     branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "DETACHED")
     int_branch="$(branch_for_repo "${repo_name}")"
+
+    # Min-interval throttle (widen-pm-cron-cadence_2026_07_27): skip this repo entirely,
+    # before any other per-repo work, if it was processed more recently than its configured
+    # min-interval (cron-repo-min-interval.txt). Keyed by repo_key (the resolved clone path,
+    # same identity the dirty-streak gate below already uses) so two slots' clones of the
+    # same repo NAME never share throttle state.
+    local _min_iv _state_file _last_run _now _elapsed
+    _min_iv="$(min_interval_for_repo "${repo_name}")"
+    if [[ "${_min_iv}" -gt 0 ]]; then
+        _state_file="${TMPDIR:-/tmp}/slot-cron-ff-pull.last-run.$(printf '%s' "${repo_key}" | shasum -a 256 2>/dev/null | cut -d' ' -f1)"
+        _now=$(date +%s)
+        _last_run=$(cat "${_state_file}" 2>/dev/null || echo 0)
+        _elapsed=$(( _now - _last_run ))
+        if [[ "${_elapsed}" -lt "${_min_iv}" ]]; then
+            log_quiet "[skip:min-interval] ${repo_name} — last processed ${_elapsed}s ago, need ${_min_iv}s"
+            popd >/dev/null
+            return 0
+        fi
+        printf '%s' "${_now}" > "${_state_file}" 2>/dev/null || true
+    fi
 
     if [[ "${branch}" == "DETACHED" || "${branch}" == "HEAD" ]]; then
         log "[skip:detached] ${repo_name} — not on a branch"
