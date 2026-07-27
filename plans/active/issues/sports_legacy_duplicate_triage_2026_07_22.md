@@ -53,7 +53,7 @@ tags:
 related:
   [
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
-    /plans/active/issues/sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md,
+    /plans/archive/issues/sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/sports-gcs-path-ssot.md,

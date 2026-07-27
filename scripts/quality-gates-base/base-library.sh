@@ -482,7 +482,11 @@ if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; 
     mkdir -p "$BASEDPYRIGHT_CACHE_DIR"
     BP_PID=""
     trap '''[[ -n "$BP_PID" ]] && kill -9 $BP_PID 2>/dev/null''' INT TERM
-    _bp_out="/tmp/bp_out.$$"
+    # TMPDIR-aware (matches BASEDPYRIGHT_CACHE_DIR above, and the base-service.sh sibling fix) —
+    # a hardcoded /tmp path here (and at every other checker-capture site below) made the capture
+    # write fail with ENOSPC whenever a shared host's /tmp tmpfs was full, producing a false gate
+    # failure indistinguishable from a real one (qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md).
+    _bp_out="${TMPDIR:-/tmp}/bp_out.$$"
     qg_prof start typecheck
     run_timeout "${PYRIGHT_TIMEOUT:-120}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
     BP_PID=$!
@@ -574,11 +578,11 @@ _AST_CHECKER="$(cd "$(dirname "${BASH_SOURCE[0]}")/../quality_gates" && pwd)/che
 _inside_extra_args=()
 for _excl in "${INSIDE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _inside_extra_args+=("--exclude-glob" "$_excl"); done
 if python3 "$_AST_CHECKER" --source-dir "$SOURCE_DIR" --self-pkg "$_SELF_PKG" \
-    "${_inside_extra_args[@]}" 2>/tmp/_inside_imports_qg.err; then
+    "${_inside_extra_args[@]}" 2>${TMPDIR:-/tmp}/_inside_imports_qg.err; then
     log_success "No imports inside functions"
 else
     log_fail "Imports inside functions — move to top (AST-detected)"
-    head -10 /tmp/_inside_imports_qg.err 2>/dev/null
+    head -10 ${TMPDIR:-/tmp}/_inside_imports_qg.err 2>/dev/null
     V=$(( V + 1 ))
 fi
 
@@ -977,15 +981,15 @@ if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
         # a gate fail. Previously any non-zero exit was reported as "vulnerabilities", so a network
         # blip reddened a green PR. A genuine finding still writes the json and still fails.
         _pa_rc=0
-        $PYTHON_CMD -m pip_audit --format json $_pa_extra -o /tmp/pip-audit-lib-output.json >/dev/null 2>&1 || _pa_rc=$?
+        $PYTHON_CMD -m pip_audit --format json $_pa_extra -o ${TMPDIR:-/tmp}/pip-audit-lib-output.json >/dev/null 2>&1 || _pa_rc=$?
         if [[ $_pa_rc -eq 0 ]]; then
             qg_cache_store pip_audit_deps_hash "$_pa_key"
-        elif [[ -s /tmp/pip-audit-lib-output.json ]] && $PYTHON_CMD -c "import json,sys; d=json.load(open('/tmp/pip-audit-lib-output.json')); sys.exit(0 if any(x.get('vulns') for x in d.get('dependencies',[])) else 1)" 2>/dev/null; then
+        elif [[ -s ${TMPDIR:-/tmp}/pip-audit-lib-output.json ]] && $PYTHON_CMD -c "import json,sys; d=json.load(open('${TMPDIR:-/tmp}/pip-audit-lib-output.json')); sys.exit(0 if any(x.get('vulns') for x in d.get('dependencies',[])) else 1)" 2>/dev/null; then
             log_fail "pip-audit vulnerabilities"
             $PYTHON_CMD -c "
 import json
 try:
-    data = json.load(open('/tmp/pip-audit-lib-output.json'))
+    data = json.load(open('${TMPDIR:-/tmp}/pip-audit-lib-output.json'))
     for d in data.get('dependencies', []):
         for v in d.get('vulns', []):
             print(f'  {d[\"name\"]} {d[\"version\"]}: {v[\"id\"]} — {v.get(\"description\",\"\")[:120]}')
@@ -1123,11 +1127,11 @@ fi
 # 1F-extend (DF-7).
 _CHAIN_INCLUSION_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_chain_set_inclusion.py"
 if [ -f "$_CHAIN_INCLUSION_CHECKER" ]; then
-    if $PYTHON_CMD "$_CHAIN_INCLUSION_CHECKER" >/tmp/chain_set_inclusion_qg_lib.log 2>&1; then
+    if $PYTHON_CMD "$_CHAIN_INCLUSION_CHECKER" >${TMPDIR:-/tmp}/chain_set_inclusion_qg_lib.log 2>&1; then
         log_ok "STEP 5.72: UAC chain_env MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES ⊇ GAS_FEE_CHAIN_START_DATES"
     else
         log_fail "STEP 5.72: UAC chain_env inclusion invariant violated (DF-7). Output:"
-        cat /tmp/chain_set_inclusion_qg_lib.log
+        cat ${TMPDIR:-/tmp}/chain_set_inclusion_qg_lib.log
         log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_chain_set_inclusion.py"
         exit 1
     fi
@@ -1142,11 +1146,11 @@ fi
 # address, EVENT_CONTRACT expiry). Only runs for UAC (UAC_CANONICAL_EXEMPT=true).
 _UAC_INSTRUMENT_VALIDATOR_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_uac_instrument_record_validator.py"
 if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_INSTRUMENT_VALIDATOR_CHECKER" ]; then
-    if $PYTHON_CMD "$_UAC_INSTRUMENT_VALIDATOR_CHECKER" >/tmp/uac_instrument_validator_qg.log 2>&1; then
+    if $PYTHON_CMD "$_UAC_INSTRUMENT_VALIDATOR_CHECKER" >${TMPDIR:-/tmp}/uac_instrument_validator_qg.log 2>&1; then
         log_ok "STEP 5.83: UAC InstrumentRecord hard-schema enforcement validator present (hard_schema Phase 1 guard)"
     else
         log_fail "STEP 5.83: UAC InstrumentRecord hard-schema enforcement MISSING or BROKEN:"
-        cat /tmp/uac_instrument_validator_qg.log
+        cat ${TMPDIR:-/tmp}/uac_instrument_validator_qg.log
         log_fail "         Fix: restore _enforce_per_asset_group_required_fields() in InstrumentRecord"
         exit 1
     fi
@@ -1159,11 +1163,11 @@ fi
 # Only runs for UAC (UAC_CANONICAL_EXEMPT=true).
 _UAC_SOURCE_CAPABILITY_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_uac_source_capability_metadata.py"
 if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_SOURCE_CAPABILITY_CHECKER" ]; then
-    if $PYTHON_CMD "$_UAC_SOURCE_CAPABILITY_CHECKER" "$WORKSPACE_ROOT" >/tmp/uac_source_capability_qg.log 2>&1; then
+    if $PYTHON_CMD "$_UAC_SOURCE_CAPABILITY_CHECKER" "$WORKSPACE_ROOT" >${TMPDIR:-/tmp}/uac_source_capability_qg.log 2>&1; then
         log_ok "STEP 5.85: UAC SourceCapability structured metadata present on all venues"
     else
         log_fail "STEP 5.85: SourceCapability instances missing chain= or kind= kwargs:"
-        cat /tmp/uac_source_capability_qg.log
+        cat ${TMPDIR:-/tmp}/uac_source_capability_qg.log
         log_fail "         Fix: add chain=... kind=... to each SourceCapability() call"
         exit 1
     fi
@@ -1177,11 +1181,11 @@ fi
 # SSOT: plans/active/canary_coverage_qg_enforcement_2026_05_20.md Phase 2
 _UAC_CASSETTE_LINKAGE_CHECKER="${PROJECT_ROOT}/scripts/check_cassette_prod_consumer_linkage.py"
 if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_CASSETTE_LINKAGE_CHECKER" ]; then
-    if $PYTHON_CMD "$_UAC_CASSETTE_LINKAGE_CHECKER" >/tmp/uac_cassette_linkage_qg.log 2>&1; then
+    if $PYTHON_CMD "$_UAC_CASSETTE_LINKAGE_CHECKER" >${TMPDIR:-/tmp}/uac_cassette_linkage_qg.log 2>&1; then
         log_ok "STEP 5.86: UAC cassette→prod-consumer linkage OK (no unallowlisted orphans)"
     else
         log_fail "STEP 5.86: Unallowlisted orphan cassette(s) found:"
-        cat /tmp/uac_cassette_linkage_qg.log
+        cat ${TMPDIR:-/tmp}/uac_cassette_linkage_qg.log
         exit 1
     fi
 fi
@@ -1194,15 +1198,15 @@ fi
 # SSOT: plans/active/canary_coverage_qg_enforcement_2026_05_20.md Phase 2
 _UAC_PROD_URL_CHECKER="${PROJECT_ROOT}/scripts/check_prod_url_cassette_coverage.py"
 if [ "${UAC_CANONICAL_EXEMPT:-false}" = "true" ] && [ -f "$_UAC_PROD_URL_CHECKER" ]; then
-    if $PYTHON_CMD "$_UAC_PROD_URL_CHECKER" --warn-only >/tmp/uac_prod_url_coverage_qg.log 2>&1; then
-        if grep -q "STEP 5.87.*WARN" /tmp/uac_prod_url_coverage_qg.log 2>/dev/null; then
+    if $PYTHON_CMD "$_UAC_PROD_URL_CHECKER" --warn-only >${TMPDIR:-/tmp}/uac_prod_url_coverage_qg.log 2>&1; then
+        if grep -q "STEP 5.87.*WARN" ${TMPDIR:-/tmp}/uac_prod_url_coverage_qg.log 2>/dev/null; then
             log_warn "STEP 5.87: prod-URL→cassette coverage gap (run scripts/check_prod_url_cassette_coverage.py for full list)"
         else
             log_ok "STEP 5.87: All prod URL hosts have cassette coverage or are allowlisted"
         fi
     else
         log_warn "STEP 5.87: prod_url_has_cassette checker error:"
-        cat /tmp/uac_prod_url_coverage_qg.log
+        cat ${TMPDIR:-/tmp}/uac_prod_url_coverage_qg.log
     fi
 fi
 
@@ -1238,11 +1242,11 @@ if [ -f "$_BAR_EDGE_CHECKER" ]; then
     _BE_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BE_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if "${PYTHON_CMD:-python3}" "$_BAR_EDGE_CHECKER" \
-            --workspace-root "$REPO_ROOT" --scope "$_BE_REPO" "${_BE_SRC_ARG[@]}" >/tmp/bar_edge_open_ingestion_qg.log 2>&1; then
+            --workspace-root "$REPO_ROOT" --scope "$_BE_REPO" "${_BE_SRC_ARG[@]}" >${TMPDIR:-/tmp}/bar_edge_open_ingestion_qg.log 2>&1; then
         log_ok "STEP 5.92: No NEW open-edge (left) bar ingestion (closed candles stamped on the right/close edge)"
     else
         log_fail "STEP 5.92: NEW open-edge (left) bar ingestion site (not baselined). Use the vendor close field or compute_bar_close_boundary(open_ts, timeframe) → t_close:"
-        cat /tmp/bar_edge_open_ingestion_qg.log
+        cat ${TMPDIR:-/tmp}/bar_edge_open_ingestion_qg.log
         exit 1
     fi
 fi
@@ -1259,11 +1263,11 @@ if [ -f "$_CANON_MODEL_CHECKER" ]; then
     _CM_SRC_ARG=()
     [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _CM_SRC_ARG=(--source-dir "$SOURCE_DIR")
     if "${PYTHON_CMD:-python3}" "$_CANON_MODEL_CHECKER" \
-            --workspace-root "$REPO_ROOT" --scope "$_CM_REPO" "${_CM_SRC_ARG[@]}" >/tmp/canonical_model_regressions_qg.log 2>&1; then
+            --workspace-root "$REPO_ROOT" --scope "$_CM_REPO" "${_CM_SRC_ARG[@]}" >${TMPDIR:-/tmp}/canonical_model_regressions_qg.log 2>&1; then
         log_ok "STEP 5.93: No NEW coarse pipeline_mode / exact-coarse reader / Era-A chain-write regressions"
     else
         log_fail "STEP 5.93: NEW canonical-model regression (not baselined). Use source-aware batch_<source> / prefix-match readers / Era-B data_type=trades for chains:"
-        cat /tmp/canonical_model_regressions_qg.log
+        cat ${TMPDIR:-/tmp}/canonical_model_regressions_qg.log
         exit 1
     fi
 fi
@@ -1278,11 +1282,11 @@ _NOFB_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_fa
 if [ -f "$_NOFB_CHECKER" ]; then
     _FB_REPO=$(basename "$PROJECT_ROOT")
     if "${PYTHON_CMD:-python3}" "$_NOFB_CHECKER" \
-            --workspace-root "$REPO_ROOT" --scope "$_FB_REPO" >/tmp/no_fallback_imports_qg.log 2>&1; then
+            --workspace-root "$REPO_ROOT" --scope "$_FB_REPO" >${TMPDIR:-/tmp}/no_fallback_imports_qg.log 2>&1; then
         log_ok "STEP 5.94: No NEW try/except-ImportError fallback-import shims (baseline-ratchet, no-empty-fallbacks)"
     else
         log_fail "STEP 5.94: NEW try/except-ImportError fallback-import shim (not baselined). Import directly + declare the dep in pyproject, or add '# noqa: fallback-import' with a one-line reason:"
-        cat /tmp/no_fallback_imports_qg.log
+        cat ${TMPDIR:-/tmp}/no_fallback_imports_qg.log
         exit 1
     fi
 fi
@@ -1298,11 +1302,11 @@ _RUFFRR_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_ruf
 if [ -f "$_RUFFRR_CHECKER" ]; then
     _RR_REPO=$(basename "$PROJECT_ROOT")
     if "${PYTHON_CMD:-python3}" "$_RUFFRR_CHECKER" \
-            --workspace-root "$REPO_ROOT" --scope "$_RR_REPO" >/tmp/ruff_rule_ratchet_qg.log 2>&1; then
+            --workspace-root "$REPO_ROOT" --scope "$_RR_REPO" >${TMPDIR:-/tmp}/ruff_rule_ratchet_qg.log 2>&1; then
         log_ok "STEP 5.95: No NEW naive-datetime (DTZ) / direct cloud-SDK (TID251) sites (baseline-ratchet)"
     else
         log_fail "STEP 5.95: NEW naive-datetime (DTZ) / direct cloud-SDK (TID251) site (not baselined). Use datetime.now(timezone.utc) / get_storage_client()/get_secret_client(), or a ruff '# noqa: <code>' with a one-line reason:"
-        cat /tmp/ruff_rule_ratchet_qg.log
+        cat ${TMPDIR:-/tmp}/ruff_rule_ratchet_qg.log
         exit 1
     fi
 fi
@@ -1317,11 +1321,11 @@ _BAG_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_bla
 if [ -f "$_BAG_CHECKER" ]; then
     _BAG_REPO=$(basename "$PROJECT_ROOT")
     if "${PYTHON_CMD:-python3}" "$_BAG_CHECKER" \
-            --workspace-root "$REPO_ROOT" --scope "$_BAG_REPO" >/tmp/no_blank_asset_group_qg.log 2>&1; then
+            --workspace-root "$REPO_ROOT" --scope "$_BAG_REPO" >${TMPDIR:-/tmp}/no_blank_asset_group_qg.log 2>&1; then
         log_success "STEP 5.96: No NEW blank asset_group at record_captured callsites (baseline-ratchet)"
     else
         log_fail "STEP 5.96: NEW blank asset_group callsite — use a non-blank asset_group or add '# noqa: blank-asset-group  <reason>' on the same line:"
-        cat /tmp/no_blank_asset_group_qg.log
+        cat ${TMPDIR:-/tmp}/no_blank_asset_group_qg.log
         exit 1
     fi
 fi
@@ -1337,11 +1341,11 @@ _ESF_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_emp
 if [ -f "$_ESF_CHECKER" ]; then
     _ESF_REPO=$(basename "$PROJECT_ROOT")
     if "${PYTHON_CMD:-python3}" "$_ESF_CHECKER" \
-            --workspace-root "$REPO_ROOT" --scope "$_ESF_REPO" >/tmp/no_empty_string_fallback_qg.log 2>&1; then
+            --workspace-root "$REPO_ROOT" --scope "$_ESF_REPO" >${TMPDIR:-/tmp}/no_empty_string_fallback_qg.log 2>&1; then
         log_ok "STEP 5.101: No NEW .get(\"key\", \"\") empty-string-fallback sites (baseline-ratchet)"
     else
         log_fail "STEP 5.101: NEW .get(\"key\", \"\") empty-string-fallback site (not baselined). Rewrite to fail fast (raise, or return None and let the caller decide), or add '# noqa: qg-empty-fallback' with a one-line reason:"
-        cat /tmp/no_empty_string_fallback_qg.log
+        cat ${TMPDIR:-/tmp}/no_empty_string_fallback_qg.log
         exit 1
     fi
 fi
@@ -1380,7 +1384,7 @@ if [ "$ACT_MODE" = true ]; then
     for _sp in "${ACT_SECRETS_FILE:-}" "${REPO_ROOT}/.act-secrets" "${HOME}/.secrets"; do
         [ -n "$_sp" ] && [ -f "$_sp" ] && { ACT_SECRETS_ARG="--secret-file $_sp"; break; }
     done
-    _ACT_LOG="$(mktemp /tmp/act-output.XXXXXX)"
+    _ACT_LOG="$(mktemp ${TMPDIR:-/tmp}/act-output.XXXXXX)"
     if act -j quality-gates --container-architecture linux/amd64 ${ACT_SECRETS_ARG} 2>&1 | tee "$_ACT_LOG"; then
         log_success "Act simulation PASSED"
     else
@@ -1437,15 +1441,15 @@ _DC_WS="${WORKSPACE_ROOT:-$(cd "$PROJECT_ROOT/.." && pwd)}"
 _DEFI_CITE_CHECKER="${_DC_WS}/unified-trading-pm/scripts/quality_gates/check_defi_address_citations.py"
 if [ -f "$_DEFI_CITE_CHECKER" ]; then
     _DC_REPO=$(basename "$PROJECT_ROOT")
-    if $PYTHON_CMD "$_DEFI_CITE_CHECKER" --workspace-root "$_DC_WS" --scope "$_DC_REPO" >/tmp/defi_address_citations_qg.log 2>&1; then
-        if grep -q '^\[WARN\]' /tmp/defi_address_citations_qg.log 2>/dev/null; then
-            log_warn "STEP 5.97: $(grep -c '^\[WARN\]' /tmp/defi_address_citations_qg.log) baselined uncited DeFi address(es); 0 new (ratchet down when citations are back-filled)"
+    if $PYTHON_CMD "$_DEFI_CITE_CHECKER" --workspace-root "$_DC_WS" --scope "$_DC_REPO" >${TMPDIR:-/tmp}/defi_address_citations_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/defi_address_citations_qg.log 2>/dev/null; then
+            log_warn "STEP 5.97: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/defi_address_citations_qg.log) baselined uncited DeFi address(es); 0 new (ratchet down when citations are back-filled)"
         else
             log_success "STEP 5.97: No new uncited DeFi contract addresses (citation ratchet)"
         fi
     else
         log_fail "STEP 5.97: NEW uncited Ethereum contract address (not in defi_address_citation_baseline.yaml). Add \`# DERIVED <YYYY-MM-DD> from <chain> <source>\` on the same line, or \`# QG-allow: defi-citation — <reason>\` for factory-deployed pool addresses:"
-        cat /tmp/defi_address_citations_qg.log
+        cat ${TMPDIR:-/tmp}/defi_address_citations_qg.log
         log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/defi_address_citation_baseline.yaml (NEVER raise a count)"
         exit 1
     fi

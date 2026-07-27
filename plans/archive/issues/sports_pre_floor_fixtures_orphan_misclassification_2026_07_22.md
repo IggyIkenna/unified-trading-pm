@@ -48,6 +48,10 @@ source: found while preparing the sports orphan back-fill (estate_orphan_assessm
 depends_on: []
 ---
 
+> **🟢 RESOLVED 2026-07-27** — all 4 todos done, `instruments-service@05c6a75f`. Registry gap fixed
+> (`unified-api-contracts@46d865df`), pre-floor wipe executed + census-verified. Archived per the RE-TRIAGE (2026-07-27)
+> — CLOSED verdict below.
+
 # Sports pre-floor FIXTURES_SCHEDULE/FIXTURES_OUTCOMES misclassification (2026-07-22)
 
 ## What happened
