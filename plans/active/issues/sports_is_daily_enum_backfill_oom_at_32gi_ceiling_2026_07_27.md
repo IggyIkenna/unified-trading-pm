@@ -207,7 +207,7 @@ Before trusting the running backfill, had to resolve a false NEGATIVE: a researc
 `is-daily-enum-sports` image contained the item-1 fix via `git merge-base --is-ancestor 5134a5f0 origin/main`, got
 `false`, and concluded the image was stale (report cited "LDR is 565 commits ahead of main"). This repo is
 100%-`ldr_main` (squash-merge on every LDR→main promote), which is a KNOWN, already-codified false-negative trap for
-exactly this check (`codex/08-workflows/ci-cd-flow.md` § "the ancestor-check validity map", from a 2026-07-25 incident)
+exactly this check (`/codex/08-workflows/ci-cd-flow.md` § "the ancestor-check validity map", from a 2026-07-25 incident)
 — the ancestor check can never validly answer "is commit X live" for this fleet. Direct blob comparison, with a negative
 control against the fix's own parent commit (which showed a genuinely different blob hash, ruling out a coincidental
 match), confirmed the exact commit that built the running image (`656ac467`) is byte-identical to the fix commit for
@@ -246,7 +246,7 @@ check of the most recent "8-consecutive-green" cron days (07-19..07-26) shows a 
 recency_ but never approaches zero. Broke the comparison down by `data_type` for both my 5 dates and the 07-24..07-26
 window: several data_types (`FIXTURES_OUTCOMES` ~98-99% unattempted both windows, `SFI_PROGRESSIVE_STATS` ~75-91%,
 `WEATHER` ~75-90%, `FIXTURES` ~70-75%) show structurally high, near-identical unattempted rates on BOTH — these are
-pre-existing, already-documented honest-absence overrides (`codex/02-data/availability-manifest-and-data-status.md`'s
+pre-existing, already-documented honest-absence overrides (`/codex/02-data/availability-manifest-and-data-status.md`'s
 per-`(source, data_type)` override table, e.g. SFI's progressive endpoint returning empty for its whole pre-2020 range
 and beyond — not a bug), while every other data_type (`TEAMS`, `STANDINGS`, `FIXTURE_EVENTS`/`LINEUPS`/`STATS`,
 `PLAYER_STATS`, `INJURIES`, `PLAYER_VALUES`, `XG*`) sits at ~0% unattempted on both. My 5 target dates match or BEAT the

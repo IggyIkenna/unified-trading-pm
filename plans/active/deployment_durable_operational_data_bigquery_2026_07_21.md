@@ -77,7 +77,7 @@ and fix those as part of the plan too — otherwise I just want the best, most r
   has zero references to these event types.
 - The one subscription that exists (`deployment-events-monitor`, pull, 7-day retention, provisioned by
   `deployment-service/scripts/setup-pubsub.sh`) is **orphaned** — `deployment_service/monitor.py` has no `pubsub` import
-  at all; it reads GCS directly. `codex/05-infrastructure/event-sink-chain.md`'s claim that `monitor.py` pulls this
+  at all; it reads GCS directly. `/codex/05-infrastructure/event-sink-chain.md`'s claim that `monitor.py` pulls this
   subscription is **stale/wrong** — flagged as its own fix below, not actioned as part of this plan's main scope. **Net:
   migration cost for the topic/schema redesign is effectively zero** — nothing real consumes the current shape.
 - The only things that DO assert on today's envelope (and need a one-line update if the shape changes for the signals

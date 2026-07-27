@@ -132,7 +132,7 @@ locked_since:
   `41ca79d7`) are live. **Method**:
   `unified_trading_library.manifest_writer.read_capture_status_counts(bucket, date_range=...)` — single manifest-index
   read (`_index/availability_index.parquet`), no whole-corpus GCS walk, per
-  codex/02-data/availability-manifest-and-data-status.md's documented query path. Bucket:
+  /codex/02-data/availability-manifest-and-data-status.md's documented query path. Bucket:
   `market-data-tick-pred-prd-central-element-323112`. Because the historical re-backfill itself is still
   `[BLOCKED-OPERATOR-DECISION]` (unlaunched), a before/after over the SAME historical target-dates would show no change
   — the only currently-observable "after" data is what the LIVE daily cron has captured for target days AFTER the

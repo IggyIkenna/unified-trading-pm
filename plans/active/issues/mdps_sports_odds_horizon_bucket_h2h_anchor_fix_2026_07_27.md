@@ -24,7 +24,11 @@ stage: [meta]
 repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: [sports, odds, mdps, honest-absence, data-correctness, pivot, schema-design]
-related: [/plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md]
+related:
+  [
+    /plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+  ]
 created: 2026-07-27
 priority: P1
 parent_epic: mtds_mdps_master
