@@ -265,3 +265,14 @@ specific to any one task.
   script remains code-complete, twice-verified, and uncommitted (commit-only-from-green-tree hard rule) — next session
   should re-attempt QG once a fleet-wide load/disk snapshot shows meaningfully lower concurrent-QG count and higher
   headroom than the two data points recorded here (14.93/97%-full and 17.37/95%-full), not just "try again."
+- 2026-07-27T09:58Z (slot-10, likely ROOT-CAUSE RESOLUTION): `df -h /` now reports **`484G 281G 203G 59% /`** — the
+  filesystem's total SIZE grew from 290G to 484G (used bytes ~unchanged at ~281G), meaning the underlying volume was
+  actually **expanded** (an operator/infra action, not cleanup) between 09:35Z and 09:58Z. This directly resolves the
+  root cause this entire issue doc has tracked since 2026-07-26. `uptime` load average also dropped to **7.24** (1-min,
+  down from the 14.93/17.37 bad points). Fleet QG census at this moment: 4 concurrent full QGs still running
+  (features-service on slots 11/5/8, unified-trading-pm on slot-6) — still over the nominal `max(2,floor(cores/4))=2`
+  cap, but this is now consistent with "many slots resuming stalled work now that the blocker is lifting," not ongoing
+  contention. **If this volume-expansion holds and the concurrent-QG count naturally drops as those catch up, this doc
+  can likely move toward RESOLVED soon** — next entry should confirm sustained headroom (not just one good snapshot)
+  before declaring it closed, since this doc has seen brief recoveries reverse before (see the 07-26 "MOOT" mark that
+  later regressed).
