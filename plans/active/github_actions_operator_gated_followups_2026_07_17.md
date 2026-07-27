@@ -32,7 +32,7 @@ related:
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: 2026-07-24
+last_updated: 2026-07-27
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -497,16 +497,72 @@ were knowable before writing any code. Measure the running cost of a mechanism B
 
 ## Deferred work after 2026-07-23
 
-| #   | Item                                                                   | State / why deferred                                                                                                                                                                                                            | Blocked on               |
-| --- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| 1   | **Trading kill-switch is a no-op** (`halt-order-flow` has no listener) | **OPERATOR-OWNED.** Verified first-hand: execution-service has only a `dependency-update` listener; 204 reads as success; the code's own comment predicts a 404 that never comes. Touches live trading behaviour — not started. | Operator ruling          |
-| 2   | **Fleet release tagging dead since 2026-06-27**                        | **NOT DONE — real work, highest technical priority.** `reconcile_release_tags.py:51` expects a static `version =`; fleet moved to `dynamic` + hatch-vcs. 0 tags in ~4 weeks; `publish-package` run 0×/7d.                       | Nobody                   |
-| 3   | **QG sentinel is environment-blind**                                   | **NOT DONE.** Gate-bypass: a standalone (prod-default) gate pass writes a sentinel that quickmerge (dev-mode) then honours, skipping the failing suite.                                                                         | Operator picks fix split |
-| 4   | `staging_versions` dep-gate fix                                        | **BLOCKED — do not action independently.** Its premise was inverted by finding F2; `staging_versions` tracks the real git tag, `versions` does not.                                                                             | Item 2                   |
-| 5   | Codex staging re-entry procedure + stale branch-model sections         | **NOT DONE.** `ci-cd-flow.md` L75-109/L763/L777-786/L1183 still describe staging as canonical; nothing in codex says the disabled triggers must be uncommented on re-entry.                                                     | Nobody                   |
-| 6   | 4 orphan dispatches · 4 dead listeners · ~873 vacuous cron runs/wk     | **NOT DONE, P2.** All catalogued with file:line in the sweep issue. `digest-drift-sweep` is the only one costing real money (never converges, fans out to `ubuntu-latest`).                                                     | Nobody                   |
-| 7   | Two-week billing re-pull vs the Phase-0 baseline                       | **CANNOT BE DONE YET** — needs elapsed time. Earliest ~2026-07-31. Method + exact commands are in the 2026-07-23 billing entry above; re-run verbatim.                                                                          | The calendar             |
+| #   | Item                                                                   | State / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Blocked on               |
+| --- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------ |
+| 1   | **Trading kill-switch is a no-op** (`halt-order-flow` has no listener) | **OPERATOR-OWNED.** Verified first-hand: execution-service has only a `dependency-update` listener; 204 reads as success; the code's own comment predicts a 404 that never comes. Touches live trading behaviour — not started.                                                                                                                                                                                                                                                                                                                                                                                                                  | Operator ruling          |
+| 2   | ~~**Fleet release tagging dead since 2026-06-27**~~                    | **STALE — RESOLVED 2026-07-25, this table row was never updated.** CLAUDE.md already records `semver-agent` "retargeted off `staging`" to `push:[main]` (2026-07-25). Spot-checked live 2026-07-27: `Semver Agent` firing 100%-success on `push` in features-service/agent-orchestrator/instruments-service/unified-api-contracts (21-22 runs/3d each); fresh `v*` tags landed 2026-07-25/26/27 in all four (e.g. `unified-api-contracts` jumped a 30-day-stale `v0.72.0`@06-27 straight to `v0.73.0`@07-27). Do not re-derive or re-fix — it's working. Still `KEEP-T` (github-hosted, ~$32/mo fleet-wide, accepted cost per the ruling below). | Resolved, needs no owner |
+| 3   | **QG sentinel is environment-blind**                                   | **NOT DONE.** Gate-bypass: a standalone (prod-default) gate pass writes a sentinel that quickmerge (dev-mode) then honours, skipping the failing suite.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Operator picks fix split |
+| 4   | `staging_versions` dep-gate fix                                        | **BLOCKED — do not action independently.** Its premise was inverted by finding F2; `staging_versions` tracks the real git tag, `versions` does not.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Item 2                   |
+| 5   | Codex staging re-entry procedure + stale branch-model sections         | **NOT DONE.** `ci-cd-flow.md` L75-109/L763/L777-786/L1183 still describe staging as canonical; nothing in codex says the disabled triggers must be uncommented on re-entry.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Nobody                   |
+| 6   | 4 orphan dispatches · 4 dead listeners · ~873 vacuous cron runs/wk     | **NOT DONE, P2.** All catalogued with file:line in the sweep issue. `digest-drift-sweep` is the only one costing real money (never converges, fans out to `ubuntu-latest`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Nobody                   |
+| 7   | Two-week billing re-pull vs the Phase-0 baseline                       | **CANNOT BE DONE YET** — needs elapsed time. Earliest ~2026-07-31. Method + exact commands are in the 2026-07-23 billing entry above; re-run verbatim.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | The calendar             |
 
-**Recommended NEXT item: #2 (release tagging).** It is unblocked, it silently froze every package version in the fleet
-~4 weeks ago, it gates #4, and unlike #1 it needs no operator ruling. #1 is more severe but is explicitly the operator's
-call. SSOT for 1/2/5/6: `plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md`.
+**#2 (release tagging) is now RESOLVED** (see the corrected row above) — it is no longer the recommended next item. #1
+is more severe but is explicitly the operator's call (still not started). SSOT for 1/5/6:
+`plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md`.
+
+**Recommended NEXT item (added 2026-07-27, operator ask: "how do we cut fleet GHA spend another 50%?"): Phase 7 below.**
+A live billing pull + run-mix sample (not a re-read of stale numbers) shows the 2026-07-15/17 self-hosted migration's
+~35-56% win is real but PM-only — **100% of every non-PM repo's spend is still plain GitHub-hosted `Actions Linux`**,
+which is why the fleet total never dropped (`$35.51/day → $38.37/day`, masked by unrelated non-PM growth the parent plan
+already flagged and never followed up on). Non-PM is now 62% of fleet spend and growing (features-service/
+agent-orchestrator up 180-230% vs the Jul01-15 baseline).
+
+## Phase 7 — Fleet-wide self-hosted-runner rollout (NEW 2026-07-27)
+
+> **Evidence**: live Enhanced-Billing pull (`github-billing-token`, same method as the 2026-07-23 entry above), Jul23-26
+> per-repo/per-SKU breakdown: PM $14.25/day (win partly eroded from the $10.94 post-migration figure); non-PM $23.09/day
+> across 24 repos, **every single line item is `Actions Linux`** (zero self-hosted offload outside PM). Run-mix sample
+> (`gh api .../actions/runs`, last 3 days) on the two fastest-growing repos shows the SAME categories of thin glue/
+> dispatch workflow PM already proved movable — `main-backmerge-to-ldr` (~13/day), `image-build-gate` (~15/day),
+> `Semver Agent` (~7/day), `update-dependency-version` (~7/day) — all still hosted, structurally, because **all 8
+> self-hosted runners are registered to `unified-trading-pm` only** (`orgs/IggyIkenna/actions/runners` → 404, personal
+> account, no org-level pool — the exact `KEEP-T`/`KEEP-R` blocker the original migration doc already found and
+> correctly left alone rather than hanging 24 repos). **`quality-gates-v2`'s real pull_request-triggered
+> pytest/lint/typecheck job is explicitly OUT of scope** — it stays hosted per the existing security ADR (no self-hosted
+> runner may carry a `pull_request` trigger) and touching it is not part of this phase.
+
+- [ ] [VERIFY] P1. Extend `classify-glue-workflows.sh`'s MOVE/STAY audit to the non-PM fleet: for each of the ~24 repos,
+      inventory the fleet-template copies (`main-backmerge-to-ldr`, `image-build-validate`/`image-build-gate`,
+      `semver-agent`, `major-bump-issue-handler`, `request-major-bump`, `update-dependency-version`,
+      `version-registry-notify`, plus any repo-owned automation beyond the templates) and classify each the same way
+      PM's 37 movers were classified — do not assume the PM split transfers unchanged; some of these ARE already
+      `KEEP-T`/ `KEEP-R` by design (fleet templates, cross-repo reusables) and need the runner-registration fix below
+      before they can move at all.
+- [ ] [INFRA] P1. Register additional self-hosted runner **processes** on existing VM capacity (planning VM /
+      slot-worker VMs already have headroom) — one (or a few) scoped **per target repo** via that repo's own repo-level
+      runner registration token. This does NOT require an org/GitHub-plan change or a repo-ownership migration (that was
+      considered and is a separate, much higher-risk option — see the note below); it only requires running additional
+      runner-agent processes on hardware that already exists, each bound to one repo.
+- [ ] [INFRA] P1. Canary the flip on ONE repo first (same discipline as the original PM migration: edit the template +
+      `rollout-workflow-templates.sh`, prove on one caller, only then fan out) — start with whichever of
+      features-service/agent-orchestrator has the simplest workflow surface, verify its promote gate still resolves
+      (`gh run list` green, required check posts), THEN roll the template change to the rest of the MOVE set.
+- [ ] [VERIFY] P2. One week after the first repo's flip lands, re-pull the Enhanced-Billing usage report (method above)
+      scoped to that repo; confirm its `Actions Linux` line drops and no new billed line replaces it (self-hosted bills
+      $0, same as PM's STEP 2c verification: `billable: {}` is the honest self-hosted check, not `/timing.total_ms`).
+- [ ] [VERIFY] P2. Once ≥5 repos are flipped, re-pull the FULL fleet total (not just PM, and not just the flipped repos
+      — the naive fleet aggregate is what masked PM's real win before) and compare against this week's baseline (fleet
+      ~$37/day, non-PM ~$23/day, measured Jul23-26 2026) — this is the number the original plan's own "fleet
+      ~$1,000/mo → ~$300-400/mo" target was about, and the one that has never yet moved.
+- [ ] [REVIEW] P3. NOT started this phase, flagged for later only: if fleet spend is still high after Phase 7 lands, the
+      remaining lever is real test-compute volume itself (quality-gates-v2 runs scale with commit/PR volume, which rises
+      with agent parallelism) — options there (test-impact analysis / selective test execution, debounced batching of
+      rapid LDR pushes) carry real correctness risk and are a distinct, harder milestone; do not reach for them before
+      Phase 7's structurally-safe win is measured.
+- [ ] [REVIEW] P3. Longer-horizon alternative to per-repo runner registration, NOT recommended to start now: migrating
+      the personal-account repos (`IggyIkenna/*`) into a GitHub organization to unlock a shared org-level runner group
+      (free on GitHub's org tier — no Team/Enterprise upgrade needed for runner groups themselves). This would let ONE
+      runner pool serve all repos instead of per-repo registration, but repo-ownership transfer risks breaking anything
+      keyed to the literal `IggyIkenna/<repo>` slug (webhooks, PAT scopes, package-registry references, deploy keys) and
+      should only be considered if per-repo runner management becomes unwieldy as the fleet grows.
