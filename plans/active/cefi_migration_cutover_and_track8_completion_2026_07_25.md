@@ -732,3 +732,17 @@ every todo executes an already-decided spec from the parent doc.
   fresh diagnosis needed this time, the playbook just worked. **Fleet at 07:08Z**: 41 RUNNING, 8 total `EXIT_STATUS`
   objects seen so far (2 genuine `=0`, 6 `=137` OOM — all 6 OOM shards now relaunched with DERIBIT excluded), 0 new SPOT
   preemptions. Continuing to poll at sensible intervals.
+- **2026-07-27T07:20Z (scheduled 30-min check-in) — issue doc filed for the DERIBIT finding; 3rd genuine completion; 2
+  more DERIBIT-landmine OOMs confirmed + fixed via the playbook.** Filed
+  `issues/deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md` (checked first — neither
+  `deribit_combo_perpetual_partition_move_2026_07_21.md` nor the Finding-8/10 spot/perpetual-collision class in
+  `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` cover this; different symbol shape, different failure
+  mode) per the findings-triage rule — this is a genuine data-correctness bug this migration works around, not fixes,
+  and needs its own follow-up (writer-side root-cause, exhaustive census, backfill/reclassify pass). **Fleet poll**:
+  `cs7-1d` finished cleanly (`EXIT_STATUS=0`, 72,064/72,064 files, 1,874 patched, `STOP-ON-SURPRISE` ok, 0 errors) — 3rd
+  genuine completion (`cs1-1r`, `cs10-10d`, `cs7-1d`). `cs9-4r` came back `EXIT_STATUS=137`; checked its date range
+  (2025-06-16..2025-07-29, day=2025-07-01) BEFORE assuming a new cause per the standing rule — found the same signature
+  (1.26GB `XRP_USDC-4JUL25-2D25-C.parquet`) — relaunched as `cs9-4e` with `--exclude-venues HYPERLIQUID:ASTER:DERIBIT`,
+  `--workers 24`, same as the established playbook; no fresh diagnosis needed. **Running total**: 3 genuine completions,
+  7 DERIBIT-landmine OOMs hit and fixed (`cs8-1`, `cs8-5`, `cs10-2`, `cs10-3` ×2, `cs9-3`, `cs9-4`), 0 SPOT preemptions
+  since the ON_DEMAND pivot. Fleet at ~40 RUNNING. Continuing to poll at sensible intervals toward all-42-terminal.
