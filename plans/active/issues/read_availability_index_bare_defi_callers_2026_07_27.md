@@ -234,9 +234,23 @@ not a mechanical column-list copy.
       Single highest-blast-radius fix in this audit (feeds ~10 downstream dashboard endpoints transitively). Updated the
       one existing test asserting the exact call signature (`test_live_mode_delegates_to_utl_reader`); full test file
       green (9 tests) + `quality-gates.sh` green (260s).
-- [ ] [SCRIPT] P1. **deployment-api** — `routes/data_status/_catalogue.py:186` +
-      `routes/data_status/_live_coverage.py:457`: project both raw-UTL-import call sites; read each caller's actual
-      downstream column usage first.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-10)** — `deployment-api@d143a44`. **deployment-api** —
+      `routes/data_status/_catalogue.py:186` + `routes/data_status/_live_coverage.py:457`: both raw-UTL-import call
+      sites projected via the existing `DRILLDOWN_COLUMNS` (`services/manifest_source.py`) — reused rather than a new
+      bespoke list, matching the pattern the `services/manifest_source.py:164` fix above already established. Column
+      coverage confirmed by direct read of each caller's downstream usage: `_catalogue.py` needs
+      `instrument_id`/`venue`/`instrument_type`/`data_type` (narrow + row fields), `written_at` (the dedup latest-wins
+      sort key — dropping it would silently degrade dedup to insertion order),
+      `capture_status`/`error_reason`/`attempted_at` (row fields), and `league_id`/`source` (`is_mvp_for_manifest_row`'s
+      sports MVP axes); `_live_coverage.py` needs every field `_build_live_row` reads
+      (`venue`/`chain`/`data_type`/`instrument_type`/`instrument_id`/`league_id`/`timeframe`/`feature_group`/
+      `capture_status`/`attempted_at`) plus `pipeline_mode` (the live-shard filter column) — all present in
+      `DRILLDOWN_COLUMNS`; deliberately did NOT add `name`/`base_asset`/`market_group` since those are not real
+      `availability_index.parquet` schema columns (confirmed against UTL `_V8_COLUMNS`) and requesting an absent column
+      would trigger the slim reader's full-schema fallback on every shard, defeating the projection. Added a regression
+      test per call site (`test_manifest_read_is_column_projected`,
+      `test_live_status_manifest_read_is_column_projected`) pinning the exact `columns=DRILLDOWN_COLUMNS` call
+      signature. Full `quality-gates.sh` green (4984 passed, 16 skipped), shipped via quickmerge --agent.
 - [ ] [SCRIPT] P1. **unified-trading-library** — `feature_service_base/manifest_discovery.py:59,99,224,274` (4 call
       sites, shared by delta_one/volatility/onchain/cross_instrument — onchain is defi-adjacent): project each to its
       own actual column usage (read each of the 4 functions individually — they differ; do not assume one column list
