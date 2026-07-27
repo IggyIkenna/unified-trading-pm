@@ -152,11 +152,19 @@ todo below.
       state `terraform/state/prod`) — `tofu apply` targeted to just these 12, in the recommended order above. Requires
       an operator with prod-apply authority; do NOT blanket-apply the whole 77-resource diff (65 of the 77 are cosmetic
       and will just re-drift on the next deploy). **Done when**: a `tofu plan` run under a permission set that can see
-      them shows zero remaining diff for these 12.
+      them shows zero remaining diff for these 12. Not downgraded (2026-07-27 gating pass) — genuinely uncertain fit:
+      this is a terraform CREATE/apply that activates new prod IAM bindings plus a live scheduled job
+      (`defi_removal_probe_daily`), not a GCS-bucket delete/migration the reversibility carve-out (finding T,
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a) is scoped to — no equivalent
+      reversibility-verification recipe exists for a terraform apply, so left gated rather than guessed.
 - [ ] [OPERATOR] P1. **Grant `unified-trading-sa` the missing read-only IAM roles** (or designate a more-privileged
       credential for future `tofu plan` runs) so the next drift audit can see the 112 currently-unreadable resources (58
       buckets, 22 secrets, 26 project-IAM members, 6 pubsub). Needs an operator with IAM-admin authority on
-      `central-element-323112`. **Done when**: a fresh `tofu plan` produces zero permission-denied read errors.
+      `central-element-323112`. **Done when**: a fresh `tofu plan` produces zero permission-denied read errors. Not
+      downgraded (2026-07-27 gating pass) — genuinely uncertain fit: this is a broad, project-wide viewer-role grant
+      across 58 buckets / 22 secrets / 26 IAM-member reads / 6 pubsub resources on a live service account, a different
+      risk shape than the GCS-bucket-scoped delete/migration reversibility carve-out covers; left gated pending an
+      operator ruling on IAM-grant scope rather than guessed.
 - [ ] [INFRA] P2. **Add `lifecycle { ignore_changes = [client, client_version] }`** to
       `deployment-service/terraform/modules/container-job/gcp`'s `google_cloud_run_v2_job` resource, so the 65 cosmetic
       client/client_version diffs stop appearing on every `tofu plan` (they reflect out-of-band `backends/cloud_run.py`
