@@ -18,7 +18,7 @@ summary: >-
   actively HARM throughput by interrupting real progress, and the sustained saturation makes them chronic.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

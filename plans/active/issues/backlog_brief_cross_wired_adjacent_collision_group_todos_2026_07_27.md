@@ -15,7 +15,7 @@ summary: >-
   larger unshipped work — must not be marked done to route around this).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

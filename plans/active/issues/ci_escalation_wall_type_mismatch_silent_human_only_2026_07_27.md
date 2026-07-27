@@ -10,7 +10,7 @@ summary:
   hard failure, masking that no AO worker was ever dispatched for these two standing conditions.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer]

@@ -9,7 +9,7 @@ summary:
   open question left for whoever picks this up.
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]

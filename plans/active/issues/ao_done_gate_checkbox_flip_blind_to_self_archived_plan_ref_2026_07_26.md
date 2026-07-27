@@ -16,7 +16,7 @@ summary: >-
   `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize-003` (`unified-trading-pm@2641d8844`).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
