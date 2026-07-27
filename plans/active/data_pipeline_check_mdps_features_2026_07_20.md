@@ -434,7 +434,17 @@ the ones already in candles) and do features service across all shards too"_
 
 - [ ] NEW todo. [DATA] P0. Enumerate the candle-coverage GAP per (asset_group, venue, data_type, timeframe): which cells
       ALREADY have candles vs which do not. Drives both "which AGs to run" and the ETA denominator.
-- [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-mdps` across all relevant AGs NOT already in candles.
+- **[DATA] P0. CANCELLED — 2026-07-27 (slot-9): consolidated into todo 8's post-split follow-up todo** (see the "SPLIT
+  2026-07-27 (slot-9, operator-ruled Option B on BLK-243a969b)" entry higher in this Todos section). This todo's scope
+  ("run `/data-pipeline-check-mdps` across all relevant AGs") is a strict SUBSET of that follow-up's scope ("all AGs ×
+  venues × data_types × timeframes") — same skill, same underlying blocker
+  (`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`, gated on prerequisite
+  `mdps-e2e-shared-host-teardown-fixed`), same done-when. Tracking it as a separate todo risked two AO-dispatched
+  workers independently re-attempting the identical blocked skill run without either being aware of the other's findings
+  (the exact collision class flagged elsewhere in this plan's Progress Log). Cancelled here rather than duplicated; the
+  live scope + gate condition live in the one post-split todo. NOT re-attempted this session — no value in a 6th
+  reproduction of an already-diagnosed, still-open P1 blocker. Original text (was
+  `- [ ] NEW todo.     [DATA] P0. Run /data-pipeline-check-mdps across all relevant AGs NOT already in candles.`).
 - [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-features` across ALL shards (8 families x valid AGs).
 
 ### 2026-07-20 — ✅ SPOT preemption auto-recovery was NOT fleet-wide; now it is (`deployment-service@c79f984`)
