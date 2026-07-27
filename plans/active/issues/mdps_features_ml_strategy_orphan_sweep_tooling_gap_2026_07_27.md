@@ -109,14 +109,16 @@ lets each one be built, validated, and run to real completion on its own timelin
 ## Open work
 
 - [ ] 1. [SCRIPT] P1. **Build + validate an MDPS candle-layer orphan sweep** (new script in
-      `market-data-processing-service/scripts/`, name TBD) — mirror `migration_orphan_sweep.py`'s A-E taxonomy against
-      `processed_candles/by_date/` per asset_group (shard key: day, venue, chain, instrument_type, data_type, timeframe;
-      note the real measured DEFI path segment ORDER is `timeframe/data_type/instrument_type/venue`, NOT the cefi-analog
-      `venue/instrument_type/data_type` — verify per-AG before assuming one shape). ALSO check manifest coverage under
-      BOTH the source `data_type` vocabulary and the aggregated `mdps_data_type_key()` vocabulary (the newly-discovered
-      false "never populated" class from `issues/candle_feature_canonical_path_divergence_2026_07_20.md` todo 7). Repo:
-      market-data-processing-service. Launch on a Tier-2 SPOT VM per the heavy-I/O rule, never in-session — budget for
-      the SAME class of iteration (memory/preemption) the raw-MTDS sweep needed. Feeds
+      `market-data-processing-service/scripts/`, name TBD) — design brief with file:line citations + open items done:
+      [`mdps_candle_orphan_sweep_design_brief_2026_07_27.md`](mdps_candle_orphan_sweep_design_brief_2026_07_27.md).
+      Mirror `migration_orphan_sweep.py`'s A-E taxonomy against `processed_candles/by_date/` per asset_group (shard key:
+      day, venue, chain, instrument_type, data_type, timeframe; note the real measured DEFI path segment ORDER is
+      `timeframe/data_type/instrument_type/venue`, NOT the cefi-analog `venue/instrument_type/data_type` — verify per-AG
+      before assuming one shape). ALSO check manifest coverage under BOTH the source `data_type` vocabulary and the
+      aggregated `mdps_data_type_key()` vocabulary (the newly-discovered false "never populated" class from
+      `issues/candle_feature_canonical_path_divergence_2026_07_20.md` todo 7). Repo: market-data-processing-service.
+      Launch on a Tier-2 SPOT VM per the heavy-I/O rule, never in-session — budget for the SAME class of iteration
+      (memory/preemption) the raw-MTDS sweep needed. Feeds
       `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`'s corpus-wide backfill scope.
 - [ ] 2. [SCRIPT] P2. **Build + validate a features-service orphan sweep** — same A-E taxonomy pattern, shard key
       `asset_group × feature_family × day`. Repo: features-service. VM-run, never in-session.
