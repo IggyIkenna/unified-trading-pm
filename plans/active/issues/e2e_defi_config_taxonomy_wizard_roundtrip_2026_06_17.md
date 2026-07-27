@@ -30,7 +30,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-27
 ---
 
 ## What I found
@@ -138,16 +138,41 @@ materially incomplete against that bar, for ALL archetypes, not just these.
       `spot_venue` param. Operator wants spot venue selectable (Binance vs DEX, liquidity-driven). Make spot_venue a
       first-class selectable axis for staked-basis (it already is for APD via `venue_universe`). Repos:
       unified-api-contracts (leg-spec/manifest) + strategy-service (catalog).
-- [ ] [SCRIPT] P1. **Wizard parameterizes ~0 of the numeric production-param surface** — exposes only structural picks
-      (archetype/legs/venues/algo/model/capital/risk-%×2/treasury/wallet/custody). The 5 behavioural params
-      (`entry_bps`/`exit_bps`/`min_health_factor`/`hedge_deadline_ms`/`peg_drift_threshold_bps`) + `stake_fraction` +
-      `start_token` + collateral posting mode are NOT form fields; APD's ~25-key surface is 100% absent. ROOT CAUSE: the
-      capability-manifest is a node/edge GRAPH with **no flat parameter schema** — so there is nothing for the wizard to
-      render param forms from. FIX (the real initiative): (1) emit a per-archetype flat PARAM SCHEMA into the capability
-      manifest (name/type/default/range/units, sourced from each engine's config model), (2) wizard renders
-      per-archetype param forms from it, (3) wire the values through `strategy_config_loader`. Repos:
-      unified-api-contracts (manifest exporter) + strategy-service (engine config schema) + unified-trading-system-ui
-      (wizard).
+- [x] ✅ [SCRIPT] P1. (RE-VERIFIED 2026-07-27, slot-4 — was `- [ ]`, stale: the FIX this todo asks for already shipped
+      the same day it was filed, via the sibling initiative
+      `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`, but that plan's own checkbox flip never
+      propagated back to this doc) **Wizard parameterizes ~0 of the numeric production-param surface** — exposes only
+      structural picks. RESOLVED: independently re-verified all 3 legs of the FIX live on current `live-defi-rollout`
+      HEAD, not just trusting the historical citation: (1) **flat per-archetype PARAM SCHEMA in the manifest** —
+      `unified-api-contracts/openapi/capability-manifest.json` top-level `param_schema` key, 35 archetypes ×
+      `{name,type,default,required,units,enum_values,min,max,source}` rows sourced to exact engine `file:line`s
+      (verified by loading the JSON directly: `CARRY_STAKED_BASIS`/`ARBITRAGE_PRICE_DISPERSION`/`CARRY_BASIS_PERP` all
+      present with real rows, e.g.
+      `entry_bps`/`exit_bps`/`min_health_factor`/`hedge_deadline_ms`/`peg_drift_threshold_bps`/`stake_fraction`/`start_token`
+      for CSB, ~18 keys for APD); byte-identical UI copy at
+      `unified-trading-system-ui/lib/registry/capability-manifest.json`. Exporter:
+      `unified-trading-pm/scripts/openapi/generate_capability_manifest.py` → `_capability_gaps.extract_param_schema()`
+      probing `strategy_service.engine.strategies.v2.param_schema.build_param_schema_registry()` in strategy-service's
+      own `.venv`. (2) **wizard renders per-archetype param forms from it** —
+      `unified-trading-system-ui/components/wizard/ParamForm.tsx` wired at wizard stage `K_PARAMS`
+      (`app/(wizard)/wizard/page.tsx:45,478`, confirmed live), numeric/enum/bool/str fields pre-filled with engine
+      defaults, required fields enforced. (3) **wired through `strategy_config_loader`** —
+      `strategy-service/strategy_service/engine/core/strategy_config_loader.py:128` `get_strategy_params()` confirmed
+      present: reads `config["params"]`, resolves archetype, looks up `PARAM_SCHEMA_REGISTRY[archetype.value]`,
+      loud-fails (`WizardParamPayloadError`) on an unknown param/missing required value, fills unset params from schema
+      defaults. Shipped commits (git-log verified): strategy-service `f2d4bef5`+`965c1393`, unified-api-contracts
+      `f0b66b2`, unified-trading-pm `853ae5ea4`, unified-trading-system-ui `869c5930`; same equivalent item already
+      checked off with evidence in `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md:107`
+      (`unified-trading-system-ui@869c5930 [UI] | pw:L2 ✓ | regression: tests/smoke/wizard-params.spec.ts + tests/unit/wizard/params.test.ts`).
+      NOT re-doing this work — building it again would duplicate ~35 archetypes' worth of shipped, tested pipeline.
+      **Residual (do not re-open here, already tracked elsewhere):** `collateral posting mode` specifically + the rest
+      of the "food chain" (exec-algo params, risk ladder, source routing) remains open as
+      `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md:110` `- [ ] [DOC] P2.`; the 4th archetype
+      named implicitly by this todo's D4 neighbor, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`, has no `PARAM_SCHEMA_REGISTRY`
+      row (confirmed: 0 grep hits) but is a deliberate permanent engine stub (`on_tick()` always `return []`) pending an
+      unresolved strategy-design decision — exhaustively scoped, not built, in
+      `plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md:482-660` — parameterizing it in
+      the wizard today would be cosmetic since the engine can't act on it regardless.
 - [ ] [SCRIPT] P2. **Audit production params vs e2e/testing params for functional alignment** (operator ask) — the e2e
       catalog sets the 7 structural params but leaves the 5 behavioural ones to engine defaults; confirm the engine
       defaults == the values the production/paper runs intend (functionally, not by name). Repo: e2e-testing +

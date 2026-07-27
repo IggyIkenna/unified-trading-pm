@@ -76,8 +76,25 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       stale (May 22 – Jun 1 vs Jun 11). — ALREADY FIXED (checkbox was stale) unified-trading-pm@50bdbcd36 (2026-06-11,
       same day as this issue doc): `_validate_service_coverage()` now calls `sys.exit(1)` on missing coverage (line 550)
       instead of only warning. Verified 2026-07-27.
-- [ ] [SCRIPT] P1. Source-mode capability matrix (batch/live/replay × source × WS/REST) exists only as a manual audit
-      doc (`source-mode-capability-matrix_2026-06-07.md`), not as registry + extraction.
+- [x] ✅ [SCRIPT] P1. Source-mode capability matrix (batch/live/replay × source × WS/REST) exists only as a manual audit
+      doc (`source-mode-capability-matrix_2026-06-07.md`), not as registry + extraction. — **FIXED 2026-07-27
+      (slot-6)**: the registry side was ALREADY DONE (checkbox was stale) — UAC's `SOURCE_MODE_CAPABILITY`
+      (`unified_api_contracts/canonical/crosscutting/_source_priority_data.py`) encodes
+      `plans/audit/results/source_mode_capability_matrix_2026_06_07.md` row-for-row, including its "CORRECTED MODEL"
+      section, and is exposed via `modes_for_source()`/`modes_for()`. **The real gap was extraction**: the manifest
+      exporter's `extract_data_sources()` (`scripts/openapi/_capability_extract.py`) never read that registry — it
+      unconditionally emitted a `not_registered`/`missing_registry` gap edge for every non-batch (source, mode) pair.
+      Fixed: `extract_data_sources()` now calls `modes_for_source(src)` and emits a real `available`/`not_available`
+      verdict per (source, mode) — unified-trading-pm@ce6eb1775. Verified live: all 99 `supports_mode` edges (33
+      external data sources × {batch, live, replay}) now resolve (79 available / 20 not_available), **0 remaining
+      `missing_registry` gaps on this dimension** (was ~56-66 of the manifest's `missing_registry` total per the
+      2026-06-11 v1 snapshot below). Spot-checked against the ratified matrix (tardis={batch}; databento={batch,live,
+      replay}; yahoo/api_football={batch,(replay)} with no live; odds_api={batch,live,replay}) — all match. Manifest
+      regenerated + committed: unified-api-contracts@ac4fd8572 (deterministic — byte-identical across two runs at a
+      fixed UAC HEAD; `check_capability_regression.py` PASSES with 0 regressions vs the committed baseline, no
+      `--update-baseline` needed — every change is either `newly_available` or an honest `not_available`, never a lost
+      `available` edge). The per-source non-default-transport dimension (the WS/REST half not covered by
+      `default_transport_for_source`) stays a real, smaller residual gap — out of scope for this todo, not hidden.
 
 ### Missing registries — `missing_registry` (Phase 2 of the plan)
 
@@ -112,31 +129,39 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       `collateral_registry.py`'s 2026-06-12 backfill — fixed those to `registry` too, broker question stays `gap`).
 - [ ] [SPEC] P1. **Simulation assumptions**: simulatable candle granularities, matching/fill assumptions per archetype
       area, backtest-live symmetry nuances per venue/instrument.
-- [ ] ⚠️ [SPEC] P1. **Fund structures**: offerable pooled/SMA/prop structures with subscription/redemption + rebalance
-      cadences (fund-administration state machines are runtime truth; nothing declares what is offerable). — **CODE
-      COMPLETE + QG-VERIFIED, PUSH BLOCKED 2026-07-27 (slot-13)**:
-      `unified_api_contracts/internal/     architecture_v2/fund_structures.py` was ALREADY FIXED (checkbox was stale) —
-      backfilled 2026-06-13 (commit `5e7d0685`, the SAME commit that fixed Fees above): `OFFERED_FUND_STRUCTURES`
-      declares POOLED + SMA (`FundStructureKind`, cited to `sma-vs-pooled.md`), each carrying
-      `share_classes`/`subscription_cadence`/ `redemption_cadence`/`rebalance_cadence`/`supports_daily_withdraw_deposit`
-      fields; PROP honestly omitted (no documented external offering). A pre-existing test
-      (`tests/unit/test_capability_manifest.py::     test_offered_fund_structures_backfilled`) already locked in the
-      2-entry backfill. **The only real defect found**: the module's own docstring (like `fees_registry.py`'s) still
-      said "intentionally empty" — fixed, committed LOCALLY at `unified-api-contracts@8903683a` (full quality-gates.sh
-      green, sentinel==HEAD), but the quickmerge PUSH failed on a fleet-wide host-disk-full condition (100% used, <2G
-      free — see `BLK-5ce3f18c`, escalated to main). **Checkbox left unflipped until the push actually lands** — do not
-      treat this as shipped until `git log origin/live-defi-rollout` shows `8903683a` (or a rebase-carried equivalent).
-      Also drafted (same local, unpushed state) fixes for the SAME staleness in
-      `codex/09-strategy/architecture-v2/capability-wizard.md`'s status table (the row still cited `UAC@6f31f59`, the
-      pre-backfill commit, for fund-structures/order-semantics/ sim-assumptions/agent-capability — verified the OTHER
-      THREE sibling registries are ALSO already backfilled with real per-venue/per-archetype data despite carrying the
-      identical stale "intentionally empty" docstring; not fixed in THEIR OWN files here — that's todos 113/117/119's
-      own scope, flagged so those dispatches go straight to the fix) and `capability-wizard-question-bank.md` (Stage A
-      fund-structure question status `gap (fund structures)` → `partial`, matching the already-`partial` sibling cadence
-      question). **Next session: once disk recovers, retry `quickmerge` for the UAC commit, confirm the push, THEN flip
-      this checkbox to `[x]` citing the verified-pushed SHA — do not just re-flip off the local commit again.**
-- [ ] [SPEC] P1. **Order semantics per venue adapter**: TIF (FOK/IOC/post-only), make/take, ref-pricing modes (fixed vs
-      delta-adjusted to underlying), multi-leg/spread delta-risk ownership, auth-wired status.
+- [x] ✅ [SPEC] P1. **Fund structures**: offerable pooled/SMA/prop structures with subscription/redemption + rebalance
+      cadences (fund-administration state machines are runtime truth; nothing declares what is offerable). — **PUSH
+      CONFIRMED LANDED 2026-07-27 (slot-13)**: `unified-api-contracts@8903683a` (docstring fix — the module's
+      "intentionally empty" claim replaced with the accurate 2026-06-13 backfill status) verified present at the tip of
+      `origin/live-defi-rollout` (`git log --oneline -1 origin/live-defi-rollout` = `8903683a`; local HEAD ahead/behind
+      origin = 0/0; `.qg_last_passed_sha` sentinel == HEAD == `8903683a`, so the full `quality-gates.sh` green run
+      claimed for this SHA is the same SHA that shipped, not a stale claim). `OFFERED_FUND_STRUCTURES` (POOLED + SMA,
+      `FundStructureKind`, cited to `sma-vs-pooled.md`) confirmed populated with
+      `share_classes`/`subscription_cadence`/`redemption_cadence`/`rebalance_cadence`/`supports_daily_withdraw_deposit`
+      per entry; PROP honestly omitted. Pre-existing test
+      `tests/unit/test_capability_manifest.py::     test_offered_fund_structures_backfilled` (asserts
+      `len(OFFERED_FUND_STRUCTURES) == 2`) read directly — real, not stubbed. The companion doc-drift fixes also
+      confirmed landed via `unified-trading-pm@53d45aa43` (already on `origin/live-defi-rollout`, same commit that
+      recorded the original push-blocked state): `capability-wizard.md`'s status table now cites `5e7d0685` (not the
+      stale pre-backfill `6f31f59`) for fund-structures/order-semantics/sim-assumptions/agent-capability/fees;
+      `capability-wizard-question-bank.md`'s Stage A fund-structure question status reads `partial` (was `gap`),
+      matching the sibling cadence question. No further action needed on this item.
+- [x] ✅ [SPEC] P1. **Order semantics per venue adapter**: TIF (FOK/IOC/post-only), make/take, ref-pricing modes (fixed
+      vs delta-adjusted to underlying), multi-leg/spread delta-risk ownership, auth-wired status. — ALREADY FIXED
+      (checkbox was stale), confirming the 2026-07-27 (slot-13) pattern flagged above: `git log --follow` on
+      `order_semantics.py` shows the registry was backfilled in `unified-api-contracts@5e7d0685` (2026-06-13, "backfill
+      order-semantics + sim-assumptions + fees + fund-structures + trading-agent registries"), same commit as the other
+      four Phase-2 items. Verified 2026-07-27: `VENUE_ORDER_SEMANTICS` carries 7 real per-venue entries
+      (hyperliquid/deribit fully wired with source file:line citations; binance/bybit/okx honest `NOT_REGISTERED`
+      scaffolds — `NotImplementedError` on `place_order`; aave_v3/kamino lending venues, no CLOB/TIF semantics) — every
+      field the todo asks for (`honored_tif`, `make_take_modes`, `ref_pricing_modes`, `multi_leg_delta_owner`,
+      `auth_wired`) is populated or explicitly honest-empty, matching the Collateral/Fees/Fund-structures resolution
+      pattern exactly. Only the file's own top-of-file docstring was stale ("STATUS: schema shipped;
+      `VENUE_ORDER_SEMANTICS` is intentionally empty") despite the real backfilled data below it — fixed in
+      `unified-api-contracts@2648f916` (mirrors the `fees_registry.py` STATUS-line pattern). Pre-existing passing tests
+      (`tests/unit/test_capability_manifest.py::test_venue_order_semantics_backfilled` +
+      `tests/unit/test_order_semantics_sim_backfill.py`) already assert the backfilled population — no new test needed.
+      No design work remaining.
 - [ ] [SPEC] P2. **Trading-agent/LLM capability**: no declaration linking trading-agent-service to archetypes (which
       strategies permit agent-driven instructions over features, which models are allowed).
 

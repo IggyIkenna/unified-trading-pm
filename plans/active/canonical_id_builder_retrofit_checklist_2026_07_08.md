@@ -77,23 +77,54 @@ source:
 
 ## Todos
 
-- [ ] [DATA] P1. **Retrofit the ~48 DeFi adapters that build `instrument_key` as an ad hoc f-string** to
-      `build_canonical_instrument_id(AssetGroup.DEFI, venue_tag_parts, InstrumentType.X, symbol, chain=...)` (or
-      `passthrough=True` where the symbol is already the final on-chain form). Representative real file:line hits (grep
-      for `instrument_key\s*=\s*f["']` under `instruments_service/reference_data/adapters/defi/*.py` for the full
-      48-file list): `aave_v3.py:424,433` (A_TOKEN/DEBT_TOKEN), `balancer.py:226` (POOL), `curve.py:164` (POOL),
-      `benqi.py:98` / `euler_v2.py:93` / `fluid.py:113` (LENDING_MARKET), `morpho.py:195` (LENDING_MARKET),
-      `compound_v3.py:263,272` (SUPPLY/BORROW), `ethena.py:67` (YIELD_BEARING), `etherfi.py:83` / `kelpdao.py:87` (LST),
-      `jito.py:126,148` (STAKING), `convex.py:98` / `beefy.py:260` / `idle.py:127` / `karak.py:117` /
-      `jito_restaking.py:141` (VAULT), `eigenlayer.py:98` / `ethfi.py:92` (GOVERNANCE_TOKEN), `drift.py:253,291`
-      (PERP/SPOT), `flash_trade.py:159` (PERP), `jupiter.py:174` (SPOT). Do NOT start this todo until todo 2 below is
-      resolved — several of these TYPE tokens aren't real `InstrumentType` enum values yet.
-- [ ] [DATA] P1. **Resolve the non-canonical TYPE-token question before retrofitting todo 1** — `VAULT`, `SUPPLY`,
-      `BORROW`, `LENDING_MARKET`, `GOVERNANCE_TOKEN`, `SPOT`, `PERP` all appear as the middle segment of a real DeFi
-      adapter's `instrument_key` (see file:line list in todo 1), but **none of these strings are real `InstrumentType`
-      enum values** (the real enum has `LENDING`, `A_TOKEN`, `DEBT_TOKEN`, `STAKING`, `YIELD_BEARING`, `LST`, `POOL`,
-      `DEX_POOL`, `SPOT_ASSET`, `PERPETUAL` — see `_instrument_enums.py`). This is the same bug CLASS as the
-      already-fixed P0 "23 DeFi adapters silently return empty on canonical-form type filters" finding
+- [x] [DATA] P1. **Resolve the non-canonical TYPE-token question before retrofitting todo 1** — **RESOLVED 2026-07-27
+      (slot-11, `data_engineering`) — stale premise, re-investigated from current code.** The 7 tokens this todo named
+      (`VAULT`, `SUPPLY`, `BORROW`, `LENDING_MARKET`, `GOVERNANCE_TOKEN`, `SPOT`, `PERP`) were true-as-of-2026-07-08,
+      but **6 of 7 were already fixed by other sessions between 2026-07-09 and 2026-07-16**, using EXISTING enum values
+      (no new `InstrumentType` members needed): `VAULT`(EVM restaking/yield)→`YIELD_BEARING`
+      (convex/beefy/idle/karak/jito_restaking, commit `bd7580a9` 2026-07-09); `SUPPLY`/`BORROW`→`A_TOKEN`/`DEBT_TOKEN`
+      (compound_v3.py, 2026-07-13, `canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py`);
+      `LENDING_MARKET`→`A_TOKEN`/`DEBT_TOKEN` pair (benqi/euler_v2/fluid/morpho, same fix wave);
+      `GOVERNANCE_TOKEN`→`SPOT_ASSET` (eigenlayer/ethfi, 2026-07-09); `SPOT`→`SPOT_PAIR` (jupiter.py); `PERP` — moot,
+      `drift.py`/`flash_trade.py` **deleted entirely** (operator ruling 2026-07-15/16, dead endpoints/~$0 TVL — nothing
+      left to retrofit). The enum itself also grew since 2026-07-08: `RESTAKING`, `SOLANA_LENDING`, `SOLANA_VAULT`,
+      `SOLANA_AMM_POOL` were added (current full list in `_instrument_enums.py`:
+      `SPOT_PAIR, PERPETUAL, FUTURE, OPTION, EQUITY_PERP, TOKENIZED_EQUITY, POOL, DEX_POOL,     LENDING, LST, YIELD_BEARING, A_TOKEN, DEBT_TOKEN, STAKING, RESTAKING, SPOT_ASSET, SOLANA_LENDING, SOLANA_VAULT,     SOLANA_AMM_POOL, ETF, EQUITY, COMMODITY, CURRENCY, INDEX, BOND, CDS, EVENT_CONTRACT, COMBO, PREDICTION_MARKET,     EXCHANGE_ODDS, FIXED_ODDS, PROP`).
+      **2 real, NOT-in-the-original-list key-vs-field mismatches found and fixed this round** (same bug class, same
+      established fix pattern — key segment must agree with `instrument_type` field, per the AAVE_V3/SPARK/COMPOUND_V3
+      precedent): `kamino.py:196` (`instrument_key` said `:VAULT:` while `instrument_type` field was already
+      `InstrumentType.SOLANA_VAULT` — fixed, key now says `:SOLANA_VAULT:`) and `pendle.py:267` (`instrument_key`'s TYPE
+      segment was the per-record role `PT`/`YT`/`SY`, none of which are real enum values, while `instrument_type` field
+      was `YIELD_BEARING` — fixed to `:YIELD_BEARING:`, with the role kept in the SYMBOL segment, e.g.
+      `PENDLE-ETHEREUM:YIELD_BEARING:PT-wstETH-25JUN2026`, so PT/YT/SY stay distinguishable without a non-canonical TYPE
+      segment; MTDS's own separate `vault_pendle_adapter.py` had already independently made this exact fix and
+      documented IS's pendle.py as the still-open counterpart — now closed, MTDS comment updated
+      `market-tick-data-service@fbe8abb9`). Both fixes, `instruments-service@d09e0cf4`; `test_pendle_metadata.py`
+      updated (role now derived from the symbol segment, not the type segment) — no other cross-repo consumer of the old
+      shape found (checked execution-service, market-tick-data-service, deployment-api's legacy display-map, and grep
+      for every literal PENDLE/KAMINO instrument_key reference). **No new `InstrumentType` enum members are needed for
+      todo 1** — every real value already has a canonical home.
+- [ ] [DATA] P2. **Retrofit the ~20 DeFi adapters whose `instrument_key` ad hoc f-string already uses a CORRECT enum
+      name (DRY-only, no behavior change)** — todo 2's re-investigation (2026-07-27) found the ORIGINAL todo 1 list is
+      now stale: of its representative examples, `aave_v3.py:422,436` / `compound_v3.py:267,281` (A_TOKEN/ DEBT_TOKEN),
+      `benqi.py`/`euler_v2.py`/`fluid.py`/`morpho.py` (now A_TOKEN/DEBT_TOKEN, not LENDING_MARKET),
+      `convex.py`/`beefy.py`/`idle.py`/`karak.py`/`jito_restaking.py` (YIELD_BEARING, not VAULT),
+      `eigenlayer.py`/`ethfi.py` (SPOT_ASSET, not GOVERNANCE_TOKEN), `jupiter.py` (SPOT_PAIR, not SPOT) are ALL already
+      emitting a real, correct `InstrumentType` name as their key's middle segment — they just don't route through the
+      shared `build_canonical_instrument_id`/`build_instrument_id` builder function yet (pure DRY gap, same class as
+      todo 8/9's "not urgent, pick up opportunistically" MTDS/ccxt_adapter.py items, NOT a correctness bug). Fresh full
+      grep (2026-07-27) of the CURRENT remaining ad hoc-`instrument_key`-f-string sites in
+      `instruments_service/reference_data/adapters/defi/*.py` (superseding the stale 48-file estimate above):
+      `compound_v3.py:267,281` (A_TOKEN/DEBT_TOKEN), `cbeth.py:106` / `lido.py:98` / `renzo.py:128` / `wbeth.py:121` /
+      `puffer.py:98` / `rocket_pool.py:87` (LST), `aave_v3.py:422,436` (A_TOKEN/DEBT_TOKEN), `kamino.py:196`
+      (SOLANA_VAULT, fixed this round), `pendle.py:267` (YIELD_BEARING, fixed this round),
+      `solana_native_staking.py:104` (STAKING), `uniswap_v2.py:222` / `uniswap_v3.py:609` / `uniswap_v4.py:253` (POOL),
+      `raydium.py:315` (POOL), `spark.py:315,329` (A_TOKEN/DEBT_TOKEN), `yearn.py:152` / `symbiotic.py:115`
+      (YIELD_BEARING). **Do NOT re-run the todo-2 investigation** — this list is already re-verified current as of
+      2026-07-27; re-grep only to catch NEW adapters added after this date. Batch by TYPE-cluster (A_TOKEN/DEBT_TOKEN
+      files together, LST files together, POOL files together, etc.) per the existing todo below on shipping in batches,
+      not one giant commit. Not urgent — cosmetic consistency only, same priority class as todo 8/9. already-fixed P0
+      "23 DeFi adapters silently return empty on canonical-form type filters" finding
       (`canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md`) — confirm whether these 7 additional tokens are
       ALSO silently dropped by any canonical-form type filter downstream (same mechanism, different tokens), or whether
       they're intentionally distinct sub-types that need new `InstrumentType` enum members before

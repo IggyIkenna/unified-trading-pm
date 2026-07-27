@@ -30,17 +30,17 @@ repos:
   ]
 scope: [engineer]
 tags: [artifact-registry, ecr, docker-images, storage-cost, cleanup-policy, retention, cicd]
-related: []
+related: [/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md]
 created: 2026-07-24
 last_updated: 2026-07-27
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 sequential: true
 priority: P2
 estimate_class: infra
-estimate_baseline_ai_days: 3
-estimate_calibrated_ai_days: 2.4
+estimate_baseline_ai_days: 1.2
+estimate_calibrated_ai_days: 1
 assigned_role: infra
 drift_direction: advance-code
 locked_by:
@@ -57,16 +57,17 @@ source:
 # Artifact Registry / ECR image retention — audit-first, safe cleanup policy
 
 > **Self-contained** — the diagnosis (§ Diagnosis) and the audit-first, safety-gated todo DAG live here; this plan
-> supersedes the original issue doc. **`assigned_vm: NA` / `execution_scope: local-only` as of 2026-07-27 — pulled out
-> of AO's backlog** (see Progress log) while Phase A's audit runs locally with the operator. Flip back to
-> `assigned_vm: planning` / `execution_scope: orchestrator-agent` once Phase A is folded in, at which point AO resumes
-> the audit/design/dry-run work — **the operator still gates every actual deletion**, via the `[OPERATOR]`-tagged todos
-> only (7, 8, 13, 17). No AR soft-delete/undelete exists — deletion is permanent, so the dry-run + deployed-digest
-> cross-check is mandatory before any live flip. **`sequential: true` (added 2026-07-27)** — every phase after Phase A
-> consumes the prior phase's actual output as data, not just file-availability (todo 5 needs todos 1+2's real audit
-> numbers; todo 6 needs todo 5's drafted policy; todo 8 needs todo 7's sign-off; …), so this plan runs strictly
-> top-to-bottom by design. **Do not remove this flag** without first splitting the genuinely-independent side-tracks
-> (Phase E todos 10-13, Phase F) into a separate satellite plan — see the Progress log entry below for why it was added.
+> supersedes the original issue doc. **Scope as of 2026-07-27: Phases A-D only** (todos 1-9, 14) — the
+> genuinely-independent side-tracks (extend-to-other-repos, ECR, legacy GCR bucket, the GCS tarball bucket) were split
+> out to
+> [docker_artifact_registry_cleanup_side_tracks_2026_07_27.md](/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md)
+> so they run **in parallel** with this plan's spine instead of serialized behind it (see Progress log).
+> **AO-dispatched** (`assigned_vm: planning`) — **the operator still gates every actual deletion**, via the
+> `[OPERATOR]`-tagged todos only (7, 8, and, in the satellite plan, 13/17). No AR soft-delete/undelete exists — deletion
+> is permanent, so the dry-run + deployed-digest cross-check is mandatory before any live flip. **`sequential: true`** —
+> every phase after Phase A consumes the prior phase's actual output as data, not just file-availability (todo 5 needs
+> todos 1+2's real audit numbers; todo 6 needs todo 5's drafted policy; todo 8 needs todo 7's sign-off; …), so this plan
+> runs strictly top-to-bottom by design.
 
 ## Diagnosis (audit numbers — pulled live via gcloud/aws 2026-07-24, not estimated)
 
@@ -126,7 +127,12 @@ What actually happens on deletion (grounds the design):
   `execution-service` have **no GCE instance and no Cloud Run service** on GCP (the only RUNNING GCE VMs are two
   `mtds-dex-swaps-backfill` tarball VMs; all else TERMINATED). Nothing pulls their GCP AR images right now → those
   sub-paths are low-risk to prune. **Not checked: AWS ECS/Fargate** — if either runs there it pulls from ECR (Phase E),
-  not GCP AR; Phase A still confirms the deployed set before any flip.
+  not GCP AR; Phase A still confirms the deployed set before any flip. **⚠️ CORRECTED 2026-07-24 spot-check, 2026-07-27
+  (Phase A todo 2 full audit)**: `strategy-service` is **NOT idle** — the earlier spot-check only looked at Cloud Run
+  _services_; the real deployment surface is 5 live Cloud Run _Jobs_ (paper-engine-run, paper-stream,
+  mtds-scenario-matrix, mtds-paper-smoke, strategy-service-t1-recon). It's still low-risk under the keep-5-recent Keep
+  rule (see § Phase A results), so this doesn't change the cleanup policy's safety — but "idle" was wrong.
+  `execution-service` re-checked and confirmed genuinely idle (zero Services, zero Jobs).
 
 **Fix:** the audit produces the set of actually-deployed digests, and the policy adds an explicit `Keep` for each one.
 Then the policy is correct-by-construction regardless of pin staleness, and keep-5 + 3-day are just the background
@@ -208,16 +214,98 @@ human-only.
 
 ### Phase A — Audit which images are actually deployed (read-only)
 
-- [ ] 1. [DATA] P1. Enumerate the currently-pinned image digest/tag per service from deployment-service
+- [x] 1. [DATA] P1. Enumerate the currently-pinned image digest/tag per service from deployment-service
       `stable_versions.yaml` (the pin oracle). Done-when: a committed table of service → pinned digest → push-age for
-      every service, saved beside this plan.
-- [ ] 2. [DATA] P1. Corroborate the pinned set against live runtime — Cloud Run revisions / any GKE workloads /
+      every service, saved beside this plan. ✅ 2026-07-27 — **the "pin oracle" doesn't work.**
+      `unified-trading-pm/configs/stable_versions.yaml` (not in deployment-service — the path above was wrong) has a
+      single commit ever (`2026-03-11`, a repo-reorg move) and every entry is still `deployed_by: "baseline-reset"`
+      dated `2026-02-25T00:00:00Z` with an empty `image` field. The intended update path
+      (`market-tick-data-service/cloudbuild.yaml`'s `notify-deployment` step) fires a GitHub `repository_dispatch` event
+      (`service-deployed`) at `IggyIkenna/deployment-service` — confirmed via grep across every `.github/workflows/` in
+      the workspace that **no workflow anywhere listens for that event type**, so even a successful dispatch goes into
+      the void (and it's `allowFailure: true` + gated on a `GH_PAT` secret that may not even be set). Table not produced
+      — there is nothing real to tabulate from this source. See § Phase A results below for what replaced it.
+- [x] 2. [DATA] P1. Corroborate the pinned set against live runtime — Cloud Run revisions / any GKE workloads /
       long-lived Docker VMs — plus the `credential-probe.sh` "all prod VMs on pinned SHA" check; flag any digest
       running-but-not-in `stable_versions.yaml`. Done-when: every drift between pinned and actually-running is listed,
-      or "no drift" is stated with the evidence.
-- [ ] 3. [DATA] P1. Label each of the top repos (MTDS, unified-trading-library, and the next 3 by size) as
+      or "no drift" is stated with the evidence. ✅ 2026-07-27 — with todo 1's source dead, this became the PRIMARY
+      audit, not a corroboration step. Full live-runtime enumeration via `gcloud run services list` /
+      `gcloud run jobs list` / `gcloud compute instances list` (`asia-northeast1`, `central-element-323112`, 2026-07-27)
+      — see § Phase A results for the findings, including one live SHA-pinned service that genuinely needs the
+      `keep-deployed-digests` protection and a correction to this plan's own earlier idle-service claim.
+- [x] 3. [DATA] P1. Label each of the top repos (MTDS, unified-trading-library, and the next 3 by size) as
       Docker-runtime vs tarball-runtime, so we know which are image-deletion-safe by construction. Done-when: each top
-      repo tagged Docker-runtime or tarball-only with a one-line basis.
+      repo tagged Docker-runtime or tarball-only with a one-line basis. ✅ 2026-07-27 — see § Phase A results table.
+
+### Phase A results (2026-07-27, executed locally, `gcloud` live queries — not estimated)
+
+**The fleet's real deploy mechanism is almost entirely `:latest`-tag tracking, not fixed-SHA pinning — and that changes
+the risk picture for the better.** `mostRecentVersions.keepCount: 5` (todo 4) is a per-package "N most recently
+_pushed_" rule, not date-scoped — so whatever a package's `:latest` tag currently points to is, by construction, always
+inside its own top-5 and already protected by the plain `keep-5-recent` rule. Verified concretely on the oldest real
+case found: `client-reporting-batch:auto-202604091748` (pushed 2026-04-09, nothing since) is still that package's #1
+most-recent version today, so it's safe under keep-5-recent alone despite being 3.5 months old. **This means the
+explicit `keep-deployed-digests` rule is only load-bearing for services that pin to a SPECIFIC, non-`:latest` tag that
+isn't being kept fresh** — a much narrower set than "every deployed service," which is what the original policy draft (§
+Policy shape) assumed it would need to enumerate.
+
+- **Found exactly one live case that needs it**: `uts-prod-data-status-rollup-svc` (a real, currently-`Ready` Cloud Run
+  SERVICE) is pinned to `deployment-api:05279c0` — not `:latest`. `deployment-api` is redeployed ~10+ times/day (Cloud
+  Build fires on every LDR→main promote — confirmed via `gcloud artifacts docker images list --sort-by=~CREATE_TIME`, 8
+  pushes in the 33 hours before this audit), so `05279c0` falls out of the keep-5 window within hours and becomes
+  delete-eligible under the 3-day rule within days. **This exact digest must be in the initial policy's
+  `keep-deployed-digests` list.** (`uts-shared-deployment-api` also pins a specific tag, `bb6c10b` — it happens to BE
+  the current `:latest` as of this audit, so it's covered by keep-5-recent today regardless, but should still be listed
+  explicitly per the plan's own "correct-by-construction, not by today's coincidence" principle.)
+- **Correction to this plan's own earlier claim (§ Why audit-first, "Blast radius is narrow")**: that section states
+  `strategy-service` is GCP-idle ("no GCE instance and no Cloud Run service"). That check only looked at Cloud Run
+  _services_ — **`strategy-service` is NOT idle**: 5 live Cloud Run _Jobs_ reference `strategy-service:latest`
+  (`uts-prod-paper-engine-run`, `uts-prod-paper-stream`, `uts-prod-mtds-scenario-matrix`, `uts-prod-mtds-paper-smoke`,
+  `uts-prod-strategy-service-t1-recon`), confirmed via `gcloud run jobs list`. It's protected the same way every other
+  `:latest`-tracking package is (keep-5-recent), so this doesn't change the cleanup policy's safety — but the "idle,
+  therefore low-risk to prune more aggressively" framing for `strategy-service` specifically no longer holds.
+  `execution-service` WAS re-checked and is genuinely idle — zero hits across both `gcloud run services list` and
+  `gcloud run jobs list`.
+- **4 Cloud Run SERVICES are permanently-broken stubs, not real deployments**: `batch-live-reconciliation-service`,
+  `deployment-service`, `fund-administration-service`, `trading-agent-service` each sit on revision `-00001-...`,
+  `Ready: False`, and have never had a successful revision since creation (container failed to start / listen on `$PORT`
+  within the health-check timeout, on the very first and only revision). Zero risk from AR cleanup — nothing is pulling
+  from them. (Their repos are NOT idle overall, though — e.g. `deployment-service` runs via many working Cloud Run
+  _Jobs_: `uts-prod-tarball-cleanup`, `uts-prod-tradfi-wave-launcher`, `vm-log-archival-prd`, etc.)
+- **One dead Job surfaced, unrelated to the cleanup policy but worth a note for its owner**: `live-event-log-compactor`
+  (created 2026-06-29) has referenced `gcr.io/central-element-323112/live-event-log-compactor:latest` since creation,
+  and `gcloud run jobs describe` shows that image has **never existed** (`Ready: False`, "Image ... not found",
+  `ContainerMissing`). It does **not** block todo 13's legacy-GCR-bucket deletion — there's nothing real there to lose —
+  but it's been silently broken for a month.
+- **GCE VM fleet (21 RUNNING at audit time — `canonical-migration-*`, `datapoint-validation-*`, `mdps-backfill-*`,
+  `mtds-*-backfill`, `vm-zombie-watchdog`) is 100% tarball-deployed, not Docker-image-based** — spot-checked directly
+  via `gcloud compute instances describe`: generic `ubuntu-os-cloud/ubuntu-2404-lts` boot disk + a `startup-script-url`
+  metadata key, no custom/baked image. This directly confirms (rather than just corroborates) the plan's existing "Blast
+  radius is narrow" claim for the live VM fleet: zero blast radius from AR cleanup.
+- **Repos outside this plan's current scope also have live `:latest`-tracking consumers**, worth knowing for Phase E's
+  rollout ordering (todo 11) since they're evidently not idle: `deployment-dashboard`, `quota-broker`,
+  `market-data-handler` (`market-data-query-service` service, `market-data-download-job` job — pinned `:v2`, not
+  `:latest`, worth a keep-check when that repo's turn comes), `market-data-tick-handler` (6 live `market-tick-cefi-*`
+  jobs — **note: this is a different AR repo than `market-tick-data-service`**, not currently in this plan's `repos:`
+  list), and `unified-trading-library` sub-packages `paper-signal-engine` / `paper-trading-engine` / `e2e-audit` (all
+  live `:latest` Jobs — directly relevant when todo 10 extends this policy to `unified-trading-library`). One naming
+  oddity, not investigated further: `vm-serial-capture-prd` references
+  `unified-trading-library/deployment-service:latest` — `deployment-service` published under the
+  `unified-trading-library` AR repo path instead of `unified-trading-system`; flagging for whoever owns that job.
+
+**Todo 3 — Docker-runtime vs tarball-runtime, top repos:**
+
+| Repo                           | Runtime                                                                                                                                                             | Basis                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| market-tick-data-service       | Tarball (VM fleet) for backfill/ingestion; several Docker-image Cloud Run Jobs for scheduled maintenance (manifest-consolidator-\*, \*-t1-recon, cf-manifest-audit) | GCE VM inspection + `gcloud run jobs list`              |
+| unified-trading-library        | Docker-image (Jobs: paper-signal-engine, paper-trading-engine; sub-package e2e-audit)                                                                               | `gcloud run jobs list`                                  |
+| deployment-service             | Docker-image, many working Jobs (tarball-cleanup, tradfi-wave-launcher, vm-log-archival-prd, …) — the standalone SERVICE entry is a dead stub                       | `gcloud run jobs list` + `services list`                |
+| deployment-api                 | Docker-image, 2 live SERVICES (`uts-shared-deployment-api`, `uts-prod-data-status-rollup-svc`) + several Jobs                                                       | `gcloud run services list` + `jobs list`                |
+| instruments-service            | Docker-image — the heaviest Job user (20+ scheduled Jobs: expected-universe-v2-\*, is-daily-enum-\*, lifecycle-catalogue-\*, sports-enrichment-\*, \*-t1-recon)     | `gcloud run jobs list`                                  |
+| strategy-service               | Docker-image (paper-engine-run, paper-stream, scenario-matrix, mtds-paper-smoke, \*-t1-recon) — **not idle**, corrects the plan's earlier claim                     | `gcloud run jobs list`                                  |
+| execution-service              | Confirmed idle — zero hits in both Services and Jobs lists                                                                                                          | `gcloud run services list` + `jobs list`, cross-checked |
+| features-service               | Docker-image (features-service-sports-job, features-onchain-collect-lst-seasonal-rewards)                                                                           | `gcloud run jobs list`                                  |
+| market-data-processing-service | Docker-image (\*-t1-recon, mdps-odds-horizon-bucket)                                                                                                                | `gcloud run jobs list`                                  |
 
 ### Phase B — Verify AR semantics + draft the policy
 
@@ -254,47 +342,13 @@ human-only.
 - [ ] 9. [INFRA] P2. Re-run the storage audit at T+2 days (cleanup runs as a ~daily background job) and confirm the
       actual GB/$ drop vs the dry-run projection AND that no `ImagePullBackOff` / failed-deploy / failed-scale incident
       fired in the window. Done-when: a re-audit CSV shows the reduction and the incident check is clean.
-
-### Phase E — Extend to the rest of the estate
-
-- [ ] 10. [INFRA] P3. Repeat Phases A–D for `unified-trading-library` (928 GB) — profile it sub-path-by-sub-path first,
-      then apply the same deployed-digest-keep + floor + 3-day pattern. Done-when: `unified-trading-library` carries a
-      live policy verified via `describe`.
-- [ ] 11. [DATA] P3. Profile the remaining ~73 GCP Artifact Registry repos (see
-      `docker_artifact_storage_audit_2026_07_24.csv`) and apply the same pattern to any showing the
-      unbounded-CI-retention shape. Done-when: each remaining repo is either policied or explicitly marked out-of-scope
-      with a reason.
-- [ ] 12. [INFRA] P3. Design the AWS ECR lifecycle policy for the 20 ECR repos — ECR syntax differs (JSON rule-priority
-      list, `countType`/`tagStatus`), and its dry-run analog is `aws ecr start-lifecycle-policy-preview` /
-      `get-lifecycle-policy-preview`; apply the same deployed-digest-keep principle. Done-when: a previewed ECR policy
-      is presented to the operator for the same sign-off gate as Phase C.
-- [ ] 13. [OPERATOR] P3. Delete the legacy GCR bucket `gs://artifacts.central-element-323112.appspot.com` (8.9 GiB, GCR
-      is shut down). This is a whole-BUCKET destroy, which is never reversibility-qualified regardless of soft-delete
-      config (delete-safety-protocol §3a) — stays `[OPERATOR]`-gated (confirmed live 2026-07-27: the bucket itself
-      carries `soft_delete_policy.retentionDurationSeconds=604800`, but that only protects individual objects/versions
-      inside a bucket, not the bucket resource itself once deleted). Per §3a's approve-executes flow: stage the exact
-      delete command, open a structured BLOCKED question recommending "approve — execute now"; a FINAL operator answer
-      authorizes the SAME worker session to run it immediately (no second agent, no manual operator execution) — not the
-      old "an agent must never run it, a human runs it separately" framing. Done-when: the bucket is gone and the
-      re-audit no longer lists it.
-- [ ] 14. [INFRA] P3. Stub `/codex/05-infrastructure/artifact-registry-cleanup-policy.md` — the per-package scoping
+- [ ] 14. [INFRA] P2. Stub `/codex/05-infrastructure/artifact-registry-cleanup-policy.md` — the per-package scoping
       decision, the keep-deployed-digest + keep-floor + delete-window pattern, and an explicit disambiguation of
       **Docker images (ephemeral, CI-rebuildable, prunable) vs data/model artifacts (permanent retention per
       artifact-versioning.md)**, stating the delete policy is scoped to AR Docker repos ONLY and must never touch the
-      data-artifact GCS buckets. Done-when: the codex doc exists and is linked from this plan.
-
-### Phase F — Code-tarball bucket retention (GCS lifecycle, human-gated)
-
-- [ ] 15. [DATA] P3. Determine which `@sha` tarballs in `gs://deployment-scripts-central-element-323112/code/` are still
-      referenced — by a live VM (`gcloud compute instances list`), a launcher default, or a `deployments/active/*.json`
-      registry entry — so the lifecycle rule never deletes a referenced copy. Done-when: the referenced-`@sha` set (or
-      "only current-pointers referenced") is listed.
-- [ ] 16. [INFRA] P3. Draft a GCS lifecycle rule on the `code/` prefix that ages out old `@sha` tarballs + manifests
-      (e.g. `age > 30d` AND not the current-pointer AND not in the Phase-15 referenced set); the per-repo
-      `<repo>-code.tar.gz` current-pointer is always kept. Done-when: the lifecycle JSON is committed and a dry
-      enumeration shows only stale `@sha` objects in scope.
-- [ ] 17. [OPERATOR] P3. Apply the tarball lifecycle rule live — human-gated prod delete, cite the delete-safety
-      protocol. Done-when: `gcloud storage buckets describe` shows the rule and the `code/` prefix size stops growing.
+      data-artifact GCS buckets. Done-when: the codex doc exists and is linked from this plan. (Numbering kept
+      non-contiguous with 5-9 intentionally — preserved from the pre-split single plan for cross-doc traceability; todos
+      10-13, 15-17 now live in the satellite plan, see the intro blockquote.)
 
 ## Review findings this plan encodes
 
@@ -319,11 +373,11 @@ Review of the original "keep-5 + delete-older-than-3d" proposal. All are address
    14).
 4. **[Scope] The proposal was AR-only and missed the code-tarball bucket.** `gs://deployment-scripts-…/code/` keeps a
    current-pointer per repo **plus 732 accumulating `@sha` copies** (versioning off), ~~2.39 GB (~~$0.24/mo) — same
-   disease, tiny cost, different fix (a GCS lifecycle rule under the delete-safety protocol, not an AR policy) → Phase
-   F.
-5. **[Minor] Loose ends** — legacy GCR bucket can just be deleted (GCR is shut down, todo 13); ECR has its own dry-run
-   analog (`start-lifecycle-policy-preview` / `get-lifecycle-policy-preview`, todo 12); the supporting CSV/HTML exist at
-   the workspace root but are uncommitted.
+   disease, tiny cost, different fix (a GCS lifecycle rule under the delete-safety protocol, not an AR policy) → moved
+   to the satellite plan's Phase F (see intro blockquote).
+5. **[Minor] Loose ends** — legacy GCR bucket can just be deleted (GCR is shut down); ECR has its own dry-run analog
+   (`start-lifecycle-policy-preview` / `get-lifecycle-policy-preview`); the supporting CSV/HTML exist at the workspace
+   root but are uncommitted. All now tracked in the satellite plan (see intro blockquote).
 
 ## Codex SSOTs
 
@@ -384,6 +438,25 @@ The original audit output lives at the **workspace root, outside any git repo** 
   genuinely dead, todo 2's live-runtime corroboration becomes the PRIMARY source of truth for "what's deployed," not
   just a corroboration step, and todo 1 should be rewritten to say so rather than treating a broken file as the oracle.
   Continuing the audit now.
+- **2026-07-27 (operator, same session) — Phase A complete + plan split**: folded real, verified Phase A findings into
+  todos 1-3 (all ✅) and § Phase A results — see that section for the full findings, headline ones being: (a) the
+  fleet's real deploy target is almost entirely `:latest`-tag tracking, which is inherently protected by the existing
+  `keep-5-recent` rule (`keepCount` is a per-package "N most recent pushes," not date-scoped, so whatever is `:latest`
+  today is trivially in its own top-5); (b) exactly one live case genuinely needs the `keep-deployed-digests` rule —
+  `uts-prod-data-status-rollup-svc` pinned to `deployment-api:05279c0`, a non-`:latest` SHA that will age out of keep-5
+  within hours given deployment-api's push rate; (c) a correction to this plan's own earlier claim — `strategy-service`
+  is NOT idle (5 live Cloud Run Jobs reference it), though the correction doesn't change the policy's safety since those
+  Jobs also track `:latest`; (d) the GCE VM fleet is confirmed 100% tarball-deployed (spot-checked directly, not just
+  corroborated); (e) one already-broken, unrelated Job found (`live-event-log-compactor`, referencing a GCR image that's
+  never existed) — doesn't block the satellite plan's GCR-bucket-delete todo, just noted for its owner. **Then split the
+  plan**: Phase E (todos 10-13) and Phase F (todos 15-17) moved to
+  [docker_artifact_registry_cleanup_side_tracks_2026_07_27.md](/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md)
+  — genuinely independent of this plan's Phase B-D spine (different repos/cloud/bucket), so splitting them out lets them
+  run **in parallel** with this plan under AO instead of serialized behind it by `sequential: true`. This plan now
+  scopes to Phases A (done) through D + todo 14 (the codex stub); `assigned_vm` flipped back to `planning` /
+  `execution_scope` back to `orchestrator-agent` so AO resumes from todo 5. `sequential: true` stays — todos 5-9 are
+  still a real chain. Estimates re-baselined down (3d/2.4d → 1.2d/1d) to reflect the narrower remaining scope; the
+  satellite plan carries its own estimate for the moved-out work.
 
 If absent when the next shift picks this up, **regenerate** via the read-only pull that produced them
 (`gcloud artifacts repositories list` across both projects + `aws ecr describe-images` across the 20 repos); the numbers

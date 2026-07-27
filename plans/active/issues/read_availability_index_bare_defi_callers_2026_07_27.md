@@ -192,15 +192,26 @@ not a mechanical column-list copy.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P0. **market-tick-data-service** — `reader.py:839` `_resolve_pipeline_mode_from_manifest`: project
+- [x] ✅ [SCRIPT] P0. **DONE 2026-07-27 (slot-15)** — `market-tick-data-service@2031aa4b`. **market-tick-data-service**
+      — `reader.py:839` `_resolve_pipeline_mode_from_manifest`: projected
       `read_availability_index(bucket, columns=["venue","data_type","instrument_type","date","capture_status","pipeline_mode"])`
-      (verified column set — includes `pipeline_mode` for the CF-3 lift). Add/extend a regression test asserting the
-      CF-3 lift still fires with a projected manifest frame.
-- [ ] [SCRIPT] P0. **market-tick-data-service** — `engine/orchestrator/__init__.py:509`
-      `_run_preflight_availability_check`: project to the columns actually read in the function body
-      (`date`/`capture_status`/`instrument_count`/`error_reason` for the skip-mask,
-      `venue`/`data_type`/`instrument_id`/`underlying`/`quote_asset`/`margin_type` in the per-row atom loop) — re-verify
-      by direct read before shipping, same incident class as `mtds_backfill_vm_startup_oom_rc137_2026_07_14`.
+      (verified column set by direct read of the function body — includes `pipeline_mode` for the CF-3 lift at lines
+      862-864). Added 2 regression tests: one pins the exact call signature so a future edit can't silently drop back to
+      a bare call, the other proves the CF-3 lift still fires when fed a genuinely narrow manifest DataFrame carrying
+      only the projected columns (not a wider convenience frame that happens to satisfy the column-membership check).
+      `quality-gates.sh` green (241s, on the 2nd attempt — the 1st clean pass's sentinel was invalidated by quickmerge's
+      own auto-rebase against a concurrently-pushing branch), shipped via quickmerge --agent.
+- [x] ✅ [SCRIPT] P0. **DONE 2026-07-27 (slot-12)** — `market-tick-data-service@27bdba6c`. **market-tick-data-service**
+      — `engine/orchestrator/__init__.py:509` `_run_preflight_availability_check`: projected to the columns actually
+      read in the function body, confirmed by direct read (`date`/`capture_status`/`instrument_count`/`error_reason` for
+      the skip-mask, `venue`/`data_type`/`instrument_id`/`underlying`/`quote_asset`/`margin_type` in the per-row atom
+      loop) — same incident class as `mtds_backfill_vm_startup_oom_rc137_2026_07_14`. The column list lives as
+      `_PREFLIGHT_AVAILABILITY_COLUMNS` in `engine/orchestrator/preflight.py` (alongside its sibling constants) rather
+      than inline, to keep `__init__.py` under the 900-line file-size cap. New regression test
+      (`test_preflight_projects_columns_to_avoid_full_index_load`) asserts the projection is applied AND that behavior
+      is unchanged. Full `quality-gates.sh` green (7094 tests passed, multiple independent runs), shipped via quickmerge
+      --agent (5 attempts — 4 blocked by a fast-moving shared branch drift / one transient fleet-contention
+      PM-integration-test kill, each confirmed transient and resolved by rebase+retry, not a code defect).
 - [x] ✅ [SCRIPT] P0. **ml-service** — `inference/app/core/manifest_inference_guard.py:46`
       `check_manifest_for_inference` — **SHIPPED 2026-07-27 (slot-10)**, `ml-service@0bd5e6a`. Confirmed by direct read
       (not the guessed default): `_filter_to_day` reads `date`/`asset_group`; `_classify_day_rows` reads

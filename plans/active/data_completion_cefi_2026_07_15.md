@@ -74,13 +74,19 @@ drift_direction: advance-code
       (original finding); slot-4 live-verification 2026-07-27 (this closure). **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [CODE] P1. **execution-service — `data/loaders/defi.py:41,77` DeFi raw-tick reads still legacy (slot-2/defi
-      owner).** The shared `candidate_parquet_paths` DeFi branch needs a `chain` kwarg
-      (`build_defi_partition_path(venue, chain, …)`) + a defi instrument-id→chain mapping that the cefi-scoped fix did
-      not supply (calling it as-is raises `KeyError("chain")`). `loader.py` `load_swaps`/`_build_swaps_paths` DeFi paths
-      likewise unchanged. Mirror the cefi `canonical_paths.build_candidate_raw_tick_paths` pattern with the defi chain
-      axis. Target repo: execution-service (DeFi slice). Provenance: cefi E2E audit 2026-06-04 (the cefi P0 above is
-      GREEN; this is the defi sibling).
+- [x] ✅ [CODE] P1. **DONE 2026-07-27 (slot-15)** — **execution-service — `data/loaders/defi.py:41,77` DeFi raw-tick
+      reads still legacy.** Found `data/loaders/defi.py`'s `DeFiDataLoader._defi_read_candidates` ALREADY has the chain
+      kwarg + derivation (already shipped by someone else before this dispatch) — the genuinely-unfixed gap was the
+      SEPARATE legacy `UCSDataLoader` in `data/loader.py` (still reachable: `engine/backtest/data_loader.py:386`
+      instantiates it with `domain="defi"`), whose `_build_swaps_paths`/`load_swaps` never got the canonical-first +
+      chain-axis treatment at all. Fixed both `_build_swaps_paths` AND the identical adjacent bug in
+      `_build_liquidity_paths` (same file, same root cause) by mirroring `DeFiDataLoader._defi_read_candidates` exactly:
+      derive chain via `to_canonical_venue`, route through `build_candidate_raw_tick_paths` (`canonical_paths` SSOT),
+      legacy path appended as fallback. 2 new regression tests pin the chain derivation + confirm the canonical builder
+      is called (not silently skipped) even with no derivable venue. `quality-gates.sh` green (204s, 2nd attempt — 1st
+      was silently killed mid-run by the same shared-host RAM contention tracked in
+      `issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`, but its 7888/7888 test pass before the kill
+      already confirmed the fix correct). Shipped: `execution-service@0788b1f0`.
 
 **🟡 P1 — pre-flight engrained (blocking the "pre-flight on every service" bar):** **(MIGRATED FROM:
 `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
@@ -344,7 +350,7 @@ MTDS consolidation ruling.)**
       independently-dispatchable todo.)**
 - [x] ✅ [DATA] P1. **VERIFY MDPS candle-manifest faithfulness — DONE 2026-07-27 (slot-14).** Verdict: **YES, MDPS is
       dramatically under-emitting manifest rows relative to real candle files it writes** — confirmed by direct
-      comparison, not assumption. _*Root cause of the original "8,715 sparse ohlcv_* rows" premise_*: STALE query
+      comparison, not assumption. _\*Root cause of the original "8,715 sparse ohlcv_* rows" premise_*: STALE query
       vocabulary — a 2026-07-21 operator ruling (`market-data-processing-service/app/core/canonical_writer.py:519-527`,
       `canonical_writer_streaming.py:478-483`, `output_path_helpers.py:120-124`) changed the manifest's `data_type` AXIS
       for MDPS-derived candle rows to the SOURCE type (e.g. `trades`), never `ohlcv_*` — both the manifest row and the

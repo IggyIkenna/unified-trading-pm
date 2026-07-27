@@ -9,7 +9,7 @@ summary: >-
   MTDS→MDPS→features→ml/strategy"). Confirmed `migration_orphan_sweep.py` (the only working orphan sweep in the corpus,
   proven on sports/cefi/defi/tradfi/prediction over 2026-07-21..24) explicitly excludes
   `processed_candles/`/`processed_data/`/`features/` and its own source comment's claim that those corpora "have their
-  own re-runnable sweep" is false — independently confirmed via `codex/02-data/orphan-object-detection.md` §2c/§5's own
+  own re-runnable sweep" is false — independently confirmed via `/codex/02-data/orphan-object-detection.md` §2c/§5's own
   "no known orphan coverage" finding. features-service/ml-service/strategy-service all write manifests via the same UTL
   `ManifestWriter`/`record_captured` pattern (so the same orphan failure mode is structurally possible there too), but
   zero orphan-detection tooling exists for any of them. No generic/reusable sweep framework exists either — sports
@@ -73,7 +73,7 @@ Dispatched a scoping sub-agent, then independently verified its key claim. Facts
    checkpointed, column-projected reads).
 2. **MDPS candle layer has NO equivalent.** `migration_orphan_sweep.py`'s `_DATA_PREFIXES` covers only
    `raw_tick_data/`/`day=`; its own source comment (line 112) asserts `processed_candles/`/`processed_data/`/
-   `features/` "have their own re-runnable sweep" — **confirmed false**: `codex/02-data/orphan-object-detection.md`
+   `features/` "have their own re-runnable sweep" — **confirmed false**: `/codex/02-data/orphan-object-detection.md`
    §2c/§5 already documents this exact claim as unverified/false and states those corpora have "no known orphan
    coverage." The only candle-orphan work that exists is
    `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` — CEFI-only, scoped narrowly to files that
@@ -94,7 +94,7 @@ Dispatched a scoping sub-agent, then independently verified its key claim. Facts
    `asset_group × feature_family`; ml/strategy are run/model-id-keyed, not day-sharded at all). The REUSABLE part is the
    design pattern, not the code: single-walk discipline, the A-E classification taxonomy, `record_captured`-only
    backfill (never delete), `is_covered()`'s wildcard-tolerant manifest match — documented at
-   `codex/02-data/orphan-object-detection.md`.
+   `/codex/02-data/orphan-object-detection.md`.
 
 ## Why this needs a split, not one checkbox
 

@@ -109,6 +109,17 @@ Two independent gates because Group A and Group B are at different stages:
 
 ## Open design decisions (resolve before terraform)
 
+> **🟥 STALE 2026-07-27 (slot-12) — the tier-set + SA-design resolutions below predate a LATER, contradicting operator
+> ruling.** `deployment-service/terraform/gcp/canonical_buckets.tf:44-46`: "prd + test are the only provisioned tiers
+> (dev/stg retired per the 2026-07-13 operator ruling — `bucket_estate_consolidation_to_sub100_2026_07_13.md` Wave 1)."
+> That ruling is dated 2026-07-13 — ONE MONTH AFTER this section's 2026-06-12 resolution — and is a WORKSPACE-WIDE,
+> PERMANENT retirement of the dev/stg tier concept (20 empty dev/stg canonical buckets deleted), not a Group-A-specific
+> gap. P1.1 already created `uts-dev-sa`/`uts-stg-sa` as live GCP SAs on this now-stale premise (no bindings yet — P1.2
+> is un-shipped). Full analysis + recommended resolution paths:
+> `issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md` (new, P0, operator-decision pending).
+> **Do not implement P1.2's literal dev-SA/stg-SA bindings** until that decision lands — do the `-prd-` binding only
+> (unambiguous, doesn't depend on the dev/stg naming question) or wait for the full re-derivation.
+
 - [x] ✅ **Tier set — RESOLVED**: `dev` / `stg` / `prd` (+ ephemeral `test`) per `resolve_bucket_name`; **staging is a
       distinct `-stg-` tier** (the codex 3-tier "staging≡dev" framing is stale). `mock` is mode-based, not a name
       suffix. — provenance: UTL `_DEPLOYMENT_ENV_SHORT_FORM` (mandated SSOT) + operator 2026-06-09.
@@ -212,10 +223,31 @@ Two independent gates because Group A and Group B are at different stages:
       rather than the repo's much older pinned `terraform` v1.5.7 binary (protocol-incompatible with the resolved
       `google` provider v7.41.0), and a short `TMPDIR`/`TF_DATA_DIR` (a long scratchpad path broke the provider plugin's
       unix-socket handshake — `Unrecognized remote plugin message`/ "Failed to read any lines from plugin's stdout").
-- [ ] [TERRAFORM] P1.2. Replace the project-wide `roles/storage.objectAdmin` with **per-suffix bindings**: dev SA →
-      `objectAdmin` on `*-dev-*`; stg SA → `*-stg-*`; prd SA → `*-prd-*`; all SAs + CI/CD + developer identities →
-      `objectViewer` broadly (read-anything) but **read-only on `*-prd-*`**. Apply to **Group A buckets first** (they
-      carry the suffix today).
+- **[TERRAFORM] P1.2.** Replace the project-wide `roles/storage.objectAdmin` with per-suffix bindings. **Non-checkbox
+  rollup header — split 2026-07-27 (slot-12) per the M3 done-gate** (a single checkbox covering both the
+  genuinely-complete SA-level slice and the still-blocked IAM-binding-apply slice left nothing honestly flippable, the
+  same shape already fixed once this session for the mdps-features plan's todo 11). See P1.2a (done) and P1.2b (open,
+  credential-blocked) immediately below.
+- [x] ✅ [TERRAFORM] P1.2a. **DONE 2026-07-27 (slot-12) — `deployment-service@0dbc9ae`.** Re-scoped per the operator
+      resolution of `issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md` (BLK-4b104acc): the
+      dev/stg suffix bindings in the original P1.2 text are DROPPED (those tiers were permanently retired 2026-07-13,
+      nothing to bind to) — `uts-test-sa` (new) is the correctly-named replacement for the actual non-prod tier
+      (`-test-`). **SA-level changes LIVE-VERIFIED** (`gcloud iam service-accounts list`): `uts-test-sa` created;
+      `uts-dev-sa`/`uts-stg-sa` display names updated to "(HISTORICAL — permanently unbound)", zero role bindings. "All
+      SAs + CI/CD + developer identities → objectViewer broadly" from the original text: the CI/CD + developer-identity
+      half is NOT addressed (no such identity is terraform-managed in this repo today — out of scope for a mechanical
+      implementation, flagged as its own todo in the SSOT-contradiction issue doc).
+- [ ] [TERRAFORM] P1.2b. **BLOCKED-CREDENTIALS 2026-07-27 (slot-12).** `objectAdmin` on `*-prd-*`/`*-test-*` for
+      `uts-prd-sa`/`uts-test-sa` + `objectViewer` broadly for all 5 SAs are DECLARED in
+      `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf` (`tofu validate` + `tofu fmt` clean, targeted
+      `tofu plan` showed exactly 8 adds/2 changes/0 destroys) but NOT YET APPLIED — this session's active credential
+      (`github-actions-deploy` SA) lacks `resourcemanager.projects.getIamPolicy`/`setIamPolicy` entirely (confirmed:
+      `gcloud projects get-iam-policy central-element-323112` 403s outright for this identity; the same error class hit
+      ~15 unrelated pre-existing resources in a full untargeted plan too, confirming a whole-project permission gap, not
+      something wrong with the new resources). **Remaining work**: run `ENV=prod ./tofu.sh apply` with a credential that
+      holds `resourcemanager.projects.setIamPolicy` on `central-element-323112` (e.g. `unified-trading-sa` or an
+      operator's own ADC) to actually apply the 8 declared-but-pending resources — see the SSOT-contradiction issue
+      doc's matching todo for the exact recipe (short-`TMPDIR` gotcha included).
 - [ ] [TERRAFORM] P1.3. Verify dev/stg workloads read everything, write their own tier, and are **IAM-denied** a `-prd-`
       write (negative test). No prod write-grant removal until P2.
 

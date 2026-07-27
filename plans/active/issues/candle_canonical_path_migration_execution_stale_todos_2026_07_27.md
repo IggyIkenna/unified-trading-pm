@@ -80,11 +80,18 @@ to reconcile the two docs' conflicting narratives later.
 
 ## Recommended decision
 
-- [ ] [DATA] P1. Main/operator reconciles `candle_canonical_path_migration_execution_2026_07_24.md` todos 3-15 against
-      `candle_feature_canonical_path_divergence_2026_07_20.md`'s Progress Log and flips/closes the ones that duplicate
-      already-completed work (todo 2 already flipped this session with evidence). Preserve genuinely-open residual items
-      that are NOT duplicated here — TRADFI's ~7.1M quarantined objects (sibling doc's own todo 3) and CEFI's 149-object
-      residual (sibling doc's own todo 19) — wherever they are currently tracked.
+- [x] ✅ [DATA] P1. **RECONCILED 2026-07-27 (fleet, closed by slot-4).** Confirmed all 16 todos in
+      `candle_canonical_path_migration_execution_2026_07_24.md` are now `[x]` — todos 3-16 were independently closed by
+      6 different slots (3/9/10/12/7/8) over this session, each with direct code-read or live-GCS re-verification (not
+      just citing the sibling doc's narrative), all landing on the same conclusion this issue doc predicted: duplicate
+      of already-shipped work. Two real code fixes DID come out of the reconciliation pass (not pure duplicates): todo
+      10 (mdps@800f3b5, manifest re-record wiring) and todo 16 (mdps@caa995c, emission-policy self-referential-lookup
+      fix). Independently re-verified the two residual items THIS closure warned against losing are still correctly
+      tracked, not duplicated or dropped: TRADFI's ~7.1M quarantined objects = sibling doc todo 3 (`[x]` pointer-closed
+      to this doc, but its own text confirms the underlying data — safe-in-quarantine, not yet canonically readable — is
+      still substantively open pending an operator ruling); CEFI's 149-object residual = sibling doc todo 19 (`[ ]`,
+      "Fix `_copy_verify_delete()`'s retry-idempotency gap", genuinely still open). No re-launch of the ~40-VM SPOT
+      fleet occurred — the risk this doc flagged did not materialize.
 - [ ] [DATA] P2. Once reconciled, check whether `candle_canonical_path_migration_execution_2026_07_24.md` should be
       archived/superseded outright (its entire remaining scope may already live in the sibling doc), or trimmed to only
       the genuinely-not-yet-done pieces, per the plan archival ritual (SSOT: `plans/active/task_template.md`).

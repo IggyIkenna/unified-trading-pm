@@ -136,7 +136,7 @@ the CeFi contract from being a one-off exception downstream readers have to spec
 - [x] ✅ [DESIGN] P1. Decide (a) vs (b) above; if (a), verify the real `timestamp` epoch unit against a live GCS sample
       before writing the `pd.to_datetime(..., unit=?)` call (repo: unified-api-contracts or market-tick-data-service
       depending on the decision). — unified-trading-pm (this doc) @ decision below, § 8. **Decided: (a), unit="us".**
-- [ ] [SERVICE] P1. Implement the chosen fix (rename `amount`→`size`, derive `ts_event` via
+- [x] ✅ [SERVICE] P1. Implement the chosen fix (rename `amount`→`size`, derive `ts_event` via
       `pd.to_datetime(df["timestamp"], unit="us", utc=True)`), **plus the price/amount dtype-coercion gap found during
       verification (§ 8.2)** — add explicit `pyarrow.csv.ConvertOptions(column_types={...})` entries for `price` and
       `amount` (trades/liquidations) and `bid_price`/`ask_price`/`bid_size`/`ask_size` (quotes) so they land as
@@ -148,7 +148,18 @@ the CeFi contract from being a one-off exception downstream readers have to spec
       (`_write_one_cefi_shard` and `_tardis_cefi_shard_router`) — the `finalise_rows_and_path` FATAL-enforcement
       mechanism is already shipped and ready to receive `validate=True`. Verify against a real captured GCS sample (not
       just synthetic test rows) that a real shard validates clean before shipping — reuse the sampling recipe in § 8.1
-      (a `pipeline_mode=batch_tardis` shard from before the 2026-06-29 capture pause).
+      (a `pipeline_mode=batch_tardis` shard from before the 2026-06-29 capture pause). —
+      **market-tick-data-service@3169d25e** (slot 6): `_rename_and_derive_contract_columns` in `tardis_shared.py`,
+      shared `_tardis_wire_convert_options()` SSOT wired into both the legacy AND streaming CSV parse paths in
+      `tardis_csv_transport.py`, `validate=True` at both `_write_one_cefi_shard` and `_tardis_cefi_shard_router`, plus
+      new/updated tests (`test_tardis_wire_convert_options.py`, `test_tardis_canonical_output.py` rewritten to exercise
+      the real wire shape). Independently re-verified this session (slot 2) against the real § 8.1 GCS sample
+      (`gs://market-data-tick-cefi-prd-central-element-323112/.../day=2026-06-29/.../BITFINEX-FUTURES:PERPETUAL:BTC-USDT@LIN.parquet`,
+      27,123 rows): confirmed the pre-fix object independently reproduces the § 8.2 `price:int64` trap, reconstructed
+      the real wire CSV bytes from the captured values and ran them through the shipped `_tardis_wire_convert_options()`
+      — `price`/`amount` now parse `float64` — then through `finalise_rows_and_path(..., validate=True)` end-to-end:
+      **zero violations**, `ts_event` dtype `datetime64[ns, UTC]` landing entirely inside `day=2026-06-29` (min
+      `00:00:05.021`, max `23:59:55.921`), `size`/`price` both `float64`.
 
 ## 7. Codex SSOTs
 
