@@ -99,26 +99,26 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                          | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                          | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                          | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                          | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                          | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                              | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                              | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                              | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                              | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                              | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                          "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                          the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                          genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                          for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                          `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                          (specific `_migrated_*` marker objects, never the bucket), target
-                          `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                          returned `604800` (7 days) fresh-checked 2026-07-27 per
-                          `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                          this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                          per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                          Progress Log below.
+                              "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                              the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                              genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                              for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                              `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                              (specific `_migrated_*` marker objects, never the bucket), target
+                              `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                              returned `604800` (7 days) fresh-checked 2026-07-27 per
+                              `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                              this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                              per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                              Progress Log below.
 
-- [ ] [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
+- [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
       `fees {     feePercentage feeType }` to match `_MESSARI_DEX_QUERY`'s shape) to
       `_CURVE_QUERY`/`_CURVE_QUERY_FILTERED`, and switch `curve`/`sushiswap`/`velodrome_v2`/`trader_joe_v2` (NOT `gmx`
@@ -126,7 +126,22 @@ is quick and doesn't block anything.
       `self._parse_messari_dex`. Verify the Messari `liquidityPoolDailySnapshots` schema actually exposes `inputTokens`
       uniformly across all 4 subgraphs before assuming this is a drop-in change. Done-when: a live test query against
       each of the 4 subgraphs returns a populated `inputTokens` array for at least one known pool. (repo:
-      market-tick-data-service)
+      market-tick-data-service) ✅ **2026-07-27**: shipped `market-tick-data-service@63199601`. Root cause was TWO-FOLD,
+      not just the missing query fields: `_parse_curve` (the pre-existing parser bound to the `messari_basic` entry)
+      never read token symbols from the pool object AT ALL, regardless of what the query requested -- so even adding
+      `inputTokens`/`fees` alone would not have fixed anything without also switching the parser to `_parse_messari_dex`
+      (which already correctly extracts `token0/token1` symbols + fee tier from that exact shape). **Live-verified** all
+      4 real subgraphs via `gateway.thegraph.com` (not assumed): curve ("Curve GEAR/ETH"), sushiswap ("SushiSwap AXON
+      Finance/Tether USD"), trader_joe_v2 ("Trader Joe HUNDRED/USD Coin") all returned populated `inputTokens`/`fees` on
+      the first query; velodrome_v2 hit a transient `bad indexers` gateway error on the first attempt, reproduced
+      populated `inputTokens`/`fees` ("Velodrome Finance V2 sAMMV2-alETH/WETH") on retry -- confirming it was
+      indexer-availability noise, not a schema gap. All 4 subgraphs confirmed uniform. Updated the 2 existing
+      dispatch-wiring unit tests (`test_query_and_parse_velodrome_v2_uses_messari_basic`,
+      `test_query_and_parse_trader_joe_v2_uses_messari_basic`) to mock `inputTokens`/`fees` and assert the resulting
+      `token_a`/`token_b` columns are correctly populated (previously they only asserted non-empty + `pool_id`, so they
+      would NOT have caught this class of bug). `_parse_curve` itself is untouched and still tested/available
+      (`test_parse_curve_full`) -- left in place since the todo didn't call for its removal and a future protocol could
+      still need the bare (non-inputTokens) Messari shape.
 - [ ] [DATA] P1. **Live-test whether 2022-era pool metadata is still indexed**, per subgraph, for
       curve/sushiswap/velodrome_v2/trader_joe_v2 -- before committing to a full historical backfill. Precedent both
       ways: Messari subgraphs are typically full-history (plausibly recoverable), but
