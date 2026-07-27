@@ -80,14 +80,22 @@ This doc stops at diagnosis + scoping, per the workspace's dispatch-scope rule (
 build-out is real feature work, not a bounded audit fix) — splitting into properly-sized follow-up todos rather than
 attempting the full build here:
 
-- [ ] [CODE] P1. **UAC chain registration.** Add `"PLASMA": 9745` to `MAINNET_CHAIN_IDS`, a genesis date to
+- [x] ✅ [CODE] P1. **UAC chain registration.** Add `"PLASMA": 9745` to `MAINNET_CHAIN_IDS`, a genesis date to
       `CHAIN_GENESIS_DATES` (mainnet launch 2025-09-25, or earlier if a public testnet/beta phase predates it —
       re-verify before committing to the exact date), and (once genesis lands) real `PROTOCOL_LAUNCH_DATES` entries for
       `("PLASMA", "AAVE")` (2025-09-25, well-sourced — see this doc) and `("PLASMA", "FLUID")` (date not yet confirmed —
       needs its own block-explorer/DefiLlama audit before adding). Repo: unified-api-contracts. Done when:
       `MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES` invariant (STEP 5.72) still holds with PLASMA included,
       `test_protocol_launch_dates_chain_known_to_genesis_ssot` and `test_protocol_launch_after_chain_genesis` pass,
-      `quality-gates.sh` green.
+      `quality-gates.sh` green. — **DONE unified-api-contracts@2483e157** `registry/chain_env.py`:
+      `MAINNET_CHAIN_IDS["PLASMA"]     = 9745`, `CHAIN_GENESIS_DATES["PLASMA"] = "2025-09-25"`,
+      `PROTOCOL_LAUNCH_DATES[("PLASMA", "AAVE")] =     "2025-09-25"`. Re-verified the date via live web search (not
+      assumed from the doc): plasma.org's own network-configuration docs + Bitget/TheDefiant coverage confirm Mainnet
+      Beta + XPL TGE launched 2025-09-25, chain_id 9745 — "Mainnet Beta" is Plasma's own launch branding, not a separate
+      earlier phase, so no earlier date applies. `("PLASMA", "AAVE")` removed from
+      `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`; `("PLASMA", "FLUID")` stays pending (unconfirmed date, per this todo's
+      own scope — that's the P2 scoping todo below). All 4 named/sibling test files green (72 tests:
+      `test_protocol_launch_dates.py` ×20, `test_chain_genesis_dates.py` ×9, `test_chain_env.py` ×43).
 - [ ] [CODE] P2. **Capture adapter scoping.** Determine what data source is actually reachable for Plasma-chain
       Aave/Fluid market data (a Goldsky/The Graph subgraph, direct RPC + known contract addresses, or a DefiLlama-style
       aggregator) — this needs its own investigation, not an assumption that an existing subgraph-pattern adapter (like
