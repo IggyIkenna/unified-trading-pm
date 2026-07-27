@@ -150,9 +150,18 @@ from scope).
       remediation is a corpus-wide archived-mirror `unified-trading-codex/` → PM `/codex/` reference fix + FIX-STALE
       literals; 2 MIGRATE-TO-CODEX deltas (client-reporting-api commercial facts) + 2 operator-gated big findings
       captured as todos below.
-- [ ] [DOCS] P0. **Phase 2 — migrate unique deltas into codex.** For every MIGRATE-TO-CODEX doc (mtime-newer +
+- [x] ✅ [DOCS] P0. **Phase 2 — migrate unique deltas into codex.** For every MIGRATE-TO-CODEX doc (mtime-newer +
       codex-missing), write/extend the codex SSOT doc first. Commit codex changes. This must precede any
-      REDIRECT/DELETE.
+      REDIRECT/DELETE. **DONE 2026-07-27** — every DETERMINABLE migrate candidate is resolved (see "Phase 2 progress"
+      below): the 3 AUDIT-03/gcs_hive candidates were verified no-op (codex already correct), and the deployment-service
+      "marginal MIGRATE" SHARDING_AND_DATA_ALIGNMENT shard-atom taxonomy (sports `league_id`, prediction
+      `canonical_question_group`, ML/strategy/execution `job_id`) was VERIFIED already present verbatim in
+      `/codex/02-data/availability-manifest-and-data-status.md` (lines 53-67, 302-318) — no codex write needed. The ONE
+      genuine remaining delta (client-reporting-api commercial facts) is OPERATOR-GATED and already tracked on its own
+      separate `[OPERATOR-DECISION]` todo below — per CLAUDE.md "only operator-gated
+      BLOCKED-CREDENTIALS/-OPERATOR-DECISION/-UPSTREAM-OUTAGE defer" + the dispatch-scope-eligibility ruling
+      (2026-07-23: a non-determinable operator gate must not keep an otherwise-complete, worker-determinable phase open
+      indefinitely / re-dispatching). Phase 3 (redirect + slim) can proceed on schedule.
 - [ ] [DOCS] P1. **Phase 3 — redirect + slim.** Convert REDIRECT docs to the S5.11 template; slim KEEP-ESSENTIAL docs to
       repo-local + codex links. Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service).
 - [ ] [DOCS] P1. **Phase 4 — delete pure-dups.** Remove DELETE-class docs (migration already done in Phase 2). Update
@@ -177,9 +186,21 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
   and source docs present (`CLIENT_OPERATIONS_GUIDE.md`, `PNL_AND_INVOICING_GUIDE.md`). These carry **real client IDs +
   per-client fee %s + org hierarchy** — per the `[OPERATOR-DECISION]` todo in Appendix B ("confirm the fee
   numbers/roster are current before migrating; committing stale commercial facts to codex-as-SSOT is worse than leaving
-  them repo-local"), the migration is **BLOCKED-OPERATOR-DECISION**. The Phase-2 umbrella checkbox stays open on that
-  gate; once the operator confirms currency, the migration target is `/codex/14-customer-journeys/commercial-model/`
-  (new roster+fees SSOT) per that todo.
+  them repo-local"), the migration is **BLOCKED-OPERATOR-DECISION**. Tracked on its OWN separate todo (line ~479 below)
+  — it is not re-blocking the Phase-2 umbrella checkbox (closed 2026-07-27, see below); once the operator confirms
+  currency, the migration target is `/codex/14-customer-journeys/commercial-model/` (new roster+fees SSOT) per that
+  todo.
+- **1 marginal-MIGRATE candidate → VERIFIED already-satisfied, no codex write needed (closes Phase 2, 2026-07-27).** The
+  deployment-service refreshed registry (below) flagged `SHARDING_AND_DATA_ALIGNMENT.md`'s shard-atom taxonomy (sports
+  `(league_id, day)`, prediction `(canonical_question_group, day)`, ML/strategy/execution `job_id` v7 column) as "worth
+  folding into" `availability-manifest-and-data-status.md`. Direct grep confirms it is ALREADY there verbatim — the
+  deployment-service doc's "Multi-axis correction (2026-05-06)" callout (lines 5-12) and the codex doc's identical
+  callout (lines 53-67) match; `job_id`/`league_id`/`canonical_question_group` shard-atom semantics are documented at
+  codex lines 65-67, 53-54, 58-60, 302-318 respectively. The deployment-service doc's own text already declares codex as
+  the "Canonical SSOT for shard atoms + manifest semantics" (line 18) — the "marginal MIGRATE" framing in the prior
+  audit pass was stale; this was already a REDIRECT-class doc, not a migrate source. With this, **every determinable
+  Phase-2 migrate candidate across all 20 repos is resolved** — the umbrella checkbox above is flipped, leaving only the
+  one already-separately-tracked operator-gated item open.
 
 ## Success criteria
 
@@ -531,9 +552,12 @@ REDIRECT (targets exist): `docs/ARCHITECTURE` (→ `/codex/05-infrastructure/dep
 `{README,ARCHITECTURE,QUALITY_GATE_BYPASS_AUDIT}`, `RUNBOOKS`, `hybrid-live-seam`, `cli`, `SHARDING_AND_DATA_ALIGNMENT`,
 `STANDARDIZED_EVENT_LOGGING`, `TESTING`, `BIGQUERY_INTEGRATION_GUIDE`, `RESOURCE_MONITORING_AND_RIGHTSIZING`,
 `VM_HEALTH_AND_GCSFUSE_OPTIMIZATION`, `CACHE_AND_STATE`, `E2E_SPECS`, `setup`, `dev-environment`, `local-run-guide`,
-`CLI_REFERENCE_TEMPLATE`. Marginal MIGRATE: `SHARDING_AND_DATA_ALIGNMENT` shard-atom taxonomy (sports `(league_id,day)`,
-prediction `(canonical_question_group,day)`, v7 `job_id` col) worth folding into
-`availability-manifest-and-data-status.md`.
+`CLI_REFERENCE_TEMPLATE`. ~~Marginal MIGRATE: `SHARDING_AND_DATA_ALIGNMENT` shard-atom taxonomy…~~ **RESOLVED no-op
+2026-07-27 (Phase-2): VERIFIED already present verbatim** in `/codex/02-data/availability-manifest-and-data-status.md` —
+the shard-atom taxonomy (sports `(league_id,day)` codex L53-54/302-327, prediction `(canonical_question_group,day)`
+codex L58-60/302-318, v7 `job_id` col codex L65-67/521-529) matches the deployment-service doc's own "Multi-axis
+correction (2026-05-06)" callout, and that doc already declares codex the "Canonical SSOT for shard atoms + manifest
+semantics" (L18). Not a migrate source — a REDIRECT-class doc for Phase 3. No codex write.
 
 **deployment-service [infra/profiles/runbooks] (42)** — DELETE:
 `audit/{CURRENT_AUDIT,ARCHIVE,DEPLOYMENT_SPLIT_AUDIT_REPORT}.md` (the whole `audit/` dir — stale 2026-03 point-in-time
