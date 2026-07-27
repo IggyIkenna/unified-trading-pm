@@ -120,12 +120,16 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
       replacing them with direct canonical-only reads. **Done when**: the function and its call sites no longer exist,
       and the sports pipeline-check (or a targeted smoke test) still passes reading only canonical paths for the
       previously-load-bearing dates.
-- [ ] [DATA] P2. [OPERATOR] Snapshot-then-delete the migrated legacy-path GCS objects (per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — 5-part proof, human sign-off required), and purge
-      their now-superseded `data_type="FIXTURES"` manifest rows for the migrated population only (leave the
-      redundant-with-canonical and stale-label populations from Phase 1 alone unless a separate decision covers them).
-      **Done when**: a post-delete listing for the migrated (date, league_id) set returns 0 legacy objects, and the
-      operator sign-off is cited.
+- [ ] [DATA] P2. Snapshot-then-delete the migrated legacy-path GCS objects (per five-part proof,
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`), and purge their now-superseded
+      `data_type="FIXTURES"` manifest rows for the migrated population only (leave the redundant-with-canonical and
+      stale-label populations from Phase 1 alone unless a separate decision covers them). **Reversibility-verified, no
+      `[OPERATOR]` gate needed** (finding T, `task_template.md`): object-level delete only against
+      `instruments-store-sports-prd-central-element-323112` — `gcs_bucket_soft_delete_retention_seconds(...)` returned
+      `604800` (7 days) fresh-checked 2026-07-26 per §3a (this is the bucket that had soft-delete disabled at the time
+      of the 2026-07-17 incident; it was re-enabled the same day this finding was added — re-query fresh before running,
+      not from this citation). **Done when**: a post-delete listing for the migrated (date, league_id) set returns 0
+      legacy objects.
 - [ ] [DOC] P2. Update `sports_consolidated_closeout_2026_07_19.md`'s FROZEN-legacy-path declaration to state the freeze
       is now TRUE (no live reads of the legacy path remain), citing this plan's completion. Update
       `/codex/02-data/sports-gcs-path-ssot.md` if it references the fallback as a known exception. **Done when**: both

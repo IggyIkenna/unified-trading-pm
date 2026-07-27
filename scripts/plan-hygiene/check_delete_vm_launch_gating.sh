@@ -2,7 +2,7 @@
 # Epic: agent_operating_framework_master
 # Lifecycle: permanent
 # Delete-when: NA
-# Delete/VM-launch todo-tagging gate (task_template.md §3 finding O, 2026-07-25) — a scoped
+# Delete/VM-launch todo-tagging gate (task_template.md §3 finding O + finding T, 2026-07-25/26) — a scoped
 # /plan-reconcile pass across all 5 AGs' AO-dispatch batches found 8 of ~15 batch docs contain a
 # GCS delete/--apply mutation and 5 contain a VM launch, with no systematic check that each is
 # correctly tagged (only that SOME [OPERATOR] tag existed somewhere in the doc). This is a cheap,
@@ -37,7 +37,7 @@ fi
 RISK_PAT='(--apply|gcs_delete_object|gsutil rm|gcloud storage rm| delete \+ | delete/purge|launch-[a-z-]+\.sh|gcloud compute instances create)'
 # Signal it's already covered: an explicit operator gate, a stated safe-idempotent-pattern phrase, or
 # the risky verb explicitly negated (dry-run-only / no --apply / read-only / diagnose-only work).
-SAFE_PAT='(\[OPERATOR\]|delete-safety-protocol|idempotent|copy.{0,10}verify.{0,10}delete|human-only|already-established|no operator gate needed|Operator-owned|dry-run|no .{0,2}--apply|without .{0,2}--apply|read-only|no new VM launch|BLOCKED-OPERATOR)'
+SAFE_PAT='(\[OPERATOR\]|delete-safety-protocol|idempotent|copy.{0,10}verify.{0,10}delete|human-only|already-established|no operator gate needed|Operator-owned|dry-run|no .{0,2}--apply|without .{0,2}--apply|read-only|no new VM launch|BLOCKED-OPERATOR|reversibility-verified|reversibility-qualified|retentionDurationSeconds|soft_delete_retention_seconds|soft-delete-retention)'
 
 RC=0
 for f in "${FILES[@]}"; do
