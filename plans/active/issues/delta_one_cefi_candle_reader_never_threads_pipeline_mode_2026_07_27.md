@@ -125,9 +125,17 @@ handler's setup code not yet grepped). The fix-todo below should trace and fix B
       `pipeline_mode` value (per-venue, e.g. `batch_hyperliquid` for HYPERLIQUID, `batch_aster` for ASTER, etc. — likely
       resolvable via the same venue→pipeline_mode mapping MDPS's writer uses) instead of leaving it `None`. (repo:
       features-service)
-- [ ] 2. [DATA] P0. Locate and fix the bulk-preload mechanism (the code path producing "No pre-loaded candles for X —
-      skipping" in the VM matrix run) — same root cause suspected, not yet confirmed. (repo: features-service, or
-      wherever the preload dict is actually built)
+- [x] ✅ 2. [DATA] P0. Located and fixed the bulk-preload mechanism — CONFIRMED same root cause. Located in
+      `features_service/delta_one/cli/handlers/_tf_cluster_helper.py`: `_load_base_candles` and
+      `_load_one_instrument_range` both call `DataLoader.load_candles_with_buffer(...)` without `pipeline_mode`,
+      identical bug to `_load_and_validate_candles` (todo 1). Fixed via a new `_resolve_read_pipeline_mode` helper using
+      the sanctioned UTL `resolve_pipeline_mode(service, mode, venue, asset_group=, data_type=)` resolver (venue = the
+      instrument_id's `VENUE:TYPE:SYMBOL` first segment, same convention `DataLoader._resolve_blob_paths` already uses);
+      threaded `asset_group` through both functions (already in scope at both call sites). Added
+      `tests/delta_one/unit/test_resolve_read_pipeline_mode.py` (real, unstubbed resolver — proves
+      `HYPERLIQUID:PERPETUAL:BTC-USD@LIN` → `batch_hyperliquid`, the exact regression scenario) + updated
+      `test_tf_cluster_helper.py`'s existing coverage for the new `asset_group` parameter. Full `quality-gates.sh` green
+      (sentinel-verified). features-service@2c6062ab.
 - [ ] 3. [DATA] P1. Once fixed, re-run the real-day proof for `features_by_date_root_canonicalisation_2026_07_21.md`
       todo 6 (delta_one + volatility force/skip legs) — this issue is what's currently blocking that proof.
 - [ ] 4. [DATA] P2. Check whether the SAME `pipeline_mode=None` gap affects other CEFI-reading call sites in
