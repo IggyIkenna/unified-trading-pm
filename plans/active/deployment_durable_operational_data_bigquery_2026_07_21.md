@@ -188,11 +188,13 @@ that VM can't answer "is it the agents, the orchestrator, or CI eating the CPU" 
 VM-resize decision needed and couldn't answer from the per-VM number alone.
 
 **Bridge already running (2026-07-27)**: a lightweight cron (`*/5 * * * *`) is live on `i-0c9b283b31d6b5ca7` today —
-`/opt/resource-monitor/resource-monitor.sh`, appending JSON lines to `/var/log/resource-monitor/resource-monitor.jsonl`
-(30-day rolling window, self-trimming). Each line: load average, `/proc/stat` CPU jiffies (deltas computed at read time,
-not in the logger, to keep it cheap), memory/swap from `/proc/meminfo`, and the top 8 processes by `%CPU` with
-PID/command/elapsed. This is a STOPGAP, not the design — retire it once the real pipeline below ships, but its schema is
-the reference for what fields matter.
+`agent-orchestrator/scripts/orchestrator/resource-monitor.sh` (committed 2026-07-27; deployed copy at
+`/opt/resource-monitor/resource-monitor.sh` on the VM — keep the two in sync, edit the git copy and redeploy, never the
+reverse), appending JSON lines to `/var/log/resource-monitor/resource-monitor.jsonl` (30-day rolling window,
+self-trimming). Each line: load average, `/proc/stat` CPU jiffies (deltas computed at read time, not in the logger, to
+keep it cheap), memory/swap from `/proc/meminfo`, and the top 8 processes by `%CPU` with PID/command/elapsed. This is a
+STOPGAP, not the design — retire it once the real pipeline below ships, but its schema is the reference for what fields
+matter.
 
 **Categorization heuristic (first pass, refine once real data is queried)**: `comm == "claude"` → worker-agent (but
 split further by parent-process/ancestry once we can tell an INTERACTIVE session from an AO-dispatched autonomous one —
