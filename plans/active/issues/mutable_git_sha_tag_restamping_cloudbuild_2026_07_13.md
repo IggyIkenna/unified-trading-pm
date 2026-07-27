@@ -20,7 +20,7 @@ summary:
   not-affected (it stamps full :$COMMIT_SHA, invisible to a SHORT_SHA grep)."
 status: open
 nature: notes
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, deployment-api]
 scope: [engineer, admin]

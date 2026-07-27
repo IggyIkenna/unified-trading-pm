@@ -29,7 +29,7 @@ summary: >
   net improvement fleet-wide, and this script gates every repo in the workspace.
 status: open
 nature: notes
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, unified-trading-library]
 scope: [engineer]

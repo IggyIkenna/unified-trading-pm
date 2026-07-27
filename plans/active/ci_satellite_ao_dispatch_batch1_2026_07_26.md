@@ -14,7 +14,7 @@ summary: >-
   as parked questions.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos:
   [

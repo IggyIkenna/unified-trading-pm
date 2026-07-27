@@ -12,7 +12,7 @@ summary: >-
   resolve to something — read the matching child instead of this file.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

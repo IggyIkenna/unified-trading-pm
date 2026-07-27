@@ -23,7 +23,7 @@ summary: >-
   predicted, one week later, via the untouched gap.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]

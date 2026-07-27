@@ -15,7 +15,7 @@ summary: >-
   intra-workspace fixture drift rather than a UAC-ref divergence. The CLASS (todos 2-5) remains open.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]

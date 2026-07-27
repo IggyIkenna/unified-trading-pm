@@ -19,7 +19,7 @@ summary: >-
   it is a mitigation, not the structural fix the commit message claims.
 status: open
 nature: notes
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer]

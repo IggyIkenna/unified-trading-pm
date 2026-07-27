@@ -11,7 +11,7 @@ summary:
   dispatch-only entry (no standalone image; its SPA is bundled into deployment-api's image instead)."
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]

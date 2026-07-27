@@ -19,7 +19,7 @@ summary: >-
   genuinely LIVE and fail-closed — the empty `breaking_pending` is only its redundant first layer.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos:
   [

@@ -14,7 +14,7 @@ summary: >-
   this plan stays active rather than archiving immediately.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

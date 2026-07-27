@@ -23,7 +23,7 @@ summary: >
   fetch would surface a wave of 403/404s at the dispatch step instead.
 status: open
 nature: notes
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos:
   [
