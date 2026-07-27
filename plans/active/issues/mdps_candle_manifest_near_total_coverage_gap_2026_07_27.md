@@ -167,3 +167,71 @@ the candle layer instead of raw-tick.
   identical branch — shipped market-data-processing-service@93a3680 (fix + regression test, QG green). Did not attempt
   the P1 backfill (own VM-launch campaign, ~2.6M rows) or the P2 sports full-corpus sweep / P2 review cross-check —
   those remain queued as their own todos.
+- **2026-07-27** (AO dispatch, slot 8, `data_engineering`) — todo 1 (P1 backfill), IN PROGRESS, not yet complete (do not
+  flip the checkbox until the § "Remaining to close todo 1" steps below finish — a genuine multi-hour VM campaign, not a
+  same-turn fix). Work done this session:
+  1. **Built the backfill tool**: `market-data-processing-service/scripts/backfill_candle_manifest.py` (RECORD-ONLY —
+     footer-reads each report row's object at its EXISTING path, never re-uploads/deletes; groups into
+     `(day, venue, chain, instrument_type, data_type, timeframe, pipeline_mode)` cells, one `record_captured` per cell;
+     mirrors `instruments-service/scripts/backfill_orphan_class_e.py`'s record-only branch) + 13 unit tests — shipped
+     `market-data-processing-service@cf94e23` (QG green both passes).
+  2. **Built the VM launcher**: `deployment-service/scripts/vm/launch-backfill-candle-manifest-vm.sh` (sibling of
+     `launch-backfill-orphan-e-vm.sh`; e2-highmem-8 SPOT, 250GB boot disk — the 150GB first draft failed
+     `check_backfill_vm_disk_provisioning.py`'s ≥250GB minimum) + registered
+     `backfill-candle-manifest-{cefi,defi,tradfi,prediction}-` VM prefixes in `vm_prefix_registry.py` +
+     `launcher_registry.py` — shipped `deployment-service@fafde10`.
+  3. **Found + fixed a real bug on the first smoke launch**: `setup-data-pipeline-vm.sh` had NO `VM_TASK` dispatch
+     branch for `backfill-candle-manifest` — the shared guard correctly refused (rc=1, self-deleted VM
+     `backfill-candle-manifest-cefi-20260727-145850`, EXIT_STATUS=1) rather than silently crashing deep in an unrelated
+     CLI's argparse. Added the missing `elif [[ "$VM_TASK" == "backfill-candle-manifest" ]]` branch (mirrors
+     `backfill-orphan-e`'s, `cd`s into `$WORKSPACE/mdps` instead of `$WORKSPACE/instruments`) — shipped
+     `deployment-service@b947d9f`.
+  4. **Validated end-to-end with a `--dry-run` VM** (`backfill-candle-manifest-cefi-20260727-151057`, relaunched after
+     the fix, ran clean rc=0): `report actionable rows (class E+F): 405496`,
+     `re-verify vs LIVE index: already_covered=0 still_orphan=405496`, `characterised: record_only=405496 escalated=0`,
+     dry-run sample `footer-read: ok=770 zero-row-junk=0 failed=0`,
+     `VERDICT cefi: ... escalated=0 convert_failed=0 verify_failed=0`. Zero escalations/failures confirms the
+     characterisation logic (canonical-shape `pipeline_mode=` path-segment resolution, `resolve_pipeline_mode`'s
+     legacy-shape `SOURCE_PRIORITY` fallback) handles the REAL report data correctly for all 4 AGs (candle objects are
+     v9-only since inception, so the legacy-shape branch is a defensive no-op in practice — confirmed, not just
+     theorised).
+  5. **Launched the real `--apply` campaign** — 4 concurrent Tier-2 SPOT VMs (`asia-northeast1-c`,
+     `LC_TARBALL_FRESHNESS=auto LC_SETUP_SCRIPT_FRESHNESS=auto` so each VM's tarball/startup-script reflected this
+     session's shipped SHAs):
+     - `backfill-candle-manifest-cefi-20260727-151741` — report
+       `gs://deployment-scripts-central-element-323112/canonical-migration-candle-orphan-sweep/20260727-124341/canonical-migration-cefi-candle-orphan-sweep-20260727-124341/orphan_sweep_cefi.parquet`
+       (405,496 actionable rows)
+     - `backfill-candle-manifest-defi-20260727-151932` — report
+       `gs://deployment-scripts-central-element-323112/canonical-migration-candle-orphan-sweep/20260727-124409/canonical-migration-defi-candle-orphan-sweep-20260727-124409/orphan_sweep_defi.parquet`
+       (1,131,367 actionable rows — the E+F combined total, largest of the 4)
+     - `backfill-candle-manifest-tradfi-20260727-151950` — report
+       `gs://deployment-scripts-central-element-323112/canonical-migration-candle-orphan-sweep/20260727-124443/canonical-migration-tradfi-candle-orphan-sweep-20260727-124443/orphan_sweep_tradfi.parquet`
+       (536,934 actionable rows)
+     - `backfill-candle-manifest-prediction-20260727-152012` — report
+       `gs://deployment-scripts-central-element-323112/canonical-migration-candle-orphan-sweep/20260727-124605/canonical-migration-prediction-cdlorph-20260727-124605/orphan_sweep_prediction.parquet`
+       (569,947 actionable rows) All 4 launched safe-idempotent WITHOUT an `[OPERATOR]` gate per the CLAUDE.md carve-out
+       (never deletes, never mutates source objects, a re-run is a safe no-op re-write) — same precedent class as
+       `backfill_orphan_class_e.py`'s own prior AO-dispatched launches.
+  6. **Observed throughput**: ~100-150 footer-reads/sec aggregate (16 threads, ranged-GET-only reads — report already
+     carries `size_bytes` so most objects need exactly one ranged GET), confirming this genuinely needs VM-hours not
+     VM-minutes at this row count — e.g. defi's 1.13M rows imply ~2-2.5h just for the footer-read pass, before the
+     `record_cells` write pass. As of 2026-07-27T16:23Z (launched ~15:17-15:20Z, ~65-70min elapsed): cefi footer-read
+     400,000/405,496 (99%, nearly done), defi 386,000/1,131,367 (34%), tradfi 366,000/536,934 (68%), prediction
+     336,000/569,947 (59%). All 4 healthy (`RUNNING`, heartbeat blobs current, log byte-counts climbing, zero
+     errors/escalations observed in any log to this point) — confirmed via
+     `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` +
+     `gcloud compute instances describe <vm> --zone=asia-northeast1-c` polling on a ~25-30min re-armed
+     `run_in_background` watchdog cadence (async-wait HARD RULE — no fire-and-forget, no busy-poll).
+  - **Remaining to close todo 1** (whoever resumes this — same session post-compact, or a fresh one): (a) wait for all 4
+    VMs to print a `VERDICT <ag>: ...` line in their `run.log` (self-shutdown on completion,
+    `VM_SHUTDOWN_ON_COMPLETION=true`); (b) sanity-check each VERDICT's `recorded_cells`/`escalated`/`read_failed`/
+    `verify_failed` counts (escalated/failed should stay 0 given the clean dry-run); (c) each VM also writes
+    `gs://<ag-tick-bucket>/_index/audit/candle_manifest_backfill_{ag}.parquet` on apply — worth a spot-check; (d) run
+    the manifest consolidator per bucket (or wait for its Cloud Scheduler cadence) so the newly-recorded rows land in
+    `_index/availability_index.parquet`; (e) OPTIONALLY re-run
+    `candle_orphan_sweep.py --manifest-fix-cutover 2026-07-27` per AG to confirm `orphan_class_E` drops to 0 (the
+    acceptance bar) — this is a NEW VM-launch, not required to flip todo 1's checkbox (the backfill itself, not the
+    re-sweep, is todo 1's scope) but strongly recommended before todo 3's REVIEW cross-check; (f) ONLY THEN flip todo
+    1's `- [ ]` to `- [x]` citing `market-data-processing-service@cf94e23` + `deployment-service@fafde10`/`@b947d9f` +
+    the 4 VERDICT lines as evidence, `docs(plans):` commit + push. Do NOT flip early on "VMs launched" alone — that is
+    exactly the smoke-test-green false-completion the data-pipeline-correctness HARD RULE forbids.
