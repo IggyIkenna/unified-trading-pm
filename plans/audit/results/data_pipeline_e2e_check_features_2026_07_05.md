@@ -2,22 +2,21 @@
 doc_type: audit-result
 title: "Pipeline E2E Check — data_pipeline_e2e_check_features (2026-07-05)"
 summary:
-  "data_pipeline_e2e_check_features pipeline-e2e-check 2026-07-05 (manually merged across 3 separate driver invocations
-  — the driver overwrites its report file per-invocation, does not append): total=6 passed=0 failed=2 ambiguous=0
-  skipped=4"
+  "data_pipeline_e2e_check_features pipeline-e2e-check 2026-07-05 (merged across multiple driver invocations — see
+  merge_pipeline_e2e_report.py): total=8 passed=0 failed=1 ambiguous=0 skipped=6"
 status: pass
 nature: record
-asset_group: [defi, tradfi, prediction]
+asset_group: [defi, prediction, tradfi]
 stage: [data]
 repos: [features-service, deployment-service]
 scope: [engineer, admin]
 tags: [pipeline-e2e-check, data_pipeline_e2e_check_features]
-related: [/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md]
+related: []
 created: 2026-07-27
 audited_scope:
   "data_pipeline_e2e_check_features real-VM force/skip/live pipeline check for day=2026-07-05, legs=force,skip"
 date: 2026-07-27
-auditor: data_pipeline_e2e_check_features (real-VM automated run)
+auditor: data_pipeline_e2e_check_features (real-VM automated run, merged)
 parent_epic: infrastructure_master
 severity: P3
 resulting_plan:
@@ -25,43 +24,43 @@ lib_version:
 doc_versions_checked:
 service: data_pipeline_e2e_check_features
 run_date: 2026-07-05
-generated_at: 2026-07-27T06:18:10.884759+00:00
+generated_at: "2026-07-27T06:38:22.185403+00:00"
 ---
 
 # Pipeline E2E Check — data_pipeline_e2e_check_features (2026-07-05)
 
 **Legs:** force, skip
 
-**Note — manually merged from 3 SEPARATE driver invocations.** `pipeline_e2e_check.py` OVERWRITES its report file
-per-invocation (does not append) when run with different `--asset-group`/`--family` filters as separate processes — this
-merge reconstructs the cumulative day's results by hand. DEFI/PREDICTION rows are driver-authored (verbatim); TRADFI is
-manually reconstructed from direct `run.log` reads (driver process crashed before writing its own row — see the TRADFI
-Note below).
+**Note — merged across multiple driver invocations** via `merge_pipeline_e2e_report.py` (the driver overwrites its
+report per-invocation, does not append across separate `--asset-group`/`--family`-scoped processes).
 
-**Summary:** data_pipeline_e2e_check_features pipeline-e2e-check 2026-07-05: total=6 passed=0 failed=2 ambiguous=0
-skipped=4
+**Summary:** total=8 passed=0 failed=1 ambiguous=0 skipped=6
 
 ## Results
 
-| Shard                | Leg   | Status  | Skip proof     | Exit | Parquet | Manifest | Reason                                                                                   |
-| -------------------- | ----- | ------- | -------------- | ---- | ------- | -------- | ---------------------------------------------------------------------------------------- |
-| DEFI:delta_one       | force | skipped | not_applicable | -    | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                |
-| DEFI:delta_one       | skip  | skipped | not_applicable | -    | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                |
-| TRADFI:delta_one     | force | failed  | not_applicable | 1    | 0       | -        | dependency_check_failed — see note below (2 independent VM runs, identical)              |
-| TRADFI:delta_one     | skip  | not_run | -              | -    | -       | -        | force already failed on missing input — skip-if-fresh is moot without a successful write |
-| PREDICTION:delta_one | force | skipped | not_applicable | -    | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                |
-| PREDICTION:delta_one | skip  | skipped | not_applicable | -    | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                |
+| Shard                | Leg   | Status  | Skip proof     | Exit | Parquet | Manifest | Reason                                                                                                                                                                                                                  |
+| -------------------- | ----- | ------- | -------------- | ---- | ------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DEFI:delta_one       | force | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
+| DEFI:delta_one       | skip  | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
+| DEFI:onchain         | force | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
+| DEFI:onchain         | skip  | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
+| PREDICTION:delta_one | force | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
+| PREDICTION:delta_one | skip  | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
+| TRADFI:delta_one     | force | failed  | not_applicable | 1    | 0       | -        | dependency_check_failed: Missing market-data-processing-service, Path gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-07-04/, Date 2026-07-04, No data for 2026-07-04/TRADFI |
+| TRADFI:delta_one     | skip  | not_run | not_applicable | None | 0       | -        | force already failed on missing input — skip-if-fresh is moot without a successful write                                                                                                                                |
 
 ## Bucket paths (where each write/read actually landed)
 
-| Shard                | Leg   | Parquet bucket        | Manifest bucket | Same bucket? |
-| -------------------- | ----- | --------------------- | --------------- | ------------ |
-| DEFI:delta_one       | force | `-`                   | `-`             | -            |
-| DEFI:delta_one       | skip  | `-`                   | `-`             | -            |
-| TRADFI:delta_one     | force | `-` (nothing written) | `-`             | -            |
-| TRADFI:delta_one     | skip  | -                     | -               | -            |
-| PREDICTION:delta_one | force | `-`                   | `-`             | -            |
-| PREDICTION:delta_one | skip  | `-`                   | `-`             | -            |
+| Shard                | Leg   | Parquet bucket | Manifest bucket | Same bucket? |
+| -------------------- | ----- | -------------- | --------------- | ------------ |
+| DEFI:delta_one       | force | `-`            | `-`             | -            |
+| DEFI:delta_one       | skip  | `-`            | `-`             | -            |
+| DEFI:onchain         | force | `-`            | `-`             | -            |
+| DEFI:onchain         | skip  | `-`            | `-`             | -            |
+| PREDICTION:delta_one | force | `-`            | `-`             | -            |
+| PREDICTION:delta_one | skip  | `-`            | `-`             | -            |
+| TRADFI:delta_one     | force | `-`            | `-`             | -            |
+| TRADFI:delta_one     | skip  | `-`            | `-`             | -            |
 
 ## Note — TRADFI:delta_one manually recorded (driver process crashed before writing its own report row)
 
