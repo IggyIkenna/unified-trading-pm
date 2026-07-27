@@ -43,7 +43,11 @@ tags:
     data-correctness,
     cross-repo,
   ]
-related: [/plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md]
+related:
+  [
+    /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+  ]
 created: 2026-07-17
 parent_epic: manifest_master
 source:
@@ -190,11 +194,39 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       full UAC suite (12094 tests) pass; full `quality-gates.sh` green. Three new findings surfaced while probing are
       tracked as their own todos immediately below (not fixed here — separate, genuine backfill/data-completeness gaps,
       not coverage-floor-registry errors).
-- [ ] [DATA] P1. HYPERLIQUID has a real, never-attempted backfill gap: the manifest has ZERO rows of ANY
-      `capture_status` (not even `empty_confirmed`) between 2023-04-15 (the now-correct, vendor-verified coverage floor)
-      and 2023-12-31; real captures only begin 2024-01-01. Investigate why (adapter gap? never scheduled?) and either
-      backfill it or file a `BLOCKED-*` reason if structurally infeasible. (repo: market-tick-data-service or the CeFi
-      backfill launcher)
+- [x] ✅ [DATA] P1. HYPERLIQUID gap ROOT-CAUSED + backfill CONFIRMED already in progress (2026-07-27, slot-11).
+      Investigated per the todo — **neither "adapter gap" nor "never scheduled"**: (1) NOT vendor unavailability —
+      Hyperliquid's own S3 archive genuinely has `book_snapshot_5` from 2023-04-15 (vendor-verified; matches
+      `coverage_starts.py`'s floor, cross-checked against the 2026-05-05 incident investigation cited there). (2) NOT
+      never-scheduled — `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` has targeted
+      `VENUE_START_DATE["HYPERLIQUID"]="2023-01-01"` since its very first commit (`deployment-service@8a027c0`,
+      2026-06-21) — the range was never config-excluded. (3) ROOT CAUSE = operational: the `cefi-hyperliquid-2023-*`
+      shard has been repeatedly SPOT-preempted (3 separate mass-preemptions logged 2026-07-27 alone, per the parent
+      tracking doc below) plus a since-fixed catalogue-universe-cap bug (`deployment-service@07936fa`, 2026-06-23)
+      suppressed early fetches; some partial `attempted_failed` rows existed at one point (per
+      `plans/archive/2026_06/cefi_hl_aster_batch_data_gaps_history_2026_06_22.md:170`) but were superseded/reset without
+      a completed re-fetch ever landing. **Live-probed the exact window** (direct `_index/availability_index.parquet`
+      read on `market-data-tick-cefi-prd-central-element-323112`, bypassing
+      `read_availability_index(bucket, columns=[...])`, which returned an empty DataFrame in this session for an
+      unrelated reason — worth its own follow-up, not chased here to stay in scope): confirms genuine
+      zero-rows-of-any-`capture_status` for **2023-03-05 through 2023-12-31** — the true fully-blank gap starts ~6 weeks
+      EARLIER than this todo's stated 2023-04-15 (dates 2023-01-01..2023-03-04 carry real `empty_confirmed` rows —
+      genuinely probed and confirmed empty, evidence of a prior interrupted run's progress before the floor even
+      begins). **NOT `BLOCKED`** — a live, healthy, idempotent non-force backfill VM is ALREADY actively closing this
+      exact gap RIGHT NOW: `cefi-hyperliquid-2023-20260727-071055` (`ON_DEMAND=true`, non-preemptible, run-id
+      `20260727-071055`), launched under the parent tracking doc's remediation effort — NOT launched by this task (a
+      duplicate launch would have violated that effort's own "verify zero fleet VMs running first" guardrail). Verified
+      RUNNING + genuinely advancing via a fresh `run.log` tail (not just VM status): chronological day-by-day walk from
+      a `PROGRESS.json` checkpoint, real `ManifestWriter: per-VM shard updated` writes each day, currently at day
+      **2023-02-27** (as of 2026-07-27T08:37:45Z) advancing at ~88s/day — climbing toward and through the
+      2023-04-15→2023-12-31 window (ETA to window start ~1h, full window ~7-8h at the observed rate; this is the parent
+      doc's own characterized "multi-hour-to-multi-day background operation", not completable within one task session).
+      No new code or VM launch needed from this task. Cross-referenced with
+      `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` (the live parent doc already tracking +
+      operating this exact fleet, `locked_by: live-defi-rollout`) — added a pointer there too. Follow-up: re-verify
+      manifest coverage for 2023-04-15..2023-12-31 once `DEPLOYMENT_COMPLETED exit_code=0` lands for
+      `cefi-hyperliquid-2023-*`. (repo: market-tick-data-service / deployment-service — investigation + cross-ref only,
+      no code shipped this task)
 - [ ] [DATA] P2. DERIBIT's `trades` data_type has a sparse, likely-partial historical backfill: real captured rows
       (thousands-to-hundreds-of-thousands `instrument_count`/day) exist 2019-05-08 through 2019-12, but not on every
       calendar day — unlike `book_snapshot_5`/`derivative_ticker`, which start cleanly and densely at 2020-01-01.

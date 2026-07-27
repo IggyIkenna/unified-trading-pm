@@ -19,7 +19,12 @@ repos:
   ]
 scope: [engineer, admin]
 tags: [cefi, backfill, manifest, data-correctness, mtds, honest-coverage, data-status, catalogue]
-related: [mvp_backfill_cefi_tick_v10_2026_06_27, /plans/active/issues/cefi_universe_capture_rule_2026_06_23.md]
+related:
+  [
+    mvp_backfill_cefi_tick_v10_2026_06_27,
+    /plans/active/issues/cefi_universe_capture_rule_2026_06_23.md,
+    /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
+  ]
 created: 2026-06-22
 parent_epic: mtds_mdps_master
 priority: P2
@@ -135,6 +140,12 @@ instruments-service@`b99e586` (tested no-key enumeration).
       (non-preemptible) within T+60s; (5) HL/ASTER are non-Tardis, no 1-VM cap applies. **Next check-in should verify**
       (T+10min+): `run.log` chunk-progress climbing on the new run-id, and eventual `DEPLOYMENT_COMPLETED exit_code=0`
       per VM as the real completion signal.
+- [x] ✅ [DATA] P2. **Cross-ref (2026-07-27, slot-11)**: this fleet's `cefi-hyperliquid-2023-20260727-071055` VM is the
+      live remediation for a specific gap independently tracked in
+      `plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md` (HYPERLIQUID zero-rows
+      2023-03-05..2023-12-31, root-caused there to the same preemption/catalogue-cap history documented in this doc). No
+      new action here — confirmed the VM was RUNNING + advancing (day 2023-02-27 as of 08:37:45Z) via `run.log`, logged
+      the cross-reference so the other doc's follow-up check doesn't duplicate-launch a VM this fleet already owns.
 - [x] ✅ [DEPLOY] P1. Redeployed the IS fixes — built `instruments-service:latest`=7489ed1/0.43.0 from LDR (no-auth
       b99e586 + full-universe 0fe8e71 + dated-future quote fix 7489ed1) via Cloud Build d215d55a (SUCCESS); created the
       missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00 IS scheduler).
