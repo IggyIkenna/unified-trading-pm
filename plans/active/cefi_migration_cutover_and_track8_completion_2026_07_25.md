@@ -151,23 +151,26 @@ drift_direction: advance-code
       every migrated cefi shard the moment this todo runs. That > normalisation has shipped; this todo was UNBLOCKED on
       that specific dependency, confirmed re-verified GREEN this session (canonical-fraction 99.45% stable, 0 residual
       invariant violations).
-- [ ] [BACKEND] P0. **POST-CUTOVER: flip the smoke-check + downloader to canonical instrument ids.** MUST land with (or
-      immediately after) todo 3's cutover `--apply`, else targeted re-fetch silently breaks fleet-wide. Today the
-      downloader's `--instrument-ids` matches RAW venue-native symbols EXACTLY (no substring/underlying expansion, no
-      canonical→raw resolution), so the moment a venue's objects are canonical-named there is no raw symbol left to pass
-      and a targeted fetch returns 0 rows with no error. Measured 2026-07-18 mid-migration: 8 of 46 provable Tardis
-      cells were already canonical-only (BITFINEX-FUTURES ×4, BYBIT-SPOT ×2, COINBASE-FUTURES ×2) and could not be
-      force-fetched at all. Three coupled changes: (1) make `--instrument-ids` accept canonical ids (or resolve
-      canonical→raw) in the MTDS download path; (2) revert the smoke-check sampler
-      (`scripts/pipeline_e2e_check.py::_sample_raw_symbol_from_prod_listing`) to sample the CANONICAL id and drop the
-      `':' in stem` skip-guard added for the mixed-naming window (`market-tick-data-service@1875b95b`); (3) drop the
-      `--tardis-only` docs' "verdicts are unreliable mid-migration" caveat once manifest lookups key on the same id form
-      the writer records. Full evidence:
-      `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`. Repos:
-      market-tick-data-service, unified-trading-pm. **Done when**: all 3 coupled changes ship in one commit/PR, a
-      targeted re-fetch of a canonical-named instrument returns real rows (not 0-with-no-error), and the "verdicts are
-      unreliable mid-migration" caveat is removed from every doc it appears in. Source:
-      `cefi_consolidated_closeout_2026_07_18.md` (Track 8, POST-CUTOVER item).
+- [x] ✅ [BACKEND] P0. **CODE SHIPPED 2026-07-27 (slot-13) — `market-tick-data-service@a4f90769`.** POST-CUTOVER: flip
+      the smoke-check + downloader to canonical instrument ids. All 3 coupled changes landed in one commit: (1)
+      `venue_fetch._process_venue` now resolves a canonical-form `--instrument-ids` entry to its venue raw wire symbol
+      via the existing `CeFiWireCanonicalMap.raw_symbol_for` (the same cefi catalogue map FIX D3 already builds
+      candidate filename stems from — no new resolver), split into a new leaf module `_canonical_instrument_ids.py`
+      (`venue_fetch.py` is cap-critical at 900 lines); (2)
+      `scripts/pipeline_e2e_check.py::_sample_raw_symbol_from_prod_listing` no longer skips canonical-named parquet
+      stems — the `':' in stem` skip-guard is gone; (3) the "verdicts are unreliable mid-migration" caveat marked
+      RESOLVED in `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md` (see that
+      doc's own RESOLVED section for the reference back to this commit). 6 new + 1 updated unit test file prove the
+      resolution logic against a synthetic `CeFiWireCanonicalMap` (canonical→raw hit, raw passthrough, mixed list,
+      unresolvable-honest-passthrough, no-catalogue-registered passthrough) — full `quality-gates.sh` green
+      (sentinel-verified SHA == HEAD before quickmerge). **Residual gap, not yet closed**: the plan's own Done-when also
+      asks for "a targeted re-fetch of a canonical-named instrument returns real rows" — a LIVE end-to-end proof via a
+      real VM smoke run (`scripts/pipeline_e2e_check.py --tardis-only`) against one of the 8 already-canonical-only
+      cells measured 2026-07-18 (BITFINEX-FUTURES / BYBIT-SPOT / COINBASE-FUTURES). NOT performed in this session —
+      launching a VM smoke check is a real-cost, Tardis-N=1-gated operation outside a routine single-worker dispatch's
+      scope without confirming no other slot is mid-Tardis-fetch; deferred to whichever session runs todo 5's live
+      backfill (already a VM-launch context) or a dedicated follow-up. Repos: market-tick-data-service,
+      unified-trading-pm. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 8, POST-CUTOVER item).
 - [ ] [DATA] P1. **Enumeration-audit terminal checkpoint.** Re-run
       `scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py` (the distinct-values census tool) against the
       live cefi manifest, once todo 3's cutover drain-gate lifts and

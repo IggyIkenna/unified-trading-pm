@@ -91,9 +91,18 @@ error.
 **Owner**: the raw-to-canonical migration plan (separate agent/plan, in flight). This doc exists so that dependency is
 explicit and does not have to be re-discovered.
 
-## Also worth knowing — manifest verdicts are unreliable mid-migration
+## RESOLVED 2026-07-27 — Finding 2 closed
 
-The smoke check verifies a manifest row keyed on the sampled RAW symbol while the writer records the row under the
+`market-tick-data-service` now resolves a canonical-form `--instrument-ids` entry to its venue raw wire symbol before
+fetching (`venue_fetch._resolve_canonical_instrument_ids`, via the existing `CeFiWireCanonicalMap.raw_symbol_for` cefi
+catalogue map — the same map FIX D3 already builds candidate filename stems from), and the smoke-check sampler
+(`scripts/pipeline_e2e_check.py::_sample_raw_symbol_from_prod_listing`) no longer skips canonical-looking parquet stems.
+Manifest lookups now key on the same id form the writer records, so the "manifest verdicts are unreliable mid-migration"
+caveat below no longer applies — the VM `run.log` cross-check remains good practice but is no longer required to
+compensate for this specific gap. See `plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md` todo 4
+for the shipping commit.
+
+~~The smoke check verifies a manifest row keyed on the sampled RAW symbol while the writer records the row under the
 CANONICAL id, so `manifest_status_invalid:no_matching_row` appears even when the fetch and write both succeeded. Read
 the VM `run.log` (`Processed date=...: N venues ok, 0 failed, R total records`) as ground truth until the migration
-lands.
+lands.~~
