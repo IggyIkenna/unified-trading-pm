@@ -46,6 +46,7 @@ resolved_by:
 source:
   chat finding during defi_lending_writer_retire_prerequisite_2026_07_20.md session-3, flagged to operator, fix
   requested 2026-07-27
+depends_on: []
 ---
 
 # phoenix_orderbook_handler.py adapter-contract-call regression
