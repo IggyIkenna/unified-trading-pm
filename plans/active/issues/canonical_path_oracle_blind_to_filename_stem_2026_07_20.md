@@ -54,8 +54,10 @@ locked_since:
 assigned_vm: planning
 resolved_by:
   "uac@d40c5d7d (default-on stem check) + mtds@953679de (sanitize_file_stem writers + reader fallback) + uac@502ef57e
-  (colon-guard fail-loud on build_instrument_id + defi ID_FORM widening, § 7 items 2+4); residual followups tracked in §
-  7 (P1 surface-A re-run; P2 quarantine disposition) and the batch=live divergence issue"
+  (colon-guard fail-loud on build_instrument_id + defi ID_FORM widening, § 7 items 2+4); surface-A re-run DONE
+  2026-07-27 (§ 7 P1, unified-trading-pm slot-15) — 1,697 colon_wire live population confirmed gone, new batch-side
+  bare-wire-symbol finding tracked as § 7 P2; residual followups tracked in § 7 (quarantine disposition) and the
+  batch=live divergence issue"
 ---
 
 # The canonical-path machine oracle was blind to the filename stem
@@ -255,8 +257,35 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       catalogue-miss fallback will now raise instead of silently minting `BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0`,
       surfacing as a proper per-shard `record_failed` via the existing shard-isolation machinery rather than a silent
       corrupt write. Regression tests: `tests/internal/unit/test_canonical_id_builder.py::TestSymbolColonGuard`.
-- [ ] [DATA] P1. Re-run CeFi surface-A reconciliation with the fixed oracle and restate the verdict; every
-      pre-2026-07-20 surface-A verdict is structure-only. (The 1,697 colon_wire live objects in § 6.1a are now flagged.)
+- [x] [DATA] P1. **DONE 2026-07-27 (slot-15)** — Re-ran CeFi surface-A id-form with the fixed oracle installed
+      (`unified-api-contracts@29c3672ff` lineage, carrying `d40c5d7d`/`502ef57e`) and restated the verdict: 1.
+      **Mechanism re-verified.** Re-ran all 4 § 1 example stems through `canonical_path_violations_classified`
+      (`require_pipeline_mode` False AND True) — every one that pre-fix silently read "0 violations == CANONICAL" now
+      correctly reports an `ID_FORM` violation; a genuinely canonical stem
+      (`BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN.parquet`) still reports zero violations of either class (no false
+      positive introduced). The exact § 6.1a colon_wire form (`BINANCE-FUTURES:PERP:BTCUSDT`) also now fails
+      `is_canonical_instrument_id` directly. 2. **Fresh sampled census (Tier-1, in-session, no VM, no corpus walk)** —
+      bounded pyarrow predicate-pushdown read of the consolidated `_index/availability_index.parquet` for
+      `market-data-tick-cefi-prd-…` over `date` window `2026-07-20..2026-07-27` (column-projected:
+      `date, venue, instrument_type, data_type,        instrument_id, capture_status, pipeline_mode, chain, quote_asset, margin_type`):
+      **2,012 `captured` rows**, 2,011 with a non-blank `instrument_id`. Ran `is_canonical_instrument_id` (the ID_FORM
+      leg, direct on the manifest column) over all of them: **1,532/2,011 = 76.18% canonical by id-form** in this window
+      — a SAMPLED, date-windowed number, NOT the corpus-wide re-measurement of § 1's historical 20.82%/~811,200 figure
+      (that full-corpus re-scan is Tier-2 VM territory, out of this todo's bounded scope). 3. **The 1,697 § 6.1a
+      colon_wire live objects are CONFIRMED gone from the current window** — 0/2,011 sampled non-canonical ids carry a
+      colon (`:`) in this post-fix window; the live-write fix (`mtds@953679de`, `sanitize_file_stem`) holds. **New
+      finding, not previously characterized**: the current non-canonical population (479/2,011 = 23.82% of this window)
+      is a DIFFERENT, BATCH-side defect — bare/no-colon raw wire symbols (`AAOI`, `ADA`, `BTC`, …), concentrated in
+      `(DERIBIT, FUTURE, batch_tardis)`: 6, `(EXTENDED-STARKNET, perpetual, batch_extended)`: 249,
+      `(OKX-FUTURES, FUTURE, batch_tardis)`: 224. This is NOT covered by § 7 item 2's `build_instrument_id` colon-guard
+      (that guard only fires on a symbol carrying an embedded `:`; a bare symbol like `AAOI` has none, so it
+      mints/passes through un-wrapped). Root cause not investigated this session (out of the bounded "restate the
+      verdict" scope) — tracked as a new todo below. - [ ] [SERVICE] P2. Root-cause + fix the batch-side
+      bare-wire-symbol id defect found above (EXTENDED-STARKNET/perpetual, OKX-FUTURES/FUTURE, DERIBIT/FUTURE via
+      `batch_tardis`/`batch_extended`) — likely a catalogue-miss fallback in the MTDS batch writer path that, unlike the
+      colon-embedded case `build_instrument_id` now guards (§ 7 item 2), never wraps a colon-less symbol into
+      `VENUE:ITYPE:SYMBOL` at all. Verify against `derive_row_instrument_id`
+      (`market-tick-data-service/.../adapters/cefi/tardis_shared.py`) and the EXTENDED adapter's own id derivation.
 - [x] [DATA] P2. Decide the id grammar for `defi` so `_ID_FORM_CHECKED_ASSET_GROUPS` can widen; `prediction` stays out
       of scope (its own future closeout). **DONE `unified-api-contracts@502ef57e`**: not a new decision — the DeFi
       instrument-uid grammar was already ratified in `plans/active/defi_consolidated_closeout_2026_07_18.md`'s
