@@ -127,8 +127,27 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       (line 115 said fees was still "honest-empty") and `capability-wizard-question-bank.md` (fee-stack question status
       `gap`→`partial`; the three sibling collateral-registry questions were ALSO stale `gap` despite
       `collateral_registry.py`'s 2026-06-12 backfill — fixed those to `registry` too, broker question stays `gap`).
-- [ ] [SPEC] P1. **Simulation assumptions**: simulatable candle granularities, matching/fill assumptions per archetype
-      area, backtest-live symmetry nuances per venue/instrument.
+- [x] ✅ [SPEC] P1. **Simulation assumptions**: simulatable candle granularities, matching/fill assumptions per
+      archetype area, backtest-live symmetry nuances per venue/instrument. — **FIXED 2026-07-27 (slot-12)**: matches the
+      2026-07-27 (slot-13) recurring pattern above — `SIM_ASSUMPTIONS_REGISTRY`
+      (`unified_api_contracts/internal/architecture_v2/simulation_assumptions.py`) was ALREADY backfilled in
+      `unified-api-contracts@5e7d0685` (2026-06-13) with 18 real per-(venue, instrument_type) entries covering every
+      ask: `supported_granularities` (`["1m","5m","15m","1h","4h","24h"]`, cited to
+      `strategy_service/cli/resolvers.py:32` `TIMEFRAMES`), `matching_model` (per-venue `MatchingModel`, derived from
+      the canonical `BenchmarkFillMode`), and batch-live symmetry nuances (`fill_assumptions` carries the shared
+      `_BATCH_LIVE_DIVERGENCE` note — benchmark-only fills, no real slippage/partial fills, in-process vs PBMS position
+      state — on every entry). The module's own F11 code-scan answer (already in-file) also settles "per archetype
+      area": fill model is dispatched by INSTRUCTION ACTION TYPE, not archetype family — the one archetype-specific
+      exception (LIQUIDATION_CAPTURE → `LIQUIDATION_BONUS`) is the sole archetype-keyed rule. **Only the module
+      docstring was stale** (claimed "intentionally empty" despite the real backfilled data below it) — fixed in
+      `unified-api-contracts@5ff6e238` (mirrors the `fees_registry.py`/`order_semantics.py` STATUS-line pattern).
+      Pre-existing passing tests already assert the backfill
+      (`tests/unit/test_order_semantics_sim_backfill.py::test_sim_assumptions_is_backfilled_not_empty` +
+      `tests/unit/test_capability_manifest.py::test_sim_assumptions_registry_backfilled`, both assert
+      `len(SIM_ASSUMPTIONS_REGISTRY) >= 16`) — no new test needed. Companion doc-drift also fixed:
+      `capability-wizard-question-bank.md`'s Stage E rows for "simulation matching/fill assumptions" and "known
+      batch-live asymmetries" flipped `gap`→`registry` (`unified-trading-pm@6586b8a2e`); `capability-wizard.md`'s status
+      table already correctly cited `5e7d0685` for sim-assumptions (no fix needed there). No design work remaining.
 - [x] ✅ [SPEC] P1. **Fund structures**: offerable pooled/SMA/prop structures with subscription/redemption + rebalance
       cadences (fund-administration state machines are runtime truth; nothing declares what is offerable). — **PUSH
       CONFIRMED LANDED 2026-07-27 (slot-13)**: `unified-api-contracts@8903683a` (docstring fix — the module's
