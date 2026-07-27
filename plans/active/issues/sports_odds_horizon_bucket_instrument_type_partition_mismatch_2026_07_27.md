@@ -49,6 +49,7 @@ source: >-
   Surfaced during sports_satellite_ao_dispatch_batch3_2026_07_25.md's "[DIAG] Determine whether the free-text
   error_reason pattern ... is still live-writing today" todo — a by-product finding from the census script
   (market-tick-data-service/scripts/sports_error_reason_free_text_census_2026_07_27.py), not the todo's own subject.
+depends_on: []
 ---
 
 # Sports odds_horizon_bucket/arbitrage_opportunity partition_mismatch — MATCH_ODDS vs MATCH_ODDS_LAY
