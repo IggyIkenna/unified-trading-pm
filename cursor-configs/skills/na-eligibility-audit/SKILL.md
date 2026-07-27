@@ -104,6 +104,18 @@ its tranche END TO END (not a checkbox count — this corpus has confirmed traps
 RE-TRIAGE section overriding an earlier checkmark, a `DECOMMISSIONED` item deliberately left unchecked as "ruled-out,
 not completed") and returns one of the four verdicts + evidence per doc.
 
+**Verify completeness before trusting a hunter's per-doc verdict set — do not skip this, even under time pressure**
+(2026-07-27 finding: a sonnet-tier hunter classifying
+`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` reported only 6 of its 14 actual open items on
+the first pass; caught only because Phase 2's own conflict-check happened to require tracing the doc closely enough to
+notice the count didn't add up — an under-read this size would otherwise have shipped an incomplete extraction batch
+silently). For every doc before moving it past Phase 1, run `grep -cE '^- \[ \]' <doc>` and compare against the sum of
+the hunter's own reported verdicts for that doc (KEEP items
+
+- RECLASSIFY items + ARCHIVE items, counting a multi-item KEEP-NA-stale-items verdict's named checkboxes). A mismatch
+  means the doc was under-read — re-dispatch it for a fresh full read (or re-read it directly yourself) before authoring
+  any Phase 2/3 output against it; never extract, close, or flip a doc's content on a partial read.
+
 **Never re-litigate an established ruling.** A doc whose own text already cites an explicit dated operator ruling, a
 `depends_on`+`gate_on_depends` gate on a still-open prerequisite, or a "🟡 DO NOT DISPATCH" banner is KEEP-NA on that
 citation alone — confirm the citation is real (grep it), don't re-derive the underlying judgment call yourself.
