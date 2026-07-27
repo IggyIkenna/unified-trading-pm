@@ -252,3 +252,18 @@ defect; it is purely a function of host capacity at any given moment.
   re-run, well past my own pre-rebase — pre-stamping the trailer eliminated that specific hurdle), but the residual
   final-`git push` non-fast-forward race persists under this session's sustained churn. Filed as its own issue:
   `/plans/active/issues/quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md`.
+- 2026-07-27 (slot-7, `infra`): **Further corroboration, 2 consecutive kills, same session**, shipping the
+  `features-multi-timeframe-service` date-bug fix (`features-service@0eaafe5c`, committed, unpushed pending a valid
+  sentinel). Both `quality-gates.sh --no-fix` re-runs (needed to refresh `.qg_last_passed_sha` to the new HEAD after
+  committing) vanished silently mid-run — attempt 1 mid-`[6/6] PRODUCTION READINESS VALIDATORS`, attempt 2 at ~54%
+  through the TESTS stage — no error, no marker file found (`find`'d for `*qg*watchdog*marker*`/`.qg_kill*`, zero hits),
+  consistent with a genuine kernel OOM-kill rather than the new self-terminating watchdog's own >80%-threshold path (or
+  that watchdog fix isn't yet live in this checkout). Fleet state at time of both kills: 15-20 concurrent
+  `quality-gates.sh` processes, load average 10-17, free RAM as low as 1.1Gi. Per this doc's own precedent (do not
+  blind-retry a 3rd time once 2 consecutive kills confirm the condition is stable, not flapping): did NOT retry again.
+  The underlying code fix itself is independently verified correct — a full clean QG run against the pre-commit tree
+  (identical file changes, just staged not committed) DID complete with `ALL QUALITY GATES PASSED (336s)` earlier in
+  this same session, before the host got more contended. Releasing the dispatched task
+  (`features_e2e_check_full_matrix_widespread_real_failures-002`) via `/skip-current-task` with reason GATED rather than
+  holding the slot idle waiting for contention to ease; the commit stays safe locally (not pushed, not lost) for
+  whichever slot picks this up next once the host is less loaded.
