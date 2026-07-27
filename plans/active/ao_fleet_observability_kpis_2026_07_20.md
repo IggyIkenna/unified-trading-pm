@@ -20,7 +20,7 @@ related:
     /plans/archive/2026_07/ao_fleet_infra_hardening_2026_07_20.md,
   ]
 created: 2026-07-20
-last_updated: 2026-07-20
+last_updated: "2026-07-27"
 parent_epic: orchestrator_master
 assigned_vm: NA # LOCAL execution — operator-assigned agents on this host, NOT AO-dispatched (2026-07-20)
 execution_scope: local-only
@@ -205,24 +205,16 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       failure isolation). Full `agent-orchestrator` `quality-gates.sh` green (1548 passed). **Gate met**: retention
       decision recorded (defer, no prune) WITH the growth alarm in place — the plan's own explicit acceptable-outcome
       clause.
-- [ ] [BACKEND] P0. **(AF-1a-followup) Re-measure the unresolved-escalation classification ~1 week post-fix.** AF-1a's
-      cicd.md backgrounding fix (`unified-trading-pm@a35c6996`) landed 2026-07-20; the 65%/33%/2%
-      NEVER_FOUND_ROOT_CAUSE/FOUND_ROOT_CAUSE_THEN_SILENT/HIT_BLOCKED_QUESTION split was measured the SAME session the
-      fix shipped, so it cannot yet reflect the fix's effect — a re-check too soon would just re-confirm pre-fix
-      escalations still working through the queue. Correction to the earlier Progress Log note: AF-5's fleet-wide
-      efficiency KPIs (boots/dispatches/done ratios) do NOT reproduce this specific classification — they're a
-      different, coarser measurement; this is a genuinely separate re-run, not automated by AF-5. **Tool**:
-      `agent-orchestrator/scripts/orchestrator/check-escalation-unresolved-classification.sh ldr_qg_failure` (built +
-      validated live this session, read-only via SSM — reproduced the exact 46/65%/33%/2% figures on a live re-run).
-      **Target date**: ~2026-07-27. **Gate**: re-run recorded with the new percentages; if
-      NEVER_FOUND_ROOT_CAUSE/FOUND_ROOT_CAUSE_THEN_SILENT haven't dropped meaningfully, the boot-prompt-too-shallow root
-      cause was wrong or incomplete — reopen the AF-1a analysis rather than assuming the fix worked. **AO-eligibility
-      ruling 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #24, option A): this
-      specific re-measure is a bounded, pure numeric re-run against a named validated script — nothing here needs a
-      human. Not extracted into a separate AO batch though: the target date (~2026-07-27) is only a day out and this is
-      the LAST open item in an otherwise-shipped LOCAL plan, so the natural trigger is simply the date arriving, not a
-      dispatch-mechanism change. Whoever picks this doc up on/after 2026-07-27 can flip just this todo's execution to an
-      AO batch at that point if it's still sitting unstarted.
+- [x] [BACKEND] P0. ✅ **(AF-1a-followup) Re-measure the unresolved-escalation classification ~1 week post-fix.** —
+      re-run 2026-07-27 (target date hit exactly). **Result: the fix worked.** `ldr_qg_failure` unresolved count dropped
+      **46 → 3**; NEVER_FOUND_ROOT_CAUSE (the bucket the cicd.md fix targeted) dropped **65% (30/46) → 0% (0/3)**. New
+      split: FOUND_ROOT_CAUSE_THEN_SILENT 67% (2/3), HIT_BLOCKED_QUESTION 33% (1/3) — both pre-existing, unrelated
+      failure classes AF-1a never claimed to fix. Gate MET — confirms the boot-prompt-too-shallow root cause was
+      correct, no reopen needed. **Correction found + fixed while re-running**: the script's hardcoded DB path
+      (`/var/lib/orchestrator/state.db`) was stale — the live DB moved in-repo to `data/state/state.db` per the
+      `ao_fleet_infra_hardening_2026_07_20` cutover completing sometime between 2026-07-20 and today (confirmed live via
+      the `orchestrator.service` unit's own comment); the script failed with "unable to open database file" until
+      corrected. Fixed + shipped: `agent-orchestrator@c5157fb`, full QG green (1804 passed, dashboard tsc/vitest green).
 
 ## Safeguards
 
@@ -242,6 +234,17 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
 
 ## Progress Log
 
+- **2026-07-27 — AF-1a-followup done, plan fully shipped.** Re-measured on the target date: `ldr_qg_failure` unresolved
+  count 46→3, NEVER_FOUND_ROOT_CAUSE 65%→0%. Confirms the AF-1a cicd.md backgrounding fix genuinely fixed the failure
+  class it targeted; the 3 remaining unresolved rows split 67% FOUND_ROOT_CAUSE_THEN_SILENT / 33% HIT_BLOCKED_QUESTION —
+  different, pre-existing classes outside this todo's scope. **Also found + fixed a live bug while re-running**: the
+  measurement script itself was broken (`sqlite3.OperationalError: unable to open database file`) because its hardcoded
+  DB path (`/var/lib/orchestrator/state.db`) went stale once the in-repo-state-path migration
+  (`ao_fleet_infra_hardening_2026_07_20`) actually cut over on the live VM sometime between 2026-07-20 and today —
+  confirmed via the live `orchestrator.service` unit file, which now documents `data/state/state.db` in-checkout as the
+  canonical path. Fixed + shipped `agent-orchestrator@c5157fb` (full QG green). Every todo in this plan is now `[x]` —
+  candidate for archival, not done in this pass (archival is a separate 6-step ritual per CLAUDE.md's plan-hygiene HARD
+  RULE, left to the operator/next pass).
 - **2026-07-22 — AF-1b done** (`agent-orchestrator@5dd9bbc8`). Every todo in this plan is now shipped except the
   time-gated AF-1a-followup (re-measurement not due until ~2026-07-27). See the AF-1b todo above for the full design +
   the key-shape correction (wall identity, not `escalation_id`) vs. this plan's original phrasing.
