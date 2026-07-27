@@ -19,9 +19,10 @@ related:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/launcher-script-ssot.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
+    /codex/06-coding-standards/quality-gates-memory-governance.md,
   ]
 created: 2026-05-15
-authoritative_for: [VM launcher per-script usage runbook]
+authoritative_for: [VM launcher per-script usage runbook, heavy-compute-on-shared-host ad-hoc-script rule]
 referenced_by:
   [
     /codex/05-infrastructure/spot-vms-for-backfill.md,
@@ -30,7 +31,7 @@ referenced_by:
     /codex/05-infrastructure/vm-tarball-deployment.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-27
 code_refs:
 type: infrastructure
 execution:
@@ -98,6 +99,47 @@ scripts with no dedicated launcher yet). A local session may only: launch/poll a
 tails), read/write git and plan docs, and do single-object `gsutil stat`/small-file reads for a quick health check. SSOT
 for VM selection/naming: this doc's rule above; for Spot provisioning:
 `/codex/05-infrastructure/spot-vms-for-backfill.md`.
+
+## Heavy COMPUTE/MEMORY on the shared planning-vm (HARD RULE, added 2026-07-27)
+
+**The Heavy I/O exemption above is I/O-only — it is NOT a blanket pass for heavy COMPUTE/MEMORY.** The rule above
+governs GCS _bandwidth_ from the operator's own laptop and explicitly exempts the human-planning/AO-orchestrator VMs
+because they have fast/cheap in-region networking. It says nothing about memory or CPU, and it was never meant to. A
+second, separately-scoped guardrail — `QG_MEM_CAP` (`/codex/06-coding-standards/quality-gates-memory-governance.md`) —
+caps `pytest`/`basedpyright` subprocesses launched _through_ `quality-gates.sh`, but it does **not** wrap an
+agent-authored ad-hoc script run directly (`python3 script.py &`). Neither rule covers that combination, and that gap is
+what actually caused an incident.
+
+**Real incident, 2026-07-27**: an ad-hoc scratchpad script (`candle_coverage_gap.py`, a whole-corpus candle-coverage
+analysis) was run directly on the shared planning-vm host — not via `quality-gates.sh`, not via any registered VM
+launcher. It loaded its working set entirely in memory and grew to **15.8GB RSS over 21 minutes**, driving the shared
+host to 24/30GB used with 0GB free and load average 50, which degraded the AO orchestrator's own `/api/state` poll loop
+for every slot on the box. It was SIGTERM-killed as a protective action; no worker session or git state was lost, but
+the host was one slow poller away from a much worse fleet-wide outage. Two people independently believed a rule already
+prevented this (one recalling the I/O rule above, one recalling the QG memory governor) — neither actually did, for the
+reasons above; this section closes that specific gap rather than relying on either being stretched to cover it.
+
+**The rule**: before running ANY ad-hoc script directly on the shared planning-vm or AO-orchestrator VM (i.e. not going
+through `quality-gates.sh`, and not a registered VM launcher), pick one:
+
+1. **Bound the read.** Use a streamed/chunked/DuckDB-style partial read instead of materializing a whole corpus in
+   memory — see `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s DuckDB-over-pandas precedent (the pandas
+   concat/sort/dedup OOM'd a 16GiB Cloud Run job the exact same way; DuckDB's out-of-core execution didn't).
+2. **Cap it.** If the analysis is genuinely one-off and can't be bounded easily, run it under
+   `scripts/dev/run-bounded-analysis.sh` (this repo) — it reuses the exact
+   `systemd-run --user --scope -p MemoryMax=... -p MemorySwapMax=0` cgroup mechanism `QG_MEM_CAP` already uses,
+   generalized to any command. A process that exceeds the cap dies with exit 137 (verified 2026-07-27 against a live
+   planning-vm instance: a 200M cap SIGKILLed a 500MB allocation cleanly, host otherwise unaffected) instead of taking
+   the shared host down with it. Default cap is 4G — deliberately smaller than QG's 10G default, since an ad-hoc
+   scratchpad script needing more than a few GB is itself a signal it should be option 1 or option 3, not a bigger cap.
+3. **Dispatch it.** If it's genuinely corpus-scale and long-running, it isn't an "ad-hoc script" at all — it's exactly
+   the class of work the Heavy I/O rule above and the Parallelization Threshold rule below already require on a
+   dedicated VM (reuse `launch-canonical-migration-vm.sh` or the generic `VM_MIGRATION_CMD` dispatch; never hand-roll a
+   VM name — see the registry rule at the top of this doc).
+
+**What this does NOT change**: the Heavy I/O rule's I/O exemption for the planning/AO-orchestrator VMs stands — GCS
+bandwidth from those VMs is still fine. This section adds a second, independent axis (compute/memory), it does not
+narrow the first.
 
 ---
 
