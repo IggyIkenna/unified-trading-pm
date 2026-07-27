@@ -461,3 +461,30 @@ every todo executes an already-decided spec from the parent doc.
   across the 10 shards above) via a multi-VM `SHARD_OF` fan-out, Script-2-style. This will be logged here as it
   progresses/completes; todo 3 flips only once Script 1 is corpus-wide applied and idempotency- reverified alongside
   Scripts 2/3/4.
+- **2026-07-27T04:36Z (slot-9) — CORRECTION: the "campaign dispatched... now running" entry above is STALE; no campaign
+  is currently in flight.** Dispatched to todo 3 (task `cefi_migration_cutover_and_track8_completion-006`), found the
+  checkbox still `- [ ]` as expected, but before touching anything, verified LIVE infra state (read-only, no writes)
+  rather than trust the narrative at face value — good thing, since it had drifted:
+  - `gcloud compute instances list` shows **zero** VMs matching `cefi-content-apply`/`cs[0-9]` currently running.
+  - `gcloud compute operations list` shows all 10
+    `canonical-migration-cefi-content-apply-20260727-0421xx..0428xx-cs{1..10}` VMs were launched ~03:21-03:29Z and
+    **bulk-deleted in one coordinated batch at 2026-07-27T04:00:10Z** (all 8 non-terminal shards' delete timestamps
+    within 0.1s of each other — a deliberate teardown, not a crash/preemption scatter).
+  - `cs1`'s `EXIT_STATUS=0` (succeeded), `cs8`'s `EXIT_STATUS=137` (OOM-killed, matches the earlier "cs8 was OOM-killed
+    mid-run" note) — the other 8 shards (cs2-cs7, cs9, cs10) have **no `EXIT_STATUS` at all**, consistent with being
+    deleted mid-run during the bulk teardown, not with organic completion.
+  - **Confirmed via direct log read** (`cs2`'s `run.log` header):
+    `Discovery scope: 42 (venue, pipeline_mode) cefi pairs... Mode: DRY-RUN | Workers: 24` — despite the `content-apply`
+    VM-name prefix, these 10 shards were **NEVER passed `--apply`**. This is the SAME 10-shard measurement sweep this
+    doc's own earlier entry describes ("10-shard sharded attempt got only ~1-11% through each shard... cleanly deleted
+    all 8 still-running dry-run shard VMs") — i.e. the "campaign dispatched... now running" line above is describing
+    that SAME dry-run measurement pass, not a distinct, still-active `--apply` run. It was written while the measurement
+    was still live and never updated after the pass was torn down.
+  - **Net state, verified**: Script 1's real `--apply` has NEVER been attempted on any shard. The ~4.5M-object
+    corpus-wide backfill remains fully open. No process is currently running that a fresh dispatch would collide with —
+    but launching the REAL 30-50-VM multi-hour-to-multi-day `--apply` campaign is explicitly out of scope for a 1-hour
+    worker dispatch per this todo's own text ("do not fold into a quick re-dispatch of this one"), and is exactly the
+    kind of substantial, costly, largely-unsupervised operation this session should not decide to launch unilaterally.
+    Filed `/blocked` (see BLK-id in the AO dashboard) asking whether Script 1's apply campaign should become its own
+    dedicated plan (mirroring Script 2's own precedent/structure) or continue to be tracked as incremental re-dispatches
+    of this todo. Checkbox correctly left `- [ ]` — no code shipped, verification only.
