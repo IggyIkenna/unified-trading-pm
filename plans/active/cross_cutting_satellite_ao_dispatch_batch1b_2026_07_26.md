@@ -107,7 +107,7 @@ drift_direction: advance-code
       just fixed elsewhere (MDPS's `reprocess_sports_odds.py`): if this specific completeness check filters manifest
       rows on `venue="ODDS_API"` (the vendor) when the real captured rows now correctly carry per-bookmaker venues (real
       bookmaker fan-out, as this row's own text says — "22 bookmaker shards"), the check itself is looking at the wrong
-      axis (`source="odds_api"` is what MTDS's raw fan-out correctly stamps per `codex/02-data/venue-availability.md`,
+      axis (`source="odds_api"` is what MTDS's raw fan-out correctly stamps per `/codex/02-data/venue-availability.md`,
       not `venue`). Confirm which axis this specific checker reads before assuming a cred/registration gap. **(b)
       sports** — item #5's `footystats-fwd-*` 0-byte `run.log` (VM startup/log-upload never emitted): check a current
       footystats forward-fetch VM's startup + heartbeat-uploader path; fix the bug if still reproducible, or

@@ -27,6 +27,7 @@ related:
     /plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/venue-availability.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master
@@ -80,7 +81,7 @@ instrument_type (`CURRENCY` for FX pairs, `INDEX` for `^VIX`, `EQUITY` for plain
 through this adapter, regardless of whether it's an FX pair, a volatility index, or a plain equity ticker, gets
 `venue="YAHOO"`. "YAHOO" is the data VENDOR (the yfinance library / Yahoo Finance's aggregation service), not a
 venue/exchange in the sense the rest of the tradfi manifest uses the column (per
-`codex/02-data/tradfi-databento-sourcing-ssot.md`, real tradfi venues are exchanges like CME/ICE/NASDAQ/NYSE).
+`/codex/02-data/tradfi-databento-sourcing-ssot.md`, real tradfi venues are exchanges like CME/ICE/NASDAQ/NYSE).
 
 ## Why this looks like the same conflation class as the sports fix (structural similarity, not a proven identical bug)
 
@@ -101,8 +102,8 @@ provable defect), it has NOT been checked here whether:
 ## Not performed here (deliberately, per scope)
 
 - No trace of `write_tradfi_shard`'s manifest-write path or the resulting `_index/availability_index.parquet` rows.
-- No check of whether `codex/02-data/tradfi-databento-sourcing-ssot.md` or any other codex doc already documents this as
-  intentional (a quick related-doc read did not surface one, but this was not an exhaustive search).
+- No check of whether `/codex/02-data/tradfi-databento-sourcing-ssot.md` or any other codex doc already documents this
+  as intentional (a quick related-doc read did not surface one, but this was not an exhaustive search).
 - No consumer trace (features-service / ml-service / manifest enumeration) for a `venue="YAHOO"` dependency.
 - No row-count/blast-radius measurement against the live manifest.
 

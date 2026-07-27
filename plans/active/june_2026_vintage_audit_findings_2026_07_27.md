@@ -90,7 +90,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
 - [ ] [PLAN] P2. `plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` — 3 stale
       unchecked items all confirmed done (understat 404 scoping, `candidate_parquet_paths` gap, odds-api backfill via
       archived `sports_p1_golden_window_mtds_odds_2026_06_27.md` Todo 2). Sole remainder (3-way understat split) is a
-      dormant contingency — carry forward as a footnote in `codex/02-data/sports-data-source-coverage-matrix.md` or the
+      dormant contingency — carry forward as a footnote in `/codex/02-data/sports-data-source-coverage-matrix.md` or the
       sports closeout doc, then archive.
 - [ ] [PLAN] P2. `plans/active/issues/understat_bulk_download_backfill_2026_06_29.md` — all 11/11 §8 done; 2026-07-26
       closure note + independent re-verification (605,368-row corpus, 0

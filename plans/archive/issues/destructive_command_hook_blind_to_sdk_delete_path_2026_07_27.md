@@ -30,7 +30,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /codex/05-infrastructure/gcs-object-operations.md,
-    plans/active/task_template.md,
+    /plans/active/task_template.md,
   ]
 created: 2026-07-27
 priority: P1
@@ -91,12 +91,12 @@ depends_on: []
 ## Why this matters
 
 This session's whole reversibility-carve-out effort (§3a, `task_template.md` findings T/U/V/W,
-`codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, the corpus-wide `[OPERATOR]`-tag downgrade sweep)
-operates entirely at the DOC/POLICY layer — it tells a worker "you may delete this." But a worker that reaches for the
-CLI form it's most familiar with (rather than the SDK wrapper) would hit this hook and could plausibly misread "escalate
-to the operator" as "this delete needs a human decision" — silently reintroducing exactly the reflexive-escalation
-problem this whole effort exists to remove, for a class of case (raw-CLI habit) the doc-level fixes alone could never
-catch, since they don't touch tool-choice.
+`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, the corpus-wide `[OPERATOR]`-tag downgrade
+sweep) operates entirely at the DOC/POLICY layer — it tells a worker "you may delete this." But a worker that reaches
+for the CLI form it's most familiar with (rather than the SDK wrapper) would hit this hook and could plausibly misread
+"escalate to the operator" as "this delete needs a human decision" — silently reintroducing exactly the
+reflexive-escalation problem this whole effort exists to remove, for a class of case (raw-CLI habit) the doc-level fixes
+alone could never catch, since they don't touch tool-choice.
 
 ## Fix shipped
 

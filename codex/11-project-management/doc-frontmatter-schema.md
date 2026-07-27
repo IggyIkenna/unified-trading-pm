@@ -13,9 +13,9 @@ scope: [engineer, admin]
 tags: [frontmatter, rag, grep, doc-governance, docspec, agent-operating-framework]
 related:
   [
-    ../../plans/epics/agent_operating_framework_master.md,
-    ../../plans/active/doc_frontmatter_schema_and_validator_2026_06_24.md,
-    plan-hygiene.md,
+    /plans/epics/agent_operating_framework_master.md,
+    /plans/active/doc_frontmatter_schema_and_validator_2026_06_24.md,
+    /codex/11-project-management/plan-hygiene.md,
   ]
 created: 2026-06-24
 authoritative_for:

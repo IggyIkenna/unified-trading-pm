@@ -94,9 +94,10 @@ drift_direction: advance-code
       fixed a genuine, DIFFERENT `venue=ODDS_API` conflation in MDPS's `reprocess_sports_odds.py`): this ruling is NOT
       the same bug — `markets`/`outcomes`/`settlements` are genuinely vendor-scoped listing/settlement data with no
       per-bookmaker breakdown to attribute (matches UAC's own `VENUES_BY_ASSET_GROUP["sports"]` registry entry for
-      `ODDS_API`, "Multi-bookmaker odds aggregator (raw tick data source)" — see `codex/02-data/venue-availability.md`),
-      unlike the fixed bug (a manifest row for data that DID already carry a real per-row `bookmaker_key`, just never
-      read). This ruling stands. **Before dispatching the pending "move these 3 venues" todo below**, re-verify against
+      `ODDS_API`, "Multi-bookmaker odds aggregator (raw tick data source)" — see
+      `/codex/02-data/venue-availability.md`), unlike the fixed bug (a manifest row for data that DID already carry a
+      real per-row `bookmaker_key`, just never read). This ruling stands. **Before dispatching the pending "move these 3
+      venues" todo below**, re-verify against
       `plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (P0, open as of this note) —
       that doc found the live `instrument_type=odds` population is far larger (~27 venues, 54.8M rows) than this doc's
       8-venue/561,260-row scope and gates the move todos until reconciled. - **`PINNACLE` (32,616 rows) → FIXED_ODDS, no

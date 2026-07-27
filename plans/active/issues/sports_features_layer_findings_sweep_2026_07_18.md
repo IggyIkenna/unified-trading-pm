@@ -581,7 +581,7 @@ read is a coverage blind spot.
       (`FOOTBALL:{BOOKMAKER}:{MARKET}:...`) was being misread as `venue` by a generic (non-sports-aware) instrument-id
       splitter; fixed `unified-trading-library@bcd73241` (`mdps_t1_recon...` Update 5). **`ODDS_API`**: valid ONLY (a)
       as a UAC registry-level vendor/aggregate-class venue entry (`VENUES_BY_ASSET_GROUP["sports"]`, "Multi-bookmaker
-      odds aggregator (raw tick data source)" — see `codex/02-data/venue-availability.md`) and (b) as the
+      odds aggregator (raw tick data source)" — see `/codex/02-data/venue-availability.md`) and (b) as the
       `reprocess_sports_odds.py` manifest's COARSE per-day AGGREGATE SENTINEL row (deliberate, unchanged). It is
       **invalid** as a FINE per-shard/per-row venue stand-in wherever the real bookmaker is already present in the data
       — that was a genuine, now-fixed conflation in `reprocess_sports_odds.py`'s fine manifest rows
