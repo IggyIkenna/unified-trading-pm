@@ -108,6 +108,25 @@ restated here.
   `--dry-run` re-run against the fresh report (995 legacy-B candidate rows) is the safe next step for whoever picks this
   up; `--apply` stays gated on Ikenna's sign-off regardless.
 
+  **Note (2026-07-27, sub-agent operator-gate review — left GATED, NOT downgraded, genuinely uncertain which category
+  applies).** Checked this todo against the §3a reversibility carve-out
+  (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, 2026-07-26): a fresh check today confirms ALL THREE
+  target buckets clear the bucket-level precondition (object/prefix-scoped, not a whole-bucket destroy) —
+  `market-data-tick-tradfi-prd-central-element-323112`, `market-data-tick-defi-prd-central-element-323112`, and
+  `market-data-tick-pred-prd-central-element-323112` each report `soft_delete_policy.retentionDurationSeconds = 604800`.
+  **Did NOT downgrade anyway**, because this delete class is specifically legacy-object-delete-**after-copy**
+  (v9-migration COPY-not-MOVE, Part 5 of that same doc), which is governed by a SEPARATE, unconditional hard stop (§3
+  item 2: "Any legacy-object delete after copy... gated by Part 5") plus the closed disposition vocabulary's own "Who
+  may act" column for exactly this disposition class (`yes-twin-confirmed`/`yes-after-verify`: "Human executes; agent
+  suggests") — and §3a's own text scopes its carve-out explicitly to **"Hard-stop #1"** only ("Hard-stop #1 above is not
+  absolute..."), with no stated amendment to hard-stop #2 or the disposition table. It is genuinely ambiguous from the
+  doc alone whether §3a's general bucket-reversibility carve-out was meant to also reach legacy-twin dispositions, or
+  whether the disposition table's stricter "Human executes" column is a deliberate, still-binding, separate constraint
+  for this delete class specifically (the exact ORPHAN-risk trap Part 5 exists to guard against — a false-positive twin
+  match here is a real, unrecoverable-per-cell data loss, not merely an undo-within-7-days mistake). Recommend the plan
+  owner/operator resolve this ambiguity once, in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` itself
+  (state explicitly whether §3a extends to legacy-twin/Part-5 deletes or not) rather than re-litigating it per-plan.
+
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
