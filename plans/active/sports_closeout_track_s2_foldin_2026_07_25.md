@@ -159,15 +159,27 @@ drift_direction: advance-code
       the move: **NOT green** — `data_completion_defi_2026_07_15.md`'s C0 path+bucket canonicalisation todo is still
       `- [ ]` open, so the item stays correctly gated on defi C0 reaching C-GREEN in its new home. No other duplicate of
       this item was found anywhere else in the active sports corpus.
-- [ ] [DATA] P1. **Sports P2a sub-item (a) — G1 non-canonical-league NOISE wipe, audit-then-conditionally-purge.** First
-      check whether the ~1,437-league/~106k-row NOISE population is the SAME population as the already-approved
-      489-pair/10,869-row §U purge (Track V's non-registry-league decision) — the scale differs by ~10x, so this must
-      not be assumed. If the census confirms it is the same population (or a strict superset), execute the
-      already-approved purge on the residual (snapshot-first, same pattern as every other purge in this doc family). If
-      the census shows a genuinely different population, STOP and report the discrepancy — do not purge an unapproved
-      population. (repo: instruments-service). **Done when**: the population-match census is recorded, AND either the
-      approved purge has executed on the confirmed-matching residual, or a discrepancy report exists (not both silently
-      skipped).
+- [x] ✅ [DATA] P1. **Sports P2a sub-item (a) — G1 non-canonical-league NOISE wipe, audit-then-conditionally-purge —
+      DONE 2026-07-27 via discrepancy-report path, NO purge executed.** Ran a live read-only census against the
+      production `instruments-store-sports-prd-central-element-323112` `_index/availability_index.parquet` (6,860,486
+      rows) reproducing the G1 delete script's own canonical-set derivation. Result: NEITHER the plan's cited
+      ~106k/1,437 figure NOR §U's approved 10,869/489 figure is reproducible today under any of 3 canonical-set cuts
+      tried (full-registry: 268,094 rows/780 leagues; MVP-scope: 1,476,781 rows/1,067 leagues; football-only: 17,767
+      rows/734 leagues) — genuinely different from both historical figures, confirming the todo's own "must not be
+      assumed" warning. Worse: the full-registry cut contains 160,909 rows under 5 symbolic aliases
+      (`PREMIER_LEAGUE`/`CHAMPIONSHIP`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/`FIRST_DIVISION_A`) already flagged as a P0
+      catastrophic-delete risk in `sports_league_id_namespace_migration_2026_07_20.md` — 100% in `trades`/
+      `odds_horizon_bucket`, real un-migrated canonical-league data belonging to Track V's separate, still-in-flight
+      casing migration, NOT G1 NOISE. Root cause: `delete_noncanonical_sports_leagues_2026_06_25.py` defines
+      `_FOOTBALL_DATA_TYPES` but never uses it to filter — a live scope bug that would delete 250,327 non-football rows
+      if `--apply` ran today. **Fixed same-turn, `instruments-service@7409c5b1`**: wired `_FOOTBALL_DATA_TYPES` into
+      `_delete_noncanonical_rows()`'s mask + 4 new unit tests (non-football survives / football still deleted / mixed
+      same-league_id-both-types / missing-data_type-column fallback), all passing; full QG green. Per this todo's own
+      instruction, STOPPED short of any purge and filed the population discrepancy as actionable follow-ups:
+      `plans/active/issues/sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` (remaining 3 todos:
+      re-baseline the canonical-set decision, reconcile §U's exact population against a raw-content read, update this
+      plan's figures once fixed). (repo: instruments-service). Census + discrepancy recorded — no purge executed, per
+      the todo's own "if genuinely different, do not purge" branch.
 - [ ] [DIAG] P1. **Sports P2a sub-item (b) — G2 2015-2017 zero-captured diagnosis ONLY, do NOT implement a fix.**
       Determine whether the 2015-2017 zero-captured seasons are a subscription-tier limit or a backfill bug. The source
       todo bundled an undecided "then fix" after diagnosis (subscription-tier-limit-vs-backfill-bug fix paths differ) —
