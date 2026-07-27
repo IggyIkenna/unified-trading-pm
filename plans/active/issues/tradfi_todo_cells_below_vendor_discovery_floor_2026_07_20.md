@@ -120,10 +120,54 @@ exactly such ad-hoc per-wrapper hardcodes.
 
 ## Todos
 
-- [ ] [DATA] P1. **Re-measure and break down the 182,407** by (venue, data_type, year) so the reclass pass has an exact,
-      verifiable worklist. Confirm each counted cell is genuinely strictly-before its UAC floor — an off-by-one at the
-      boundary date would silently reclass a real, fillable day into expected-absent, which is the one dangerous failure
-      mode of this change.
+- [x] [DATA] P1. ✅ **DONE 2026-07-27 — re-measured directly against the manifest, exact year-level worklist below.**
+      Queried `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` directly
+      (`date`/`venue`/`data_type`/`capture_status`/`error_reason`/`asset_group` columns) rather than re-deriving from
+      any script — confirmed the "todo" bucket is precisely
+      `asset_group=="tradfi" AND capture_status=="expected_unattempted"     AND error_reason==""` (blank — every one of
+      the 420,438 current tradfi `expected_unattempted` rows carries a blank `error_reason`; this is the exact bucket
+      `enumerate_expected_universe.py`'s now-shipped fix (`instruments-service@31cf3952`) reclassifies pre-floor dates
+      OUT of, into `EXPECTED_PRE_SOURCE_COVERAGE_START`). Cross-referenced each row's `date` against its venue's UAC
+      floor (`VenueMapping().get_instrument_discovery_start`, read from
+      `unified-api-contracts/registry/venue_mapping.py`: NASDAQ/NYSE `2023-04-15`, CME `2020-01-01`, CBOE `2020-06-01`,
+      KRX `2019-01-02`, FX `2020-01-01`) using a strict `date < floor` predicate. **TOTAL below-floor todo cells:
+      182,407 — reproduces the original measurement's figure exactly**, confirming the population is stable and the
+      (venue, data_type) totals match byte-for-byte (NASDAQ 97,475 / NYSE 79,130 / CME 5,802). CBOE/KRX/FX: 0
+      below-floor todo cells each (none currently exist below their floors in this state).
+
+      **Full year-level breakdown** (the exact, verifiable worklist for the corrective reclassification pass, todo
+          below):
+
+          | Venue  | data_type | Year | Count  |
+          | ------ | --------- | ---- | ------ |
+          | CME    | ohlcv_1m  | 2018 | 1,916  |
+          | CME    | ohlcv_1m  | 2019 | 3,886  |
+          | NASDAQ | ohlcv_1m  | 2018 | 18,435 |
+          | NASDAQ | ohlcv_1m  | 2019 | 18,429 |
+          | NASDAQ | ohlcv_1m  | 2020 | 18,489 |
+          | NASDAQ | ohlcv_1m  | 2021 | 18,425 |
+          | NASDAQ | ohlcv_1m  | 2022 | 18,449 |
+          | NASDAQ | ohlcv_1m  | 2023 | 5,248  |
+          | NYSE   | ohlcv_1m  | 2018 | 14,965 |
+          | NYSE   | ohlcv_1m  | 2019 | 14,965 |
+          | NYSE   | ohlcv_1m  | 2020 | 15,006 |
+          | NYSE   | ohlcv_1m  | 2021 | 14,965 |
+          | NYSE   | ohlcv_1m  | 2022 | 14,965 |
+          | NYSE   | ohlcv_1m  | 2023 | 4,264  |
+
+          (NASDAQ/NYSE 2023 rows are the partial year up to the 2023-04-15 floor, hence the smaller count.) Only one
+          `data_type` (`ohlcv_1m`) appears in the below-floor set for all three venues — no other tradfi `data_type` has
+          pre-floor `expected_unattempted` rows currently.
+
+          **Boundary verification (the one dangerous failure mode this todo exists to catch)**: checked for off-by-one at
+          the floor date using a strict-inequality partition — 238,031 todo cells sit ON-OR-AFTER their venue's floor
+          (correctly EXCLUDED from the below-floor set), and **103 cells sit EXACTLY ON the floor date** across all
+          venues — these are genuinely fillable (the floor date itself IS in-archive) and are correctly NOT included in
+          the 182,407 below-floor count. No off-by-one drift found; the `<` (strict) comparison is the correct boundary.
+          Raw breakdown CSV retained at
+          `/home/ubuntu/.claude-configs/orch-slot-9/cc-tmpdir/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-9/0f3ea3ca-85ec-474a-b218-34f27ddd735d/scratchpad/tradfi_below_floor_breakdown.csv`
+          (session-scratch, not committed — the table above is the durable record).
+
 - [x] ✅ [BACKEND] P1. **Teach the sentinel/enumerator path the discovery floor** so NEW pre-floor cells materialise as
       `expected_unattempted` at write time rather than as `todo`. Resolve the floor from UAC
       (`get_instrument_discovery_start`) at runtime; no hardcoded per-venue dates. **DONE 2026-07-27 (slot-5)** —
