@@ -527,11 +527,16 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 > absent, not filtered/empty-on-purpose. CONFIRMED 2026-07-24 (operator: "in local version as well i cannot see anything
 > in tarball lane"): `_all_build_facts()`/`_all_image_facts()` in `service.py` only ever call the
 > Artifact-Registry/Cloud-Build (image-lane) providers; `LANE_TARBALL` is a real constant in `models.py` and the UI's
-> lane filter chips already offer "Tarball" (Pipeline tab), but zero rows can ever carry it. **What's already done, for
-> contrast — do not re-build**: Deploy timeline ALREADY treats a GCE VM launch as the tarball-lane deploy event
-> (`deployment-ui@797180c`/`deployment-api@72a0108`, Phase 3 above, "a launch IS the tarball-lane deploy") — that half
-> of the tarball story is live. The gap is specifically the BUILD/ARTIFACT half: the tarball's own creation/upload event
-> (Pipeline tab) and its registry-style inventory (Artifacts tab).
+> lane filter chips already offer "Tarball" (Pipeline tab), but zero rows can ever carry it.
+>
+> **CORRECTED 2026-07-27 — the line below was WRONG, re-verify-against-the-cited-commit caught it**: this banner
+> originally claimed "Deploy timeline ALREADY treats a GCE VM launch as the tarball-lane deploy event
+> (`deployment-ui@797180c`/`deployment-api@72a0108`) — that half of the tarball story is live." The CITED commit's own
+> message says the opposite: "AWS App Runner/ECS + GCE VM launches (the tarball-lane deploy) are later increments." No
+> VM-launch-as-`DeployFact` provider exists anywhere in this codebase — `running()`'s tarball-lane coverage is zero, not
+> partially built. This phase's actual scope is (and always was) just the BUILD/ARTIFACT half: the tarball's own
+> creation/upload event (Pipeline tab) and its registry-style inventory (Artifacts tab) — both now shipped, see the
+> Todos below. The VM-launch-deploy gap remains open, tracked as the blocker note on the "What's running tab" P3 todo.
 >
 > **⚠️ Bucket path needs live confirmation before implementation (operator, 2026-07-24)**: the bucket path cited below
 > comes from `code_tarball_refresh_scheduler.tf`'s comment, cross-checked against the Data-feasibility table's
@@ -540,39 +545,69 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 > NOT start Phase 3d's backend todo below from this citation alone** — first `gsutil ls`/`gcloud storage ls` the live
 > bucket and diff its actual contents against the cited path before writing the provider.
 
-- [ ] [BACKEND] P1. **`gcp_tarball_manifests()` provider** — read the GCS tarball-manifest bucket
-      (`gs://{code-bucket}/code/*-code.tar.gz`, per `code_tarball_refresh_scheduler.tf` — **UNCONFIRMED live, see the
-      caveat above; verify before use**; the Data-feasibility table above already measured **4064 manifests / 163
-      tarballs** from this exact source as of 2026-07-17, free to read) and normalize each manifest into a
-      `BuildFact`-shaped record with `lane=LANE_TARBALL`: commit_sha, pyproject_version, created_at, git_status_clean
-      are all already carried per-manifest (see the Data-feasibility table). Mirror `gcp_cloud_builds()`'s shape so
-      `service.builds()` needs no new logic beyond appending this provider's output — `_all_build_facts()`'s docstring
-      already anticipates this ("AWS CodeBuild + the tarball-lane builds land in later increments — each `_safe`").
-- [ ] [BACKEND] P1. **Fold tarball manifests into `_all_image_facts()` / `service.images()`** so the Artifacts tab's
-      "AR + ECR + tarball bucket" promise (line 148) is actually true — one row per tarball "repo" (i.e. per service
-      name in the `code/` prefix), image_count → manifest_count, tags → the pinned/floating SHA suffix ladder already
-      documented in Tab-1's review notes (`x.tar.gz (floating) → x@sha.tar.gz (pinned)`), last_pushed → newest manifest
-      `created_at`, size → summed tarball bytes. Needs a `cloud`/`registry` value distinct from `gcp`/
-      `unified-trading-system` (e.g. `registry="gcs-tarball-bucket"`) so it doesn't collide with the AR rows in the
-      per-repo grouping key.
-- [ ] [BACKEND] P2. Once the two providers above land, **Health's tarball-lane condition needs a second look** — today
-      it always emits one static "VM-tarball-lane workloads carry no measured git commit yet" condition
-      (`service.py:650`, med, always-on) regardless of whether tarball DATA exists at all. After this phase, that
-      condition should only fire for tarball rows that genuinely lack a stamped commit (Phase 3c gap), not as a blanket
-      "the lane is unimplemented" placeholder — and a NEW condition should flag if the tarball provider itself fails
-      (`providers.safe()` swallowing an exception the same way the AR provider did before today's IAM fix — see Phase 7
-      below for exactly that failure mode).
-- [ ] [UI] P2. **Pipeline tab** — the `Tarball` filter chip already exists (`PipelineView`, per Phase 3's "All / Failed
-      / Image / Tarball / GCP / AWS" chips) but has never had a row to filter TO; verify it actually filters correctly
-      once real tarball `BuildFact` rows exist (no UI code change expected, but add it to the `pw:L2` regression spec so
-      it's not an assumed-working, never-tested path).
-- [ ] [UI] P2. **Artifacts tab** — extend the per-repo table to render tarball rows alongside AR/ECR rows (same columns:
-      tags, digest-or-manifest-hash, pushed, size, running?), and extend the `cloud`/`registry` filter chips to include
-      the new tarball source so it's distinguishable from GCP/AWS image rows at a glance.
+- [x] [BACKEND] P1. ✅ **`gcp_tarball_manifest_builds()` provider — `deployment-api@3525bce` (2026-07-27).** Bucket path
+      LIVE-VERIFIED via `gcloud storage ls` before writing any code (measured ~4966 manifests / ~1046 tarballs, up from
+      the 2026-07-17 figure — confirms the bucket only grows, no lifecycle rule). **Design deviation from the original
+      spec, deliberate**: reads ZERO manifest bodies — `commit_sha`/`branch`/`size`/timestamp are all derivable from the
+      object's own name + `list_blobs` metadata (the SHA is IN the filename: `<repo>-code@<sha>.tar.gz`), so this stays
+      one cheap metadata scan even at ~5000 objects rather than thousands of small downloads
+      `pyproject_version`/`git_status_clean` are NOT read — `BuildFact` has no fields for them, so reading them would be
+      pure waste). The floating (no-`@sha`) pointer is skipped for build-history purposes — it's always a byte-identical
+      `cp` of the newest pin (`create-code-tarballs.sh:373`), so counting it would double the build event, not add
+      information. Every row is `status="SUCCESS"` — this bucket structurally cannot record a failed refresh (no
+      manifest gets written), so a fabricated failure rate is never at risk. Bucket name is config-derived
+      (`deployment-scripts-{project_id}`, matching `_project_id(cfg)`'s existing pattern), NOT a hardcoded literal — the
+      QG's "no hardcoded project ID in production" gate caught my first draft doing exactly that, and a `# noqa: gs-uri`
+      covers the one display-string URI construction this doesn't route through `resolve_bucket_name()` for (documented
+      as a separate, already-tracked gap, not a new one).
+- [x] [BACKEND] P1. ✅ **Folded into `_all_image_facts()` / `service.images()` — `deployment-api@3525bce`.** One
+      `RegistryImageFact` per manifest (floating AND pinned both count here, unlike the build-history reading — the
+      Artifacts roll-up shows every currently-fetchable artifact); `registry="gcs-tarball-bucket"`
+      (`REGISTRY_TARBALL_BUCKET` in `models.py`, shared by both `providers.py` and `service.py` rather than duplicated)
+      so it never collides with the AR per-repo grouping key even when a tarball repo shares its name with an AR repo.
+      `digest=""` always (honest absence — a tarball has no Docker digest), so the existing `running_on` cross-ref
+      (keyed on digest) correctly never fires for these rows without any special-casing in `_image_row()` — reused
+      verbatim, zero new logic needed there. `size_bytes` comes from the SIBLING `.tar.gz` object, never the tiny
+      manifest JSON's own size — **a real bug a test caught before shipping**: the first draft fell back to the
+      manifest's own byte count when no matching tarball existed, silently fabricating a plausible-looking but wrong
+      size for an orphaned manifest; fixed to honest `None` in that case.
+- [x] [BACKEND] P2. ✅ **Health's tarball-lane condition made data-driven — `deployment-api@3525bce`.** The existing "VM
+      tarball-lane workloads carry no measured git commit yet" condition now gates on `images_resp` actually containing
+      `REGISTRY_TARBALL_BUCKET` rows (count = the real number of tarball repos observed, not the fixed word "fleet") —
+      it no longer fires as a blanket placeholder when the lane is simply unbuilt. Added a NEW condition, "The
+      tarball-bucket provider returned zero rows" (MED, `tab=art`), that fires only when AR rows are present in the SAME
+      response (proving `images()` itself works) but zero tarball rows exist — the same silent-empty symptom Phase 7
+      diagnosed for AR before its IAM fix (a caught exception degrading to `[]`), isolated to the tarball provider
+      specifically. **A stale claim caught + corrected while doing this**: this exact Phase 3d banner previously said
+      "Deploy timeline ALREADY treats a GCE VM launch as the tarball-lane deploy event... that half of the tarball story
+      is live" — re-verified against the CITED commit (`deployment-api@72a0108`)'s own message, which says the opposite
+      ("GCE VM launches (the tarball-lane deploy) are later increments"). No VM-launch deploy provider exists yet, so
+      `running()`'s tarball coverage remains exactly zero — the git-commit-gap condition's wording was correct
+      regardless (it was never claiming VM launches were covered), but the banner's contrast claim was wrong and is
+      corrected here so a future session doesn't build on it. New coverage: 10 new unit tests total across the 3 backend
+      todos (parsing, size-backfill, both health-condition branches); full deployment-api gate green (4996 tests).
+- [x] [UI] P2. ✅ **Pipeline tab — verified, `deployment-ui@05a087d` (2026-07-27).** No production code change was
+      needed (confirmed, matching the original prediction) — `PipelineView`'s `Tarball` filter chip already worked
+      against real data the moment the backend started returning `lane=tarball` rows. The mock fixture (`mock-api.ts`)
+      already carried one tarball row (pre-existing, apparently added speculatively and never exercised) — added 1
+      Vitest + 1 `pw:L2` case asserting the filter actually narrows to it and back, closing the "assumed-working,
+      never-tested" gap the plan flagged.
+- [x] [UI] P2. ✅ **Artifacts tab — verified, `deployment-ui@05a087d`.** Also no production code change needed:
+      `registryOptions`/`cloudOptions` in `ArtifactsView` are already computed dynamically from `data.rows` (not a
+      hardcoded option list), so a `registry="gcs-tarball-bucket"` row automatically appears as a selectable filter
+      value the moment real data exists — same generic per-repo table, no special-casing. Added a tarball row to the
+      mock fixture (there wasn't one) + 1 Vitest + 1 `pw:L2` case confirming the row renders and the Registry funnel
+      isolates it correctly, including the same-repo-name-as-an-AR-row collision case.
 - [ ] [UI] P3. **What's running tab** — a tarball-lane version row can only ever show a real commit once Phase 3c's
       stamp lands (today `git_commit` is `""` on every live VM); until then, tarball rows in Running should render
       explicitly ⚪ **unknown, reason: "stamp not yet live (Phase 3c)"** rather than silently absent — this is the
-      "honest blank, never a fabricated value" principle the plan already commits to elsewhere (line 124).
+      "honest blank, never a fabricated value" principle the plan already commits to elsewhere (line 124). **Re-scoped
+      2026-07-27**: genuinely blocked on more than Phase 3c alone — `running()` has ZERO tarball-lane rows today because
+      no provider builds VM-launch `DeployFact`s at all (the Phase 3d banner's contrast claim that this already existed
+      was stale, corrected above), so there is no tarball version row to even attach an "unknown" label to yet.
+      Sequencing: a VM-launch-as-deploy provider (net-new, not currently a todo anywhere in this plan) → Phase 3c's
+      commit stamp → this display fix. Left as P3/deferred rather than expanded into that larger scope without an
+      explicit decision to do so.
 
 ### Phase 4 — absorb + retire
 
@@ -764,7 +799,7 @@ ready whenever picked back up.
 
 | Item                                                                                   | State / why deferred                                                                                                                                                                                                                                                                              | Blocked on                             |
 | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Tarball-bucket provider (Phase 3d) — Pipeline/Artifacts/Running tarball rows           | **Not started** — NEW 2026-07-24, confirmed structural gap (no provider ever read the GCS tarball-manifest bucket, in local OR prod, unrelated to today's IAM/logging bugs)                                                                                                                       | —                                      |
+| Tarball-bucket provider (Phase 3d) — Pipeline/Artifacts rows                           | ✅ **DONE 2026-07-27** — `deployment-api@3525bce`, `deployment-ui@05a087d`. Running-tab tarball rows remain out of scope — no VM-launch deploy provider exists (see Phase 3d's P3 todo)                                                                                                           | a VM-launch deploy provider (net-new)  |
 | Phase 7 — prod-vs-local parity: root causes #1/#2/#3 (IAM/logging/buffering)           | ✅ **FIXED 2026-07-24** — `deployment-service@74306a1`, `deployment-api@f27a8f1`/`@6518e82` — but prod endpoint STILL empty on a fresh revision after all 3                                                                                                                                       | —                                      |
 | Phase 7 — CPU-throttling test (leading untested hypothesis for the still-open symptom) | **Paused 2026-07-24 — operator ask** ("let's check the locally running one first")                                                                                                                                                                                                                | operator resume                        |
 | GCS Data Access audit-log cost finding (Cloud Logging, ~151 GB/7d, MTDS buckets)       | ✅ **Issue doc FILED 2026-07-24** — `plans/archive/2026_07/gcs_data_access_audit_log_cost_2026_07_24.md`; operator to route to Ikenna (or pick up Monday)                                                                                                                                         | Ikenna / operator                      |
