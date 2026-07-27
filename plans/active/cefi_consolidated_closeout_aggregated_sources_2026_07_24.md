@@ -405,11 +405,10 @@ drift_direction: advance-code
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`](/plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md`](/plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md)
-    - **[CODE] P1.** UAC-side retirement, not yet started — delete the `order_flow_imbalance`-specific capability
-      entries across `data_type_capability.py` + 4 UAC test files.
-    - **[VERIFY] P2.** Once the SSOT decision fully lands, check whether the two (now-one) live formulas agreed
-      numerically on real historical data.
+  - [`plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md`](/plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md)
+    — 0 open todos (status: resolved, archived 2026-07-27 — UAC-side retirement shipped
+    `unified-api-contracts@49314f51`; numeric-agreement check closed MOOT per the doc's own zero-production-rows
+    finding).
   - [`plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`](/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md)
     - **[HUMAN] P1.** Create `bybit-trade-api-key`/`bybit-trade-api-key-secret` in GCP — the one remaining step to
       complete Bybit's scope split.
