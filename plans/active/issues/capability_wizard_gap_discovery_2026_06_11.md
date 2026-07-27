@@ -76,8 +76,25 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       stale (May 22 – Jun 1 vs Jun 11). — ALREADY FIXED (checkbox was stale) unified-trading-pm@50bdbcd36 (2026-06-11,
       same day as this issue doc): `_validate_service_coverage()` now calls `sys.exit(1)` on missing coverage (line 550)
       instead of only warning. Verified 2026-07-27.
-- [ ] [SCRIPT] P1. Source-mode capability matrix (batch/live/replay × source × WS/REST) exists only as a manual audit
-      doc (`source-mode-capability-matrix_2026-06-07.md`), not as registry + extraction.
+- [x] ✅ [SCRIPT] P1. Source-mode capability matrix (batch/live/replay × source × WS/REST) exists only as a manual audit
+      doc (`source-mode-capability-matrix_2026-06-07.md`), not as registry + extraction. — **FIXED 2026-07-27
+      (slot-6)**: the registry side was ALREADY DONE (checkbox was stale) — UAC's `SOURCE_MODE_CAPABILITY`
+      (`unified_api_contracts/canonical/crosscutting/_source_priority_data.py`) encodes
+      `plans/audit/results/source_mode_capability_matrix_2026_06_07.md` row-for-row, including its "CORRECTED MODEL"
+      section, and is exposed via `modes_for_source()`/`modes_for()`. **The real gap was extraction**: the manifest
+      exporter's `extract_data_sources()` (`scripts/openapi/_capability_extract.py`) never read that registry — it
+      unconditionally emitted a `not_registered`/`missing_registry` gap edge for every non-batch (source, mode) pair.
+      Fixed: `extract_data_sources()` now calls `modes_for_source(src)` and emits a real `available`/`not_available`
+      verdict per (source, mode) — unified-trading-pm@ce6eb1775. Verified live: all 99 `supports_mode` edges (33
+      external data sources × {batch, live, replay}) now resolve (79 available / 20 not_available), **0 remaining
+      `missing_registry` gaps on this dimension** (was ~56-66 of the manifest's `missing_registry` total per the
+      2026-06-11 v1 snapshot below). Spot-checked against the ratified matrix (tardis={batch}; databento={batch,live,
+      replay}; yahoo/api_football={batch,(replay)} with no live; odds_api={batch,live,replay}) — all match. Manifest
+      regenerated + committed: unified-api-contracts@ac4fd8572 (deterministic — byte-identical across two runs at a
+      fixed UAC HEAD; `check_capability_regression.py` PASSES with 0 regressions vs the committed baseline, no
+      `--update-baseline` needed — every change is either `newly_available` or an honest `not_available`, never a lost
+      `available` edge). The per-source non-default-transport dimension (the WS/REST half not covered by
+      `default_transport_for_source`) stays a real, smaller residual gap — out of scope for this todo, not hidden.
 
 ### Missing registries — `missing_registry` (Phase 2 of the plan)
 
