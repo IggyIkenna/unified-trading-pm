@@ -180,17 +180,17 @@ consume these paths must be updated in lockstep with the writer.
       separate top-level prefix) + `market_lifecycle/by_canonical_group/` (prediction only):
 
       | asset_group | instrument_availability (+ futures_contracts) | market_lifecycle |
-          |---|---|---|
-          | cefi | 53,419 | 0 |
-          | defi | 177,346 | 0 |
-          | tradfi | 50,700 | 0 |
-          | sports | 148,691 | 0 |
-          | prediction | 22,637 | 12,582 |
-          | **TOTAL** | **452,793** | **12,582** |
+              |---|---|---|
+              | cefi | 53,419 | 0 |
+              | defi | 177,346 | 0 |
+              | tradfi | 50,700 | 0 |
+              | sports | 148,691 | 0 |
+              | prediction | 22,637 | 12,582 |
+              | **TOTAL** | **452,793** | **12,582** |
 
-          **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
-          this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
-          in-session action. Sizing now available to scope todo 7c.
+              **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
+              this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
+              in-session action. Sizing now available to scope todo 7c.
 
 - [ ] 7c. [OPERATOR] P2. **EXECUTE the historical migration** (copy the 465,375 flat objects UP into full hive, verify,
       then human-only purge of the flat tree) — VM-only, never in-session, per the data-pipeline-correctness HARD RULE
@@ -198,7 +198,15 @@ consume these paths must be updated in lockstep with the writer.
       on delete-safety-protocol §3a (soft-delete retention check) or explicit `[OPERATOR]` sign-off. Split out of the
       original todo 7 2026-07-27 (slot-8) — same pattern as the mdps_features plan's 11a/11b/11c split — once 7a/7b
       proved the writer correct and sized the remaining work, "migrate" itself is a separately-dispatchable, properly
-      VM-scoped unit rather than bundled into a single checkbox no one session could honestly complete.
+      VM-scoped unit rather than bundled into a single checkbox no one session could honestly complete. **Cross-corpus
+      note 2026-07-27**: same shape as the sports K1/K2 casing-revert migration (also 5-figure-object, also
+      copy-then-later-gated-purge) — that one hit the exact bundling mistake this todo's own text already avoids (a
+      single `[OPERATOR]` tag covering both the copy AND the purge, when only the purge is genuinely irreversible): see
+      `issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`'s history for the concrete near-miss.
+      Recommend splitting 7c itself into a copy-and-verify half (additive, non-destructive, arguably NOT `[OPERATOR]`-
+      eligible on its own under finding U) and a separate purge todo (genuinely `[OPERATOR]`/finding-T-gated) before
+      dispatch, mirroring `market-tick-data-service/scripts/sports/k1k2_casing_revert_2026_07_27/`'s
+      migrate/report/manifest-swap trio as a structural template if useful.
 - [ ] 8. [REVIEW] P1. On writer ship, record the `instrument_availability` full-hive cutover date in
       `/codex/02-data/canonical-cutover-register.md` (repo@sha) and flip the non-canonical-path-inventory row #16 to
       EXECUTED with a dated post-migration probe. **Still deferred** (pairs with todo 7c, not 7a/7b — cutover date

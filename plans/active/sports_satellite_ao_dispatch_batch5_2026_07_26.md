@@ -492,6 +492,8 @@ drift_direction: advance-code
       is left checked-complete-for-code with an explicit `BLOCKED-OPERATOR` note pending sign-off if the operator has
       not yet approved. **DONE-FOR-CODE 2026-07-26** — `market-tick-data-service@236d945e` (+`@08439787`):
       implemented+tested+dry-run-verified twin-safe both surfaces. **BLOCKED-OPERATOR** on the `--apply` firing.
+      **Re-check 2026-07-27**: likely a quick finding-T/U re-tag (soft-delete re-verified 604800s); not re-tagged,
+      pending a live-reader re-check.
 - [x] [UI] P3. ✅ 2026-07-26 — `deployment-ui@66cc06d`. Relabel `FixturesBrowser.tsx`'s window note and remove the stale
       `MAX_SPAN_DAYS=120` span-cap warning now that `deployment-api/services/fixtures_browser.py` serves the
       full-history single catalogue source (`prod/catalog.parquet`, deployment-api@dbbf64c, shipped via
