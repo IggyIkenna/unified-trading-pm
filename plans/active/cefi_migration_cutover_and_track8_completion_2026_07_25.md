@@ -680,3 +680,44 @@ every todo executes an already-decided spec from the parent doc.
   record). **Whoever continues this: watch for MORE `EXIT_STATUS=137` completions going forward** (not just `=0`) —
   treat any as an OOM, relaunch same date-range at `--workers 10` (or lower, e.g. 6, if 10 recurs), never assume a fresh
   `EXIT_STATUS` object means success without checking its actual value + the run.log's SUMMARY block.
+- **2026-07-27T06:55Z (scheduled 30-min check-in) — TRUE root cause of the OOM class found: pathologically huge
+  mis-classified DERIBIT files, not worker concurrency. Reduced-worker fix from the last entry did NOT work; corrected
+  course.** Direct re-verification (per the standing "always check actual EXIT_STATUS value + SUMMARY block" rule):
+  found 2 MORE `EXIT_STATUS=137` events — `cs10-3d2` (my own `--workers 10` retry from the last checkpoint, died EVEN
+  FASTER: 4,000/168,624 files @ 391s, vs. the original's 7,800 @ ~2,020s) and `cs8-5d` (a previously-untouched
+  `--workers 24` shard, first failure). **Diagnosed properly this time, not just re-patched**: `cs10-3d2` dying faster
+  at FEWER workers proved concurrency wasn't the driver. Sampled the largest objects in each OOM'd shard's own date
+  range and found the same signature in EVERY case — one giant DERIBIT file per range, always
+  `venue=DERIBIT/instrument_type=perpetual/data_type=trades/<BASE>_<QUOTE>-<DATE>-<STRIKE>-<C|P>.parquet` (a
+  DATED-OPTION wire symbol, sitting in the WRONG `perpetual/` partition — a real, separate DERIBIT option→perpetual
+  mis-classification bug, consistent with the already-tracked "DERIBIT mislabel" finding class elsewhere in this plan's
+  history, but out of THIS todo's scope to fix): `cs10-3` day=2025-12-25 → 2.45GB; `cs8-5` day=2024-11-10 → 2.08GB;
+  `cs8-1` day=2024-05-20 → 1.73GB; `cs10-2` day=2025-12-01 → **6.3GB**. These files are so large because the
+  mis-classification bug appears to merge MANY distinct dated-option instruments' trades into one "perpetual" blob per
+  day — a single such file, once downloaded + parsed to a DataFrame + copied (the tool's own `df.copy()`) +
+  reserialized + re-downloaded-and-reparsed for the post-write verify, plausibly peaks at 30-50+GB resident for that ONE
+  file alone — enough to OOM even `e2-standard-16` (64GB) regardless of how many OTHER workers are concurrently doing
+  normal-sized files, which is exactly why cutting `--workers` 24→10 didn't help (and made it worse, since a smaller
+  worker pool doesn't change whether a giant file lands on the schedule, it just changes overall throughput). **Fix**:
+  extended `--exclude-venues` to `HYPERLIQUID:ASTER:DERIBIT` for the 4 confirmed-affected shards (DERIBIT excluded
+  alongside the existing HL/ASTER exclusion), `--workers` back to 24 (no longer the lever — the exclusion removes the
+  actual landmine), same `e2-standard-16`/`ON_DEMAND`. **Proactively stopped `cs10-2d2` mid-run** (only ~20% done,
+  6,000/29,444) rather than let it keep going — its date range is CONFIRMED to contain the 6.3GB landmine
+  (day=2025-12-01 falls inside `cs10-2`'s 2025-11-23..2025-12-20 window), so letting it continue would only guarantee a
+  LATER, more-wasteful OOM. New VM names: `cs8-1e`, `cs8-5e`, `cs10-2e`, `cs10-3e` — all `RUNNING` immediately after
+  launch. **Deliberately did NOT preemptively kill/re-exclude-DERIBIT on the other ~37 currently- healthy shards** —
+  this bug is very likely present in MOST DERIBIT-containing shards across the corpus (DERIBIT has been captured since
+  near the start of the corpus), meaning more of the currently-healthy fleet may hit their OWN DERIBIT landmine later —
+  but preemptively killing dozens of shards with real, unaffected progress on a "might contain one too" theory is
+  disproportionate versus the same reactive policy already working: **the moment any other shard shows
+  `EXIT_STATUS=137`, add `DERIBIT` to its relaunch's `--exclude-venues` immediately** (no need to re-diagnose from
+  scratch — this IS the diagnosis now). **New follow-up tracked** (alongside the existing HYPERLIQUID/ASTER one): a
+  dedicated DERIBIT content-patch pass is needed once the rest of the corpus is done, ideally after the
+  mis-classification bug itself is understood/fixed upstream (or at minimum with a much bigger machine / lower worker
+  count / a size-aware pre-filter that isolates the outlier file for solo processing). **Fleet state 06:55Z**: 41
+  RUNNING + `cs10-2d2` stopping (self-inflicted, not a failure) + 1 genuine completion (`cs1-1r`) = 42 accounted for
+  once `cs10-2d2`'s replacement `cs10-2e` is counted. 0 new preemption-ops (still 42, unchanged — SPOT stockout issue
+  has not recurred). **Whoever continues this: any FUTURE `EXIT_STATUS=137` should be treated as the DERIBIT landmine
+  class first** (check the shard's date range for a >1GB `DERIBIT/perpetual/trades` file before assuming a new/different
+  cause) and fixed by adding `DERIBIT` to that relaunch's `--exclude-venues`, `--workers` back to 24 (no need to reduce
+  it — that lever doesn't help this failure mode).
