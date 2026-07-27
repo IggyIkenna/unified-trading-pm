@@ -55,6 +55,18 @@ depends_on: []
 
 # The IAM-per-tier plan's dev/stg SA design predates and contradicts the dev/stg tier retirement
 
+> **🟢 DESIGN DECISION RESOLVED 2026-07-27 — READ THIS BEFORE RE-ASKING.** This exact question ("how to reconcile the
+> dev/stg SA design with the retirement") was raised independently by three slots this session (slot-12 → BLK-4b104acc,
+> slot-8 → BLK-6cb40a54, slot-6 → BLK-f1620233) and main ruled identically all three times: **option (a) "rename" is
+> impossible** (GCP SA `account_id`s are immutable) — the end state is **create `uts-test-sa`; leave
+> `uts-dev-sa`/`uts-stg-sa` permanently UNBOUND + documented as historical, never destroyed** (retiring an already-dead
+> tier via a live destroy is a separate, [OPERATOR]-gated step per delete-safety, not this decision). **This is DONE and
+> live-verified** (`gcloud iam service-accounts list` re-confirmed 2026-07-27 slot-6: `uts-test-sa` exists;
+> `uts-dev-sa`/`uts-stg-sa` display names read "(HISTORICAL — permanently unbound)") — see the flipped `[DESIGN] P0`
+> checkbox below for the full citation. **Do not re-open this design question** — if you land on this doc next, your job
+> is one of the 3 still-open mechanical todos below (credential-blocked `tofu apply`, `related:` cross-referencing,
+> CI/CD-identity scoping), not the architecture decision.
+
 ## What I found
 
 - **The retirement (root cause)**: `deployment-service/terraform/gcp/canonical_buckets.tf:44-46` — "prd + test are the
