@@ -82,7 +82,7 @@ drift_direction: advance-code
       `sports_consolidated_closeout_2026_07_19.md`'s Canonical target section, plus a short provenance pointer in
       `sports_catalog_league_grain_only_scope_2026_07_08.md` confirming the reciprocal link. Both docs' tracking
       sections now carry both facts, consistently worded.
-- [ ] [DATA] P1. **Reconcile the league_id canonical-form conflict between
+- [x] [DATA] P1. ✅ **Reconcile the league_id canonical-form conflict between
       `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` and this closeout's Track V.** That plan's own text
       treats raw display strings (`PREMIER_LEAGUE`/`BUNDESLIGA`/`SERIE_A`/`LA_LIGA`) as canonical, while this closeout's
       Canonical target section and Track V treat UAC registry form (`EPL` etc.) as canonical — the convention is already
@@ -91,7 +91,16 @@ drift_direction: advance-code
       table + the 28 IDs in the merged location) BEFORE either doc's league_id items proceed, and update both docs to
       cross-reference the single settled location. (repo: unified-api-contracts / unified-trading-pm). **Done when**:
       the mapping + gap list are merged into ONE tracked location, both docs cross-reference it, and no unflagged "raw
-      string is canonical" claim remains in either doc.
+      string is canonical" claim remains in either doc. — **DONE 2026-07-27, `unified-trading-pm` (this commit)**:
+      merged the tier-coverage mapping (23/51 mapped) + 28-unmapped-`league_id` list into
+      `issues/sports_league_id_namespace_migration_2026_07_20.md` § "MERGED TRACKING 2026-07-27" (the single settled
+      location, per Track V's own "prod-apply" pointer). Cross-referenced from both
+      `sports_consolidated_closeout_2026_07_19.md` Track V (new note) and
+      `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` (SCOPE OVERLAP banner + P1 gap-analysis-follow-ups
+      caveat, both updated). Flagged the inline "Canonical namespace" heading in the bookmaker plan as scoped to that
+      plan's own golden-window audit only, not this closeout's canonical form — no unflagged "raw string is canonical"
+      claim remains in either doc. Execution (building `LEAGUE_ID_TO_TIER` / extending `EXPECTED_BOOKMAKER_MARKET_SETS`)
+      stays with the bookmaker plan's own P1 todos, unchanged — this todo was tracking reconciliation only.
 - [ ] [DATA] P2. **Root-cause + fix + migrate the peripheral-bucket league-vocabulary contamination** — a SECOND,
       DISTINCT non-canonical league vocabulary (country-prefixed `ENGLAND_PREMIER_LEAGUE`/`LA_LIGA_2`/`UNKNOWN`, not the
       api-football-display-name axis the league_id relocation fixes) found in `features-sports-prd` (30 objects, live to
