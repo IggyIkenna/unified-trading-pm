@@ -79,8 +79,46 @@ assigned_role: infra
       agent running AS this role can grant it more, verified empirically (see summary). Minimum: S3, RDS, DynamoDB, ECS
       access matching what the GCP side already has (storage/database/compute admin). Optionally also grant
       `iam:{Get,List,Put,Attach,Detach}RolePolicy` scoped to this ONE role's ARN so future gaps are self-serviceable
-      without a human round-trip. **Done when**: `aws s3api list-buckets`, `aws rds     describe-db-instances`,
+      without a human round-trip. **Done when**: `aws s3api list-buckets`, `aws rds describe-db-instances`,
       `aws dynamodb list-tables`, `aws ecs list-clusters` all succeed when run as this role.
+
+      **Exact runnable commands** (run with an AWS identity OTHER than `uts-orchestrator-epic-role` — your own
+          root/admin CLI profile, or the AWS Console; running this from a session that assumes the role itself is the
+          exact problem this todo exists to fix):
+
+          ```bash
+          ROLE=uts-orchestrator-epic-role
+          ACCOUNT=427895769566
+
+          # 1. Core service access — mirrors the GCP-side grant (storage/database/container-compute admin,
+          #    not blanket AdministratorAccess)
+          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
+          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
+          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
+
+          # 2. Optional but recommended: let this role manage its OWN permissions going forward, scoped only to
+          #    itself, so the next gap doesn't need another human round-trip.
+          aws iam put-role-policy --role-name $ROLE --policy-name self-manage-own-policies --policy-document '{
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": [
+                "iam:GetRolePolicy",
+                "iam:ListRolePolicies",
+                "iam:ListAttachedRolePolicies",
+                "iam:PutRolePolicy",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy"
+              ],
+              "Resource": "arn:aws:iam::'"$ACCOUNT"':role/'"$ROLE"'"
+            }]
+          }'
+          ```
+
+          After running, ping any session on the orchestrator/human-planning VM to re-verify the 4 `Done when` checks and
+          flip this todo with evidence — do not self-flip without a fresh verification run.
+
 - [x] [DIAG] P1. ✅ **Verified 2026-07-27** — all 14 files done, commits confirmed on `origin/live-defi-rollout` via
       `git merge-base --is-ancestor` (`cc438a02c`, `1be59b97b`, `1e7f5389a`, `c6ef8cb1f`, `f5232f3e5`) + spot-checked
       actual file content (not just trusting the agent's self-report). 6 files downgraded to reversibility-verified (all
