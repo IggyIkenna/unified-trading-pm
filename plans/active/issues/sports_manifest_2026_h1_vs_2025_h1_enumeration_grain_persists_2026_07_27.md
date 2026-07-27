@@ -59,6 +59,7 @@ source: >-
   2026-vs-prior-year enumeration-grain inconsistency ... still persists" todo (source of THAT todo:
   data_completion_sports_2026_07_24.md's 2026-06-23 "concentrated in 2026-H1 (~120k/data_type vs ~8-30k/prior-year)"
   finding).
+depends_on: []
 ---
 
 # Sports manifest 2026-vs-2025 cell-seeding ratio still 2.2x-16.6x — driven by the v2 enumerator's static bounded window, not Cause A
