@@ -112,7 +112,27 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
       the twin-less live-writer-window slice has no lowercase source to swap to (it must be created). Requires a
       migration-VM launch over ~260,298+ GCS objects / ~373,296 manifest rows with real per-object content nuance.
       **Done when**: a fresh content-verified census shows 100% of the current uppercase K1/K2 population has a
-      confirmed lowercase canonical twin (Part 1 + Part 2 of the delete-safety five-part proof).
+      confirmed lowercase canonical twin (Part 1 + Part 2 of the delete-safety five-part proof). **Tooling built +
+      validated 2026-07-27, `market-tick-data-service@f4dd8f8e`** (still NOT executed at scale — this lands the
+      reviewed, tested executor trio only, so the eventual worker/VM run doesn't have to design it from scratch):
+      `scripts/sports/k1k2_casing_revert_2026_07_27/{migrate_sports_casing_revert_2026_07_27.py,     generate_casing_revert_manifest_report_2026_07_27.py, manifest_swap_casing_revert_2026_07_27.py}`,
+      mirroring the already-prod-run 2026-07-22 K2/league_id-relocation trio (direction reversed: uppercase source →
+      lowercase target), copy-only (never deletes the uppercase source — Track V's separate `[OPERATOR]`-gated delete
+      owns that), CAS-protected manifest ADD/REMOVE with a case-SENSITIVE remove mask. Passed a 6-agent adversarial
+      Workflow review (2 real bugs found + fixed: a shard-path hardcode that would have blocked every real
+      `--apply-prod` invocation, and — the more important one — the report generator originally stamped `verify: "PASS"`
+      for any lowercase object found on GCS with no cross-check against the copy step's own outcome classification,
+      which would have let a `content_mismatch` object the copy step explicitly refused to auto-resolve get
+      REMOVEd+ADDed into the manifest as if verified; it now independently re-derives the equivalence relation against
+      the uppercase source before stamping PASS). Sanity-validated read-only against REAL prod data for `2020-06-06`
+      (not a synthetic test): migrate dry-run found 34 uppercase/26 already-lowercase objects; the report generator
+      content-re-verified all 26 lowercase objects against their uppercase source, 26 PASS / 0 FAIL; `manifest_swap`'s
+      `--apply-prod` PLAN mode (live index read, no writes) found 18/26 targeted uppercase rows genuinely present and
+      all 26 ADD keys genuinely new — the full pipeline is wired correctly end-to-end. **Still outstanding before this
+      checkbox flips**: the actual full-corpus run (all ~2,200+ days, sharded across a migration VM per the heavy-I/O
+      rule — `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` needs a new `sports-k1k2-casing-revert`
+      category, none of the existing categories match this shape) and the fresh content-verified census this todo's own
+      "Done when" requires.
 - [ ] [DATA] P2. **Only after the above lands**: re-run the 5-part proof against the now-fully-twinned uppercase
       population and execute the delete (§3a reversibility-qualified, fresh retention check required same-run) — this
       becomes the corrected version of `batch7` todo 1's K1/K2 half.
@@ -127,3 +147,11 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
 - **2026-07-27** — Filed while executing `sports_satellite_ao_dispatch_batch7_2026_07_27.md` todo 1 (slot 4). Escalated
   via `BLK-2cf85627` before executing anything; operator confirmed the finding and selected Option B (split the todo,
   hold K1/K2 entirely, file this doc). No delete was executed for the K1/K2 population.
+- **2026-07-27** (interactive session, operator-driven) — Built + shipped the 3-script migration executor trio for todo
+  1 above (`market-tick-data-service@f4dd8f8e`), adversarially reviewed (6-agent Workflow, 2 real bugs caught + fixed
+  pre-ship — see todo 1's note for detail), and sanity-validated read-only against real prod data for one day. Confirmed
+  via `check-ao-backlog-status.sh` before AND after this work that no AO worker had claimed
+  `sports_k1k2_delete_bundled_with_twin_less_data-001` (still `status: queued, dispatched_to: None`) — no race.
+  Deliberately did NOT launch a migration VM or execute any write against prod this session (a ~260k-object / ~373k-row
+  write-scale operation is a real infra-launch + prod-mutation decision, not something to run unattended off the
+  strength of a same-session build) — left for the operator to authorize the actual execution.
