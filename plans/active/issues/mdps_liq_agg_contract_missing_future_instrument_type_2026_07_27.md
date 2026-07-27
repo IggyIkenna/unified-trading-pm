@@ -77,12 +77,18 @@ liquidations but never registered the equivalent for `instrument_type=FUTURE`.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P1. **unified-api-contracts** — register a `liq_agg_1d` (and the other liquidation-candle timeframes,
+- [x] ✅ [SCRIPT] P1. **unified-api-contracts** — register a `liq_agg_1d` (and the other liquidation-candle timeframes,
       mirroring however `PERPETUAL` is currently registered) `SchemaContract` for
       `asset_group=cefi     instrument_type=FUTURE venue=BINANCE-FUTURES` in
       `unified_api_contracts.internal.schemas.contracts` (`CONTRACT_REGISTRY` + `VENUE_CONTRACT_OVERRIDES` if
       venue-specific). Add a regression test asserting the contract resolves for a `FUTURE`-instrument_type liquidation
-      candle. Re-run the same scoped `/data-pipeline-check-mdps` cell to confirm all 489/489 instruments pass.
+      candle. Re-run the same scoped `/data-pipeline-check-mdps` cell to confirm all 489/489 instruments pass. —
+      `unified-api-contracts@bf1ecdb7`: registered `cefi/future` `liq_agg_{tf}` (base `CONTRACT_REGISTRY`, not
+      venue-specific — matches `PERPETUAL`'s unscoped registration; `BINANCE-FUTURES` needs no
+      `VENUE_CONTRACT_OVERRIDES` entry) across all `MDPS_TIMEFRAMES_CEFI`; added `test_cefi_future_liq_aggregates`
+      (parametrised over every CeFi timeframe) asserting `lookup_contract` resolves — full `quality-gates.sh` green.
+      Real-VM `/data-pipeline-check-mdps` 489/489 re-confirmation is a follow-on VM run, not performed in this code-fix
+      session.
 - [ ] [SCRIPT] P2. Audit whether the SAME `instrument_type=FUTURE` gap exists for OTHER candle data_types beyond
       `liquidations` (the derivative_ticker fix + this proof-sweep only checked `book_snapshot_5`/`liquidations` on
       CEFI:BINANCE-FUTURES) — grep `CONTRACT_REGISTRY` for `instrument_type=FUTURE` entries across all registered
