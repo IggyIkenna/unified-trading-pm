@@ -40,6 +40,9 @@ source:
   "review role pre-compact checkpoint (msg 2373 to main agt-498659) reported slot 11 riding 90→96% context_used across
   3+ /progress polls with no compact_now directive; main (agt-498659) captured it here so the finding survives
   compaction (review role never commits)."
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## Observation
