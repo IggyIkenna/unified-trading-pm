@@ -127,12 +127,20 @@ not a caller-side workaround.
 
 ## Recommended fix path
 
-- [ ] 1. [DATA] P0. **Fix `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`'s recommended remediation** —
-      do NOT invoke `rebuild_manifest_from_canonical_paths` scoped to `prefix="processed_candles/by_date"` on a
-      co-located tick bucket. Blocked until todo 2 below ships an additive alternative, OR an `[OPERATOR]`-gated one-off
-      script does a proper merge (read full existing index, union in only genuinely-new candle keys, write back) instead
-      of a naive full-prefix-replace. Repo: unified-trading-pm (doc fix — done as part of this issue's own filing, see
-      that doc's cross-reference below).
+- [x] 1. ✅ [DATA] P0. **VERIFIED DONE 2026-07-27 (slot-15)** — **Fix the sibling reconciliation doc's recommended
+      remediation** — do NOT invoke `rebuild_manifest_from_canonical_paths` scoped to
+      `prefix="processed_candles/by_date"` on a co-located tick bucket. Confirmed the fix is already in place: the
+      sibling doc's "Recommended fix path" section (see `related:` above) carries both the "CORRECTED 2026-07-27" banner
+      (blocking the original unsafe recipe) and the "UNBLOCKED 2026-07-27" banner (pointing the recipe at
+      `merge_manifest_from_canonical_paths`, shipped by todo 2). Independently re-verified rather than trusting the
+      doc's own claim: (1) grepped + read `merge_manifest_from_canonical_paths` in `_maintenance.py` (line 757) —
+      confirmed genuinely additive (concatenates new rows onto the existing index, never replaces it wholesale); (2)
+      confirmed it is exported from both `manifest_writer/__init__.py` and the top-level
+      `unified_trading_library/__init__.py`; (3) confirmed both cited regression tests exist in
+      `tests/unit/test_manifest_v4_migration.py` (`test_merge_from_canonical_paths_preserves_rows_outside_prefix`,
+      `test_merge_from_canonical_paths_is_idempotent_no_duplicate_rows`). No further doc edit needed — the corrected
+      recipe was already written into the sibling doc when todo 2 shipped; this todo's own text just hadn't been flipped
+      to reflect it. Repo: unified-trading-pm (verification only, no code change).
 - [x] 2. ✅ [SCRIPT] P0. **DONE 2026-07-27 (slot-12)** — `unified-trading-library@2352e7c8`. Added
       `merge_manifest_from_canonical_paths()` (new function, `_maintenance.py`), an additive
       `(day, venue, chain, instrument_type, data_type)`-keyed sibling of `rebuild_manifest_from_canonical_paths`: walks
