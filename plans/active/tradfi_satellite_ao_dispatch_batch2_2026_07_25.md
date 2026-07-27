@@ -109,12 +109,13 @@ changed since batch1.
 
 ## Todos
 
-- [ ] [DATA] P1. **Re-run the tradfi manifest venue/data_type drift audit (no conflict was ever recorded against this
-      candidate — it was grouped under `data_completion_tradfi_2026_07_15.md`'s whole-doc deferral)**, combined with
-      **deploying the already-shipped MDPS ohlcv_15m/24h `canonical_writer` fixes** into ONE todo (both edit the SAME
-      doc file — `data_completion_tradfi_2026_07_15.md` — and would collide if dispatched as two concurrent AO todos):
-      (1) Re-run the drift audit against the live `market-data-tick-tradfi-prd` `_index` (post-v9-walk) to confirm the
-      2026-06-04 finding (6,602 rows: 4,130 blank/`UNKNOWN` venue + 2,472 blank data_type) was resolved by the E5
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-6, data_engineering)** — Re-run the tradfi manifest venue/data_type drift
+      audit (no conflict was ever recorded against this candidate — it was grouped under
+      `data_completion_tradfi_2026_07_15.md`'s whole-doc deferral), combined with **deploying the already-shipped MDPS
+      ohlcv_15m/24h `canonical_writer` fixes** into ONE todo (both edit the SAME doc file —
+      `data_completion_tradfi_2026_07_15.md` — and would collide if dispatched as two concurrent AO todos): (1) Re-run
+      the drift audit against the live `market-data-tick-tradfi-prd` `_index` (post-v9-walk) to confirm the 2026-06-04
+      finding (6,602 rows: 4,130 blank/`UNKNOWN` venue + 2,472 blank data_type) was resolved by the E5
       path-re-derivation walk; diagnose (do NOT bulk-rename) any residual blank/`UNKNOWN` venue or blank data_type rows.
       Flip/update the P1 drift-verify checkbox (line 54) and the E6 CF-7 relabel checkbox (line 177). (2) Rebuild the
       market-data-processing-service tarball from a clean LDR checkout and relaunch `mdps-backfill-tradfi-*` to deploy
@@ -137,6 +138,25 @@ changed since batch1.
       rejection), a fresh manifest read shows non-zero newly-captured ohlcv_15m/24h cells for tradfi, and the line-629
       checkbox's sub-bullet is updated with deploy evidence (tarball sha / VM name / T+10min manifest read). Source:
       `data_completion_tradfi_2026_07_15.md`.
+
+      **Evidence**: (a) FULLY DONE — fresh live read of `market-data-tick-tradfi-prd-central-element-323112`'s
+                  `_index` (5,873,616 rows, up from 5,553,198 confirmed 2026-07-16, a growth not a shrink) shows **0 blank
+                  venue, 0 `UNKNOWN` venue, 0 blank data_type, 0 `asset_group=None`** — the 2026-06-04 6,602-row drift finding is
+                  fully resolved. Line-54 and line-177 checkboxes in `data_completion_tradfi_2026_07_15.md` flipped with the
+                  fresh numbers (residual blank-`instrument_type` finding on a different, non-tracked axis noted inline, not
+                  re-opening this candidate). (b) PARTIALLY DONE — tarball rebuilt from a clean LDR checkout
+                  (`market-data-processing-service@3328ffd0`) and `mdps-backfill-tradfi-*` relaunched twice
+                  (`mdps-backfill-tradfi-20260727-183828` over 2026-07-13..19, `mdps-backfill-tradfi-20260727-185026` over
+                  2026-07-20..24, both `--force`, ~5,400+ instrument-day attempts, both VMs self-terminated cleanly). ZERO
+                  occurrences of `MalformedRowKeyError` or a missing-source rejection in either run — the deployed fix is
+                  confirmed correct and regression-free. The stricter "non-zero newly-captured cells" sub-clause could NOT be
+                  demonstrated in either verification window: both show `Candles: 0` for every date, root-caused to TWO NEW,
+                  orthogonal blockers found live (neither caused by, nor in scope of, this fix) — filed as
+                  `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` with 3 actionable follow-up todos.
+                  `data_completion_tradfi_2026_07_15.md` line-629's sub-bullet updated with the full deploy evidence + both new
+                  findings. Shipped: `unified-trading-pm` doc updates (this commit) +
+                  `deployment-scripts-central-element-323112/code/market-data-processing-service-code@3328ffd0...tar.gz` (GCS,
+                  not a git commit).
 
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review)** — Combined instruments-foundation cleanup pass — 7
       independent, conflict-clear candidates from `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, bundled into
@@ -186,18 +206,18 @@ changed since batch1.
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
 
       **Evidence**: (1) CME coverage verified against its TRUE declared floor (2020-01-01, not 2019-01-01 — confirmed
-                                                          live via a SPOT VM finding zero active venues for all of 2019); 1 genuine gap (2024-11-08) backfilled, 2
-                                                          anomalous Sundays filed as a new P3 finding. (2) `databento_subscription_allowlist` unit tests already existed
-                                                          (39/39 pass, all 6 scenarios) — no new test needed. (3) The QG grep-ratchet already existed (MTDS STEP
-                                                          5.92/5.93) — re-verified green. (4) 2 of 3 sample re-fetches succeeded (2020-01-02: 38,669 records; 2023-01-03:
-                                                          47,810 records), confirming the pre-lockdown universe was far narrower; full 2020-01-01→2026-06-18 re-fetch
-                                                          range enumerated and filed as a new P2 finding for a dedicated backfill plan. (5) UAC's stale CBOE `ohlcv_15m`
-                                                          entries were already removed (2026-07-15); fixed the one remaining stale MDPS docstring. (6) uac@599acf93
-                                                          confirmed live on `main` via merge-ancestry + zero reverts + the removed symbols still absent a month later. (7)
-                                                          Doc self-contradiction corrected, live-reverified post IS@92084d5c. Shipped:
-                                                          `market-data-processing-service@aebca177c5` (docstring fix) + `instruments-service@6a54828f84` (script bugfix +
-                                                          2024-11-08 backfill, no code diff for the manifest write itself). All findings + underlying checkboxes flipped
-                                                          in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` in the same commit.
+                                                                      live via a SPOT VM finding zero active venues for all of 2019); 1 genuine gap (2024-11-08) backfilled, 2
+                                                                      anomalous Sundays filed as a new P3 finding. (2) `databento_subscription_allowlist` unit tests already existed
+                                                                      (39/39 pass, all 6 scenarios) — no new test needed. (3) The QG grep-ratchet already existed (MTDS STEP
+                                                                      5.92/5.93) — re-verified green. (4) 2 of 3 sample re-fetches succeeded (2020-01-02: 38,669 records; 2023-01-03:
+                                                                      47,810 records), confirming the pre-lockdown universe was far narrower; full 2020-01-01→2026-06-18 re-fetch
+                                                                      range enumerated and filed as a new P2 finding for a dedicated backfill plan. (5) UAC's stale CBOE `ohlcv_15m`
+                                                                      entries were already removed (2026-07-15); fixed the one remaining stale MDPS docstring. (6) uac@599acf93
+                                                                      confirmed live on `main` via merge-ancestry + zero reverts + the removed symbols still absent a month later. (7)
+                                                                      Doc self-contradiction corrected, live-reverified post IS@92084d5c. Shipped:
+                                                                      `market-data-processing-service@aebca177c5` (docstring fix) + `instruments-service@6a54828f84` (script bugfix +
+                                                                      2024-11-08 backfill, no code diff for the manifest write itself). All findings + underlying checkboxes flipped
+                                                                      in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` in the same commit.
 
 - [ ] [SCRIPT] P1. **Conflict-check (2026-07-25 plan-reconcile): this todo's Done-when flips 3 checkboxes in
       `tradfi_backfill_throughput_followups_2026_07_24.md`; todo 9 below flips a 4th checkbox in that SAME doc. Do not
