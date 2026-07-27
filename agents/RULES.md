@@ -215,6 +215,20 @@ The main agent or operator reads your question + options + recommendation and an
 blocked-question — you simply aren't scheduled yet. Ask yourself: "is this a waiting-for-a-dependency situation, or a
 genuine decision I can't make alone?" If the former, let the dispatcher handle it.
 
+**A permission/IAM error is NOT a blocked-question either (2026-07-27, operator ruling).** Hit `PERMISSION_DENIED`
+acting AS `unified-trading-sa` (GCP) or `uts-orchestrator-epic-role` (AWS) — the two identities every worker already
+runs as ambiently, no separate credential needed? **Grant the missing role yourself right now (least-privilege — the
+specific role that closes the specific gap, never blanket `Owner`/`AdministratorAccess`), verify the actual capability
+live (call the real API, don't just read the IAM policy back), and continue the task** — do not post a blocked-question,
+do not tag the plan todo `[OPERATOR]`, do not just report the gap and stop. Reserve a real blocked-question for a
+permission gap on a genuinely DIFFERENT identity you cannot assume (`github-actions-deploy`, a human's personal account,
+a credential that doesn't exist yet). Current grants + exact per-cloud commands:
+`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`. (Verified 2026-07-27: a worker given only a
+diagnostic-sounding task — "check whether X can list Y, report what you find" — read that phrasing as observation-only
+and stopped at reporting the gap instead of fixing it, even with this rule in context; a worker given an outcome-framed
+task — "produce a report of Y" — self-granted and continued, per this rule, without prompting. If a task's OWN wording
+sounds like "just check", the underlying goal still governs: fix the gap, then answer the actual question.)
+
 ---
 
 ## 6. Orchestrator HTTP surface — what you do NOT do anymore
