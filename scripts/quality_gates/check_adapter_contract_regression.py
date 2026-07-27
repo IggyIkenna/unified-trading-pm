@@ -20,12 +20,13 @@ Shape (mirrors ``check_inline_bucket_uri.py``):
 
   1. Load ``adapter_contract_baseline.yaml`` — per-file minimum contract-call count
      captured at last ``--regenerate-baseline`` run.
-  2. Walk workspace repos (every immediate sub-dir of ``--workspace-root`` with a
-     ``.git``), counting per-file occurrences of the 5 contract patterns:
-     ``classify_venue_error|ADAPTER_FETCH_FAILED|record_captured|record_empty|record_failed``.
+  2. Read ONLY the baseline-listed files (targeted, not a full workspace walk — see
+     ``read_baseline_files``), counting per-file occurrences of the 5 contract
+     patterns: ``classify_venue_error|ADAPTER_FETCH_FAILED|record_captured|record_empty|record_failed``.
   3. For each baseline-listed file: if observed count < baseline → FAIL (exit 1).
-     If observed ≥ baseline → OK. New files (not in baseline) report as INFO; operator
-     decides when to add them to the baseline via ``--regenerate-baseline``.
+     If observed ≥ baseline → OK. ``--regenerate-baseline`` instead does a full
+     workspace walk (``scan_workspace``) so it can also surface new files not yet
+     baselined.
 
 Unlike ``check_inline_bucket_uri`` (per-repo total count, shrinking ratchet), this
 check is **per-file** + **non-shrinking** — the baseline only RAISES when the operator
@@ -276,7 +277,13 @@ def present_repo_names(workspace_root: Path) -> frozenset[str]:
 
 
 def scan_workspace(workspace_root: Path) -> list[FileScan]:
-    """Walk every immediate sub-dir with a ``.git`` + return per-file counts."""
+    """Walk every immediate sub-dir with a ``.git`` + return per-file counts.
+
+    Full-corpus walk — every ``.py`` file in every present repo. Only needed for
+    ``--regenerate-baseline`` (which must observe the true current state, including
+    new files) and for the CI-timeout-bound ratchet check, use ``read_baseline_files``
+    instead.
+    """
     results: list[FileScan] = []
     for child in sorted(workspace_root.iterdir()):
         if not child.is_dir():
@@ -292,6 +299,34 @@ def scan_workspace(workspace_root: Path) -> list[FileScan]:
             rel = py.relative_to(workspace_root).as_posix()
             results.append(FileScan(file_key=rel, count=count))
     return results
+
+
+def read_baseline_files(baseline: Baseline, present_repos: frozenset[str], workspace_root: Path) -> dict[str, int]:
+    """Read counts for exactly the baseline-listed files, scoped to present repos.
+
+    The regression ratchet only needs to know, per baseline entry, whether its LIVE
+    count is still >= its required minimum — it never needed a full workspace walk to
+    answer that. ``scan_workspace`` reads every ``.py`` file across every present repo
+    (tens of thousands of files across a 25-repo workspace) to answer a question that
+    only concerns the ~300 files the baseline actually lists. That full walk was
+    measured exceeding QG STEP 5.83's 60s ``run_timeout`` (2026-07-27, repro'd both
+    under fleet-wide host I/O contention on slot 8 AND standalone >120s on slot 5),
+    hard-failing the gate on legitimate hosts with no actual regression. Reading only
+    the baseline's own files is O(baseline size), not O(workspace size), and gives the
+    identical pass/fail verdict for the ratchet (new-file discovery, which DOES need
+    the full walk, only runs under ``--regenerate-baseline`` — an explicit, non-CI,
+    non-timed operator action).
+    """
+    observed: dict[str, int] = {}
+    for file_key in baseline.counts:
+        repo_name = file_key.split("/", 1)[0]
+        if repo_name not in present_repos:
+            continue
+        path = workspace_root / file_key
+        if not path.is_file():
+            continue  # absence handled downstream: observed.get(file_key, 0) < required
+        observed[file_key] = count_contract_calls_in_file(path)
+    return observed
 
 
 # ── main ─────────────────────────────────────────────────────────────────────
@@ -312,18 +347,23 @@ def main(argv: Iterable[str] | None = None) -> int:
     workspace_root: Path = args.workspace_root.resolve()
     regenerate = bool(args.regenerate_baseline)
     baseline = load_baseline()
-
-    scans = scan_workspace(workspace_root)
-    observed: dict[str, int] = {s.file_key: s.count for s in scans}
     present_repos = present_repo_names(workspace_root)
 
     if regenerate:
+        # Full corpus walk — regeneration must observe true current state (incl. new
+        # files), and this is an explicit operator action, not a CI-timeout-bound gate.
+        scans = scan_workspace(workspace_root)
+        observed: dict[str, int] = {s.file_key: s.count for s in scans}
         write_baseline(observed, baseline)
         print(f"[check_adapter_contract_regression] baseline rewritten at {_baseline_path()}")
         print(f"[check_adapter_contract_regression] {len(observed)} file(s) recorded.")
         for file_key in sorted(observed):
             print(f"  {file_key}: {observed[file_key]}")
         return 0
+
+    # Ratchet check: only the baseline's own files matter — targeted reads, not a
+    # full-workspace walk (see read_baseline_files docstring for why).
+    observed = read_baseline_files(baseline, present_repos, workspace_root)
 
     failures: list[str] = []
     new_files: list[str] = []

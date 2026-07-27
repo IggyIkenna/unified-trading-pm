@@ -125,6 +125,39 @@ def test_main_still_fails_on_genuine_regression_in_present_repo(tmp_path: Path) 
     assert rc == 1
 
 
+def test_main_check_path_never_walks_full_workspace(tmp_path: Path) -> None:
+    """Regression test for the 2026-07-27 QG STEP 5.83 timeout incident: the ratchet
+    check must read only the baseline's own files (`read_baseline_files`), never do a
+    full-workspace `.py` walk (`scan_workspace`) — that full walk was measured
+    exceeding the 60s CI `run_timeout` on a 25-repo workspace (>120s standalone, worse
+    under host I/O contention), hard-failing the gate with no actual regression
+    present. Locks in the targeted-read fix so this can't silently regress back."""
+    repo = tmp_path / "synthetic-repo-3"
+    (repo / ".git").mkdir(parents=True)
+    _write(repo / "pkg" / "handler.py", "classify_venue_error()\n")
+    # Files a full workspace walk WOULD visit but the targeted read must never touch.
+    for i in range(50):
+        _write(repo / "pkg" / f"unrelated_{i}.py", "x = 1\n")
+
+    baseline = Baseline(counts={"synthetic-repo-3/pkg/handler.py": 1})
+
+    import check_adapter_contract_regression as m
+
+    def _boom(*_args: object, **_kwargs: object) -> list[object]:
+        raise AssertionError("scan_workspace must not run on the non-regenerate check path")
+
+    original_load_baseline = m.load_baseline
+    original_scan_workspace = m.scan_workspace
+    m.load_baseline = lambda: baseline
+    m.scan_workspace = _boom  # type: ignore[assignment]
+    try:
+        rc = m.main(["--workspace-root", str(tmp_path)])
+    finally:
+        m.load_baseline = original_load_baseline
+        m.scan_workspace = original_scan_workspace
+    assert rc == 0
+
+
 def test_main_fails_on_missing_file_in_present_repo(tmp_path: Path) -> None:
     """A baseline-listed file whose repo IS present but the file itself was deleted/renamed
     without a --regenerate-baseline run is a genuine regression → FAIL, distinct from the
