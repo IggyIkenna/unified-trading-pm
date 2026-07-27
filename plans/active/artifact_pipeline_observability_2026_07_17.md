@@ -428,16 +428,23 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 > **🟢 UNBLOCKED 2026-07-23** — this phase was gated on the What's running view landing (the version row that would
 > deep-link); it shipped as `deployment-ui@3210bb5`/`deployment-api@a13c667` this session. Recommended next phase.
 
-- [ ] [BACKEND] P1. Carry the image/tarball version on the Deployments inventory row so it can be filtered on.
-      **Additive only** — `DeploymentItem` today carries no image URI / digest / commit; adding fields must not break
-      any existing consumer or field-set assertion. Respect the 45s SWR cache + the 4 GiB / WORKERS=2 budget (report the
-      payload delta before shipping). **AUDITED 2026-07-17 — cheaper than assumed: the data is already in hand.**
-      `DeploymentRegistryEntry` already declares `image_digest`/`git_commit`
-      (`unified_trading_library/deployment_registry.py:205-206`) and `_vm_item()` (`deployments_inventory.py:689-721`)
-      **already receives that entry object** — it simply never copies the fields onto the row. So this is a ~2-line
-      addition with **zero new I/O / census cost**; no join to write. Payload delta measured at **<20 KB** across ~200
-      targets. `_unmanaged_vm_item` (live-GCE-but-unregistered) correctly stays `None`. **No test anywhere asserts a
-      closed field set**, so additive fields are safe.
+- [x] [BACKEND] P1. ✅ **Carried the image/tarball version onto the Deployments inventory row — `deployment-api@24070d9`
+      (2026-07-27).** Added `image_digest`/`git_commit` (both `str | None`) to `DeploymentItem`, populated in
+      `_vm_item()` from `entry.image_digest or None` / `entry.git_commit or None` (honest `None` on a pre-BoM `""`,
+      never a fabricated empty string). Two pre-existing test fake-entry stand-ins
+      (`test_route_deployments_inventory.py`'s module-level `_FakeEntry` dataclass,
+      `test_route_deployments_inventory_aws.py`'s inline per-test `_FakeEntry`) needed the two new attributes added
+      since `_vm_item()` now reads them unconditionally — caught by a full-gate run, not assumed; one new unit test
+      (`test_build_inventory_surfaces_image_digest_and_git_commit`) pins both the stamped and the honest-`None`
+      legacy-row cases. Full deployment-api gate green (4985 tests). **Additive only** — `DeploymentItem` today carries
+      no image URI / digest / commit; adding fields must not break any existing consumer or field-set assertion. Respect
+      the 45s SWR cache + the 4 GiB / WORKERS=2 budget (report the payload delta before shipping). **AUDITED 2026-07-17
+      — cheaper than assumed: the data is already in hand.** `DeploymentRegistryEntry` already declares
+      `image_digest`/`git_commit` (`unified_trading_library/deployment_registry.py:205-206`) and `_vm_item()`
+      (`deployments_inventory.py:689-721`) **already receives that entry object** — it simply never copies the fields
+      onto the row. So this is a ~2-line addition with **zero new I/O / census cost**; no join to write. Payload delta
+      measured at **<20 KB** across ~200 targets. `_unmanaged_vm_item` (live-GCE-but-unregistered) correctly stays
+      `None`. **No test anywhere asserts a closed field set**, so additive fields are safe.
 - [ ] [UI] P1. Deployments view accepts a **pre-loaded filter via URL param** (e.g. `?git_commit=<sha>`), so an
       /ops/artifacts version row deep-links to exactly the hosts running that artifact. **AUDITED — the page was built
       for this**: every filter already reads `useSearchParams()` via one `setParam` helper, and the module docstring
