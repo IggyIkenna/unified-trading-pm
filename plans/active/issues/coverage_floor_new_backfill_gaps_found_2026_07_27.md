@@ -48,9 +48,9 @@ depends_on: []
       the source genuinely has data here; nobody ever dispatched a backfill job that enumerated these shards (a genuine
       source gap or adapter defect would still leave `attempted_failed`/`expected_unattempted` rows; total absence of
       ANY manifest row means the shards were never even in scope for a run). **Backfill: found ALREADY IN FLIGHT, not
-      launched by me.** `deployment-service/scripts/vm/launch-cefi-hl-aster-     historical-backfill.sh` already
-      documents `HYPERLIQUID: 2023-01-01 → today` as its intended coverage. A DRY_RUN confirmed a scoped re-run
-      (`YEARS=2023 OVERRIDE_START_DATE=2023-04-15 OVERRIDE_END_DATE=2023-12-31     DATA_TYPES="book_snapshot_5;derivative_ticker"`,
+      launched by me.** `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` already documents
+      `HYPERLIQUID: 2023-01-01 → today` as its intended coverage. A DRY_RUN confirmed a scoped re-run
+      (`YEARS=2023 OVERRIDE_START_DATE=2023-04-15 OVERRIDE_END_DATE=2023-12-31 DATA_TYPES="book_snapshot_5;derivative_ticker"`,
       `trades` excluded — no real trades source exists before 2025-03-22 per `S3_TRADES_START`) would correctly target
       this exact gap, so I launched it for real (5 SPOT shards, `SHARD_DAYS=60`). **Before those shards did any work,
       discovered a pre-existing VM `cefi-hyperliquid-2023-20260727-071055` (launched 2026-07-27T00:10:58-07:00, ~47 min
@@ -59,15 +59,15 @@ depends_on: []
       AO worker dispatched the same underlying finding (this doc's own summary notes it was surfaced from
       `coverage_floor_registries_no_cross_propagation-002`, slot-6, which independently found the same gap while fixing
       the coverage-floor registries). **Deleted my 5 redundant STAGING VMs immediately**
-      (`gcloud compute     instances delete`, confirmed clean — none had started real work, no wasted spend beyond ~1
-      min of boot) rather than duplicate in-flight work / risk a shard-write race. Verified the pre-existing VM is
-      genuinely healthy, not zombied: `RUNNING` status, serial console shows continuous minute-cadence activity through
-      07:58Z (~15 min before my check). **Not yet independently confirmed via captured manifest rows** — the
-      consolidated `_index/availability_index.parquet` still shows 0 rows for this window as of this check, which is
-      EXPECTED (manifest consolidation runs on its own cadence, lagging behind per-VM-shard writes;
-      `MANIFEST_PER_VM_SHARDS=true` is set on that VM) and is NOT evidence the backfill is stalled. **Residual**:
-      re-verify captured rows for this window once the VM completes (a few hours, VM-scale — not re-dispatched as a
-      separate todo here since it is a natural follow-up check on already-in-flight work, not new work).
+      (`gcloud compute instances delete`, confirmed clean — none had started real work, no wasted spend beyond ~1 min of
+      boot) rather than duplicate in-flight work / risk a shard-write race. Verified the pre-existing VM is genuinely
+      healthy, not zombied: `RUNNING` status, serial console shows continuous minute-cadence activity through 07:58Z
+      (~15 min before my check). **Not yet independently confirmed via captured manifest rows** — the consolidated
+      `_index/availability_index.parquet` still shows 0 rows for this window as of this check, which is EXPECTED
+      (manifest consolidation runs on its own cadence, lagging behind per-VM-shard writes; `MANIFEST_PER_VM_SHARDS=true`
+      is set on that VM) and is NOT evidence the backfill is stalled. **Residual**: re-verify captured rows for this
+      window once the VM completes (a few hours, VM-scale — not re-dispatched as a separate todo here since it is a
+      natural follow-up check on already-in-flight work, not new work).
 - [ ] [DATA] P2. **DERIBIT sparse/partial 2019 historical backfill.** `trades` data_type has real captured rows
       (thousands-to-hundreds-of-thousands `instrument_count`/day, not placeholders) 2019-05-08 through 2019-12, but NOT
       on every calendar day (multi-day gaps) — unlike `book_snapshot_5`/`derivative_ticker`, which start cleanly and
