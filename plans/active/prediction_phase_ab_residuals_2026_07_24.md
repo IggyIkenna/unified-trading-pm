@@ -52,7 +52,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-26" # was 2026-07-25 — /plan-reconcile prediction shard corrected the A1 Kalshi-smoke-matrix todo's per-todo repo attribution (e2e-testing, not MTDS-only); no checkbox changes. 2026-07-25 — consolidated-closeout split pass added 2 todos relocated from the parent (adapter dead-code audit as new A5; merged reconciliation-cadence + duplicate-note in Phase B) + folded the POLYMARKET schema-extension ruling into the existing A2 todo (no new checkbox); open-todo count 11 -> 13
+last_updated: "2026-07-27" # was 2026-07-26 — /plan-reconcile prediction shard corrected the A1 Kalshi-smoke-matrix todo's per-todo repo attribution (e2e-testing, not MTDS-only); no checkbox changes. 2026-07-25 — consolidated-closeout split pass added 2 todos relocated from the parent (adapter dead-code audit as new A5; merged reconciliation-cadence + duplicate-note in Phase B) + folded the POLYMARKET schema-extension ruling into the existing A2 todo (no new checkbox); open-todo count 11 -> 13. 2026-07-27 — batch2 todo-2 conflict-check re-verified item 9's instrument_type residual case-insensitively (still open, 176 genuinely-malformed rows, blank sub-population actively growing ~10/day); added new Phase-B P2 todo for the growing-blank finding; open-todo count 13 -> 14
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -193,15 +193,15 @@ source: >-
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                      **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                      `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                      2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                      either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                      launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                      operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                      availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                      see its own Progress Log.
+                          `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                          **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                          `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                          2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                          either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                          launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                          operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                          availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                          see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -330,7 +330,25 @@ source: >-
       `instrument_type` rows (not either historical snapshot) AND the deployment-ui data-status Distinct Values panel
       confirms 0 non-canonical entries for prediction. This is the cross-AG standard — tradfi/cefi/sports all target the
       same 100% bar; DeFi is the sole exception (genuinely mixed per-instrument_type, tracked separately in
-      `defi_consolidated_closeout_2026_07_18.md`).
+      `defi_consolidated_closeout_2026_07_18.md`). **Narrowed 2026-07-25
+      (`prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 2) to the case-insensitive standard the RULED C2a
+      ruling actually mandates** (`/codex/02-data/reconciliation-     finding-taxonomy.md` §5.1 — UPPERCASE target,
+      `migration_pending`, compared case-INSENSITIVELY, no casing finding during the migration window) — **still open,
+      see 2026-07-27 Progress Log entry**: a fresh read found 176 genuinely-malformed (non-casing) rows, not 0.
+- [ ] [DIAG] P2. **NEW 2026-07-27 — prediction manifest blank/null `instrument_type` rows are ACTIVELY GROWING, not
+      static residue (found while re-verifying the casing item above).** Live counts across 3 dated reads: 30
+      (2026-07-20) → 70 (2026-07-24) → 100 (2026-07-27) — a consistent ~10 rows/day linear rate over both intervals (+40
+      over 4 days, +30 over 3 days, both ≈10.0/day). This contrasts with the co-located 76-row `prediction` (singular)
+      malformed residual on the SAME axis, which has been static/unchanged across all 3 reads since 2026-07-20 — that
+      population is dead historical residue, not active, while the blank population is evidence of an ONGOING writer
+      defect still stamping blank `instrument_type` on ~10 prediction rows/day. **Done when**: the writer/cron path
+      responsible for the blank stamps is identified by name (file:line) with a live-vs-historical verdict — candidates
+      include the per-CID writer path near `engine/orchestrator/manifest_finalize.     _finalize_prediction_bundles`
+      (already known from the tick-18 finding above to mis-stamp `instrument_type` on bundle rows, though that finding
+      was lowercase `"prediction"`, not blank) or a different live/per-CID path — and either a fix ships and is verified
+      against the next day's count, or the ~10/day gap is recorded as accepted with a stated reason. Repo:
+      market-tick-data-service. Source: `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 2 (this doc's item
+      9 re-verify surfaced it as a byproduct).
 - [ ] [DATA] P2. **`/data-pipeline-reconciliation` post-migration 3x-cadence + duplicate-note merge (relocated
       2026-07-25 from the parent's "Queued audits + reviews" + "Distinct Values / axis-value census" P3 sections — both
       tracked the same underlying action, merged into this one todo).** Reach the 3x dated-pass cadence
@@ -372,3 +390,25 @@ source: >-
   corrected to name both legs (`e2e-testing` for the smoke matrix, `market-tick-data-service` for the
   `raw_tick_data/by_date/` drift). The plan's frontmatter `repos:` already included `e2e-testing` — the gap was
   per-todo, which is the level AO dispatch actually reads.
+- **2026-07-27T15:28:46Z (slot-4, `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 2) — fresh
+  case-insensitive live read of item 9's `instrument_type` residual: still open, and the blank sub-population is
+  actively growing, not static.** Per the RULED C2a standard (`/codex/02-data/reconciliation-finding-taxonomy.md` §5.1 —
+  UPPERCASE target, compared case-INSENSITIVELY, no casing finding during `migration_pending`), read
+  `market-data-tick-pred-prd-central-element-323112`'s `availability_index.parquet` `instrument_type` column live via a
+  slim, column-pruned `read_availability_index(bucket, columns=["instrument_type"])` (single-walk, no whole-corpus scan;
+  mirrors deployment-api's `_axis_census.py` pattern) at 2026-07-27T15:28:46Z:
+  - **785,035 total rows.** 775,139 exact-uppercase `PREDICTION_MARKET` (98.74%) + 9,720 lowercase `prediction_market`
+    casing-variant (1.24%) — correctly NOT flagged, `migration_pending` per the ruling — + **176 genuinely malformed,
+    non-casing rows (0.0224%)**: 76 rows literally `prediction` (singular) + 100 blank/null.
+  - **Checkbox stays open** — the count is non-zero, not the 0 the (case-insensitive-narrowed) done-when requires.
+  - **Composition matters and is new information**: the 76 `prediction`-singular rows are IDENTICAL to the count at both
+    the 2026-07-20 baseline (76) and the 2026-07-24 pass ("76 unchanged" per that pass's own note) — this sub-population
+    is dead historical residue, not re-accumulating. The blank/null count is NOT static: 30 (2026-07-20) → 70
+    (2026-07-24) → 100 (2026-07-27) — a consistent ~10 rows/day linear rate over both gaps (+40/4d, +30/3d). This is
+    evidence of an ACTIVE writer defect, not a closed historical gap — filed as a new Phase-B todo above rather than
+    only noted here.
+  - Citing THIS read as current. The 2026-07-20 baseline (106 total) and the 2026-07-24 pass (146 total, inferred from
+    its own "76 unchanged + 70 blank" note) are both superseded snapshots, not current state.
+  - **Did NOT run** `canonicalize_prediction_manifest_2026_07_18.py --remove-stragglers --apply` (out of this todo's
+    scope per its source batch2 plan — that `--apply` still needs its own separate D1-migration-execution sign-off).
+    Read-only: no code changed, no manifest mutation.
