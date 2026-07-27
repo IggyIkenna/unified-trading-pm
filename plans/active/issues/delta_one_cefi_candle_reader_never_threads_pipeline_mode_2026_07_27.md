@@ -121,10 +121,19 @@ handler's setup code not yet grepped). The fix-todo below should trace and fix B
 
 ## Todos
 
-- [ ] 1. [DATA] P0. Trace and fix `_load_and_validate_candles`'s candle-loading call chain to pass a real
-      `pipeline_mode` value (per-venue, e.g. `batch_hyperliquid` for HYPERLIQUID, `batch_aster` for ASTER, etc. — likely
-      resolvable via the same venue→pipeline_mode mapping MDPS's writer uses) instead of leaving it `None`. (repo:
-      features-service)
+- [x] ✅ 1. [DATA] P0. Traced and fixed `_load_and_validate_candles`'s candle-loading call chain to pass a real
+      `pipeline_mode` value. Added `OrchestrationService._resolve_read_pipeline_mode` (mirrors todo 2's
+      `_tf_cluster_helper._resolve_read_pipeline_mode` pattern) using the sanctioned UTL
+      `resolve_pipeline_mode(service, mode, venue, asset_group=, data_type=)` resolver — venue = the instrument_id's
+      `VENUE:TYPE:SYMBOL` first segment. `_load_and_validate_candles` now resolves + threads `pipeline_mode` into
+      `DataLoader.load_candles_with_buffer(...)`; returns `None` (skip, never raise) when unresolvable — shard-level
+      failure isolation preserved. Added `tests/delta_one/unit/test_load_and_validate_candles_pipeline_mode.py` (real,
+      unstubbed resolver proving `HYPERLIQUID:PERPETUAL:BTC-USD@LIN` → `batch_hyperliquid`, plus a mocked-data_loader
+      test asserting `load_candles_with_buffer` is called WITH `pipeline_mode=` — the exact regression scenario). Full
+      `quality-gates.sh` green (17900 passed, 0 failed; sentinel-verified). features-service@e9430f0d. Filed a separate
+      flaky-gate finding while shipping (2 of 4 full QG runs failed on an unrelated 60s-timeout in STEP 5.83's
+      adapter-contract-call ratchet under shared-host contention, confirmed the check itself passes standalone —
+      `/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`).
 - [x] ✅ 2. [DATA] P0. Located and fixed the bulk-preload mechanism — CONFIRMED same root cause. Located in
       `features_service/delta_one/cli/handlers/_tf_cluster_helper.py`: `_load_base_candles` and
       `_load_one_instrument_range` both call `DataLoader.load_candles_with_buffer(...)` without `pipeline_mode`,
@@ -150,3 +159,7 @@ handler's setup code not yet grepped). The fix-todo below should trace and fix B
   its own investigation. Real-VM check (`features-e2e-cefi-20260727-083854-025349`) was left running in the background
   against the `-test-` bucket (no prod mutation) — expected to eventually report `PROVED NOTHING` per this root cause;
   its report can serve as further corroborating evidence once it completes.
+- **2026-07-27** — Todo 1 shipped: `features-service@e9430f0d`. Full `quality-gates.sh` green (pytest 17900 passed/0
+  failed, basedpyright clean, adapter-contract-call ratchet clean). Both delta_one CEFI candle-reader paths (the
+  bulk-preload path from todo 2 and the per-instrument path from this todo) now thread a resolved `pipeline_mode`. Todo
+  3 (re-run the real-day proof for `features_by_date_root_canonicalisation_2026_07_21.md` todo 6) is now unblocked.
