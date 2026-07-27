@@ -115,36 +115,36 @@ exists. Neither finding was on any tracked plan before this verification pass.
       market-data-processing-service.
 
       **Root cause identified**: `market_data_processing_service/app/core/batch_workers.py`'s `_handle_empty_tick_data`
-                  (the batch-mode empty-tick-data handler) unconditionally defaulted `empty_reason =
-                  EmptyConfirmedReason.SOURCE_RETURNED_ZERO` for every non-SPORTS asset_group and called
-                  `record_empty_for_shard(...)` (→ `canonical_writer_manifest.py:182`'s `manifest_writer.record_empty(...)`) with no
-                  `fetch_evidence` — the function's own signature doesn't even accept one. This is a DERIVATION step (reading
-                  already-captured raw tick parquet), not a live vendor fetch, so there is no `FetchEvidence` to supply — the call
-                  always violated the `SOURCE_RETURNED_ZERO` hard-requirement (operator decision 2026-06-22,
-                  `mtds_honest_absence_swallow_remediation_2026_06_10` Phase 2 KEYSTONE) the moment that gate landed. The code's
-                  own pre-existing comment (`writegate_phase_3.D.5_wave3`) already stated the correct target behavior:
-                  cefi/defi/tradfi instrument-day-grain empty is NOT a legitimate `empty_confirmed` state (only venue-level
-                  calendar rules are) — it should flip to `attempted_failed`; `record_empty_for_shard` was only ever the
-                  "conservative interim" until a catalog-aware writer-side guard (full "Wave 3", still unbuilt) could ship.
+                          (the batch-mode empty-tick-data handler) unconditionally defaulted `empty_reason =
+                          EmptyConfirmedReason.SOURCE_RETURNED_ZERO` for every non-SPORTS asset_group and called
+                          `record_empty_for_shard(...)` (→ `canonical_writer_manifest.py:182`'s `manifest_writer.record_empty(...)`) with no
+                          `fetch_evidence` — the function's own signature doesn't even accept one. This is a DERIVATION step (reading
+                          already-captured raw tick parquet), not a live vendor fetch, so there is no `FetchEvidence` to supply — the call
+                          always violated the `SOURCE_RETURNED_ZERO` hard-requirement (operator decision 2026-06-22,
+                          `mtds_honest_absence_swallow_remediation_2026_06_10` Phase 2 KEYSTONE) the moment that gate landed. The code's
+                          own pre-existing comment (`writegate_phase_3.D.5_wave3`) already stated the correct target behavior:
+                          cefi/defi/tradfi instrument-day-grain empty is NOT a legitimate `empty_confirmed` state (only venue-level
+                          calendar rules are) — it should flip to `attempted_failed`; `record_empty_for_shard` was only ever the
+                          "conservative interim" until a catalog-aware writer-side guard (full "Wave 3", still unbuilt) could ship.
 
-                  **Fix shipped**: (1) added a new closed-taxonomy `RecordFailedReason.NO_RAW_TICK_DATA_FOR_SHARD` value
-                  (`unified-api-contracts@349795f4`, `unified_api_contracts/canonical/crosscutting/honest_coverage.py`). (2)
-                  `batch_workers.py`'s `_handle_empty_tick_data` now routes cefi/defi/tradfi through `record_failed_for_shard`
-                  with this reason instead of `record_empty_for_shard(SOURCE_RETURNED_ZERO)`; SPORTS is unchanged (already has its
-                  own typed calendar-aware `classify_sports_empty_reason` path) — `market-data-processing-service@b6079c5`,
-                  with 2 new unit tests (`test_tradfi_empty_routes_to_record_failed_not_record_empty`,
-                  `test_sports_empty_still_routes_to_record_empty`) + updated docstrings/comments. Both repos: full
-                  `quality-gates.sh` green, `basedpyright`/`ruff` clean.
+                          **Fix shipped**: (1) added a new closed-taxonomy `RecordFailedReason.NO_RAW_TICK_DATA_FOR_SHARD` value
+                          (`unified-api-contracts@349795f4`, `unified_api_contracts/canonical/crosscutting/honest_coverage.py`). (2)
+                          `batch_workers.py`'s `_handle_empty_tick_data` now routes cefi/defi/tradfi through `record_failed_for_shard`
+                          with this reason instead of `record_empty_for_shard(SOURCE_RETURNED_ZERO)`; SPORTS is unchanged (already has its
+                          own typed calendar-aware `classify_sports_empty_reason` path) — `market-data-processing-service@b6079c5`,
+                          with 2 new unit tests (`test_tradfi_empty_routes_to_record_failed_not_record_empty`,
+                          `test_sports_empty_still_routes_to_record_empty`) + updated docstrings/comments. Both repos: full
+                          `quality-gates.sh` green, `basedpyright`/`ruff` clean.
 
-                  **Live re-verification (Done-when satisfied)**: rebuilt the TRADFI tarball from a clean LDR checkout (both fixes
-                  included) and relaunched `mdps-backfill-tradfi-20260727-194704` (`--force`, CME/NASDAQ/NYSE ohlcv_15m/24h,
-                  2026-07-13 — the exact date that previously produced 5,470 rejection warnings). Result: 2,284/2,284 succeeded, 0
-                  errors, **ZERO** `canonical_writer` WARNING lines (vs. the prior run's thousands) — only normal, auto-retried
-                  GCS 429 backoffs. Read the VM's own per-VM manifest shard directly (`_index/per_vm/mdps-backfill-tradfi-
-                  20260727-194704.parquet`, pre-consolidation ground truth — the shared consolidator's next cycle hadn't run yet):
-                  **2,735 rows (135 NASDAQ + 2,600 NYSE), 100% `capture_status=attempted_failed`,
-                  `error_reason=NO_RAW_TICK_DATA_FOR_SHARD`** — exactly the intended classification, correctly written, no
-                  rejection. Fix confirmed working end-to-end in production.
+                          **Live re-verification (Done-when satisfied)**: rebuilt the TRADFI tarball from a clean LDR checkout (both fixes
+                          included) and relaunched `mdps-backfill-tradfi-20260727-194704` (`--force`, CME/NASDAQ/NYSE ohlcv_15m/24h,
+                          2026-07-13 — the exact date that previously produced 5,470 rejection warnings). Result: 2,284/2,284 succeeded, 0
+                          errors, **ZERO** `canonical_writer` WARNING lines (vs. the prior run's thousands) — only normal, auto-retried
+                          GCS 429 backoffs. Read the VM's own per-VM manifest shard directly (`_index/per_vm/mdps-backfill-tradfi-
+                          20260727-194704.parquet`, pre-consolidation ground truth — the shared consolidator's next cycle hadn't run yet):
+                          **2,735 rows (135 NASDAQ + 2,600 NYSE), 100% `capture_status=attempted_failed`,
+                          `error_reason=NO_RAW_TICK_DATA_FOR_SHARD`** — exactly the intended classification, correctly written, no
+                          rejection. Fix confirmed working end-to-end in production.
 
 - [ ] [DATA] P1. Root-cause finding (2): trace why CME combo/chain-bundle `ohlcv_1m`/`ohlcv_1s` raw ticks (confirmed
       read via "Streaming chain bundle" log lines) never produce an `ohlcv_15m`/`ohlcv_24h` candle write attempt of ANY
@@ -164,4 +164,4 @@ exists. Neither finding was on any tracked plan before this verification pass.
 # Codex SSOTs
 
 None new — this is an implementation-bug finding against the existing honest-absence/FetchEvidence contract
-(`codex/02-data/honest-absence-downstream-handling.md`), not a contract change.
+(`/codex/02-data/honest-absence-downstream-handling.md`), not a contract change.

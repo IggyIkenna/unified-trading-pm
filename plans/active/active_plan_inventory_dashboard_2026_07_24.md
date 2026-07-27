@@ -175,7 +175,6 @@ epic._
 | [`sports_closeout_exchange_fixed_odds_fork_2026_07_25`](./sports_closeout_exchange_fixed_odds_fork_2026_07_25.md)                                                         | master           | infra     | 8/11       | 73%          | 1.0      | —        |
 | [`bucket_fold_ml_2026_07_17`](./bucket_fold_ml_2026_07_17.md)                                                                                                             | master           | infra     | 4/10       | 40%          | 1.0      | —        |
 | [`deployment_registry_firestore_p5_verify_2026_07_14`](./deployment_registry_firestore_p5_verify_2026_07_14.md)                                                           | master           | infra     | 2/5        | 40%          | 1.0      | —        |
-| [`cefi_migration_cutover_and_track8_completion_2026_07_25`](./cefi_migration_cutover_and_track8_completion_2026_07_25.md)                                                 | master           | infra     | 3/5        | 60%          | 1.0      | —        |
 | [`tradfi_registry_coverage_and_ao_readiness_2026_07_25`](./tradfi_registry_coverage_and_ao_readiness_2026_07_25.md)                                                       | master           | infra     | 0/11       | 0%           | 1.0      | —        |
 | [`data_completion_defi_2026_07_15`](./data_completion_defi_2026_07_15.md)                                                                                                 | master           | infra     | 29/55      | 53%          | 0.9      | —        |
 | [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md)                                                               | master           | infra     | 33/41      | 80%          | 0.9      | —        |
@@ -312,6 +311,7 @@ epic._
 | [`ao_fleet_observability_kpis_2026_07_20`](./ao_fleet_observability_kpis_2026_07_20.md)                                                                                   | master           | infra     | 8/8        | 100%         | 0.0      | —        |
 | [`asset_group_ao_ci_infra_schema_expansion_2026_07_27`](./asset_group_ao_ci_infra_schema_expansion_2026_07_27.md)                                                         | master           | refactor  | 10/10      | 100%         | 0.0      | —        |
 | [`candle_canonical_path_migration_execution_2026_07_24`](./candle_canonical_path_migration_execution_2026_07_24.md)                                                       | master           | infra     | 16/16      | 100%         | 0.0      | —        |
+| [`cefi_migration_cutover_and_track8_completion_2026_07_25`](./cefi_migration_cutover_and_track8_completion_2026_07_25.md)                                                 | master           | infra     | 5/5        | 100%         | 0.0      | —        |
 | [`data_pipeline_e2e_milestones_gate_2026_07_24`](./data_pipeline_e2e_milestones_gate_2026_07_24.md)                                                                       | master           | research  | 64/64      | 100%         | 0.0      | —        |
 | [`data_pipeline_reconciliation_skill_2026_07_20`](./data_pipeline_reconciliation_skill_2026_07_20.md)                                                                     | master           | design    | 42/42      | 100%         | 0.0      | —        |
 | [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](./defi_onchain_derivable_values_and_date_drift_2026_06_20.md)                                                 | master           | design    | 14/14      | 100%         | 0.0      | —        |
@@ -324,7 +324,7 @@ epic._
 | [`prediction_satellite_ao_dispatch_batch2_2026_07_25`](./prediction_satellite_ao_dispatch_batch2_2026_07_25.md)                                                           | master           | infra     | 6/6        | 100%         | 0.0      | —        |
 | [`sports_derived_features_postfloor_residue_purge_2026_07_27`](./sports_derived_features_postfloor_residue_purge_2026_07_27.md)                                           | master           | infra     | 2/2        | 100%         | 0.0      | —        |
 | [`sports_satellite_ao_dispatch_batch4_2026_07_25`](./sports_satellite_ao_dispatch_batch4_2026_07_25.md)                                                                   | master           | infra     | 3/3        | 100%         | 0.0      | —        |
-| **TOTAL** (268 plans)                                                                                                                                                     | 0 orphans, 0 TBD | —         | —          | **46% done** | **439**  | —        |
+| **TOTAL** (268 plans)                                                                                                                                                     | 0 orphans, 0 TBD | —         | —          | **46% done** | **438**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
