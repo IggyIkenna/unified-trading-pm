@@ -26,7 +26,7 @@ authoritative_for: [MTDS prediction data_type catalog, prediction venue-vs-sourc
 referenced_by:
   [/codex/02-data/README.md, /codex/02-data/prediction-perps-sourcing.md, /codex/02-data/prediction-schema-paths.md]
 owner:
-last_reviewed: 2026-06-04
+last_reviewed: 2026-07-27
 code_refs:
 ---
 
@@ -246,11 +246,27 @@ dual-casing".
 
 ### NEEDS_CANDLE_PROCESSING
 
-- **True**: none — all prediction data types are pass-through or event-driven; no MDPS candle aggregation applies.
-- **False**: `trades`, `prediction_canonical_question_group`, `market_lifecycle`
+**CORRECTED 2026-07-27** (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Update 6 + the KALSHI-mapping todo,
+operator-ruled): this section previously claimed a prediction-specific `False` override for `trades` — that claim was
+**stale/wrong**, not a description of real running code.
+`unified_api_contracts.registry.market_data_categories. NEEDS_CANDLE_PROCESSING` is a **flat, data_type-keyed dict with
+no asset_group axis at all**; `"trades": True` applies uniformly to every asset_group, and the dict's own adjacent
+comment reads "Prediction — uses canonical 'trades' / 'book_snapshot_5' (same keys as CeFi)" — i.e. the code's intent
+has always been to share CeFi's `True` value, not override it. `needs_candle_processing()` is called with `data_type`
+only (never `asset_group`), so no code path could apply a prediction-specific exception even if one were intended.
 
-Note: `trades` has `NEEDS_CANDLE=False` for the prediction asset_group — the UAC override for prediction means raw
-trades are not processed into OHLCV candles. Only CeFi/TradFi `trades` have `NEEDS_CANDLE=True`.
+- **True**: `trades` — uniform across every asset_group (CeFi/TradFi/DeFi/prediction), including prediction. MDPS DOES
+  attempt candle derivation for prediction `trades` (Polymarket has worked in production since 2026-01; the KALSHI
+  schema mapping was the gap — see `PredictionTradesAdapter`).
+- **False (unchanged, not part of the corrected claim)**: `market_lifecycle` — pass-through lifecycle events, no MDPS
+  candle adapter registered for it.
+
+Residual, NOT independently re-verified in this correction pass: `prediction_canonical_question_group` is likewise
+absent from the flat `NEEDS_CANDLE_PROCESSING` dict, which means `needs_candle_processing()`'s documented "unknown data
+types default to `True`" fallback applies to it too (same mechanism that was silently wrong for `trades`) — but MDPS has
+no `CandleAdapterRegistry` entry for `(PREDICTION, "prediction_canonical_question_group")` either, so this doc no longer
+asserts `False` for it. Whether that live behavior is correct (harmlessly no-adapter-found / skipped) or a second,
+smaller instance of the same class of drift was not investigated here — flagging rather than guessing.
 
 ### API Key Requirements
 
