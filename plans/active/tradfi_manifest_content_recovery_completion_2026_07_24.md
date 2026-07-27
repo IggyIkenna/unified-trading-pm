@@ -269,8 +269,9 @@ source: >-
       `migrate_tradfi_manifest_itype_semantic_relabel_2026_07_27.py` relabels only on OK/ALREADY_CANONICAL/
       QUARANTINE_COMBO, else honest-absence. Plan's cited counts were stale — real residual 2,058,772 evaluated, 1,587
       changed; applied live, independent re-read confirms held. New re-drift finding filed below. (repo: mtds)
-- [ ] [DATA] P1. **Casing re-drift found 2026-07-27** — see
-      `/plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md`. (repo: mtds)
+- [x] ✅ [DATA] P1. **Casing re-drift — 2 writer bypasses fixed, mtds@a1729bb4** — see
+      `/plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md` (residual + follow-ups tracked there). (repo:
+      mtds)
 - [x] ✅ [BACKEND] P0. **Converge every WRITER's `instrument_type` emission to the UPPERCASE enum (catalogue SSOT,
       operator 2026-07-18)** so forward-writes don't re-drift the manifest to lowercase after the Phase-B re-stamp.
       **SHIPPED 2026-07-25 — mtds@020b703e "fix(tradfi): route manifest instrument_type casing through one canonical
