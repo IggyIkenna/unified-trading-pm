@@ -970,23 +970,25 @@ backgrounded + Monitor-heartbeated; on driver death check
 via its `run.log`. `delta_one` first per-AG. CEFI is slot-3's. Driver OVERWRITES its report per-invocation — merge with
 `unified-trading-pm@e537bff29` `scripts/plan-hygiene/merge_pipeline_e2e_report.py` after every cell.
 
-**5 cells attempted**: `DEFI:delta_one` + `PREDICTION:delta_one` + `DEFI:onchain` all honest
-`no_captured_input_for_window` skips; `TRADFI:delta_one` FAILED (2 independent VM runs, identical
+**7 cells attempted**: `DEFI:delta_one` + `PREDICTION:delta_one` + `DEFI:onchain` + `volatility:TRADFI` all honest
+`no_captured_input_for_window` skips (`volatility:TRADFI` VM `features-e2e-tradfi-20260727-065459-b1a99f` confirmed
+`DEPLOYMENT_COMPLETED exit_code=0`, 872x honest `No captured perp` warnings, 0 ERROR/CRITICAL — ground-truthed after
+session moved on before its driver wrote a report row, same manual-record pattern as `TRADFI:delta_one` below);
+`TRADFI:delta_one` FAILED (2 independent VM runs, identical
 `DEPENDENCY CHECK FAILED — Missing market-data-processing-service`, exit_code=1 — driver's `--require-captured` wrongly
-accepted the window as covered, filed as todo below); `calendar` (GLOBAL) surfaced a **P0 DATA-CORRECTNESS BUG, not a
-pass** — VM `features-e2e-global-20260727-074139-a9e7df` wrote to `gs://features-calendar-prd-...` (PROD) despite
-`IS_TEST_RUN=true` — root-caused: `calendar/config.py`'s `is_test_run` field is declared but consumed NOWHERE in the
-package (unlike `delta_one`'s correct `get_output_bucket()` pattern). 0 rows this run (no damage), but a real-data day
-would pollute PROD. Filed `unified-trading-pm@a381871aa`
-`issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` (P0, operator-notified) with the fix + a P2
-audit-every-other-family follow-up. **Do NOT re-run `calendar` until fixed.** Report:
-`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.{md,json}`.
+accepted the window as covered, filed as todo below); `commodity:TRADFI` FAILED cleanly — all 3 public/no-auth external
+sources (`eia_weekly_storage`/`cftc_cot_report`/`baker_hughes_rig_count`) 403/timeout/404'd from the GCP VM, NOT a
+`BLOCKED-CREDENTIALS` case (no credential exists to provision); filed
+`unified-trading-pm@47a9f4f9c issues/features_commodity_public_api_403_from_gcp_vm_2026_07_27.md` (P2, likely
+IP-blocking or missing User-Agent); `calendar` (GLOBAL) surfaced a **P0 DATA-CORRECTNESS BUG, not a pass** — VM
+`features-e2e-global-20260727-074139-a9e7df` wrote to `gs://features-calendar-prd-...` (PROD) despite `IS_TEST_RUN=true`
+— root-caused: `calendar/config.py`'s `is_test_run` field is declared but consumed NOWHERE in the package (unlike
+`delta_one`'s correct `get_output_bucket()` pattern). 0 rows this run (no damage), but a real-data day would pollute
+PROD. Filed `unified-trading-pm@a381871aa` `issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` (P0,
+operator-notified) with the fix + a P2 audit-every-other-family follow-up. **Do NOT re-run `calendar` until fixed.**
+Report: `plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.{md,json}`.
 
-**1 cell IN FLIGHT**: `volatility:TRADFI`, VM `features-e2e-tradfi-20260727-065459-b1a99f`, genuinely computing but slow
-(~1.5 underlyings/min × 109 × 4 groups, first ~20 sampled 100% `No captured perp...No data` — near-certain all-skip);
-stopped live-watching, verify its final `run.log` before assuming an outcome.
-
-29 cells total; 5 attempted, 1 in flight, 23 not started. **This plan is at its 1000-line hard cap** — a future session
+29 cells total; 7 attempted, 0 in flight, 22 not started. **This plan is at its 1000-line hard cap** — a future session
 touching it should consider archiving older closed sections (per the plan-hygiene archival ritual) before adding more.
 
 - [ ] NEW todo. [DATA] P1. **Coverage-check discrepancy**: driver's `--require-captured` reported `TRADFI:delta_one`'s

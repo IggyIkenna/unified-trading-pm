@@ -72,6 +72,10 @@ def merge_reports(prior: dict[str, object], fresh: dict[str, object]) -> dict[st
     return merged
 
 
+def _shard_prefix(row: dict[str, object]) -> str:
+    return str(row["shard_label"]).split(":")[0].lower()
+
+
 def render_md(merged: dict[str, object], *, prior_md_text: str | None) -> str:
     results = merged["results"]
     lines: list[str] = []
@@ -83,9 +87,12 @@ def render_md(merged: dict[str, object], *, prior_md_text: str | None) -> str:
         f"driver invocations — see merge_pipeline_e2e_report.py): total={merged['total']} passed={merged['passed']} "
         f'failed={merged["failed"]} ambiguous={merged["ambiguous"]} skipped={merged["skipped"]}"'
     )
-    lines.append("status: pass")
+    lines.append("status: pass" if merged["failed"] == 0 else "status: fail")
     lines.append("nature: record")
-    ags = sorted({str(r["shard_label"]).split(":")[0].lower() for r in results})
+    # frontmatter schema's asset_group enum has no "global" — GLOBAL-family shards
+    # (e.g. calendar) are cross-asset-group and map to "cross-cutting" instead.
+    ag_map = {"global": "cross-cutting"}
+    ags = sorted({ag_map.get(_shard_prefix(r), _shard_prefix(r)) for r in results})
     lines.append(f"asset_group: [{', '.join(ags)}]")
     lines.append("stage: [data]")
     lines.append("repos: [features-service, deployment-service]")
