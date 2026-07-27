@@ -17,7 +17,7 @@ related:
   [
     ../active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/archive/2026_06/defi_governance_params_refresh_2026_06_20.md,
-    ../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
+    /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     ../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md,
     ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
     /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
@@ -52,7 +52,7 @@ codex_ssots:
 related_plans:
   - ../active/defi_consolidated_closeout_2026_07_18.md
   - ../active/defi_lending_writer_retire_prerequisite_2026_07_20.md
-  - ../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md
+  - /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
   - ../active/defi_strategy_pnl_axis_index_2026_07_24.md
   - ../active/mvp_backfill_defi_onchain_v10_2026_06_27.md
@@ -329,7 +329,7 @@ todo block below maps to one of these homes — nothing dropped, nothing flipped
 | Former inline block                                                                                                                                                                                                                 | Disposition                                                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Governance parameters refresh (Aave/Compound/Morpho event listener → time-versioned `governance_params` parquet → APR-calc + sizing migration + new UAC `GOVERNANCE_PARAMS_CHANGED`)                                                | **EXTRACTED (net-new)**                                                                                                         | [`defi_governance_params_refresh_2026_06_20`](../active/defi_governance_params_refresh_2026_06_20.md)                                                                                                                                                                                                                                            |
-| Hardcoded on-chain-derivable values audit (Cat-A derive-SSOT + CI citation gate; Cat-B fallback removal, blocked on governance Phase 2) + Fork-1 prep residuals (Pyth-Hermes coverage SSOT, local-fallback drift sweep)             | **EXTRACTED (net-new)**                                                                                                         | [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)                                                                                                                                                                                                                |
+| Hardcoded on-chain-derivable values audit (Cat-A derive-SSOT + CI citation gate; Cat-B fallback removal, blocked on governance Phase 2) + Fork-1 prep residuals (Pyth-Hermes coverage SSOT, local-fallback drift sweep)             | **EXTRACTED (net-new)**                                                                                                         | [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)                                                                                                                                                                                                   |
 | DEX-swaps subgraph schema-mismatch rewrite (PancakeSwap/SushiSwap/Aerodrome/Camelot) + Compound V3 Messari rewrite (Bug 2) + Hyperliquid OHLCV stub + Extended-Starknet unblocking + CLOB asset_group classification                | **EXTRACTED (net-new)**                                                                                                         | [`defi_mtds_subgraph_and_adapter_fixes_2026_06_20`](../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md)                                                                                                                                                                                                                       |
 | DeFi full-batch E2E validation + per-handler coverage + Phase-D historical carry tracer (2022→today × 7 archetypes) + Lighter/Pacifica backfill final-state verify + SolidlyCL golden-swap validation (P2)                          | **EXTRACTED (net-new)**                                                                                                         | [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)                                                                                                                                                                                                                      |
 | `mtds-s4-10` rescan-all-manifests + LIGHTER `perp_funding` (A5) + DeFi per-chain/per-venue launch dates + DEX per-chain launch-date + on-chain features + DeFi single-walk / G1 backfill / coverage rollup                          | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`defi_manifest_canonicalisation_2026_06_01`](../active/defi_manifest_canonicalisation_2026_06_01.md) (DeFi manifest/coverage master; the manifest-migration rescan rides `infrastructure_master` / `master_data_canonicalisation_migration_catalogue_2026_06_07`)                                                                               |
@@ -613,10 +613,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                                                                                      gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                                                                                      ```
+                                                                                              gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                                                                                              ```
 
-                                                                                      [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                                                                                              [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -985,7 +985,7 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
 > **EXTRACTED / OWNED-ELSEWHERE**: Priority #2 (DEX-swaps subgraph schema rewrite) →
 > [`defi_mtds_subgraph_and_adapter_fixes_2026_06_20`](../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md);
 > Priority #3 (PROTOCOL_LAUNCH_DATES tightening) →
-> [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md) +
+> [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md) +
 > launch-date population in
 > [`defi_manifest_canonicalisation_2026_06_01`](../active/defi_manifest_canonicalisation_2026_06_01.md); Priority #4
 > (ASTER genesis/funding audit) → operator decision tracked in `defi_manifest_canonicalisation_2026_06_01` (ASTER launch
@@ -1160,16 +1160,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                                                                                      `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                                                                                      (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                                                                                      VM ran current code without a refresh.
+                                                                                              `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                                                                                              (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                                                                                              VM ran current code without a refresh.
 
-                                                                                      Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                                                                                      (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                                                                                      `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                                                                                              Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                                                                                              (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                                                                                              `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                                                                                      Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                                                                                      (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                                                                                              Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                                                                                              (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
@@ -1261,7 +1261,7 @@ Phase 3.D.5 v2 enumerator (must handle CLOB venues).
 ### Hardcoded on-chain-derivable values audit (migrated from `defi_eliminate_hardcoded_onchain_derivable_values_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing (restructured 2026-06-20)")
 
 > **EXTRACTED**: all open Phases 1-5 →
-> [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
+> [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
 > (Cat-B Phase 3 is blocked on `defi_governance_params_refresh_2026_06_20` Phase 2; the PM CI lint Phase 5 coordinates
 > with the PM CI-gate owner). Do NOT dispatch from here.
 
@@ -1298,7 +1298,7 @@ Phase 2 (time-versioned parquet) lands. Sequence in plan execution.
 
 > **EXTRACTED**: Batches A-D are ✅ shipped (UAC@6c873e4, evidence inline); the open P1 residuals (Pyth-Hermes coverage
 > SSOT + jitoSOL pre-2023-10 scope; local-fallback drift sweep) →
-> [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
+> [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
 > P1. Do NOT dispatch from here.
 
 Source issue archived. 13 UAC date drifts identified in Fork-1 scope: AAVE_V3 OPTIMISM/BASE/LINEA/BSC (141d-293d drift),
@@ -1704,10 +1704,11 @@ Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 **status**: active · **estimate**: 2.0 cal AI-days (class: refactor) **title**: DeFi lending writer fix — HARD
 PREREQUISITE for the D2 flat-LENDING retire
 
-### [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
+### [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
 
-**status**: active · **estimate**: 3.6 cal AI-days (class: design) **title**: DeFi hardcoded on-chain-derivable values +
-UAC date-drift elimination (derive-SSOT + CI citation gate)
+**status**: ✅ ARCHIVED 2026-07-27 (was: active) · **estimate**: 3.6 cal AI-days (class: design) · **title**: DeFi
+hardcoded on-chain-derivable values + UAC date-drift elimination (derive-SSOT + CI citation gate) — all 14/14 todos done
+(`unified-api-contracts@4a29261e`, `instruments-service@8b02b647`); no longer a P0 must-complete item.
 
 ### [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)
 

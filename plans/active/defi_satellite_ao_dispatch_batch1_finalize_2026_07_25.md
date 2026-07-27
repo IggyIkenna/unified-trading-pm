@@ -91,11 +91,18 @@ drift_direction: advance-code
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md` (6 todos),
       `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` (2 todos),
       `issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`,
-      `issues/phantom_captures_defi_2026_06_28.md`, `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`.
-      For each: after flipping, re-check whether it now has 0 open todos remaining (checkbox AND prose-form). Only flip
-      a doc's `status` to `resolved` if it genuinely reaches 0 open todos. **Done when**: all 29 source docs'
-      corresponding checkboxes/sections are flipped with verified evidence (including the consolidated-plan Track 2
-      cross-flip above), and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
+      `issues/phantom_captures_defi_2026_06_28.md` (**partially reconciled 2026-07-27** by the separate
+      `june_2026_vintage_audit_findings_2026_07_27.md` §2 pass — its todo 2 "apply reconciliation" is genuinely done,
+      flipped citing `mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762`'s APPLY COMPLETE evidence;
+      that same pass ALSO found + corrected a false `[x]` on todo 1 (root-cause diagnosis) — it was never actually done,
+      reverted to open. **NOT archived**: todo 1 is genuinely open and already tracked at
+      `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical unchecked todo — when THIS finalize plan's pass
+      reaches it, confirm whether batch1 has since executed that root-cause diagnosis before re-flipping/archiving),
+      `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`. For each: after flipping, re-check whether it
+      now has 0 open todos remaining (checkbox AND prose-form). Only flip a doc's `status` to `resolved` if it genuinely
+      reaches 0 open todos. **Done when**: all 29 source docs' corresponding checkboxes/sections are flipped with
+      verified evidence (including the consolidated-plan Track 2 cross-flip above), and any doc that genuinely reaches 0
+      open todos is flipped to `status: resolved`.
 - [ ] [REVIEW] P1. **Re-check the 1 too-large-doc exclusion for a batch2 pass.** Re-read
       `issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`'s current state — has whatever made it
       too-large/risky at batch-1 triage time settled enough that a fresh, precisely-scoped triage pass could now safely

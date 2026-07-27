@@ -67,7 +67,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/data_completion_defi_2026_07_15.md,
     /plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
-    /plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
+    /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
     /plans/archive/2026_07/mtds_defi_dex_zero_capture_protocols_2026_07_14.md,
     /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
@@ -107,7 +107,7 @@ related:
   ]
 created: 2026-07-18
 last_updated:
-  2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"; "2026-07-27" session-3 lending-resolver close-out (todo 18)

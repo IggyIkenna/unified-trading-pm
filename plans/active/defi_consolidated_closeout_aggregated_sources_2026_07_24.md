@@ -183,8 +183,8 @@ drift_direction: none
       `method`.
     - **[MTDS] P3.** Prove force + skip per surface on `-test-` — BLOCKED-CREDENTIALS (the `-test-` bucket doesn't exist
       / SA lacks `storage.buckets.get`+`create`).
-  - [`plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md)
-    — 0 open todos (closed/archived/record-only).
+  - [`plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md)
+    — ARCHIVED 2026-07-27, 0 open todos (all 9 mini-plans confirmed archived/complete).
   - [`plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`](/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md)
     (9 open: 1 P0, 6 P1, 1 P2, 1 P3 — P0/P1 listed in full, P2/P3 capped)
     - **[OPERATOR] P0.** BLOCKED-OPERATOR-DECISION — coordinate a maintenance window with the operator for the
@@ -334,12 +334,11 @@ drift_direction: none
     — ✅ RESOLVED 2026-07-26 (worker, slot 6), archived: all 4 original decisions + the 3 CeFi-pivot cross-repo bugs
     (tz-aware-vs-naive datetime join, canonical_writer column-order drift, filter-pushdown memory overhead) re-verified
     live against current code, all confirmed shipped.
-  - [`plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md`](/plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
-    (2 open)
-    - **[HUMAN-AGENT] P1.** Pyth Hermes coverage SSOT + jitoSOL pre-2023-10 backtest scope — operator go/no-go on
-      Pythnet replay vs clipping the backtest window (default: clip).
-    - **[SCRIPT] P1.** Latent Bug-class-3 local fallback drift sweep — find any local fallback overriding a UAC value
-      without an explicit comment.
+  - [`defi_onchain_derivable_values_and_date_drift_2026_06_20.md`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
+    — ✅ ARCHIVED 2026-07-27, all 14 todos done: Pyth Hermes/jitoSOL resolved as **clip**
+    (`unified-api-contracts@4a29261e`), Latent Bug-class-3 local-fallback sweep shipped (`instruments-service@8b02b647`;
+    broader sweep beyond that concrete precedent filed separately at
+    `/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`).
   - [`plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`](/plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md)
     (5 open — ⛔ GATES Track 1's LENDING retire)
     - **[CODE] P0.** Ship the retire atomically across UAC+MTDS+UTL in ONE wave — a partial wave IS the outage (the
@@ -762,8 +761,9 @@ drift_direction: none
     lst-rates aggregation + venue-spelling residual, forked from `migration_verification_orphan_safety_2026_06_10`.
   - [`features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md)
     — ✅ RESOLVED + archived 2026-07-26; `master:` field named `defi_manifest_canonicalisation_2026_06_01.md` as owner.
-  - [`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`](/plans/active/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md)
-    — e2e defi-strategy funding/APR/gas/lending-rate correctness bugs, `parent_epic: defi_master`.
+  - [`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`](/plans/archive/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md)
+    — ✅ ARCHIVED 2026-07-27, all 6 BUGs fixed + shipped (UTL@b587b91b/ed622af8, UAC@fd5bcfa/7fade10,
+    execution-service@38c7e06f, strategy-service@b91d3e1f, features-service@16be6c0f).
   - [`e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`](/plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md)
     — e2e DeFi strategy configs taxonomy/wizard round-trip fidelity gaps; repos/paths all `e2e-testing/scripts/defi/*`.
 

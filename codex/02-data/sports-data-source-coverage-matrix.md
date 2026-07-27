@@ -199,6 +199,20 @@ Expected leagues: 5 PREDICTION only — EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE
 | --------- | ----------------------------- | ----------------------------------- | ----------------------- |
 | `XG`      | per-league × per-fixture-date | 5 leagues × fixture dates in season | Yes                     |
 
+**Dormant contingency — 3-way understat absence split (`EXPECTED_NO_PROVIDER_COVERAGE`), archived 2026-07-27**: the
+2-way split above (`record_failed` for genuinely-errored leagues, `record_empty` for the rest) is currently CORRECT
+because `get_expected_leagues_for_source("understat", ["Prediction"])` already returns ONLY the 5 understat-native
+leagues (EPL/LA_LIGA/BUNDESLIGA/SERIE_A/LIGUE_1) — the denominator never contains a league understat doesn't cover, so a
+3-way split has nothing to do today. A 3-way split (provider-not-covering → `EXPECTED_NO_PROVIDER_COVERAGE`;
+covered+errored → `failed`; covered+no-fixture → `EXPECTED_NO_FIXTURE`) becomes necessary ONLY if the understat expected
+denominator ever broadens to include a league understat lacks. If that happens: add `XG`/`XG_SHOTS` keys to UAC
+`LEAGUE_ENTITY_COVERAGE` (`registry/sports_league_entity_coverage`) built from understat's OWN observed corpus (NOT
+API-Football's, which is what that map is keyed on today — wiring it in as-is would mislabel every understat absence,
+including real 404 failures and genuine no-fixture days, as `EXPECTED_NO_PROVIDER_COVERAGE`), then apply the
+`is_league_entity_covered`-first ordering. Provenance:
+`/plans/archive/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` P3 fix (originally diagnosed
+2026-06-24).
+
 ### 2.4 Transfermarkt-sourced (source key = `transfermarkt`)
 
 Expected leagues: 56 (PREDICTION 32 + FEATURES 24). Reference leagues NOT covered.

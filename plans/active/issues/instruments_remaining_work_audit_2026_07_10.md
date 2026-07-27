@@ -480,10 +480,11 @@ Cross-doc / cross-registry contradiction, drift, or design-authority gaps.
    valid-data_types despite ICE having no Databento coverage); DeFi's two capability registries have drifted. 6
    unchecked todos incl. a proposed two-layer redesign pending operator approval.
 
-3. **DeFi hardcoded on-chain-derivable values + UAC date-drift elimination**
-   `plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md` Phases 5–5.6 shipped; 2 residuals: operator
-   go/no-go on Pyth Hermes jitoSOL pre-2023-10 backtest scope, and a "Bug-class-3" sweep for local fallback dicts
-   silently overriding UAC values.
+3. **DeFi hardcoded on-chain-derivable values + UAC date-drift elimination** — ✅ RESOLVED 2026-07-27, both residuals
+   shipped and the plan archived: `/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md`
+   Phases 5–5.6 shipped; the 2 residuals noted here are done — Pyth Hermes jitoSOL pre-2023-10 backtest scope resolved
+   as **clip** (`unified-api-contracts@4a29261e`), and the "Bug-class-3" local-fallback sweep shipped
+   (`instruments-service@8b02b647`).
 
 ### P2
 

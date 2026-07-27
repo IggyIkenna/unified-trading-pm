@@ -71,7 +71,7 @@ tags:
 related:
   [
     ../sports_data_sources_canonical_completion_2026_07_13.md,
-    ./sports_golden_window_attempted_failed_remediation_2026_06_24.md,
+    /plans/archive/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md,
     ../sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md,
   ]
 created: 2026-07-15
