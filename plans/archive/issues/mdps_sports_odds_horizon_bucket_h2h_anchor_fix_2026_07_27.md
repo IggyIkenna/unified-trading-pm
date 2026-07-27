@@ -49,6 +49,13 @@ resolved_by:
   uts-prod-market-data-processing-service-t1-recon-jsghk, 2026-07-27"
 ---
 
+> **🟢 RESOLVED 2026-07-27** — all 3 h2h-anchoring layers fixed: `market-data-processing-service@d6f99b8`
+> (`main@9cc084e`). Verified end-to-end against real production data via
+> `uts-prod-market-data-processing-service-t1-recon-jsghk` — reached `Completed=True`, `odds_horizon_bucket`
+> 100%/0-errors on both dates, with real `ASIAN_HANDICAP_*`/`OVER_UNDER_*` output confirmed in GCS for the first time.
+> See §"Update 2" for full evidence. Residual, deliberately-not-fixed gap: `h2h_lay` (MATCH_ODDS_LAY) has no pivot logic
+> — flagged, not a regression.
+
 # sports odds_horizon_bucket — real 3-layer h2h-anchoring bug, ALL 3 layers fixed + verified against real production data
 
 ## What I found
