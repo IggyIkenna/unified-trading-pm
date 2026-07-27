@@ -71,12 +71,13 @@ drift_direction: advance-code
       it), still genuinely gated (re-confirm with fresh evidence), or belongs to another tranche (name that tranche).
       Three specific re-checks are cheap and high-yield: (a) has `defi_satellite_ao_dispatch_batch2_2026_07_26`'s
       finalize resolved the `defi_collateral_sizing…` retag, which would unblock its 4 todos; (b) has the tradfi
-      finalize's own re-check cleared the `phantom_captures_tradfi_2026_06_28.md` double-claim; (c) is
-      `issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (infra-claimed) resolved, which would unblock the
-      vcrpy `--ignore-vuln` drop. **Do NOT re-surface an operator question already asked** — decisions #10 and #11 in
-      `issues/autonomous_session_operator_decisions_2026_07_25.md` and the two parked in this audit's own report are
-      already queued. **Done when**: every Deferred entry carries a dated re-verification verdict with one of the three
-      routings named.
+      finalize's own re-check cleared the `phantom_captures_tradfi_2026_06_28.md` double-claim; (c) **RESOLVED
+      2026-07-27**: `/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (infra-claimed) is now
+      fully resolved + archived — the execution-service holdout migration shipped (execution-service@`9ce159a7`), all 11
+      `--ignore-vuln` entries dropped fleet-wide. **Do NOT re-surface an operator question already asked** — decisions
+      #10 and #11 in `issues/autonomous_session_operator_decisions_2026_07_25.md` and the two parked in this audit's own
+      report are already queued. **Done when**: every Deferred entry carries a dated re-verification verdict with one of
+      the three routings named.
 - [ ] [DOC] P2. **Action the two membership/classification findings this audit raised.** (1) **The tranche-membership
       gap.** batch1's Phase-1 scope was 59 docs against a real membership of 142 (104 non-peer-claimed), which is why
       the closeout's Tracks 16-24 went almost entirely un-triaged — those Tracks were added by the 2026-07-25

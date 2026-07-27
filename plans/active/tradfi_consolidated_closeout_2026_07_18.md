@@ -621,8 +621,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[SCRIPT] P1.** Implement R1: bounded-concurrent `_run_date_as_subprocess` dispatch (gated on the seed-context
       fix)
     - +6 more (P2/P3) — see file for the rest
-  - [`plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md)
-    (`status: draft`) — 0 open todos (closed/archived/record-only; not yet flipped `active`)
+  - [`plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md)
+    — ARCHIVED 2026-07-27, 0 open todos, all 9 mini-plans confirmed archived/complete
   - [`plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`](/plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md)
     - **[VERIFY] P1.** Check whether manifest regeneration is automatic or requires an explicit re-enumeration trigger
     - **[VERIFY] P2.** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers

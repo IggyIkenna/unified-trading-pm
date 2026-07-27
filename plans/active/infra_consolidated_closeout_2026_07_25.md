@@ -67,8 +67,8 @@ source: >-
 (codex-violation/file-size ratchet + splitting oversized source files) ·
 [repo_scripts_governance_audit_2026_06_18.md](/plans/active/repo_scripts_governance_audit_2026_06_18.md) (`scripts/` dir
 governance — ruff-lint, deprecate/delete audit) ·
-[issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md](/plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md)
-(CVE vs vcrpy dependency conflict + pyproject duplicate-key) ·
+[issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md](/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md)
+(ARCHIVED 2026-07-27, RESOLVED — CVE vs vcrpy dependency conflict + pyproject duplicate-key) ·
 [issues/cve_affected_pinned_deps_remediation_2026_06_18.md](/plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md)
 (lift CVE-driven dependency caps once blockers clear) ·
 [issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md](/plans/active/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md)
@@ -77,14 +77,14 @@ governance — ruff-lint, deprecate/delete audit) ·
 its pinned version on the VM fleet) ·
 [issues/pm_scripts_typecheck_debt_2026_06_11.md](/plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md) (PM
 `scripts/` basedpyright typecheck-debt ratchet regression) ·
-[utl_uac_reuse_consolidation_remediation_2026_06_10.md](/plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md)
+[utl_uac_reuse_consolidation_remediation_2026_06_10.md](/plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md)
 (UTL/UAC dedup/reimplementation consolidation refactor) ·
 [stash_pile_workspace_cleanup_2026_06_03.md](/plans/active/stash_pile_workspace_cleanup_2026_06_03.md) (cross-host git
 stash-pile audit/cleanup runbook) ·
 [issues/service_dockerfile_pattern_normalization_2026_06_17.md](/plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md)
 (9 services' Dockerfiles inconsistent vs the clean base-image pattern) ·
-[issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md](/plans/active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md)
-(aiohttp-3.14 CVE bump blocked by an aioresponses test-mock incompatibility in execution-service).
+[issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md](/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md)
+(ARCHIVED 2026-07-27, RESOLVED — execution-service@9ce159a7, aiohttp-3.14 CVE bump unblocked).
 
 **Close-out criterion**: all CVE remediations land (aiohttp/vcrpy, setuptools PYSEC-2026-3447, execution-service
 aioresponses migration); the codex-violation ratchet stays green; scripts/ governance sweep complete; uv pin re-synced
@@ -92,8 +92,10 @@ fleet-wide; PM typecheck debt cleared; UTL/UAC dedup shipped; Dockerfile pattern
 
 ## Track 2 — Org/account admin + terraform drift · P1
 
-**Sources**: [org_migration_to_odumresearch_2026_06_07.md](/plans/active/org_migration_to_odumresearch_2026_06_07.md)
-(GitHub org migration, IggyIkenna→OdumResearch, fleet-wide) ·
+**Sources**:
+[org_migration_to_odumresearch_2026_06_07.md](/plans/archive/2026_07/org_migration_to_odumresearch_2026_06_07.md)
+(GitHub org migration, IggyIkenna→OdumResearch, fleet-wide — **CANCELLED 2026-07-27**, operator declined, staying on
+`IggyIkenna` Pro; `june_2026_vintage_audit_findings_2026_07_27.md` §5#39) ·
 [issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md](/plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md)
 (prod terraform drift backlog — 21 add / 18 change — reconcile-apply) ·
 [issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md](/plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md)
@@ -103,9 +105,10 @@ fleet-wide; PM typecheck debt cleared; UTL/UAC dedup shipped; Dockerfile pattern
 [issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md](/plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md)
 (fleet-wide VM-launcher billing-waste audit + pre-flight gate design).
 
-**Close-out criterion**: org migration fully verified fleet-wide (no stale `IggyIkenna` refs); terraform drift
-reconciled + applied; VM startup scripts auto-roll to GCS; `managed-by` label convention adopted; the billing-waste
-pre-flight gate designed + shipped.
+**Close-out criterion**: ~~org migration fully verified fleet-wide (no stale `IggyIkenna` refs)~~ — **DROPPED
+2026-07-27**, org migration cancelled by operator ruling, `IggyIkenna` refs are now the permanent correct state, not
+drift; terraform drift reconciled + applied; VM startup scripts auto-roll to GCS; `managed-by` label convention adopted;
+the billing-waste pre-flight gate designed + shipped.
 
 ## Track 3 — PM plan-format / plan-hygiene tooling · P2
 
@@ -122,8 +125,9 @@ this whole `/ag-closeout-audit` rollout — self-referential, included for compl
 (plan-quality four-line-of-defense architecture: task_template/QG hygiene/reconcile skills) ·
 [issues/reference_path_convention_2026_07_23.md](/plans/active/issues/reference_path_convention_2026_07_23.md)
 (cross-reference leading-slash path convention rollout) ·
-[l0_doc_index_generator_2026_06_24.md](/plans/active/l0_doc_index_generator_2026_06_24.md) (L0 doc-index generator +
-FF-cron auto-regen) · `task_template.md` (the plan-authoring template/rules doc itself) ·
+[l0_doc_index_generator_2026_06_24.md](/plans/archive/2026_07/l0_doc_index_generator_2026_06_24.md) (ARCHIVED 2026-07-27
+— 2 remaining items migrated to `infra_satellite_ao_dispatch_batch1_2026_07_26.md`; L0 doc-index generator + FF-cron
+auto-regen) · `task_template.md` (the plan-authoring template/rules doc itself) ·
 [codex_vs_repo_docs_ssot_audit_2026_06_01.md](/plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md) (generic "audit
 all active repo docs vs codex SSOT" hygiene) ·
 [issues/human_led_audit_pool_2026_05_21.md](/plans/archive/issues/human_led_audit_pool_2026_05_21.md) (archived
@@ -133,7 +137,7 @@ operator's original catalogue/process doc for background-agent-driven issue reme
 (code-fixable-items sweep across the issue-doc backlog) ·
 [issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md](/plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md)
 (plan-hygiene tooling migration: prek + fold-to-QG + agentic contradiction resolution) ·
-[issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md](/plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md)
+[issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md](/plans/archive/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md)
 (stale codex pointer + abandoned INDEX.md drift findings from the daily plan-reconciler) ·
 [issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md](/plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md)
 (generic UI e2e test-helper `?persona=` bug, unrelated to any AG/AO/CI concern).
@@ -221,7 +225,7 @@ phases ship.
   `tradfi_consolidated_closeout_2026_07_18.md:196-197`, the `vm_log_archival_scheduler.tf` apply already landed
   (`deployment-service@3cd0b1d`, verified 2026-07-07), and 4 DeFi items are already claimed by defi batches 1/3/4. Also
   measured and reported (not fixed here — reconcile's territory):
-  [utl_uac_reuse_consolidation_remediation_2026_06_10.md](/plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md)'s
+  [utl_uac_reuse_consolidation_remediation_2026_06_10.md](/plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md)'s
   25 open boxes are almost certainly false-unchecked residue of its 2026-07-13 AO split — all 10 split children are now
   archived with 0 open todos, and its still-open Phase-9 registry-extract box is contradicted by
   `unified_trading_library/deployment_registry.py` existing and being exported at `__init__.py:695`. Exit gate

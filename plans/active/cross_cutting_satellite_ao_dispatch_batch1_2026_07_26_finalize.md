@@ -70,13 +70,16 @@ drift_direction: advance-code
 - [ ] [DOC] P2. **Action the 6 remaining mistags + 2 archivable_now docs found during Phase 0/1** (was 7 mistags;
       `shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` resolved + archived to
       `plans/archive/issues/shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` in the 2026-07-26 terminal-status sweep — no
-      retag needed, drop it from this list). (1) Retag the 2 genuinely single-AG docs
-      (`plans/active/issues/empty_reprobe_disagreement_2026_06_22.md` → `[defi]`,
-      `plans/active/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` → `[cefi]`) and the 4 remaining
-      genuinely infra-scoped docs (`plans/active/bucket_fold_ml_2026_07_17.md`,
+      retag needed, drop it from this list). **CORRECTED 2026-07-27 (`/plan-vintage-audit` archival pass)**: 2 of the
+      named docs are now MOOT — `empty_reprobe_disagreement_2026_06_22.md` and
+      `live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` are both fully archived (
+      `/plans/archive/issues/empty_reprobe_disagreement_2026_06_22.md`,
+      `/plans/archive/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md`) — no retag needed, drop both from
+      this list. `monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` is ALSO now fully archived
+      (`/plans/archive/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md`) — drop it too. (1) Retag
+      the remaining 3 genuinely infra-scoped docs (`plans/active/bucket_fold_ml_2026_07_17.md`,
       `plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md`,
-      `plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md`,
-      `plans/active/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` → `[infra]` or fold into
+      `plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md` → `[infra]` or fold into
       `infra_consolidated_closeout_2026_07_25.md`'s Sources list per that doc's own convention) — read each doc's real
       content first to confirm before retagging (do not blind-apply), then re-run
       `scripts/plan-hygiene/check_ag_closeout_linkage.py` after each retag. (2) Archive

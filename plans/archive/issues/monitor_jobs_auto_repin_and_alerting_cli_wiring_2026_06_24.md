@@ -4,7 +4,7 @@ title: Monitor-job auto-re-pin gap + alerting-CLI wiring finalization (2026-06-2
 summary:
   Resolving the residual deadman alerts surfaced two infra-hygiene gaps. The CODE/TF durable fixes are **shipped**; this
   doc tracks the remaining finalization + the one real standing gap.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -27,6 +27,13 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-27
 ---
+
+> **✅ ARCHIVED (archived 2026-07-27)** — All 5 todos done. Build `2ea305e9` (full id
+> `2ea305e9-483c-4665-a78d-93d01ef8295d`, `deployment-api-main-deploy`, commit `21d6858`) verified SUCCESS via
+> `gcloud builds describe`. `alerting-service@e111843` confirmed ancestor of `origin/main`. Live
+> `uts-prod-alerting-paging` Cloud Run job verified running the durable `python -m alerting_service.cli.main` command
+> (not the `-c` bridge), matching `deployment-service/terraform/gcp/audit03_cron_provisioning.tf`. Per
+> `/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §2.
 
 ## What I found
 
@@ -115,12 +122,13 @@ re-pin — the exact manual toil that made this incident's coordination fragile.
       `gcloud run jobs execute     uts-prod-monitoring-deadman --wait` on the freshly-repinned image completed cleanly:
       `Execution completed successfully in 44.81s`. The redeploy-monitor-jobs auto-repin is now proven live end-to-end;
       item 1's original "CONFIG DONE" claim is retroactively corrected — it was NOT actually working until this fix.
-- [ ] [INFRA] P2. **Finalize the alerting-CLI durable command**: the `__main__` guard IS in `alerting-service:latest`
-      (verified 2026-06-24) but NOT yet confirmed on alerting-service's _main_ — so switching the job to
-      `python -m alerting_service.cli.main` (which re-pins `:latest`) risks the same caveat-#2 regression on the next
-      main build. HELD until `alerting-service@e111843` is verified on main; the `-c` bridge is live + draining the
-      backlog in the meantime (safe, image-agnostic). Then `gcloud run jobs update` / `tofu apply`
-      `alerting_paging_job` + drop the bridge.
+- [x] ✅ [INFRA] P2. **Finalize the alerting-CLI durable command — VERIFIED DONE (2026-07-28)**:
+      `alerting-service@e111843` confirmed ancestor of `origin/main` (`git merge-base --is-ancestor` YES). Live Cloud
+      Run job `uts-prod-alerting-paging` (asia-northeast1) inspected directly (`gcloud run jobs describe`): runs the
+      durable `command=["python","-m","alerting_service.cli.main"]` `args=["--operation","alerts","--mode","live"]` —
+      the `-c` bridge is gone. Label `run.googleapis.com/lastUpdatedTime=2026-07-12T22:00:00Z`, `managed-by=terraform`.
+      Confirmed matching `deployment-service/terraform/gcp/audit03_cron_provisioning.tf` (`module.alerting_paging_job`,
+      lines ~705-730): identical `command`/`args`. All 5 todos in this doc now done.
 - [x] ✅ [INFRA] P3. **dp-meta 16Gi + wave-launcher path/memory durable**. Runtime already correct (gcloud). tf made
       durable: `data_pipeline_fleet_monitor_scheduler.tf` carries dp-meta 16Gi/cpu4; `wave_launcher_scheduler.tf` memory
       `4Gi->8Gi` shipped — deployment-service@`fd083ba` (dirty-deps carve-out; UAC had foreign mvp_scope WIP). **No

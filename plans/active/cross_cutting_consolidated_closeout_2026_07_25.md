@@ -369,11 +369,13 @@ items + 2 needing an owner design call + 1 large repo-wide sweep).
 already-shipped fixes — verify before re-dispatching), `issues/fleet_audit_triad_deferred_followups_2026_06_01.md`
 (**explicit operator "let it be" — exclude from dispatch**), `issues/fleet_data_acquisition_health_2026_06_21.md`
 (mostly done; small residuals: sports ODDS_API recheck, footystats 0-byte log check, a `book_snapshot` key-mismatch
-fix), `issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` (mostly done; one substantial open item — run the
-HL/ASTER batch launcher over the 2023→26/2024→26 ranges, 48.5k `attempted_failed` cells, code proven, backfill not yet
-run), `issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` (1/4 done; 2 bounded verify/config items),
-`issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` (nearly all done; 1 bounded terraform-image-sync item + 1
-tradfi OOM fix blocked-on-land by a concurrent dirty-dep conflict).
+fix), `/plans/archive/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` (ARCHIVED 2026-07-27, both
+architecture asks shipped+proven; the backfill-over-full-ranges ask absorbed via the archived
+`mvp_backfill_cefi_tick_v10_2026_06_27.md` → `cefi_completion_program_2026_07_15.md`; ongoing HL/ASTER batch-gap work
+continues in `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`),
+`/plans/archive/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` (ARCHIVED 2026-07-27, all 5/5
+done), `issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` (nearly all done; 1 bounded terraform-image-sync
+item + 1 tradfi OOM fix blocked-on-land by a concurrent dirty-dep conflict).
 
 **Excluded (mistag, fixed 2026-07-25)**: `issues/features_service_defi_data_loading_blockers_2026_05_29.md` — its own
 `master:` field names `defi_manifest_canonicalisation_2026_06_01.md` as owner; retagged `[defi]`, route to the DeFi

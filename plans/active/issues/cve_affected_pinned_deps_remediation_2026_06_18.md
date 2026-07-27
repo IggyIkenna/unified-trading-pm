@@ -13,8 +13,8 @@ scope: [engineer, admin]
 tags: [cve, quality-gates, infrastructure, verification, consolidation]
 related:
   [
-    /plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
-    /plans/active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md,
+    /plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
+    /plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md,
   ]
 created: 2026-06-18
 parent_epic: infrastructure_master
@@ -67,14 +67,14 @@ The fleet carries a **sanctioned `--ignore-vuln` block of 20 advisory IDs** in
 `scripts/quality-gates-base/base-service.sh` + `base-library.sh`. These are deps held at a CVE-affected version because
 a **blocker** (usually a transitive dep, sometimes a genuinely-unreleased fix) prevents the upgrade. Categorized:
 
-| Group                                    | Advisories                                                                                           | Blocker / reason                                                                                                        | Resolvable now?                                                                                                                                                                                                                                     |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **aiohttp ≤3.13.5** (cookie-CVE cluster) | CVE-2026-34993, -47265, -50269, -54273, -54274, -54275, -54276, -54277, -54278, -54279, -54280 (~11) | **vcrpy 8.1.1** doesn't support aiohttp 3.14.0 (3.14 removed `AsyncStreamReaderMixin`) → caps `aiohttp<3.14` fleet-wide | **MAYBE — vcrpy 8.2.1 now released** (pulled by the 1.5b --upgrade). CHECK if 8.2.1 supports aiohttp 3.14; if yes → lift the cap + bump aiohttp 3.14.0 + drop these ~11 ignores. SSOT: `issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` |
-| **pip**                                  | CVE-2026-3219, CVE-2026-6357, PYSEC-2026-196                                                         | pip < 26.1 (and a 26.1.1 console-scripts issue)                                                                         | **Likely yes** — bump the CI/base pip floor to a patched release; re-validate.                                                                                                                                                                      |
-| **starlette ≤1.1.0**                     | CVE-2026-54283, -54282                                                                               | transitive via fastapi (fastapi pins starlette)                                                                         | bump fastapi to a release that pins a patched starlette; transitive → "speed>security WARN" today                                                                                                                                                   |
-| **cryptography ≤46.0.7**                 | GHSA-537c-gmf6-5ccf                                                                                  | wheels statically link an OpenSSL with a CVE; transitive pin                                                            | re-check for a wheel with a patched OpenSSL; "speed>security WARN" today                                                                                                                                                                            |
-| **idna 3.11**                            | CVE-2026-45409                                                                                       | no patched release as of 2026-05-22                                                                                     | likely still no-fix — re-check upstream                                                                                                                                                                                                             |
-| **(workspace-global)**                   | CVE-2026-4539                                                                                        | no-fix-version (reviewed 2026-05-20)                                                                                    | re-check upstream                                                                                                                                                                                                                                   |
+| Group                                    | Advisories                                                                                           | Blocker / reason                                                                                                        | Resolvable now?                                                                                                                                  |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **aiohttp ≤3.13.5** (cookie-CVE cluster) | CVE-2026-34993, -47265, -50269, -54273, -54274, -54275, -54276, -54277, -54278, -54279, -54280 (~11) | **vcrpy 8.1.1** doesn't support aiohttp 3.14.0 (3.14 removed `AsyncStreamReaderMixin`) → caps `aiohttp<3.14` fleet-wide | **RESOLVED 2026-07-27** — see the DONE entry below; SSOT: `/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (ARCHIVED) |
+| **pip**                                  | CVE-2026-3219, CVE-2026-6357, PYSEC-2026-196                                                         | pip < 26.1 (and a 26.1.1 console-scripts issue)                                                                         | **Likely yes** — bump the CI/base pip floor to a patched release; re-validate.                                                                   |
+| **starlette ≤1.1.0**                     | CVE-2026-54283, -54282                                                                               | transitive via fastapi (fastapi pins starlette)                                                                         | bump fastapi to a release that pins a patched starlette; transitive → "speed>security WARN" today                                                |
+| **cryptography ≤46.0.7**                 | GHSA-537c-gmf6-5ccf                                                                                  | wheels statically link an OpenSSL with a CVE; transitive pin                                                            | re-check for a wheel with a patched OpenSSL; "speed>security WARN" today                                                                         |
+| **idna 3.11**                            | CVE-2026-45409                                                                                       | no patched release as of 2026-05-22                                                                                     | likely still no-fix — re-check upstream                                                                                                          |
+| **(workspace-global)**                   | CVE-2026-4539                                                                                        | no-fix-version (reviewed 2026-05-20)                                                                                    | re-check upstream                                                                                                                                |
 
 ## Why it matters
 
@@ -139,9 +139,12 @@ gate is satisfied.
       `canonical-dependency-manifest.json` + each pyproject; all shipped to LDR + drained to staging (v2 green);
       CLAUDE.md KNOWN-EXCEPTION block rewritten (cap LIFTED). GHSA-rpj2 ignore dropped (8.2.1 fixes it).
       **execution-service held on 3.13.5 via `[tool.uv] override`** (aioresponses 0.7.8 can't build aiohttp-3.14
-      ClientResponse) → the 11 aiohttp ignores are retained ONLY for it; drop them when it migrates →
-      `issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`. Repo: unified-trading-pm + 18
-      aiohttp repos. SSOT: `issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (RESOLVED banner).
+      ClientResponse) → the 11 aiohttp ignores were retained ONLY for it; **UPDATE 2026-07-27: migration DONE**
+      (execution-service@`9ce159a7`, all 11 ignores dropped fleet-wide) —
+      `/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md` (ARCHIVED). Repo:
+      unified-trading-pm + 18 aiohttp repos. SSOT:
+      `/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (ARCHIVED 2026-07-27, RESOLVED
+      banner).
 - [ ] [SCRIPT] P3. **pip floor bump.** Bump the CI/base pip floor to a patched release (CVE-2026-3219 / -6357 /
       PYSEC-2026-196), re-validate, drop those 3 ignores. Repo: unified-trading-pm.
 - [ ] [SCRIPT] P3. **cryptography / idna / CVE-2026-4539 re-check.** Re-check upstream for patched releases; lift where
@@ -154,5 +157,6 @@ gate is satisfied.
 ## Composes with
 
 - `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 1.5 (the uv work this is gated on)
-- `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (the canonical aiohttp instance)
+- `/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (the canonical aiohttp instance, ARCHIVED
+  2026-07-27)
 - CLAUDE.md "Speed > security (operator 2026-06-12): transitive CVEs WARN not block" + the aiohttp KNOWN-EXCEPTION block

@@ -647,7 +647,7 @@ SSOT: `plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md`.
 A `cloudbuild.yaml` step that auto-repins a downstream Cloud Run resource (e.g. `redeploy-monitor-jobs` re-pinning the 4
 `dp-*` monitor jobs to a freshly-pushed `:latest`, `deployment-api/cloudbuild.yaml`) assumes every build it fires from
 is a **real, reachable commit**. A `main` force-sync breaks that assumption twice (found during the 2026-06-24 incident,
-`plans/active/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md`):
+`/plans/archive/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md`, archived 2026-07-27):
 
 1. It **orphans the in-flight CI commit** — the deploy trigger builds a now-nonexistent SHA → a BAD image gets pushed to
    `:latest`, and an auto-repin step would happily re-pin production jobs onto that bad image.

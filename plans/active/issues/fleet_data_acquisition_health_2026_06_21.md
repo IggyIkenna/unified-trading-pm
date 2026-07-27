@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [mtds, live-trading, cefi, defi, data-quality, uac, monitoring]
 related:
   [
-    plans/active/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md,
+    /plans/archive/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md,
     plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
     /codex/02-data/pipeline-mode-partition.md,
   ]
@@ -196,12 +196,13 @@ primary; mirrors the pre-existing `aster`-in-`derivative_ticker` registration). 
       confirms `get_expected_instruments_for_venue("HYPERLIQUID", "liquidations") == []`, expect-nothing/no-crash
       semantics). `quality-gates.sh` green (full suite, 3570+ tests). Evidence: `unified-api-contracts@2088324c`.
 
-**Correction to issue `live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` §2 (STALE PREMISE):** that doc says the
-cefi download "STRIPS HL/ASTER (they're defi in VENUE_TO_ASSET_GROUP)." **Verified 2026-06-21: `VENUE_TO_ASSET_GROUP`
-now resolves `HYPERLIQUID`→`cefi` and `ASTER`→`cefi`** (post UAC 0.30.0 — NOT defi). So the strip premise is stale; the
-actual 48.5k-cell `attempted_failed` cause needs fresh diagnosis (and the **defi lane is actively running on HL S3
-data** → a blind cefi HL/ASTER batch could collide — diagnose-first, not blind-execute). First-run chain now 8 bugs:
-…instrument-id-buffer-key · capture-schema-validation(bug#7) · source-registration(bug#8).
+**Correction to issue `/plans/archive/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` §2 (ARCHIVED
+2026-07-27, STALE PREMISE at time of writing):** that doc says the cefi download "STRIPS HL/ASTER (they're defi in
+VENUE_TO_ASSET_GROUP)." **Verified 2026-06-21: `VENUE_TO_ASSET_GROUP` now resolves `HYPERLIQUID`→`cefi` and
+`ASTER`→`cefi`** (post UAC 0.30.0 — NOT defi). So the strip premise is stale; the actual 48.5k-cell `attempted_failed`
+cause needs fresh diagnosis (and the **defi lane is actively running on HL S3 data** → a blind cefi HL/ASTER batch could
+collide — diagnose-first, not blind-execute). First-run chain now 8 bugs: …instrument-id-buffer-key ·
+capture-schema-validation(bug#7) · source-registration(bug#8).
 
 ### Follow-up finding (P2, cefi-lane 2026-06-21) — `book_snapshot` vs `book_snapshot_5` SOURCE_PRIORITY key mismatch
 
