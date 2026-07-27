@@ -243,11 +243,27 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
       `tests/multi_timeframe/unit/test_cli_main.py` assert the CLI-provided `--end-date` reaches the batch handler (not
       `date.today()`), that `--end-date` wins when both are given, and that the `--date`-only back-compat path still
       works. Full `quality-gates.sh` green (17945 passed, exit 0) before ship.
-- [ ] [SCRIPT] P1. **Root cause C** — either chunk/stream the `regime_detection` HMM fit for `cross_instrument` (CEFI
+- [x] [SCRIPT] P1. **Root cause C** — either chunk/stream the `regime_detection` HMM fit for `cross_instrument` (CEFI
       has ~589 instruments per the recent universe-filter fix; 4,476 columns is a wide feature matrix) or size the
       launcher's VM up for this family/AG, and/or add a memory-budget guard before the fit rather than letting the OS
       OOM-kill it silently. Repo: features-service. **Done when**: a from-scratch `cross_instrument` CEFI force-leg run
-      completes without an OOM kill.
+      completes without an OOM kill. — ✅ features-service@9ed3d59e. Root cause was NOT primarily raw matrix size —
+      `_load_parquets_concat` row-stacks EVERY instrument's own candle series into one frame before dispatch, and
+      `RegimeCalculator._calculate_features` ran the O(n²) expanding-window HMM walk-forward across that whole
+      concatenated multi-instrument blob with no `group_by("instrument_id")` split (unlike
+      `PolymarketTemporalCalculator`/`PolymarketWhaleActivityCalculator`, which already loop per entity). That fits an
+      artificial price/return discontinuity at every instrument boundary (destabilising the covariance —
+      `'covars' must be symmetric, positive-definite`) AND turns one 115,584-row O(n²) fit into the OOM driver instead
+      of ~589 independent ~196-row fits (≈566× less walk-forward work). Fix: split by `instrument_id`, run each
+      instrument's own contiguous series independently through the existing single-series pipeline, concatenate results
+      back (`features_service/cross_instrument/app/calculators/regime_calculator.py`). Regression test added
+      (`tests/cross_instrument/unit/test_regime_calculator.py::test_regime_calculator_multi_instrument_no_cross_contamination`)
+      proves a batch result's rows for one instrument are byte-identical to computing that instrument alone — i.e. no
+      cross-instrument leakage into `regime_hmm_state`/`regime_volatility`/`time_in_regime`/`regime_changed`. Full
+      `quality-gates.sh` green (all existing regime/cross_instrument tests unchanged/passing) before ship. A live
+      from-scratch VM force-leg re-run against real CEFI data (the literal "done when" proof) is deferred to the
+      already-tracked re-verification todo below (P2, "re-run `/data-pipeline-check-features` for the affected 6
+      shards") rather than duplicated here.
 - [ ] [SCRIPT] P1. **Root cause D** — (a) propagate `MANIFEST_ALLOW_STALE_FALLBACK` (or an equivalent recovery flag) to
       the remote VM's environment the same way the local driver sets it for itself, so the two sides have consistent
       staleness tolerance; (b) separately, check why `features-sports-test-central-element-323112`'s manifest
@@ -308,3 +324,9 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   updated, `tests/commodity/unit/{test_sources,test_sources_extra,test_schema_robustness}.py` updated — 340/340
   commodity tests green. EIA adapter code untouched (scaffold stays per external-data-always-available rule) —
   registering `eia-api-key` and wiring it into `eia_ng.py`/`eia_crude.py` remains open, not actioned this session.
+- 2026-07-27 (slot-4): fixed Root cause C — `features-service@9ed3d59e`. Traced the OOM to the batch handler
+  concatenating every CEFI instrument's candle series into one frame (`_load_parquets_concat`) and `RegimeCalculator`
+  running its O(n²) expanding-window HMM walk-forward across that whole unpartitioned blob (no
+  `group_by("instrument_id")`, unlike the sibling polymarket calculators). Split the HMM fit per `instrument_id`;
+  regression test proves no cross-instrument leakage. Full `quality-gates.sh` green. Live from-scratch VM verification
+  against real CEFI data is left to the existing P2 re-verification todo, not duplicated here.
