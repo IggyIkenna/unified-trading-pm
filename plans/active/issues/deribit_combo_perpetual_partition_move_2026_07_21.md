@@ -314,6 +314,19 @@ rather than via a second venue label) — which would need to land together with
 not after. Flagging for whoever picks up either piece of work to cross-check with the other before landing; not decided
 or implemented here.
 
+## 8a. Same mechanism's OTHER symptom — the "FUTURE row requires 'expiry_date'" hard-failure population
+
+Traced 2026-07-27 (slot-15) from `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s todo 4: a combo-shaped bare-
+`DERIBIT` symbol that reaches the FUTURE branch (rather than the perpetual/dated-future defaults this doc's §2/§3
+measured) doesn't silently mispartition — `derive_row_instrument_id`'s FUTURE-branch expiry-parsing helpers
+(`parse_deribit_future_symbol` / `_parse_numeric_futures_expiry` / `_parse_month_code_futures_expiry`) all structurally
+fail on a multi-leg combo id, so it raises `ValueError("FUTURE row requires 'expiry_date'")` instead — a hard
+`attempted_failed`, not a silent write. Measured: 4,812 manifest rows / 786 distinct symbols, 100% `venue=DERIBIT`, 100%
+confirmed combo-shaped via the real `is_deribit_combo_symbol_shape()`, and 100% pre-dating `2ddc6d4a` (max
+`attempted_at` 2026-07-21T11:47Z, the fix shipped 2026-07-22T18:28Z) — zero recurrence since. **Same root cause, same
+fix, already resolved by the §9 `[WRITER] P1` guard-widen** — no separate code action needed. The 786-symbol historical
+backlog remains an unretried capture gap (normal backfill re-attempt, not a code change).
+
 ## 9. Todos
 
 - [x] [DESIGN] P1. **DONE 2026-07-27 (slot-15)** — Cross-checked this doc's root-cause fix (§3, §6) against the

@@ -401,9 +401,41 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
       ~7.5M-row scale) — NOT reporting this as a real finding. **Recommendation**: if a fresh post-N=1-cap
       attempted_failed/403 census is still wanted, scope it as a NEW todo against the current architecture (not a
       "close" of this now-moot lease-era one).
-- [ ] [DATA] P1. Trace the fresh (2026-07-21) `"FUTURE/OPTION row requires 'expiry_date'"` recurrence
-      (DERIBIT/COINBASE-FUTURES/BITFINEX-FUTURES/OKX-FUTURES) to specific symbols via the real run.log; confirm or rule
-      out the DERIBIT-combo-symbol hypothesis; file/extend an issue doc once traced.
+- [x] [DATA] P1. **DONE 2026-07-27 (slot-15)** — Traced the fresh (2026-07-21) `"FUTURE row requires 'expiry_date'"`
+      recurrence to specific symbols via a bounded, column-projected manifest read (no VM, no corpus walk; `venue`,
+      `instrument_type`, `data_type`, `instrument_id`, `capture_status`, `error_reason`, `attempted_at` columns only).
+      **Two corrections to the finding above, plus the hypothesis CONFIRMED (not just plausible):** 1. **Venue-breakdown
+      correction.** The `error_reason` column IS the specific per-row cause — filtering the whole
+      `book_snapshot_5`+`trades` manifest for `error_reason` literally containing `"expiry_date"` returns **4,812 rows,
+      100% `venue=DERIBIT`, 100% `instrument_type=FUTURE`, 0 rows on any other venue and 0 rows with the `OPTION`
+      variant of the message, ever.** The earlier finding's venue table
+      (`COINBASE-FUTURES 189, COINBASE-SPOT 185, BITFINEX-FUTURES 104, OKX-FUTURES 5`) was **not** the expiry_date bug's
+      venue distribution — its own caveat said so ("venue counts are for the whole 4,666-row recent slice, both error
+      types") but the surrounding prose read as if those venues shared this specific defect. They do not: those venues'
+      rows in the same time window carry unrelated causes (measured separately: `Resolver requires aiodns library` 791,
+      `UNCLASSIFIED:404 GET https` 368, `Tardis HTTP 500` 344, `Tardis HTTP 403 code=274 concurrent-IP-lock` 200,
+      `UNCLASSIFIED:UpstreamTimestampBiasError` 150 — a different, already-covered mix, not this todo's scope). 2.
+      **Symbol-level trace — the manifest's own `instrument_id` column IS the failing raw symbol.** For an
+      `attempted_failed` row, `instrument_id` carries the raw wire symbol (id-resolution never completed), e.g.
+      `BTC-CS-25DEC26-110000_120000`, `BTC-FS-25DEC26_13FEB26`, `BTC-CBUT-26JUN26-75000_90000_100000` — read directly,
+      no run.log needed. **786 distinct failing symbols. Ran the real `is_deribit_combo_symbol_shape()` classifier (not
+      a re-implemented regex) against all 786: 786/786 = 100% combo-shaped.** The DERIBIT-combo hypothesis in the
+      finding above is CONFIRMED, not merely plausible. 3. **Already fixed, zero recurrence since.** Max `attempted_at`
+      across all 4,812 expiry_date rows is `2026-07-21T11:47:18Z` — the day BEFORE `market-tick-data-service@2ddc6d4a`
+      (2026-07-22T18:28:09Z, the `deribit_combo_perpetual_partition_move_2026_07_21.md` §9 `[WRITER] P1` guard-widen,
+      independently re-verified earlier this same session) shipped. Zero rows with `attempted_at` on or after the fix.
+      This is the SAME mechanism and SAME fix as that doc's root cause (a combo-shaped bare-`DERIBIT` symbol falling
+      through to the `FUTURE`-branch's expiry-parsing helpers, all of which structurally cannot extract a single expiry
+      from a multi-leg combo id) — the guard-widen hoists `is_deribit_combo_symbol_shape` above that branch, so a combo
+      symbol is now classified `COMBO` before ever reaching the code that raised. **No new issue doc needed** —
+      extending `deribit_combo_perpetual_partition_move_2026_07_21.md` with a cross-link is sufficient (added there);
+      this is not a new mechanism, it is the same one's OTHER symptom (a hard write failure via `ValueError`, vs that
+      doc's silent mispartition via a passthrough). 4. **Residual, unfixed by the guard-widen**: this HISTORICAL backlog
+      of 786 symbols × up to ~35 days each (4,812 `attempted_failed` rows) is still sitting in the manifest as permanent
+      capture gaps — the guard-widen only stops the bug from recurring going forward; it does not retry the historical
+      failures. Retrying them is a normal backfill re-attempt (idempotent, no code change needed) — not filed as a
+      separate todo here since it is the same "historical poisoned rows never retried" class already named in this doc's
+      own § "Is this one root cause or several?" item 1, not a new gap.
 - [ ] [REVIEW] P2. Decide (operator/alerting-service owner) whether `DP_RUN_MOSTLY_EMPTY` should distinguish "static,
       already-tracked backlog" from "fresh failure" to avoid indefinite 30-min CRITICAL re-paging on a known issue.
 - [ ] [DATA] P3. If pursued, a targeted historical run.log pull to attribute the `VENUE_FETCH_FAILED` bucket's original
