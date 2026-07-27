@@ -106,7 +106,7 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       commission rate table in-repo, only IBKR's live `commissionReport` callback field) and `FeeComponent.CLEARING` (0
       entries — no CME/ICE/Deribit/CBOE clearing-fee constant in-repo) stay honest-empty; every entry carries
       `tier="base"` only (no volume/VIP fee-tier schedule exists in-repo, unlike margin's sibling
-      `cefi_margin_tiers.py`). Also fixed stale doc-drift in `codex/09-strategy/architecture-v2/capability-wizard.md`
+      `cefi_margin_tiers.py`). Also fixed stale doc-drift in `/codex/09-strategy/architecture-v2/capability-wizard.md`
       (line 115 said fees was still "honest-empty") and `capability-wizard-question-bank.md` (fee-stack question status
       `gap`→`partial`; the three sibling collateral-registry questions were ALSO stale `gap` despite
       `collateral_registry.py`'s 2026-06-12 backfill — fixed those to `registry` too, broker question stays `gap`).
