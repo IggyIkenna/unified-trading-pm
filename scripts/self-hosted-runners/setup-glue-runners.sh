@@ -40,7 +40,18 @@
 #
 # Tunables (env): GLUE_COUNT (5) · WRITER_COUNT (3) · RUNNER_BASE (/opt/github-glue-runners) ·
 #   OWNER (IggyIkenna) · REPO (unified-trading-pm) · RUNNER_VERSION · GCP_PROJECT (optional, pairs
-#   with GH_TOKEN_SECRET) · GH_TOKEN_SECRET | GH_PAT (admin token — see above)
+#   with GH_TOKEN_SECRET) · GH_TOKEN_SECRET | GH_PAT (admin token — see above) · POOL_TAG (see below)
+#
+# POOL_TAG — run a SECOND (THIRD, ...) independent pool on this same host for a DIFFERENT repo,
+# without touching PM's pool at all (qg_backfill... no — this is
+# github_actions_operator_gated_followups_2026_07_17.md's "setup-glue-runners.sh cannot safely
+# register a second repo's runner pool" P0 finding). Default empty ⇒ every path/name below is
+# BYTE-IDENTICAL to before this existed (ENV_FILE/RUNNER_BASE/unit names all unchanged) — zero
+# behavior change for PM. Set POOL_TAG=<slug> (e.g. `ao`) and this pool's ENV_FILE, RUNNER_BASE
+# default, and all six systemd unit names get a `-<slug>` suffix, so a second `install` with a
+# different POOL_TAG is ADDITIVE (new files/units) rather than overwriting PM's live pool — the
+# exact clobber the P0 finding warned about (PM's glue-N/writer-N re-reading a rewritten shared
+# ENV_FILE on their next JIT restart, minutes away).
 set -euo pipefail
 
 OWNER="${OWNER:-IggyIkenna}"
@@ -49,12 +60,30 @@ REPO="${REPO:-unified-trading-pm}"
 # fire ~24 repos at once). The ephemeral pool absorbs the ~37 low-frequency movers.
 GLUE_COUNT="${GLUE_COUNT:-5}"
 WRITER_COUNT="${WRITER_COUNT:-3}"
-RUNNER_BASE="${RUNNER_BASE:-/opt/github-glue-runners}"
 RUNNER_VERSION="${RUNNER_VERSION:-2.335.1}"
 RUNNER_SHA256="${RUNNER_SHA256:-4ef2f25285f0ae4477f1fe1e346db76d2f3ebf03824e2ddd1973a2819bf6c8cf}" # linux-x64 2.335.1
 RUNNER_USER="${RUNNER_USER:-ubuntu}"
-ENV_FILE="/etc/github-glue-runner.env"
 UNIT_DIR="/etc/systemd/system"
+
+POOL_TAG="${POOL_TAG:-}"
+_TAG_SUFFIX="${POOL_TAG:+-${POOL_TAG}}"
+RUNNER_BASE="${RUNNER_BASE:-/opt/github-glue-runners${_TAG_SUFFIX}}"
+ENV_FILE="${ENV_FILE:-/etc/github-glue-runner${_TAG_SUFFIX}.env}"
+# Every systemd unit name this script installs/enables/tears down — ALL derived from ONE prefix per
+# base name, so a POOL_TAG can never make two of these agree by accident (the exact bug class this
+# fix exists to close: names/paths computed independently, one updated and one forgotten).
+RUNNER_UNIT_PREFIX="github-glue-runner${_TAG_SUFFIX}"
+SLOT_REFRESH_PREFIX="github-glue-slot-refresh${_TAG_SUFFIX}"
+TOKEN_REFRESH_PREFIX="github-glue-token-refresh${_TAG_SUFFIX}"
+SLICE_NAME="${RUNNER_UNIT_PREFIX}.slice"
+TEMPLATE_UNIT="${RUNNER_UNIT_PREFIX}@.service"
+SLOT_REFRESH_SERVICE="${SLOT_REFRESH_PREFIX}.service"
+SLOT_REFRESH_TIMER="${SLOT_REFRESH_PREFIX}.timer"
+TOKEN_REFRESH_SERVICE="${TOKEN_REFRESH_PREFIX}.service"
+TOKEN_REFRESH_TIMER="${TOKEN_REFRESH_PREFIX}.timer"
+# The runtime (tmpfs) dir name happens to share the runner-unit prefix — same "github-glue-runner"
+# root the token cache has always lived under, just pool-tagged like everything else.
+RUNTIME_DIR_NAME="${RUNNER_UNIT_PREFIX}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARBALL="actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
 URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${TARBALL}"
@@ -442,29 +471,55 @@ cmd_install() {
     printf 'GH_TOKEN=%s\n' "${GH_PAT}" > "${ENV_FILE}"
   fi
   printf 'OWNER=%s\nREPO=%s\nRUNNER_BASE=%s\n' "${OWNER}" "${REPO}" "${RUNNER_BASE}" >> "${ENV_FILE}"
+  # GH_TOKEN_FILE/GLUE_GCLOUD_CONFIG: glue-runner-run.sh's OWN defaults point at PM's shared
+  # /opt/github-glue-runners paths (see its `${VAR:=...}` fallbacks) — a second pool MUST override
+  # both explicitly here or it would silently read PM's token cache / gcloud identity instead of its
+  # own. github-glue-runner@.service has no other path to these two (only EnvironmentFile=${ENV_FILE}
+  # reaches it), so this is the ONE place they are set for that unit.
+  printf 'GH_TOKEN_FILE=/run/%s/gh_token\nGLUE_GCLOUD_CONFIG=%s/.gcloud\n' "${RUNTIME_DIR_NAME}" "${RUNNER_BASE}" >> "${ENV_FILE}"
   chmod 0600 "${ENV_FILE}"
   log "wrote ${ENV_FILE} (0600) — $([ -n "${GH_TOKEN_SECRET:-}" ] && echo 'secret NAME only, no credential on disk' || echo 'contains a literal PAT')"
 
-  # 6) systemd slice + template unit + slot-refresh timer
-  install -m 0644 "${HERE}/github-glue-runner.slice"          "${UNIT_DIR}/github-glue-runner.slice"
-  install -m 0644 "${HERE}/github-glue-runner@.service"       "${UNIT_DIR}/github-glue-runner@.service"
-  install -m 0644 "${HERE}/github-glue-slot-refresh.service"  "${UNIT_DIR}/github-glue-slot-refresh.service"
-  install -m 0644 "${HERE}/github-glue-slot-refresh.timer"    "${UNIT_DIR}/github-glue-slot-refresh.timer"
+  # 6) systemd slice + template unit + slot-refresh timer — RENDERED (sed-substituted), not a byte
+  # copy: the checked-in templates hardcode PM's paths/names, and POOL_TAG needs those swapped for a
+  # second pool's own RUNNER_BASE/ENV_FILE/SLICE_NAME/runtime-dir. With POOL_TAG empty every
+  # substitution is a same-value no-op, so PM's installed units are BYTE-IDENTICAL to before this
+  # existed — verified via `diff` against a pre-change install, see the plan's evidence entry.
+  render_unit() {
+    sed \
+      -e "s#/opt/github-glue-runners#${RUNNER_BASE}#g" \
+      -e "s#/etc/github-glue-runner\\.env#${ENV_FILE}#g" \
+      -e "s#github-glue-runner\\.slice#${SLICE_NAME}#g" \
+      -e "s#/run/github-glue-runner/#/run/${RUNTIME_DIR_NAME}/#g" \
+      -e "s#RuntimeDirectory=github-glue-runner\$#RuntimeDirectory=${RUNTIME_DIR_NAME}#" \
+      -e "s#Before=github-glue-runner@\\.service#Before=${TEMPLATE_UNIT}#" \
+      -e "s#Environment=GH_TOKEN_SECRET=GH_PAT#Environment=GH_TOKEN_SECRET=${GH_TOKEN_SECRET:-GH_PAT}#" \
+      -e "s#Environment=GCP_PROJECT=central-element-323112#Environment=GCP_PROJECT=${GCP_PROJECT:-central-element-323112}#" \
+      -e "s#IggyIkenna/unified-trading-pm#${OWNER}/${REPO}#g" \
+      "$1"
+  }
+  render_unit "${HERE}/github-glue-runner.slice"          > "${UNIT_DIR}/${SLICE_NAME}"
+  render_unit "${HERE}/github-glue-runner@.service"       > "${UNIT_DIR}/${TEMPLATE_UNIT}"
+  render_unit "${HERE}/github-glue-slot-refresh.service"  > "${UNIT_DIR}/${SLOT_REFRESH_SERVICE}"
+  render_unit "${HERE}/github-glue-slot-refresh.timer"    > "${UNIT_DIR}/${SLOT_REFRESH_TIMER}"
+  chmod 0644 "${UNIT_DIR}/${SLICE_NAME}" "${UNIT_DIR}/${TEMPLATE_UNIT}" "${UNIT_DIR}/${SLOT_REFRESH_SERVICE}" "${UNIT_DIR}/${SLOT_REFRESH_TIMER}"
   # Token cache refresher — keeps Secret Manager OFF the runner hot path (see refresh-gh-token.sh).
   install -m 0755 "${HERE}/refresh-gh-token.sh"               "${RUNNER_BASE}/refresh-gh-token.sh"
-  install -m 0644 "${HERE}/github-glue-token-refresh.service" "${UNIT_DIR}/github-glue-token-refresh.service"
-  install -m 0644 "${HERE}/github-glue-token-refresh.timer"   "${UNIT_DIR}/github-glue-token-refresh.timer"
+  render_unit "${HERE}/github-glue-token-refresh.service" > "${UNIT_DIR}/${TOKEN_REFRESH_SERVICE}"
+  render_unit "${HERE}/github-glue-token-refresh.timer"   > "${UNIT_DIR}/${TOKEN_REFRESH_TIMER}"
+  chmod 0644 "${UNIT_DIR}/${TOKEN_REFRESH_SERVICE}" "${UNIT_DIR}/${TOKEN_REFRESH_TIMER}"
+  unset -f render_unit
   systemctl daemon-reload
 
   # 7) enable + start both pools, then the refresh timer
   for inst in $(all_instances); do
-    systemctl enable --now "github-glue-runner@${inst}.service"
+    systemctl enable --now "${RUNNER_UNIT_PREFIX}@${inst}.service"
   done
-  systemctl enable --now github-glue-slot-refresh.timer
-  systemctl enable --now github-glue-token-refresh.timer
+  systemctl enable --now "${SLOT_REFRESH_TIMER}"
+  systemctl enable --now "${TOKEN_REFRESH_TIMER}"
   # Seed the cache synchronously: /run is tmpfs, so it is empty right now, and every runner started
   # below would otherwise cold-start against Secret Manager — the exact hot-path call we removed.
-  systemctl start github-glue-token-refresh.service || {
+  systemctl start "${TOKEN_REFRESH_SERVICE}" || {
     echo "WARN: token refresh failed at install; runners will fall back to a direct Secret Manager read" >&2
   }
   log "started ${GLUE_COUNT} ephemeral (glue-*) + ${WRITER_COUNT} long-lived (writer-*) — verify with: $0 status"
@@ -472,10 +527,10 @@ cmd_install() {
 
 cmd_status() {
   log "systemd units:"
-  systemctl --no-pager --type=service list-units 'github-glue-runner@*' || true
+  systemctl --no-pager --type=service list-units "${RUNNER_UNIT_PREFIX}@*" || true
   echo
   log "slot-refresh timer:"
-  systemctl --no-pager list-timers 'github-glue-slot-refresh*' 'github-glue-token-refresh*' || true
+  systemctl --no-pager list-timers "${SLOT_REFRESH_PREFIX}*" "${TOKEN_REFRESH_PREFIX}*" || true
   local stamp="${RUNNER_BASE}/repo.refreshed-at" stamp_val=""
   [ -f "${stamp}" ] && stamp_val="$(tr -dc '0-9' < "${stamp}")"
   # Guard the arithmetic: an empty/garbage stamp would make $(( now - "" )) a fatal syntax error
@@ -492,7 +547,7 @@ cmd_status() {
   fi
   echo
   log "slice resource state:"
-  systemctl --no-pager show github-glue-runner.slice -p CPUQuotaPerSecUSec -p MemoryMax -p MemoryCurrent 2>/dev/null || true
+  systemctl --no-pager show "${SLICE_NAME}" -p CPUQuotaPerSecUSec -p MemoryMax -p MemoryCurrent 2>/dev/null || true
   echo
   local tok
   tok="$(resolve_admin_token)"
@@ -518,13 +573,13 @@ cmd_teardown() {
   [ "$(id -u)" -eq 0 ] || die "teardown must run as root (sudo)"
   local inst
   for inst in $(all_instances); do
-    systemctl disable --now "github-glue-runner@${inst}.service" 2>/dev/null || true
+    systemctl disable --now "${RUNNER_UNIT_PREFIX}@${inst}.service" 2>/dev/null || true
   done
-  systemctl disable --now github-glue-slot-refresh.timer 2>/dev/null || true
-  systemctl disable --now github-glue-token-refresh.timer 2>/dev/null || true
-  rm -f "${UNIT_DIR}/github-glue-runner@.service" "${UNIT_DIR}/github-glue-runner.slice" \
-        "${UNIT_DIR}/github-glue-slot-refresh.service" "${UNIT_DIR}/github-glue-slot-refresh.timer" \
-        "${UNIT_DIR}/github-glue-token-refresh.service" "${UNIT_DIR}/github-glue-token-refresh.timer"
+  systemctl disable --now "${SLOT_REFRESH_TIMER}" 2>/dev/null || true
+  systemctl disable --now "${TOKEN_REFRESH_TIMER}" 2>/dev/null || true
+  rm -f "${UNIT_DIR}/${TEMPLATE_UNIT}" "${UNIT_DIR}/${SLICE_NAME}" \
+        "${UNIT_DIR}/${SLOT_REFRESH_SERVICE}" "${UNIT_DIR}/${SLOT_REFRESH_TIMER}" \
+        "${UNIT_DIR}/${TOKEN_REFRESH_SERVICE}" "${UNIT_DIR}/${TOKEN_REFRESH_TIMER}"
   systemctl daemon-reload
   cmd_prune || true
   log "systemd units removed. Runner dirs + slot + ${ENV_FILE} left in place; rm -rf ${RUNNER_BASE} ${ENV_FILE} to fully purge."
