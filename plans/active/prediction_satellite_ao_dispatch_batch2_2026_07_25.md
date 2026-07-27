@@ -68,21 +68,24 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DIAG] P1. Verify + flip the stale `manifest_master.md` P2 "Prediction bucket naming migration" checkbox
-      (currently `[ ]` unchecked at `plans/epics/manifest_master.md:261`). The target legacy prediction buckets
-      (`market-data-tick-prediction-*`, `instruments-store-prediction-*`) were already purge-deleted 2026-07-13 per
-      `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md` ("prediction: ✅ DONE 2026-07-13" — confirmed
-      404, both live + noncurrent versions purged). Grep `market-tick-data-service` + `instruments-service` prediction
-      code paths for any remaining inline legacy bucket-name string literal not routed through `resolve_bucket_name()`
-      (STEP 5.69). Repo: unified-trading-pm docs (read-only verification against market-tick-data-service,
-      instruments-service). **Resolution note**: originally excluded from batch1 because the source doc
-      (`issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`) logged 2 conflicts — but both conflicts are
-      about that doc's OTHER 2 prose-only items (the raw_tick_data stall + the dead Kalshi host, already covered by
-      batch1 todo 1), not about this checkbox-flip candidate, which has zero conflicts of its own. **Done when**:
-      `plans/epics/manifest_master.md`'s "Prediction bucket naming migration" P2 line is either flipped to `[x]` with
-      the grep result + decommission-plan citation as evidence, or left open with a dated note naming the exact
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-11).** Verify + flip the stale `manifest_master.md` P2 "Prediction bucket
+      naming migration" checkbox (currently `[ ]` unchecked at `plans/epics/manifest_master.md:261`). The target legacy
+      prediction buckets (`market-data-tick-prediction-*`, `instruments-store-prediction-*`) were already purge-deleted
+      2026-07-13 per `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md` ("prediction: ✅ DONE
+      2026-07-13" — confirmed 404, both live + noncurrent versions purged). Grep `market-tick-data-service` +
+      `instruments-service` prediction code paths for any remaining inline legacy bucket-name string literal not routed
+      through `resolve_bucket_name()` (STEP 5.69). Repo: unified-trading-pm docs (read-only verification against
+      market-tick-data-service, instruments-service). **Resolution note**: originally excluded from batch1 because the
+      source doc (`issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`) logged 2 conflicts — but both
+      conflicts are about that doc's OTHER 2 prose-only items (the raw_tick_data stall + the dead Kalshi host, already
+      covered by batch1 todo 1), not about this checkbox-flip candidate, which has zero conflicts of its own. **Done
+      when**: `plans/epics/manifest_master.md`'s "Prediction bucket naming migration" P2 line is either flipped to `[x]`
+      with the grep result + decommission-plan citation as evidence, or left open with a dated note naming the exact
       non-compliant file:line(s) found — never silently dropped. Source:
-      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`.
+      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`. **Result: flipped to `[x]`** — every LIVE
+      production code path in both repos already routes through `resolve_bucket_name()`; the only raw legacy-literal
+      hits are in dated, already-completed one-off migration/reconciliation/purge scripts targeting the now-deleted
+      bucket. See `plans/epics/manifest_master.md`'s flipped line for the full grep-result citation.
 - [ ] [DIAG] P1. **Conflict-check (2026-07-25 plan-reconcile)**: `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`
       todo 7 ALSO writes to `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. Do not dispatch/commit
       concurrently with that todo — batch1 was drafted first, run batch1 todo 7 before this todo if both are active.
@@ -210,11 +213,11 @@ drift_direction: advance-code
       `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
 
       **Evidence**: all 3 SHAs confirmed on `live-defi-rollout` (`git merge-base --is-ancestor`) AND `main`
-              (content-diff, since these repos squash-merge on promote — distinctive marker lines from each commit found
-              live in `origin/main`'s copies). Production capture proof re-verified live: `venue=KALSHI, data_type=trades,
-              date=2026-07-09` in the prediction manifest returns exactly 423 `captured` rows summing to 6,407 — an exact
-              match to the cited 2026-07-14T11:00Z proof, still holding. `status` flipped to `resolved`, `resolved_by`
-              populated, dated Progress Log entry added — unified-trading-pm@`<pending>`.
+                  (content-diff, since these repos squash-merge on promote — distinctive marker lines from each commit found
+                  live in `origin/main`'s copies). Production capture proof re-verified live: `venue=KALSHI, data_type=trades,
+                  date=2026-07-09` in the prediction manifest returns exactly 423 `captured` rows summing to 6,407 — an exact
+                  match to the cited 2026-07-14T11:00Z proof, still holding. `status` flipped to `resolved`, `resolved_by`
+                  populated, dated Progress Log entry added — unified-trading-pm@`<pending>`.
 
 ## Deferred — still genuinely blocked after re-check (NOT dispatched)
 
@@ -276,3 +279,27 @@ finalize pattern.
 `/codex/02-data/reconciliation-finding-taxonomy.md` §5.1 (C2a instrument_type-casing ruling, load-bearing for todo 2's
 resolution — read before touching that todo). No new durable contract is created by this plan — every todo executes an
 already-decided spec from its source doc or an already-RULED codex standard.
+
+## Progress Log
+
+### 2026-07-27 (slot-11) — Todo 1 done: prediction bucket naming migration verified complete, checkbox flipped
+
+Picked up todo 1 via `/boot`. Confirmed the legacy prediction buckets are purge-deleted (404) per
+`legacy_bucket_dual_write_decommission_2026_07_24.md`. Grepped both `market-tick-data-service` and `instruments-service`
+for remaining inline legacy prediction bucket-name literals not routed through `resolve_bucket_name()`: every live
+production code path (`reader.py`, `live/websocket_runner.py`, `engine/orchestrator/__init__.py`,
+`market_interface/adapters/prediction/*`, `cli/handlers/websocket_streaming_handler.py`,
+`instruments_service/engine/orchestrator/catalogue.py`) already calls
+`resolve_bucket_name(kind="market-data-tick-prediction"/"instruments-store-prediction", ...)` — the dedicated flat-kind
+SSOT pattern. Spot-checked the two most ambiguous hits (`engine/orchestrator/__init__.py:806-815`,
+`instruments_service/engine/orchestrator/catalogue.py:37-53`) directly to confirm the `kind=` string is passed INTO
+`resolve_bucket_name()`, not used to construct a raw bucket name. The only raw f-string/literal bucket-name
+constructions found (`f"market-data-tick-prediction-{PROJECT_ID}"` / `f"instruments-store-prediction-{project_id}"`) are
+confined to dated one-off scripts under `scripts/*_2026_0[5-7]_*.py` (e.g. `migrate_prediction_to_pred_prd_v9.py`,
+`purge_prediction_index_final_residuals_2026_07_11.py`, `reconcile_legacy_blank_to_typed_reason.py`) whose entire
+purpose was migrating away from / auditing / purging the legacy bucket itself — verified one representative
+(`migrate_prediction_to_pred_prd_v9.py`'s docstring) is the already-completed E2 migration step from
+`prediction_manifest_canonicalisation_2026_06_01.md` (source plan for the decommission that already shipped 2026-07-13).
+Flipped `plans/epics/manifest_master.md`'s P2 "Prediction bucket naming migration" checkbox to `[x]` with the full
+grep-result citation, and this todo's own checkbox above. No code changed (read-only verification, as scoped). Repo:
+unified-trading-pm only.
