@@ -604,12 +604,18 @@ drift_direction: advance-code
       Remaining `hyperliquid` mentions in the file are docstring/comment history + one unrelated
       `pipeline_mode_for_source` default in the generic "unknown protocol" error-path fallback, not a routing entry.
       Nothing to ship.
-- [ ] [BACKEND] P1. Add the missing `Mode.REPLAY` case to `possible_manifest._canonical_pipeline_mode_prefixes` in
+- [x] ✅ [BACKEND] P1. Add the missing `Mode.REPLAY` case to `possible_manifest._canonical_pipeline_mode_prefixes` in
       unified-api-contracts so it also emits `replay_<source>/` prefixes alongside `Mode.BATCH`/`Mode.LIVE`, closing a
       latent gap in the phantom-shard auditor (additive, 1-line-class, no-risk future-proofing). Confirm
       `test_possible_manifest`'s prefix-count guard is quiescent before landing. Repo: unified-api-contracts. **Done
       when**: `_canonical_pipeline_mode_prefixes` iterates `(Mode.BATCH, Mode.LIVE, Mode.REPLAY)`; the prefix-count
-      guard passes; `quality-gates.sh` green. Source:
+      guard passes; `quality-gates.sh` green. — unified-api-contracts@6456dd23. The prefix-count guard was NOT quiescent
+      (6 sources per AG are REPLAY-capable per `SOURCE_MODE_CAPABILITY`), so
+      `test_extra_live_probe_sources_do_not_leak_cross_ag`'s `expected_pipeline_mode_counts` was updated with the same
+      explanatory-comment precedent used for prior additions: cefi 21→27 (+aster/databento/deribit/extended/
+      hyperliquid/kalshi_perp), defi 17→24 (+chainlink/helius_rpc/hyperliquid/onchain_rpc/onchain_subgraph/
+      pyth_hermes/solana_rpc), tradfi 6→9 (+databento/eia/massive); sports unaffected (no inline templates).
+      `quality-gates.sh` green (275-322s across runs). Source:
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
 - [ ] [DIAG] P1. Run a real past-day EXTENDED-STARKNET `book_snapshot_5` backfill and a real current-day run against the
       shipped fix (`@55dac12a`, current-only-endpoint honest-skip) — confirm the past-day run produces 0 book rows with
