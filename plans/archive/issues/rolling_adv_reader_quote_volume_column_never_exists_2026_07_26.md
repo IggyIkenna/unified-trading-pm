@@ -49,6 +49,9 @@ depends_on: []
 
 # RollingAdvReader: quote_volume column has never existed on any real MDPS candle
 
+> **🟢 ARCHIVED 2026-07-27** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
+
 ## What I found
 
 1. Backfilled real HYPERLIQUID `trades` candles for `day=2026-07-19` (BTC/ETH), confirmed non-zero real data:

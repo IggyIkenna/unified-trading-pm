@@ -31,7 +31,7 @@ related:
   [
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
-    /plans/active/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md,
+    /plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md,
   ]
 created: 2026-07-26
 last_updated: 2026-07-26
@@ -180,7 +180,7 @@ trail. A duplicate issue doc slot-3 filed before this ruling landed
     "still awaits Harsh slot 5 per-service consumer wiring." VM deleted after diagnosis (no further billing). **Not
     re-attempted in this session** — fixing a monorepo-wide dependency conflict is its own scoped task, not a "redeploy
     already-shipped code" smoke test. Filed as
-    `/plans/active/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md`.
+    `/plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md`.
 
   **Result: 3 of 4 verified (features-service, execution-service, MTDS); MDPS blocked on an unrelated, pre-existing
   dependency conflict, now filed separately rather than silently retried.** All temporary smoke-test infra was torn down

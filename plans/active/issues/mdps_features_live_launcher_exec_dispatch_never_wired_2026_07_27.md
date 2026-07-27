@@ -5,8 +5,9 @@ title:
   through to a literal `python -m market_data_processing_service+features_service`, and even a correct per-service
   branch can't invoke either service today because neither's CLI supports the launcher's premise
 summary: >-
-  With the dependency-install bug (mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md) fixed, a
-  live-VM verification (`mdps-features-live-cefi-20260727-004133`) got past `uv pip install` cleanly for the first time,
+  With the dependency-install bug
+  (/plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md) fixed, a live-VM
+  verification (`mdps-features-live-cefi-20260727-004133`) got past `uv pip install` cleanly for the first time,
   exposing the NEXT bug in the same launcher: `setup-data-pipeline-vm.sh` has no exec-dispatch branch for
   `VM_TASK=mdps-features-live` (or any compound "+"-joined `VM_SERVICE` at run time — only the tarball-resolution
   section was fixed to split on "+"), so it falls through to the generic default `python -m $VM_SERVICE $CLI_ARGS`,
@@ -31,7 +32,7 @@ tags:
   [mdps, features-service, vm-launcher, exec-dispatch, live-launch, cli-contract-mismatch, design-gap, silent-failure]
 related:
   [
-    /plans/active/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md,
+    /plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md,
     /plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
   ]
@@ -60,8 +61,9 @@ resolved_by:
 ## Evidence
 
 Launched `mdps-features-live-cefi-20260727-004133` to verify the dependency-install fix in
-`mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md`. Bootstrap now succeeds cleanly (no more
-`position-balance-monitor-service` unsatisfiable conflict — that fix is confirmed correct). `run.log` then showed:
+`/plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md`. Bootstrap now
+succeeds cleanly (no more `position-balance-monitor-service` unsatisfiable conflict — that fix is confirmed correct).
+`run.log` then showed:
 
 ```
 [vm-exec] starting: bash -c ( ... ) & ...; /home/ikennaigboaka/venv/bin/python -m market_data_processing_service+features_service --operation live_aggregate_and_compute --mode live --asset-group CEFI
@@ -140,6 +142,7 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       wrapped command exiting non-zero AFTER bootstrap succeeded, as happened here —
       `[vm-exec] command exited     rc=1`) does not appear to self-delete or otherwise loudly signal on a
       `VM_SHUTDOWN_ON_COMPLETION=false` live launcher, mirroring (but distinct from) the bootstrap-phase gap fixed in
-      `mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md` Update 4 — not investigated further
-      here since it's a different code path (the tee wrapper, not `_self_delete_on_setup_failure`); worth auditing once
-      Gap 1/2 above are resolved and a real live launch exists to observe its failure-signaling behavior against.
+      `/plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md` Update 4 — not
+      investigated further here since it's a different code path (the tee wrapper, not `_self_delete_on_setup_failure`);
+      worth auditing once Gap 1/2 above are resolved and a real live launch exists to observe its failure-signaling
+      behavior against.

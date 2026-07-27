@@ -38,6 +38,9 @@ locked_by:
 
 # CEFI bare-venue (COINBASE/OKX) manifest residue
 
+> **🟢 ARCHIVED 2026-07-27** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
+
 ## What happened
 
 The `deployment-ui` Axis Value Census panel

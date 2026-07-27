@@ -266,7 +266,7 @@ This plan is **green** — and only then may step 2 (the ~16.7M-row migration) b
       `liquidityRate` and designate ONE of the two as authoritative writer-of-record. File as a data-correctness finding
       per `/codex/02-data/data-pipeline-correctness-hard-rule.md` regardless of which fix is chosen — this is a live
       bug, not a design question.
-- [ ] 17. [DOCS] P0. **[session-3] Update the naming SSOT.** `codex/02-data/defi-canonical-naming-ssot.md`
+- [ ] 17. [DOCS] P0. **[session-3] Update the naming SSOT.** `/codex/02-data/defi-canonical-naming-ssot.md`
       instrument_type row: replace "RULED 2026-07-20 D2... FULL retire... migration_pending" with the resolved decision
       — flat `LENDING`/`SOLANA_LENDING` is now PERMANENT for market/event lending data; canonical A_TOKEN/DEBT_TOKEN
       rate lookup is via todo 15's resolver (name it explicitly), not by re-keying raw data. State plainly this reverses
