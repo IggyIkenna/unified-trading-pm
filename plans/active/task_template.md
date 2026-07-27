@@ -288,6 +288,17 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   real safety net, the same bar every other shared-library change in this codebase already meets. Reserve actual
   `[OPERATOR]` for this class only when no test can meaningfully exercise the risk at all (e.g. a genuinely unobservable
   production race) — state that explicitly if so, don't default to it out of general unease.
+- **A permission/IAM gap on the orchestrator's OWN cloud identity is never `[OPERATOR]`/`BLOCKED-CREDENTIALS` — grant it
+  directly** _(finding W, 2026-07-27, operator ruling: a todo asking to grant `unified-trading-sa` Cloud Scheduler read
+  access sat gated for an hour before the operator had to point out this is the exact class of thing the session had
+  just spent hours making self-service — "the whole thing we just did")._ `unified-trading-sa` (GCP) and
+  `uts-orchestrator-epic-role` (AWS) both hold IAM-self-management permission; every AO worker already runs AS these
+  identities ambiently (no separate credential setup). A todo naming either identity + a specific missing role is a
+  same-class fix as finding T's reversibility check: grant the specific role (never blanket
+  `Owner`/`AdministratorAccess`), re-verify the actual capability live (call the real API, not just the IAM policy
+  dump), cite both, done. See `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` for current
+  grants + exact commands. Reserve `BLOCKED-CREDENTIALS` for a gap on a genuinely DIFFERENT identity this worker cannot
+  assume.
 - **When splitting an over-cap plan, correctness beats file count** _(finding R, 2026-07-25, operator ruling: asked
   whether to fork every Track with a real sequential/gating constraint into its own child+finalize even if small, vs.
   merge related Tracks to reduce file count — ruled "correctness over file count")._ Give any Track/section with a real
