@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
+        "large_file_count": 1,
         "warn_file_count": 0,
-        "coverage_pct": null,
-        "large_file_count": 1
+        "coverage_pct": 81.47,
+        "qg_red_reason": null
       }
     },
     "batch-live-reconciliation-service": {
@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 4,
-        "coverage_pct": null
+        "coverage_pct": 74.69,
+        "qg_red_reason": null
       }
     },
     "deployment-api": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 9,
-        "qg_red_reason": null,
         "large_file_count": 8,
-        "coverage_pct": 90.91
+        "warn_file_count": 9,
+        "coverage_pct": null,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -882,9 +882,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
-        "qg_red_reason": null,
         "warn_file_count": 41,
-        "coverage_pct": 83.61
+        "coverage_pct": 83.61,
+        "qg_red_reason": "ruff"
       }
     },
     "ml-service": {
@@ -1212,9 +1212,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 96.42,
-        "warn_file_count": 30,
         "large_file_count": 27,
+        "warn_file_count": 30,
+        "coverage_pct": null,
         "qg_red_reason": null
       }
     },
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 22,
-        "qg_red_reason": null,
         "large_file_count": 7,
-        "coverage_pct": 88.87
+        "warn_file_count": 22,
+        "coverage_pct": 88.85,
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "warn_file_count": 0,
         "large_file_count": 0,
-        "coverage_pct": null
+        "warn_file_count": 0,
+        "coverage_pct": 73.06,
+        "qg_red_reason": null
       }
     },
     "unified-trading-api": {
