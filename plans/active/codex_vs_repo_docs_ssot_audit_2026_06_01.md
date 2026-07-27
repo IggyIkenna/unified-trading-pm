@@ -242,7 +242,15 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       +root `README` archived-mirror FIX-STALE). 5 DELETE · 7 FIX-STALE · 3 REDIRECT (all codex targets VERIFIED-EXIST)
       · no MIGRATE. Apply stays Phase-3/4.
 - [ ] [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`, `codex/02-venues`.
-- [ ] [DOCS] P0. **instruments-service** (19) — IS→MTDS contract/path docs vs `codex/04-architecture`, `codex/02-data`.
+- [x] ✅ [DOCS] P0. **instruments-service** (19→13) — IS→MTDS contract/path docs vs `codex/04-architecture`,
+      `codex/02-data`. **AUDIT REFRESHED 2026-07-27** (read-only via opus sub-agent; registry in **Appendix B** below,
+      SUPERSEDES the stale Appendix-A `(19)` entry). Repo drifted hard from Appendix-A: `specs/` dir GONE (consolidated
+      into `ADAPTER_ARCHITECTURE` + 5 asset docs), `POLYMARKET_PREDICTION`→`PREDICTION_INSTRUMENTS`,
+      `instrument-catalogue` gone. Net: duplication vs codex LOW (asset catalogs + adapter arch legitimately
+      service-local); 2 DELETE · 6 FIX-STALE (README dead-repo/CLI/mirror drift is the big one) · no REDIRECT strictly
+      required · no MIGRATE · no codex target needs creating. Apply stays Phase-3/4 (operator FIX-STALE-only hold). BIG
+      FINDING (determinable FIX-STALE, not operator-gated) captured in the registry: README front-door contradicts its
+      two newer authoritative docs on the dependency graph.
 - [ ] [DOCS] P1. **strategy-service** (15) — archetype/promote docs vs `codex/09-strategy`, `codex/04-architecture`.
 - [ ] [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs.
 - [ ] [DOCS] P1. **e2e-testing** (21) — defi/sports/prediction runbooks vs `codex/08-workflows`, `codex/15-runbooks`.
@@ -566,3 +574,69 @@ since 2026-07-21), root `README.md` (archived-mirror ref). REDIRECT (targets exi
 `docs/README.md`. No MIGRATE (candle-edge/schema material codex needs already lives in the REDIRECT targets).
 `TIMEFRAME_AGGREGATION`'s `resample(closed='right', label='right')` is ALIGNED with the codex right/close-edge
 convention (genuine duplication → REDIRECT, not FIX-STALE).
+
+### instruments-service refreshed registry (2026-07-27) — supersedes the stale Appendix-A `(19)` entry
+
+> Read-only re-audit via opus sub-agent (`.claude/*` symlink mirrors, `.pytest_cache/`, `.git/` excluded as
+> vendored/generated). 13 repo-owned docs. The Appendix-A `(19)` entry is FULLY superseded — its `specs/` dir,
+> `instrument-catalogue`, and `POLYMARKET_PREDICTION` no longer exist (consolidated into `docs/ADAPTER_ARCHITECTURE.md`
+>
+> - the 5 per-asset-group `*_INSTRUMENTS.md` docs). All cited REDIRECT/repoint targets VERIFIED-EXIST — none need
+>   creating. Apply (redirects/deletes/fixes) stays Phase-3/4 under the operator FIX-STALE-only hold.
+
+**instruments-service (13)** — DELETE: `scripts/README.md` (documents ONLY a non-existent `run_quality_gates.py`; cites
+retired `../unified-cloud-services` monorepo + stale 65% coverage [actual 88] + `GH_PAT`-in-`.env` flow; zero index
+value — never lists the ~90 real scripts), `.github/BRANCH_PROTECTION_SETUP.md` (dead manual GitHub-clicks how-to,
+superseded by centralized ruleset/template rollout from PM per CLAUDE "branch protection = ruleset + classic BOTH";
+names retired `quality-gates` check + 65% coverage). FIX-STALE: `README.md` (HEAVY — 4 archived-mirror
+`unified-trading-codex/` refs [L35/116/123/124]; cites 3 NON-EXISTENT dep repos
+`unified-internal-contracts`/`unified-reference-data-interface`/`unified-sports-reference-interface` [actual siblings =
+UTL+UAC only]; attributes `InstrumentRecord`/`InstrumentGenerator`/`MockScenario` to "UIC" though they live in UAC
+`.../internal/reference/`; stale CLI `--CEFI/--TRADFI/--DEFI/--SPORTS`+`--redo-all` vs real
+`--asset-group CEFI`+`--force`; `urdi_reference_provider.fetch(venue,date)` vs real
+`fetch_instruments_for_all_venues()`), `CONTRIBUTING.md` (retired `git checkout/pull/push origin main`,
+`python -m pytest`, plain `quickmerge "msg"` [no `--agent`/`--files`], PR-auto-merge-to-main [no LDR],
+branch-protection-on-main, dead `.cursorrules`/`unified-trading-deployment-v2/` refs), `.github/BRANCH_PROTECTION.md`
+(required check `quality-gates` → actual `quality-gates-v2`; nonexistent `make ci-local`; coverage 35%/65% → actual 88;
+1-approval model), `docs/SETUP_GUIDE.md` (CLI examples `--mode instruments`/`--mode instruments-query` [L38/476/477] use
+`--mode` as an OPERATION name — violates the CLI-convention SSOT; real form `--operation instruments --mode batch`),
+`docs/SPORTS_INSTRUMENTS.md` (LOW-CONFIDENCE — `gs://features-sports-{project}/` [L432/501-502] lacks the `{env}` tier
+its siblings carry; verify vs codex before treating as stale — may be a legit folded env-agnostic bucket). REDIRECT:
+none strictly required (`CONTRIBUTING.md` + `.github/BRANCH_PROTECTION.md` are REDIRECT-eligible →
+`/codex/08-workflows/ci-cd-flow.md`, but classified FIX-STALE to match the deployment-service
+`CONTRIBUTING`/branch-protection-template precedent; owner's Phase-3 call). MIGRATE-TO-CODEX: none. KEEP-ESSENTIAL:
+`QUALITY_GATE_BYPASS_AUDIT.md`, `docs/ADAPTER_ARCHITECTURE.md`, `docs/{CEFI,DEFI,PREDICTION,TRADFI}_INSTRUMENTS.md`, +
+`docs/SETUP_GUIDE.md`/`docs/SPORTS_INSTRUMENTS.md` (KEEP content, fix the one literal each above) — all rich, current,
+repo-specific (per-asset-group instrument-type catalogs + real GCS audit findings + module map / 8-stage command flow /
+canonical-id current-vs-target spec), correctly citing LIVE PM `/codex/` + UAC ownership. **Net: duplication LOW;
+dominant remediation FIX-STALE (README dep/CLI/mirror drift) + 2 DELETEs; no MIGRATE; no codex target needs creating for
+confirmed items.**
+
+Verification notes (all cited targets ground-truthed):
+
+- `/codex/08-workflows/ci-cd-flow.md`, `/codex/06-coding-standards/quality-gates.md`,
+  `/codex/06-coding-standards/cli-convention.md` — **VERIFIED-EXIST** (CONTRIBUTING/BRANCH_PROTECTION repoint;
+  scripts/README's real QG replacement; SETUP_GUIDE `--mode` fix authority).
+- README L35 `unified-trading-codex/09-strategy/cross-cutting/operational-modes-matrix.md` →
+  `/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` — **VERIFIED-EXIST** (note the
+  `architecture-v2/` path drift). L116/L123 `unified-trading-codex/{02-data,06-coding-standards}/` → live `/codex/…`
+  dirs — **VERIFIED-EXIST**. L124 `unified-trading-codex/09-strategy/defi/` — **NEEDS-MANUAL-PICK** (no 1:1 live target;
+  `/codex/09-strategy/defi/` absent — closest live SSOTs `/codex/04-architecture/defi-execution-overview.md` or
+  `/codex/02-data/defi-canonical-naming-ssot.md`; Phase-3 editorial choice, NOT a codex create).
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`,
+  `/codex/04-architecture/instrument-universe-registry-consolidation.md` — **VERIFIED-EXIST** (already cited correctly
+  by `ADAPTER_ARCHITECTURE`; no change needed).
+- **URDI (plan finding 369) — CONFIRMED not a doc-staleness problem**: `ADAPTER_ARCHITECTURE.md` (L54-58) +
+  `TRADFI_INSTRUMENTS.md` (L75) describe URDI correctly as the load-bearing internal
+  `reference_data`/`urdi_reference_provider.py` module, aligned with codex. No URDI doc rename recommended (README's
+  URDI staleness is only its framing of URDI-as-external-repo, folded into the README FIX-STALE).
+- Code-truth false-positives avoided: `unified_api_contracts.canonical.canonical_mappings` (SETUP_GUIDE L282) STILL
+  EXISTS (the plan's "canonical/ deleted" note was specifically `canonical/normalize/`); PREDICTION `category=` (L98) is
+  a live Kalshi API query param, not retired partition vocab.
+- **BIG FINDING (determinable FIX-STALE → Phase-3, owner-routed, not operator-gated)**: `instruments-service/README.md`
+  (mtime 2026-07-03) — the repo front-door — contradicts its two newer authoritative docs (`SETUP_GUIDE.md`@2026-07-24,
+  `ADAPTER_ARCHITECTURE.md`@2026-07-19) and live `pyproject.toml` on the dependency graph: it tells a reader IS depends
+  on / imports from `unified-internal-contracts`, `unified-reference-data-interface`,
+  `unified-sports-reference-interface` — none of which exist in the workspace (actual editable siblings = UTL + UAC
+  only). A reader following README would import nonexistent packages. The Phase-3 README rewrite must cite
+  `SETUP_GUIDE`/`ADAPTER_ARCHITECTURE` as the reconciliation ground truth.
