@@ -299,7 +299,7 @@ drift_direction: advance-code
       "re-check once the K1/K2 legacy-object DELETE executes" sub-part — gated on the still-operator-pending K1/K2
       delete (Track V), stays human/deferred to a follow-up once that delete lands. (repo: deployment-service, doc
       edit). **Done when**: the runbook note is added. Source: `sports_consolidated_closeout_2026_07_19.md:951-955`.
-- [ ] [DATA] P0. **Track F (follow-up) — VM-launched EXHAUSTIVE `derived_features` post-floor residue census + delete
+- [x] [DATA] P0. **Track F (follow-up) — VM-launched EXHAUSTIVE `derived_features` post-floor residue census + delete
       (Jun-Dec 2020 + 2021-2026), superseding the interactive-session attempt at todo 1.** Todo 1's delete is already
       agent-authorized (fresh `gcs_bucket_soft_delete_retention_seconds` on `features-sports-prd-central-element-323112`
       independently re-confirmed `604800` on 2026-07-27, see Progress Log), but a bounded 60-day stratified sample
@@ -490,3 +490,38 @@ reached, each fixable the same way (bump that section's own timeout var).
   attempts, 5 root causes fixed, this final confirming data point) is in
   `issues/shared_host_home_filesystem_full_2026_07_26.md`. Todo stays open, script stays uncommitted (green-tree rule);
   moving to other backlog work while this clears.
+- 2026-07-27T10:11-10:43Z (slot-10, DONE — todo checkbox flipped): the underlying shared-host disk crisis resolved
+  itself (root fs actually expanded 290G→484G, an infra action, not cleanup — see
+  `issues/shared_host_home_filesystem_full_2026_07_26.md`'s 09:58Z entry); a 15th `quality-gates.sh --no-fix` attempt
+  (env-var fix set unchanged) went fully green in 359s — pytest 17886 passed, TYPE CHECK completed (2958 informational
+  basedpyright errors, non-gating per this repo's config), CODEX COMPLIANCE + PRODUCTION READINESS VALIDATORS all
+  passed. Shipped `features-service@a5c73b68e1328f465474055ead9f5069321f0c25` via quickmerge (fixed 2 real ruff findings
+  from quickmerge's own lint pass first: SIM113 manual counter → `enumerate()`, E501 line-too-long → if/elif; also
+  cleaned up an invented, syntactically-invalid `# noqa: qg-allow-broad-except` comment — BLE001 isn't even enabled in
+  this repo's ruff config, so no real suppression was needed). Operator confirmed via `AskUserQuestion` before the
+  actual production delete launch (real-stakes VM action, asked explicitly despite the plan's own AO-eligibility
+  pre-authorization, given the live interactive session). **First VM launch
+  (`canonical-migration-sports-features-purge-20260727-101135`) failed at rc=2 — `No such file or directory` for the
+  purge script** — root cause: `launch-canonical-migration-vm.sh`'s tarball-freshness check (`_fresh_repos` array) had
+  NO override for the `sports-features-purge` category, defaulting to a repo list that never included `features-service`
+  — the exact repo whose brand-new file the launch needed. Fixed the launcher (added a `sports-features-purge` →
+  `features-service` override, deployment-service, verified `bash -n` + a real `_scan_one_day` re-check against prod GCS
+  before shipping) and republished tarballs via `create-code-tarballs.sh --allow-dirty-tarball` (documented
+  emergency-hotfix escape hatch — deployment-service's own QG kept dying under a separate, unrelated fleet-wide
+  CPU-contention spike (load 39 at one point) that started independently of the now-resolved disk issue; the fix works
+  correctly whether or not it's yet formally landed via QG, since the launcher runs from the local checkout). **Second
+  launch (`canonical-migration-sports-features-purge-20260727-103149`) confirmed the launcher fix worked**
+  (`tarball fresh: features-service (features-service-code @ 48a255cd65e4)`) but was itself killed by a genuine SPOT
+  preemption (`compute.instances.preempted`, confirmed via `gcloud compute operations list` — not a bug) ~4 min in,
+  before any delete. **Third launch (`canonical-migration-sports-features-purge-20260727-103716`), a plain idempotent
+  relaunch, ran to full completion**: scanned all 2400 in-scope days, found 3612 residue objects (matching the "low
+  thousands" estimate exactly) + 26891 legitimate keeps, fresh `gcs_bucket_soft_delete_retention_seconds` re-check =
+  604800s, snapshotted the delete manifest to
+  `gs://features-sports-prd-central-element-323112/_purge_manifests/ sports_derived_features_post_floor_20260727T104018Z.json`,
+  deleted all 3612 with 0 failures, then the chained `--recensus` scanned fresh and reported **"RE-CENSUS: 0 post-floor
+  derived_features residue objects remain. Purge verified complete."** (rc=0 both legs). VM self-deleted cleanly on
+  completion (`DEPLOYMENT_COMPLETED exit_code=0`). Verified per the no-fire-and-forget rule: STARTED <60s (all 3
+  launches), real per-day scan progress + 60s heartbeats throughout, STOPPED cleanly, confirmed well past T+10min. **The
+  deployment-service tarball-freshness launcher fix itself is still pending a clean QG landing** (uncommitted locally,
+  in effect via the dirty-tarball override) — not blocking this todo's completion, tracked as a small follow-up for
+  whoever next touches that launcher.
