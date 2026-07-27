@@ -258,7 +258,16 @@ source: >-
       (residual drop) stays gated — checkbox correctly unchecked. NOTE for next slot: the interactive `gcloud`/`gsutil`
       account token is expired again (`credentials are invalid`) — use
       `CLOUDSDK_CORE_ACCOUNT=github-actions-deploy@central-element-323112.iam.gserviceaccount.com` with `gcloud storage`
-      for GCS reads; still re-verify from scratch rather than trust this note.
+      for GCS reads; still re-verify from scratch rather than trust this note. **Check-in 2026-07-27T19:50Z (slot 11,
+      data_engineering)**: re-verified from scratch (default ambient `gcloud` account, `unified-trading-sa@…`, worked
+      fine this check-in — no auth workaround needed). All 3 signals fresh: VM `af-backfill-20260727-064958`
+      status=RUNNING (SPOT); `run.log` tail shows `last_completed_date=2023-06-10 monotonic=true` with
+      `PIPELINE_HEARTBEAT` through 19:50:30Z (advanced +10 days from slot 5's 2023-05-31 in ~19min, ~1.9 min/date —
+      steady, consistent with prior pace); per-VM manifest shard (`_index/per_vm/af-backfill-20260727-064958.parquet`)
+      mtime=19:49:10Z (near-real-time write, 1.54 MiB). `gcloud compute operations list` filtered to this VM shows zero
+      `compute.instances.preempted` events. No OOM/error lines. No relaunch needed. Step 2 still mid-run (~1,143 days of
+      2023-06-10→2026-07-27 remaining at this pace, still tracking the prior ~30h-ish ETA order of magnitude), step 3
+      stays gated — checkbox correctly unchecked. Next slot: re-verify from scratch, don't trust this note as current.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
