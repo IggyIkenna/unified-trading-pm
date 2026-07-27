@@ -158,3 +158,17 @@ own true source docs (`cefi_residual_followups_after_honest_done_2026_07_17.md`'
 `/codex/02-data/availability-manifest-and-data-status.md`,
 `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`. No new durable contract is created by this plan —
 every todo executes an already-decided spec from the parent doc.
+
+## Progress Log
+
+- **2026-07-27 (autonomous session, driven off an operator prompt asking to check + fix lowercase/non-canonical cefi
+  `instrument_type` — this plan is the existing execution vehicle, not a new investigation)**: confirmed live via AO
+  backlog check (SSM, read-only) that all 5 todos here are already ingested + `queued`, none `dispatched`. Operator
+  chose to have this driven interactively now rather than wait for orchestrator dispatch, then invoked `/autonomous` (do
+  not stop to confirm; proceed through dry-run-validated applies/renames/deletes for real). Investigated todo 1 first
+  (it gates everything else): the DERIBIT adapter fix AND the roll-up self-heal
+  (`_canonicalize_cefi_deribit_dated_quote`, wired into `_canonicalize_cefi_rollup_id`) both already shipped in
+  `instruments-service@d72edcf7` (2026-07-18) — confirmed via `git log -L` on `scripts/build_instrument_catalogue.py`.
+  So todo 1's code is done; what remains is the operational `--mode full` catalogue rebuild + live verification.
+  Dispatching a sub-agent to execute that + the Phase-−1 gate extension now; this log will be updated as each todo
+  lands.
