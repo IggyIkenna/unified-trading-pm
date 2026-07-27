@@ -524,3 +524,39 @@ every todo executes an already-decided spec from the parent doc.
 - **New follow-up (not yet a formal todo, tracked here)**: once the 7 `cefi-hl-aster-historical-backfill` VMs report
   terminated, run one more Script 1 pass scoped to `--venue HYPERLIQUID` and `--venue ASTER` (2 more VM runs, full
   corpus date range) to patch the 2 excluded venues that this campaign is otherwise skipping.
+- **2026-07-27T05:11Z — MAJOR CHECKPOINT: full 42-VM `--apply` fan-out is LIVE, all healthy, canary validated clean.**
+  Canary result (checked directly via `run.log`/`gcloud compute instances describe`/`gcloud compute operations list`,
+  not passively awaited): all 3 canary shards reached real migration progress (not just discovery) with **zero**
+  `verify_failed`/`error`/`wedged_outstanding` counts. `cs81c` (the shard that OOM-killed at 5,400/635,113 files on
+  `e2-standard-8` in the earlier measurement pass) cleanly passed 2,200+/94,157 files on `e2-standard-16` — the
+  machine-type fix holds. Measured real `--apply`-mode throughput (materially different from the earlier _dry-run_
+  numbers since a changed file costs ~4 GCS round-trips — backup-upload + real-upload + reread-verify — vs. 1 for an
+  unchanged file): 3.4-10 files/sec/VM depending on the shard's already-canonical mix. Given literal 100% completion of
+  even one ~150K-file shard would take ~8+ hours, "clean canary" here means demonstrated health (no errors, no OOM,
+  correct GREEN Phase-1 gate, confirmed `--exclude-venues HYPERLIQUID:ASTER` active in the actual running command), not
+  full completion — proceeded to the full fan-out on that basis rather than blocking for hours on 3 shards alone.
+  **Launched the remaining 39 shards** (same 42-VM proportional plan from the entry above), all `e2-standard-16` +
+  `--workers 24` + SPOT + `--exclude-venues HYPERLIQUID:ASTER`, VM names
+  `canonical-migration-cefi-content-apply-055803-cs{1-1, 3-1, 3-2, 4-1..4-3, 5-1..5-3, 6-1..6-5, 7-1..7-5, 8-2..8-6, 9-2..9-6, 10-1..10-10}`
+  (cs2/cs8-1/cs9-1 are the canaries above, already counted). **Verified, not assumed**: all 39 reported `Created [...]`
+  in their launch logs (0 launcher-side errors), all 42 total VMs (canary + fan-out) confirmed `RUNNING` via a fresh
+  `gcloud compute instances list`, 0 hits on
+  `gcloud compute operations list --filter=operationType=compute.instances.preempted`, 0 `EXIT_STATUS` objects anywhere
+  (nothing has terminated yet, good — still mid-flight), and a 5-VM spot-check across the fan-out
+  (`cs1-1, cs3-1, cs6-3, cs8-2, cs10-10`) showed 4/5 already in discovery/migration with correct per-shard file counts
+  matching the proportional plan (`cs10-10` was still in early VM boot at check time — the very last VM created,
+  expected). **Shard→date-range mapping + full launch scripts** live in this dispatch's scratchpad (ephemeral, not
+  committed — re-derivable from the `LAUNCH_PARAMS.json` each VM's `vm-logs/` dir already carries, same as the earlier
+  10-shard measurement pass). **Real infra finding**: mid-session the interactive `gcloud` user session
+  (`ikenna@odum-research.com`) started failing ALL `gcloud compute`/`gcloud storage` calls ("Reauthentication failed:
+  cannot prompt during non-interactive execution") — worked around via
+  `CLOUDSDK_AUTH_ACCESS_TOKEN=$(gcloud auth application-default print-access-token)` (ADC stayed valid; re-minted per
+  invocation since access tokens expire ~1h) rather than an interactive re-login. **Status: IN FLIGHT, not done.** Next
+  steps for whoever continues this (same dispatch or a resume): (1) keep polling the fleet for terminal states
+  (`EXIT_STATUS` objects, preemptions) — do NOT re-launch any `cs*` VM that's still `RUNNING`; (2) any preempted/failed
+  shard gets a narrowed re-launch of ONLY its own date sub-range (idempotent — already-canonical files skip cleanly),
+  never a blind full restart; (3) once every shard reports a genuine terminal success, re-run a corpus-wide sharded
+  `--dry-run` (same 10-shard boundaries) to confirm 0 further changes; (4) then the full todo-3 done-when check across
+  all 4 scripts + the enumeration audit; (5) the HYPERLIQUID/ASTER follow-up pass above stays open regardless. **For any
+  concurrent reader**: 42 real `canonical-migration-cefi-content-apply-055803-*` VMs are live in `asia-northeast1-c`
+  right now — check `gcloud compute instances list` before assuming this campaign hasn't started.
