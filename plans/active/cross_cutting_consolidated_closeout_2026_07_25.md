@@ -520,7 +520,7 @@ domain-level `AssetClass`→`AssetGroup` enum rename across all 5 AGs + 7 repos)
 (coverage-percent formula symmetric-inclusion invariant audit, honest-coverage-model) ·
 [issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md](/plans/active/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md)
 (UAC capability-manifest/strategy-catalogue data gaps) ·
-[issues/features_service_catalogue_completeness_inventory_2026_07_24.md](/plans/active/issues/features_service_catalogue_completeness_inventory_2026_07_24.md)
+[issues/features_service_catalogue_completeness_inventory_2026_07_24.md](/plans/archive/issues/features_service_catalogue_completeness_inventory_2026_07_24.md)
 (features-service catalogue completeness across all 9 modules) ·
 [issues/mvp_scope_resolver_code_read_2026_07_24.md](/plans/active/issues/mvp_scope_resolver_code_read_2026_07_24.md)
 (code-read of the paper/live strategy-universe resolver vs UAC `MVP_SCOPE`, across all 5 AG plans) ·
@@ -608,13 +608,13 @@ the cron launcher-SSOT reconcile, the missing `{service_name}-events` topic crea
 ## Track 22 — Manifest-hygiene / phantom-capture monitor instances · P2
 
 **Sources**: dated outputs of 2 standing cross-cutting monitors —
-[issues/manifest_hygiene_red_2026_06_27.md](/plans/active/issues/manifest_hygiene_red_2026_06_27.md) (defi instance) +
-[issues/manifest_hygiene_red_2026_06_29.md](/plans/active/issues/manifest_hygiene_red_2026_06_29.md) (cefi instance) —
+[issues/manifest_hygiene_red_2026_06_27.md](/plans/archive/issues/manifest_hygiene_red_2026_06_27.md) (defi instance) +
+[issues/manifest_hygiene_red_2026_06_29.md](/plans/archive/issues/manifest_hygiene_red_2026_06_29.md) (cefi instance) —
 both from `manifest_hygiene_daily.py`;
 [issues/phantom_captures_prediction_2026_06_28.md](/plans/active/issues/phantom_captures_prediction_2026_06_28.md)
 
-- [issues/phantom_captures_tradfi_2026_06_28.md](/plans/active/issues/phantom_captures_tradfi_2026_06_28.md) — both from
-  the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py`).
+- [issues/phantom_captures_tradfi_2026_06_28.md](/plans/archive/issues/phantom_captures_tradfi_2026_06_28.md) — both
+  from the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py`).
 
 **Close-out criterion**: each candidate CSV triaged (real gap → backfill, code bug → fix adapter/writer, intentional new
 venue → extend the UAC oracle); the prediction/tradfi phantom rows reconciled via `--apply` flips to `attempted_failed`.

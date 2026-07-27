@@ -86,11 +86,11 @@ todos of its own**. The plans that actually work these docs' open items:
 (`PlanRegenLoop.prune_stale` wiped the entire live backlog on a transient zero-scan tick) ·
 [issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md](/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md)
 (same backlog task dispatched to two slots simultaneously) ·
-[issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md](/plans/active/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md)
+[issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md](/plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md)
 (ready P1 task undispatched, no matching worker, autospawn gap) ·
 [issues/dispatch_sequential_gate_fix_2026_07_24.md](/plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md)
 (`_claim_plan_for_slot` pinned all tasks to one slot, defeating intra-plan concurrency) ·
-[issues/gated_skip_park_no_slack_page_2026_07_25.md](/plans/active/issues/gated_skip_park_no_slack_page_2026_07_25.md)
+[issues/gated_skip_park_no_slack_page_2026_07_25.md](/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md)
 (GATED skip-task auto-park path never pages Slack) ·
 [issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md](/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md)
 (redispatch churn when a task is gated on an external CI promote, no durable park) ·
@@ -114,7 +114,7 @@ reaper-false-done, clean-exit-signal, auto-park-enforcement).
 (killed slot's watchdog frozen-kick loop leaves orphaned unpushed commits) ·
 [issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md](/plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md)
 (idle-slot dirty WIP never triggers orphan-inherit — spawn-only mechanism gap) ·
-[issues/slot_double_reset_dataloss_race_2026_07_25.md](/plans/active/issues/slot_double_reset_dataloss_race_2026_07_25.md)
+[issues/slot_double_reset_dataloss_race_2026_07_25.md](/plans/archive/issues/slot_double_reset_dataloss_race_2026_07_25.md)
 (slot worktree double-reset data-loss race, two realign code paths) ·
 [issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md](/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md)
 (slot recurring wedge at `context_pct=75` needing manual `/compact` confirmation) ·
@@ -149,7 +149,7 @@ guard); orphaned branch work recovered or explicitly written off with evidence.
 [orchestrator_vm_e2e_hardening_2026_07_24.md](/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md)
 (bootstrap/watchdog/memory-guardrail, VM-from-scratch e2e — forked out of `monitoring_control_plane_master` as the
 AO-internals slice) ·
-[issues/orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md](/plans/active/issues/orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md)
+[issues/orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md](/plans/archive/issues/orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md)
 (new `SlotRow` ORM column shipped without a hand-rolled migration).
 
 **Close-out criterion**: VM relaunch reprovisions glue-runners; DB pool sized/tuned for concurrent slot load; JWT secret
@@ -164,7 +164,7 @@ pinned across the fleet; VM log backup wired; the e2e hardening suite green; the
 (dispatch-completion/escalator-efficacy/account-burn observability KPIs) ·
 [issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md](/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md)
 (`plan_health` test suite firing real Slack posts to the AO alerts channel) ·
-[issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md](/plans/active/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md)
+[issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md](/plans/archive/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md)
 (repo-docs cleanup deleted files still referenced in shipped AO server code) ·
 [issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md](/plans/active/issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md)
 (per-slot Playwright dev-server port collision producing false cross-slot test results) ·

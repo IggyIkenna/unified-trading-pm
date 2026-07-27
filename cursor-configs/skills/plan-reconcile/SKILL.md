@@ -37,6 +37,11 @@ Runs against `unified-trading-pm/plans/{active,active/issues,epics}` + normative
 audit scope but ARE valid evidence when adjudicating (a codex SSOT outranks any plan; `plans/archive/` explains dangling
 refs).
 
+**Reads `assigned_vm: NA` docs too (Phase 2's checkbox surfaces are not filtered by `assigned_vm`), but does not ask
+whether a doc's OWN `NA` classification is still correct** — that reclassification question, over the same population,
+is `/na-eligibility-audit`'s disjoint remit. A false-unchecked flip inside an NA doc is still this skill's job; deciding
+the doc should flip to `assigned_vm: planning` is not.
+
 ## Topic-scoped (sharded) runs — added 2026-07-25
 
 **`all` (no argument) is the default and preserves today's exact whole-corpus behavior — nothing changes for an existing
@@ -426,4 +431,8 @@ interactively any time — the timer is additive, not a replacement for an on-de
 - `/codex/11-project-management/doc-frontmatter-schema.md` + `plans/PLAN_FORMAT.md` — frontmatter truth
 - `codex/11-project-management/` — findings triage, archival ritual, issue-doc lifecycle
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — assigned_vm/role semantics
+- `codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — AO-dispatch batch naming, the shared
+  conflict-check protocol, and the assigned_vm:NA corpus ratchet
+- `cursor-configs/skills/na-eligibility-audit/SKILL.md` — sibling skill (NA-doc validity/reclassification, disjoint
+  population from this skill's contradiction/false-unchecked sweep)
 - `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` — sub-agent spawn contract + escalation format

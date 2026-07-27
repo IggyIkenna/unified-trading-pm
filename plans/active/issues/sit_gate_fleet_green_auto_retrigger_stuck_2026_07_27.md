@@ -9,10 +9,10 @@ summary: >-
   (system-integration-tests run 30258599465, 2026-07-27T10:34:32Z) failed on `cross-repo-invariants` — but the actual
   failure was 4 downstream `ci-status-update` dispatches timing out ("conclusion=unknown/timeout") for
   alerting-service/greeks-service/instruments-service/unified-trading-system-ui, not a real cross-repo invariant
-  violation. Per codex/08-workflows/ci-cd-flow.md, "On a red/absent signal the PR stays BLOCKED until a later tick reads
-  a green SIT" and the promoter is documented to actively re-dispatch full-workspace-sit on red. In practice, the PM
-  fleet promoter (ldr-to-main-promote.yml) ran successfully at 2026-07-27T11:26:02Z and 2026-07-27T12:38:50Z (2 ticks,
-  ~2h after the red) with NO corresponding new full-workspace-sit run appearing in system-integration-tests — the
+  violation. Per /codex/08-workflows/ci-cd-flow.md, "On a red/absent signal the PR stays BLOCKED until a later tick
+  reads a green SIT" and the promoter is documented to actively re-dispatch full-workspace-sit on red. In practice, the
+  PM fleet promoter (ldr-to-main-promote.yml) ran successfully at 2026-07-27T11:26:02Z and 2026-07-27T12:38:50Z (2
+  ticks, ~2h after the red) with NO corresponding new full-workspace-sit run appearing in system-integration-tests — the
   auto-retrigger did not fire. Manually triggered `gh workflow run full-workspace-sit.yml` (workflow_dispatch, run
   30266902462) as an unblock; this is a sanctioned, low-risk action (no destructive/mutating side effects, fleet-wide
   benefit) but should not be the standing recovery path.
@@ -54,7 +54,7 @@ resolved_by:
    (`conclusion=unknown/timeout`) for alerting-service, greeks-service, instruments-service, unified-trading-system-ui —
    not a real invariant violation (21/21 repos otherwise stamped `SIT_VALIDATED` cleanly). This reads as a transient
    infra flake (GH Actions dispatch/Firestore-write timeout), not a code defect.
-2. `codex/08-workflows/ci-cd-flow.md` documents: "the fleet promoter computes... POSTS it... On a red/absent signal the
+2. `/codex/08-workflows/ci-cd-flow.md` documents: "the fleet promoter computes... POSTS it... On a red/absent signal the
    PR stays BLOCKED until a later tick reads a green SIT" — implying the promoter actively re-drives SIT to recover. The
    PM fleet promoter (`ldr-to-main-promote.yml`) ran successfully (its own workflow conclusion) at
    `2026-07-27T11:26:02Z` and `2026-07-27T12:38:50Z` — 2 ticks spanning ~2h after the red SIT run — with **no new

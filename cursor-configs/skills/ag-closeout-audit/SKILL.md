@@ -80,6 +80,10 @@ of 2026-07-25, a single topic-scoped shard of it — see `/plan-reconcile`'s own
 drafts the next AO-dispatch batch to close the gap. Run `/plan-reconcile` first if the corpus might have
 stale/false-unchecked state — this skill's classification is only as good as the frontmatter `status` it reads.
 
+**Also NOT `/na-eligibility-audit`.** An `assigned_vm: NA`, `status: active`/`open` doc is by definition NOT orphaned
+(it has an owner: itself) — this skill correctly never touches it. Whether that doc's OWN `NA` self-classification is
+still correct is a disjoint question `/na-eligibility-audit` answers, over a disjoint population, on its own schedule.
+
 ## Why `batchN` exists as a SIBLING doc, not content folded into the consolidated closeout plan
 
 Two independent reasons, both real, neither alone sufficient:
@@ -300,10 +304,13 @@ undecided design/judgment call?
 
 **Conflict check — BEFORE drafting any candidate todo (HARD, added 2026-07-25 per operator instruction: a
 naively-extracted batch todo can regress work the consolidated plan already has in flight for the SAME file/fix from a
-different angle).** For each candidate item, grep the AG's consolidated-closeout plan's OWN todos AND every existing
-batch plan for this AG (Phase 0.1/0.2) for overlap on the same target file(s)/same underlying fix — not just "is this
-covered" (Phase 1's question) but "does something ELSE already claim this exact ground, possibly with a different
-approach". Three outcomes:
+different angle).** This is now the SHARED protocol documented in full at
+`codex/11-project-management/ao-dispatch- batch-naming-and-conflict-check.md` § 3 — `/na-eligibility-audit` (the sibling
+skill auditing the disjoint `assigned_vm: NA` population) runs the identical check before any `NA → planning` flip, so
+the procedure lives in one place, not two. For each candidate item, grep the AG's consolidated-closeout plan's OWN todos
+AND every existing batch plan for this AG (Phase 0.1/0.2) for overlap on the same target file(s)/same underlying fix —
+not just "is this covered" (Phase 1's question) but "does something ELSE already claim this exact ground, possibly with
+a different approach". Three outcomes:
 
 - **No overlap** — draft normally.
 - **Clear duplicate or the other side is provably stale/superseded** (a newer dated section in either doc, a commit that
@@ -347,5 +354,9 @@ yourself only after that approval, then ship).
 - `plans/PLAN_FORMAT.md` — `status: draft` semantics, frontmatter schema
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility"
 - `/codex/11-project-management/` — findings triage, archival ritual
+- `codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — the shared conflict-check protocol
+  (§ 3) this skill's Phase 3 runs, also used by `/na-eligibility-audit`
+- `cursor-configs/skills/na-eligibility-audit/SKILL.md` — sibling skill (already-owned `assigned_vm: NA` doc validity,
+  disjoint population from this skill's orphan detection)
 - Precedent: `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` +
   `plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`

@@ -87,7 +87,7 @@ drift_direction: advance-code
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`](/plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md)
     — 0 open todos (archived 2026-07-26, record-only).
-  - [`plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](/plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md)
+  - [`plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](/plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md)
     - 5. **[DATA] P1.** PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip).
     - 6. **[DATA] P1.** Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5).
     - 7. **[DATA] P1.** Re-sync the manifest / data-status render for the migrated cefi chain cells so all four
@@ -180,7 +180,7 @@ drift_direction: advance-code
       gate).
     - **[DATA] P3.** (stretch) Consider wiring `book_depth.py`'s `adv_30d_usd` input to the same Phase-1 utility with
       `window_days=30`.
-  - [`plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md`](/plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md)
+  - [`plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md`](/plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md)
     - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — once lock contention resolved, RE-RUN this plan's G4 verification from
       a clean slate (gated on todos #1/#2, both open).
   - [`plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`](/plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md)
@@ -189,7 +189,7 @@ drift_direction: advance-code
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md`](/plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md`](/plans/active/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md)
+  - [`plans/active/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md`](/plans/archive/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`](/plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md)
     - **[OPS] P0.** Confirm status of this plan's Track-2 DERIBIT Wave-3 backfill; launch if not running (cap-1
@@ -208,7 +208,7 @@ drift_direction: advance-code
       `batch_lighter_api`.
     - **[DATA] P2.** Quarantine PACIFICA-SOLANA (no valid lane, no catalogue rows, venue culled).
     - **[DATA] P1.** Find the WRITER that stamped `batch_tardis` on a non-Tardis venue and fix the derivation at source.
-  - [`plans/active/issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md`](/plans/active/issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md)
+  - [`plans/active/issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md`](/plans/archive/issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`](/plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md)
     - **[SERVICE] P1.** Add a write-time canonical-path guard to the Tardis cefi lane (currently has none).
@@ -405,7 +405,7 @@ drift_direction: advance-code
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`](/plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md`](/plans/active/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md)
+  - [`plans/active/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md`](/plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md)
     - **[CODE] P1.** UAC-side retirement, not yet started — delete the `order_flow_imbalance`-specific capability
       entries across `data_type_capability.py` + 4 UAC test files.
     - **[VERIFY] P2.** Once the SSOT decision fully lands, check whether the two (now-one) live formulas agreed
@@ -623,7 +623,7 @@ drift_direction: advance-code
     - **[DOCS] P1.** Progress Log at every gate — each `--apply` records measured before/after row counts + coverage
       delta.
     - +3 more P2 — see file for the rest.
-  - [`plans/active/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`](/plans/active/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md)
+  - [`plans/active/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`](/plans/archive/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md`](/plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md)
     - **[DESIGN] P1.** Cross-check this doc's root-cause fix against the concurrent DERIBIT-COMBO venue-registry purge

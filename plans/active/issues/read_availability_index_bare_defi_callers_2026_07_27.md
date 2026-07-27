@@ -251,10 +251,20 @@ not a mechanical column-list copy.
       test per call site (`test_manifest_read_is_column_projected`,
       `test_live_status_manifest_read_is_column_projected`) pinning the exact `columns=DRILLDOWN_COLUMNS` call
       signature. Full `quality-gates.sh` green (4984 passed, 16 skipped), shipped via quickmerge --agent.
-- [ ] [SCRIPT] P1. **unified-trading-library** — `feature_service_base/manifest_discovery.py:59,99,224,274` (4 call
-      sites, shared by delta_one/volatility/onchain/cross_instrument — onchain is defi-adjacent): project each to its
-      own actual column usage (read each of the 4 functions individually — they differ; do not assume one column list
-      fits all 4).
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-15)** — `unified-trading-library@60a84d4a`. **unified-trading-library** —
+      `feature_service_base/manifest_discovery.py:59,99,224,274` (4 call sites, shared by
+      delta_one/volatility/onchain/cross_instrument — onchain is defi-adjacent): the first site (`read_manifest_rows`,
+      then line 59) was already fixed by a prior slot's commit `06190d77` before this task picked it up. Projected the
+      remaining 3 to their own actual column usage (read each function individually, not a mechanical shared list):
+      `get_captured_instruments` →
+      `columns=["capture_status","date","data_type","venue","instrument_type","instrument_id"]` (confirmed via
+      `compose_instrument_ids`'s downstream column reads); `check_dependency_via_manifest` →
+      `columns=["date","data_type","capture_status"]` + a `date` (and conditional `data_type`) row-group pushdown filter
+      (both required/optional args map directly to equality filters); `resolve_spot_perp_from_manifest` →
+      `columns=["date","capture_status","venue","instrument_type","instrument_id"]` + a `date` filter. Added a
+      regression test per function pinning the exact `columns=`/`filters=` call signature so a future edit can't
+      silently drop back to a bare call. Full `quality-gates.sh` green (244s-272s, 2 runs), shipped via quickmerge
+      --agent.
 - [ ] [SCRIPT] P1. **unified-trading-library** — `manifest_freshness.py:362`: the module's own comment already flags the
       ~6.5 GB peak risk; confirm current call shape by direct read and project if still bare.
 - [ ] [SCRIPT] P2. **unified-trading-library** — `manifest_writer/_queries.py` (4 sites) + `_maintenance.py` (4 sites) +

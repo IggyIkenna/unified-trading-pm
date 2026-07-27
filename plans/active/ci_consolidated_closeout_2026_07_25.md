@@ -93,11 +93,11 @@ isolation fixed on self-hosted runners.
 (`rollout-cloudbuild.py` template drift would regress fleet Cloud Build fixes) ·
 [issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md](/plans/active/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md)
 (Cloud Build re-stamps mutable git-sha image tags on rebuild) ·
-[issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md](/plans/active/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md)
+[issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md](/plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md)
 (`cassette-drift-check.yml` calls a deleted script, silently green) ·
 [issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md](/plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md)
 (`digest-drift-sweep.yml` `GITHUB_TOKEN` cross-repo scope bug, silent no-op since birth) ·
-[issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md](/plans/active/issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md)
+[issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md](/plans/archive/issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md)
 (github-actions-deploy SA has over-broad project-wide Secret Manager access) ·
 `github_actions_ci_cost_reduction_2026_07_15.md` + `github_actions_cost_reduction_options_analysis_2026_07_15.md` +
 `github_actions_operator_gated_followups_2026_07_17.md` + `github_actions_staging_machinery_shutdown_2026_07_24.md` (GHA
@@ -130,9 +130,9 @@ release-tagging/breaking-gate mechanisms repaired.
 ## Track 4 — Version-graduation / release-tag machinery · P2
 
 **Sources**:
-[issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md](/plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md)
+[issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md](/plans/archive/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md)
 (`reconcile-release-tags` creating zero tags post-D13 `version_source` migration) ·
-[issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md](/plans/active/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md)
+[issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md](/plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md)
 (orphaned version-readers + `workspace-manifest.json` `versions{}` cache drift post-D13 — the REPO version manifest, not
 the data manifest, despite the filename).
 

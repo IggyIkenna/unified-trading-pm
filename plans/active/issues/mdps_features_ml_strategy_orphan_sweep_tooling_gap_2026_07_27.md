@@ -108,7 +108,7 @@ lets each one be built, validated, and run to real completion on its own timelin
 
 ## Open work
 
-- [ ] 1. [SCRIPT] P1. **Build + validate an MDPS candle-layer orphan sweep** (new script in
+- [x] 1. ✅ [SCRIPT] P1. **Build + validate an MDPS candle-layer orphan sweep** (new script in
       `market-data-processing-service/scripts/`, name TBD) — design brief with file:line citations + open items done:
       [`mdps_candle_orphan_sweep_design_brief_2026_07_27.md`](mdps_candle_orphan_sweep_design_brief_2026_07_27.md).
       Mirror `migration_orphan_sweep.py`'s A-E taxonomy against `processed_candles/by_date/` per asset_group (shard key:
@@ -140,10 +140,22 @@ lets each one be built, validated, and run to real completion on its own timelin
       citation) — this is the expected shape of the problem, not a new bug. Added a read-only, `$MODE`-ignoring
       `<ag>-candle-orphan-sweep` launcher category (`deployment-service@d75e8f3`, `launch-canonical-migration-vm.sh`,
       mirrors `_candle_census_cmd`'s no-reachable-`--apply`-path shape; no new `VM_PREFIX_TO_BUCKET` registry entry
-      needed — falls under the existing per-AG `canonical-migration-<ag>-` prefixes). **Still outstanding before this
-      checkbox flips**: the actual full-corpus Tier-2 SPOT VM run for cefi/defi/tradfi/prediction (sports alone was
-      real-data-validated in-session at a bounded 200-object scale) and confirming `orphan_class_E == 0` (or a genuine,
-      triaged non-zero count) per asset_group.
+      needed — falls under the existing per-AG `canonical-migration-<ag>-` prefixes). **CLOSED 2026-07-27** — per main's
+      ruling (`BLK-c8936baa`): this VM run is read-only/safe-idempotent/no-`--apply`-path-ever-reachable, so it is
+      AO-dispatchable without an operator gate (unlike K1/K2's prod-mutating migration). Fixed a real GCE 63-char
+      vm_name overflow found on the actual launch (`deployment-service@ff8eebe`, mirrors the earlier `*-candle-apply`
+      `cdlap` fix). **Ran the full-corpus Tier-2 SPOT VM sweep for cefi/defi/tradfi/prediction** (4× `e2-standard-8`
+      SPOT, all completed in <2 min, zero preemptions) — real, manifest-verified per-AG results: cefi
+      A=460/E=0/F=405,496 (0.11% coverage), defi A=0/E=7,936/F=1,123,431 (0% coverage), tradfi A=4,388/E=0/F=536,934
+      (0.81% coverage), prediction A=13,281/E=0/F=569,947 (2.28% coverage). **This surfaced a MASSIVE, corpus-wide
+      candle-manifest coverage gap** — spot-verified against the live cefi manifest directly (75 total MDPS rows in an
+      8.78M-row index, zero for the flagged DERIBIT object) to confirm this is a real manifest absence, not a sweep-tool
+      bug. Filed as its own P0 finding, out of this todo's scope:
+      [`mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`](mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md)
+      (root-cause + backfill are that doc's todos, not this one's — todo 1's own scope was build+validate the TOOL,
+      which is now genuinely done: built, bug-fixed, 31-test-covered, and run to completion on real prod data for 4/5
+      asset_groups). Sports's full-corpus sweep (only a bounded 200-object sample run) is P2 follow-up in the new issue
+      doc, not a gate on this todo.
 - [ ] 2. [SCRIPT] P2. **Build + validate a features-service orphan sweep** — same A-E taxonomy pattern, shard key
       `asset_group × feature_family × day`. Repo: features-service. VM-run, never in-session.
 - [ ] 3. [SCRIPT] P2. **Build + validate an ml/strategy orphan sweep** — genuinely different shape (run/model-id-keyed,
@@ -162,3 +174,13 @@ lets each one be built, validated, and run to real completion on its own timelin
   `deployment-service@d75e8f3`. Deliberately did NOT flip todo 1's checkbox — the full-corpus Tier-2 SPOT VM run for
   cefi/defi/tradfi/prediction genuinely has not happened yet (DeFi alone confirmed to need VM-scale memory, matching the
   raw-tick sweep's own multi-day 2026-07-21..24 iteration history), so "validate" is only partially satisfied.
+- **2026-07-27** (same dispatch, continued) — Escalated the resulting `/done` checkbox-flip conflict (`BLK-c8936baa`).
+  Main ruled this genuinely differs from the K1/K2 precedent: read-only, no `--apply` path ever reachable, safe-
+  idempotent → AO-dispatchable without an operator gate. Launched all 4 real Tier-2 SPOT VMs
+  (cefi/defi/tradfi/prediction); the first launch attempt used a stale code tarball (caught before the VM could pull it
+  — deleted + republished tarballs via `create-code-tarballs.sh` before relaunching) and a real GCE 63-char vm_name
+  overflow on prediction (fixed live, `deployment-service@ff8eebe`). All 4 completed in under 2 minutes each with
+  manifest-verified results (see todo 1's final note). The results themselves surfaced a severe, corpus-wide
+  candle-manifest coverage gap (0-2.3% coverage across all 4 non-sports AGs) — filed as its own P0 issue doc
+  (`mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`) rather than absorbed into this tooling-gap doc's scope.
+  Todo 1 flipped — the tool-build+validate deliverable is genuinely complete.
