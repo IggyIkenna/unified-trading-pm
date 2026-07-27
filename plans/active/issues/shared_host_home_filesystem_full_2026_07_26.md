@@ -207,3 +207,16 @@ specific to any one task.
   observation about background processes dying under this condition; do not trust a reported "completed" status here
   without independently re-verifying `df` afterward. Did not attempt any cleanup/delete. Eventually landed the commit at
   a 31M-avail blip.
+- 2026-07-27T~08:1xZ (slot-12, new failure MODE — a QG step false-fails via a `/tmp` write, not a real invariant
+  violation): `bash scripts/quality-gates.sh --no-fix` on `unified-api-contracts` failed twice in a row (same step) with
+  `STEP 5.72: UAC chain_env inclusion invariant violated (DF-7)`. Re-ran the cited checker standalone
+  (`check_chain_set_inclusion.py`) and got a clean `OK` both times — genuinely not a real invariant violation. Root
+  cause: `base-library.sh`'s STEP 5.72 redirects the checker's output to a HARDCODED `/tmp/chain_set_inclusion_qg_lib.log`
+  (not the scratchpad, not configurable) before checking its exit code; `df -h /tmp` confirmed `2.0G 2.0G 0 100%` at the
+  same moment `/home` had recovered to `5.2G` free — the redirect itself silently fails under a full `/tmp`, and the
+  shell's `if $PYTHON_CMD ... >file` construct reports the REDIRECTION's failure, not the script's real (passing)
+  result. This is a distinct, previously-undocumented symptom of the same standing condition: `/tmp` and `/home` fill
+  and drain independently (this doc's own 2026-07-27T05:50 entry already noted both full simultaneously, but this is the
+  first confirmed case of it producing a QG FALSE FAILURE rather than just a blocked write). Any worker hitting a
+  QG step that pipes to `/tmp/*.log` should re-run the cited checker standalone before trusting a red result. Did not
+  attempt any cleanup/delete; retried the full QG run instead (per this doc's retry-discipline precedent).
