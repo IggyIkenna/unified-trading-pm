@@ -191,14 +191,19 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
       `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` for the fix-todo (same
       underlying disagreement between `--require-captured --auto-day`'s coverage check and the VM-side
       `check_dependencies()`, confirmed on 3 independent occurrences across 2 different days now). Reconcile there, not
-      here, to avoid two parallel fix attempts. — ✅ features-service@ecd548b8 + features-service@c06a9bbf (sibling doc
-      has full detail). Root cause was neither phantom-capture nor a coverage-check gap: 2026-07-04 (the delta_one
-      lookback window's start day) is an honest TradFi weekend/holiday (`empty_confirmed` in the real manifest, no
-      backing object by design) — the coverage-check already handled it correctly; the VM-side `check_dependencies()`
-      had zero manifest awareness and hard-failed on the honest-empty day. Fixed by making `DependencyChecker`
-      manifest-aware. Also caught + fixed a live regression in a different slot's concurrently-shipped phantom-capture
-      guard (features-service@696768c7) that was over-applying its new object-existence check to `empty_confirmed` days
-      too, which would have broken coverage for nearly every multi-day TradFi window.
+      here, to avoid two parallel fix attempts. — ✅ features-service@ecd548b8 (sibling doc has full detail; this todo's
+      own local `c06a9bbf` follow-up was superseded by a concurrently-shipped, more complete fix from another slot —
+      discarded via `git rebase --skip`, never pushed, per the sibling doc's reconciliation). Root cause was neither
+      phantom-capture nor a plain coverage-check gap: 2026-07-04 (the delta_one lookback window's start day) is an
+      honest TradFi weekend/holiday (`empty_confirmed` in the real manifest, no backing object by design) — fixed at TWO
+      complementary layers: (1) the runtime `DependencyChecker.check_dependencies()` (raw GCS probe, zero manifest
+      awareness) is now manifest-aware (`features-service@ecd548b8`); (2) `pipeline_e2e_check.py`'s coverage-check
+      itself had a separate, real granularity gap — it applied the same acceptable-status set to the TARGET day as to
+      window-interior days, so an `EMPTY_CONFIRMED` target still read as "covered" — fixed via
+      `features-service@1b272676` + `4fbf4dc7` (a different slot, reconciled together with the phantom-capture guard
+      `features-service@696768c7` that a THIRD slot shipped concurrently for a related-but-distinct bug). Full
+      reconciliation + verification against real production data in
+      `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`.
 - [ ] [SCRIPT] P0. **Root cause B** — fix `features-multi-timeframe-service`'s delta_one-input lookup to use the
       requested `--start-date`/`--end-date` (or the per-day date it's currently processing), not the current wall-clock
       date. Repo: features-service (`features_service/multi_timeframe/` or wherever the delta_one input loader lives).
