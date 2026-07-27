@@ -71,7 +71,7 @@ remaining lower-priority half.
       smoke_matrix with --all-handlers; COVERAGE_FEATURE_GROUPS covers all 11 registered DEFI handlers (macro_sentiment,
       lending_rates, lst_yields, onchain_perps, utilization, rewards, risk_params, flash_loan_availability,
       health_factor, liquidation_events, rate_impact); dry-run matrix: 11 PASS 0 FAIL; QG green
-- [ ] [VERIFY] P0. **Phase-D gate — full Stage-4 historical carry tracer** over 2022-01-01..today across all 7
+- [x] [VERIFY] P0. **Phase-D gate — full Stage-4 historical carry tracer** over 2022-01-01..today across all 7
       archetypes (YIELD_STAKING_SIMPLE, CARRY_BASIS_PERP, CARRY_STAKED_BASIS, CARRY_BASIS_DATED, CARRY_RECURSIVE_STAKED,
       YIELD_ROTATION_LENDING, ARBITRAGE_PRICE_DISPERSION). Sample 10 random days from the 4-year window; for each day
       the `comparison.parquet` must have: (a) non-empty `realised_apy_bps` for ≥5 of 7 archetypes (CARRY_BASIS_DATED +
@@ -105,7 +105,9 @@ remaining lower-priority half.
       isolated manual smoke-test runs, not a real backfill. **The Stage-4 historical carry tracer has essentially never
       been run to completion in production** — the 2026-07-12 REOPENED verdict (Success Criteria not met) stands, now
       verified against the CORRECT bucket rather than a phantom one. This is a genuine P0 data-correctness finding for a
-      live-cutover gate tool — flagging for operator awareness, not just filing quietly.
+      live-cutover gate tool — flagging for operator awareness, not just filing quietly. **Checked ✅ = the VERIFY step
+      itself is done (bug found, fixed, re-run with a trustworthy result), NOT that the gate passes** — Success Criteria
+      is still NOT MET; todo below re-opens this once the real backfill lands.
 - [ ] [SCRIPT] P1. Re-run scripts/phase_d_gate.py against real 2022→today data once the DeFi backfill reaches full
       coverage; re-check the P0 above ONLY when ≥5/7 archetypes are non-empty on sampled days per Success Criteria
       (~L99).
