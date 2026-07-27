@@ -171,7 +171,15 @@ oracle's PRE-`d40c5d7d` behavior (structure-only), which would have reported the
       the writer-fix-then-migrate plan need to (a) stop the active batch/backfill crons until the leaf-naming fix ships,
       (b) accept the growing backlog and let the eventual migration sweep it up, or (c) ship the leaf-naming fix on an
       expedited timeline given it's now measurably live-growing rather than static? Options, not a recommendation from
-      this doc — needs the plan owner's call.
+      this doc — needs the plan owner's call. **Status note (2026-07-27, category-A judgment call, left gated)**:
+      genuinely a real "which tradeoff do we accept" decision (crons were never actually stopped, so (a)/(b) carry real
+      operational cost/risk differences a worker can't weigh) — not downgraded. In practice, option (c) appears to have
+      been executed regardless of a formal sign-off: `write_defi_rows()`'s leaf fix shipped
+      `market-tick-data-service@0fddb95e` (2026-07-27, per
+      `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s corresponding todo) on an expedited timeline
+      without stopping the crons. Left open for an explicit operator close/confirm rather than auto-resolved here, since
+      this doc's own scope (§ "What is NOT claimed") never asserted a fix timeline as sufficient to answer the
+      sequencing question on its own.
 - [x] [DIAG] P1. **Measure the scale**: how many `pipeline_mode=batch_*` DeFi objects have been written since 2026-07-20
       (the register's implicit "capture stopped" reference point) under the bare-symbol leaf shape? A bounded
       per-day-since-2026-07-20 delimiter descent (not a corpus walk) would answer this. — already covered by
