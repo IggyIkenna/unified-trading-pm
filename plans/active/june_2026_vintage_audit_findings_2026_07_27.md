@@ -375,7 +375,7 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
    model-variant trainings still need an operator-scheduled VM run.
 4. defi_collateral_sizing bps=150 — KEEP as documented reasonable estimate; close the placeholder flag, no calibration
    work needed.
-5. e2e_defi_config_taxonomy D1 — confirmed stays DEFERRED-BY-DESIGN, no timeline.
+5. e2e_defi_config_taxonomy D1 — confirmed stays "DEFERRED-BY-DESIGN", no timeline.
 6. sports_canonical day=all fold — **CORRECTED (was stale)**: already operator-authorized 2026-07-25 (Option A,
    `sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`), reversibility re-verified 2026-07-27 (7-day
    soft-delete). Not about "teams over time" — confirmed dead legacy season-keyed snapshot, zero live readers.
