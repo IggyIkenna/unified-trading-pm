@@ -162,6 +162,12 @@ drift_direction: advance-code
           to `processed_candles/`.
     - 16. **[DATA] P1.** Root-cause + close the candle object↔manifest disconnect so skip-if-fresh can be trusted
           post-migration.
+  - [`plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`](/plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md)
+    — filed as a tracked follow-up to root-cause during the candle_canonical_path_migration_execution_2026_07_24.md work
+    above (two consecutive `--force` writes for the identical CEFI:BINANCE-FUTURES shard landed at two different object
+    paths — with vs. without the `instrument_type=` segment — despite byte-identical content).
+    - 1. **[DATA] P3.** Root-cause why the `instrument_type=` segment's presence is non-deterministic for the identical
+         shard (invocation-path-dependent vs. a resolution race).
 - **Coverage / backfill / VM ops**:
   - [`plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`](/plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).

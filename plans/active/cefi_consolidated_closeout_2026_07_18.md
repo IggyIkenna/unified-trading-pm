@@ -449,3 +449,12 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 > Surface C v2 manifest-dedup `--apply` + LIGHTER-ZKSYNC backfill remain the critical-path items (tracked in the child's
 > Deferred-work table) — do NOT assume done without re-measuring. The `/autonomous` loop is OFF; resuming requires a
 > fresh explicit invocation.
+
+- **2026-07-27** — Discoverability fix (`na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` Phase 4): 2
+  cefi-tagged docs reclassified `assigned_vm: NA → planning` this session were not mentioned anywhere in this hub, the
+  exact "orphan invisible to sweep" bug class fixed twice before (entry #18/#25 in
+  `autonomous_session_operator_decisions_2026_07_25.md`). Added here for future tranche-sweep discoverability:
+  `issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md` (DNS-starvation Tardis-client fix, mechanical
+  apply-of-proven-pattern) and `mdps_candle_manifest_population_disconnect_2026_07_25.md` (candle-manifest root-cause +
+  fix, multi-AG tagged cefi-first). Neither is tracked in any Track above; both are now `assigned_vm: planning` and live
+  in the AO backlog.

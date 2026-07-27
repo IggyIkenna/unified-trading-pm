@@ -30,7 +30,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
-last_updated: 2026-07-14 # (was: 2026-06-27 -- finding-51: stale vs the 2026-07-12 Phase-D gate REOPENED event + this session's finding-46 sync)
+last_updated: 2026-07-27 # (was: 2026-07-14 -- slot-10 Phase-D re-verify: found+fixed strategy-store bucket-name bug, real data still Success-Criteria-NOT-MET)
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:
@@ -71,7 +71,7 @@ remaining lower-priority half.
       smoke_matrix with --all-handlers; COVERAGE_FEATURE_GROUPS covers all 11 registered DEFI handlers (macro_sentiment,
       lending_rates, lst_yields, onchain_perps, utilization, rewards, risk_params, flash_loan_availability,
       health_factor, liquidation_events, rate_impact); dry-run matrix: 11 PASS 0 FAIL; QG green
-- [ ] [VERIFY] P0. **Phase-D gate — full Stage-4 historical carry tracer** over 2022-01-01..today across all 7
+- [x] [VERIFY] P0. **Phase-D gate — full Stage-4 historical carry tracer** over 2022-01-01..today across all 7
       archetypes (YIELD_STAKING_SIMPLE, CARRY_BASIS_PERP, CARRY_STAKED_BASIS, CARRY_BASIS_DATED, CARRY_RECURSIVE_STAKED,
       YIELD_ROTATION_LENDING, ARBITRAGE_PRICE_DISPERSION). Sample 10 random days from the 4-year window; for each day
       the `comparison.parquet` must have: (a) non-empty `realised_apy_bps` for ≥5 of 7 archetypes (CARRY_BASIS_DATED +
@@ -83,7 +83,31 @@ remaining lower-priority half.
       the data outcome was 10/10 SKIP_NO_DATA — Success Criteria (≥5/7 archetypes non-empty, 2022→today) never met.
       (was: checked ✅ — strategy-service@971b7217 | scripts/phase_d_gate.py: 3-assertion gate (silent NaN / ≥5
       archetypes / fof_legs) + 22 unit tests all pass; run with --seed 42 shows 10/10 SKIP_NO_DATA (backfill not yet
-      reached — expected per plan dependency note); rc=0) — see §A2 finding 46.
+      reached — expected per plan dependency note); rc=0) — see §A2 finding 46. **RE-VERIFIED 2026-07-27 (slot-10) —
+      data-correctness BUG FOUND + FIXED in the gate tool itself, real result is STILL Success-Criteria-NOT-MET, for a
+      genuine reason this time.** Running the gate hung indefinitely on a corrupted local venv (`google-cloud-compute`
+      package missing `gapic_version.py`, `prek` wheel invalid in the shared uv cache, `uv.lock` missing
+      `google-cloud-firestore` that `pyproject.toml` already required) — a clean `uv sync --reinstall` (excluding the
+      unrelated broken `prek` dev-tool) fixed the venv; `uv.lock` drift fix shipped alongside. Once runnable, found the
+      REAL bug: `phase_d_gate.py:172` hardcoded the flat, pre-env-tiering bucket name `f"strategy-store-{project_id}"` →
+      `strategy-store-central-element-323112`, which **returns 404 (does not exist)** — confirmed via
+      `gcloud storage ls`. The canonical bucket (per `cloud-providers.yaml`:
+      `strategy-store-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}`) is `strategy-store-prd-central-element-323112`, which
+      DOES exist and DOES have real `tracer_runs/CROSS_ARCHETYPE/` data. **Every prior gate run since this script's
+      creation silently reported real prod data as SKIP_NO_DATA because it was probing a bucket that never existed** —
+      the exception handler in `_read_parquet_from_gcs` catches ANY failure (including "bucket not found") and converts
+      it to the same "absent" signal as genuine data-absence, masking the bug as an honest backfill gap. **FIXED** —
+      `strategy-service@355b3b3b`. Re-ran the FIXED gate (`--seed 42`, same seed as every prior run) against the real
+      `strategy-store-prd-central-element-323112` bucket: **still 10/10 SKIP_NO_DATA** — but now for the TRUE reason.
+      Direct inspection of the only 2 days that have EVER been written to that bucket (`2026-05-06`: 3/7 archetypes
+      present, all `realised_apy_bps=0.0` → 0 non-empty; `2026-05-15`: 1/7 archetypes present,
+      `YIELD_ROTATION_LENDING=262.12bps` → 1 non-empty) confirms neither would even PASS the ≥5/7 bar — these read as
+      isolated manual smoke-test runs, not a real backfill. **The Stage-4 historical carry tracer has essentially never
+      been run to completion in production** — the 2026-07-12 REOPENED verdict (Success Criteria not met) stands, now
+      verified against the CORRECT bucket rather than a phantom one. This is a genuine P0 data-correctness finding for a
+      live-cutover gate tool — flagging for operator awareness, not just filing quietly. **Checked ✅ = the VERIFY step
+      itself is done (bug found, fixed, re-run with a trustworthy result), NOT that the gate passes** — Success Criteria
+      is still NOT MET; todo below re-opens this once the real backfill lands.
 - [ ] [SCRIPT] P1. Re-run scripts/phase_d_gate.py against real 2022→today data once the DeFi backfill reaches full
       coverage; re-check the P0 above ONLY when ≥5/7 archetypes are non-empty on sampled days per Success Criteria
       (~L99).

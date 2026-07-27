@@ -401,3 +401,32 @@ handler needs `--shard-spec` + `--instrument-ids` + `streaming_redis_url`. **Pla
 into setup-data-pipeline-vm.sh → launch mtds-live cefi → verify ≥1 live row** (reusable for all AGs — live=0
 fleet-wide). Then year-shard the 48.5k free-venue failed re-fetch + file the BLOCKED-CREDENTIALS ask for the 775.9k
 Tardis-gated.
+
+### 2026-07-27 (slot-14, `data_engineering`) — dispatched the "NEXT SESSION — execute the migration" todo (line 195): STOPPED before executing, standing down
+
+Dispatched task `data_completion_cefi-009` targets the todo bundling: (1) an 8 year-sharded `--also-legacy --apply`
+gap-fill (5,233 legacy-only cells), (2) an irreversible corpus-wide orphan-sweep-delete, (3) E5 manifest rebuild, (4) E7
+verify, (5) E8 **permanent legacy-bucket delete** — as ONE dispatched unit (`est_hours: 1.0`). Did not execute any part
+of it. Reasons:
+
+1. **The todo's own text already says not to**: title is literally "NEXT SESSION — execute the migration", body ends
+   "NOT this session (irreversible)" — this is stale prose carried verbatim from
+   `cefi_manifest_canonicalisation_2026_06_01.md` (2026-06-01 era, migrated 2026-07-13) and was never meant to be picked
+   up as a single atomic dispatch.
+2. **A discovered, pre-existing, unambiguous cross-plan HARD RULE forbids step 5 (E8) right now**:
+   `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md` line 134: "**Do NOT delete an AG's legacy bucket
+   while its L3 plan is open** — prediction/cefi hold legacy-only history." THIS plan (cefi's L3 plan) is
+   `status: active` with many other open P0 items beyond this one todo (⑦ catalog-path denominator build, the v8→v9
+   single-walk, E7 verify itself is its own separate unchecked item, several MDPS candle-coverage gaps) — it is not
+   C-GREEN, so E8 is structurally not permitted yet regardless of how steps 1-4 go.
+3. **Steps 1-4 are each independently VM-scale and irreversible-adjacent**: the doc's own text elsewhere describes the
+   legacy listing alone as having "stalled an e2-standard-4, so shard/bigger-mem" and explicitly calls this class of
+   work "**Deliberate execution (irreversible deletes + VM-scale) — not to be rushed**" (same doc, E4 item). An
+   8-year-sharded VM launch fleet + a full-corpus orphan-sweep delete + a manifest rebuild is not something to originate
+   and monitor to completion inside a single ~1-hour interactive dispatch, independent of the E8 gate.
+
+**Recommendation for whoever picks this up next**: this whole todo needs to be split into a properly-scoped, phased,
+VM-launched execution plan (matching the pattern used for the cefi Track-1/Track-2 migrations elsewhere this week), with
+the E8 delete as its own final, separately-gated step confirmed against
+`legacy_bucket_dual_write_decommission_2026_07_24.md`'s L3-open rule at execution time, not bundled into one dispatch.
+Did not flip this todo's checkbox. Filed the same finding via `/blocked` for operator awareness given the scale/stakes.

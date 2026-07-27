@@ -168,10 +168,59 @@ isolation, consolidator merge/dedup, stale-blob liveness and the `captured`-outr
       (a) equivalence vs `_build_capture_status_map` across all 4 `capture_status` states incl. the
       `_DEDUP_NULL_SENTINEL` NULL≡`""` collapse; (b) perf guard — 1.4 M-row synthetic index,
       `compute_completeness_fraction` < 0.5 s (today: **13.14 s measured**); (c) memoization — 1 build for 3 calls.
-- [ ] 5. [DATA] P0. **The 1.58 GB defi-prd index is its own P0** — audit every `read_availability_index` caller on defi
-      for a missing column/filter projection (OOM risk), and consider whether the index needs compaction/partitioning.
+- [x] ✅ 5. [DATA] P0. **AUDITED 2026-07-27 (slot-7)**. Grepped every `read_availability_index(` call site
+      workspace-wide (168 real calls across 14 repos, tests excluded) and classified each by (a) whether it passes
+      `columns=`/`filters=` (48 do — SAFE, slim-path) vs. a bare full-schema call (120 do NOT), and (b) whether the call
+      is DEFI-reachable (asset_group-parametrized shared code, or explicitly defi-named) vs. scoped to a single other
+      asset_group (sports/tradfi/prediction/cefi one-off backfill/reconcile scripts — excluded, not "on defi"). **17
+      files carry a genuine DEFI-reachable unfiltered read** (production/interactive hot-paths first):
+      `unified-trading-library/manifest_completeness.py:375` (the parent issue's own read — F1/F2 sped up the POST-read
+      map-build but the READ ITSELF is still full-schema/unfiltered, called 3x/instrument from MDPS for defi's
+      ohlcv_1m/1h/1d emission checks); `features_service/common/{manifest_leg_guard.py,manifest_window_guard.py}`
+      (shared per-feature-family guards onchain/defi inherits);
+      `unified-trading-library/feature_service_base/manifest_discovery.py` (4 sites — the base class every feature
+      family incl. onchain inherits from); `unified-trading-library/dependency_check.py:143`;
+      `unified-trading-library/pipeline_e2e_check/{prod_precheck,shard_verify}.py` (shared engine behind all four
+      `/data-pipeline-check-*` skills); `deployment-api` dashboard backend
+      (`services/{data_status_hierarchical,data_status_service,manifest_source}.py`,
+      `routes/data_status/_live_coverage.py` — serves the LIVE defi data-status dashboard page, the
+      highest-traffic/interactive risk of the set); `deployment-service/cli/utils/manifest_reader.py`; MTDS core
+      (`engine/orchestrator/{__init__.py,venue_fetch.py}`, `reader.py`,
+      `cli/handlers/{data_manifest_handler.py,_gas_fee_helpers.py}` — gas-fee handling is an on-chain/defi concept);
+      MTDS's own explicitly-defi-named `scripts/{rebuild_defi_manifest.py,delete_defi_zero_row_placeholders.py}`;
+      `market-data-processing-service/scripts/pipeline_e2e_check.py:533` +
+      `market-tick-data-service/scripts/pipeline_e2e_check.py:1998` (the check-skill drivers' own fallback path — the
+      SAME driver this plan's todo 8 ran against CEFI this session; DEFI would hit the identical unfiltered read);
+      `strategy-service/{manifest_allocation_guard.py,scripts/probe_funding_rate_dispersion_coverage.py}` (the latter
+      explicitly a defi funding-rate probe);
+      `ml-service/{training/manifest_gap_handler.py,inference/manifest_inference_guard.py}`;
+      `batch-live-reconciliation-service/stage0_manifest_reason_check.py` (nightly per-asset_group reconciliation, runs
+      for defi too); `instruments-service/{cli/main.py,engine/orchestrator/catalogue.py}`;
+      `features-service/scripts/onchain/smoke_matrix.py`;
+      `features-service/delta_one/app/core/dependency_checker.py:619` (flagged for confirmation — unclear whether
+      delta_one's feature groups ever consume defi instruments). A further ~15 files (the per-feature-family
+      `scripts/*/smoke_matrix.py` set, `census_manifest_data_type_2026_07_24.py`,
+      `audit_instrument_definition_completeness.py`, `backfill_asset_group_blank_repair_2026_07_15.py`,
+      `validate_manifest_coverage.py`, `rebuild_mtds_manifest.py`) are generic/asset_group-parametrized but dev-time/
+      on-demand rather than production hot-path — same fix pattern applies, lower urgency. **Compaction/partitioning
+      verdict: NOT recommended** — the proven fix (this issue's own F1-F3, plus the existing row-group filter pushdown
+      already measured at ~14.86 GiB→~5 MB for a single-day filter, see `_read_index.py` docstring) is a READ-PATH-ONLY
+      column/filter projection at each call site, mirroring what `deployment-api/_axis_census.py` and the
+      `pipeline_e2e_check.py` canonical-leg readers already do correctly — no on-disk migration needed. Follow-up fixes
+      filed as todos 7-8 below (scoped per-file rather than bundled, since each caller's `columns=`/`filters=` set
+      differs).
 - [ ] 6. [DOC] P2. Record in codex that the per-VM manifest flush is ALREADY debounced (50 entries/5.0s, `utl@6b6d53bd`)
       so the "flush is O(n²)" hypothesis is not re-derived by the next reader.
+- [ ] 7. [SCRIPT] P1. Add `columns=`/`filters=` projection to `manifest_completeness.py:375`'s
+      `read_availability_index(bucket)` call — thread the already-available `upstream_window` row keys into a `filters=`
+      predicate (date/data_type/instrument_id, mirroring the proven row-group-pushdown pattern) so the READ itself, not
+      just the post-read map-build, stops paying the full-corpus cost on defi-prd (1.58 GB). Highest-value single fix
+      from todo 5's audit (repo: unified-trading-library).
+- [ ] 8. [SCRIPT] P1. Add `columns=`/`filters=` projection to the `deployment-api` dashboard data-status backend
+      (`services/{data_status_hierarchical,data_status_service,manifest_source}.py`,
+      `routes/data_status/_live_coverage.py`) — the highest interactive-traffic defi-reachable unfiltered reads found in
+      todo 5's audit (an operator viewing the defi data-status page triggers a full-index decode per request) (repo:
+      deployment-api).
 
 ## 2026-07-20 — F1+F2 SHIPPED (16.7x, value-equivalent); F3 premise DISPROVEN
 

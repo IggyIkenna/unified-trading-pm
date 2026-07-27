@@ -146,13 +146,15 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       (16+16+60+58+1 = 151 docs verified clean across every commit), `check_todo_format.sh` (non-blocking pre-existing
       numbering warnings only, nothing introduced by this pass), `check_line_caps.sh` (one HARD violation caught —
       `instrument_id_format_canonicalization_2026_07_08.md` at 1,309L — fixed via the Phase-3 split, not skipped).
-- [ ] [SCRIPT] P3. Verify every new/touched doc carries correct tags per its tranche (`asset_group`, `stage`, `tags`)
-      and is listed in its tranche's consolidated-closeout Sources — a doc that's been reclassified but not added to its
-      tranche's Sources list is exactly the "orphan invisible to the sweep" bug this session already fixed twice (entry
-      #18/#25 in `autonomous_session_operator_decisions_2026_07_25.md`) recurring in a new form. **NOT done this pass**
-      — genuinely deferred, not silently skipped: the 77 reclassified docs' own `asset_group`/`tags` were verified
-      correct at classification time, but none were added to their tranche's consolidated-closeout Sources list. Flagged
-      as this plan's own next concrete todo.
+- [x] [SCRIPT] P3. **DONE 2026-07-27 (`unified-trading-pm@665a49d21`).** Grep-checked all 77 reclassified docs against
+      their tranche's consolidated-closeout hub: 50 already mentioned somewhere, 27 genuinely NOT — confirming this
+      finding's own predicted bug class actually recurred. Root cause split two ways: 1
+      (`mdps_odds_horizon_bucket_     reprocess_launch_prep`) needed no fix, already claimed+resolved+archived by a real
+      AO worker mid-session; the other 26 got a discoverability-only append (no existing content touched) to their
+      tranche's hub — cefi (2), defi (5), sports (4), cross-cutting (4), meta/infrastructure (11, routed to
+      `infra_consolidated_closeout` per `ag_closeout_audit_scope_widening_triage_2026_07_26.md`'s own precedent for that
+      asset_group pairing). `asset_group`/`tags` on all 77 were already verified correct at classification time (Phase
+      1/2), not re-checked here.
 - [x] [DOC] P3. **DONE** — final tallies recorded in the 2026-07-27 Progress Log entries above (77 reclassified, 64
       stale-checkbox-corrected, 1 split, live-fleet execution proof for at least 1 of the 77).
 
@@ -374,3 +376,35 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   live reads intermittently failed due to genuine host memory/load pressure on the orchestrator VM (25.6GB/56GB used,
   internal `tmux has-session` subprocess timeouts observed in its own journal), not a service outage (confirmed via
   `systemctl status`: stable uptime throughout, never crash-looping).
+
+- **2026-07-27, continued (tranche-Sources fix, final health check, session close-out decision).** Fixed Phase 4's
+  deferred tranche-Sources-listing todo — see the flipped checkbox above for the full breakdown
+  (`unified-trading-pm@665a49d21`/`c223eed09`): 27 of 77 confirmed genuinely missing, 26 fixed via discoverability
+  appends, 1 needed no fix (already archived by a real worker).
+
+  **Final live-fleet health check**: backlog now 804 total (`queued`=716, `dispatched`=9, `blocked`=15, `done`=61,
+  `cancelled`=3) — `done` climbed from 45 → 61 since the last snapshot, real continuous fleet throughput, not a stalled
+  queue. No new PR/quickmerge failures observed beyond the expected transient branch-drift bounces on this extremely
+  busy shared branch (all resolved via the standard rebase-and-retry, up to 9 retries on one commit tonight — consistent
+  with, not exceeding, this workspace's own documented norm for a heavily concurrent session).
+
+  **Decision on the remaining Phase-3 item (fresh full `/ag-closeout-audit all` 9-tranche re-run): deferred again,
+  deliberately, not attempted.** Re-confirmed the same reasoning as the first pass: this is a separate-scale undertaking
+  (the skill's own prior invocations have fanned out to dozens of sub-agents per full run) that deserves its own
+  dedicated session with a fresh token/time budget, not a tacked-on continuation of an already extremely long dispatch
+  (this session alone has shipped 20+ commits, run 30 parallel classification sub-agents across two phases, and worked
+  through single retries as high as 9 consecutive transient branch-drift bounces). The tranche-Sources fix just
+  completed directly addresses the actual risk a fresh audit re-run would have caught (this session's own reclassified
+  docs going undiscovered) — the highest-value slice of "verify total coverage" is done; the remaining slice (are there
+  OTHER, unrelated orphans that emerged overnight) is real but lower-value and unbounded in scope, better suited to a
+  fresh `/ag-closeout-audit all` invocation on its own terms.
+
+  **Session close-out.** Both items from this tick's dispatch are resolved (Sources fix: done; full audit re-run:
+  deliberately deferred with reasoning recorded, not silently dropped). Ending the loop here rather than re-arming for
+  another tick — continuing to poll without a concrete next action to take would be manufacturing work against this
+  workspace's own stall-safety principle, not genuine progress. Next session should start with: (1) the deferred fresh
+  `/ag-closeout-audit all` re-run, (2) re-verifying this plan's own Phase 1 tranches that haven't had a full pass yet
+  (tradfi/prediction/ao/ci were folded into combined sub-agent batches tonight rather than getting a dedicated pass each
+  — worth a targeted spot-check), (3) picking up the ~314 remaining `assigned_vm:NA` docs this session's sampling never
+  reached directly (Phase 1/2 covered the docs with the clearest evidence trails; a systematic pass through the rest
+  would likely surface more of the same 3-bucket split found here).

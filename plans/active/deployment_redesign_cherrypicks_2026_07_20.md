@@ -57,12 +57,16 @@ source:
       (`tests/unit/test_data_status_hierarchical.py::TestReasonCategoryAndSummary` — mixed-failure dominant-pillar
       case + fully-captured null-category case). This plan's checkbox simply never got flipped after the code shipped —
       no further code change needed.
-- [ ] [BACKEND] P1. D — deployment-api: mock-mode fixes. `/coverage-summary` returns all-zeros in mock because
-      `_status_core.get_coverage_summary` (registered first, wins) has a zero mock while the rich mock lives in the
-      unreachable `_deploy_turbo.get_data_coverage_summary`. Port the rich per-asset-group mock INTO the winning
-      `_status_core` handler — do NOT reorder routes (the `__init__.py:91` import order is deliberate). Also synthesise
-      a non-empty mock drilldown tree. Update the tests that lock in the zeros
-      (`tests/unit/test_route_data_status_mock.py`). Ship+flip.
+- [x] ✅ [BACKEND] P1. D — deployment-api: mock-mode fixes. **VERIFIED 2026-07-27 (slot-13)**: already shipped —
+      `deployment-api@349946a` ("fix(data-status): mock mode returned all-zero coverage-summary and an empty drilldown
+      tree"), same day this plan was created, explicitly cites this plan in its commit message.
+      `_status_core.     get_coverage_summary` (the winning duplicate-route handler) now calls
+      `build_mock_coverage_summary` — a rich per-asset_group mock (CEFI/DEFI/SPORTS/…, 5-state `capture_status_counts`,
+      `completion_pct`, totals) — and `/drilldown` synthesises a non-empty 2-level tree via `build_mock_drilldown_tree`,
+      both in `services/data_status_mock.py`. Ran `tests/unit/test_route_data_status_mock.py` fresh: 13/13 passed,
+      including `test_returns_rich_nonzero_inventory`, `test_asset_groups_param_narrows_the_inventory`, and
+      `test_tree_and_totals_are_nonzero_in_mock` — the exact zero/empty-lock-in tests this todo asked to update. This
+      plan's checkbox simply never got flipped after the code shipped — no further code change needed.
 - [ ] [BACKEND] P1. E — deployment-api: add a flat `(primary × date)` capture_status matrix endpoint (heatmap-shaped)
       reimplemented against `services/manifest_source.read_manifest_index` predicate-pushdown reader + the current
       `services/data_status/` package layout — NOT Harsh's own index_cache/mock modules. Honest-absence + in-process TTL

@@ -223,6 +223,27 @@ items explicitly "FENCED" to another named agent/live process).
 
 ### Stays human — live migration critical path (judgment/coordination/operator-gated)
 
+> **🟡 DATED CORRECTION (2026-07-27) — the "needs human-coordinated timing" framing below is STALE for 4 of the 6
+> bullets, not a live contradiction.** This section was written 2026-07-25 while the Track-1 cutover's own prerequisites
+> (DERIBIT quote fix, `:PERP:` on-disk rename) were still open, so "not yet safely dispatchable" was accurate AT THE
+> TIME — matching this doc's own precedent 3 sections down ("these predate later child-log entries that may have since
+> resolved them"). Since then, under a direct real-time operator `/autonomous` dispatch (2026-07-27, logged in
+> `cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s Progress Log): the DERIBIT quote fix + catalogue
+> rebuild (todo 1) landed and was live-verified GREEN; the `:PERP:` on-disk rename (todo 2) landed across ~43K objects,
+> idempotency-verified; and Track-1's own Scripts 3 (manifest dedup v2) + 4 (eu-twin drop) landed with a real
+> drain→snapshot→apply→re-enable cycle, live-verified on all 4 surfaces for the operator's named probe object, and
+> re-verified idempotent. A concurrent AO-dispatched worker (slot-14, same session window) independently found the SAME
+> evidence this section's original framing predates, correctly flagged the apparent contradiction, and filed a
+> `/blocked` escalation rather than risk a collision — no collision occurred (the two efforts didn't overlap: slot-14
+> found no live process on its host and backed off; the drain/apply above completed and was verified before slot-14's
+> check). Resolution: this was staleness, not a genuine live disagreement over dispatch authority — the direct operator
+> dispatch is the authoritative basis, per the same commit-timestamp-and-explicit-statement precedent used to resolve
+> the analogous defi-casing doc-supersession in `cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`. What
+> genuinely REMAINS human/coordination-shaped: Script 1 (parquet content backfill) turned out ~2 orders of magnitude
+> larger than planned (~4.5M objects, not ~12,662) — a dedicated multi-VM, multi-hour-to-multi-day campaign of its own,
+> still in progress under the same dispatch. The bullets below are kept verbatim (struck-through-banner convention,
+> nothing deleted) — read them as history, not current gating state.
+
 - **Track 1 cutover** (`[PM] P0.` execute the minutes-gap hybrid) — the central 4-script canonical-ID migration's
   drain+apply; still gated on multiple other still-open P0 items below, needs human-coordinated timing.
 - **DERIBIT quote fix** (`[BACKEND] P0.`) — the code fix alone is inconsistent without its paired "coordinated ~38-min

@@ -199,6 +199,56 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
 > `/plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md` — none carried an open todo. Read
 > that file for the full record; continuing below picks up at the next entry that carried live open-todo checkboxes.
 
+### 2026-07-27 — todo 8 PARTIAL: CEFI force-leg mechanism re-proven 4x; skip-proof + other AGs blocked by session teardown
+
+Scoped `/data-pipeline-check-mdps` to CEFI:BINANCE-FUTURES:trades (day=2026-07-05, auto-day-resolved) as a
+representative cell before attempting the full 448-cell all-AG matrix (unscoped run is explicitly warned against by the
+skill itself). **Force leg independently re-proven correct on real infra 4 separate times** (VMs
+`...pipelinecheck-20260727-022633`, `-023618`, `-031200`, `...manualskip-033855` — all `exit_code=0`, all derive the
+identical 7,615 candles across the 7 timeframes). The automated skill driver (`pipeline_e2e_check.py --legs force,skip`)
+could not be kept alive long enough by this interactive session to produce a clean automated skip-proof verdict — the
+local process was killed mid-run 4 times across different backgrounding strategies (plain `run_in_background`,
+`nohup&disown`, foreground-with-auto-background, `setsid`). Full findings + recommended fixes:
+`/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. A secondary, minor
+finding (byte-identical candle written to two different paths — with/without `instrument_type=` segment — across
+consecutive force runs) is tracked separately:
+`/plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`.
+
+**Disposition:** todo 8 stays OPEN (not flipped) — the force-leg _mechanism_ is proven, but the todo's actual scope
+("every MVP candle shard, all AGs") and even a single clean automated skip-proof are not yet met. Report written this
+session: `plans/audit/results/data_pipeline_e2e_check_mdps_2026_07_05.md`.
+
+### 2026-07-27 (slot-9) — one of todo 8's two identified blockers FIXED; todo 8 itself still OPEN
+
+Dispatched to continue todo 8. Rather than re-attempt the exact same 4x-failed backgrounding strategies (harness
+`run_in_background`, `nohup&disown`, foreground-auto-backgrounded, `setsid` — all already exhausted per the entry
+above), root-caused and fixed the CONCRETE bug behind attempt 3's `launcher_script_timeout` false-failure:
+`unified-trading-library@137e219c` — a `subprocess.TimeoutExpired` on the launcher-script client-side wait
+(`_LAUNCHER_SCRIPT_TIMEOUT_SEC=120s`) previously aborted the whole shard immediately with ZERO retry, even though the
+identical `_vm_is_present`-gated retry machinery already existed for ordinary nonzero launcher exits (added for the
+exact same "gcloud create succeeded server-side after the client-side confirmation wait already gave up" failure mode).
+Now a timeout is converted to a synthetic nonzero-exit result and flows through that same retry path. 3 new regression
+tests, QG green (226s). Full detail + evidence:
+`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` todo 3 (flipped).
+
+**Disposition:** todo 8 stays OPEN — this fixes one of the two identified blockers (the launcher-timeout false-failure),
+not the other (the session/container teardown killing the long-running driver process itself, still under P1
+investigation, unresolved). A from-scratch automated run may now get further before hitting the teardown wall, but
+re-attempting the full multi-hour/462-cell matrix was out of scope for this 1-hour task; the next attempt should happen
+once the teardown root-cause (item 1 below) is resolved, or from a longer-lived host if the teardown proves to be this
+interactive-session-class specific.
+
+## Deferred work after 2026-07-27
+
+| #   | Item                                                                                                                                | Priority | Where tracked                                                             | Gating                     |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------- | -------------------------- |
+| 1   | Root-cause / fix worker-session teardown killing long-running check-skill drivers                                                   | P1       | `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` | none                       |
+| 2   | Add `--resume`/checkpoint to `pipeline_e2e_check` so a killed run doesn't restart the whole matrix                                  | P2       | same issue doc                                                            | depends on #1's root cause |
+| 3   | ✅ DONE 2026-07-27 (slot-9) — Loosen/backoff `launch_vm_and_wait`'s launcher-script timeout under fleet contention (`utl@137e219c`) | P2       | same issue doc                                                            | none                       |
+| 4   | Root-cause non-deterministic instrument_type path segment for identical force re-runs                                               | P3       | `mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md` | none                       |
+| 5   | Complete todo 8's actual scope (skip-proof + defi/tradfi/sports/prediction reps) once #1/#2 land                                    | P0       | this plan, todo 8                                                         | #1                         |
+| 6   | Complete todo 9 (`/data-pipeline-check-features`) — not yet attempted this session                                                  | P0       | this plan, todo 9                                                         | #1                         |
+
 ### 2026-07-20 — OPERATOR CONTRACT: "empty window" vs "not fetched yet" are TWO signals (durable rule)
 
 Operator, verbatim: _"the key is knowing what is empty data because theres nothing to aggregate in the window vs not

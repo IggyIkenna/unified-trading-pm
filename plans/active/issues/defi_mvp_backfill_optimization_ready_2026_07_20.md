@@ -77,9 +77,9 @@ watch the 429 rate before any wide wave.**
 
 ## Optimization — the perf bundle (ship as ONE commit or not at all; canary-gated)
 
-- [ ] [SCRIPT] P1. **knobs + async fan-out + executor-offload, together.** The workflow proved the 3 concurrency knobs
-      are **INERT alone** (0% gain, 3 unread config fields) unless shipped WITH the fan-out + dedicated executors, so
-      bundle: (a) `service_config.py` — add `defi_max_concurrent_fetches` (32), `defi_max_inflight_tasks` (128),
+- [x] ✅ [SCRIPT] P1. **knobs + async fan-out + executor-offload, together.** The workflow proved the 3 concurrency
+      knobs are **INERT alone** (0% gain, 3 unread config fields) unless shipped WITH the fan-out + dedicated executors,
+      so bundle: (a) `service_config.py` — add `defi_max_concurrent_fetches` (32), `defi_max_inflight_tasks` (128),
       `defi_max_concurrent_uploads` (64), mirroring the Tardis 3-knob block; (b) replace the sequential
       `for protocol in protocols` / `for shard: _upload_parquet(...)` loops in `solana_defi_handler.py` +
       `dex_pools_handler.py` with a bounded `asyncio.Semaphore` fan-out — **reuse UTL's `ParallelPerSymbolRunner`**
@@ -89,35 +89,24 @@ watch the 429 rate before any wide wave.**
       shard isolation preserved, no `raise` in per-shard loops, `record_captured` grain unchanged, no upload
       reorder/drop. **CANARY at 2 VMs, watch 429, before any wide wave.**
 
-      **IN PROGRESS 2026-07-27 (slot-6, paused mid-task at high context usage — resume here, do not re-investigate):**
-          Verified (a)/(b)/(c) as originally scoped are ALREADY SHIPPED — `mtds@ff1b5d51` "feat(defi): MTDS DeFi perf
-          bundle -- concurrency knobs + async fan-out + executor-offload", confirmed ancestor of `origin/live-defi-rollout`.
-          `defi_max_inflight_tasks`/`defi_max_concurrent_uploads` are live-consumed (`ParallelPerSymbolRunner` fan-out in
-          `solana_defi_handler.py`/`dex_pools_handler.py`; dedicated `_defi_upload_executor.py` mirroring
-          `tardis_csv_transport._get_parse_executor`). **ONE confirmed real gap**: `defi_max_concurrent_fetches` was
-          declared in `service_config.py` (its own docstring promises it "Bounds the actual I/O-bound fetch stage,
-          decoupled from defi_max_inflight_tasks the same way tardis_max_concurrent_downloads is decoupled...") but NOTHING
-          read it — grep confirmed zero non-definition references. Fixed, uncommitted in the market-tick-data-service slot
-          clone (`.tabs/6`), syntax-checked (`python3 -c "import ast; ast.parse(...)"` on all 3 files), NOT yet
-          test-run/QG'd/shipped:
-          - NEW `market_tick_data_service/cli/handlers/_defi_fetch_semaphore.py` — lazy-singleton `asyncio.Semaphore`
-            sized from `get_config().defi_max_concurrent_fetches`, mirrors `_defi_upload_executor.py`'s
-            lock-guarded-singleton shape.
-          - `solana_defi_handler.py`: `_collect_protocol`'s `df = await collector(session)` now wrapped
-            `async with get_defi_fetch_semaphore():`.
-          - `_dex_pools_subgraph.py`: TWO sites — `_collect_solana_dex`'s `fetch_kamino_vault`/`fetch_orca`/
-            `fetch_raydium`/`fetch_phoenix` dispatch, AND `_execute_subgraph_query`'s `session.post(...)` (the shared
-            TheGraph key-pool chokepoint this doc's own "structural fact" section names as the real ceiling — held only
-            for the request itself, released before the retry backoff `sleep`).
-          - NEW `tests/unit/test_defi_fetch_semaphore.py` — singleton/sizing tests + a static call-site guard, mirrors
-            `test_defi_upload_executor_dedicated.py`'s pattern for the sibling knob (c).
-          **TO RESUME**: `cd market-tick-data-service && bash scripts/setup.sh` (venv didn't exist in this slot clone) →
-          `.venv/bin/python3 -m pytest tests/unit/test_defi_fetch_semaphore.py tests/unit/test_defi_upload_executor_dedicated.py -v`
-          → if green, `bash scripts/quality-gates.sh` (full) → commit (files: the 4 above) → `quickmerge.sh --agent` → flip
-          this checkbox with the shipped sha → `/done` on AO task `defi_mvp_backfill_optimization_ready-003`. Deliberately
-          NOT touching `evm_defi_handler.py`/`lending_indices_handler.py`/`risk_params_handler.py` — each has its OWN
-          separate `_execute_subgraph_query` copy, out of this todo's named scope (only `solana_defi_handler.py` +
-          `dex_pools_handler.py`).
+      **DONE 2026-07-27 (slot-6).** (a)/(b)/(c) as originally scoped were ALREADY SHIPPED — `mtds@ff1b5d51`
+          "feat(defi): MTDS DeFi perf bundle -- concurrency knobs + async fan-out + executor-offload", ancestor of
+          `origin/live-defi-rollout`. `defi_max_inflight_tasks`/`defi_max_concurrent_uploads` are live-consumed
+          (`ParallelPerSymbolRunner` fan-out in `solana_defi_handler.py`/`dex_pools_handler.py`; dedicated
+          `_defi_upload_executor.py` mirroring `tardis_csv_transport._get_parse_executor`). This dispatch closed the ONE
+          real gap found: `defi_max_concurrent_fetches` was declared but never read (grep confirmed zero non-definition
+          references), contradicting its own docstring's decoupled-from-defi_max_inflight_tasks promise. Fixed in
+          `mtds@4cf0ea3d` — new `_defi_fetch_semaphore.py` (lazy-singleton `asyncio.Semaphore`, mirrors
+          `_defi_upload_executor.py`'s shape) applied at the 3 fetch call sites in this todo's scope: `solana_defi_handler.py`'s
+          `collector(session)` dispatch, and `_dex_pools_subgraph.py`'s Solana-native `fetch_*` dispatch + the shared
+          EVM/TheGraph `_execute_subgraph_query`'s `session.post(...)` (the doc's own "structural fact" — the shared key
+          pool is the real ceiling — held only for the request, released before the retry backoff). New
+          `tests/unit/test_defi_fetch_semaphore.py` (4 tests) + 132 pre-existing solana_defi/dex_pools handler tests + the
+          full `quality-gates.sh` suite (7101 items) all green. Deliberately did NOT touch
+          `evm_defi_handler.py`/`lending_indices_handler.py`/`risk_params_handler.py` — each has its own separate
+          `_execute_subgraph_query` copy, out of this todo's named scope. **CANARY at 2 VMs still required before any wide
+          wave** — unchanged, still gated on the Auth block (§ below); this todo covers the CODE only, per the doc's own
+          "safe to implement + unit-test without it; only their live validation is blocked."
 
 ## Descoped / do-NOT-implement-as-specced (workflow demolished these)
 
