@@ -1,0 +1,8 @@
+# Per-repo min-interval throttle for slot-cron-ff-pull.sh (widen-pm-cron-cadence_2026_07_27).
+# Format: "repo_name seconds" per line; # and blank lines ignored. A repo with no entry here
+# is never throttled (checked on every tick, same as before this file existed).
+#
+# unified-trading-pm: shipped to constantly during an active session (commits every 20-90s
+# from many concurrent agents) -- its own commit/push traffic already keeps it fresh, so the
+# cron's job here is redundant. Widened from the default */5min tick to effectively */15min.
+unified-trading-pm 900
