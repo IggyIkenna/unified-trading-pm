@@ -25,8 +25,8 @@ scope: [engineer]
 tags: [manifest, capture, oom, memory, is-daily-enum, cloud-run, backfill, sports, durable-fix]
 related:
   [
-    plans/active/is_daily_enum_capture_heal_2026_07_07.md,
-    plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
+    /plans/active/is_daily_enum_capture_heal_2026_07_07.md,
+    /plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-27
