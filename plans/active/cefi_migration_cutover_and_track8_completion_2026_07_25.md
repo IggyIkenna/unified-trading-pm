@@ -746,3 +746,22 @@ every todo executes an already-decided spec from the parent doc.
   `--workers 24`, same as the established playbook; no fresh diagnosis needed. **Running total**: 3 genuine completions,
   7 DERIBIT-landmine OOMs hit and fixed (`cs8-1`, `cs8-5`, `cs10-2`, `cs10-3` ×2, `cs9-3`, `cs9-4`), 0 SPOT preemptions
   since the ON_DEMAND pivot. Fleet at ~40 RUNNING. Continuing to poll at sensible intervals toward all-42-terminal.
+- **2026-07-27T07:50Z — apparent `cs7-2d`/`cs6-1d` throughput deceleration investigated properly (per the
+  async-wait-discipline "healthy-looking but actually stuck" concern), confirmed NORMAL VARIANCE, not degradation.** The
+  operator flagged a real-looking pattern from the last few check-ins' file-count deltas (`cs7-2d`'s per-window gain
+  shrinking ~6x). Pulled each shard's FULL `run.log` (not just the latest line) rather than re-reporting the same two
+  data points. Findings: (1) **byte-throughput held flat/stable** through the "slow" window — `cs7-2d` ~24.5-25.1MB/s
+  cumulative-and-instantaneous both ways, `cs6-1d` ~31.0-31.3MB/s — while `files/sec` cumulative average declined only
+  because the AVERAGE FILE SIZE in this stretch of the corpus is genuinely bigger (~7MB/file recent vs. ~4.2MB/file
+  overall for `cs7-2d`); (2) **zero real errors** — 0 `ERROR` lines in either log, and the only `WARNING`s (259 / 263
+  respectively) are ALL the same generic 30s "no progress in poll window" soft-check, not the tool's actual fatal
+  hard-wedge path (never triggered); grepping for `429`/throttle/timeout/retry found no genuine hits (the apparent
+  matches were false positives on numbers like `429129` catalogue-row counts); (3) **direct SSH process check** on both
+  VMs confirmed the migration process genuinely alive and working — `cs7-2d` PID 7725 at 207% CPU / 279min accumulated
+  CPU time, `cs6-1d` PID 7769 at 200% CPU / 271min — light load averages (2.57/1.78/1.85 on 16 cores) consistent with
+  the already-documented I/O-bound-not-CPU-bound profile, no thread pileup. `cs6-1d` has in fact continued advancing
+  normally since the flagged snapshot (68% done as of this check). **Conclusion: this was a genuine
+  file-size-distribution effect in this part of the DERIBIT-excluded corpus, not the class of silent degradation the
+  async-wait-discipline rule warns about — no fix applied, none needed.** Standard fleet poll this cycle: still 40
+  RUNNING, 42 preemption-ops (unchanged), same 10 `EXIT_STATUS` objects as the last several checks — no new completions
+  or OOMs to action via the DERIBIT playbook this cycle.
