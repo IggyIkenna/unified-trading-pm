@@ -615,3 +615,21 @@ pairs stay honest-unresolved (reported, never guessed).
   trimming the parent todo's own wording to stay under cap; a future check-in on ANY still-open todo in that plan will
   hit the identical wall until it goes through the archival/line-cap-remediation ritual (same pattern already applied to
   this doc on 2026-07-25). Flagging so the next agent doesn't burn time on the same discovery.
+
+- **2026-07-27 T+31min (slot-11) — HYPERLIQUID recent-tail gap check-in: healthy, genuine forward progress, still
+  open.** Picked up the same still-open `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` HL recent-tail todo per
+  slot-6's "next check-in should verify" ask above. `gcloud compute instances list` confirms
+  `cefi-hyperliquid-2026-20260727-123922` still `RUNNING`, no preemption; `run.log` ground-truthed (not just VM status)
+  — fresh writes at T+31min (`OnchainPerpBatch: HYPERLIQUID/derivative_ticker/KPEPE/2026-06-24 captured 1440 rows`,
+  timestamp within ~90s of check time), now on `derivative_ticker` for day 2026-06-24 after finishing `book_snapshot_5`.
+  **Fresh `read_availability_index` measurement, same window (venue=HYPERLIQUID, 2026-06-24..2026-07-25, 30,848 rows —
+  grew by 61 vs baseline's 30,787 since `now-2` advanced a day)**: `captured`=5,987 (up from baseline 5,928, +59 —
+  genuine climb), `attempted_failed`=3 (unchanged — no regression), `expected_unattempted`=15,376,
+  `empty_confirmed`=9,482. Confirms the VM is doing real, correct work, but at this pace (+59 captured in ~31min
+  covering one symbol-day at a time across `book_snapshot_5`→`derivative_ticker`→likely `trades` next, for each of ~32
+  days) this is genuinely a multi-hour-to-multi-day completion, consistent with slot-6's estimate — not completable in
+  this session. **Did NOT flip the parent plan checkbox** (real completion criterion — captured across the full range —
+  not yet met; the plan file is at its 1000-line hard cap per slot-6's structural finding, so any future check-in note
+  belongs here, not inline in the plan). **Next check-in should verify**: `captured` continuing to climb toward the
+  ~21,304 total-attempted target, `attempted_failed` still ~3, and eventual `DEPLOYMENT_COMPLETED exit_code=0` — then
+  flip the parent checkbox.
