@@ -280,16 +280,58 @@ re-attempting the full multi-hour/462-cell matrix was out of scope for this 1-ho
 once the teardown root-cause (item 1 below) is resolved, or from a longer-lived host if the teardown proves to be this
 interactive-session-class specific.
 
+### 2026-07-27 (slot-12) — todo 11 PARTIAL: caught + fixed a P0 unsafe-rebuild bug blocking the candle-manifest orphan reconciliation; DEFI candle-manifest measurement corrected
+
+Dispatched to todo 11 (cross-repo orphan/lineage audit + migrate to zero orphans). Scoping how to execute the
+already-open `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (CEFI candle files orphaned by
+pre-fix-era OOM crashes) surfaced a genuine, previously-uncaught **P0 data-loss risk in the recommended remediation
+itself**: `unified_trading_library.manifest_writer.rebuild_manifest_from_canonical_paths()` builds its output purely
+from a `prefix`-scoped GCS walk and uploads that as the bucket's WHOLE consolidated manifest index — on the
+`market-data-tick-{ag}-prd` buckets, which co-locate MTDS's `raw_tick_data/` and MDPS's `processed_candles/` under ONE
+index, a prefix-scoped call (exactly what the reconciliation doc recommended) would have silently deleted essentially
+the entire raw-tick manifest for that asset_group to backfill a much smaller candle-orphan set. **Caught before any VM
+launched — nothing was actually deleted.** Full analysis, evidence, and fix:
+`issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` (new, P0). Shipped the fix:
+`unified-trading-library@2352e7c8` — added `merge_manifest_from_canonical_paths()`, an additive sibling that only adds
+genuinely-missing `(day, venue, chain, instrument_type, data_type)` rows and preserves every existing row (including
+rows for other prefixes) verbatim; 2 new regression tests directly proving the safety property (a pre-existing
+out-of-prefix row survives the merge, both in the returned frame AND in what actually lands in GCS) plus an idempotency
+test. Corrected `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`'s recommended-fix section to route
+through the new additive function instead of the unsafe call, and to re-verify the bucket's non-candle row count is
+unchanged before trusting a future run.
+
+**Also corrected a stale measurement feeding this same effort**:
+`candle_feature_canonical_path_divergence_2026_07_20.md` todo 7's "candle manifest never systematically populated" claim
+(cefi=6/defi=0/tradfi=73/prediction=168 rows, 2026-07-23) used the WRONG `data_type` vocabulary (the aggregated
+`ohlcv_*` family) — the SAME mistake already root-caused for cefi in the archived
+`mdps_cefi_candle_manifest_never_emitted_2026_07_26.md` (MDPS stamps `data_type=<SOURCE type>` + a real `timeframe`, not
+the aggregated family, by deliberate operator ruling). Re-measured DEFI directly this session with the correct
+vocabulary: **7,913 real `market-data-processing-service` candle-manifest rows exist today**
+(`data_type=dex_pool_swaps`, real timeframes), not 0. Flagged in that todo; not fully re-verified for
+cefi/tradfi/prediction this session — do not close it on the DEFI spot-check alone.
+
+**Disposition:** todo 11 stays OPEN — this session did NOT run the actual candle/feature migration. The previously-
+recommended reconciliation path was unsafe; the additive fix (`unified-trading-library@2352e7c8`) has now SHIPPED and is
+QG/CI-green, so `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` is UNBLOCKED for its next session (only
+the actual Tier-2 SPOT VM reconciliation run remains, deliberately not launched from this interactive session per the
+heavy-I/O rule). The full cross-repo lineage audit (MTDS→MDPS→features→ml/strategy) beyond the candle-manifest slice was
+not attempted this session. What shipped is a genuine, verifiable safety fix + a corrected measurement that a future
+session's migration work depends on not repeating.
+
 ## Deferred work after 2026-07-27
 
-| #   | Item                                                                                                                                | Priority | Where tracked                                                             | Gating                     |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------- | -------------------------- |
-| 1   | Root-cause / fix worker-session teardown killing long-running check-skill drivers                                                   | P1       | `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` | none                       |
-| 2   | Add `--resume`/checkpoint to `pipeline_e2e_check` so a killed run doesn't restart the whole matrix                                  | P2       | same issue doc                                                            | depends on #1's root cause |
-| 3   | ✅ DONE 2026-07-27 (slot-9) — Loosen/backoff `launch_vm_and_wait`'s launcher-script timeout under fleet contention (`utl@137e219c`) | P2       | same issue doc                                                            | none                       |
-| 4   | Root-cause non-deterministic instrument_type path segment for identical force re-runs                                               | P3       | `mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md` | none                       |
-| 5   | Complete todo 8's actual scope (skip-proof + defi/tradfi/sports/prediction reps) once #1/#2 land                                    | P0       | this plan, todo 8                                                         | #1                         |
-| 6   | Complete todo 9 (`/data-pipeline-check-features`) — not yet attempted this session                                                  | P0       | this plan, todo 9                                                         | #1                         |
+| #   | Item                                                                                                                                           | Priority | Where tracked                                                                   | Gating                     |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------- | -------------------------- |
+| 1   | Root-cause / fix worker-session teardown killing long-running check-skill drivers                                                              | P1       | `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`       | none                       |
+| 2   | Add `--resume`/checkpoint to `pipeline_e2e_check` so a killed run doesn't restart the whole matrix                                             | P2       | same issue doc                                                                  | depends on #1's root cause |
+| 3   | ✅ DONE 2026-07-27 (slot-9) — Loosen/backoff `launch_vm_and_wait`'s launcher-script timeout under fleet contention (`utl@137e219c`)            | P2       | same issue doc                                                                  | none                       |
+| 7   | Run the CEFI candle-manifest orphan reconciliation via the new safe `merge_manifest_from_canonical_paths` (Tier-2 SPOT VM, never in-session)   | P1       | `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`                 | none                       |
+| 8   | Audit `rebuild_mtds_manifest.py --from-canonical`'s existing call site for the same prefix-scoped-wipe risk (already-shipped permanent script) | P1       | `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 3 | none                       |
+| 9   | Re-measure cefi/tradfi/prediction candle-manifest coverage with the CORRECT vocabulary before trusting todo 7's "never populated" framing      | P1       | `candle_feature_canonical_path_divergence_2026_07_20.md` todo 7                 | none                       |
+| 10  | Complete todo 11's actual scope (full MTDS→MDPS→features→ml/strategy lineage audit + real migration to zero orphans) once the above land       | P0       | this plan, todo 11                                                              | #7                         |
+| 4   | Root-cause non-deterministic instrument_type path segment for identical force re-runs                                                          | P3       | `mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`       | none                       |
+| 5   | Complete todo 8's actual scope (skip-proof + defi/tradfi/sports/prediction reps) once #1/#2 land                                               | P0       | this plan, todo 8                                                               | #1                         |
+| 6   | Complete todo 9 (`/data-pipeline-check-features`) — not yet attempted this session                                                             | P0       | this plan, todo 9                                                               | #1                         |
 
 ### 2026-07-20 — OPERATOR CONTRACT: "empty window" vs "not fetched yet" are TWO signals (durable rule)
 
