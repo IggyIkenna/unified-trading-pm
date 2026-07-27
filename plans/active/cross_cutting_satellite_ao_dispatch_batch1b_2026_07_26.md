@@ -8,7 +8,9 @@ summary: >-
   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` for the full Phase-1/Phase-3 audit summary, the Deferred
   conflict-gated/operator-gated/time-gated sections (not duplicated here), and the 7 mistags/2 archivable_now notes.
   This doc carries the remaining 15 of the 31 conflict-cleared todos, split purely to stay under the workspace's
-  1000-line hard cap after prettier reformatting.
+  1000-line hard cap after prettier reformatting. Grew to 17 todos 2026-07-27 (vintage-audit §3/§4 execution): +2 scoped
+  owner-design-call fixes from `features_service_coverage_and_script_canon_2026_06_10.md` (velocity-accel fallback
+  semantics, `make_session` loop-safety), previously parked pending a human owner — now agent-owned per operator ruling.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -34,7 +36,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-27"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -59,7 +61,7 @@ drift_direction: advance-code
 
 > **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
 > skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review, together with its sibling `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`. All 15 todos
+> operator review, together with its sibling `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`. All 17 todos
 > below are same-priority-independent and touch distinct files/docs, except the `smoke_matrix.py` pair (todo citing
 > `features_service_coverage_and_script_canon_2026_06_10.md`) which carries inline coordination text with its sibling in
 > batch1 — do not strip that text if editing before dispatch.
@@ -98,6 +100,40 @@ drift_direction: advance-code
       and no longer under features-service, wired to that repo's QG; every repo's `scripts/` directory has been
       classified per the script-homes canon with dead scripts deleted and relocatable scripts moved, each carrying the
       required lifecycle marker.
+- [ ] [CODE] P2. **features-service — fix `odds_features_exporter.py` velocity-accel fallback NaN/math semantics
+      (dead-code + a legit-`0.0`-drop bug).** `_compute_velocity_from_pivoted`'s (lines ~509-514) elif/else acceleration
+      branches are unreachable dead code today: `np.nan` satisfies `isinstance(x, float)`, so the line-509 guard always
+      fires and the elif/else are never taken. Separately, the same function's `v_late = a or b` retrieval drops a
+      legitimate `0.0` value (Python truthiness treats `0.0` as falsy, so a real zero velocity silently falls through to
+      `b`). Fix: (1) add `and not math.isnan(v_early)` to the line-509 guard so the elif/else branches become reachable
+      when intended; (2) replace the `a or b` retrieval with an explicit not-None check (e.g.
+      `a if a is not None else b`) so a legitimate `0.0` is preserved. This changes acceleration feature math — sports
+      feature buckets are currently empty in prod (per the source doc, no live data affected today), so this is safe to
+      land now without a data-correctness blast radius. Repo: features-service
+      (`features_service/sports/exporters/odds_features_exporter.py`). Source:
+      `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` (line ~71-75, previously DEFERRED
+      pending owner sign-off on NaN/fallback semantics — operator ruling 2026-07-27, vintage-audit §5-RESOLVED item 35:
+      this is now agent-owned scoped work, not parked on a human). Done when: both fixes land with a new/extended unit
+      test asserting (a) the elif/else branches are reachable and produce the expected acceleration value for a non-NaN
+      early velocity, and (b) a legitimate `v_late=0.0` is preserved rather than replaced by the fallback;
+      `quality-gates.sh` is green in features-service; and the source doc's line ~71-75 checkbox is flipped citing the
+      commit sha.
+- [ ] [CODE] P2. **features-service — make `_make_session`'s aiohttp resolver construction lazy/loop-safe (latent
+      out-of-loop-construction crash).** `features_service/onchain/app/core/data_loader.py:224`'s `_make_session`
+      constructs `aiohttp.resolver.ThreadedResolver()` eagerly, which calls `asyncio.get_running_loop()` at construction
+      time — this crashes with a `RuntimeError` if `_make_session` (or anything that constructs the session) is ever
+      called outside a running event loop. All current callers are async-context-only, so this is latent, not yet
+      reproducing in prod. Fix: defer the `ThreadedResolver()` construction until it's actually built inside a running
+      loop (e.g. construct it lazily inside an already-async factory/context manager, or pass a resolver factory instead
+      of a pre-built instance), so calling the session-construction path from a non-async context either works safely or
+      raises a clear, intentional error instead of an opaque `asyncio.get_running_loop()` crash. Repo: features-service
+      (`features_service/onchain/app/core/data_loader.py`). Source:
+      `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` (line ~76-79, previously DEFERRED
+      pending owner sign-off on the DNS-resolver config change — operator ruling 2026-07-27, vintage-audit §5-RESOLVED
+      item 35: this is now agent-owned scoped work, not parked on a human). Done when: the fix lands with a new/extended
+      test confirming the session-construction path no longer raises the construction-time `RuntimeError` when exercised
+      outside a running loop while existing async-context callers remain green; `quality-gates.sh` is green in
+      features-service; and the source doc's line ~76-79 checkbox is flipped citing the commit sha.
 - [ ] [CODE] P2. Close the 4 remaining fixable-bug residuals from `fleet_data_acquisition_health_2026_06_21.md`: **(a)
       sports** — recheck `mtds-backfill-odds-*` ODDS_API source-completeness (item #4: manifest flags
       `complete=False missing=['ODDS_API']` despite 8.5K rows across 22 bookmaker shards) and verify the sports-odds
@@ -168,12 +204,17 @@ drift_direction: advance-code
       doc's `status:` is reassessed (M-C7 remains explicitly open/deferred, not silently dropped).
 - [ ] [DATA] P1. **Close out remaining perp-funding data-semantics/cadence CeFi work: exact discrete funding, cadence
       tracker, Aster backfill + live book, margining reverify.** Five independent legs from the same source doc (repos
-      market-tick-data-service + unified-api-contracts unless noted): (a) make exact discrete per-settlement funding
-      readable — persist funding settlements timestamped to the charge instant (matching venue `fundingTime`), or add a
-      canonical per-settlement funding data_type, and document `funding_timestamp` semantics across cefi adapters
-      (Tardis cefi, hyperliquid, OKX `next_funding_timestamp`). (b) add a historical funding-cadence tracker in GCS
-      (canonical-from-docs or inferred from observed settlement frequency per instrument/day) so a venue cadence change
-      doesn't silently mis-annualise historical windows. (c) run the Aster perp-funding backfill VM
+      market-tick-data-service + unified-api-contracts unless noted). **Status update (2026-07-27/28 vintage-audit
+      re-verification): leg (a) is now DONE UPSTREAM — do not re-do it.** The source doc's own P1 checkbox for this leg
+      shipped 2026-07-27 (`unified-api-contracts@22689df5`, `market-tick-data-service@466d5670` — audited every
+      `funding_timestamp`/`next_funding_timestamp` write path and fixed 3 go-forward bugs: OKX field-swap,
+      `hyperliquid_s3.py` REST-backfill gap, Tardis WS-replay derivation). Only (b)-(e) remain open: ~~(a) make exact
+      discrete per-settlement funding readable — persist funding settlements timestamped to the charge instant (matching
+      venue `fundingTime`), or add a canonical per-settlement funding data_type, and document `funding_timestamp`
+      semantics across cefi adapters (Tardis cefi, hyperliquid, OKX `next_funding_timestamp`)~~ **DONE, see above.** (b)
+      add a historical funding-cadence tracker in GCS (canonical-from-docs or inferred from observed settlement
+      frequency per instrument/day) so a venue cadence change doesn't silently mis-annualise historical windows. (c) run
+      the Aster perp-funding backfill VM
       (`deployment-service/scripts/vm/launch-mtds-perp-funding-backfill-vm.sh --perp-protocols aster`, start 2023-07-22,
       default SPOT) — the write path is production-verified-ready (e2e↔production parity confirmed 2026-06-17); this is
       a safe, idempotent write-only historical backfill (no deletes), so no `[OPERATOR]` gate needed; label pre-2024
@@ -184,11 +225,17 @@ drift_direction: advance-code
       USDC/USDT-only, no spot/LST collateral) against live Aster docs before any cash-and-carry sizing decision.
       **Excludes** (do not duplicate): the pre-funding-genesis Aster trades backfill (explicitly blocked on GAP4 in the
       source doc, and GAP4 itself is already an open `[ ]` todo in `instruments_completion_tracker_2026_07_06.md` Stage
-      2a/2b) and the latent cefi `ohlcv_*` direct-write capability (explicitly deferred by the source doc until a
-      trades-less cefi venue exists — no current need). Source: `perp_funding_data_semantics_and_cadence_2026_06_16.md`.
-      **Done when**: (a)+(b) land as code + tests in mtds/uac with `quality-gates.sh` green; (c)'s VM run reaches
-      STOPPED with new Aster `derivative_ticker` shards visible in the manifest for the backfill range; (d) lands with a
-      unit test asserting the 5-level book write + manifest record at `pipeline_mode=live_aster`; (e) is recorded as a
+      2c) and the latent cefi `ohlcv_*` direct-write capability (explicitly deferred by the source doc until a
+      trades-less cefi venue exists — no current need). **Also NOT covered here (found 2026-07-27/28, needs its own
+      home, not batchable as-is)**: the source doc's standalone P2 todo "Bulk historical Tardis-CSV
+      `derivative_ticker.funding_timestamp` is forward-looking, not the charge instant" — `tardis_stream_processor.py`'s
+      shared streaming pass-through leaves already-written historical parquet mislabeled, and the source doc explicitly
+      states this needs a **design decision** (in-place go-forward derivation vs. a one-time heavy-I/O reprocessing
+      backfill), not an in-slot judgment call — flag for the operator-gated queue rather than dispatching blind. Source:
+      `perp_funding_data_semantics_and_cadence_2026_06_16.md`. **Done when**: (a) is already shipped (no action —
+      verified above); (b) lands as code + tests in mtds/uac with `quality-gates.sh` green; (c)'s VM run reaches STOPPED
+      with new Aster `derivative_ticker` shards visible in the manifest for the backfill range; (d) lands with a unit
+      test asserting the 5-level book write + manifest record at `pipeline_mode=live_aster`; (e) is recorded as a
       Progress Log finding (confirmed unchanged, or a new dated issue doc if Aster's collateral rules changed).
 - [ ] [BUG] P0. **Recover the 2 features-service DEFERRED stash fixes and resolve Finding #2's gas-fee data-location
       question.** (1) In features-service, `git stash list` to find
