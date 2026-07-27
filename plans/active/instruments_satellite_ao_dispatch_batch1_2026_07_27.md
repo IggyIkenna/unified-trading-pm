@@ -117,7 +117,7 @@ source doc is untouched (beyond one stale-checkbox citation fix, done directly, 
       mislabel resolving, not a capture gap opening. Confirmed all 4 NULL-`instrument_type` rows found across the 5
       venues are honest `capture_status=expected_unattempted` placeholders (`row_count=0`), unrelated to the
       blank-collapse bug pattern.
-- [ ] [DATA] P1. **Add `missing_dates`/`dates_found_list` to the per-instrument_type and per-underlying breakdown
+- [x] ✅ [DATA] P1. **Add `missing_dates`/`dates_found_list` to the per-instrument_type and per-underlying breakdown
       entries** (`deployment-api/deployment_api/services/data_status/breakdowns_core.py` —
       `_build_instrument_type_breakdown` ~405-409, `_build_underlying_breakdown` ~508-512; mirror
       `_build_data_type_breakdown`'s entry shape ~629-643, which already carries this). Needs a matching
@@ -126,7 +126,18 @@ source doc is untouched (beyond one stale-checkbox citation fix, done directly, 
       `TurboDataTypeStatus` at `client.ts:984-999`). Repo: deployment-api, deployment-ui. Source:
       `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` ("Add `missing_dates`/`dates_found_list`
       to the per-instrument_type and per-underlying breakdown entries..."). Done when: both breakdown entry types carry
-      both fields in the mirrored shape, the UI renders them, with a passing test.
+      both fields in the mirrored shape, the UI renders them, with a passing test. — deployment-api@554cde9,
+      deployment-ui@8f6c4bc. `_build_instrument_type_breakdown`/`_build_underlying_breakdown` now compute
+      `it_found_dates`/`ul_found_dates` (intersection of observed vs. UAC-expected dates) and emit `dates_missing`,
+      `missing_dates`, `dates_found_list` — same shape as `_build_data_type_breakdown`. 2 new unit tests
+      (`test_instrument_type_breakdown_includes_missing_dates_and_found_list`,
+      `test_underlying_breakdown_includes_missing_dates_and_found_list`) assert the exact found/missing split on a
+      narrow 3-day fixture; both pass (4/4 incl. the 2 pre-existing clamp tests). `TurboInstrumentTypeStatus`/
+      `TurboUnderlyingStatus` in `client.ts` carry the 3 new optional fields; `DataStatusTab.tsx`'s instrument_type and
+      underlying rows now render an expandable found/missing date-list drilldown (mirroring the existing per-data_type
+      block, `openShardDetail` wired with `instrument_type`/`underlying`/`data_type: ""`). Verified: `tsc --noEmit`
+      clean, `eslint` clean, full `npm run build` clean, full `vitest run` (1099 passed / 16 skipped, no regressions),
+      both repos' `quality-gates.sh` green pre-commit.
 - [ ] [DATA] P1. **Pull the real per-instrument_type breakdown for DERIBIT live** (the comparison built for the source
       doc used illustrative numbers pending this) and confirm whether OPTION coverage is actually healthy or is itself a
       live gap once visible. Repo: market-tick-data-service. Source:
