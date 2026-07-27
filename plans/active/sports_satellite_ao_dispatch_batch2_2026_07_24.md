@@ -208,9 +208,16 @@ source: >-
       whole run) — looks like gradual memory accumulation over a long single-process runtime rather than a per-call
       trigger. Shutdown-script self-deleted cleanly, no zombie. Relaunched (default `e2-standard-8`, singleton-lock
       verified clear first) as `af-backfill-20260727-004325`; UAC tarball flagged 1-commit stale but confirmed the
-      MVP-scope fix is included and irrelevant anyway (FIXTURES-only path). Watch: if this recurs at a similarly-timed
-      ~20hr mark, that's a real leak needing proper profiling, not just another relaunch. Current:
-      `af-backfill-20260727-004325`.
+      MVP-scope fix is included and irrelevant anyway (FIXTURES-only path). **Root cause found + fixed
+      2026-07-27T01:10Z**: `unified-trading-library` `ManifestWriter._flush_per_vm_pending` does a full read-merge-write
+      of the ENTIRE per-VM shard on every flush (a correctness requirement for concurrent same-shard writers, e.g.
+      MDPS's per-unit finalize threads) — peak memory/I/O per flush grows linearly with cumulative shard size, so ANY
+      single process spanning enough dates eventually OOMs regardless of per-date correctness. Rather than touch that
+      concurrency-critical shared library code, routed this launcher's explicit-date-range runs through the EXISTING
+      chunked `instruments-backfill` VM_TASK (already used by 4 sibling sports launchers) — 90-day chunks, each a FRESH
+      process, memory resets between chunks — via `deployment-service` (launcher-only change, zero
+      shared-dispatcher-code touched). Relaunched as `af-backfill-20260727-011039`, verified using the chunked path.
+      Current: `af-backfill-20260727-011039`.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
