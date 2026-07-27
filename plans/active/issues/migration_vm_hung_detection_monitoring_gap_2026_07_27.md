@@ -47,6 +47,7 @@ related:
     /plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
     /plans/active/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md,
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
+    /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master
@@ -143,6 +144,23 @@ failure completely unmonitored.
 - Net effect: canonical-migration workers get neither the (weak, size-only) 30-min default from this script, nor any
   content-aware stall detection — whatever in-VM stall protection exists for them, if any, is not this script.
 
+> **CORRECTION (2026-07-27, todo-2 implementation session)** — the claim above ("this launcher does not invoke
+> [vm-exec-with-gcs-tee.sh] at all") is factually wrong against the current code, re-verified this session by direct
+> read (not trusted from the prior summary): `launch-canonical-migration-vm.sh` sets `VM_TASK=canonical-migration` and
+> stages `--metadata="startup-script-url=gs://${CODE_BUCKET}/vm/setup-data-pipeline-vm.sh,..."`. That SHARED startup
+> script downloads `vm-exec-with-gcs-tee.sh` unconditionally for all task modes, then its
+> `VM_TASK == "canonical-migration"` branch calls `_launch_with_tee "$FULL_CMD" "$LOGS/canonical-migration.log"`, where
+> `$FULL_CMD` IS the `VM_MIGRATION_CMD` value — i.e. `bash -c "$VM_MIGRATION_CMD"` executes INSIDE the tee wrapper
+> subshell, not as a separate mechanism. So canonical-migration VMs DO inherit the generic 30-min byte-growth stall-kill
+> by default (no `STALL_PROGRESS_REGEX` override is set for this task, so it's still the weak size-only variant — that
+> part of this gap, "no content-aware detection," still stands). This narrows todo 3 below: criterion (a) ("a
+> stall-enforcement mechanism is identified and confirmed live") is already satisfied by this re-read — the mechanism is
+> the generic `_launch_with_tee` byte-growth kill, it just isn't content-aware (todo 4 is still valid/needed). This same
+> `VM_TASK=canonical-migration` dispatch is shared verbatim by `launch-cefi-migration-vm.sh`,
+> `launch-cefi-mvp-reclassify-vm.sh`, `launch-kalshi-bulk-seed-vm.sh`, `launch-tradfi-session-stamp-vm.sh`, and
+> `launch-tradfi-session-stamps-vm.sh` — all 6 (incl. the base launcher) get the SAME Class-A stall-kill and the SAME
+> Gap-3 naming miss (fixed by todo 2 below).
+
 ## Gap 3 — the fleet-wide heartbeat/run-log stall watcher's naming heuristic doesn't match this launcher's prefix
 
 `deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py`, `_is_backfill_vm()` (lines
@@ -209,12 +227,30 @@ automatic, and depends entirely on someone deciding to look and knowing to look 
       `composite_health_status` transitions into `"hung"` produces a `_persist_alert(...)` call (verified via a
       deliberately-induced stale-heartbeat test VM or a unit test around `_alert_on_health_transition`), with no new
       false-positive-page complaint from a legitimately-quiet live/paper VM in the following week of operation.
-- [ ] [HUMAN] P1. **Wire `canonical-migration-*` (and any other one-off migration VM prefixes launched via
+- [x] [HUMAN] P1. **Wire `canonical-migration-*` (and any other one-off migration VM prefixes launched via
       `deployment-service/scripts/vm/launch-*-vm.sh` that behave like backfill VMs) into `heartbeat_stall_watcher.py`'s
       `_is_backfill_vm()` matching**, so the run-log-freshness liveness signal applies to them instead of the
       heartbeat-blob-only live-capture path. Done when: `_is_backfill_vm("canonical-migration-<anything>")` returns
       `True`, and a deliberately-frozen `run.log` on a canonical-migration test VM trips the
-      `DEFAULT_RUN_LOG_STALL_MINUTES` alert within its configured window.
+      `DEFAULT_RUN_LOG_STALL_MINUTES` alert within its configured window. —
+      **deployment-service@fde4f4f3b557f9dcef8cb355a57d63122ab087bd** (2026-07-27). `_is_backfill_vm()` now also matches
+      `canonical-migration`, `mtds-migrate-cefi-itype`, `mtds-migrate-cefi-mvp-reclassify`,
+      `mtds-prediction-kalshibulk`, `sports-v9-migration`, `mdps-sports-bucket`, `sports-manifest-rescan` (the full
+      Class-A `VM_TASK=canonical-migration`-dispatch family identified by todo 5's audit — every launcher's real
+      `VM_NAME=`/`VM_PREFIX=` line was grepped directly, not re-derived from a naming guess). Existing `-live-`/`-live`
+      early-out and `backfill`/`-bf-`/literal-prefix cases unchanged (regression- tested). Unit test added:
+      `test_is_backfill_vm_matches_migration_launcher_family` (deployment-service
+      `tests/unit/test_data_pipeline_monitors.py`) asserts `True` for every new prefix + the deliberately-frozen-
+      run.log alert path is unchanged code (`DEFAULT_RUN_LOG_STALL_MINUTES` gate itself was not touched, only which VMs
+      route into it). Full `quality-gates.sh` green (2863 passed). **Verified separately (not assumed): this fix does
+      NOT touch `RelaunchPreemptedVm`'s eligibility** — `_is_backfill_vm` has zero references anywhere outside
+      `heartbeat_stall_watcher.py` itself (`grep -rn "_is_backfill_vm"` across deployment-service, excluding tests,
+      confirms this); `canonical-migration-cefi-*` was already fully registered in `launcher_registry.py` +
+      `vm_prefix_registry.py` independent of this heuristic. It DOES change which liveness signal
+      `heartbeat_stall_watcher.py`'s own sweep applies (run-log-freshness instead of heartbeat-blob-only), feeding
+      `DP_VM_STALL` → `RelaunchStalledVm` (a different actuator) — confirmed that actuator has NO checkpoint/resume
+      logic at all (`grep` for checkpoint/PROGRESS/resume in `relaunch_stalled_vm.py` returns nothing), so even this
+      newly-enabled detection path relaunches blind, not via the PROGRESS.json checkpoint (see todo 6).
 - [ ] [HUMAN] P2. **Determine what (if anything) actually enforces a stall-timeout on `VM_MIGRATION_CMD`-executed
       workers** launched by `launch-canonical-migration-vm.sh`, given Gap 2 shows `vm-exec-with-gcs-tee.sh` is never
       invoked by this launcher at all. Done when: either (a) a stall-enforcement mechanism is identified and confirmed
@@ -226,12 +262,68 @@ automatic, and depends entirely on someone deciding to look and knowing to look 
       byte-growth), so a wedged network call inside an otherwise-noisy log gets caught within `STALL_TIMEOUT_SEC`. Done
       when: a deliberately-induced hang-on-network-call test run (log still emitting non-progress noise) trips the
       stall-kill within the configured timeout, where it previously would not have under the size-growth-only default.
-- [ ] [HUMAN] P3. **Audit other one-off launcher scripts under `deployment-service/scripts/vm/` for the same three-gap
+- [x] [HUMAN] P3. **Audit other one-off launcher scripts under `deployment-service/scripts/vm/` for the same three-gap
       pattern** (paging-set exclusion is fleet-wide so N/A per-launcher, but the stall-watchdog non-invocation and
       backfill-naming-regex miss are per-launcher-name issues) — not just `launch-canonical-migration-vm.sh`. Done when:
       every `launch-*-vm.sh` script under that directory is checked against `_is_backfill_vm()`'s matching rules and
       against whether it invokes `vm-exec-with-gcs-tee.sh`, with results recorded (either already covered, or added as a
-      new todo here/in a follow-up plan).
+      new todo here/in a follow-up plan). — **Audit results (2026-07-27), all 103 `launch-*-vm.sh` scripts checked:**
+      ~31 already correctly matched (`*-backfill-*`/`-bf-`/literal-prefix, e.g. `af-backfill-*`, `tradfi-bf-*`,
+      `tm-backfill-*`, `fs-backfill-*`, all `mtds-*-backfill-*`); ~5 correctly excluded (genuinely live/paper/
+      continuous: `defi-paper-*`, `strategy-paper-*`, `strategy-live-*`, `funding-ensemble-paper-*`,
+      `sports-scheduler-*`); 4 out of scope (standing infra: `launch-dashboard-vm.sh`, `launch-planning-vm.sh`,
+      `launch-orchestrator-worker-vm.sh`, `launch-ec2-vm.sh`). Of the remainder: - **8 launchers fixed by todo 2** (the
+      `VM_TASK=canonical-migration`-dispatch family, Class A — confirmed live stall-kill via the shared
+      `setup-data-pipeline-vm.sh` → `_launch_with_tee()` → `vm-exec-with-gcs-tee.sh` path):
+      `launch-canonical-migration-vm.sh`, `launch-cefi-migration-vm.sh`, `launch-cefi-mvp-reclassify-vm.sh`,
+      `launch-kalshi-bulk-seed-vm.sh`, `launch-tradfi-session-stamp-vm.sh`, `launch-tradfi-session-stamps-vm.sh`,
+      `launch-sports-v9-migration-vm.sh`, `launch-mdps-sports-bucket-vm.sh`, `launch-sports-manifest-rescan-vm.sh`. -
+      **~35 more one-off/recon/audit/validation-named launchers** (e.g. `launch-orphan-sweep-vm.sh`,
+      `launch-manifest-recon-*-vm.sh`, `launch-sports-full-sweep-vm.sh`, `launch-mtds-gas-fees-backfill-vm.sh` whose
+      actual `VM_NAME` drops the "backfill" its own filename carries) likely route through the same Class-A
+      `setup-data-pipeline-vm.sh` startup script but were NOT individually VM_TASK-verified, and were deliberately
+      **NOT** added to `_is_backfill_vm()` by todo 2 — broadening the naming heuristic with generic substrings
+      (`"recon"`/`"sweep"`/`"validation"`) risks an unpredictable fleet-wide naming collision against a
+      legitimately-continuous VM name, which the parent doc's blast-radius rule requires proving safe first; todo 2
+      stayed narrowly scoped to the individually-verified migration-launcher family only. Left open for a follow-up,
+      properly fleet-naming-collision-reviewed pass (not filed as its own issue doc — same shape as todo 2, just
+      unverified per-launcher, so it belongs as a future extension of this same todo rather than a new finding). - **1
+      active mis-route**: `launch-batch-live-recon-cron-vm.sh` (`VM_NAME=batch-live-recon-<date>-<ts>`) is a BATCH
+      reconciliation cron job whose name coincidentally contains `-live-`, tripping `_is_backfill_vm()`'s early-out to
+      `False` regardless of any other signal — not merely unmatched, actively forced into the wrong bucket by its own
+      name. Not fixed here (same narrow-scope reasoning as above); left open. - **8 launchers use a SECOND, separate
+      no-stall-kill code path** (`lib/launcher_common.sh`'s `lc_log_upload_trap_block()`, "Class B" — log-tee +
+      heartbeat blob + EXIT_STATUS marker only, confirmed via direct grep to have ZERO `STALL_TIMEOUT_SEC`/kill logic
+      anywhere) — a genuine, separate bug, NOT fixed by todo 2 (naming alone cannot add an in-VM watchdog that doesn't
+      exist). 6 of the 8 also fail `_is_backfill_vm()` after todo 2's fix ships, leaving them with no protective layer
+      at any level. Filed as its own issue doc per findings-triage (outside this doc's exact Gap-3 scope):
+      `/plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md`.
+- [x] [HUMAN] P2. **Genuine 4th gap discovered mid-session (operator ask: "spot vms should auto recover at large from
+      where they left off too"): `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` (the Script-1 cefi
+      content-migration worker) had NO `PROGRESS.json` checkpoint emission of its own — its only resume mechanism was
+      per-file idempotent-skip (`rows_changed == 0` → skip the WRITE), which still forces a full re-download +
+      re-parse + re-resolve of the ENTIRE prior scope on every relaunch (day one, forever), because the discovery loop
+      always re-walks the full `[--start-date, --end-date]` scope with no persisted frontier to narrow it.** Verified
+      this is a SEPARATE gap from todo 2/Gap 3: `RelaunchPreemptedVm`'s checkpoint-read/`START_DATE`-override logic
+      (`scripts/recovery/relaunch_backfill_vm.py`) and the `vm-logs/{vm}/PROGRESS.json` write path
+      (`vm-exec-with-gcs-tee.sh`) were ALREADY fully live and already apply to `canonical-migration-cefi-*` VMs
+      (registered in `launcher_registry.py`/`vm_prefix_registry.py` independent of `_is_backfill_vm()`) — the ONLY
+      missing piece was the Python script itself never calling `record_vm_progress()`. Done when: the script emits a
+      `[[VM_PROGRESS]]` marker (via `unified_trading_library.manifest_writer._vm_progress.record_vm_progress`) once each
+      day in its scope is fully migrated. — **FIXED: market-tick-data-service@54817bc15acc218762431180e20d3e3f4a230929**
+      (2026-07-27). `run()`'s per-file completion loop now tracks a per-day remaining-file counter (built from the same
+      flat cross-day file list the ThreadPoolExecutor already processes) and calls `record_vm_progress(day)` once every
+      file discovered for that day — across all venues/pipeline_modes — has completed, gated on `apply` (a dry-run must
+      never advance the resume frontier; matches the existing `ManifestWriter.record_captured()` hook's own "only from a
+      real recorded artifact" contract). A day with any wedged/hard-deadline-outstanding file never reports complete (it
+      stays in `pending`, never counted down), so the frontier can never skip past a day that wasn't genuinely finished.
+      Full `quality-gates.sh` green (no new basedpyright/ruff findings near the change — pre-existing `reportAny`
+      findings in `main()`'s argparse-Namespace access are unrelated and unchanged). No dedicated unit test added (this
+      is a `Lifecycle: oneoff` migration script under `scripts/` with no existing test scaffold to extend —
+      `script-homes.md` convention treats these as temporary, deleted after the prod run); correctness was verified by
+      direct code read of the day-completion accounting logic and by confirming the consuming
+      `read_progress_checkpoint()`/`RelaunchPreemptedVm` machinery is already live and unconditional on this script's
+      own changes.
 
 ## Evidence / how to reproduce
 
