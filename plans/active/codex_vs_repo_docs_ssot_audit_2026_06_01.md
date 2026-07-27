@@ -212,8 +212,14 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
 - [ ] [DOCS] P1. **market-tick-data-service finish**: `DEPLOYMENT_GUIDE_FEMI.md` (person-named onboarding dup) +
       `SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md` (infra-spec dup) → migrate unique delta, replace with redirect to
       `codex/05-infrastructure` + `codex/08-workflows`, delete the dumps. Slim `DEPENDENCIES.md` / `ARCHITECTURE.md`.
-- [ ] [DOCS] P0. **deployment-service** (79) — deploy-flow/infra/bucket/VM-tarball docs vs `codex/05-infrastructure`,
-      `codex/08-workflows`. Highest duplication surface.
+- [x] ✅ [DOCS] P0. **deployment-service** (79) — deploy-flow/infra/bucket/VM-tarball docs vs `codex/05-infrastructure`,
+      `codex/08-workflows`. Highest duplication surface. **AUDIT DONE 2026-07-27** — refreshed per-doc registry (89
+      repo-owned docs: 47 core + 42 infra/profiles/runbooks; excl. `docs/archive/*` 13 + vendored `.terraform` provider
+      CHANGELOGs 10) in **Appendix B** below; SUPERSEDES the stale `deployment-service (~52)` entry in Appendix A. Net:
+      12 DELETE (dead Feb/Mar-2026 impl-plan dumps + the `audit/` trio, not codex-dups) · 14 REDIRECT (all 12 codex
+      targets VERIFIED-EXIST — none need creating) · systemic FIX-STALE = archived-mirror `unified-trading-codex/`
+      links + a stale `POST_PLAN_BANNER_2026_05_06` replicated across ~30 files. Redirect/delete APPLY stays Phase-3/4
+      (operator's FIX-STALE-only hold, line ~224).
 - [ ] [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`.
 - [ ] [DOCS] P0. **market-data-processing-service** (22) — path/manifest/candle docs vs `codex/02-data`.
 - [ ] [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`, `codex/02-venues`.
@@ -468,3 +474,53 @@ genuine-UI, out of scope.
       README/docs/coverage-floor treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human
       2FA"; `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN` describe manual GUI/IB-Key login). Needs an operator/owner call on the
       repo's actual status + the canonical 2FA path before the FIX-STALE rewrite can land. (repo: ibkr-gateway-infra)
+
+### deployment-service refreshed registry (2026-07-27) — supersedes the stale Appendix-A `(~52)` entry
+
+> Read-only re-audit of the highest-duplication repo via 2 parallel opus sub-agents (core docs +
+> infra/profiles/runbooks). 89 repo-owned docs (47 core + 42 infra/profiles/runbooks); OUT-OF-SCOPE: `docs/archive/*`
+> (13), vendored `terraform/**/.terraform/providers/*` provider CHANGELOGs (10). **Redirect/delete APPLY stays
+> Phase-3/4** under the operator's FIX-STALE-only hold; this entry is the classification the phases consume. All
+> REDIRECT targets VERIFIED-EXIST in current PM `/codex/` — none need creating.
+
+**deployment-service [core docs] (47)** — DELETE: `IMPLEMENTATION_MAX_WORKERS`, `MASTER_IMPLEMENTATION_INDEX`,
+`MAX_WORKERS_UNIFIED_IMPLEMENTATION_PLAN`, `MASTER_ML_IMPLEMENTATION_PLAN`, `ML_IMPLEMENTATION` (dead Feb-2026 "ready to
+implement" dumps, ~6.7k lines), `UI_TYPESCRIPT_TYPES`, `GCS_LIFECYCLE_COST_OPTIMIZATION` (dup of AGGRESSIVE_STRATEGY),
+`docs/SPECS.md` (historical contractor spec dump), `docs/specs/{PLANS_ALIGNMENT,README}` (archived 2026-05-06 plans),
+`CONFIGURATION` (near-empty stub), `service-bundling-review` (completed 2026-03 one-off). FIX-STALE: `CONTRIBUTING`
+(mis-titled "Contributing to Instruments Service"; prescribes retired `git checkout main`/`python -m pytest`/plain
+quickmerge), `INDEX` (links ARCHIVED `unified-trading-codex/` mirror + broken targets), `MIGRATION` (archived 2026-05-06
+plans as "active" + archived-mirror), `LIVE_MODE` (archived-mirror batch-live-symmetry ref), `HARDENING` (broken
+BIGQUERY_HIVE ref), `CLOUD_BUILD_SUCCESS_CHECKLIST` (retired merge-to-main-triggers-CloudBuild vs LDR→main + qg-v2).
+REDIRECT (targets exist): `docs/ARCHITECTURE` (→ `/codex/05-infrastructure/deployment-clusters-live-vs-batch.md`),
+`GCS_PATHS` (→ `/codex/05-infrastructure/path-registry.md`), `SCHEMA_VALIDATION` + `GCS_AND_SCHEMA` (→
+`/codex/02-data/availability-manifest-and-data-status.md`), `DEPLOYMENT_GUIDE` (→
+`/codex/05-infrastructure/vm-tarball-deployment.md`), `CLOUD_AGNOSTIC_MIGRATION` (→
+`/codex/05-infrastructure/cloud-agnostic-script-pattern.md`), `INFRASTRUCTURE` (→
+`/codex/05-infrastructure/auth-setup.md`), `COST` (→ `/codex/05-infrastructure/billing-cost-observability.md`),
+`GCS_LIFECYCLE_AGGRESSIVE_STRATEGY` (→ `/codex/05-infrastructure/gcs-lifecycle-policies.md`), `GITHUB_TOKEN_CLOUD_BUILD`
+(→ `/codex/05-infrastructure/cicd-setup.md`), `UI_SPEC` (→ `/codex/05-infrastructure/deployment-ui-architecture.md`),
+`COMPREHENSIVE_SERVICE_AUDIT_FRAMEWORK` (→ `/codex/11-project-management/` citadel standards). KEEP: root
+`{README,ARCHITECTURE,QUALITY_GATE_BYPASS_AUDIT}`, `RUNBOOKS`, `hybrid-live-seam`, `cli`, `SHARDING_AND_DATA_ALIGNMENT`,
+`STANDARDIZED_EVENT_LOGGING`, `TESTING`, `BIGQUERY_INTEGRATION_GUIDE`, `RESOURCE_MONITORING_AND_RIGHTSIZING`,
+`VM_HEALTH_AND_GCSFUSE_OPTIMIZATION`, `CACHE_AND_STATE`, `E2E_SPECS`, `setup`, `dev-environment`, `local-run-guide`,
+`CLI_REFERENCE_TEMPLATE`. Marginal MIGRATE: `SHARDING_AND_DATA_ALIGNMENT` shard-atom taxonomy (sports `(league_id,day)`,
+prediction `(canonical_question_group,day)`, v7 `job_id` col) worth folding into
+`availability-manifest-and-data-status.md`.
+
+**deployment-service [infra/profiles/runbooks] (42)** — DELETE:
+`audit/{CURRENT_AUDIT,ARCHIVE,DEPLOYMENT_SPLIT_AUDIT_REPORT}.md` (the whole `audit/` dir — stale 2026-03 point-in-time
+snapshots, resolved P0s / completed migration). FIX-STALE: `resource-profiles/*` (all 22 carry
+`POST_PLAN_BANNER_2026_05_06` w/ a wrong-depth `../`-relative link + refs to archived May plans; `execution-service.md`
+uses stale `.plan` ext), `terraform/README.md` + `terraform/modules/README.md` (broken `unified-trading-codex/` refs —
+mirror archived/gone), `configs/RUNTIME_TOPOLOGY_DECISIONS.md` (broken archived-mirror refs + Feb-dated gap tables),
+`templates/branch-protection-template.md` (names `quality-gates` — actual `quality-gates-v2`; cites nonexistent
+`make ci-local`). REDIRECT: `templates/branch-protection-template.md` (→ `/codex/08-workflows/ci-cd-flow.md`),
+`configs/RUNTIME_TOPOLOGY_DECISIONS.md` (redirect-with-migration →
+`/codex/04-architecture/runtime-deployment-topology.md`). KEEP: `resource-profiles/*` (22 — repo-specific
+CPU/mem/timeout/cost/VM-override per service incl. COINBASE c2-standard-60; content KEEP, only the banner is stale),
+`scripts/{vm,recovery,cloud-run}/README.md`, `configs/{README,BUCKET_CONFIG_SCHEMA}.md`,
+`packer/agent-orchestrator/README.md`, `deployment_service/backends/README.md`, `terraform/{README,modules/README}.md`
+(KEEP content, fix refs), `infra/ibkr-gateway/FIRST_TIME_LOGIN.md`. **Runbooks: 4/4 FULLY frontmatter-compliant**
+(`owner`/`cadence`/`verifier`/`last_executed`; two staging runbooks carry `last_executed: never` but the field is
+present).
