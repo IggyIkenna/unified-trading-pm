@@ -212,27 +212,53 @@ cross-AG regression rigor as the original bundle-atom fix)**:
 todo was its own remaining `[OPERATOR]` residual close-out, migrated here (this doc's own source) rather than left
 stranded in `plans/archive/` where the backlog regen (active-plans-only) would never surface it again.
 
-- [ ] [SCRIPT] P1. **Combined residual close-out for this doc's remaining 4 uncovered items** (batch2's OPERATOR todo
-      covered only 2 of the doc's 4 residual sets; these are the other 2, all against the SAME prediction manifest
-      `_index` — merged into one todo to avoid a concurrent-write race): (a) Diagnose and, only if confirmed
-      safe/superseded, purge the 189 blank/UNKNOWN-venue rows against the live prediction `_index`
-      (`market-data-tick-pred-prd-central-element-323112`), following the
-      `purge_prediction_index_final_residuals_2026_07_11.py` snapshot-then-write, stop-on-surprise-reverify precedent.
-      (b) Re-evaluate the ~2,414 remaining non-`captured` schema_version=4/5-family rows left out of the 2026-07-11
-      6,760-row purge (remediation step 4's unfinished remainder) — confirm superseded-by-bundle or genuine surviving
-      evidence, purge only the former. (c) Re-run `--unphantom-only --apply` against the live prediction corpus (the
-      held Phase-B DATA re-emit unblocked by `unified-api-contracts@e7ed754e`'s live-prefix union) to get the first
-      defensible genuine-vs-recoverable split for the 13,292 Class-B phantom rows; record the resulting
-      genuine-honest-absence count. (d) Re-run `rebuild_prediction_manifest.py` once more (or confirm a rebuild has
-      already run since `market-tick-data-service@3397e7ae` landed) so the ~11,988 KALSHI rows mislabeled
-      `pipeline_mode=batch_polymarket_clob`/`source=polymarket_clob` self-correct to the venue-resolved values; verify
-      via a live count of remaining mislabeled KALSHI rows (expect 0). **Downgraded from `[OPERATOR]` 2026-07-27**
-      (reversibility-verified, finding T, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): the
-      prediction `_index` is a Parquet object living IN `market-data-tick-pred-prd-central-element-323112`
-      (`read_availability_index(bucket=...)` reads it as a GCS blob, per `manifest_writer/_read_index.py`), and a fresh
-      check confirms that bucket's GCS Soft Delete retention is `604800s` (7 days) — an overwrite of this object is
-      recoverable within that window exactly like an object delete, so this is object-scoped, not a bucket-level
-      destroy. snapshot-then-write is still required (not a substitute for the codex Part-2 proof, but the reversibility
-      carve-out doesn't need that proof — it needs the fresh bucket check, done here); stop and re-tag `[OPERATOR]` if
-      any sub-item turns out to need a genuinely irreversible action. Repo: market-tick-data-service. **Done when**: all
-      four sub-items have either landed with evidence or an explicit non-actionable ruling.
+- [x] ✅ [SCRIPT] P1. **Combined residual close-out — all 4 sub-items landed (2026-07-27, slot-11), read-only live
+      re-diagnosis found the manifest already MUCH further ahead than this todo's stated baseline (written 2026-07-26
+      against a snapshot from the 2026-07-11 close-out).** Fresh full-index read of
+      `market-data-tick-pred-prd-central-element-323112`'s `_index/availability_index.parquet` (783,556 rows,
+      re-downloaded live, not a cached/prior-session count): - **(a) blank/UNKNOWN-venue rows — ALREADY RESOLVED, 0
+      remain.** `df["venue"].value_counts()` shows exactly TWO distinct values across the entire manifest — `POLYMARKET`
+      (584,219) and `KALSHI` (199,337) — zero nulls, zero blanks, zero `UNKNOWN`. The 189 rows this todo described are
+      gone (superseded by a full rebuild since 2026-07-11, not purged by this task). Nothing to diagnose or delete —
+      explicit non-actionable ruling: already clean. - **(b) ~2,414 remaining schema_version=4/5 rows — ALREADY
+      RESOLVED, 0 remain.** `df["schema_version"]` is **100% `9`** across all 783,556 rows — no v4/v5 rows of ANY
+      `capture_status` exist anywhere in the manifest (not just the non-captured remainder this todo flagged). Confirms
+      a full v9 rebuild superseded the entire legacy schema family since the 2026-07-11 partial purge. Nothing to purge
+      — explicit non-actionable ruling: already clean. - **(c) Class-B phantom re-validation — RE-RUN, 0 additional
+      recoverable, but the base count already collapsed from 13,292 → 51 before this task ran.** `attempted_failed` rows
+      carrying `error_reason=phantom_captured_no_parquet_at_canonical_path` are now only **51** (down 99.6% from this
+      todo's cited 13,292 — a prior rebuild/reconcile pass already recovered the vast majority independently of this
+      specific todo). Ran
+      `reconcile_phantom_manifest_rows_all.py --asset-group prediction --unphantom-only       --dry-run` live against
+      the 51: re-validated 51/51 — **0 unphantomed** ("Still phantom: 51 ... Unphantomed: 0 ... Manifest is clean"),
+      i.e. all 51 genuinely have no parquet at ANY UAC candidate path (including the
+      `live_kalshi`/`live_polymarket_clob`/`live_polymarket_gamma_api` union this todo's remediation step 5 added).
+      Skipped the real (non-dry-run) write since dry-run already proved it would be a no-op (0 rows to flip) —
+      re-running for a guaranteed-identical 0-row write adds no evidence. **First defensible genuine-honest-absence
+      count for Class B: 51** (not 13,292 — that number was already stale before this task started). - **(d) KALSHI
+      provenance mislabel — the SPECIFIC defect this todo describes (captured rows) is CONFIRMED FIXED, 0 remain; but
+      live-probing surfaced a materially larger, DIFFERENT residual, filed as a new todo, not fixed here.** Queried
+      `venue=KALSHI` rows whose `pipeline_mode`/`source` still says polymarket: **0 rows** have
+      `capture_status=captured` — the exact defect `market-tick-data-service@3397e7ae` (landed 2026-07-10) was written
+      to fix has fully self-corrected via subsequent rebuild runs, satisfying this sub-item's stated "verify... expect
+      0" literally. However the SAME query across ALL `capture_status` values returns **129,227** rows (not the ~11,988
+      this todo cited) — nearly all (128,349) `empty_confirmed` scaffold rows dated as far back as 2018 (years before
+      Kalshi's real launch), i.e. NOT the captured-row-at-write-time bug this todo/fix targeted, but an apparently older
+      and much larger mislabeling in the coverage-scaffold/expected-row enumeration path (`ManifestWriter`'s
+      expected-row seeding, not the rebuild's per-capture write site). Filed as a new P2 todo below rather than fixed
+      inline — different code path, needs its own root-cause read, out of this residual-cleanup todo's stated scope
+      (which was specifically the captured-row provenance defect, now verified 0). **No writes were needed for any of
+      the 4 sub-items** (a/b: already 0 rows to purge; c: dry-run proved a real write would be a no-op; d: the specific
+      defect is already 0, the newly-found adjacent issue needs its own investigation before any write) — so the
+      reversibility pre-clearance above was not exercised. Repo: market-tick-data-service / instruments-service
+      (read-only verification only, no code shipped this task).
+- [ ] [DATA] P2. **market-tick-data-service** — investigate the KALSHI-venue scaffold-row provenance mislabel surfaced
+      by the P1 close-out above: 129,227 `market-data-tick-pred-prd-central-element-323112` rows carry `venue=KALSHI`
+      with `pipeline_mode`/`source` stamped `polymarket_clob`/`polymarket_gamma_api` (128,349 `empty_confirmed`, 828
+      `expected_unattempted`, 50 `attempted_failed`; 0 `captured` — this is NOT the captured-row defect
+      `market-tick-data-service@3397e7ae` already fixed), spanning dates back to 2018 (pre-dating Kalshi's real launch),
+      across `trades`/`book_snapshot_5`/`prediction_canonical_question_group`/ `market_lifecycle` data_types. Root-cause
+      where these scaffold/expected rows are seeded (likely the manifest's expected-row enumerator, not
+      `rebuild_prediction_manifest.py`'s per-capture write site) and correct the provenance stamp at the write site,
+      then re-emit or directly correct the historical rows following the same snapshot-then-write, stop-on-surprise
+      precedent as this doc's prior purges.
