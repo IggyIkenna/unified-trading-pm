@@ -32,7 +32,7 @@ related:
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-08
-last_updated: 2026-07-08
+last_updated: 2026-07-27
 parent_epic: sports_master
 priority: P2
 source:
@@ -241,6 +241,20 @@ code-fix task). A data_engineering slot with a full session budget should:
 
 ## Progress Log
 
+- **2026-07-27** — Re-checked todo #4's gate per `sports_satellite_ao_dispatch_batch4_2026_07_25.md` todo #1
+  (data_engineering slot). A fresh single-walk read of `_index/availability_index.parquet`
+  (`unified_trading_library.read_availability_index`) shows the 2026-07-12 zero-verification NO LONGER HOLDS:
+  `(footystats, MATCHES)` pending_fetch=35,151, `(footystats, PREDICTIONS)` pending_fetch=35,151, `(footystats, ODDS)`
+  pending_fetch=35,349. Per this todo's own instruction, NOT silently re-closing — this is a genuine regression,
+  root-caused and filed as its own actionable finding:
+  `issues/footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md`. Summary of that doc's
+  root cause: NOT a write-path regression (the 2026-07-08 code fixes below are still correct and unaffected) — the
+  sports canonical universe grew to ~300+ additional footystats-non-covered leagues since the last typing pass, and the
+  existing non-covered-league typing scripts (`type_footystats_matches_predictions_non_covered_leagues_2026_07_06.py`,
+  `type_footystats_odds_non_covered_leagues_2026_06_29.py`) simply haven't been re-run against the larger universe. Live
+  dry-run of both scripts confirms they account for 105,370 of the 105,651-row live total (99.7%). Todo #4 below and
+  this doc's `status: open` are left UNCHANGED pending the new doc's remediation todos. **This doc's own checkbox #4
+  stays `- [ ]` — not flipped.**
 - **2026-07-08** — Todo #6 (extend write-gate fix to ODDS + root-cause 5-league gap) FLIPPED (slot-6 sonnet/high). See
   the todo's own entry above for the full write-up. Summary: (1) added the confirmed subscription-scope write-gate guard
   to `_fetch_footystats_odds`'s per-league write loop (mirrors todo #1); (2) root-caused the 5-league ongoing gap by
