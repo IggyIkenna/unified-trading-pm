@@ -53,6 +53,13 @@ source: POST /api/escalate wall_type=ldr_qg_failure, repo=market-tick-data-servi
 depends_on: []
 ---
 
+> **🟢 RESOLVED 2026-07-27** — scanner scoped to skip baseline entries whose owning repo isn't present under
+> `--workspace-root`, shipped `unified-trading-pm@34b7066ae`; verified both CI-shaped and full-workspace scans exit 0
+> with unchanged regression-catching power. Remaining P2 follow-up (flip warn-only -> hard-fail for
+> execution-service/instruments-service/features-service) is already tracked as Todo 4 of
+> `/plans/archive/issues/mtds_phoenix_orderbook_handler_contract_call_regression_2026_07_27.md` — no separate tracking
+> needed.
+
 # STEP 5.83 adapter-contract-regression scanner — workspace-scope false positive
 
 ## What broke

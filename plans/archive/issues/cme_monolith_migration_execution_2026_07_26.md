@@ -33,6 +33,11 @@ resolved_by: "slot 3, /autonomous run, 2026-07-27"
 drift_direction: advance-code
 ---
 
+> **🟢 RESOLVED 2026-07-27** — all 30 real days migrated + independently reconciled (24,588 captured rows exact match),
+> `--delete-source` dry-run confirms all 30/30 delete-safe. The one remaining decision (the `--delete-source --apply`
+> irreversible delete) is a standing human-sign-off judgment call by this doc's own policy, not an open todo — this
+> doc's full stated scope is complete.
+
 # CME monolith migration — tool shipped, execution pending
 
 ## What's done

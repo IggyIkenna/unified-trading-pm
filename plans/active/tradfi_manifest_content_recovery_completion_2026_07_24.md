@@ -844,7 +844,7 @@ questions when a decision is needed. Ran it. Findings:
   (per-symbol grouping, contract-vs-combo classification, canonical path construction per `_canonical_chain_path`-style
   logic but for FLAT per-contract futures/options, not chain bundles, manifest registration) — deferred as its own P2
   todo below rather than rushed in this session alongside the higher-priority P1 manifest-recovery pass.
-  - `[x] ✅ [DATA] P2. Design + build the CME monolith migration tool — TOOL DONE 2026-07-26 (`mtds@02284f8e`). Execution tracked separately: `/plans/active/issues/cme_monolith_migration_execution_2026_07_26.md`.`
+  - `[x] ✅ [DATA] P2. Design + build the CME monolith migration tool — TOOL DONE 2026-07-26 (`mtds@02284f8e`). Execution tracked separately: `/plans/archive/issues/cme_monolith_migration_execution_2026_07_26.md` (RESOLVED 2026-07-27).`
 
 ### 2026-07-22 continuation — the chain-manifest recovery script (P1), PA-2021 progress check
 
