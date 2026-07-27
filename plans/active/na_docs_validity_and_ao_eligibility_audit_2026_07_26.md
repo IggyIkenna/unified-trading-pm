@@ -265,3 +265,62 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
 
   **Next**: stale-checkbox correction sweep for the ~35 already-duplicated docs (bucket 2 above); Phase 2 (the 299
   `doc_type:issue` NA docs, 677 todos) — not yet started.
+
+- **2026-07-27 — Phase 2 executed same session, immediately after Phase 1.** 10 parallel read-only sub-agents (cefi
+  split ×2, defi, tradfi+prediction combined, sports split ×2, cross-cutting split ×3, meta) classified all 214
+  `doc_type:issue`, `assigned_vm:NA` docs with open todos (665 todos total, re-counted fresh — differs slightly from
+  Phase 1's earlier 299/677 estimate because several docs had since been archived/resolved by concurrent sessions). Same
+  3-verdict rubric as Phase 1, but this population needed a third bucket since issue docs are typically single-finding
+  bug reports rather than multi-phase epics: **KEEP-NA** (genuine judgment/operator/credential gate), **KEEP-NA-STALE**
+  (content already duplicated verbatim in an active satellite batch — needs a checkbox citation fix, not
+  reclassification), **RECLASSIFY** (genuinely bounded, zero or non-competing conflicts).
+
+  **Headline finding: the issue-doc population is FAR richer in genuinely-new AO-eligible content than the plan-doc
+  population was.** Roughly 90 of 214 docs verdicted KEEP-NA-STALE (this week's satellite batches already absorbed their
+  content, checkboxes just never got flipped — same root cause as Phase 1's bucket 2) and roughly 60-70 verdicted
+  genuine KEEP-NA (a disproportionate share of these are AO/orchestrator-infrastructure bug reports —
+  `ao_db_lock_storm_and_stuck_shutdown_outage`, `orchestrator_failover_double_dispatch_duplicate_work`,
+  `one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks`,
+  `reaper_kills_inflight_detached_quickmerge_false_done`, etc. — correctly excluded per an explicit extra-caution
+  instruction given to every sub-agent: a wrong fix to the orchestrator's own dispatch/git/state machinery risks
+  corrupting the very backlog this audit depends on, so those stay human-reviewed even when a fix "looks mechanical").
+  But **~61 docs verdicted genuinely clean RECLASSIFY** (zero or non-competing conflicts) — more than triple Phase 1's
+  yield from a similarly-sized population, because issue docs are narrower bug reports that this week's PLAN-level
+  satellite-batch drafting simply never reached.
+
+  **Executed: 60 of the 61 clean docs flipped `assigned_vm: NA → planning`**
+  (`unified-trading-pm@<pending, see next commit>`) directly, with no companion finalize doc — confirmed via reading
+  `check_finalize_plan_coverage.py`'s source that it only globs the top-level `plans/active/*.md`, never
+  `plans/active/issues/*.md`, so issue docs are structurally exempt from that gate. One candidate,
+  `issues/instrument_id_format_canonicalization_2026_07_08.md`, was otherwise clean but already sits at 1,309 lines
+  (pre-existing, not caused by this pass) — over the 1,000-line hard cap — so it was reverted back to `NA` and left for
+  a future split-then-reclassify pass rather than blocking the other 60. Full per-doc evidence is in each sub-agent's
+  transcript; representative highlights: `cross_ag_instrument_type_casing_100pct_directive_2026_07_24` (blocked only by
+  3 docs exceeding the old 1000L cap — since split, the block cleared, nobody re-checked),
+  `defi_plasma_chain_onboarding_gap_2026_07_26` (explicitly filed "out of scope here" by an active batch, left genuinely
+  undispatched), `mdps_t1_recon_job_oom_failing_7_days_2026_07_26` (first OOM cause already fixed, but a SECOND distinct
+  OOM with its own stated investigative approach was never picked up),
+  `manifest_reprocessing_generic_utility_2026_07_07` (a ~90%-complete template to generalize, never claimed by any
+  batch), `catalogue_census_equivalents_inventory_2026_07_24`
+  - `cli_shard_split_flag_coverage_audit_2026_07_24` (both had their main audits shipped, small bounded follow-ups left
+    unclaimed).
+
+  **Notable KEEP-NA verified, not touched** (selection): `production_readiness_checklist_file_missing_2026_07_24` (doc's
+  own text: "genuinely needs a human decision on which checklist is authoritative");
+  `ao_operator_delete_gating_aws_iam_and_corpus_sweep_2026_07_27` (an empirically-verified hard IAM blocker, doc's own
+  Final Report: "not a judgment call"); `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21` (money-path
+  NAV change under repeated operator rulings); `defi_archetype_universe_no_curtailment_mechanism_2026_07_23`
+  (in-progress phased build under direct operator guidance, doc self-declares "still correctly NOT AO-dispatchable" for
+  its open items); `wsfeedconnector_phase35_gap_2026_07_06` (BLOCKED-CREDENTIALS on a vendor real-time key, matches the
+  external-data-always-available pattern).
+
+  **Net this session (Phase 1 + Phase 2 combined): ~185 + ~(60 docs' worth of todos, not yet summed — see next commit's
+  exact count) new open todos entered the AO backlog.** Both flip batches were verified end-to-end against the live
+  backlog API (`check-ao-backlog-status.sh`) earlier in Phase 1; the same verification should be repeated for Phase 2's
+  docs once `PlanRegenLoop`'s ~5min cycle catches up.
+
+  **Next**: (1) verify Phase 2's 60 docs actually appear in the live backlog; (2) the stale-checkbox correction sweep
+  for BOTH phases' combined ~125 KEEP-NA-STALE docs (cite the extracting batch's commit/sha per item — this is real
+  hygiene value distinct from backlog growth, not yet started); (3) split
+  `instrument_id_format_canonicalization_2026_07_08.md` under the 1000L cap, then reclassify it; (4) Phase 3 (re-run
+  `/ag-closeout-audit all` to verify total coverage against this session's baseline) — not yet started.
