@@ -11,7 +11,13 @@
 # LOWER a count (re-run `--update-baseline`) the moment sites are fixed.
 # NEVER raise a count. Repos not listed default to count=0.
 #
-# SSOT: plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md.
+# `repos[<repo>].commit` is that repo's own HEAD sha at the moment `count`
+# was last set — used to git-diff-detect genuinely NEW over-baseline sites
+# instead of an arbitrary positional tail-slice. Set automatically by
+# `--update-baseline`; do not hand-edit.
+#
+# SSOT: plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+# plans/active/issues/instruments_service_empty_string_fallback_baseline_breach_2026_07_14.md.
 note: Seeded 2026-07-08 — mtds_empty_string_fallback_codex_gate_blocking_pushes fleet audit (QG STEP 5.101).
 repos:
   agent-orchestrator:
@@ -45,7 +51,8 @@ repos:
   market-data-processing-service:
     count: 66
   market-tick-data-service:
-    count: 199
+    commit: 2031aa4b4068c4089c9468e011a580b0dbc3237d
+    count: 90
   ml-service:
     count: 8
   strategy-service:
