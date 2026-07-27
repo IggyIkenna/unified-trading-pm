@@ -190,7 +190,12 @@ Both alert classes fired on healthy runs during normal backfill load. Recurrent 
       rows. Recommended = re-run `populate_v9_index_columns_inplace.py --apply` on the defi + tradfi index buckets — BUT
       first verify a sample of contaminated rows is single-column (only `schema_version` wrong) and not a full-row
       positional shift (see Contamination root cause above). Needs GCS access + a snapshot before mutating. **Surfaced
-      to operator — not auto-applied from this slot.**
+      to operator — not auto-applied from this slot.** **APPROVED 2026-07-27** (interactive operator-gate session,
+      `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 11:
+      "`populate_v9_index_columns_inplace.py     --apply`: APPROVED to run"). Now dispatchable as a real `[OPERATOR] P2`
+      todo in `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (snapshot + sample-verification prerequisites
+      staged there, citing `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s manifest-mutation gate). Leave
+      this checkbox unflipped until that todo's `--apply` run actually completes — approval is not execution.
 
 ### Finding 2 — DP_SOURCE_RATE_LIMITED (classifier — SHIPPED `deployment-service@d36f281`, QG green 98s)
 

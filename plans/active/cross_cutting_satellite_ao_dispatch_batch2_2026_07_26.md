@@ -341,6 +341,29 @@ drift_direction: advance-code
       `issues/manifest_hygiene_red_2026_06_29.md`. **Done when**: every `oracle_expects_but_empty` and
       `noncanonical_path_on_disk` candidate in both CSVs has a recorded verdict with evidence, the stale `.tabs/` paths
       are corrected, and both docs' checkboxes are flipped or their `status` set to `resolved` if nothing remains.
+- [ ] [OPERATOR] P2. **Clean the contaminated defi/tradfi manifest `schema_version` rows — operator APPROVED 2026-07-27,
+      ready to dispatch.** Operator ruling (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 11,
+      interactive session 2026-07-27): "dp_alerts_dp_not_v9 — `populate_v9_index_columns_inplace.py --apply`:
+      **APPROVED** to run." This is a prod-manifest **row mutation** (bumping `schema_version` on single-column-
+      contaminated rows), not a GCS object delete, so the applicable gate is the manifest-mutation contract in
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § "Not a hard stop, but adjacent: manifest-row
+      deletion via a phantom-audit `--apply`... `--apply` only after `prefix_tpls` cover every current path shape,
+      verified by a clean `--dry-run`" plus that same doc's § 5 sanctioned mechanics (UTL `gcs_*` helpers only, never a
+      subprocess `gcloud`/`gsutil`) and its general snapshot-before-mutate discipline. **Before running `--apply`**: (1)
+      snapshot the defi + tradfi `_index/availability_index.parquet` files; (2) verify via a live GCS row sample that
+      the contamination is single-column only (only `schema_version` wrong) and NOT a full-row positional shift — per
+      `issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`'s own stated prerequisite,
+      a positional shift needs re-derivation, not a version bump; (3) run `populate_v9_index_columns_inplace.py --apply`
+      against the defi + tradfi index buckets only; (4) verify before/after row counts and that the non-v9 residual
+      shrank by exactly the expected contaminated-row count. **Done when**: the pre-mutate snapshot exists, the
+      sample-verification result is recorded (single-column vs positional-shift, with the sample cited), the `--apply`
+      run completes with before/after counts, and the source doc's "Operator decision (prod-manifest mutation)" checkbox
+      is flipped `[x]` citing this evidence. Source:
+      `issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` Finding 1's "Operator
+      decision (prod-manifest mutation)" item. **Note**: the source doc itself carries `locked_by: live-defi-rollout` —
+      this todo does not require unlocking the source doc (it only needs a checkbox flip there, not archival), but the
+      source doc's own archival still needs a separate operator `[unlock-plan]` grant once all 3 of its items are
+      resolved.
 - [ ] [DATA] P3. **Triage the 10 unfiltered `read_availability_index(bucket)` call sites (third-strike audit).** For
       each site listed in the source doc — 5 in instruments-service (`cli/main.py`,
       `engine/orchestrator/{process_preflight,venue_core,process_completeness,catalogue}.py`) and 5 in
@@ -409,9 +432,10 @@ drift_direction: advance-code
 - **`consolidator_throughput_backlog_monitor_2026_07_09.md`** (3 open). All three are gated on the same standing
   operator hold — "Cloud Build deploy DEFERRED (operator 2026-07-10 — local-dev-only until …)" — and the WS-3 v2
   truthful merged-per-tick histogram is separately DESCOPED pending WS-H's structured-progress spine.
-- **`issues/data_pipeline_alerts_dp_not_v9_…_2026_06_27.md`** third item (prod-manifest mutation) — carved out of the
-  drafted todo above; the doc marks it "Surfaced to operator — not auto-applied from this slot" and it needs a snapshot
-  before mutating.
+- ~~**`issues/data_pipeline_alerts_dp_not_v9_…_2026_06_27.md`** third item (prod-manifest mutation)~~ — **RESOLVED
+  2026-07-27**: the operator APPROVED this run (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 11);
+  no longer a bare operator-decision block. Moved to a real dispatchable `[OPERATOR] P2` todo in the Todos section above
+  (staged with the snapshot + sample-verification prerequisites), not left here.
 - **`issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md`** todo 1 (2 open total). The doc's own text
   forecloses dispatch: "This is a genuine operator/design decision (which model to commit to), not a worker-determinable
   fact — do not dispatch (a) or (b) speculatively without that decision." Its `[DATA] P3` shutdown-script grace-period
