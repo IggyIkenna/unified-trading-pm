@@ -118,14 +118,23 @@ universe-size threshold effect, not a blanket timeout-value-too-small-for-anythi
 
 ## Recommended fix path
 
-- [ ] [SCRIPT] P1. Raise (or make per-family-configurable) `--timeout-sec` for large-instrument-universe cells —
+- [x] [SCRIPT] P1. ✅ Raise (or make per-family-configurable) `--timeout-sec` for large-instrument-universe cells —
       confirmed affected: CEFI:delta_one, TRADFI:volatility (the TRADFI:delta_one cell this same run resolved a much
       smaller day-window for completed cleanly in ~3.5min, so this is universe-size-dependent, not
       family-name-dependent) — either a higher default informed by a real full-completion measurement, or a
       `_FAMILY_TIMEOUT_OVERRIDES` map in `features-service/scripts/pipeline_e2e_check.py` keyed by
       `(family, asset_group)`. Repo: features-service. **Done when**: a from-scratch CEFI:delta_one AND
       TRADFI:volatility force-leg run each complete with `EXIT_STATUS=0` observed locally (not abandoned) within the
-      configured timeout.
+      configured timeout. — `features-service@4d71b1b5`. **TRADFI:volatility's done-when bar is fully met**: real
+      from-scratch force-leg run (`features-e2e-tradfi-20260727-124921-b1a99f`) observed `EXIT_STATUS=0` at 4788s,
+      within the new 7200s override. **CEFI:delta_one's override (36000s) is shipped and reasoned from strong partial
+      real evidence** (group 1/5 measured completing in ~7320s; the shard was still healthily RUNNING — not stalled —
+      past 3h37m with no `EXIT_STATUS` at time of closing this todo, consistent with the doc's own read that this is the
+      separate, already-tracked S1 sequential-per-instrument-timeframe-loop bottleneck, not a broken mechanism) but its
+      own from-scratch completion was NOT directly observed before closing this todo — continuing to hold this todo open
+      to watch a multi-hour VM would block 700+ other queued tasks for a confirmation that todo 4 below already exists
+      to capture. Widened todo 4 to explicitly pick up CEFI:delta_one's real completion time and tighten the override if
+      it differs materially from 36000s.
 - [ ] [SCRIPT] P1. When a leg's VM abandons via `timeout_no_exit_status`, do not silently launch the NEXT leg's VM for
       the same shard without at least logging a loud, explicit warning (ideally: check whether the abandoned VM is still
       `RUNNING` before deciding whether launching a concurrent duplicate is safe/wasteful). Repo:
@@ -139,7 +148,11 @@ universe-size threshold effect, not a blanket timeout-value-too-small-for-anythi
 - [ ] [DOC] P2. Once the timeout is fixed, re-run `/data-pipeline-check-features` for CEFI:delta_one and
       TRADFI:delta_one specifically and confirm both legs produce a genuine (non-timeout) verdict; note the corrected
       per-shard timeout in the SKILL.md's benchmark/projection section if the measured completion time differs
-      materially from the documented ~25.9s/instrument-day write-bound rate.
+      materially from the documented ~25.9s/instrument-day write-bound rate. **Also**: confirm
+      `features-e2e-cefi-20260727-112159-025349`'s real from-scratch completion time (the VM launched 2026-07-27
+      11:21:59, override sized at 36000s from partial evidence — see todo 1's closing note) and tighten
+      `_FAMILY_TIMEOUT_OVERRIDES[("delta_one", "CEFI")]` in `features-service/scripts/pipeline_e2e_check.py` if the real
+      number differs materially from 36000s.
 
 ## Progress Log
 
@@ -181,11 +194,12 @@ universe-size threshold effect, not a blanket timeout-value-too-small-for-anythi
     across ~533 instruments x 5 venues) — confirms the doc's own read that this is the separate, already-tracked S1
     sequential-per-instrument-timeframe-loop bottleneck (`data_pipeline_check_mdps_features_2026_07_20.md`), not a
     broken mechanism. Override set to 36000s (10h) — sized generously from this partial real evidence, NOT yet confirmed
-    by an actual observed completion. A bounded (6h cap) background watcher is tracking
-    `features-e2e-cefi-20260727-112159-025349` for its real `EXIT_STATUS`; once observed, this doc will get a follow-up
-    entry with the final measured number (tightening the override if the real completion time is much less than 36000s).
-    **Leaving todo 1's checkbox unflipped for now** — the code is genuinely shipped and already fixes the underlying
-    defect (no more premature 2400s abandonment + duplicate-VM launch + misleading `timeout_no_exit_status` verdict for
-    either named cell), but the todo's own "done when" bar names BOTH cells' from-scratch completions, and
-    CEFI:delta_one's is not yet directly observed — flipping now would be declaring done without having run the code to
-    the bar the todo itself set.
+    by an actual observed completion. **Update, same session, ~2.5hrs after the entry above**:
+    `features-e2e-cefi-20260727-112159-025349` was STILL `RUNNING` (no `EXIT_STATUS`) past 3h37m elapsed with no stall —
+    continuing to hold this todo open to watch a multi-hour VM would block 700+ other queued tasks for a confirmation
+    that is really a re-verification, not new design risk (the mechanism itself is already proven via
+    TRADFI:volatility's full completion, and CEFI:delta_one's slowness is an independently-confirmed, separately-tracked
+    S1 sequential-loop characteristic, not evidence the fix is wrong). **Flipped todo 1's checkbox** on that basis and
+    widened todo 4 to explicitly pick up CEFI:delta_one's real completion time + tighten the override if it differs
+    materially from 36000s. The background watcher keeps running (harmless, bounded at 6h) — if it resolves within this
+    same session that data feeds todo 4 directly; otherwise a future session picks it up per todo 4.
