@@ -105,7 +105,20 @@ tracked here rather than silently claimed complete.
 - [ ] [SCRIPT] P2. Add a `--resume`/checkpoint capability to `unified_trading_library.pipeline_e2e_check`'s
       `run_pipeline_check` so a killed driver process can resume from the next not-yet-attempted shard cell instead of
       restarting the whole `--legs` matrix from scratch (repo: unified-trading-library).
-- [ ] [SCRIPT] P2. Loosen or add contention-aware retry/backoff to the launcher-script VM-creation wait in
-      `launch_vm_and_wait` (currently times out at ~120s under fleet load, while the VM itself DOES get created and
-      complete successfully a few minutes later) (repo: unified-trading-library or market-data-processing-service,
-      wherever `launch_vm_and_wait` lives).
+- [x] ✅ [SCRIPT] P2. **SHIPPED 2026-07-27 (slot-9)**: `unified-trading-library@137e219c`. Loosened the launcher-script
+      VM-creation wait in `launch_vm_and_wait`/`_run_launcher_script` (`pipeline_e2e_check/launcher.py`): a
+      `subprocess.TimeoutExpired` on the launcher subprocess is now caught in `_run_launcher_script_once` and converted
+      to a synthetic nonzero-exit `CompletedProcess` (sentinel `_LAUNCHER_TIMEOUT_RC = -1000`), so it flows through the
+      SAME `_vm_is_present`-gated retry path a real nonzero launcher exit already used — matching this exact incident's
+      own root cause (attempt 3: launcher timed out client-side waiting to confirm VM creation while
+      `gcloud compute     instances create` had already succeeded server-side a few minutes later). Previously the
+      timeout propagated straight out of `_run_launcher_script` to `launch_vm_and_wait`'s outer
+      `except subprocess.TimeoutExpired`, which returned `reason="launcher_script_timeout"` immediately with ZERO
+      retry/presence-check, even though the identical retry machinery already existed one level down for ordinary
+      nonzero exits. 3 new regression tests (`tests/unit/test_pipeline_e2e_check_launcher_timeout.py`) cover: (1)
+      timeout + VM confirmed present → treated as launched, no further retry; (2) timeout + VM genuinely absent →
+      retries and succeeds on the next attempt; (3) end-to-end `launch_vm_and_wait` no longer returns
+      `launcher_script_timeout` for a timeout the retry path recovers from. QG green (226s, full run). This does NOT
+      itself complete todo 8 of the parent plan (the full all-AG matrix + skip-proof still needs a from-scratch run
+      under the now-fixed retry path — likely still blocked by the separate P1 session-teardown investigation above),
+      but removes one of the two concretely-identified blockers.
