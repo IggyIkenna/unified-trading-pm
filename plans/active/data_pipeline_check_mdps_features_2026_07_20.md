@@ -511,8 +511,35 @@ the ones already in candles) and do features service across all shards too"_
   report `no_captured_input_for_window` until the candle backfill runs) — so MDPS coverage leads, features follows, and
   the honest-gap verdicts in between are themselves the signal, not a failure.
 
-- [ ] NEW todo. [DATA] P0. Enumerate the candle-coverage GAP per (asset_group, venue, data_type, timeframe): which cells
-      ALREADY have candles vs which do not. Drives both "which AGs to run" and the ETA denominator.
+- [x] NEW todo. ✅ [DATA] P0. **DELIVERED 2026-07-27 (slot-15)** — Enumerate the candle-coverage GAP per (asset_group,
+      venue, data_type, timeframe): which cells ALREADY have candles vs which do not. **Denominator**
+      (`enumerate_mdps_shards` × `_valid_timeframes`, all 5 AGs): **3,125 candle-eligible cells** — CEFI 819, DEFI
+      1,974, TRADFI 273, SPORTS 30, PREDICTION 29. **Real GCS ground truth** (bounded delimiter-descent under
+      `processed_candles/by_date/` — NOT a full-corpus walk; used instead of a pure manifest census because the manifest
+      is KNOWN to undercount — todo 3 above found 20,734 real cefi candle objects vs 6 manifest rows on one day),
+      day-partitions / most-recent-day / MDPS-service manifest rows (axis-census) per AG: DEFI 1,148 days / 2026-07-26
+      (producing daily) / 503 manifest-too-large-for-one-request (see below); SPORTS 1,941 days / 2026-07-26 (producing
+      daily) / 120,792 rows; TRADFI 884 days / 2026-07-22 / 23,810 rows (CME 22,086/NYSE 1,651/FX 73); CEFI 342 days /
+      2026-07-21 / 75 rows (HYPERLIQUID 73/BITGET-FUTURES 2); PREDICTION 247 days / **2026-01-14 — STALLED ~6mo, no new
+      days since** / 15,558 rows (KALSHI/POLYMARKET, all historical). Per-day breadth is narrow vs. the denominator:
+      DEFI's 2026-07-26 sample covers only `pipeline_mode=batch_onchain_subgraph` + `data_type=dex_pool_swaps` +
+      `instrument_type=POOL`, for 2 venues (PANCAKESWAP_V3, UNISWAP_V3) across 7 timeframes (DEFI's other data_types
+      show ~0 recent activity); CEFI's 75 manifest rows cover only 2 of many venues and 2 of 6 candle data_types.
+      **Verdict**: DEFI (63% of all cells, narrow real coverage) and CEFI (819 cells, near-empty manifest) are the
+      biggest genuine gaps — prioritize these for the next `/data-pipeline-check-mdps` run + todo 15's backfill.
+      TRADFI/SPORTS are comparatively well-covered (daily production current through this week). PREDICTION's pipeline
+      appears to have STOPPED producing new days since 2026-01-14 — an operational question, filed below. **Known
+      limitation (honest, not swept)**: a full per-cell DEFI census could not be completed safely this session — an
+      in-process `read_availability_index` attempt grew to 15.8 GB RSS and was SIGTERM'd by main-agent (shared-host load
+      avg hit 50); the deployment-api `axis-value-census` Cloud Run endpoint also 503'd on DEFI's manifest size. Per
+      `reconciliation-census-and-compute-tiers.md`, this belongs on a Tier-2 SPOT VM — filed below.
+
+- [ ] NEW todo (surfaced 2026-07-27, slot-15). [DATA] P1. Run a DEFI-specific per-cell (venue,data_type,timeframe)
+      candle-coverage census on a Tier-2 SPOT VM — both the in-process `read_availability_index` read and the
+      deployment-api `axis-value-census` endpoint failed on DEFI's manifest size this session (see todo above).
+- [ ] NEW todo (surfaced 2026-07-27, slot-15). [DATA] P2. Investigate why PREDICTION's MDPS candle pipeline stopped
+      producing new `processed_candles/by_date/day=` partitions after 2026-01-14 (247 total days, none since) — an
+      operational question, not a backfill-scope gap (only 29 cells total for this AG).
 - **[DATA] P0. CANCELLED — 2026-07-27 (slot-9): consolidated into todo 8's post-split follow-up todo** (see the "SPLIT
   2026-07-27 (slot-9, operator-ruled Option B on BLK-243a969b)" entry higher in this Todos section). This todo's scope
   ("run `/data-pipeline-check-mdps` across all relevant AGs") is a strict SUBSET of that follow-up's scope ("all AGs ×
