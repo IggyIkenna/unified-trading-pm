@@ -98,12 +98,12 @@ source:
       was `YIELD_BEARING` — fixed to `:YIELD_BEARING:`, with the role kept in the SYMBOL segment, e.g.
       `PENDLE-ETHEREUM:YIELD_BEARING:PT-wstETH-25JUN2026`, so PT/YT/SY stay distinguishable without a non-canonical TYPE
       segment; MTDS's own separate `vault_pendle_adapter.py` had already independently made this exact fix and
-      documented IS's pendle.py as the still-open counterpart — now closed). Both fixes,
-      `instruments-service@<pending-sha>`; `test_pendle_metadata.py` updated (role now derived from the symbol segment,
-      not the type segment) — no other cross-repo consumer of the old shape found (checked execution-service,
-      market-tick-data-service, deployment-api's legacy display-map, and grep for every literal PENDLE/KAMINO
-      instrument_key reference). **No new `InstrumentType` enum members are needed for todo 1** — every real value
-      already has a canonical home.
+      documented IS's pendle.py as the still-open counterpart — now closed, MTDS comment updated
+      `market-tick-data-service@fbe8abb9`). Both fixes, `instruments-service@d09e0cf4`; `test_pendle_metadata.py`
+      updated (role now derived from the symbol segment, not the type segment) — no other cross-repo consumer of the old
+      shape found (checked execution-service, market-tick-data-service, deployment-api's legacy display-map, and grep
+      for every literal PENDLE/KAMINO instrument_key reference). **No new `InstrumentType` enum members are needed for
+      todo 1** — every real value already has a canonical home.
 - [ ] [DATA] P2. **Retrofit the ~20 DeFi adapters whose `instrument_key` ad hoc f-string already uses a CORRECT enum
       name (DRY-only, no behavior change)** — todo 2's re-investigation (2026-07-27) found the ORIGINAL todo 1 list is
       now stale: of its representative examples, `aave_v3.py:422,436` / `compound_v3.py:267,281` (A_TOKEN/ DEBT_TOKEN),
