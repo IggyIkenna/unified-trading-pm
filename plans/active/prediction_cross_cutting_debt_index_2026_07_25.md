@@ -160,7 +160,7 @@ source: >-
   - **[DATA] P2.** Resolve the POLYMARKET mismatch (2022-11-21 CLOB-launch vs 2025-03-14 first-actual-instrument)
   - **[DATA] P3.** Resolve the small 1-21 day DeFi protocol drifts (CURVE, UNISWAP_V2, UNISWAP_V4, BALANCER, LIDO)
   - **[DATA] P3.** Publish an explicit key-mapping table between `coverage_starts.py`'s bare venue/protocol keys
-- [`plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`](/plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md)
+- [`plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`](/plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md)
   (8 open total — listed in full, not over the >8 cap threshold; **re-measured 2026-07-26, `/plan-reconcile` prediction
   shard** — the previous list was a stale ROUND-3 snapshot: it named todos 5/6/7 (answered 2026-07-24) and a todo 8 that
   does not exist in the target doc, while silently omitting ROUND-4/5/6's todos 12/13/14/15 — three of them P0)

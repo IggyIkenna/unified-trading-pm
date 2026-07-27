@@ -210,7 +210,7 @@ the table only for completeness, immediately flagged non-canonical in the same r
 
 **F1 — cross-AG manifest bleed into the sports estate · MEDIUM · S3 · NOT independently re-verified this run** (out of
 this dispatch's raw-tick-MTDS-prediction-bucket scope — the bleed lives in `instruments-store-sports-prd`). See
-`plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` for the standing
+`plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` for the standing
 tracker.
 
 **F2 — malformed manifest `instrument_type` axis value · LOW-MEDIUM · S3 · GROWING.** 2026-07-20 measured 76 rows

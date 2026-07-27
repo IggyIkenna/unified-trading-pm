@@ -263,7 +263,7 @@ drift_direction: advance-code
     — `status: resolved`, 2 residual:
     - **[DATA] P0.** Re-run the targeted L6 manifest re-emission for the regressed cells
     - **[DATA] P1.** Forensics (open question) — what wrote pre-launch captured rows into the IS canonical
-  - [`plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`](/plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md)
+  - [`plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`](/plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md)
     (8 open, cross-AG with prediction):
     - **1. [DATA] P1.** Pin the true full count and composition of the bleed
     - **2. [BACKEND] P1.** Locate the writer that puts `asset_group=prediction` rows into the sports index

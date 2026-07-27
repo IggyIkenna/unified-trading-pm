@@ -727,7 +727,7 @@ drift_direction: advance-code
   whole classifies operator_gated rather than yielding a batchable todo. Recommended resolution: raise a single operator
   question bundling both asks (probe-VM go-ahead + quota-bump-vs-skip-fresh choice) in the next operator-decision-needed
   batch; once ruled, a follow-up pass can draft the now-bounded todo(s) against whichever branch is authorized.
-- **`plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`**: Confirmed the
+- **`plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`**: Confirmed the
   Phase-1 uncovered item: todos 12/13/14 (the manifest-consolidator TOCTOU fix, its deploy, then a re-run+hold-verify of
   the cross_ag_prediction remediation) are not cited or covered by any doc in the covering set. Todo 15 (the separate
   market-data-tick-sports-prd KALSHI empty_confirmed population) IS fully covered by

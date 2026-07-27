@@ -340,6 +340,6 @@ proof this pass).
   (F1 — answers that issue's open "is the pipeline dormant" question: no, it is writing real data; the manifest signal
   it used was reading the architecturally non-authoritative bucket)
 - **Addendum appended** to
-  `plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (F2's KALSHI slice —
+  `plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (F2's KALSHI slice —
   answers that issue's own explicitly-flagged-but-unchecked "also check the market-data(tick)/sports manifest for the
   same bleed" item)

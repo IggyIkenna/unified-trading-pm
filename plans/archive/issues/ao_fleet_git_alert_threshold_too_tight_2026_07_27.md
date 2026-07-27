@@ -50,6 +50,9 @@ source:
 
 # Fleet-git RED threshold too tight for long-task slots — 2026-07-27
 
+> **🟢 RESOLVED 2026-07-27** — `GIT_RED_SUSTAIN_S` raised 50m->90m + stale-threshold-text fix shipped and verified same
+> session; all 48 tests in the two affected files pass.
+
 ## What I found
 
 `agent-orchestrator/server/worker_liveness/_git_alerts.py` pages the operator (`agent-orchestrator-alerts` Slack

@@ -46,6 +46,9 @@ source:
 
 # Escalation + scheduled-dispatch slot starvation — 2026-07-27
 
+> **🟢 RESOLVED 2026-07-27** — `ORCHESTRATOR_ESCALATION_SLOT_RESERVE` shipped and verified same session; 2 new
+> regression tests added; all existing tests pass unchanged.
+
 ## What I found
 
 `server/autospawn.py::_apply_fleet_cap` bounds how many CONCURRENT regular-backlog workers `AutoSpawnLoop` will spawn,

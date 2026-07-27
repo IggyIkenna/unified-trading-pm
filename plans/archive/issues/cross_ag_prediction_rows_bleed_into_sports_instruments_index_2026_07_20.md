@@ -69,6 +69,10 @@ resolved_by:
 
 # Cross-AG bleed — `asset_group=prediction` rows in the `instruments-store-sports` index
 
+> **🟢 RESOLVED 2026-07-27** — ROUND 8 hold-check passed (5/5 checks over 15min) confirming the
+> `unified-trading- library@14301571` TOCTOU fix + round-3 remediation re-run holds; see ROUND 8 section below for the
+> full verification.
+
 > **⚠️ BIG FINDING (data-correctness — cross-AG / cross-bucket).** Operator-notify per the findings-triage HARD RULE.
 > Independently measured by two 2026-07-20 reconciliation runs (sports F4 + prediction F1). Filed as a tracked open
 > issue; the read-only reconciliation skills could not root-cause it and neither could fix it.
