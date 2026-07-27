@@ -150,6 +150,27 @@ the candle layer instead of raw-tick.
       CEFI-only scope (3 known venues, one known day, "corpus-wide extent unknown") is now superseded by this
       corpus-wide measurement — likely yes, this doc should probably fold into or supersede that one once the backfill
       scope is finalized.
+- [ ] [DATA] P2. **Remediate ~1,639 cefi `processed_candles/` objects mis-tagged `pipeline_mode=batch_databento`**
+      (should be `batch_tardis`) — discovered during todo 1's cefi `--apply` run (10 `RECORD-ERROR` warnings in
+      `backfill-candle-manifest-cefi-20260727-151741`'s `run.log`, all
+      `MissingSourceError: source='databento' ... not a     registered source for asset_group='cefi'`). Root-caused via
+      direct GCS listing: for the SAME shard key
+      (`day=2019-04-01/timeframe=1d/data_type=derivative_ticker/instrument_type=PERPETUAL/venue=DERIBIT/*-PERPETUAL`),
+      TWO objects exist — one correctly at `pipeline_mode=batch_tardis/`, one incorrectly at
+      `pipeline_mode=batch_databento/` (databento is not in cefi's `SOURCE_PRIORITY`-registered source list: aster,
+      binance, bybit, deribit, extended, hyperliquid, kalshi_perp, kraken, okx, polymarket_perp, tardis). Confirmed
+      scope via
+      `gcloud storage ls -r gs://market-data-tick-cefi-prd-central-element-323112/processed_candles/by_date/**/pipeline_mode=batch_databento/**`
+      → 1,639 objects across ~1,638 distinct day/instrument combos, DERIBIT PERPETUAL derivative_ticker/1d only (not
+      re-checked for other data_types/timeframes/venues — scope this todo's own read before remediating).
+      `backfill_candle_manifest.py` correctly REFUSED to write a manifest row claiming `source=databento` for these
+      (never silently mis-records) — they remain unmanifested after todo 1's backfill; this is a PRE-EXISTING GCS mistag
+      from some earlier write/migration event, NOT a bug introduced by this backfill or its tool. Options: (a) relabel
+      the mistagged objects' `pipeline_mode=` path segment to `batch_tardis` (copy-not-move + verify twin content
+      matches, then this todo's own record_captured pass), or (b) if the `batch_databento`-path object is actually
+      STALE/superseded by its `batch_tardis` twin, treat as a legacy-duplicate cleanup candidate instead (needs a
+      content diff first — do NOT assume). Small, bounded, does not block todo 1's completion (25,593+ other cells
+      recorded successfully for cefi alone).
 
 ## Progress Log
 
@@ -235,3 +256,13 @@ the candle layer instead of raw-tick.
     1's `- [ ]` to `- [x]` citing `market-data-processing-service@cf94e23` + `deployment-service@fafde10`/`@b947d9f` +
     the 4 VERDICT lines as evidence, `docs(plans):` commit + push. Do NOT flip early on "VMs launched" alone — that is
     exactly the smoke-test-green false-completion the data-pipeline-correctness HARD RULE forbids.
+- **2026-07-27T16:36Z** (AO dispatch, slot 8, `data_engineering`) — Second checkpoint:
+  `backfill-candle-manifest-cefi-20260727-151741` finished
+  (`VERDICT cefi: already_covered=0 ok=405496 recorded_cells=25593 junk=0 escalated=0 read_failed=0 verify_failed=0`,
+  self-shutdown). Found + root-caused a small pre-existing data anomaly while it ran — see the new `[DATA] P2` todo
+  above (~1,639 cefi objects mis-tagged `pipeline_mode=batch_databento`); NOT a bug in this backfill or its tool (the
+  script correctly refused to falsely manifest them), and does NOT block todo 1's completion. The other 3 VMs are still
+  running, all healthy, no errors observed beyond the same class covered by the new P2 todo (not yet confirmed whether
+  defi/tradfi/prediction have their own analogous mistagged slices — check each VM's `run.log` for `RECORD-ERROR` lines
+  when it finishes and fold any into the same P2 todo rather than filing duplicates). Snapshot at 16:36Z: defi
+  footer-read 467,000/1,131,367 (41%), tradfi 459,000/536,934 (85%), prediction 418,000/569,947 (73%).
