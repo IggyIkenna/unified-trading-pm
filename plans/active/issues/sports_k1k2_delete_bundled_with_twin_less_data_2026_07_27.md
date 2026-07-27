@@ -128,11 +128,13 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
       (not a synthetic test): migrate dry-run found 34 uppercase/26 already-lowercase objects; the report generator
       content-re-verified all 26 lowercase objects against their uppercase source, 26 PASS / 0 FAIL; `manifest_swap`'s
       `--apply-prod` PLAN mode (live index read, no writes) found 18/26 targeted uppercase rows genuinely present and
-      all 26 ADD keys genuinely new — the full pipeline is wired correctly end-to-end. **Still outstanding before this
-      checkbox flips**: the actual full-corpus run (all ~2,200+ days, sharded across a migration VM per the heavy-I/O
-      rule — `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` needs a new `sports-k1k2-casing-revert`
-      category, none of the existing categories match this shape) and the fresh content-verified census this todo's own
-      "Done when" requires.
+      all 26 ADD keys genuinely new — the full pipeline is wired correctly end-to-end. **Launcher category shipped
+      2026-07-27** (`deployment-service@43a03d5`) —
+      `launch-canonical-migration-vm.sh sports-k1k2-casing-revert     <start> <end> dry|full` is ready (no new
+      `VM_PREFIX_TO_BUCKET` registry entry needed; falls under the existing `canonical-migration-sports-` prefix).
+      **Still outstanding before this checkbox flips**: the operator-gated VM launch itself (`BLK-1dd83088` — Option B:
+      code/staging only, execution stays operator-authorized pending a go-ahead for this specific first full-scale run)
+      and, once that runs, the fresh content-verified census this todo's own "Done when" requires.
 - [ ] [DATA] P2. **Only after the above lands**: re-run the 5-part proof against the now-fully-twinned uppercase
       population and execute the delete (§3a reversibility-qualified, fresh retention check required same-run) — this
       becomes the corrected version of `batch7` todo 1's K1/K2 half.
@@ -155,3 +157,25 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
   Deliberately did NOT launch a migration VM or execute any write against prod this session (a ~260k-object / ~373k-row
   write-scale operation is a real infra-launch + prod-mutation decision, not something to run unattended off the
   strength of a same-session build) — left for the operator to authorize the actual execution.
+- **2026-07-27** (AO dispatch, slot 9) — Picked up `sports_k1k2_delete_bundled_with_twin_less_data-001`. Before
+  launching anything, escalated (`BLK-1dd83088`) the exact same tension the prior session flagged: the todo carries no
+  `[OPERATOR]` tag and the safe-idempotent design arguably clears CLAUDE.md's delete/VM-launch gate on its own, but this
+  is a first-at-scale run of tooling sanity-validated for only one real day. Operator answered **Option B — hold
+  execution**: per lines 84-91 above, the operator had _already_ ruled (via `BLK-2cf85627`) that dropping the 2026-07-23
+  `[OPERATOR]` tag on the strength of §3a alone was an error — §3a waives the tag only once the five-part proof already
+  holds, it doesn't supply that proof — so the safe-idempotent justification does not clear the gate here; the actual VM
+  launch + prod write stays operator-gated. Authorized scope: build + stage the launcher tooling only. Shipped
+  `deployment-service@43a03d5` — added the `sports-k1k2-casing-revert` category to `launch-canonical-migration-vm.sh`
+  (mirrors the `sports-features-purge` compound-chain pattern: dry = single migrate dry-run scan; full = migrate
+  --apply-prod --confirm-prod-write -> generate_casing_revert_manifest_report (local `--reports-dir`, no GCS round-trip
+  needed since all 3 steps share one VM boot) -> manifest_swap --apply-prod --confirm-prod-write, each gated on the
+  prior step's clean exit). No new `VM_PREFIX_TO_BUCKET` registry entry needed —
+  `canonical-migration-sports-k1k2-casing-revert-*` already falls under the existing `canonical-migration-sports-`
+  prefix via longest-prefix match. Verified via `bash -n` + `shellcheck` (no new findings) + an isolated
+  command-construction test (sourced only `_script_for()`, no gcloud/GCS calls) — both the dry and full emitted command
+  strings are syntactically valid, comma-free (gcloud `--metadata` safety). Repo `quality-gates.sh` green. **Did NOT**
+  launch the VM, write to prod, or flip todo 1's checkbox — per the operator's explicit instruction, that stays gated
+  until an operator go-ahead for this specific first full-scale run; once launched, todo 1 flips only after the fresh
+  content-verified census shows 100% twin coverage. Deferring this AO task as `BLOCKED-OPERATOR-DECISION` (the only
+  legitimate defer reason under CLAUDE.md's data-pipeline-correctness rule) — the code-shipping half of the work is
+  done; the execution-authorization half is a standing operator decision, not a stalled todo.
