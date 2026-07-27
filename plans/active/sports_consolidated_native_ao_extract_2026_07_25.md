@@ -340,6 +340,63 @@ item). See the dispatching session's full report for the per-todo table.
 
 ## Progress Log
 
+### 2026-07-27 (slot-10) — Track F (follow-up) IN PROGRESS: script written + verified, blocked on QG only (host contention)
+
+**Checkpoint before a mandatory context compaction — this is NOT a finding, it's a handoff so the next session doesn't
+re-derive any of this.** Code for the VM-launched exhaustive census+delete is DONE and verified against real prod GCS
+data; the only remaining blocker is getting `features-service/scripts/quality-gates.sh` to complete once (shared-host
+contention, not a code problem — see below). Nothing here needs re-investigating, only re-attempting the QG.
+
+**Shipped already** (all pushed, `ahead=0`):
+
+- `unified-trading-library@78129566` — fixed a real gap found while building the script: `GCSStorageClient.list_blobs()`
+  dropped `blob.updated` on the floor even though GCS's `objects.list` response already carries it for free (verified
+  directly: `bucket.list_blobs()` returns `blob.updated` populated with zero extra API calls — confirmed via a live call
+  against `features-sports-prd-central-element-323112`). Without this fix, a per-day census walk would need one
+  `get_blob_metadata()` describe call PER OBJECT (prohibitively slow for a corpus this size). 2 new regression tests
+  added.
+- `deployment-service@94e3ecf` — registered `canonical-migration-sports-features-` in both `VM_PREFIX_TO_BUCKET` (→
+  `features-sports-{pid}`, NOT the existing shorter `canonical-migration-sports-` prefix which maps to the TICK bucket —
+  longest-prefix-match resolves correctly since mine is longer) and `LAUNCHER_FOR_VM_PREFIX` (caught a real
+  `test_every_watchdog_prefix_has_a_registry_entry` failure from the first registry-only edit — fixed by also adding the
+  launcher-registry entry). Added a new `sports-features-purge` category to `launch-canonical-migration-vm.sh`: dry mode
+  runs the census once (no mutation); full mode applies the delete then chains `--recensus` on a clean exit.
+  Dry-run-previewed both dry and full command construction with `DRY_RUN=true` — both build correctly (VM name
+  `canonical-migration-sports-features-purge-<ts>`, 59 chars, under the 63-char GCE limit).
+
+**NOT yet shipped** — `features-service/scripts/purge_sports_derived_features_post_floor_residue_2026_07_27.py`
+(untracked, on disk, nothing else references it, safe to survive a compaction as-is):
+
+- Walks `sports_features/by_date/day={D}/` per-day (server-side scoped, not a whole-corpus walk) across Jun-Dec 2020
+  (from the 2020-06-06 data floor) + 2021-2026, filters for `feature_group=derived_features/` objects, classifies by
+  `last_modified` vs the 2026-07-19 re-run cutoff. Snapshots the delete list to `_purge_manifests/` before any delete;
+  fresh-rechecks `gcs_bucket_soft_delete_retention_seconds` immediately before deleting (never trusts a prior citation);
+  `--recensus` re-verifies post-delete. DRY-RUN by default.
+- **VERIFIED against real prod GCS data** (not just unit-level): `_scan_one_day(date(2021, 1, 1))` → 4 keep, 0 delete (a
+  genuinely-regenerated day); `_scan_one_day(date(2020, 6, 6))` → 0 keep, 9 delete (matches slot-12's own 2026-07-26
+  finding for this exact day byte-for-byte). The classification logic is proven correct on live data.
+- **Blocked only on**: `bash scripts/quality-gates.sh` completing once so the commit can land (workspace hard rule:
+  commit only from a green tree). **4 consecutive attempts all died silently mid-run with NO error/timeout message.**
+  **ROOT CAUSE CONFIRMED (not the CPU-contention theory this entry originally guessed)**: `df -h` showed BOTH `/`
+  (`290G 290G 2.6M 100%`) and `/tmp` tmpfs (`2.0G 2.0G 0 100%`) genuinely 100% full at the worst point — this is the
+  SAME recurring fleet-wide condition tracked in `issues/shared_host_home_filesystem_full_2026_07_26.md` (this exact
+  task, `sports_consolidated_native_ao_extract-029`, already hit it independently via slot-9 ~90 min earlier per that
+  doc's own log — see that doc for the full evidence chain + a TMPDIR-redirect workaround worth trying). A
+  `nohup ... > /tmp/out.log` redirect (or any subprocess writing to a full `/tmp`) fails silently mid-write with no
+  clean error surfaced, which is exactly this symptom. Concurrent OTHER-slot `quality-gates.sh`/pytest processes seen in
+  `ps aux` (orch-slot-8, orch-slot-5) are a real compounding factor but NOT the primary cause. **Next session**: check
+  `df -h / /tmp` FIRST — do not retry blind. If still full, wait/escalate per the shared-host-full doc's established
+  posture (do NOT delete other slots' files, do NOT file a 4th+ BLOCKED question for the same standing condition — just
+  corroborate there if it's still ongoing). Once host pressure genuinely eases, re-run
+  `cd features-service && bash scripts/quality-gates.sh` (plain foreground is fine; no special flags needed), then
+  `bash scripts/quickmerge.sh "..." --agent --files 'scripts/purge_sports_derived_features_post_floor_residue_2026_07_27.py'`.
+  If it passes, launch the VM:
+  `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh sports-features-purge <any-date> <any-date> full`
+  (START_DATE/END_DATE are cosmetic labels only — the script scopes its own worklist), verify STARTED <60s + real
+  progress in the run.log (per-day scan progress lines every 200 days), then verify the post-delete re-census step
+  (chained automatically) reports 0 residue remaining. Flip this todo + this plan's own P0 todo only after that real VM
+  run completes — not on the code-ships-and-QG-passes milestone alone.
+
 - 2026-07-26 (slot-12, `data_engineering`): **Todo 1 (Track F derived_features purge) — corrected mis-gating + completed
   the worker-safe portion; the delete itself stays human.** The todo's own "Not `[OPERATOR]`-gated" justification was
   WRONG: confirmed the target bucket is `features-sports-prd-central-element-323112` (a genuine `-prd-` production

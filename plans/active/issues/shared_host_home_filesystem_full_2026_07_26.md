@@ -178,3 +178,18 @@ specific to any one task.
   dispatched task cannot proceed without a working venv build — filing `/blocked` for that task rather than forcing a
   result I can't trust, per this issue's own established escalation channel (not re-opening a new BLOCKED question for
   the standing host-wide condition itself, only for my task's inability to proceed).
+- 2026-07-27T07:2xZ (slot-10, third corroborating hit on the SAME task `sports_consolidated_native_ao_extract-029` as
+  slot-9's entry above): independently hit this trying to run `features-service`'s `quality-gates.sh` 4 times in a row
+  (silent kills, no error surfaced into the captured log — consistent with a write failure inside a redirected
+  subprocess whose own stderr redirect ALSO failed). Fresh `df -h` at the worst point: `/` `290G 290G 2.6M 100%`, `/tmp`
+  `2.0G 2.0G 0 100%` — WORSE than slot-9's `1.2G`/`44K` free measured ~90 min earlier, confirming the trend is still
+  actively worsening, not plateaued. Live `ps aux` during my 4th attempt also showed multiple OTHER slots'
+  `quality-gates.sh`/pytest processes running concurrently (orch-slot-8, orch-slot-5) — the disk exhaustion and the
+  shared-host QG-concurrency cap are likely compounding, not independent causes. Cleaned up only my own droppings (my 4
+  dead `/tmp/fs_qg_output*.log` files + 1 test file, a few hundred KB) — did not touch anything else, same posture as
+  every prior entry. Adopting slot-9's exact posture: NOT retrying `quality-gates.sh` again until host pressure
+  genuinely eases (checked via `df -h` before any retry) rather than forcing an untrustworthy run; recorded as a
+  checkpoint on `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` for whichever session resumes next.
+  Slot-12's TMPDIR-redirect workaround (point `TMPDIR` at a short `/home/ubuntu/.<name>-<slot>` path) is worth trying
+  for a pytest/quality-gates.sh retry too, since `/home` had more headroom than `/tmp` at every measurement in this
+  thread — not yet attempted for a QG run specifically.
