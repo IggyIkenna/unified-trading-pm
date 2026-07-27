@@ -161,18 +161,27 @@ drift_direction: advance-code
       row, so downstream consumers can compute fill slippage at arbitrary sizes. Repo: market-tick-data-service. **Done
       when**: per-snapshot tick-array state is captured and persisted alongside pool state; new unit tests cover the
       decode; `quality-gates.sh` green. Source: `data_completion_defi_2026_07_15.md`.
-- [ ] [DATA] P1. **Combined `instruments-service/scripts/enumerate_expected_universe.py` fix (2 sub-items merged into
-      one todo — both would EDIT the same file):** (a) locate + fix the DeFi expected-universe seeder that emits
-      blank-`chain` venue rows for the oracle-prices/perp-funding sub-buckets — canonicalize `chain` at write time in
-      `instruments-service/instruments_service/engine/orchestrator/defi.py` instead of leaving it blank; (b) normalize
-      the tz-naive vs tz-aware timestamp comparison in `_enumerate_v2_prediction` (~line 1852) — align
-      `pd.Timestamp(created_str)`/`pd.Timestamp(settled_str)` and `window_start_ts`/`window_end_ts` to the same
-      tz-awareness before comparing, so a scan-only v2-prediction enumerator run can complete without a `TypeError`.
-      Repo: instruments-service. **Done when**: (a) a newly-seeded oracle/perp DeFi row carries a non-blank canonical
-      chain value (verified via a targeted read of one recent day-shard, not a whole-corpus walk); (b) a scan-only
-      `enumerate_expected_universe.py --asset-group prediction --enumerator-version v2` run completes end-to-end without
-      the tz-comparison `TypeError` and reports a final candidate count; `quality-gates.sh` green in
-      instruments-service. Source: `data_completion_defi_2026_07_15.md`,
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-10) — both sub-items already resolved by prior commits predating this plan;
+      no code change needed.** (a) The DeFi expected-universe seeder's blank-`chain` bug for glued `PROTOCOL-CHAIN`
+      venues (incl. the oracle-prices/perp-funding sub-buckets — `CHAINLINK-ETHEREUM`, `AAVE-ETHEREUM`,
+      `AAVE_V3-ARBITRUM` A_TOKEN rows) was fixed in `instruments-service@b34416ee` ("fix(enum): v2 defi enumerator emits
+      canonical venue=PROTOCOL + chain=X (was combined PROTOCOL-CHAIN/blank-chain, phantom expected_unattempted)"),
+      landed 2026-06-22 — **before** this plan (2026-07-25) and its source doc (`data_completion_defi_2026_07_15.md`,
+      2026-07-15). The fix lives in `scripts/enumerate_expected_universe.py`'s `_enumerate_v2_defi` (not
+      `engine/orchestrator/defi.py`, which only assembles the venue-fetch list — no EU-seeding logic lives there),
+      splitting a blank-`chain` glued venue on its trailing `-` into `(canonical_venue, chain_upper)` before every
+      `ExpectedRow` yield. Verified live via a synthetic reproduction against the current `_enumerate_v2_defi` (not a
+      whole-corpus walk): a `CHAINLINK-ETHEREUM` SPOT_PAIR row and an `AAVE_V3-ARBITRUM` A_TOKEN row
+      (oracle_prices/perp_funding data_types) both yield `chain='ETHEREUM'`/ `chain='ARBITRUM'` — never blank. (b) The
+      tz-naive/tz-aware comparison crash in `_enumerate_v2_prediction` was fixed in `instruments-service@b90bc2d9`
+      ("fix(scripts): fix tz-naive/tz-aware comparison crash in prediction v2 enumerator"), landed 2026-07-10 — also
+      before this plan/source doc — via the identical `tz_localize(None)` normalization pattern the todo describes,
+      already present at the current
+      `af_ts = af_raw.tz_localize(None) if (af_raw is not None and af_raw.tzinfo is not None) else af_raw` (and the
+      `at_ts` sibling). Verified live: `enumerate_v2(asset_group="prediction", ...)` against a synthetic catalogue entry
+      with tz-aware `market_created_at`/`settlement_time` ISO strings completes with zero `TypeError` and reports a
+      candidate count (2 rows for a 2-day window). No `quality-gates.sh` run needed (read-only verification, zero lines
+      changed). Source: `data_completion_defi_2026_07_15.md`,
       `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`.
 - [x] ✅ [BACKEND] P1. **Combined `market-tick-data-service/.../lst_rates_handler.py` fix — sub-item (b) DONE 2026-07-26
       (slot-14), sub-item (a) DONE 2026-07-26 (slot-2).** (a) both `pipeline_mode_for_source("onchain_subgraph", ...)`
