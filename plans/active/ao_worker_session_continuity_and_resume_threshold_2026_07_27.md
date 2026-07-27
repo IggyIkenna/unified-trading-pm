@@ -1,0 +1,132 @@
+---
+doc_type: plan
+title: AO worker session reset policy — plan-continuity gate + resume-threshold tuning
+summary: >-
+  Closes the two remaining open threads from the 2026-07-25/27 Slack discussion (Ikenna/Harsh) on worker context
+  carryover, distinct from the already-archived ao_worker_context_lifecycle_gap_2026_07_25.md (which gated dispatch on
+  context_used_pct alone). Harsh's stated intent: a persistent plan-backlog worker should keep draining tasks in the
+  SAME session only when the next task genuinely continues the SAME plan; a task from an unrelated/parallel plan should
+  get a fresh session instead, relying on the plan's own Progress Log for continuity — matching the pre-existing
+  operator ruling in agent-orchestrator-single-vm-architecture.md that conversational context-resume is an explicit
+  NON-GOAL. Today's done_slot() has no such discrimination — it persists blanket, gated only by context_used_pct. Also
+  lowers resume_lifecycle.py's resume_fresh_context_pct 90->80 (operator-directed) and documents the full
+  saturated-context prune lifecycle (context_burn_kill -> classify_dead_worker requeue -> AutoSpawn fresh spawn) that
+  was verified to have no coverage gap. A third thread (a described "kill blocked-and-unanswered slot after ~10min"
+  mechanism) was investigated and found to have NEVER existed in this repo's git history — explicitly NOT built here,
+  see Progress Log.
+status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
+scope: [engineer]
+tags: [orchestrator, context-management, worker-lifecycle, dispatch, resume]
+related:
+  [
+    /plans/archive/2026_07/ao_worker_context_lifecycle_gap_2026_07_25.md,
+    /plans/archive/2026_07/ao_worker_context_lifecycle_gap_finalize_2026_07_25.md,
+    /plans/epics/orchestrator_master.md,
+  ]
+created: "2026-07-27"
+last_updated: "2026-07-27"
+parent_epic: orchestrator_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 1.2
+estimate_calibrated_ai_days: 0.96
+assigned_role: backend_engineer
+drift_direction: advance-code
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source: >-
+  Slack thread 2026-07-25/27 (Ikenna Igboaka / Harsh Kantariya): Ikenna's "smoking gun" analysis of unbounded context
+  carryover across /done-persisted tasks (fully closed by the now-archived ao_worker_context_lifecycle_gap_2026_07_25.md
+  before this plan was authored); Harsh's clarification that persistence should be conditional on same-plan continuity,
+  not blanket, plus that resume/respawn should gate on a lower context threshold than the shipped 90%; Ikenna's
+  follow-up asking whether the reset-vs-persist policy was meant to be manually or automatically governed, and asking
+  for blocked-question answers to persist onto the plan rather than needing to be re-asked. Operator (this session,
+  2026-07-27) resolved the open design questions via AskUserQuestion: (1) do NOT build the described
+  blocked-timeout-kill mechanism, but investigate whether it ever existed; (2) lower resume_fresh_context_pct to 80%,
+  and trace who prunes a saturated worker end-to-end; (3) reset trigger = different plan_ref OR different
+  assigned_role/repos; (4) implement now, this session (LOCAL plan, not AO-dispatched).
+---
+
+# AO worker session reset policy — plan-continuity gate + resume-threshold tuning
+
+> **Codex SSOTs to check against / update on completion**:
+> `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (§ "Conversational context-resume is an
+> explicit NON-GOAL", § "Worker lifecycle" — this plan adds a SECOND persistence gate alongside the context-pct one),
+> `/codex/04-architecture/agent-orchestrator-worker-liveness.md` (resume_fresh_context_pct / classify_dead_worker was
+> never documented there — gap predates this plan but adjacent), `unified-trading-pm/agents/worker.md` (directive field
+> contract).
+
+## Investigation findings (resolved before writing code — see Progress Log for full detail)
+
+1. **The described "kill a blocked-and-unanswered worker after ~10 minutes" mechanism never existed.** Blamed the
+   `WorkerLivenessWatchdog`'s "never kill a slot with status == 'blocked'" rule to its origin commit (`97cda3f9`,
+   2026-06-01 — the watchdog's very first commit) and searched the ENTIRE git history (`git log --all -S`) for any prior
+   blocked-timeout-kill concept: zero hits. Per operator direction, **not building this** — the current
+   nudge-in-place-on-answer behavior stays as-is.
+2. **The saturated-context worker prune lifecycle has no coverage gap.** Full chain, verified by reading
+   `worker_liveness_watchdog.py` + `resume_lifecycle.py` + `config.py`: `context_worker_compact_gate_pct=70` withholds
+   the next task and asks the worker to compact; if ignored, `context_burn_min_pct=80` (OR 3+ compactions) combined with
+   4h+ session staleness flags `context_burn_suspected`; `context_burn_kill_min_pct=98` (with a 2-report grace window
+   requiring a directive was already issued) actively KILLS the live session (WIP-preserved first via
+   `_preserve_wip_before_kill`) — `context_burn_kill` defaults `True` as of the now-archived parent plan. Once dead,
+   `classify_dead_worker` (`resume_lifecycle.py`) checks `context_used_pct >= resume_fresh_context_pct` and requeues
+   (never resumes) a saturated session to a fresh worker. Since a killed-for-being-saturated session is always well
+   above even the lowered 80% bar, lowering `resume_fresh_context_pct` cannot regress this path.
+
+## Todos
+
+- [ ] [BACKEND] P1. Lower `resume_fresh_context_pct` default 90 -> 80 in `server/config.py` (`agent-orchestrator`),
+      mirroring the existing `Field(default=..., ge=1, le=100)` pattern on the same class. Add/ update a unit test
+      asserting the new default. **Done when**: `get_config().tuning.resume_fresh_context_pct` resolves to 80 by default
+      in a passing test; `quality-gates.sh` green.
+- [ ] [BACKEND] P1. Add `plan_continuity_reset_enabled: bool = Field(default=False)` to `Tuning` in `server/config.py` —
+      feature-flagged OFF by default, mirroring the `context_burn_kill` precedent (a new fleet-wide dispatch-behavior
+      change ships gated, then gets an explicit operator flip once verified, rather than going live unreviewed). **Done
+      when**: default resolves to `False` in a passing test; `quality-gates.sh` green.
+- [ ] [BACKEND] P1. Extend `DoneResponse.directive` in `server/models/worker_api.py` from
+      `Literal["compact_before_next"] | None` to `Literal["compact_before_next", "reset_before_next"] | None`. **Done
+      when**: a model-level test asserts the new literal value validates and serializes; existing `compact_before_next`
+      tests unaffected.
+- [ ] [BACKEND] P0. Implement the plan-continuity reset check in `done_slot()` (`server/routes/slots_worker.py`),
+      immediately after `pick_next_task` returns a real candidate (i.e. AFTER the existing context-pct gate, which takes
+      priority and is unchanged). When `plan_continuity_reset_enabled` is `True` and the candidate task's `plan_ref`
+      differs from the just-completed task's `plan_ref`, OR its `assigned_role` differs, OR its `repos` set differs: do
+      NOT dispatch it in this response (leave it `queued`, untouched — same withhold contract the context gate already
+      uses); log a new activity type `worker_plan_switch_reset` (slot_id, task_id, from/to plan_ref+role+repos); kill
+      this slot's own tmux session via a daemon thread
+      (`threading.Thread(target=tmux_spawn.kill_session, args=(reap_session,), daemon=True).start()` — the EXACT
+      established pattern the one_shot-reap branch already uses a few lines below in the same function, " off the
+      request thread so the SQLite write lock isn't held across the kill subprocess"); return
+      `DoneResponse(next_task=None, status="idle", directive="reset_before_next", ...)`. When the flag is `False`
+      (default), behavior is byte-for-byte unchanged from today. **Done when**: a unit test asserts (a) flag off ->
+      dispatches normally even across a plan/role/repo switch (today's behavior, unchanged); (b) flag on + same plan_ref
+      -> dispatches normally in the same session; (c) flag on + different plan_ref (or role, or repos) -> withholds the
+      task (stays `queued`), fires the kill thread, returns `directive="reset_before_next"`; `quality-gates.sh` green.
+- [ ] [INFRA] P1. Update `unified-trading-pm/agents/worker.md`'s directive-field documentation to also cover
+      `reset_before_next` (alongside the existing `compact_before_next`/`compact_now`): the worker does not need to take
+      any action itself (the server has already triggered the session teardown) — document it purely for observability,
+      so an agent that reads a `reset_before_next` response is not confused into thinking it must self- compact. **Done
+      when**: worker.md documents both directive values in the same section; doc-lint passes.
+- [ ] [INFRA] P1. Update codex: add a note to `agent-orchestrator-single-vm-architecture.md`'s "Persistence is now
+      GATED..." bullet (added by the parent plan's finalize) describing this SECOND, plan-continuity-based gate,
+      feature-flagged and defaulting off; add the `resume_fresh_context_pct` mechanism (never previously documented) to
+      `agent-orchestrator-worker-liveness.md` alongside the context-burn trigger row added by the parent finalize.
+      **Done when**: both docs describe the mechanism currently shipped in code, not aspirationally.
+- [ ] [REVIEW] P0. Run full `quality-gates.sh` on `agent-orchestrator` after all code todos land; commit + push via
+      quickmerge; flip every checkbox above in the SAME turn per the commit-push-flip HARD RULE.
+- [ ] [OPERATOR] P1. **Decide whether to flip `plan_continuity_reset_enabled` to `True`** now that it's implemented,
+      tested, and quickmerged — mirrors the `context_burn_kill` precedent (ship gated, flip on operator approval once
+      verified). BLOCKED-OPERATOR-DECISION until answered; not auto-flipped by this plan.
+
+## Progress Log
+
+(filled in as todos land — see commit history for exact SHAs)

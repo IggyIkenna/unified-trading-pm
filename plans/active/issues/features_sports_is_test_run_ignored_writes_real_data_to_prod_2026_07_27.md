@@ -130,12 +130,25 @@ def get_output_bucket(self, asset_group: str) -> str:
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P0. **features-service** — `features_service/sports/cli/handlers/batch_handler.py:872` (and any other
+- [x] ✅ [SCRIPT] P0. **features-service** — `features_service/sports/cli/handlers/batch_handler.py:872` (and any other
       call site resolving the sports output bucket): route through `get_data_sink(routing_key="sports")` first, falling
       back to `resolve_bucket(kind="features-sports", asset_group="sports")` only when no override is set — mirroring
       `FeaturesDeltaOneConfig.get_output_bucket()` / the just-shipped calendar fix exactly. Add a regression test
       asserting `IS_TEST_RUN=true` (or a `PROTOCOL_DATA_SINK_BUCKET_SPORTS` override) actually changes the resolved
-      bucket, mirroring `test_get_output_bucket_honours_data_sink_override`.
+      bucket, mirroring `test_get_output_bucket_honours_data_sink_override`. — **DONE 2026-07-27,
+      `features-service@48a255cd`**. Added `FeaturesSportsServiceConfig.get_output_bucket()` (mirrors
+      `FeaturesDeltaOneConfig.get_output_bucket`/`CalendarFeaturesConfig.get_source_bucket` exactly: `get_data_sink`
+      override first, `resolve_bucket(kind="features-sports", ...)` fallback) and routed all 6 sports output-bucket call
+      sites through it: `batch_handler.py:872`, `live_handler.py:113`, `subscriber.py:136`, `ml_readiness_check.py:101`,
+      `cli/main.py:194`, `cli/batch_write.py:66`. Regression tests added: `tests/unit/test_config.py`
+      (`test_sports_get_output_bucket_honours_data_sink_override` / `test_sports_get_output_bucket_falls_back_to_ssot`,
+      mirroring the calendar pattern exactly) plus
+      `tests/sports/unit/test_gcs_paths_and_reader_deps.py::TestOutputBucketResolvesViaYamlSSOT::     test_batch_handler_honours_is_test_run_override`
+      (proves the override actually changes the resolved bucket — the literal bug this issue reports). Updated 3
+      pre-existing tests in that same file (they patched `resolve_bucket` directly inside the handler modules, a target
+      that no longer exists post-fix) plus `test_main_batch_prune.py` and `test_ml_readiness_check.py` (patched
+      `resolve_bucket` in `ml_readiness_check`'s own module) to patch at the new `features_service.sports.config` call
+      site instead. Full `quality-gates.sh` green.
 - [ ] [DATA] P1. **operator** — decide whether to leave or delete the 2026-07-05 sports-features objects this run
       created in `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-05/` (content is
       real/valid — computed from real upstream reference data, not fabricated — but its provenance is an unintended test
