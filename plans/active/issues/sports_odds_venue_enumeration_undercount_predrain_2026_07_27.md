@@ -134,6 +134,37 @@ manifest specifically for these 6 venues:
   and still needs the operator/data_engineering follow-up steps below before the legacy `odds` contract can be safely
   retired.
 
+## PARTIAL RECONCILIATION (2026-07-27, slot-14) — the 3 previously-ambiguous venues ONLY, NOT closing this doc
+
+Before executing `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s "move those 3 venues' GCS objects" todo
+(bare `BETFAIR`, `ODDS_API`, `PINNACLE` — the 3 venues the mapping todo ruled 2026-07-26), re-measured live against the
+manifest specifically for these 3 venues, per this same doc's precedent for the prior 6-venue move:
+
+- None of these 3 venues are among the ~19 unmapped venues this doc lists (`BETONLINEAG`, `UNIBET`, `BETRIVERS`,
+  `WILLIAMHILL`, `CASUMO`, `SPORT888`, `CORAL`, `PADDYPOWER`, `DRAFTKINGS`, `UNIBET_UK`, `SKYBET`, `BETSSON`, `FANDUEL`,
+  `VIRGINBET`, `LIVESCOREBET`, `BETVICTOR`, `LADBROKES_UK`, `BOVADA`, `BETWAY`, `UNIBET_EU`) — confirmed by
+  set-difference against the per-venue list above. So this doc's core concern (venues with no EXCHANGE_ODDS/FIXED_ODDS
+  destination getting silently orphaned by a later legacy-contract retirement) does not apply to these 3.
+- Real live scope for these 3 (via `read_availability_index`, manifest-derived, no GCS walk), measured 2026-07-27: bare
+  `BETFAIR` = **0 shards / 0 rows** under `instrument_type=ODDS` — the venue key does not appear at all among the
+  manifest's 31 distinct venues (any instrument_type), consistent with the mapping todo's own text that the plan's cited
+  33 rows were dead legacy writes from a since-fixed structural bug (`mtds@accd8aa4`, 2026-07-20). `ODDS_API` = **0
+  shards / 0 rows** under `instrument_type=ODDS` — the venue key DOES exist in the manifest, but only under other
+  instrument_types (markets/outcomes/settlements per the mapping ruling), none of which are `odds`. `PINNACLE` =
+  **15,570 shards / 4,887,512 summed row_count** under `instrument_type=ODDS, data_type=TRADES` (uppercase on disk) —
+  matches this doc's own earlier corpus-wide PINNACLE figure (4,887,512) above, not the plan's stale "32,616 rows"
+  citation.
+- Result: the plan's move-todo executed 2026-07-27 against these fresh live counts — 15,570/15,570 PINNACLE shards
+  copied to `instrument_type=fixed_odds` (lowercase), independently re-verified (crc32c+size match, 0 missing, 0
+  mismatch), old `instrument_type=ODDS/data_type=TRADES` PINNACLE source objects deleted (0 remaining). BETFAIR/
+  ODDS_API had nothing to move (0 shards each) — not a data-loss concern, just confirmation their plan-cited row counts
+  no longer (or never did) exist under the `odds` instrument_type. See
+  `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s move-todo for the full evidence citation
+  (`market-tick-data-service@2d0a7dc6`).
+- **This doc STAYS OPEN** — the ~19-unmapped-venue question (this doc's actual main subject) is untouched by the above
+  and still needs the operator/data_engineering follow-up steps below before the legacy `odds` contract can be safely
+  retired.
+
 ## Suggested next step (not performed here — scope belongs to the plan's own mapping-ruling pattern, i.e. an `[OPERATOR]` decision, per `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` todo 1's precedent)
 
 1. Reconcile where the plan's 561,260 / per-venue figures came from (grep `sports_consolidated_closeout_2026_07_19.md`

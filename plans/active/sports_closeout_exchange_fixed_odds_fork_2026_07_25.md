@@ -197,7 +197,7 @@ drift_direction: advance-code
       now-superseded K1/K2 UPPER-casing migration, which copied but never deleted) — left untouched; recorded as an
       addendum on `sports_consolidated_closeout_2026_07_19.md`'s open K1/K2-revert todo (Step 3) since it's already
       tracked there.
-- [ ] [DATA] P1. **⛔ GATED 2026-07-27 — do not dispatch without re-reading
+- [x] ✅ [DATA] P1. **⛔ GATED 2026-07-27 — do not dispatch without re-reading
       `plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (P0, open as of this note)
       FIRST** — that doc found the live `instrument_type=odds` population (~27 venues, 54.8M rows) is far larger than
       this plan's 8-venue/561,260-row scope and explicitly blocks this exact todo pending reconciliation. **Now that the
@@ -210,7 +210,27 @@ drift_direction: advance-code
       required. Via UTL `gcs_copy_object`/`gcs_delete_object` (never subprocess gsutil). (repo:
       market-data-processing-service / instruments-service). **Done when**: the same re-read-count check passes for all
       3 previously-ambiguous venues once moved, citing the operator's ruling from the mapping todo above, with 0 objects
-      lost.
+      lost. ✅ **DONE 2026-07-27 — `market-tick-data-service@2d0a7dc6`:** re-read the GATED doc FIRST per this todo's
+      own banner, then re-measured live scope (manifest-derived, no GCS walk) for these 3 specific venues before
+      executing. Real live scope under `instrument_type=ODDS/data_type=TRADES`: **bare `BETFAIR` = 0 shards/0 rows**
+      (confirmed the venue key does not appear anywhere in the manifest's 31 distinct venues — consistent with the
+      mapping todo's own text that the 33 legacy rows were dead writes from a since-fixed bug, `mtds@accd8aa4`
+      2026-07-20); **`ODDS_API` = 0 shards/0 rows under `odds`** (the venue key exists in the manifest, but only for
+      other instrument_types — markets/outcomes/settlements — none of which are in this fork's scope); **`PINNACLE` =
+      15,570 shards / 4,887,512 summed row_count** (uppercase `ODDS`/`TRADES` on disk), matching the undercount issue
+      doc's own live PINNACLE figure, not the plan's stale "32,616 rows" citation. **This resolves the GATED banner's
+      concern for these 3 venues specifically**: none of the 3 are among the undercount doc's ~19 unmapped-venue list,
+      so this move does not create the orphaning risk that doc's banner describes (the doc stays open for those other
+      ~19 venues — untouched by this todo). Wrote
+      `market-tick-data-service/scripts/sports/exchange_fixed_odds_fork/move_odds_ambiguous_venues_2026_07_27.py` (same
+      snapshot/migrate/verify pattern as todo 5's tool). Snapshot: 15,570/15,570 sources confirmed on disk, 0 target
+      collisions, fresh soft-delete retention = 604800s (qualifies for self-authorized delete per delete-safety-protocol
+      §3a path (c)). Migrate (real PROD write, `--confirm`): **15,570 copied, 15,570 deleted, 0 FAIL** — server-side
+      `gcs_copy_object` rewrite to lowercase `instrument_type=fixed_odds`/`data_type=trades` for PINNACLE
+      (BETFAIR/ODDS_API had 0 shards to move). Independent re-read verification (separate `verify` pass, fresh
+      describes): **target OK=15,570 MISSING=0 MISMATCH=0, source objects still present=0** — exactly this todo's
+      done-when. Added a corresponding note to `sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md`
+      confirming these 3 venues are not among that doc's ~19 unmapped-venue list (doc stays open for those).
 - [ ] [DATA] P1. **Update MDPS `dependency_checker`'s hive-token matcher for the new instrument_type partitions** —
       confirm no consumer of the legacy `odds` hive token goes orphaned. (repo: market-data-processing-service). **Done
       when**: a `dependency_checker` run against the post-move bucket state shows 0 orphaned consumers of the legacy
