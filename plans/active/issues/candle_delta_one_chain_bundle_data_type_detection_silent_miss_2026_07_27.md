@@ -119,13 +119,26 @@ it was not code-read as part of this finding.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `DataLoader`'s chain-bundle detection in
+- [x] ✅ [BACKEND] P1. Fix `DataLoader`'s chain-bundle detection in
       `features-service/features_service/delta_one/app/core/data_loader.py` to key off `instrument_type` (not
       `data_type`) for the `underlying=.../ticks.parquet` vs `{instrument_id}.parquet` tail choice; add a regression
       test reproducing this exact case (TRADFI, `data_type=ohlcv_1m`, `instrument_type=FUTURE`, bundled underlying) so
       it can never silently regress. (repo: features-service). **Done when**: the regression test fails before the fix
       and passes after, and a live re-run of the TradFi axis of the both-axes load-test above (same instrument/day)
-      returns non-empty rows.
+      returns non-empty rows. **DONE 2026-07-27 (slot-5)** — `features-service@d16ed8aa`. New
+      `_is_chain_bundle_instrument()` resolves `grain_for_instrument_type(asset_group, instrument_type, venue=venue)`
+      from UAC (the SAME registry MDPS's writer-grain and instruments-service's expected-universe enumerator already use
+      — `GRAIN_BUNDLE_BY_UNDERLYING` for tradfi option/combo always, and future only at `FUTURE_BUNDLE_VENUES` CME/ICE),
+      replacing the always-false `data_type in {"options_chain","futures_chain"}` check at all 4 call sites
+      (`_canonical_candle_blob_paths`, `_resolve_blob_paths`'s derivative-scan gate, `_build_blob_path`,
+      `_build_legacy_blob_path`); removed the now-fully-dead `_DERIVATIVE_DATA_TYPES` class constant. 4 new regression
+      tests added (`TestCanonicalCandleBlobPathsChainBundleDetection`), including the exact `CME:FUTURE:AUD`/`ohlcv_1m`
+      repro; 1 pre-existing test (`test_futures_chain_uses_underlying_dir`) fixed — its CEFI-loader +
+      CME(tradfi)-instrument fixture was unrealistic and only passed under the old broken check. **Live re-run of the
+      exact TradFi-axis repro from this issue**
+      (`DataLoader("TRADFI").load_candles(     instrument_id="CME:FUTURE:AUD", data_type="ohlcv_1m", day=2026-07-22, pipeline_mode="batch_databento")`
+      against real PROD GCS, ADC): **1440 rows, non-empty** (was 0 rows / `is_empty()=True` before the fix). Full
+      `bash scripts/quality-gates.sh` green (sentinel verified matching HEAD both pre- and post-quickmerge).
 - [ ] [BACKEND] P2. Audit `unified-trading-api`'s `batch_candles.py` chart reader (also a named dual-reader in
       `candle_canonical_path_migration_execution_2026_07_24.md` todo 3) for the same `data_type`-based chain-detection
       pattern; fix if present. (repo: unified-trading-api). **Done when**: either confirmed not-affected (cite the code
