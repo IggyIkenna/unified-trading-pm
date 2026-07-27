@@ -207,14 +207,22 @@ drift_direction: advance-code
       market-tick-data-service + unified-api-contracts.** Source: `defi_strategy_pnl_axis_index_2026_07_24.md`,
       `lst_rate_honest_coverage_2026_07_21.md`,
       `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
-- [ ] [BACKEND] P1. Fix `_perp_funding_kalshi_polymarket.py`'s KALSHI_PERP/POLYMARKET_PERP routing in
-      market-tick-data-service: route both venues through a cefi-classified write path (mirroring
-      `onchain_perp_batch_handler.py`'s explicit `asset_group='cefi'` `ManifestWriter` precedent) instead of DeFi-only
-      `write_defi_rows`; fix the `source` field (currently hardcoded `"hyperliquid"` for both venues) to be
-      venue-derived; then, only after the writer fix lands, run a targeted manifest cleanup of the small number of
-      pre-existing stale KALSHI_PERP/POLYMARKET_PERP defi-classified rows. Repo: market-tick-data-service. **Done
-      when**: rows route via a cefi-classified path (never `write_defi_rows`); `source` reflects the real venue;
-      `quality-gates.sh` green; the pre-existing stale defi-classified rows are cleaned up in the same change. Source:
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-27 (slot-14).** Fixed `_perp_funding_kalshi_polymarket.py`'s
+      KALSHI_PERP/POLYMARKET_PERP routing in market-tick-data-service: both venues now route through a cefi-classified
+      write path (`_write_cefi_perp_funding_rows()`, mirroring `onchain_perp_batch_handler.py`'s `asset_group='cefi'`
+      `ManifestWriter` precedent — new UAC `build_cefi_partition_path`/`build_instrument_id`-based per-instrument
+      sharder, no chain axis) instead of DeFi-only `write_defi_rows`; `DefiManifestRecorder` gained an `asset_group`
+      param (default `"defi"`, ~25 other callers unchanged) and `perp_funding_handler.py` now constructs it with
+      `asset_group="cefi"` + resolves the cefi bucket; `source` is now explicitly `_source_for_protocol(protocol)` on
+      every `record_captured`/`record_zero_rows`/`record_failed`/`record_empty` call (was blank, silently auto-stamping
+      the wrong single-source `"hyperliquid"` default). 71/71 targeted unit tests pass; `quality-gates.sh` green
+      (265-497s across runs). **Manifest cleanup executed and verified against prod**:
+      `scripts/remove_kalshi_polymarket_defi_manifest_rows_2026_07_26.py` removed the 8 pre-existing stale rows (4
+      KALSHI_PERP `captured` + 4 POLYMARKET_PERP `attempted_failed`, all mis-stamped `source="hyperliquid"`) —
+      26,540,325 → 26,540,317 rows, pre-apply backup snapshot taken, post-write verification confirmed zero remaining
+      KALSHI_PERP/POLYMARKET_PERP rows. market-tick-data-service@2aa23de5 (writer fix),
+      market-tick-data-service@6998ea4c (cleanup script's final streaming-rewrite, after the original pandas-based
+      version proved unsafe on this contended host — see Progress Log entry below). Source:
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md`.
 - [ ] [DATA] P1. Measure the exact scope of MTDS manifest rows stamped `instrument_type="liquidation"` by the pre-fix
       `liquidations_handler.py` code path (before `market-tick-data-service@fec20de2`), cross-checking each row's
