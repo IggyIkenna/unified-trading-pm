@@ -70,19 +70,34 @@ For comparison, `readiness-verifier.yml` (also `schedule:` + `workflow_dispatch:
 throttle (`/codex/04-architecture/ci-alerting.md`: hourly crons land ~90%). 1/200 is not that throttle — it's something
 specific to this workflow.
 
-**Not yet root-caused.** Candidates not yet ruled in/out:
+**Not yet root-caused. UPDATE 2026-07-27 ~02:45 UTC** — two candidates now RULED OUT:
+
+- **Workflow-disabled state**: `gh api repos/.../actions/workflows/242855945` reports `"state": "active"` — not manually
+  disabled, not auto-disabled for inactivity.
+- **Recently-added trigger**: `git log --follow -p` across the file's whole history shows the `schedule: - cron: "0 2
+  - - *"`line present, unchanged, since the file's original commit (alongside an ORIGINAL`push: branches: [main], paths:
+      [plans/active/**]`trigger that was later replaced by the current`pull_request: branches: [main]` — the schedule
+      block itself was never touched). This has had ~140 real days to fire, not a handful.
+
+Still not ruled in/out (need either a live observation at the NEXT 02:00 UTC fire, or GitHub support/status-page
+escalation — neither completed this session):
 
 - The `pull_request: branches: [main]` trigger — this workflow gets extremely high `pull_request` volume (dozens of
   runs/hour, matching this repo's commit velocity) that every OTHER workflow with a bare `schedule:` trigger doesn't
   share. Worth checking whether GitHub's scheduler deprioritizes/drops a scheduled run for a workflow it considers
   "already busy" — not a documented GH behavior, but worth testing empirically rather than assuming.
-- The workflow's own `concurrency: group: ${{ github.workflow }}-${{ github.ref }}` — a `schedule` event's `github.ref`
-  is the default branch (`refs/heads/main`); confirm no OTHER trigger on this workflow shares that exact ref (a
-  `pull_request` event's ref is the PR merge ref, so should differ, but this needs confirming rather than assuming for
-  THIS specific workflow).
-- GitHub's automatic disable of `schedule:` triggers after 60 days of REPOSITORY inactivity does not apply here (this
-  repo is maximally active), but a workflow-specific disable state (`gh workflow view` showing `disabled_manually` or
-  similar) has not yet been checked.
+- ~~The workflow's own `concurrency:` group colliding with pull_request runs~~ — **RULED OUT**: sampled
+  `pull_request`-event run `head_branch` values (`ci/clear-quarantine-recovery-2026-06-16`, `cicd-hardening-to-main`,
+  `cicd/failopen-sit-gate-uncovered-repos`, ...) are all distinct feature/PR branches, never `main` itself — their
+  concurrency-group ref genuinely differs from the schedule event's `refs/heads/main`, so no collision/cancellation is
+  possible between them.
+- The workflow file's own `updated_at` (`2026-06-08T21:10:50+01:00`, per the Actions API) shows no edits since ~49 days
+  before this check — the trigger definition has been completely stable for that whole window, so this isn't an artifact
+  of a recent change either.
+- **Next concrete step**: the next scheduled fire is ~2026-07-28 02:00 UTC. Check
+  `gh run list --workflow plan-health-agent.yml --limit 5 --json event,createdAt,conclusion` shortly after that time —
+  either it fires (data point 2/~141, still worth explaining but less urgent) or it doesn't (stronger signal to escalate
+  to GitHub support with the two ruled-out candidates above as context).
 
 ## Why it matters
 

@@ -8,7 +8,7 @@ summary:
   operator's answer, so the enqueued message is only delivered when the worker itself next polls. Flipping the slot to
   "working" also immediately removes it from the watchdog's blocked exemption, so a real-world delay past the heartbeat
   timeout triggers a resume-or-respawn — very likely the "have to regenerate everything" the operator observed.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -32,7 +32,7 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: NA
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: interactive session 2026-07-27, agent-orchestrator commits 18444f5 and c290bc5, QG green both times
 locked_by:
 supersedes:
 superseded_by:
@@ -89,18 +89,20 @@ needed it gets destroyed anyway).
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Add a `tmux_spawn.nudge()` call after both answer-recording paths** —
-      `POST /api/blocked/{id}/answer` (`server/routes/backlog.py:680-739`) and `BlockedQueueReconciler`'s ruling-sync
-      path (`server/blocked_reconcile.py:147-215`) — right after the message is enqueued and the slot flips to
-      `working`. Add a regression test confirming `nudge()` is called exactly once per answer, patching the same mock
-      surface used by `test_slots_ops` for `set_loop_interval`'s nudge call.
-- [ ] [BACKEND] P2. **Fix the flip-then-stale-heartbeat race**: either (a) don't flip `slot.status` to `working` until
-      the worker's NEXT heartbeat actually arrives (keep it in a state the watchdog still exempts until then), or (b)
-      have the watchdog treat a slot whose `answered_at`/status-flip is more recent than `watchdog_heartbeat_timeout` as
-      freshly-woken rather than stale-and-unhealthy (a short grace window keyed off the flip timestamp, not the old
-      heartbeat). Pick whichever is the smaller, more surgical change after reading `worker_liveness_watchdog.py`'s
-      active-slot query and `_resume_or_fresh_respawn` in full — report which was chosen and why before implementing if
-      both look equally reasonable.
+- [x] [BACKEND] P2. **Add a `tmux_spawn.nudge()` call after both answer-recording paths** — DONE,
+      `agent-orchestrator@18444f5`. Both `POST /api/blocked/{id}/answer` and `BlockedQueueReconciler`'s ruling-sync path
+      now nudge the worker's pane right after enqueueing the answer, best-effort. Regression tests added confirming
+      `nudge()` is called exactly once per answer (and skipped when there's no live tmux session).
+- [x] [BACKEND] P2. **Fix the flip-then-stale-heartbeat race** — DONE, shipped alongside the fleet-cap-reserve /
+      TmuxPruner work this same session. Chose option (b): both answer paths now stamp `slot.last_ping = utcnow()` in
+      the same write that flips status to `working` — `last_ping` is already one of `effective_silence_seconds()`'s
+      recognized life signals (alongside `last_spawned_at`/`assigned_at`/ `session_created`), so this reuses the
+      EXISTING mechanism rather than adding a new status/gate, and gives the worker the full
+      `watchdog_heartbeat_timeout` (900s) grace window to act on the answer before the watchdog would otherwise see a
+      stale pre-blocked-episode heartbeat and force a resume-or-respawn right as the answer lands. Chose (b) over (a)
+      (delaying the status flip) because it's a strictly smaller, more localized change — no other code path needed to
+      change its understanding of what `blocked`/`working` mean. Regression tests added for both answer paths confirming
+      `last_ping` advances to "now" on answer.
 
 ## Codex SSOTs
 
