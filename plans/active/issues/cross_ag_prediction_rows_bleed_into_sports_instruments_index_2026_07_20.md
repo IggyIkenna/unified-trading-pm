@@ -28,7 +28,7 @@ summary: >-
   ever detected). Fleet-wide blast radius (every asset_group's consolidator shares this write path), so the fix needs
   its own careful implementation + test + deploy cycle, not a same-session patch — BLOCKED-OPERATOR-DECISION on
   scheduling that work. Do NOT re-attempt manifest remediation until it ships.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports, prediction]
 stage: [data]
@@ -44,7 +44,7 @@ related:
     sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15,
   ]
 created: 2026-07-20
-last_updated: 2026-07-26 # was 2026-07-24 — /plan-reconcile prediction shard flipped the ROUND-3 duplicate `[ ]` 5/6/7 that were already answered as `[x]` 5/6/7 in this same doc
+last_updated: 2026-07-27 # ROUND 8 -- hold-check passed (5/5 checks, 15min), status flipped resolved
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -63,6 +63,8 @@ source:
   "/data-pipeline-reconciliation sports (F4) + prediction (F1) runs, 2026-07-20; both independently measured the same
   bleed at 6,597 rows via scoped manifest reads"
 resolved_by:
+  "unified-trading-library@14301571 (TOCTOU fix, shipped by a concurrent session 2026-07-24) + round-3 remediation
+  re-run 2026-07-27T01:11:27Z, 5/5 hold-check passed over 15min -- see ROUND 8"
 ---
 
 # Cross-AG bleed — `asset_group=prediction` rows in the `instruments-store-sports` index
@@ -461,10 +463,31 @@ cycle, is exposed to the same silent-clobber failure mode).
       check — see below**, per this doc's own repeated warning that round-2's identical immediate-verify-passed state
       reverted within 30h43m.
 
-**Hold-check in progress (2026-07-27, started immediately after todo 14's apply)**: a 5-check, 15-minute poll (3-min
-spacing, well beyond the ~7.5min slow-cycle window that caused the prior TOCTOU-driven reversion) of the live sports
-index. **Do not re-flip this doc's `status` to `resolved` until this poll's final check confirms 0 bleed rows** — see
-the dated result appended below once it completes.
+## ROUND 8 — HOLD-CHECK PASSED, status flipped to resolved (2026-07-27)
+
+**5/5 checks over 15 minutes, all zero.** Read-only poll of the live `instruments-store-sports-prd` index
+(`read_availability_index`, same reader the axis-value-census endpoint uses), 3-minute spacing — well beyond the ~7.5min
+slow-cycle window that produced the prior TOCTOU-driven reversion:
+
+| Check | Timestamp (UTC)      | Total rows | `prediction` bleed rows |
+| ----- | -------------------- | ---------- | ----------------------- |
+| 1/5   | 2026-07-27T01:13:00Z | 6,644,474  | **0**                   |
+| 2/5   | 2026-07-27T01:16:47Z | 6,644,474  | **0**                   |
+| 3/5   | 2026-07-27T01:20:29Z | 6,644,475  | **0**                   |
+| 4/5   | 2026-07-27T01:24:18Z | 6,644,475  | **0**                   |
+| 5/5   | 2026-07-27T01:28:00Z | 6,650,949  | **0**                   |
+
+Total rows grew by 6,475 between checks 4 and 5 (legitimate new captures — normal operation continuing), with zero of
+that growth attributable to `asset_group=prediction`. This is the decisive difference from round-2 (identical
+immediate-verify-passed state, reverted to the exact pre-remediation population within 30h43m) and round-3-pre-fix
+(reverted within ~5min): with todo 12's TOCTOU fix actually in place and confirmed deployed, an external CAS-safe write
+landing mid-merge now correctly triggers `PreconditionFailed` and the existing retry path, instead of being silently
+clobbered by a stale-content upload.
+
+**Status flipped to `resolved`.** Snapshots (recovery net, kept per delete-safety discipline even though this was a
+manifest-only REMOVE, not a GCS object delete): see todo 14 above. **If this issue is ever re-observed**, do not
+re-attempt a bare remediation — first confirm `unified-trading-library@14301571` (or its content) is still present on
+the serving image; a regression there would be the first thing to check, not a new mystery.
 
 ## ADDENDUM 2026-07-24 (`/data-pipeline-reconciliation sports` raw-tick dispatch) — answers the original todo 1's unchecked "also check the market-data(tick)/sports manifest" item: yes, a related population exists there too
 
