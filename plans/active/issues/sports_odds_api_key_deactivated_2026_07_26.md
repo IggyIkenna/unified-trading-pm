@@ -126,9 +126,9 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
       operational re-run blocked on the scoping bug too)
 
       **UNBLOCKED 2026-07-26 (slot 6)**: the P1 root-cause todo below is done — the scoping code was live-tested
-                                  correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
-                                  This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
-                                  is needed first. Still blocked only on the operator's credential fix (todo above).
+                                      correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
+                                      This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
+                                      is needed first. Still blocked only on the operator's credential fix (todo above).
 
 - [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 4)** — Confirmed via direct manifest query
       (`gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`): ZERO `odds_api`
@@ -226,7 +226,7 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
   instruction to check for an underused alternate key/vendor path before accepting a credential-ask at face value:
   `gcloud secrets list` shows 5 OTHER sports-odds-adjacent secrets already provisioned in Secret Manager
   (`odds-api-io-key`, `oddsjam-api-key`, `oddspapi-api-key` + `oddspapi-api-keys` [17-key pool, 4,250 req/mo per
-  `codex/07-security/secrets-management.md`], `opticodds-api-key`) — but a corpus-wide grep for any of their names
+  `/codex/07-security/secrets-management.md`], `opticodds-api-key`) — but a corpus-wide grep for any of their names
   (`oddsjam|oddspapi|opticodds|odds-api-io`) across every repo returns **zero code hits**: none of them have an adapter,
   UAC schema, or MTDS handler wired to them. These are not "un-wired but ready" — building a working fallback vendor
   integration for any of them is a from-scratch new-vendor build (UAC schema + normalize + endpoint registry + MTDS

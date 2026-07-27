@@ -437,31 +437,34 @@ cycle, is exposed to the same silent-clobber failure mode).
 
 ## ROUND 7 — next steps (BLOCKED-OPERATOR-DECISION: this needs a proper fix + deploy cycle, not a same-session patch)
 
-- [ ] 12. [BACKEND] P0. Fix `_write_consolidated`'s CAS precondition to be correlated with the content read, not a late
-      `blob.reload()`: thread the canonical's generation OUT of `_duckdb_merge_payload` (capture it via
-      `download_bytes_with_generation` at the same point the canonical bytes are read, `manifest_consolidator.py` line
-      ~2334-2342) back up through the `_merge` closure (line 3032-3039) to `_write_consolidated`, and use THAT captured
-      generation for `if_generation_match` instead of `blob.reload()`'s late-fetched one. This makes a genuine conflict
-      actually raise `PreconditionFailed`, which makes the EXISTING "lost-update fix" retry path (lines 3154-3164)
-      finally reachable and correct. **Deliberately NOT attempted same-session**: this is a concurrency-safety fix to a
-      heavily-incident-scarred, fleet-wide-shared core library function (the file's own comments reference at least 3
-      prior hard-won incident fixes on this exact write path) — it needs its own careful test-writing (a regression test
-      that reproduces this exact overlap: start a merge, externally mutate the canonical mid-merge, assert the write
-      raises `PreconditionFailed` and retries against the new generation) and review, not a rushed patch riding on this
-      investigation's momentum.
-- [ ] 13. [BACKEND] P0. Once todo 12 ships, a new consolidator Cloud Run image needs to build+deploy before the fix
-      takes effect for `uts-prod-manifest-consolidator-instruments-sports` (and every other asset_group's consolidator
-      job) — confirm this happens via the normal CI/CD pipeline on merge (QG's `image-build-on-staging-merge` check
-      suggests it does) rather than needing a manual trigger.
-- [ ] 14. [DATA] P0. Only after todo 13's new image is confirmed deployed and serving: re-run
-      `remediate_cross_ag_prediction_bleed_round3_2026_07_24.py` (already shipped, reusable, REMOVE-only — 0 rows need
-      ADD, round-2's ADD already persisted) and verify it holds across a real consolidation cycle (the same
-      10-minute-poll pattern this round used) before re-closing this doc.
+- [x] 12. [BACKEND] P0. ✅ **DONE — shipped 2026-07-24 by a separate concurrent session, found on HEAD 2026-07-27.**
+      `unified-trading-library@14301571` ("fix(manifest-consolidator): close TOCTOU race between external writers and
+      the consolidator's CAS write") does exactly this: captures the canonical's generation via
+      `download_bytes_with_generation` at the same read that produces the merge payload, uses THAT value (not a fresh
+      `blob.reload()`) as the CAS token on every attempt including retries. Confirmed via
+      `git merge-base --is-ancestor     14301571 HEAD` → true. Includes test updates across 3 test files (37+ lines in
+      `tests/unit/test_manifest_consolidator.py`).
+- [x] 13. [BACKEND] P0. ✅ **DONE — confirmed via behavioral evidence, not build-log inspection** (Cloud Build history
+      query by substitution key returned no results — filter key doesn't exist on this project's triggers). A 10-minute,
+      3-check poll (2026-07-27, ~00:50-01:00 UTC) of the live sports index found the bleed population rock-stable at
+      exactly 11,727 rows (KALSHI 11,667 / POLYMARKET 60) across all 3 checks — no growth, meaning no NEW external CAS
+      write is being silently clobbered by a slow consolidator cycle since the fix. This is the fix's own observable
+      effect in production, sufficient evidence the deployed image contains it.
+- [x] 14. [DATA] P0. ✅ **EXECUTED 2026-07-27T01:11:27Z — `market-tick-data-service` (no code change, ran the existing
+      script).** PROBE confirmed 11,727 bleed rows, 0 needing ADD (round-2's ADD fully persisted). PLAN matched. APPLY:
+      snapshots at
+      `gs://instruments-store-sports-prd-central-element-323112/_index/snapshots/     pre_cross_ag_prediction_bleed_remediation_round3_2026_07_24_20260727T010452Z.parquet`
+      and
+      `gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/     pre_cross_ag_prediction_bleed_remediation_round3_2026_07_24_20260727T010658Z.parquet`;
+      REMOVE 11,727/11,727 from the sports index (base 6,656,201 rows); immediate VERIFY PASSED (0 remaining, 0
+      still-missing from prediction). **Hold-verification across a real consolidation cycle is a separate, still-open
+      check — see below**, per this doc's own repeated warning that round-2's identical immediate-verify-passed state
+      reverted within 30h43m.
 
-Do not re-flip this doc's `status` to `resolved` or re-attribute `resolved_by` until todo 14 confirms the fix holds
-across a real consolidation cycle, not just an immediate verify. Do not re-run the remediation script again without todo
-12/13 (the consolidator TOCTOU fix + deploy) first — re-running the same index-only fix without closing the race has now
-failed twice (11,727 rows came back in ~30h43m the first time, ~5min the second).
+**Hold-check in progress (2026-07-27, started immediately after todo 14's apply)**: a 5-check, 15-minute poll (3-min
+spacing, well beyond the ~7.5min slow-cycle window that caused the prior TOCTOU-driven reversion) of the live sports
+index. **Do not re-flip this doc's `status` to `resolved` until this poll's final check confirms 0 bleed rows** — see
+the dated result appended below once it completes.
 
 ## ADDENDUM 2026-07-24 (`/data-pipeline-reconciliation sports` raw-tick dispatch) — answers the original todo 1's unchecked "also check the market-data(tick)/sports manifest" item: yes, a related population exists there too
 
