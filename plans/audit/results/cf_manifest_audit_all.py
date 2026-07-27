@@ -20,12 +20,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 from cf_manifest_audit_2026_06_01 import audit  # type: ignore[import-not-found]
+from unified_trading_library import get_storage_client
 
 #: AG → the bucket-name asset_group token. prediction's bucket token is `pred`.
 AG_BUCKET_TOKENS: dict[str, str] = {
@@ -46,19 +46,16 @@ def _bucket(kind: str, ag_token: str, env: str, project: str) -> str:
 
 
 def _write_json_out(uri_or_path: str, payload: dict[str, object]) -> None:
-    """Write the JSON summary locally, then `gcloud storage cp` it up if a gs:// target."""
+    """Write the JSON summary locally, then upload it via the UTL SDK if a gs:// target."""
     text = json.dumps(payload, indent=2, sort_keys=True)
     if uri_or_path.startswith("gs://"):
         tmp = Path(tempfile.mkdtemp(prefix="cf_audit_json_")) / "cf_audit.json"
         _ = tmp.write_text(text, encoding="utf-8")
-        res = subprocess.run(
-            ["gcloud", "storage", "cp", str(tmp), uri_or_path],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if res.returncode != 0:
-            print(f"  WARN: could not upload JSON summary to {uri_or_path}: {res.stderr.strip()[-160:]}", flush=True)
+        bucket, path = uri_or_path.removeprefix("gs://").split("/", 1)
+        try:
+            _ = get_storage_client(provider="gcp").upload_file(bucket, path, str(tmp))
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"  WARN: could not upload JSON summary to {uri_or_path}: {str(exc)[-160:]}", flush=True)
     else:
         _ = Path(uri_or_path).write_text(text, encoding="utf-8")
     print(f"  JSON summary → {uri_or_path}", flush=True)

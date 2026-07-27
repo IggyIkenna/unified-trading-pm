@@ -42,6 +42,7 @@ import tempfile
 from pathlib import Path
 
 import pandas as pd
+from unified_trading_library import get_storage_client
 
 INDEX_REL = "_index/availability_index.parquet"
 CANONICAL_SCHEMA_VERSION = 9
@@ -54,17 +55,17 @@ ERA_A_CHAIN_DATA_TYPES: frozenset[str] = frozenset({"options_chain", "futures_ch
 
 
 def _cp(uri: str, dst: Path, tries: int = 5) -> bool:
-    """Pull a single GCS object via the gcloud CLI (DNS-robust), retried. Returns ok."""
+    """Pull a single GCS object via the UTL SDK wrapper, retried. Returns ok."""
+    bucket, path = uri.removeprefix("gs://").split("/", 1)
     for i in range(tries):
-        res = subprocess.run(
-            ["gcloud", "storage", "cp", uri, str(dst)],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if res.returncode == 0 and dst.exists():
+        try:
+            get_storage_client(provider="gcp").bucket(bucket).blob(path).download_to_filename(str(dst))
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(f"  cp attempt {i + 1}/{tries} failed {uri}: {str(exc).strip()[-120:]}", flush=True)
+            continue
+        if dst.exists():
             return True
-        print(f"  cp attempt {i + 1}/{tries} failed {uri}: {res.stderr.strip()[-120:]}", flush=True)
+        print(f"  cp attempt {i + 1}/{tries} failed {uri}: download completed but file missing", flush=True)
     return False
 
 

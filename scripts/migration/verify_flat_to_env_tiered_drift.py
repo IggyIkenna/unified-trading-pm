@@ -43,10 +43,11 @@ from __future__ import annotations
 
 import argparse
 import random
-import subprocess
 import sys
 from dataclasses import dataclass
 from typing import cast
+
+from unified_trading_library import get_storage_client
 
 
 @dataclass(frozen=True)
@@ -85,121 +86,50 @@ def _is_s3(uri: str) -> bool:
 def _bucket_stats(uri: str) -> BucketStats:
     """Return (object_count, total_bytes) for a bucket URI."""
     if _is_gcs(uri):
-        # `gcloud storage du gs://bucket --total --summarize --readable-sizes=false`
-        result = subprocess.run(
-            ["gcloud", "storage", "du", uri, "--summarize", "--readable-sizes=false"],
-            capture_output=True,
-            text=True,
-            timeout=300,
-            check=False,
-        )
-        if result.returncode != 0:
-            raise RuntimeError(f"gcloud storage du failed for {uri}: {result.stderr}")
-        # Output: "  <total_bytes>  gs://bucket/"
-        parts = result.stdout.strip().split()
-        total_bytes = int(parts[0]) if parts else 0
-        # Object count via ls --recursive | wc -l (slow but accurate)
-        result2 = subprocess.run(
-            ["gcloud", "storage", "ls", "--recursive", uri],
-            capture_output=True,
-            text=True,
-            timeout=600,
-            check=False,
-        )
-        # Strip empty lines + directory-marker lines (end with /)
-        count = sum(1 for line in result2.stdout.splitlines() if line.strip() and not line.strip().endswith("/"))
-        return BucketStats(uri=uri, object_count=count, total_bytes=total_bytes)
-    if _is_s3(uri):
-        result = subprocess.run(
-            ["aws", "s3", "ls", uri, "--recursive", "--summarize"],
-            capture_output=True,
-            text=True,
-            timeout=600,
-            check=False,
-        )
-        if result.returncode != 0:
-            raise RuntimeError(f"aws s3 ls failed for {uri}: {result.stderr}")
-        count = 0
-        total_bytes = 0
-        for line in result.stdout.splitlines():
-            line = line.strip()
-            if line.startswith("Total Objects:"):
-                count = int(line.split(":")[1].strip())
-            elif line.startswith("Total Size:"):
-                total_bytes = int(line.split(":")[1].strip())
-        return BucketStats(uri=uri, object_count=count, total_bytes=total_bytes)
-    raise ValueError(f"unknown URI scheme: {uri}")
+        provider, scheme = "gcp", "gs://"
+    elif _is_s3(uri):
+        provider, scheme = "aws", "s3://"
+    else:
+        raise ValueError(f"unknown URI scheme: {uri}")
+    bucket, _, prefix = uri.removeprefix(scheme).partition("/")
+    try:
+        metas = list(get_storage_client(provider=provider).list_blobs(bucket, prefix=prefix))
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise RuntimeError(f"list_blobs failed for {uri}: {exc}") from exc
+    return BucketStats(uri=uri, object_count=len(metas), total_bytes=sum(m.size for m in metas))
 
 
 def _list_parquet_objects(uri: str, limit: int = 5000) -> list[str]:
     """List up to `limit` parquet object URIs in the bucket."""
     if _is_gcs(uri):
-        result = subprocess.run(
-            ["gcloud", "storage", "ls", "--recursive", uri],
-            capture_output=True,
-            text=True,
-            timeout=600,
-            check=False,
-        )
+        provider, scheme = "gcp", "gs://"
     elif _is_s3(uri):
-        result = subprocess.run(
-            ["aws", "s3", "ls", uri, "--recursive"],
-            capture_output=True,
-            text=True,
-            timeout=600,
-            check=False,
-        )
+        provider, scheme = "aws", "s3://"
     else:
         return []
-    parquets = [line.strip() for line in result.stdout.splitlines() if line.strip().endswith(".parquet")]
+    bucket, _, prefix = uri.removeprefix(scheme).partition("/")
+    try:
+        metas = list(get_storage_client(provider=provider).list_blobs(bucket, prefix=prefix))
+    except (OSError, ValueError, RuntimeError):
+        return []
+    parquets = [f"{scheme}{bucket}/{m.name}" for m in metas if m.name.endswith(".parquet")]
     return parquets[:limit]
 
 
 def _object_size(uri: str) -> int:
     """Return object size in bytes for a single GCS/S3 URI."""
     if _is_gcs(uri):
-        result = subprocess.run(
-            ["gcloud", "storage", "objects", "describe", uri, "--format=value(size)"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-        if result.returncode != 0:
-            return -1
-        try:
-            return int(result.stdout.strip())
-        except ValueError:
-            return -1
-    if _is_s3(uri):
-        bucket = uri.split("/")[2]
-        key = "/".join(uri.split("/")[3:])
-        result = subprocess.run(
-            [
-                "aws",
-                "s3api",
-                "head-object",
-                "--bucket",
-                bucket,
-                "--key",
-                key,
-                "--query",
-                "ContentLength",
-                "--output",
-                "text",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-        if result.returncode != 0:
-            return -1
-        try:
-            return int(result.stdout.strip())
-        except ValueError:
-            return -1
-    return -1
+        provider, scheme = "gcp", "gs://"
+    elif _is_s3(uri):
+        provider, scheme = "aws", "s3://"
+    else:
+        return -1
+    bucket, _, path = uri.removeprefix(scheme).partition("/")
+    try:
+        meta = get_storage_client(provider=provider).get_blob_metadata(bucket, path)
+    except (OSError, ValueError, RuntimeError):
+        return -1
+    return meta.size if meta else -1
 
 
 def _sample_parquet_parity(source_uri: str, dest_uri: str, sample_n: int, seed: int) -> tuple[int, int]:

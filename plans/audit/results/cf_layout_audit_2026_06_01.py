@@ -19,11 +19,14 @@ Run:
 
 from __future__ import annotations
 
+import contextlib
 import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+from unified_trading_library import get_storage_client
 
 ADMIN_PREFIXES = ("_index", "_deploy", "_vm_staging", "backfill-logs", "snapshots", "configs")
 
@@ -67,8 +70,10 @@ def _descend_to_leaf(bucket: str, start: str, max_depth: int = 9) -> str | None:
 
 def _sample_schema(uri: str, tmp: Path) -> str:
     dst = tmp / "leaf.parquet"
-    res = subprocess.run(["gcloud", "storage", "cp", uri, str(dst)], capture_output=True, text=True, check=False)
-    if res.returncode != 0 or not dst.exists():
+    bucket, path = uri.removeprefix("gs://").split("/", 1)
+    with contextlib.suppress(OSError, ValueError, RuntimeError):
+        get_storage_client(provider="gcp").bucket(bucket).blob(path).download_to_filename(str(dst))
+    if not dst.exists():
         return "  (could not read leaf)"
     try:
         import pandas as pd
@@ -81,7 +86,7 @@ def _sample_schema(uri: str, tmp: Path) -> str:
                 date_hint = f" | {c}~{str(df[c].iloc[0])[:19]} (nuniq {df[c].nunique()})"
                 break
         return f"  nrows={len(df)} cols={cols[:18]}{date_hint}"
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return f"  (read error: {exc})"
 
 
@@ -110,7 +115,7 @@ def audit_bucket(bucket: str) -> None:
         for m in ("asset_group=", "pipeline_mode=", "category=", "data_source=", "date=", "day="):
             if m in rel:
                 markers.append(m)
-        print(f"\n  TREE: {top[len(f'gs://{bucket}/'):] or '<root>'}", flush=True)
+        print(f"\n  TREE: {top[len(f'gs://{bucket}/') :] or '<root>'}", flush=True)
         print(f"    layout-sig: {sig}")
         print(f"    markers: {markers}")
         print(f"    sample: {rel}")

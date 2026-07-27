@@ -18,13 +18,13 @@ Output:
 
 from __future__ import annotations
 
-import subprocess
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 import gcsfs
 import pandas as pd
 import pyarrow.parquet as pq
+from unified_trading_library import get_storage_client
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[4]
 PROJECT_ID = "central-element-323112"
@@ -113,17 +113,14 @@ def probe_gcs_index(fs: gcsfs.GCSFileSystem, bucket: str) -> pd.DataFrame | None
 
 def probe_aws_index(bucket: str) -> dict[str, object]:
     """Lightweight AWS probe — list bucket head to confirm existence."""
-    result = subprocess.run(
-        ["aws", "s3", "ls", f"s3://{bucket}/_index/"],  # noqa: gs-uri — audit script, s3:// for AWS probing, bucket is caller-provided
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode == 0:
-        return {"exists": True, "stdout": result.stdout[:500]}
-    if "NoSuchBucket" in result.stderr:
-        return {"exists": False, "reason": "NoSuchBucket"}
-    return {"exists": False, "reason": result.stderr[:200]}
+    try:
+        metas = list(get_storage_client(provider="aws").list_blobs(bucket, prefix="_index/", max_results=1))
+        return {"exists": True, "stdout": str([m.name for m in metas])[:500]}
+    except (OSError, ValueError, RuntimeError) as exc:
+        msg = str(exc)
+        if "NoSuchBucket" in msg:
+            return {"exists": False, "reason": "NoSuchBucket"}
+        return {"exists": False, "reason": msg[:200]}
 
 
 def main() -> int:
@@ -138,18 +135,38 @@ def main() -> int:
             df = probe_gcs_index(fs, bucket)
         except (OSError, FileNotFoundError) as err:
             per_bucket_stats.append(
-                {"asset_group": ag, "service_kind": kind, "bucket": bucket, "exists": "ERROR",
-                 "rows": 0, "v8_rows": 0, "v_lt_8_rows": 0, "null_version_rows": 0,
-                 "captured": 0, "empty_confirmed": 0, "attempted_failed": 0,
-                 "error_summary": str(err)[:120]},
+                {
+                    "asset_group": ag,
+                    "service_kind": kind,
+                    "bucket": bucket,
+                    "exists": "ERROR",
+                    "rows": 0,
+                    "v8_rows": 0,
+                    "v_lt_8_rows": 0,
+                    "null_version_rows": 0,
+                    "captured": 0,
+                    "empty_confirmed": 0,
+                    "attempted_failed": 0,
+                    "error_summary": str(err)[:120],
+                },
             )
             continue
         if df is None:
             per_bucket_stats.append(
-                {"asset_group": ag, "service_kind": kind, "bucket": bucket, "exists": "NO_INDEX",
-                 "rows": 0, "v8_rows": 0, "v_lt_8_rows": 0, "null_version_rows": 0,
-                 "captured": 0, "empty_confirmed": 0, "attempted_failed": 0,
-                 "error_summary": ""},
+                {
+                    "asset_group": ag,
+                    "service_kind": kind,
+                    "bucket": bucket,
+                    "exists": "NO_INDEX",
+                    "rows": 0,
+                    "v8_rows": 0,
+                    "v_lt_8_rows": 0,
+                    "null_version_rows": 0,
+                    "captured": 0,
+                    "empty_confirmed": 0,
+                    "attempted_failed": 0,
+                    "error_summary": "",
+                },
             )
             print(f"  {kind:24s} {bucket}: NO _index/availability_index.parquet", flush=True)
             continue
