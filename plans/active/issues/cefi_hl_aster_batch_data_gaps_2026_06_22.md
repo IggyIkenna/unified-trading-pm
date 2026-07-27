@@ -101,6 +101,20 @@ instruments-service@`b99e586` (tested no-key enumeration).
       preemption-billing-waste audit). Whoever relaunches next: same `launch-cefi-hl-aster-historical-backfill.sh`
       command works unchanged (idempotent, non-force); consider `--on-demand`/`ON_DEMAND=true` if a second SPOT attempt
       also gets mass-preempted in this zone (asia-northeast1-c e2-highmem-8 capacity contention suspected, not proven).
+      **RELAUNCHED 2026-07-27 (slot-4)**: re-ran
+      `VENUES="HYPERLIQUID ASTER" bash     scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (SPOT, same
+      idempotent non-force command slot-10 named) — new run-id `20260727-022558`, 7 VMs. Verified STARTED (all RUNNING
+      at T+0). **T+10min+ check: NO preemption this time** — `gcloud compute instances list` shows all 7 still `RUNNING`
+      well past T+10min (unlike the prior attempt's ~2.5-min mass-preemption). Ground-truthed via `run.log`, not just VM
+      status (per this doc's own lesson): `cefi-hyperliquid-2023-20260727-022558`'s log shows real per-day
+      `PROGRESS: chunk=N/365` lines advancing + genuine `ManifestWriter: per-VM shard updated` writes — the fleet is
+      actually processing, not stalled-but-running. **GATE stays open, honestly** — a 365-daily-chunk-per-VM backfill
+      across 7 VMs is a multi-hour operation, not completable within one agent-turn session; the underlying condition
+      (`expected_unattempted` → 0 for HL/ASTER) has NOT yet been re-measured post-relaunch. Handing off per the same
+      pattern slot-10 used: whoever next picks up this GATE should (1) confirm the fleet is still running / check for a
+      fresh preemption, (2) once all 7 report terminal (`gcloud compute instances list` shows none, or a per-VM
+      `EXIT_STATUS` in `run.log`), re-measure via `read_availability_index` filtered to venue ∈ {HYPERLIQUID, ASTER} —
+      do not flip this checkbox until that fresh measurement confirms 0 `expected_unattempted`.
 - [x] ✅ [DEPLOY] P1. Redeployed the IS fixes — built `instruments-service:latest`=7489ed1/0.43.0 from LDR (no-auth
       b99e586 + full-universe 0fe8e71 + dated-future quote fix 7489ed1) via Cloud Build d215d55a (SUCCESS); created the
       missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00 IS scheduler).
