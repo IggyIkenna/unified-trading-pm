@@ -132,8 +132,11 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
       rows = 25,031, same order of magnitude; the manifest carries 0 pre-floor `FIXTURES_OUTCOMES` rows at all,
       confirming that entity was fully unmanifested/orphaned, consistent with the original `E_orphan_real`
       classification). Deleted the MEASURED current population per the data-domain "trust the actual distribution, not
-      the constant" principle, not the stale cited figure. Snapshot (pre-delete object-name list, JSON, 30,182 paths) +
-      post-delete census (0 objects remaining) both captured in the same run; delete verdicts
+      the constant" principle, not the stale cited figure. Snapshot (pre-delete object-name list, JSON, 30,182 paths)
+      durably archived at
+      `gs://instruments-store-sports-prd-central-element-323112/_index/purge_backups/pre_floor_fixtures_snapshot_2026_07_27.json`
+      (mirrors the `_index/purge_backups/` convention `purge_frozen_2018_2020_sports_odds_scaffolding_2026_07_24.py`
+      uses) + post-delete census (0 objects remaining) both captured in the same run; delete verdicts
       `{DELETED: 30182,     ERROR: 0}`. Post-delete census sampled the 2 remaining pre-floor day dirs and confirmed only
       unrelated `entity=fixture_events` objects survive there (correctly out of this todo's scope — a different track).
       Manifest phantom-row cleanup for this population (rows that may still point at now-deleted objects) is explicitly
