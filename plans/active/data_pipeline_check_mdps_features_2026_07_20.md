@@ -970,9 +970,10 @@ backgrounded + Monitor-heartbeated; on driver death check
 via its `run.log`. `delta_one` first per-AG. CEFI is slot-3's. Driver OVERWRITES its report per-invocation — merge with
 `unified-trading-pm@e537bff29` `scripts/plan-hygiene/merge_pipeline_e2e_report.py` after every cell.
 
-**9 cells attempted, 0 in flight, 20 not started**: 4 honest `no_captured_input_for_window` skips (`DEFI:delta_one`,
-`PREDICTION:delta_one`, `DEFI:onchain`, `volatility:TRADFI` — the last ground-truthed post-hoc via `run.log`,
-`DEPLOYMENT_COMPLETED exit_code=0`, 872x honest warnings). `TRADFI:delta_one` FAILED (2 identical VM runs,
+**10 cells attempted, 0 in flight, 19 not started**: 5 honest `no_captured_input_for_window` skips (`DEFI:delta_one`,
+`PREDICTION:delta_one`, `DEFI:onchain`, `multi_timeframe:DEFI` — cascades from `delta_one:DEFI`'s own skip, expected —
+`volatility:TRADFI` — the last ground-truthed post-hoc via `run.log`, `DEPLOYMENT_COMPLETED exit_code=0`, 872x honest
+warnings). `TRADFI:delta_one` FAILED (2 identical VM runs,
 `DEPENDENCY CHECK FAILED — Missing market-data-processing-service`; driver's `--require-captured` wrongly accepted the
 window, todo below); `cross_instrument:TRADFI` (both legs) FAILED identically as a direct CASCADE of that same gap
 (`FileNotFoundError: No delta-one features found` — its `--source-bucket` reads `delta_one`'s never-written `-test-`

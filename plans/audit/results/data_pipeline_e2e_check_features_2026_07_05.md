@@ -3,7 +3,7 @@ doc_type: audit-result
 title: "Pipeline E2E Check — data_pipeline_e2e_check_features (2026-07-05)"
 summary:
   "data_pipeline_e2e_check_features pipeline-e2e-check 2026-07-05 (merged across multiple driver invocations — see
-  merge_pipeline_e2e_report.py): total=18 passed=0 failed=6 ambiguous=0 skipped=7"
+  merge_pipeline_e2e_report.py): total=20 passed=0 failed=6 ambiguous=0 skipped=9"
 status: fail
 nature: record
 asset_group: [cross-cutting, defi, prediction, sports, tradfi]
@@ -24,7 +24,7 @@ lib_version:
 doc_versions_checked:
 service: data_pipeline_e2e_check_features
 run_date: 2026-07-05
-generated_at: "2026-07-27T06:38:22.185403+00:00"
+generated_at: "2026-07-27T09:47:54.833762+00:00"
 ---
 
 # Pipeline E2E Check — data_pipeline_e2e_check_features (2026-07-05)
@@ -34,7 +34,7 @@ generated_at: "2026-07-27T06:38:22.185403+00:00"
 **Note — merged across multiple driver invocations** via `merge_pipeline_e2e_report.py` (the driver overwrites its
 report per-invocation, does not append across separate `--asset-group`/`--family`-scoped processes).
 
-**Summary:** total=18 passed=0 failed=6 ambiguous=0 skipped=7
+**Summary:** total=20 passed=0 failed=6 ambiguous=0 skipped=9
 
 ## Results
 
@@ -42,6 +42,8 @@ report per-invocation, does not append across separate `--asset-group`/`--family
 | ----------------------- | ----- | ------- | -------------- | ---- | ------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | DEFI:delta_one          | force | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | DEFI:delta_one          | skip  | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| DEFI:multi_timeframe    | force | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| DEFI:multi_timeframe    | skip  | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | DEFI:onchain            | force | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | DEFI:onchain            | skip  | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | GLOBAL:calendar         | force | failed  | not_applicable | 0    | 0       | -        | PROD-WRITE BUG: wrote to gs://features-calendar-prd-... despite IS_TEST_RUN=true (is_test_run field declared but never consumed in calendar/config.py). See issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md. 0 rows written this run (no real damage), exit_code=0 at the VM level but this is a P0 SAFETY bug, not a pass.                                                                                                                                        |
@@ -65,6 +67,8 @@ report per-invocation, does not append across separate `--asset-group`/`--family
 | ----------------------- | ----- | -------------------------------------------- | -------------------------------------------- | ------------ |
 | DEFI:delta_one          | force | `-`                                          | `-`                                          | -            |
 | DEFI:delta_one          | skip  | `-`                                          | `-`                                          | -            |
+| DEFI:multi_timeframe    | force | `-`                                          | `-`                                          | -            |
+| DEFI:multi_timeframe    | skip  | `-`                                          | `-`                                          | -            |
 | DEFI:onchain            | force | `-`                                          | `-`                                          | -            |
 | DEFI:onchain            | skip  | `-`                                          | `-`                                          | -            |
 | GLOBAL:calendar         | force | `-`                                          | `-`                                          | -            |
