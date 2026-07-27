@@ -223,7 +223,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
 - [x] 11b-scope. ✅ [DATA] P0. **DONE 2026-07-27 (slot-15)** — Scoped the cross-repo orphan/lineage audit
       (MTDS→MDPS→features→ml/strategy) before attempting it as one VM run. Confirmed no orphan-detection tooling exists
       for MDPS/features/ml/strategy (only raw-MTDS has `migration_orphan_sweep.py`; independently verified via
-      `codex/02-data/orphan-object-detection.md` §2c/§5's own "no known orphan coverage" finding for candles/features)
+      `/codex/02-data/orphan-object-detection.md` §2c/§5's own "no known orphan coverage" finding for candles/features)
       and no generic framework to reuse (sports needed its own 771-line fork of the raw-tick sweep; candle/feature/
       ml-strategy shard keys are each a different shape). Split the original single all-or-nothing checkbox into 4
       independently-dispatchable build/run/report todos rather than risk a rushed, unsafe attempt at the full scope in

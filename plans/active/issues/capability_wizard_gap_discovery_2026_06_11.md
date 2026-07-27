@@ -127,7 +127,7 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       free — see `BLK-5ce3f18c`, escalated to main). **Checkbox left unflipped until the push actually lands** — do not
       treat this as shipped until `git log origin/live-defi-rollout` shows `8903683a` (or a rebase-carried equivalent).
       Also drafted (same local, unpushed state) fixes for the SAME staleness in
-      `codex/09-strategy/architecture-v2/capability-wizard.md`'s status table (the row still cited `UAC@6f31f59`, the
+      `/codex/09-strategy/architecture-v2/capability-wizard.md`'s status table (the row still cited `UAC@6f31f59`, the
       pre-backfill commit, for fund-structures/order-semantics/ sim-assumptions/agent-capability — verified the OTHER
       THREE sibling registries are ALSO already backfilled with real per-venue/per-archetype data despite carrying the
       identical stale "intentionally empty" docstring; not fixed in THEIR OWN files here — that's todos 113/117/119's
