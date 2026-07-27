@@ -233,18 +233,28 @@ drift_direction: advance-code
       market-tick-data-service@6998ea4c (cleanup script's final streaming-rewrite, after the original pandas-based
       version proved unsafe on this contended host — see Progress Log entry below). Source:
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md`.
-- [ ] [DATA] P1. Measure the exact scope of MTDS manifest rows stamped `instrument_type="liquidation"` by the pre-fix
-      `liquidations_handler.py` code path (before `market-tick-data-service@fec20de2`), cross-checking each row's
-      historical `protocol` column against `resolve_lending_instrument_type(protocol)` to confirm genuine lending
-      mislabeling (never a real liquidation-event row). Then build
-      `market-tick-data-service/scripts/restamp_lending_instrument_type_2026_07_24.py` mirroring the
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-2).** Measured the exact scope of MTDS manifest rows stamped
+      `instrument_type="liquidation"` by the pre-fix `liquidations_handler.py` code path (before
+      `market-tick-data-service@fec20de2`) via a live read-only probe of prod
+      (`market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, 26,797,412 total rows): **0
+      rows currently carry the buggy literal** — 7,106 rows carry `data_type=liquidations` (7,047 already
+      `instrument_type=lending`, 59 `None` via the `record_zero_rows` fallback path, out of scope by construction). A
+      genuine measured-zero, not a placeholder — the pre-fix window's captures (if any landed) have since fully cycled
+      out. Built `market-tick-data-service/scripts/restamp_lending_instrument_type_2026_07_24.py` mirroring the
       `restamp_cefi_onchain_perp_venue_chain_2026_07_21.py`/`restamp_sports_odds_horizon_bucket_2026_07_22.py` safety
-      pattern (dry-run default = the scope measurement, `--apply` CAS-guarded, pre-apply snapshot, post-write
-      verification, unit tests). Ship via quickmerge, `quality-gates.sh` green first. Do NOT run `--apply` — operator
-      gated. Repo: market-tick-data-service. **Done when**: the script exists; its dry-run mode prints the exact
-      affected row count + shard/venue/date breakdown; unit tests cover classification/dry-run/apply and pass;
-      `quality-gates.sh` green; commit verified as an ancestor of `origin/live-defi-rollout`; script remains un-applied
-      at hand-off. Source: `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`.
+      pattern (dry-run default, `--apply` CAS-guarded, pre-apply snapshot, post-write verification), cross-checking each
+      affected row's `venue`-derived protocol against the REAL `_lending_grain.resolve_lending_instrument_type()`
+      (imported, never re-implemented) to confirm genuine lending mislabeling. Adapted for memory safety per
+      `remove_kalshi_polymarket_defi_manifest_rows_2026_07_26.py`'s documented OOM finding on this same 26.8M-row/~1GB
+      index: `classify()`/`build_final()` operate only on the small `data_type=liquidations` candidate subset, the full
+      corpus is only ever touched via `ParquetFile.iter_batches()` + a streaming `ParquetWriter`. 27 unit tests
+      (classification/collision-detection, streaming dry-run/apply helpers, `try_once()` end-to-end against a fake
+      CAS-aware storage client) all pass. `quality-gates.sh` green (sentinel verified). Shipped via quickmerge —
+      market-tick-data-service@be064c27, verified ancestor of `origin/live-defi-rollout`
+      (`rev-list --count HEAD     ^origin/live-defi-rollout` = 0). Script remains **un-applied** at hand-off — `--apply`
+      stays operator-gated on a paused-consolidator-cron window (this plan's separate `[OPERATOR]` todo). Repo:
+      market-tick-data-service. Source:
+      `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`.
 - [ ] [CHORE] P1. Replace the stale `onchain/__init__.py` module docstring with the corrected text already drafted and
       verified in the source issue doc §2.2 (documents `GlassnodeAdapter` as `PLANNED_VENUES`-parked and
       `HeliusSolanaAdapter` as `BLOCKED-CREDENTIALS`-gated, replacing a stale 2026-04 "all adapters deleted" claim) —
