@@ -591,3 +591,27 @@ pairs stay honest-unresolved (reported, never guessed).
   VM, multi-hour-to-multi-day campaign in its own right, not completable inside this dispatch. This is the single
   biggest finding of the session — flagged here, in the main plan, and needs its own follow-up todo/plan before the
   4-script migration can be called fully closed.
+
+- **2026-07-27 (slot-6) — HYPERLIQUID recent-tail gap: launched, verified healthy, genuinely still open.** Dispatched to
+  `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s HL recent-tail todo (this doc is its cited Source). Fleet-check
+  first: the existing `cefi-hyperliquid-2026-20260727-071055` 365-day historical-year VM (launched 2026-07-27 00:10 UTC)
+  was only on day 7/208 (2026-01-07) at pickup, measured pace ~2h/day — it would not reach the 2026-06-24 tail for ~2
+  weeks, so a separate targeted launch does not duplicate current in-flight compute. **Baseline**
+  (`read_availability_index`, cefi consolidated index, venue=HYPERLIQUID, 2026-06-24..2026-07-25): 30,787 rows —
+  `expected_unattempted`=15,376, `empty_confirmed`=9,480, `captured`=5,928, `attempted_failed`=3. **Launched**
+  `cefi-hyperliquid-2026-20260727-123922` via
+  `VENUES="HYPERLIQUID" YEARS="2026" OVERRIDE_START_DATE=2026-06-24 OVERRIDE_END_DATE=2026-07-25 bash scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`
+  (dry-run verified the exact window first; SPOT, non-force/idempotent, `SYMBOLS=ALL` catalogue-driven — matches BUG#4's
+  fix, not the old hardcoded-9 cap). **Verified started + healthy** (not fire-and-forget): RUNNING at T+30s; `run.log`
+  shows `OnchainPerpBatch: catalogue-driven universe for HYPERLIQUID on 2026-06-24 = 174 symbols` (correct start date) +
+  a fresh `vm-heartbeat/cefi-hyperliquid-2026-20260727-123922.txt` timestamp at T+5min, S3 client initialized, actively
+  fetching. **Disposition**: the parent todo stays genuinely open — a 32-day multi-symbol S3 backfill is multi-hour at
+  the sibling VM's measured pace, not completable in one session. **Next check-in should verify** (via
+  `read_availability_index` on the same window): `captured` climbing from the 5,928 baseline toward the ~21,304
+  attempted total (expected_unattempted+empty_confirmed+captured), `attempted_failed` still ~3 (no regression), and
+  eventual VM `DEPLOYMENT_COMPLETED exit_code=0` — then flip the parent plan checkbox with the before/after counts its
+  done_when clause requires. **Separate structural finding**: `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` is
+  sitting AT its 1000-line hard cap right now (zero headroom) — even this minimal in-place progress note required
+  trimming the parent todo's own wording to stay under cap; a future check-in on ANY still-open todo in that plan will
+  hit the identical wall until it goes through the archival/line-cap-remediation ritual (same pattern already applied to
+  this doc on 2026-07-25). Flagging so the next agent doesn't burn time on the same discovery.
