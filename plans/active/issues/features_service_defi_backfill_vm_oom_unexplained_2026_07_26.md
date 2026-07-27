@@ -203,6 +203,30 @@ SIGKILL, and I could not observe the actual final seconds to catch a real OOM-ki
 **Open question, not resolved**: what actually sends SIGKILL to the `features_service` process at ~8 minutes, and is the
 process merely BLOCKED (not allocating) for that whole window?
 
+## 2026-07-27 handoff (slot-11, operator-confirmed) -- the ONLY remaining step is relaunch-to-validate
+
+A candidate fix for finding 1 is shipped: `unified-trading-library@06190d77` (see the checked-off P2 script item below).
+It is a CANDIDATE, not a confirmed fix -- do not flip `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo until
+the repro below actually goes green (runtime-verification HARD RULE: a done-claim requires running the code).
+
+**Pending gate**: the fix has NOT reached features-service yet. It needs the UTL wheel release pipeline (LDR -> staging
+-> main -> semver-agent publish) to land a new `unified-trading-library` wheel version before any features-service VM
+picks it up. Do not idle-hold a worker slot polling for this (async-wait/poll-discipline HARD RULE) -- check back on a
+normal cadence instead, or park behind a wheel-release prerequisite if this recurs.
+
+**Exact repro command** (matches the 2026-07-27 live-VM-profiling attempt above, the one that hung with zero log
+output):
+
+```
+--feature-family onchain --asset-group DEFI --start-date 2026-07-20 --end-date 2026-07-25 --feature-group lst_yields
+```
+
+**Next dispatch should**: confirm the features-service venv/lockfile has picked up a UTL version >= the one containing
+`06190d77`, then relaunch this exact repro on a SPOT VM. If it goes green (no OOM/hang, features compute completes),
+flip the P2 item's "confirmed" note here, flip D1 in the batch3 plan, and close this issue (`resolved_by:`). If it STILL
+hangs/OOMs, findings 2 (the `BlobMetadata.size` accounting hole) and 3 (memory-watchdog backpressure) are the next
+candidates, or the still-open OOM-vs-hang question needs the more robust on-VM monitor (P1 items below) to settle.
+
 ## Recommended next steps (none done yet -- do NOT re-attempt the same repro without one of these)
 
 - [ ] [DATA] P1. Re-run the exact same repro
