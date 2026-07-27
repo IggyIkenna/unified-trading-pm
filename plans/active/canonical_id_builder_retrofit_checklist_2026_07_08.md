@@ -156,22 +156,26 @@ source:
       convention — canonical ids for Betfair KEEP the `/` delimiter; downstream consumers must treat it as venue-native,
       not normalise. Zero production Betfair rows exist today (dormant path); if Betfair activates, builders adopt this
       convention as-is.
-- [ ] [DATA] P1. **Fix the real "no VENUE:TYPE: wrap at all" gap in both Prediction adapters** — Kalshi
-      (`kalshi.py:799`, `instrument_key=ticker`) and Polymarket (`polymarket/parsing.py:139`,
-      `instrument_key=condition_id`) both store the BARE raw provider id as `instrument_key` with zero structure — not
-      even the `VENUE:TYPE:` prefix every other asset group carries. This is a real, separate finding from finding 8 in
-      the canonicalization issue doc (which is about `base_asset`/`underlying`/`raw_symbol` being NULL — this is about
-      `instrument_key` itself). Target:
-      `build_canonical_instrument_id(AssetGroup.PREDICTION, venue, InstrumentType.PREDICTION_MARKET, raw_id,     passthrough=True)`
-      → e.g. `KALSHI:PREDICTION_MARKET:<ticker>`. **Before retrofitting**: check every downstream consumer that
-      currently joins on the bare `condition_id`/`ticker` shape (the Polymarket adapter's own
-      `_register_clob_token_ids(condition_id, ...)` side-table keyed by the CURRENT bare value is one real consumer
-      found in `parsing.py:135` — confirm it and any others tolerate or get updated for the wrapped shape) — same
-      consumer-impact-check discipline as the CCXT plan. **Coordinate with, don't conflate against,
-      `prediction_canonical_identity_migration_2026_07_08.md`** — that plan's `canonical_instrument_id` field (populated
-      from `cross_venue_mapping`) is a SEPARATE, complementary field from the `instrument_key` this todo wraps, not a
-      conflicting proposal. Sequence so this todo's downstream-consumer check and that plan's todo 6 (same underlying
-      question, different field) don't get answered inconsistently by 2 different agents.
+- [x] [DATA] P1. **Fix the real "no VENUE:TYPE: wrap at all" gap in both Prediction adapters** — ✅ ALREADY SHIPPED
+      2026-07-09, `instruments-service@0a0c7397` — **checkbox was never flipped; verified 2026-07-27 (slot-8,
+      `data_engineering`) that the code, docs, and tests all match this todo's target shape, no new code needed.** Both
+      Kalshi (`kalshi.py:865-867`) and Polymarket (`polymarket/parsing.py:161-163`) now call
+      `build_canonical_instrument_id(AssetGroup.PREDICTION, venue, InstrumentType.PREDICTION_MARKET, raw_id)` —
+      `KALSHI:PREDICTION_MARKET:<ticker>` / `POLYMARKET:PREDICTION_MARKET:<condition_id>` — WITHOUT `passthrough=True`
+      (passthrough upper-cases non-DeFi symbols, which would corrupt Polymarket's lowercase `0x…64hex` condition_id;
+      dispatching without it for PREDICTION_MARKET already routes to `_build_sports_or_prediction()`, which preserves
+      case verbatim). **Downstream-consumer check** (the one real consumer this todo flagged): Polymarket's
+      `_register_clob_token_ids(...)` side-table (`parsing.py:173`) is registered under the FINAL wrapped
+      `instrument_key`, not the bare `condition_id` — the commit message documents this as a real bug found + fixed
+      during the consumer-impact check. Re-verified 2026-07-27: grep of
+      `instruments_service/reference_data/adapters/prediction/` finds zero remaining
+      `instrument_key=ticker`/`instrument_key=condition_id` bare-assignment sites; `docs/PREDICTION_INSTRUMENTS.md`
+      cites this fix; `tests/unit/test_kalshi_adapter.py` + `tests/unit/test_prediction_adapters_comprehensive.py`
+      (lines 297/374/408) + `tests/unit/test_betfair_polymarket_adapter.py:212` all assert the wrapped
+      `VENUE:PREDICTION_MARKET:<id>` shape. **Coordination note**:
+      `prediction_canonical_identity_migration_2026_07_08.md` (the sibling plan this todo was to coordinate with on the
+      separate `canonical_instrument_id` field) is already archived (`plans/archive/2026_07/`) — no live cross-plan
+      conflict remains.
 - [ ] [DATA] P3. **Cross-reference, don't duplicate, the TradFi combo-leg fix** — finding 7 (CBOE/VX spreads bypassing
       `InstrumentLeg`/COMBO entirely) already has its own dedicated plan,
       `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`. Note there that the new `build_leg()` helper is
