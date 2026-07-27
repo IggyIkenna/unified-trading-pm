@@ -119,10 +119,69 @@ form stays exactly as conservative as before.
   trigger a real Cloud Build purely to re-confirm an already-working, already-evidenced mechanism — flagging this
   explicitly as a scoping choice, not a silent skip.
 
+## Follow-up 2026-07-27: closing the mechanical enforcement gap (QG STEP 5.105)
+
+The hook-message fix (above) and the "storage-code" doc rule both rely on a worker choosing the right tool going forward
+— neither one catches a _new_ script that reaches for `subprocess.run(["gsutil", "rm", ...])` instead of the UTL SDK
+wrapper. Two follow-up questions surfaced this gap directly: "how do we ensure this happens every time" and "does the
+canonical migration scripts' `--apply` path already follow the storage-code rule."
+
+**Migration scripts, verified**: read all 5 real canonical-migration `--apply` scripts in
+`instruments-service`/`market-tick-data-service` — 4 call `gcs_delete_object`/`gcs_copy_object` directly (6/6/6/6 grep
+hits each), 1 (`delete_migrated_defi_markers_2026_07_23.py`) 3 hits, 1 (`migrate_defi_full_v9_canonical.py`) not
+applicable (no direct object delete/copy). **0 of 5 use subprocess `gcloud`/`gsutil`** — the sanctioned path is already
+followed everywhere it matters today.
+
+**But there was no mechanical gate that would catch a NEW violation.** The closest existing check,
+`check_inline_bucket_uri.py` (STEP 5.69), only AST-walks for inline `f"gs://..."` URI construction — it never inspects
+subprocess call arguments at all, AND it explicitly excludes the entire `scripts/` directory (`EXCLUDE_DIR_NAMES`
+includes `"scripts"`) — exactly where the real violations live.
+
+Built `scripts/quality_gates/check_subprocess_gcs_object_cli.py` (new, AST-based, same shrinking-ratchet-baseline shape
+as STEP 5.69/5.101/5.103) and wired it in as **STEP 5.105** in `scripts/quality-gates-base/base-service.sh`. It flags
+`subprocess.{run,call,check_call,check_output, Popen}`/`os.system` calls invoking an OBJECT-level
+`gcloud storage`/`gsutil`/`aws s3`/`aws s3api` verb (cp/mv/rm/rsync/sync/ls/cat/*-object) — deliberately excluding
+bucket-admin subcommands (mb/rb/ versioning/lifecycle/iam/buckets/create-bucket/etc, which have no UTL equivalent and
+are legitimate). Deliberately does NOT exclude `scripts/` (unlike STEP 5.69) — that exclusion was the confirmed root
+cause of the coverage gap.
+
+**A real design bug found and fixed before shipping**: the first version only inspected the LITERAL argument to
+`subprocess.run(...)`. Every real violation in this codebase uses the
+`cmd = ["gsutil", "rm", path]; subprocess.run(cmd, ...)` idiom (assign-then-call) — the checker's first pass returned 0
+hits workspace-wide, a false all-clear. Fixed by resolving a bare `Name` argument to its nearest preceding same-name
+assignment in the file (a heuristic, not real data-flow analysis — good enough for this idiom; a genuinely
+cross-scope/branch-dependent dynamic command is a documented false-negative, same trade-off STEP 5.69 makes for
+non-f-string URI builds).
+
+**Workspace-wide baseline seeded from the real, re-verified count** (`subprocess_gcs_object_cli_baseline.yaml`):
+`deployment-service`/`deployment-service-sports-wt` 11 each (incl. `maintenance_handler.py` — real, live service CLI
+code doing `gsutil rm` in a cleanup loop, and `phase5a_aws_object_migrate.py`, `cleanup_old_tarballs.py`,
+`analyze_vm_costs.py`, `wipe_pre_floor_sports_2026_07_21.py`), `unified-trading-pm` 11 (audit/migration one-offs under
+`plans/audit/results/` and `scripts/migration/`), `market-tick-data-service`/`-cid-migration`/`-sports-wt` 3 each
+(`analyze_shard_memory.py`, `restamp_mtds_sports_blank_source_2026_06_29.py`), `unified-trading-library` 3
+(`cf_manifest_audit.py` — a documented, deliberate CLI fallback with its own bandit/timeout rationale), `e2e-testing` 3
+(`scripts/paper_trading/_gcs.py` — a labelled POC), `instruments-service` 1
+(`restamp_is_sports_blank_source_2026_07_13.py`). All 21 other repos baseline at 0 (zero tolerance — any new site there
+fails immediately). None of these are fixed in this pass — per the shrinking-ratchet convention, existing debt is
+grandfathered at its current count; a NEW site anywhere fails CI. `maintenance_handler.py` specifically (live production
+code, not a dead script) is worth a real fix in its own right, but that's separate, scoped work — not bundled into a
+mechanical-gate commit.
+
+Validated: `setup-buckets.py` (`gsutil versioning set`/`lifecycle set`) correctly does NOT trigger the check
+(bucket-admin, out of scope by design); 19 unit tests (`test_check_subprocess_gcs_object_cli.py`) cover classification,
+the assign-then-call resolution idiom (incl. per-function nearest-preceding-assignment, and the false-negative case with
+no resolvable assignment), noqa-marker skipping, docstring/comment non-matching, `scripts/`-inclusion (vs STEP 5.69's
+exclusion), and a `main()` end-to-end smoke; full `unified-trading-pm` `quality-gates.sh` green (1430 tests) with STEP
+5.105 passing alongside STEP 5.69/5.104.
+
 ## Todos
 
 - [x] [SCRIPT] P1. ✅ **DONE 2026-07-27** — fixed `block_destructive_commands.py`'s error message. Commit
       `agent-orchestrator@d7dfa2361`, `quality-gates.sh` green (1808 tests), shipped via quickmerge.
+- [x] [SCRIPT] P2. ✅ **DONE 2026-07-27** — built + shipped `check_subprocess_gcs_object_cli.py` (QG STEP 5.105), the
+      mechanical gate that catches a NEW subprocess/os.system GCS/S3 object-CLI call site (as opposed to the doc-level
+      rule alone). Baseline seeded from the real, confirmed workspace count (see above). `quality-gates.sh` green,
+      shipped via quickmerge.
 - [ ] [SCRIPT] P3. Consider a corpus grep for any OTHER open plan todo that literally instructs `gcloud storage rm`/
       `gsutil rm`/`aws s3 rm` as its stated method (rather than citing the UTL wrapper) — those todos would hit this
       same hook when dispatched; rewrite them to cite `gcs_delete_object()`/`gcs_copy_object()` instead. Not done this
