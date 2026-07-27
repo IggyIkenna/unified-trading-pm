@@ -1084,3 +1084,108 @@ jobs:
         github.ref_name }}"
       cooldown_min: 120
     secrets: inherit
+
+  # ── QG RESULT MEMORY — independent fail/recovery bookend (operator ruling 2026-07-27) ────────
+  # notify-qg-fail (above) has NO green counterpart: a repo that goes red then green on
+  # live-defi-rollout pages CRITICAL on the way down and stays silent on the way up. The obvious
+  # fix — hang "recovered" off ci_status (ci-status-update.yml) — is WRONG: ci_status_store's
+  # resolve_status() deliberately refuses to let a non-main FAILING clobber a stored MAIN_GREEN
+  # (2026-07-16 incident fix — MAIN_GREEN is the on-main promotion-gate truth, not a per-branch QG
+  # verdict), so a live-defi-rollout fail/fix cycle on an already-MAIN_GREEN repo NEVER touches
+  # ci_status at all and recovered never fires. That carve-out is correct for the promotion gate
+  # and must stay untouched — so this tracks its OWN state instead: "did QG's verdict on THIS
+  # branch/PR just flip red→green?", answered from a dedicated Firestore doc
+  # (`qg_last_conclusion/{key}`, same key shape as notify-qg-fail's dedup_key), never from
+  # ci_status. Best-effort/fail-open throughout: any auth/network hiccup skips silently — it can
+  # only cost a missed recovery post, never a false one or a corrupted verdict.
+  record-qg-result:
+    name: Record QG result (fail/recovery memory)
+    needs: [qg-slices, supersede-check]
+    if: always() && needs.supersede-check.outputs.superseded != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      recovered: ${{ steps.decide.outputs.recovered }}
+    steps:
+      - name: Authenticate to GCP (state doc read+write)
+        id: gcp_auth
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          token_format: access_token
+      - name: Read prior verdict, decide recovery, persist current verdict
+        id: decide
+        shell: bash
+        env:
+          TOKEN: ${{ steps.gcp_auth.outputs.access_token }}
+          PROJECT: ${{ steps.gcp_auth.outputs.project_id }}
+          RESULT: ${{ needs.qg-slices.result }}
+          REPO: ${{ github.event.repository.name }}
+          KEY_BRANCH: ${{ github.event_name == 'pull_request' && github.base_ref || github.ref_name }}
+        run: |
+          set -uo pipefail
+          # Only a conclusive verdict updates the memory — 'skipped' (this leg never ran, e.g. a
+          # docs-only fast-path elsewhere) says nothing about red/green and must not overwrite it.
+          CURRENT=""
+          case "${RESULT}" in
+            success) CURRENT=success ;;
+            failure | cancelled) CURRENT=failure ;;
+            *)
+              echo "qg-slices.result=${RESULT} — not conclusive, leaving QG-result memory untouched"
+              echo "recovered=false" >> "$GITHUB_OUTPUT"
+              exit 0
+              ;;
+          esac
+          RECOVERED=false
+          if [ -n "${TOKEN:-}" ] && [ -n "${PROJECT:-}" ]; then
+            SAFE_KEY="$(printf 'qg-fail:%s:%s' "${REPO}" "${KEY_BRANCH}" | tr -c 'A-Za-z0-9._-' '_')"
+            DOC_URL="https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/qg_last_conclusion/${SAFE_KEY}"
+            PREV="$(curl -s --max-time 15 -H "Authorization: Bearer ${TOKEN}" "${DOC_URL}" \
+              | jq -r '.fields.conclusion.stringValue // empty' 2>/dev/null || echo "")"
+            if [ "${PREV}" = "failure" ] && [ "${CURRENT}" = "success" ]; then
+              RECOVERED=true
+            fi
+            NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            CODE="$(curl -s -o /tmp/qg-result-save.json -w '%{http_code}' --max-time 15 -X PATCH \
+              -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" \
+              "${DOC_URL}" \
+              -d "{\"fields\": {
+                    \"conclusion\": {\"stringValue\": \"${CURRENT}\"},
+                    \"repo\": {\"stringValue\": \"${REPO}\"},
+                    \"branch\": {\"stringValue\": \"${KEY_BRANCH}\"},
+                    \"commit_sha\": {\"stringValue\": \"${GITHUB_SHA}\"},
+                    \"updated_at\": {\"timestampValue\": \"${NOW}\"}
+                  }}" || echo 000)"
+            [ "${CODE}" = "200" ] || echo "::warning::qg_last_conclusion save failed (HTTP ${CODE}) for ${SAFE_KEY} — best-effort, next run retries."
+            echo "qg-result-memory: ${SAFE_KEY} prev=${PREV:-<none>} current=${CURRENT} recovered=${RECOVERED}"
+          else
+            echo "GCP auth unavailable — skipping QG-result memory this run (fail-open: no recovery post, no state corruption)."
+          fi
+          echo "recovered=${RECOVERED}" >> "$GITHUB_OUTPUT"
+
+  notify-qg-recovered:
+    name: Slack INFO — QG Recovered
+    needs: [qg-slices, record-qg-result]
+    if: always() && needs.record-qg-result.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "🟢 *QG RECOVERED* | *${{ github.event.repository.name }}* | ${{ github.event_name == 'pull_request' &&
+        format('PR #{0} `{1}` → `{2}`', github.event.pull_request.number, github.head_ref, github.base_ref) ||
+        format('push to `{0}`', github.ref_name) }} | <${{ github.server_url }}/${{ github.repository
+        }}/actions/runs/${{ github.run_id }}|sha `${{ github.sha }}`> — green again after a prior failure"
+      severity: INFO
+      conclusion: success
+      recovery: true
+      workflow_name: python-quality-gates-v2
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Distinct key from notify-qg-fail's qg-fail:<repo>:<branch> (own cooldown lane); the
+      # record-qg-result state machine is what actually prevents repeat posts (recovered only
+      # computes true on an ACTUAL prev=failure -> current=success transition), this cooldown is
+      # just a defensive backstop against a duplicate/racing run.
+      dedup_key:
+        "qg-recovered:${{ github.event.repository.name }}:${{ github.event_name == 'pull_request' && github.base_ref ||
+        github.ref_name }}"
+      cooldown_min: 15
+    secrets: inherit
