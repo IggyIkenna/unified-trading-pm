@@ -27,7 +27,7 @@ referenced_by:
     /codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
   ]
 owner: workspace-platform
-last_reviewed: 2026-07-15
+last_reviewed: 2026-07-27
 code_refs:
 last_updated: 2026-07-09
 related_codex: [/codex/05-infrastructure/plan-aware-merge-resolution.md, ../../cursor-configs/CLAUDE.md]
@@ -593,7 +593,27 @@ old and new paths** (or just commit the rename with no pathspec restriction at a
 `git cat-file -e HEAD:<old-path>` unexpectedly succeeding — and fixed the same way: verify the resurrected content is
 byte-identical to the pre-move blob, then remove it with its own single-file `git rm` + commit naming that exact path.
 
-### Isolated-worktree promotion (rare: concurrent session shares slot's `.git`)
+### A third variant (2026-07-27): UNCOMMITTED edits vanish entirely, not just stale content resurrecting
+
+Distinct from both variants above (which involve content that was already committed at least once). Editing several
+files, then running `quickmerge.sh` — which performs its OWN multi-stage internal `git stash`/pull/rebase cycle around
+the pre-commit hooks — while those edits are still UNCOMMITTED, silently dropped them entirely (not reverted to a
+stale-but-real prior version; the edit simply never reappeared anywhere, in the working tree, a stash, or a patch file)
+on a branch this actively shared. It happened **twice in one session** editing the same 9 files, each time only
+discovered by grepping for the edit's own added text after the fact — `git status` looked clean, no error was printed,
+and there was nothing to "resolve" because nothing conflicted.
+
+**The fix that worked reliably, proven across the rest of that session's ~50+ subsequent file edits with zero further
+loss**: commit each file (or small batch) IMMEDIATELY after editing it — within seconds, before running
+`quality-gates.sh`, before `quickmerge.sh`, before anything else. A real `git commit` survives a rebase (git replays
+it); long-lived UNCOMMITTED changes sitting in the working tree across multiple pull/rebase/quickmerge-internal-stash
+cycles do not reliably survive on a branch this busy. Concretely: edit → grep-verify the edit is on disk →
+`git add <exact files, by name>` → `git commit` → only then `git pull --rebase --autostash` (safe now, since it's
+replaying a real commit, not popping a stash over dirty content) → re-grep to confirm survival before doing anything
+else → push, retrying the pull-rebase-push cycle as many times as the branch's traffic requires (this branch routinely
+needs 2-4 retries for a single push; that is normal, not a sign of a problem). Editing 9 files then running one slow
+multi-stage pipeline over all of them uncommitted is exactly the failure shape; editing-and-committing one small unit at
+a time is the fix.
 
 Under Path-B each slot is an independent clone with its OWN `.git`, so two agents sharing the same slot's `.git` is
 structurally impossible in the normal operating model. However, in rare edge cases — a sub-agent launched by a
