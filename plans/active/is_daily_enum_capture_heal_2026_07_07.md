@@ -102,6 +102,31 @@ source:
       with `plans/archive/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md` (same index,
       avoid double-writing) per the archived doc's own note.
 
+      **PARTIALLY COMPLETED 2026-07-27 (slot-2)**: ran a targeted backfill via one-off `is-daily-enum-{ag}` Cloud Run
+                  Job executions (`--args` override invoking `instruments_service --operation instruments --mode batch
+                  --start-date <> --end-date <>` directly, bypassing the wrapper's relative `--days-back`).
+                  **Prediction: ✅ DONE.** 8Gi OOM'd once (bumped to 16Gi, matching the historical fix), then succeeded cleanly
+                  (execution `is-daily-enum-prediction-bjkxs`, ~17 min). Verified via `read_availability_index`: 358 real rows,
+                  07-01/02/03 all `capture_status=captured` (118/118/122). Catalogue confirmed fresh via a manual
+                  `lifecycle-catalogue-regen-prediction` trigger: `max(available_from)`=2026-07-27 (today, not stale).
+                  **Sports: ⚠️ BLOCKED, NOT completable via this mechanism.** Three real attempts — a full 5-day window, then a
+                  split 3-day window, then a split 2-day window, ALL at 32Gi/8cpu (Cloud Run's hard ceiling for 8cpu — a 64Gi
+                  attempt was rejected outright by `gcloud run jobs update`) — every one failed identically with "The configured
+                  memory limit was reached." This is a genuine architecture limitation (fixed memory cost specific to historical
+                  vs. trailing enumeration requests, independent of requested day-count — a 2-day historical window fails exactly
+                  like the 5-day one), NOT a memory-tier or window-size problem retriable from here. Real partial data DID land
+                  incrementally (37,053 manifest rows across all 5 gap dates) but `expected_unattempted` remains genuinely high
+                  (22-45% per day) — honest partial coverage, not fabricated-complete. Full root cause, the exact repro args, the
+                  residual per-day numbers, and the recommended durable-fix path are captured in
+                  `plans/active/issues/sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md` — this UPGRADES the
+                  archived doc's standing P2 "durable chunked-scan fix" note from a slow-motion ceiling race to an ACTIVE
+                  BLOCKER. This todo's checkbox stays unchecked (honestly re-scoped, not faked green) pending that fix — see the
+                  new issue doc's own `## Open work` for the follow-up todos. Secondary finding filed separately (unrelated to
+                  the backfill itself, found while verifying it):
+                  `plans/active/issues/read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md` (a
+                  `read_availability_index(columns=..., filters=...)` broad except silently converts ANY `ValueError` — including
+                  a caller's missing `GCP_PROJECT_ID` — into a false-empty result).
+
 ## Done definition
 
 Both `is-daily-enum-{prediction,sports}` cloud jobs succeed on 2 consecutive scheduled runs (not just a manual
