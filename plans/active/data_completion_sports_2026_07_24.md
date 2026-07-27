@@ -394,17 +394,21 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       instruments-service `base.py` (`_reserve_utc_window_slot` + `set_window_quota`, ~line 312 `_throttle`) +
       `api_football.py:154` (900→1200/0.05s) + deployment-service `launch_budget_registry.py`
       (`RateBudgetAllocation.per_vm_daily_quota`)
-- [ ] [SCRIPT] P1. **PART 2/3 — RUN the ramp-to-429 calibration probe on an EPHEMERAL VM** (operator-gated; "blast from
-      an IP, see when banned — one-time test"). Harness SHIPPED:
-      `instruments-service/scripts/calibrate_source_rate_limit.py` (lifecycle: campaign). It ramps request rate from a
-      single IP until 429/ban for **understat / transfermarkt / open_meteo / soccer_football_info** (Part 2) +
-      **polymarket_clob / polymarket_gamma_api** (Part 3, per-IP) and measures (break-rate, safe-rate=0.8×break,
-      recovery window). **MUST run from a throwaway VM IP** (a temporary ban there is acceptable; NEVER a prod IP) — it
-      cannot run in the credential-free `--block-network` sandbox or on a shared host. Then transcribe each
-      `safe_rate_rpm` + `recovery_seconds` into `launch_budget_registry.py` (`SOURCE_RATE_LIMITS_RPM` for fleet-divided,
-      `SOURCE_PER_IP_LIMITS` for per-IP), flip `calibrated=True` / drop the `# TODO: empirically calibrate` markers, and
-      record the measured table here. **Pending the operator-gated probe-VM run.** (instruments-service +
-      deployment-service)
+- [ ] [SCRIPT] P1. **PART 2/3 — RUN the ramp-to-429 calibration probe on an EPHEMERAL VM** ("blast from an IP, see when
+      banned — one-time test"). Harness SHIPPED: `instruments-service/scripts/calibrate_source_rate_limit.py`
+      (lifecycle: campaign). It ramps request rate from a single IP until 429/ban for **understat / transfermarkt /
+      open_meteo / soccer_football_info** (Part 2) + **polymarket_clob / polymarket_gamma_api** (Part 3, per-IP) and
+      measures (break-rate, safe-rate=0.8×break, recovery window). **MUST run from a throwaway VM IP** (a temporary ban
+      there is acceptable; NEVER a prod IP) — it cannot run in the credential-free `--block-network` sandbox or on a
+      shared host. Then transcribe each `safe_rate_rpm` + `recovery_seconds` into `launch_budget_registry.py`
+      (`SOURCE_RATE_LIMITS_RPM` for fleet-divided, `SOURCE_PER_IP_LIMITS` for per-IP), flip `calibrated=True` / drop the
+      `# TODO: empirically calibrate` markers, and record the measured table here. **Downgraded from operator-gated
+      2026-07-27** (finding E, `/codex/05-infrastructure/vm-launcher-runbook.md`): this is an ordinary ephemeral
+      calibration-VM launch (spin up, run the already-shipped harness, tear down), not one of the three human-sign-off
+      exceptions (disaster-drill / DR-cutover / live-strategy-with-wallet-key) — the runbook's default posture is
+      AO-dispatchable. The script's own docstring already carries the operator's 2026-06-23 approval of the approach
+      ("operator-sanctioned" ban on the probe VM's own throwaway IP; never a production egress IP), so no further human
+      step is needed to fire it. (instruments-service + deployment-service)
 - [x] ✅ [CODE] P1. **PART 3 — model databento + polymarket as PER-IP in the registry** (not a shared fleet ceiling).
       Added `SOURCE_PER_IP_LIMITS` (`PerIpLimit{rpm,calibrated,note}`) + `per_ip_rate_for_source()`: databento
       (`rpm=None` — usage-billed, per-IP transport, scale via more IPs) + polymarket_clob / polymarket_gamma_api
