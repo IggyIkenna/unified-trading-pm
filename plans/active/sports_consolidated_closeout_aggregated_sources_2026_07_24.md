@@ -248,11 +248,11 @@ drift_direction: advance-code
     (2 open, both P1):
     - **[DATA] P1.** Sports CF-5 oracle relabel = zero — root-caused + fixed (code), preserved to a wip branch
     - **[DATA] P1.** Sports pre-launch-window corpus decision (C3, 10,345 objects — operator-gated)
-  - [`plans/active/issues/sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md`](/plans/active/issues/sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md)
-    (3 open):
-    - **2. [OPERATOR] P1.** Disposition ruling needed on the 83,541 pre-floor `FIXTURES_SCHEDULE` rows
-    - **3. [DATA] P2.** Once ruled, run the delete-safety protocol's 5-part proof + execute the wipe
-    - **4. [REVIEW] P2.** Re-run `migration_orphan_sweep_sports.py --bucket reference --dry-run` after the wipe
+  - [`plans/archive/issues/sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md`](/plans/archive/issues/sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md)
+    — **RESOLVED 2026-07-27** (archived; the 3-open listing below is a stale historical snapshot, kept for context):
+    - **2. [OPERATOR] P1.** Disposition ruling needed on the 83,541 pre-floor `FIXTURES_SCHEDULE` rows — DONE
+    - **3. [DATA] P2.** Once ruled, run the delete-safety protocol's 5-part proof + execute the wipe — DONE
+    - **4. [REVIEW] P2.** Re-run `migration_orphan_sweep_sports.py --bucket reference --dry-run` after the wipe — DONE
   - [`plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`](/plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md)
     (4 open):
     - **[INFRA] P1.** Redeploy the `expected-universe-v2-sports` Cloud Run job image
