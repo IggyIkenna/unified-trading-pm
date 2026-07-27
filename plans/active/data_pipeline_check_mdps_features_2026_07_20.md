@@ -170,8 +170,29 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       buckets: `market-data-tick-{cefi,defi,tradfi,sports}-test-*` + `market-data-tick-pred-test-*` (all have objects).
       features: `features-{cefi,defi,tradfi,pred,sports,calendar}-test-*` all exist (cefi has objects, rest empty — the
       legitimate state of an unwritten `-test-` sibling).
-- [ ] 8. [DATA] P0. RUN + VALIDATE `/data-pipeline-check-mdps` e2e: auto-select high-coverage day per AG, prove
-      force+skip for every MVP candle shard (all AGs × venues × data_types × timeframes). Report written.
+- [x] ✅ 8. [DATA] P0. **SPLIT 2026-07-27 (slot-9, operator-ruled Option B on BLK-243a969b)** — the force-leg MECHANISM
+      is DIRECT-GCS-VERIFIED correct 4-5x independently (real VM runs for CEFI:BINANCE-FUTURES:trades, day=2026-07-05,
+      all derive the identical 7,615 candles across 7 timeframes: `1440×1m, 288×5m, 96×15m, 24×1h, 6×4h, 1×24h`;
+      confirmed via `gcloud storage cat`/`objects describe` on the VM's own `run.log`/parquet outputs, independent of
+      the local driver process). Along the way, root-caused + fixed a real launcher bug blocking the automated skill
+      itself: `unified-trading-library@137e219c` — a client-side `subprocess.TimeoutExpired` on the launcher-script wait
+      previously aborted the whole shard immediately (0 retries) even though the identical `_vm_is_present`-gated retry
+      machinery already existed for ordinary nonzero launcher exits; now the timeout flows through that same retry path.
+      3 new regression tests, QG green (226s). Full evidence + the 5 reproduction attempts of the SEPARATE
+      session-teardown blocker: `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. **This
+      flips the mechanism half of todo 8; the automated skill's own multi-cell round-trip is split out as a new todo
+      below, still genuinely open.**
+- [ ] NEW todo (was 8's remaining scope). [DATA] P0. Complete the automated `/data-pipeline-check-mdps` skill's OWN
+      multi-cell round-trip (force+skip, all AGs × venues × data_types × timeframes, report written) — the mechanism is
+      proven (see todo 8 above) but the SKILL DRIVER ITSELF has never survived long enough (5 independent reproductions
+      across 2 sessions, both ad-hoc interactive and AO-managed persistent workers) to produce one clean automated
+      verdict beyond a single scoped cell. **GATED on prerequisite condition `mdps-e2e-shared-host-teardown-fixed`**
+      (set by main/operator; tracks `issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` — fleet-wide
+      shared-host RAM contention silently killing background processes mid-run, 32s-520s in, not tied to elapsed time; a
+      distinct but likely-related mechanism from the `WorkerLivenessWatchdog` heartbeat-silent kill documented for the
+      original ~19-minute reproduction in `/codex/04-architecture/agent-orchestrator-worker-liveness.md`). Do NOT
+      attempt this todo until that condition flips green — re-attempting blind just wastes another cycle on the same
+      wall.
 - [ ] 9. [DATA] P0. RUN + VALIDATE `/data-pipeline-check-features` e2e: multi-day input window per family, prove
       force+skip for every MVP feature shard (all families × valid AGs). Report written.
 - [ ] 10. [DATA] P1. Steady-state benchmark VMs (250GB disk) per representative shard-type; measure amortized per-shard-

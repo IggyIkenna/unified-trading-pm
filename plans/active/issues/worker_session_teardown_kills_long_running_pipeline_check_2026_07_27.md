@@ -23,6 +23,8 @@ related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
   ]
 tags: [infra, worker-lifecycle, data-pipeline-check, flakiness]
 priority: P1
@@ -74,10 +76,20 @@ pyarrow `ImportError`, then the `GCP_PROJECT_ID` `ValueError`) — i.e. the harn
 did keep those alive long enough to surface a real error, so this is not a blanket "backgrounding never survives more
 than N seconds" pattern; something specifically ended the 3rd, longer-lived attempt mid-flight. No `dmesg`/`journalctl`
 access from this session (permission denied) and `free -h` showed no memory pressure (22Gi available, no swap thrashing)
-at kill time, so an OOM-kill was not confirmed — but also not ruled out definitively; a kernel-level or
-orchestrator-level killer this session cannot see remains the leading hypothesis. **This is now the 5th independent
+AT THAT MOMENT — but the operator independently identified the likely actual cause the same day:
+`issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` documents fleet-wide shared-host RAM contention
+silently killing background processes anywhere from 32s to 520s in (NOT tied to elapsed time — matching this session's
+~18s kill far better than a fixed-threshold theory would), with no visible exit code/stderr/dmesg entry either,
+correlated with 5-8 concurrent `quality-gates.sh`/VM-launch processes fleet-wide at kill time (this session's own
+`free -h` snapshot — taken only once, not sampled repeatedly across the run like that doc's — is consistent with but
+does not itself prove this, since RAM pressure can spike and recede within seconds). **This is now the 5th independent
 reproduction, across 2 different sessions and both an ad-hoc interactive worker AND an AO-managed persistent slot
-worker** — ruling out "just that one session was unusual" as an explanation.
+worker** — ruling out "just that one session was unusual" as an explanation, and now tracked jointly under condition
+`mdps-e2e-shared-host-teardown-fixed` (gates `data_pipeline_check_mdps_features_2026_07_20.md`'s new post-split
+follow-up todo) alongside slot-7's identical hit. **Two distinct, both-real mechanisms are now implicated**: (1) the
+`WorkerLivenessWatchdog` heartbeat-silent kill (900s, confirmed root cause of the original ~19-minute reproduction — see
+todo 1 below) and (2) shared-host RAM exhaustion (a much better fit for the fast, sub-minute kills including this
+session's ~18s one). Do not assume either alone is the WHOLE story — a from-scratch fix attempt should account for both.
 
 ## Why it matters
 
