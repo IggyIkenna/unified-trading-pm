@@ -158,14 +158,17 @@ change required.
       research replacement subgraph deployment IDs via The Graph Explorer/Network Subgraph, or add a taxonomy reason +
       runtime detection for this distinct "bad indexers" condition (mirroring `EXPECTED_SUBGRAPH_DEINDEXED` but NOT
       reusing it — the semantics differ). Repo: market-tick-data-service, unified-api-contracts.
-- [ ] [SCRIPT] P2. Launch a scoped `dex_pool_swaps` backfill re-run for TRADER_JOE_V2/AVALANCHE + the 5 verified-healthy
-      smaller pairs (aerodrome_v3/BASE, uniswap_v4/ETHEREUM, uniswap_v3/POLYGON, pancakeswap_v3/ETHEREUM,
-      velodrome_v2/OPTIMISM) via `deployment-service/scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh` — no code change
-      needed, all 6 verified live-healthy this session. Repo: deployment-service.
-- [ ] [PM] P3. Annotate `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s combined todo (lines 276-294) noting
-      sub-item (a) is now shipped by this doc and sub-item (b)'s TRADER_JOE_V2 code-fix premise is stale (see finding 3)
-      — leave the todo's own checkbox for the plan owner to resolve (the VM-launch half is still open, covered by the
-      todo directly above). Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **PARTIALLY DONE 2026-07-27 (slot-11), independently converged on the same finding.**
+      TRADER_JOE_V2/AVALANCHE + VELODROME_V2/OPTIMISM: SPOT backfill VM `mtds-dex-swaps-historical`
+      (`--protocols trader_joe_v2,velodrome_v2 --start 2023-01-01 --end 2024-10-06`) launched, T+10min health-verified
+      RUNNING (`defi_satellite_ao_dispatch_batch1_2026_07_25.md` lines 276-294). **Still open**: the remaining 3
+      smaller-count pairs (aerodrome_v3/BASE, uniswap_v4/ETHEREUM, uniswap_v3/POLYGON, pancakeswap_v3/ETHEREUM) — no
+      backfill launched for these yet, no code change needed, all verified live-healthy this session. Repo:
+      deployment-service.
+- [x] ✅ [PM] P3. **DONE 2026-07-27 — moot.** `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s combined todo (lines
+      276-294) was independently flipped `[x]` by slot-11 in the same window, citing this doc directly ("folded as
+      corroborating evidence into the existing 2026-07-27 (slot-2) scope-extension todo in the source issue doc") — no
+      annotation needed, already cross-referenced both ways. Repo: unified-trading-pm.
 
 ## Verified live (2026-07-27)
 
