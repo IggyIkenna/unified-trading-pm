@@ -152,7 +152,7 @@ items explicitly "FENCED" to another named agent/live process).
       pre-migration per-leg totals) is recorded in this plan's Progress Log or the source issue doc; if any of the 6
       days fails presence, this todo stops at (a) and records why, without attempting (b). Source:
       `cefi_consolidated_closeout_2026_07_18.md` (Track 7).
-- [ ] [BACKEND] P1. **Fix the MTDS writer-side `:PERP:` → `:PERPETUAL:` shorthand emission for HL/LIGHTER/ASTER cefi
+- [x] ✅ [BACKEND] P1. **Fix the MTDS writer-side `:PERP:` → `:PERPETUAL:` shorthand emission for HL/LIGHTER/ASTER cefi
       captures (writer-side code fix ONLY — no data motion).** The manifest-side rewrite already shipped
       (`instruments-service@555ddf1c`, Script 3's `resolve_canonical`), but new captures for these venues can still
       write the `VENUE:PERP:RAW` shorthand at source. Locate the cefi capture write path that stamps `instrument_type`
@@ -165,7 +165,22 @@ items explicitly "FENCED" to another named agent/live process).
       still-pending, human-coordinated Track-1 cutover). Repo: market-tick-data-service. **Done when**: new captures for
       HL/LIGHTER/ASTER perpetuals write `instrument_type=PERPETUAL` (never the `PERP` shorthand), proven by a
       new/extended unit test; `quality-gates.sh` green. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 8,
-      `:PERP:` → `:PERPETUAL:` rewrite item — writer-side half only).
+      `:PERP:` → `:PERPETUAL:` rewrite item — writer-side half only). ✅ — found ALREADY FIXED, 2026-07-27, no code
+      change needed: the writer-side fix shipped `market-tick-data-service@c20ea464` ("canonicalize on-chain-perp
+      HL/ASTER live connectors + batch handler to PERPETUAL:BASE-QUOTE") + `@1e8870b1` ("add real @LIN margin marker to
+      the 5 on-chain-perp PERPETUAL instrument_ids, combined with the PERP-shorthand rename") back on 2026-07-08 — both
+      ancestors of current HEAD, well before this triage plan (2026-07-25) was written. Verified every current capture
+      write path for all 3 venues: `_onchain_perp_batch_symbols.py::native_symbol_to_instrument_id` emits
+      `VENUE:PERPETUAL:BASE-QUOTE@LIN` for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC (and EXTENDED-STARKNET) explicitly — no
+      `:PERP:` shorthand anywhere; the live WS connectors (`hyperliquid_ws.py`, `hyperliquid_l2book_ws.py`,
+      `hyperliquid_ticker_ws.py`, `aster_book_liq_ws.py`) all construct `instrument_type="PERPETUAL"` / `instrument_id`
+      in the same canonical shape; a repo-wide grep for a literal `"PERP"` instrument-type constant in
+      non-test/non-migration-script code found none. Existing unit tests already prove this (not newly added, but
+      already extended by the 2026-07-08 fix commit): `test_onchain_perp_batch_lighter.py:281` asserts
+      `native_symbol_to_instrument_id("LIGHTER-ZKSYNC", "BTC") == "LIGHTER-ZKSYNC:PERPETUAL:BTC-USDC@LIN"`,
+      `test_aster_ws_connector.py` + `test_hyperliquid_ws_connector.py` assert `instrument_id`/`instrument_type` in the
+      canonical `PERPETUAL` shape. Ran all 6 relevant test files (114 tests) fresh on current HEAD — 100% pass. No new
+      commit was possible or needed.
 - [x] ✅ [BACKEND] P1. **Enumerate every caller of `get_expected_instruments_for_venue` fleet-wide (audit only — the
       removal decision itself stays a separate `[OPERATOR]` todo in the parent doc).**
       `unified_api_contracts.registry.market_data_categories.get_expected_instruments_for_venue`
