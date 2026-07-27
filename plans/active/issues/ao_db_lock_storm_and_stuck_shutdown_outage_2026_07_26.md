@@ -27,7 +27,7 @@ last_updated: 2026-07-26
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P2
+priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
@@ -98,6 +98,26 @@ Two distinct, compounding problems:
 The service self-recovered at 18:53:50 and has served real operator traffic cleanly since (confirmed via live `200 OK`
 responses in the journal immediately after). This doc exists so the two real open questions don't just live in chat.
 
+## UPDATE 2026-07-27 01:00–01:22 UTC — the storm is ONGOING and now caused a real functional failure, not just noise
+
+Checked live (per an operator request to verify the daily scheduler) whether `plan-reconciler.timer`'s 01:00 UTC fire
+actually dispatched. It DID fire (the systemd timer + curl mechanism work) — `POST /api/plan-health/dispatch` was called
+at 01:12:53 UTC (13 min late — separately worth noting, timer jitter or contention-delayed) — but the handler returned
+**`500 Internal Server Error`**, root cause `sqlite3.OperationalError: database is locked`. The dispatch script's own
+case statement (`install-plan-reconciler-timer.sh`) has NO retry path for an unexpected HTTP code — only `503` retries
+(next timer run); a `500` just logs `UNEXPECTED HTTP 500` and exits 1. **Today's plan-reconciler run did not happen and
+will not retry until tomorrow's 01:00 UTC fire.**
+
+Widened the check: `journalctl -u orchestrator --since '00:50 UTC' --until '01:22 UTC'` shows **143** occurrences of
+`database is locked` in this 32-minute window alone — essentially every background loop hit it at least once:
+`TmuxPruner`, `WorkerLivenessKicker`, `AgentKeeper` (review-ensure/agent-record/orphan-main sub-tasks), `Health check`,
+`UsagePoller`, `AutoParkReconciler`, `RepoHealthWatcher`, **`PlanReconcilerLivenessCanary`** (the purpose-built monitor
+for exactly this failure mode — also hitting the same lock error on its own tick, at 01:20:36 UTC),
+`BlockedQueueReconciler`, `AutoSpawnLoop`, and `context-lifecycle`. This is not a one-off blip from the 2026-07-26
+incident — it is a live, sustained, systemic condition affecting essentially the whole background-loop ecosystem,
+confirmed still happening at the time of this update. Raised priority P2 → **P1** on this basis: this is no longer
+"recurring noise," it is causing real scheduled work to silently fail with a day's delay.
+
 ## Why it matters
 
 - A stuck-shutdown-forcing-SIGKILL is a genuine robustness gap on a service the WHOLE fleet (15 slots + the operator's
@@ -111,7 +131,7 @@ responses in the journal immediately after). This doc exists so the two real ope
 
 ## Todos
 
-- [ ] [BACKEND] P2. **CONFIRMED 2026-07-27 — `TmuxPruner.prune_once()` (`server/tmux_pruner.py:190-333`) IS an instance
+- [ ] [BACKEND] P1. **CONFIRMED 2026-07-27 — `TmuxPruner.prune_once()` (`server/tmux_pruner.py:190-333`) IS an instance
       of the `ensure_review_agents` anti-pattern.** It opens ONE `session_scope()` write transaction, then inside it:
       (1) loops every `SlotRow` with a `tmux_session` set, calling `has_session(name)` (a `tmux` subprocess) per row,
       plus `resume_lifecycle.classify_dead_worker(...)` and — for each dead slot — `reap_dead_slot_worker_tree(...)`
@@ -126,16 +146,16 @@ responses in the journal immediately after). This doc exists so the two real ope
       genuinely-dead one-shot agent's session within ~90s (`server/tmux_pruner.py:328-357`, the
       `archive_agent(..., exit_reason="lifecycle-complete")` path) — a 9-minute lingering `ACTIVE` state is consistent
       with this exact tick either failing/timing out under load or being starved by lock contention, though it could
-      also just be a slow cold-start; not independently confirmed via a live tmux-pane check in this session. - [ ]
-      [BACKEND] P2. **Fix**: restructure `prune_once()` to collect the slot/agent rows needing a liveness check in a
-      read-only pass, close that session, run all `has_session()` / `classify_dead_worker()` /
-      `reap_dead_slot_worker_tree()` calls WITHOUT a session open, then open a fresh `session_scope()` only for the
-      actual field writes + activity logging — mirroring the `ensure_review_agents` fix's shape. This function is larger
-      and more stateful than `ensure_review_agents` was (task-release, resume classification, orphan reaping,
-      context-saturation event logging all interleave with the row mutations) — read the WHOLE function first, plan the
-      read/act/write split before editing, and re-run the existing `tmux_pruner` test suite plus add a regression
-      asserting no `session_scope()` is open during the `has_session()` calls (patch `has_session` to assert
-      `db.in_transaction()` is False, or equivalent).
+      also just be a slow cold-start; not independently confirmed via a live tmux-pane check in this session.
+  - [ ] [BACKEND] P1. **Fix**: restructure `prune_once()` to collect the slot/agent rows needing a liveness check in a
+        read-only pass, close that session, run all `has_session()` / `classify_dead_worker()` /
+        `reap_dead_slot_worker_tree()` calls WITHOUT a session open, then open a fresh `session_scope()` only for the
+        actual field writes + activity logging — mirroring the `ensure_review_agents` fix's shape. This function is
+        larger and more stateful than `ensure_review_agents` was (task-release, resume classification, orphan reaping,
+        context-saturation event logging all interleave with the row mutations) — read the WHOLE function first, plan
+        the read/act/write split before editing, and re-run the existing `tmux_pruner` test suite plus add a regression
+        asserting no `session_scope()` is open during the `has_session()` calls (patch `has_session` to assert
+        `db.in_transaction()` is False, or equivalent).
 - [ ] [BACKEND] P2. **Investigate why the graceful shutdown hung for ~20s with zero log output** before systemd's
       SIGKILL. Check whether any of the orphaned processes found on the next start (`sh`, `node`, `npm exec prettier` —
       PIDs 2961831/2961834/2958093 at the time) correlate with a specific in-flight operation (a worker's own
