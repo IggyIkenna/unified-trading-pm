@@ -92,11 +92,19 @@ cosmetic error message.
       `one_shot_complete` succeeds afterward (the exact live rejection this doc reproduced), and a second `/boot`
       doesn't double-register. `agent-orchestrator@a01aeae`, `quality-gates.sh` green (1749 backend + 137 dashboard
       tests).
-- [ ] [OPERATOR] P3. Confirm whether slot 8's `ag_closeout_auditor` dispatch (dispatch_id `agt-9ddfc3`, 2026-07-26) was
-      intentionally spawned outside the normal `/api/plan-health/dispatch` → daily-systemd-timer path (e.g. a manual
-      test/dev invocation) — if so this may be a one-off rather than a live production gap; if the daily timer itself is
-      capable of producing this same bypass, that's the more urgent half of this finding. This session's actual audit
-      work is verified complete and shipped regardless of how the plumbing question resolves.
+- [x] ✅ [SCRIPT] P3. **Not operator-gated — read-only investigation, resolved 2026-07-27 by reading the actual timer
+      code (Category B, no judgment call): the daily systemd timer is NOT capable of producing this bypass.**
+      `agent-orchestrator/scripts/install-ag-closeout-auditor-timer.sh` generates a dispatch script whose entire body,
+      for every one of the 9 tranches, is
+      `curl -X POST http://localhost:8765/api/plan-health/dispatch ... -d     '{"mode": "ag_closeout", "tranche": "<t>"}'`
+      — there is no code path anywhere in the installed service/timer that calls `/api/slots/{N}/boot` directly. So the
+      daily-timer path always goes through the correct `/api/plan-health/dispatch` route that constructs the `AgentRow`
+      this doc's root cause depends on; only a manually-started session that hands role/tranche straight to `/boot` (as
+      this reproduction did) can hit the gap. That answers the "more urgent half" definitively: **no live production
+      (timer-driven) exposure** — this instance was very likely a manual/dev invocation, consistent with the doc's own
+      reproduction narrative. Combined with the STEP-2 fix above (lazy `AgentRow` construction on any direct `/boot` of
+      a `plan_health`-family role), the gap is closed either way this session was spawned. No operator recall of intent
+      needed to close this out.
 
 ## Current session status (informational, not part of the fix)
 
