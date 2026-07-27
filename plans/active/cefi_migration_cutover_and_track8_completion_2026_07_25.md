@@ -931,3 +931,17 @@ every todo executes an already-decided spec from the parent doc.
   `cs5-1d`, `cs7-3d`, `cs9-4e`, all confirmed `EXIT_STATUS=0`). No new casualties. `cs7-4d-r2` (the DERIBIT-excluded
   retry) healthy at 54,600/128,129 files (42.6%), steady ~8.3 files/sec, checkpoint still writing. Nothing to relaunch
   this cycle.
+
+- **2026-07-27T~14:50Z (scheduled check-in) — 8 VMs still RUNNING** (`cs10-4b/5d`, `cs3-2d`, `cs4-3d`, `cs7-4d-r2`,
+  `cs8-6f`, `cs9-1d/2e`). 4 more clean completions since the last snapshot (`cs10-3e`, `cs6-2d`, `cs7-5f`, `cs8-3f`, all
+  confirmed `EXIT_STATUS=0`). No new casualties. `cs7-4d-r2` healthy at 72,600/128,129 files (56.7%), steady ~8.0
+  files/sec. **Running-count caveat**: a full `gsutil ls` of this campaign's `vm-logs/` prefix returned 105 distinct
+  VM-instance names (not 42) — this session's own "N/42" framing tracks _currently-running instances_ cycle-over-cycle,
+  not a precise total-shard denominator; the extra names are earlier canary/preemption-retry attempts
+  (`-r`/`-d2`/bare-numbered) already superseded by a later-suffixed relaunch under the SAME logical shard, not new
+  uncovered work. Spot-checked a handful of the old bare-numbered/retry names for a buried non-zero exit predating this
+  session's monitoring — found only already-known/already-handled DERIBIT-class 137s from earlier waves (already covered
+  in this doc's own OOM-playbook entries above), nothing new. Did not do a full 105-way reconciliation (scope creep
+  beyond this cycle's job — the currently-RUNNING list plus per-drop exit-code checks is the operationally sufficient
+  signal); noting this here so a future reader isn't confused by the running-count arithmetic not summing to a clean 42.
+  Nothing to relaunch this cycle.
