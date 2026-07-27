@@ -543,8 +543,8 @@ drift_direction: advance-code
       error (`Bad syntax for dict arg: [compound_v3]`); the NEW `;`-delimited format parses cleanly past metadata and
       fails only on the (expected, harmless) project-not-found step. Single-protocol case verified clean too.
       `bash -n` + `shellcheck -S error` clean; full `quality-gates.sh` green (98s, sentinel `bd46bf2`).
-- [ ] [BACKEND] P1. Rename the onchain feature_group keys in unified-api-contracts' two vocabularies not updated during
-      the writer/CLI-name ratification (`unified-api-contracts@e9faf32e`) — `FEATURE_REQUIRED_INPUTS`
+- [x] ✅ [BACKEND] P1. Rename the onchain feature_group keys in unified-api-contracts' two vocabularies not updated
+      during the writer/CLI-name ratification (`unified-api-contracts@e9faf32e`) — `FEATURE_REQUIRED_INPUTS`
       (`required_inputs.py`) and the feature_group refs in `_feature_contracts.py` — from old registry names
       (`aave_lending_rates`, `aave_utilization`, `aave_risk_params`, `lst_staking_yields`, `eigen_rewards`,
       `aave_rate_impact`) to ratified names (`lending_rates`, `utilization`, `risk_params`, `lst_yields`, `rewards`,
@@ -552,7 +552,15 @@ drift_direction: advance-code
       writer dispatch); update consuming tests. Repo: unified-api-contracts. **Done when**:
       `rg -i     'aave_lending_rates|aave_utilization|aave_risk_params|lst_staking_yields|eigen_rewards|aave_rate_impact|onchain_regime|defillama_tvl|protocol_rewards'`
       over both files returns zero hits; `quality-gates.sh` green. Source:
-      `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.
+      `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`. **✅ DONE 2026-07-27 (slot-12) —
+      `unified-api-contracts@edf5122d`** ("refactor(features): ratify onchain feature_group vocab in
+      required_inputs+contracts", shipped via quickmerge --agent). Renamed the 6 keys in `FEATURE_REQUIRED_INPUTS`
+      (`required_inputs.py`) + `ONCHAIN_FEATURE_GROUPS`/routes (`_feature_contracts.py`) to the ratified names, dropped
+      `onchain_regime`/`defillama_tvl`/`protocol_rewards`, updated consuming tests (`test_feature_contracts.py`,
+      `test_feature_dag_ssot.py`). Verified: the done-when `rg -i` over both files returns **zero hits**; remaining
+      corpus hits are out-of-scope (alerting code `defi_aave_utilization_spike`, the
+      `normalize_defillama_tvl_history_point` DefiLlama normalizer, and docstrings documenting the rename), not the
+      feature_group vocabulary.
 - [ ] [SCRIPT] P1. Add a machine check to e2e-testing that imports the onchain feature_group vocabulary from
       unified-api-contracts' `FEATURE_GROUP_TO_FAMILY`, features-service onchain CLI's `FEATURE_GROUPS`, and
       ml-service's `DEFI_FEATURE_GROUPS`, using the same cross-repo `sys.path` pattern e2e-testing already uses in
