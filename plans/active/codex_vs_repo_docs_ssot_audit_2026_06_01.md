@@ -160,6 +160,27 @@ from scope).
 - [ ] [DOCS] P2. **Phase 5 — verify + enforce.** Run S5.7 audit per repo; add a QG/CI check that flags repo docs
       duplicating a codex table/contract (or hardcoding a resolver-owned literal); confirm all redirect links resolve.
 
+## Phase 2 progress (2026-07-27)
+
+Phase-1 audit (Appendix B) found the codex-migration surface is **tiny**: only `client-reporting-api` carries genuine
+MIGRATE-TO-CODEX deltas (2 docs), and the 3 legacy AUDIT-03/gcs_hive codex-update candidates in Appendix A were all
+either already-satisfied or stale. This session (Phase-2 worker) executed the **determinable** slice:
+
+- **3 AUDIT-03/gcs_hive codex-migration candidates → resolved no-op** (flipped above with evidence): F-45 (codex never
+  claims `correlation_id` is a path key — already `instance_id`-correct), gcs_hive (codex examples already canonical
+  `key=value`), F-06 (recommendation stale — entity-governance SSOT already exists in
+  `org-fund-client-entity-model.md` + `capital-structure-and-regulatory.md`; the remaining Elysium refs are the client
+  POD, not the removed provider). **Zero codex writes were needed** — codex already holds the canonical content for all
+  three.
+- **2 genuine MIGRATE-TO-CODEX deltas (client-reporting-api commercial facts) → OPERATOR-GATED, NOT migrated.**
+  Confirmed codex-missing (`codex/14-customer-journeys/commercial-model/` has no client-roster/fee-tier/three-HWM SSOT)
+  and source docs present (`CLIENT_OPERATIONS_GUIDE.md`, `PNL_AND_INVOICING_GUIDE.md`). These carry **real client IDs +
+  per-client fee %s + org hierarchy** — per the `[OPERATOR-DECISION]` todo in Appendix B ("confirm the fee
+  numbers/roster are current before migrating; committing stale commercial facts to codex-as-SSOT is worse than leaving
+  them repo-local"), the migration is **BLOCKED-OPERATOR-DECISION**. The Phase-2 umbrella checkbox stays open on that
+  gate; once the operator confirms currency, the migration target is `/codex/14-customer-journeys/commercial-model/`
+  (new roster+fees SSOT) per that todo.
+
 ## Success criteria
 
 - Every in-scope repo: `rg` finds no codex table/contract/path-template duplicated in its `docs/`; every required doc is
@@ -239,16 +260,30 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       fixed, but code still uses URDI symbols (`URDI` is a phantom name per CLAUDE.md). Audit + rename in
       instruments-service." (Note: `cursor-configs/CLAUDE.md`'s system-map "URDI phantom" note is also stale per this
       finding but is out of scope for this edit — not named in this chunk.)
-- [ ] [DOCS] P2. **AUDIT-03 F-45 codex update** (from `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`):
-      code wins — events GCS path keys on `instance_id`; `correlation_id` is a column, NOT a path key. Update the codex
-      doc(s) that say correlation_id is a path key to match the implemented `instance_id` path semantics.
-- [ ] [DOCS] P2. **AUDIT-03 F-06 codex FIX-STALE** (from same): declare `/codex/04-architecture/custody-providers.md`
-      the **entity-governance SSOT**; entities = **Odum Research UK** + **Odum Group Cayman**; **scrub all stale Elysium
-      references** (Elysium is a removed provider per CLAUDE.md).
-- [ ] [DOCS] P2. **gcs_hive partition-path doc FIX-STALE** (from
-      `archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md` — operator: doc-fix only; the GCS
-      data remediation stays operator-deferred): fix the malformed hive-partition path examples in the relevant codex
-      doc to canonical `key=value` form.
+- [x] ✅ [DOCS] P2. **AUDIT-03 F-45 codex update** — VERIFIED already-correct 2026-07-27 (Phase-2), no codex change
+      needed. `rg` across `codex/` finds NO doc claiming `correlation_id` keys/partitions the events GCS path; every
+      `correlation_id` reference is a column / PubSub attribute / function param (matches the code). Original finding
+      (from `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`): "code wins — events GCS path keys on
+      `instance_id`; `correlation_id` is a column, NOT a path key." Codex already reflects `instance_id` path semantics
+      — nothing to migrate.
+- [x] ✅ [DOCS] P2. **AUDIT-03 F-06** — RESOLVED as a stale finding 2026-07-27 (Phase-2), no codex change needed (the
+      2026-05-22 recommendation is itself obsolete). (a) Entity-governance SSOT ALREADY exists and must NOT be grafted
+      onto custody-providers.md: `/codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md`
+      (`authoritative_for: org/fund/client… entity model`) +
+      `/codex/04-architecture/capital-structure-and-regulatory.md`
+      (`authoritative_for: per-category custody, regulatory posture, and onboarding structure`) already own the entities
+      incl. Odum UK/Cayman; `/codex/04-architecture/custody-providers.md` is
+      `authoritative_for: custody provider     protocol` only — declaring it a second entity SSOT would VIOLATE this
+      plan's no-duplicate-SSOT principle. (b) The remaining `Elysium` codex refs are the **client POD**
+      (`elysium-managed-sla`, `pod-elysium-client-onboarding`), NOT the removed data provider — custody-providers.md's
+      sole Elysium ref is a legit link to the client-pod onboarding doc. Nothing to scrub.
+- [x] ✅ [DOCS] P2. **gcs_hive partition-path doc FIX-STALE** — VERIFIED already-canonical 2026-07-27 (Phase-2), no
+      codex change needed. Sampled the codex hive-partition path examples
+      (`codex/02-data/sports-data-source-coverage-matrix.md`, `sports-data-types-catalog.md`, et al.); all use canonical
+      `key=value` segments (`by_date/day=…/entity=…/league=…`, `data_type=odds`). No malformed non-`key=value` example
+      survives in codex. (Operator note preserved from
+      `archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`: doc-fix only; the GCS DATA
+      remediation stays operator-deferred and is out of scope here.)
 - **Parked — features-service**: another agent active; LDR branch-protected. Docs commit `b9b4103e` on
   `origin/tab/hk/10`; PR #4 bundles a foreign commit (`603c2b9c`) — do NOT merge as-is. Left for the owning agent; no
   git surgery.
