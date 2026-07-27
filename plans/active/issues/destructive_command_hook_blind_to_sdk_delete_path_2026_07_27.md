@@ -127,3 +127,14 @@ form stays exactly as conservative as before.
       `gsutil rm`/`aws s3 rm` as its stated method (rather than citing the UTL wrapper) — those todos would hit this
       same hook when dispatched; rewrite them to cite `gcs_delete_object()`/`gcs_copy_object()` instead. Not done this
       session (scope: this issue was about the mechanism, not a corpus-wide todo-text sweep).
+- [ ] [SCRIPT] P3. **Self-discovered false-positive, worth a real fix**: the recursive-delete pattern
+      (`\brm\b[^|;&\n]*(-[A-Za-z]*[rR]|--recursive)`) matches the bare word as raw TEXT anywhere in the full flattened
+      command line, with no awareness of shell quoting — writing THIS issue doc's own `git commit -m` heredoc (prose
+      _describing_ the CLI form this hook blocks, not an actual invocation of it) tripped the exact same guardrail,
+      purely because the word appeared once in the message body and some later word in the same long heredoc happened to
+      match the trailing flag alternation. Worked around it this session by keeping the commit message short and
+      paraphrased instead of quoting the literal command forms — but a hook that can block an innocent commit message
+      describing itself is a real over-blocking risk for any future commit message, docstring, or code comment that
+      discusses this exact command class. A proper fix needs the hook to recognize (and skip) text inside a
+      single/double-quoted string or heredoc body in the command payload, not just word-boundary regex over the raw
+      flattened line — a real parsing improvement, not a quick patch; scoping it is future work, not attempted here.
