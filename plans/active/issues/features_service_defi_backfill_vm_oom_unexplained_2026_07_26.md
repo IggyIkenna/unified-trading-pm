@@ -44,7 +44,7 @@ drift_direction: advance-code
 depends_on: []
 source: [self-investigation-2026-07-26, blocks defi_satellite_ao_dispatch_batch3_2026_07_26.md-D1]
 locked_by:
-last_updated: "2026-07-26"
+last_updated: "2026-07-27"
 resolved_by:
 ---
 
@@ -134,3 +134,95 @@ session didn't find, (2) a genuine data-volume issue specific to loading many De
 just never been exercised at this scale before now. Until this is resolved, **the D1 DeFi features backfill todo
 (`defi_satellite_ao_dispatch_batch3_2026_07_26.md`) is BLOCKED** on this issue for its actual compute step (the
 dependency-checker bug fix that unblocked the preflight check is already shipped and unaffected by this).
+
+# 2026-07-27 update (slot-8) -- live-VM profiling done; two real candidate bugs found; the "OOM" label itself is now in doubt
+
+Per the suggested next step above, ran a dedicated live-VM profiling session: a code-trace agent covering the
+`unified-trading-library` manifest-read path, PLUS a real repro VM (`features-onchain-defi-20260727-065646`, SPOT,
+identical params to prior attempt 4:
+`--feature-family onchain --asset-group DEFI --start-date 2026-07-20 --end-date 2026-07-25 --feature-group lst_yields`)
+with a live SSH-based `ps`/`free`/`dmesg` polling loop (~7-17s interval) running alongside it from boot.
+
+## The repro reproduced cleanly -- same shape, longer this time
+
+Hung at the exact same log line
+(`ManifestReader: consolidated blob age 248.2s > 120s threshold -- falling back to per-VM shards`, 06:59:23) with zero
+further log output, killed at ~07:07:1x (`bash: line 1: 8045 Killed`, `rc=137`) -- **this time ~8 minutes of silence,
+not ~4-5**. Confirms the bug is real and not a one-off.
+
+## Code trace found 3 concrete findings (not yet confirmed as THE root cause -- see live-monitoring caveat below)
+
+1. **`unified_trading_library/feature_service_base/manifest_discovery.py:59`** -- `read_manifest_rows()` (called by
+   `features_service/onchain/app/core/dependency_checker.py`'s `_check_mtds_manifest()` for every `UPSTREAM_DEPS_DEFI`
+   entry) calls `read_availability_index(bucket)` with **no `columns=`, no `filters=`** -- the one hot-path caller in
+   the DEFI onchain preflight that never got the `filters=` row-group-pushdown treatment the sibling
+   `mtds_backfill_vm_startup_oom_rc137_2026_07_14` fix applied elsewhere (that fix measured 14.86 GiB -> 5 MB
+   peak-memory reduction from adding a single-day filter). On the STALE-consolidated-blob branch this falls into the
+   (budget-capped) per-VM path, but on a FRESH-consolidated-blob day this same call would do a full, unbounded,
+   full-schema decode -- the code's own docstring (`_read_index.py:330-332`) warns this can be "~6.5 GB (sports full
+   index)" pre-pruning.
+2. **`unified_trading_library/cloud_interface/providers/gcp.py:301`** -- `blob_size: int = blob.size or 0` coerces a
+   genuinely-unknown GCS blob size (`None`, e.g. eventual-consistency lag on a just-written object) into `0`, which
+   `_read_index.py:1073-1074`'s `isinstance(raw_size, int)` check then treats as a KNOWN size of zero, not "unknown."
+   `_apply_per_vm_merge_budget()` (`_read_index.py:964`) then counts that shard as `cost=0` -- i.e. FREE against the 200
+   MiB budget -- with no `MANIFEST_PER_VM_MERGE_SHARDS_SKIPPED` warning ever fired, yet the shard is still fully
+   downloaded + decoded with no size cap. This is a real accounting hole in the already-shipped 2026-07-23 budget fix,
+   and is DEFI-shaped in effect (not in code) because DeFi has other backfill VMs actively writing NEW per-VM shards to
+   this same bucket's `_index/per_vm/` directory concurrently with feature-compute reads (the two dex-pool/dex-swap
+   shard timestamps recorded in this doc's earlier finding, `20:25:56Z`/`20:28:20Z`/`20:30:45Z`, land inside a prior
+   failing run's own hang window) -- exactly the write/read race where GCS list-metadata can lag. **Not shipping a fix
+   for this yet**: `BlobMetadata.size` is a required `int` (no `| None`) used broadly across `cloud_interface` consumers
+   workspace-wide -- widening it to `int | None` is a real type-contract change, not a one-line fix, and deserves its
+   own scoped todo + review rather than a rushed same-session patch.
+3. **`unified_trading_library/core/memory_monitor.py:220-253`** -- the in-process "Memory watchdog started... threshold
+   85.0%" only polls every 60s and only LOGS on breach (no `gc.collect()`, no backpressure, no abort) -- not a safety
+   net for a fast allocation spike, independent of whatever the sink turns out to be.
+
+## Live-monitoring finding that complicates the OOM story -- IMPORTANT, read before assuming "OOM" fixes this
+
+The `ps`/`free`/`dmesg` polling loop captured 44 samples from `07:01:19` to `07:03:36` (poll 25-44, ~2m17s of the ~8min
+hang). Across every single sample: the `features_service` python process RSS was **perfectly flat at 542024-542024 KB
+(~530 MB)**, byte-for-byte identical poll to poll -- not climbing, not oscillating. Total VM memory used was **~1.7-1.8
+GB out of 32 GB** the entire time. `dmesg | grep -iE 'killed process|out of memory|oom'` was captured on every poll and
+returned **zero matches** throughout. My own monitoring script died after poll 44 (root cause not yet determined --
+likely an artifact of my interactive session getting interrupted, not the target VM) so I have NO visibility into the
+final ~3.5 minutes before the actual kill, and could not capture a live `dmesg` read in the seconds just before
+`rc=137`.
+
+This means the "OOM" label on this bug (`rc=137` = SIGKILL, universally read as "OOM reaper" in every prior writeup
+including this doc's own title) is **NOT actually confirmed** -- everything observed for the first ~40% of the hang
+looks like a **genuine HANG** (a blocked/stuck call, not an actively-allocating one) rather than a memory-growth curve
+climbing toward the ceiling. I checked the shell-side stall-watchdog
+(`deployment-service/scripts/vm/vm-exec-with-gcs- tee.sh:192`, `STALL_TIMEOUT_SEC="${STALL_TIMEOUT_SEC:-1800}"`, 30 min
+default) as an alternative kill mechanism, but `launch-features-vm.sh` sets no override and the observed kill happened
+at ~8 min, well under 1800s -- so that specific watchdog is ALSO ruled out as the killer (and per its own code comment
+at `vm-exec-with-gcs-tee.sh:197-208`, its size-based stall detection would likely be defeated anyway by the
+`PIPELINE_HEARTBEAT` background loop's own 60s writes keeping the log "growing" even when the real workload is frozen --
+a separate, already-documented blind spot). Neither kill mechanism I could positively identify matches an 8-minute
+SIGKILL, and I could not observe the actual final seconds to catch a real OOM-killer dmesg line or a genuine RSS spike.
+**Open question, not resolved**: what actually sends SIGKILL to the `features_service` process at ~8 minutes, and is the
+process merely BLOCKED (not allocating) for that whole window?
+
+## Recommended next steps (none done yet -- do NOT re-attempt the same repro without one of these)
+
+- [ ] [DATA] P1. Re-run the exact same repro
+      (`--feature-family onchain --asset-group DEFI --start-date 2026-07-20     --end-date 2026-07-25 --feature-group lst_yields`)
+      with a MORE ROBUST monitor: a `nohup`'d polling loop running **on the VM itself** (not over SSH from an
+      interactive session that can die mid-run) writing `ps`/`free`/`dmesg` snapshots to a local file every 2-5s,
+      fetched via `gcloud compute scp` (or uploaded to GCS) after the VM self-deletes or is paused before its
+      `VM_SHUTDOWN_ON_COMPLETION` fires -- specifically to capture the final 30-60 seconds before the kill and settle
+      the OOM-vs-hang question with a real dmesg line or RSS curve. (repo: deployment-service for the monitor script, no
+      code change)
+- [ ] [DATA] P1. If the next repro confirms a genuine hang (not OOM): attach `py-spy dump` to the stuck PID during the
+      silent window to get a real Python stack trace of what it's blocked on (network read, lock, retry-forever loop) --
+      this would point directly at the true root cause instead of further code-reading guesses.
+- [ ] [SCRIPT] P2. Add `filters=[("date", "==", date_str)]` (or the bucket's real date-partition column) to the
+      `read_availability_index(bucket)` call in `unified_trading_library/feature_service_base/manifest_discovery.py:59`
+      -- mirrors the already-fixed sibling pattern (`mtds_backfill_vm_startup_oom_rc137_2026_07_14`) and is safe
+      regardless of whether it's THE fix, since an unfiltered full-schema manifest read is never the intended shape for
+      a single-day dependency check. (repo: unified-trading-library)
+- [ ] [DESIGN] P2. Scope a fix for the `BlobMetadata.size: int` vs GCS's genuinely-`None`-until-eventually-consistent
+      size (`cloud_interface/providers/gcp.py:301`, `blob.size or 0`) -- decide whether `size` becomes `int | None`
+      workspace-wide (audit every consumer) or whether `list_blobs` should instead retry/refresh metadata for
+      very-recently-written objects before returning. This is a real accounting hole in the 2026-07-23 per-VM-shard
+      budget fix, independent of whether it's the cause of this specific OOM. (repo: unified-trading-library)
