@@ -1238,6 +1238,106 @@ jobs:
       cooldown_min: 1440
     secrets: inherit
 
+  # ── UTL CLOUD-BUILD RESULT MEMORY — recovered bookend (operator ruling 2026-07-27) ──────────
+  # notify-utl-base-image-not-configured (above) has no green counterpart, same class of gap as
+  # python-quality-gates-v2.yml's notify-qg-fail before its own recovered-bookend fix earlier
+  # today: it pages CRITICAL when the trigger call fails but never says anything when a later
+  # dispatch succeeds, so a fixed pipeline reads as "still broken" until someone checks by hand
+  # (exactly what happened after the --branch fix above — the fix was verified with a real prod
+  # build, but nothing in this workflow would have announced it). Tracks its own state in a
+  # dedicated Firestore doc (`cloud_build_last_conclusion/{key}`, key mirrors the existing
+  # dedup_key shape) — separate from ci_status, same reasoning as the QG fix: this only answers
+  # "did unified-trading-library-prod's build verdict just flip not-configured -> success?".
+  # Best-effort/fail-open: an auth/network hiccup only costs a missed recovery post.
+  record-cloud-build-result:
+    name: Record UTL Cloud Build result (recovery memory)
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo == 'unified-trading-library' &&
+      needs.route-build.outputs.repo_type != 'library'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      recovered: ${{ steps.decide.outputs.recovered }}
+    steps:
+      - name: Authenticate to GCP (state doc read+write)
+        id: gcp_auth
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          token_format: access_token
+      - name: Read prior verdict, decide recovery, persist current verdict
+        id: decide
+        shell: bash
+        env:
+          TOKEN: ${{ steps.gcp_auth.outputs.access_token }}
+          PROJECT: ${{ steps.gcp_auth.outputs.project_id }}
+          BUILD_TRIGGERED: ${{ needs.route-build.outputs.build_triggered }}
+          BUILD_EXIT_CODE: ${{ needs.route-build.outputs.build_exit_code }}
+          FAILURE_REASON: ${{ needs.route-build.outputs.build_failure_reason }}
+        run: |
+          set -uo pipefail
+          # Only the two states notify-utl-base-image-not-configured actually cares about update
+          # the memory — a genuine full-pipeline SUCCESS (triggered AND polled to exit 0), or the
+          # exact 'not-configured' failure that job pages on. Any other outcome (permission-denied,
+          # a real Cloud Build FAILURE/TIMEOUT once triggered, POLL_EXHAUSTED) is a DIFFERENT
+          # problem class with its own dedicated alert job — leave the memory untouched so it can't
+          # manufacture a false 'recovered' out of an unrelated failure mode clearing.
+          CURRENT=""
+          if [ "${BUILD_TRIGGERED}" = "true" ] && [ "${BUILD_EXIT_CODE}" = "0" ]; then
+            CURRENT=success
+          elif [ "${FAILURE_REASON}" = "not-configured" ]; then
+            CURRENT=failure
+          else
+            echo "build_triggered=${BUILD_TRIGGERED} build_exit_code=${BUILD_EXIT_CODE} failure_reason=${FAILURE_REASON} — not a tracked state, leaving memory untouched"
+            echo "recovered=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          RECOVERED=false
+          if [ -n "${TOKEN:-}" ] && [ -n "${PROJECT:-}" ]; then
+            DOC_URL="https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/cloud_build_last_conclusion/cloud-build_unified-trading-library-prod"
+            PREV="$(curl -s --max-time 15 -H "Authorization: Bearer ${TOKEN}" "${DOC_URL}" \
+              | jq -r '.fields.conclusion.stringValue // empty' 2>/dev/null || echo "")"
+            if [ "${PREV}" = "failure" ] && [ "${CURRENT}" = "success" ]; then
+              RECOVERED=true
+            fi
+            NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            CODE="$(curl -s -o /tmp/cb-result-save.json -w '%{http_code}' --max-time 15 -X PATCH \
+              -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" \
+              "${DOC_URL}" \
+              -d "{\"fields\": {
+                    \"conclusion\": {\"stringValue\": \"${CURRENT}\"},
+                    \"updated_at\": {\"timestampValue\": \"${NOW}\"}
+                  }}" || echo 000)"
+            [ "${CODE}" = "200" ] || echo "::warning::cloud_build_last_conclusion save failed (HTTP ${CODE}) — best-effort, next run retries."
+            echo "cloud-build-result-memory: prev=${PREV:-<none>} current=${CURRENT} recovered=${RECOVERED}"
+          else
+            echo "GCP auth unavailable — skipping Cloud Build result memory this run (fail-open)."
+          fi
+          echo "recovered=${RECOVERED}" >> "$GITHUB_OUTPUT"
+
+  notify-utl-base-image-recovered:
+    name: Slack INFO — UTL Base-Image Trigger Recovered
+    needs: [route-build, record-cloud-build-result]
+    if: always() && needs.record-cloud-build-result.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "🟢 *unified-trading-library-prod Cloud Build RECOVERED* — the base Docker image is publishing again (build
+        succeeded after a prior not-configured failure). <${{ github.server_url }}/${{ github.repository
+        }}/actions/runs/${{ github.run_id }}|run>"
+      subject_repo: unified-trading-library
+      severity: "INFO"
+      conclusion: "success"
+      recovery: true
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "cloud-build-recovered:unified-trading-library-prod"
+      cooldown_min: 15
+    secrets: inherit
+
   # Route instruments-service build failures to #data-pipeline-alerts (2026-06-26).
   # instruments-service builds the image used by all Cloud Run data-pipeline jobs
   # (sports-trigger-instruments, catalogue refresh, etc.). A build failure means jobs
