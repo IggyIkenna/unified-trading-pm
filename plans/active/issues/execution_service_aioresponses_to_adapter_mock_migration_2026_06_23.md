@@ -76,14 +76,21 @@ execution-service's active development settles (operator 2026-06-23: do not refa
 
 ## Todos
 
-- [ ] [TEST] P2. execution-service — migrate the 8 `aioresponses` test files to adapter-layer mocking (patch the
-      adapter's HTTP method to return synthetic payloads; preserve every assertion incl. error-injection paths). Remove
-      `aioresponses` from `pyproject.toml` `[project.dependencies]` + `workspace-constraints.toml` +
-      `canonical-dependency-manifest.json`. Then **remove the `aiohttp>=3.13.4,<3.14.0` line from execution-service's
-      `[tool.uv] override-dependencies`**, `uv lock` (resolves aiohttp 3.14.1), and **drop the 11 aiohttp
-      `--ignore-vuln` entries** (CVE-2026-34993/47265/50269/54273–54280) from `base-service.sh` + `base-library.sh`.
-      QG-green execution-service + UAC + UTL, then ship. Repo: execution-service + unified-trading-pm. Cold-start
-      context: read this doc + the aiohttp issue doc; the override + ignores exist ONLY because of these 8 files.
+- [x] ✅ [TEST] P2. execution-service — migrate the 8 `aioresponses` test files to adapter-layer mocking — DONE
+      2026-07-27 (slot-8), execution-service@9ce159a7. Patched each adapter's own HTTP-issuing method directly
+      (`_post_json`/`_get_json`/`_delete` on `KalshiAdapter`/`PolymarketCLOBAdapter`/`OneXBetAdapter`, `_post_json` on
+      `JitoBundleProvider`, `_make_request` on `MatchbookAdapter`) or, for connectors that construct
+      `aiohttp.ClientSession`/`_make_session` inline with no such wrapper (Hyperliquid connector + bridge, the 5 Solana
+      protocol connectors), a shared `FakeAiohttpSession`/`FakeAiohttpResponse` test double + `patch_aiohttp_session()`
+      context manager added at `execution-service/tests/aiohttp_test_utils.py` — preserves every original assertion
+      incl. error-injection paths (179 tests green). Removed `aioresponses` from `pyproject.toml`
+      `[project.dependencies]` + `workspace-constraints.toml` + `canonical-dependency-manifest.json`
+      (unified-trading-pm@0f9dc00b4). Removed the `aiohttp>=3.13.4,<3.14.0` line from execution-service's
+      `[tool.uv]     override-dependencies`, `uv lock --upgrade-package aiohttp` → 3.14.3. Dropped the 11 aiohttp
+      `--ignore-vuln` entries (CVE-2026-34993/47265/50269/54273–54280) — these now live in `QG_PIP_AUDIT_COMMON_IGNORES`
+      (`scripts/quality-gates-base/qg-common.sh`, consolidated from the separate base-service.sh/base-library.sh copies
+      this todo was written against). QG-green execution-service (full `quality-gates.sh`, 181s) + PM; shipped via
+      quickmerge. UAC/UTL untouched — neither declared aioresponses or the override.
 
 ## Composes with
 

@@ -141,13 +141,18 @@ source:
 >
 > **Per-child open-todo digest (2026-07-24, so this split is AO-legible without opening the children)**:
 >
-> - `tradfi_manifest_content_recovery_completion_2026_07_24.md` — **8 open** (2×P0, 5×P1, 1×P2, re-verified 2026-07-25
->   against the child's own checkboxes — down from the earlier 11-open/5×P0 count). Top P0s still open: (1) **Migrate
->   the catalogue (Surface A)** via `canonicalize_tradfi_catalogue_usd_lin_*.py` — NOT yet executed (DURABILITY TRAP: a
->   `prod/n`-only rewrite silently reverts on the next `build_instrument_catalogue.py` rebuild — must also migrate the
->   per-day corpus); (2) **Migrate GCS filenames + tick CONTENT (Surfaces C+D)**. The manifest migration (Surface B) is
->   now DONE + RE-VERIFIED LIVE 2026-07-25, and the enumeration-driven-migration casing sub-scope CLOSED 2026-07-25 (its
->   semantic-mislabel + null/blank residual moved to a separate open P1) — both are no longer open P0s.
+> - `tradfi_manifest_content_recovery_completion_2026_07_24.md` — digest below is **STALE as of 2026-07-27** (see the
+>   Ground-truth verdict supersede banner above): the "top P0s still open" it names are now BOTH done — catalogue
+>   (Surface A) SHIPPED+APPLIED LIVE 2026-07-25 (instruments-service@52d8b3ef) and chain-bundle content (Surfaces C+D)
+>   GATE CLOSED 2026-07-27 (checked=961 canonical=961 violations=0). Re-derive the live open-todo count from the child
+>   plan directly rather than trusting the count below. Original 2026-07-24 digest text retained for history: **8 open**
+>   (2×P0, 5×P1, 1×P2, re-verified 2026-07-25 against the child's own checkboxes — down from the earlier 11-open/5×P0
+>   count). Top P0s said still open: (1) **Migrate the catalogue (Surface A)** via
+>   `canonicalize_tradfi_catalogue_usd_lin_*.py` — NOT yet executed (DURABILITY TRAP: a `prod/n`-only rewrite silently
+>   reverts on the next `build_instrument_catalogue.py` rebuild — must also migrate the per-day corpus); (2) **Migrate
+>   GCS filenames + tick CONTENT (Surfaces C+D)**. The manifest migration (Surface B) is now DONE + RE-VERIFIED LIVE
+>   2026-07-25, and the enumeration-driven-migration casing sub-scope CLOSED 2026-07-25 (its semantic-mislabel +
+>   null/blank residual moved to a separate open P1) — both are no longer open P0s.
 > - `tradfi_backfill_throughput_followups_2026_07_24.md` — **6 open as of 2026-07-25 (was 11 at this digest's 2026-07-24
 >   generation; 3 more shipped independently since — SIGKILL verify, phantom-row retirement, concurrency-cap raise —
 >   corrected via plan-reconcile; expect this to drop further once tradfi batch2 lands)**. Top P1s: (1) Backfill-VM
@@ -168,8 +173,19 @@ source:
 
 ## Ground-truth verdict (measured live 2026-07-18 — supersedes the first-draft "largely done" claim)
 
-The operator was right: tradfi is overwhelmingly raw. Direct reads of the live prod buckets, NOT the migration docs'
-claims:
+> **SUPERSEDED 2026-07-27 — this 2026-07-18 baseline verdict is historical.** The canonicalisation described below as
+> "barely started / 0%" is now COMPLETE and VERIFIED: catalogue (Surface A) SHIPPED+APPLIED LIVE 2026-07-25
+> (instruments-service@52d8b3ef) — `prod/n` 775,116/776,387 canonical (99.84%), per-day corpus 68,133,635/68,406,251
+> canonical (99.60%); manifest (Surface B) RE-VERIFIED LIVE 2026-07-25 — FUTURE/OPTION `instrument_id` 90.2% canonical,
+> EQUITY/ETF 98.9%; chain-bundle content (Surfaces C+D) GATE CLOSED 2026-07-27 (slot-9) —
+> `assert_tradfi_derivative_ids_canonical` checked=961 canonical=961 violations=0. Data-loss forensics CLOSED: 95 real
+> victims (restored); 385,341 "twins" were benign rename-to-live. Residual non-canonical is by-design quarantine (ICE
+> qualifier variants, `BLOCKED-OPERATOR-DECISION`, non-MVP) + writer-path re-drift, tracked separately — see
+> `tradfi_manifest_content_recovery_completion_2026_07_24.md`. The table below is retained only as the 2026-07-18
+> pre-migration baseline.
+
+The operator was right: tradfi is overwhelmingly raw **(as of the 2026-07-18 baseline below — see the supersede note
+above for current state)**. Direct reads of the live prod buckets, NOT the migration docs' claims:
 
 | Surface                                                              | Canonical (`@LIN`/`@INV`) for FUTURE/OPTION | Reality                                                                 |
 | -------------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------- |

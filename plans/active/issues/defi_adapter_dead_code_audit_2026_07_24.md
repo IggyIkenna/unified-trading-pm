@@ -267,14 +267,62 @@ separately-named `etherfi_adapter.py`). Shared utilities are all genuinely consu
   """
   ```
 
-### 2.3 Lower-confidence, not separately traced
+### 2.3 RESOLVED 2026-07-27 (slot-11) — **CONFIRMED MASKING**, `curve_adapter.py::_download_liquidity`'s broad except IS
+
+indistinguishable from a genuine empty-result day, quoting the full caller chain
 
 `defi/curve_adapter.py::_download_liquidity` (~line 682) catches broad `Exception`, logs, and `return []` on failure —
-the same return shape as "this pool genuinely has zero liquidity snapshots today." I did not trace whether the outer
-`base_defi_adapter.py` per-instrument loop's `if not result: continue` distinguishes this from a real per-shard failure
-(i.e., whether an RPC outage here silently reads as "no data" instead of incrementing the loop's `failed` counter).
-Noting this as an unconfirmed lead rather than a proven violation — it may already be covered by the same
-shard-isolation convention that makes the rest of the file's broad-except usage legitimate.
+traced the full caller chain end to end; it is **NOT distinguishable** from a genuine zero-liquidity-snapshot day
+anywhere in the accounting, and the masking is worse than the original lead suspected — it also swallows a **whole-day
+setup failure** (e.g. `_ensure_alchemy_client()`/`w3.eth.contract()` raising), not just per-block RPC misses.
+
+**The chain, each hop quoted:**
+
+1. `curve_adapter.py::_download_liquidity` (:682-684): `except Exception as e: logger.error(...); return []` — catches
+   EVERYTHING from the whole try block (client setup, contract binding, `BlockResolver.get_sample_blocks()`, the
+   sampling loop itself), not just per-block queries. Per-block RPC failures never even reach this except — they're
+   already caught individually one level down in `_query_curve_pool_at_block` (:639,
+   `except (OSError, ValueError, RuntimeError, Exception)`, returns `None` per block) — so if EVERY sample in the day
+   fails, `liquidity_snapshots` ends up `[]` via the NORMAL return path (:680), not even via the except block.
+2. `curve_adapter.py::_fetch_curve_data_type` (:469-470):
+   `data = await self._download_liquidity(...); return data if data else []` — an empty list from EITHER cause (failure
+   or genuine) returns `[]` here, uniformly.
+3. `curve_adapter.py::download_market_data` (:451-453):
+   `fetched = await self._fetch_curve_data_type(...); if fetched is not None: results[data_type] = fetched` — `fetched`
+   is `[]`, which `is not None`, so `results["dex_pool_state"] = []` IS added to the dict. `results` (returned as
+   `result` to the caller) is therefore `{"dex_pool_state": []}` — a **non-empty dict** — regardless of whether the day
+   genuinely had zero snapshots or the whole fetch failed.
+4. `base_defi_adapter.py::_download_all_instruments` (:290-295):
+   `result = await self.download_market_data(...); if not result: continue` — `result = {"dex_pool_state": []}` is
+   truthy (a dict with one key, even if its value is an empty list, is never falsy in Python), so this `continue`
+   **never fires** for this cause. Execution falls through to `_flatten_instrument_result(result, ...)` (contributes 0
+   rows, since iterating an empty list appends nothing) and `succeeded += 1` (:295) — the SAME counter path as a real
+   success. The `failed` counter (:288, :299, :303) is never incremented; the per-day shard-summary log line (:305-313)
+   never surfaces this instrument at all.
+
+**Verdict: masking is real, not "may already be covered by the shard-isolation convention."** Unlike the file's OTHER
+broad-except usages (§0's narrow per-field parse guards, and `curve.py:224`'s per-record skip-and-log inside a listing
+loop — both legitimate record-level isolation per `/codex/04-architecture/shard-level-failure-isolation.md`), this one
+collapses an entire INSTRUMENT-day's outcome (not a single record) into the exact same shape as "nothing to report,"
+with zero signal surviving to the caller's failure-accounting.
+
+**Broader than Curve alone — filed separately**: tracing the caller chain surfaced that
+`base_defi_adapter.py::_download_all_instruments`'s `if not result: continue` check ALSO never inspects the
+`"success": bool` key that ~12 OTHER DeFi adapters already return (`lst_puffer_adapter.py`, `lst_lido_adapter.py`,
+`lst_renzo_adapter.py`, `lst_rocket_pool_adapter.py`, `lst_solblaze_adapter.py`, `restaking_jito_adapter.py`,
+`restaking_karak_adapter.py`, `vault_pendle_adapter.py`, `lst_coinbase_adapter.py`, `lst_etherfi_adapter.py`,
+`lst_kelpdao_adapter.py`, `aave_positions.py` — all return `{"success": False, "error": "..."}` on failure) —
+`_flatten_instrument_result` (:50) only uses the `"success"` key to SKIP it during row-flattening, never to route a
+`False` value into the `failed` counter. So the masking pattern found here for Curve is a SYSTEMIC gap in the shared
+caller, not a Curve-specific bug — filed as its own issue doc since it's a bigger, cross-adapter finding than this
+todo's Curve-only scope: `issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md`.
+
+**Not traced further** (staying honest about scope, matching this doc's own § 5 convention): whether/how a
+zero-row-but-`succeeded` DataFrame propagates into manifest `capture_status` (i.e., whether it lands as
+`empty_confirmed` vs `attempted_failed` at the GCS-write layer) — that's downstream of `download_batch`'s return value,
+outside `base_defi_adapter.py`, and DeFi's actual collection path is CLI operations
+(`collect-evm-defi`/`collect-dex-swaps`/etc., not `download_batch` via `umi_tick_provider.py` — confirmed via grep, DeFi
+doesn't route through that file at all) that weren't in this todo's scope.
 
 ## 3. execution-service — `execution_service/adapters/defi_adapter.py`
 
@@ -313,22 +361,22 @@ shard-isolation convention that makes the rest of the file's broad-except usage 
 
 ## 4. Summary table
 
-| module / file                                                                         | disposition        | reason                                                                                                  |
-| ------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------- |
-| IS `adapters/defi/jupiter.py`                                                         | FLAGGED            | fully built + tested, registered nowhere; needs a wire-in-or-delete decision                            |
-| IS `adapters/defi/` (other 50 files)                                                  | KEPT               | all registered in `factory.py::_ADAPTERS`, reachable, no duplication                                    |
-| IS `reference_data/router.py` (context, not a `defi/` file)                           | noted              | second resolver, apparently unreached outside its own tests                                             |
-| MTDS `onchain_perps/` (3 files)                                                       | KEPT               | both concrete adapters in `VENUE_REGISTRY`                                                              |
-| MTDS `adapters/defi/` registered protocol adapters + shared utils                     | KEPT               | all in `VENUE_REGISTRY` or confirmed real consumers                                                     |
-| MTDS `adapters/defi/live/` (`hyperliquid_ws.py`, `onchain_event_poller.py`)           | FLAGGED            | exported, tested, zero production callers                                                               |
-| MTDS `adapters/defi/live/governance_params_event_poller.py`                           | FLAGGED — big      | plan-marked-complete Phase 1, never actually runs; masks a live-trading fallback three repos downstream |
-| MTDS `adapters/defi_live/` (both files)                                               | FLAGGED            | exported, tested, zero callers, no successor exists either                                              |
-| MTDS `onchain/glassnode.py`, `onchain/helius_solana.py`                               | KEPT               | both intentionally-parked with a stated reason (`PLANNED_VENUES` / `BLOCKED-CREDENTIALS`)               |
-| MTDS `onchain/helius_solana.py` vs `native_staking_handler.py`                        | FLAGGED            | undocumented duplicate implementation of the same Helius RPC capability                                 |
-| MTDS `onchain/__init__.py` docstring                                                  | FLAGGED, minor     | stale text; corrected version drafted, not shipped (shared-checkout risk)                               |
-| MTDS `adapters/defi/curve_adapter.py::_download_liquidity`                            | noted, unconfirmed | broad except → `[]`; not traced against the outer loop's failure accounting                             |
-| execution-service `adapters/defi_adapter.py::execute_swap/execute_lend/execute_stake` | REMOVED, shipped   | zero callers, bypassed all of `execute_instruction()`'s safety machinery                                |
-| execution-service `adapters/defi_adapter.py` (rest of file)                           | KEPT               | fail-loud retry/classify path; Tenderly fallback is named + logged                                      |
+| module / file                                                                         | disposition         | reason                                                                                                  |
+| ------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------- |
+| IS `adapters/defi/jupiter.py`                                                         | FLAGGED             | fully built + tested, registered nowhere; needs a wire-in-or-delete decision                            |
+| IS `adapters/defi/` (other 50 files)                                                  | KEPT                | all registered in `factory.py::_ADAPTERS`, reachable, no duplication                                    |
+| IS `reference_data/router.py` (context, not a `defi/` file)                           | noted               | second resolver, apparently unreached outside its own tests                                             |
+| MTDS `onchain_perps/` (3 files)                                                       | KEPT                | both concrete adapters in `VENUE_REGISTRY`                                                              |
+| MTDS `adapters/defi/` registered protocol adapters + shared utils                     | KEPT                | all in `VENUE_REGISTRY` or confirmed real consumers                                                     |
+| MTDS `adapters/defi/live/` (`hyperliquid_ws.py`, `onchain_event_poller.py`)           | FLAGGED             | exported, tested, zero production callers                                                               |
+| MTDS `adapters/defi/live/governance_params_event_poller.py`                           | FLAGGED — big       | plan-marked-complete Phase 1, never actually runs; masks a live-trading fallback three repos downstream |
+| MTDS `adapters/defi_live/` (both files)                                               | FLAGGED             | exported, tested, zero callers, no successor exists either                                              |
+| MTDS `onchain/glassnode.py`, `onchain/helius_solana.py`                               | KEPT                | both intentionally-parked with a stated reason (`PLANNED_VENUES` / `BLOCKED-CREDENTIALS`)               |
+| MTDS `onchain/helius_solana.py` vs `native_staking_handler.py`                        | FLAGGED             | undocumented duplicate implementation of the same Helius RPC capability                                 |
+| MTDS `onchain/__init__.py` docstring                                                  | FLAGGED, minor      | stale text; corrected version drafted, not shipped (shared-checkout risk)                               |
+| MTDS `adapters/defi/curve_adapter.py::_download_liquidity`                            | FLAGGED — confirmed | broad except → `[]`, CONFIRMED indistinguishable from a genuine empty day at every caller hop (§2.3)    |
+| execution-service `adapters/defi_adapter.py::execute_swap/execute_lend/execute_stake` | REMOVED, shipped    | zero callers, bypassed all of `execute_instruction()`'s safety machinery                                |
+| execution-service `adapters/defi_adapter.py` (rest of file)                           | KEPT                | fail-loud retry/classify path; Tenderly fallback is named + logged                                      |
 
 ## 5. Scope not covered
 
@@ -353,5 +401,8 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       `cli/handlers/native_staking_handler.py`'s hand-rolled Helius calls onto one implementation.
 - [ ] [SERVICE] P3. market-tick-data-service: land the corrected `onchain/__init__.py` docstring quoted in § 2.2 once
       the shared checkout is clean.
-- [ ] [SERVICE] P3. market-tick-data-service: trace whether `curve_adapter.py::_download_liquidity`'s broad-except
-      `return []` is distinguishable from a genuine zero-snapshot day in the caller's success/failure accounting.
+- [x] ✅ [DIAG] P3. **DONE 2026-07-27 (slot-11) — no code shipped (diagnostic-only todo).** Traced whether
+      `curve_adapter.py::_download_liquidity`'s broad-except `return []` is distinguishable from a genuine zero-snapshot
+      day in the caller's success/failure accounting — **CONFIRMED MASKING**, full caller-chain evidence in § 2.3. Also
+      surfaced a broader, systemic version of the same gap affecting ~12 other adapters, filed separately:
+      `issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md`.

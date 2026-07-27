@@ -1388,15 +1388,11 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     # CVE-2026-45409: idna 3.11 — follow-up to CVE-2024-3651; no patched release as of 2026-05-22
     # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
     # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
-    # aiohttp cookie-CVE cluster CVE-2026-34993/47265/50269/54273-54280: aiohttp <=3.13.5 (CookieJar.load() RCE,
-    #   cross-origin cookie re-send, the 2026-06-15 OSV batch). All fixed in 3.14.0. 2026-06-23: 17 of the 18 declaring
-    #   repos were bumped to aiohttp>=3.14.1 (vcrpy>=8.2.1 unblocked the cassette suites) and are genuinely CVE-free —
-    #   these ignores are NO-OPs there. They are RETAINED ONLY for execution-service, which is held on aiohttp 3.13.5 via
-    #   a [tool.uv] override because its 8 aioresponses test files can't build aiohttp-3.14's ClientResponse (aioresponses
-    #   0.7.8 has no 3.14 fix). Exploit surface nil (client-only aiohttp, never CookieJar.load() on untrusted input).
-    #   SUCCESSOR (drop these ignores): migrate execution-service off aioresponses (→ adapter-layer mocks) + bump it to
-    #   aiohttp>=3.14, then it's fleet-wide. Tracked:
-    #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
+    # aiohttp cookie-CVE cluster CVE-2026-34993/47265/50269/54273-54280 (CookieJar.load() RCE, cross-origin cookie
+    #   re-send, the 2026-06-15 OSV batch) — RESOLVED: execution-service (the last holdout, held on aiohttp 3.13.5 via
+    #   a [tool.uv] override for its 8 aioresponses test files) migrated to adapter-boundary mocks and bumped to
+    #   aiohttp>=3.14.1 fleet-wide; the 11 ignore-vuln entries were dropped from QG_PIP_AUDIT_COMMON_IGNORES
+    #   (qg-common.sh). See plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
     # PYSEC-2026-196: pip 26.1.1 — console_scripts/gui_scripts treated as paths without sanitizing the resolved
     #   absolute path. The fleet stays on the vulnerable pip line because the next pip release is incompatible with
     #   the pinned vcrpy (operator-accepted 2026-06-05). Exploit surface nil — the fleet never pip-installs untrusted

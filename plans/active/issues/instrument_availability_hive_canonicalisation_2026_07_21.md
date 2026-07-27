@@ -57,6 +57,7 @@ superseded_by:
 resolved_by:
 source: operator HARD RULE 2026-07-21 (every data-at-rest bucket uses the full canonical hive grammar)
 depends_on: []
+sequential: true
 ---
 
 # instrument_availability full-hive canonicalisation (2026-07-21)
@@ -180,17 +181,17 @@ consume these paths must be updated in lockstep with the writer.
       separate top-level prefix) + `market_lifecycle/by_canonical_group/` (prediction only):
 
       | asset_group | instrument_availability (+ futures_contracts) | market_lifecycle |
-              |---|---|---|
-              | cefi | 53,419 | 0 |
-              | defi | 177,346 | 0 |
-              | tradfi | 50,700 | 0 |
-              | sports | 148,691 | 0 |
-              | prediction | 22,637 | 12,582 |
-              | **TOTAL** | **452,793** | **12,582** |
+                      |---|---|---|
+                      | cefi | 53,419 | 0 |
+                      | defi | 177,346 | 0 |
+                      | tradfi | 50,700 | 0 |
+                      | sports | 148,691 | 0 |
+                      | prediction | 22,637 | 12,582 |
+                      | **TOTAL** | **452,793** | **12,582** |
 
-              **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
-              this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
-              in-session action. Sizing now available to scope todo 7c.
+                      **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
+                      this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
+                      in-session action. Sizing now available to scope todo 7c.
 
 - [ ] 7c. [OPERATOR] P2. **EXECUTE the historical migration** (copy the 465,375 flat objects UP into full hive, verify,
       then human-only purge of the flat tree) — VM-only, never in-session, per the data-pipeline-correctness HARD RULE
@@ -211,4 +212,9 @@ consume these paths must be updated in lockstep with the writer.
       `/codex/02-data/canonical-cutover-register.md` (repo@sha) and flip the non-canonical-path-inventory row #16 to
       EXECUTED with a dated post-migration probe. **Still deferred** (pairs with todo 7c, not 7a/7b — cutover date
       should be the historical-migration date, not the writer-ship date or the proof/sizing date, per the register's own
-      convention).
+      convention). **Dispatch-hygiene note (2026-07-27, slot-2)**: this todo was dispatched to a worker before 7c had
+      run (only `depends_on` scopes whole-plan ordering; there was no per-todo gate between the last two remaining
+      todos) — recording a "cutover date" ahead of the actual migration would be fabricating the record, so the worker
+      correctly declined rather than faking it. Added `sequential: true` to this plan's frontmatter so
+      `regen_backlog_from_plan.py`'s `_wire_sequential_prereqs` chains todo 8 behind 7c by `plan_order` (harmless for
+      the already-`[x]` todos 1-7b) — todo 8 will not re-dispatch until 7c is marked done.

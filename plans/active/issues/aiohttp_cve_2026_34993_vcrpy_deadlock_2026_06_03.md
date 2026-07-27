@@ -204,22 +204,24 @@ base), wired in the VCR repos' test bootstrap (conftest/sitecustomize). Once the
       `aligned: true` (0 aiohttp issues); UAC `tests/vcr/` → 145 passed/6 skipped (the failing promote run 27009399635
       is now green); `--ignore-vuln CVE-2026-34993/47265` stays in the QG bases (covers the non-exploitable CVE).
       Recorded as a KNOWN EXCEPTION in `cursor-configs/CLAUDE.md`.
-- [ ] [DEPS] P2. **Lift the `<3.14` cap + bump fleet to `aiohttp>=3.14` + drop the two `--ignore-vuln` flags — ONLY when
-      vcrpy ships an aiohttp-3.14-compatible release** (was: this framing is stale, see the 2026-07-12 note below)
-      (track [vcrpy#995](https://github.com/kevin1024/vcrpy/issues/995) / >8.1.1). Steps: bump
-      `workspace-constraints.toml` → regen `canonical-dependency-manifest.json` → set all 18 repos →
-      `uv lock --upgrade-package aiohttp` + `uv lock --upgrade-package vcrpy` per repo → remove
-      `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` from `base-service.sh` + `base-library.sh` → re-QG +
-      update the `cursor-configs/CLAUDE.md` known-exception. Verifier: `pip-audit` clean with NO aiohttp ignores + all
-      VCR cassette tests green on aiohttp 3.14. Owner: `cicd_contract_hardening_2026_06_01.md` (parent_epic:
-      infrastructure_master) — NOTE: there is no `cicd/dep-security` epic; the earlier successor todos misnamed it. >
-      **(2026-07-12, finding 80, §A2 B-queue ruling)**: this item's "ONLY when vcrpy ships..." framing is stale — > per
-      the `## ✅ RESOLVED 2026-06-23` banner above, vcrpy 8.2.1 already shipped an aiohttp-3.14-compatible > release and
-      17/18 repos are already bumped to `aiohttp>=3.14.1` with the ignore-vuln flags dropped for them. > The only
-      remaining scope of this item is the **execution-service holdout** (still pinned to 3.13.5 via >
-      `[tool.uv] override-dependencies`, retaining both ignore-vulns) — tracked by >
-      `execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`. Left unchecked (not flipped) because >
-      that holdout migration has not shipped yet.
+- [x] ✅ [DEPS] P2. **Lift the `<3.14` cap + bump fleet to `aiohttp>=3.14` + drop the ignore-vuln flags — DONE
+      2026-07-27 (slot-8).** The only remaining scope was the **execution-service holdout** (still pinned to 3.13.5 via
+      `[tool.uv] override-dependencies` for its 8 aioresponses test files). Migrated all 8 files to adapter-boundary
+      mocks (patch `_post_json`/`_get_json`/`_delete`/`_make_request` directly, or a shared `FakeAiohttpSession` test
+      double for connectors constructing `aiohttp.ClientSession`/`_make_session` inline — see
+      `execution-service/tests/aiohttp_test_utils.py`) — execution-service@9ce159a7. Removed the
+      `[tool.uv]     override-dependencies` aiohttp entry + the `aioresponses` dev dependency;
+      `uv lock --upgrade-package aiohttp` → 3.14.3. Dropped all 11 aiohttp cookie-CVE `--ignore-vuln` entries
+      (CVE-2026-34993/47265/50269/54273-54280) from the fleet-wide `QG_PIP_AUDIT_COMMON_IGNORES` (consolidated into
+      `scripts/quality-gates-base/qg-common.sh` since this doc was written — not two separate
+      base-service.sh/base-library.sh edits) — unified-trading-pm@0f9dc00b4. **Verified**: 179 migrated tests pass
+      (execution-service `.venv/bin/python -m pytest`), ruff+basedpyright clean, full `quality-gates.sh` green on both
+      repos, `--ignore-vuln` no longer needed anywhere in the fleet (17/18 repos already didn't carry it;
+      execution-service was the last). Also fixed an unrelated pre-existing bug found while migrating
+      `test_solana_connectors.py`: `solana`/`solders` had become real installed deps, silently breaking the file's
+      `sys.modules`-based test-double substitution (an ancestor `conftest.py` imports the real `solders.keypair.Keypair`
+      before the file's own mock setup runs) — replaced the placeholder fake key/pubkey strings with cryptographically
+      valid ones.
 - [x] ✅ [DEPS] P2. **Fix deployment-service uv blockers (2a duplicate `[tool.uv.sources.unified-api-contracts]` key +
       2b corrupt `cbor2` lock entry) — DONE 2026-06-04 (slot-4)** — deployment-service@3899a5d. Removed the duplicate
       `[tool.uv.sources.unified-api-contracts]` stanza (2a) — that re-exposed 2b: the lock had a dangling

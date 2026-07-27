@@ -267,3 +267,20 @@ defect; it is purely a function of host capacity at any given moment.
   (`features_e2e_check_full_matrix_widespread_real_failures-002`) via `/skip-current-task` with reason GATED rather than
   holding the slot idle waiting for contention to ease; the commit stays safe locally (not pushed, not lost) for
   whichever slot picks this up next once the host is less loaded.
+
+- 2026-07-27 (slot-3, `infra`, ~22:04-22:09 UTC): **Much more severe data point than any previously recorded** —
+  `uptime` load average **1200.89 / 556.62 / 264.05** at first observation (own `docs(issues):` quickmerge for a 1-file
+  change had been in-flight ~10min at that point, far longer than a single-file plan-doc commit normally takes).
+  `ps aux | grep quality-gates.sh | wc -l` counted **34** concurrent full `quality-gates.sh` processes fleet-wide (vs.
+  this doc's prior worst-recorded 15-20, vs. CLAUDE.md's `≤2 full QGs at once` hard rule) — identified concurrent QGs
+  for at least 3 other repos/slots (`alerting_service`, `fund_administration_service`, `client_reporting_api` via
+  slot-15 and slot-1's own quickmerge invocations, confirmed via `ps -ef` command-line inspection). Re-checked ~5 min
+  later: load average dropped to **461.97 / 775.59 / 461.56**, still **19** concurrent `quality-gates.sh` processes —
+  declining but still an order of magnitude over the ≤2 rule. **Own process did NOT get killed this time** — it
+  completed successfully (`unified-trading-pm@892e3456a`, `QUICKMERGE_EXIT=0`) after being severely slowed (CPU-starved,
+  not memory-killed) — i.e. this specific episode manifested as throughput degradation for a surviving process, not
+  (this time) a silent kill, though the mechanism this doc tracks (RAM exhaustion → OOM-kill) and pure CPU contention
+  are DIFFERENT failure modes that can co-occur at this concurrency level; did not independently check `free -h` at
+  either observation point to confirm whether RAM was ALSO constrained, so cannot confirm this episode's mechanism
+  matches the doc's OOM-kill hypothesis vs. being pure CPU starvation — flagging as a related but not
+  confirmed-identical data point.

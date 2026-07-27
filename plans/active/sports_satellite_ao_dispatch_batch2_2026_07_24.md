@@ -294,6 +294,24 @@ source: >-
       `gcloud compute operations list` filtered to this VM's `targetLink` for `compute.instances.preempted` returns zero
       rows. No OOM/error lines. No relaunch needed. Step 2 still mid-run (2023-08-31→2026-07-27 remaining), step 3 stays
       gated — checkbox correctly unchecked. Next slot: re-verify from scratch, don't trust this note as current.
+      **Check-in 2026-07-27T21:11Z (slot 14, data_engineering)**: re-verified from scratch. All 3 signals fresh: VM
+      `af-backfill-20260727-064958` status=RUNNING; `run.log` tail shows `last_completed_date=2023-09-16 monotonic=true`
+      with `PIPELINE_HEARTBEAT` through 21:10:30Z (advanced +16 days from slot 5's 2023-08-31 in ~31min, ~1.9min/date —
+      back to the normal pace after that entry's brief enrichment-only fast burst, not a slowdown/regression); manifest
+      shard (`_index/per_vm/af-backfill-20260727-064958.parquet`) Update Time=21:11:00Z (near-real-time write).
+      `gcloud compute operations list` filtered to this VM's `targetLink` for `compute.instances.preempted` returns zero
+      rows. No OOM/error lines. No relaunch needed. Step 2 still mid-run (2023-09-16→2026-07-27 remaining), step 3 stays
+      gated — checkbox correctly unchecked. **Dispatch gate added 2026-07-27T21:20Z (slot 14, per main's BLK-cac2757a
+      resolution)**: this todo had bounced to 8+ idle slots today for pure re-verify-VM-health check-ins (no action
+      possible each time — the backfill walk itself takes days). Rather than continue that per-idle-slot polling
+      pattern, added a named AO prerequisite `sports-curated-universe-backfill-walk-complete` (defaults `false` =
+      blocking) attached to this task's `prereqs.prerequisites` in `backlog.yaml`, mirroring the cefi-Track-1 /
+      sports-S2 completion-condition gate pattern elsewhere in this plan. This task will NOT re-dispatch to idle slots
+      until the condition is flipped `true`. **Whoever finishes the curated-universe backfill (step 2) and the residual
+      drop (step 3) MUST flip it**:
+      `curl -X POST $SERVER_URL/api/prerequisites/sports-curated-universe-backfill-walk-complete -d '{"value": true, "set_by": "<slot>"}'`
+      — then this todo will dispatch normally to actually flip the checkbox. Do not delete/rename this condition without
+      updating `backlog.yaml`'s `prereqs.prerequisites` for this task accordingly.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 

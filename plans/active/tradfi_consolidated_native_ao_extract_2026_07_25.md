@@ -183,18 +183,26 @@ drift_direction: advance-code
       Evidence is the shipped commit + test name + spot-check numbers (cited in this todo's own commit message; no
       separate markdown doc needed). Source: `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 314-323).
 
-- [ ] [REVIEW] P1. **Verify the data-status page (Upcoming expiries widget + catalogue view) now renders canonical
+- [x] ✅ [REVIEW] P1. **Verify the data-status page (Upcoming expiries widget + catalogue view) now renders canonical
       tradfi ids, given catalogue Surface A shipped live since this native todo was written — plus confirm the
-      venue-lookup gap fix still holds for tradfi.** Source native todo (lines 324-329), unmodified scope but
-      **UN-BLOCKED**: at authoring time (2026-07-18/24) this todo was effectively blocked — the closeout's own
-      Ground-truth verdict table showed catalogue `prod/catalog.parquet` at 0% canonical for derivatives. Live-checked
-      2026-07-25 against `tradfi_manifest_content_recovery_completion_2026_07-24.md` directly: catalogue Surface A
-      migration is now `[x]` **"SHIPPED + APPLIED LIVE 2026-07-25"** (`instruments-service@52d8b3ef`, 775,116/776,387 =
-      99.84% canonical post-apply). This is a real, previously-unnoted prerequisite clearing — the parent closeout's own
-      digest table still says "NOT yet executed," which is now STALE (flagged in this doc's frontmatter `summary`, not
-      silently corrected in the parent). Given the prerequisite has landed, this verify task is now genuinely ready to
-      run (a "still stale, rollup lag" finding is still an acceptable, valid outcome — not a mandate to force green).
-      The `deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md` re-verify is a much smaller,
+      venue-lookup gap fix still holds for tradfi.** **Live-verified 2026-07-27** (read-only audit — no code shipped,
+      evidence is this commit + the cited Progress Log): not stale —
+      `catalogue_lifecycle.list_upcoming_expiries_page(asset_group="tradfi")` against real GCS returns 149,957 matching
+      rows, every sampled `instrument_id` fully canonical (e.g. `CME:OPTION:SP500-USD@LIN-20260717-100-P`), no raw
+      `E3AN6     C7960`-style output; venue-lookup gap fix confirmed to still hold live
+      (`DataQueryService()._venue_to_category()` resolves CME/NYSE/NASDAQ/CBOE/ICE → TRADFI via the canonical UAC
+      registry, cross-checked against two never-hardcoded venues). Full evidence in
+      `data_status_page_ux_and_canonicalisation_2026_07_16.md`'s Progress Log (deployment-api@c19edcc). Source native
+      todo (lines 324-329), unmodified scope but **UN-BLOCKED**: at authoring time (2026-07-18/24) this todo was
+      effectively blocked — the closeout's own Ground-truth verdict table showed catalogue `prod/catalog.parquet` at 0%
+      canonical for derivatives. Live-checked 2026-07-25 against
+      `tradfi_manifest_content_recovery_completion_2026_07-24.md` directly: catalogue Surface A migration is now `[x]`
+      **"SHIPPED + APPLIED LIVE 2026-07-25"** (`instruments-service@52d8b3ef`, 775,116/776,387 = 99.84% canonical
+      post-apply). This is a real, previously-unnoted prerequisite clearing — the parent closeout's own digest table
+      still says "NOT yet executed," which is now STALE (flagged in this doc's frontmatter `summary`, not silently
+      corrected in the parent). Given the prerequisite has landed, this verify task is now genuinely ready to run (a
+      "still stale, rollup lag" finding is still an acceptable, valid outcome — not a mandate to force green). The
+      `deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md` re-verify is a much smaller,
       independent, always-ready check (archived/resolved doc, cite don't edit). Repo: deployment-api (read-only verify).
       **Done when**: a live sample row from the "Upcoming expiries" widget/catalogue view is read and confirmed
       canonical (no raw `E3AN6     C7960`-style output, matching the Ground-truth verdict table's target shape) or, if

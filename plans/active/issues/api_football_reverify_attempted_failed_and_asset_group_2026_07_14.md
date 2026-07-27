@@ -128,14 +128,20 @@ that should never happen. None are blocked on credentials.
       consolidator's own merge cycle had already retroactively healed the entire backlog. Verified via direct gcsfs read
       (`sports: 5,432,770 / cefi: 1 / defi: 1`, the 2 non-sports rows already tracked as Finding C) and held stable
       across a re-check ~90s later. See the "Update 2026-07-15 (final)" section below for full evidence.
-- [ ] [DATA] P2. **Remove/relabel the 1 defi/UNISWAP_V3-BASE row mis-filed in the sports manifest under
-      source=api_football** (date=2026-06-26). Trace the writer that emitted a UNISWAP_V3-BASE row with
-      source=api_football into the sports bucket; delete the phantom row (CAS-safe) and fix the mis-route at source if
-      reproducible. (repo: market-tick-data-service / instruments-service) — **bonus finding 2026-07-15**: a SECOND,
+- [x] ✅ [DATA] P2. **DONE 2026-07-27 (slot-11)** — **Remove/relabel the 1 defi/UNISWAP_V3-BASE row mis-filed in the
+      sports manifest under source=api_football** (date=2026-06-26). Trace the writer that emitted a UNISWAP_V3-BASE row
+      with source=api_football into the sports bucket; delete the phantom row (CAS-safe) and fix the mis-route at source
+      if reproducible. (repo: market-tick-data-service / instruments-service) — **bonus finding 2026-07-15**: a SECOND,
       previously-undocumented mislabeled row was found in the same live probe:
       `source=instruments_service asset_group=cefi capture_status=captured` (no venue/data_type distinguishing detail
       captured in the probe) sitting in the sports manifest — same bug class (wrong non-blank value, not blank), not
-      fixed, folded into this todo's scope rather than filed separately.
+      fixed, folded into this todo's scope rather than filed separately. **Both rows deleted CAS-safe (snapshot-first)
+      via `instruments-service@3e08f7d2` (`scripts/delete_cross_ag_phantom_rows_sports_manifest_2026_07_27.py`); root
+      cause found + fixed for the captured-row class (`_is_all_run` in `process_write.py` now also triggers on a genuine
+      multi-value `--asset-group` list, not just the literal "ALL" sentinel, with a regression test); the
+      attempted_failed row's class is a separate, still-open structural gap in `process_completeness.py`, filed as a new
+      scoped follow-up todo below rather than fixed inline (out of this cleanup's scope). Full evidence: "Update
+      2026-07-27" section below.**
 
 ## Update 2026-07-15 — Finding A closed; Finding B grown (37x), Finding C unchanged, still root-caused
 
@@ -193,6 +199,76 @@ final whole-plan re-verify:
 - **Finding C**: one additional MISLABELED (non-blank wrong-value, not blank) row found —
   `source=instruments_service asset_group=cefi capture_status=captured` — folded into the existing Finding C todo's
   scope above, not fixed in this pass.
+
+## Update 2026-07-27 — Finding C RESOLVED: both phantom rows deleted, root cause found + fixed (partially)
+
+Worked the outstanding Finding C todo (`sports_satellite_ao_dispatch_batch3_2026_07_25.md`). Live re-verify against the
+current canonical (`instruments-store-sports-prd`, 6,841,125 rows before / 6,841,123 after) confirmed both rows still
+present exactly as described:
+
+1. `date=2026-06-26 venue=UNISWAP_V3-BASE source=api_football asset_group=defi service_name=instruments-service capture_status=attempted_failed error_reason=UNCLASSIFIED_ADAPTER_ERROR`
+   (written_at 18:13:50Z).
+2. `date=2026-06-26 venue=BITGET-FUTURES source=instruments_service asset_group=cefi service_name=instruments-service capture_status=captured instrument_type=PERPETUAL row_count=39`
+   (written_at 18:56:40Z) — a REAL CeFi capture with real data (`row_count=39`), not a diagnostic stamp.
+
+**Root cause, confirmed via code read (not guessed):** `_write_all_venues()`
+(`instruments_service/engine/orchestrator/process_write.py`) resolves ONE primary bucket per run and only switches to
+per-venue bucket routing when its `_is_all_run` discriminator is True. Before this session's fix, `_is_all_run` checked
+ONLY `asset_groups[0] == "ALL"` — it never checked `len(asset_groups) > 1`. The service's own shared CLI
+(`unified_trading_library.service_cli`) defines `--asset-group` with `nargs="+"` (confirmed: genuine multi-value
+invocations like `--asset-group SPORTS CEFI` are a real, currently-supported shape — the choices list is the 5
+individual asset_groups, "ALL" is not even a listed choice, it only arises via the `cli_asset_groups or ["ALL"]`
+no-flag-passed fallback). So an explicit multi-value, non-"ALL" `--asset-group` invocation silently left `_is_all_run`
+False, forcing EVERY venue in that run — including row 2's real CEFI capture — into the single SPORTS-primary bucket.
+**This class is now fixed** in `instruments-service` (`process_write.py`'s `_is_all_run` now also triggers on
+`len(asset_groups) > 1`), with a new regression test (`TestMultiAssetGroupListTriggersPerVenueBucketRouting` in
+`tests/unit/test_orchestrator_gaps.py`) that fails without the fix (proved via a stash/pop before-fix run:
+`_get_instruments_bucket` was called with only `['SPORTS']`, never `'cefi'`) and passes with it.
+
+Row 1 (a DIAGNOSTIC honest-coverage write from `process_completeness.py`'s missing-shards fallback,
+`_finalize_completeness()` lines ~595-649) is a SEPARATE, still-open structural gap, NOT fixed in this pass: that
+module's `ManifestWriter` instances (`_failed_manifest`, `_empty_ok_manifest`) are always constructed with the single
+`bucket` param passed into `_completeness_and_retry()` — they never gained the per-venue bucket routing
+(`_get_venue_bucket()`) that the main write loop has. So ANY combined multi-AG run — including the ALREADY-correctly
+-detected "ALL" sentinel case — can still misroute a missing/adapter-failed non-primary-AG venue's honest-coverage row
+into the primary bucket. Deliberately NOT fixed inline here: it requires threading a bucket resolver through
+`_completeness_and_retry()` → `_finalize_completeness()` (a larger change to the sports daily producer's shared
+completeness-check, a high-blast-radius hot path used by every instruments-service run, touching a file already at 716
+lines) — out of scope for this cleanup todo. **New follow-up todo filed below** for a future dispatch.
+
+Neither row shows evidence of an ACTIVE ongoing leak: the `asset_group` value_counts on the live manifest showed exactly
+these 2 non-sports rows out of 6.84M total (both dated the same day, 2026-06-26), with 0 new phantom rows appearing
+since. Treated as 2 one-off writes from a historical manual/ad-hoc multi-AG invocation, now closed off for row 2's class
+going forward.
+
+**Remediation applied**: `instruments-service/scripts/delete_cross_ag_phantom_rows_sports_manifest_2026_07_27.py`
+(dry-run confirmed exactly 2 matching rows; snapshot taken first via server-side GCS copy to
+`_index/snapshots/pre_cross_ag_phantom_delete_2026_07_27.parquet`; CAS-safe direct rewrite applied on attempt 1/30,
+generation `1785185026081616` → `1785185292923233`, row count 6,841,125 → 6,841,123 — exactly -2, no other column
+touched). Fresh re-read immediately after, and again ~1 minute later, both confirm **0 rows matching either predicate**.
+Caution (per `remediate_cross_ag_prediction_bleed_round3_2026_07_24.py`'s documented precedent, where a similar delete
+reverted ~30h43m later via a stale per-VM-shard re-merge): these 2 specific rows are historical one-off writes, not part
+of an actively-changing daily-write population like that prior incident's blank-asset_group backlog, so the reversion
+risk is lower here — but a future audit re-touching this manifest should re-confirm 0 rows matching these 2 exact
+predicates before assuming this stays permanently closed.
+
+**Both parts of the todo's Done-when are satisfied**: (a) both rows confirmed removed via a fresh re-read, snapshot
+taken first; (b) the mis-routing writer is fixed with a regression test for row 2's class (multi-value `--asset-group`
+list bucket routing); row 1's class is a documented, scoped, NEW follow-up todo (not "not reproducible" — genuinely
+reproducible and root-caused, just deliberately out-of-scope for this cleanup pass per findings-triage: audit-scope
+discoveries beyond the immediate ask get their own tracked todo, not unplanned scope absorbed inline).
+
+- [ ] [DATA] P2. **Fix `process_completeness.py`'s honest-coverage `ManifestWriter` instances (the missing-shards
+      `record_failed`/`record_expected_empty` loop and the empty-ok-venues `record_zero_rows` loop in
+      `_finalize_completeness()`/`_completeness_and_retry()`) to route each venue to its OWN asset_group bucket,
+      mirroring `_write_all_venues()`'s existing `_get_venue_bucket()` per-venue routing** — today these diagnostic
+      writers always use the single `bucket` param passed into `_completeness_and_retry()`, so a combined multi-AG run
+      (even the correctly-detected "ALL" sentinel case) can still misroute a missing/adapter-failed non-primary -AG
+      venue's honest-coverage row into the primary bucket (the same bug class as Finding C's row 1, still live). Needs a
+      bucket-resolver threaded through `_completeness_and_retry()`'s signature (repo: instruments-service). **Done
+      when**: a regression test proves a non-primary-AG venue's `record_failed`/`record_zero_rows` call resolves that
+      venue's OWN bucket (not the run's primary bucket) during a combined multi-AG run; `quality-gates.sh` green.
+      Source: this doc's 2026-07-27 update.
 
 ## Update 2026-07-15 (final) — Finding B FULLY RESOLVED, no redeploy needed after all
 

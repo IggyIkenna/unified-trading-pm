@@ -108,40 +108,40 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **BLOCKED 2026-07-26 (slot-8) — real bug found + fixed (unblocked the preflight check), but the actual
-                          compute step is blocked on a separate, unresolved cross-cutting OOM issue:**
+                                      compute step is blocked on a separate, unresolved cross-cutting OOM issue:**
 
-                          **Bug found + FIXED (unblocked, confirmed working)**: onchain's `DependencyChecker` (`features_service/onchain/
-                          app/core/dependency_checker.py`, `UPSTREAM_DEPS`/`UPSTREAM_DEPS_DEFI`) had every `bucket_template` missing the
-                          `-prd-` env-tier segment (`"market-data-tick-{asset_group_lower}-{project_id}"` instead of the canonical
-                          `"market-data-tick-{asset_group_lower}-prd-{project_id}"` — see `unified_trading_library/config_interface/
-                          paths/registry.py`'s own `-prd-`-bearing template). This made the checker always resolve a bucket that doesn't
-                          exist, so it unconditionally reported all 5 DeFi MTDS on-chain deps as missing regardless of the real capture
-                          date. Fixed + regression-tested (`tests/onchain/unit/test_dependency_checker_bucket_templates.py`) + shipped
-                          `features-service@5fb00174`; confirmed working — a post-fix onchain run against `2026-07-20..2026-07-25`
-                          correctly logged `Upstream dependencies: []`.
+                                      **Bug found + FIXED (unblocked, confirmed working)**: onchain's `DependencyChecker` (`features_service/onchain/
+                                      app/core/dependency_checker.py`, `UPSTREAM_DEPS`/`UPSTREAM_DEPS_DEFI`) had every `bucket_template` missing the
+                                      `-prd-` env-tier segment (`"market-data-tick-{asset_group_lower}-{project_id}"` instead of the canonical
+                                      `"market-data-tick-{asset_group_lower}-prd-{project_id}"` — see `unified_trading_library/config_interface/
+                                      paths/registry.py`'s own `-prd-`-bearing template). This made the checker always resolve a bucket that doesn't
+                                      exist, so it unconditionally reported all 5 DeFi MTDS on-chain deps as missing regardless of the real capture
+                                      date. Fixed + regression-tested (`tests/onchain/unit/test_dependency_checker_bucket_templates.py`) + shipped
+                                      `features-service@5fb00174`; confirmed working — a post-fix onchain run against `2026-07-20..2026-07-25`
+                                      correctly logged `Upstream dependencies: []`.
 
-                          **BLOCKING issue (new, unresolved)**: every VM launch attempted AFTER the fix (4 total, varying window size,
-                          feature-group scope, and confirmed-present-upstream-data windows) was OOM-killed (exit 137) on the default
-                          `e2-standard-8` machine. Ruled out the obvious suspect — the already-resolved `defi_manifest_per_vm_shard_
-                          fallback_bloat_2026_07_23.md` issue — by checking the live per-VM shard directory for the exact bucket these
-                          VMs read: only 18.2MB across 4 shards, far under that fix's 200MiB budget cap, so this is a DIFFERENT,
-                          currently-unexplained memory sink. Full writeup + all 4 attempts' details + suggested next steps:
-                          `/plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md`. **This todo cannot
-                          proceed to its actual compute step until that issue is resolved** — do not repeat the same window/feature-group
-                          permutations already tried there (documented in full in the issue doc); a real fix requires live-VM profiling
-                          or a local repro with a memory profiler, which is out of scope for a plain backfill session.
+                                      **BLOCKING issue (new, unresolved)**: every VM launch attempted AFTER the fix (4 total, varying window size,
+                                      feature-group scope, and confirmed-present-upstream-data windows) was OOM-killed (exit 137) on the default
+                                      `e2-standard-8` machine. Ruled out the obvious suspect — the already-resolved `defi_manifest_per_vm_shard_
+                                      fallback_bloat_2026_07_23.md` issue — by checking the live per-VM shard directory for the exact bucket these
+                                      VMs read: only 18.2MB across 4 shards, far under that fix's 200MiB budget cap, so this is a DIFFERENT,
+                                      currently-unexplained memory sink. Full writeup + all 4 attempts' details + suggested next steps:
+                                      `/plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md`. **This todo cannot
+                                      proceed to its actual compute step until that issue is resolved** — do not repeat the same window/feature-group
+                                      permutations already tried there (documented in full in the issue doc); a real fix requires live-VM profiling
+                                      or a local repro with a memory profiler, which is out of scope for a plain backfill session.
 
-                          **Separate, smaller finding also worth knowing before resuming**: MDPS DeFi `processed_candles` coverage is
-                          SPARSE — dense `2026-04-16..2026-05-22`, then a hard gap `2026-05-23..2026-07-17` (zero days), then only 3
-                          sparse days since (`07-18`, `07-22`, `07-25`). `delta_one`'s dependency checker requires MDPS candles
-                          (`required: True`, no DEFI override), so any `--start-date` in that gap fails preflight with `No data for
-                          <date>/DEFI` regardless of the OOM issue. Pick a date from the dense block or the 3 sparse days once the OOM
-                          issue is fixed. Also confirmed onchain's needed groups are `lst_yields` (→ `staking_apy_bps`) and
-                          `perp_funding_rates` (→ `funding_rate_apy_bps`); delta_one's are `funding_oi` and `returns` — use
-                          `FEATURE_GROUP=<group>` (launcher env override, not `ALL`) once compute is unblocked, to keep memory footprint
-                          minimal regardless of whether the OOM issue turns out to be group-count-related.
+                                      **Separate, smaller finding also worth knowing before resuming**: MDPS DeFi `processed_candles` coverage is
+                                      SPARSE — dense `2026-04-16..2026-05-22`, then a hard gap `2026-05-23..2026-07-17` (zero days), then only 3
+                                      sparse days since (`07-18`, `07-22`, `07-25`). `delta_one`'s dependency checker requires MDPS candles
+                                      (`required: True`, no DEFI override), so any `--start-date` in that gap fails preflight with `No data for
+                                      <date>/DEFI` regardless of the OOM issue. Pick a date from the dense block or the 3 sparse days once the OOM
+                                      issue is fixed. Also confirmed onchain's needed groups are `lst_yields` (→ `staking_apy_bps`) and
+                                      `perp_funding_rates` (→ `funding_rate_apy_bps`); delta_one's are `funding_oi` and `returns` — use
+                                      `FEATURE_GROUP=<group>` (launcher env override, not `ALL`) once compute is unblocked, to keep memory footprint
+                                      minimal regardless of whether the OOM issue turns out to be group-count-related.
 
-- [ ] [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
+- [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
       slot-table construction surfaces parallel to the already-swept `archetype_slots_defi.py` DEFI_SLOTS (where 7/28
       rows were broken) — for catalog-emitted-config-key vs engine-param-read drift, using this doc's proven technique:
@@ -156,16 +156,48 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       CEFI/TRADFI/SPORTS slot row either fires a real non-empty instruction or is explicitly
       xfail(strict=True)/allow-listed with a reason, the extended guardrail is green under
       `bash scripts/quality-gates.sh --no-fix` (0 unexpected failures, 0 XPASS), mechanical fixes shipped via quickmerge
-      scoped to touched files. Source: `defi_catalog_engine_config_key_contract_drift_2026_07_23.md`
+      scoped to touched files. Source: `defi_catalog_engine_config_key_contract_drift_2026_07_23.md` —
+      **strategy-service@bc441642**. Swept all 31 CEFI + 12 TRADFI + 5 SPORTS slot rows: found + fixed the same
+      catalog/engine config-key drift bug class in 2 CEFI rows (`STAT_ARB_BTC_ETH`, `REL_VOL_BTC_ETH` — catalog set
+      `leg_a`/`leg_b`/`entry_zscore`/`exit_zscore`; `StatArbPairsFixedEngine` reads
+      `long_instrument`/`short_instrument`/`long_venue`/`entry_z_score`/`exit_z_score`; added the real keys alongside,
+      kept the originals as documentation per the same-catalog-surface `catalog_trading.py` precedent). All other rows
+      already fired correctly or were on the existing design-gated xfail allow-list (RULES_DIRECTIONAL_CONTINUOUS /
+      ML_DIRECTIONAL_EVENT_SETTLED / MARKET_MAKING_EVENT_SETTLED / VOL_TRADING_OPTIONS) — none force-fixed. Extended
+      `test_all_catalogued_archetypes_construct_and_fire.py` to parametrize CEFI/TRADFI/SPORTS_SLOTS via a shared
+      `_slot_test_params`/`_assert_slot_constructs_and_fires` helper (refactored the existing DEFI_SLOTS test onto the
+      same helper, behavior-preserving). Verified: `bash scripts/quality-gates.sh --no-fix` green (real exit code
+      confirmed via unpiped re-run, not a `| tail` artifact); systemic test 92 passed, 22 xfailed, 0 unexpected
+      failures, 0 XPASS.
 
-- [ ] [DATA] P1. D2 MDPS `swaps_ohlcv` reprocess of the stale chain-column `attempted_failed`/`SCHEMA_VALIDATION_FAILED`
-      rows on the consolidated `market-data-tick-defi` `_index` (processed_candles layer) — ONE reprocess pass (NOT a
-      one-venue VM racing the migration) covering UNISWAP_V3-ETHEREUM (28,634) + companions
-      UNISWAP_V2-ETHEREUM/AAVEV3-OPTIMISM/EIGENLAYER/CURVE-ETHEREUM/MAKER/FRAX/DRIFT-SOLANA/KAMINO/JITO/MARGINFI. No
-      code change (fix live mdps@7f1a5b5+3799c8d); rerun now that C0 canonicalises the source. Safe-idempotent
-      justification: idempotent candle reprocess, no GCS delete. Repo: market-data-processing-service. Done when:
-      post-reprocess `attempted_failed` for all listed venues → 0 (rows now `captured` or legit `empty_confirmed`),
-      verified against the live `_index`. Source: `data_completion_defi_2026_07_15.md`
+- [x] 2026-07-27 (slot-2) ✅ [DATA] P1. D2 MDPS `swaps_ohlcv` reprocess of the stale chain-column
+      `attempted_failed`/`SCHEMA_VALIDATION_FAILED` rows — **VERIFIED STALE PREMISE, no reprocess needed.** Read the
+      LIVE consolidated manifest directly (`market-data-tick-defi-prd-central-element-323112` —
+      `resolve_bucket_name(kind="market-data", asset_group="defi")`; confirmed the legacy non-`-prd`
+      `market-data-tick-defi-central-element-323112` bucket this todo's own text cites no longer exists, 404): **zero**
+      `attempted_failed` rows exist for UNISWAP_V3-ETHEREUM or any of the 10 companion venues
+      (UNISWAP_V2-ETHEREUM/AAVEV3-OPTIMISM/EIGENLAYER/CURVE-ETHEREUM/MAKER/FRAX/DRIFT-SOLANA/KAMINO/JITO/MARGINFI, or
+      their current canonical forms AAVE_V3-OPTIMISM/EIGENLAYER-ETHEREUM/MAKER-ETHEREUM/FRAX-ETHEREUM/KAMINO-SOLANA/
+      JITO-SOLANA/MARGINFI-SOLANA) under the `swaps_ohlcv`/`dex_pool_swaps` data_type. The `chain` column is 100%
+      populated fleet-wide for the current `dex_pool_swaps` rows (0/795 null) — the chain-propagation bug this todo
+      describes is confirmed fixed, and the C0 full-hive migration (C0d, `canonical-migration-defi-20260618-180603`)
+      evidently already re-derived/rewrote this data with the fixed code, superseding the specific 28,634+companion row
+      count this todo cited from 2026-05-28. Both the venue naming (now flat, e.g. `UNISWAP_V3` not
+      `UNISWAP_V3-ETHEREUM`) and the manifest's `data_type` field (now the raw ingest type `dex_pool_swaps`, not
+      per-timeframe `swaps_ohlcv_{tf}`) have changed since this todo was written, consistent with the C2/C3
+      canonicalisation todos in `instrument_availability_hive_canonicalisation_2026_07_21.md`-style migrations. Done
+      when: post-reprocess `attempted_failed` for all listed venues → 0, verified against the live `_index` — **this is
+      independently true today with no reprocess run**, so there is nothing left to execute against this todo's
+      described scope. **New finding, filed separately** (not part of this todo — a different, currently-ACTIVE failure
+      mode, not the old chain-column bug): 795 `dex_pool_swaps` `attempted_failed` rows exist TODAY across
+      UNISWAP_V3/OPTIMISM (342), CURVE/OPTIMISM (338), TRADER_JOE_V2/AVALANCHE (73, already tracked),
+      PANCAKESWAP_V3/BSC+ETHEREUM (17), UNISWAP_V4/ETHEREUM+POLYGON (12), UNISWAP_V2/ETHEREUM (5), VELODROME_V2/OPTIMISM
+      (5), AERODROME_V3/BASE (1) — all
+      `error_reason="All N cascade schemas     drifted/returned GraphQL errors for {venue}/{chain} (subgraph=...)"`,
+      growing daily through 2026-07-27 (not a stale artifact). Same TheGraph subgraph-schema-cascade failure class as
+      the already-tracked TRADER_JOE_V2 finding in `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md` —
+      extended that doc's scope with a new todo rather than filing a duplicate issue. Source:
+      `data_completion_defi_2026_07_15.md`
 
 - [ ] [STRATEGY] P2. Build the interest-PnL A2 staking leg in strategy-service: wire the `carry_staked_basis`
       `STAKING_REWARD`/`CARRY` accrual leg to the `lst_yields` `exchange_rate`/`prev_rate` index ratio keyed off

@@ -256,9 +256,16 @@ post-2026-07-19 tradfi chain object without the tail is a genuine regression and
   `possible_manifest` read-recognition can now be removed from code. See
   [`tradfi-databento-sourcing-ssot.md`](tradfi-databento-sourcing-ssot.md).
 
-The tradfi corpus is canonical on **filenames only** — the manifest measured **0 canonical rows across all years**, and
-the physical migration `--apply` is operator-gated. So for tradfi the manifest surface is expected non-canonical
-wholesale; that is migration state, not per-shard regression.
+**UPDATED 2026-07-27 — migration COMPLETE, not operator-gated/pending.** The physical tradfi path+manifest
+canonicalization `--apply` RAN: run `20260720-120911` (mtds-code@5581dcf9), 20/20 SPOT shards reporting ORPHAN=0 over
+2,649,469 objects (848,886 MIGRATE→canonical); data-loss forensics CLOSED (0 permanent loss; true victim set = 95, all
+restored+verified live; the 385,341 "twins" were benign rename-to-live, e.g. CL→CRUDE/NG→NATGAS). Catalogue (Surface A)
+SHIPPED+APPLIED LIVE 2026-07-25 (instruments-service@52d8b3ef): `prod/n` 775,116/776,387 canonical (99.84%), per-day
+corpus 68,133,635/68,406,251 canonical (99.60%). Manifest (Surface B) RE-VERIFIED LIVE 2026-07-25: FUTURE/OPTION
+`instrument_id` 90.2% canonical, EQUITY/ETF 98.9%. Chain-bundle content (Surfaces C+D) GATE CLOSED 2026-07-27 (slot-9):
+`assert_tradfi_derivative_ids_canonical` checked=961 canonical=961 violations=0. Residual non-canonical is by-design
+quarantine (ICE qualifier variants — `BLOCKED-OPERATOR-DECISION`, non-MVP) + writer-path re-drift, tracked separately —
+not a pending physical migration. Cite `tradfi_manifest_content_recovery_completion_2026_07_24.md`.
 
 ---
 

@@ -176,8 +176,42 @@ edited.)
       catalogue miss it will raise instead of silently minting a double-wrapped id, surfacing as a per-shard
       `record_failed` via the existing shard-isolation machinery. Full detail:
       `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` § 7.
-- [ ] [DATA] P1. Migrate/restate the historical non-canonical live objects (1,697 colon_wire cefi) as part of the
-      surface-A re-run with the fixed oracle.
+- [x] ✅ [DATA] P1. Migrate/restate the historical non-canonical live objects (1,697 colon_wire cefi) as part of the
+      surface-A re-run with the fixed oracle. **DONE 2026-07-27 (slot-12)** — the oracle doc's own § 7 "DONE 2026-07-27
+      (slot-15)" claim ("1,697 colon_wire live objects CONFIRMED gone") was based on a SAMPLED census of the
+      `2026-07-20..2026-07-27` manifest window, which never actually covers the live cefi population (measured here:
+      every live cefi object sits on `day=2026-06-21..2026-06-29`, 9 days, disjoint from that sample window) — so it did
+      not verify the actual historical objects. Re-verified by DIRECT measurement instead: a bounded (single-walk-safe,
+      `pipeline_mode=live*` prefix, `day=2026-*` scoped, not a corpus walk) `gcloud storage ls` against
+      `market-data-tick-cefi-prd-central-element-323112` found **1,742 total live cefi objects** (close to but not
+      identical to the original 1,697 — some drift since the 2026-07-20 census, expected) and, run through
+      `is_canonical_instrument_id`, exactly **63 non-canonical (all colon_wire)**: 9
+      `BYBIT-FUTURES:PERP:{BTC,ETH,SOL}USDT` (day=2026-06-22 only) + 54 `OKX-FUTURES:PERP:{BTC,ETH,SOL}-USDT-SWAP`
+      (day=2026-06-22..06-27) — the rest of the original ~1,697 population had already been resolved incidentally by
+      other work between 2026-07-20 and 2026-07-27 (plausibly the Range A/B/C `cefi-late-renames` apply, though those
+      venues aren't in its own per-venue breakdown, so not fully attributable). **Root cause of these 63**: not just a
+      filename-stem issue — the live writer partitioned them under the WRONG venue too (`BYBIT-FUTURES`/`OKX-FUTURES`,
+      the dated-futures venues) instead of the catalogue's actual venue for these instruments (`BYBIT` — 2,170 catalogue
+      rows; `OKX-SWAP` — 652 catalogue rows; the instruments-store catalogue has **zero** `BYBIT-FUTURES`/`OKX-FUTURES`
+      PERPETUAL rows), so a same-partition filename-only rename would not have fixed it. Resolved all 6 unique wire
+      stems via the SAME shared resolver Script 2 uses
+      (`_cefi_canonical_resolver_migration_2026_07_18.resolve_canonical`, catalogue-backed, honest-`None`-on-unresolved)
+      — all 6 resolved cleanly (e.g. `(BYBIT, perpetual, BTCUSDT)` → `BYBIT:PERPETUAL:BTC-USDT@LIN`,
+      `(OKX-SWAP, perpetual, BTC-USDT-SWAP)` → `OKX-SWAP:PERPETUAL:BTC-USDT@LIN`). Checked all 63 target paths for
+      collisions BEFORE any write (`gcs_describe_object`) — zero collisions, zero missing sources. Migrated via the
+      standard idempotent pattern (UTL `gcs_copy_object` → verify crc32c+size match via `gcs_describe_object` on both
+      sides → `gcs_delete_object` source → verify source gone) — **63/63 renamed, 0 errors**. Delete-safety: the
+      bucket's soft-delete retention is exactly `604800s` (7 days) ≥ the CLAUDE.md reversibility-qualified threshold, so
+      this qualifies as safe-idempotent (path (c)) without an `[OPERATOR]` tag. Re-listed post-migration: still 1,742
+      total objects (no data loss), **1,742/1,742 = 100% canonical by id-form**. Manifest check (bounded
+      predicate-pushdown read of `_index/availability_index.parquet`, not a new walk): **zero** PERPETUAL manifest rows
+      existed under the old venue names (`BYBIT-FUTURES`/`OKX-FUTURES`) for any pipeline_mode — this population was
+      never manifest-registered under the wrong venue, so no manifest row needed updating. As independent corroboration
+      the rename was correct: **45 already-`captured` manifest rows** exist under the CORRECT venue names
+      (`BYBIT`/`OKX-SWAP`) PERPETUAL for this exact date window — i.e. the manifest already pointed at the canonical
+      path the GCS objects now actually occupy (a pre-existing manifest-vs-GCS divergence this rename closes, not one it
+      created). Full live cefi population is now 100% canonical by id-form; no residual colon_wire objects remain
+      anywhere in the corpus (live cefi's only 9-day window, fully checked).
 
 ## 6. Codex SSOTs
 

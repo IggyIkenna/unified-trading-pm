@@ -262,36 +262,41 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       archived-doc reference resolves; and every relative `related:` entry is corrected. Source:
       `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`.
 
-- [ ] [DOC] P1. **Apply the 3 residual findings in `issues/tradfi_docs_reconciliation_findings_2026_07_21.md`.** That
-      doc's banner reads "32/34 checkboxes applied 2026-07-21" but three unchecked findings remain, none claimed by any
-      covering plan: **[P1 L97]** the consolidated closeout's Ground-truth-verdict header still asserts "the
-      id-canonicalisation is barely started on the derivative id columns" and needs a supersede banner (that doc's own
-      Progress Log now records catalogue Surface A and manifest Surface B as migrated and re-verified live 2026-07-25);
-      **[P1 L460]** "Phase B migration items still shown unchecked" — **re-derive this one, do not trust the line
-      number**: the Phase A1/B content it points at was forked out to
-      `tradfi_manifest_content_recovery_completion_2026_07_24.md` on 2026-07-24, AFTER the finding was written, so the
-      checkbox set to reconcile now lives in that child, not at L460 of the parent; **[P1 L237]** section 4 of
-      `/codex/02-data/canonical-cutover-register.md` still says the tradfi corpus is "canonical on filenames only — the
-      manifest measured 0 canonical rows". **CROSS-BATCH ORDERING NOTE**: two of the three findings edit
-      `tradfi_consolidated_closeout_2026_07_18.md`, which `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s todo
-      also writes to. Both plans are currently `status: draft`; if BOTH are activated, do not dispatch this todo
-      concurrently with that one. Repos: unified-trading-pm (plan + codex doc). **Done when**: all three findings are
-      either applied with the corrected current state cited, or explicitly struck through in the findings doc with the
-      evidence showing they no longer apply; the findings doc's own three checkboxes are flipped; and the banner's
-      "32/34" count is updated. Source: `issues/tradfi_docs_reconciliation_findings_2026_07_21.md`.
+- [x] ✅ [DOC] P1. **Apply the 3 residual findings in `issues/tradfi_docs_reconciliation_findings_2026_07_21.md`.** —
+      unified-trading-pm (this commit). All 3 applied with corrected current state (content-migration landed
+      2026-07-25/07-27, none turned out moot-by-staleness except the L460 checkbox-location itself): **[P1 L97]**
+      inserted a `SUPERSEDED 2026-07-27` banner under the Ground-truth verdict header in
+      `tradfi_consolidated_closeout_2026_07_18.md`, citing catalogue Surface A SHIPPED+APPLIED LIVE 2026-07-25
+      (instruments-service@52d8b3ef), manifest Surface B RE-VERIFIED LIVE 2026-07-25, chain-bundle Surfaces C+D GATE
+      CLOSED 2026-07-27 (checked=961 canonical=961 violations=0); also corrected the adjacent "per-child open-todo
+      digest" (lines ~142-159) which still asserted the now-false "Surface A not yet executed" claim, directly
+      contradicting the new banner in the same file. **[P1 L460]**: re-derived per the caution above — the four target
+      checkboxes no longer live at L460 of the parent (forked 2026-07-24); verified they are ALL already `[x]` in
+      `tradfi_manifest_content_recovery_completion_2026_07_24.md` (lines 180/204/217/238) with fresher evidence than
+      this finding's own text — MOOT, no parent-doc edit possible/needed, disposed as applied-by-decomposition. **[P1
+      L237]**: the stale "canonical on filenames only / manifest measured 0 canonical rows" text was verbatim-present as
+      of 2026-07-27 (contra the na-eligibility-audit's "may already be moot" speculation) — rewrote
+      `/codex/02-data/canonical-cutover-register.md` §4's closing paragraph to reflect migration COMPLETE, citing run
+      `20260720-120911` (20/20 SPOT shards ORPHAN=0, 848,886 migrated) + the same Surface A/B/C+D evidence above. The
+      findings doc's own 3 checkboxes flipped, banner updated to "35/35 checkboxes applied". CROSS-BATCH check: both
+      plans are `status: active` now (not draft as noted when this todo was written) — verified
+      `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s own todo touches a DIFFERENT section of the closeout doc
+      (its 13-native-todo AO-eligibility triage, referencing lines ~218+), not the Ground-truth-verdict/digest lines
+      (~97-159) this todo edited — no overlap. Source: `issues/tradfi_docs_reconciliation_findings_2026_07_21.md`.
 
-- [ ] [DATA] P1. **Two uncovered residuals in `data_completion_tradfi_2026_07_15.md`, combined into ONE todo because
-      both edit that same doc.** (1) **Manifest-verify the NASDAQ/NYSE 2023-2026 equity/ETF window** — the doc's
-      COVERAGE-GAP todo was narrowed by `/plan-reconcile` on 2026-07-26 from "track against this running backfill" to a
-      pure manifest verification, because the fleet it tracked is gone (the last NASDAQ/NYSE ohlcv-1m shard was deleted
-      2026-07-21T17:34:04Z; zero `tradfi-bf-*` instances exist as of 2026-07-26T02:20Z). Read the live tradfi `_index`
-      (single-object read, no walk) and report captured / `attempted_failed` / `expected_unattempted` counts for venue
-      NASDAQ and NYSE, `data_type` `ohlcv_1m` and `ohlcv_1s`, dates 2023-04-15 through 2026, by year, and state plainly
-      whether the window is filled, partially filled, or still substantially empty. **Scope note**: this is a
-      MANIFEST-COUNT verification only and does NOT discharge `tradfi_consolidated_closeout_2026_07_18.md`'s own open P2
-      todo, which asks for a fresh `data-pipeline-check-is` / `data-pipeline-check-mtds` RUN per MVP cell — a different,
-      heavier method; say so explicitly in the write-up so the two are never conflated. (2) **Close the stale
-      `base-library.sh` sentinel item** — the doc's own "Deferred work" section already records that
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-5, data_engineering)** — Two uncovered residuals in
+      `data_completion_tradfi_2026_07_15.md`, combined into ONE todo because both edit that same doc. (1)
+      **Manifest-verify the NASDAQ/NYSE 2023-2026 equity/ETF window** — the doc's COVERAGE-GAP todo was narrowed by
+      `/plan-reconcile` on 2026-07-26 from "track against this running backfill" to a pure manifest verification,
+      because the fleet it tracked is gone (the last NASDAQ/NYSE ohlcv-1m shard was deleted 2026-07-21T17:34:04Z; zero
+      `tradfi-bf-*` instances exist as of 2026-07-26T02:20Z). Read the live tradfi `_index` (single-object read, no
+      walk) and report captured / `attempted_failed` / `expected_unattempted` counts for venue NASDAQ and NYSE,
+      `data_type` `ohlcv_1m` and `ohlcv_1s`, dates 2023-04-15 through 2026, by year, and state plainly whether the
+      window is filled, partially filled, or still substantially empty. **Scope note**: this is a MANIFEST-COUNT
+      verification only and does NOT discharge `tradfi_consolidated_closeout_2026_07_18.md`'s own open P2 todo, which
+      asks for a fresh `data-pipeline-check-is` / `data-pipeline-check-mtds` RUN per MVP cell — a different, heavier
+      method; say so explicitly in the write-up so the two are never conflated. (2) **Close the stale `base-library.sh`
+      sentinel item** — the doc's own "Deferred work" section already records that
       `scripts/quality-gates-base/base-library.sh` "already writes `.qg_last_passed_sha` on a full green run … the exact
       fix this item describes has landed separately. **Already resolved** — the checklist item text is stale". Re-verify
       that against the live file and flip the stale `[SCRIPT] P2` PM-template-gap checkbox with the citation.
@@ -302,6 +307,24 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       the explicit "manifest-count only, not a pipeline-check run" caveat, the COVERAGE-GAP todo is either flipped or
       restated with the measured remainder, and the `base-library.sh` checkbox is flipped citing the live file. Source:
       `data_completion_tradfi_2026_07_15.md`.
+
+      **Evidence**: (1) DONE — single-object read of the live `-prd` `_index`
+                  (`market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, 5,876,351 total rows,
+                  no bucket walk) via `unified_trading_library`'s `get_storage_client().download_bytes(...)` +
+                  `pandas.read_parquet` (matches the sanctioned single-object pattern, not `read_availability_index()` — that
+                  reader is separately known to return 0 rows on this bucket per
+                  `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md:734`). Scoped to venue∈{NASDAQ,NYSE} ×
+                  data_type∈{ohlcv_1m,ohlcv_1s} × date≥2023-04-15 (2,087,240 cells); full per-year `capture_status` table + the
+                  "manifest-count only" caveat recorded in `data_completion_tradfi_2026_07_15.md`'s COVERAGE-GAP item.
+                  **Verdict: PARTIALLY FILLED, asymmetric by venue** — NYSE 72-76% `captured`; NASDAQ mostly `empty_confirmed`
+                  (79-87%, ~9-10% `captured`); real `expected_unattempted` remainder both venues (NASDAQ 71,183 / NYSE 62,327
+                  combined cells); `attempted_failed` negligible (170 rows, all NYSE 2026). Restated the COVERAGE-GAP todo with
+                  this remainder rather than flipping it — real fetch work is still outstanding. (2) DONE — re-verified
+                  `unified-trading-pm/scripts/quality-gates-base/base-library.sh` live: lines 1476-1491 confirm the "SENTINEL
+                  CONTRACT (parity with base-service.sh, WS-L #1014)" block writes `.qg_last_passed_sha` on a complete green run.
+                  Found the `[SCRIPT] P2` checkbox (line 422 of `data_completion_tradfi_2026_07_15.md`) was **already flipped**
+                  by a prior na-eligibility-audit pass (2026-07-27, before this task dispatched) citing the same live evidence —
+                  no further edit needed, confirmed correct as-is. Shipped: `unified-trading-pm` doc updates (this commit).
 
 ## Deferred — conflict-gated (do NOT draft a competing todo; parked for the operator)
 

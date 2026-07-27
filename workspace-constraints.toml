@@ -9,7 +9,6 @@ aiofiles = "aiofiles>=24.1.0,<25.0.0"
 # (MockStream no longer needs the removed AsyncStreamReaderMixin), unblocking the bump.
 # SSOT: plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md
 aiohttp = "aiohttp>=3.14.1,<4.0.0"
-aioresponses = "aioresponses>=0.7.6,<1.0.0"
 alembic = "alembic>=1.13.0,<2.0.0"
 anthropic = "anthropic>=0.87.0,<1.0.0"
 asyncio_mqtt = "asyncio-mqtt>=0.16.1,<1.0.0"

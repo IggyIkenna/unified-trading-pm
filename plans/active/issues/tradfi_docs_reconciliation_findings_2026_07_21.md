@@ -36,35 +36,39 @@ the post-`--apply` id-form reality (nuance: paths/catalogue canonical since this
 30.8% → being migrated). Massive-purged premise VERIFIED (0 objects everywhere). Storage
 `_migration_backup`/`_quarantine`/`_needs_attribution` now DELETED (register patch below reflects that).
 
-> **✅ 32/34 checkboxes applied 2026-07-21 (`unified-trading-pm@935de9424` + `unified-trading-pm@1dd1a22fd`)** — the
-> SAFE subset (no content-migration-complete claims). **3 remain `- [ ]` and are DEFERRED on purpose**: L97 + L460 in
-> `tradfi_consolidated_closeout_2026_07_18.md` and L237 in `canonical-cutover-register.md` — each would assert the
-> manifest/raw-tick-parquet `instrument_id` CONTENT column is canonical/migrated, which is still false (content id-form
-> measured 30.8% canonical; only GCS paths + the catalogue are genuinely canonical so far). Apply those 3 once the
-> content-migration lands.
+> **✅ 35/35 checkboxes applied (32 on 2026-07-21, final 3 on 2026-07-27, `unified-trading-pm@935de9424` +
+> `unified-trading-pm@1dd1a22fd` + this commit)** — content-migration landed 2026-07-25/07-27 (catalogue Surface A +
+> manifest Surface B + chain-bundle Surfaces C/D all DONE/GATE-CLOSED, per
+> `tradfi_manifest_content_recovery_completion_2026_07_24.md`), so the 3 findings that were deferred pending that
+> migration are now applied below.
 
-> **NOTE (na-eligibility-audit 2026-07-27)**: these same 3 residual findings are already restated verbatim as one
-> combined todo in `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (`status: active`, `assigned_vm: planning`, line
-> ~245-261), which also flags that its own L460 citation should be RE-DERIVED, not trusted verbatim ("that content
-> forked to `tradfi_manifest_content_recovery_completion_2026_07_24.md`"). Not reclassified independently — the
-> checkboxes here stay open until batch4's todo actually lands and flips them. Separately:
-> `canonical-cutover -register.md` §4 (the L237 target) has since been rewritten entirely with a resolved evidence table
-> ("effective-from: 2026-07-19") — the exact "canonical on filenames only" text this doc's L237 finding quotes no longer
-> exists verbatim in that file, so that specific finding may already be moot; re-verify before applying it rather than
-> assuming the original quoted text is still there.
+> **NOTE (na-eligibility-audit 2026-07-27, then applied same day)**: these same 3 residual findings were also restated
+> verbatim as one combined todo in `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (line ~265) — that todo's own
+> checkboxes + banner were flipped in the same commit as this doc's. Re-verified before applying, per that todo's own
+> caution: L460's target checkbox set had already moved to `tradfi_manifest_content_recovery_completion_2026_07_24.md`
+> (forked 2026-07-24) and was found ALREADY `[x]` there (see disposition below — no parent-doc edit was
+> possible/needed). `canonical-cutover-register.md` §4 (the L237 target) still contained the exact stale "canonical on
+> filenames only" text verbatim as of 2026-07-27 (the na-eligibility-audit's "may already be moot" speculation was
+> WRONG) — applied.
 
 ## Findings by document (apply the `fix` field from the JSON)
 
 ### `plans/active/tradfi_consolidated_closeout_2026_07_18.md` — 5 (P1,P1,P1,P2,P2)
 
-- [ ] **[P1 L97]** Ground-truth verdict header: 'the id-canonicalisation is barely started on the derivative id columns
+- [x] **[P1 L97]** Ground-truth verdict header: 'the id-canonicalisation is barely started on the derivative id columns
       (manifest + catalogue)... tradfi is done on filenames only' → FIX: Insert a supersede banner immediately under the
-      '## Ground-truth verdict' header (line 97) and relabel the table as a dated baseline. Suggested: '> **SUPERSEDED
-      2026-07-21 — this 2026-07-18 baseline verdict is historical.** The canonicalisa
-- [ ] **[P1 L460]** Phase B migration items still unchecked: '- [ ] [DATA] P0. Migrate the catalogue (Surface A)'
-      (L460), '- [ ] [DATA] P0. Migrate the live manifest (Surface B)' ( → FIX: Flip the four false-negative boxes to
-      checked with the evidence already in the Progress Log, and leave L507 open. Specifically: L460 -> "- [x] ✅ [DATA]
-      P0. Migrate the catalogue (Surface A) — DONE/verified live (Progress Log ticks 5 + 11):
+      '## Ground-truth verdict' header. **Applied 2026-07-27 (this commit)** — inserted a `SUPERSEDED 2026-07-27` banner
+      citing catalogue Surface A SHIPPED+APPLIED LIVE 2026-07-25 (instruments-service@52d8b3ef), manifest Surface B
+      RE-VERIFIED LIVE 2026-07-25, chain-bundle Surfaces C+D GATE CLOSED 2026-07-27 (checked=961 canonical=961
+      violations=0), and captioned the 2026-07-18 table as a retained baseline (repo: unified-trading-pm).
+- [x] **[P1 L460]** Phase B migration items still unchecked: '- [ ] [DATA] P0. Migrate the catalogue (Surface A)'
+      (L460), '- [ ] [DATA] P0. Migrate the live manifest (Surface B)' ( → **MOOT, applied by decomposition (verified
+      2026-07-27)**: the four checkboxes this finding targeted no longer live at L460 of the parent — they were forked
+      2026-07-24 to `tradfi_manifest_content_recovery_completion_2026_07_24.md` and are ALL already `[x]` there (lines
+      180/204/217/238) with fresher evidence (2026-07-25/07-27) than this finding's own fix text cites. No parent-doc
+      edit was possible or needed; the parent's separate "per-child open-todo digest" (lines 142-159) DID still assert
+      the stale "Surface A not yet executed" claim — corrected that same digest in this commit (repo:
+      unified-trading-pm).
 - [x] **[P1 L124]** MVP universe: '**CME BTC + ETH futures + options** (crypto index products on the TradFi venue)'. →
       FIX: Change L124 from "CME BTC + ETH futures + options (crypto index products on the TradFi venue)" to "CME
       BTC/ETH/MBT/MET futures — FUTURES ONLY, no crypto options (operator 2026-07-21 'no CME option for BTC and ETH';
@@ -215,10 +219,14 @@ the post-`--apply` id-form reality (nuance: paths/catalogue canonical since this
 
 ### `/codex/02-data/canonical-cutover-register.md` — 2 (P1,P2)
 
-- [ ] **[P1 L237]** §4: "The tradfi corpus is canonical on filenames only — the manifest measured 0 canonical rows
+- [x] **[P1 L237]** §4: "The tradfi corpus is canonical on filenames only — the manifest measured 0 canonical rows
       across all years, and the physical migration --apply is operator- → FIX: Rewrite §4's closing paragraph
-      (canonical-cutover-register.md:237-239) to reflect migration COMPLETE. Replace "canonical on filenames only /
-      manifest measured 0 canonical rows / --apply operator-gated / expected non-canonical wholesale" wit
+      (canonical-cutover-register.md:237-239) to reflect migration COMPLETE. **Applied 2026-07-27 (this commit)** — the
+      stale text was still verbatim-present as of 2026-07-27 (the na-eligibility-audit's "may already be moot"
+      speculation was wrong). Replaced with a COMPLETE-state paragraph citing run `20260720-120911` (20/20 SPOT shards
+      ORPHAN=0, 848,886 migrated), catalogue Surface A SHIPPED+APPLIED LIVE 2026-07-25, manifest Surface B RE-VERIFIED
+      LIVE 2026-07-25, chain-bundle Surfaces C+D GATE CLOSED 2026-07-27 (checked=961 canonical=961 violations=0), and
+      data-loss forensics CLOSED (repo: unified-trading-pm).
 - [x] **[P2 L232]** §4 carve-out: "batch_massive — Massive was removed as a tradfi source 2026-07-19, but batch_massive
       PipelineMode + possible_manifest read-recognition is KEPT un → FIX: Update §4
       (canonical-cutover-register.md:232-235): change the batch_massive carve-out from an active "read-recognition is

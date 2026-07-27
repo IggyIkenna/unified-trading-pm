@@ -150,14 +150,15 @@ drift_direction: advance-code
   `instruments-service/scripts/restamp_orphan_mtds_player_stats_rows_2026_07_13.py`,
   `plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md:56-77,111-129`. No further action
   needed.
-- [ ] [DOC] P1. **Move the mis-filed DEFI tracking item out of the sports corpus entirely: add "features-service: ban
-      `category=defi` in on-disk GCS path reads (`mtds_canonical_reader.py::_legacy_twin()`,
-      `eigen_rewards_calculator.py`)" as a tracked `- [ ]` todo in `data_completion_to_100_all_ag_2026_06_21.md`'s own
-      todo list** (its real gating plan — this item has nothing to do with sports and was mis-filed under the
-      now-archived `sports_manifest_canonicalisation_2026_06_01.md`). Cite that doc's current defi C-GREEN status as of
-      the move. (repo: unified-trading-pm, doc edit only — no code change, this todo relocates the tracking). **Done
-      when**: the item appears as a real todo in `data_completion_to_100_all_ag_2026_06_21.md` and is removed from
-      anywhere it duplicates in the sports corpus.
+- [x] ✅ [DOC] P1. **Move the mis-filed DEFI tracking item out of the sports corpus entirely — DONE 2026-07-27.** The
+      "features-service: ban `category=defi` in on-disk GCS path reads (`mtds_canonical_reader.py::_legacy_twin()`,
+      `eigen_rewards_calculator.py`)" item (mis-filed under the now-archived
+      `sports_manifest_canonicalisation_2026_06_01.md` — it has nothing to do with sports) is now a tracked `- [ ]` todo
+      in `data_completion_to_100_all_ag_2026_06_21.md`'s own todo list (its real gating plan), directly under the
+      `defi_manifest_canonicalisation_2026_06_01.md` fold-in section. Cited that doc's current defi C-GREEN status as of
+      the move: **NOT green** — `data_completion_defi_2026_07_15.md`'s C0 path+bucket canonicalisation todo is still
+      `- [ ]` open, so the item stays correctly gated on defi C0 reaching C-GREEN in its new home. No other duplicate of
+      this item was found anywhere else in the active sports corpus.
 - [ ] [DATA] P1. **Sports P2a sub-item (a) — G1 non-canonical-league NOISE wipe, audit-then-conditionally-purge.** First
       check whether the ~1,437-league/~106k-row NOISE population is the SAME population as the already-approved
       489-pair/10,869-row §U purge (Track V's non-registry-league decision) — the scale differs by ~10x, so this must

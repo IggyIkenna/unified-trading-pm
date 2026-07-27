@@ -16,10 +16,6 @@
       "versionRange": "aiohttp>=3.14.1,<4.0.0"
     },
     {
-      "name": "aioresponses",
-      "versionRange": "aioresponses>=0.7.6,<1.0.0"
-    },
-    {
       "name": "alembic",
       "versionRange": "alembic>=1.13.0,<2.0.0"
     },
@@ -452,5 +448,5 @@
       "versionRange": "zstandard>=0.22.0,<1.0.0"
     }
   ],
-  "count": 112
+  "count": 111
 }

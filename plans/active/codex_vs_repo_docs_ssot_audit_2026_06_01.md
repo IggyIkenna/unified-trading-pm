@@ -516,11 +516,25 @@ genuine-UI, out of scope.
 
 ### Phase-1 cross-cutting findings → Phase 2+ tracked todos
 
-- [ ] [DOCS] P1. **Corpus-wide archived-mirror reference fix (dominant Phase-1 remediation)**: multiple repos
+- [x] ✅ [DOCS] P1. **Corpus-wide archived-mirror reference fix (dominant Phase-1 remediation)**: multiple repos
       (`trading-agent-service`, `ibkr-gateway-infra`, `batch-live-reconciliation-service`, `system-integration-tests`,
       `agent-orchestrator/AUTH_INVENTORY.md`) carry stale codex refs pointing at the archived `unified-trading-codex/`
       mirror; SSOT is now PM `/codex/`. Grep each repo's `docs/` for `unified-trading-codex/` and repoint to the live
-      `/codex/…` equivalent (this is FIX-STALE, feeds Phase 3). (repo: all listed)
+      `/codex/…` equivalent (this is FIX-STALE, feeds Phase 3). (repo: all listed) — **DONE 2026-07-27** (sonnet-scoped
+      mechanical FIX-STALE literal sweep, plan §"Execution model" permits sonnet for FIX-STALE literal sweeps; operator
+      hold PERMITS FIX-STALE, per BLK-d1b29089 split-decision answer). Grepped `*.md` docs (excl. vendored `.claude/*`
+      mirrors + `docs/archive/*`) in all 5 named repos for `unified-trading-codex/`: **3 refs fixed across 2 repos** —
+      `trading-agent-service` (`README.md` `TIER-ARCHITECTURE.md`→`tier-and-import-architecture.md` +
+      `QUALITY_GATE_BYPASS_AUDIT.md` SSOT ref; both repointed to `../unified-trading-pm/codex/…`) **@`b481cf9`** and
+      `ibkr-gateway-infra` (`docs/ARCHITECTURE.md`
+      `vcr-cassette-ownership.md`→`../../unified-trading-pm/codex/02-data/…`) **@`2496fcb`**, both landed on LDR via
+      QG-green + `quickmerge --agent`. The other 3 named repos carry **ZERO** remaining archived-mirror
+      `unified-trading-codex/` refs in their `.md` docs: `batch-live-reconciliation-service` (`docs/GCS_PATHS.md`) +
+      `system-integration-tests` (`README.md`, `docs/portable-backtest-criteria.md`) already use the live
+      `unified-trading-pm/codex/…` form; `agent-orchestrator` has none in `.md` docs. NOTE:
+      `agent-orchestrator/AUTH_INVENTORY.md`'s staleness (retired `agents/worker.md`/`main.md` PATHS — now under
+      `unified-trading-pm/agents/`) is a **separate non-archived-mirror FIX-STALE** tracked in the Appendix-B
+      agent-orchestrator entry, NOT this `unified-trading-codex/`-repoint todo's scope.
 - [ ] [DOCS] P1. **[OPERATOR-DECISION] client-reporting-api commercial-facts SSOT gap (⚠️ cross-repo SSOT
       contradiction)**: the committed client roster + org hierarchy + per-client trader/Odum/introducer fee %s +
       three-HWM invoicing model live ONLY in

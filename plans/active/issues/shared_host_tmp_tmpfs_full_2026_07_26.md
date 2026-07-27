@@ -214,3 +214,30 @@ rather than deciding unilaterally:
   same class of judgment call as the manual sweep this doc already gated `[OPERATOR]`. Todos 2 (base-service.sh
   `/tmp/*_qg.log` race — separately in progress per slot-11's note above) and 3 (oversubscription capacity decision)
   remain open and are unaffected by this finding.
+
+- 2026-07-27T22:28Z (slot-13, `cicd` role, dispatched to `ldr_qg_failure` escalation `agt-1c4089` for
+  `ibkr-gateway-infra`): corroborating evidence for open todo 3 (oversubscription), from a CI-gate-failure angle rather
+  than an interactive-slot angle. `ibkr-gateway-infra`'s `quality-gates-v2` was RED on `live-defi-rollout` with both
+  matrix legs (`tests`, `checks`) failing after ~10m. Diagnosis: **not a code/test defect** —
+  `bash scripts/quality-gates.sh` on the exact failing commit (`47d2456`, itself a same-day self-hosted-runner rollout
+  for this repo) passed clean locally in 135s, all gates green. The CI failure traced to two self-hosted-runner-pool
+  problems on this same VM: (1) one of the repo's 2 dedicated `glue` runners (`glue-2`) was crash-looping on
+  re-registration (`curl: (22) HTTP 422`, systemd restart counters 38/45) during the failing window, then came back up
+  as a **zombie** — its `Runner.Listener` process alive and logging "Listening for Jobs" locally, but never actually
+  appearing in `GET /repos/.../actions/runners` (confirmed via the live GitHub API, not just local process state) —
+  leaving only 1 of 2 runners actually able to claim jobs, so the `tests` leg sat queued behind `checks` instead of
+  running in parallel. I fixed this specific defect myself (own-user `kill` on the zombie PID — no sudo needed since the
+  process is owned by `ubuntu`; systemd's `Restart=always` cleanly re-registered it, confirmed via the runners API
+  showing both `glue-ip-172-31-5-118-1` and `-2` `status: online`). (2) Even after both runners were healthy, the
+  `checks` leg — a 135s job locally — was still `in_progress` after 27+ minutes. `uptime` at that point:
+  `load average: 86.26, 138.88, 218.93` on `nproc=16` (this VM's core count as of today, up from the `nproc=8` in this
+  doc's 2026-07-27 finding above — the host itself has apparently been resized since, but is proportionally MORE
+  oversubscribed now: ~5-14x vs. the earlier 3-4.6x) — i.e. the exact standing condition todo 3 describes, now with a
+  concrete CI-gate-blocking consequence (a repo's required promotion check effectively hangs, not just an interactive
+  slot's QG run). I did not attempt to address the oversubscription itself (same `[OPERATOR]`-gated capacity/scheduling
+  decision as todo 3 — not something I can or should unilaterally fix by killing other slots' work). Not closing todo 3;
+  this is corroboration + a fresh, higher core-count data point, and a new symptom category (CI required-check
+  starvation) worth noting for whoever picks up the capacity decision. Pinging the `ibkr-gateway-infra` authoring slot
+  with this diagnosis; not blocking further on watching this specific CI run complete (est. up to 135min timeout at this
+  slowdown rate) since holding this shared CI-firefighter slot that long starves other queued escalations per the `cicd`
+  role's own scoping — GH Actions will resolve the run asynchronously regardless.

@@ -185,7 +185,7 @@ parked conflicts).
       `quality-gates.sh` is green in every touched repo; the prod promotion is explicitly recorded as NOT run, with a
       pointer to `prediction_phase_ab_residuals_2026_07_24.md`'s gated regen todo as its carrier.
 
-- [ ] [DIAG] P1. **Confirm or deny the prediction live-capture stall at `day=2026-06-28` (read-only).**
+- [x] ✅ [DIAG] P1. **Confirm or deny the prediction live-capture stall at `day=2026-06-28` (read-only).**
       `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`'s "Suggested next step" item 1 has never been
       actioned: `raw_tick_data/by_date/` appeared to have no day partitions after `day=2026-06-28` (~2 weeks stale as of
       2026-07-13, no July partitions at all). The doc itself flags this as the higher-stakes of its findings — "#2
@@ -203,6 +203,36 @@ parked conflicts).
       prefix/bucket/partition shape that was misread, plus the day partitions that DO exist) or GENUINE STALL (naming
       the last real capture day, the producer VM(s) involved, and what their logs show) — and item 1 of that doc's
       "Suggested next step" list is struck through with the verdict cited, matching how item 3 was closed on 2026-07-26.
+      **DONE 2026-07-27 (slot-12) — GENUINE STALL** (not an artifact): live `pipeline_mode=live_kalshi`/
+      `live_polymarket_clob` GCS partitions stop dead at `day=2026-06-28` and never reappear through `day=2026-07-26`
+      (~29 days), while `batch_kalshi`/`batch_polymarket_clob` partitions in the SAME bucket/window flow fine throughout
+      (rules out a bucket/path misread). Both live-producer VM naming conventions
+      (`mtds-live-prediction-consolidated-*`, `prediction-live-{venue}-*`) have zero matching instances anywhere in the
+      current GCP fleet (checked against a live 20+-VM fleet, so not a listing gap), and no Cloud Run service for
+      prediction exists either — no process is running, so there's nothing silently failing, it's simply not launched.
+      Full evidence + the bucket-form/partition-shape/manifest checks:
+      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`'s 2026-07-27T22:10Z Progress Log entry
+      (`unified-trading-pm@<see commit>`). **Remediation is explicitly out of this todo's scope** (read-only diagnosis
+      only) — tracked as the new follow-up todo directly below.
+
+- [ ] [SCRIPT] P1. **Relaunch the live Kalshi + Polymarket prediction tick producer(s) — confirmed down ~29 days.** The
+      todo above confirmed a GENUINE stall (not an artifact): no VM matching either live-producer launcher's naming
+      convention (`mtds-live-prediction-consolidated-*` from
+      `deployment-service/scripts/vm/launch-mtds-live-prediction-consolidated.sh`, or `prediction-live-{venue}-*` from
+      `launch-prediction-live.sh`) exists anywhere in the current fleet, and no Cloud Run service covers it either.
+      **Before relaunching**: per `plans/active/prediction_live_clob_depth_capture_2026_07_24.md`:155-160/434-435,
+      verify the producer's UNIVERSE source (`instruments-store-pred-prd-...` vs the stale env-less
+      `instruments-store-prediction-...` legacy bucket) resolves to the fresh env-short bucket BEFORE launch — a stale
+      universe read would silently reproduce the same "no live ticks" symptom for a different reason (empty/stale market
+      list, not a launcher failure), and this todo's own evidence didn't rule that out (excluded only as the likely
+      PRIOR-stall cause, not re-verified fresh at launch time). Launch via the existing sanctioned launcher (on-demand —
+      live VMs are the documented SPOT-cap exemption; NOT idempotent-backfill, so the SPOT-default HARD RULE does not
+      apply here), confirm STARTED within T+60s and real live-mode GCS partitions appearing at T+10min (a fresh `day=`
+      partition with `pipeline_mode=live_kalshi`/`live_polymarket_clob` populating), and arm a heartbeat watchdog per
+      the async-wait discipline. Repos: deployment-service (launch), market-tick-data-service (verify capture). **Done
+      when**: both live producers are confirmed STARTED and writing real ticks (T+10min GCS check), OR — if launch
+      surfaces a genuine blocker (credential/config/universe issue) — that blocker is filed as its own
+      `[OPERATOR]`-tagged follow-up with the specific failure evidence, not silently left unlaunched.
 
 ## Deferred — parked conflicts (BLOCKED-OPERATOR-DECISION; NOT guessed at, NOT silently drafted)
 

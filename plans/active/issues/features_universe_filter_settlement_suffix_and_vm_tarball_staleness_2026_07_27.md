@@ -133,10 +133,53 @@ first).
       `orchestrator-slot-10-sports-features-purge-tarball-freshness-fix-2026-07-27`, `.tabs/10/` worktree) via a normal
       QG + quickmerge cycle once host load is calm — `git stash pop`, verify `bash -n`, ship. Small, already-verified,
       no design work needed.
-- [ ] [DATA] P1 (bumped from P2, 2026-07-27T~13:15Z — 3rd independent occurrence same day, see corroborating finding
+- [x] ✅ [DATA] P1 (bumped from P2, 2026-07-27T~13:15Z — 3rd independent occurrence same day, see corroborating finding
       above). Consider defaulting `LC_TARBALL_FRESHNESS=enforce` (or auto-rebuilding the affected repo's tarball) as
       part of the quickmerge/promote pipeline for any repo with a VM-based e2e-check skill, so a fresh push is never
       silently invisible to the next VM launch. Scope: `deployment-service/scripts/vm/lib/launcher_common.sh`,
       `create-code-tarballs.sh`, and whichever CI hook (if any) should trigger the rebuild.
+
+      **Resolution (2026-07-27, slot-8): investigated, decided AGAINST a blanket default flip — evidence below,
+                      follow-up todos filed instead of shipping an unvetted change.** `lc_verify_tarball_freshness()` already has an
+                      `auto` mode (republish-then-continue, added in the original 2026-07-12 guard) that in principle closes exactly
+                      this gap without `enforce`'s launch-blocking downside. Tried flipping the shared function's default
+                      `LC_TARBALL_FRESHNESS:-warn` → `:-auto` in `deployment-service/scripts/vm/lib/launcher_common.sh` and ran the
+                      full `quality-gates.sh` to measure blast radius before shipping (per the "not the right moment... without a
+                      chance to verify blast radius first" caution already on this doc). Result: **24 existing unit tests broke**,
+                      spanning THREE unrelated launcher categories — `TestCanonicalMigrationVmRelaunch` (8),
+                      `TestCanonicalMigrationStallDetection` (4) and `TestCandleApplyCategory` (4) (all
+                      `launch-canonical-migration-vm.sh`), plus `TestDefiLaunchersSpotPreemptionContract` (7, the two DeFi backfill
+                      launchers — confirming the breakage is NOT confined to the two launchers this doc's corroborating findings
+                      actually implicate). Root cause of the breakage: most of these tests mock `gcloud` for the `compute instances
+                      create` call but do NOT mock a manifest `commit_sha` matching the real local repo HEAD, so under the OLD
+                      default (`warn`) the mismatch was silently non-blocking; under `auto` the guard now attempts a REAL
+                      `create-code-tarballs.sh --include <repo>` subprocess, which has no valid target to tar/upload inside the test
+                      sandbox and fails, and `auto` mode (correctly) aborts the launch on a failed republish — turning 24 previously-
+                      green tests into hard failures. **This is real, measured evidence the blast-radius concern was correct**, not
+                      just caution: even scoping the flip to ONLY the two launchers this doc names (`launch-features-vm.sh`,
+                      `launch-canonical-migration-vm.sh`) would still break the 16 canonical-migration-vm.sh tests above — closing
+                      that gap safely needs a companion pass hardening every affected test's `gcloud` mock (return a manifest
+                      `commit_sha` equal to the real HEAD, or explicitly pin `LC_TARBALL_FRESHNESS=warn`/`off` where the test is
+                      deliberately exercising unrelated behavior) BEFORE any default changes, which is materially larger than this
+                      todo's `est_hours: 1.0` scope and touches test suites for launchers this doc doesn't otherwise own. Reverted
+                      the trial change cleanly (`git checkout --` on both files; tree confirmed clean). Filed two properly-scoped
+                      follow-ups below instead of leaving this as unactioned prose.
+
 - [ ] [DATA] P1. Investigate the remaining `unknown_quote=3` residual on CEFI (post-fix) — likely a handful of genuinely
       non-standard symbols, not a suffix-parsing bug, but not yet confirmed which 3 instruments or why.
+- [ ] [DATA] P2. Harden the `lc_verify_tarball_freshness`-adjacent unit tests in
+      `deployment-service/tests/unit/test_vm_launcher_scripts.py` so a future `LC_TARBALL_FRESHNESS` default change is
+      actually safe to ship: for every test that invokes a launcher without `--dry-run` and without setting
+      `LC_TARBALL_FRESHNESS` explicitly (at minimum `TestCanonicalMigrationVmRelaunch`,
+      `TestCanonicalMigrationStallDetection`, `TestCandleApplyCategory`, `TestDefiLaunchersSpotPreemptionContract` — the
+      24 identified in the P1 resolution above), either mock a manifest `commit_sha` equal to the real local repo HEAD
+      (so the guard reads fresh) or explicitly set `LC_TARBALL_FRESHNESS=off`/`warn` in the test's env (so the test's
+      intent doesn't silently depend on today's default). This is a prerequisite for the next todo, not optional
+      cleanup.
+- [ ] [OPERATOR] P2. Once the prior todo lands, decide + implement the actual staleness fix: either (a) flip
+      `LC_TARBALL_FRESHNESS` default `warn` → `auto` in `deployment-service/scripts/vm/lib/launcher_common.sh` (now safe
+      to measure post-hardening), or (b) design a quickmerge/promote-pipeline hook that proactively rebuilds a repo's
+      code tarball right after it lands on `live-defi-rollout` (only for repos with a VM-based e2e-check skill), so
+      staleness never occurs rather than being caught-and-auto-fixed at launch time. (b) needs an operator call on where
+      it lives (a step inside PM's `scripts/quickmerge.sh` vs. a new GitHub Actions workflow with GCP credentials) and
+      which repos qualify — genuine design work, not a determinable-outcome AO todo as currently worded.

@@ -190,7 +190,8 @@ drift_direction: advance-code
       instruments-service@dd3ecff1 (`scripts/odds_api_team_mapping_coverage_audit_2026_07_27.py`). Findings + full
       breakdown: `plans/active/issues/odds_api_team_mapping_coverage_audit_2026_07_27.md`. Source:
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
-- [ ] [DATA] P1. Remove/relabel the 2 confirmed cross-asset_group mislabeled rows sitting in the SPORTS manifest: (1)
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-11)** — Remove/relabel the 2 confirmed cross-asset_group mislabeled rows
+      sitting in the SPORTS manifest: (1)
       `date=2026-06-26 venue=UNISWAP_V3-BASE asset_group=defi service_name=instruments-service     capture_status=attempted_failed source=api_football`,
       and (2) a second row `source=instruments_service asset_group=cefi capture_status=captured` found in the same
       2026-07-15 probe. Trace the writer path that emitted each into `instruments-store-sports-prd`'s manifest instead
@@ -202,6 +203,21 @@ drift_direction: advance-code
       `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`. Source:
       `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` (corrected 2026-07-25 plan-reconcile
       — matches this todo's own Done-when target; the digest previously cited as Source has 0 checkboxes).
+      `instruments-service@3e08f7d2`. **Root cause found via code read**: `_write_all_venues()`
+      (`instruments_service/engine/orchestrator/process_write.py`) only treated the literal `"ALL"` sentinel as a
+      multi-AG run; a genuine multi-value `--asset-group` list (the service's own CLI defines `nargs="+"`, a real
+      supported shape) silently fell through and forced every venue into the single primary bucket. Fixed `_is_all_run`
+      to also trigger on `len(asset_groups) > 1`, with a new regression test
+      (`TestMultiAssetGroupListTriggersPerVenueBucketRouting`, `tests/unit/test_orchestrator_gaps.py`) proven to fail
+      pre-fix / pass post-fix. Both phantom rows deleted CAS-safe (snapshot to
+      `_index/snapshots/pre_cross_ag_phantom_delete_2026_07_27.parquet` first,
+      `scripts/delete_cross_ag_phantom_rows_sports_manifest_2026_07_27.py`, generation `1785185026081616` ->
+      `1785185292923233`, rows 6,841,125 -> 6,841,123); fresh re-read (twice) confirms 0 rows matching either predicate.
+      A SEPARATE, still-open structural gap (the `process_completeness.py` honest-coverage writers never gained
+      per-venue bucket routing at all) is the root cause of the `attempted_failed` row's class specifically —
+      documented + filed as a new scoped P2 follow-up todo in the issue doc rather than fixed inline (bigger,
+      higher-blast-radius change to the sports daily producer's shared completeness-check, out of this cleanup's scope).
+      Full evidence: issue doc's "Update 2026-07-27" section.
 - [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7)** — Grant
       `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com` `storage.objects.create` on
       `central-element-323112-events` (or the correct events-sink bucket, confirm the exact name at execution time) so
@@ -218,7 +234,7 @@ drift_direction: advance-code
       (`deployment-service@<see plan flip commit>`), live-applied, and verified with a synthetic impersonated-SA write
       that landed HTTP 200 (no 403) then was cleaned up. Full evidence + the credential gotcha hit along the way in the
       Progress Log below.
-- [ ] [DOC] P1. Re-verify and flip
+- [x] ✅ [DOC] P1. Re-verify and flip
       `plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` to `status: resolved` with
       `resolved_by: instruments-service@ac22305c` populated — it documents the identical 3 oversized sports-domain
       functions (`_AfManifestHooks.emit_empty_gaps_for_entity()` / `_fetch_teams_and_standings()` /
@@ -229,13 +245,19 @@ drift_direction: advance-code
       sibling doc or a fresh independent re-measurement if this doc's own claims need independent reverification first.
       Source: `plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` (corrected
       2026-07-25 plan-reconcile — this todo's subject IS that doc; the digest previously cited as Source has 0
-      checkboxes and isn't the doc actually being flipped).
-- [ ] [DIAG] P1. **Verify whether the sports manifest's 2026-vs-prior-year enumeration-grain inconsistency (~10x more
-      cells seeded per data_type for 2026 than prior years) still persists** — measure current per-data_type
-      cell-seeding counts for a matched 2025 vs 2026 sample window directly against the live
-      `instruments-store-sports-prd/_index/availability_index.parquet` manifest. The diagnosed cause (over-seeding,
+      checkboxes and isn't the doc actually being flipped). — RE-VERIFIED 2026-07-27 (slot-12): the target doc's
+      frontmatter is ALREADY `status: resolved` with `resolved_by: instruments-service@a8c0e18e (2026-07-25)` populated
+      (a LATER, more complete closure SHA than this todo's `ac22305c` — that commit only closed the function-size
+      regrowth; `a8c0e18e` closed the doc's remaining 2 P3 follow-ons, per its own "## Resolution (2026-07-25)"
+      section). No further doc edit was needed — this todo's premise ("never itself flipped") was already stale by the
+      time it dispatched. Sibling doc `sports_reference_function_size_qg_regression_2026_07_16.md` cross-checked:
+      `status: resolved`, `resolved_by: instruments-service@ac22305c` — consistent, no drift between the two.
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-9)** — **Verify whether the sports manifest's 2026-vs-prior-year
+      enumeration-grain inconsistency (~10x more cells seeded per data_type for 2026 than prior years) still persists**
+      — measure current per-data_type cell-seeding counts for a matched 2025 vs 2026 sample window directly against the
+      live `instruments-store-sports-prd/_index/availability_index.parquet` manifest. The diagnosed cause (over-seeding,
       "Cause A") was substantially addressed by the 2026-06-23 `enumerate_expected_universe.py` fix
-      (instruments-service@0bcf727) and the subsequent write-gate/dereg/canonicalize program —
+      (instruments-service@0bcf727) and the subsequent write-gate/dereg/ canonicalize program —
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s own "Post-backfill entity-coverage relabel" todo measured a
       ~30x reduction in the closely-related phantom-seed count (1,027,396 → 33,905 rows) as a side effect of that same
       program. If the 2025-vs-2026 ratio is now ~1x, annotate this line "resolved as side effect" citing the measurement
@@ -245,10 +267,24 @@ drift_direction: advance-code
       per-data_type 2025-vs-2026 cell-seeding ratio has been measured and reported against the live `-prd-` manifest,
       AND either (a) this item is annotated "resolved as side effect" with the measurement cited, or (b) a new scoped
       issue doc is filed under `plans/active/issues/` with the measurement + root-cause hypothesis (no fix implemented).
+      — **(b): STILL PERSISTS, NOT resolved.** Ran a single-download read of the live prod manifest (6,847,192 rows)
+      grouped by `data_type` over a matched H1 window (2025-01-01..2025-06-30 vs 2026-01-01..2026-06-30): overall ratio
+      **3.13x** (363,842 → 1,137,706 cells); most data_types cluster 2.2x-3.6x; 3 outliers — `FIXTURES` 16.6x,
+      `FIXTURES_OUTCOMES` 15.7x, `ODDS` 6.0x. Root cause identified by code read (a DIFFERENT mechanism than the fixed
+      Cause A): every 2025 H1 row is `capture_status ∈ {captured, empty_confirmed}` only (zero `expected_unattempted`),
+      while 2026 H1 rows carry a real 3-way split including a large `expected_unattempted` share — because
+      `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`'s v2 enumerator `--start-date`
+      (`var.     expected_universe_start_date`) is a STATIC, never-overridden Terraform default `"2026-02-20"`
+      (verified: only declaration + only usage in `terraform/`), so the entire 2025 H1 window falls before the
+      enumerator's bounded 120-day window and structurally never gets `expected_unattempted` seeded — an artifact of the
+      bounded-window design, not a live over-seeding regression. Full measurement + root-cause writeup + 2 follow-up
+      todos (1 `[OPERATOR]` window-policy decision, 1 `[DATA]` league-count-growth investigation) filed:
+      `issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Measurement script:
+      `instruments-service/scripts/sports_manifest_enumeration_grain_check_2026_07_27.py` (read-only, single-walk).
       Source: `data_completion_sports_2026_07_24.md`.
-- [ ] [DIAG] P1. Determine whether the free-text `error_reason` pattern documented in this doc's §2.5
-      ("record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says ...") is still live-writing
-      today by running a fresh distinct-`error_reason` census over the prod sports manifest
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-9)** — Determine whether the free-text `error_reason` pattern documented in
+      this doc's §2.5 ("record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says ...") is
+      still live-writing today by running a fresh distinct-`error_reason` census over the prod sports manifest
       (`market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`, grouping
       `empty_confirmed`+`attempted_failed` rows by `error_reason`, diffed against UAC's `EMPTY_CONFIRMED_REASONS` closed
       set + classified error codes, single-walk discipline). If any live-dated (not frozen-legacy) row still carries a
@@ -261,7 +297,24 @@ drift_direction: advance-code
       matches → note the pattern is stale and no code change was needed; N live matches → a write-time guard shipped
       with a passing regression test proving `error_reason` for newly-written sports rows is always a member of the
       closed set, never a free-text sentence); `quality-gates.sh` green in the touched repo(s). Source:
-      `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`.
+      `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`. — **Ran the census
+      (market-tick-data-service/scripts/sports_error_reason_free_text_census_2026_07_27.py, single read of 516,196-row
+      manifest).** The EXACT originally-cited pattern is STALE (0 live matches). A DIFFERENT free-text pattern IS still
+      live-writing: 1,998 rows / 1,976 distinct values, all dated 2026-07-25/26, from a
+      `StreamingParquetWriter pre-write validation failed: [partition_mismatch] ...` diagnostic. **Write site
+      correction**: not MTDS as this todo assumed — traced by code read to **market-data-processing-service**
+      (`live_workers_streaming.py` → `close_candle_streaming_writer` → `_emit_status_for_shard`). Shipped the write-time
+      guard there: `market-data-processing-service@da98dc7` — a new `_classify_write_error_reason()` classifies the
+      pre-write-validation ValueError class to `RecordFailedReason.MALFORMED_ROW_KEY` (closed-set) and any other
+      write-loop exception to `UNCLASSIFIED_ADAPTER_ERROR`, with the full diagnostic now logged instead of persisted; 2
+      regression tests added/updated in `tests/unit/test_canonical_writer_record_helpers.py` proving the guard fires
+      (`quality-gates.sh` green, `.qg_last_passed_sha=4544eb8692b0c28f26fb2f7e8db198a7219060df` (quickmerge then amended
+      the commit to add its trailer, landed as `da98dc7`)). Full census + fix writeup:
+      `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` §2.5 "Update 2026-07-27". The underlying
+      MATCH_ODDS/MATCH_ODDS_LAY partition-mismatch write FAILURE itself (data loss, not just the error_reason cosmetic)
+      is a separate, still-open bug — filed as
+      `issues/sports_odds_horizon_bucket_instrument_type_partition_mismatch_2026_07_27.md` (not fixed here, out of this
+      DIAG todo's declared scope).
 - [ ] [DOC] P1. Apply this doc's own already-specified §4.5 self-correction to itself: in
       `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s original "Why it is wrong" section, bullet 5 (~lines
       117-119: "Coverage is not universal even where it IS meaningful ... There is no per-(venue, fixture/market)
@@ -316,6 +369,27 @@ written up, not just pointed at). The 2 `doc_too_large_or_risky_for_batch` docs 
 dedicated pass.
 
 ## Progress Log
+
+- **2026-07-27 (slot-11)** — Worked the "2 cross-asset_group mislabeled sports-manifest rows" todo. Live-probed
+  `instruments-store-sports-prd` (6,841,125 rows) and confirmed both rows exactly as described: a defi/UNISWAP_V3-BASE
+  `attempted_failed` diagnostic row and a REAL cefi/BITGET-FUTURES `captured` row (row_count=39). Traced the writer via
+  code read (not guessed): `_write_all_venues()` in `instruments-service/engine/orchestrator/process_write.py` only
+  treats the literal `"ALL"` sentinel as a multi-AG run needing per-venue bucket routing; the service's own shared CLI
+  (`unified_trading_library.service_cli`) defines `--asset-group` with `nargs="+"`, so a genuine multi-value, non-"ALL"
+  invocation (a real, currently-supported shape) silently forces every venue into one primary bucket. Fixed
+  `_is_all_run` to also trigger on `len(asset_groups) > 1`; added `TestMultiAssetGroupListTriggersPerVenueBucketRouting`
+  to `tests/unit/test_orchestrator_gaps.py`, proved it fails pre-fix (stash/pop) and passes post-fix. A second, separate
+  structural gap (`process_completeness.py`'s honest-coverage `ManifestWriter`s never gained per-venue routing at all)
+  explains the attempted_failed row's class specifically — documented and filed as a new scoped P2 follow-up todo in the
+  issue doc rather than fixed inline here (bigger, higher-blast-radius change to the sports daily producer's shared
+  completeness-check). Deleted both phantom rows CAS-safe via a new one-off script
+  (`instruments-service/scripts/delete_cross_ag_phantom_rows_sports_manifest_2026_07_27.py`) — snapshot taken first
+  (`_index/snapshots/pre_cross_ag_phantom_delete_2026_07_27.parquet`), CAS write succeeded on attempt 1/30 (generation
+  `1785185026081616` -> `1785185292923233`, rows 6,841,125 -> 6,841,123, exactly -2). Fresh re-read confirms 0 rows
+  matching either predicate, held stable across a second re-read ~1 minute later. `quality-gates.sh` green in
+  instruments-service. Full write-up in the issue doc's "Update 2026-07-27" section. No file collision with other
+  in-flight batch3/batch4 todos (touched only `process_write.py`, `test_orchestrator_gaps.py`, the new one-off script,
+  this plan, and the issue doc).
 
 - **2026-07-27 (slot-15)** — Worked the `source_data_latency.py` re-pin todo. Ran the aggregator against 552 live
   `_index/latency_observations` parquets (13-day accrual). Only api_football had samples (n=2504, ceiling-only,
