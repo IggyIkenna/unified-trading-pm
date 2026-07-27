@@ -190,7 +190,8 @@ drift_direction: advance-code
       instruments-service@dd3ecff1 (`scripts/odds_api_team_mapping_coverage_audit_2026_07_27.py`). Findings + full
       breakdown: `plans/active/issues/odds_api_team_mapping_coverage_audit_2026_07_27.md`. Source:
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
-- [ ] [DATA] P1. Remove/relabel the 2 confirmed cross-asset_group mislabeled rows sitting in the SPORTS manifest: (1)
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-11)** — Remove/relabel the 2 confirmed cross-asset_group mislabeled rows
+      sitting in the SPORTS manifest: (1)
       `date=2026-06-26 venue=UNISWAP_V3-BASE asset_group=defi service_name=instruments-service     capture_status=attempted_failed source=api_football`,
       and (2) a second row `source=instruments_service asset_group=cefi capture_status=captured` found in the same
       2026-07-15 probe. Trace the writer path that emitted each into `instruments-store-sports-prd`'s manifest instead
@@ -202,6 +203,21 @@ drift_direction: advance-code
       `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`. Source:
       `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` (corrected 2026-07-25 plan-reconcile
       — matches this todo's own Done-when target; the digest previously cited as Source has 0 checkboxes).
+      `instruments-service@3e08f7d2`. **Root cause found via code read**: `_write_all_venues()`
+      (`instruments_service/engine/orchestrator/process_write.py`) only treated the literal `"ALL"` sentinel as a
+      multi-AG run; a genuine multi-value `--asset-group` list (the service's own CLI defines `nargs="+"`, a real
+      supported shape) silently fell through and forced every venue into the single primary bucket. Fixed `_is_all_run`
+      to also trigger on `len(asset_groups) > 1`, with a new regression test
+      (`TestMultiAssetGroupListTriggersPerVenueBucketRouting`, `tests/unit/test_orchestrator_gaps.py`) proven to fail
+      pre-fix / pass post-fix. Both phantom rows deleted CAS-safe (snapshot to
+      `_index/snapshots/pre_cross_ag_phantom_delete_2026_07_27.parquet` first,
+      `scripts/delete_cross_ag_phantom_rows_sports_manifest_2026_07_27.py`, generation `1785185026081616` ->
+      `1785185292923233`, rows 6,841,125 -> 6,841,123); fresh re-read (twice) confirms 0 rows matching either predicate.
+      A SEPARATE, still-open structural gap (the `process_completeness.py` honest-coverage writers never gained
+      per-venue bucket routing at all) is the root cause of the `attempted_failed` row's class specifically —
+      documented + filed as a new scoped P2 follow-up todo in the issue doc rather than fixed inline (bigger,
+      higher-blast-radius change to the sports daily producer's shared completeness-check, out of this cleanup's scope).
+      Full evidence: issue doc's "Update 2026-07-27" section.
 - [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7)** — Grant
       `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com` `storage.objects.create` on
       `central-element-323112-events` (or the correct events-sink bucket, confirm the exact name at execution time) so
@@ -316,6 +332,27 @@ written up, not just pointed at). The 2 `doc_too_large_or_risky_for_batch` docs 
 dedicated pass.
 
 ## Progress Log
+
+- **2026-07-27 (slot-11)** — Worked the "2 cross-asset_group mislabeled sports-manifest rows" todo. Live-probed
+  `instruments-store-sports-prd` (6,841,125 rows) and confirmed both rows exactly as described: a defi/UNISWAP_V3-BASE
+  `attempted_failed` diagnostic row and a REAL cefi/BITGET-FUTURES `captured` row (row_count=39). Traced the writer via
+  code read (not guessed): `_write_all_venues()` in `instruments-service/engine/orchestrator/process_write.py` only
+  treats the literal `"ALL"` sentinel as a multi-AG run needing per-venue bucket routing; the service's own shared CLI
+  (`unified_trading_library.service_cli`) defines `--asset-group` with `nargs="+"`, so a genuine multi-value, non-"ALL"
+  invocation (a real, currently-supported shape) silently forces every venue into one primary bucket. Fixed
+  `_is_all_run` to also trigger on `len(asset_groups) > 1`; added `TestMultiAssetGroupListTriggersPerVenueBucketRouting`
+  to `tests/unit/test_orchestrator_gaps.py`, proved it fails pre-fix (stash/pop) and passes post-fix. A second, separate
+  structural gap (`process_completeness.py`'s honest-coverage `ManifestWriter`s never gained per-venue routing at all)
+  explains the attempted_failed row's class specifically — documented and filed as a new scoped P2 follow-up todo in the
+  issue doc rather than fixed inline here (bigger, higher-blast-radius change to the sports daily producer's shared
+  completeness-check). Deleted both phantom rows CAS-safe via a new one-off script
+  (`instruments-service/scripts/delete_cross_ag_phantom_rows_sports_manifest_2026_07_27.py`) — snapshot taken first
+  (`_index/snapshots/pre_cross_ag_phantom_delete_2026_07_27.parquet`), CAS write succeeded on attempt 1/30 (generation
+  `1785185026081616` -> `1785185292923233`, rows 6,841,125 -> 6,841,123, exactly -2). Fresh re-read confirms 0 rows
+  matching either predicate, held stable across a second re-read ~1 minute later. `quality-gates.sh` green in
+  instruments-service. Full write-up in the issue doc's "Update 2026-07-27" section. No file collision with other
+  in-flight batch3/batch4 todos (touched only `process_write.py`, `test_orchestrator_gaps.py`, the new one-off script,
+  this plan, and the issue doc).
 
 - **2026-07-27 (slot-15)** — Worked the `source_data_latency.py` re-pin todo. Ran the aggregator against 552 live
   `_index/latency_observations` parquets (13-day accrual). Only api_football had samples (n=2504, ceiling-only,
