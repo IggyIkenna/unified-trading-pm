@@ -88,7 +88,19 @@ instruments-service@`b99e586` (tested no-key enumeration).
       data_types (book_snapshot_5 staying 0-captured for ASTER is correct/expected, not a gap). Verify at T+10min
       (STARTED) then periodically until terminal; re-measure via `read_availability_index` filtered to venue ∈
       {HYPERLIQUID, ASTER}, do not trust prior `attempted_failed` counts as the gap census (mirrors the Tardis-lockout
-      lesson elsewhere in this doc — measure fresh, don't assume).
+      lesson elsewhere in this doc — measure fresh, don't assume). **UPDATE 2026-07-27 T+10min (slot-10)**: all 7 VMs
+      were **mass-preempted at 19:02:2x UTC, ~2.5 min after creation (19:00:01)** — `gcloud compute operations list`
+      shows `compute.instances.preempted` system events for all 7 within a 6-second window, then auto-deleted
+      (`--instance-termination-action=DELETE`). No `run.log` was ever written for any of the 7 (checked at T+10min) —
+      this was a boot-time preemption, not a mid-run one, so there is no `PROGRESS.json` checkpoint for any
+      auto-recovery watchdog to resume from. Checked for an auto-relaunch (`vm_zombie_watchdog.py` / preemption
+      auto-recovery per `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`): **zero**
+      `cefi-hyperliquid-*`/`cefi-aster-*` VMs running now — nothing has re-launched this fleet. This GATE stays open and
+      unflipped (honest — the corrective backfill made zero progress, not partial). Not re-launched from this session
+      (outside this task's assigned scope — flagging for whoever picks up this GATE next, or the
+      preemption-billing-waste audit). Whoever relaunches next: same `launch-cefi-hl-aster-historical-backfill.sh`
+      command works unchanged (idempotent, non-force); consider `--on-demand`/`ON_DEMAND=true` if a second SPOT attempt
+      also gets mass-preempted in this zone (asia-northeast1-c e2-highmem-8 capacity contention suspected, not proven).
 - [x] ✅ [DEPLOY] P1. Redeployed the IS fixes — built `instruments-service:latest`=7489ed1/0.43.0 from LDR (no-auth
       b99e586 + full-universe 0fe8e71 + dated-future quote fix 7489ed1) via Cloud Build d215d55a (SUCCESS); created the
       missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00 IS scheduler).
