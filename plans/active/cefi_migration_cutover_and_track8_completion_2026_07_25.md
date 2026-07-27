@@ -950,3 +950,22 @@ every todo executes an already-decided spec from the parent doc.
   `cs8-6f`, `cs9-1d`). 2 more clean completions (`cs10-4b`, `cs9-2e`, both confirmed `EXIT_STATUS=0`). No new
   casualties. `cs7-4d-r2` healthy at 88,200/128,129 files (68.8%), steady ~7.9 files/sec. Fleet is converging — down to
   6 shards. Nothing to relaunch this cycle.
+
+- **2026-07-27T~15:40Z — operator ETA question surfaced a genuine casualty: `cs9-1d` frozen since 09:33 UTC (6+ hours),
+  `gcloud` still reporting it `RUNNING`.** Its `run.log` (last INFO Progress at 09:31:01, 25,200/152,700 files, 16.5%)
+  AND the authoritative host-level sidecar heartbeat blob (`vm-heartbeat/…cs9-1d.txt`) BOTH stopped updating at the
+  identical timestamp (~09:33) — the whole VM froze at the OS level, not just the worker (the "GCE RUNNING ≠ alive"
+  class already documented in this doc's own lessons). No `PROGRESS.json` checkpoint existed (this VM predates
+  `54817bc1`) and it wasn't a SPOT preemption (`compute.operations.list` for `compute.instances.preempted` on this VM
+  returned empty) — a genuine host-level hang, not reclaimed capacity. Deleted it and relaunched as
+  `canonical-migration-cefi-content-apply-055803-cs9-1d-r2` with the same
+  `--start-date 2025-02-02 --end-date 2025-03-17` scope; caught+republished a stale `unified-api-contracts` tarball
+  before it could matter (mtds/UTL/ deployment-service were already fresh from earlier fixes). **ETA to full drain,
+  given current real throughput**: `cs10-5d` (98.5%, 5.5 files/sec) ~9min; `cs4-3d` (92.6%, 3.7/sec) ~48min; `cs3-2d`
+  (87.5%, 3.1/sec) ~85min; `cs7-4d-r2` (72.7%, 7.8/sec) ~75min; `cs8-6f` (52%, 3.9/sec) ~6.5h — **the long pole**;
+  `cs9-1d-r2` just restarted (its dead predecessor ran at only 1.8 files/sec on this exact date range before freezing,
+  the slowest of the whole fleet — if it holds that rate over its full 152,700-file scope, this could be the true long
+  pole at potentially 20+ hours, though idempotent-skip should make the RE-scan of its already-processed 25,200 files
+  fast, not full-cost). Honest read: 4 of 6 shards finish within ~1.5h; `cs8-6f` and `cs9-1d-r2` are the real unknowns
+  and could run several hours past that — will re-baseline this estimate against measured throughput on the next
+  check-in rather than assert a single number now.
