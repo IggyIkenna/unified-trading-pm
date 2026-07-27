@@ -151,8 +151,18 @@ edited.)
       my change. File-size ratchet note: `tardis_shared.py` was already at the exact 900-line cap — relocated the guard
       call into `build_partition_path()` (one shared call site instead of duplicating at `finalise_rows_and_path()` too)
       and compacted the new lines to land the file at exactly 900.
-- [ ] [SERVICE] P1. Fix `tardis_shared.py:671` to escape `/` in the stem (use `sanitize_file_stem`) so a slash-bearing
-      id cannot forge a hive segment; migrate the 48+ KRAKEN-SPOT `ADA/USD.parquet`-style corrupt objects.
+- [x] ✅ [SERVICE] P1. Fix `tardis_shared.py:671` to escape `/` in the stem (use `sanitize_file_stem`) so a
+      slash-bearing id cannot forge a hive segment; migrate the 48+ KRAKEN-SPOT `ADA/USD.parquet`-style corrupt objects.
+      — ALREADY RESOLVED (checkbox was stale). Code fix: market-tick-data-service@fd5cfc35 (2026-07-25) —
+      `sanitize_file_stem` already escapes `/` and is already called at `build_partition_path`'s v5-path return.
+      Migration: verified 2026-07-27 via live `gcloud storage ls` against
+      `gs://market-data-tick-cefi-prd-central-element-323112` — the specific corrupt shape
+      (`.../data_type={dt}/ADA/USD.parquet`, a forged `ADA/` hive segment) is ABSENT everywhere checked: every
+      KRAKEN-SPOT `spot_pair` object across every `day=` partition, both `book_snapshot_5` and `trades`, is the
+      canonical `KRAKEN-SPOT:SPOT_PAIR:{BASE}-USD.parquet` shape. A wildcard probe for any extra path segment under
+      `data_type=book_snapshot_5/*/` and `data_type=trades/*/` for this venue/instrument_type matched zero objects
+      across all dates. No corrupt objects remain to migrate (targeted, scoped GCS checks — not a new whole-corpus walk,
+      per the single-walk-discipline rule).
 - [ ] [SERVICE] P1. Turn `validate=True` on the two `tardis_cefi_shards.py` write sites and make
       `finalise_rows_and_path` violations FATAL, not advisory (fail hard, per the operator's write-path directive).
 - [x] [SERVICE] P0. Remove the silent `build_instrument_id(venue, itype, symbol)` catalogue-miss fallback that mints
