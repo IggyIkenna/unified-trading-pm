@@ -969,3 +969,16 @@ every todo executes an already-decided spec from the parent doc.
   fast, not full-cost). Honest read: 4 of 6 shards finish within ~1.5h; `cs8-6f` and `cs9-1d-r2` are the real unknowns
   and could run several hours past that — will re-baseline this estimate against measured throughput on the next
   check-in rather than assert a single number now.
+
+- **2026-07-27T~16:32Z (scheduled check-in) — 3 VMs RUNNING** (`cs3-2d`, `cs7-4d-r2`, `cs8-6f`). `cs10-5d`/`cs4-3d` both
+  confirmed clean (`EXIT_STATUS=0`). **`cs9-1d-r2` OOM'd (exit 137)** at only 5,600/159,332 files — its
+  `bytes_read`/file ratio (~19MB/file average, driven by a handful of enormous files) matches the DERIBIT dated-options
+  giant-file class already diagnosed earlier this campaign, and this shard had NEVER had `--exclude-venues` applied
+  (unlike `cs7-4d-r2`, which already excludes it). Relaunched as
+  `canonical-migration-cefi-content-apply-055803-cs9-1d-r3` with `--exclude-venues DERIBIT`; caught + republished 2
+  stale tarballs (`unified-api-contracts`, `deployment-service`) before they could matter. Checked all 3 currently-
+  running VMs for the new frozen-but-RUNNING failure class (per the operator's ask last cycle) — all 3 have fresh
+  `run.log` activity within 1-3 minutes of the check, no freeze. **ETA re-baseline**: `cs3-2d` (95.6%, 3.1 files/sec)
+  ~30min; `cs7-4d-r2` (87.1%, 7.3/sec) ~38min; `cs8-6f` (58.1%, 3.9/sec) ~5.7h — still the confirmed long pole;
+  `cs9-1d-r3` just restarted with DERIBIT now excluded, too early to rate — if it settles near `cs7-4d-r2`'s
+  post-exclusion rate (~7/sec) it'd be ~6.3h, but this is a rough guess pending real throughput data.
