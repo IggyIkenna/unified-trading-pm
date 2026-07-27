@@ -49,6 +49,7 @@ repos:
   instruments-service:
     count: 366
   market-data-processing-service:
+    commit: 43d8f7d7d30de3430202bf91568cdb61e3a652fc
     count: 66
   market-tick-data-service:
     commit: 2031aa4b4068c4089c9468e011a580b0dbc3237d
