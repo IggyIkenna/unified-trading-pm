@@ -133,12 +133,14 @@ rather than deciding unilaterally:
 
 ## Todos
 
-- [ ] [INFRA] P1. Investigate `/tmp` tmpfs exhaustion on the shared orchestrator- adjacent VM(s) — confirm scope (this
-      VM only, or fleet-wide), identify the largest un-owned/stale contributors (`pytest-of-ubuntu` cache in particular,
-      703M observed), and either clear safely or resize the tmpfs. `[OPERATOR]` gated for any delete — determining
-      another slot's temp-file liveness isn't reliably automatable from inside one slot. Repo: agent-orchestrator (or
-      the relevant infra runbook location). **Done when**: `df -h /tmp` shows meaningful headroom restored and a stated
-      root cause (fleet-wide sweep gap / undersized tmpfs / missing cleanup cron) is recorded.
+- [x] ✅ [INFRA] P1. Investigate `/tmp` tmpfs exhaustion on the shared orchestrator- adjacent VM(s) — confirm scope
+      (this VM only, or fleet-wide), identify the largest un-owned/stale contributors (`pytest-of-ubuntu` cache in
+      particular, 703M observed), and either clear safely or resize the tmpfs. `[OPERATOR]` gated for any delete —
+      determining another slot's temp-file liveness isn't reliably automatable from inside one slot. Repo:
+      agent-orchestrator (or the relevant infra runbook location). **Done when**: `df -h /tmp` shows meaningful headroom
+      restored and a stated root cause (fleet-wide sweep gap / undersized tmpfs / missing cleanup cron) is recorded. —
+      unified-trading-pm (this doc), see 2026-07-27T12:49Z Progress Log entry: confirmed resolved externally between the
+      09:40Z SSM check and this session — no delete/resize performed by this slot.
 - [ ] [SCRIPT] P2. Fix `scripts/quality-gates-base/base-service.sh`'s 25 `>/tmp/<name>_qg.log` redirects (STEP 5.93 and
       24 siblings — grep `>/tmp/.*_qg\.log` for the full list) to use a PID-or-mktemp-unique path instead of a fixed
       shared filename, updating each step's paired read-back (`cat`/`grep -q` on the same path) to match. Root cause of
@@ -169,3 +171,46 @@ rather than deciding unilaterally:
   `30Gi total / 8.9Gi used / 2.7Gi free`, swap `4.2Gi/15Gi` used, load average `9.40 11.75 13.13`. Confirms the standing
   condition from an external vantage point independent of any slot session. Not attempting cleanup — same
   `[OPERATOR]`-gated posture as this doc's existing todos.
+
+- 2026-07-27T12:49Z (slot-12, dispatched to todo 1): re-investigated from inside the affected host itself (confirmed via
+  IMDSv2 `instance-id` = `i-0c9b283b31d6b5ca7`, `ap-northeast-1` — the SAME VM as every prior finding in this doc, so
+  scope is confirmed as **single shared host, not a multi-VM fleet issue** — "fleet-wide" in this doc's earlier language
+  means "affects every slot process sharing this one host's tmpfs", not multiple VMs).
+
+  **Current state — both the `/tmp` and `/` crises from this doc are RESOLVED, as of a window BEFORE this session
+  started (I performed no delete or resize myself):**
+  - `df -h /tmp`: `2.0G 510M 1.6G 25%` (was `2.0G 2.0G 0 100%`) — 1.6G headroom restored. `pytest-of-ubuntu`
+    specifically dropped from the originally-observed 703M to 2.0M.
+  - `df -h /`: `484G 302G 182G 63%` (was `290G 278G 12G 96%` per the 09:40Z SSM sample above) — note the total capacity
+    itself grew 290G→484G.
+
+  **Root cause of the `/` recovery — confirmed, not inferred**: `journalctl` shows `sudo growpart /dev/nvme0n1 1` +
+  `sudo resize2fs /dev/nvme0n1p1` executed today at `09:27:17Z`, `09:28:05Z`, `09:28:37Z`, `09:28:51Z` (several
+  retries/dry-runs, incl. one traced with `bash -x`) and a final successful pair at `09:46:27Z`/`09:46:28Z`
+  (`kernel: EXT4-fs (nvme0n1p1): resizing filesystem from 78380795 to 130809595 blocks` →
+  `resized filesystem to 130809595`). This is a genuine EBS-volume-grow + online filesystem resize, i.e. someone (with
+  sudo, root-owned `PWD=/home/ubuntu`) actually enlarged the underlying disk — consistent with the operator or another
+  agent acting on this same issue doc's capacity concern, not a coincidence.
+
+  **Root cause of the `/tmp` recovery — confirmed NOT the daily timer, so a deliberate one-off action**: the `/tmp`
+  tmpfs `size=2097152k` mount option is UNCHANGED (still exactly 2GB — no tmpfs resize happened), so the 1.5GB drop in
+  USED space is from a deletion, not a bigger tmpfs. `systemctl show systemd-tmpfiles-clean.timer` shows its last actual
+  firing was `2026-07-26 13:17:04Z` (yesterday) with the next scheduled for `2026-07-27 13:17:03Z` (still ~30 min in the
+  future at investigation time) — the routine daily sweep did NOT run in the 09:27–12:49Z window, so it is not the
+  explanation. Corroborating evidence of a targeted stale-file sweep (not a blanket wipe): boot-time system dirs from
+  `2026-07-14` (`.X11-unix`, `.ICE-unix`, `systemd-private-*`) are still present untouched, while the oldest SURVIVING
+  scratch file now dates to `2026-07-24` — i.e. everything scratch-shaped and >~3 days old was removed while live system
+  sockets and recent (<3 day) scratch were left alone. This is exactly the shape of this doc's own recommendation #1
+  (`find /tmp -mtime +1 -not -path '/tmp/.X11-unix*' ...`, systemd-private-* excluded), strongly suggesting the operator
+  (or an infra agent acting on their approval) already ran the recommended sweep.
+
+  **Disposition**: both halves of this todo's "done when" bar are met (`df -h /tmp` shows meaningful headroom restored;
+  root cause stated — fleet-wide accumulation from many slots' unmanaged scratch writes, compounded by a root-disk
+  capacity shortfall that has now also been fixed) — closing this todo. I performed NO delete and NO resize myself (both
+  were already done by the time I investigated); this entry is confirmation + root-cause attribution, not new
+  remediation. The standing prevention question this doc's "Recommended decision" #2 raises (periodic tmpfiles sweep vs.
+  broader `TMPDIR` isolation enforcement) is still genuinely open and is NOT resolved by this todo closing — leaving it
+  in "Recommended decision" for a future operator call, since installing an automated recurring delete policy is the
+  same class of judgment call as the manual sweep this doc already gated `[OPERATOR]`. Todos 2 (base-service.sh
+  `/tmp/*_qg.log` race — separately in progress per slot-11's note above) and 3 (oversubscription capacity decision)
+  remain open and are unaffected by this finding.
