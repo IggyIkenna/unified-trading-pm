@@ -84,19 +84,19 @@ source: >-
 
 ## Todos
 
-- [x] [BACKEND] P1. Lower `resume_fresh_context_pct` default 90 -> 80 in `server/config.py` (`agent-orchestrator`),
+- [ ] [BACKEND] P1. Lower `resume_fresh_context_pct` default 90 -> 80 in `server/config.py` (`agent-orchestrator`),
       mirroring the existing `Field(default=..., ge=1, le=100)` pattern on the same class. Add/ update a unit test
       asserting the new default. **Done when**: `get_config().tuning.resume_fresh_context_pct` resolves to 80 by default
       in a passing test; `quality-gates.sh` green.
-- [x] [BACKEND] P1. Add `plan_continuity_reset_enabled: bool = Field(default=False)` to `Tuning` in `server/config.py` —
+- [ ] [BACKEND] P1. Add `plan_continuity_reset_enabled: bool = Field(default=False)` to `Tuning` in `server/config.py` —
       feature-flagged OFF by default, mirroring the `context_burn_kill` precedent (a new fleet-wide dispatch-behavior
       change ships gated, then gets an explicit operator flip once verified, rather than going live unreviewed). **Done
       when**: default resolves to `False` in a passing test; `quality-gates.sh` green.
-- [x] [BACKEND] P1. Extend `DoneResponse.directive` in `server/models/worker_api.py` from
+- [ ] [BACKEND] P1. Extend `DoneResponse.directive` in `server/models/worker_api.py` from
       `Literal["compact_before_next"] | None` to `Literal["compact_before_next", "reset_before_next"] | None`. **Done
       when**: a model-level test asserts the new literal value validates and serializes; existing `compact_before_next`
       tests unaffected.
-- [x] [BACKEND] P0. Implement the plan-continuity reset check in `done_slot()` (`server/routes/slots_worker.py`),
+- [ ] [BACKEND] P0. Implement the plan-continuity reset check in `done_slot()` (`server/routes/slots_worker.py`),
       immediately after `pick_next_task` returns a real candidate (i.e. AFTER the existing context-pct gate, which takes
       priority and is unchanged). When `plan_continuity_reset_enabled` is `True` and the candidate task's `plan_ref`
       differs from the just-completed task's `plan_ref`, OR its `assigned_role` differs, OR its `repos` set differs: do
@@ -111,17 +111,17 @@ source: >-
       dispatches normally even across a plan/role/repo switch (today's behavior, unchanged); (b) flag on + same plan_ref
       -> dispatches normally in the same session; (c) flag on + different plan_ref (or role, or repos) -> withholds the
       task (stays `queued`), fires the kill thread, returns `directive="reset_before_next"`; `quality-gates.sh` green.
-- [x] [INFRA] P1. Update `unified-trading-pm/agents/worker.md`'s directive-field documentation to also cover
+- [ ] [INFRA] P1. Update `unified-trading-pm/agents/worker.md`'s directive-field documentation to also cover
       `reset_before_next` (alongside the existing `compact_before_next`/`compact_now`): the worker does not need to take
       any action itself (the server has already triggered the session teardown) — document it purely for observability,
       so an agent that reads a `reset_before_next` response is not confused into thinking it must self- compact. **Done
       when**: worker.md documents both directive values in the same section; doc-lint passes.
-- [x] [INFRA] P1. Update codex: add a note to `agent-orchestrator-single-vm-architecture.md`'s "Persistence is now
+- [ ] [INFRA] P1. Update codex: add a note to `agent-orchestrator-single-vm-architecture.md`'s "Persistence is now
       GATED..." bullet (added by the parent plan's finalize) describing this SECOND, plan-continuity-based gate,
       feature-flagged and defaulting off; add the `resume_fresh_context_pct` mechanism (never previously documented) to
       `agent-orchestrator-worker-liveness.md` alongside the context-burn trigger row added by the parent finalize.
       **Done when**: both docs describe the mechanism currently shipped in code, not aspirationally.
-- [x] [REVIEW] P0. Run full `quality-gates.sh` on `agent-orchestrator` after all code todos land; commit + push via
+- [ ] [REVIEW] P0. Run full `quality-gates.sh` on `agent-orchestrator` after all code todos land; commit + push via
       quickmerge; flip every checkbox above in the SAME turn per the commit-push-flip HARD RULE.
 - [ ] [OPERATOR] P1. **Decide whether to flip `plan_continuity_reset_enabled` to `True`** now that it's implemented,
       tested, and quickmerged — mirrors the `context_burn_kill` precedent (ship gated, flip on operator approval once
