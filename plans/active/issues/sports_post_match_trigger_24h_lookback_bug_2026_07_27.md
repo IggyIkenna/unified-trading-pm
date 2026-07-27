@@ -223,10 +223,32 @@ same conclusion, plus two provenance details worth keeping on record:
       `batch_understat`, one-shot 2026-07-13..22 backfill); derived_features not literally zero but ~8-day stale and
       tracking a shared batch job, not the live 26h window — consistent with `features_post_match` also never firing
       live. Independently corroborated by slot-10, see "Q1 corroboration" above.
-- [ ] [INFRA] P0. If Q1 confirms live capture is dead: design + ship a fix to
+- [x] ✅ [INFRA] P0. If Q1 confirms live capture is dead: design + ship a fix to
       `deployment_service/sports_trigger_state.py::get_upcoming_fixtures()` / `evaluate_post_match_triggers()` so
       post-match triggers with an offset beyond the current ~2h fixture-visibility cutoff can actually fire (see
       "Recommended decision" above for the design options) — with a regression test proving a synthetic 25h-offset
       trigger now fires for a fixture whose kickoff was >24h in the past. Repo: deployment-service. **Done when**: the
       fix ships, the regression test passes, and a live re-verification (next `stats_delayed` cycle after deploy) shows
-      a fresh `data_type=XG` capture or a fresh `_index/latency_observations` row with `trigger_name=stats_delayed`.
+      a fresh `data_type=XG` capture or a fresh `_index/latency_observations` row with `trigger_name=stats_delayed`. —
+      deployment-service@5b5d227. Implemented option (b) — `SportsTriggerScheduler._max_post_match_lookback_hours()`
+      derives the widest configured post-match fire-window edge from `configs/sports-trigger-tiers.yaml` (currently
+      `features_post_match`: 105+25\*60+60=1665min=27.75h) and `run_once()` fetches a SEPARATE, wider-lookback fixture
+      list (`get_upcoming_fixtures(lookback_hours=...)`) for `evaluate_post_match_triggers` only — the shared 2h
+      pre-match/discovery cutoff and its GCS scan cost are unchanged. Also fixed `evaluate_post_match_triggers` to
+      respect each trigger's own `tolerance_minutes` (was hardcoded to 30, silently ignoring `features_post_match`'s
+      configured 60). 5 new regression tests in
+      `deployment-service/tests/unit/test_sports_trigger_postmatch_lookback.py` (all pass; full suite 91/91 pass;
+      `quality-gates.sh` green, basedpyright error count net DOWN 39→31 on the two touched files) — including an
+      end-to-end `run_once()` test proving a synthetic fixture kicked off >24h ago now fires `stats_delayed` (would fail
+      pre-fix, since `run_once` fed the single 2h-lookback fixture list to both pre- and post-match evaluation). **Live
+      re-verification NOT YET DONE** — requires this fix to reach the deployed scheduler (LDR→staging→main promotion +
+      redeploy) and a real fixture's `stats_delayed` window (~kickoff+25.25h..26.25h) to actually elapse post-deploy;
+      tracked as a new todo below rather than claimed here.
+- [ ] [OPERATOR] P1. Live re-verification follow-up for the fix above (deployment-service@5b5d227): once this commit has
+      reached the deployed sports-trigger-scheduler (promoted past staging + redeployed — check `deployment-service`'s
+      CI/CD status for the promotion), query the live sports manifest for a FRESH `data_type=XG` `captured` row with
+      `pipeline_mode` != `batch_understat` (i.e. NOT the 2026-07-13..22 one-shot backfill) or a fresh
+      `_index/latency_observations/` row with `trigger_name=stats_delayed`, dated after the redeploy. **Done when**:
+      such a row is found (confirms the live fix works end-to-end) or, if none appears after a full day-plus of live
+      operation post-redeploy, escalate — that would mean a second, still-undiagnosed issue beyond the lookback bug
+      fixed here.
