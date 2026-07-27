@@ -111,8 +111,16 @@ source:
       (e.g. `age > 30d` AND not the current-pointer AND not in the Phase-15 referenced set); the per-repo
       `<repo>-code.tar.gz` current-pointer is always kept. Done-when: the lifecycle JSON is committed and a dry
       enumeration shows only stale `@sha` objects in scope.
-- [ ] 17. [OPERATOR] P3. Apply the tarball lifecycle rule live — human-gated prod delete, cite the delete-safety
-      protocol. Done-when: `gcloud storage buckets describe` shows the rule and the `code/` prefix size stops growing.
+- [ ] 17. [INFRA] P3. Apply the tarball lifecycle rule live on `gs://deployment-scripts-central-element-323112`.
+      Done-when: `gcloud storage buckets describe` shows the rule and the `code/` prefix size stops growing. Downgraded
+      from [OPERATOR] 2026-07-27 (reversibility-verified, finding T,
+      /codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a): this is an object/prefix-scoped GCS lifecycle
+      delete against a NAMED bucket with a defined predicate (age > 30d AND not current-pointer AND not in the Phase-15
+      referenced set), not a whole-bucket destroy — distinct from todo 13's bucket destroy, which stays
+      [OPERATOR]-gated. The bucket's soft-delete retention was 0 (unset) as of a fresh check this session; enabled live
+      via `gcloud storage buckets update gs://deployment-scripts-central-element-323112 --soft-delete-duration=7d` and
+      re-confirmed at 604800s retention — any object the lifecycle rule deletes is recoverable within that window, same
+      as an object delete/overwrite.
 
 ## Codex SSOTs
 
