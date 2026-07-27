@@ -369,17 +369,34 @@ todos 7-8.
 **Target ruled: 2026-07-21** (operator R3) — the v6 tail `underlying={ROOT}/quote={Q}/margin={M}/ticks.parquet` is
 canonical everywhere; the v5 bare tail `underlying={ROOT}/ticks.parquet` is LOSSY (same-underlying USD/USDT +
 linear/inverse chains collide) and ALL v5 must migrate. This resolves the "cefi chain-tail v5 vs v6 — two live-written
-shapes" contested axis → **RULED v6**. **In force at W1: NOT YET → cefi effective-from UNKNOWN.**
+shapes" contested axis → **RULED v6**. **CODE fully EXECUTED 2026-07-27 (write + read + guard, real-GCS proven). DATA
+MIGRATION: N/A — 0 v5 (or any) cefi chain objects exist anywhere in the corpus (see below). effective-from for
+classification = 2026-07-22** (the date `mtds@04222eb0` shipped; no cefi chain object has EVER been written, so there is
+no pre-cutover population to grandfather).
 
-| Surface                    | v6 state                                                                                                                                                                      |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| UAC builder                | ✅ v6 — `partition_paths.py:252-253` (`build_cefi_partition_path`)                                                                                                            |
-| reader                     | ✅ v6-first, v5-fallback — `reader.py:402-403`                                                                                                                                |
-| W2 (Tardis lane)           | ✅ v6 — `tardis_shared.py:668-669`                                                                                                                                            |
-| W1 (PartitionedTickWriter) | ❌ bare v5 for cefi — quote/margin derived ONLY under `asset_group=="tradfi"` (`partitioned_writer.py:291-292`); guard `_assert_canonical_tradfi_path` (`:83`) is tradfi-only |
+| Surface                    | v6 state                                                                                                                                                                                                                                                                                                              |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UAC builder                | ✅ v6 — `partition_paths.py:252-253` (`build_cefi_partition_path`); structural guard `unified-api-contracts@9a92cf4f`                                                                                                                                                                                                 |
+| W2 (Tardis lane)           | ✅ v6 — `tardis_shared.py:668-669`                                                                                                                                                                                                                                                                                    |
+| W1 (PartitionedTickWriter) | ✅ v6 — `market-tick-data-service@04222eb0` (`_cefi_chain_partition_dims`); guard `_assert_canonical_chain_path` raises on synthetic v5 (real-GCS proven)                                                                                                                                                             |
+| reader                     | ✅ FIXED 2026-07-27 — was v6-first for tradfi ONLY (cefi always fell to the bare v5 tail, unreadable post-W1-fix); now lists the chain's own `underlying={id}/` subtree (handles multiple v6 settlement variants sharing one underlying, e.g. DERIBIT BTC USD/inverse + USDC/linear) — `_cefi_chain_underlying_blobs` |
 
-**Open first:** whether any native-REST cefi venue routes `options_chain`/`futures_chain` through W1 (vs the W2 Tardis
-lane) — this sizes the live v5 cefi migration blast radius. Fix + migration:
+**Real-GCS proof (2026-07-27, `-test-` bucket, no mocking)**: wrote a DERIBIT BTC options-chain chunk (two settlement
+variants) via the real `PartitionedTickWriter.write_chunk` — both objects landed at the v6 path (confirmed via
+`gcs_describe_object`); `CanonicalParquetReader.read_shard` round-tripped both rows back (after the reader fix above);
+`_assert_canonical_chain_path` raised on a hand-constructed synthetic v5 path. All 3 checks PASS. Proof script:
+`market_tick_data_service/scripts/prove_cefi_chain_tail_v6_e2e_2026_07_27.py`.
+
+**Data migration — confirmed 0 objects (2026-07-27)**: queried the real consolidated availability manifest
+(`market-data-tick-cefi-prd-central-element-323112`) for every row with
+`instrument_type in (options_chain, futures_chain)`: 307 rows, ALL
+`capture_status ∈ {attempted_failed, empty_confirmed}` — **ZERO rows with `capture_status == captured`**, across the
+ENTIRE corpus, any date, any venue, any writer. Spot-verified with real `gcloud storage ls` against the attempted-failed
+(day, venue) prefixes: zero objects. This extends the issue doc's todo-1 finding (W1 reaches zero live objects) to the
+whole corpus: no cefi chain object — v5 or v6 — has EVER been successfully captured. Migration is therefore a confirmed
+no-op; there is nothing to copy, verify, or leave in place.
+
+Fix + migration record:
 [`../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
 
 ---
@@ -410,13 +427,13 @@ is NOT owned by this reconciliation-skill plan.
 
 ## §7 — Summary table
 
-| asset_group | require_pipeline_mode                 | instrument_type PATH | instrument_type COLUMN                                                                | chain tail                                 | defi leaf                    | sports data_type case  |
-| ----------- | ------------------------------------- | -------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------- | ---------------------- |
-| cefi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c)                                         | ✅ v6 target · migration_pending (R3, §6c) | n/a                          | n/a                    |
-| tradfi      | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c)                                         | **2026-07-19**                             | n/a                          | n/a                    |
-| defi        | 2026-05-19                            | lower · UNKNOWN date | ⚠ PER-VALUE target, not blanket UPPER · migration_pending (2026-07-24 carve-out, §3c) | n/a                                        | UNKNOWN (writer not resumed) | n/a                    |
-| prediction  | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c)                                         | n/a                                        | n/a                          | n/a                    |
-| sports      | 2026-05-19 (+ BLK-d48acae4 exception) | n/a                  | ✅ UPPER target · migration_pending (D1, §3c)                                         | n/a                                        | n/a                          | UNKNOWN (K1 unshipped) |
+| asset_group | require_pipeline_mode                 | instrument_type PATH | instrument_type COLUMN                                                                | chain tail                                              | defi leaf                    | sports data_type case  |
+| ----------- | ------------------------------------- | -------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------- | ---------------------- |
+| cefi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c)                                         | **2026-07-22** — EXECUTED, 0-object migration (R3, §6c) | n/a                          | n/a                    |
+| tradfi      | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c)                                         | **2026-07-19**                                          | n/a                          | n/a                    |
+| defi        | 2026-05-19                            | lower · UNKNOWN date | ⚠ PER-VALUE target, not blanket UPPER · migration_pending (2026-07-24 carve-out, §3c) | n/a                                                     | UNKNOWN (writer not resumed) | n/a                    |
+| prediction  | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c)                                         | n/a                                                     | n/a                          | n/a                    |
+| sports      | 2026-05-19 (+ BLK-d48acae4 exception) | n/a                  | ✅ UPPER target · migration_pending (D1, §3c)                                         | n/a                                                     | n/a                          | UNKNOWN (K1 unshipped) |
 
 > **⛔ corrected 2026-07-20, operator ruling D1 — RE-RECONCILED 2026-07-20 (acceptance review).** The
 > `instrument_type COLUMN` cells above read "🔴 UNRULED (§3c)" until the 2026-07-20 ruling, then briefly "RULED
@@ -424,17 +441,14 @@ is NOT owned by this reconciliation-skill plan.
 > (mixed on disk today) — the reconciliation skill compares it **case-INSENSITIVELY** and emits **NO** casing finding
 > until the migration completes; UPPERCASE is enforced POST-migration. See §3c.
 
-**cefi chain-tail hazard (not a date, a fork).** _(**⛔ RULED 2026-07-21, operator R3 — see §6c.** The fork is resolved:
-**v6 is canonical**, v5 is LOSSY and ALL v5 migrates. The W1 cefi-emits-v5 divergence is now a WRITER DEFECT to fix
-(`partitioned_writer.py:291-292` derives quote/margin only under `asset_group=="tradfi"`), not a permanent two-shape
-fork; it is `migration_pending` until W1 ships. Until then a reconciliation pass still accepts both cefi tails and does
-NOT flag v5 as a fresh finding.)_ cefi has **two live write lanes emitting two different tails for the same shard**:
-MTDS W1 `PartitionedTickWriter` emits the bare v5 tail `underlying={U}/ticks.parquet` because `write_chunk` gates
-quote/margin derivation on `asset_group == "tradfi"` only, while the W2 Tardis lane emits the v6 tail. There is no cefi
-cutover date to record because cefi never cut over — both shapes are being written **now**. A reconciliation pass must
-accept both cefi tails and report the fork itself as one finding, not per-shard. _(**UNVERIFIED by this agent**: the
-`partitioned_writer.py:290-293` and `tardis_shared.py:667-671` line references come from the Phase-0 audit synthesis;
-this agent did not open the MTDS writer files.)_
+**cefi chain-tail hazard — RESOLVED 2026-07-27.** _(Historical: ⛔ RULED 2026-07-21, operator R3 — see §6c. At the time
+of ruling, cefi had two live write lanes emitting two different tails for the same shard: MTDS W1
+`PartitionedTickWriter` emitting the bare v5 tail because `write_chunk` gated quote/margin derivation on
+`asset_group == "tradfi"` only, while the W2 Tardis lane already emitted v6.)_ W1 shipped v6
+(`market-tick-data-service@04222eb0`, 2026-07-22) and was proven end-to-end against real GCS 2026-07-27 (write + reader
+round-trip + guard — see §6c). **No cefi chain-tail fork exists on disk to reconcile**: the corpus manifest shows ZERO
+captured cefi `options_chain`/`futures_chain` rows anywhere, ever (§6c) — there was never a v5-shaped object written by
+ANY lane, so a reconciliation pass finds nothing to accept or flag on this axis today.
 
 ---
 

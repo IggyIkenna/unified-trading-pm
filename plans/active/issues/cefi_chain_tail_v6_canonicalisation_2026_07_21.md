@@ -167,28 +167,63 @@ papering over them.
       of this todo's literal scope — todo 4 names "shard-atom (manifest key)" + "available_at bookkeeping", which most
       directly maps to `_row_counts`/`underlying_counts`, already fixed) — flagging as a residual, smaller finding for a
       follow-up rather than expanding scope further.
-- [x] 5. [DATA] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc for
-      execution]** PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip via the
-      v6-first probe at `reader.py:402`), with the guard raising on a synthetic v5 path. — **Code now SHIPPED
-      (`market-tick-data-service@04222eb0`) and the `canonical-migration-cefi-*` VM fleet that originally blocked this
-      (interference risk on the same bucket) has since TERMINATED (verified 2026-07-22) — the blocker is cleared.**
-      Unit-level proof (mocked writer, no real GCS) is in `tests/unit/test_partitioned_writer_cefi_chain_tail_v6.py` (6
-      tests, all passing); the real-day GCS round-trip proof is still **NOT ATTEMPTED** and remains Round 2 work —
-      genuinely separate operational verification, not a doc update.
-- [x] 6. [DATA] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc for
-      execution]** Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5),
-      recording any v5 collisions where two logical chains overwrote one object as unrecoverable rather than silently
-      merging. — **DEFERRED to Round 2** (out of scope for this session per task instructions; todo 1's finding that W1
-      reaches zero live objects means this migration's true source, if any v5 cefi chain objects exist at all in GCS, is
-      NOT the W1 path — needs its own enumeration before migrating).
-- [x] 7. [DATA] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc for
-      execution]** Re-sync the manifest / data-status render for the migrated cefi chain cells so all four canonical
-      surfaces agree post-migration. — **DEFERRED to Round 2** (depends on todo 6).
-- [x] 8. [REVIEW] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc
-      for execution]** On W1 ship, record the cefi chain-tail v6 cutover date in
-      `/codex/02-data/canonical-cutover-register.md` (repo@sha) and update the §7 summary cefi `chain tail` cell from
-      "v5/v6 dual hazard" to the ruled v6 (migration_pending → EXECUTED). — **DEFERRED**: gated on the MTDS-side W1 code
-      actually shipping (todos 2/3's MTDS portion), which did not happen this session.
+- [x] 5. [DATA] P1. **[executed 2026-07-27 via plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md todo]**
+      PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip via the v6-first probe at
+      `reader.py:402`), with the guard raising on a synthetic v5 path. — **DONE 2026-07-27, real GCS `-test-` bucket
+      (`market-data-tick-cefi-test-central-element-323112`), no mocking.** Ran
+      `market_tick_data_service/scripts/prove_cefi_chain_tail_v6_e2e_2026_07_27.py`, day=2026-07-27, venue=DERIBIT,
+      underlying=BTC, both real settlement variants (USD/inverse, USDC/linear — the exact anti-collision shape): - **(a)
+      write PASS**: both objects landed at the v6 path —
+      `raw_tick_data/by_date/day=2026-07-27/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/instrument_type=options_chain/data_type=trades/underlying=BTC/quote={USD,USDC}/margin={inverse,linear}/ticks.parquet`
+      (both confirmed via `gcs_describe_object`, then cleaned up post-proof — this is the `-test-` bucket). - **(b)
+      reader round-trip PASS** — but only after fixing TWO real, previously-unknown reader bugs surfaced by this
+      real-GCS proof (unit tests never caught either because they mock `list_blobs` to return bare strings, not the real
+      provider's return type): 1. `reader.py::_derivative_underlying_tails` built the v6 probe tail ONLY for
+      `asset_group == "tradfi"` — a cefi v6 write was unreadable via the bare-v5-only fallback. Not fixable by mirroring
+      the tradfi branch verbatim: tradfi has exactly one canonical quote/margin per product (a single guessed tail
+      suffices); cefi chains can carry MULTIPLE v6 variants under one underlying (this exact DERIBIT BTC case). Fixed by
+      adding `_cefi_chain_underlying_blobs` — a bounded, single-shard live-list of the chain's own `underlying={id}/`
+      subtree (not a corpus walk) that returns every real object found, covering all v6 variants and the bare v5 tail in
+      one pass. 2. `_blob_paths_derivative`/`_blob_paths_non_derivative`'s bulk (no-`instrument_id`) branches, and the
+      new listing above, all called `.endswith(...)` directly on `list_blobs`'s yielded items. The REAL GCP/AWS provider
+      (`GCSStorageClient.list_blobs`) yields `BlobMetadata` objects (`.name` carries the path), not bare strings —
+      `'BlobMetadata' object has no attribute 'endswith'`. The existing unit tests mock `list_blobs` to return strings,
+      which is why this was never caught. Added `_blob_path_name()` (accepts either shape) and applied it at all three
+      call sites. 3. Also had to widen `_read_candidate_blobs`'s dispatch: with `instrument_id` given and >1 candidate
+      blob, it took the FIRST existing blob only — correct for same-content duplicate stems (wire/canonical/legacy), but
+      WRONG for the new cefi-chain listing, where >1 candidates are REAL DISTINCT objects (one per settlement variant)
+      that must all be read — first-existing would silently reproduce the exact v5 collision this whole fix eliminates.
+      Added an `is_cefi_chain` carve-out that unions (concatenates) instead. After the fixes:
+      `reader.read_shard(venue="DERIBIT", instrument_type="options_chain", instrument_id="BTC", pipeline_mode="batch_tardis", ...)`
+      returned both rows, `symbol` column containing both `BTC-29DEC25-100000-C` and `BTC_USDC-29DEC25-100000-C`. -
+      **(c) guard PASS**: `_assert_canonical_chain_path` raised `ValueError` on a hand-constructed synthetic v5 path
+      (`.../underlying=BTC/ticks.parquet`, same day/venue/instrument_type/data_type). All 3 checks PASS. Code:
+      `market-tick-data-service@4e5d0a24` (`reader.py` fix + `tests/unit/test_reader.py` new coverage —
+      `TestBlobPathName`, `TestCefiChainUnderlyingBlobs`, `TestBlobPathsDerivativeCefiListing`,
+      `TestReadCandidateBlobsCefiChainUnion` — + the one-off proof script).
+- [x] 6. [DATA] P1. **[executed 2026-07-27 via plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md todo]**
+      Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5), recording any v5
+      collisions where two logical chains overwrote one object as unrecoverable rather than silently merging. —
+      **ENUMERATION = 0 objects, migration is a confirmed no-op.** Queried the real consolidated availability manifest
+      (`market-data-tick-cefi-prd-central-element-323112`, `GCP_PROJECT_ID` env required for `read_availability_index`
+      to actually resolve credentials — silently returns an empty frame otherwise, a sharp edge worth flagging for
+      future readers of this doc) for every row with `instrument_type in (options_chain, futures_chain)`: **307 rows
+      total, ALL dated 2026-07-26, capture_status ∈ {attempted_failed: 157, empty_confirmed: 150} — ZERO rows with
+      `capture_status == captured`.** This extends todo 1's investigation-based finding (W1 reaches zero live objects)
+      with direct manifest + GCS evidence: there is no successful cefi options_chain/futures_chain capture anywhere in
+      the corpus, via ANY writer, at any time — not just via W1. Spot-verified with real `gcloud storage ls` against the
+      exact attempted-failed (day, venue) prefixes (DERIBIT, OKX-FUTURES, BINANCE-DELIVERY, day=2026-07-26): all
+      returned zero objects, consistent with the manifest. No v5 objects exist to migrate; no collisions to record;
+      nothing to leave in place per the "do not delete/purge" instruction (there is nothing there).
+- [x] 7. [DATA] P1. **[executed 2026-07-27 via plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md todo]**
+      Re-sync the manifest / data-status render for the migrated cefi chain cells so all four canonical surfaces agree
+      post-migration. — **N/A, depends on todo 6 which migrated 0 objects.** No cells to re-sync; the manifest already
+      correctly shows 0 captured cefi chain rows, consistent with 0 real objects on disk.
+- [x] 8. [REVIEW] P1. **[executed 2026-07-27 via plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md todo]** On
+      W1 ship, record the cefi chain-tail v6 cutover date in `/codex/02-data/canonical-cutover-register.md` (repo@sha)
+      and update the §7 summary cefi `chain tail` cell from "v5/v6 dual hazard" to the ruled v6 (migration_pending →
+      EXECUTED). — **DONE 2026-07-27** — see register §6c/§7, citing `market-tick-data-service@04222eb0` (W1 write fix),
+      `unified-api-contracts@9a92cf4f` (structural guard), and this session's reader-fix + e2e-proof sha.
 
 ## Progress Log
 
