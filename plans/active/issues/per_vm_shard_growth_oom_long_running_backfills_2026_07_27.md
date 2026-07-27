@@ -98,12 +98,19 @@ shows `task=instruments-backfill`, `Chunk 1/25: 2020-06-06 → 2020-09-03`.
       launcher is ever invoked with a wide date range in practice. **Done when**: every such launcher is either
       confirmed low-risk (always invoked with a bounded range) or redirected to a chunked task type the same way this
       one was.
-- [ ] [OPERATOR] P3. **Consider a proper library-level fix** (not attempted here — too risky to rush; needs an explicit
-      go-ahead before an AO worker touches fleet-wide concurrency-critical code): cache the merged per-VM shard
-      DataFrame + its GCS generation in the `ManifestWriter` instance across flushes, using a generation-check to detect
-      whether another writer touched the object since this instance's last upload before trusting the cache (falls back
-      to a full read on any mismatch — preserves the existing concurrent-writer correctness guarantee exactly). Would
-      eliminate the redundant download+parse cost for the common single-sequential-writer case without a chunking
-      workaround, but touches `unified-trading-library`'s concurrency-critical shared code (used fleet-wide, not just
-      sports) — needs its own dedicated session with full test coverage of `test_manifest_writer_per_vm.py` /
-      `test_manifest_writer_per_vm_debounce.py`, not a rushed mid-incident change.
+- [ ] [CODE] P3. **Library-level fix for the `ManifestWriter` per-VM-shard flush cost** — **downgraded from `[OPERATOR]`
+      2026-07-27** (operator ruling: this class of risk — a silent, hard-to-detect correctness regression in shared
+      fleet-wide concurrency-critical code, not a bounded/recoverable-within-7-days mistake like a soft-deleted GCS
+      object — genuinely differs from the reversibility carve-out (§3a) and needed its own ruling rather than a
+      reflexive downgrade. Decided: dispatchable with a STRENGTHENED test bar, not a human sign-off, since
+      quality-gates.sh + real adversarial test coverage is the actual safety net for every other shared-library change
+      in this codebase). Cache the merged per-VM shard DataFrame + its GCS generation in the `ManifestWriter` instance
+      across flushes, using a generation-check to detect whether another writer touched the object since this instance's
+      last upload before trusting the cache (falls back to a full read on any mismatch — must preserve the existing
+      concurrent-writer correctness guarantee exactly, same invariant
+      `test_concurrent_writers_same_shard_lose_no_entries` already covers). **Done when**: (a) both existing suites stay
+      green (`test_manifest_writer_per_vm.py`, `test_manifest_writer_per_vm_debounce.py`), AND (b) a NEW adversarial
+      test is added that specifically simulates a second writer mutating the shard's GCS generation between this
+      instance's cache-fill and its next flush, proving the generation-check detects the mismatch and falls back to a
+      full read-merge (not just that the happy-path cache hit works) — this new test is the real safety net, not a
+      human's review. `quality-gates.sh` green on `unified-trading-library`.
