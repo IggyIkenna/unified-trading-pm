@@ -119,7 +119,31 @@ lets each one be built, validated, and run to real completion on its own timelin
       `issues/candle_feature_canonical_path_divergence_2026_07_20.md` todo 7). Repo: market-data-processing-service.
       Launch on a Tier-2 SPOT VM per the heavy-I/O rule, never in-session — budget for the SAME class of iteration
       (memory/preemption) the raw-MTDS sweep needed. Feeds
-      `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`'s corpus-wide backfill scope.
+      `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`'s corpus-wide backfill scope. **Built 2026-07-27**
+      (`market-data-processing-service@01744b7`, `scripts/candle_orphan_sweep.py`, the design brief's open items
+      resolved: a bounded live 3-object-per-AG spot-check found the segment ORDER is actually UNIFORM across all 5
+      asset_groups — `day/pipeline_mode/timeframe/data_type/instrument_type/venue` — not per-AG-divergent as the
+      pre-check text above assumed; no existing UAC `ShardKey` shape covers candles, so a new `CandleShardKey`
+      NamedTuple was hand-rolled as expected). Implements the A/D/E/F taxonomy (F = ambiguous-pre-fix, gated on
+      `--manifest-fix-cutover`, informational-only, does not gate acceptance) + dual-vocabulary manifest coverage + its
+      own checkpointed single walk (no external enumeration file needed, unlike candle-census/apply). **Validated
+      2026-07-27** (`market-data-processing-service@d921823`): found + fixed a REAL bug during validation —
+      `_BUCKET_KIND_MAP["sports"]` pointed at `instruments-store-sports-prd-...` (live-verified: ZERO
+      `processed_candles/` objects there, a silent false-clean "0 orphans" result) instead of the tick bucket
+      `market-data-tick-sports-prd-...` where the real corpus lives — the exact honest-absence violation this codebase's
+      data-correctness rules exist to catch. Added 31 unit tests (previously zero). Ran a bounded real 200-object sweep
+      against PROD sports data post-fix: 200/200 `A_canonical_manifested`, 0 orphans/junk/ambiguous — genuine,
+      real-data, end-to-end proof the pipeline works. Attempted the same for DeFi; killed intentionally after ~6 min /
+      ~15.6GB RSS on this shared host (memory: 396MB free, heavy swap) once it confirmed the bucket resolves correctly
+      and the manifest-load phase started — DeFi's 23.9M-row `availability_index.parquet` genuinely needs VM-scale
+      memory, matching the raw-tick sweep's own documented 2026-07-21..24 OOM history (see the design brief's §2
+      citation) — this is the expected shape of the problem, not a new bug. Added a read-only, `$MODE`-ignoring
+      `<ag>-candle-orphan-sweep` launcher category (`deployment-service@d75e8f3`, `launch-canonical-migration-vm.sh`,
+      mirrors `_candle_census_cmd`'s no-reachable-`--apply`-path shape; no new `VM_PREFIX_TO_BUCKET` registry entry
+      needed — falls under the existing per-AG `canonical-migration-<ag>-` prefixes). **Still outstanding before this
+      checkbox flips**: the actual full-corpus Tier-2 SPOT VM run for cefi/defi/tradfi/prediction (sports alone was
+      real-data-validated in-session at a bounded 200-object scale) and confirming `orphan_class_E == 0` (or a genuine,
+      triaged non-zero count) per asset_group.
 - [ ] 2. [SCRIPT] P2. **Build + validate a features-service orphan sweep** — same A-E taxonomy pattern, shard key
       `asset_group × feature_family × day`. Repo: features-service. VM-run, never in-session.
 - [ ] 3. [SCRIPT] P2. **Build + validate an ml/strategy orphan sweep** — genuinely different shape (run/model-id-keyed,
@@ -127,3 +151,14 @@ lets each one be built, validated, and run to real completion on its own timelin
       mechanical port of the day-sharded pattern). Repo: ml-service, strategy-service. VM-run, never in-session.
 - [ ] 4. [DOC] P2. Once todos 1-3 land real per-stage findings, write the combined cross-repo lineage report
       `data_pipeline_check_mdps_features_2026_07_20.md` todo 11b actually asks for, then flip that todo.
+
+## Progress Log
+
+- **2026-07-27** (AO dispatch, slot 9) — Picked up todo 1. Found the script already built by a peer slot
+  (`market-data-processing-service@01744b7`) but with zero test coverage and never validated against real data.
+  Validation found + fixed a real bucket-resolution bug (sports pointed at the wrong bucket — see todo 1's own note
+  above for full detail), added 31 unit tests, ran a real bounded 200-object sweep against prod sports data (clean), and
+  wired the `<ag>-candle-orphan-sweep` VM launcher category. Shipped `market-data-processing-service@d921823` +
+  `deployment-service@d75e8f3`. Deliberately did NOT flip todo 1's checkbox — the full-corpus Tier-2 SPOT VM run for
+  cefi/defi/tradfi/prediction genuinely has not happened yet (DeFi alone confirmed to need VM-scale memory, matching the
+  raw-tick sweep's own multi-day 2026-07-21..24 iteration history), so "validate" is only partially satisfied.
