@@ -292,63 +292,63 @@ This plan is done when:
       requirements — both now fixed/documented, not rediscovered here).
 
       **Key finding: the registration mechanism ALREADY EXISTS and is ALREADY WIRED in, in
-                                          `market-data-processing-service/scripts/migrate_candle_canonical_2026_07.py`.** Read the script directly rather
-                                          than assuming a new one was needed: `_apply_one()` dispatches on `cls.action` — for `A_VERIFY_ONLY` (an
-                                          already-canonical object needing no move, `_apply_one` line ~1080-1084) it calls
-                                          `_record_captured_for_target(uri, asset_group=asset_group)` directly; for `A_COPY` (a real
-                                          migrate/rename) it threads `record_manifest_asset_group=asset_group` into `_copy_verify_delete`, which calls the
-                                          SAME `_record_captured_for_target` on any outcome in `(success_label, "SRC_ALREADY_GONE",
-                                          "NOOP_TARGET_EQUALS_SOURCE")`. So **every object the apply pass touches — migrated OR already-canonical — is
-                                          already supposed to get a manifest row**, via a direct `ManifestWriter(service_name=...,
-                                          catalogue_bucket=bucket).record_captured(..., row_count=0, validate=False)` call
-                                          (`migrate_candle_canonical_2026_07.py:917-935`) — deliberately `row_count=0` + no content re-read, since
-                                          `check_shard_freshness` (the sole skip-if-fresh consumer, `unified_trading_library/manifest_writer/_queries.py`)
-                                          keys off shard PRESENCE + `capture_status`/`written_at`, never `row_count`, and re-reading ~11M objects' content
-                                          purely to satisfy a row-count would be prohibitively expensive at this scale (this reasoning is already in the
-                                          script's own docstring — not re-derived here). **This call is a DIRECT `ManifestWriter.record_captured()`, NOT
-                                          routed through `canonical_writer_stamping.py`'s `_publish_emission_check`/`should_publish_row` gate** (the
-                                          todo-1/2 root cause) — confirmed by reading the import (`from unified_trading_library import ManifestWriter`,
-                                          no `canonical_writer_stamping` import) and the inline QG-allow comment ("emission-policy-not-applicable —
-                                          migration re-record, not a derived output"). So todo 2's fix and this mechanism are INDEPENDENT — todo 2 fixed
-                                          the LIVE/forward writer path; this pre-existing migration-script path was never subject to that bug at all.
+                                              `market-data-processing-service/scripts/migrate_candle_canonical_2026_07.py`.** Read the script directly rather
+                                              than assuming a new one was needed: `_apply_one()` dispatches on `cls.action` — for `A_VERIFY_ONLY` (an
+                                              already-canonical object needing no move, `_apply_one` line ~1080-1084) it calls
+                                              `_record_captured_for_target(uri, asset_group=asset_group)` directly; for `A_COPY` (a real
+                                              migrate/rename) it threads `record_manifest_asset_group=asset_group` into `_copy_verify_delete`, which calls the
+                                              SAME `_record_captured_for_target` on any outcome in `(success_label, "SRC_ALREADY_GONE",
+                                              "NOOP_TARGET_EQUALS_SOURCE")`. So **every object the apply pass touches — migrated OR already-canonical — is
+                                              already supposed to get a manifest row**, via a direct `ManifestWriter(service_name=...,
+                                              catalogue_bucket=bucket).record_captured(..., row_count=0, validate=False)` call
+                                              (`migrate_candle_canonical_2026_07.py:917-935`) — deliberately `row_count=0` + no content re-read, since
+                                              `check_shard_freshness` (the sole skip-if-fresh consumer, `unified_trading_library/manifest_writer/_queries.py`)
+                                              keys off shard PRESENCE + `capture_status`/`written_at`, never `row_count`, and re-reading ~11M objects' content
+                                              purely to satisfy a row-count would be prohibitively expensive at this scale (this reasoning is already in the
+                                              script's own docstring — not re-derived here). **This call is a DIRECT `ManifestWriter.record_captured()`, NOT
+                                              routed through `canonical_writer_stamping.py`'s `_publish_emission_check`/`should_publish_row` gate** (the
+                                              todo-1/2 root cause) — confirmed by reading the import (`from unified_trading_library import ManifestWriter`,
+                                              no `canonical_writer_stamping` import) and the inline QG-allow comment ("emission-policy-not-applicable —
+                                              migration re-record, not a derived output"). So todo 2's fix and this mechanism are INDEPENDENT — todo 2 fixed
+                                              the LIVE/forward writer path; this pre-existing migration-script path was never subject to that bug at all.
 
-                                          **Recommended mechanism: RE-RUN the EXISTING `<ag>-candle-apply` VM category**
-                                          (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh`, `cefi-candle-apply` /
-                                          `defi-candle-apply` / `tradfi-candle-apply` / `prediction-candle-apply`) **in `full` mode for the complete date
-                                          range, per asset_group** — this is NOT a new script; it reuses the already-shipped, already-tested
-                                          `migrate_candle_canonical_2026_07.py --apply` pass verbatim, which already performs the SAME single-walk
-                                          enumeration (`gcloud storage ls -r gs://<bucket>/processed_candles/**`) this todo would otherwise need to build
-                                          from scratch, and is independently idempotent/re-run-safe by its own checkpoint-safety design — `VERIFIED_INPLACE`
-                                          / `NOOP_TARGET_EQUALS_SOURCE` / `SRC_ALREADY_GONE` are all explicitly `_CHECKPOINT_SAFE_OUTCOMES`, meaning a
-                                          re-run over already-migrated objects is a safe, cheap no-op on the move/rename side while still re-attempting the
-                                          manifest-record call. `MANIFEST_PER_VM_SHARDS=true` is already exported globally by
-                                          `setup-data-pipeline-vm.sh` for every VM this launcher spawns (per the launcher's own comment at line ~897) —
-                                          the defi-fold doc's env-var pitfall is NOT the cause here, already ruled out.
+                                              **Recommended mechanism: RE-RUN the EXISTING `<ag>-candle-apply` VM category**
+                                              (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh`, `cefi-candle-apply` /
+                                              `defi-candle-apply` / `tradfi-candle-apply` / `prediction-candle-apply`) **in `full` mode for the complete date
+                                              range, per asset_group** — this is NOT a new script; it reuses the already-shipped, already-tested
+                                              `migrate_candle_canonical_2026_07.py --apply` pass verbatim, which already performs the SAME single-walk
+                                              enumeration (`gcloud storage ls -r gs://<bucket>/processed_candles/**`) this todo would otherwise need to build
+                                              from scratch, and is independently idempotent/re-run-safe by its own checkpoint-safety design — `VERIFIED_INPLACE`
+                                              / `NOOP_TARGET_EQUALS_SOURCE` / `SRC_ALREADY_GONE` are all explicitly `_CHECKPOINT_SAFE_OUTCOMES`, meaning a
+                                              re-run over already-migrated objects is a safe, cheap no-op on the move/rename side while still re-attempting the
+                                              manifest-record call. `MANIFEST_PER_VM_SHARDS=true` is already exported globally by
+                                              `setup-data-pipeline-vm.sh` for every VM this launcher spawns (per the launcher's own comment at line ~897) —
+                                              the defi-fold doc's env-var pitfall is NOT the cause here, already ruled out.
 
-                                          **Open question left for todo 5 (the execution) to check BEFORE re-running, not assumed here**: it is not yet
-                                          established WHY the P7/P8 apply pass (cited elsewhere in this plan as "COMPLETE 2026-07-23") left the manifest
-                                          this empty if `_record_captured_for_target` really fired for every object. Two live possibilities, undistinguished:
-                                          (i) the actual `--apply --quarantine --content-repair` `full`-mode run may not have been executed to genuine
-                                          completion across the FULL date range for all 4 asset_groups (only a `--dry-run`/census pass, or a partial/shard
-                                          subset, may have actually completed) — checkable by reading the staged run artifacts at
-                                          `gs://<CODE_BUCKET>/canonical-migration-candle-apply/<RUN_TS>/<vm_name>/` and each run's `CANDLE_APPLY_ENUM_LINES`
-                                          count vs. the ~10.9M P0-census total, per asset_group; (ii) the apply pass DID complete but
-                                          `_record_captured_for_target`'s own `except Exception` swallow path fired at scale for a reason distinct from the
-                                          already-ruled-out env-var gap — checkable via a targeted grep for `"manifest re-record failed for"` WARNING lines
-                                          in those same staged run logs. **Do a `--dry-run` (or a `--limit`-bounded `--apply` smoke) re-run FIRST and read
-                                          its output against these two hypotheses before committing to a full-corpus `--apply` re-run** — re-running blind
-                                          risks masking (i)/(ii) if the fix turns out to be something other than "just re-run it."
+                                              **Open question left for todo 5 (the execution) to check BEFORE re-running, not assumed here**: it is not yet
+                                              established WHY the P7/P8 apply pass (cited elsewhere in this plan as "COMPLETE 2026-07-23") left the manifest
+                                              this empty if `_record_captured_for_target` really fired for every object. Two live possibilities, undistinguished:
+                                              (i) the actual `--apply --quarantine --content-repair` `full`-mode run may not have been executed to genuine
+                                              completion across the FULL date range for all 4 asset_groups (only a `--dry-run`/census pass, or a partial/shard
+                                              subset, may have actually completed) — checkable by reading the staged run artifacts at
+                                              `gs://<CODE_BUCKET>/canonical-migration-candle-apply/<RUN_TS>/<vm_name>/` and each run's `CANDLE_APPLY_ENUM_LINES`
+                                              count vs. the ~10.9M P0-census total, per asset_group; (ii) the apply pass DID complete but
+                                              `_record_captured_for_target`'s own `except Exception` swallow path fired at scale for a reason distinct from the
+                                              already-ruled-out env-var gap — checkable via a targeted grep for `"manifest re-record failed for"` WARNING lines
+                                              in those same staged run logs. **Do a `--dry-run` (or a `--limit`-bounded `--apply` smoke) re-run FIRST and read
+                                              its output against these two hypotheses before committing to a full-corpus `--apply` re-run** — re-running blind
+                                              risks masking (i)/(ii) if the fix turns out to be something other than "just re-run it."
 
-                                          **Delete-safety**: the manifest `record_captured` calls this mechanism makes are pure additive bookkeeping
-                                          (`row_count=0` placeholder, no delete/overwrite of unrelated manifest rows) — NOT gated by the delete-safety
-                                          protocol. The underlying migration's `--quarantine --content-repair` gates DO carry real object
-                                          copy/verify/delete semantics for non-`VERIFY_ONLY` dispositions, but since the path migration is independently
-                                          documented COMPLETE for this corpus, a re-run is expected to land ~100% `VERIFIED_INPLACE` /
-                                          `NOOP_TARGET_EQUALS_SOURCE` / `SRC_ALREADY_GONE` outcomes (no new moves/deletes) — the dry-run-first step above is
-                                          exactly the check that confirms this before any `--apply` re-run touches real objects, so `[OPERATOR]` gating is
-                                          not being invoked here; if the dry-run instead reveals a large `A_COPY`/`A_QUARANTINE` population (meaning the
-                                          corpus is NOT actually fully migrated), STOP and treat that as a new finding requiring its own review before
-                                          proceeding, per the existing delete-safety citation this todo originally flagged.
+                                              **Delete-safety**: the manifest `record_captured` calls this mechanism makes are pure additive bookkeeping
+                                              (`row_count=0` placeholder, no delete/overwrite of unrelated manifest rows) — NOT gated by the delete-safety
+                                              protocol. The underlying migration's `--quarantine --content-repair` gates DO carry real object
+                                              copy/verify/delete semantics for non-`VERIFY_ONLY` dispositions, but since the path migration is independently
+                                              documented COMPLETE for this corpus, a re-run is expected to land ~100% `VERIFIED_INPLACE` /
+                                              `NOOP_TARGET_EQUALS_SOURCE` / `SRC_ALREADY_GONE` outcomes (no new moves/deletes) — the dry-run-first step above is
+                                              exactly the check that confirms this before any `--apply` re-run touches real objects, so `[OPERATOR]` gating is
+                                              not being invoked here; if the dry-run instead reveals a large `A_COPY`/`A_QUARANTINE` population (meaning the
+                                              corpus is NOT actually fully migrated), STOP and treat that as a new finding requiring its own review before
+                                              proceeding, per the existing delete-safety citation this todo originally flagged.
 
 - [x] 4. [DATA] P1. ✅ **DONE 2026-07-27 (slot-7).** Re-verified all 3 AGs fresh — see "Cross-AG re-verification,
       2026-07-27" above. **DEFI/PREDICTION candle manifests unchanged/still fully degenerate** (0 `ohlcv_*` rows each;
@@ -387,6 +387,37 @@ This plan is done when:
 ---
 
 ## Progress Log
+
+### 2026-07-27 (slot-6) — Todo 5: found the historical backfill ALREADY running under a sibling campaign — declined to launch a duplicate
+
+Picked up todo 5 fresh via `/boot` (task `mdps_candle_manifest_population_disconnect-005`). Before launching the
+`<ag>-candle-apply` VMs todo 3 recommended, checked live infra state first (`gcloud compute instances list` +
+`/api/state`) rather than launching blind — found `backfill-candle-manifest-{cefi,defi,tradfi,prediction}-20260727-*`
+already `RUNNING` (asia-northeast1-c), and slot 8 (`mdps_candle_manifest_near_total_coverage_gap-002`) actively
+monitoring them (`last_msg: "monitoring remaining 3 apply backfill VMs, tradfi closest to completion"`).
+
+Read the sibling issue doc `plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md` (linked from
+this plan's own "why it matters" — the operator escalation of this same underlying finding) — slot 8 built a
+**purpose-built, record-only backfill tool** (`market-data-processing-service/scripts/backfill_candle_manifest.py` +
+`deployment-service/scripts/vm/launch-backfill-candle-manifest-vm.sh`, shipped `mdps@cf94e23` +
+`deployment-service@fafde10`/`@b947d9f`) scoped from a real `candle_orphan_sweep.py` census (A/E/F taxonomy) rather than
+a blind full-corpus `--apply` re-run — strictly superior targeting to todo 3's originally-recommended
+`<ag>-candle-apply` mechanism (which would re-walk the ENTIRE corpus rather than just the ~2.6M actually-orphaned E+F
+rows). Both mechanisms solve the exact same problem (populate missing `record_captured` manifest rows for
+cefi/defi/tradfi/prediction candle objects) for the exact same 4 asset_groups.
+
+**Decision: do NOT launch todo 3's `<ag>-candle-apply` VMs.** Doing so now would be a second full-corpus GCS walk racing
+against slot 8's already ~35-99%-complete campaign (per its Progress Log, footer-read stage: cefi 99%, defi 34%, tradfi
+68%, prediction 59% as of 2026-07-27T16:23Z) over the same objects/manifest shards — a direct violation of the
+data_engineering craft's single-walk efficiency north-star, real duplicate GCP compute spend, and unnecessary contention
+risk on concurrent manifest writes. This also already satisfies todo 5's own TRADFI caveat ("re-check its actual
+candle-manifest gap before launching") — slot 8's launch is scoped from a real orphan-sweep census (536,934 actionable
+F-rows for tradfi), a more precise gap measurement than this plan's todo 4 estimate.
+
+**Action**: declining to duplicate; will monitor the existing 4 VMs to completion (self-shutdown on a
+`VERDICT <ag>: ...` run.log line per their own design) via my own `run_in_background` watchdog per the async-wait HARD
+RULE, then verify manifest rows landed per AG and flip this todo citing the shared campaign's evidence + VM names. No
+code changed, no VM launched, no manifest touched in this session so far.
 
 ### 2026-07-27 (slot-11) — Todo 4: re-dispatched a third time despite PARKED; declined via the same sanctioned skip mechanism, no retry
 
