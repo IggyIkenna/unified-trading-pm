@@ -736,10 +736,14 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       9-10 benchmark-days) — `features-service@3cf2b674`. Set to 10800s (~48% margin over the 30-day-benchmark
       prediction of ~7320s), mirroring the same measured-completion methodology as the existing
       `("volatility",     "TRADFI")` and `("delta_one", "CEFI")` overrides.
-- [ ] [DATA] P2. File a consolidated issue doc for the `multisource_xg`/`player_lineup` missing-source-data gaps —
-      confirmed reproducible across 13 distinct days this session, both calculators degrade gracefully but the
-      underlying source coverage (Understat/FootyStats/API-Football xG feeds, squad/lineup data) is a real, standing gap
-      worth its own tracked finding.
+- [x] [DATA] P2. ✅ Both gaps ALREADY have their own dedicated, deeper root-cause docs from other slots — filing a 3rd
+      "consolidated" doc would duplicate rather than add value. Appended a 2026-07-27 live-reproduction corroboration
+      note to each instead: `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md` (21/28 columns
+      confirmed all-NaN across 13 days this session, consistent with its dead-placeholder-schema diagnosis) and
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` (`player_lineup` 74/74 all-zero confirmed on
+      day=2026-07-19 — flagged an open question: that day falls 2 days past the 2026-07-18 re-derive's
+      `2019-01-01..2026-07-17` window, so this may be normal data-capture lag rather than a regression; not
+      independently diagnosed further).
 - [ ] [DATA] P2. MTDS has never ingested DeFi
       `vault_share_price`/`lst_rates`/`lending_indices`/`oracle_prices`/`perp_funding` raw-tick bypass-grain data types
       (confirmed via direct dependency-check error, both a 30d and a 3d window) — blocks `DEFI:onchain` entirely until

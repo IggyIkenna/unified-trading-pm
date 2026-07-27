@@ -72,6 +72,13 @@ locked_since:
   values") that this is a port that copied the target SCHEMA (column names) but not the computation behind 21 of the 28
   fields.
 
+**2026-07-27 corroboration (slot-3, todo-10 benchmark work,
+`/plans/active/data_pipeline_check_mdps_features_2026_07_20.md`)**: running the `/data-pipeline-check-features`
+benchmark leg for `SPORTS:sports` (both a 7-day and a 30-day window, 13 distinct days observed total), 21/28
+`multisource_xg` columns were consistently all-NaN on EVERY day tested — a live-run reproduction consistent with this
+doc's code-read diagnosis (dead placeholder schema, not a per-day data gap). No new root cause found; this is
+confirmation the gap is stable/reproducible in production runs, not just a static code-read finding.
+
 ## Why it matters
 
 These 21 columns are real, meaningful xG-derived features (per-source disagreement, blended totals, historical
