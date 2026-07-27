@@ -33,6 +33,7 @@ related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master
