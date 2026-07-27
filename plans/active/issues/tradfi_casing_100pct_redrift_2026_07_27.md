@@ -216,10 +216,19 @@ compare case-insensitively in the interim (`migration_pending`).
       `migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py` call the UTL function directly.
       `continuous_future → FUTURE` now applies (bundle-grain exclusion reverted); regression tests added
       (`tests/unit/engine/test_tradfi_manifest_shard.py`). Full QG green (7223 tests).
-- [ ] [DATA] P1. Verify instruments-service (`engine/orchestrator/writers.py`) + market-data-processing-service
+- [x] ✅ [DATA] P1. Verify instruments-service (`engine/orchestrator/writers.py`) + market-data-processing-service
       (`engine/build_continuous_engine.py`) manifest writes inherit the shared UTL casing canon at the record\_\* seam
       (add a live re-read assertion: 0 lowercase tradfi rows written after the seam ships). (repos: instruments-service,
-      market-data-processing-service)
+      market-data-processing-service) — DONE. Both repos already inherit the fix for free (editable path dependency on
+      unified-trading-library, HEAD has 688e49bc as an ancestor) — confirmed via source read: neither
+      `writers.py::_write_venue` nor `build_continuous_engine.py::_process_day_shard` has any local casing logic, both
+      call only `unified_trading_library.ManifestWriter.record_captured`/`record_empty`, which now canonicalize
+      internally. Added a write-seam integration test per repo exercising each call site's EXACT kwargs shape with a
+      real `ManifestWriter` (`MockEventSink`-backed, no live GCS) — proves the actual production call shape
+      (`asset_group="tradfi"`, lowercase `instrument_type` incl. `continuous_future`) comes back UPPERCASE:
+      `instruments-service@10513f78` (`tests/unit/test_tradfi_manifest_casing_inherited_from_utl_seam.py`, 5 tests) and
+      `market-data-processing-service@25faf6d` (same filename, 2 tests). No code change needed in either repo. Full QG
+      green both repos.
 - [ ] [OPERATOR] P2. AFTER the UTL seam ships AND all writer fleets redeploy, re-run
       `migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py --apply` to repair the 82,311 pre-fix lowercase rows
       (heavy-I/O → VM/in-region; prod-manifest CAS mutation = delete-safety-adjacent, snapshot-first; human-only). Add
