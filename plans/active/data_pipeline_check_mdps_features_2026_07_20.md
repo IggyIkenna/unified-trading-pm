@@ -245,6 +245,18 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       another billable VM. QG green, quickmerge shipped. Launched zero new VMs this session; did not touch slot-7's (or
       any other slot's) in-flight VMs. 9b's own full-matrix completion remains genuinely open, now owned by slot-7's
       in-flight run — see the disposition note below.
+- [x] 9b-duplicate-vm-guard-mdps. ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-2)** —
+      `market-data-processing-service@6cd96e8` + `deployment-service@c8ee47e`. Re-checked live fleet state on pickup of
+      9b: slot-7's driver (PID 3665121, started 11:21 UTC) still running, 1h18m+ elapsed, genuinely progressing — stood
+      down rather than launch a competing run, same precedent as `9b-duplicate-vm-guard` above. Ported the identical
+      `_find_inflight_duplicate_vm` guard (labels- based `aggregated_list_instances` check, no raw gcloud/subprocess)
+      into MDPS's own `pipeline_e2e_check.py` (force + skip legs), keyed on `(asset_group, venue, data_type)`; also
+      found and fixed a launcher-label insufficiency the port surfaced — `launch-mdps-backfill-vm.sh` wasn't stamping
+      venue/data_type labels the guard needs, so extended it to do so for the single-value (non-multi-filter) launch
+      case. 11 new tests across both repos, QG green both, shipped via quickmerge. Full detail:
+      `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. Launched zero new VMs; did not
+      touch slot-7's in-flight run. 9b's own full-matrix completion remains genuinely open, still owned by slot-7 — see
+      the disposition note below.
 - [ ] 10. [DATA] P1. Steady-state benchmark VMs (250GB disk) per representative shard-type; measure amortized per-shard-
       day throughput (RX + rows/s + wall-clock); project full-history time (honest floor + flat 2019) + SPOT cost +
       parallelization/optimization headroom.
