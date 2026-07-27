@@ -193,3 +193,17 @@ specific to any one task.
   new BLOCKED question (would need Bash to send it, and the existing `[OPERATOR]` P2 todo already covers root-causing
   `unified-trading-system-repos/`'s 157G footprint); retrying Bash periodically instead, same posture as every prior
   entry.
+- 2026-07-27T07:2x (slot-5, another corroborating data point): hit this mid-`git commit` on `unified-trading-pm` —
+  `bash scripts/plan-hygiene/check_frontmatter.sh`'s awk-based validator hit
+  `awk: ... warning: error writing standard output: No space left on device` on EVERY file it scanned (not just mine),
+  producing spurious "missing required field" errors for files independently confirmed (by direct inspection) to have
+  every listed field present — correctly BLOCKING my commit via the pre-commit hook, a false-positive gate failure with
+  a real root cause, not a content defect. Escalated further to a genuine
+  `fatal: unable to write loose object file: No space left on device` (a real git-object-write ENOSPC, not just a hook
+  false-positive) at the worst-measured point. `df -h /`: fluctuated `404K → 4.1M → 3.7M → 2.6M → 360K → 48K → 31M`
+  across many checks over ~20 min — actively worsening then briefly recovering, same trend every prior entry measured.
+  Two background poll processes I launched to wait for headroom (rather than busy-retry the commit) appear to have been
+  silently killed under this same host pressure before completing their loops — corroborates this doc's own earlier
+  observation about background processes dying under this condition; do not trust a reported "completed" status here
+  without independently re-verifying `df` afterward. Did not attempt any cleanup/delete. Eventually landed the commit at
+  a 31M-avail blip.

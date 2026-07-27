@@ -295,8 +295,82 @@ tight for a legitimately large OKX-options day, the constant (`_BULK_CHAIN_DOWNL
 unbounded/hanging (no total-size logging exists yet) is unresolved — a future pass could add byte-count logging to the
 streaming download to distinguish "genuinely huge legitimate file" from "runaway/never-terminating stream".
 
+## Combined investigation (2026-07-27, slot-5) — three sub-verdicts
+
+Dispatched via `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s combined-investigation todo (3 sub-items merged since
+all append findings to this doc). All three resolved this session, read-only / static-code-read only (per the todo's own
+scope), one live infra mutation (item b, explicitly authorized by the todo itself).
+
+**(a) 07-21 and 07-22 DO show the same OOM/memory-limit failure class as 07-23/24/25/26 — NOT a distinct earlier-stage
+failure.** Pulled the full (unfiltered) Cloud Logging record for both days' 06:00/09:00 UTC executions
+(`gcloud logging read 'resource.type="cloud_run_job" AND resource.labels.job_name="uts-prod-market-tick-data-service-cefi-t1-recon"'`,
+`--format=json`, full time range). The single bare `ERROR` entry the original doc found per execution turns out to be
+the **execution's own audit-log completion record** (`protoPayload.response.status.conditions[type=Completed]`), not a
+severity-filtered gap in the container's own stdout stream. All 4 real executions checked carry the IDENTICAL terminal
+message: `"Task ...-task0 failed with exit code: 0 and message: The configured memory limit was reached."` — the exact
+same Cloud Run OOM-kill category confirmed for every later day (07-25/26's `RelaunchPreemptedVm`-adjacent "configured
+memory limit was reached" quote in the Dominant-contributor section above is byte-identical phrasing). Timing:
+`07-21T06:00:04→06:02:37` (153s), `07-21T09:00:09→09:02:43` (154s), `07-22T06:00:04→06:02:17` (133s),
+`07-22T09:00:11→09:02:07` (116s) — a consistent ~2m-to-OOM window that sits BETWEEN the two previously-documented
+signatures (~10-40s for 07-23/24's die-before-any-download pattern; ~13-14min for 07-25/26's OKX-options bulk-download
+hang) — i.e. this is neither of those two exactly, a THIRD timing point on the same OOM spectrum, consistent with the
+job's memory-growth driver shifting as the codebase changed across this week (an incidental
+`google.cloud.run.v1 .Jobs.ReplaceJob` deploy by `ikenna@odum-research.com` landed at `2026-07-22T04:18:50Z`, between
+the two 07-22 executions — plausibly related to the ongoing HyperLiquid-cache work, not confirmed causally). **Verdict:
+one continuous OOM regression since >=2026-07-21, not two unrelated failure modes** — updates/supersedes the original
+doc's "(d) LOWER CONFIDENCE" section above, which is now resolved.
+
+**(b) `market-tick-cefi-daily-download` (PAUSED since 2026-07-16) is CONFIRMED DEAD — DELETED.** Three independent
+evidence threads agree: (1) `gcloud scheduler jobs describe` shows its target is the Cloud Run _service_
+`trigger-market-tick-cefi-job` (a Cloud Function, deployed 2026-01-21) — a categorically different invocation mechanism
+from the two confirmed-live cefi triggers (`uts-prod-market-tick-data-cefi-t1-schedule` @ 06:00 direct Cloud-Run-Job
+invoke; `market-tick-daily-trigger` @ 09:00 Workflow-Executions invoke). (2) The prior 2026-07-16 resume-audit
+(`defi_scheduled_collection_outage_paused_crons_2026_07_16.md` § "5. The rest of the 48-scheduler GCP runbook")
+independently resumed then re-paused it as a "confirmed-broken orphaned Cloud Run target (404/403) — pre-existing infra
+drift". (3) `deployment-service/scripts/vm/launch-cefi-fwd-daily-cron-vm.sh`'s own header documents replacing this EXACT
+broken pattern: _"The Cloud Run service `trigger-market-tick-cefi-job` had been returning HTTP 403 with zero successful
+executions for 4+ months (audit 2026-05-17 slot-5, ack'd 2026-05-20 by operator)."_ No live code reference to the job
+name or its trigger function exists in `market-tick-data-service` or `deployment-service` outside that
+historical/documentary context. Deleted via
+`gcloud scheduler jobs delete market-tick-cefi-daily-download --location=asia-northeast1` (verified gone via a follow-up
+`describe` → `NOT_FOUND`); the job was PAUSED (already inert) and not Terraform-managed, so this is a clean, low-risk
+removal, not a live-traffic change. **Residual observation (not this todo's scope, flagged as a new todo below)**: the
+VM cron-host pattern (`cefi-fwd-daily-cron-*`) that the launcher script says replaces this Scheduler job does not
+currently appear in `gcloud compute instances list` (checked both a direct name filter and a 30-day
+`compute.instances.insert` audit-log search for that prefix — zero hits either way), so it's unclear whether that
+replacement was ever actually launched in prod, or ran once and was since torn down. Not investigated further here
+(different question than the one asked; the two LIVE triggers this todo confirmed are unaffected either way — this
+concerns only whichever gap the paused job was originally covering, if any beyond what the two live triggers already
+handle).
+
+**(c) NO shared heavy-import code path — the two OOM incidents are unrelated, by both infra class and imports.** Static
+read of `market_tick_data_service/adapters/hyperliquid_s3.py` (`csv`, `io`, `json`, `logging`,
+`concurrent.futures.ThreadPoolExecutor`, `datetime`, `lz4.frame`,
+`unified_trading_library.{StorageClient,get_secret_client,get_storage_client}` — **no pandas, no pyarrow**) against
+`instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py` (the v1 script v2 imports and reuses
+wholesale: `argparse`, `io`, `logging`, `re`, `sys`, `datetime`, `typing.NamedTuple`, **`pandas as pd`,
+`pyarrow.parquet as pq`**, `unified_api_contracts.CeFiWireCanonicalMap`,
+`unified_trading_library.{get_storage_client,resolve_bucket_name}`). The only overlapping import between the two is the
+lightweight `unified_trading_library.get_storage_client` factory — not itself memory-heavy. More decisively:
+`cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding 6 already establishes the dedup script's "OOM"
+was **shared-host `earlyoom` contention** (a SIGTERM-first daemon on an operator's interactive dev host running ~20
+concurrent unrelated agent sessions competing for 15Gi RAM) — **explicitly confirmed NOT a code memory-footprint
+defect**, since the same script completed a full-corpus dry-run cleanly (`exit 0`) both before and after, on isolated
+infra. That is a categorically different failure class from this Cloud Run Job's isolated-container hard memory ceiling
+(no host contention possible — it's the sole process in its own container). **Verdict: coincidental, same-week timing,
+not a shared root cause** — rules out the "(2) Whether this is causally related" open question in the original doc's
+"What is NOT established" section.
+
 ### Todos
 
+- [ ] [DATA] P3. **Confirm whether the `cefi-fwd-daily-cron-*` VM cron-host pattern (documented in
+      `deployment-service/scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` as the replacement for the now-deleted
+      `market-tick-cefi-daily-download` scheduler job) is actually running in prod.** A 2026-07-27 check found zero
+      matching instances in `gcloud compute instances list` and zero `compute.instances.insert` audit-log hits for that
+      name prefix in the last 30 days. If it was never launched (or was launched once, then torn down without a
+      recurring re-launch), determine whether the 09:00 UTC cefi coverage it was meant to provide is already fully
+      subsumed by the two confirmed-live triggers (`uts-prod-market-tick-data-cefi-t1-schedule` @ 06:00,
+      `market-tick-daily-trigger` @ 09:00) or whether a real gap exists. Repo: deployment-service.
 - [x] ✅ [BACKEND] P1. Confirm (via a memory profile / Cloud Monitoring container-memory graph of an actual execution,
       not just code-reading) whether the OOM's proximate cause is insufficient memory — **CONFIRMED via the service's
       own `peak_rss=8646.5MB` resource-profiler log line, 2026-07-25T01:44Z execution** (exceeds the old 8Gi/8192MiB
