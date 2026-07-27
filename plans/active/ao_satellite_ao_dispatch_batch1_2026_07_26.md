@@ -276,8 +276,8 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
 - **Regen positional task-ids** —
   `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md` BACKEND P3 duplicates
   `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`, which
-  `/plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md` records as a parked decision "deferred until a
-  new incident forces it". A new incident arguably HAS occurred (the 2026-07-25
+  `/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md` (archived 2026-07-27) records as a
+  parked decision "deferred until a new incident forces it". A new incident arguably HAS occurred (the 2026-07-25
   `sync_backlog_to_db: REFUSING to reset task id` collisions), but whether that meets the deferral's own trigger is the
   operator's call. **BLOCKED-OPERATOR-DECISION.**
 - **`slack-read-channel.py` env-var token fallback** —
@@ -326,8 +326,9 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
   — each needs foreign-worktree access plus a judgment call on whether specific commits are superseded.
 - `/plans/active/issues/ao_backlog_done_row_disappearance_2026_07_25.md` `[OPERATOR]` P1 (watch-log check) and its
   `[BACKEND]` P2 (root-cause once a recurrence is caught) — the latter is time-gated on an unobserved recurrence.
-- `/plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md` — both open items are `BLOCKED-OPERATOR-DECISION`
-  / `BLOCKED-UPSTREAM-DESIGN` by their own labels.
+- `/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md` (archived 2026-07-27) — both open items
+  were `BLOCKED-OPERATOR-DECISION` / `BLOCKED-UPSTREAM-DESIGN` by their own labels and are now marked DEFERRED rather
+  than held open.
 
 ## Codex SSOTs (read before starting a todo)
 

@@ -40,7 +40,6 @@ codex_ssots:
 related_plans:
   - ../active/ao_consolidated_closeout_2026_07_25.md
   - ../active/ao_fleet_observability_kpis_2026_07_20.md
-  - ../active/ao_issue_docs_consolidated_remediation_2026_07_23.md
   - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
   - ../active/ao_satellite_ao_dispatch_batch1_2026_07_26.md
 last_updated: 2026-07-16
@@ -318,11 +317,6 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 **status**: active · **estimate**: 2.8 cal AI-days (class: infra) **title**: AO fleet observability — make efficiency,
 escalator efficacy and account burn visible
-
-### [`ao_issue_docs_consolidated_remediation_2026_07_23`](../active/ao_issue_docs_consolidated_remediation_2026_07_23.md)
-
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: AO issue-docs remediation — held +
-blocked residual (the parts NOT dispatched to AO)
 
 ### [`ao_open_issues_consolidated_close_out_2026_07_17`](../active/ao_open_issues_consolidated_close_out_2026_07_17.md)
 

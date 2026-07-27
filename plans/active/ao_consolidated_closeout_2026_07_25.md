@@ -177,8 +177,9 @@ posts; dead code refs restored or removed cleanly; Playwright port-collision fix
 ## Track 5 — Session/remediation meta-plans · P2
 
 **Sources**:
-[ao_issue_docs_consolidated_remediation_2026_07_23.md](/plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md)
-(held/blocked residual todos from an AO-scope remediation sweep) ·
+[ao_issue_docs_consolidated_remediation_2026_07_23.md](/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md)
+(archived 2026-07-27 — the Q2-held todos shipped and 2 of 4 non-dispatchable items resolved; the remaining 2,
+route-collision + backlog-relations-view, are DEFERRED per operator instruction rather than held open) ·
 [issues/ao_recovery_audit_layer1_deleted_2026_07_15.md](/plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md)
 (AO custom recovery-audit-signoff role/agent deleted as cleanup collateral) ·
 [ao_open_issues_consolidated_close_out_2026_07_17.md](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
