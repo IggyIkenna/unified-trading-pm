@@ -983,8 +983,13 @@ kills (2/4 still died with it active; likely genuine shared-host RAM contention 
 `shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`). **On a local-driver death, check
 `gcloud compute instances list --filter="name~'features-e2e-<ag>'"` first** — the VM often outlives the poller;
 ground-truth via its `run.log` directly rather than re-launching blind. `delta_one` runs first per-AG. CEFI is slot-3's
-— avoid collision. 29 viable cells total; 2 done (DEFI skip, TRADFI failure), 27 open. Stays OPEN until the matrix is
-proven or a genuine blocker surfaces.
+— avoid collision. **`PREDICTION:delta_one` also done** (5th attempt, clean 11s, honest `no_captured_input_for_window`
+skip — same shape as DEFI). **IMPORTANT: the driver OVERWRITES its report file per-invocation, does not append** across
+separate `--asset-group`/`--family`-scoped process launches — each cell landed in a SEPARATE run this session and had to
+be manually re-merged into one file; the next slot doing more cells must merge similarly (or invoke the driver
+unscoped/multi-cell in ONE process to get native accumulation, per the skill's own `/autonomous` "append to the same
+day's report" design intent). 29 viable cells total; 3 done (DEFI skip, TRADFI failure, PREDICTION skip), 26 open. Stays
+OPEN until the matrix is proven or a genuine blocker surfaces.
 
 - [ ] NEW todo. [DATA] P1. **Coverage-check discrepancy**: driver's `--require-captured` reported `TRADFI:delta_one`'s
       `2026-07-04..2026-07-05` window covered, but the VM's own dependency check found NO object at the expected candle

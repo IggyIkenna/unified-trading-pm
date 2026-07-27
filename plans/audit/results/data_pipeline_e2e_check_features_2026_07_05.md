@@ -2,12 +2,12 @@
 doc_type: audit-result
 title: "Pipeline E2E Check — data_pipeline_e2e_check_features (2026-07-05)"
 summary:
-  "data_pipeline_e2e_check_features pipeline-e2e-check 2026-07-05: total=4 passed=0 failed=2 ambiguous=0 skipped=2
-  (DEFI:delta_one honest-skip; TRADFI:delta_one FAILED — real dependency-check failure, manifest-vs-GCS divergence, see
-  note below)"
+  "data_pipeline_e2e_check_features pipeline-e2e-check 2026-07-05 (manually merged across 3 separate driver invocations
+  — the driver overwrites its report file per-invocation, does not append): total=6 passed=0 failed=2 ambiguous=0
+  skipped=4"
 status: pass
 nature: record
-asset_group: [defi, tradfi]
+asset_group: [defi, tradfi, prediction]
 stage: [data]
 repos: [features-service, deployment-service]
 scope: [engineer, admin]
@@ -25,33 +25,43 @@ lib_version:
 doc_versions_checked:
 service: data_pipeline_e2e_check_features
 run_date: 2026-07-05
-generated_at: 2026-07-27T05:40:35.289767+00:00
+generated_at: 2026-07-27T06:18:10.884759+00:00
 ---
 
 # Pipeline E2E Check — data_pipeline_e2e_check_features (2026-07-05)
 
-**Legs:** force, skip **Started:** 2026-07-27T05:40:24.276745+00:00 **Finished:** 2026-07-27T05:40:35.289590+00:00
+**Legs:** force, skip
 
-**Summary:** data_pipeline_e2e_check_features pipeline-e2e-check 2026-07-05: total=2 passed=0 failed=0 ambiguous=0
-skipped=2
+**Note — manually merged from 3 SEPARATE driver invocations.** `pipeline_e2e_check.py` OVERWRITES its report file
+per-invocation (does not append) when run with different `--asset-group`/`--family` filters as separate processes — this
+merge reconstructs the cumulative day's results by hand. DEFI/PREDICTION rows are driver-authored (verbatim); TRADFI is
+manually reconstructed from direct `run.log` reads (driver process crashed before writing its own row — see the TRADFI
+Note below).
+
+**Summary:** data_pipeline_e2e_check_features pipeline-e2e-check 2026-07-05: total=6 passed=0 failed=2 ambiguous=0
+skipped=4
 
 ## Results
 
-| Shard            | Leg   | Status  | Skip proof     | Exit | Parquet | Manifest | Reason                                                                                   |
-| ---------------- | ----- | ------- | -------------- | ---- | ------- | -------- | ---------------------------------------------------------------------------------------- |
-| DEFI:delta_one   | force | skipped | not_applicable | -    | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                |
-| DEFI:delta_one   | skip  | skipped | not_applicable | -    | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                |
-| TRADFI:delta_one | force | failed  | not_applicable | 1    | 0       | -        | dependency_check_failed — see note below (2 independent VM runs, identical)              |
-| TRADFI:delta_one | skip  | not_run | -              | -    | -       | -        | force already failed on missing input — skip-if-fresh is moot without a successful write |
+| Shard                | Leg   | Status  | Skip proof     | Exit | Parquet | Manifest | Reason                                                                                   |
+| -------------------- | ----- | ------- | -------------- | ---- | ------- | -------- | ---------------------------------------------------------------------------------------- |
+| DEFI:delta_one       | force | skipped | not_applicable | -    | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                |
+| DEFI:delta_one       | skip  | skipped | not_applicable | -    | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                |
+| TRADFI:delta_one     | force | failed  | not_applicable | 1    | 0       | -        | dependency_check_failed — see note below (2 independent VM runs, identical)              |
+| TRADFI:delta_one     | skip  | not_run | -              | -    | -       | -        | force already failed on missing input — skip-if-fresh is moot without a successful write |
+| PREDICTION:delta_one | force | skipped | not_applicable | -    | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                |
+| PREDICTION:delta_one | skip  | skipped | not_applicable | -    | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                |
 
 ## Bucket paths (where each write/read actually landed)
 
-| Shard            | Leg   | Parquet bucket        | Manifest bucket | Same bucket? |
-| ---------------- | ----- | --------------------- | --------------- | ------------ |
-| DEFI:delta_one   | force | `-`                   | `-`             | -            |
-| DEFI:delta_one   | skip  | `-`                   | `-`             | -            |
-| TRADFI:delta_one | force | `-` (nothing written) | `-`             | -            |
-| TRADFI:delta_one | skip  | -                     | -               | -            |
+| Shard                | Leg   | Parquet bucket        | Manifest bucket | Same bucket? |
+| -------------------- | ----- | --------------------- | --------------- | ------------ |
+| DEFI:delta_one       | force | `-`                   | `-`             | -            |
+| DEFI:delta_one       | skip  | `-`                   | `-`             | -            |
+| TRADFI:delta_one     | force | `-` (nothing written) | `-`             | -            |
+| TRADFI:delta_one     | skip  | -                     | -               | -            |
+| PREDICTION:delta_one | force | `-`                   | `-`             | -            |
+| PREDICTION:delta_one | skip  | `-`                   | `-`             | -            |
 
 ## Note — TRADFI:delta_one manually recorded (driver process crashed before writing its own report row)
 
