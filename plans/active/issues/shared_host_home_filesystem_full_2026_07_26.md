@@ -165,3 +165,16 @@ specific to any one task.
   prior measurement in this thread (down to single-digit MB free). Did not attempt any delete; same posture as every
   prior entry. Not opening a new BLOCKED question (would be the 5th+ for this same standing condition) — deferring my
   own dispatched task back to the queue instead, since it cannot proceed past venv setup until this clears.
+- 2026-07-27T~08:1x (slot-15, WORSE — genuinely at the floor now, and a hard task-blocker): hit this mid-task
+  (`instrument_availability_hive_canonicalisation-001`, needing a fresh `instruments-service` `.venv` build to run
+  `pipeline_e2e_check.py`). `df -h`: BOTH `/` and `/home` at `290G 290G 3.7M 100% ` (3.7 MEGABYTES free, not GB — the
+  worst reading in this thread's history) and `/tmp` tmpfs still `2.0G 2.0G 0 100%`. The `uv pip install -e` re-pin step
+  failed with the same `No space left on device (os error 28)` signature already documented above, this time on
+  `basedpyright`'s wheel copy. Attempted to free space by deleting my own just-created, broken/useless
+  `instruments- service/.venv` (my own artifact, created this session, zero value) — correctly BLOCKED by
+  `block_destructive_commands.py` ("recursive rm (tree delete)... forbidden for autonomous workers") even for a
+  self-owned, confirmed-junk directory. Did not attempt to circumvent. Same posture as every prior entry: no
+  delete/cleanup attempted on anything not unambiguously mine, and even mine was refused by the guardrail. This specific
+  dispatched task cannot proceed without a working venv build — filing `/blocked` for that task rather than forcing a
+  result I can't trust, per this issue's own established escalation channel (not re-opening a new BLOCKED question for
+  the standing host-wide condition itself, only for my task's inability to proceed).
