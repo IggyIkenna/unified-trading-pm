@@ -84,7 +84,7 @@ objects across Jun-Dec 2020 + all of 2021-2026) is unknown and requires the full
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Run the exhaustive `derived_features` post-floor residue census on a Tier-2 SPOT VM, ONE sanctioned
+- [x] [SCRIPT] P1. **Run the exhaustive `derived_features` post-floor residue census on a Tier-2 SPOT VM, ONE sanctioned
       single-walk.** Enumerate every object under
       `gs://features-sports-prd-central-element-323112/sports_features/by_date/day={D}/league={L}/     feature_group=derived_features/`
       for `D` in Jun-Dec 2020 + 2021-2026 (do NOT re-touch pre-floor 2017-2019 / pre-`2020-06-06` dates — those are
@@ -104,7 +104,7 @@ objects across Jun-Dec 2020 + all of 2021-2026) is unknown and requires the full
       manifest — it never deletes or mutates any existing object, so re-running it is a no-op refresh, not a destructive
       action. No `[OPERATOR]` tag needed for this todo per `task_template.md` finding O's safe-idempotent carve-out;
       Todo 2 (the actual delete) is reversibility-verified per §3a, not operator-gated either — see its own citation.
-- [ ] [SCRIPT] P1. **Purge the objects named in Todo 1's census manifest.** **Downgraded from `[OPERATOR]` 2026-07-27**
+- [x] [SCRIPT] P1. **Purge the objects named in Todo 1's census manifest.** **Downgraded from `[OPERATOR]` 2026-07-27**
       (reversibility-verified, finding T, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a — this
       supersedes this doc's own §3.1 citation, written before §3a existed): a fresh check on
       `features-sports-prd-     central-element-323112` confirms `604800s` GCS Soft Delete retention. These are
@@ -117,7 +117,15 @@ objects across Jun-Dec 2020 + all of 2021-2026) is unknown and requires the full
       fresh in THIS run (not from this citation), then execute the delete and re-run a confirmation census (0 remaining
       pre-`2026-07-19` objects in scope). Repo: features-service (GCS delete only, no code change). **Done when**: the
       confirmation census returns 0 remaining post-floor `derived_features` objects with a pre-`2026-07-19` creation
-      timestamp, closing `sports_consolidated_native_ao_extract_2026_07_25.md`'s Todo 1 for real.
+      timestamp, closing `sports_consolidated_native_ao_extract_2026_07_25.md`'s Todo 1 for real. **RESOLVED AS A NO-OP
+      2026-07-27 (slot-15)**: Todo 1's EXHAUSTIVE census (2400/2400 in-scope days, the full Jun-Dec-2020 + 2021-2026
+      scope, not a sample) found `total_delete=0` — every one of the 26,891 in-scope `derived_features` objects already
+      carries a `last_modified` on/after the `2026-07-19` cutoff. The delete list is empty, so there is nothing to run
+      the five-part proof against and nothing to delete; the census itself, by construction, already IS the
+      "confirmation census returns 0 remaining" done-when condition this todo asks for. The residue the original 5-date
+      sample found (`2020-06-06`, `creation_time=2026-07-17T21:52:06Z`) has since been naturally resolved — some
+      intervening regeneration of the corpus overwrote it (and everything else in scope) after that sample was taken and
+      before this census ran. No delete action was needed or taken.
 
 ## Progress Log
 
@@ -199,5 +207,19 @@ objects across Jun-Dec 2020 + all of 2021-2026) is unknown and requires the full
     `slot-cron-ff-pull.sh` auto-fast-forward landing mid-import rather than a real UTL defect (not reproduced on retry,
     no code fix needed). Re-ran the launcher; tarball fresh, launched clean. Armed a second `run_in_background` watchdog
     (same 30-min-cap shape, now ALSO polling `SETUP_EXIT_STATUS` so a repeat bootstrap failure surfaces immediately
-    instead of only via the VM-disappeared branch) in the same turn. Awaiting completion before flipping the checkbox —
-    will report the VM name + manifest URI + flagged-object count here once the watchdog confirms the manifest exists.
+    instead of only via the VM-disappeared branch) in the same turn.
+  - **Census completed successfully at `2026-07-27T18:01:32.772861+00:00`** — both watchdogs confirmed independently.
+    `sports-derived-features-census-20260727-175711` ran the census clean (`run.log` shows `2400/2400` days scanned,
+    `command exited rc=0`, `DEPLOYMENT_COMPLETED`, then a normal `VM_SHUTDOWN_ON_COMPLETION` self-delete — a genuine
+    success shutdown this time, not the bootstrap-failure trap). Manifest at
+    `gs://features-sports-prd-central-element-323112/_audits/derived_features_postfloor_residue_census_2026_07_27.json`:
+    **`days_scanned=2400`, `total_delete=0`, `total_keep=26891`, `total_unparseable=0`** — EVERY in-scope
+    `derived_features` object (Jun-Dec 2020 + 2021-2026) now carries a `last_modified` on/after the `2026-07-19` regen
+    cutoff. The pre-cutoff residue the original 5-date sample found (`2020-06-06`, `creation_time=2026-07-17T21:52:06Z`)
+    is gone — some intervening corpus regeneration between that sample and this exhaustive run overwrote it along with
+    everything else in scope. Flipping Todo 1's checkbox on this evidence. Also flipping Todo 2's checkbox: with
+    `total_delete=0` there is nothing to purge, and the exhaustive census IS Todo 2's own "confirmation census returns 0
+    remaining" done-when condition, already satisfied — see Todo 2's own inline resolution note for detail.
+    `sports_consolidated_native_ao_extract_2026_07_25.md`'s original Todo 1 (the thing this whole follow-up plan exists
+    to close) is now genuinely resolved: no fabricated post-floor `derived_features` residue remains in the production
+    bucket.
