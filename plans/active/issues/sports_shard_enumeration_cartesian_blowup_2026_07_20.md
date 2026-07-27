@@ -422,15 +422,17 @@ as a target state — but then it needs a migration plan, not a silent doc claim
 `authoritative_for:` frontmatter still resolves; `rg 'sports_market' --glob '!.venv*'` shows only `taxonomy.py:44` and
 the doc.
 
-### 2.5 Free-text reason values in `error_reason` (existing issue, still live)
+### 2.5 Free-text reason values in `error_reason` (originally-cited pattern now STALE, see 2026-07-27 update)
 
-The odds slice contains full English sentences as reason values, e.g.
-`"record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says 'trades' was ALIVE on MATCHBOOK/2024-02-08. ..."`
-— a rejection diagnostic persisted as the code itself. Tracked by
-`unified-trading-pm/plans/active/issues/sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`.
-**Change:** add a writer-side assertion that `error_reason ∈ EMPTY_CONFIRMED_REASONS ∪ <classified error codes>` and
-raise on anything else; the diagnostic belongs in a log line, not the column. Fold the existing rows into the Part-3
-remediation as a **relabel**, not a delete.
+Originally: the odds slice contained full English sentences as `error_reason` values (e.g.
+`"record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says 'trades' was ALIVE on MATCHBOOK/2024-02-08. ..."`).
+Tracked by `sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`.
+
+**Update 2026-07-27 (slot-9):** fresh census — that EXACT pattern is **STALE, 0 live matches**, but a DIFFERENT one IS
+live (1,998 rows, `StreamingParquetWriter partition_mismatch`, write site MDPS not MTDS). **Fixed**:
+`market-data-processing-service@da98dc7` (`RecordFailedReason.MALFORMED_ROW_KEY`, 2 regression tests, QG green). Full
+detail: `sports_satellite_ao_dispatch_batch3_2026_07_25.md` item 10; underlying write-failure follow-up:
+`issues/sports_odds_horizon_bucket_instrument_type_partition_mismatch_2026_07_27.md`.
 
 ---
 

@@ -282,9 +282,9 @@ drift_direction: advance-code
       `issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Measurement script:
       `instruments-service/scripts/sports_manifest_enumeration_grain_check_2026_07_27.py` (read-only, single-walk).
       Source: `data_completion_sports_2026_07_24.md`.
-- [ ] [DIAG] P1. Determine whether the free-text `error_reason` pattern documented in this doc's §2.5
-      ("record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says ...") is still live-writing
-      today by running a fresh distinct-`error_reason` census over the prod sports manifest
+- [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-9)** — Determine whether the free-text `error_reason` pattern documented in
+      this doc's §2.5 ("record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says ...") is
+      still live-writing today by running a fresh distinct-`error_reason` census over the prod sports manifest
       (`market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`, grouping
       `empty_confirmed`+`attempted_failed` rows by `error_reason`, diffed against UAC's `EMPTY_CONFIRMED_REASONS` closed
       set + classified error codes, single-walk discipline). If any live-dated (not frozen-legacy) row still carries a
@@ -297,7 +297,24 @@ drift_direction: advance-code
       matches → note the pattern is stale and no code change was needed; N live matches → a write-time guard shipped
       with a passing regression test proving `error_reason` for newly-written sports rows is always a member of the
       closed set, never a free-text sentence); `quality-gates.sh` green in the touched repo(s). Source:
-      `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`.
+      `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`. — **Ran the census
+      (market-tick-data-service/scripts/sports_error_reason_free_text_census_2026_07_27.py, single read of 516,196-row
+      manifest).** The EXACT originally-cited pattern is STALE (0 live matches). A DIFFERENT free-text pattern IS still
+      live-writing: 1,998 rows / 1,976 distinct values, all dated 2026-07-25/26, from a
+      `StreamingParquetWriter pre-write validation failed: [partition_mismatch] ...` diagnostic. **Write site
+      correction**: not MTDS as this todo assumed — traced by code read to **market-data-processing-service**
+      (`live_workers_streaming.py` → `close_candle_streaming_writer` → `_emit_status_for_shard`). Shipped the write-time
+      guard there: `market-data-processing-service@da98dc7` — a new `_classify_write_error_reason()` classifies the
+      pre-write-validation ValueError class to `RecordFailedReason.MALFORMED_ROW_KEY` (closed-set) and any other
+      write-loop exception to `UNCLASSIFIED_ADAPTER_ERROR`, with the full diagnostic now logged instead of persisted; 2
+      regression tests added/updated in `tests/unit/test_canonical_writer_record_helpers.py` proving the guard fires
+      (`quality-gates.sh` green, `.qg_last_passed_sha=4544eb8692b0c28f26fb2f7e8db198a7219060df` (quickmerge then amended
+      the commit to add its trailer, landed as `da98dc7`)). Full census + fix writeup:
+      `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` §2.5 "Update 2026-07-27". The underlying
+      MATCH_ODDS/MATCH_ODDS_LAY partition-mismatch write FAILURE itself (data loss, not just the error_reason cosmetic)
+      is a separate, still-open bug — filed as
+      `issues/sports_odds_horizon_bucket_instrument_type_partition_mismatch_2026_07_27.md` (not fixed here, out of this
+      DIAG todo's declared scope).
 - [ ] [DOC] P1. Apply this doc's own already-specified §4.5 self-correction to itself: in
       `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s original "Why it is wrong" section, bullet 5 (~lines
       117-119: "Coverage is not universal even where it IS meaningful ... There is no per-(venue, fixture/market)
