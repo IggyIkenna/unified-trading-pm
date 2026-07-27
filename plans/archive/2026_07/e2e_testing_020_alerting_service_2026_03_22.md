@@ -1,8 +1,13 @@
+> **ARCHIVED (2026-07-27) — genuine coverage gap found.** Blank template. alerting-service's own
+> `tests/e2e/test_mock_replay_e2e.py` (178 lines) never actually imports `alerting_service.*` — it re-implements ad-hoc
+> assertions over VCR cassette data, not the real rule/notifier pipeline. This is a real, unaddressed E2E gap. Coverage
+> gap found (2026-07-27): the file's own template was blank/never-executed. Real E2E coverage does not yet exist for
+> this service — tracked as a new gap in
+> `plans/active/e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md`.
+
 ---
-title: "E2E Test: alerting-service"
-service: alerting-service
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: alerting-service" service: alerting-service date: 2026-03-22 status: pending
 ---
 
 # E2E Test: alerting-service

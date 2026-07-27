@@ -138,8 +138,18 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       pre-apply block.** ⚠️ Do NOT "fix" this back to `dex_pools` — the `mtds_mdps_master.md` Phase 9
       `dex_pool_state→dex_pools` rename is a SUPERSEDED dead-letter (banner added there 2026-06-08). Defi audit guard
       (`defi-dexpool-name`) pins the canonical name. (reversed per SSOT; verified end-to-end by the 2026-06-08 sweep.)
-- [ ] [CODE] P3. D15 — HYPERLIQUID + ASTER are `DEFI_VENUE_PHASE=pipeline` but `perp_funding_handler` actively collects
-      them; reconcile the phase label (→ live, or confirm cefi-axis classification).
+- [~] [DATA] P2. D15 — HYPERLIQUID + ASTER classification. **Partially resolved (corrected 2026-07-27):** the
+  phase-label contradiction this item originally flagged is moot — both venues were removed entirely from
+  `ALL_DEFI_VENUES`/`DEFI_VENUE_PHASE` on 2026-06-21 (commit `0d0e00a89`, fixing a 48.5k `attempted_failed` regression)
+  and `perp_funding_handler` itself was retired 2026-07-08. **Operator decision (2026-07-27, pre-June-1 stale-plans
+  audit):** keep both venues pure CEFI (do not dual-classify in UAC, despite the 2026-07-07
+  `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` "intentional hybrid" note, which was never
+  reconciled against the 06-21 fix) — but the frozen legacy GCS/manifest corpus still sitting under `asset_group=defi`
+  (HYPERLIQUID/HYPERLIQUID: 3.77M rows through 2026-05-31; ASTER/BSC: 1.07M rows through 2026-05-31) must be migrated
+  into `asset_group=cefi` so data agrees with the code-level classification. Remaining work: scope + schedule that
+  migration as its own tracked plan (mirror `plans/archive/2026_07/solana_defi_legacy_migration_2026_05_27.md`'s pattern
+  — legacy→ canonical prefix migration, coordinated with instruments-service + manifest); heavy GCS I/O, needs a VM, not
+  a local-machine operation. Not yet scoped — this checkbox stays `[~]` until that migration plan exists.
 - [x] ✅ [CODE] P3. D7 — **SHIPPED** MTDS@d3e02228
       (`fix(mev): remove banned bloxroute relays + stale .bak from     mev_events_handler`): the 2 bloxroute URLs are
       gone from `mev_events_handler.py` `MEV_BOOST_RELAYS` (Flashbots / agnostic / ultra_sound retained, comment cites

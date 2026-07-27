@@ -1,8 +1,10 @@
+> **SUPERSEDED (archived 2026-07-27).** Blank, never-executed test-matrix template. Superseded by the
+> `/data-pipeline-check-features` skill + `plans/active/sports_consolidated_closeout_2026_07_19.md`.
+
 ---
-title: "E2E Test: features-service (sports family)"
-service: features-service (sports family)
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: features-service (sports family)" service: features-service (sports family) date: 2026-03-22 status:
+pending
 ---
 
 # E2E Test: features-service (sports family)

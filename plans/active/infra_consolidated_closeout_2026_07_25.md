@@ -126,8 +126,9 @@ this whole `/ag-closeout-audit` rollout — self-referential, included for compl
 FF-cron auto-regen) · `task_template.md` (the plan-authoring template/rules doc itself) ·
 [codex_vs_repo_docs_ssot_audit_2026_06_01.md](/plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md) (generic "audit
 all active repo docs vs codex SSOT" hygiene) ·
-[issues/human_led_audit_pool_2026_05_21.md](/plans/active/issues/human_led_audit_pool_2026_05_21.md) (operator's
-catalogue/process doc for background-agent-driven issue remediation at scale) ·
+[issues/human_led_audit_pool_2026_05_21.md](/plans/archive/issues/human_led_audit_pool_2026_05_21.md) (archived
+2026-07-27, superseded by `plans/audit/README.md`'s audit-instructions/results lifecycle + `/ag-closeout-audit` —
+operator's original catalogue/process doc for background-agent-driven issue remediation at scale) ·
 [issues/issue_docs_remediation_sweep_2026_06_02.md](/plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md)
 (code-fixable-items sweep across the issue-doc backlog) ·
 [issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md](/plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md)

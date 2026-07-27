@@ -33,6 +33,11 @@ last_updated: 2026-05-22
 
 # Strategy Master — Audit Instructions
 
+> **⚠️ KNOWN GAP (flagged 2026-07-27, from `human_led_audit_pool_2026_05_21.md` row #7 close-out):** the pool's "risk
+> audit" item has no dedicated audit-instructions coverage anywhere — this file only mentions the risk manager in
+> passing (Epic Scope, below). No dedicated `risk_master_audit_instructions.md` exists. Either fold a real risk-audit
+> section into this file's cadence, or spin up a dedicated instructions doc — currently neither exists.
+
 ## Epic Scope
 
 strategy-service post-consolidation: 53 archetypes across all asset_groups, `portfolio_allocator`, risk manager,

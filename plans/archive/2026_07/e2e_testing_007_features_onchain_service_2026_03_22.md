@@ -1,8 +1,11 @@
+> **SUPERSEDED (archived 2026-07-27).** Blank, never-executed test-matrix template. Superseded by the
+> `/data-pipeline-check-features` skill + `plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md` (real
+> per-handler GCS coverage checks for the features-onchain leg).
+
 ---
-title: "E2E Test: features-service (onchain family)"
-service: features-service (onchain family)
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: features-service (onchain family)" service: features-service (onchain family) date: 2026-03-22 status:
+pending
 ---
 
 # E2E Test: features-service (onchain family)

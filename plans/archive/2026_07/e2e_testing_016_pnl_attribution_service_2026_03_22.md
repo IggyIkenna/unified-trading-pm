@@ -1,8 +1,11 @@
+> **SUPERSEDED (archived 2026-07-27) — real coverage confirmed, acceptable scope.** pnl-attribution-service consolidated
+> into strategy-service `--operation pnl-attribution` (2026-05-21). Covered by
+> `strategy-service/tests/pnl/integration/test_pnl_integration.py` (real `compute_pnl_breakdown`/`PnlDomainAdapter`,
+> mocked-cloud only — no live PubSub/SSE emission leg, judged acceptable for now).
+
 ---
-title: "E2E Test: pnl-attribution-service"
-service: pnl-attribution-service
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: pnl-attribution-service" service: pnl-attribution-service date: 2026-03-22 status: pending
 ---
 
 # E2E Test: pnl-attribution-service

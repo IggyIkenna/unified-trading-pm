@@ -1,8 +1,10 @@
+> **SUPERSEDED (archived 2026-07-27).** Blank, never-executed test-matrix template. Superseded by
+> `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` +
+> `plans/active/cross_cutting_strategy_execution_determinism_2026_07_26.md` (real determinism-spine validation).
+
 ---
-title: "E2E Test: strategy-service"
-service: strategy-service
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: strategy-service" service: strategy-service date: 2026-03-22 status: pending
 ---
 
 # E2E Test: strategy-service

@@ -52,18 +52,35 @@ drift_direction: advance-code
 > over a week of substantive body updates and would mislead staleness-based triage tooling. Finding #56,
 > plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 
-> **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working this plan end-to-end. **Do
-> NOT auto-assign / auto-fix / push to LDR** any item here. See `plans/active/_agent_pings.md`. Banner removed by
-> harsh-side when released.
+> **✅ HOLD LIFTED (2026-07-27, operator decision).** The 2026-05-26 ROLLOUT-AGENT HOLD is lifted — its release channel
+> (`plans/active/_agent_pings.md`) was retired 2026-07-04 with no live successor mechanism, so the hold could never be
+> released through the named channel. A follow-up investigation reconciled the 7 "Open Track-1 todos" against everything
+> shipped since 2026-05-26 (see below) before lifting — this is NOT a blind auto-dispatch of the original list.
 >
-> **⚠ STALE-BANNER ANNOTATION (2026-07-12, finding #55)**: the release channel named above
-> (`plans/active/_agent_pings.md`) was RETIRED 2026-07-04 per that file's own header ("this ping-ledger channel is
-> decommissioned... AO agents are explicitly forbidden from polling this file") — there is no live mechanism left by
-> which harsh-side can lift this banner through the named channel. The plan body meanwhile carries dated session content
-> through 2026-06-03 and 6 open Track-1 P0/P1/P2 todos (see "Open Track-1 todos" below), unaddressed since. Flagging
-> only — NOT lifting the hold, which is an operator-only call — but any agent reading this plan should treat the named
-> release channel as dead and escalate to the operator before either auto-dispatching the open todos or continuing to
-> sit on them indefinitely. (was: banner carried no staleness note, unremoved since 2026-05-26.)
+> **Track-1 todo reconciliation (2026-07-27):**
+>
+> 1. features-onchain staked-basis e2e dry-run + `IS_TEST_RUN` validation — **still genuinely open**, no successor plan
+>    owns it. Dispatchable as-is.
+> 2. Short CeFi MDPS top-up + delta_one `funding_oi`/`realized_vol` — **likely superseded**: broader CeFi
+>    candle-completion work (`data_completion_cefi_2026_07_15.md`) now delivers ~2x the original ask (1,238
+>    processed_candles files/day across BITGET-FUTURES/SPOT/BITFINEX/KRAKEN), but the `delta_one`-specific
+>    `funding_oi`/`realized_vol` fields were not independently re-verified — re-check before assuming closed.
+> 3. Drift/Orca DeFi coverage confirm — **superseded, moot**: DRIFT was purged workspace-wide (operator ruling
+>    2026-07-16, `issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`); SOL_BASIS now points at
+>    `perp_venue=hyperliquid`/`spot_venue=raydium`, not Orca. Do not re-dispatch.
+> 4. Strategy read-back (CarryStakedBasisRankAllocator/CarryBasisPerpRankAllocator) — **superseded**: owned by
+>    `carry_staked_basis_funding_scan_experiment_2026_06_16.md` +
+>    `carry_strategy_ensemble_productionization_2026_07_24.md`, with a live, actively-maintained harness
+>    (`e2e-testing/scripts/defi/test_csb_paper_e2e_smoke.py`). Do not re-dispatch.
+> 5. Perf/resource instrumentation — **superseded**: `data_pipeline_check_mdps_features_2026_07_20.md` (active) builds a
+>    strict superset of this ask (RX+rows/s+wall-clock benchmark, full-history projection, SPOT cost, across ALL
+>    asset_groups). Do not re-dispatch.
+> 6. DEFERRED-fan-out MDPS 1h backfill 2026-04-14..04-30 + BITGET-SPOT 4h/24h candles — **unconfirmed**: broad CeFi
+>    candle-completion work landed since, but this exact date-range/timeframe ask wasn't independently verified closed.
+>    Was already self-labeled DEFERRED in the original plan — re-verify before dispatching.
+> 7. `usdc_idle_yield_apy_bps` stub disposition — **still genuinely open**: `strategy-service/.../staked_basis.py:450`
+>    still hardcodes `features.get("usdc_idle_yield_apy_bps", 0.0)`, unwired to `venue_funding_yield`, no disposition
+>    decision recorded anywhere. Dispatchable as-is (needs a decision: wire it up, or explicitly drop the field).
 
 ## Goal
 
@@ -667,17 +684,25 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
 - [ ] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol.** Run MDPS for ~2–3 days over
       the perp venues (read raw tick from `market-data-tick-cefi-prd`, write processed*candles to a `-test` bucket via
       `MDPS_OUTPUT_BUCKET*{CAT}`) → run delta_one `funding_oi`+`returns`(realized_vol_20)@1h → `-test` → read-back.
-      Repos: market-data-processing-service + features-service.
-- [ ] [INFRA] P1. **Basis-perp DeFi leg — confirm Drift/Orca coverage.** Verify `venue=DRIFT data_type=perp_funding` +
-      `venue=ORCA/RAYDIUM data_type=dex_pool_state` exist in `market-data-tick-defi-prd` for the test window; MTDS/MDPS
-      top-up if missing. Repo: market-tick-data-service.
-- [ ] [VALIDATE] P1. **Phase C — strategy read-back.** Confirm `CarryStakedBasisRankAllocator` /
-      `CarryBasisPerpRankAllocator` (+ `trace_carry_staked_basis.py`) consume the `-test` features and produce a
-      non-empty ranked result. Repo: strategy-service.
-- [ ] [SCRIPT] P2. **Perf/resource instrumentation** per `(asset_group × feature category)` across the Phase A/B runs
-      (wall-clock, peak RSS, rows-in/out, parquet size). Repo: features-service `scripts/e2e/`.
+      Repos: market-data-processing-service + features-service. **Re-check before dispatch (2026-07-27):**
+      `data_completion_cefi_2026_07_15.md` already delivers ~2x the MDPS top-up ask; the `delta_one`
+      `funding_oi`/`realized_vol` fields specifically weren't independently re-verified — confirm still needed.
+- [x] ✅ SUPERSEDED, do not dispatch (2026-07-27). **Basis-perp DeFi leg — confirm Drift/Orca coverage.** DRIFT was
+      purged workspace-wide (operator ruling 2026-07-16, `issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`);
+      SOL_BASIS now points at `perp_venue=hyperliquid`/`spot_venue=raydium`, not Orca. The asked-for venue combination
+      no longer exists in this role.
+- [x] ✅ SUPERSEDED, do not dispatch (2026-07-27). **Phase C — strategy read-back.** Owned by
+      `carry_staked_basis_funding_scan_experiment_2026_06_16.md` +
+      `carry_strategy_ensemble_productionization_2026_07_24.md`, with a live, actively-maintained harness
+      (`e2e-testing/scripts/defi/test_csb_paper_e2e_smoke.py`, commits `76a1071`/`db70ead` through the DRIFT cull).
+- [x] ✅ SUPERSEDED, do not dispatch (2026-07-27). **Perf/resource instrumentation.**
+      `data_pipeline_check_mdps_features_2026_07_20.md` (active, finalize 2026-07-27) builds a strict superset:
+      RX+rows/s+wall-clock benchmark, full-history projection, SPOT cost, across ALL asset_groups.
 - [ ] [INFRA] P2. **DEFERRED (fan-out, not the 2 strategies):** MDPS 1h backfill `2026-04-14→04-30` for mtf 4h/24h; and
       BITGET-SPOT 4h/24h candles via MDPS (producible gap — see audit above, do NOT `empty_confirmed`). Repo: MDPS.
+      **Re-check before dispatch (2026-07-27):** broad CeFi candle-completion work landed since
+      (`data_completion_cefi_2026_07_15.md`, `cefi_consolidated_closeout_2026_07_18.md`) but this exact
+      date-range/timeframe ask wasn't independently confirmed closed.
 - [ ] [VALIDATE] P2. **`usdc_idle_yield_apy_bps` stub** — confirm leave-as-0-floor (acked) vs wire `venue_funding_yield`
       upstream; folded with the per-service status-calibration audit. Repo: features-service onchain + delta_one.
 

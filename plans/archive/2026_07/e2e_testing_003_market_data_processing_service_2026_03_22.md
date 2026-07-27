@@ -1,8 +1,10 @@
+> **SUPERSEDED (archived 2026-07-27).** Blank, never-executed test-matrix template. Superseded by the
+> `/data-pipeline-check-mdps` skill.
+
 ---
-title: "E2E Test: market-data-processing-service"
-service: market-data-processing-service
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: market-data-processing-service" service: market-data-processing-service date: 2026-03-22 status:
+pending
 ---
 
 # E2E Test: market-data-processing-service

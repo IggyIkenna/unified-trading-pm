@@ -1,8 +1,10 @@
+> **SUPERSEDED (archived 2026-07-27).** Blank, never-executed test-matrix template. Superseded by the
+> `/data-pipeline-check-features` skill + `plans/active/features_service_e2e_pipeline_test_2026_05_26.md`.
+
 ---
-title: "E2E Test: features-service (cross-instrument family)"
-service: features-service (cross-instrument family)
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: features-service (cross-instrument family)" service: features-service (cross-instrument family) date:
+2026-03-22 status: pending
 ---
 
 # E2E Test: features-service (cross-instrument family)

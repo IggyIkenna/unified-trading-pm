@@ -1,8 +1,11 @@
+> **SUPERSEDED (archived 2026-07-27) — real coverage confirmed, acceptable scope.** risk-and-exposure-service
+> consolidated into strategy-service `--operation risk-monitor`. Covered by `strategy-service/tests/risk/integration/`
+> (`test_exposure_calculation_integration.py`, `test_var_pretrade.py`, `test_pre_trade_check_integration.py`), mocked
+> `PositionMonitorClient`.
+
 ---
-title: "E2E Test: risk-and-exposure-service"
-service: risk-and-exposure-service
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: risk-and-exposure-service" service: risk-and-exposure-service date: 2026-03-22 status: pending
 ---
 
 # E2E Test: risk-and-exposure-service

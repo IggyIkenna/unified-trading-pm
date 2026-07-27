@@ -1,7 +1,10 @@
+> **SUPERSEDED (archived 2026-07-27).** Blank, never-executed test-matrix template. Superseded by the
+> `/data-pipeline-check-features` skill + `plans/active/features_service_e2e_pipeline_test_2026_05_26.md` (a real GCS
+> read→calc→write→read-back harness, dozens of live bugs found/fixed).
+
 ---
-title: "E2E Test: features-service (delta-one family)"
-service: features-service (delta-one family)
-date: 2026-03-22
+
+title: "E2E Test: features-service (delta-one family)" service: features-service (delta-one family) date: 2026-03-22
 status: pending
 ---
 

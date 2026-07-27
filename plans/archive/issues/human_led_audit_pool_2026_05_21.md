@@ -2,7 +2,7 @@
 doc_type: issue
 title: Human-led audit pool — issue catalogue for background-agent remediation
 summary: "Verbatim from operator note to Harsh ahead of meet, 2026-05-21:"
-status: open
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -29,9 +29,15 @@ parent_epic: plan_hygiene_master
 priority: P0
 source: [operator note to Harsh ahead of meet 2026-05-21]
 assigned_vm: NA
-resolved_by:
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+resolved_by: >-
+  Superseded in substance by plans/audit/README.md's per-epic everlasting audit-instructions/results lifecycle
+  (plans/audit/instructions/<epic>_master_audit_instructions.md -> plans/audit/results/) for the audit-execution half,
+  and by the /ag-closeout-audit skill + satellite-dispatch-batch pattern for the wrapper-plan/AO-dispatch half. Archived
+  2026-07-27 per operator decision (pre-June-1 stale-plans audit). 3 of the 14 rows had zero audit coverage anywhere and
+  were filed as KNOWN GAP notes: row #7 (risk audit) -> plans/audit/instructions/strategy_master_audit_instructions.md,
+  row #12 (multi-client dynamic add/remove) ->
+  plans/audit/instructions/client_isolation_and_governance_master_audit_instructions.md, row #14 (batch/live symmetry)
+  -> plans/audit/instructions/batch_live_symmetry_master_audit_instructions.md.
 execution_scope: local-only
 estimate_class: design
 estimate_baseline_ai_days: 1

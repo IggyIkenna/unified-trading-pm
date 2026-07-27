@@ -1,5 +1,13 @@
 # DeFi Venue Matrix
 
+> **RETIRED (archived 2026-07-27).** Content folded into `codex/02-data/defi-venue-protocol-catalogue.md` § "Dev/testnet
+> venue reference" — that doc already covered 2 of 3 wanted axes (UAC-entry↔instruments-service adapter↔MTDS
+> adapter↔execution connector + GCS shard-atom path) and now also carries this file's testnet-endpoint/env-var/faucet
+> content. `instadapp` and `defillama` were found to not be real UAC venues (data-source-only entries) — flagged in the
+> new location. `scripts/deployment/provision-defi-testnet.sh`'s stale `docs/defi-venue-matrix.md` citation was fixed to
+> point at the new location. A manifest-value cross-check (the 3rd axis) is still missing everywhere — tracked as a
+> follow-up in the new location, not yet a todo.
+
 Source: `unified-market-interface/unified_market_interface/factory.py` VENUE_REGISTRY (14 DeFi protocols).
 
 ## DeFi Venues

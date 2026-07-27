@@ -1,8 +1,10 @@
+> **SUPERSEDED (archived 2026-07-27).** Blank, never-executed test-matrix template. Superseded by the
+> `/data-pipeline-check-mtds` skill (real force-refetch/skip-if-fresh/canonical-path verification against `-test` GCS
+> buckets).
+
 ---
-title: "E2E Test: market-tick-data-service"
-service: market-tick-data-service
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: market-tick-data-service" service: market-tick-data-service date: 2026-03-22 status: pending
 ---
 
 # E2E Test: market-tick-data-service

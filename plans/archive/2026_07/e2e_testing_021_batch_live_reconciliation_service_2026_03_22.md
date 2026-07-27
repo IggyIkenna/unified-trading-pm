@@ -1,8 +1,11 @@
+> **SUPERSEDED (archived 2026-07-27).** Blank, never-executed test-matrix template. Superseded by
+> `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` + the live BLRS audit trail in
+> `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`.
+
 ---
-title: "E2E Test: batch-live-reconciliation-service"
-service: batch-live-reconciliation-service
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: batch-live-reconciliation-service" service: batch-live-reconciliation-service date: 2026-03-22 status:
+pending
 ---
 
 # E2E Test: batch-live-reconciliation-service

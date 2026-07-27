@@ -1,8 +1,12 @@
+> **SUPERSEDED (archived 2026-07-27) — real coverage confirmed.** position-balance-monitor-service consolidated into
+> strategy-service `--operation position-recon`. Covered by
+> `strategy-service/tests/position/integration/test_end_to_end.py` (real fill→position-update→reconciliation flow) +
+> `test_cross_venue_integration.py`.
+
 ---
-title: "E2E Test: position-balance-monitor-service"
-service: position-balance-monitor-service
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: position-balance-monitor-service" service: position-balance-monitor-service date: 2026-03-22 status:
+pending
 ---
 
 # E2E Test: position-balance-monitor-service

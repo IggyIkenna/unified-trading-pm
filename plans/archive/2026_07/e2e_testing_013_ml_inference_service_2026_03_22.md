@@ -1,8 +1,10 @@
+> **SUPERSEDED (archived 2026-07-27) — real coverage confirmed.** Blank template superseded by a genuine E2E harness:
+> `ml-service/tests/inference/e2e/test_mock_inference_e2e.py` drives a real `InferenceOrchestrator` single/multi-target
+> predict + event serialization.
+
 ---
-title: "E2E Test: ml-inference-service"
-service: ml-inference-service
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: ml-inference-service" service: ml-inference-service date: 2026-03-22 status: pending
 ---
 
 # E2E Test: ml-inference-service

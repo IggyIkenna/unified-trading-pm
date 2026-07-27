@@ -1,8 +1,10 @@
+> **SUPERSEDED (archived 2026-07-27) — real coverage confirmed.** Blank template superseded by a genuine E2E harness:
+> `ml-service/tests/training/e2e/test_mock_training_e2e.py` runs a real
+> `ModelTrainer`+`MockFeatureGenerator`+`HyperparameterConfig` through feature-select→train→predict_proba.
+
 ---
-title: "E2E Test: ml-training-service"
-service: ml-training-service
-date: 2026-03-22
-status: pending
+
+title: "E2E Test: ml-training-service" service: ml-training-service date: 2026-03-22 status: pending
 ---
 
 # E2E Test: ml-training-service
