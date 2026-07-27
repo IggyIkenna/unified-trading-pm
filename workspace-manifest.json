@@ -68,7 +68,7 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.0",
-    "deployment-api": "0.56.0",
+    "deployment-api": "0.57.0",
     "deployment-service": "0.107.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.39.0",
@@ -78,9 +78,9 @@
     "instruments-service": "0.93.0",
     "market-tick-data-service": "0.97.0",
     "system-integration-tests": "0.15.0",
-    "unified-api-contracts": "0.76.0",
+    "unified-api-contracts": "0.77.0",
     "unified-trading-library": "0.61.0",
-    "unified-trading-pm": "1.2.636",
+    "unified-trading-pm": "1.2.638",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
-        "warn_file_count": 16,
+        "large_file_count": 6,
         "qg_red_reason": null,
-        "large_file_count": 6
+        "warn_file_count": 16,
+        "coverage_pct": 82.62
       }
     },
     "deployment-service": {
@@ -393,9 +393,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "warn_file_count": 9,
-        "coverage_pct": 73.2,
+        "qg_red_reason": null,
         "large_file_count": 4,
-        "qg_red_reason": null
+        "coverage_pct": null
       }
     },
     "execution-service": {
@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
         "warn_file_count": 21,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "large_file_count": 0,
+        "coverage_pct": 84.45
       }
     },
     "features-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 8,
         "warn_file_count": 10,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "large_file_count": 8,
+        "coverage_pct": 90.92
       }
     },
     "market-data-processing-service": {
@@ -822,9 +822,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 5,
-        "warn_file_count": 7,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "warn_file_count": 7,
+        "coverage_pct": 89.79
       }
     },
     "market-tick-data-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 44,
-        "coverage_pct": null,
+        "large_file_count": 0,
         "qg_red_reason": null,
-        "large_file_count": 0
+        "warn_file_count": 44,
+        "coverage_pct": 83.63
       }
     },
     "ml-service": {
@@ -1012,9 +1012,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 5,
-        "warn_file_count": 10,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "warn_file_count": 10,
+        "coverage_pct": 85.82
       }
     },
     "system-integration-tests": {
@@ -1103,10 +1103,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
         "warn_file_count": 0,
+        "qg_red_reason": null,
         "large_file_count": 0,
-        "qg_red_reason": null
+        "coverage_pct": 9.54
       }
     },
     "trading-agent-service": {
@@ -1213,9 +1213,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 31,
-        "coverage_pct": null,
         "qg_red_reason": null,
-        "large_file_count": 27
+        "large_file_count": 27,
+        "coverage_pct": 96.45
       }
     },
     "unified-trading-library": {
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 23,
+        "qg_red_reason": null,
         "large_file_count": 7,
-        "coverage_pct": null
+        "coverage_pct": 89.24
       }
     },
     "unified-trading-pm": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 0,
-        "coverage_pct": 73.09,
-        "large_file_count": 0
+        "qg_red_reason": null,
+        "large_file_count": 0,
+        "coverage_pct": null
       }
     },
     "unified-trading-api": {
@@ -1417,10 +1417,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 15,
         "warn_file_count": 7,
         "qg_red_reason": null,
-        "coverage_pct": 75.54
+        "large_file_count": 16,
+        "coverage_pct": 75.41
       },
       "breaking_scan_dir": "none"
     },
@@ -2190,8 +2190,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.76.0",
-      "published_at": "2026-07-27T18:14:40Z",
+      "version": "0.77.1.dev1+gf48ee1ab2",
+      "published_at": "2026-07-27T18:48:11Z",
       "registry": "artifact-registry"
     }
   }
