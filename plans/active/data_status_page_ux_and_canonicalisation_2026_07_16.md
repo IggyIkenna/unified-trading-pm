@@ -147,6 +147,31 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 > full session-by-session narrative and every shipped item's real-infra evidence (commit SHAs, GCS row counts, rollback
 > snapshots, unit-test names).
 
+### 2026-07-27 (slot-8, review) — tradfi native-extract todo 6: canonical ids + venue-lookup gap re-verify
+
+Re-verified per `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 6 (catalogue Surface A migration landed live
+2026-07-25, `instruments-service@52d8b3ef`, un-blocking this check — the parent closeout's digest table saying "NOT yet
+executed" is stale).
+
+**Upcoming Expiries widget — canonical ids confirmed live, not stale.** Called
+`deployment_api.services.catalogue_lifecycle.list_upcoming_expiries_page` (the exact function the widget/catalogue view
+uses) scoped to `asset_group="tradfi"`, `within_days=365`: 149,957 matching rows. Every sampled `instrument_id` (25 rows
+across two windows) is fully canonical, e.g. `CME:OPTION:SP500-USD@LIN-20260717-100-P`,
+`CME:OPTION:BTC-USD@LIN-20260723-560-C` — the raw wire symbol (e.g. `E4AN6 C10100`) only appears in the separate
+`raw_symbol` field, never surfaced as the id. No `E3AN6     C7960`-style raw output found in the sample.
+
+**Venue-lookup gap fix
+(`plans/archive/issues/deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`) — confirmed still
+holds for tradfi.** Live-called `DataQueryService()._venue_to_category()` for CME/NYSE/NASDAQ/CBOE/ICE: all 5 resolve to
+`TRADFI` via the canonical UAC `VENUE_TO_ASSET_GROUP` registry lookup, matching `VENUE_TO_ASSET_GROUP.get(venue)`
+directly (not a reverted hardcoded allowlist). Confirmed genuinely registry-backed — not coincidentally still working
+off the old hardcode — by also querying two venues NEVER in the old hardcoded 5-venue tradfi allowlist (`XCBF`, `BATS`,
+both correctly resolve `None` — not yet UAC-registered venues) and one cefi venue (`ASTER` → correctly resolves `CEFI`),
+proving the lookup is generic/registry-driven across asset groups. Fix holds.
+
+Verified against `deployment-api@c19edcc` (fresh-pulled to `origin/live-defi-rollout` before checking); read-only
+verification, no code changed. Source: `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 6.
+
 ## P1 — Honest Coverage: remaining hardening
 
 **Design guide.** The user-facing bug is already fixed and verified (Progress Log). What remains: (a) make the fix
