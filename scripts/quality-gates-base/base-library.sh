@@ -926,12 +926,10 @@ qg_prof start pip-audit
 if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     # CVE-2026-4539: pygments 2.19.2 (latest, no fix version) — transitive via pytest+rich
     # CVE-2026-45409: idna 3.14 follow-up to CVE-2024-3651; fix: upgrade to idna>=3.15
-    # aiohttp cookie-CVE cluster CVE-2026-34993/47265 (+ 50269/54273-54280 below): aiohttp <=3.13.5, all fixed in 3.14.0.
-    #   2026-06-23: 17 of 18 declaring repos bumped to aiohttp>=3.14.1 (vcrpy>=8.2.1 unblocked the cassette suites) → these
-    #   ignores are NO-OPs there; RETAINED ONLY for execution-service, held on 3.13.5 via [tool.uv] override (its aioresponses
-    #   test files can't build aiohttp-3.14 ClientResponse; aioresponses 0.7.8 has no fix). Client-only aiohttp → surface nil.
-    #   SUCCESSOR (drop): migrate execution-service off aioresponses + bump to 3.14. Tracked:
-    #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
+    # aiohttp cookie-CVE cluster CVE-2026-34993/47265/50269/54273-54280 — RESOLVED: execution-service (the last holdout,
+    #   held on aiohttp 3.13.5 via a [tool.uv] override for its aioresponses test files) migrated to adapter-boundary
+    #   mocks and bumped to aiohttp>=3.14.1 fleet-wide; the 11 ignore-vuln entries were dropped from
+    #   QG_PIP_AUDIT_COMMON_IGNORES (qg-common.sh). See plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
     # The three pip advisories below MUST stay in parity with base-service.sh — they are sanctioned
     # ignores for the SAME shared pip dep (operator-accepted 2026-06-05); a library-vs-service drift
     # here reddens UTL/UAC while services pass (incident 2026-06-11: PYSEC-2026-196 published, present
