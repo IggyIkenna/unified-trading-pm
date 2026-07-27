@@ -165,11 +165,17 @@ all_instances() {
 # The runner's PATH, read from the unit file so there is exactly ONE source of truth. Parsing it
 # (rather than duplicating the string here) means preflight can never green-light a PATH the runner
 # will not actually have.
+#
+# The checked-in template's PATH is PM's literal /opt/github-glue-runners — under a non-empty
+# POOL_TAG that is NOT what the installed unit will actually contain (render_unit substitutes it to
+# ${RUNNER_BASE}), so this applies the SAME substitution here. Without it, preflight for a second
+# pool silently probes PM's already-built venv (python3/uv both "resolve" via PM's path) instead of
+# reporting the truth: this pool's venv does not exist until install builds it.
 runner_path() {
   local p
   p="$(sed -n 's/^Environment=PATH=//p' "${HERE}/github-glue-runner@.service" | head -1)"
   [ -n "${p}" ] || die "no 'Environment=PATH=' in ${HERE}/github-glue-runner@.service — refusing to guess the runner's PATH"
-  printf '%s' "${p}"
+  printf '%s' "${p}" | sed "s#/opt/github-glue-runners#${RUNNER_BASE}#g"
 }
 
 # Run a command EXACTLY as a job step will: as ${RUNNER_USER}, on the unit's PATH, with the env
