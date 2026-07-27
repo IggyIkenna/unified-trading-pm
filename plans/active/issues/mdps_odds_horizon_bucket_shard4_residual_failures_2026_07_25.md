@@ -20,7 +20,7 @@ tags: [sports, mdps, odds-horizon-bucket, attempted-failed, loss-guard, honest-a
 related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
+    /plans/archive/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
     /plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md,
     /plans/active/issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md,
   ]

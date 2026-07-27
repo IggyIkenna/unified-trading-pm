@@ -21,7 +21,7 @@ tags: [sports, league-id, footystats, migration, plan-drift]
 related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
+    /plans/archive/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
     /plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md,
     /plans/active/issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md,
   ]
