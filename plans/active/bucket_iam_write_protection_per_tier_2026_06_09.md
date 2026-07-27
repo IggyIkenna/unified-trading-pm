@@ -109,6 +109,17 @@ Two independent gates because Group A and Group B are at different stages:
 
 ## Open design decisions (resolve before terraform)
 
+> **🟥 STALE 2026-07-27 (slot-12) — the tier-set + SA-design resolutions below predate a LATER, contradicting operator
+> ruling.** `deployment-service/terraform/gcp/canonical_buckets.tf:44-46`: "prd + test are the only provisioned tiers
+> (dev/stg retired per the 2026-07-13 operator ruling — `bucket_estate_consolidation_to_sub100_2026_07_13.md` Wave 1)."
+> That ruling is dated 2026-07-13 — ONE MONTH AFTER this section's 2026-06-12 resolution — and is a WORKSPACE-WIDE,
+> PERMANENT retirement of the dev/stg tier concept (20 empty dev/stg canonical buckets deleted), not a Group-A-specific
+> gap. P1.1 already created `uts-dev-sa`/`uts-stg-sa` as live GCP SAs on this now-stale premise (no bindings yet — P1.2
+> is un-shipped). Full analysis + recommended resolution paths:
+> `issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md` (new, P0, operator-decision pending).
+> **Do not implement P1.2's literal dev-SA/stg-SA bindings** until that decision lands — do the `-prd-` binding only
+> (unambiguous, doesn't depend on the dev/stg naming question) or wait for the full re-derivation.
+
 - [x] ✅ **Tier set — RESOLVED**: `dev` / `stg` / `prd` (+ ephemeral `test`) per `resolve_bucket_name`; **staging is a
       distinct `-stg-` tier** (the codex 3-tier "staging≡dev" framing is stale). `mock` is mode-based, not a name
       suffix. — provenance: UTL `_DEPLOYMENT_ENV_SHORT_FORM` (mandated SSOT) + operator 2026-06-09.
