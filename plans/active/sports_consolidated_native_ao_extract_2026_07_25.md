@@ -79,12 +79,22 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P0. **Track F — PURGE the fabricated POST-FLOOR `derived_features` remainder (Jun-Dec 2020 + 2021-2026
-      only) + re-verify by CENSUS, one worker, in order.** **⛔ CORRECTED 2026-07-26 (slot-12 `data_engineering`): this
-      todo's own "Not `[OPERATOR]`-gated" justification was WRONG at the time and was removed** — the original triage
-      had merely ASSERTED "GCS soft-delete gives a 7-day recovery window, reversible" without ever querying the actual
-      bucket policy, and no carve-out existed in the codex SSOT yet at that point. **✅ RE-CORRECTED 2026-07-27 —
-      `[OPERATOR]` removed again, this time on a verified rather than asserted basis.**
+- [x] ✅ [DATA] P0. **Track F — PURGE the fabricated POST-FLOOR `derived_features` remainder (Jun-Dec 2020 + 2021-2026
+      only) + re-verify by CENSUS, one worker, in order.** **DONE 2026-07-27 (slot-5, `data_engineering`): superseded by
+      the Track F (follow-up) VM-launched exhaustive purge below, which completed + verified this todo's own done-when
+      condition** — the follow-up's third VM launch (`canonical-migration-sports-features-purge-20260727-103716`)
+      scanned all 2400 in-scope days, deleted 3612 residue objects, and its chained `--recensus` reported "RE-CENSUS: 0
+      post-floor derived_features residue objects remain. Purge verified complete." (see Progress Log
+      2026-07-27T10:11-10:43Z, slot-10). Independently spot-checked before flipping this checkbox (not just trusting the
+      log): `gcloud storage objects list` on `day=2020-06-06/*/feature_group=derived_features/*.parquet` (previously
+      confirmed 9/9 residue objects by slot-10) now returns ZERO objects, while the previously-confirmed-clean day
+      `2021-01-01` still has its 4 legitimate `features.parquet` objects intact — confirms the delete was surgical
+      (correct objects removed, correct objects kept), not a blind wipe. No further action needed; flipping this
+      checkbox to close out the original todo now that its substance is fully satisfied. **⛔ CORRECTED 2026-07-26
+      (slot-12 `data_engineering`): this todo's own "Not `[OPERATOR]`-gated" justification was WRONG at the time and was
+      removed** — the original triage had merely ASSERTED "GCS soft-delete gives a 7-day recovery window, reversible"
+      without ever querying the actual bucket policy, and no carve-out existed in the codex SSOT yet at that point. **✅
+      RE-CORRECTED 2026-07-27 — `[OPERATOR]` removed again, this time on a verified rather than asserted basis.**
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a (added 2026-07-26, AFTER the 07-26 correction
       above) now provides exactly the carve-out that doc's §3.1 lacked when this todo was last edited: an object/
       prefix-scoped prod-bucket delete (never a whole-bucket destroy) may proceed agent-side once a FRESH, same-run
@@ -525,3 +535,11 @@ reached, each fixable the same way (bump that section's own timeout var).
   deployment-service tarball-freshness launcher fix itself is still pending a clean QG landing** (uncommitted locally,
   in effect via the dirty-tarball override) — not blocking this todo's completion, tracked as a small follow-up for
   whoever next touches that launcher.
+- 2026-07-27 (slot-5, `data_engineering`, todo 1 — checkbox flip only, no code): dispatched onto the ORIGINAL todo 1
+  (`sports_consolidated_native_ao_extract-028`), which the Track F (follow-up) todo above had already superseded and
+  completed. Rather than re-do work, verified the follow-up's claimed outcome independently before flipping:
+  spot-checked `day=2020-06-06` (previously confirmed 9/9 `derived_features` parquet residue objects by slot-10's
+  pre-purge sample) — now 0 objects match `*/feature_group=derived_features/*.parquet` on that day; spot-checked
+  `day=2021-01-01` (previously confirmed clean) — its 4 legitimate `features.parquet` objects are still present
+  untouched. Confirms the VM purge was surgical and complete. Flipped todo 1's checkbox to close it out; no code changes
+  needed for this task.
