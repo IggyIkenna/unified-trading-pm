@@ -21,7 +21,11 @@ repos: [features-service]
 scope: [engineer, admin]
 tags: [features-service, delta-one, dependency-checker, bucket-naming, prediction, config-bug]
 related:
-  [/plans/active/data_pipeline_check_mdps_features_2026_07_20.md, /codex/02-data/per-asset-group-bucket-layouts.md]
+  [
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+  ]
 created: 2026-07-27
 priority: P2
 parent_epic: infrastructure_master

@@ -171,7 +171,7 @@ drift_direction: advance-code
       `.../sports/cli/handlers/batch_handler.py:93-112,299-361,639-648`, and
       `ml-service/ml_service/training/app/core/sports_feature_loader.py:52-146` as ground truth (all verified by direct
       read, not inferred). Repo: unified-trading-pm (codex/02-data/). New doc:
-      `codex/02-data/sports-features-bucket-path-layout.md`. **Done when**: a new codex/02-data doc exists documenting
+      `/codex/02-data/sports-features-bucket-path-layout.md`. **Done when**: a new codex/02-data doc exists documenting
       this exact layout with the cited writer file:line references, and its path is added to
       `sports_consolidated_closeout_2026_07_19.md`'s Codex SSOTs list. Source:
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
