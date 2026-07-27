@@ -222,11 +222,29 @@ isolation, consolidator merge/dedup, stale-blob liveness and the `captured`-outr
       slim caches) instead of only popping the full-schema cache, since the read now routes through the slim/columns
       path. 8 new unit tests (`_window_read_filters` behavior + the read-call's actual `columns=`/`filters=` kwargs +
       force_refresh invalidating both caches); full `quality-gates.sh` green (6810 passed) on the committed SHA.
-- [ ] 8. [SCRIPT] P1. Add `columns=`/`filters=` projection to the `deployment-api` dashboard data-status backend
-      (`services/{data_status_hierarchical,data_status_service,manifest_source}.py`,
-      `routes/data_status/_live_coverage.py`) — the highest interactive-traffic defi-reachable unfiltered reads found in
-      todo 5's audit (an operator viewing the defi data-status page triggers a full-index decode per request) (repo:
-      deployment-api).
+- [x] ✅ 8. [SCRIPT] P1. **VERIFIED 2026-07-27 (slot-5) — no code change needed, already fixed by a parallel audit.**
+      Direct read of all 4 named call sites shows every one already column-projected (some also row-group filtered),
+      shipped earlier the same day via the independent, broader
+      `plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md` audit (which covers this exact
+      chokepoint plus ~35-40 other bare call sites workspace-wide): (a) `services/manifest_source.py` — BOTH the
+      pushdown branch
+      (`read_availability_index(bucket, columns=DRILLDOWN_COLUMNS, filters=[("date",">=",...),     ("date","<=",...)])`,
+      line ~142) and the previously-bare fallback branch
+      (`read_availability_index(bucket,     columns=DRILLDOWN_COLUMNS)`, line ~169) are projected — the fallback fix
+      shipped `deployment-api@489d747`; (b) `services/data_status_service.py:449`
+      (`idx = read_availability_index(bucket)`) imports the wrapper
+      `manifest_source.read_manifest_index as read_availability_index` (not the raw UTL function), so it inherits (a)'s
+      fix transitively — confirmed by direct read of the import at line 244, no separate bare UTL call exists in this
+      file; (c) `services/data_status_hierarchical.py:688`
+      (`read_availability_index(bucket,     date_window=(window_start, window_end))`) likewise imports the same wrapper
+      (line 61) and always passes a real `(window_start, window_end)` computed earlier in the function, so it takes the
+      wrapper's row-group-pushdown branch, not the bare fallback — confirmed already projected AND filtered, predating
+      even the parallel audit (comment: "P2 proper-root-fix (predicate pushdown)"); (d)
+      `routes/data_status/_live_coverage.py:464` (`read_availability_index(bucket, columns=DRILLDOWN_COLUMNS)`, lazily
+      imports the RAW UTL function) is column-projected — shipped `deployment-api@d143a44` — and has no `filters=`
+      because this endpoint polls for live-pipeline rows across the whole index (no date/window parameter exists to
+      filter by; not a gap). No commit made for this todo — the fix is already on `live-defi-rollout` and verified
+      present after a fresh pull.
 
 ## 2026-07-20 — F1+F2 SHIPPED (16.7x, value-equivalent); F3 premise DISPROVEN
 
