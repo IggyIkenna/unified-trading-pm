@@ -112,3 +112,78 @@ on. Filed separately per the workspace's findings-triage rule (outside the migra
 - [ ] 3. [SCRIPT] P2. Once ruled, register the contract (or fix the routing) + add a regression test asserting every
       raw-tick-capturable CEFI instrument_type has a registered candle contract for its capturable data_types (closes
       the class of bug, not just this instance).
+
+# 2026-07-27 update (slot-8) -- todo 1 RULED + fix ready, blocked on host disk-full (BLK-ff0ebe7f), NOT re-dispatchable to this slot
+
+**Ruling on todo 1**: register a standalone contract (not "confirm chain-bundled-only"). Confirmed via
+`unified_api_contracts.gcs_paths.CEFI_CHAIN_INSTRUMENT_TYPES = frozenset({"options_chain", "futures_chain"})` --
+`"future"` is deliberately NOT a member, so DERIBIT's raw per-contract dated-futures ticks correctly route to the
+standalone (non-bundled) path today; the gap is purely a missing `CONTRACT_REGISTRY` entry, exactly like the doc's
+original "oversight, not policy" read (TradFi already registers standalone `future` the same way,
+`_TIMEFRAMES_TRADFI_RE_AGGREGATED` loop, trades-only, no book5/derivative_ticker/liquidations since dated futures don't
+emit funding/liquidation events).
+
+**Fix written + verified, but NOT shipped**: implemented in `unified-api-contracts`, full `quality-gates.sh` run got to
+12101 tests PASSED before the pytest-cov coverage-DB write itself failed with `disk or database is full` -- the code is
+correct, only the QG bookkeeping step is blocked by the same host disk-full incident escalated in
+`features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md`-adjacent session context (BLK-ff0ebe7f; main PARKED
+this task's backlog entry behind `shared-host-disk-headroom-restored=false`, `priority: 999`). Per RULES.md skip
+semantics, I could not stay assigned to this exact task without permanently blocking my own slot from ever picking it up
+again once the prereq flips -- so I released it via `/skip-current-task`, but that also means whichever slot resumes it
+next does NOT have my local `git stash` (`unified-api-contracts`, message
+`orchestrator-slot-8-cefi_future_instrument_type_no_candle_schema_contract-001-diskfull-blocked`). Pasting the full
+patch here so it survives independent of any one slot's local stash:
+
+```diff
+diff --git a/tests/internal/unit/test_mdps_candle_contracts.py b/tests/internal/unit/test_mdps_candle_contracts.py
+index 5d844baf..dc6c95cd 100644
+--- a/tests/internal/unit/test_mdps_candle_contracts.py
++++ b/tests/internal/unit/test_mdps_candle_contracts.py
+@@ -132,6 +132,19 @@ def test_cefi_spot_pair_candles(tf: str) -> None:
+     assert book5.symbol_column == "symbol"
+
+
++@pytest.mark.parametrize("tf", MDPS_TIMEFRAMES_CEFI)
++def test_cefi_future_trades_candles(tf: str) -> None:
++    """Standalone dated future (e.g. DERIBIT BTC-USD@INV-20260627), not chain-bundled.
++
++    Regression for cefi_future_instrument_type_no_candle_schema_contract_2026_07_21:
++    every CEFI FUTURE candle write failed "No SchemaContract registered" because this
++    instrument_type had no contract at all (CEFI's perpetual/spot_pair loop never
++    covered it, unlike TradFi's `future`, which already registers the same shape).
++    """
++    contract = lookup_contract(asset_group="cefi", instrument_type="future", data_type=MDPS_KEY_TRADES(tf))
++    assert contract.symbol_column == "symbol"
++
++
+ @pytest.mark.parametrize("tf", MDPS_TIMEFRAMES_OPTIONS)
+ def test_cefi_options_chain_candles_key_on_underlying(tf: str) -> None:
+     contract = lookup_contract(asset_group="cefi", instrument_type="options_chain", data_type=MDPS_KEY_TRADES(tf))
+diff --git a/unified_api_contracts/internal/schemas/_candle_contracts.py b/unified_api_contracts/internal/schemas/_candle_contracts.py
+index bc6c3a30..937661e1 100644
+--- a/unified_api_contracts/internal/schemas/_candle_contracts.py
++++ b/unified_api_contracts/internal/schemas/_candle_contracts.py
+@@ -332,6 +332,17 @@ for _tf in _TIMEFRAMES_CEFI:
+     # spot_pair — no derivative_ticker / liquidations
+     _register(_build("cefi", "spot_pair", _trades_key(_tf), symbol_column="symbol", extra_cols=[], nullable_ohlcv=True))
+     _register(_build("cefi", "spot_pair", _book5_key(_tf), symbol_column="symbol", extra_cols=_BOOK5_EXT))
++    # standalone dated future (non-chain-bundled per-contract futures, e.g. DERIBIT
++    # BTC-USD@INV-20260627) — mirrors TradFi's `future` registration below (trades
++    # only, no derivative_ticker/liquidations: those are perp-specific funding/
++    # liquidation events that dated futures don't emit).
++    # cefi_future_instrument_type_no_candle_schema_contract_2026_07_21: this
++    # instrument_type is deliberately excluded from CEFI_CHAIN_INSTRUMENT_TYPES
++    # (unified_api_contracts.gcs_paths, frozenset({"options_chain", "futures_chain"}))
++    # so raw per-contract future ticks correctly route here rather than through the
++    # chain-bundle path — the gap was a missing contract registration, not a routing
++    # bug (confirmed: TradFi already registers standalone `future` the same way).
++    _register(_build("cefi", "future", _trades_key(_tf), symbol_column="symbol", extra_cols=[], nullable_ohlcv=True))
+
+ for _tf in _TIMEFRAMES_OPTIONS:
+     _register(
+```
+
+Whoever resumes this once `shared-host-disk-headroom-restored` flips true: apply the patch above (or pull from
+`unified-api-contracts` slot-8 stash if it's still there), re-run `quality-gates.sh` for real (do not skip it — only the
+coverage-DB write failed last time, not the actual test assertions), ship via quickmerge, and flip todo 1's checkbox
+with the ruling above as evidence. Todos 2 and 3 remain open follow-ups.
