@@ -232,7 +232,18 @@ source: >-
       expired, workaround: `--account=`/`CLOUDSDK_CORE_ACCOUNT=1060025368044-compute@developer.gserviceaccount.com` per
       command, never `gcloud config set account` globally) is now a known non-issue baked into the monitoring loop's own
       instructions. Relaunched as `af-backfill-20260727-064958`, verified RUNNING + chunked task resuming correctly.
-      Current: `af-backfill-20260727-064958`.
+      Current: `af-backfill-20260727-064958`. **Check-in 2026-07-27T16:36Z (slot 15, data_engineering)**: no code
+      changes — verified VM `af-backfill-20260727-064958` RUNNING (status via `gcloud compute instances describe`),
+      healthy, monotonic (`run.log` tail: `[[VM_PROGRESS]] last_completed_date=2023-02-07 monotonic=true`, no OOM/error
+      lines). Armed a session-local background watchdog (15-min-interval `gcloud`/GCS poll,
+      `scratchpad/watch_af_backfill.sh`, NOT committed — deliberately ephemeral, trivially recreatable from this note)
+      to catch stall/preemption during this session; **that watchdog dies with this session** — it is not a durable
+      monitor, so the NEXT slot to touch this todo should re-verify VM health from scratch (don't assume anything is
+      watching it between sessions) rather than trusting a stale "still running" from this entry. No relaunch was needed
+      this check-in. Log path for future checks:
+      `gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260727-064958/run.log` (note: NOT
+      `central-element-323112-vm-logs` — that bucket doesn't exist; the real vm-logs prefix lives under
+      `deployment-scripts-central-element-323112`).
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
