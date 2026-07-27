@@ -173,7 +173,14 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       canonical unchecked todo if any residual remains, so the doc stops reading as "0 open" to the digest. Source:
       `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`.
 
-- [ ] [SCRIPT] P1. **Fix `reconcile_manifest_after_entity_change.py`'s `_default_csv_path()` under the Path-B per-slot
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot 11)** — instruments-service@fc07e6b6 — `_default_csv_path()` now walks up
+      from the script to the invoking repo's own `.git` root (Path-B or non-slotted, any nesting depth) and derives the
+      `unified-trading-pm` sibling from that identity instead of a fixed `parents[N]` hop; raises loudly when no sibling
+      clone resolves instead of silently falling back. 4 new unit tests in
+      `tests/scripts/test_reconcile_manifest_entity_change_default_csv_path.py` prove: resolution at multiple nesting
+      depths, resolution lands inside the sibling PM clone, and both `_find_repo_toplevel` and `_default_csv_path` raise
+      (not silently fall back) when no `.git`/sibling clone is found. `quality-gates.sh --no-fix` green (sentinel
+      matches HEAD). **Fix `reconcile_manifest_after_entity_change.py`'s `_default_csv_path()` under the Path-B per-slot
       topology.** Found and explicitly deferred by batch3's own tombstone run (2026-07-26):
       "`reconcile_manifest_after_entity_change.py`'s `_default_csv_path()` resolves `Path(__file__).parents[4]` assuming
       a non-slotted checkout — under the Path-B per-slot topology this lands on the READ-ONLY root PM clone

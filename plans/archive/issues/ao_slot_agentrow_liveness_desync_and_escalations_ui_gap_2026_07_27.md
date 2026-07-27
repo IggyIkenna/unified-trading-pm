@@ -44,6 +44,10 @@ resolved_by: slot-3 (interactive), agent-orchestrator@b94e585
 locked_by:
 ---
 
+> **🟢 RESOLVED 2026-07-27** — fixed `_slot_to_view` to compute main/review liveness from `AgentRow`, not just `SlotRow`
+> (`agent-orchestrator@b94e585`); the escalations-UI gap and the two verified-non-bugs (review-agent stale snapshot,
+> slot 16 SlotRow-staleness artifact) are documented findings, not separate open work.
+
 # AO slot liveness desync (SlotRow vs AgentRow) + missing escalations UI
 
 ## What I found

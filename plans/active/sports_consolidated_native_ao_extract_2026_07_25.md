@@ -135,25 +135,58 @@ drift_direction: advance-code
       unchanged and still the correct scope; the twin/no-twin split has NOT materially drifted since the original
       investigation. Full sample outputs cited in this plan's Progress Log below. Source:
       `sports_consolidated_closeout_2026_07_19.md:337-340`.
-- [ ] [DATA] P1. **Track C — venue vocabulary safe re-stamp + SMARKETS residual purge (excludes the KALSHI/POLYMARKET
-      cross-AG bleed sub-item).** Now that the parts[]-index parser fix has shipped
-      (`market-data-processing-service@51502c3` + `instruments-service@f46e553e`, verified via `git log`), re-stamp: (1)
-      casing/alias rewrite LADBROKES_UK→LADBROKES, UNIBET_UK/UNIBET_EU→UNIBET, SPORT888→BET888SPORT (all 4 already exist
-      correctly-cased in the UAC venue registry — pure re-stamp, no registry gap); (2) the footystats legacy bundle
-      mislabel `venue=ODDS_API`→`FOOTYSTATS` (42,476 rows, a separate writer defect from the parser bug); (3) the
-      parse-bug residue FOOTBALL/UNKNOWN (parser fix already shipped, existing rows need re-stamping to match). THEN
-      snapshot-then-purge the small SMARKETS residual (an explicitly-deleted venue per codex — "removed from all repos,
-      no manifest rows should be expected" — any remaining rows are stale residue, not a registry gap). **EXCLUDES**:
-      the cross-AG bleed sub-item (KALSHI, POLYMARKET rows belonging to `asset_group=prediction`) — already tracked as
-      its own AO-eligible candidate in `sports_satellite_ao_dispatch_batch3_2026_07_25.md:132` ("Determine the
-      disposition of `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/... rows") — drafting it here too would
-      duplicate that work. **Self-justified, not `[OPERATOR]`-gated**: the re-stamp mirrors the same safe
-      copy/verify/swap-or-relabel pattern K1/K2 shipped without an `[OPERATOR]` tag elsewhere in this same doc family;
-      the SMARKETS purge is snapshot-first against a tiny, already-fully-removed-venue residual population. (repo:
-      market-data-processing-service / market-tick-data-service / instruments-service catalogue). **Done when**: a
-      corpus-wide sports venue census shows 0 rows for LADBROKES_UK/UNIBET_UK/UNIBET_EU/SPORT888/FOOTBALL/UNKNOWN/
-      SMARKETS, and 0 rows carrying the footystats-legacy-bundle `venue=ODDS_API` signature. Source:
-      `sports_consolidated_closeout_2026_07_19.md:364-374`.
+- [ ] [DATA] P1. **Track C — venue vocabulary safe re-stamp (excludes the KALSHI/POLYMARKET cross-AG bleed sub-item).**
+      ⛔ **CORRECTED 2026-07-27 (slot-9, `data_engineering`) — 2 of the source todo's premises are WRONG, proven by
+      fresh same-day evidence that already exists elsewhere in this doc family; both are DROPPED from scope rather than
+      executed:** **(a) UNIBET_UK/UNIBET_EU→UNIBET is NOT a casing/alias fold** —
+      `unified_api_contracts.registry.     market_data_categories.SPORTS_VENUE_FOLD`'s own docstring (shipped
+      2026-07-27, same day) documents this was originally added to the fold then REMOVED same-day after live content
+      comparison proved UNIBET_UK/UNIBET_EU are genuinely distinct bookmaker feeds from bare UNIBET (a shared
+      (day,league,fixture,market) — 2022-10-17, ALLSVENSKAN, IFK Goteborg vs Malmo FF — shows DIFFERENT simultaneous
+      odds at slightly different `bm_time`, with 1,066/1,090 UNIBET_UK dates and 9,028/9,443 shards overlapping bare
+      UNIBET's own captured population). Folding would silently conflate two distinct bookmakers' live data on every
+      future capture. `SPORTS_VENUE_FOLD` now contains ONLY `{"ladbrokes_uk": "LADBROKES", "sport888": "BET888SPORT"}` —
+      confirmed by direct read 2026-07-27. **(b) SMARKETS is NOT stale/deleted-venue residue** —
+      `plans/active/issues/     sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` measured SMARKETS at
+      **1,113,644-1,652,384 row_count** (two independent live manifest census passes, 2026-07-27) across 480-6,958
+      shards through 2026-07-26 — i.e. actively captured production data, not a small residual.
+      `codex/01-domain/sports-instruments.md` §"VENUE COUNT CORRECTED 2026-07-24" independently lists SMARKETS among the
+      28 live, individually-registered bookmaker venues captured through ODDS_API — it was NEVER "removed from all
+      repos" as the source todo asserted. A purge here would have destroyed over a million rows of genuine live
+      betting-exchange data. **Corrected scope — now that the parts[]-index parser fix has shipped
+      (`market-data-processing-service@51502c3` + `instruments-service@f46e553e`, verified via `git log`), re-stamp
+      ONLY**: (1) casing/alias rewrite LADBROKES_UK→LADBROKES, SPORT888→BET888SPORT (2 renames, both already exist
+      correctly-cased in the UAC venue registry — pure re-stamp, no registry gap; confirmed via live manifest census
+      2026-07-27: LADBROKES_UK 10,255 shards/1,423,010 rows across 987 dates, SPORT888 15,181 shards/2,432,928 rows
+      across 1,821 dates, both spanning raw-tick `instrument_type=ODDS/data_type=TRADES` AND 4 derived-candle data_types
+      `odds_snapshot`/`arbitrage_opportunity`/`odds_movement`/`odds_horizon_bucket` — the existing
+      `restamp_sports_bookmaker_venue_2026_07_27.py` tool covers ONLY the raw-tick shape; the derived-candle shape needs
+      its own follow-up tooling, flagged rather than silently dropped); (2) the footystats legacy bundle mislabel
+      `venue=ODDS_API` under `pipeline_mode=batch_footystats` specifically →`FOOTYSTATS` (**42,476 shards, row_count
+      sum=40,929, confirmed by live census 2026-07-27 — matches the source todo's cited figure exactly**; a separate
+      writer defect from the parser bug, date range 2020-06-01..2026-04-14). **FOOTBALL/UNKNOWN parse-bug residue —
+      RE-VERIFIED, NOT what the source todo assumed**: live corpus-wide manifest census 2026-07-27 (no filter, full
+      history) found **0 rows anywhere carrying `venue=FOOTBALL`** — the MDPS candle-write bug this venue-name came from
+      (`_venue_token_from_canonical_id` returning the SPORT token) never actually produced a persisted manifest cell for
+      sports in this bucket (verified: `CandleAdapterRegistry` DOES have 4 registered sports adapters —
+      odds_horizon_bucket/odds_snapshot/arbitrage_opportunity/odds_movement — so the bug path was reachable, but the
+      live census still shows 0 FOOTBALL rows; likely already-clean by construction or the buggy window produced no
+      candle output for sports specifically). This part of the done-when is ALREADY SATISFIED — no action needed.
+      `venue=UNKNOWN` is real but TINY: exactly 12 total manifest shards corpuswide (8 on a single date `2026-04-14`
+      under `batch_odds_api`/odds_movement+odds_snapshot, both casings; 4 more among the 4 candle data_types above), ALL
+      `capture_status=empty_confirmed` (0/NaN row_count — honest-absence placeholders, no real GCS parquet content at
+      risk) — tracked as its own small cleanup, not folded into this todo's main re-stamp mechanics. **EXCLUDES**: the
+      cross-AG bleed sub-item (KALSHI, POLYMARKET rows belonging to `asset_group=prediction`) — already tracked as its
+      own AO-eligible candidate in `sports_satellite_ao_dispatch_batch3_2026_07_25.md:132` ("Determine the disposition
+      of `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/... rows") — drafting it here too would duplicate that
+      work. **Self-justified, not `[OPERATOR]`-gated**: the re-stamp mirrors the same safe copy/verify/swap-or-relabel
+      pattern K1/K2 shipped without an `[OPERATOR]` tag elsewhere in this same doc family — a rewrite to an already-
+      correctly-cased registry target, never a delete of the source until content-verified. (repo:
+      market-data-processing-service / market-tick-data-service / instruments-service catalogue). **Done when
+      (CORRECTED)**: a corpus-wide sports venue census shows 0 rows for LADBROKES_UK/SPORT888/UNKNOWN, and 0 rows
+      carrying the footystats-legacy-bundle `venue=ODDS_API` signature under `pipeline_mode=batch_footystats` — NOT
+      UNIBET_UK/UNIBET_EU/SMARKETS (excluded above; forcing those to 0 would be a data-correctness regression, not a
+      fix). FOOTBALL is already 0 (no further action). Source: `sports_consolidated_closeout_2026_07_19.md:364-374`.
 - [ ] [CLEANUP] P2. **Track S — snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout** (frozen
       2026-04-20, no entities). **Built-in safety gate**: first confirm no reader consumes it (grep both repos for the
       path); if a reader is found, STOP and report instead of deleting — do not proceed with the cull. Self-justified,

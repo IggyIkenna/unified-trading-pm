@@ -140,11 +140,16 @@ from scope).
   FIX-STALE pass-1 (~340 literal fixes across 9 repos on `live-defi-rollout`). Evidence + 8-repo registry + per-repo
   rollout list folded into **Appendix A** below (migrated 2026-06-01 from the now-archived
   `issues/repo_docs_codex_ssot_consolidation_2026_06_01.md`).
-- [ ] [DOCS] P0. **Phase 1 — audit-complete the remaining 12 repos** (read-only): agent-orchestrator, deployment-api,
+- [x] ✅ [DOCS] P0. **Phase 1 — audit-complete the remaining 12 repos** (read-only): agent-orchestrator, deployment-api,
       client-reporting-api, alerting-service, trading-agent-service, ibkr-gateway-infra,
       batch-live-reconciliation-service, system-integration-tests, deployment-ui (`user-management-ui` ARCHIVED
       2026-04-20, dropped — corrected 2026-07-15, plan-reconcile), unified-trading-system-ui (data/path docs only), +
-      finish features-service audit. Produce the full per-doc registry (extend the pass-1 registry).
+      finish features-service audit. Produce the full per-doc registry (extend the pass-1 registry). **DONE 2026-07-27**
+      — per-doc registry for all remaining repos in **Appendix B** below (read-only audit via 7 parallel opus
+      sub-agents). Net: near-zero codex duplication (most repo docs are legitimately service-local); dominant
+      remediation is a corpus-wide archived-mirror `unified-trading-codex/` → PM `/codex/` reference fix + FIX-STALE
+      literals; 2 MIGRATE-TO-CODEX deltas (client-reporting-api commercial facts) + 2 operator-gated big findings
+      captured as todos below.
 - [ ] [DOCS] P0. **Phase 2 — migrate unique deltas into codex.** For every MIGRATE-TO-CODEX doc (mtime-newer +
       codex-missing), write/extend the codex SSOT doc first. Commit codex changes. This must precede any
       REDIRECT/DELETE.
@@ -154,6 +159,27 @@ from scope).
       any `INDEX.md` / README doc-index links.
 - [ ] [DOCS] P2. **Phase 5 — verify + enforce.** Run S5.7 audit per repo; add a QG/CI check that flags repo docs
       duplicating a codex table/contract (or hardcoding a resolver-owned literal); confirm all redirect links resolve.
+
+## Phase 2 progress (2026-07-27)
+
+Phase-1 audit (Appendix B) found the codex-migration surface is **tiny**: only `client-reporting-api` carries genuine
+MIGRATE-TO-CODEX deltas (2 docs), and the 3 legacy AUDIT-03/gcs_hive codex-update candidates in Appendix A were all
+either already-satisfied or stale. This session (Phase-2 worker) executed the **determinable** slice:
+
+- **3 AUDIT-03/gcs_hive codex-migration candidates → resolved no-op** (flipped above with evidence): F-45 (codex never
+  claims `correlation_id` is a path key — already `instance_id`-correct), gcs_hive (codex examples already canonical
+  `key=value`), F-06 (recommendation stale — entity-governance SSOT already exists in
+  `org-fund-client-entity-model.md` + `capital-structure-and-regulatory.md`; the remaining Elysium refs are the client
+  POD, not the removed provider). **Zero codex writes were needed** — codex already holds the canonical content for all
+  three.
+- **2 genuine MIGRATE-TO-CODEX deltas (client-reporting-api commercial facts) → OPERATOR-GATED, NOT migrated.**
+  Confirmed codex-missing (`codex/14-customer-journeys/commercial-model/` has no client-roster/fee-tier/three-HWM SSOT)
+  and source docs present (`CLIENT_OPERATIONS_GUIDE.md`, `PNL_AND_INVOICING_GUIDE.md`). These carry **real client IDs +
+  per-client fee %s + org hierarchy** — per the `[OPERATOR-DECISION]` todo in Appendix B ("confirm the fee
+  numbers/roster are current before migrating; committing stale commercial facts to codex-as-SSOT is worse than leaving
+  them repo-local"), the migration is **BLOCKED-OPERATOR-DECISION**. The Phase-2 umbrella checkbox stays open on that
+  gate; once the operator confirms currency, the migration target is `/codex/14-customer-journeys/commercial-model/`
+  (new roster+fees SSOT) per that todo.
 
 ## Success criteria
 
@@ -234,16 +260,30 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       fixed, but code still uses URDI symbols (`URDI` is a phantom name per CLAUDE.md). Audit + rename in
       instruments-service." (Note: `cursor-configs/CLAUDE.md`'s system-map "URDI phantom" note is also stale per this
       finding but is out of scope for this edit — not named in this chunk.)
-- [ ] [DOCS] P2. **AUDIT-03 F-45 codex update** (from `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`):
-      code wins — events GCS path keys on `instance_id`; `correlation_id` is a column, NOT a path key. Update the codex
-      doc(s) that say correlation_id is a path key to match the implemented `instance_id` path semantics.
-- [ ] [DOCS] P2. **AUDIT-03 F-06 codex FIX-STALE** (from same): declare `/codex/04-architecture/custody-providers.md`
-      the **entity-governance SSOT**; entities = **Odum Research UK** + **Odum Group Cayman**; **scrub all stale Elysium
-      references** (Elysium is a removed provider per CLAUDE.md).
-- [ ] [DOCS] P2. **gcs_hive partition-path doc FIX-STALE** (from
-      `archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md` — operator: doc-fix only; the GCS
-      data remediation stays operator-deferred): fix the malformed hive-partition path examples in the relevant codex
-      doc to canonical `key=value` form.
+- [x] ✅ [DOCS] P2. **AUDIT-03 F-45 codex update** — VERIFIED already-correct 2026-07-27 (Phase-2), no codex change
+      needed. `rg` across `codex/` finds NO doc claiming `correlation_id` keys/partitions the events GCS path; every
+      `correlation_id` reference is a column / PubSub attribute / function param (matches the code). Original finding
+      (from `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`): "code wins — events GCS path keys on
+      `instance_id`; `correlation_id` is a column, NOT a path key." Codex already reflects `instance_id` path semantics
+      — nothing to migrate.
+- [x] ✅ [DOCS] P2. **AUDIT-03 F-06** — RESOLVED as a stale finding 2026-07-27 (Phase-2), no codex change needed (the
+      2026-05-22 recommendation is itself obsolete). (a) Entity-governance SSOT ALREADY exists and must NOT be grafted
+      onto custody-providers.md: `/codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md`
+      (`authoritative_for: org/fund/client… entity model`) +
+      `/codex/04-architecture/capital-structure-and-regulatory.md`
+      (`authoritative_for: per-category custody, regulatory posture, and onboarding structure`) already own the entities
+      incl. Odum UK/Cayman; `/codex/04-architecture/custody-providers.md` is
+      `authoritative_for: custody provider     protocol` only — declaring it a second entity SSOT would VIOLATE this
+      plan's no-duplicate-SSOT principle. (b) The remaining `Elysium` codex refs are the **client POD**
+      (`elysium-managed-sla`, `pod-elysium-client-onboarding`), NOT the removed data provider — custody-providers.md's
+      sole Elysium ref is a legit link to the client-pod onboarding doc. Nothing to scrub.
+- [x] ✅ [DOCS] P2. **gcs_hive partition-path doc FIX-STALE** — VERIFIED already-canonical 2026-07-27 (Phase-2), no
+      codex change needed. Sampled the codex hive-partition path examples
+      (`codex/02-data/sports-data-source-coverage-matrix.md`, `sports-data-types-catalog.md`, et al.); all use canonical
+      `key=value` segments (`by_date/day=…/entity=…/league=…`, `data_type=odds`). No malformed non-`key=value` example
+      survives in codex. (Operator note preserved from
+      `archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`: doc-fix only; the GCS DATA
+      remediation stays operator-deferred and is out of scope here.)
 - **Parked — features-service**: another agent active; LDR branch-protected. Docs commit `b9b4103e` on
   `origin/tab/hk/10`; PR #4 bundles a foreign commit (`603c2b9c`) — do NOT merge as-is. Left for the owning agent; no
   git surgery.
@@ -297,3 +337,134 @@ ERROR_HANDLING, specs/\*, README.
 (missing lifecycle_class + gsutil), sports/ROADMAP (past trial dates → migrate to epic). REDIRECT:
 defi/PAPER_LIVE_CONVERGENCE, E2E_PIPELINE_GUIDE, architecture. KEEP: sports/LIVE_ODDS_PROVIDERS, \*/progress, \*/issues,
 coverage-matrix, \*/per-strategy-acceptance, \*/smoke-test-baseline.
+
+---
+
+## Appendix B — Phase 1 remaining-12-repo read-only audit registry (2026-07-27)
+
+> Read-only audit of the remaining repos via 7 parallel opus sub-agents (`.claude/*` symlinks to
+> `unified-trading-pm/cursor-configs/` excluded as vendored mirrors in every repo; `issues/*`, generated test artifacts,
+> and `docs/archive/*` excluded per method). **Headline: near-zero codex DUPLICATION** — almost every living repo doc is
+> legitimately service-local; the dominant issue is stale codex _references_ (pointing at the archived
+> `unified-trading-codex/` mirror instead of PM `/codex/`) + FIX-STALE literals, not content that duplicates codex. Only
+> `client-reporting-api` carries genuine MIGRATE-TO-CODEX deltas.
+
+**agent-orchestrator (10 living; 32 total incl. 16 test fixtures, 4 generated, 2 symlinks)** — FIX-STALE:
+`API_REFERENCE.md` (RETIRED tab-branch literals `tab/hk/4` / `tab/<op>/<slot>` at L53/294/313/323/625 +
+`/api/slots/{id}/bootstrap` "each on branch tab/…" — slots commit directly on `live-defi-rollout`), `AUTH_INVENTORY.md`
+(prod-cutover status stale + retired `agents/worker.md`/`main.md` paths, now under `unified-trading-pm/agents/`). KEEP:
+`README.md` (freshly rewritten 2026-07-24, fully single-VM aligned — the REOPENED-audit README fix ALREADY LANDED),
+`ENV_VARS.md`, `REPO_PROVENANCE.md`, `SLOTS_AGENTS_AND_FLEET.md`, `WORKER_SPAWN_PREREQUISITES.md`,
+`BACKLOG_RELATIONS_UX_BRIEF.md`, `DESIGN_BRIEF.md`, `DESIGN_HANDOFF.md`. NO DELETE/REDIRECT/MIGRATE — repo-local impl
+refs are cited BY `/codex/04-architecture/agent-orchestrator-overview.md` as the repo-local detail SSOT (KEEP +
+fix-in-place, not redirect). No port-8026 refs anywhere (all 8765). `DESIGN_BRIEF`/`DESIGN_HANDOFF` (2026-05-19) are
+archival candidates if the redesign is complete.
+
+**deployment-api (10)** — DELETE: `docs/specs/PLANS_ALIGNMENT.md` + `docs/specs/README.md` (dead plan-alignment dumps;
+all 5 referenced plans archived; cite deprecated `event-logging.mdc`). FIX-STALE: `README.md` (WRONG "…v3 — ARCHIVED, do
+not use" banner though this IS the live deploy/launch backend for both UIs — owner rewrite, not a one-liner),
+`docs/TESTING.md` (`pytest tests/` direct → violates never-run-pytest QG rule), `docs/DEPLOYMENT_GUIDE.md` (`gcr.io/`
+Container Registry deprecated vs Artifact Registry). KEEP: `QUALITY_GATE_BYPASS_AUDIT.md`,
+`docs/{CONFIGURATION,ARCHITECTURE,SCHEMA_VALIDATION,GCS_PATHS}.md` (thin repo-specific stubs). NO REDIRECT/MIGRATE.
+
+**client-reporting-api (10)** — FIX-STALE: `docs/GCS_PATHS.md` ("does not read/write GCS" is stale — newer
+`CLIENT_OPERATIONS_GUIDE` documents live GCS persistence), `docs/TESTING.md` (`pytest -n auto` direct),
+`docs/DEPLOYMENT_GUIDE.md` (`gcr.io/` deprecated). **MIGRATE-TO-CODEX**: `docs/PNL_AND_INVOICING_GUIDE.md` (three-HWM
+operational model TWR/Notional/PnL-recovery + exact field names + per-client fee numbers — NOT in codex),
+`docs/CLIENT_OPERATIONS_GUIDE.md` (full client roster w/ real client IDs + fee tiers + org hierarchy +
+onboarding/backfill/Cloud-Run-jobs runbook — NOT in codex). KEEP: `README.md`, `QUALITY_GATE_BYPASS_AUDIT.md`,
+`docs/{CONFIGURATION,ARCHITECTURE,SCHEMA_VALIDATION}.md`. NO DELETE/REDIRECT. **⚠️ BIG FINDING (see Phase-2 todos
+below).**
+
+**alerting-service (10)** — DELETE: `docs/specs/PLANS_ALIGNMENT.md` + `docs/specs/README.md` (stale snapshots; all 5
+mapped plans archived; cite retired cursor `.mdc` rules). FIX-STALE: `docs/TESTING.md` (`pytest tests/` +
+`.venv activate` vs QG rule; low-pri). KEEP: `README.md` (notes standalone codex archived→PM SSOT),
+`docs/{ARCHITECTURE,CONFIGURATION,GCS_PATHS,SCHEMA_VALIDATION,DEPLOYMENT_GUIDE}.md`, `QUALITY_GATE_BYPASS_AUDIT.md`. NO
+REDIRECT/MIGRATE.
+
+**trading-agent-service (10)** — FIX-STALE: `README.md` (stale archived-mirror codex ref →
+`/codex/04-architecture/tier-and-import-architecture.md`; ALSO "Key Dependencies" list contradicts
+`DEPENDENCIES.md`/`ARCHITECTURE.md` interface names — a reader could import the wrong ones), `docs/CONFIGURATION.md`
+(`min_signal_strength` 0.20 vs 0.25 elsewhere; `data_refresh` 60 vs 300 — CONFIGURATION is the outlier),
+`QUALITY_GATE_BYPASS_AUDIT.md` (stale archived-mirror SSOT ref). KEEP:
+`docs/{ARCHITECTURE,DEPENDENCIES,DEPLOYMENT_GUIDE,GCS_PATHS,SCHEMA_VALIDATION,TESTING}.md`,
+`.coverage-floor-exception.md`. NO REDIRECT/MIGRATE.
+
+**ibkr-gateway-infra (8 living)** — FIX-STALE: `QUALITY_GATE_BYPASS_AUDIT.md` (says repo "archived" — contradicts newer
+`.coverage-floor-exception.md`@2026-06-01 live 51% floor + active README), `ibkr-gateway/FIRST_TIME_LOGIN.md` (documents
+manual IB-Key 2FA fallback as canonical — contradicts README/ARCHITECTURE IBGA+TOTP "no human 2FA"),
+`docs/DEPLOYMENT_GUIDE.md` (Step 3 "interactive credential entry" contradicts README "fully automated"),
+`docs/ARCHITECTURE.md` (broken archived-mirror ref). KEEP: `README.md`, `docs/LOCAL_DOCKER_GATEWAY.md`,
+`docs/FULLY_AUTOMATED_2FA_OPTIONS.md`, `.coverage-floor-exception.md`. No codex SSOT for IBKR gateway → nothing to
+REDIRECT/MIGRATE. **⚠️ BIG FINDING (see Phase-2 todos below).**
+
+**batch-live-reconciliation-service (2 living)** — FIX-STALE: `docs/GCS_PATHS.md` (KEEP content — repo-specific
+`t1-recon/recon/` layout not in codex — but its `## References` points to an archived-mirror path that no longer exists;
+recon SSOT is `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`). KEEP:
+`QUALITY_GATE_BYPASS_AUDIT.md`. NO DELETE/REDIRECT/MIGRATE.
+
+**system-integration-tests (4 living)** — FIX-STALE: `README.md` (KEEP content — SIT scope table/env/coverage-matrix — 3
+stale literals: "manifest v5 schema" [codex is v9 since 2026-05-30]; cites MISSING
+`/codex/02-data/per-category-bucket-layouts.md` [actual: `/codex/02-data/per-asset-group-bucket-layouts.md`];
+archived-mirror operational-modes-matrix ref [actual:
+`/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`]), `docs/portable-backtest-criteria.md`
+(KEEP content — archived-mirror ref → `/codex/06-coding-standards/integration-testing-layers.md`; §3 overlaps
+`/codex/09-strategy/operational/paper-batch-live-reconciliation.md` — cross-link, not merge). KEEP:
+`QUALITY_GATE_BYPASS_AUDIT.md`, `.coverage-floor-exception.md`. NO DELETE/REDIRECT/MIGRATE.
+
+**deployment-ui (8 audited)** — DELETE: `src/README.md` (stock Vite+React template boilerplate). FIX-STALE:
+`README.md` + `docs/ARCHITECTURE.md` (repo-internal drift only — env-var name inconsistency `VITE_API_URL` vs
+`VITE_DEPLOYMENT_API_URL`, tab-count 7 vs 8; no codex target). KEEP: `docs/{ARCHITECTURE,DEPLOYMENT_GUIDE,TESTING}.md`,
+`README.md`, `public/design-mocks/README.md` (self-deleting marker), `QUALITY_GATE_BYPASS_AUDIT.md`,
+`src/docs/consolidators-help.md` (in-app help, VERIFIED codex-consistent w/
+`/codex/05-infrastructure/manifest-consolidator-ssot.md`). NO REDIRECT/MIGRATE — all deploy-flow docs legitimately
+UI-repo-local.
+
+**features-service (121 md; ~88 audit-scope after excluding 33 `delta_one/docs/archive/*` + noise)** — DELETE:
+`{volatility,sports}/docs/specs/PLANS_ALIGNMENT.md` (list RETIRED plan names as live) +
+`{volatility,sports}/docs/specs/README.md`. FIX-STALE + REDIRECT: the 8 `*/docs/GCS_PATHS.md`
+(non-canonical/inconsistent bucket literals — placeholder `my-features-bucket`, non-canonical
+`sports_features/`/`features-mtf/` prefixes, timestamped filenames vs canonical `by_date/day`, missing `{env}` tier,
+`{category}`→asset_group legacy note) → trim to redirect to `/codex/05-infrastructure/bucket-isolation-model.md` +
+`/codex/05-infrastructure/gcs-object-operations.md`. REDIRECT: 8 `*/docs/SCHEMA_VALIDATION.md` (SSOT = UAC feature
+schemas; describe not define → redirect-header). KEEP: `README.md` + per-family
+`docs/{ARCHITECTURE,CONFIGURATION,DEPENDENCIES,DEPLOYMENT_GUIDE,TESTING,ERROR_HANDLING}` (~48 service-local dev docs),
+`delta_one/docs/*` + `cross_instrument/FEATURE_SPECIFICATION` + `volatility/TRADFI_VOL_SURFACES` +
+`sports/docs/specs/{features_improvements,halftime_data_architecture}` family specs, coverage/changelog artifacts.
+OUT-OF-SCOPE: `delta_one/docs/archive/*` (33). NO MIGRATE. Duplication vs codex LOW; `POST_PLAN_BANNER_2026_05_06_FINAL`
+targets `/codex/POST_PLAN_REALITY_2026_05_06.md` which STILL EXISTS (not broken).
+
+**unified-trading-system-ui (data/path/contract subset: 1 actionable of ~292 non-vendored; 558 total)** — FIX-STALE:
+`docs/audits/dart-v2-audit-context.md` (§10.1 cites MISSING `/codex/02-data/per-category-bucket-layouts.md`; layout SSOT
+is `/codex/05-infrastructure/bucket-isolation-model.md` → repoint). KEEP:
+`docs/audits/{backend-feature-requests,dart-v2-audit-context,global-filters-v2}.md`,
+`docs/trading/platform-review/tabs/03-positions.md`, strategy widget filter/color config,
+`widget-certification-deferred-questions.md`. NO DELETE/REDIRECT/MIGRATE. Scanned all 292 non-vendored; ~8 real
+data/path candidates, 7 genuine UI-consumption. No doc duplicates codex GCS-bucket structure / canonical-path templates
+/ manifest v9 / `capture_status` / `pipeline_mode`. Rest (widget/typography/a11y/UX/audit-scripts/routing/UI-deploy)
+genuine-UI, out of scope.
+
+### Phase-1 cross-cutting findings → Phase 2+ tracked todos
+
+- [ ] [DOCS] P1. **Corpus-wide archived-mirror reference fix (dominant Phase-1 remediation)**: multiple repos
+      (`trading-agent-service`, `ibkr-gateway-infra`, `batch-live-reconciliation-service`, `system-integration-tests`,
+      `agent-orchestrator/AUTH_INVENTORY.md`) carry stale codex refs pointing at the archived `unified-trading-codex/`
+      mirror; SSOT is now PM `/codex/`. Grep each repo's `docs/` for `unified-trading-codex/` and repoint to the live
+      `/codex/…` equivalent (this is FIX-STALE, feeds Phase 3). (repo: all listed)
+- [ ] [DOCS] P1. **[OPERATOR-DECISION] client-reporting-api commercial-facts SSOT gap (⚠️ cross-repo SSOT
+      contradiction)**: the committed client roster + org hierarchy + per-client trader/Odum/introducer fee %s +
+      three-HWM invoicing model live ONLY in
+      `client-reporting-api/docs/{CLIENT_OPERATIONS_GUIDE,PNL_AND_INVOICING_GUIDE}.md`, NOT in
+      `/codex/14-customer-journeys/commercial-model/` — directly undercuts CLAUDE.md's "grep codex before asking the
+      operator for committed numbers." Phase-2 migration target = `/codex/14-customer-journeys/commercial-model/` (new
+      roster+fees SSOT), with `client-reporting-architecture.md` cross-referencing it; the onboarding/backfill/Cloud-Run
+      runbook portion stays repo-local (must gain `owner/cadence/verifier/last_executed` runbook frontmatter).
+      `CLIENT_OPERATIONS_GUIDE.md` also hardcodes real project id `central-element-323112` (L378) — a `{project_id}`
+      placeholder violation to fix on migration. OPERATOR-GATED: confirm the fee numbers/roster are current before
+      migrating (committing stale commercial facts to codex-as-SSOT is worse than leaving them repo-local). (repo:
+      client-reporting-api, unified-trading-pm)
+- [ ] [DOCS] P2. **[OPERATOR-DECISION] ibkr-gateway-infra internal contradictions (⚠️ ground-truth needed)**: the repo
+      contradicts itself on (a) archived-vs-live status (`QUALITY_GATE_BYPASS_AUDIT.md` says archived;
+      README/docs/coverage-floor treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human
+      2FA"; `DEPLOYMENT_GUIDE`/`FIRST_TIME_LOGIN` describe manual GUI/IB-Key login). Needs an operator/owner call on the
+      repo's actual status + the canonical 2FA path before the FIX-STALE rewrite can land. (repo: ibkr-gateway-infra)

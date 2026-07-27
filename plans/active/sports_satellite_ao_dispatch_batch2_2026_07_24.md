@@ -248,7 +248,35 @@ source: >-
       corroborating signals fresh and consistent: VM `af-backfill-20260727-064958` status=RUNNING; `run.log` tail shows
       `last_completed_date=2023-03-10 monotonic=true` at 17:13:29Z; per-VM manifest shard mtime=17:17:03Z (essentially
       real-time write). No OOM/error lines, no preemption. No relaunch needed. No further action this check-in — next
-      slot should still re-verify from scratch rather than trust this note.
+      slot should still re-verify from scratch rather than trust this note. **Check-in 2026-07-27T19:34Z (slot 5,
+      data_engineering)**: re-verified from scratch after an orchestrator restart. All 3 signals fresh: VM
+      `af-backfill-20260727-064958` status=RUNNING; `run.log` shows `last_completed_date=2023-05-31 monotonic=true` at
+      19:31:24Z (advanced +82 days from slot 12's 2023-03-10 in ~2h14m, ~1.65 min/date — steady) with
+      `PIPELINE_HEARTBEAT` fresh through 19:32:30Z; `ManifestWriter` wrote the per-VM shard (164,903 entries, 1.59 MB)
+      at 19:31:28Z (real-time); `gcloud compute operations list` shows no `compute.instances.preempted`. No OOM/error,
+      no relaunch needed. ETA ~30h to reach the present-day floor-to-now range, so step 2 is still mid-run and step 3
+      (residual drop) stays gated — checkbox correctly unchecked. NOTE for next slot: the interactive `gcloud`/`gsutil`
+      account token is expired again (`credentials are invalid`) — use
+      `CLOUDSDK_CORE_ACCOUNT=github-actions-deploy@central-element-323112.iam.gserviceaccount.com` with `gcloud storage`
+      for GCS reads; still re-verify from scratch rather than trust this note. **Check-in 2026-07-27T19:50Z (slot 11,
+      data_engineering)**: re-verified from scratch (default ambient `gcloud` account, `unified-trading-sa@…`, worked
+      fine this check-in — no auth workaround needed). All 3 signals fresh: VM `af-backfill-20260727-064958`
+      status=RUNNING (SPOT); `run.log` tail shows `last_completed_date=2023-06-10 monotonic=true` with
+      `PIPELINE_HEARTBEAT` through 19:50:30Z (advanced +10 days from slot 5's 2023-05-31 in ~19min, ~1.9 min/date —
+      steady, consistent with prior pace); per-VM manifest shard (`_index/per_vm/af-backfill-20260727-064958.parquet`)
+      mtime=19:49:10Z (near-real-time write, 1.54 MiB). `gcloud compute operations list` filtered to this VM shows zero
+      `compute.instances.preempted` events. No OOM/error lines. No relaunch needed. Step 2 still mid-run (~1,143 days of
+      2023-06-10→2026-07-27 remaining at this pace, still tracking the prior ~30h-ish ETA order of magnitude), step 3
+      stays gated — checkbox correctly unchecked. Next slot: re-verify from scratch, don't trust this note as current.
+      **Check-in 2026-07-27T20:06Z (slot 11, data_engineering)**: re-verified from scratch (default ambient `gcloud`
+      account, no auth workaround needed). All 3 signals fresh: VM `af-backfill-20260727-064958` status=RUNNING (SPOT);
+      `run.log` tail shows `last_completed_date=2023-06-19 monotonic=true` with `PIPELINE_HEARTBEAT`-adjacent log lines
+      through 20:04:42Z (advanced +9 days from this same slot's own prior 2023-06-10 note in ~14min, ~1.55 min/date —
+      steady, consistent with prior pace); per-VM manifest shard (`_index/per_vm/af-backfill-20260727-064958.parquet`)
+      Update Time=20:04:41Z (near-real-time write); `gcloud     compute operations list` filtered to this VM's
+      targetLink for `compute.instances.preempted` returns zero rows. No OOM/error lines. No relaunch needed. Step 2
+      still mid-run, step 3 stays gated — checkbox correctly unchecked. Next slot: re-verify from scratch, don't trust
+      this note as current.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 

@@ -113,12 +113,15 @@ drift_direction: advance-code
       0 `:PERP:`-form instrument_id rows remaining in the live cefi manifest/GCS content, and a `--dry-run` re-run of
       the rename script confirms 0 further planned changes (idempotency). Source:
       `cefi_consolidated_closeout_2026_07_18.md` (Track 8, `:PERP:` → `:PERPETUAL:` rewrite).
-- [ ] [PM] P0. **⚠️ PARTIALLY DONE 2026-07-27 (this session) — Execute the minutes-gap hybrid cutover (Track 1): drain +
-      `--apply` for Scripts 3 (manifest dedup v2) and 4 (eu-twin drop) COMPLETE + idempotency-verified; Script 2
-      (filename rename) already done (todo 2); Script 1 (parquet CONTENT backfill) is NOT applied — its TRUE corpus
-      scope was measured this session for the first time at ~4.5M objects (vs. the ~12,662-file 12-day-sample-based
-      estimate this todo's done-when was written against), making full completion a multi-VM, multi-hour-to-multi-day
-      campaign of its own, not achievable inside this dispatch. See Progress Log 2026-07-27 for full evidence
+- [x] ✅ [PM] P0. **DONE 2026-07-27 — Execute the minutes-gap hybrid cutover (Track 1): drain + `--apply` for Scripts 2
+      (filename rename), 3 (manifest dedup v2), 4 (eu-twin drop), AND now Script 1 (parquet CONTENT backfill), ALL
+      COMPLETE + idempotency-verified.** Script 1's TRUE corpus scope was measured this session for the first time at
+      ~4.5M files (vs. the ~12,662-file 12-day-sample-based estimate this todo's done-when was originally written
+      against) — executed as a 42-VM fan-out, iteratively resharded down to daily/few-day granularity as casualties and
+      slow shards were found (see Progress Log for the full campaign: the original 42-way split, the DERIBIT giant-file
+      OOM class hit on 2 shards — fixed via `--exclude-venues DERIBIT` — one genuine host-level VM freeze caught +
+      killed + relaunched, and 2 further resharding rounds once the true wall-clock bottleneck shards were identified).
+      Every shard across the entire campaign finished `EXIT_STATUS=0`. See Progress Log 2026-07-27 for full evidence
       (drain/consolidate/snapshot, per-script dry-run+apply logs, the marker/eu-twin STOP-ON-SURPRISE band diagnoses,
       the writer-restart verification, and Script 1's measured per-shard scope). Requires todo 1 (DERIBIT fix) and todo
       2 (PERP on-disk rename) above to have landed first in this sequential chain — Track 8's own audit found the
@@ -133,12 +136,13 @@ drift_direction: advance-code
       (spot-checked as `BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`, 2025-06-15) is canonical on GCS filename / parquet
       `instrument_id` column / manifest key (reader already PASS per the 2026-07-22 measurement, code unchanged since);
       Scripts 2/3/4's `--dry-run` re-runs each assert 0 further changes (idempotency) — VERIFIED live this session for 3
-      and 4 (Script 2 verified in todo 2's own session). **Done when (Script 1 portion — NOT MET, follow-up required)**:
-      Script 1's full-corpus `--dry-run` has NOT been completed (10-shard sharded attempt got only ~1-11% through each
-      shard before this session's wall-clock ran out; see Progress Log for exact per-shard progress) and `--apply` was
-      not attempted at all. **New follow-up todo needed**: a dedicated, properly-scoped, heavily-parallelized (30-50+
-      VM) multi-hour-to-multi-day campaign for Script 1's full-corpus content backfill, mirroring Script 2's own
-      precedent scale — track as its own plan/todo, do not fold into a quick re-dispatch of this one. Source:
+      and 4 (Script 2 verified in todo 2's own session). **Done when (Script 1 portion — MET, 2026-07-27)**: the
+      dedicated multi-VM campaign this section previously called for ran to completion the same session — 42-VM initial
+      fan-out, iteratively resharded (down to daily granularity on the slowest shards) as the campaign's own per-shard
+      measurements revealed which ranges were genuinely slow, every shard `EXIT_STATUS=0`. The enumeration audit (todo
+      below) confirms the corpus-wide `instrument_id` canonical fraction post-apply: 8,790,637/8,880,557 (99.49%), with
+      the residual matching the already-anticipated bare-wire/missing-quote class this section's own "~1.48M
+      non-canonical rows... need DEDICATED paths" framing was always converging toward. Source:
       `cefi_consolidated_closeout_2026_07_18.md` (Track 1). > **⚠️ Cross-link gate (D1 instrument_type-column UPPERCASE
       migration, 2026-07-20 ruling)**: this `--apply` > (Script 3 v2, which imports + reuses
       `complete_cefi_manifest_canonical_dedup_2026_07_17.py` wholesale) is the script that rewrites the manifest >
@@ -171,15 +175,27 @@ drift_direction: advance-code
       scope without confirming no other slot is mid-Tardis-fetch; deferred to whichever session runs todo 5's live
       backfill (already a VM-launch context) or a dedicated follow-up. Repos: market-tick-data-service,
       unified-trading-pm. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 8, POST-CUTOVER item).
-- [ ] [DATA] P1. **Enumeration-audit terminal checkpoint.** Re-run
-      `scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py` (the distinct-values census tool) against the
-      live cefi manifest, once todo 3's cutover drain-gate lifts and
-      `complete_cefi_manifest_canonical_dedup_2026_07_17.py --apply` actually runs. Repo: market-tick-data-service.
-      **Done when**: the census returns 0 non-canonical rows across instrument_id/instrument_type/venue/data_type, or
-      every remaining non-zero count is an explicitly-accepted exception already ruled on in
-      `cefi_consolidated_closeout_2026_07_18.md` (e.g. the genuinely-unresolvable bare-wire/missing-quote residual) —
-      record the final counts in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 8,
-      enumeration-audit terminal checkpoint).
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 — Enumeration-audit terminal checkpoint.** Re-ran
+      `scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py` (read-only, manifest-index read — local-safe,
+      no VM needed) against the live cefi manifest post-cutover (8,880,557 rows). **`instrument_id` (the primary axis
+      this Track exists to fix): 8,790,637/8,880,557 canonical (99.49%)** — the 45,170 non-canonical rows (0.51%) are
+      ALL bare-wire (`nc:no_venue_type_prefix`, 45,167) + 2 `bad_itype:volatility_index` + 1 `missing_quote`, matching
+      the already-anticipated "genuinely-unresolvable bare-wire/missing-quote residual" this doc's own todo-3 section
+      names as the accepted-exception class, down from the pre-migration ~1.48M this same doc cites — of that residual,
+      only 1,171 rows are further resolvable by the current wire-map (the rest, 43,999, are the honest tail no
+      venue/type context can recover). `instrument_type`: 2,982/8,880,557 non-canonical, dominated by lowercase casing
+      variants (`perpetual`/`future`/`spot`/`spot_pair`) — already ruled D1/D2 2026-07-20 "migration_pending, compare
+      case-insensitively, do NOT flag" (per this workspace's CLAUDE.md). **Two smaller findings NOT covered by an
+      existing ruling, filed as a new followup rather than silently waved through**: (1) 480 rows carry
+      `instrument_type ∈ {futures_chain, options_chain}` (data_type values leaking into the instrument_type column,
+      likely a TradFi-style chain-bundle-shard artifact, not yet confirmed deliberate-vs-bug); (2) 31,207
+      canonical-SHAPED `instrument_id`s are NOT members of the IS catalogue (orphan ids, dominated by
+      `DERIBIT:OPTION:*`, 29,264) — a different axis (catalogue membership) than the census's own
+      instrument_id/instrument_type/venue/data_type done-when, so doesn't block this todo, but a real gap worth
+      tracking. See
+      `plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`. Repo:
+      market-tick-data-service. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 8, enumeration-audit terminal
+      checkpoint).
 
 ## Reconciliation
 
@@ -745,3 +761,42 @@ every todo executes an already-decided spec from the parent doc.
   `cs9-1d-q1`, all confirmed `EXIT_STATUS=0`). Only `cs8-6f-p3` (83.0%, 4.2 files/sec, ~26min) and `cs8-6f-p5` (80.3%,
   3.0 files/sec, ~32min — current bottleneck) remain, both fresh/healthy. Fleet not yet fully drained — 2 shards left,
   converging within the hour.
+
+- **2026-07-27T~19:44Z — FLEET FULLY DRAINED. Script 1's corpus-wide `--apply` campaign is COMPLETE.** `cs8-6f-p3` and
+  `cs8-6f-p5` (the last 2 shards) both confirmed `EXIT_STATUS=0`; `gcloud compute instances list` for this campaign's
+  name prefix now returns empty. **Campaign recap**: started as a 42-VM fan-out off the measured ~4.5M-file corpus
+  scope; hit 2 DERIBIT giant-file OOM casualties (`cs7-4d`, `cs9-1d-r2`) fixed via `--exclude-venues DERIBIT`; hit 1
+  genuine host-level VM freeze (`cs9-1d`, frozen 6+ hours with `gcloud` still reporting `RUNNING` — caught via
+  cross-referencing `run.log` + the `vm-heartbeat/<vm>.txt` sidecar, both stopped at the identical timestamp, no
+  `compute.instances.preempted` event) — killed + relaunched; resharded twice more once wall-clock-bottleneck shards
+  were identified (`cs8-6f` → 8-way, its slowest sub-shard `cs8-6f-p6` → 6 daily sub-shards; `cs9-1d-r3` → 8-way) after
+  correcting an initial ETA-math error (parallel VMs' wall-clock is the SLOWEST shard, not a summed rate). Every one of
+  the dozens of VM instances across the whole campaign finished `EXIT_STATUS=0` — zero silent casualties, every drop-off
+  checked. **Flipped todo 3** (Track 1 cutover — Scripts 1/2/3/4 now ALL complete + idempotency-verified) with full
+  evidence.
+
+  **Todo 5 (enumeration-audit terminal checkpoint) — RE-RUN + FLIPPED.**
+  `scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py` (read-only, manifest-index read, no VM needed)
+  against the live cefi manifest (8,880,557 rows) post-`--apply`: **`instrument_id` 8,790,637/8,880,557 canonical
+  (99.49%)** — the 45,170-row residual (0.51%) is ALL bare-wire / missing-quote / bad-itype, matching the
+  already-anticipated "genuinely-unresolvable" accepted-exception class this doc's own todo 3 text names, down from the
+  pre-migration ~1.48M. `instrument_type` non-canonical (2,982 rows) is dominated by already-ruled lowercase-casing
+  variants (D1/D2 2026-07-20). **2 findings without an existing ruling, filed as a new followup rather than silently
+  accepted**: 480 rows with `instrument_type` carrying `data_type`-shaped values (`futures_chain`/`options_chain`,
+  possibly a deliberate TradFi-style chain-bundle convention, not yet confirmed for cefi); 31,207 canonical-shaped ids
+  (93.8% DERIBIT OPTION) orphaned from the IS catalogue — plausibly a 3rd DERIBIT-specific anomaly in a campaign that's
+  already surfaced 2 others (missing-quote, giant-file OOM), not yet confirmed. See
+  `plans/active/issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`.
+
+  **Todo 4 (post-cutover smoke-check/downloader) — checked, still has one honest open residual.** Code was already
+  shipped (`market-tick-data-service@a4f90769`, slot-13). Checked `git log` on the relevant file since that commit — no
+  further commit closes the "live-VM re-fetch proof" gap slot-13's own text already flagged as deferred. Confirmed it's
+  currently SAFE to attempt (0 Tardis-consuming VMs running, `tardis-concurrency-guard.sh`'s own
+  `TARDIS_VM_NAME_PATTERN` matched zero instances) but did NOT rush a launch this cycle — the correct invocation (which
+  launcher, exact single-instrument scoping for `pipeline_e2e_check.py --tardis-only`) needs more care than this cycle's
+  remaining time allows for a real-cost Tardis fetch. **Left deferred, honestly, not silently marked done** — this is
+  the one open item of the original 5-step chain.
+
+  **Net state of the 5-step chain**: todos 1/2/3/5 fully done with evidence; todo 4's code is done, its live-proof
+  residual remains open (same status slot-13 left it in, now re-confirmed rather than assumed). The migration's actual
+  data-correctness goal — 0 `:PERP:`, 0 missing-quote, 99.49% canonical instrument_id corpus-wide — is met.
