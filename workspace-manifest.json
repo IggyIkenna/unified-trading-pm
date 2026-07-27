@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 8,
-        "warn_file_count": 9,
-        "coverage_pct": 90.91
+        "qg_red_reason": null,
+        "coverage_pct": null,
+        "warn_file_count": 9
       }
     },
     "market-data-processing-service": {
@@ -882,9 +882,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
-        "warn_file_count": 43,
-        "coverage_pct": 83.62,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "coverage_pct": null,
+        "warn_file_count": 43
       }
     },
     "ml-service": {
@@ -1213,8 +1213,8 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 27,
-        "coverage_pct": 96.42,
         "qg_red_reason": null,
+        "coverage_pct": null,
         "warn_file_count": 30
       }
     },
