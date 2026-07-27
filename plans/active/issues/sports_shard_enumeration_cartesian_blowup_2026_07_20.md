@@ -367,6 +367,9 @@ point UPPER→lower, which K0 says is superseded, which GCS says is right.
 
 ### 2.2 Add a write-time closed-set guard on `data_type` (do this regardless of 2.1's outcome) — ✅ SHIPPED 2026-07-22
 
+> **⚠️ CORRECTION 2026-07-27** — 07-26 allowlisted `TRADES`/`trades` as "deliberate", missing the closeout doc's
+> SAME-DAY (07-23) reversal (lower-case, no exception). Corrected (`uac@bddd063e`+`mtds@7ffabf77`).
+
 **✅ SHIPPED — `unified-api-contracts@50301e5f`.** New `tests/unit/test_sports_data_type_vocabulary.py`, skip-gated with
 a `TODO(K0-b)` reason (hoisted to a module-level `_SKIP_REASON_K0B` constant to satisfy the QG rule that
 `pytest.mark.skip` needs its `reason=` on the same physical line as the decorator). Now that 2.1/4.3 has decided
