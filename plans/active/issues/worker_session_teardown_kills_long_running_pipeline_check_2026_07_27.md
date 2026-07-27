@@ -23,6 +23,8 @@ related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
   ]
 tags: [infra, worker-lifecycle, data-pipeline-check, flakiness]
 priority: P1
@@ -63,6 +65,32 @@ Independently, direct `gcloud storage cat .../run.log` + `gcloud storage objects
 real-VM force-leg runs** for the same shard cell all completed with `exit_code=0` and derived the identical 7,615
 candles (`1440×1m, 288×5m, 96×15m, 24×1h, 6×4h, 1×24h`).
 
+**5th reproduction, 2026-07-27 (slot-9), AO-managed persistent worker session (not an ad-hoc interactive session):**
+after fixing the launcher-timeout retry bug (todo 3 below) + a corrupted local pyarrow venv + a missing `GCP_PROJECT_ID`
+env var — none of which explain this — a 3rd relaunch of the same scoped CEFI:BINANCE-FUTURES:trades check via the
+harness's `run_in_background` was reported **`status: "killed"` / "was stopped"** after only **~18 seconds** of real
+work (Phase-0 manifest consolidation had already logged one completed shard-consolidation line), well before reaching
+the VM-launch stage. Two immediately-prior attempts in the SAME session (using the same `run_in_background` mechanism)
+instead ran to natural completion in under a minute each, failing with clean, real, unrelated Python tracebacks (the
+pyarrow `ImportError`, then the `GCP_PROJECT_ID` `ValueError`) — i.e. the harness's background-task mechanism CAN and
+did keep those alive long enough to surface a real error, so this is not a blanket "backgrounding never survives more
+than N seconds" pattern; something specifically ended the 3rd, longer-lived attempt mid-flight. No `dmesg`/`journalctl`
+access from this session (permission denied) and `free -h` showed no memory pressure (22Gi available, no swap thrashing)
+AT THAT MOMENT — but the operator independently identified the likely actual cause the same day:
+`issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` documents fleet-wide shared-host RAM contention
+silently killing background processes anywhere from 32s to 520s in (NOT tied to elapsed time — matching this session's
+~18s kill far better than a fixed-threshold theory would), with no visible exit code/stderr/dmesg entry either,
+correlated with 5-8 concurrent `quality-gates.sh`/VM-launch processes fleet-wide at kill time (this session's own
+`free -h` snapshot — taken only once, not sampled repeatedly across the run like that doc's — is consistent with but
+does not itself prove this, since RAM pressure can spike and recede within seconds). **This is now the 5th independent
+reproduction, across 2 different sessions and both an ad-hoc interactive worker AND an AO-managed persistent slot
+worker** — ruling out "just that one session was unusual" as an explanation, and now tracked jointly under condition
+`mdps-e2e-shared-host-teardown-fixed` (gates `data_pipeline_check_mdps_features_2026_07_20.md`'s new post-split
+follow-up todo) alongside slot-7's identical hit. **Two distinct, both-real mechanisms are now implicated**: (1) the
+`WorkerLivenessWatchdog` heartbeat-silent kill (900s, confirmed root cause of the original ~19-minute reproduction — see
+todo 1 below) and (2) shared-host RAM exhaustion (a much better fit for the fast, sub-minute kills including this
+session's ~18s one). Do not assume either alone is the WHOLE story — a from-scratch fix attempt should account for both.
+
 ## Why it matters
 
 The `/data-pipeline-check-mdps` (and by the same shared-engine construction, `-mtds`/`-is`/`-features`) skills are
@@ -99,9 +127,29 @@ tracked here rather than silently claimed complete.
 
 ## Todos
 
-- [ ] [INFRA] P1. Investigate whether interactive worker sessions have a wall-clock/resource teardown cadence that is
-      shorter than a realistic `/data-pipeline-check-*` full run, and document the finding (or fix the cadence) in
-      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` or a new dedicated codex doc.
+- [x] ✅ [INFRA] P1. **ANSWERED 2026-07-27 (slot-9), partial.** Root-caused the ~19-minute reproduction (attempt 1) via
+      direct code read of `agent-orchestrator`: `WorkerLivenessWatchdog` (`server/worker_liveness_watchdog.py`) kills a
+      slot's ENTIRE tmux session after `watchdog_heartbeat_timeout` (default 900s/15min, config.py:354) of no
+      `/progress`/`/done` — and `kill_session` (`server/tmux_spawn.py:_reap_pane_tree`, lines 245-293) ALSO reaps the
+      pane's whole descendant process tree (SIGTERM then SIGKILL) BEFORE the tmux kill, specifically so a
+      `nohup`/`disown`/`setsid`-detached background job (or the harness's own `run_in_background` Bash) doesn't survive
+      as an orphan. This exactly matches attempt 1: a long, synchronous, single blocking Bash call with no intervening
+      `/progress` for ~19 minutes would cross the 900s heartbeat-silent threshold, and the resulting kill reaps the
+      backgrounded driver too — even though it was correctly progressing and would have re-invoked on its own
+      completion. **This was a genuine STALE-codex gap**:
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md`'s "Kill execution" section documented
+      `kill_session` calling only `tmux kill-session`, with no mention of the pane-tree reap added 2026-07-10 —
+      corrected in the same commit as this todo. **Actionable fix (procedural, no code change needed)**: a worker
+      driving a `/data-pipeline-check-*` skill (or any multi-minute wait) MUST keep sending explicit `/progress`
+      heartbeats at the existing ~10min HARD RULE cadence EVEN WHILE "just waiting" on a `run_in_background` task or a
+      `ScheduleWakeup` — `ScheduleWakeup` has NO server-side heartbeat effect (confirmed: no implementation in
+      agent-orchestrator, client-side `/loop` concept only per
+      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`'s existing "Wake sources" section), so relying on it
+      alone during a long wait silently lets the AO-side heartbeat clock run out. **NOT fully explained**: this
+      session's OWN 5th reproduction (see "What I found" above) was killed after only ~18s — far too fast for the 900s
+      heartbeat-silent path, and this session HAD sent an HTTP ping (a rejected `/done` call) shortly before. That
+      faster kill remains genuinely unexplained (no OS-level log access from this session to confirm/rule out an
+      OOM-kill or a different, undiscovered reaper) — flagged as residual, not swept under this answered todo.
 - [ ] [SCRIPT] P2. Add a `--resume`/checkpoint capability to `unified_trading_library.pipeline_e2e_check`'s
       `run_pipeline_check` so a killed driver process can resume from the next not-yet-attempted shard cell instead of
       restarting the whole `--legs` matrix from scratch (repo: unified-trading-library).

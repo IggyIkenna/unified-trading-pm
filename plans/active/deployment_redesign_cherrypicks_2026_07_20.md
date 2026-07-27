@@ -67,10 +67,20 @@ source:
       including `test_returns_rich_nonzero_inventory`, `test_asset_groups_param_narrows_the_inventory`, and
       `test_tree_and_totals_are_nonzero_in_mock` — the exact zero/empty-lock-in tests this todo asked to update. This
       plan's checkbox simply never got flipped after the code shipped — no further code change needed.
-- [ ] [BACKEND] P1. E — deployment-api: add a flat `(primary × date)` capture_status matrix endpoint (heatmap-shaped)
+- [x] ✅ [BACKEND] P1. E — deployment-api: add a flat `(primary × date)` capture_status matrix endpoint (heatmap-shaped)
       reimplemented against `services/manifest_source.read_manifest_index` predicate-pushdown reader + the current
       `services/data_status/` package layout — NOT Harsh's own index_cache/mock modules. Honest-absence + in-process TTL
-      cache like the sibling endpoints. Unit-test. Ship+flip.
+      cache like the sibling endpoints. Unit-test. Ship+flip. **VERIFIED 2026-07-27 (slot-5)**: already shipped —
+      `deployment-api@b8f7507` ("feat(data-status): flat (primary x date) capture_status matrix endpoint GET
+      /coverage-grid"), same day this plan was created, explicitly cites this plan in its commit message.
+      `_coverage_grid.py` builds the grid off `manifest_source.read_manifest_index` pushdown reads (date_window), does
+      dense zero-fill honest-absence across all 4 `capture_status` keys per cell, and caches via the shared
+      `BoundedCache` TTL pattern (`_grid_cache`, 500 entries / 300s) matching the sibling endpoints — not Harsh's
+      index_cache/mock modules. Registered on the shared `data_status` router in `__init__.py`; no separate
+      `include_router` needed. Ran `tests/unit/test_route_data_status_coverage_grid.py` fresh: 19/19 passed. Ran the
+      full `bash scripts/quality-gates.sh`: all gates green (186s), sentinel written. This plan's checkbox simply never
+      got flipped after the code shipped — no further code change needed. All five A–E cherry-picks are now flipped;
+      this plan is complete.
 - [x] [UI] P1. ✅ B — deployment-ui: dark-theme default. **FIXED** — deployment-ui@2c4e950. Playwright-verified the real
       defect first (`emulateMedia({colorScheme:'light'})`): `--color-bg-primary` resolved to `#ffffff` on a light-OS
       context with ZERO opt-out (no `.theme-light` consumer, no toggle anywhere). Note the light palette is itself

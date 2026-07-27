@@ -211,23 +211,38 @@ heartbeat — real issues get fixed, not hushed.
       mocked SDK / no live creds — each simulates a `threading.Event`-blocked stall and asserts the wrapper
       RETURNS/raises within a generous outer `wait_for` instead of hanging). SSOT:
       `/codex/02-data/tradfi-databento-sourcing-ssot.md`.
-- [ ] [TRADFI] P1. **Root-cause + close the 06:00-UTC tradfi-bf OHLCV hang loop** (target repo:
-      `market-tick-data-service`; `parent_epic: tradfi_master`). **🔴 ROOT CAUSE CORRECTED 2026-06-24 (tradfi-agent) —
-      it is an OOM crash-loop, NOT a hang, NOT a stale tarball, NOT a databento call** (so afd5296/2410e712 are
-      irrelevant to it). Serial console on every stale VM (gc=60 / es=30 / nyse-2024=22 / 6j=many
-      `Out of memory: Killed process (python)`, anon-rss ~15.3 GB on e2-standard-4/16 GB): each chunk's fresh python
-      balloons to ~15 GB in ~3 min, OOM-killed; the `mtds_chunk_loop.sh` wrapper advances and the next process re-OOMs —
-      externally indistinguishable from a hang (sidecar/run.log/shard all stale, VM `RUNNING`). **Cause:** the per-date
-      sentinel fan-out re-downloads + re-parses the date-INDEPENDENT `catalog.parquet` (cefi=227,576 rows, 2×/date +
-      defi + tradfi) with NO caching → pyarrow/pandas churn never returned to the OS. **FIX SHIPPED + VERIFIED (mtds
-      working tree, green in isolation):** instance-level catalogue memoisation on the cefi/defi/tradfi readers +
-      regression `tests/unit/engine/test_catalog_reader_cache.py`. **BLOCKED ON LAND:** a LIVE concurrent agent is
-      mid-edit on the UAC+UTL dep clones (Barchart-removal/databento-first close-out; UAC commit `137d1f8a`
-      unpushed+dirty, UTL still refs retired `BATCH_BARCHART`) → breaks the shared local QG (11 unrelated
-      `batch_massive`→`batch_databento` skew failures) AND makes a safe tarball rebuild impossible (would bake half-done
-      deps → VM import-crash). Land + tarball + relaunch + run-to-completion pending that dep WIP settling. Full
-      detail + sub-todos: `tradfi_backfill_oom_remediation_2026_06_24.md`. DISPATCH for the tradfi agent — context below
-      is cold-start-complete (worker reads `SUB_AGENT_MANDATORY_RULES.md` first). env:
+- [x] ✅ [TRADFI] P1. **Root-cause + close the 06:00-UTC tradfi-bf OHLCV hang loop** (target repo:
+      `market-tick-data-service`; `parent_epic: tradfi_master`). **CLOSED 2026-07-27 (slot-5)**: this todo's own text
+      was stale — the root-cause work it dispatches actually happened in the sibling issue doc
+      `tradfi_backfill_oom_remediation_2026_06_24.md` (OOM crash-loop, not a hang), which reached
+      RECONCILED-COMPLETE-BY-FLEET 2026-07-14 (catalogue-cache fix `market-tick-data-service@d83d70e2` +
+      `TRADFI_OHLCV_MACHINE` e2-standard-4→e2-highmem-4 baked into `_tradfi-ohlcv-launcher-lib.sh`, zero OOM recurrence
+      verified across the fleet). Re-verified LIVE 13 days later (2026-07-27, ADC):
+      `tradfi-bf-cme-ohlcv-1m-es-2020-20260727-000928` (created 2026-07-26T17:09, running 11h+) shows **0**
+      `Out of     memory: Killed process` lines in its serial console (was 22-60/VM on the original e2-standard-4 bug);
+      the launcher default was independently raised again e2-highmem-4→**e2-highmem-16** on 2026-07-25 per measured
+      throughput (46.9k rows/min/VM CME rate), with no `TRADFI_OHLCV_MACHINE` runtime override on the
+      `uts-prod-tradfi-wave-launcher` Cloud Run job (confirmed via `gcloud run jobs describe` — fleet runs on the baked
+      default). Recent VM operations (2026-07-19 to 2026-07-21 waves) show normal insert→(hours running)→delete
+      lifecycles, not the ~3-min OOM crash-loop signature. The only remaining open item is a P2 memray
+      decode/enrich-footprint profiling follow-up in `tradfi_backfill_oom_remediation_2026_06_24.md` (optional, would
+      let the fleet downshift off e2-highmem — not blocking, tracked there). This todo's dispatch hypotheses
+      (stale-tarball / different-unbounded-call) were superseded by the OOM finding; no further action needed here. **🔴
+      ROOT CAUSE CORRECTED 2026-06-24 (tradfi-agent) — it is an OOM crash-loop, NOT a hang, NOT a stale tarball, NOT a
+      databento call** (so afd5296/2410e712 are irrelevant to it). Serial console on every stale VM (gc=60 / es=30 /
+      nyse-2024=22 / 6j=many `Out of memory: Killed process (python)`, anon-rss ~15.3 GB on e2-standard-4/16 GB): each
+      chunk's fresh python balloons to ~15 GB in ~3 min, OOM-killed; the `mtds_chunk_loop.sh` wrapper advances and the
+      next process re-OOMs — externally indistinguishable from a hang (sidecar/run.log/shard all stale, VM `RUNNING`).
+      **Cause:** the per-date sentinel fan-out re-downloads + re-parses the date-INDEPENDENT `catalog.parquet`
+      (cefi=227,576 rows, 2×/date + defi + tradfi) with NO caching → pyarrow/pandas churn never returned to the OS.
+      **FIX SHIPPED + VERIFIED (mtds working tree, green in isolation):** instance-level catalogue memoisation on the
+      cefi/defi/tradfi readers + regression `tests/unit/engine/test_catalog_reader_cache.py`. **BLOCKED ON LAND:** a
+      LIVE concurrent agent is mid-edit on the UAC+UTL dep clones (Barchart-removal/databento-first close-out; UAC
+      commit `137d1f8a` unpushed+dirty, UTL still refs retired `BATCH_BARCHART`) → breaks the shared local QG (11
+      unrelated `batch_massive`→`batch_databento` skew failures) AND makes a safe tarball rebuild impossible (would bake
+      half-done deps → VM import-crash). Land + tarball + relaunch + run-to-completion pending that dep WIP settling.
+      Full detail + sub-todos: `tradfi_backfill_oom_remediation_2026_06_24.md`. DISPATCH for the tradfi agent — context
+      below is cold-start-complete (worker reads `SUB_AGENT_MANDATORY_RULES.md` first). env:
       `GCP_PROJECT_ID=central-element-323112     DEPLOYMENT_ENV=prod CLOUD_PROVIDER=gcp`, ADC admin. **These were REAL
       hangs, not monitor false-positives** — on 2026-06-24 the dp-heartbeat-watcher correctly fired DP_VM_STALL for 7
       `tradfi-bf` OHLCV VMs whose sidecar blob (`vm-heartbeat/{vm}.txt`) + GCS-tee'd run.log + per-VM manifest shard

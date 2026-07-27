@@ -152,6 +152,21 @@ early enough that the worker has not necessarily produced dirty WIP. If WIP is p
 `orphan-wip` commit on the slot branch (produced by any subsequent respawn + re-kill cycle via `WorkerLivenessKicker`'s
 Phase 3A path).
 
+**`kill_session` ALSO reaps the pane's entire descendant process tree, not just the tmux session (added
+`ao_worker_lifecycle` 2026-07-10 Phase B, `server/tmux_spawn.py:_reap_pane_tree`, called from every `kill_session`
+before the actual `tmux kill-session`).** tmux only SIGHUPs the pane's own process group — a worker's DELIBERATELY
+detached background job (`nohup`/`disown`/`setsid`, or the harness's own `run_in_background` Bash) reparents to init and
+would otherwise survive a plain session kill as an orphan. `_reap_pane_tree` walks ppid ancestry while the pane is still
+alive (the last moment the soon-to-be orphans are enumerable), SIGTERMs every strict descendant, then SIGKILLs
+0.5s-later survivors — deliberately, to close the 10-17-day orphan-monitor class. **Blast-radius implication for
+long-running skills**: any heartbeat-silent watchdog kill (>900s/15min of no `/progress`/`/done`, the trigger #3 above)
+does NOT just end the Claude session — it also kills any LEGITIMATELY-running backgrounded task the worker started (e.g.
+a `/data-pipeline-check-*` driver launched via `run_in_background`), even though that background task was correctly
+progressing and would have re-invoked the worker on its own completion. A worker whose turn is blocked on a long,
+synchronous, multi-minute foreground wait (rather than truly backgrounding it AND continuing to `/progress` every ~10min
+per the worker heartbeat HARD RULE) is exactly the scenario this reaps — confirmed root cause for
+`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`'s ~19-minute reproduction.
+
 ---
 
 ## Interaction with AutoSpawnLoop
