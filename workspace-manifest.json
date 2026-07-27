@@ -76,11 +76,11 @@
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
     "instruments-service": "0.91.0",
-    "market-tick-data-service": "0.96.0",
+    "market-tick-data-service": "0.97.0",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.73.0",
     "unified-trading-library": "0.60.0",
-    "unified-trading-pm": "1.2.627",
+    "unified-trading-pm": "1.2.628",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
@@ -2005,7 +2005,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2185,13 +2185,13 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.60.1.dev1+gdf58712c4",
-      "published_at": "2026-07-27T08:12:44Z",
+      "version": "0.60.1.dev2+gf0a012825",
+      "published_at": "2026-07-27T13:05:28Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.73.1.dev4+g9b0e5b71b",
-      "published_at": "2026-07-27T09:54:11Z",
+      "version": "0.73.1.dev5+gf6345966a",
+      "published_at": "2026-07-27T13:03:32Z",
       "registry": "artifact-registry"
     }
   }
