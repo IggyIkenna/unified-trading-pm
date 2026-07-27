@@ -74,50 +74,53 @@ assigned_role: infra
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **Attach broader AWS permissions to `uts-orchestrator-epic-role`** (account `427895769566`).
-      Requires a human with a DIFFERENT AWS identity than this role itself (root, or a separate IAM-admin user) — no
-      agent running AS this role can grant it more, verified empirically (see summary). Minimum: S3, RDS, DynamoDB, ECS
-      access matching what the GCP side already has (storage/database/compute admin). Optionally also grant
-      `iam:{Get,List,Put,Attach,Detach}RolePolicy` scoped to this ONE role's ARN so future gaps are self-serviceable
-      without a human round-trip. **Done when**: `aws s3api list-buckets`, `aws rds describe-db-instances`,
-      `aws dynamodb list-tables`, `aws ecs list-clusters` all succeed when run as this role.
+- [x] [OPERATOR] P0. ✅ **DONE 2026-07-27** — operator ran all 4 `attach-role-policy` calls + the
+      `self-manage-own-policies` inline policy from a non-role identity. Verified live, this session, as the role:
+      `aws iam list-attached-role-policies` shows `AmazonS3FullAccess`, `AmazonRDSFullAccess`,
+      `AmazonDynamoDBFullAccess`, `AmazonECS_FullAccess` + the pre-existing `uts-orchestrator-epic-policy`;
+      `aws iam get-role-policy --policy-name self-manage-own-policies` succeeds (the role can now read its own policy —
+      the exact thing that was previously denied). All 4 **Done when** checks pass: `aws s3api     list-buckets` (2
+      buckets returned), `aws rds describe-db-instances` (empty list — real access, zero instances exist, not
+      AccessDenied), `aws dynamodb list-tables` (empty list, same), `aws ecs list-clusters` (5 clusters returned, incl.
+      `uts-defi-prod`/`unified-trading-prod`). **Attach broader AWS permissions to `uts-orchestrator-epic-role`**
+      (account `427895769566`).
 
       **Exact runnable commands** (run with an AWS identity OTHER than `uts-orchestrator-epic-role` — your own
-          root/admin CLI profile, or the AWS Console; running this from a session that assumes the role itself is the
-          exact problem this todo exists to fix):
+              root/admin CLI profile, or the AWS Console; running this from a session that assumes the role itself is the
+              exact problem this todo exists to fix):
 
-          ```bash
-          ROLE=uts-orchestrator-epic-role
-          ACCOUNT=427895769566
+              ```bash
+              ROLE=uts-orchestrator-epic-role
+              ACCOUNT=427895769566
 
-          # 1. Core service access — mirrors the GCP-side grant (storage/database/container-compute admin,
-          #    not blanket AdministratorAccess)
-          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
-          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
-          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
+              # 1. Core service access — mirrors the GCP-side grant (storage/database/container-compute admin,
+              #    not blanket AdministratorAccess)
+              aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
+              aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
+              aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+              aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
 
-          # 2. Optional but recommended: let this role manage its OWN permissions going forward, scoped only to
-          #    itself, so the next gap doesn't need another human round-trip.
-          aws iam put-role-policy --role-name $ROLE --policy-name self-manage-own-policies --policy-document '{
-            "Version": "2012-10-17",
-            "Statement": [{
-              "Effect": "Allow",
-              "Action": [
-                "iam:GetRolePolicy",
-                "iam:ListRolePolicies",
-                "iam:ListAttachedRolePolicies",
-                "iam:PutRolePolicy",
-                "iam:AttachRolePolicy",
-                "iam:DetachRolePolicy"
-              ],
-              "Resource": "arn:aws:iam::'"$ACCOUNT"':role/'"$ROLE"'"
-            }]
-          }'
-          ```
+              # 2. Optional but recommended: let this role manage its OWN permissions going forward, scoped only to
+              #    itself, so the next gap doesn't need another human round-trip.
+              aws iam put-role-policy --role-name $ROLE --policy-name self-manage-own-policies --policy-document '{
+                "Version": "2012-10-17",
+                "Statement": [{
+                  "Effect": "Allow",
+                  "Action": [
+                    "iam:GetRolePolicy",
+                    "iam:ListRolePolicies",
+                    "iam:ListAttachedRolePolicies",
+                    "iam:PutRolePolicy",
+                    "iam:AttachRolePolicy",
+                    "iam:DetachRolePolicy"
+                  ],
+                  "Resource": "arn:aws:iam::'"$ACCOUNT"':role/'"$ROLE"'"
+                }]
+              }'
+              ```
 
-          After running, ping any session on the orchestrator/human-planning VM to re-verify the 4 `Done when` checks and
-          flip this todo with evidence — do not self-flip without a fresh verification run.
+              After running, ping any session on the orchestrator/human-planning VM to re-verify the 4 `Done when` checks and
+              flip this todo with evidence — do not self-flip without a fresh verification run.
 
 - [x] [DIAG] P1. ✅ **Verified 2026-07-27** — all 14 files done, commits confirmed on `origin/live-defi-rollout` via
       `git merge-base --is-ancestor` (`cc438a02c`, `1be59b97b`, `1e7f5389a`, `c6ef8cb1f`, `f5232f3e5`) + spot-checked
@@ -142,6 +145,27 @@ assigned_role: infra
       citable ruling, or credential-asks needing an external action — every one has a stated reason, none silently
       skipped.
 
+- [ ] [OPERATOR] P1. **GCP self-manage-own-policies parity is NOT in place** (found 2026-07-27, continuation session).
+      Unlike AWS, `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` cannot read or grant its own
+      project-level IAM bindings — confirmed empirically both ways: (a) switching `gcloud` to the SA identity and
+      calling `projects.getIamPolicy` returns `PERMISSION_DENIED`; (b) this session's own ADC token (a separate,
+      narrower identity from the interactive `ikenna@odum-research.com` gcloud CLI login that granted the 5 roles in
+      todo 2 above) tested via `testIamPermissions` holds only `storage.buckets.get/list` + `iam.serviceAccounts.actAs`
+      — no `resourcemanager.projects.{get,set}IamPolicy`. The `ikenna@odum-research.com` gcloud CLI session that did the
+      earlier 5-role grant has since expired
+      (`Reauthentication failed: cannot     prompt during non-interactive execution`) and needs an interactive
+      `gcloud auth login` to refresh — genuinely not completable by any agent in this environment, same class as the AWS
+      blocker above. **Asymmetry vs. AWS, worth knowing before granting**: AWS's fix could be scoped tightly
+      (`Resource:     arn:...role/uts-orchestrator-epic-role` — the role can only touch its OWN policy). GCP has no
+      equivalent resource-scoped primitive for project-level IAM bindings — `roles/resourcemanager.projectIamAdmin` (the
+      closest analog) grants the ability to add/remove ANY binding on the WHOLE project, including granting itself or
+      any other member Owner. There is no "manage only my own service account's bindings" role in GCP. **Exact runnable
+      command** (after a fresh `gcloud auth login` as an identity holding `roles/resourcemanager.projectIamAdmin` or
+      `roles/owner` on `central-element-323112`):
+      `bash     gcloud projects add-iam-policy-binding central-element-323112 \       --member="serviceAccount:unified-trading-sa@central-element-323112.iam.gserviceaccount.com" \       --role="roles/resourcemanager.projectIamAdmin"     `
+      **Done when**: `gcloud auth activate-service-account --key-file=... unified-trading-sa@...` (or equivalent
+      impersonation) followed by `gcloud projects get-iam-policy central-element-323112` succeeds as that SA.
+
 ## Progress Log
 
 - **2026-07-27**: Background agent (dispatched pre-compact) completed all 14 delete-safety-set files. Verified via
@@ -161,6 +185,44 @@ assigned_role: infra
   running (each was a large, thorough per-file investigation, expect it to take a while) — do not re-dispatch duplicate
   agents on the same 34 files without first confirming via `git log --oneline -20 -- plans/active/` whether commits
   already landed.
+
+- **2026-07-27 (continuation, operator back at desk)**: AWS grant confirmed live (todo above flipped, evidence above).
+  GCP self-manage parity gap found and filed as a new todo above (genuinely blocked the same way as AWS was — not fixed
+  this session). Separately, operator flagged 8 still-open `[OPERATOR]` questions surfacing in the dashboard despite
+  this session's earlier work; investigated each with full context (not from the truncated dashboard snippet) rather
+  than assuming the earlier sweep missed them:
+  - **Root-cause bug found and fixed**: `agent-orchestrator/server/regen_backlog_from_plan.py`'s
+    `operator_gated = bool(re.search(r"\[OPERATOR\]", description))` scanned the WHOLE todo description for the literal
+    substring, not just the todo's own leading tag — so a todo explaining "No `[OPERATOR]` gate needed... per finding
+    O's carve-out" was itself flagged operator-gated by the string it was trying to rule out. This is exactly what made
+    `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`'s already-`[SCRIPT]`-tagged todo (fixed earlier this
+    session) keep showing as pending in the dashboard. Fixed to scan only the leading tag-cluster
+    (`agent-orchestrator@<sha, see that repo's own log>`), regression test added, shipped.
+  - **5 of the 8 were genuine premature/stale `[OPERATOR]` tags**, now downgraded to reversibility-verified after a
+    FRESH per-bucket soft-delete check (not reused from this doc's earlier 604800s baseline table):
+    `data_pipeline_check_mdps_features_2026_07_20.md` todo 11c (was gated on a hypothetical worst case before its
+    dependency's findings existed — now a conditional fresh-check-at-execution-time procedure),
+    `prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`,
+    `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`, `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` (also
+    un-gated a separate consolidator-cron-pause coordination step that doesn't need a human either),
+    `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` todo 7 (was "propose only" — now full
+    execute-and-verify). All 4 target buckets fresh-checked this session: `market-data-tick-pred-prd`,
+    `market-data-tick-tradfi-prd`, `market-data-tick-defi-prd`, `features-sports-prd` — all `central-element-323112`,
+    all `604800s`.
+  - **1 was a genuine cost/config decision that had gone stale**:
+    `cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md` — the "keep 16Gi or revert to 8Gi" choice isn't a
+    business decision (this doc's own text calls the cost delta small, and a Cloud Run memory limit is a one-line
+    reversible config either way); decided directly (keep 16Gi until the sibling todo confirms steady-state health
+    across multiple scheduled runs, then auto-revert) instead of leaving it as a standing operator question.
+  - **1 was ALSO fixed this pass**: `sports_derived_features_postfloor_residue_purge_2026_07_27.md` todo 2 — same
+    reversibility-verified downgrade (its own background section shows an EARLIER version of this exact todo already
+    asserted "GCS soft-delete gives a 7-day window" and was corrected to `[OPERATOR]` specifically because that claim
+    was unverified and §3a didn't exist yet; now verified for real).
+  - **1 stays correctly `[OPERATOR]`**: `fleet_audit_triad_deferred_followups_2026_06_01.md`'s Tardis paid-key item — a
+    real recurring third-party spend decision, and the operator has ALREADY ruled on it (a standing "not yet" from
+    2026-06-01, not a pending question). The dashboard has no "acknowledge a standing no" affordance distinct from
+    "answer now" — worth a small backlog-UX improvement someday, not filed as a todo here since it's cosmetic, not a
+    correctness issue.
 
 ## Final report (2026-07-27, `/autonomous` session end)
 
