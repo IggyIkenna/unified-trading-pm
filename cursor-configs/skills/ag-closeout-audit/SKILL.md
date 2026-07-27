@@ -354,7 +354,7 @@ yourself only after that approval, then ship).
 - `plans/PLAN_FORMAT.md` — `status: draft` semantics, frontmatter schema
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility"
 - `/codex/11-project-management/` — findings triage, archival ritual
-- `codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — the shared conflict-check protocol
+- `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — the shared conflict-check protocol
   (§ 3) this skill's Phase 3 runs, also used by `/na-eligibility-audit`
 - `cursor-configs/skills/na-eligibility-audit/SKILL.md` — sibling skill (already-owned `assigned_vm: NA` doc validity,
   disjoint population from this skill's orphan detection)

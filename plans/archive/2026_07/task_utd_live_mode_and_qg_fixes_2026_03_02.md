@@ -4,7 +4,7 @@
 > already show every listed repo PASS. Part B's target repo, `unified-trading-deployment-v3`, was archived 2026-03-03
 > and split into `deployment-service`+`deployment-api`+`deployment-ui`+`system-integration-tests`
 > (`codex/11-project-management/service-registry.yaml`). The live-mode design it built is superseded by the current
-> batch=live event-log spine (`codex/02-data/live-data-persistence-and-event-log.md`).
+> batch=live event-log spine (`/codex/02-data/live-data-persistence-and-event-log.md`).
 
 **Workspace**: /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
 

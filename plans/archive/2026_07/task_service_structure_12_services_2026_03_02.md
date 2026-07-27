@@ -4,7 +4,7 @@
 > (features-calendar/delta-one/volatility/onchain-service consolidated into `features-service`; ml-training/ml-inference
 > consolidated into `ml-service`; pnl-attribution/risk-and-exposure/position-balance-monitor-service don't exist as
 > named repos). Current service topology: `codex/11-project-management/service-registry.yaml`; current CLI standard:
-> `codex/06-coding-standards/cli-convention.md`.
+> `/codex/06-coding-standards/cli-convention.md`.
 
 **Source plan**: `.cursor/plans/service_structure_standardization_4a4b3ff3.md` **Scope**: All 14 Python services EXCEPT
 instruments-service and market-tick-data-handler → **12 services**.

@@ -2,7 +2,7 @@
 
 > **SUPERSEDED (archived 2026-07-27).** Mandates a manual per-task token-cost-accounting ritual priced against 'Sonnet
 > 4.5'/a Cursor 'fast model'. Current model/effort governance is the model-tier system
-> (`codex/06-coding-standards/model-tier-selection.md`, sonnet/opus/fable × low..max effort), not a per-task cost
+> (`/codex/06-coding-standards/model-tier-selection.md`, sonnet/opus/fable × low..max effort), not a per-task cost
 > spreadsheet.
 
 **⚠️ CRITICAL: TOKEN TRACKING IS MANDATORY** - All tasks MUST report tokens!

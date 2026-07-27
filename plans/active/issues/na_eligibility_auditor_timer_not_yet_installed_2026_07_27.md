@@ -39,8 +39,8 @@ depends_on: []
 **What's shipped** (verify with `git log`, not this doc, before acting — these are point-in-time citations):
 
 - `unified-trading-pm@f355c0b2a` — `/na-eligibility-audit` skill,
-  `codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`, `check_na_corpus_ratchet.py` + baseline,
-  `agents/na_eligibility_auditor.md`, cross-references in the sibling skills.
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`, `check_na_corpus_ratchet.py` +
+  baseline, `agents/na_eligibility_auditor.md`, cross-references in the sibling skills.
 - `agent-orchestrator@f4a116e` — `mode="na_eligibility"` in `server/plan_health.py`, `server/models/escalation.py` doc
   update, `scripts/install-na-eligibility-auditor-timer.sh`.
 

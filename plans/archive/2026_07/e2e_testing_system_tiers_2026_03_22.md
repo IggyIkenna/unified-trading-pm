@@ -1,7 +1,7 @@
 # System Runtime Tiers — Startup & E2E Testing
 
 > **SUPERSEDED (archived 2026-07-27).** The 7-tier (T0-T6) deployment topology this file defines is now the live codex
-> SSOT at `codex/05-infrastructure/runtime-tiers-and-deployment.md` (created 2026-03-27,
+> SSOT at `/codex/05-infrastructure/runtime-tiers-and-deployment.md` (created 2026-03-27,
 > `authoritative_for: 7-tier deployment topology`). That doc's stale `.cursor/plans/end-to-end-testing/...` backlinks to
 > this file (and the matching one in `codex/00-SSOT-INDEX.md`) were fixed as part of this archival.
 

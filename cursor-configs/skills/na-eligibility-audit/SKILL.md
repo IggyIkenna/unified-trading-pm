@@ -61,8 +61,8 @@ classifier-flagged candidates NA on independent review — see its Progress Log 
 
 ## Naming, grouping, and the conflict-check — all live in ONE codex doc, not restated here
 
-`codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` is the SSOT for: how a RECLASSIFY verdict's
-doc gets renamed/paired (it doesn't — `assigned_vm` flips IN PLACE, name unchanged, plus a bolt-on
+`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` is the SSOT for: how a RECLASSIFY
+verdict's doc gets renamed/paired (it doesn't — `assigned_vm` flips IN PLACE, name unchanged, plus a bolt-on
 `{stem}_finalize_{today}.md` per `/ag-closeout-audit`'s own pairing convention § 1), which frontmatter axis to group by
 (§ 2 — `parent_epic`, not `asset_group`'s inconsistent non-AG split), and the conflict-check protocol (§ 3) every
 RECLASSIFY candidate must clear before flipping. Read it before running Phase 2 below; this skill does not maintain its
@@ -162,7 +162,7 @@ invocable interactively any time.
 
 ## Codex SSOTs
 
-- `codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — naming/pairing convention, grouping
+- `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — naming/pairing convention, grouping
   semantics, the shared conflict-check protocol, and the NA-corpus ratchet rationale
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" —
   bounded-outcome bar for a RECLASSIFY verdict

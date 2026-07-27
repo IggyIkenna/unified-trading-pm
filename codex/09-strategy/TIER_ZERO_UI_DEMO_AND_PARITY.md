@@ -43,7 +43,7 @@ code_refs:
 [`END_TO_END_STATIC_TIER_ZERO_TESTING.md`](../../unified-trading-system-ui/docs/END_TO_END_STATIC_TIER_ZERO_TESTING.md)
 (path from workspace root: `unified-trading-system-ui/docs/END_TO_END_STATIC_TIER_ZERO_TESTING.md`)
 
-**Runtime tier model:** `unified-trading-pm/plans/active/end-to-end-testing/system-tiers.md`
+**Runtime tier model:** `unified-trading-pm/plans/archive/2026_07/e2e_testing_system_tiers_2026_03_22.md`
 
 **Institutional demo bar (workflows, subscriptions, admin approvals, API handoff):** UI playbook §1b —
 `unified-trading-system-ui/docs/END_TO_END_STATIC_TIER_ZERO_TESTING.md` (“Institutional-grade demo target”).

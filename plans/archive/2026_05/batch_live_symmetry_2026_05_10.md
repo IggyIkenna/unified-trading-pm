@@ -50,9 +50,9 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 
 **Cutover deadline**: 2026-05-23 — `carry_staked_basis` lead + `leveraged_funding_arb` hedge live on real wallet ≥7
 continuous days. **Source-of-truth**: this plan body is the orchestration surface; the
-[pre-audit manifest](../questions/batch_live_design_symmetry_preaudit_2026_05_10.md) is the citation-ready manifest
-sub-agents read before any work. The [question doc](../questions/batch_live_design_symmetry_2026_05_08.md) captures the
-architectural Q&A + audit findings.
+[pre-audit manifest](/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md) is the citation-ready manifest
+sub-agents read before any work. The [question doc](/plans/archive/batch_live_design_symmetry_2026_05_08.md) captures
+the architectural Q&A + audit findings.
 
 ## Defaults locked (operator approved 2026-05-10)
 
@@ -187,7 +187,7 @@ You are Tab 1 — codex SSOT batch (NEW + UPDATE codex docs) for the batch_live_
 
 BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 1
-  2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1 + § 4
+  2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1 + § 4
   3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
   4. The 6 codex docs cited in this plan's frontmatter (related_codex)
 
@@ -242,26 +242,26 @@ BatchExecutionMode enum extraction · J1 helper signature lock · L7 sweep verif
       fix-list handed to MDPS / UTL owners. Pre-audit Manifest 2. (sweep complete 2026-05-14 — see fix-list below)
 
       **L7 FIX-LIST (Tab 5/MDPS owner action required)**:
-                                                                                                                              Pre-audit named files (`storage_dispatch_worker.py`, `output_writer_service.py`, `orchestration_writer.py`) do
-                                                                                                                              NOT exist in LDR MDPS worktree — pre-audit was derived from main workspace. Actual violations found by
-                                                                                                                              sweeping `.tabs/5/market-tick-data-service/`:
-                                                                                                                              25+ `to_parquet` callsites across defi handlers — NONE stamp `available_at` on df before serialization. No
-                                                                                                                              `record_captured(df=...)` flow yet (handlers use `record_captured(row_count=N)` form, bypassing internal
-                                                                                                                              `assert_available_at_present`). Files: `token_transfers_handler.py:183` · `governance_events_handler.py:120`
-                                                                                                                              · `liquidation_events_handler.py:187` · `vault_share_price_handler.py:268,470` · `mev_events_handler.py:120`
-                                                                                                                              · `eigenlayer_rewards_handler.py:305` · `dex_pools_handler.py:554` · `perp_funding_handler.py:405,545,703`
-                                                                                                                              · `solana_defi_handler.py:68` · `gas_fee_handler.py:545,622,707,839,914` · `oracle_prices_handler.py:618`
-                                                                                                                              · `lending_indices_handler.py:565` · `bridge_events_handler.py:138` · `dex_swaps_handler.py:561`
-                                                                                                                              · `position_data_handler.py:120,170` · `flash_loan_events_handler.py:137` · `data_manifest_handler.py:531`
-                                                                                                                              · `lst_rates_handler.py:443,517` · `liquidations_handler.py:478` · `evm_defi_handler.py:475,546`
-                                                                                                                              Full v8 `record_captured(df=...)` migration tracked in `_defi_manifest.py:148-149` comment.
-                                                                                                                              **Tab 5 action**: include these handlers in L7 migration batch.
+                                                                                                                                  Pre-audit named files (`storage_dispatch_worker.py`, `output_writer_service.py`, `orchestration_writer.py`) do
+                                                                                                                                  NOT exist in LDR MDPS worktree — pre-audit was derived from main workspace. Actual violations found by
+                                                                                                                                  sweeping `.tabs/5/market-tick-data-service/`:
+                                                                                                                                  25+ `to_parquet` callsites across defi handlers — NONE stamp `available_at` on df before serialization. No
+                                                                                                                                  `record_captured(df=...)` flow yet (handlers use `record_captured(row_count=N)` form, bypassing internal
+                                                                                                                                  `assert_available_at_present`). Files: `token_transfers_handler.py:183` · `governance_events_handler.py:120`
+                                                                                                                                  · `liquidation_events_handler.py:187` · `vault_share_price_handler.py:268,470` · `mev_events_handler.py:120`
+                                                                                                                                  · `eigenlayer_rewards_handler.py:305` · `dex_pools_handler.py:554` · `perp_funding_handler.py:405,545,703`
+                                                                                                                                  · `solana_defi_handler.py:68` · `gas_fee_handler.py:545,622,707,839,914` · `oracle_prices_handler.py:618`
+                                                                                                                                  · `lending_indices_handler.py:565` · `bridge_events_handler.py:138` · `dex_swaps_handler.py:561`
+                                                                                                                                  · `position_data_handler.py:120,170` · `flash_loan_events_handler.py:137` · `data_manifest_handler.py:531`
+                                                                                                                                  · `lst_rates_handler.py:443,517` · `liquidations_handler.py:478` · `evm_defi_handler.py:475,546`
+                                                                                                                                  Full v8 `record_captured(df=...)` migration tracked in `_defi_manifest.py:148-149` comment.
+                                                                                                                                  **Tab 5 action**: include these handlers in L7 migration batch.
 
-                                                                                                                              **UTL audit (AUDIT-NEEDED — UTL owner decision)**:
-                                                                                                                              `domain/standardized_service.py:100` (`_serialize_upload_item`) + `:299` (`upload_to_gcs`) — generic
-                                                                                                                              serialization helpers converting DataFrame to parquet bytes for GCS upload. NOT directly a manifest write
-                                                                                                                              path. Whether callers stamp `available_at` before passing df is caller-dependent. UTL owner should audit
-                                                                                                                              callers and confirm whether assert is needed at this layer.
+                                                                                                                                  **UTL audit (AUDIT-NEEDED — UTL owner decision)**:
+                                                                                                                                  `domain/standardized_service.py:100` (`_serialize_upload_item`) + `:299` (`upload_to_gcs`) — generic
+                                                                                                                                  serialization helpers converting DataFrame to parquet bytes for GCS upload. NOT directly a manifest write
+                                                                                                                                  path. Whether callers stamp `available_at` before passing df is caller-dependent. UTL owner should audit
+                                                                                                                                  callers and confirm whether assert is needed at this layer.
 
 - [x] [SCRIPT] P1. **J1 phase→mode helper signature** (DEFER — defaults #2 says J1 wiring post-cutover; ship signature
       contract only as design stub at `unified_api_contracts/internal/domain/strategy_service/lifecycle.py`). Helper
@@ -281,7 +281,7 @@ You are Tab 2 — UAC + UTL agent for the batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 2
-  2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab2 + § 3 + § 7
+  2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab2 + § 3 + § 7
   3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
 Your agent-tag: tab2-uac-utl.
@@ -355,7 +355,7 @@ You are Tab 3 — QG STEPs L2/L3/L7 for the batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 3
-  2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab3
+  2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab3
   3. unified-trading-pm/scripts/quality-gates-base/base-service.sh STEP 5.64 (template)
   4. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
@@ -415,7 +415,7 @@ You are Tab 4 main — features-service ModeHandler lift for batch_live_symmetry
 
 BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 4
-  2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab4 + § 7
+  2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab4 + § 7
   3. features-service (volatility family)/features_volatility_service/cli/handlers/base_handler.py (reference impl)
   4. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
@@ -477,7 +477,7 @@ You are Tab 5 — pipeline_mode VM fleet migration for batch_live_symmetry_2026_
 
 BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 5
-  2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab5 + § 6 risk #2 + § 7
+  2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab5 + § 6 risk #2 + § 7
   3. unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md (full plan body)
   4. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
@@ -577,7 +577,7 @@ You are Tab 6 — F21 reconciler ship for batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 6
-  2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab6 + § 6 risk #3 + § 6 risk #12
+  2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab6 + § 6 risk #3 + § 6 risk #12
   3. unified-trading-pm/codex/04-architecture/batch-live-architecture.md § 6 (strategy alpha vs execution alpha)
   4. unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md
   5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
@@ -641,7 +641,7 @@ You are Tab 7 main — UI ExecutionModeContext rollout for batch_live_symmetry_2
 
 BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 7
-  2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab7 + § 7 collision matrix
+  2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab7 + § 7 collision matrix
   3. unified-trading-system-ui/lib/execution-mode-context.tsx (canonical provider)
   4. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
@@ -730,7 +730,7 @@ You are Tab 8 — carry_staked_basis end-to-end run + 7-day soak for batch_live_
 
 BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 8
-  2. unified-trading-pm/plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab8 + § 6 risks #4-#6 + § 9 recipe
+  2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab8 + § 6 risks #4-#6 + § 9 recipe
   3. unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md § Group F items 17-22
   4. unified-trading-pm/plans/active/defi_master.md
   5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
@@ -779,12 +779,12 @@ Cited in pre-audit § 5. Canonical schedule:
 ## Risk register pointer
 
 Top 12 risks + mitigations + owners + detection signals: see
-[pre-audit manifest § 6](../questions/batch_live_design_symmetry_preaudit_2026_05_10.md#6--risk-register-top-12).
+[pre-audit manifest § 6](/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md#6--risk-register-top-12).
 
 ## Concurrent-agent collision matrix pointer
 
 8 collision points with serialisation strategy: see
-[pre-audit manifest § 7](../questions/batch_live_design_symmetry_preaudit_2026_05_10.md#7--concurrent-agent-collision-matrix).
+[pre-audit manifest § 7](/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md#7--concurrent-agent-collision-matrix).
 
 ## Success criteria (overall plan)
 

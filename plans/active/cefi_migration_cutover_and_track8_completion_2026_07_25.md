@@ -901,8 +901,8 @@ every todo executes an already-decided spec from the parent doc.
   **Committed via the pathspec form (`git commit -m "..." -- <2 files>`) after this session's own git-commit skill
   diagnosed the actual cause of ~9 consecutive "branch drift"/foreign-content collisions this cycle: a still-alive
   background sub-agent from earlier in this session (a "review role" agent, visible via `[slot-2·laptop]`-authored
-  commits with unrelated content — `codex/02-data/prediction-data-types-catalog.md`,
-  `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) sharing this SAME un-isolated working tree, not a truly
+  commits with unrelated content — `/codex/02-data/prediction-data-types-catalog.md`,
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) sharing this SAME un-isolated working tree, not a truly
   foreign concurrent slot** — both of its commits were legitimate, independently verified content (one already
   corroborated by `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`'s own Update 6), so nothing was discarded, just
   not bundled into my own commit. **Lesson for future sessions**: spawning monitoring/review sub-agents without

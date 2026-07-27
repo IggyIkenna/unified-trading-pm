@@ -431,7 +431,7 @@ interactively any time — the timer is additive, not a replacement for an on-de
 - `/codex/11-project-management/doc-frontmatter-schema.md` + `plans/PLAN_FORMAT.md` — frontmatter truth
 - `codex/11-project-management/` — findings triage, archival ritual, issue-doc lifecycle
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — assigned_vm/role semantics
-- `codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — AO-dispatch batch naming, the shared
+- `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — AO-dispatch batch naming, the shared
   conflict-check protocol, and the assigned_vm:NA corpus ratchet
 - `cursor-configs/skills/na-eligibility-audit/SKILL.md` — sibling skill (NA-doc validity/reclassification, disjoint
   population from this skill's contradiction/false-unchecked sweep)

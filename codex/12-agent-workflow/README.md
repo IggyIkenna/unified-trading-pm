@@ -30,7 +30,7 @@ Agent operating procedures for the Unified Trading System. Authoritative agent r
 | Was here                     | Now in                                                                                |
 | ---------------------------- | ------------------------------------------------------------------------------------- |
 | WORKFLOW_OVERVIEW            | `sub-agent-workflow-standard.mdc` + `agents-follow-cursor-rules.mdc`                  |
-| TASK_TEMPLATE                | `unified-trading-pm/plans/tasks/cursor/START_HERE.md`                                 |
+| TASK_TEMPLATE                | `unified-trading-pm/plans/archive/2026_07/cursor_tasks_start_here_2026_03_02.md`      |
 | TASK_CLASSIFICATION          | `ai-task-classification.mdc`                                                          |
 | WORKER_AGENT_INSTRUCTIONS    | `agents-follow-cursor-rules.mdc`                                                      |
 | LOCAL_VS_CLOUD_ORCHESTRATION | `parallel-agent-execution.mdc`                                                        |
