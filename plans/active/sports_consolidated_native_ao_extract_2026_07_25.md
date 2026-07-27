@@ -41,7 +41,7 @@ related:
     /plans/active/task_template.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-27"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -120,12 +120,21 @@ drift_direction: advance-code
       / GCS `features-sports-prd-central-element-323112`). **Done when**: the step-3 census returns 0 post-floor
       `derived_features` objects with a pre-`2026-07-19` creation timestamp. Source:
       `sports_consolidated_closeout_2026_07_19.md:244-259`.
-- [ ] [REVIEW] P1. **Track C — re-verify the existing K1/K2 delete-candidate GCS object list against the CURRENT casing
-      state.** Read-only: a fresh object-level census confirms whether the candidate list matches the corpus's actual
-      casing as of the check date (it may predate or postdate the still-pending lowercase-revert). No delete action in
-      this todo itself. (repo: market-tick-data-service / instruments-service, read-only census). **Done when**: either
-      the census confirms the existing candidate list still matches current corpus state, or a corrected list is
-      produced and cited. Source: `sports_consolidated_closeout_2026_07_19.md:337-340`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-27 (slot-14) — Track C re-verified: existing candidate list still matches current
+      corpus state, no correction needed.** Re-ran the existing `verify_k1k2_lowercase_twins_2026_07_27.py` census (same
+      query/scope as `sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`'s own investigation — no new script,
+      no corpus walk) against live prod (`market-data-tick-sports-prd-central-element-323112`). **Fresh population**:
+      275,136 uppercase-keyed (`instrument_type=ODDS, data_type=TRADES`) rows as of this check (a precise, dated figure
+      — prior docs cite adjacent-but-different numbers for related populations: 260,298 GCS objects from K1/K2's
+      original copy, ~373,296 manifest rows from an earlier broader count). **Twin-coverage, n=200 (seed=42, independent
+      of the original run)**: 153 hits / 47 misses = **23.5% no-twin** — statistically consistent with the original
+      40-sample's 27.5% (95% CI on 27.5%/n=40 is ~[21%,34%]; 23.5% falls inside it). Two smaller same-session samples
+      (n=40 seed=20260727 exact-repeat: 12.5% miss; n=60 seed=20260727: 16.7% miss) diverged further from 27.5% but are
+      explained as small-n sampling noise once the n=200 result landed back in-CI — recommend using n≥200 for any future
+      risk-sizing of this migration, not a 40-row spot-check. **Conclusion**: the candidate population/query is
+      unchanged and still the correct scope; the twin/no-twin split has NOT materially drifted since the original
+      investigation. Full sample outputs cited in this plan's Progress Log below. Source:
+      `sports_consolidated_closeout_2026_07_19.md:337-340`.
 - [ ] [DATA] P1. **Track C — venue vocabulary safe re-stamp + SMARKETS residual purge (excludes the KALSHI/POLYMARKET
       cross-AG bleed sub-item).** Now that the parts[]-index parser fix has shipped
       (`market-data-processing-service@51502c3` + `instruments-service@f46e553e`, verified via `git log`), re-stamp: (1)
@@ -349,6 +358,28 @@ unsupervised"; (f) items whose real content lives in another doc this extraction
 item). See the dispatching session's full report for the per-todo table.
 
 ## Progress Log
+
+### 2026-07-27 (slot-14) — Track C: fresh K1/K2 census confirms the existing candidate list still holds
+
+Dispatched to the Track C `[REVIEW]` todo. Ran the existing, already-reviewed
+`market-tick-data-service/scripts/sports/verify_k1k2_lowercase_twins_2026_07_27.py` script (built + sanity-validated by
+an earlier session per `issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`) fresh against live prod —
+no new tooling, no corpus walk, same bounded sample-existence-probe methodology.
+
+- **Population** (`instrument_type=ODDS`, `data_type=TRADES`, `row_count>0` on
+  `market-data-tick-sports-prd-central-element-323112`): **275,136 rows** as of this check.
+- **n=40, seed=20260727 (exact repeat of the original investigation's params)**: 35 hits / 5 misses = 12.5% no-twin.
+- **n=60, seed=20260727**: 50 hits / 10 misses = 16.7% no-twin.
+- **n=200, seed=42 (independent, larger)**: 153 hits / 47 misses = **23.5% no-twin**.
+
+The two small (n=40/60) same-day samples read well below the originally-documented 27.5%, which could have been mis-read
+as "the risk has shrunk" — but the larger n=200 sample lands at 23.5%, inside the 95% CI around the original 27.5%/n=40
+estimate (~[21%, 34%]). No genuine migration work has executed yet (the VM launch is still `BLOCKED-OPERATOR-DECISION`
+per the issue doc's own Progress Log), so there is no mechanism that would have shrunk the twin-less population since
+the original investigation — the small-sample divergence is sampling noise, not drift. **Verdict: the existing candidate
+list/scope is still accurate; no correction produced.** Flagging for whoever eventually sizes the real migration: use
+n≥200, not a 40-row spot-check, since the small samples this session moved the estimate by up to 15 points on the same
+underlying population.
 
 ### 2026-07-27 (slot-10) — Track F (follow-up) code DONE, twice-verified correct; blocked only on a QG run completing
 

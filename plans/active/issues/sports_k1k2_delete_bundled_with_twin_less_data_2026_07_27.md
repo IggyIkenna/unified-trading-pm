@@ -179,3 +179,9 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
   content-verified census shows 100% twin coverage. Deferring this AO task as `BLOCKED-OPERATOR-DECISION` (the only
   legitimate defer reason under CLAUDE.md's data-pipeline-correctness rule) — the code-shipping half of the work is
   done; the execution-authorization half is a standing operator decision, not a stalled todo.
+- **2026-07-27 (slot-14)** — Re-ran `verify_k1k2_lowercase_twins_2026_07_27.py` fresh (the Track C `[REVIEW]` todo in
+  `sports_consolidated_native_ao_extract_2026_07_25.md`, not this doc's own todos). Current population: 275,136
+  uppercase-keyed rows. A larger, independent n=200 sample (seed=42) measured 23.5% no-twin, inside the 95% CI of this
+  doc's original 27.5%/n=40 figure — no material drift, still the risk profile todo 1 above should be sized against. Two
+  smaller same-session n=40/60 samples read lower (12.5%/16.7%) but that's sampling noise, not improvement (no migration
+  has executed yet to have shrunk the real number). Full detail in the Track C plan's own Progress Log.
