@@ -226,15 +226,26 @@ lands (per the workspace's commit-push-flip + evidence discipline).
       `partial: false`. The merge-on-write fix (`instruments-service@21083716`) is confirmed working on real prod data —
       the same-day clobber bug is fixed. VM `measure-honest-coverage-20260727-020313` self-deleted on completion as
       designed (`gcloud compute instances list --filter="name~measure-honest-coverage"` → empty).
-- [ ] [SCRIPT] P0. `IggyIkenna/deployment-api#398` still **OPEN, unmerged** as of 2026-07-27 (re-checked via
-      `gh pr     view 398 --repo IggyIkenna/deployment-api --json mergedAt,state` → `state=OPEN`, `mergedAt=null`) —
-      awaiting the `*/15` `ldr-to-main-promote-fleet` cron.
-      `gcloud builds list --filter="substitutions.REPO_NAME=deployment-api"     --limit=3` still shows only pre-fix
-      builds (latest `createTime=2026-07-26T20:46:45Z`, before the fix commit); `uts-shared-deployment-api`'s
-      `status.latestReadyRevisionName` is still `uts-shared-deployment-api-00301-gcl` (pre-fix). Re-check after the PR
-      merges: confirm a NEW Cloud Build ran and SUCCEEDED with `createTime` after `2026-07-27T01:06:05Z`, then confirm
-      the Cloud Run revision updated. Cite the build ID as `Evidence: cloudbuild=<id>` per `plans/PLAN_FORMAT.md` § 8b
-      before considering this "deployed".
+- [ ] [SCRIPT] P0. `IggyIkenna/deployment-api#398` still **OPEN, unmerged** as of 2026-07-27
+      (`mergeStateStatus=BLOCKED`, `mergeable=MERGEABLE`) — but NOT because of anything in this fix. Checks
+      (`gh pr checks 398`): `quality-gates-v2` ✅, `validate / GCP Cloud Build — deployment-api` ✅ **SUCCESS (completed
+      2026-07-27T01:06:34Z)** — the image for `deployment-api@e8fc64a` already built cleanly, satisfying the "builds an
+      image" requirement independent of the merge. The ONLY failing required check is `sit-gate/fleet-green`
+      (`https://github.com/IggyIkenna/system-integration-tests/actions/runs/30227188482`), and its failed job
+      (`cross-repo-invariants`) is a **fleet-wide, unrelated flake**: `ci-status-update.yml` dispatch timed out for 6
+      DIFFERENT repos (`market-tick-data-service`, `ml-service`, `strategy-service`, `trading-agent-service`,
+      `unified-trading-library`, `unified-trading-system-ui` — deployment-api is not among them), so the SIT-wide stamp
+      step failed and blocks EVERY repo's promotion, not just this one. Root-causing/fixing that fleet SIT flake is
+      explicitly OUT OF SCOPE for this issue (it's infra-wide, not a Data Status regression, and per the commit churn on
+      this branch other concurrent agent work already appears to be actively triaging fleet CI/registry health — do not
+      duplicate). **Action: wait for the next `sit-gate/fleet-green` run to go green and the `*/15` promote cron to
+      auto-merge #398**, then re-check (`gcloud builds list --filter="substitutions.REPO_NAME=deployment-api" --limit=3`
+      for a NEW build with `createTime` after `2026-07-27T01:06:05Z`, and
+      `gcloud run services describe uts-shared-deployment-api     --region=asia-northeast1 --format='value(status.latestReadyRevisionName)'`
+      for a revision newer than `uts-shared-deployment-api-00301-gcl`). Cite the build ID as `Evidence: cloudbuild=<id>`
+      per `plans/PLAN_FORMAT.md` § 8b before considering this "deployed". If `sit-gate/fleet-green` is STILL failing on
+      the SAME unrelated repos after a few more cron cycles, that is itself worth a fresh, separately-scoped issue doc
+      (or checking whether one already exists) — but do not fold it into THIS doc, which is scoped to Data Status only.
 - [ ] [SCRIPT] P1. Self-verify live once both above are confirmed: `curl .../api/data-status/honest-coverage` shows 5
       asset_groups; `curl .../api/data-status/coverage-summary?service=market-tick-data-service` returns EITHER a
       `refused`/`stale` structured response (fast) OR real data — never a >60s hang, never contributing to another
