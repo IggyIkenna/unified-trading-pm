@@ -23,7 +23,7 @@ related:
     /plans/archive/issues/ao_dispatch_health_idle_slot_thrash_2026_07_26.md,
   ]
 created: 2026-07-26
-last_updated: 2026-07-26
+last_updated: 2026-07-27
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -166,6 +166,36 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       it shouldn't be waiting on. Definition of done: either a concrete root cause + fix, or a documented conclusion
       that the shutdown hang is inherent to `KillMode=process`'s tradeoff (protects workers, costs shutdown latency) and
       not worth changing.
+
+## Recurrence + memory-footprint evidence — 2026-07-27 (main agt-498659)
+
+The shutdown-hang → SIGKILL is **not a one-off** — it recurred **3× on 2026-07-27** and the service restarted **7× that
+day** at the unit level. `journalctl -u orchestrator.service --since today`:
+
+```
+Started:  08:31:10, 09:01:38, 10:48:30, 11:01:42, 13:01:36, 13:15:23, 14:31:37
+Stop→SIGKILL (code=killed status=9/KILL, "Failed with result 'timeout'"):
+          11:01:42, 13:01:36, 14:31:37   ← graceful stop timed out, systemd SIGKILLed
+Clean deactivate:  13:15:23
+Per-cycle resource line (every restart):  28.8G memory peak, 15.4G memory swap peak
+```
+
+Two things this adds to the open P2 shutdown-hang todo:
+
+1. **Recurring, ~1–2h cadence** — this is now a daily-recurring restart+SIGKILL pattern, not the single 07-26 incident.
+   Each `deactivating` phase drains ~50–90s (observed live: one cycle sat `deactivating`/`stop-sigterm` for ~51s before
+   going `active`, then another ~50s before uvicorn rebound and the port bound). During that window `/api/state` and
+   `/poll` are unreachable (connection refused) — a real, if brief, recurring outage the fleet rides through.
+2. **28.8G RSS + 15.4G swap peak per cycle** — the orchestrator's own memory footprint is enormous and heavily swapped.
+   This is very likely _why_ the graceful stop hangs (a swapped-out process is slow to respond to SIGTERM → systemd hits
+   `TimeoutStopSec` → SIGKILL), and it plausibly links this doc to the host-RAM-exhaustion cluster
+   (`/plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`): an orchestrator peaking at
+   28.8G + 15.4G swap on a shared host is a prime contributor to the low-FREE-RAM condition that's been reaping
+   background QG/quickmerge processes. Worth investigating the two together — the memory footprint may be the common
+   root, not two independent problems.
+
+`NRestarts=0` in `systemctl show` throughout — i.e. these are watchdog/self-heal `systemctl restart`s (or reload-driven
+stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned memory-cap/watchdog self-heal path.
 
 ## Codex SSOTs
 
