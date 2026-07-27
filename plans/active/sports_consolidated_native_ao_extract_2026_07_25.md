@@ -383,3 +383,32 @@ item). See the dispatching session's full report for the per-todo table.
   delete itself is now agent-executable (§3a, confirmed twice independently) — the remaining blocker is EXECUTION SCALE,
   not authorization. Not flipping todo 1's checkbox — Steps 2/3 (delete, re-census) still have not run; the new
   follow-up todo carries that work forward.
+- 2026-07-27T05:20-06:10Z (slot-9, Track F follow-up todo): **built + functionally validated the census+delete script;
+  PAUSED before shipping/launching due to a shared-host disk-full crisis, not resumed this session.**
+  `features-service/scripts/sports/purge_derived_features_post_floor_residue_2026_07_27.py` — enumeration is
+  MANIFEST-DRIVEN (reads the already-materialised `_index/availability_index.parquet`, ~4.2MiB, one read; NOT a fresh
+  GCS directory walk) rather than the plan text's originally-envisioned live prefix walk, filtering
+  `feature_group=="derived_features"` + `capture_status=="captured"` + `date>=2020-06-06`: **30,500 in-scope
+  candidates** (bigger than the "low thousands" delete-list estimate, since this counts ALL captured rows, not just
+  residue — the actual delete rate matches the prior ~9-11% sample). Discovered + fixed a real path-mapping bug along
+  the way: the manifest's `league_id` is the CANONICAL UAC id, but the real GCS object partitions on the RAW numeric
+  api-football id (confirmed via `features_service/sports/cli/handlers/batch_handler.py`'s `_write_per_league`); a
+  league with NO canonical registry entry keeps its RAW numeric id in the manifest too (my first cut wrongly tried a
+  reverse-lookup on those and mis-classified them `NO_NUMERIC_ID` — fixed to detect already-numeric manifest values and
+  use them directly). **Validated 3 times against real, live prod data** (dry-run only, read-only): a 16-candidate
+  sample, then 61, then 31 — each correctly classified DELETE (pre-2026-07-19 `last_modified`, e.g.
+  `2020-06-06/BUNDESLIGA` at `2026-07-17T21:52:07Z`) vs KEEP (post-cutoff) vs the fixed numeric-id case, with 0
+  MISSING/unclassified rows. Also shipped a small, genuinely-needed dependency fix along the way:
+  `unified-trading-library@a7928ed9` re-exports `gcs_bucket_soft_delete_retention_seconds` from the package top level
+  (was cloud_interface-only, tripping the repo's import-pattern QG check) — QG-verified, quickmerged, landed. **Blocked
+  from here**: `features-service`'s own `quality-gates.sh` run for the new script hit
+  `tee: 'standard output': No space left on device` / `Terminated` mid-suite — the shared host is at
+  `290G 289G 1.2G 100% /` and tmpfs `/tmp` also ~100% full, an ACTIVE RECURRENCE of the already-tracked
+  `issues/shared_host_home_filesystem_full_2026_07_26.md` (previously marked "MOOT", now regressed — corroborating entry
+  added there with fresh evidence, worsening `2.6G→1.3G→1.2G` avail across ~10 min of re-checks). Given the NEXT step
+  after shipping is launching a Tier-2 SPOT VM for a real, irreversible prod delete, operator guidance was to NOT push
+  forward on an unstable host — cleanly `git stash`ed the script
+  (`orchestrator-slot-9-sports_consolidated_native_ao_extract-029-disk-full-blocked`, features-service worktree, not
+  lost) rather than force a QG run I couldn't trust or launch a delete campaign I couldn't reliably monitor. Todo stays
+  open; the script is ready to resume from (stash pop → re-run QG → ship → launch) once host disk pressure eases — do
+  not rebuild from scratch.
