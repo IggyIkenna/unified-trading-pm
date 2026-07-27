@@ -113,8 +113,8 @@ drift_direction: advance-docs
 
 ## Codex SSOTs
 
-- `plans/active/task_template.md` §1-2 (LOCAL vs AO track, frontmatter)
-- `codex/11-project-management/doc-frontmatter-schema.md` (asset_group enum SSOT)
+- `/plans/active/task_template.md` §1-2 (LOCAL vs AO track, frontmatter)
+- `/codex/11-project-management/doc-frontmatter-schema.md` (asset_group enum SSOT)
 - `cursor-configs/skills/ag-closeout-audit/SKILL.md` (classification-mechanism section this plan's schema change
   eventually simplifies — do not edit until the concurrent rewrite lands, see coordination note)
 
