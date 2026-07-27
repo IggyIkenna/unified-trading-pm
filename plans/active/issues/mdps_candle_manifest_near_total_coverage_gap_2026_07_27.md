@@ -140,10 +140,24 @@ the candle layer instead of raw-tick.
       `record_captured(data_type=...)` can never literally equal a `BUNDLED_DATA_TYPES` member — this guard is
       structurally unreachable from MDPS's own candle writer today, which also explains why sports's
       `odds_snapshot`/`odds_movement`/`arbitrage_opportunity` (which ARE UAC-bundled) don't hit it either.
-- [ ] [DATA] P1. **Once root-caused, scope + execute the historical backfill** for cefi/defi/tradfi/prediction's ~2.6M
-      total F-classified (+7,936 E-classified for DeFi) unmanifested candle objects via `record_captured`-only backfill
-      (never delete — mirrors `backfill_orphan_class_e.py`'s precedent). Given the scale (~1.1M for DeFi alone), this is
-      its own VM-launch campaign, not an in-session fix.
+- [x] ✅ [DATA] P1. **DONE 2026-07-27 (slots 8 + 6).** Executed the historical backfill for
+      cefi/defi/tradfi/prediction's unmanifested candle objects via the purpose-built `backfill_candle_manifest.py`
+      (`market-data-processing-service@cf94e23`) + `launch-backfill-candle-manifest-vm.sh`
+      (`deployment-service@fafde10`/`@b947d9f`) campaign — 4 concurrent Tier-2 SPOT VMs, one per asset_group,
+      `record_captured`-only (never deletes/re-uploads). All 4 finished clean:
+      `VERDICT cefi: already_covered=0 ok=405496 recorded_cells=25593 junk=0 escalated=0 read_failed=0 verify_failed=0`,
+      `VERDICT tradfi: already_covered=0 ok=536934 recorded_cells=22905 junk=0 escalated=0 read_failed=0 verify_failed=0`,
+      `VERDICT prediction: already_covered=0 ok=569947 recorded_cells=1609 junk=0 escalated=0 read_failed=0 verify_failed=0`,
+      `VERDICT defi: already_covered=0 ok=1131367 recorded_cells=36145 junk=0 escalated=0 read_failed=0 verify_failed=0`
+      — 86,252 total `record_captured` cells written, zero `escalated`/`read_failed`/`verify_failed` across all 4. 30
+      objects (10 per cefi/prediction/defi, 0 for tradfi) hit a pre-existing `source=` mistag and were correctly REFUSED
+      rather than falsely manifested — tracked separately in the P2 todo below, does not block this todo. Verified via
+      each AG's `_index/audit/candle_manifest_backfill_<ag>.parquet` existing with a size consistent with its
+      recorded_cells count (7.1MB/9.3MB/40.9MB/53.4MB respectively, timestamps matching each VERDICT). Did not run a
+      full manifest-consolidator + re-sweep pass in this session (step (e) in the prior checkpoint's own text is
+      explicitly optional); the audit-parquet + VERDICT evidence is accepted per this plan's own acceptance bar. Newly
+      recorded rows will land in each bucket's consolidated `_index/availability_index.parquet` on the consolidator's
+      normal cadence.
 - [ ] [DATA] P2. **Complete the sports full-corpus sweep** (only a bounded 200-object sample has been run) to confirm
       the ~100% coverage pattern holds across sports's entire historical corpus, not just a recent-day sample.
 - [ ] [REVIEW] P2. Cross-check whether `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`'s narrower
@@ -176,12 +190,24 @@ the candle layer instead of raw-tick.
       2026-07-27 slot-6, `backfill-candle-manifest-tradfi-20260727-151950`, clean
       `escalated=0 read_failed=0 verify_failed=0`) — does NOT show this pattern, so it's not universal across AGs;
       consistent with tradfi being a legitimate Databento-sourced AG (`SOURCE_PRIORITY` databento-first there), so a
-      `source=databento` write there is expected to be valid, not mistagged. Options for both AGs: (a) relabel the
-      mistagged objects' `pipeline_mode=`/source path segment to the correct source (copy-not-move + verify twin content
-      matches, then this todo's own `record_captured` pass), or (b) if the mistagged object is actually STALE/superseded
-      by a correctly-tagged twin, treat as a legacy-duplicate cleanup candidate instead (needs a content diff first — do
-      NOT assume). Small, bounded, does not block todo 1's completion (25,593+ cefi cells and 1,609 prediction cells
-      recorded successfully despite these).
+      `source=databento` write there is expected to be valid, not mistagged. - **defi** (10 `RECORD-ERROR`s, confirmed
+      2026-07-27 slot-6, `backfill-candle-manifest-defi-20260727-151932`, otherwise clean VERDICT
+      `already_covered=0 ok=1131367 recorded_cells=36145 junk=0 escalated=0 read_failed=0 verify_failed=0`): same mistag
+      SHAPE, a THIRD distinct source pairing —
+      `MissingSourceError: source='onchain_rpc' ... not a registered source for asset_group='defi' data_type='dex_pool_swaps'`
+      (allowed: `onchain_subgraph`), all `venue='BALANCER'`, `chain` in `{ARBITRUM, ETHEREUM}`, `date=2023-01-01` only
+      (one date, all 7 candle timeframes for each of the 2 chains — 10 total). Same open question as prediction's: not
+      yet confirmed whether this is the full extent (scope a fresh GCS listing before remediating) or root-caused
+      against cefi/prediction's mechanism — three AGs now show the identical REFUSED-not-recorded shape with three
+      different disallowed sources (`databento`→cefi, `databento`→prediction, `onchain_rpc`→defi), which may point to a
+      shared upstream cause (e.g. a migration/backfill step that stamped the wrong `source=` on a small slice of objects
+      across AGs) rather than three independent one-offs — worth a joint root-cause pass before remediating any of the
+      three individually. Options for all three AGs: (a) relabel the mistagged objects' `pipeline_mode=`/source path
+      segment to the correct source (copy-not-move + verify twin content matches, then this todo's own `record_captured`
+      pass), or (b) if the mistagged object is actually STALE/superseded by a correctly-tagged twin, treat as a
+      legacy-duplicate cleanup candidate instead (needs a content diff first — do NOT assume). Small, bounded, does not
+      block todo 1's completion (25,593 cefi + 1,609 prediction + 36,145 defi cells recorded successfully despite these
+      — 30 total mistagged/refused objects across all 4 AGs, out of ~2.6M actionable rows processed).
 
 ## Progress Log
 
@@ -288,3 +314,16 @@ the candle layer instead of raw-tick.
   `source='databento'` not registered for `asset_group='prediction'`, all `venue='POLYMARKET'` `data_type='trades'` —
   folded into the P2 todo above rather than filing a duplicate. `defi` still `RUNNING` as of this checkpoint
   (footer-read ~646,000/1,131,367, ~57%); will check back via a bounded watchdog.
+- **2026-07-27T18:16Z** (slot 6, `data_engineering`) — `defi` (the last of the 4 campaign VMs) finished: footer-read
+  pass clean (`ok=1131367 zero-row-junk=0 failed=0`), then
+  `VERDICT defi: already_covered=0 ok=1131367 recorded_cells=36145 junk=0 escalated=0 read_failed=0 verify_failed=0`. 10
+  `RECORD-ERROR`s — a THIRD distinct mistag pairing (`source='onchain_rpc'` not registered for
+  `asset_group='defi' data_type='dex_pool_swaps'`, all `venue='BALANCER'`, `chain` in `{ARBITRUM, ETHEREUM}`,
+  `date=2023-01-01`) — folded into the same P2 todo above, alongside a note that 3 AGs now show the identical
+  REFUSED-not-recorded shape with 3 different disallowed sources, which may share an upstream cause worth a joint
+  root-cause pass. **All 4 campaign VMs are now complete**: cefi 25,593 / tradfi 22,905 / prediction 1,609 / defi 36,145
+  recorded_cells (86,252 total), zero `escalated`/`read_failed`/`verify_failed` across all 4, 30 total
+  REFUSED-not-recorded objects (all pre-existing mistags, not backfill-tool defects). This closes out the campaign this
+  doc's own todo 1 tracks — see its Progress Log entry for the todo 1 checkbox flip. Handing back to
+  `mdps_candle_manifest_population_disconnect_2026_07_25.md` todo 5 to do its own manifest-coverage spot-check and flip
+  against this evidence.
