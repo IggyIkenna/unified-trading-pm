@@ -47,6 +47,13 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **🔴 OPERATOR-NOTIFY — CONFIRMED GENUINE STALL (2026-07-27).** Live Kalshi/Polymarket prediction tick capture has been
+> down for ~29 days (last real day `2026-06-28`) with **no producer VM or Cloud Run service currently running anywhere
+> in the fleet** — not a read/path artifact (batch data flows fine in the same bucket/window throughout).
+> Data-pipeline-correctness HARD RULE: this is a big finding needing a remediation decision/follow-up (relaunch the live
+> producer), not something to leave un-actioned. See the dated 2026-07-27 Progress Log entry at the bottom for full
+> evidence.
+
 ## What I found
 
 While reconciling `work_split_2026_05_22_ikenna.md` (a 2026-05-22 dispatch snapshot being retired — every plan it
@@ -112,8 +119,9 @@ not sit un-triaged.
 
 ## Suggested next step
 
-1. Confirm/deny whether `raw_tick_data/by_date/` is genuinely stalled at `day=2026-06-28` (check the live capture
-   process/VM logs directly) vs. a path/prefix read artifact.
+1. ~~Confirm/deny whether `raw_tick_data/by_date/` is genuinely stalled at `day=2026-06-28` (check the live capture
+   process/VM logs directly) vs. a path/prefix read artifact.~~ ✅ **GENUINE STALL, confirmed 2026-07-27** (slot-12) —
+   see the dated Progress Log entry below.
 2. Fix `e2e-testing@dbf8e78`'s regression at `validate_batch_live_smoke_matrix.py:552` (swap back to the
    elections-subdomain host) and actually build the missing regression check this time so it can't silently reappear a
    third time.
@@ -160,3 +168,47 @@ The batch-capture half of this doc is CLOSED end to end. The final two links, sh
 - The three live-capture follow-ups listed above (live stall triage at day=2026-06-28, the e2e-testing host regression,
   the schema-drift issue chain) remain open — they are the LIVE half, out of scope of the batch chain this doc's
   root-causes cover.
+
+## 2026-07-27T22:10Z — GENUINE STALL confirmed (slot-12): live prediction capture has been down ~29 days, no bucket/path artifact
+
+**Verdict: GENUINE STALL, not a read artifact.** Read-only diagnosis, no fix/backfill/VM-launch/manifest-write in scope
+per this todo.
+
+- **Bucket-form ruled out**: `gcloud storage buckets list --filter="name~market-data-tick.*pred"` returns exactly
+  `market-data-tick-pred-prd-central-element-323112` (the one this doc's original finding checked) + a `-test-` sibling
+  — no env-less/legacy variant exists to have been misread.
+  `resolve_bucket_name(kind="market-data-tick-prediction", asset_group="prediction")` resolves to the same prd bucket,
+  confirming it's the canonical target.
+- **Partition-shape ruled out**: the bucket's only tick-data prefix is
+  `raw_tick_data/by_date/day=.../pipeline_mode=.../ asset_group=prediction/...` — no alternate cqg-first or other
+  top-level layout exists (only `_index/`, `_migration_backup/`, `_vm_staging/`, `processed_candles/`, `raw_tick_data/`
+  at bucket root).
+- **Direct GCS evidence**: `day=` partitions with a `pipeline_mode=live_kalshi` or `pipeline_mode=live_polymarket_clob`
+  subdirectory exist for every day through `day=2026-06-28`, then **never again** through `day=2026-07-26` (today is
+  2026-07-27) — a clean, total stop, not a thin/patchy gap. Meanwhile
+  `pipeline_mode=batch_kalshi`/`batch_polymarket_clob` partitions DO appear intermittently in that same window
+  (`day=2026-07-09`, `07-16`, `07-18..07-26`) — i.e. the SAME bucket, SAME base path shape is demonstrably being written
+  to by BATCH jobs throughout, which rules out a bucket- or path-level misread: if the read path were wrong, batch data
+  wouldn't be visible there either.
+- **Manifest corroboration** (bounded predicate-pushdown read of `_index/availability_index.parquet`, filtered to
+  `pipeline_mode LIKE '%live%' AND capture_status='captured'`, not a corpus walk): max captured date is
+  `live_kalshi`→`2026-06-29`, `live_polymarket_clob`→`2026-06-28`. `day=2026-06-29` itself has **zero objects in GCS**
+  (`gcloud storage ls .../day=2026-06-29/` matches nothing) — that one manifest row is a phantom/unbacked entry, so the
+  last REAL captured live day for both venues is `2026-06-28`, matching the original finding exactly. Gap as of today:
+  **~29 days**.
+- **Producer VM/process state — confirmed absent, not just quiet**: the two launchers that create live prediction
+  producers (`deployment-service/scripts/vm/launch-mtds-live-prediction-consolidated.sh`,
+  `VM_PREFIX=mtds-live-prediction-consolidated`; `launch-prediction-live.sh`, `VM_PREFIX=prediction-live-{venue}-{dt}`)
+  have **zero matching instances** anywhere in the current GCP fleet
+  (`gcloud compute instances list --filter="name~mtds-live-prediction OR name~prediction-live"` — 0 rows, checked
+  against the full unfiltered instance list too, which shows an active fleet of 20+ VMs for cefi/defi/features/etc., so
+  this isn't a listing-permissions gap). No Cloud Run service for prediction/kalshi/ polymarket exists either
+  (`gcloud run services list` — 16 services, none prediction-related). There is therefore no running process to pull
+  logs from — the producer isn't silently failing, it simply isn't running.
+- **What this is NOT**: not the `instruments-store-pred-prd-` vs `-prediction-` env-short/env-less split documented in
+  `prediction_live_clob_depth_capture_2026_07_24.md` (that's the UNIVERSE bucket a live runner reads to know what to
+  poll, a different bucket kind from the tick-data bucket checked here) — that mechanism was considered and excluded by
+  the same corroborating batch-data-flows-fine evidence above, but is flagged as a plausible root-cause angle for
+  whoever picks up the remediation follow-up (not this todo's scope).
+- **Remediation is explicitly out of scope for this todo** (read-only diagnosis only) — relaunching either live producer
+  is a follow-up todo for whoever owns the live-capture remediation, informed by this verdict.
