@@ -203,6 +203,17 @@ dead worker's task or process stranded.
   This corrects a live defect where four plan-worker roles declared `lifecycle: one_shot` were reaped per task via a
   static-role gate (`role_one_shot`); the gate now keys on dispatch context, and role-field reclassification is
   deferred.
+- **Persistence is now GATED on self-reported context, not unconditional**
+  (`ao_worker_context_lifecycle_gap_2026_07_25`, archived). The "same live session drains the next task" behavior above
+  holds ONLY while `context_used_pct < tuning.context_worker_compact_gate_pct` (default 70). All four dispatch-adjacent
+  routes — `/done`, `/progress`, `/boot`, `/heartbeat` — check this before calling `pick_next_task`; at/above threshold
+  the candidate task is left `queued` (untouched) and the response carries `directive="compact_before_next"`
+  (`/done`/`/boot`/`/heartbeat`) or `directive="compact_now"` (`/progress`) — a machine-checkable field (not prose) the
+  worker's boot-loop MUST act on (`unified-trading-pm/agents/worker.md`'s HARD RULE: run `/pre-compact` then `/compact`
+  before the next `/boot` call). This closed a live gap where a persistent session climbed to 100% context with zero
+  compaction across many back-to-back tasks — `worker_liveness_watchdog.py`'s `context_burn` anomaly trigger (Trigger 4)
+  independently backstops a session that ignores the directive (kills it once genuinely stuck, WIP-preserved first;
+  AutoSpawn respawns fresh — see worker-liveness.md).
 - **Account failover**: usage-cap / auth-failure evicts a slot off a dead/exhausted account onto a headroom account
   (resume-preserving where a `claude_session_id` exists). Health is a poller verdict, never a heartbeat inference. Full
   contract:

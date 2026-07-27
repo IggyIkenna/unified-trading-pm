@@ -20,7 +20,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [orchestrator, autospawn, incident, fleet-capacity, branch-quarantine, observability]
-related: [/plans/active/ao_worker_context_lifecycle_gap_2026_07_25.md, /plans/epics/orchestrator_master.md]
+related: [/plans/archive/2026_07/ao_worker_context_lifecycle_gap_2026_07_25.md, /plans/epics/orchestrator_master.md]
 created: "2026-07-25"
 last_updated: "2026-07-25"
 parent_epic: orchestrator_master
