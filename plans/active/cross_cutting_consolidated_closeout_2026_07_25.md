@@ -337,12 +337,15 @@ case-robust, and the one genuinely case-sensitive site,
 `mtds_retry_safe_default_audit_2026_07_14.md` (**NOT started** — was: "[IN FLIGHT 2026-07-25] … being closed now", which
 never happened: the doc still reads 5 open / 0 done and its last content commit is `unified-trading-pm@98090f60a`,
 2026-07-23, a corpus-wide reference-path migration. 5 small self-contained P3 residuals, genuinely still open and
-AO-eligible).
+AO-eligible) + `instruments_service_e2e_live_mock_observability_2026_07_27.md` (added 2026-07-27, found never-cited by
+the schema-expansion plan's Phase-2 verification pass — re-scoped from the never-completed Phases 5-7 of the archived
+2026-03 instruments-service E2E audit: live-mode 15-min clock alignment, mock-mode failure scenarios,
+observability/logging checks, all 0 done / fully open).
 
 **Close-out criterion**: ICE connector lands once credentialed; **the honest-coverage case-fix is VERIFIED landed
 (2026-07-25, evidence above) — this Track's one hard sequencing dependency on the CeFi cutover is DISCHARGED, no
 re-check needed before the cutover fires**; `instrument_record_schema_completeness`'s 6 todos closed;
-`mtds_retry_safe_default`'s 5 residuals closed.
+`mtds_retry_safe_default`'s 5 residuals closed; the E2E Phases 5-7 audit's 3 checks land.
 
 ## Track 10 — Cross-AG features/ML pipeline + fleet monitoring/health · P2
 
@@ -536,10 +539,17 @@ pointer, not duplicated, since Track 1 already references its `related:` graph i
 (promotes `pipeline_mode` to an on-disk hive partition across every asset group's next whole-corpus manifest walk) +
 [issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md](/plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md)
 (MTDS/MDPS live-pipeline persistence/hot-path architecture, log-spine decoupling — applies to the whole live pipeline,
-not one AG).
+not one AG) +
+[issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md](/plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md)
+(added 2026-07-27, retagged out of a `[cefi, cross-cutting]` Orthogonality-HARD-CHECK mistag — the specific verification
+VM happened to be a CeFi run, but the bug itself, `setup-data-pipeline-vm.sh`'s exec-dispatch never wired for a compound
+`VM_SERVICE` + neither MDPS's nor features-service's CLI supporting the launcher's per-asset-group premise, is
+asset-group-agnostic, applies to every AG's live launch).
 
 **Close-out criterion**: the hive-partition migration lands on the next scheduled whole-corpus walk (single-walk
-discipline applies — do not schedule a dedicated walk just for this); the hot-path decoupling design ships.
+discipline applies — do not schedule a dedicated walk just for this); the hot-path decoupling design ships; the
+live-launcher exec-dispatch gap gets real design work (two independent fixes needed: the compound-service run-command
+branch, and a shard/family-iteration mode neither service's CLI currently supports).
 
 ## Track 18 — Manifest-consolidator throughput + data-feed SLA/self-healing · P1/P2
 

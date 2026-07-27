@@ -11,7 +11,7 @@ summary: |
   this is a general prod-infra terraform-drift item, not a data-pipeline-hardening concern.
 status: open
 nature: process
-asset_group: [cross-cutting, infrastructure]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]

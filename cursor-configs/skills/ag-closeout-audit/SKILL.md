@@ -43,18 +43,25 @@ data-relevant epics this doc was scoped from (`infrastructure_master`'s data-rel
 `mtds_mdps_master`, `manifest_master`, `features_and_ml_master`) OR explicit membership in one of Tracks 16-24 (docs
 epic-scoped elsewhere but reclassified in by content — see that doc's own Progress Log).
 
-**`ao`/`ci`/`infra`**: **no dedicated `asset_group` value exists for these** — all 3 stay tagged
-`asset_group: cross-cutting` at the frontmatter level (introducing 3 new enum values was deliberately avoided to avoid a
-schema migration). Membership is instead ground-truthed by: (1) `parent_epic` as a strong prior (`ao` ≈
-`orchestrator_master` + `agent_operating_framework_master`; `ci`/`infra` split the CI/CD-vs-generic content inside
-`infrastructure_master` + `deployment_and_user_management_master` + `strategy_master` + `plan_hygiene_master`), (2) but
-the FINAL call is explicit membership in that tranche's own consolidated-closeout doc's Track/Sources lists, since the
-ci-vs-infra-vs-ao split needed actual per-doc content judgment, not a mechanical epic rule (see each doc's own Progress
-Log for the classification pass that produced it). **When auditing `ao`/`ci`/`infra`, do not attempt to re-derive
-membership from `asset_group` alone (it will just say `cross-cutting` for the whole corpus) — read the target tranche's
-own consolidated-closeout doc's Sources lists as the membership set, and treat a doc found in the
-`infrastructure_master`/`orchestrator_master`/etc. corpus that ISN'T listed in ANY of the 4 non-AG tranches's docs
-(cross-cutting/ao/ci/infra) as a genuine new orphan to triage into whichever tranche its content actually matches.**
+**`ao`/`ci`/`infra`**: **`ao`, `ci`, and `infrastructure` are now real dedicated `asset_group` enum values** (added
+2026-07-27, `unified-trading-pm@a97bc7bed` — `docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5, now 10
+values: `cefi · defi · tradfi · sports · prediction · cross-cutting · ao · ci · infrastructure · meta`). The
+2026-07-25→27 workaround this section used to describe (no dedicated value, ground-truth only via each tranche's Sources
+list) is RETIRED — a 2026-07-27 corpus-wide retag pass (`asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`)
+mechanically re-derived membership from all 4 non-AG tranches' closeout Sources lists and applied it to the frontmatter
+directly: 119 docs retagged (`asset_group: [cross-cutting]` → `[ao]`/`[ci]`/`[infrastructure]` as appropriate), verified
+via `check_ag_closeout_linkage.py` (0 orphans) and a re-run of the citation pre-filter (cross-cutting's never-cited rate
+dropped 92.5% → 3%). **`asset_group` containing `ao`/`ci`/`infrastructure` is now the PRIMARY membership signal for
+these 3 tranches** — use it exactly like the 5 real AGs (subject to the same Orthogonality HARD CHECK below).
+`parent_epic` (`ao` ≈ `orchestrator_master` + `agent_operating_framework_master`; `ci`/`infra` split the
+CI/CD-vs-generic content inside `infrastructure_master` + `deployment_and_user_management_master` + `strategy_master` +
+`plan_hygiene_master`) is now only a secondary hint for docs the tag doesn't yet cover — still relevant because the
+retag pass only covered docs that were bare-tagged `cross-cutting` at the time; a NEW doc authored after 2026-07-27 with
+a habitually-typed `cross-cutting` tag (old muscle memory) or a blank/mistagged `asset_group` needs the same
+content-judgment fallback the old workaround used: read that tranche's own consolidated-closeout doc's Track/Sources
+lists, or read the doc itself, before concluding it's out of scope. **Still do not fully trust `asset_group` alone
+without a linkage check** — `check_ag_closeout_linkage.py` remains the safety net for any doc the tag and the Sources
+lists disagree about.
 
 **`all` (the default with no argument)**: run the audit for all 9 tranches (parallel Agent dispatch, one per tranche, is
 the efficient path given the scale — see Phase 1) and aggregate one combined report: total orphan count per tranche, any
@@ -62,16 +69,22 @@ genuine new mistags found (feed back into the Orthogonality HARD CHECK below), a
 recommendations. **This is the mode a scheduled/cron AO invocation with no explicit tranche argument should resolve to —
 never fail or block asking "which tranche?"**.
 
-**Total-coverage gap, fixed 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #32,
-option A): this 9-tranche partition's stated value is total coverage of the plans/issues corpus, but
-`plans/PLAN_FORMAT.md:88` also declares `infrastructure` and `meta` as valid `asset_group` values — the 9 tranches above
-only ever sweep `cross-cutting` (+ the 5 AGs), so docs tagged `asset_group: infrastructure` or `asset_group: meta` were
-invisible to every tranche's membership rule regardless of `all` mode. Measured: sweeping those 2 additional values
-returns ~48 unlisted docs. **`all` mode (and any single-tranche run building its own membership set) MUST also sweep
-`asset_group: infrastructure` and `asset_group: meta`**, folding genuine hits into `ci`/`infra`/`ao` per their existing
-content-judgment membership rule above — do not silently skip them. `check_ag_closeout_linkage.py` does not catch this
-class either; a corpus-wide triage of the ~48-doc delta is tracked in
-`plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md`.
+**Total-coverage gap, fixed 2026-07-26, partially superseded 2026-07-27**: this 9-tranche partition's stated value is
+total coverage of the plans/issues corpus, but `plans/PLAN_FORMAT.md:88` also declares `infrastructure` and `meta` as
+valid `asset_group` values — the 9 tranches above originally only ever swept `cross-cutting` (+ the 5 AGs), so docs
+tagged `asset_group: infrastructure` or `asset_group: meta` were invisible to every tranche's membership rule regardless
+of `all` mode (measured: ~48 unlisted docs at the time). **`asset_group: infrastructure` is now a NON-issue** —
+`infrastructure` IS the `infra` tranche's real enum value as of 2026-07-27 (see the classification-mechanism section
+above), so Phase 0.3's standard inventory step already sweeps it directly; no separate fold-in sweep needed anymore.
+**`asset_group: meta` remains the one genuine gap** — `meta` has no dedicated tranche of its own (it was, and still is,
+a deliberately generic "spans everything / process-level" marker) — `all` mode (and any single-tranche run) MUST still
+sweep `asset_group: meta` and fold genuine hits into whichever of `ci`/`infra`/`ao`/`cross-cutting` its content actually
+matches. `check_ag_closeout_linkage.py` does not catch this class either; **the original ~48-doc delta was NOT touched
+by the 2026-07-27 retag** (that pass's population was bare-`[cross-cutting]` docs specifically — a doc already tagged
+`infrastructure`/`meta` was never in scope for it) — re-measured 2026-07-27: 59 docs carry `asset_group: infrastructure`
+and 65 carry `asset_group: meta` corpus-wide right now, still a real, still-open population. The corpus-wide triage is
+tracked in `plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` (still `status: open`, 2/4 todos
+done at last check).
 
 **This skill answers a forward-looking completeness question — it is NOT `/plan-reconcile`.** `/plan-reconcile` fixes
 what's already provably done (false-unchecked flips, contradiction resolution, archival) across the WHOLE corpus (or, as
@@ -195,20 +208,23 @@ For the target `<ag>`:
    `task_template.md` §4's finalize-plan-coverage rule — cross-check with
    `.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --workspace-root <root>` if convenient). Also
    check `plans/archive/2026_*/` for already-archived batches of this AG (their coverage is DONE, not a gap).
-3. **AG-primary doc inventory**: for the 5 real AGs + `cross-cutting`, enumerate every `plans/active/*.md` and
-   `plans/active/issues/*.md` whose frontmatter `asset_group` list contains `<ag>`. **For `ao`/`ci`/`infra`,
-   `asset_group` alone is USELESS** (all 3 stay tagged `asset_group: cross-cutting` — see the classification-mechanism
-   section above) — instead read that tranche's own `<ag>_consolidated_closeout_2026_07_25.md`'s Track/Sources lists as
-   the membership set directly (each Source link IS a member of the inventory; there is no separate filter step). For
-   the 5 AGs + cross-cutting, filter out docs whose `asset_group` also contains a genuinely DIFFERENT peer asset-group
-   marker (any of `cefi`/`defi`/`tradfi`/`quant`/`options`/`cross-cutting`, EXCLUDING `<ag>` itself and the
-   historically-confirmed same-work dual-tag `prediction` when auditing `sports` or vice versa — that pairing describes
-   the same betting-market work tagged two ways, not two different scopes) — these are the deterministic cross-cutting
-   candidates to exclude from the deep audit. This is a CANDIDATE filter only; the per-doc agent in Phase 1 re-checks
-   scope from real content (step 5 below), since asset_group tagging is not perfectly reliable. Further exclude docs
-   already `status: resolved`/`archived`/`superseded` — they're already closed, not orphans. **Orthogonality HARD CHECK
-   (added 2026-07-25 — a real corpus-quality bug, not a hypothetical)**: `cefi`/`defi`/ `tradfi`/`prediction`/`sports`
-   and `cross-cutting` are meant to be a MUTUALLY EXCLUSIVE partition — a doc belongs to exactly one specific AG, or is
+3. **AG-primary doc inventory**: for the 5 real AGs + `cross-cutting` + `ao`/`ci`/`infrastructure` (all 9 now have a
+   real dedicated `asset_group` value as of 2026-07-27 — see the classification-mechanism section above), enumerate
+   every `plans/active/*.md` and `plans/active/issues/*.md` whose frontmatter `asset_group` list contains `<ag>`
+   (`infra` reads as `infrastructure` here, matching the enum). Cross-check against that tranche's own
+   `<ag>_consolidated_closeout_2026_07_25.md`'s Track/Sources lists — the two should now largely agree post-retag; a doc
+   present in one but not the other is either a post-2026-07-27 addition never added to the Sources list (fix by adding
+   it there, per the 3-doc example already tracked in `asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`'s own
+   Phase 3), or a genuine new mistag worth fixing on sight. For the 5 AGs + cross-cutting, filter out docs whose
+   `asset_group` also contains a genuinely DIFFERENT peer asset-group marker (any of
+   `cefi`/`defi`/`tradfi`/`quant`/`options`/`cross-cutting`, EXCLUDING `<ag>` itself and the historically-confirmed
+   same-work dual-tag `prediction` when auditing `sports` or vice versa — that pairing describes the same betting-market
+   work tagged two ways, not two different scopes) — these are the deterministic cross-cutting candidates to exclude
+   from the deep audit. This is a CANDIDATE filter only; the per-doc agent in Phase 1 re-checks scope from real content
+   (step 5 below), since asset_group tagging is not perfectly reliable. Further exclude docs already
+   `status: resolved`/`archived`/`superseded` — they're already closed, not orphans. **Orthogonality HARD CHECK (added
+   2026-07-25 — a real corpus-quality bug, not a hypothetical)**: `cefi`/`defi`/ `tradfi`/`prediction`/`sports` and
+   `cross-cutting` are meant to be a MUTUALLY EXCLUSIVE partition — a doc belongs to exactly one specific AG, or is
    genuinely cross-AG, never both. A doc tagged with exactly ONE specific AG PLUS `cross-cutting` (e.g.
    `[cefi, cross-cutting]`) is a MISTAG, not a valid third category — and it is actively dangerous: per the exclusion
    rule above, such a doc gets excluded from `<ag>`'s own audit (cross-cutting reads as "a different peer marker") AND

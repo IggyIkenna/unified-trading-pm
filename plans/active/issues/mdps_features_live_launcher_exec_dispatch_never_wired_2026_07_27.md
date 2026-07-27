@@ -24,7 +24,7 @@ summary: >-
   design work on shard/family iteration lands.
 status: open
 nature: issue
-asset_group: [cefi, cross-cutting]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, market-data-processing-service, features-service]
 scope: [engineer, admin]
