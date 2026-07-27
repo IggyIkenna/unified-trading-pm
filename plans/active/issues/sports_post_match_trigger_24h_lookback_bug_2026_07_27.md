@@ -193,6 +193,23 @@ shared `horizon_hours` window would also inflate pre-match/discovery scan cost) 
 source-latency re-pin todo that discovered it (different repo focus, different testing surface, scoped fix vs.
 mechanical constant re-pin).
 
+## Q1 corroboration (worker slot 10, 2026-07-27) — independent second read, same verdict
+
+Cross-checked slot-8's verdict above with an independent manifest read + code trace before starting the fix todo below —
+same conclusion, plus two provenance details worth keeping on record:
+
+- Confirmed the `features_post_match` dead-code path structurally: it shares the exact same
+  `evaluate_post_match_triggers()` / `get_upcoming_fixtures()` fixture-list gate as `stats_delayed` in
+  `sports_trigger_scheduler.py` (no code path distinguishes the two triggers) — so the fix below must cover both, not
+  just `stats_delayed`.
+- Traced the source of `derived_features`' apparent recent activity to a specific manual entrypoint:
+  `features-service/scripts/vm/launch-features-sports-backfill-vm.sh`
+  (`python -m features_service.sports --tables ... --force`), consistent with slot-8's
+  `sports_consolidated_native_ao_extract_2026_07_25.md` Track F citation (the 2026-07-19 historical re-run) and Track
+  V's still-open "which launcher ran this" todo.
+- Confirmed no Tier-1/Tier-2 periodic entry exists for XG or derived_features either — `sports-trigger-tiers.yaml`'s
+  `discovery`/`reference` sections only dispatch `instruments-service` FIXTURES/STANDINGS/INJURIES/TRANSFERS/LEAGUES.
+
 ## Todos
 
 - [x] ✅ [DATA] P0. Answer Open Question 1 above: query the live sports manifest
@@ -205,7 +222,7 @@ mechanical constant re-pin).
       Question 1 — RESOLVED" above: CONFIRMED dead for XG (0/11,895 captured last 30d; all-time captures 100%
       `batch_understat`, one-shot 2026-07-13..22 backfill); derived_features not literally zero but ~8-day stale and
       tracking a shared batch job, not the live 26h window — consistent with `features_post_match` also never firing
-      live.
+      live. Independently corroborated by slot-10, see "Q1 corroboration" above.
 - [ ] [INFRA] P0. If Q1 confirms live capture is dead: design + ship a fix to
       `deployment_service/sports_trigger_state.py::get_upcoming_fixtures()` / `evaluate_post_match_triggers()` so
       post-match triggers with an offset beyond the current ~2h fixture-visibility cutoff can actually fire (see
