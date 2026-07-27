@@ -194,6 +194,31 @@ dispatch cycle.
 
 ---
 
+## Dead-worker resume-vs-requeue gate (`server/resume_lifecycle.py::classify_dead_worker`)
+
+Once a session is dead (killed above, or vanished on its own — `TmuxPruner` catches both), one more decision remains:
+does the slot's in-flight task get **resumed** (`claude --resume <session_id>`, same conversation, WIP intact) or
+**requeued** (fresh spawn, zero conversational context, WIP still preserved via the handoff path)?
+`classify_dead_worker` is the SSOT — resume iff ALL hold: a task is bound to the slot, a `claude_session_id` exists
+(resume target), the slot dir carries uncommitted WIP (a clean tree has nothing a resume would preserve that a fresh
+spawn loses), and `resume_attempts < resume_max_attempts`.
+
+**Context-saturation gate** (`ao_autospawn_role_blind…/gap-3`, 2026-07-14; threshold lowered
+`ao_worker_session_continuity_and_resume_threshold_2026_07_27`): a `--resume` reloads the SAME conversation, so resuming
+an already-(near-)saturated session just re-wedges it instantly. At/above `resume_fresh_context_pct` (**80**, lowered
+from 90 — operator-directed) the classifier returns `requeue` regardless of dirty WIP; the WIP files are still
+preserved, only the un-continuable conversation is dropped. Below that, resume proceeds — and if
+`context_used_pct >= resume_compact_first_context_pct` (also **80** as of the same change — this collapses the old 80–90
+"resume but tell the worker to compact first" band to zero width, so that middle path no longer fires; a resumed session
+is now always either clearly-fresh-enough-to-just-continue or saturated-enough-to-requeue-instead), `autospawn.py`'s
+resume nudge prefixes an explicit "run `/compact` first" instruction (`_do_spawn`, not the classifier itself).
+
+Since a session the context-burn trigger just killed is, by construction, at/above `context_burn_kill_min_pct` (98) —
+always well above even the lowered 80% — lowering `resume_fresh_context_pct` cannot regress the context-burn-kill →
+dead-worker → resume-classification chain: a context-burn kill is always followed by a requeue, never a resume.
+
+---
+
 ## Slack alert paths
 
 | Event                   | Alert                                                                                                | Severity                        |

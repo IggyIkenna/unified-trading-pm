@@ -84,19 +84,24 @@ source: >-
 
 ## Todos
 
-- [ ] [BACKEND] P1. Lower `resume_fresh_context_pct` default 90 -> 80 in `server/config.py` (`agent-orchestrator`),
+- [x] ✅ [BACKEND] P1. Lower `resume_fresh_context_pct` default 90 -> 80 in `server/config.py` (`agent-orchestrator`),
       mirroring the existing `Field(default=..., ge=1, le=100)` pattern on the same class. Add/ update a unit test
       asserting the new default. **Done when**: `get_config().tuning.resume_fresh_context_pct` resolves to 80 by default
-      in a passing test; `quality-gates.sh` green.
-- [ ] [BACKEND] P1. Add `plan_continuity_reset_enabled: bool = Field(default=False)` to `Tuning` in `server/config.py` —
-      feature-flagged OFF by default, mirroring the `context_burn_kill` precedent (a new fleet-wide dispatch-behavior
-      change ships gated, then gets an explicit operator flip once verified, rather than going live unreviewed). **Done
-      when**: default resolves to `False` in a passing test; `quality-gates.sh` green.
-- [ ] [BACKEND] P1. Extend `DoneResponse.directive` in `server/models/worker_api.py` from
+      in a passing test; `quality-gates.sh` green. — **`agent-orchestrator@998574b`.** Also updated 4 existing tests in
+      `test_task_lifecycle_done_gate_resume.py` whose premises assumed the old 90 default (one, `..._mid_context_...`,
+      exercised the now-collapsed resume_compact_first_context_pct..resume_fresh_context_pct band and was rewritten as
+      `test_classifier_below_fresh_cutoff_still_resumes`). `quality-gates.sh` green (1798 passed, 2 skipped).
+- [x] ✅ [BACKEND] P1. Add `plan_continuity_reset_enabled: bool = Field(default=False)` to `Tuning` in
+      `server/config.py` — feature-flagged OFF by default, mirroring the `context_burn_kill` precedent (a new fleet-wide
+      dispatch-behavior change ships gated, then gets an explicit operator flip once verified, rather than going live
+      unreviewed). **Done when**: default resolves to `False` in a passing test; `quality-gates.sh` green. —
+      **`agent-orchestrator@998574b`.** `test_plan_continuity_reset_enabled_default_is_false`.
+- [x] ✅ [BACKEND] P1. Extend `DoneResponse.directive` in `server/models/worker_api.py` from
       `Literal["compact_before_next"] | None` to `Literal["compact_before_next", "reset_before_next"] | None`. **Done
       when**: a model-level test asserts the new literal value validates and serializes; existing `compact_before_next`
-      tests unaffected.
-- [ ] [BACKEND] P0. Implement the plan-continuity reset check in `done_slot()` (`server/routes/slots_worker.py`),
+      tests unaffected. — **`agent-orchestrator@998574b`.**
+      `test_done_response_directive_field_accepts_reset_before_next`.
+- [x] ✅ [BACKEND] P0. Implement the plan-continuity reset check in `done_slot()` (`server/routes/slots_worker.py`),
       immediately after `pick_next_task` returns a real candidate (i.e. AFTER the existing context-pct gate, which takes
       priority and is unchanged). When `plan_continuity_reset_enabled` is `True` and the candidate task's `plan_ref`
       differs from the just-completed task's `plan_ref`, OR its `assigned_role` differs, OR its `repos` set differs: do
@@ -110,23 +115,50 @@ source: >-
       (default), behavior is byte-for-byte unchanged from today. **Done when**: a unit test asserts (a) flag off ->
       dispatches normally even across a plan/role/repo switch (today's behavior, unchanged); (b) flag on + same plan_ref
       -> dispatches normally in the same session; (c) flag on + different plan_ref (or role, or repos) -> withholds the
-      task (stays `queued`), fires the kill thread, returns `directive="reset_before_next"`; `quality-gates.sh` green.
-- [ ] [INFRA] P1. Update `unified-trading-pm/agents/worker.md`'s directive-field documentation to also cover
+      task (stays `queued`), fires the kill thread, returns `directive="reset_before_next"`; `quality-gates.sh` green. —
+      **`agent-orchestrator@998574b`.** Implemented as designed, PLUS: extended the trigger to also cover a different
+      `assigned_role` (matching the operator's actual answer — "different plan_ref OR different assigned_role/repos" —
+      not just plan_ref alone as this todo's own first sentence undersold). Split into 3 small module-level functions
+      (`_plan_switch_needs_reset`, `_plan_switch_reset_response`, `_maybe_plan_switch_reset`) rather than inlining —
+      `done_slot` was already sitting at the repo's C901 complexity ceiling (26) and the inline version pushed it to 27;
+      also had to extract the pre-existing account-rotation block into its own `_maybe_rotate_rate_limited_account`
+      helper to claim back enough headroom. 4 new tests (flag-off unchanged, same-plan dispatches normally, different
+      plan_ref resets, different role resets) in `test_task_lifecycle_done_gate_resume.py`. `quality-gates.sh` green.
+- [x] ✅ [INFRA] P1. Update `unified-trading-pm/agents/worker.md`'s directive-field documentation to also cover
       `reset_before_next` (alongside the existing `compact_before_next`/`compact_now`): the worker does not need to take
       any action itself (the server has already triggered the session teardown) — document it purely for observability,
       so an agent that reads a `reset_before_next` response is not confused into thinking it must self- compact. **Done
-      when**: worker.md documents both directive values in the same section; doc-lint passes.
-- [ ] [INFRA] P1. Update codex: add a note to `agent-orchestrator-single-vm-architecture.md`'s "Persistence is now
+      when**: worker.md documents both directive values in the same section; doc-lint passes. — Added a
+      `reset_before_next` paragraph to the PROGRESS section's HARD RULE block, a note on the DONE section's `next_task`
+      docs, and a `4c.` line in the boot-loop pseudocode — same 3-touchpoint pattern the parent plan's todo 5 used for
+      `compact_before_next`.
+- [x] ✅ [INFRA] P1. Update codex: add a note to `agent-orchestrator-single-vm-architecture.md`'s "Persistence is now
       GATED..." bullet (added by the parent plan's finalize) describing this SECOND, plan-continuity-based gate,
       feature-flagged and defaulting off; add the `resume_fresh_context_pct` mechanism (never previously documented) to
       `agent-orchestrator-worker-liveness.md` alongside the context-burn trigger row added by the parent finalize.
-      **Done when**: both docs describe the mechanism currently shipped in code, not aspirationally.
-- [ ] [REVIEW] P0. Run full `quality-gates.sh` on `agent-orchestrator` after all code todos land; commit + push via
-      quickmerge; flip every checkbox above in the SAME turn per the commit-push-flip HARD RULE.
+      **Done when**: both docs describe the mechanism currently shipped in code, not aspirationally. — Added a new
+      bullet to `agent-orchestrator-single-vm-architecture.md` right after the context-pct-gate bullet; added a new
+      "Dead-worker resume-vs-requeue gate" section to `agent-orchestrator-worker-liveness.md` covering
+      `classify_dead_worker`, `resume_fresh_context_pct`/`resume_compact_first_context_pct`, and the band-collapse side
+      effect, plus an explicit note that a context-burn kill can never regress into a resume (it's always well above
+      even the lowered threshold).
+- [x] ✅ [REVIEW] P0. Run full `quality-gates.sh` on `agent-orchestrator` after all code todos land; commit + push via
+      quickmerge; flip every checkbox above in the SAME turn per the commit-push-flip HARD RULE. —
+      **`agent-orchestrator@998574b`**, quickmerged to `live-defi-rollout`. Full suite: 1798 passed, 2 skipped; ruff +
+      basedpyright clean; dashboard tsc + vitest (154 tests) clean.
 - [ ] [OPERATOR] P1. **Decide whether to flip `plan_continuity_reset_enabled` to `True`** now that it's implemented,
       tested, and quickmerged — mirrors the `context_burn_kill` precedent (ship gated, flip on operator approval once
       verified). BLOCKED-OPERATOR-DECISION until answered; not auto-flipped by this plan.
 
 ## Progress Log
 
-(filled in as todos land — see commit history for exact SHAs)
+**2026-07-27 (interactive session, operator-directed, implemented in-session per the "implement now" execution-mode
+answer).** All 6 dispatchable todos landed in a single quickmerge, `agent-orchestrator@998574b`. Full detail in each
+todo's own evidence line above; summary: lowered `resume_fresh_context_pct` 90->80 (+ fixed 4 tests whose premises
+assumed the old default), added the feature-flagged `plan_continuity_reset_enabled` (default False), extended
+`DoneResponse.directive`, implemented the plan-continuity reset check in `done_slot` (extended to also trigger on
+`assigned_role` mismatch per the operator's actual answer, not just `plan_ref`), and updated both `worker.md` and two
+codex docs. `quality-gates.sh`: 1798 passed, 2 skipped, ruff + basedpyright clean, dashboard tsc/vitest clean.
+
+Only the `[OPERATOR]` todo (whether to flip `plan_continuity_reset_enabled` to `True`) remains — asked directly this
+session rather than left as a silent blocker.
