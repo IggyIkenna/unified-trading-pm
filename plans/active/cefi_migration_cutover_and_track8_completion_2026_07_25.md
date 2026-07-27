@@ -857,3 +857,34 @@ every todo executes an already-decided spec from the parent doc.
     `market-tick-data-service`, `deployment-service`, `deployment-api`) is `ahead=0` of `origin/live-defi-rollout` —
     nothing uncommitted or unpushed anywhere. The only untracked files present (`plans/audit/results/*_2026_06_28.*`)
     predate this session and are not mine — left untouched per the foreign-WIP rule.
+
+- **2026-07-27T~13:20Z (post-`/compact` resume) — fresh fleet check: 18/42 still RUNNING (5 more clean completions since
+  the pre-compact snapshot: `cs5-2d`, `cs6-3r`, `cs8-1e`, `cs9-3e` all `EXIT_STATUS=0`). One genuine casualty found and
+  fixed: `cs7-4d` exited `137` at 116,200/129,599 files (89.7% done) — its own command excluded `HYPERLIQUID:ASTER` but
+  **not `DERIBIT`**, and its date range (2024-01-25..2024-03-18) sits inside the DERIBIT dated-options OOM window
+  diagnosed earlier this session — this shard simply predates that fix being applied fleet-wide, not a new bug.
+  Relaunched as `canonical-migration-cefi-content-apply-055803-cs7-4d-r2` with
+  `MIGRATION_EXTRA_ARGS="--exclude-venues DERIBIT:HYPERLIQUID:ASTER"` (same playbook as the prior DERIBIT casualties);
+  confirmed RUNNING and past discovery (128,129 files, 54 days x 36 venue/pipeline_mode pairs) within ~4 min of launch.
+  **New operational finding surfaced while relaunching**: the launcher warned all 4 code tarballs
+  (`market-tick-data-service`/`unified-api-contracts`/`unified-trading-library`/`deployment-service`) were STALE
+  relative to repo HEAD — meaning every "floating"-pin VM launched since some earlier point (including this session's
+  own `market-tick-data-service@54817bc1` PROGRESS.json-checkpoint fix, landed 10:27 UTC) had been silently pulling
+  **pre-fix code** despite the source commit being pushed and green. Ran
+  `create-code-tarballs.sh --include market-tick-data-service --include unified-api-contracts --include unified-trading-library --include deployment-service`
+  to republish (completed ~12:19 UTC, manifests now point at current HEADs modulo normal concurrent-slot drift on
+  `unified-api-contracts`, which is expected multi-agent churn, not a gap). **Caveat honestly recorded**: `cs7-4d-r2`
+  itself likely still raced the republish and ran the pre-fix tarball anyway (its own run.log shows processing starting
+  ~12:17:30 UTC, before the 12:19:15 UTC republish completed) — this does NOT matter for correctness here since the
+  DERIBIT exclusion was passed as an explicit CLI flag on the command line (independent of which tarball SHA is
+  running), but it DOES mean this specific relaunch will NOT checkpoint to `PROGRESS.json` if it dies again; a future
+  relaunch of `cs7-4d-r2` itself would still replay from day one. Every VM launched from now on picks up the fresh
+  tarball. **Lesson**: a floating-tarball VM launch and a code republish are NOT ordered relative to each other —
+  launching a VM does not itself trigger a republish, so a source fix can sit merged-and-green for hours while every VM
+  in flight (and any new one launched before someone remembers to republish) keeps running the old code. **Not a novel
+  finding** — this is the SAME gap already tracked in
+  `/plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md` (two prior
+  independent hits the same day, features-service + sports-features-purge); added this occurrence as a corroborating
+  finding there and bumped its "default `LC_TARBALL_FRESHNESS=enforce`" todo P2→P1 given it's now a 3rd same-day hit,
+  rather than fix the default mid-campaign (not the right moment to flip a workspace-wide launch gate while other shards
+  are in flight).

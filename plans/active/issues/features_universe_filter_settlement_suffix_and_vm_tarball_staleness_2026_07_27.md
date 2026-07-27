@@ -109,6 +109,23 @@ Unblocked the actual VM relaunch in the meantime via `create-code-tarballs.sh --
 emergency-hotfix escape hatch), which worked correctly since the fix only needs to be present in the LOCAL checkout
 invoking the launcher, not committed.
 
+**Corroborating finding, 2026-07-27T~13:15Z (interactive session,
+`cefi_migration_cutover_and_track8_completion_2026_07_25.md` Script-1 fleet monitoring)**: a THIRD independent hit of
+the same root gap, this time on `launch-canonical-migration-vm.sh` itself (the launcher already named in this doc's
+`_fresh_repos` finding above). Relaunching an OOM-killed shard (`cs7-4d` → `cs7-4d-r2`) surfaced the warn-only staleness
+check flagging all 4 of `market-tick-data-service`/`unified-api-contracts`/`unified-trading-library`/
+`deployment-service` as stale — including `market-tick-data-service`, whose tarball predated a same-day fix
+(`market-tick-data-service@54817bc1`, the PROGRESS.json-checkpoint fix, landed 10:27 UTC) by hours. Ran
+`create-code-tarballs.sh --include <4 repos>` to republish (no `--force`/dirty-checkout needed this time, tree was
+clean) — but the relaunch had ALREADY started processing (~12:17:30 UTC) before the republish finished (~12:19:15 UTC),
+so this specific VM likely still ran pre-fix code despite the republish "succeeding" moments too late. Three independent
+occurrences of this same gap in one day (features-service, sports-features-purge, canonical-migration), across three
+different slots/sessions, each discovered only because someone happened to notice the warning — this is a real,
+recurring, cross-repo tax, not a one-off. Bumping the "default to enforce" todo below to P1 on that basis; did not
+action the enforce-default change itself from this session (mid a live P0 migration campaign — not the right moment to
+flip a workspace-wide default that could newly block other in-flight launches without a chance to verify blast radius
+first).
+
 ## Todos
 
 - [ ] [DATA] P2. Land the stashed `_fresh_repos` fix for the `sports-features-purge` category in
@@ -116,7 +133,8 @@ invoking the launcher, not committed.
       `orchestrator-slot-10-sports-features-purge-tarball-freshness-fix-2026-07-27`, `.tabs/10/` worktree) via a normal
       QG + quickmerge cycle once host load is calm — `git stash pop`, verify `bash -n`, ship. Small, already-verified,
       no design work needed.
-- [ ] [DATA] P2. Consider defaulting `LC_TARBALL_FRESHNESS=enforce` (or auto-rebuilding the affected repo's tarball) as
+- [ ] [DATA] P1 (bumped from P2, 2026-07-27T~13:15Z — 3rd independent occurrence same day, see corroborating finding
+      above). Consider defaulting `LC_TARBALL_FRESHNESS=enforce` (or auto-rebuilding the affected repo's tarball) as
       part of the quickmerge/promote pipeline for any repo with a VM-based e2e-check skill, so a fresh push is never
       silently invisible to the next VM launch. Scope: `deployment-service/scripts/vm/lib/launcher_common.sh`,
       `create-code-tarballs.sh`, and whichever CI hook (if any) should trigger the rebuild.
