@@ -117,10 +117,24 @@ instruments-service@`b99e586` (tested no-key enumeration).
       check-in should verify**: (a) no 3rd interruption recurs, (b) forward progress via `run.log` chunk/entry counts
       climbing (never mere `RUNNING` status), (c) eventual `DEPLOYMENT_COMPLETED exit_code=0` per VM as the real
       completion signal for this todo.
-- [ ] [INFRA] P1. **Follow-up check** on the `cefi-{hyperliquid,aster}-*-20260727-022558` fleet (7 VMs, 365-day/venue-
-      year historical backfill): ground-truth via `run.log` (never bare VM status) that all 7 reached
-      `DEPLOYMENT_COMPLETED exit_code=0`, OR — if a 3rd interruption recurs — escalate to the operator per the
-      recurring-kill pattern already flagged above rather than relaunching again unilaterally.
+- [x] ✅ [INFRA] P1. **3rd interruption CONFIRMED + RESOLVED (2026-07-27, slot-12, BLK-0545be2d).** Ground-truthed via
+      `run.log` (never bare VM status) + `gcloud compute operations list`: all 7 `...-20260727-022558` VMs were
+      mass-preempted (`compute.instances.preempted`) within a 10-second window at 2026-07-26T22:30:54-22:31:04 PDT
+      (=2026-07-27 05:30-05:31 UTC) — confirmed independently by every VM's `run.log` tail stopping dead at that exact
+      timestamp, ~1h35m into genuinely healthy running (real chunk-progress + manifest-shard writes per slot-7's prior
+      check). Zero VMs running afterward, no auto-recovery relaunch, no `DEPLOYMENT_COMPLETED` in any log. This is the
+      exact 3rd-interruption case flagged above — escalated per instruction rather than relaunching unilaterally.
+      **Operator-approved resolution (Option A + guardrails)**: 3 genuine SPOT preemptions in one day in
+      `asia-northeast1-c` = real capacity pressure, not a launcher/cost-guard bug (ruling out re-investigation) —
+      switched to the SPOT-default HARD RULE's own sanctioned opt-out. **Relaunched with `ON_DEMAND=true`**
+      (non-preemptible, idempotent non-force so it resumes from `PROGRESS.json` — zero data loss, on-demand cost bounded
+      to remaining chunks only):
+      `VENUES="HYPERLIQUID ASTER" ON_DEMAND=true bash     scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`, new
+      run-id `20260727-071055`. Guardrails followed: (1) verified zero fleet VMs running before launch: (2) non-force
+      idempotent path: (3) `ON_DEMAND=true`: (4) verified STARTED — all 7 `STAGING`, `PROVISIONING_MODEL=STANDARD`
+      (non-preemptible) within T+60s; (5) HL/ASTER are non-Tardis, no 1-VM cap applies. **Next check-in should verify**
+      (T+10min+): `run.log` chunk-progress climbing on the new run-id, and eventual `DEPLOYMENT_COMPLETED exit_code=0`
+      per VM as the real completion signal.
 - [x] ✅ [DEPLOY] P1. Redeployed the IS fixes — built `instruments-service:latest`=7489ed1/0.43.0 from LDR (no-auth
       b99e586 + full-universe 0fe8e71 + dated-future quote fix 7489ed1) via Cloud Build d215d55a (SUCCESS); created the
       missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00 IS scheduler).
