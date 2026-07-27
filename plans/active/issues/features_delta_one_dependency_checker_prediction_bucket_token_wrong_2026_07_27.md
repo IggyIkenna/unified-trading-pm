@@ -108,17 +108,27 @@ question.
 
 ## Recommended fix path
 
-- [ ] [SCRIPT] P2. Route `features_service/delta_one/app/core/dependency_checker.py`'s `market-data-tick` bucket
-      resolution through a canonical resolver (mirroring the already-shipped output-side fix via
-      `get_output_bucket()`/`cloud-providers.yaml`) instead of the raw `bucket_template.format(asset_group_lower=...)`
-      approach — so the `pred` abbreviation (and any other asset_group-specific bucket-token exceptions) resolve
-      correctly without a hand-maintained per-family template string. Add a regression test asserting
-      `asset_group="PREDICTION"` resolves to a bucket containing `pred` (not `prediction`), mirroring whatever test
-      already exists for the output-side fix.
-- [ ] [SCRIPT] P3. Investigate and resolve the `UPSTREAM_DEPS` (non-test) `bucket_template`'s apparent missing `-prd-`
-      segment (`"market-data-tick-{asset_group_lower}-{project_id}"`) against the observed-correct TRADFI path
-      (`market-data-tick-tradfi-prd-...`) — determine whether this exact template/class is actually invoked for
-      non-test-mode delta_one runs, or a different resolution path is in play; fix whichever is found to be wrong.
+- [x] [SCRIPT] P2. ✅ Route `features_service/delta_one/app/core/dependency_checker.py`'s `market-data-tick` bucket
+      resolution through a canonical resolver — `features-service@bba7de58`. Not quite the originally-guessed shape (a
+      simple `resolve_bucket_name(kind="market-data", asset_group=...)` swap): PREDICTION resolves via a **dedicated
+      FLAT yaml kind** (`market-data-tick-prediction`), not an entry in the per-asset_group `market-data` dict
+      (CEFI/DEFI/TRADFI/SPORTS only) — that call raises `BucketNamingError` for `asset_group="prediction"` rather than
+      silently resolving wrong. Fixed by mirroring the IDENTICAL, already-shipped fix in
+      `execution-service/execution_service/utils/dependency_checker.py` (`resolve_kind_prediction` special-case, lines
+      ~223-230/387-391 there): added a `_resolve_mdps_bucket(asset_group_lower)` static helper that branches on
+      `asset_group_lower == "prediction"` → `resolve_bucket_name(kind="market-data-tick-prediction")` (no
+      `asset_group=`), else → `resolve_bucket_name(kind="market-data", asset_group=...)`. Used by both
+      `_resolve_gcs_path` and `_mdps_manifest_capture_status`. 2 new regression tests added to
+      `tests/delta_one/unit/test_dependency_checker_manifest_aware.py` (asserts the exact `resolve_bucket_name` call
+      args for both the PREDICTION and non-PREDICTION branches) — 7/7 tests passing.
+- [x] [SCRIPT] P3. ✅ Resolved as a side effect of the P2 fix above, not separately: the `UPSTREAM_DEPS` (non-test)
+      `bucket_template`'s missing `-prd-` segment is a fallback ONLY reached when `resolve_bucket_name` raises inside
+      the base class's `_resolve_gcs_path`/`_check_single_dependency` — which is now exactly what used to happen for
+      PREDICTION (the raise) and never happens for the other 4 asset_groups (their `resolve_bucket_name` call already
+      succeeded pre-fix, which is why TRADFI's dependency-check error correctly showed the full `-prd-` path). With
+      PREDICTION now resolving successfully too, the buggy hardcoded fallback template is never exercised in
+      non-test-mode for ANY asset_group — confirming the original "different resolution path" hypothesis was right, just
+      not the fallback template itself being wrong in a way that mattered at runtime.
 - [ ] [DATA] P3. Once the bucket-naming bug is fixed, re-run
       `/data-pipeline-check-features --family delta_one     --asset-group PREDICTION` for a day within the now-resumed
       candle-production window (≥2026-07-25) to get a genuine benchmark measurement — day=2026-07-19 (used this session)

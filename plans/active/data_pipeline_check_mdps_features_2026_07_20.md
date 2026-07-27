@@ -781,5 +781,12 @@ TRADFI/DEFI/PREDICTION this session, they would very likely just re-hit the same
 
 - [ ] [DATA] P2. Re-test `TRADFI:volatility`/`TRADFI:commodity` once their respective upstream gaps close (raw
       options/futures tick backfill; Baker Hughes vendor fix) to get genuine benchmark measurements.
-- [ ] [SCRIPT] P2. See `issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` — fix
-      the PREDICTION bucket-token bug before any further PREDICTION:delta_one testing.
+- [x] [SCRIPT] P2. ✅ See `issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` —
+      fixed the PREDICTION bucket-token bug (`features-service@bba7de58`). Root cause was bigger than initially scoped:
+      PREDICTION resolves via a dedicated FLAT yaml kind (`market-data-tick-prediction`), not an entry in the
+      per-asset_group `market-data` dict — `resolve_bucket_name(kind="market-data", asset_group="prediction")` raises
+      `BucketNamingError` rather than silently resolving wrong. Fixed by mirroring the identical, already-shipped fix in
+      `execution-service/execution_service/utils/dependency_checker.py` (special-case PREDICTION to the flat kind, no
+      `asset_group=`); added a new `_resolve_mdps_bucket` helper used by both `_resolve_gcs_path` and
+      `_mdps_manifest_capture_status`; 2 new regression tests (7/7 passing). Day=2026-07-19 still can't be re-tested
+      (falls inside the ~6-month PREDICTION MDPS candle production gap) — needs a day ≥2026-07-25 per the issue doc.
