@@ -112,6 +112,37 @@ worktree reflog or re-derive from this doc.)
       strict-quickmerge pre-push hook. This enhancement is a dependency of the sports derived-features residue purge
       todo (the follow-up purge reads the stable census-manifest GCS path this commit writes).
 
+### Second wave — CONFIRMED RECURRENCE at the ~23:50Z reap (main agt-4d8de7, 2026-07-27T23:54Z)
+
+The bug fired again on two more slots, and this time main directly CONFIRMED the orphaning mechanism from the live
+reflog (not inferred) — proof the runtime respawn / orphan-wip-inheritance path does NOT recover a committed-ahead code
+commit; it resets the branch to origin and drops it:
+
+- **slot-13 `d1c1ad8a`** (features-service CODE,
+  `fix(delta_one): wire per-venue accepted-quote extension into universe filter` + test) — **CONFIRMED ORPHANED.**
+  `git merge-base --is-ancestor d1c1ad8a origin/live-defi-rollout` → NO (not on origin). Worktree HEAD is now `a9429cba`
+  (== origin). Reflog: `d1c1ad8a HEAD@{2}: commit …` → `a9429cba HEAD@{1}: branch: Reset to origin/live-defi-rollout` →
+  drops it. DISTINCT, later commit from the `207afd62` above (slot-13 did multiple pieces of work across the session,
+  each orphaned in a successive reap). Backstop patch:
+  `.orch-orphan-commits-recovery/slot13_d1c1ad8a_features-service.patch`.
+- **slot-11 `ffc02a8c`** (market-tick-data-service CODE,
+  `fix(sports): add consecutive-non-422-failure counter to odds_api_adapter fetch loop` +
+  `test_odds_api_consecutive_failures.py`) — dead (worker_alive=false, tmux_alive=false, last_ping 23:50:08Z),
+  `ahead=1`, drift_violation=true. Same mechanism will orphan it next. Backstop patch:
+  `.orch-orphan-commits-recovery/slot11_ffc02a8c_market-tick-data-service.patch` (content == the earlier `0a822e98`
+  patch; sha changed under an ff-pull rebase). Flagged by the review role (msg 2450).
+
+- [ ] [WORKER] P1. Recover the two second-wave orphaned CODE commits above (slot-13 `d1c1ad8a`, slot-11 `ffc02a8c`):
+      cherry-pick each from its `.tabs/<n>/<repo>` reflog (or apply the saved backstop patch) onto current
+      `origin/live-defi-rollout`, then SHIP VIA QUICKMERGE (`--agent --files <the named file(s)>`). Both are clean +
+      complete + test-backed (review-verified). Code MUST go through quickmerge (QG + provenance trailer).
+
+> **⚠️ DISPATCH GAP (main, 2026-07-27T23:54Z):** these `[WORKER]` recovery todos live in an `assigned_vm: NA` issue doc,
+> so they are NOT auto-dispatched to any worker — they will rot unless (a) migrated into a dispatched plan
+> (`assigned_vm: planning`), (b) a worker is explicitly routed to them, or (c) main is authorized to run the quickmerge
+> recovery directly. Content is not lost yet (backstop patches host-local on `ip-172-31-5-118` + 90d reflog), but this
+> is why the first-wave `207afd62` todo has also sat unrecovered. Escalated to operator for routing.
+
 ## Investigation (root cause)
 
 - [ ] [OPERATOR] P1. Identify WHAT emits `branch: Reset to origin/live-defi-rollout` on a worktree that carries an
