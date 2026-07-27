@@ -239,6 +239,36 @@ write a manifest row of any kind — not even `attempted_failed`).
    directly than relying on the sentinel's later reconciliation pass. Low priority given the existing mitigation. (repo:
    market-tick-data-service)
 
+## Todos
+
+> Converted from the 3 prose items above (`plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md` todo 4,
+> step 1) — `regen_backlog_from_plan.py` derives backlog tasks from `- [ ]` checkboxes, so prose-only next-steps were
+> structurally invisible to dispatch. Text preserved verbatim from the numbered items above.
+
+- [ ] [OPERATOR] P0. Confirm deploy + decide on backfill. Confirm the fix (`market-tick-data-service@410d7569`) has
+      reached the production `uts-prod-market-tick-data-service-fast-t1-recon` image (check `gcloud run jobs describe`
+      image digest / trigger a redeploy if the standard promote pipeline hasn't picked it up yet), then confirm the
+      `DATA_NOT_AVAILABLE` error stops appearing in fresh executions. Separately: decide whether the ~1-month gap
+      (2026-06-25…2026-07-25, all leagues) should be backfilled via the Odds-API historical endpoint (credits-cost /
+      priority tradeoff — an operator call, not a worker one). **DEPLOY half already satisfied** per the 🟡
+      CORRECTED-IN-PART banner above: the image tagged `f6ea001`/`410d756` (built 2026-07-26T01:10-01:29Z, ~18 min
+      after the fix pushed to `live-defi-rollout` at 00:52Z) was directly log-inspected running in production with
+      zero `DATA_NOT_AVAILABLE` errors — deploy is CONFIRMED, not inferred. Only the backfill fork remains (per the
+      banner's revised framing: (1) the 2026-06-27…2026-07-15 true dormancy, ~19 days genuinely zero data, and (2)
+      the 2026-07-16…2026-07-25 lost-granularity window, where daily coverage exists but collapsed into one late
+      T+1 snapshot instead of the 8-point pre-match horizon grid) — both operator credits/priority calls, not worker
+      ones.
+- [ ] [DATA] P1. Verify DeFi's same-day capture was/wasn't also blocked, once
+      `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator is confirmed healthy (see the
+      ManifestConsolidatorStaleError above — this itself may need its own issue doc if it's still stale; worker
+      should check current state first, not assume it's still down). Compare a recent 10-day window against a
+      10-day window before that, same method as this doc's § (c). (repo: market-tick-data-service)
+- [ ] [DATA] P3. Harden `odds_api_adapter.py`'s `_run_league_fetch_loop` with an explicit consecutive-non-422-failure
+      counter (defense-in-depth for the mechanism in § (a) above) — even though the independent sentinel safeguard
+      currently mitigates the worst outcome, a same-session failure counter would surface the condition faster and
+      more directly than relying on the sentinel's later reconciliation pass. Low priority given the existing
+      mitigation. (repo: market-tick-data-service)
+
 ## Verdict (per the dispatching todo's done-when)
 
 **Root cause found — DIFFERENT mechanism than the 2022 outage, and it IS/WAS still live**: not the
