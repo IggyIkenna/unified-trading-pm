@@ -146,9 +146,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 1,
+        "coverage_pct": null,
         "warn_file_count": 0,
-        "coverage_pct": 81.47,
+        "large_file_count": 1,
         "qg_red_reason": null
       }
     },
@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "warn_file_count": 4,
+        "coverage_pct": null,
         "large_file_count": 0,
-        "coverage_pct": 74.71,
-        "qg_red_reason": null,
-        "warn_file_count": 4
+        "qg_red_reason": null
       }
     },
     "deployment-api": {
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 6,
-        "qg_red_reason": null,
         "warn_file_count": 15,
-        "coverage_pct": 82.55
+        "coverage_pct": null,
+        "large_file_count": 6,
+        "qg_red_reason": null
       }
     },
     "deployment-service": {
@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 3,
-        "qg_red_reason": null,
         "warn_file_count": 10,
-        "coverage_pct": 73.12
+        "coverage_pct": null,
+        "large_file_count": 3,
+        "qg_red_reason": null
       }
     },
     "execution-service": {
@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "warn_file_count": 20,
+        "coverage_pct": null,
         "large_file_count": 0,
-        "coverage_pct": 84.45,
-        "qg_red_reason": null,
-        "warn_file_count": 20
+        "qg_red_reason": null
       }
     },
     "features-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 9,
         "large_file_count": 8,
-        "coverage_pct": 90.91,
-        "qg_red_reason": null,
-        "warn_file_count": 9
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "warn_file_count": 6,
+        "coverage_pct": 89.65,
         "large_file_count": 5,
-        "coverage_pct": 89.64,
-        "qg_red_reason": null,
-        "warn_file_count": 6
+        "qg_red_reason": null
       }
     },
     "market-tick-data-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 83.62,
+        "warn_file_count": 41,
         "large_file_count": 0,
-        "coverage_pct": 83.61,
-        "qg_red_reason": null,
-        "warn_file_count": 41
+        "qg_red_reason": null
       }
     },
     "ml-service": {
@@ -1103,10 +1103,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 0,
         "large_file_count": 0,
-        "coverage_pct": 9.54,
-        "qg_red_reason": null,
-        "warn_file_count": 0
+        "qg_red_reason": null
       }
     },
     "trading-agent-service": {
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "warn_file_count": 22,
+        "coverage_pct": null,
         "large_file_count": 7,
-        "coverage_pct": 88.86,
-        "qg_red_reason": null,
-        "warn_file_count": 22
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
@@ -2005,7 +2005,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2190,8 +2190,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.73.1.dev1+g17897cbb9",
-      "published_at": "2026-07-27T04:12:03Z",
+      "version": "0.73.1.dev2+g7e1d5d15d",
+      "published_at": "2026-07-27T05:49:58Z",
       "registry": "artifact-registry"
     }
   }
