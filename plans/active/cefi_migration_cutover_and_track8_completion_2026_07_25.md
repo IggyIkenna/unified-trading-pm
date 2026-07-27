@@ -721,3 +721,14 @@ every todo executes an already-decided spec from the parent doc.
   class first** (check the shard's date range for a >1GB `DERIBIT/perpetual/trades` file before assuming a new/different
   cause) and fixed by adding `DERIBIT` to that relaunch's `--exclude-venues`, `--workers` back to 24 (no need to reduce
   it — that lever doesn't help this failure mode).
+- **2026-07-27T07:05Z — same check-in, continued: 2nd genuine completion + 1 more DERIBIT-landmine OOM confirmed +
+  fixed, playbook holding.** `cs10-10d` finished cleanly (`EXIT_STATUS=0`, 15,920/15,920 files, 550 patched, 300,876
+  rows changed via `catalogue_marker_peel`, `STOP-ON-SURPRISE` bounds ok, 0 errors) — the 2nd real completion alongside
+  `cs1-1r`. Separately, `cs9-3r` (one of the wave-1 `--workers 24` recoveries) also came back `EXIT_STATUS=137` —
+  checked its date range (2025-05-02..2025-06-15) BEFORE assuming a new cause, per the standing instruction, and found
+  the exact same signature: a 2.33GB `DERIBIT/perpetual/trades/XRP_USDC-23MAY25-3D1-C.parquet` (day=2025-05-15) —
+  confirms the DERIBIT-landmine class is real and recurring, not a one-off. Relaunched immediately per the now-known
+  playbook: `cs9-3e`, `--exclude-venues HYPERLIQUID:ASTER:DERIBIT`, `--workers 24`, `e2-standard-16`, `ON_DEMAND` — no
+  fresh diagnosis needed this time, the playbook just worked. **Fleet at 07:08Z**: 41 RUNNING, 8 total `EXIT_STATUS`
+  objects seen so far (2 genuine `=0`, 6 `=137` OOM — all 6 OOM shards now relaunched with DERIBIT excluded), 0 new SPOT
+  preemptions. Continuing to poll at sensible intervals.
