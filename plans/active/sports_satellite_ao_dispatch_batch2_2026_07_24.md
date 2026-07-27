@@ -243,7 +243,12 @@ source: >-
       this check-in. Log path for future checks:
       `gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260727-064958/run.log` (note: NOT
       `central-element-323112-vm-logs` — that bucket doesn't exist; the real vm-logs prefix lives under
-      `deployment-scripts-central-element-323112`).
+      `deployment-scripts-central-element-323112`). **Check-in 2026-07-27T17:17Z (slot 12, data_engineering)**:
+      re-verified from scratch (per prior note's instruction, not trusting the stale "still running"). All 3
+      corroborating signals fresh and consistent: VM `af-backfill-20260727-064958` status=RUNNING; `run.log` tail shows
+      `last_completed_date=2023-03-10 monotonic=true` at 17:13:29Z; per-VM manifest shard mtime=17:17:03Z (essentially
+      real-time write). No OOM/error lines, no preemption. No relaunch needed. No further action this check-in — next
+      slot should still re-verify from scratch rather than trust this note.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
