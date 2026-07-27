@@ -523,16 +523,20 @@ def extract_brokers() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
 
 
 def extract_data_sources() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
-    """SOURCE_PRIORITY + Transport + default_transport_for_source.
+    """SOURCE_PRIORITY + Transport + default_transport_for_source + SOURCE_MODE_CAPABILITY.
 
-    Where the full batch/live/replay matrix per source is not encoded in UAC
-    (it lives in the manual source-mode-capability-matrix audit), emit a
-    ``missing_registry`` gap edge rather than parsing the markdown.
+    The batch/live/replay matrix per source is now codified in UAC
+    (``SOURCE_MODE_CAPABILITY`` — the ratified ``source_mode_capability_matrix_2026_06_07.md``
+    rows, transcribed 2026-06 for the M2 reconciliation code). A source PRESENT in that
+    registry gets a real ``available``/``not_available`` verdict per mode (an honest
+    negative, not a gap); a source ABSENT from it (not yet ratified) still emits the
+    ``missing_registry`` gap for its non-batch modes — batch is the universal floor.
     """
-    # Transport + default_transport_for_source are re-exported at the UAC root
-    # facade; SOURCE_PRIORITY is surfaced via the registry sub-facade (NOT the
-    # canonical.* deep path the import-surface gate blocks).
+    # Transport + default_transport_for_source + SOURCE_MODE_CAPABILITY are re-exported
+    # at the UAC root facade; SOURCE_PRIORITY is surfaced via the registry sub-facade
+    # (NOT the canonical.* deep path the import-surface gate blocks).
     from unified_api_contracts import (
+        SOURCE_MODE_CAPABILITY,
         Transport,
         default_transport_for_source,
     )
@@ -587,8 +591,10 @@ def extract_data_sources() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
                         reason=f"default transport for {src}",
                     )
                 )
-        # batch mode is the baseline; live/replay per-source capability is the
-        # manual audit not yet codified in UAC → typed gap.
+        # batch mode is the baseline for every source. Non-batch modes resolve
+        # against SOURCE_MODE_CAPABILITY when the source is ratified there;
+        # unratified sources still fall back to the missing_registry gap.
+        ratified_modes = SOURCE_MODE_CAPABILITY.get(src)
         for mode in modes:
             # noqa: L2-mode-seam — this is manifest GRAPH-BUILD over pipeline-mode
             # vocabulary strings, not CLI batch/live execution routing.
@@ -602,6 +608,20 @@ def extract_data_sources() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
                         reason="batch is the baseline mode for every source",
                     )
                 )
+            elif ratified_modes is not None:
+                supported = mode in {m.value for m in ratified_modes}
+                edges.append(
+                    CapabilityEdge(
+                        from_node_id=sid,
+                        to_node_id=sid,
+                        relation=f"{REL_SUPPORTS_MODE}:{mode}",
+                        status=CapabilityEdgeStatus.AVAILABLE if supported else CapabilityEdgeStatus.NOT_AVAILABLE,
+                        reason=(
+                            f"SOURCE_MODE_CAPABILITY[{src}] "
+                            f"{'includes' if supported else 'does not include'} {mode}"
+                        ),
+                    )
+                )
             else:
                 edges.append(
                     CapabilityEdge(
@@ -610,10 +630,7 @@ def extract_data_sources() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
                         relation=f"{REL_SUPPORTS_MODE}:{mode}",
                         status=CapabilityEdgeStatus.NOT_REGISTERED,
                         gap_type=CapabilityGapType.MISSING_REGISTRY,
-                        reason=(
-                            f"{mode}-mode capability for {src} lives in the manual "
-                            "source-mode-capability-matrix audit, not yet codified in a UAC registry"
-                        ),
+                        reason=(f"{src} is not yet ratified in SOURCE_MODE_CAPABILITY"),
                     )
                 )
 

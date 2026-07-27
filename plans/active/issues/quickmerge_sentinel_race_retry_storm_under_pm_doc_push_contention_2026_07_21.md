@@ -107,3 +107,36 @@ PM-doc-push queue, still open, only if 1+2 don't suffice)** remain unimplemented
 fix (skip the full multi-minute regate entirely when the only tree delta since the last green gate is remote doc/plan
 commits that don't touch this slot's own staged files) — deliberately deferred rather than rushed, per this doc's own
 instruction not to dispatch a change to `quickmerge.sh` blind.
+
+# Further observation (2026-07-27, slot 2) — the re-observe this doc asked for, plus a STAGE-5-specific gap
+
+Slot 2 hit this same shape while shipping a small, always-green-since-attempt-1 2-file change
+(`capability_wizard_gap_discovery-005`, `scripts/openapi/_capability_extract.py` +1 new test file) on
+`unified-trading-pm`: **15 consecutive QG->quickmerge attempts over ~3+ hours** under sustained heavy fleet contention
+(commits landing on `live-defi-rollout` roughly every 60-90s throughout). This is the "re-observe under similarly heavy
+contention" data point fix-2 was waiting on:
+
+- **Fix 2 (STAGE 3 bounded retry) confirmed working as designed**: observed it self-heal a lost sentinel race within a
+  single `quickmerge.sh` invocation — `_qm_check_agent_sentinel` failed, the loop slept, re-pulled, and re-ran
+  `quality-gates.sh --no-fix` once, which then verified clean and proceeded past STAGE 3. No 27x-style storm within
+  STAGE 3 itself was observed this session; the bound is doing its job.
+- **New gap: STAGE 5 has no equivalent retry.** STAGE 5's `check-branch-drift` pre-commit hook (run inside `git commit`)
+  is a SEPARATE check from the STAGE 3 sentinel, and has no retry/backoff loop — a loss there hard-fails the whole
+  `quickmerge.sh` invocation (`❌ Commit failed (pre-commit may have failed)`), forcing the caller to re-run the ENTIRE
+  script from scratch, including a fresh multi-minute STAGE 3 QG pass. Observed directly: a STAGE 3 re-gate (fix-2's own
+  retry, ~5-10 min) bought enough wall-clock for 1-2 *more* commits to land, which STAGE 5's non-retried check then
+  caught immediately afterward — i.e. **fix-2 winning its own race can still hand a freshly-stale tree to STAGE 5**,
+  which has no mechanism to absorb it. This is a distinct failure point from the one this doc originally documented
+  (that was STAGE 3 losing repeatedly; this is STAGE 3 *winning* and STAGE 5 losing anyway).
+- Net effect matches this doc's thesis exactly: every attempt this session was a real, correctly-behaving safety check
+  (never a bug in the shipped diff — confirmed via `git stash` clean-tree comparison during the same session) losing a
+  race against a hot branch, at a wall-clock cost of ~10-20 min per full retry cycle.
+
+**Suggests widening fix 1's scope** (or a small fix-4): the content-hash/green-tree fast-path this doc already proposes
+for STAGE 3 would, if it also covered the STAGE-3-to-STAGE-5 gap (i.e. STAGE 5 trusts a STAGE-3 sentinel that just
+verified moments ago, rather than re-deriving drift from scratch via its own independent pre-commit hook), close this
+specific gap too. Alternatively, STAGE 5's `check-branch-drift` failure path could get the same bounded
+retry-with-backoff shape already proven at STAGE 3 (pull + retry the commit, not a full re-gate) — cheaper than fix 1
+and directly targets the observed failure (STAGE 5 alone, STAGE 3 already green). Not attempted here: `quickmerge.sh`
+is high-blast-radius shared ship infra per this doc's own caution, and this was a single-task worker session, not a
+scoped infra task. Filing as evidence, not a fix — still `status: open`.
