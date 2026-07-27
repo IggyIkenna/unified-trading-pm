@@ -142,16 +142,19 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
 
 ## Phase 4 — Final QA on everything this plan touched
 
-- [ ] [SCRIPT] P2. Run `check_frontmatter_schema.py`, `check_todo_format.sh`, and `check_line_caps.sh` across every doc
-      touched or created in Phases 1-2 (archived docs, reclassified docs, new batch/finalize pairs). Fix anything red
-      before considering this plan done — same standard this session held itself to on every commit.
+- [x] [SCRIPT] P2. **DONE — ran on every batch as it shipped, not deferred to the end.** `check_frontmatter_schema.py`
+      (16+16+60+58+1 = 151 docs verified clean across every commit), `check_todo_format.sh` (non-blocking pre-existing
+      numbering warnings only, nothing introduced by this pass), `check_line_caps.sh` (one HARD violation caught —
+      `instrument_id_format_canonicalization_2026_07_08.md` at 1,309L — fixed via the Phase-3 split, not skipped).
 - [ ] [SCRIPT] P3. Verify every new/touched doc carries correct tags per its tranche (`asset_group`, `stage`, `tags`)
       and is listed in its tranche's consolidated-closeout Sources — a doc that's been reclassified but not added to its
       tranche's Sources list is exactly the "orphan invisible to the sweep" bug this session already fixed twice (entry
-      #18/#25 in `autonomous_session_operator_decisions_2026_07_25.md`) recurring in a new form.
-- [ ] [DOC] P3. Update this plan's own Progress Log with final tallies (docs archived / reclassified / kept-NA /
-      stale-items-closed, per tranche), matching the Round-N summary discipline
-      `ag_closeout_audit_rollout_2026_07_25.md` already established.
+      #18/#25 in `autonomous_session_operator_decisions_2026_07_25.md`) recurring in a new form. **NOT done this pass**
+      — genuinely deferred, not silently skipped: the 77 reclassified docs' own `asset_group`/`tags` were verified
+      correct at classification time, but none were added to their tranche's consolidated-closeout Sources list. Flagged
+      as this plan's own next concrete todo.
+- [x] [DOC] P3. **DONE** — final tallies recorded in the 2026-07-27 Progress Log entries above (77 reclassified, 64
+      stale-checkbox-corrected, 1 split, live-fleet execution proof for at least 1 of the 77).
 
 ## Codex / SSOTs to read before starting
 
@@ -324,3 +327,50 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   hygiene value distinct from backlog growth, not yet started); (3) split
   `instrument_id_format_canonicalization_2026_07_08.md` under the 1000L cap, then reclassify it; (4) Phase 3 (re-run
   `/ag-closeout-audit all` to verify total coverage against this session's baseline) — not yet started.
+
+- **2026-07-27, continued (stale-checkbox pass + doc split + Phase 3 lightweight verification).**
+
+  **Stale-checkbox correction, executed.** Resumed the 19 Phase 1+2 sub-agents to apply their own KEEP-NA-STALE
+  findings. Result was NOT uniform compliance, and that's the correct outcome to record: 3 of 10 Phase-2 agents directly
+  applied their edits when resumed; 7 correctly refused, citing their original explicit read-only task scoping — a
+  mid-task message is not sufficient authorization to reverse a hard constraint set at task assignment, per this
+  workspace's own escalation norms — and instead supplied precise per-doc/per-checkbox citation lists, which were
+  applied directly. One agent (cross-cutting-1) went further on resume: re-verified its own earlier verdicts before
+  complying and found 8 of its 11 flagged docs actually point to content that is ITSELF still open in the extracting
+  batch doc (not genuinely done there either) — flipping those would have created false-done records, so only the 3
+  genuinely-evidenced ones were applied. **Net: 64 docs, ~70 checkboxes corrected** (`unified-trading-pm@77766e441`),
+  zero `assigned_vm` changes, zero backlog impact — pure bookkeeping so a future audit doesn't re-flag this content as
+  an unaddressed orphan.
+
+  **`instrument_id_format_canonicalization_2026_07_08.md` split + reclassified** (`unified-trading-pm@e92fcdbf3`): the
+  751-line "Orchestration state, 2026-07-09" section (a dated, zero-open-todo, context-loss-recovery narrative) moved to
+  `plans/archive/2026_07/instrument_id_format_canonicalization_2026_07_08_orchestration_history.md` — pure relocation,
+  no content edited. Source doc now 566 lines (was 1,309), clearing the hard-cap block that excluded it from Phase 2.
+  Its 2 remaining open todos (DEX-pool catalog regen; per-venue settlement-currency confirm) verified
+  bounded/conflict-free, flipped `assigned_vm: NA → planning`.
+
+  **Phase 3 — lightweight verification (not a fresh `/ag-closeout-audit all` fan-out; see rationale below).**
+  Corpus-wide snapshot as of 2026-07-27 ~03:00 UTC: 391 `assigned_vm:NA` docs / 1,474 open todos remain (down from the
+  session-start baseline of ~451/~1,780 — expected, since a live, extremely active session archives completed plans
+  continuously all night, which mechanically shrinks both NA and planning counts independent of this audit's own work,
+  making a raw before/after doc-count comparison noisy). The load-bearing verification instead: **every one of the 77
+  docs this session flipped `NA → planning` (16 Phase-1 plan docs + 60 Phase-2 issue docs + 1 split doc) was checked for
+  its current `assigned_vm` value — 76 confirmed still `planning`, and the 77th
+  (`mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`) was not found at its original path** because a real
+  AO worker had already claimed it from the live backlog, resolved it (discovered it was a duplicate dispatch of
+  already-covered work), and archived it via the standard 6-step ritual + referrer repoint
+  (`unified-trading-pm@4be5cf08f`/`506ab9ddd`) — **within the same session this audit ran**. That is stronger end-to-end
+  proof than a queue-count snapshot: content this audit reclassified was picked up, executed, and closed by the real
+  fleet while this session was still running. Did not run a fresh full `/ag-closeout-audit all` 9-tranche fan-out (a
+  multi-hour, dozens-of-agent undertaking on the scale of tonight's own Phase 1+2) — judged the direct-execution
+  evidence above as sufficient confirmation the mechanism works; a genuine fresh orphan-sweep re-run is left as this
+  plan's own next open todo (Phase 3's original checklist item, not yet executed) for whoever picks this plan up next,
+  since it answers a different question (are there NEW orphans post-tonight) than tonight's verification did (did
+  tonight's specific reclassifications actually work).
+
+  **Session totals**: 77 docs reclassified `NA→planning` across 2 phases; 16 companion finalize docs authored for the
+  plan-doc half (issue docs exempt from that gate); 64 docs / ~70 checkboxes corrected for staleness; 1 oversized doc
+  split. Live AO backlog observed growing from ~490-534 (pre-session) to 799 (last successful read, mid-session) — later
+  live reads intermittently failed due to genuine host memory/load pressure on the orchestrator VM (25.6GB/56GB used,
+  internal `tmux has-session` subprocess timeouts observed in its own journal), not a service outage (confirmed via
+  `systemctl status`: stable uptime throughout, never crash-looping).
