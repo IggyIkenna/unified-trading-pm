@@ -97,24 +97,44 @@ that is mid-execution against a **live production GCP project**. Two consequence
 
 ## Recommended decision
 
-- [ ] [DESIGN] P0. **Operator/main decides how to reconcile the SA architecture with the retirement**: (a) repurpose the
-      already-created `uts-dev-sa` as the `-test-` tier writer (rename semantics only, keep the GCP resource — no new
-      SA, no destroy/recreate churn) and leave `uts-stg-sa` genuinely unbound/reserved for a possible future
-      re-introduction of staging; (b) create a new, correctly-named `uts-test-sa` and formally retire (destroy or just
-      permanently leave unbound + documented as historical) `uts-dev-sa`/`uts-stg-sa`; (c) some other resolution the
-      operator prefers. This is a genuine judgment call for the project's live IAM identity naming, not something to
-      guess on for a production credential fabric.
-- [ ] [DOCS] P1. **Correct `bucket_iam_write_protection_per_tier_2026_06_09.md`'s "Open design decisions" §** once (a)
-      above is decided — the 2026-06-12 resolution is stale, supersede it with a dated correction (do not silently edit
-      history) citing this issue doc + the retirement ruling.
-- [ ] [TERRAFORM] P1. **Re-scope P1.2** to bind SAs to the REAL 2-tier set (`prd` write-protected, `test`
-      CI/ephemeral) + the sanctioned `uts-migration-sa` cross-tier exception, once (a) is decided. `uts-prd-sa` →
-      `objectAdmin` on `*-prd-*` for Group A (`market-data-tick-*`, `instruments-store-*`, `features-calendar-*` — the
-      exact families in `deployment-service/terraform/gcp/canonical_buckets.tf`'s `canonical_storage_kinds`) is
-      UNAMBIGUOUS and safe to ship regardless of how (a) resolves — only the `-test-`-tier SA binding depends on the
-      naming decision.
+- [x] ✅ [DESIGN] P0. **RESOLVED 2026-07-27 — operator approval via BLK-4b104acc.** Chose option (b) WITHOUT a destroy:
+      create a correctly-named `uts-test-sa` (GCP SA `account_id`s are immutable, so (a)'s "rename" was never really
+      possible — it would have left a permanently-misnamed resource); leave `uts-dev-sa`/`uts-stg-sa` PERMANENTLY
+      UNBOUND (zero IAM role bindings) and documented as historical, never destroyed (retiring a bucket TIER that's
+      already gone is implementing an existing operator SSOT, not a new architecture decision; leaving the SAs
+      undestroyed is zero-risk and trivially reversible). Shipped `deployment-service@0dbc9ae`: `uts-test-sa` created +
+      `uts-dev-sa`/`uts-stg-sa` descriptions updated, live-verified via `gcloud iam service-accounts list`.
+- [x] ✅ [DOCS] P1. **DONE 2026-07-27** — `bucket_iam_write_protection_per_tier_2026_06_09.md`'s "Open design decisions"
+      § now carries a dated correction banner citing this issue doc + the retirement ruling (the stale 2026-06-12
+      resolution is preserved below the banner, not silently edited).
+- [x] ✅ [TERRAFORM] P1. **PARTIAL 2026-07-27** — `uts-prd-sa` → `objectAdmin` on `*-prd-*` + `uts-test-sa` →
+      `objectAdmin` on `*-test-*` (both scoped to Group A: `market-data-tick-*`/`instruments-store-*`/
+      `features-calendar-*`) + broad `objectViewer` for all 5 SAs are DECLARED in
+      `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf` (`tofu validate` clean, targeted `tofu plan` showed 8
+      adds/2 changes/0 destroys) but **NOT YET APPLIED** — see new todo below (credential blocker).
+- [ ] [TERRAFORM] P0. **NEW 2026-07-27 — BLOCKED-CREDENTIALS.** `tofu apply` of the 8 declared IAM-binding resources
+      failed: this session's active credential (`github-actions-deploy@central-element-323112.iam.gserviceaccount.com`)
+      lacks `resourcemanager.projects.getIamPolicy`/`setIamPolicy` on `central-element-323112` entirely — confirmed
+      directly, `gcloud projects get-iam-policy central-element-323112` 403s outright for this identity (not scoped to
+      my new resources; the SAME error class hit ~15 unrelated pre-existing `google_project_iam_member`/
+      `google_secret_manager_secret_iam_member` resources in a full untargeted `tofu plan`, confirming this is a
+      whole-project IAM-policy permission gap, not something wrong with the new resources). **Done when**: someone with
+      a credential holding `resourcemanager.projects.setIamPolicy` on `central-element-323112` (e.g.
+      `unified-trading-sa`, or an operator's own ADC — matches how P1.1's SA-creation step and other project-level
+      grants in this terraform were evidently applied historically) runs
+      `ENV=prod TMPDIR=<short-path> TF_DATA_DIR=<short-path>/.terraform ./tofu.sh apply` from
+      `deployment-service/terraform/gcp/` (a short `TMPDIR` avoids a known unix-socket-handshake break on the plugin
+      install step with long paths — see P1.1's own note above) and confirms
+      `Plan: 8 to add, 2 to change, 0 to     destroy` before applying (re-run `tofu plan` fresh first — the docs above
+      are not a substitute for a live re-check).
 - [ ] [DOCS] P2. Cross-reference `bucket_iam_write_protection_per_tier_2026_06_09.md` and the (now-archived)
       `bucket_estate_consolidation_to_sub100_2026_07_13.md` in each other's `related:` frontmatter so this class of
       drift (two plans quietly deciding contradictory things about the same tier model, a month apart, never
       cross-checked) is easier to catch next time — add to `related:` on both plan docs (the source plan is archived, so
       only add on this side + this issue doc; do not un-archive it just to edit frontmatter).
+- [ ] [SCOPE] P2. **NEW 2026-07-27.** The original P1.2 text's "all SAs + CI/CD + developer identities → objectViewer
+      broadly" was only partially addressed — the 5 per-tier SAs got objectViewer, but no CI/CD or developer identity is
+      terraform-managed anywhere in this repo today (grepped: only task-specific SAs like `t1_batch`, `catalogue_regen`
+      exist, no generic "CI/CD SA" or "developer SA" resource), so that half of the original ask has no concrete
+      terraform target yet. Scope this properly (does a CI/CD SA need to be created? are "developer identities" human
+      GCP IAM users, handled outside terraform entirely?) before assuming it's done.

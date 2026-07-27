@@ -223,10 +223,23 @@ Two independent gates because Group A and Group B are at different stages:
       rather than the repo's much older pinned `terraform` v1.5.7 binary (protocol-incompatible with the resolved
       `google` provider v7.41.0), and a short `TMPDIR`/`TF_DATA_DIR` (a long scratchpad path broke the provider plugin's
       unix-socket handshake — `Unrecognized remote plugin message`/ "Failed to read any lines from plugin's stdout").
-- [ ] [TERRAFORM] P1.2. Replace the project-wide `roles/storage.objectAdmin` with **per-suffix bindings**: dev SA →
-      `objectAdmin` on `*-dev-*`; stg SA → `*-stg-*`; prd SA → `*-prd-*`; all SAs + CI/CD + developer identities →
-      `objectViewer` broadly (read-anything) but **read-only on `*-prd-*`**. Apply to **Group A buckets first** (they
-      carry the suffix today).
+- [ ] [TERRAFORM] P1.2. **PARTIAL 2026-07-27 (slot-12) — `deployment-service@0dbc9ae`.** Re-scoped per the operator
+      resolution of `issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md` (BLK-4b104acc): the
+      dev/stg suffix bindings in the original text above are DROPPED (those tiers were permanently retired 2026-07-13,
+      nothing to bind to) — `uts-test-sa` (new) is the correctly-named replacement for the actual non-prod tier
+      (`-test-`). **SA-level changes LIVE-VERIFIED** (`gcloud iam service-accounts list`): `uts-test-sa` created;
+      `uts-dev-sa`/`uts-stg-sa` display names updated to "(HISTORICAL — permanently unbound)", zero role bindings. **IAM
+      policy bindings (`objectAdmin` on `*-prd-*`/`*-test-*` for `uts-prd-sa`/`uts-test-sa` + `objectViewer` broadly for
+      all 5 SAs) are DECLARED in terraform (`tofu validate` + `tofu fmt` clean, targeted `tofu plan` showed exactly 8
+      adds/2 changes/0 destroys) but NOT YET APPLIED** — this session's active credential (`github-actions-deploy` SA)
+      lacks `resourcemanager.projects.getIamPolicy`/`setIamPolicy` entirely (confirmed:
+      `gcloud projects get-iam-policy central-element-323112` 403s outright for this identity) — a genuine
+      **BLOCKED-CREDENTIALS** gap, not a design question. "All SAs + CI/CD + developer identities → objectViewer
+      broadly" from the original text: the CI/CD + developer-identity half is NOT addressed (no such identity is
+      terraform-managed in this repo today — out of scope for a mechanical implementation, flagged as a gap in the
+      SSOT-contradiction issue doc's todo 4). **Remaining work**: run `ENV=prod ./tofu.sh apply` with a credential that
+      holds `resourcemanager.projects.setIamPolicy` on `central-element-323112` (e.g. `unified-trading-sa` or an
+      operator's own ADC) to actually apply the 8 declared-but-pending resources.
 - [ ] [TERRAFORM] P1.3. Verify dev/stg workloads read everything, write their own tier, and are **IAM-denied** a `-prd-`
       write (negative test). No prod write-grant removal until P2.
 
