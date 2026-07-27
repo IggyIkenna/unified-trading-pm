@@ -84,19 +84,26 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
 
 ## Todos
 
-- [ ] [DATA] P0. **Execute the 5-part-proof-gated DELETE of old non-canonical K1/K2 GCS objects + the ~7,251
-      `api_football` captured-cell objects** in `market-data-tick-sports-prd-central-element-323112`. Reversibility
-      already verified (finding T, `task_template.md`): `gcs_bucket_soft_delete_retention_seconds(...)` returned
-      `604800` (7 days), fresh-checked 2026-07-27 per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a —
-      **re-query fresh immediately before running, not from this citation.** **Sequencing note (not a machine gate — no
-      cross-plan `depends_on` exists for a single todo in another plan): re-verify the delete-candidate list against the
-      CURRENT casing state first.** That re-verify is already queued as its own todo in
-      `sports_consolidated_native_ao_extract_2026_07_25.md` (~line 113-118, `status: active`) — check whether it has
-      already run before executing this delete; if not, run it first (it is read-only and cheap) rather than trusting a
-      stale candidate list. Detail: `plans/archive/2026_07/sports_master_closeout_2026_07_21.md`'s 2026-07-23
-      root-cause-sweep section. **Done when**: the delete executes (snapshot-first, CAS-safe), a fresh object-level
-      census confirms 0 remaining candidates, and the re-verify prerequisite's completion is cited by commit/date, not
-      assumed. Source: `sports_consolidated_closeout_2026_07_19.md` Track V (K1/K2 + api_football DELETE todo).
+- [x] ✅ [DATA] P0. **api_football half — RESOLVED 2026-07-27, nothing to delete.** Before executing anything, escalated
+      via `BLK-2cf85627`: this todo bundled two populations (K1/K2 casing-migration objects + ~7,251 `api_football`
+      captured-cell objects) with materially different safety profiles under one §3a citation. Operator confirmed
+      (Option B) and directed a split. **api_football**: fresh-verified via the pre-2026-07-23-wipe manifest snapshot
+      (`gs://market-data-tick-sports-prd-central-element-323112/_index/snapshots/pre_api_football_manifest_wipe_2026_07_23_20260723T081810Z.parquet`,
+      7,251 `source=api_football`/`capture_status=captured` rows, matching the estimate exactly) — a prefix-scoped
+      listing across all 197 distinct dates in that population found **0 GCS objects** matching
+      `pipeline_mode=batch_api_football` anywhere under `raw_tick_data/by_date/`, and a direct `gcs_describe_object`
+      probe on 16 constructed candidate paths (1 targeted + 15 random-sampled across 2020-2025, multiple venues) also
+      returned `None` for all 16. The manifest's "captured" claim for this population is not backed by any live GCS
+      object — nothing exists to delete; the todo's "done when" (fresh census confirms 0 remaining candidates) is
+      already satisfied. No delete action taken (none needed). Fresh §3a check for completeness:
+      `gcs_bucket_soft_delete_retention_seconds('market-data-tick-sports-prd-central-element-323112')` = `604800` (would
+      have qualified if objects had existed). **K1/K2 half — HELD, NOT executed.** Investigation found the population is
+      not uniformly redundant (a ~5-day live-writer window, 2026-07-22 K1 ship through 2026-07-27 revert, produced
+      twin-less uppercase-only objects — the same slice `batch7`'s own Deferred section already flagged as "~27.5% of
+      sampled uppercase-keyed rows have no lowercase GCS twin yet"). A blind delete would have destroyed that slice
+      permanently. Filed: `issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md` (new todos: run the
+      K1/K2 casing-revert migration first, then re-attempt the delete). Source:
+      `sports_consolidated_closeout_2026_07_19.md` Track V (K1/K2 + api_football DELETE todo).
 
 - [ ] [DATA] P0. **Execute the operator-ruled (decision 14, 2026-07-23) pre-floor wipe: snapshot-then-delete 83,541
       pre-floor (2014-01-01..2020-06-05) `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` rows** that fall before the established
