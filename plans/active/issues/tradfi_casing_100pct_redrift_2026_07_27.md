@@ -195,10 +195,16 @@ slot-13's shipped `_BUNDLE_GRAIN_EXCLUDED` addition (which keeps it lowercase); 
 the FUTURE mapping. The 82,311 already-written rows are a SEPARATE repair follow-up (seam fix stops NEW drift only);
 compare case-insensitively in the interim (`migration_pending`).
 
-- [ ] [DATA] P1. UTL: add tradfi/cefi `instrument_type` UPPERCASE casing canon co-located with
+- [x] ✅ [DATA] P1. UTL: add tradfi/cefi `instrument_type` UPPERCASE casing canon co-located with
       `canonical/_derive_instrument_id.py`, applied additively at the `ManifestWriter` record\_\* write seam (separate
       from `manifest_writer_normalising.py`); include `continuous_future → InstrumentType.FUTURE`. All-AG blast radius →
-      QG green + SIT/fleet-green before ship; quickmerge UTL FIRST. (repo: unified-trading-library)
+      QG green + SIT/fleet-green before ship; quickmerge UTL FIRST. (repo: unified-trading-library) — DONE
+      `unified-trading-library@688e49bc`: new `canonical.canonicalize_manifest_instrument_type`, wired additively into
+      `record_captured`/`record_captured_from_counts`/`_record_status` (shared by record_empty/record_failed/
+      record_expected_unattempted); `continuous_future → FUTURE`; `futures_chain`/`options_chain` stay permanently
+      lowercase; 30 new unit tests; full QG green. Also fixed an unrelated pre-existing red
+      (`unified-trading-library@c1c6cfff`, self-caused by an earlier this-session UAC rename `edf5122d` that never
+      updated this repo's `test_point_in_time.py`) so the tree could ship clean.
 - [ ] [DATA] P1. mtds: RE-EXPORT the shared UTL canon and DELETE the local `_tradfi_manifest_canon.py` (no shim); update
       `venue_fetch.py`/`sentinels.py` imports. REVERT slot-13's `continuous_future` addition to `_BUNDLE_GRAIN_EXCLUDED`
       (operator ruled FUTURE, not excluded). (repo: market-tick-data-service)
