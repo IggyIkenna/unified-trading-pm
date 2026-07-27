@@ -107,19 +107,23 @@ Two independent, non-exclusive fixes:
 
 ## Todos
 
-- [ ] 1. [INFRA] P0. Raise `run_timeout 60` in `scripts/quality-gates.sh` STEP 5.83 (or the CI/local-shared template
-      it's rolled out from) to a budget that reliably completes under normal host I/O load (measure a clean-host
-      baseline first — this doc's 1m28s+ measurement was under concurrent multi-slot QG load, not necessarily the worst
-      case). (repo: unified-trading-pm, rolled out to every consuming repo's quality-gates.sh per the template
-      convention)
-- [ ] 2. [INFRA] P1. Make `check_adapter_contract_regression.py`'s workspace scan incremental (cache prior per-file
-      counts + only re-walk files whose mtime changed since the last successful scan, or scope to the touched repos for
-      the current commit) so the check's runtime stops scaling with total workspace size on every single QG invocation.
-      (repo: unified-trading-pm)
+- [ ] 1. [INFRA] P2 (downgraded from P0 — see progress log 2026-07-27 cicd/slot-5: todo 2's fix alone resolved the
+      timeout, this is now optional defense-in-depth, not a blocker). Raise `run_timeout 60` in
+      `scripts/quality-gates.sh` STEP 5.83 (per-repo file, not templated — a fleet-wide bump means editing every
+      consuming repo's copy) as extra headroom against pathological host I/O contention. (repo: unified-trading-pm +
+      every consuming repo)
+- [x] 2. [INFRA] P1. Make `check_adapter_contract_regression.py`'s scan stop walking the full workspace — read only the
+      baseline's own files (`read_baseline_files()`), scoped to present repos, instead of `rglob("*.py")`-ing every file
+      in every repo. Runtime is now O(baseline size ≈ 332 files), not O(workspace size) — measured 0.5-0.65s standalone
+      AND via the real `quality-gates.sh` STEP 5.83 invocation path, down from a >120s reproduction (was hitting the 60s
+      `run_timeout`). `scan_workspace()` (the full walk) is retained but now used only by `--regenerate-baseline`, an
+      explicit non-CI operator action. Pass/fail semantics unchanged (existing test suite + 1 new regression test lock
+      in that the check path never calls `scan_workspace`). — unified-trading-pm@91e9865b9
 - [ ] 3. [INFRA] P2. Distinguish a genuine "count dropped below baseline" failure from a "scan timed out / didn't
       complete" failure in the emitted message — the current `log_fail "Adapter contract-call regression..."` text is
       identical for both, which will send whoever hits this chasing a nonexistent code regression instead of an infra
-      timeout. (repo: unified-trading-pm)
+      timeout. Lower urgency now that todo 2 makes a genuine timeout very unlikely, but still worth doing for the rare
+      pathological case. (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -132,3 +136,17 @@ Two independent, non-exclusive fixes:
   of `data_engineering` craft scope (infra/CI ownership of `scripts/quality-gates.sh` + the shared QG script template),
   and I should not unilaterally raise a shared QG timeout without infra sign-off given it's rolled out via
   `rollout-workflow-templates.sh`-style propagation to every repo.
+- **2026-07-27 (cicd, slot 5, escalation RB-6696c2a9)**: Reproduced independently —
+  `check_adapter_contract_regression.py` exceeded 120s standalone in slot 5's workspace too, confirming this isn't
+  purely transient host contention: the full `rglob` walk is inherently too slow for a 60s budget on a 25-repo
+  workspace, contention or not. Root-caused: the scan only needs the ~332 baseline-listed files' counts, not every `.py`
+  file in every repo — `scan_workspace()` was doing O(workspace size) I/O to answer an O(baseline size) question.
+  Shipped `read_baseline_files()` (targeted reads of just the baseline's files, scoped to present repos) as the check
+  path's data source; `scan_workspace()` is now reserved for `--regenerate-baseline` only. Verified: 8/8 unit tests pass
+  (7 existing + 1 new regression test asserting the check path never calls `scan_workspace`), ruff + basedpyright clean,
+  unified-trading-pm's own `quality-gates.sh --no-fix` passed (123s, unrelated warn-only findings only), and the real
+  STEP 5.83 invocation path (`no_adapter_contract_regression.sh` from within `features-service`) now completes in 0.65s.
+  Shipped directly to `live-defi-rollout` (unified-trading-pm@91e9865b9) under the PM `scripts/**` pipeline-unblock
+  direct-push carve-out (CLAUDE.md § Git discipline). Todo 2 done; todo 1 downgraded to optional defense-in-depth (no
+  longer needed to clear the wall); todo 3 still open as a lower-urgency polish item. Wall RESOLVED — this was NOT a
+  false alarm or pure host contention, it was a genuine O(workspace) vs O(baseline) inefficiency in the scanner.
