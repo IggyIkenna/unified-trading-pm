@@ -146,11 +146,39 @@ ALL, not even for the success path.
       (override-honoured + SSOT-fallback), mirroring
       `test_get_output_bucket_honours_data_sink_override`/`_falls_back_to_ssot`. Full `quality-gates.sh` green
       (sentinel-verified by quickmerge --agent); shipped via quickmerge, landed on `live-defi-rollout`.
-- [ ] [DATA] P1. **features-service / operator** — audit
-      `gs://features-calendar-prd-central-element-323112/     calendar/{time_features,economic_events}/` for objects
-      written by prior test/smoke-check invocations (anomalous zero-row parquets, or objects whose `written_at`/manifest
-      provenance correlates with a known test-harness run rather than the real scheduled batch job) — determine whether
-      any cleanup is needed. Scope this as its own audit; do not block the config fix above on it.
+- [x] ✅ [DATA] P1. **features-service / operator** — audit COMPLETE (2026-07-27, slot-11). Enumerated the ENTIRE
+      `gs://features-calendar-prd-central-element-323112/calendar/` estate (both `time_features/` and `economic_events/`
+      prefixes, full listing not a sample): **only 2 objects existed in the whole bucket, total** —
+      `calendar/economic_events/by_date/day=2026-07-04/features.parquet` and `.../day=2026-07-05/features.parquet` (2397
+      bytes each, `updated=2026-07-27T07:41:20Z`). No other historical test-harness pollution found anywhere in this
+      bucket — these 2 are the ONLY objects that have EVER landed here, and they are exactly the 2 objects this issue
+      doc's own root-cause section already identified as the triggering incident's writes (same dates, same `run.log`
+      timestamp window). Downloaded + inspected both: genuinely 0-row parquets (`shape=(0, 4)`,
+      columns=`[timestamp, date, event_type, importance]`) — schema-only, no real data, confirming test-harness
+      provenance beyond just the filename/date match. **Cleanup executed** (reversibility-qualified autonomous delete
+      per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): object-scoped `gcs_delete_object()` on both
+      URIs (never a whole-bucket op); FRESH same-run
+      `gcs_bucket_soft_delete_retention_seconds("features-calendar-prd-central-element-323112")` returned `604800`
+      (meets the ≥604800s bar, queried live not assumed) before deleting; verified both PRE-delete
+      (`gcs_describe_object` → exists, size=2397) and POST-delete (`gcs_describe_object` → `None`) for each object. Both
+      test artifacts removed from PROD; bucket is now genuinely empty pending the P0 config fix's real scheduled runs.
+      **Adjacent finding surfaced, NOT fixed here (new P2 todo below, out of this audit's GCS-object scope)**: this
+      bucket's small manifest (`_index/availability_index.parquet`, 2 rows) has a **phantom-captured** entry for the
+      SAME incident — `feature_family=time_features`, `date∈{2026-07-04,2026-07-05}`, `capture_status=captured`,
+      `row_count=24`, `available=True` — despite ZERO `time_features/` objects ever existing in this bucket (the
+      `run.log`'s claimed `time_features` write apparently never persisted to GCS at all, unlike `economic_events`'s
+      genuine-but-empty write). A manifest saying `captured`+`row_count=24` for data that was never actually written is
+      a silent-placeholder-adjacent correctness bug distinct from the GCS-pollution this todo scoped — filed as its own
+      todo rather than fixed inline (different write path than the config-bucket-routing bug; needs its own root cause
+      investigation into the calendar `time_features` writer, not touched by this task).
+- [ ] [DATA] P2. **features-service** — investigate the `time_features` manifest-vs-GCS mismatch surfaced by the P1
+      audit above: `features-calendar-prd-central-element-323112`'s manifest claims `capture_status=captured`,
+      `row_count=24`, `available=True` for `feature_family=time_features` on `2026-07-04`/`2026-07-05` (written_at
+      `2026-07-27T07:41:1{8,9}Z`, the same known test-harness incident), but ZERO `calendar/time_features/` objects have
+      ever existed in this bucket. Determine why the `time_features` write path records a manifest "success" without the
+      corresponding GCS object landing (a distinct bug from the `IS_TEST_RUN` bucket-routing fix already shipped — this
+      affects the underlying write-then-record sequencing/atomicity, not which bucket is targeted), then correct or
+      purge the 2 phantom manifest rows once root-caused. (repo: features-service)
 - [ ] [SCRIPT] P2. **features-service** — audit every OTHER feature family's config for the same declared-but-unconsumed
       `is_test_run` pattern (this bug's root cause — a field that LOOKS like it's wired up because it's declared with
       the right description, but isn't consulted anywhere) — `volatility`, `onchain`, `sports`, `cross_instrument`,
