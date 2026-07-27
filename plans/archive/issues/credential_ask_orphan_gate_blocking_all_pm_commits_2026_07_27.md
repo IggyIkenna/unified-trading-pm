@@ -30,6 +30,11 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **🟢 RESOLVED 2026-07-27** — pings filed for both orphan `BLOCKED-CREDENTIALS` findings
+> (`unified-trading-pm@bb6a25da7`); `check_credential_ask_orphans.py` verified at 0 orphans, at-or-below baseline. The
+> repo-wide commit block is over. Archived per issue-doc-lifecycle; the P2 scoping-improvement suggestion below stays
+> open as a low-priority follow-up.
+
 # credential-ask-orphan gate blocking all PM commits (2026-07-27)
 
 ## What's happening
