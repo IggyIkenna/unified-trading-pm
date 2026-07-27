@@ -135,6 +135,13 @@ This is what the position would actually earn — not a DefiLlama-modelled or ve
 > drift on 2026-05-14). Empirical evidence + recommended decisions:
 > [`plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md`](../../../../plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md).
 
+> **jitoSOL backtest window — clipped to 2023-10-01+ (resolved, default: clip).** The `oracle_prices` feed for
+> jitoSOL-involving slots reads Pyth Hermes, whose archive API has no data before `ORACLE_COVERAGE_START["pyth_hermes"]`
+> (2023-10-01) — an ~11-month gap vs. jitoSOL token genesis (2022-11-01). No Pythnet RPC historical-replay adapter is
+> built to fill this gap (slow + expensive, no archive API); backtests over jitoSOL slots are clipped to the Hermes
+> archive start rather than extended earlier. SSOT + override path:
+> [`unified_api_contracts/registry/capability_declarations/_defi_oracle_coverage.py`](../../../../unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_oracle_coverage.py).
+
 `funding_rate_apy_bps` = venue-published funding rate × cycles/day × 365 (pure arithmetic on raw venue data, no
 modelling).
 

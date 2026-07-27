@@ -167,40 +167,43 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       whose pair no longer disagrees is itself a failure (`STALE BASELINE`), forcing removal the moment each [DATA] todo
       below resolves, so the baseline only shrinks. Verified live against the real registries: 0 new findings, 0 stale
       baseline entries (16/16 still genuinely tracked).
-- [ ] [DATA] P1. Resolve the 8 confirmed multi-year/multi-month CeFi mismatches (BITFINEX, KRAKEN, COINBASE-SPOT,
+- [x] ✅ [DATA] P1. Resolve the 8 confirmed multi-year/multi-month CeFi mismatches (BITFINEX, KRAKEN, COINBASE-SPOT,
       DERIBIT, OKX, BINANCE, BYBIT, HYPERLIQUID — table above) per venue: probe the actual manifest min(date) per
       `coverage_starts.py`'s own docstring instruction (`read_availability_index({bucket}).date.min()`) and update
-      whichever registry is wrong to match measured reality. (repo: unified-api-contracts) — **CODE COMPLETE +
-      TEST-VALIDATED, NOT YET COMMITTED (slot-6, 2026-07-27) — blocked on a fleet-wide disk-full incident (root fs hit
-      true 0 bytes free; `git add`/`git status` exited 128, and even the Edit tool briefly failed with ENOSPC writing to
-      THIS doc — worse than the already-tracked "coverage.py sqlite ENOSPC" symptom reported earlier this session;
-      escalated as BLK-10683291). DO NOT RE-DERIVE — the analysis below is done; the only remaining step once disk
-      recovers is add+commit+push+quickmerge.** Probed live
+      whichever registry is wrong to match measured reality. (repo: unified-api-contracts) — **DONE 2026-07-27 (slot-6)
+      — unified-api-contracts@3d24f147c.** Probed live
       `read_availability_index("market-data-tick-cefi-prd-central-element-323112")`, grouped by venue on
       `capture_status="captured"`, cross-checked every result for a hidden "never-attempted gap before the registered
       floor" trap (the exact failure mode that would make a naive min() wrong — caught it live on HYPERLIQUID, see
       below). **Fixed 8/8 in `coverage_starts.py` `CEFI_SOURCE_COVERAGE_START`**: BITFINEX/KRAKEN/COINBASE-SPOT/OKX/
-      BINANCE → `2020-01-01`; DERIBIT → `2019-05-08`; BYBIT → `2021-01-01`; HYPERLIQUID → `2023-04-15` (see HYPERLIQUID
-      caveat below — NOT the naive-measured 2024-01-01). **Fixed 3/5 in `venue_mapping.py` `venue_start_dates`**:
+      BINANCE → `2020-01-01`; DERIBIT → `2019-05-08`; BYBIT → `2021-01-01`; HYPERLIQUID → `2023-04-15` (matched
+      `venue_mapping.py`'s vendor-verified value, NOT the naive measured-captured-min of `2024-01-01` — see the new
+      HYPERLIQUID backfill-gap todo below for why). **Fixed 3/5 in `venue_mapping.py` `venue_start_dates`**:
       `BINANCE-FUTURES` 2019-11-17→2020-01-01, `DERIBIT` 2019-03-30→2019-05-08, `BYBIT` 2020-01-01→2021-01-01.
       **Deliberately did NOT touch** `BITFINEX-FUTURES` (stays 2019-12-01) or `BYBIT-SPOT` (stays 2021-12-04) — both
       have their OWN documented, evidence-backed rationale in `venue_mapping.py`'s existing comments (Tardis-available
-      vs symbol-reliability gap; separate spot-vs-perp product launch), narrower than the original bare-key mismatch but
-      real and deliberate, not an unverified seed to overwrite. Updated
-      `scripts/check_coverage_floor_registry_drift.py`'s `KNOWN_DIVERGENCES`: removed 6 now-fully-resolved entries
-      (KRAKEN/COINBASE-SPOT/DERIBIT/OKX/BINANCE/HYPERLIQUID), narrowed BITFINEX + BYBIT's notes to the real residual
-      per-suffix gap (verified via the falsifier script itself: 0 new findings, 0 stale baseline, "10 tracked
-      divergence(s)" down from 16). Fixed 2 tests that hardcoded the old baseline count/dates
-      (`test_coverage_floor_registry_drift.py`, `test_catalogue_registries.py`) — all 39 targeted tests + the full UAC
-      suite (12094 tests) pass. **Dirty files, ready to commit the moment disk recovers** (all in
-      `unified-api-contracts`): `unified_api_contracts/canonical/coverage_starts.py`,
-      `unified_api_contracts/registry/venue_mapping.py`, `scripts/check_coverage_floor_registry_drift.py`,
-      `tests/unit/test_coverage_floor_registry_drift.py`, `tests/unit/test_catalogue_registries.py`. **Two genuine new
-      findings surfaced while probing** (NOT fixed here — separate todos below): a real, never-backfilled gap on
-      HYPERLIQUID (2023-04-15→2023-12-31) and a partial/sparse historical backfill on DERIBIT (2019-05→2019-12, `trades`
-      only). **Also found**: `BINANCE-DELIVERY` in `venue_mapping.py` has ZERO real captured rows in the manifest
-      despite its registered `2020-01-01` floor — not touched (no ground truth to set; the falsifier doesn't flag it
-      since its date happens to equal the sibling BINANCE floors), flagged as its own todo below.
+      vs symbol-reliability gap; separate spot-vs-perp product launch), a real residual gap not an unverified seed.
+      Updated `scripts/check_coverage_floor_registry_drift.py`'s `KNOWN_DIVERGENCES`: removed 6 now-fully-resolved
+      entries (KRAKEN/COINBASE-SPOT/DERIBIT/OKX/BINANCE/HYPERLIQUID), narrowed BITFINEX + BYBIT's notes to the real
+      residual per-suffix gap. Verified via the falsifier itself: 0 new findings, 0 stale baseline (10 tracked
+      divergences, down from 16). Fixed 2 tests that hardcoded the old baseline count/dates. All 39 targeted tests + the
+      full UAC suite (12094 tests) pass; full `quality-gates.sh` green. Three new findings surfaced while probing are
+      tracked as their own todos immediately below (not fixed here — separate, genuine backfill/data-completeness gaps,
+      not coverage-floor-registry errors).
+- [ ] [DATA] P1. HYPERLIQUID has a real, never-attempted backfill gap: the manifest has ZERO rows of ANY
+      `capture_status` (not even `empty_confirmed`) between 2023-04-15 (the now-correct, vendor-verified coverage floor)
+      and 2023-12-31; real captures only begin 2024-01-01. Investigate why (adapter gap? never scheduled?) and either
+      backfill it or file a `BLOCKED-*` reason if structurally infeasible. (repo: market-tick-data-service or the CeFi
+      backfill launcher)
+- [ ] [DATA] P2. DERIBIT's `trades` data_type has a sparse, likely-partial historical backfill: real captured rows
+      (thousands-to-hundreds-of-thousands `instrument_count`/day) exist 2019-05-08 through 2019-12, but not on every
+      calendar day — unlike `book_snapshot_5`/`derivative_ticker`, which start cleanly and densely at 2020-01-01.
+      Investigate whether more complete 2019 Deribit history is available from Tardis and whether the existing sparse
+      rows are worth completing into a dense daily series. (repo: market-tick-data-service backfill)
+- [ ] [DATA] P3. `venue_mapping.py`'s `BINANCE-DELIVERY` entry (`2020-01-01`) has ZERO real captured rows in the
+      manifest (only 7 `attempted_failed` rows dated 2026-07-26) — the registered floor is unverifiable against measured
+      reality because no real data exists yet. Investigate whether Binance COIN-M delivery contracts are actually being
+      fetched at all, or whether this is a dead/never-implemented shard. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P2. Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 carries `# TODO verify` while
       `venue_mapping.py`'s 2020-01-01 does not; probe the manifest to confirm 2020-01-01 is correct, update
       `TRADFI_SOURCE_COVERAGE_START["CME"]`, and drop the TODO marker. (repo: unified-api-contracts) —

@@ -113,14 +113,22 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
 
 ## Todos
 
-- [ ] [DECISION] P1. **Decide the fix mechanism**: (a) bulk-annotate the 338 call sites with `# noqa: qg-empty-fallback`
-      where the empty-string default is a deliberate, safe choice (the pattern already used by ~15 sites in
-      `bybit.py`/`thegraph_base_client.py`), (b) rewrite genuinely-unsafe ones to a fail-fast pattern (raise / `None`
-      sentinel) where an empty string silently masks a real missing-field bug, or (c) add a baseline-ratchet file for
-      this specific check (matching `/codex/06-coding-standards/quality-gates.md`'s existing DTZ/TID251/fallback-import
-      precedent) so pre-existing debt doesn't block unrelated pushes while still preventing NEW violations. Needs a real
-      per-callsite audit (338 sites) to know which of (a)/(b) applies where — not safe to blanket-apply either without
-      reading each one.
+- [x] [DECISION] P1. ✅ **DECIDED — option (c), baseline-ratchet.** Confirmed 2026-07-27: (c) was already built
+      fleet-wide 2026-07-08 (`scripts/quality_gates/check_no_empty_string_fallback.py`, QG STEP 5.101 +
+      `no_empty_string_fallback_baseline.yaml`), superseding the old zero-tolerance `codex_rg` check in
+      `base-service.sh`. Re-verified live for THIS repo today by running the checker directly (not trusting a stale
+      report): `check_no_empty_string_fallback.py --workspace-root <ws> --scope market-tick-data-service` →
+      `[WARN] market-tick-data-service: 90 < baseline 199` — i.e. this repo is comfortably UNDER baseline (WARN, not
+      FAIL), so STEP 5.101 does not block `market-tick-data-service` pushes. (a)/(b) per-site audits are therefore not
+      needed to unblock — the ratchet already does the job the DECISION was scoped to solve. Original (a)/(b)/(c)
+      framing retained below for provenance. ~~Decide the fix mechanism: (a) bulk-annotate the 338 call sites with
+      `# noqa: qg-empty-fallback` where the empty-string default is a deliberate, safe choice (the pattern already used
+      by ~15 sites in `bybit.py`/`thegraph_base_client.py`), (b) rewrite genuinely-unsafe ones to a fail-fast pattern
+      (raise / `None` sentinel) where an empty string silently masks a real missing-field bug, or (c) add a
+      baseline-ratchet file for this specific check (matching `/codex/06-coding-standards/quality-gates.md`'s existing
+      DTZ/TID251/fallback-import precedent) so pre-existing debt doesn't block unrelated pushes while still preventing
+      NEW violations. Needs a real per-callsite audit (338 sites) to know which of (a)/(b) applies where — not safe to
+      blanket-apply either without reading each one.~~
 - [ ] [SCRIPT] P1. **Once the mechanism is decided, execute it** and get `bash scripts/quality-gates.sh` exiting 0 on
       `market-tick-data-service`'s `live-defi-rollout` tip, restoring `.qg_last_passed_sha` to a current commit.
 - [x] [VERIFY] P2. ✅ **RUN 2026-07-16 — fleet-wide sweep executed, results below.** **Check whether other repos have
@@ -309,10 +317,13 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       `# noqa: qg-empty-fallback` with a one-line reason **if** the empty string is genuinely a meaningful not-present
       value there. The checker reports it as a "positional tail-slice — no baseline commit on record for this repo yet",
       so confirm the site is genuinely new before annotating. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P3. **Ratchet 5 baselines DOWN** (`--update-baseline` per repo): deployment-service 91→89,
-      instruments-service 366→361, **market-tick-data-service 199→62** (this doc's own subject repo — a 137-site
-      improvement never banked), ml-service 8→6, trading-agent-service 2→1. Pure hygiene; each unbanked baseline leaves
-      headroom for a real regression to slip in unnoticed, which is exactly how `agent-orchestrator` reached 26.
+- [ ] [SCRIPT] P3. **Ratchet remaining 4 baselines DOWN** (`--update-baseline` per repo): deployment-service 91→89,
+      instruments-service 366→361, ml-service 8→6, trading-agent-service 2→1. **market-tick-data-service portion DONE
+      2026-07-27** — banked at 199→90 (not 62; count drifted upward between the 07-16 sweep and this re-scan from
+      unrelated commits landing in the interim, still comfortably under the old baseline) via scoped
+      `--update-baseline --scope market-tick-data-service`, `unified-trading-pm@<see Progress Log>`. Pure hygiene for
+      the rest; each unbanked baseline leaves headroom for a real regression to slip in unnoticed, which is exactly how
+      `agent-orchestrator` reached 26.
 
 - [ ] [SCRIPT] P2. **Stamp a `commit:` anchor into the `agent-orchestrator` baseline row** (and audit which other repos
       lack one). Root cause of the 2026-07-16 mis-report: AO's row is bare `count: 25` with no `commit:`, so an
@@ -323,3 +334,15 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       Running `--update-baseline` on a green repo stamps the anchor and clamps the count DOWN (never up), so it is safe.
       **Gate**: `no_empty_string_fallback_baseline.yaml`'s `agent-orchestrator` row carries a `commit:`; a
       deliberately-introduced test site is reported at its real path, not a tail-slice guess.
+
+- **2026-07-27 (Todo 1 closed)** — Re-verified live rather than trusting the 2026-07-16 sweep snapshot: ran
+  `check_no_empty_string_fallback.py --workspace-root <ws> --scope market-tick-data-service` directly →
+  `[WARN] market-tick-data-service: 90 < baseline 199`. Confirms the mechanism decided in 2026-07-08's Progress Log
+  entry (option (c), baseline-ratchet, built as QG STEP 5.101) is genuinely in effect and this repo's STEP 5.101 check
+  is not blocking pushes — the DECISION todo's outcome already held, it just hadn't been checked off. Banked the
+  improvement via scoped `--update-baseline --scope market-tick-data-service` (199→90, stamps a `commit:` anchor for
+  this repo's row too, closing part of the separate P2 anchor todo's spirit though that todo names `agent-orchestrator`
+  specifically). Did not touch the other 4 repos' baselines (deployment-service/instruments-service/ml-service/
+  trading-agent-service) — out of scope for this task, left for the standing P3 todo. Did not attempt Todo 2 (full
+  `quality-gates.sh` exit-0 + `.qg_last_passed_sha` restoration) — that is a separate, broader deliverable than the
+  DECISION this task was scoped to.

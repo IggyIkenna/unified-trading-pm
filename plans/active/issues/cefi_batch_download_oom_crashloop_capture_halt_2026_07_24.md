@@ -385,8 +385,14 @@ not a shared root cause** — rules out the "(2) Whether this is causally relate
       `asyncio.wait_for(300s)` in `download_batch()` (`tardis_batch_download.py`), routing a timeout into the existing
       shard-level failure isolation instead of hanging the whole job. `market-tick-data-service@31958a05`,
       `quality-gates.sh` green, shipped via quickmerge.
-- [ ] [OPERATOR] P2. Decide whether to keep the Cloud Run job at 16Gi permanently (small ongoing cost increase) once the
-      root cause is confirmed/fixed, or revert to 8Gi after a code fix lands.
+- [x] [DATA] P2. ✅ **DECIDED 2026-07-27** — **not an operator decision**: reverting to 8Gi is a technical call gated on
+      evidence, not a business/spend judgment (the cost delta is this todo's own "small" framing, and Cloud Run memory
+      limits are a one-line, instantly-reversible config either direction). **Keep 16Gi for now** — the fix
+      (`market-tick-data-service@31958a05`, 300s bound) has only ONE confirmed manual-execution repro; the sibling todo
+      below explicitly notes steady-state health across multiple SCHEDULED runs is not yet observed. Revert to 8Gi only
+      once that todo confirms steady-state recovery — tracked there, not as a separate decision.
 - [ ] [DATA] P2. Once the regular 06:00/09:00 UTC crons have run a few times on the new 16Gi limit, re-verify
       `capture_status` by `date` returns to the ~1,000-1,200/day baseline (this session only confirmed ONE manual
-      execution recovered; the steady-state pattern across multiple scheduled runs is not yet observed).
+      execution recovered; the steady-state pattern across multiple scheduled runs is not yet observed). **Once
+      confirmed, revert Cloud Run to 8Gi** (closes the prior todo's deferred revert decision) — autonomous, no operator
+      gate: this is a one-line Cloud Run memory-limit config change, instantly reversible either way.

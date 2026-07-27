@@ -118,6 +118,29 @@ one of four verdicts with evidence:
 **Done when** (per tranche): every `assigned_vm: NA` doc in that tranche has a recorded verdict + evidence, either
 inline in the doc itself (Progress Log entry) or in a per-tranche audit-results doc under `plans/audit/results/`.
 
+> **Status as of 2026-07-27: the 9 checkboxes above stay honestly unflipped — real work happened in every tranche, but
+> not to this section's own "every NA doc" bar, so flipping them would overclaim.** What actually ran (2026-07-27, same
+> session): 19 parallel sub-agents (9 for `doc_type:plan`, 10 for `doc_type:issue`) verdicted every NA doc that had ≥1
+> open todo — 142 plan docs + 214 issue docs, 356 total — across all 9 tranches, with cefi/defi/sports/
+> cross-cutting/meta getting dedicated per-tranche agents and **tradfi+prediction combined into one shared agent** (11
+> docs — the smallest 2 tranches, judged low-enough-volume to combine; not yet re-verified this was sufficient depth vs.
+> a dedicated pass each) and **ao/ci folded into the cross-cutting/meta batches** rather than getting their own
+> dedicated split. Docs with **zero open todos** were never in scope at all (nothing to reclassify), which is why ~444
+> NA docs existed but only 356 got a verdict. The gap: **~314 of the ~451 original NA docs never got individual
+> attention this session** (444 live-status minus 356 covered, plus a handful of already-excluded paused/false-positive
+> docs) — some genuinely have 0 open todos (correctly out of scope), but that hasn't been confirmed doc-by-doc, only
+> inferred from the corpus-wide grep. Two concrete follow-ups, not yet started:
+
+- [ ] [REVIEW] P2. **Spot-check whether tradfi+prediction's combined single-agent pass (11 docs) and the ao/ci
+      folded-into-other-tranches coverage were adequate**, or whether those 4 tranches need their own dedicated
+      per-tranche agent pass like cefi/defi/sports/cross-cutting/meta got — compare finding-density (RECLASSIFY rate)
+      against the dedicated-agent tranches; a suspiciously low rate is the signal a combined/folded pass under-mined its
+      tranche.
+- [ ] [REVIEW] P2. **Confirm the ~314 NA docs with zero open todos are genuinely out of scope** (nothing to reclassify)
+      rather than silently-excluded candidates — a quick per-doc `grep -c '^\s*-\s*\[ \]'` sweep (not a full read) is
+      enough to separate "confirmed 0 open todos, correctly skip" from "this session's zero-open-todo filter itself has
+      a bug" (e.g. a doc whose todos use a non-canonical checkbox format the regex missed).
+
 ## Phase 2 — Consolidate RECLASSIFY findings into AO-eligible satellite batches
 
 - [ ] [DOC] P2. Per tranche, for every doc/todo verdicted RECLASSIFY in Phase 1: run the SAME conflict-check methodology

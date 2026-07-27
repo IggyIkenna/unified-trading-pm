@@ -186,18 +186,18 @@ changed since batch1.
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
 
       **Evidence**: (1) CME coverage verified against its TRUE declared floor (2020-01-01, not 2019-01-01 — confirmed
-                                              live via a SPOT VM finding zero active venues for all of 2019); 1 genuine gap (2024-11-08) backfilled, 2
-                                              anomalous Sundays filed as a new P3 finding. (2) `databento_subscription_allowlist` unit tests already existed
-                                              (39/39 pass, all 6 scenarios) — no new test needed. (3) The QG grep-ratchet already existed (MTDS STEP
-                                              5.92/5.93) — re-verified green. (4) 2 of 3 sample re-fetches succeeded (2020-01-02: 38,669 records; 2023-01-03:
-                                              47,810 records), confirming the pre-lockdown universe was far narrower; full 2020-01-01→2026-06-18 re-fetch
-                                              range enumerated and filed as a new P2 finding for a dedicated backfill plan. (5) UAC's stale CBOE `ohlcv_15m`
-                                              entries were already removed (2026-07-15); fixed the one remaining stale MDPS docstring. (6) uac@599acf93
-                                              confirmed live on `main` via merge-ancestry + zero reverts + the removed symbols still absent a month later. (7)
-                                              Doc self-contradiction corrected, live-reverified post IS@92084d5c. Shipped:
-                                              `market-data-processing-service@aebca177c5` (docstring fix) + `instruments-service@6a54828f84` (script bugfix +
-                                              2024-11-08 backfill, no code diff for the manifest write itself). All findings + underlying checkboxes flipped
-                                              in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` in the same commit.
+                                                          live via a SPOT VM finding zero active venues for all of 2019); 1 genuine gap (2024-11-08) backfilled, 2
+                                                          anomalous Sundays filed as a new P3 finding. (2) `databento_subscription_allowlist` unit tests already existed
+                                                          (39/39 pass, all 6 scenarios) — no new test needed. (3) The QG grep-ratchet already existed (MTDS STEP
+                                                          5.92/5.93) — re-verified green. (4) 2 of 3 sample re-fetches succeeded (2020-01-02: 38,669 records; 2023-01-03:
+                                                          47,810 records), confirming the pre-lockdown universe was far narrower; full 2020-01-01→2026-06-18 re-fetch
+                                                          range enumerated and filed as a new P2 finding for a dedicated backfill plan. (5) UAC's stale CBOE `ohlcv_15m`
+                                                          entries were already removed (2026-07-15); fixed the one remaining stale MDPS docstring. (6) uac@599acf93
+                                                          confirmed live on `main` via merge-ancestry + zero reverts + the removed symbols still absent a month later. (7)
+                                                          Doc self-contradiction corrected, live-reverified post IS@92084d5c. Shipped:
+                                                          `market-data-processing-service@aebca177c5` (docstring fix) + `instruments-service@6a54828f84` (script bugfix +
+                                                          2024-11-08 backfill, no code diff for the manifest write itself). All findings + underlying checkboxes flipped
+                                                          in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` in the same commit.
 
 - [ ] [SCRIPT] P1. **Conflict-check (2026-07-25 plan-reconcile): this todo's Done-when flips 3 checkboxes in
       `tradfi_backfill_throughput_followups_2026_07_24.md`; todo 9 below flips a 4th checkbox in that SAME doc. Do not
@@ -224,19 +224,21 @@ changed since batch1.
       non-existent plan doc; all 3 corresponding checkboxes in `tradfi_backfill_throughput_followups_2026_07_24.md` are
       flipped/updated in the SAME commit. Source: `tradfi_backfill_throughput_followups_2026_07_24.md`.
 
-- [ ] [OPERATOR] P1. **Correct the live tradfi `availability_index` manifest for the ~97,828 combo/chain objects
+- [ ] [SCRIPT] P1. **Correct the live tradfi `availability_index` manifest for the ~97,828 combo/chain objects
       quarantined by the 2026-07-20 recovery run** — locate `recover_tradfi_garbage_underlying_2026_07.py --apply`'s
       retained per-shard `--out` TSV / `*.apply_outcomes.json` artifacts (VM launcher convention
       `gs://deployment-scripts-*/vm-logs/<vm>/...`) as the authoritative QUARANTINED-row list, then CAS-update those
       rows' `capture_status` to `attempted_failed` in the live manifest (mirroring
       `recover_tradfi_chain_manifest_registration_2026_07_22.py`'s register/retire whole-index in-place-CAS pattern) so
-      the manifest stops silently claiming `captured` at a path that no longer physically exists. **Tagged `[OPERATOR]`
-      per `task_template.md` §3's delete-risk rule and `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`**
-      (2026-07-25 delete/VM-launch gating pass) — this CAS-updates `capture_status` for ~97,828 live prod manifest rows,
-      an overwrite of production state, not a reversible dry-run; per this SAME plan's own "reclassification races the
-      consolidator too" near-miss precedent todo below (in-place manifest reclassification racing the live consolidator
-      cron), the operator running this must pause the manifest-consolidator cron BEFORE the CAS pass and resume only
-      after the post-pass spot-check confirms clean. If the run's per-shard artifacts are not retrievable, STOP and
+      the manifest stops silently claiming `captured` at a path that no longer physically exists. **Downgraded from
+      `[OPERATOR]` 2026-07-27** (reversibility-verified, finding T,
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): the `availability_index` is a Parquet object in
+      `market-data-tick-tradfi-prd-central-element-323112`, confirmed fresh at `604800s` GCS Soft Delete retention — the
+      CAS overwrite is recoverable within that window like an object delete. The consolidator-race concern is separate
+      and does NOT need a human either: it's a coordination step (pause the manifest-consolidator cron BEFORE the CAS
+      pass, resume only after the post-pass spot-check confirms clean), fully executable by whoever runs this —
+      pausing/resuming a Cloud Scheduler job is an ordinary GCP admin action, no different from the cron-pause step this
+      plan already expects a human to perform manually. If the run's per-shard artifacts are not retrievable, STOP and
       report that as the finding rather than launching a new full-corpus GCS walk (single-walk discipline). **No real
       conflict** — the original triage's own conflict note confirmed zero overlap with
       `tradfi_consolidated_closeout_2026_07_18.md`'s own remediation items (grepped, zero hits); the only flagged item

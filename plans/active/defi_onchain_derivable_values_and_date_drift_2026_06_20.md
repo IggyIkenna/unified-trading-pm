@@ -177,11 +177,19 @@ that workstream.
 
 ## P1 — Fork-1 prep residuals (UAC date drift)
 
-- [ ] [HUMAN-AGENT] P1. **Pyth Hermes coverage SSOT + jitoSOL pre-2023-10 backtest scope.** A NEW UAC oracle-coverage
-      module declares Pyth Hermes archive availability per feed: the jitoSOL feed has Hermes data starting 2023-10-XX,
-      with Pythnet RPC data going further back but not archived consistently. Operator go/no-go: do we backtest jitoSOL
-      pre-2023-10 (Pythnet replay, slow + expensive) or clip the backtest window to 2023-10+? Default: clip. (Named
-      successor for the LST-sourcing decision: archived
+- [x] ✅ [HUMAN-AGENT] P1. **Pyth Hermes coverage SSOT + jitoSOL pre-2023-10 backtest scope.** Resolved 2026-07-27
+      applying the plan's own stated default (**clip**): the UAC oracle-coverage module
+      (`unified_api_contracts/registry/capability_declarations/_defi_oracle_coverage.py`, pre-existing since the
+      2026-05-08 Tab 14 audit) declares `ORACLE_COVERAGE_START["pyth_hermes"] = "2023-10-01"`; its docstring's
+      previously-`pending` jitoSOL note is now **RESOLVED**: jitoSOL backtests start no earlier than 2023-10-01, the
+      Pythnet-RPC replay for the pre-archive (2022-11 → 2023-10) window is NOT pursued (slow + expensive, no archive
+      API). Facade re-export wired (`ORACLE_COVERAGE_START` / `get_oracle_coverage_start` now reachable via
+      `unified_api_contracts.registry`, mirroring `LST_TOKEN_GENESIS`) + a facade-parity test added. Codex cross-link
+      added at `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` § "On-chain APY derivation". Note:
+      no consumer yet derives an actual backtest date-range floor from this SSOT (nothing in the codebase runs a
+      pre-2023-10 jitoSOL backtest today, so there is nothing to clip in practice) — wiring an explicit floor into the
+      backtest engine is separate, cross-craft follow-on work if/when a consumer needs it. —
+      unified-api-contracts@4a29261e (Named successor for the LST-sourcing decision: archived
       `plans/archive/issues/lst_apr_sourcing_method_validated_2026_05_14.md`.)
 - [ ] [SCRIPT] P1. **Latent Bug-class-3 local fallback drift sweep.** Adjacent to case-2 (UAC `PROTOCOL_LAUNCH_DATES` vs
       the instruments-service local fallback dict). Sweep for any local fallback that overrides a UAC value without an

@@ -3,10 +3,11 @@ doc_type: audit-result
 title: "Pipeline E2E Check — data_pipeline_e2e_check_features (2026-07-05)"
 summary:
   "data_pipeline_e2e_check_features pipeline-e2e-check 2026-07-05 (merged across multiple driver invocations — see
-  merge_pipeline_e2e_report.py): total=8 passed=0 failed=1 ambiguous=0 skipped=6"
-status: pass
+  merge_pipeline_e2e_report.py): total=12 passed=0 failed=3 ambiguous=0 skipped=6. Includes a P0 data-correctness bug
+  (calendar writes to PROD despite IS_TEST_RUN)."
+status: fail
 nature: record
-asset_group: [defi, prediction, tradfi]
+asset_group: [defi, prediction, tradfi, cross-cutting]
 stage: [data]
 repos: [features-service, deployment-service]
 scope: [engineer, admin]
@@ -34,33 +35,48 @@ generated_at: "2026-07-27T06:38:22.185403+00:00"
 **Note — merged across multiple driver invocations** via `merge_pipeline_e2e_report.py` (the driver overwrites its
 report per-invocation, does not append across separate `--asset-group`/`--family`-scoped processes).
 
-**Summary:** total=8 passed=0 failed=1 ambiguous=0 skipped=6
+**Summary:** total=12 passed=0 failed=3 ambiguous=0 skipped=6
 
 ## Results
 
-| Shard                | Leg   | Status  | Skip proof     | Exit | Parquet | Manifest | Reason                                                                                                                                                                                                                  |
-| -------------------- | ----- | ------- | -------------- | ---- | ------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| DEFI:delta_one       | force | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
-| DEFI:delta_one       | skip  | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
-| DEFI:onchain         | force | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
-| DEFI:onchain         | skip  | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
-| PREDICTION:delta_one | force | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
-| PREDICTION:delta_one | skip  | skipped | not_applicable | None | 0       | -        | no_captured_input_for_window (window 2026-07-04..2026-07-05, lookback=1d)                                                                                                                                               |
-| TRADFI:delta_one     | force | failed  | not_applicable | 1    | 0       | -        | dependency_check_failed: Missing market-data-processing-service, Path gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-07-04/, Date 2026-07-04, No data for 2026-07-04/TRADFI |
-| TRADFI:delta_one     | skip  | not_run | not_applicable | None | 0       | -        | force already failed on missing input — skip-if-fresh is moot without a successful write                                                                                                                                |
+| Shard                | Leg   | Status     | Exit | Reason                                                                 |
+| -------------------- | ----- | ---------- | ---- | ---------------------------------------------------------------------- |
+| DEFI:delta_one       | force | skipped    | -    | no_captured_input_for_window (window 2026-07-04..2026-07-05)           |
+| DEFI:delta_one       | skip  | skipped    | -    | no_captured_input_for_window                                           |
+| DEFI:onchain         | force | skipped    | -    | no_captured_input_for_window (window 2026-07-04..2026-07-05)           |
+| DEFI:onchain         | skip  | skipped    | -    | no_captured_input_for_window                                           |
+| GLOBAL:calendar      | force | **failed** | 0    | **P0 BUG**: wrote to PROD despite IS_TEST_RUN=true — see Note below    |
+| GLOBAL:calendar      | skip  | not_run    | -    | force violated test-bucket isolation                                   |
+| PREDICTION:delta_one | force | skipped    | -    | no_captured_input_for_window (window 2026-07-04..2026-07-05)           |
+| PREDICTION:delta_one | skip  | skipped    | -    | no_captured_input_for_window                                           |
+| TRADFI:commodity     | force | failed     | 1    | all 3 external sources 403/timeout/404 — see Note below                |
+| TRADFI:commodity     | skip  | not_run    | -    | force failed on all external sources                                   |
+| TRADFI:delta_one     | force | failed     | 1    | dependency_check_failed: no candles at day=2026-07-04 — see Note below |
+| TRADFI:delta_one     | skip  | not_run    | -    | force already failed on missing input                                  |
 
-## Bucket paths (where each write/read actually landed)
+(full per-row `skip_proof`/`parquet`/`manifest` detail lives in the paired `.json`, trimmed here for width)
 
-| Shard                | Leg   | Parquet bucket | Manifest bucket | Same bucket? |
-| -------------------- | ----- | -------------- | --------------- | ------------ |
-| DEFI:delta_one       | force | `-`            | `-`             | -            |
-| DEFI:delta_one       | skip  | `-`            | `-`             | -            |
-| DEFI:onchain         | force | `-`            | `-`             | -            |
-| DEFI:onchain         | skip  | `-`            | `-`             | -            |
-| PREDICTION:delta_one | force | `-`            | `-`             | -            |
-| PREDICTION:delta_one | skip  | `-`            | `-`             | -            |
-| TRADFI:delta_one     | force | `-`            | `-`             | -            |
-| TRADFI:delta_one     | skip  | `-`            | `-`             | -            |
+## Note — GLOBAL:calendar — P0 DATA-CORRECTNESS BUG, not a clean pass
+
+VM `features-e2e-global-20260727-074139-a9e7df` (`DEPLOYMENT_COMPLETED exit_code=0`) wrote to
+`gs://features-calendar-prd-central-element-323112/...` — **PROD**, despite `IS_TEST_RUN=true` /
+`PROTOCOL_DATA_SINK_BUCKET=features-calendar-test-...` both set in the VM env. Root cause (direct code read):
+`features_service/calendar/config.py`'s `is_test_run` field is declared but consumed NOWHERE in the package —
+`get_source_bucket()` never branches on it or checks `get_data_sink(routing_key=...)` (the correct pattern
+`delta_one/config.py`'s `get_output_bucket()` already uses). 0 rows written this run (no real damage), but a real-data
+day would silently pollute PROD from a smoke-test invocation. Full writeup + fix:
+`issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` (P0, operator-notified). **Do not re-run this
+cell until the fix lands.**
+
+## Note — TRADFI:commodity — external data sources unreachable from this GCP VM (not a credentials gap)
+
+VM `features-e2e-tradfi-20260727-083257-974efe` (`DEPLOYMENT_FAILED exit_code=1`, `Batch completed: 0/4 succeeded`) —
+all 3 data sources (`eia_weekly_storage`, `cftc_cot_report`, `baker_hughes_rig_count`) returned 403/timeout/404. Each
+adapter's own docstring states "Authentication: None required (public)" — this is NOT `BLOCKED-CREDENTIALS` (no
+credential exists to provision); most likely GCP-VM outbound-IP blocking or a missing/generic `User-Agent` header these
+public sites now reject. The manifest's own honest-absence guard correctly REFUSED to record this as `empty_confirmed`
+(no clean-200-empty `FetchEvidence`) — a good defensive catch, not a bug. Full writeup:
+`issues/features_commodity_public_api_403_from_gcp_vm_2026_07_27.md` (P2).
 
 ## Note — TRADFI:delta_one manually recorded (driver process crashed before writing its own report row)
 
