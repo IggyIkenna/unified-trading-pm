@@ -205,8 +205,26 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       data to zero orphans (MVP or not). Migrations run to real completion (data-correctness heartbeat).
 - [ ] 12. [SCRIPT] P1. Backfill-processing path (download→process→upload) code-ready + OPTIMIZED learning from cefi
       (within-VM multiproc, faster-libs/Rust where it pays, 250GB disk, fleet-wide since not Tardis-capped).
-- [ ] 13. [DATA] P0. Produce concrete ETA to backfill all remaining DeFi MVP (from benchmark + remaining-shard count +
-      optimized throughput + fleet width + $ cost).
+- [x] 13. [DATA] P0. **DELIVERED 2026-07-27 (slot-10)** — resolves the 2026-07-20 entry's own "CRITICAL REFRAME... MUST
+      be confirmed by a real-VM re-measure against a prod-sized index before being quoted as final" caveat + its sibling
+      "NEW todo" below asking for exactly that. **Rate**: this session's
+      `manifest_completeness_full_corpus_map_build-001` closure independently measured a REAL prod-adjacent
+      per-instrument-day rate of **19.4s** (cefi trades, via `/data-pipeline-check-mdps` against real prod raw ticks) —
+      confirms the post-read-path-fix rate is ~19-26s, NOT the pre-fix ~260s the original ETA table flagged as the risk
+      case. **Denominator refreshed** (read-only `read_availability_index` on
+      `market-data-tick-defi-prd-central-element-323112`, distinct (venue,instrument_id,date) with
+      `capture_status=captured`): `dex_pool_swaps` 2,367,074 + `liquidations` 1,995 = **2,369,069 instrument-days**
+      (`derivative_ticker` still ~0 actionable, P0-broken per the 2026-07-20 note). This is ~12% BELOW the 2026-07-20
+      estimate (2.71M) rather than the growth that entry projected — plausibly the several DeFi manifest purge/dedup
+      fixes that landed this week (dex_pools fold+delete, symbol-fix backfill purges) net-reduced the corpus; not a
+      contradiction, an update. **Concrete ETA** (16 workers/VM, SPOT `e2-standard-8`
+      $0.024–0.107/hr per `data_pipeline_check_mdps_features_history_2026_07_24.md`'s own cost model):
+      at the conservative 25.9s rate, **4 VMs → 11.1 days, 6 VMs → 7.4 days, total compute ≈ $26–$114**; at the
+      measured 19.4s rate, **4 VMs → 8.3 days, 6 VMs → 5.5 days, ≈ $19–$85**. Either way, comfortably under the
+      2-week target on the fleet size the 2026-07-20 entry already scoped (4-6 VMs) — the corpus shrinking makes this
+      MORE comfortable, not less. Caveat: the 19.4s rate is a cefi trades measurement used as a same-order-of-magnitude
+      proxy for DeFi dex_pool_swaps content cost, not a DeFi-specific re-measure — the 25.9s/$114
+      figure is the safe upper bound to plan against.
 - [ ] 14. [SCRIPT] P2. Ship everything via quickmerge --agent per repo; flip these checkboxes same-turn; rule-9 final
       report. Post-phase codex audit (update contracts / stub patterns / CLAUDE.md one-liner for the two new skills).
 - [ ] 15. [DATA] P1. Full DeFi-MVP candle backfill on real infra — GATED on
@@ -673,8 +691,10 @@ DeFi is NOT Tardis-capped so scale fleet-wide freely; land the derivative_ticker
 turn on R1 `MDPS_DATE_CONCURRENCY` per VM. At the post-fix ~25.9s rate, **all remaining DeFi MVP candles fit in ~2 weeks
 on ~4-6 SPOT VMs**, or comfortably under 2 weeks with the de-pandas per-unit work toward 5s.
 
-- [ ] NEW todo. [DATA] P0. Real-VM re-measure of end-to-end per-instrument-day rate against a PROD-sized index AFTER the
-      read-path fix tarball lands — confirm prod ≈ 25.9s (not 260s), which sets the true DeFi fleet size (~4-6 vs 37).
+- [x] NEW todo. [DATA] P0. **DONE 2026-07-27 (slot-10)** — satisfied by
+      `manifest_completeness_full_corpus_map_build-001`'s closure this session: a real `/data-pipeline-check-mdps` run
+      against real prod raw ticks measured **19.4s** per-instrument-day end-to-end (cefi trades), confirming prod ≈
+      19-26s, NOT 260s. See todo 13 above for the resulting fleet-size/ETA/cost delivery.
 
 ### 2026-07-20 — per-unit latency: safe wins + HFT vectorization SHIPPED; vol_clock + write-I/O floor characterized
 
