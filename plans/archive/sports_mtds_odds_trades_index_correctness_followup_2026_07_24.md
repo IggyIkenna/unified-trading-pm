@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [migration, manifest, sports, data-correctness, mtds, schema-drift]
 related:
   [
-    /plans/active/sports_legacy_bucket_cutover_2026_07_16.md,
+    /plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md,
     /plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
@@ -53,18 +53,19 @@ source:
 # MTDS sports odds/trades index-correctness followup
 
 > **Forked 2026-07-24** from
-> [`sports_legacy_bucket_cutover_2026_07_16.md`](/plans/active/sports_legacy_bucket_cutover_2026_07_16.md) via the
-> plan-hygiene line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 24, bucket (c))
-> — the parent plan's ~2700 lines of completed cutover history stay in place; these were its last 2 open Phase-2 (MOVE)
-> todos, moved here **verbatim, unedited**. Todo IDs (T2.9, T2.10) and every cross-reference inside them (T2.5, T2.6,
-> T2.7, T3.1, OR-4, OR-5b, R-11, `_legacy_seed.parquet`, etc.) are defined and discussed at length in the parent plan —
-> **read it for full context before acting on either todo below**, especially the parent's own updated top-of-file
-> banner (as of 2026-07-17) which reports `OR-5b RESOLVED` and the `market-data-tick-sports-central-element-323112`
-> bucket already **DELETED**, and separately states _"T2.10 seed phantoms purged (`odds_api` intact)"_ as part of that
-> later resolution. **T2.10 in particular may already be stale against that later banner** — the checkbox below is moved
-> exactly as it stood at its 2026-07-16/17 authoring point (still unchecked in the source); verify current state on real
-> infra before executing rather than assuming the text below is still accurate. This plan does not resolve that
-> discrepancy — it is flagged here for whoever picks up T2.10 to check first.
+> [`sports_legacy_bucket_cutover_2026_07_16.md`](/plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md) via
+> the plan-hygiene line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 24, bucket
+> (c)) — the parent plan's ~2700 lines of completed cutover history stay in place; these were its last 2 open Phase-2
+> (MOVE) todos, moved here **verbatim, unedited**. Todo IDs (T2.9, T2.10) and every cross-reference inside them (T2.5,
+> T2.6, T2.7, T3.1, OR-4, OR-5b, R-11, `_legacy_seed.parquet`, etc.) are defined and discussed at length in the parent
+> plan — **read it for full context before acting on either todo below**, especially the parent's own updated
+> top-of-file banner (as of 2026-07-17) which reports `OR-5b RESOLVED` and the
+> `market-data-tick-sports-central-element-323112` bucket already **DELETED**, and separately states _"T2.10 seed
+> phantoms purged (`odds_api` intact)"_ as part of that later resolution. **T2.10 in particular may already be stale
+> against that later banner** — the checkbox below is moved exactly as it stood at its 2026-07-16/17 authoring point
+> (still unchecked in the source); verify current state on real infra before executing rather than assuming the text
+> below is still accurate. This plan does not resolve that discrepancy — it is flagged here for whoever picks up T2.10
+> to check first.
 
 ## Codex SSOTs (read before executing)
 
@@ -89,20 +90,20 @@ source:
       canonical object. _ABORT_: none (analysis).
 
       **Resolution (2026-07-26)**: updated `SPORTS_ODDS_TRADES` in
-              `unified_api_contracts/internal/schemas/_sports_prediction_contracts.py` to the real writer schema —
-              `venue`→`bookmaker_key` (row-level rename applied by `venue_fetch.py`'s per-bookmaker shard grouping before
-              write — the real object never carries a `venue` column, only the manifest/path dimension is named that),
-              `ts_event`→`bm_time` (kept dtype `string`, NOT `datetime64[ns, UTC]` — the writer persists it as a raw ISO8601
-              string), `data_source`→`source`, `market_type`→`market_key`, `outcome`→`outcome_name`, `odds_decimal`→`price`
-              (reused the shared `PRICE_COL`). `broker`/`client` REMOVED entirely — verified live (`venue_fetch.py` +
-              `odds_api_adapter.py::_build_fixture_rows`) that no sports-odds ingestion path ever emits either field; declaring
-              them `nullable=True` still fails `missing_column` when the column doesn't exist at all, so nullable-but-present
-              was never the right fix. **Verified directly against a live captured object** —
-              `gs://market-data-tick-sports-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-20/pipeline_mode=batch_odds_api/asset_group=sports/venue=WILLIAMHILL/league_id=ALLSVENSKAN/instrument_type=ODDS/data_type=TRADES/ticks.parquet`
-              (75 rows) → `validate_dataframe(df, lookup_contract(asset_group="sports", instrument_type="odds", data_type="trades"))`
-              returns `[]` (0 violations) under the corrected contract, vs. `missing_column` violations under the prior one.
-              23 unit tests updated/passing in `tests/internal/unit/test_sports_prediction_contracts.py`; full
-              `quality-gates.sh` green.
+                                                  `unified_api_contracts/internal/schemas/_sports_prediction_contracts.py` to the real writer schema —
+                                                  `venue`→`bookmaker_key` (row-level rename applied by `venue_fetch.py`'s per-bookmaker shard grouping before
+                                                  write — the real object never carries a `venue` column, only the manifest/path dimension is named that),
+                                                  `ts_event`→`bm_time` (kept dtype `string`, NOT `datetime64[ns, UTC]` — the writer persists it as a raw ISO8601
+                                                  string), `data_source`→`source`, `market_type`→`market_key`, `outcome`→`outcome_name`, `odds_decimal`→`price`
+                                                  (reused the shared `PRICE_COL`). `broker`/`client` REMOVED entirely — verified live (`venue_fetch.py` +
+                                                  `odds_api_adapter.py::_build_fixture_rows`) that no sports-odds ingestion path ever emits either field; declaring
+                                                  them `nullable=True` still fails `missing_column` when the column doesn't exist at all, so nullable-but-present
+                                                  was never the right fix. **Verified directly against a live captured object** —
+                                                  `gs://market-data-tick-sports-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-20/pipeline_mode=batch_odds_api/asset_group=sports/venue=WILLIAMHILL/league_id=ALLSVENSKAN/instrument_type=ODDS/data_type=TRADES/ticks.parquet`
+                                                  (75 rows) → `validate_dataframe(df, lookup_contract(asset_group="sports", instrument_type="odds", data_type="trades"))`
+                                                  returns `[]` (0 violations) under the corrected contract, vs. `missing_column` violations under the prior one.
+                                                  23 unit tests updated/passing in `tests/internal/unit/test_sports_prediction_contracts.py`; full
+                                                  `quality-gates.sh` green.
 
 - [x] [DATA] P0. **T2.10 — 47,253 phantom `api_football × trades` `captured` rows in the MDT canonical index (BIG
       FINDING, T2.7). Same class as T3.1's 123,149 `api_football × ODDS`, other bucket, no todo owns it.** ✅ RESOLVED
@@ -119,30 +120,30 @@ source:
       purging without the `source` filter → destroys the real `odds_api` population → STOP.
 
       **Resolution (2026-07-26)**: re-queried the CURRENT `market-data-tick-sports-prd-central-element-323112`
-              manifest for `source=api_football AND data_type=trades` (case-insensitive — the sports manifest carries a live
-              instrument_type/data_type casing migration, `TRADES` vs `trades`, so an exact-case match alone would risk a
-              false "clean" or false "dirty" read) on **BOTH surfaces separately**, per the plan's own caveat that a
-              merged-index-only check is insufficient (SLOT-3 2026-07-17 finding below):
-              - `_index/availability_index.parquet` (merged index): 465,223 total rows, **0** matching
-                `source=api_football AND data_type=trades` (any case).
-              - `_index/per_vm/_legacy_seed.parquet` (live per-VM legacy seed shard — the one the SLOT-3 finding warned
-                re-introduces phantoms every consolidator cycle): 362,753 total rows, **0** matching, also verified
-                case-insensitively.
+                                                  manifest for `source=api_football AND data_type=trades` (case-insensitive — the sports manifest carries a live
+                                                  instrument_type/data_type casing migration, `TRADES` vs `trades`, so an exact-case match alone would risk a
+                                                  false "clean" or false "dirty" read) on **BOTH surfaces separately**, per the plan's own caveat that a
+                                                  merged-index-only check is insufficient (SLOT-3 2026-07-17 finding below):
+                                                  - `_index/availability_index.parquet` (merged index): 465,223 total rows, **0** matching
+                                                    `source=api_football AND data_type=trades` (any case).
+                                                  - `_index/per_vm/_legacy_seed.parquet` (live per-VM legacy seed shard — the one the SLOT-3 finding warned
+                                                    re-introduces phantoms every consolidator cycle): 362,753 total rows, **0** matching, also verified
+                                                    case-insensitively.
 
-              Both surfaces are clean. Per this todo's own `Done when` clause, this closes T2.10 citing the 2026-07-23
-              CAS-safe wipe (`market-tick-data-service@e9d9dec0`,
-              `scripts/sports/wipe_api_football_sports_manifest_2026_07_23.py`, 1,266,874/1,266,874 `source=api_football`
-              rows removed from the merged index) as the resolution — note that wipe script's CAS remove only touched
-              `_index/availability_index.parquet`, NOT `_index/per_vm/_legacy_seed.parquet` directly, so the seed's current
-              cleanliness was NOT assumed and was independently, freshly re-verified rather than inferred from the merged-index
-              wipe alone (exactly the check the "POSSIBLY MOOT" flag below asked for). The mechanism by which the seed itself
-              became clean between the 2026-07-17 SLOT-3 measurement (37,114 phantom rows in the seed) and now was not
-              re-derived here (out of this todo's scope — the Gate is a disposition on the 47,253, not a root-cause of the
-              seed's history) — a candidate explanation is a later, unlogged seed rebuild/rotation during one of the several
-              sports remediation passes in the intervening 9 days, but this is not asserted as fact. Reproducible via
-              `market-tick-data-service@f6ea0010`,
-              `scripts/sports/probe_t210_api_football_trades_both_surfaces_2026_07_26.py` (read-only, no writes — probes both
-              surfaces directly and prints the match counts for either surface independently).
+                                                  Both surfaces are clean. Per this todo's own `Done when` clause, this closes T2.10 citing the 2026-07-23
+                                                  CAS-safe wipe (`market-tick-data-service@e9d9dec0`,
+                                                  `scripts/sports/wipe_api_football_sports_manifest_2026_07_23.py`, 1,266,874/1,266,874 `source=api_football`
+                                                  rows removed from the merged index) as the resolution — note that wipe script's CAS remove only touched
+                                                  `_index/availability_index.parquet`, NOT `_index/per_vm/_legacy_seed.parquet` directly, so the seed's current
+                                                  cleanliness was NOT assumed and was independently, freshly re-verified rather than inferred from the merged-index
+                                                  wipe alone (exactly the check the "POSSIBLY MOOT" flag below asked for). The mechanism by which the seed itself
+                                                  became clean between the 2026-07-17 SLOT-3 measurement (37,114 phantom rows in the seed) and now was not
+                                                  re-derived here (out of this todo's scope — the Gate is a disposition on the 47,253, not a root-cause of the
+                                                  seed's history) — a candidate explanation is a later, unlogged seed rebuild/rotation during one of the several
+                                                  sports remediation passes in the intervening 9 days, but this is not asserted as fact. Reproducible via
+                                                  `market-tick-data-service@f6ea0010`,
+                                                  `scripts/sports/probe_t210_api_football_trades_both_surfaces_2026_07_26.py` (read-only, no writes — probes both
+                                                  surfaces directly and prints the match counts for either surface independently).
 
 > **🔬 SLOT-3 FINDING 2026-07-17 — T2.10 is NOT a T3.1-style merged-index purge; the seed re-introduces the phantoms.
 > STILL BLOCKED (entangled with `_legacy_seed`/OR-4/OR-5b).** Measured directly with DuckDB over fresh downloads of BOTH

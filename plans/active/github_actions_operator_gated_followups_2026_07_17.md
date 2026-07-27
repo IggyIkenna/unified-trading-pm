@@ -26,7 +26,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/archive/issues/quickmerge_agent_sentinel_race_vs_own_rebase_2026_07_16.md,
     /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md,
-    /plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
+    /plans/archive/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
     /plans/active/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md,
     /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
@@ -103,7 +103,7 @@ drift_direction: advance-code
       [/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md](/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
       § Phase 4). Left **unticked deliberately** — the deletion must not happen, and retiring vs rewriting this todo is
       a planning call parked for the operator. SSOT:
-      [/plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md](/plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md)
+      [/plans/archive/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md](/plans/archive/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md)
       (banner at top).
 - [ ] [REVIEW] P0. **OPERATOR DECISIONS on cassette-drift-check (fixed + flipped 2026-07-17, but two calls are yours).**
       (a) **Close the 52 open false `[Cassette Drift]` issues** in `unified-api-contracts` (each self-refuting: "Total

@@ -376,7 +376,7 @@ drift_direction: none
       mitigation).
     - **[DOC] P2.** Update `/codex/02-data/defi-canonical-naming-ssot.md` with the two-id/dual-key POOL model
       (post-phase codex audit).
-  - [`plans/active/issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`](/plans/active/issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md)
+  - [`plans/active/issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`](/plans/archive/issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md)
     (3 open)
     - **[BACKEND] P1.** Generalise `catalogue_pool_ids_for_shard` beyond `instrument_type=='pool'` — the prerequisite
       for any non-pool residual reconciliation.
@@ -412,7 +412,7 @@ drift_direction: none
   - [`plans/active/issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`](/plans/active/issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md)
     — 0 open todos (closed/archived/record-only) — its follow-up capture work is tracked under
     `defi_track01_per_instrument_and_canon_id_2026_07_24.md` below.
-  - [`plans/active/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`](/plans/active/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md)
+  - [`plans/active/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`](/plans/archive/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md)
     (4 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos
     (closed/archived/record-only)" entry was wrong, this doc is `status: open` with 4 live `- [ ]` todos at
     `:144`/`:150`/`:160`/`:165`)
@@ -458,7 +458,7 @@ drift_direction: none
       `swaps_ohlcv_*` keys to `DATA_TYPES_BY_ASSET_GROUP['defi']`.
     - **[CODE] P3.** Alternatively execute Path B (accepted-exception stopgap) if Path A isn't prioritized soon.
     - **[VERIFY] P3.** Reconcile the `swaps_ohlcv_4h` timeframe discrepancy before either path ships.
-  - [`plans/active/issues/defi_five_never_captured_venues_fix_2026_07_22.md`](/plans/active/issues/defi_five_never_captured_venues_fix_2026_07_22.md)
+  - [`plans/active/issues/defi_five_never_captured_venues_fix_2026_07_22.md`](/plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md`](/plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md)
     (3 open)
@@ -649,7 +649,7 @@ drift_direction: none
     - **[VERIFY] P1.** Root-cause the 273 mistagged DERIBIT/COMBO rows — not attempted this session.
     - **[CODE] P2.** Update both drilldown mockups — not attempted this session; ~12 remaining P2/P3 items
       low-value/deferred.
-  - [`plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md`](/plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md)
+  - [`plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md`](/plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md`](/plans/archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md)
     — 0 open todos (closed/archived/record-only).

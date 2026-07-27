@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [migration, cutover, sports, codex-audit, cleanup, plan-hygiene]
 related:
   [
-    /plans/active/sports_legacy_bucket_cutover_2026_07_16.md,
+    /plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md,
     /plans/archive/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
@@ -54,9 +54,9 @@ source:
 > **Archived 2026-07-25** — all todos verified done, no living-tracker/recurring purpose. status: active -> complete.
 
 > **Forked 2026-07-24** from
-> [`sports_legacy_bucket_cutover_2026_07_16.md`](/plans/active/sports_legacy_bucket_cutover_2026_07_16.md) via the
-> plan-hygiene line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 24, bucket (c))
-> — the parent plan's ~2700 lines of completed cutover history stay in place; these were its last 2 open Phase-6
+> [`sports_legacy_bucket_cutover_2026_07_16.md`](/plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md) via
+> the plan-hygiene line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 24, bucket
+> (c)) — the parent plan's ~2700 lines of completed cutover history stay in place; these were its last 2 open Phase-6
 > (RESTORE) todos, moved here **verbatim, unedited**. Both are administrative closeout tasks (codex audit +
 > one-off/dead-knob retirement), independent of the data-correctness followup forked into the sibling plan below. Full
 > phase context (freeze/move/purge/verify/delete/restore) lives in the parent plan.

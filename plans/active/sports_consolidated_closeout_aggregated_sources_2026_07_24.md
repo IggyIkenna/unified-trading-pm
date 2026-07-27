@@ -203,7 +203,7 @@ drift_direction: advance-code
     - **[DESIGN] P3.** Once the harness runs, decide its place in routine backtest-groups verification
 
 - **Legacy cutover / manifest / league_id / data correctness**:
-  - [`plans/active/sports_legacy_bucket_cutover_2026_07_16.md`](/plans/active/sports_legacy_bucket_cutover_2026_07_16.md)
+  - [`plans/active/sports_legacy_bucket_cutover_2026_07_16.md`](/plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md)
     — 0 open todos.
   - [`plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md`](/plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md)
     (2 open):
@@ -213,7 +213,7 @@ drift_direction: advance-code
     — 0 open todos.
   - [`plans/active/issues/sports_legacy_canonical_row_gap_2026_07_16.md`](/plans/archive/issues/sports_legacy_canonical_row_gap_2026_07_16.md)
     — `status: resolved`, 0 open todos.
-  - [`plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md`](/plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md)
+  - [`plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md`](/plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md)
     — 0 open todos. ⚠️ near-duplicate name of `sports_legacy_canonical_row_gap_2026_07_16.md` above — not verified
     whether these are the same finding filed twice or genuinely distinct; flagging, not resolving.
   - [`plans/archive/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md`](/plans/archive/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md)
