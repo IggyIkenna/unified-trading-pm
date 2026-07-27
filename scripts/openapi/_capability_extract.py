@@ -523,18 +523,22 @@ def extract_brokers() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
 
 
 def extract_data_sources() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
-    """SOURCE_PRIORITY + Transport + default_transport_for_source.
+    """SOURCE_PRIORITY + Transport + default_transport_for_source + SOURCE_MODE_CAPABILITY.
 
-    Where the full batch/live/replay matrix per source is not encoded in UAC
-    (it lives in the manual source-mode-capability-matrix audit), emit a
-    ``missing_registry`` gap edge rather than parsing the markdown.
+    The full batch/live/replay matrix per source is now a UAC registry
+    (``SOURCE_MODE_CAPABILITY``, ratified row-for-row from the manual
+    ``source_mode_capability_matrix_2026_06_07.md`` audit) — read via
+    :func:`modes_for_source` rather than re-parsing the markdown.
     """
-    # Transport + default_transport_for_source are re-exported at the UAC root
-    # facade; SOURCE_PRIORITY is surfaced via the registry sub-facade (NOT the
-    # canonical.* deep path the import-surface gate blocks).
+    # Transport + default_transport_for_source + modes_for_source are
+    # re-exported at the UAC root facade; SOURCE_PRIORITY is surfaced via the
+    # registry sub-facade (NOT the canonical.* deep path the import-surface
+    # gate blocks).
     from unified_api_contracts import (
+        Mode,
         Transport,
         default_transport_for_source,
+        modes_for_source,
     )
     from unified_api_contracts.registry.possible_manifest import (  # noqa: qg-deep-import
         SOURCE_PRIORITY,
@@ -569,6 +573,7 @@ def extract_data_sources() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
     transports = sorted(t.value for t in Transport)
     # Three pipeline modes are the canonical axis.
     modes = ["batch", "live", "replay"]
+    mode_by_str = {"batch": Mode.BATCH, "live": Mode.LIVE, "replay": Mode.REPLAY}
 
     for src in sorted(sources):
         sid = f"data_source:{src}"
@@ -587,19 +592,22 @@ def extract_data_sources() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
                         reason=f"default transport for {src}",
                     )
                 )
-        # batch mode is the baseline; live/replay per-source capability is the
-        # manual audit not yet codified in UAC → typed gap.
+        # batch/live/replay capability per source is the ratified
+        # SOURCE_MODE_CAPABILITY registry (M2 — encodes
+        # source_mode_capability_matrix_2026_06_07.md row-for-row); a real
+        # AVAILABLE/NOT_AVAILABLE answer per mode, never a gap edge.
+        capable_modes = modes_for_source(src)
         for mode in modes:
             # noqa: L2-mode-seam — this is manifest GRAPH-BUILD over pipeline-mode
             # vocabulary strings, not CLI batch/live execution routing.
-            if mode == "batch":  # noqa: L2-mode-seam
+            if mode_by_str[mode] in capable_modes:  # noqa: L2-mode-seam
                 edges.append(
                     CapabilityEdge(
                         from_node_id=sid,
                         to_node_id=sid,
                         relation=f"{REL_SUPPORTS_MODE}:{mode}",
                         status=CapabilityEdgeStatus.AVAILABLE,
-                        reason="batch is the baseline mode for every source",
+                        reason=f"SOURCE_MODE_CAPABILITY[{src}] includes {mode}",
                     )
                 )
             else:
@@ -608,11 +616,10 @@ def extract_data_sources() -> tuple[list[CapabilityNode], list[CapabilityEdge]]:
                         from_node_id=sid,
                         to_node_id=sid,
                         relation=f"{REL_SUPPORTS_MODE}:{mode}",
-                        status=CapabilityEdgeStatus.NOT_REGISTERED,
-                        gap_type=CapabilityGapType.MISSING_REGISTRY,
+                        status=CapabilityEdgeStatus.NOT_AVAILABLE,
                         reason=(
-                            f"{mode}-mode capability for {src} lives in the manual "
-                            "source-mode-capability-matrix audit, not yet codified in a UAC registry"
+                            f"SOURCE_MODE_CAPABILITY[{src}] does not include {mode} "
+                            "(ratified source_mode_capability_matrix_2026_06_07.md; honest absence, not a gap)"
                         ),
                     )
                 )
