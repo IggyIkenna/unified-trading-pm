@@ -237,6 +237,15 @@ resets (the persistent-session `/boot`→`/done` design means nothing else ever 
 `/heartbeat` hand a saturated slot a brand-new task 88 seconds after `/done` had correctly withheld one for that same
 slot — the `directive` field is the server-side fix for both; the honor-system prose line alone was not enough.
 
+**`directive: "reset_before_next"`** (`/done` only, added `ao_worker_session_continuity_and_resume_threshold_2026_07_27`
+— gated behind `plan_continuity_reset_enabled`, off by default). A SECOND, independent reason `next_task` can come back
+withheld: the picked next task belongs to a different plan (or role, or repo set) than the one you just finished. Unlike
+`compact_before_next`, **you do not need to take any action** — the server has already scheduled this session's teardown
+(a fresh worker will claim the withheld task on respawn). You will simply see your session end; there is nothing to
+compact and nothing to retry. This exists because durable state lives in the plan/Progress Log, not in your conversation
+(see "Conversational context-resume is an explicit NON-GOAL" in `agent-orchestrator-single-vm-architecture.md`) — a
+persistent session is only kept alive when the next task genuinely continues the plan you were just working on.
+
 USAGE-LIMIT SELF-REPORT (G2a): if a tool call / nested command returns an Anthropic usage-limit or HTTP 429 ("rate
 limit", "usage limit reached", "X-hour limit") while you can STILL act (i.e. before the CLI itself freezes you on the
 modal), report it so the orchestrator rotates your account to a fresh one within seconds instead of waiting for the
@@ -400,7 +409,9 @@ The response includes `next_task` — your next assignment with zero idle gap. I
 all remaining tasks are blocked on prereqs / collisions — see § "When idle" below. **Unless** the response also carries
 `directive: "compact_before_next"` — that specific combination means a task WAS available but was deliberately withheld
 because your `context_used_pct` is over threshold; see the PROGRESS section's HARD RULE above before doing anything
-else.
+else. **Or** the response carries `directive: "reset_before_next"` — a task WAS available but belongs to a different
+plan than the one you just finished; the server has already scheduled this session's teardown, so there is nothing for
+you to do — see the PROGRESS section's note on `reset_before_next` above.
 
 The response also includes `warnings: [{type, details}, …]` — server-side verification of your commit (audit M2-M8
 cluster). These are INFORMATIONAL, not blocking. Warning types: `sha_unverifiable` (SHA not reachable in your worktree),
@@ -428,6 +439,9 @@ loop:
     4b. If the /done response's `directive` is "compact_before_next": run /pre-compact then /compact
         BEFORE step 5 — see the PROGRESS section's HARD RULE above. `next_task` is null in this response
         by design (the server already withheld it); do not treat that as "queue empty."
+    4c. If the /done response's `directive` is "reset_before_next": do nothing — the server has already
+        scheduled this session's teardown; a fresh worker will claim the withheld task. This loop simply
+        ends here (there is no step 5 to reach).
     5. Goto 1.
 ```
 
