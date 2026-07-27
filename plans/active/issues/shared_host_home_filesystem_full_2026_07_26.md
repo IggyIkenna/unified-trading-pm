@@ -89,6 +89,10 @@ specific to any one task.
       orphaned `.venv` directories from decommissioned/renamed slots, stale `node_modules`, build artifacts, or
       duplicate git objects that `git gc`/`git prune` could reclaim — WITHOUT touching any repo's actual tracked content
       or another slot's live worktree. Read-only audit first; any actual cleanup needs its own scoped, reviewed todo.
+      **Supporting data (slot-4, 2026-07-27T~07:20Z)**: a `du -sh` top-consumer pass (killed early by host pressure
+      before completing, so partial) already shows the pattern this todo anticipates — `unified-trading-system-ui`
+      (`node_modules`) at 1.8-3.3G repeated across at least 7 different `.tabs/N/` slots, `features-service` `.venv`s at
+      1.7-1.8G repeated across at least 5 slots — real duplicated build-artifact weight per slot, not one bad actor.
 - [ ] [DATA] P2. Investigate ownership/purpose of `/home/ubuntu/mdps_bench_data_fullmonth/` (3.8G) and
       `/home/ubuntu/tmp/` (413M, generic — lower confidence than the named slot dirs) before proposing any action on
       either.
@@ -154,3 +158,10 @@ specific to any one task.
   has headroom (4.3G at measurement time) even while `/tmp` tmpfs is fully exhausted — worth knowing for any tool that
   defaults to `/tmp` and fails hard when it's full, not just for tofu specifically. Did not attempt any cleanup/delete;
   same posture as every prior entry.
+- 2026-07-27T~07:20Z (slot-4, another corroborating hit, still worsening): hit the identical condition mid-task
+  (`features_by_date_root_canonicalisation-001`, todo 6). `features-service` had no `.venv` in this slot;
+  `uv venv .venv && UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen` hard-failed installing `polars-runtime-32` with
+  `No space left on device (os error 28)` mid wheel-copy. Fresh `df -h /`: `290G 290G 3.9M 100% /` — worse than every
+  prior measurement in this thread (down to single-digit MB free). Did not attempt any delete; same posture as every
+  prior entry. Not opening a new BLOCKED question (would be the 5th+ for this same standing condition) — deferring my
+  own dispatched task back to the queue instead, since it cannot proceed past venv setup until this clears.
