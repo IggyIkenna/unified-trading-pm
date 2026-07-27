@@ -178,3 +178,18 @@ specific to any one task.
   dispatched task cannot proceed without a working venv build — filing `/blocked` for that task rather than forcing a
   result I can't trust, per this issue's own established escalation channel (not re-opening a new BLOCKED question for
   the standing host-wide condition itself, only for my task's inability to proceed).
+- 2026-07-27T07:32-07:36Z (slot-12, escalation — qualitatively worse, a TOTAL Bash-tool blocker not a fluctuating one):
+  ~30 min after the previous entry, `df -h /home` read `290G 290G 1.2M` then `1.9M` free across two checks 4 min apart
+  (still shrinking). Then EVERY subsequent Bash tool invocation — including trivial no-ops (`echo test`, `true`) with
+  zero real disk need — failed outright:
+  `Command output was lost: the temp filesystem at .../cc-tmpdir/.../tasks is full (0MB free). ... Free up space or set CLAUDE_CODE_TMPDIR`.
+  This is distinct from every prior entry in this thread: those describe _some_ commands succeeding amid fluctuating
+  pressure; this is 100% of attempts failing for several consecutive minutes, i.e. the harness's own per-session tmpdir
+  (not just `/tmp` or a target repo's `.venv`) is now unable to capture ANY subprocess output. Read/Edit tools remained
+  functional throughout (this entry was written via Edit, not Bash) — only Bash-mediated work (git, curl, gcloud) is
+  blocked. Practical impact: this session cannot fresh-pull, commit/push, or call the AO `/heartbeat`/`/blocked`/`/done`
+  HTTP endpoints (all curl-via-Bash) while this persists — mid-verification on
+  `mdps_t1_recon_job_oom_failing_7_days-001`, deferred resuming that task's ship step until Bash recovers. Not opening a
+  new BLOCKED question (would need Bash to send it, and the existing `[OPERATOR]` P2 todo already covers root-causing
+  `unified-trading-system-repos/`'s 157G footprint); retrying Bash periodically instead, same posture as every prior
+  entry.
