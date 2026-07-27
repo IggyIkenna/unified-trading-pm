@@ -19,7 +19,7 @@ tags: [defi, mtds, lst-rates, vault-share-price, maker, manifest-gap]
 related:
   [
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
-    /plans/active/issues/defi_five_never_captured_venues_fix_2026_07_22.md,
+    /plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md,
   ]
 created: 2026-07-26
 parent_epic: defi_master

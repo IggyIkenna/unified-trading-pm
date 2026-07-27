@@ -19,7 +19,7 @@ tags: [cefi, tardis, throughput, quota, throttling, backfill, big-finding, capac
 related:
   [
     /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
-    /plans/active/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
+    /plans/archive/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
   ]
 created: 2026-07-18
 source:

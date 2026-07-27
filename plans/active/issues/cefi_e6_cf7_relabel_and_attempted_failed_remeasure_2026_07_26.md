@@ -20,7 +20,7 @@ tags: [cefi, attempted-failed, data-correctness, relabel, tardis, deribit, diagn
 related:
   [
     /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
-    /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/data_completion_cefi_2026_07_15.md,

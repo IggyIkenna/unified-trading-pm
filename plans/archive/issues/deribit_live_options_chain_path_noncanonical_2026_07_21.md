@@ -20,7 +20,7 @@ scope: [engineer, admin]
 tags: [canonicalisation, cefi, chain-tail, gcs-path, reader, live-write-path, deribit, data-correctness]
 related:
   [
-    /plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /codex/02-data/canonical-cutover-register.md,
   ]

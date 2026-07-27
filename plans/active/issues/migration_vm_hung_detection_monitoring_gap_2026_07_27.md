@@ -45,7 +45,7 @@ related:
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
     /plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
-    /plans/active/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md,
+    /plans/archive/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md,
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
     /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md,
     /plans/active/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md,
@@ -205,7 +205,7 @@ timestamps to wall-clock time.
 - **Not a claim that migration VMs get zero fleet coverage.**
   `/plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` shows canonical-migration-* VMs ARE
   registered in `launcher_registry.py`/`vm_prefix_registry.py` for preemption-signal purposes, and
-  `/plans/active/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md` shows the `DP_VM_GONE_NO_CAPTURE`
+  `/plans/archive/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md` shows the `DP_VM_GONE_NO_CAPTURE`
   hung/stall alert DID fire once against a canonical-migration-* VM (albeit miscategorized). Coverage is partial and
   buggy in places, not structurally absent everywhere — this doc documents three specific, verified gaps (paging
   exclusion of `"hung"`, this launcher's stall-watchdog non-invocation, and the fleet watcher's naming-regex miss), not

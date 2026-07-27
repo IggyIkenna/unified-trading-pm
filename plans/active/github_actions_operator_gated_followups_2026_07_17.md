@@ -27,7 +27,7 @@ related:
     /plans/archive/issues/quickmerge_agent_sentinel_race_vs_own_rebase_2026_07_16.md,
     /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md,
     /plans/archive/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
-    /plans/active/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md,
+    /plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md,
     /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
   ]

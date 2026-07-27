@@ -79,7 +79,6 @@ epic._
 | [`ci_consolidated_closeout_2026_07_25`](./ci_consolidated_closeout_2026_07_25.md)                                                                                         | master           | infra     | —          | —            | 4.0      | —        |
 | [`github_actions_ci_cost_reduction_2026_07_15`](./github_actions_ci_cost_reduction_2026_07_15.md)                                                                         | master           | infra     | —          | —            | 4.0      | —        |
 | [`github_actions_operator_gated_followups_2026_07_17`](./github_actions_operator_gated_followups_2026_07_17.md)                                                           | master           | infra     | 0/16       | 0%           | 4.0      | —        |
-| [`sports_legacy_bucket_cutover_2026_07_16`](./sports_legacy_bucket_cutover_2026_07_16.md)                                                                                 | master           | infra     | —          | —            | 4.0      | —        |
 | [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](./pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md)                             | master           | infra     | 18/30      | 60%          | 3.8      | —        |
 | [`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20`](./cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md)                                               | master           | brand-new | 14/36      | 39%          | 3.7      | —        |
 | [`carry_staked_basis_funding_scan_experiment_2026_06_16`](./carry_staked_basis_funding_scan_experiment_2026_06_16.md)                                                     | master           | research  | 0/28       | 0%           | 3.6      | —        |
@@ -117,7 +116,6 @@ epic._
 | [`sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24`](./sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md)               | master           | design    | 20/28      | 71%          | 2.1      | —        |
 | [`sports_catalog_league_grain_only_scope_2026_07_08`](./sports_catalog_league_grain_only_scope_2026_07_08.md)                                                             | master           | research  | 3/7        | 43%          | 2.1      | —        |
 | [`data_completion_prediction_2026_07_15`](./data_completion_prediction_2026_07_15.md)                                                                                     | master           | infra     | 0/23       | 0%           | 2.0      | —        |
-| [`github_actions_cost_reduction_options_analysis_2026_07_15`](./github_actions_cost_reduction_options_analysis_2026_07_15.md)                                             | master           | design    | —          | —            | 2.0      | —        |
 | [`instruments_store_cf_canonicalization_single_walk_2026_07_24`](./instruments_store_cf_canonicalization_single_walk_2026_07_24.md)                                       | master           | infra     | 5/26       | 19%          | 1.9      | —        |
 | [`mtds_available_at_cross_asset_backfill_2026_07_13`](./mtds_available_at_cross_asset_backfill_2026_07_13.md)                                                             | master           | infra     | 6/15       | 40%          | 1.9      | —        |
 | [`deployment_registry_firestore_p3_cutover_2026_07_14`](./deployment_registry_firestore_p3_cutover_2026_07_14.md)                                                         | master           | infra     | 1/5        | 20%          | 1.9      | —        |
@@ -319,7 +317,7 @@ epic._
 | [`deployment_registry_firestore_p0_unblock_2026_07_14`](./deployment_registry_firestore_p0_unblock_2026_07_14.md)                                                         | master           | infra     | 16/16      | 100%         | 0.0      | —        |
 | [`infra_capture_and_devops_leftovers_finalize_2026_07_25`](./infra_capture_and_devops_leftovers_finalize_2026_07_25.md)                                                   | master           | infra     | 1/1        | 100%         | 0.0      | —        |
 | [`is_daily_enum_capture_heal_2026_07_07`](./is_daily_enum_capture_heal_2026_07_07.md)                                                                                     | master           | infra     | 3/3        | 100%         | 0.0      | —        |
-| **TOTAL** (263 plans)                                                                                                                                                     | 0 orphans, 0 TBD | —         | —          | **44% done** | **455**  | —        |
+| **TOTAL** (261 plans)                                                                                                                                                     | 0 orphans, 0 TBD | —         | —          | **44% done** | **449**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 

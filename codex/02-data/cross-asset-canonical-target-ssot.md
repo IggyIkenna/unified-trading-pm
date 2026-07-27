@@ -499,7 +499,7 @@ writer(s) + data migration ship — see `canonical-cutover-register.md` §6a–�
   `asset_group=="tradfi"` (`partitioned_writer.py:291-292`), and the write-guard `_assert_canonical_tradfi_path` (`:83`)
   is tradfi-only. This resolves the "cefi chain-tail v5 vs v6 — two live-written shapes" contested axis → **RULED v6**.
   Fix + migration:
-  [`../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
+  [`../../plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
 
 ## 12. Where the work lives
 

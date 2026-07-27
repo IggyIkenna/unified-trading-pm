@@ -18,7 +18,7 @@ related:
   [
     /plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md,
     /plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md,
-    /plans/active/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md,
+    /plans/archive/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md,
     /plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md,
   ]
 created: 2026-07-23

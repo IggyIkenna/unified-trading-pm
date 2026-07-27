@@ -27,7 +27,7 @@ tags: [oom, memory-leak, manifest-writer, per-vm-shard, backfill, vm-launcher, r
 related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/issues/read_availability_index_unfiltered_callsite_audit_2026_07_26.md,
+    /plans/archive/issues/read_availability_index_unfiltered_callsite_audit_2026_07_26.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
   ]
 created: 2026-07-27

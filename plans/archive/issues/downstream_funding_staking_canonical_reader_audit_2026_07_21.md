@@ -20,7 +20,7 @@ scope: [engineer, admin]
 tags: [funding, staking, lst-rates, perp-funding, canonical-reader, path-registry, silent-empty, bucket-resolution]
 related:
   [
-    /plans/active/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
+    /plans/archive/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/06-coding-standards/canonical-write-guard-contract.md,
   ]

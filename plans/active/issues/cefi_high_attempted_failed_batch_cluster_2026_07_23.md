@@ -39,7 +39,7 @@ tags: [data-correctness, attempted-failed, cefi, tardis, concurrency-lock, optio
 related:
   [
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
-    /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
     /plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,

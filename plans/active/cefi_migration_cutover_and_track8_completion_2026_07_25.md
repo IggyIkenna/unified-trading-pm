@@ -25,7 +25,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
-    /plans/active/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
+    /plans/archive/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
     /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md,

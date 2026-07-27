@@ -183,7 +183,7 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       test exercising the canary against the reflog signature of one allowed realign satisfies this — the source doc's
       done-when explicitly accepts "either a test or a live observation". **Done when**: the test (or cited live
       observation) exists and passes, the verdict is written into the source doc, and that doc reaches zero open todos
-      so the finalize plan can archive it. Source: `/plans/active/issues/slot_double_reset_dataloss_race_2026_07_25.md`
+      so the finalize plan can archive it. Source: `/plans/archive/issues/slot_double_reset_dataloss_race_2026_07_25.md`
       (BACKEND P3 — the sole residual; both halves of the fix are already verified shipped in that doc).
 - [ ] [BACKEND] P3. **Audit every `/skip-current-task` `reason_code` for a silent, unpaged durable park.** Record per
       code whether it can reach a durable park and whether that park pages Slack, so the GATED-specific finding is
@@ -194,7 +194,7 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       (`/plans/active/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md`) is an undecided
       operator-gated design question and must not be pre-empted. **Done when**: the source doc carries a
       per-`reason_code` table with the code-read evidence for each row. Source:
-      `/plans/active/issues/gated_skip_park_no_slack_page_2026_07_25.md` (BACKEND P3).
+      `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md` (BACKEND P3).
 - [ ] [REVIEW] P2. **Read-only: is each of the 7 rootm commit-sets' functionality on LDR today?** For every commit-set
       the rootm-branch doc named, record present-or-absent on `origin/live-defi-rollout`. The 7 `tab/rootm/*` branches
       it says are "LEFT IN PLACE" are **measurably GONE** (verified 2026-07-26 via the GitHub branches API across all
@@ -260,9 +260,9 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
   `/plans/active/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` (P1, a held-behind-a-gate
   push must NOT be auto-shipped). Re-triage once that doc's gate-aware sweep decision exists.
 - **AutoSpawn no-eligible-worker gap** —
-  `/plans/active/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md` (BACKEND
-  P2 + two P3 audits). FILE-COLLISION-gated only: it changes `server/autospawn.py`, which todo 1 of this plan may also
-  touch. Straightforward batch-2 material once todo 1 lands.
+  `/plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md`
+  (BACKEND P2 + two P3 audits). FILE-COLLISION-gated only: it changes `server/autospawn.py`, which todo 1 of this plan
+  may also touch. Straightforward batch-2 material once todo 1 lands.
 - **Rejected-push recovery in `_ahead_push.py`** —
   `/plans/active/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md`. Its own doc calls
   this "the single riskiest automated code path in the system" and says the fix needs a real design decision; a

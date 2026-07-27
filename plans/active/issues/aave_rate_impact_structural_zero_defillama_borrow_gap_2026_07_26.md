@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [silent-failure, data-correctness, false-zero, defi, aave, feature-groups]
 related:
   [
-    /plans/active/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
+    /plans/archive/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
     /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
     /plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
     /plans/archive/issues/aave_irm_slope_capture_dropped_2026_05_12.md,
