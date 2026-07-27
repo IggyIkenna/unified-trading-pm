@@ -53,20 +53,20 @@ Automatic backend lifecycle events — the orchestrator handled them, no human i
 - `notify_agent_stuck_escalation` ("Auto-respawn FAILED"), `notify_autospawn_flap`, `notify_stash_on_done` — automatic
   self-healing / lifecycle events (a respawn a guard skipped, an AutoSpawn retry loop backing off, a worker stashing WIP
   to pass the /done gate). All log + digest, none page (operator 2026-07-13 full audit). The one respawn/quarantine case
-- **A backward-HEAD discard already preserved on `wip-preserve/orchestrator-slot-<N>-<sha>`** — `HeadBackwardCanary`
-  (2026-07-27 fix): the orphan-wip inherit flow (`_orphan.py`) always pushes a discarded commit to that ref BEFORE its
-  own `git checkout -B` realign, so the content is safe forever, not merely reflog-recoverable — this is the routine
-  by-design outcome of a task-less slot handoff, not a data-loss event. Logged INFO only
-  (`HeadBackwardCanary.tick_once`'s `preserved_hits`); `notify_head_backward_dataloss` is only ever called with the
-  remaining `real_hits` (no matching preserve ref found) — see the "DOES page" entry above. that still pages is a slot
-  actively **starving** escalation dispatch (`notify_slot_quarantined`). **Verified live 2026-07-25**
-  (`plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md` — 3 independent fires, journal + Slack-200
-  confirmed): the starvation condition was `escalation.count_queued_walls() > 0` — this counted only queued
+  that still pages is a slot actively **starving** escalation dispatch (`notify_slot_quarantined`). **Verified live
+  2026-07-25** (`plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md` — 3 independent fires, journal +
+  Slack-200 confirmed): the starvation condition was `escalation.count_queued_walls() > 0` — this counted only queued
   CI-escalation walls, NOT the (usually much larger) plain backlog-task queue, so a quarantine with backlog tasks queued
   but zero escalation walls queued would have silently paged the quiet path instead. **Fixed
   `agent-orchestrator@9c73579`**: the condition is now `count_queued_walls() > 0 or count_queued_backlog_tasks() > 0`,
   and `notify_slot_quarantined`'s Slack copy names whichever queue(s) triggered it — see
   `plans/archive/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md`.
+- **A backward-HEAD discard already preserved on `wip-preserve/orchestrator-slot-<N>-<sha>`** — `HeadBackwardCanary`
+  (2026-07-27 fix): the orphan-wip inherit flow (`_orphan.py`) always pushes a discarded commit to that ref BEFORE its
+  own `git checkout -B` realign, so the content is safe forever, not merely reflog-recoverable — this is the routine
+  by-design outcome of a task-less slot handoff, not a data-loss event. Logged INFO only
+  (`HeadBackwardCanary.tick_once`'s `preserved_hits`); `notify_head_backward_dataloss` is only ever called with the
+  remaining `real_hits` (no matching preserve ref found) — see the "DOES page" entry below.
 
 Each of these calls `logger.info(...)` (the "D11 downgrade" convention) instead of `slack._post(...)`. Their events are
 recorded in the DB **activity log** (`log_activity`) by the callers, which is what the digest reads.
@@ -91,7 +91,7 @@ recorded in the DB **activity log** (`log_activity`) by the callers, which is wh
   (2026-07-27 follow-up to `agent_orchestrator_alert_channel_cleanup_2026_07_13`)**: `HeadBackwardCanary` checks each
   discarded SHA for a matching `wip-preserve/orchestrator-slot-<N>-<sha>` ref on origin BEFORE calling this notifier —
   the orphan-wip inherit flow (`worktree_clean_check/_orphan.py`) always pushes there before its own realign, so that
-  case is safe forever, not merely reflog-recoverable, and is logged INFO only (see "does NOT page" below). Measured
+  case is safe forever, not merely reflog-recoverable, and is logged INFO only (see "does NOT page" above). Measured
   live 2026-07-27: ~80% of all backward-HEAD discards fleet-wide are this benign preserve-then-realign case; only the
   ~20% with no matching preserve ref (a genuinely wedged/misclassified worker) still page here.
 - **Alert-lifecycle closure bookends** — an actionable alert's CLOSE is posted in-channel so the operator can tell an
