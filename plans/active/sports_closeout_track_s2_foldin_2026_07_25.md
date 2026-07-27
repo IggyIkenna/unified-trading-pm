@@ -115,7 +115,13 @@ drift_direction: advance-code
       own Progress Log; what's missing is the operational maintenance-window RUN itself, not a new decision. Per this
       item's own explicit instruction, did NOT re-run `cf_manifest_audit_2026_06_01.py` (30+ prior identical RED
       reproductions on record; nothing has changed upstream to make a 31st informative). No forward action possible from
-      this slot — correctly re-parked pending the operator-scheduled window.
+      this slot — correctly re-parked pending the operator-scheduled window. **RE-CONFIRMED 2026-07-27 (slot-15, same
+      day as slot-10's check above) — independently re-read both facts, unchanged: parent Track H CF-8 todo still
+      `- [ ]`, detail doc `status:` still `open`.** No new information; did not re-run the audit script for the same
+      reason slot-10 gave. This item should stay parked until the maintenance window actually runs — flagging that this
+      todo is bouncing back into the AO dispatch queue on every cycle with no mechanical gate to stop it (the doc's own
+      text already names why: a dispatched child can't `depends_on`+`gate_on_depends` against a LOCAL plan's todo) is
+      itself worth a main/operator look, since each re-dispatch burns a full worker cycle for zero new signal.
 - **[DATA] P0.** Sports IS L6 index regression — **ALREADY RESOLVED, not carried forward as an open todo (finding C,
   2026-07-25).** The parent's Track S2 text described this as a live 3-step fix (base-image rebuild / resume schedulers
   / re-consolidate); the cited detail doc (`sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md`, now
