@@ -104,10 +104,14 @@ the churn the pin prevents). Align the fleet TO the pin.
 
 ### Durable fix — needs a tracked rollout unit (coupled: template edit + fleet rollout + per-repo commit)
 
-- [ ] [INFRA] P1. Fix the `scripts/setup.sh` bootstrap-uv fallback in the PM template
-      (`unified-trading-pm/scripts/setup.sh`, the SSOT copied to all repos by
-      `scripts/propagation/rollout-quality-gates-unified.py`). Replace the pip fallback with the astral installer so a
-      drifted box self-realigns pip-free:
+- [x] ✅ [INFRA] P1. Fix the `scripts/setup.sh` bootstrap-uv fallback in the PM template — already shipped: verified
+      `unified-trading-pm@4ce056d7d` ("replace pip-only uv realign fallback with astral installer") +
+      `unified-trading-pm@713dc3d4b` ("unquote uv==0.10.8 in pip fallback so codex-compliance's pip-install exclusion
+      matches") are both ancestors of current `live-defi-rollout` HEAD, and `scripts/setup.sh:400-410` on disk matches
+      the recommended fix byte-for-byte (astral installer branch + `hash -r` + pip fallback, unquoted per the follow-up
+      commit). This was a plan-flip lag, not outstanding work. (`unified-trading-pm/scripts/setup.sh`, the SSOT copied
+      to all repos by `scripts/propagation/rollout-quality-gates-unified.py`). Replace the pip fallback with the astral
+      installer so a drifted box self-realigns pip-free:
   ```bash
   elif command -v uv &>/dev/null && uv --version 2>&1 | grep -q '0\.10\.8'; then
       log_skip "uv 0.10.8 already installed (pinned)"

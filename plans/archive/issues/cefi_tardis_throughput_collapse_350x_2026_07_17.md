@@ -25,7 +25,7 @@ tags: [cefi, tardis, throughput, regression, backfill, honest-coverage, big-find
 related:
   [
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
-    /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     /plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
   ]
 created: 2026-07-17

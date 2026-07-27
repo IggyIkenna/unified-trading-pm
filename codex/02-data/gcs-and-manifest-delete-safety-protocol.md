@@ -281,6 +281,13 @@ asserted justification is not a verified one.** Query the bucket, cite the actua
 incident below — had it disabled (`0`); fixed the same day via
 `gcloud storage buckets update ... --soft-delete-duration=7d`.
 
+**2026-07-27 re-verification**: all 24 current `-prd-` buckets on `central-element-323112` carry
+`retentionDurationSeconds = 604800` — 0 gaps
+(`gcloud storage buckets describe gs://<bucket> --format "value(soft_delete_policy.retentionDurationSeconds)"` against
+the live `gcloud storage buckets list ... | grep -- '-prd-'` enumeration, not the stale count above). Re-run this sweep
+whenever a new prod bucket is provisioned — a bucket created without the org policy default would silently reintroduce
+the exact 2026-07-17 gap.
+
 **Why this matters, concretely — the 2026-07-17 incident.** An automated manifest-consolidator run "succeeded" while
 destroying 7,185 manifest rows describing ~344k real objects on `instruments-store-sports-prd`, with **zero recoverable
 GCS versions** at the time — soft delete was disabled on that exact bucket. It was recovered only because the executing

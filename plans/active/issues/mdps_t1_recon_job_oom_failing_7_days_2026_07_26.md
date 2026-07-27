@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [mdps, oom, cloud-run-job, candle-derivation, production-incident]
 related: [/plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md]
 created: 2026-07-26
-last_updated: 2026-07-27 (Update 8)
+last_updated: 2026-07-27 (Update 9)
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -699,6 +699,128 @@ short-circuits `process_category`'s own fallback). Low risk today: live mode's d
 (`run()`/`_run_live_mode()`/ `_process_cycle()`'s `timeframes: list[str]` param becoming Optional, resolved per-category
 inside the loop) beyond this todo's stated scope.
 
+## Update 9 (2026-07-27, attended session) — `MalformedTickFieldError('bm_minutes_to_kickoff_or_h2h_columns')` ROOT-CAUSED, FIXED + verified against real pulled GCS files; a SEPARATE, larger, previously-unknown data-correctness bug found and flagged (NOT fixed)
+
+Picked up the P2 todo below (Update 7's newly-filed `MalformedTickFieldError` finding). Located the pivot at
+`market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py`'s `pivot_mtds_to_wide()` /
+`_pivot_market()` (the `"Pivoted MTDS long→wide: N h2h, ..."` / `"No h2h data found in MTDS raw data"` log lines both
+live here), called from `SportsBucketAssignmentAdapter._prepare_tick_data()` → `process_to_candles()` (the
+`MalformedTickFieldError(field="bm_minutes_to_kickoff_or_h2h_columns")` raise at line ~734, Path C of the adapter's
+three-category empty-output decision).
+
+### Root cause — confirmed via real failing-vs-succeeding GCS file comparison, not guessed
+
+Pulled the krtkf/86jbn execution logs (`gcloud logging read`) and extracted exact failing `(venue, instrument_id, date)`
+triples — e.g. `FOOTBALL:BETFAIR_EX_UK:MATCH_ODDS:ALLSVENSKAN:2026-27:GAIS-HALMSTAD::HOME`, day=2026-07-26. Downloaded
+the REAL raw `ticks.parquet` directly from
+`gs://market-data-tick-sports-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-26/pipeline_mode=batch_odds_api/asset_group=sports/venue=BETFAIR_EX_UK/league_id=ALLSVENSKAN/instrument_type=ODDS/data_type=TRADES/ticks.parquet`
+(192 rows, full 25-column real MTDS schema, `market_key` ∈ {h2h, h2h_lay}) and a SUCCEEDING same-venue/league/day
+sibling file (`fixture_id=1494222/…`, 96 rows, 0 fixtures overlapping) for direct comparison.
+
+**The two files are the SAME writer-generation split already documented in this adapter's own `_PIVOT_INDEX_EXCLUDE`
+docstring** (the 2026-02-09 `instrument_type`/`data_source` and 2025-02-16 `available_at` incidents) — just a THIRD,
+previously-uncovered column: the failing "combined" shape (no `fixture_id=` path partition; multiple fixtures bundled in
+one file) has `af_fixture_id` **NaN on 100% of rows** (192/192, and 48/48 on a second sampled combined-shape file,
+day=2026-07-24), while every "per-fixture" partitioned file sampled (4 files, 360 rows total) has it **fully populated
+(0 NaN)**. `af_fixture_id` is a best-effort odds-tick ↔ instruments-service cross-vendor join key
+(`market_tick_data_service/market_interface/adapters/sports/fixture_id_resolver.py`) — its own docstring: _"a genuine
+nullable int … NaN/None is the only 'no value' signal"_, i.e. legitimately absent whenever that generation's write path
+never attempted/resolved the join. It was never added to `_PIVOT_INDEX_EXCLUDE`, so `pivot_table(index=group_cols)`
+silently dropped every h2h row of the affected fixtures (pandas' default `dropna=True` behavior on a NaN index level) →
+`h2h_wide.empty` → `"No h2h data found"` → `_prepare_tick_data` returns empty (not via the causality path) →
+`MalformedTickFieldError`. **Directly reproduced** with the real 16-row per-instrument slice
+(`SportsBucketAssignmentAdapter.process_to_candles`, calling the exact production code path) — raises pre-fix, resolves
+post-fix, producing real horizon-bucketed odds (`close=[1.41, 1.40, nan, nan, nan, nan, nan, nan]`, matching the raw
+file's actual prices).
+
+**Verdict: (b) — a genuine code gap**, not absent upstream data. The h2h ticks are genuinely present and correct; only a
+non-identity vendor-metadata column accidentally sat in the pivot grain.
+
+### Fix shipped + verified
+
+`market-data-processing-service@67cb2ef` (`live-defi-rollout`, confirmed on `origin/live-defi-rollout` HEAD): added
+`af_fixture_id` and `af_fixture_match_status` (its companion closed-set join-status enum, always non-null today but same
+non-grain vendor-metadata class) to `_PIVOT_INDEX_EXCLUDE`, with a code comment documenting the measured NaN rates and
+the real GCS paths probed. Two regression tests added to `tests/unit/test_bucket_assignment_adapter.py`
+(`TestPivotStrayMetadataColumns`): one mirroring the existing stray-metadata pattern with `af_fixture_id`/
+`af_fixture_match_status` NaN, and one using the **exact real 25→21-column production schema** (down to the real
+`instrument_id`, `bookmaker_key`/`event_id`/prices/timestamps pulled from the actual GAIS-HALMSTAD file) run end-to-end
+through `process_to_candles` — confirmed this second test genuinely catches the regression (`git stash` the fix, re-run:
+both new tests fail with the identical production error signature and sample-column list; `git stash pop` restores).
+Full suite: 69/69 passed.
+`quality-gates.sh --no-fix --files 'market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py tests/unit/test_bucket_assignment_adapter.py'`
+→ **"ALL QUALITY GATES PASSED (179s)"** (2290 tests, 87.06% coverage; the 1 basedpyright `reportAny` warning in this
+file is pre-existing baseline, confirmed unchanged before/after via `git stash`). Shipped via
+`quickmerge.sh --agent --files …` (one branch-drift retry — very active branch, recovered per the standard
+`git pull --rebase --autostash` recipe, no force-push).
+
+**Verification method — direct real-data repro, not a live Cloud Run re-trigger.** Given the fix is source-only (pandas
+pivot logic, no infra/env change) and the exact failing production shard was already reproduced against a real
+downloaded GCS file with the real adapter code both before and after the fix, a full Cloud Run re-trigger (which first
+needs LDR→main promotion + image rebuild, ~30-60min, mirroring Updates 4/7/8's methodology) was judged unnecessary for
+this class of fix and not run this session — flagging this explicitly rather than implying a live-job re-verification
+happened. The standing daily cron will exercise this fix within 24h once `main`'s normal promotion cadence picks it up.
+
+### Blast radius — concentrated in the "combined" (no `fixture_id=` partition) writer-generation shape, MATCH_ODDS-only
+
+From the krtkf execution log (sports-scoped, `--force`, 2026-07-25..26): **1098 individual `MalformedTickFieldError`
+occurrences → 549 unique `(venue, instrument_id)` pairs → 184 unique fixtures, across 14 bookmaker venues**
+(VIRGINBET/UNIBET/SKYBET/PADDYPOWER/LIVESCOREBET each 192 mentions; UNIBET_UK/SMARKETS/PINNACLE/MATCHBOOK each 180;
+WILLIAMHILL 132; SPORT888/BETFAIR_EX_EU each 96; LADBROKES_UK 72; BETFAIR_EX_UK 12). A second, independent execution
+(86jbn) shows the same shape (1034 occurrences, 8 venues). **Every single occurrence in both executions is
+`instrument_type=MATCH_ODDS`** — never `MATCH_ODDS_LAY`/`ASIAN_HANDICAP_*`/`OVER_UNDER_*` (see below for why — those
+markets never even reach this code path). This is a genuine, actively-recurring production bug (not a one-off) — every
+day a bookmaker's odds-writer emits the "combined" multi-fixture-per-file shape instead of per-`fixture_id=`
+partitioning, every h2h row for every fixture in that file is silently dropped, and the shard is marked
+`attempted_failed` in the manifest instead of producing real odds output.
+
+### A SEPARATE, larger, previously-unknown data-correctness bug found while investigating — FLAGGED, NOT fixed this session
+
+While confirming why `MATCH_ODDS_LAY`/`ASIAN_HANDICAP_*`/`OVER_UNDER_*` never appear in the `MalformedTickFieldError`
+logs (expected some fraction to, per the original todo's "MATCH_ODDS/ASIAN_HANDICAP/OVER_UNDER" framing), found they
+don't fail loudly — they **silently produce ZERO candle output, always, and always report "success"**, regardless of
+whether real market data exists.
+
+**Mechanism**: `process_to_candles`'s "Path A½" honest-absence short-circuit (`bucket_assignment_adapter.py` ~line
+684-702) checks `(tick_data["market_key"] == "h2h").sum() == 0` and, if true, returns empty ("no h2h market_key rows …
+recording as empty_confirmed"). This check was written (and is still tested,
+`TestNoH2HHonestAbsence::test_no_h2h_returns_empty_not_malformed`) assuming `tick_data` is a full per-fixture/bookmaker
+BUNDLE potentially containing multiple markets — correctly distinguishing "this bookmaker genuinely doesn't offer h2h"
+from a schema defect. But the ACTUAL production call path (`live_workers_streaming.py::_iter_chain_symbol_dfs`,
+`group_col` auto-resolved to `instrument_id` for sports files since they carry no `instrument_key`/`symbol` column)
+**already slices `tick_data` down to ONE `instrument_id` — hence exactly ONE market — before `process_to_candles` is
+ever called.** For any non-MATCH_ODDS instrument (`market_key` ∈ {h2h_lay, spreads, totals, btts}), the slice's
+`market_key` is NEVER `"h2h"` by construction, so this check is `True` unconditionally, for every call, regardless of
+whether that instrument's own market data is genuinely present.
+
+**Confirmed with real data, not inferred**: pulled a real WILLIAMHILL raw file
+(`day=2026-07-25/…/fixture_id=1494218/…/ticks.parquet`) containing 24 genuine `market_key="totals"` rows for
+`FOOTBALL:WILLIAMHILL:OVER_UNDER_2_5:ALLSVENSKAN:2026-27:DEGERFORS-DJURGARDEN::{OVER,UNDER}`. Sliced to the `::OVER`
+instrument (12 real rows) and called `process_to_candles` directly — it logged
+`"No h2h market_key rows for this bookmaker/fixture (12 raw rows, market_keys=['totals']) — recording as empty_confirmed (honest absence)"`
+and returned an EMPTY `CandleOutput`, despite 12 real `totals` ticks being present. **Cross-checked against real
+production output**:
+`gs://market-data-tick-sports-prd-central-element-323112/processed_candles/by_date/day=2026-07-25/pipeline_mode=batch_odds_api/timeframe=15m/data_type=odds_horizon_bucket/`
+contains **only** `instrument_type=MATCH_ODDS/` — zero `MATCH_ODDS_LAY`/`ASIAN_HANDICAP_*`/`OVER_UNDER_*` objects
+anywhere for that entire day, confirming this isn't a one-fixture edge case: **the `odds_horizon_bucket` product has
+never produced real candle output for any market other than plain h2h (MATCH_ODDS)**, despite `pivot_mtds_to_wide()` /
+`_pivot_market()` explicitly implementing spreads/totals/btts pivoting (`asian_handicap_home_odds`, `over_odds`,
+`btts_yes_odds`, …) and Update 5's UAC SchemaContract fallback deliberately supporting all these `instrument_type`s
+uniformly — i.e. the DESIGN INTENT was clearly for all 4 market families to produce odds_horizon_bucket output, and this
+Path A½ / per-instrument-slicing invariant mismatch (likely introduced whenever the chain-bundle-streaming refactor
+started pre-slicing by `instrument_id`, after Path A½ was written against the older multi-market-bundle assumption)
+silently defeats that for 3 of 4 families, permanently, with no error signal (`success=True`, 0 candles).
+
+**Not fixed this session** — this is a genuinely separate root cause/code path from the `af_fixture_id` pivot-index bug
+above, and the correct fix needs real judgment (mirroring this doc's own established standard for this class of
+situation, e.g. the KALSHI investigation in Update 6): should Path A½ check for ANY recognized `market_key` present (not
+hardcoded to `"h2h"`) given the slice-per-instrument invariant is now permanent? Does `btts` ever legitimately co-occur
+with another market in one slice, complicating a naive generalization? Is there a call path where `tick_data` is
+genuinely NOT yet market-filtered (in which case a blind generalization could turn genuine absence into false
+`MalformedTickFieldError`s)? These need real tracing before a fix, not a guess. Filed as a new P1 todo below — flagging
+per CLAUDE.md's data-pipeline-correctness-is-the-heartbeat / big-finding-notify-operator rule, since this silently drops
+real market data across most of the sports odds product, apparently for its entire history.
+
 ## Todos
 
 - [x] [SCRIPT] P1. **Root-cause and fix the second OOM path** (the silent >28GB spike after DEFI `dex_pool_swaps`
@@ -750,29 +872,29 @@ inside the loop) beyond this todo's stated scope.
       ONE group, not every group written under it.
 
       **Fix**: added `no_real_chain_root` (true only for the legacy-sentinel, no-underlying case) to
-                                                      `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
-                                                      (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
-                                                      own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
-                                                      original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
-                                                      so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
+                                                          `_streaming_write_per_tf`; when true, batches are grouped by their OWN `instrument_id`'s inferred type
+                                                          (`_infer_instrument_type`, reusing the existing UAC/MDPS helper — no new schema logic) and each group writes its
+                                                          own file under its own representative id via a new `_streaming_write_one_group` helper (extracted from the
+                                                          original per-tf write body, unchanged logic). A true chain is provably unaffected: `no_real_chain_root` is false,
+                                                          so it takes the untouched single-group path, byte-for-byte identical to the pre-fix code.
 
-                                                      **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
-                                                      batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
-                                                      id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
-                                                      green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files).
+                                                          **Regression test**: `tests/unit/test_streaming_write_group_by_type.py` — proves MATCH_ODDS + MATCH_ODDS_LAY
+                                                          batches (in the observed crash order, MATCH_ODDS_LAY first) split into 2 groups each keyed by their own correct
+                                                          id, while multiple same-market batches (different fixtures) stay combined into 1 group. `quality-gates.sh`
+                                                          green (2224 passed, 86.95% coverage, 0 basedpyright errors in touched files).
 
-                                                      **Re-verified end-to-end against real production data (Update 7, 2026-07-27)**: execution
-                                                      `uts-prod-market-data-processing-service-t1-recon-86jbn` (the exact repro command below, against the fixed image
-                                                      rebuilt on `main`@`eaf8127`), watched to a genuine `Completed=False`/`NonZeroExitCode` terminal state (failing for
-                                                      two unrelated, already-triaged reasons, not the mixing bug — see Update 7). Zero `partition_mismatch`/
-                                                      `instrument_type mismatch` occurrences anywhere in the run's logs, and two independent freshly-written
-                                                      MATCH_ODDS/MATCH_ODDS_LAY output pairs for the same fixture (BETFAIR_EX_EU ALLSVENSKAN KALMAR-MJALLBY;
-                                                      BETFAIR_EX_EU MLS COLUMBUS_CREW_SC-CINCINNATI) were pulled directly from GCS and confirmed uncontaminated
-                                                      (`instrument_id.unique()` per file contains only that file's own market). See Update 7 for full evidence.
+                                                          **Re-verified end-to-end against real production data (Update 7, 2026-07-27)**: execution
+                                                          `uts-prod-market-data-processing-service-t1-recon-86jbn` (the exact repro command below, against the fixed image
+                                                          rebuilt on `main`@`eaf8127`), watched to a genuine `Completed=False`/`NonZeroExitCode` terminal state (failing for
+                                                          two unrelated, already-triaged reasons, not the mixing bug — see Update 7). Zero `partition_mismatch`/
+                                                          `instrument_type mismatch` occurrences anywhere in the run's logs, and two independent freshly-written
+                                                          MATCH_ODDS/MATCH_ODDS_LAY output pairs for the same fixture (BETFAIR_EX_EU ALLSVENSKAN KALMAR-MJALLBY;
+                                                          BETFAIR_EX_EU MLS COLUMBUS_CREW_SC-CINCINNATI) were pulled directly from GCS and confirmed uncontaminated
+                                                          (`instrument_id.unique()` per file contains only that file's own market). See Update 7 for full evidence.
 
-                                                      Repro command used for this verification pass:
-                                                      `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
-                                                      (repo: market-data-processing-service)
+                                                          Repro command used for this verification pass:
+                                                          `gcloud run jobs execute uts-prod-market-data-processing-service-t1-recon --update-env-vars=MDPS_ASSET_GROUP=SPORTS --args=--operation,process,--mode,batch,--start-date,2026-07-25,--end-date,2026-07-26,--force`.
+                                                          (repo: market-data-processing-service)
 
 - [x] [SCRIPT] P2. **Scope MDPS's per-asset-group candle timeframe iteration** — `config.py`'s `default_timeframes`
       (`["15s","1m","5m","15m","1h","4h","24h"]`) was applied uniformly to every asset_group; sports only has
@@ -817,33 +939,61 @@ inside the loop) beyond this todo's stated scope.
       `/codex/02-data/prediction-schema-paths.md`).
 
       **Real open design decisions the next implementer must make** (see Update 6 for full detail + evidence):
-                                                  (1) which of `yes_price_dollars`/`no_price_dollars` is the OHLCV price for a two-sided YES/NO market (they sum to
-                                                  exactly 1.00 — confirmed on 54,295 real rows); (2) how `taker_side`/`taker_outcome_side`/`taker_book_side`
-                                                  (yes/no/bid/ask, not BUY/SELL) map to the adapter's `is_buy` buy/sell-split and whale-detection features;
-                                                  (3) whether `count_fp` (string-typed, cleanly float-parseable) is genuinely trade size/contract count;
-                                                  (4) timestamp source — `available_at` is evidence-backed safe (confirmed byte-exact match against `created_time`
-                                                  across all 54,295 rows of a real file, genuine per-trade granularity, 44,077 distinct values across one day) but
-                                                  wiring it into `_get_local_timestamp_column`'s existing local-vs-exchange-time HFT-delay convention needs a
-                                                  decision since Kalshi has no local/exchange timestamp split.
+                                                      (1) which of `yes_price_dollars`/`no_price_dollars` is the OHLCV price for a two-sided YES/NO market (they sum to
+                                                      exactly 1.00 — confirmed on 54,295 real rows); (2) how `taker_side`/`taker_outcome_side`/`taker_book_side`
+                                                      (yes/no/bid/ask, not BUY/SELL) map to the adapter's `is_buy` buy/sell-split and whale-detection features;
+                                                      (3) whether `count_fp` (string-typed, cleanly float-parseable) is genuinely trade size/contract count;
+                                                      (4) timestamp source — `available_at` is evidence-backed safe (confirmed byte-exact match against `created_time`
+                                                      across all 54,295 rows of a real file, genuine per-trade granularity, 44,077 distinct values across one day) but
+                                                      wiring it into `_get_local_timestamp_column`'s existing local-vs-exchange-time HFT-delay convention needs a
+                                                      decision since Kalshi has no local/exchange timestamp split.
 
-                                                  **Also flag before starting**: a genuine SSOT-vs-code contradiction — `/codex/02-data/prediction-data-types-catalog.md`
-                                                  claims `NEEDS_CANDLE_PROCESSING["trades"]` has a prediction-specific `False` override, but the actual UAC
-                                                  registry (`unified_api_contracts/registry/market_data_categories.py:640`, flat/non-asset-group-keyed) sets it
-                                                  `True` for `trades` uniformly, with a comment explicitly stating prediction shares CeFi's `True` value. Resolve
-                                                  this FIRST — if the codex doc's intent is correct, the right fix may be "stop attempting prediction candle
-                                                  derivation entirely" rather than building a Kalshi adapter. (repo: market-data-processing-service,
-                                                  unified-api-contracts if the NEEDS_CANDLE contradiction is resolved as a code fix)
+                                                      **Also flag before starting**: a genuine SSOT-vs-code contradiction — `/codex/02-data/prediction-data-types-catalog.md`
+                                                      claims `NEEDS_CANDLE_PROCESSING["trades"]` has a prediction-specific `False` override, but the actual UAC
+                                                      registry (`unified_api_contracts/registry/market_data_categories.py:640`, flat/non-asset-group-keyed) sets it
+                                                      `True` for `trades` uniformly, with a comment explicitly stating prediction shares CeFi's `True` value. Resolve
+                                                      this FIRST — if the codex doc's intent is correct, the right fix may be "stop attempting prediction candle
+                                                      derivation entirely" rather than building a Kalshi adapter. (repo: market-data-processing-service,
+                                                      unified-api-contracts if the NEEDS_CANDLE contradiction is resolved as a code fix)
 
-- [ ] [SCRIPT] P2. **Investigate + fix `MalformedTickFieldError` for `bm_minutes_to_kickoff_or_h2h_columns` — a large
-      fraction of sports MATCH_ODDS/ASIAN_HANDICAP/OVER_UNDER instruments fail with "ticks present but downstream calc
-      dropped all rows due to NaN/malformed field"**, tracing to "No h2h data found in MTDS raw data — cannot produce
-      odds" during the MTDS long→wide pivot step (`Pivoted MTDS long→wide: N h2h, 0 spreads, 0 totals, 0 btts → N rows`
-      pattern observed in logs). Newly discovered 2026-07-27 (Update 7) while verifying the sports market-mixing fix —
-      it was invisible in every prior investigation (OOM, then the SchemaContract gap, then the partition_mismatch bug
-      each masked it in turn, upstream in the same asset-group loop). Confirmed unrelated to the mixing fix: fires
-      before any candle write is attempted, in the raw-tick-to-h2h-columns pivot, not in
-      `live_workers_streaming.py`/`live_workers_chain.py`'s write dispatch. Not investigated further or fixed this
-      session — out of the sports-mixing todo's mandate and a genuinely separate adapter/data-quality question (why do
-      some raw `ticks.parquet` bundles lack the h2h columns the pivot expects — a per-bookmaker data-shape gap, a
-      market-type the pivot doesn't handle, or something else — needs real tracing before guessing at a fix, same
-      standard as the other data-correctness bugs in this doc). (repo: market-data-processing-service)
+- [x] [SCRIPT] P2. **Investigate + fix `MalformedTickFieldError` for `bm_minutes_to_kickoff_or_h2h_columns` — a large
+      fraction of sports MATCH_ODDS instruments fail with "ticks present but downstream calc dropped all rows due to
+      NaN/malformed field"**, tracing to "No h2h data found in MTDS raw data — cannot produce odds" during the MTDS
+      long→wide pivot step. **DONE, verified (Update 9, 2026-07-27)** — root cause: a THIRD, previously-uncovered
+      vendor-metadata column (`af_fixture_id`, a best-effort cross-vendor join key that is legitimately NaN whenever a
+      writer generation never resolved it) was left in `pivot_mtds_to_wide()`'s `group_cols` pivot index; the "combined"
+      (no `fixture_id=` path partition) writer generation leaves it NaN on 100% of rows, so `pivot_table`'s default
+      NaN-index-drop behavior silently emptied the h2h pivot — same bug CLASS as the two already-fixed
+      `instrument_type`/`data_source`/`available_at` incidents documented in this file's own `_PIVOT_INDEX_EXCLUDE`
+      docstring, just a new column. Confirmed via a REAL failing-vs-succeeding raw `ticks.parquet` GCS comparison (not
+      guessed) — h2h ticks were genuinely present and correct; this is verdict (b), a genuine code gap, not absent
+      upstream data. **Fix**: `market-data-processing-service@67cb2ef` — added `af_fixture_id`/`af_fixture_match_status`
+      to `_PIVOT_INDEX_EXCLUDE`. 2 new regression tests (one using the exact real 25-column production schema),
+      confirmed to genuinely catch the regression (fail pre-fix via `git stash`, pass post-fix).
+      `quality-gates.sh --no-fix` → ALL QUALITY GATES PASSED. Shipped via `quickmerge.sh --agent`, confirmed on
+      `origin/live-defi-rollout` HEAD. Blast radius: 1098 error occurrences / 549 unique instrument_ids / 184 unique
+      fixtures across 14 venues in one 2-day sports-scoped execution alone — every occurrence is `MATCH_ODDS` (see the
+      new todo below for why ASIAN_HANDICAP/OVER_UNDER/MATCH_ODDS_LAY never appeared here — a separate, larger bug, not
+      this one). See Update 9 for full evidence. (repo: market-data-processing-service)
+
+- [ ] [SCRIPT] P1. **Fix sports `odds_horizon_bucket`'s Path A½ honest-absence check silently suppressing ALL
+      non-MATCH_ODDS candle output (MATCH_ODDS_LAY/ASIAN_HANDICAP__/OVER_UNDER__), always, regardless of whether real
+      market data exists.** Newly discovered 2026-07-27 (Update 9) while investigating the `af_fixture_id` bug above — a
+      SEPARATE root cause/code path, not fixed there. `process_to_candles`'s Path A½ check
+      (`tick_data["market_key"] == "h2h"`) was written assuming `tick_data` is a full per-fixture/bookmaker bundle
+      (correctly distinguishing "bookmaker doesn't offer h2h" from a schema defect), but the actual production call path
+      (`_iter_chain_symbol_dfs` grouping by `instrument_id`) already slices `tick_data` to ONE market before
+      `process_to_candles` is ever called — so for any non-MATCH_ODDS instrument the check is unconditionally `True`,
+      REGARDLESS of whether that instrument's own market data is genuinely present. Confirmed with a real WILLIAMHILL
+      file (12 genuine `market_key="totals"` rows for an `OVER_UNDER_2_5::OVER` instrument) returning an EMPTY
+      `CandleOutput` instead of real odds, and cross-checked against real production output:
+      `processed_candles/.../data_type=odds_horizon_bucket/` for day=2026-07-25 contains ONLY
+      `instrument_type=MATCH_ODDS/` objects — zero `MATCH_ODDS_LAY`/`ASIAN_HANDICAP_*`/`OVER_UNDER_*` output anywhere,
+      despite `pivot_mtds_to_wide()`/`_pivot_market()` explicitly implementing spreads/totals/btts pivoting and Update
+      5's UAC SchemaContract fallback deliberately supporting all these `instrument_type`s. **Apparently never worked
+      for any market other than plain h2h, for the product's entire history.** Not fixed this session — needs real
+      judgment (does the fix generalize the check to "any recognized market_key present", could `btts` ever legitimately
+      co-occur with another market in one slice, is there a call path where `tick_data` is genuinely NOT yet
+      market-filtered) before guessing, same standard as the KALSHI investigation (Update 6). Flagged per
+      data-pipeline-correctness-is-the-heartbeat — this silently drops real market data across most of the sports
+      odds_horizon_bucket product. See Update 9 for full evidence. (repo: market-data-processing-service)

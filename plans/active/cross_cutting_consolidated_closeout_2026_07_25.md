@@ -66,7 +66,7 @@ related:
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     /plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
-    /plans/active/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
+    /plans/archive/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
     /plans/active/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

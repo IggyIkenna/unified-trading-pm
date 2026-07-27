@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [cefi, migration, canonicalisation, vm-fleet, incomplete, data-correctness, phantom-vm]
 related:
   [
-    /plans/active/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md,
+    /plans/archive/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
   ]
 created: 2026-07-26

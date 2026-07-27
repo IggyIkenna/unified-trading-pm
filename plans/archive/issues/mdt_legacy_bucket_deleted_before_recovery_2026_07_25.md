@@ -28,7 +28,7 @@ scope: [engineer]
 tags: [sports, mdt, data-loss, gcs, bucket-delete, critical, operator-action]
 related:
   [
-    /plans/active/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
+    /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
 created: 2026-07-25

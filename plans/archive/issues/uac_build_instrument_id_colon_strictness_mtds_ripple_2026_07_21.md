@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [cross-repo, breaking-change, canonical-id, build_instrument_id, quarantine-model, editable-install-ripple]
 related:
   [
-    /plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
     /codex/04-architecture/tier-and-import-architecture.md,
     /plans/archive/issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md,
   ]

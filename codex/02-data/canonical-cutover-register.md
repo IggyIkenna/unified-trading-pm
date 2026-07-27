@@ -397,7 +397,7 @@ whole corpus: no cefi chain object — v5 or v6 — has EVER been successfully c
 no-op; there is nothing to copy, verify, or leave in place.
 
 Fix + migration record:
-[`../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
+[`../../plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
 
 ---
 

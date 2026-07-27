@@ -23,7 +23,7 @@ tags: [backlog, regen, verification, done-gate, cross-repo, false-negative]
 related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master

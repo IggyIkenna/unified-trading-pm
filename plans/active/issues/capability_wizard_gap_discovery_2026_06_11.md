@@ -331,12 +331,27 @@ context; recommended owner strategy-service PBM):
       exported via the crosscutting + root facades. 4 tests. NOTE: `AllocationTarget` lives in fund-administration (not
       UAC) — its `transfer_purpose` wiring + the execution-service/fund-admin consumers are the IMPLEMENT half below
       (engine-coupled). The contract surface that makes margin transfers traceable is now in place.
-- [ ] [IMPLEMENT] P1. CeFi margin emission: margin_event_emitter.py is DeFi-only (hardcodes venue_type="defi"); UTL
+- [x] ✅ [IMPLEMENT] P1. CeFi margin emission: margin_event_emitter.py is DeFi-only (hardcodes venue_type="defi"); UTL
       margin models for HL/Bybit/OKX/Binance exist but nothing feeds them live balances. strategy-service PBM owns.
-      **STRATEGY-SERVICE ENGINE under LOGIC FREEZE (2026-06-13)** — this feeds live per-venue balances into the UTL
-      margin models + flips margin_event_emitter off its hardcoded `venue_type="defi"`; both are engine-runtime changes,
-      NOT surface-only, so they require the freeze to lift / a dedicated PBM dispatch. The UAC surface above
-      (transfer_purpose + COLLATERAL_POSTED/MARGIN_RELEASED) is the contract these will emit against once unfrozen.
+      **DONE 2026-07-27 — strategy-service@3c14639d.** The freeze cited below (2026-06-13) was lifted 2026-07-12
+      (operator ruling; freeze language removed from `epics/strategy_master.md`), unblocking this. By the time of this
+      flip, the emitter itself was ALREADY fixed by a separate margin-cluster remediation (2026-06-15, predates this
+      flip): `emit_margin_event_for_cefi` in `margin_event_emitter.py` carries a real `venue_type="cefi"` path (not
+      hardcoded "defi"), and `CefiVenueBalanceReader`/`cefi_margin_model_for_venue` (`core/venue_balance_tracker.py`)
+      already built live per-venue `PortfolioInputs` from the UPI-backed `AccountQueryClient` — but only for the
+      pull-based `margin_health.py` query API (`get_margin_health`/`compute_live_cefi_snapshots`). "Nothing feeds them
+      live balances" into an actual _emission_ was the one part still genuinely open. Closed: added
+      `emit_live_cefi_margin_events()` (`core/venue_balance_tracker.py`) — reuses the existing reader/model-resolution
+      building blocks to PUSH a `MarginEvent` via `emit_margin_event_for_cefi` per CeFi perp venue (shard-isolated per
+      venue), wired into the live monitor's periodic reconciliation loop (`cli/handlers/monitor_handler.py`) so a CeFi
+      margin breach now reaches the `margin-events` topic the same way DeFi's `update_lending_positions` push already
+      does. Also added shard-level failure isolation to the sibling read path (`compute_live_cefi_snapshots` in
+      `api/margin_health.py`) — a pre-existing gap in the same file where one venue's exchange-fetch failure could fail
+      the whole call. 5 new unit tests (`tests/position/unit/test_emit_live_cefi_margin_events.py`); quality-gates.sh
+      green (sentinel=27c2ecd7, amended to 3c14639d by quickmerge's trailer). **Found + filed, not fixed here** (out of
+      this todo's scope): the CeFi margin model's asset-symbol parsing mis-scores real (hyphenated) instrument ids via a
+      bad fallback, misclassifying healthy positions as WARNING —
+      `/plans/active/issues/cefi_margin_model_hyphenated_instrument_id_misclassification_2026_07_27.md`.
 - [ ] [IMPLEMENT] P2. margin_health API is a Phase-1 stub returning []; no CeFi per-venue margin balance tracker
       (venue_balance_tracker.py is sports-only). strategy-service. **LOGIC FREEZE — engine-runtime, deferred to PBM
       dispatch** (the API surface exists; the real CeFi balance tracker is engine work).

@@ -25,7 +25,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
-    /plans/active/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
+    /plans/archive/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
     /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md,
@@ -857,3 +857,55 @@ every todo executes an already-decided spec from the parent doc.
     `market-tick-data-service`, `deployment-service`, `deployment-api`) is `ahead=0` of `origin/live-defi-rollout` —
     nothing uncommitted or unpushed anywhere. The only untracked files present (`plans/audit/results/*_2026_06_28.*`)
     predate this session and are not mine — left untouched per the foreign-WIP rule.
+
+- **2026-07-27T~13:20Z (post-`/compact` resume) — fresh fleet check: 18/42 still RUNNING (5 more clean completions since
+  the pre-compact snapshot: `cs5-2d`, `cs6-3r`, `cs8-1e`, `cs9-3e` all `EXIT_STATUS=0`). One genuine casualty found and
+  fixed: `cs7-4d` exited `137` at 116,200/129,599 files (89.7% done) — its own command excluded `HYPERLIQUID:ASTER` but
+  **not `DERIBIT`**, and its date range (2024-01-25..2024-03-18) sits inside the DERIBIT dated-options OOM window
+  diagnosed earlier this session — this shard simply predates that fix being applied fleet-wide, not a new bug.
+  Relaunched as `canonical-migration-cefi-content-apply-055803-cs7-4d-r2` with
+  `MIGRATION_EXTRA_ARGS="--exclude-venues DERIBIT:HYPERLIQUID:ASTER"` (same playbook as the prior DERIBIT casualties);
+  confirmed RUNNING and past discovery (128,129 files, 54 days x 36 venue/pipeline_mode pairs) within ~4 min of launch.
+  **New operational finding surfaced while relaunching**: the launcher warned all 4 code tarballs
+  (`market-tick-data-service`/`unified-api-contracts`/`unified-trading-library`/`deployment-service`) were STALE
+  relative to repo HEAD — meaning every "floating"-pin VM launched since some earlier point (including this session's
+  own `market-tick-data-service@54817bc1` PROGRESS.json-checkpoint fix, landed 10:27 UTC) had been silently pulling
+  **pre-fix code** despite the source commit being pushed and green. Ran
+  `create-code-tarballs.sh --include market-tick-data-service --include unified-api-contracts --include unified-trading-library --include deployment-service`
+  to republish (completed ~12:19 UTC, manifests now point at current HEADs modulo normal concurrent-slot drift on
+  `unified-api-contracts`, which is expected multi-agent churn, not a gap). **Caveat honestly recorded**: `cs7-4d-r2`
+  itself likely still raced the republish and ran the pre-fix tarball anyway (its own run.log shows processing starting
+  ~12:17:30 UTC, before the 12:19:15 UTC republish completed) — this does NOT matter for correctness here since the
+  DERIBIT exclusion was passed as an explicit CLI flag on the command line (independent of which tarball SHA is
+  running), but it DOES mean this specific relaunch will NOT checkpoint to `PROGRESS.json` if it dies again; a future
+  relaunch of `cs7-4d-r2` itself would still replay from day one. Every VM launched from now on picks up the fresh
+  tarball. **Lesson**: a floating-tarball VM launch and a code republish are NOT ordered relative to each other —
+  launching a VM does not itself trigger a republish, so a source fix can sit merged-and-green for hours while every VM
+  in flight (and any new one launched before someone remembers to republish) keeps running the old code. **Not a novel
+  finding** — this is the SAME gap already tracked in
+  `/plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md` (two prior
+  independent hits the same day, features-service + sports-features-purge); added this occurrence as a corroborating
+  finding there and bumped its "default `LC_TARBALL_FRESHNESS=enforce`" todo P2→P1 given it's now a 3rd same-day hit,
+  rather than fix the default mid-campaign (not the right moment to flip a workspace-wide launch gate while other shards
+  are in flight).
+
+- **2026-07-27T~13:35Z — fleet check after a session interruption (battery cut mid git-push retry loop; no work lost,
+  the interrupted commit was still sitting safely uncommitted in the working tree on resume).** Fresh count: **14 shards
+  still RUNNING** (`cs10-3e/4b/5d`, `cs3-2d`, `cs4-3d`, `cs5-1d`, `cs6-2d`, `cs7-3d(finishing)/5f`, `cs8-3f/6f`,
+  `cs9-1d/2e/4e`, `cs7-4d-r2`) — **28/42 shards clean-complete** (5 more since the last snapshot: `cs10-4a`, `cs2d`,
+  `cs8-2f`, `cs8-5e`, `cs7-3d`, all confirmed `EXIT_STATUS=0`). `cs7-4d-r2` (the DERIBIT-excluded retry) is healthy at
+  36,200/128,129 files (28%) and — confirmed via its own `run.log` — IS writing
+  `[[VM_PROGRESS]] last_completed_date=... monotonic=true` checkpoints, meaning it picked up the fresh (post-`54817bc1`)
+  tarball despite the earlier-suspected race; it now has real crash-resilience its predecessor never had. No new
+  casualties, no new stale-tarball hits, no wedged-worker warnings escalating past the known-benign noise pattern.
+  **Committed via the pathspec form (`git commit -m "..." -- <2 files>`) after this session's own git-commit skill
+  diagnosed the actual cause of ~9 consecutive "branch drift"/foreign-content collisions this cycle: a still-alive
+  background sub-agent from earlier in this session (a "review role" agent, visible via `[slot-2·laptop]`-authored
+  commits with unrelated content — `codex/02-data/prediction-data-types-catalog.md`,
+  `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) sharing this SAME un-isolated working tree, not a truly
+  foreign concurrent slot** — both of its commits were legitimate, independently verified content (one already
+  corroborated by `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`'s own Update 6), so nothing was discarded, just
+  not bundled into my own commit. **Lesson for future sessions**: spawning monitoring/review sub-agents without
+  `isolation: "worktree"` means they share this git tree and WILL occasionally interleave commits under the same slot
+  identity — expected, not a bug, and the pathspec commit form (`git commit -m ... -- <my files>`) is the clean way
+  through it instead of a stash-restore dance.

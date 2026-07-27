@@ -119,7 +119,7 @@ rulings: [`cross-asset-canonical-target-ssot.md`](cross-asset-canonical-target-s
 - **R3 — cefi chain-tail v6.** v6 (`underlying=/quote=/margin=/ticks.parquet`) is canonical; the LOSSY v5 bare tail
   migrates in full (no separate inventory row yet — live v5 blast radius pending the "which cefi venues route chains
   through W1" question). →
-  [`../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
+  [`../../plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
 
 ## 🔴 DO-NOT-DELETE (SUPERSEDED 2026-07-21 — was correct until the fold+delete above)
 

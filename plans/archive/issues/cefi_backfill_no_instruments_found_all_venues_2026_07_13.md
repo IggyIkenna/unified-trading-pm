@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [cefi, backfill, instrument-resolution, availability-index, migration-collision, data-correctness, big-finding]
 related:
   [
-    /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     ../aster_cefi_data_defi_bucket_migration_2026_07_13.md,
     ../data_pipeline_e2e_check_2026_07_10.md,
   ]

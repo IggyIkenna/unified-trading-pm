@@ -27,7 +27,7 @@ related:
     /plans/archive/issues/quickmerge_agent_sentinel_race_vs_own_rebase_2026_07_16.md,
     /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md,
     /plans/archive/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
-    /plans/active/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md,
+    /plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md,
     /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
   ]
@@ -542,22 +542,42 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
 > ~15-17/day image-build-gate, ~13-15/day main-backmerge-to-ldr, plus smaller items), the confidently **movable** glue
 > (`main-backmerge-to-ldr` + `update-dependency-version` + `version-registry-notify` + `major-bump-issue-handler` — all
 > push/repository_dispatch/issue_comment triggered, none `pull_request`) is only **~4-5% of one busy repo's total billed
-> minutes**; `image-build-gate` (~9%) is a SEPARATE, larger pool but its own security review is still open (it DOES fire
-> on `pull_request` — the first todo below covers this, don't assume it passes). **quality-gates-v2's real test/lint job
-> alone is ~90%+ of a plain service repo's billed minutes** — far higher than PM's own ~18-20% pre-migration share,
-> because service repos don't run PM's extra automation (`ci-status-consolidator`, `cloud-build-router`, monitors, etc.)
-> that diluted PM's own quality-gates-v2 share. **Net read: Phase 7, even fully executed, plausibly nets only ~5-10% off
-> each non-PM repo's own spend** (~3-6% off the fleet total, since non-PM is 62% of it) — genuine and worth doing, but
-> the 50% target is NOT reachable through this lever alone. Getting there needs the real-test-compute lever flagged as
-> its own item below (P3), not this phase.
+> minutes**; `image-build-gate` (~9%) is a SEPARATE, larger pool. **`image-build-gate`'s security review is now DONE
+> (2026-07-27), not open** — read the actual reusable (`unified-trading-pm/.github/workflows/image-build-validate.yml`):
+> it `actions/checkout`s **PM's own repo, never the calling repo's PR code**; the real Docker build already happens on
+> **GCP Cloud Build / AWS CodeBuild**, triggered via `gcloud builds triggers run --substitutions=...` with the PR's
+> commit SHA passed as a plain string (not templated into the shell — `branch`/`commit_sha` flow through `env:`
+> indirection, the safe GitHub-recommended pattern, not `${{ }}` interpolated directly into `run:`). **Verdict: safe to
+> self-host once a runner exists for the calling repo** — its `pull_request` trigger doesn't carry the risk
+> `quality-gates-v2` does, because it never executes the calling repo's code at all; the only blocker is the same
+> runner-registration gap as everything else in this phase. **quality-gates-v2's real test/lint job alone is ~90%+ of a
+> plain service repo's billed minutes** — far higher than PM's own ~18-20% pre-migration share, because service repos
+> don't run PM's extra automation (`ci-status-consolidator`, `cloud-build-router`, monitors, etc.) that diluted PM's own
+> quality-gates-v2 share. **Net read: Phase 7 (main-backmerge/update-dependency-version/etc. + now image-build-gate)
+> plausibly nets ~13-14% off each non-PM repo's own spend** (~8-9% off the fleet total) — real and worth doing, but the
+> 50% target is NOT reachable through this lever alone. Getting there needs the real-test-compute lever below (P3).
+
+> **Operator decision (NEW 2026-07-27) — is moving `quality-gates-v2` itself off hosted runners worth the security
+> tradeoff?** This is where the actual 50%+ lives (it's ~90%+ of a service repo's spend), and it is explicitly NOT
+> recommended casually. GitHub-hosted runners for `pull_request` are ephemeral, single-use, zero-ambient-credential
+> sandboxes destroyed after each job; this workspace's self-hosted runners carry AMBIENT GCP/AWS credentials on a
+> persistent host (that's why they're useful for the glue jobs). Running the real pytest suite there means a compromised
+> transitive PyPI dependency (`uv sync` resolves the PR's own lockfile — no malicious human required) or an autonomous
+> agent writing something dangerous into a test file (elevated risk here specifically, given how much agent-driven code
+> churn this workspace has vs. a small human team) executes WITH that host's real cloud access, and one bad run poisons
+> the box for every other repo/job sharing it. Doing this "safely" means building fully ephemeral, zero-ambient-
+> credential, per-job sandboxes (torn down after every run) — a real infra project shared by all ~25 repos, not a
+> `runs-on:` flip; one misconfiguration reopens the hole fleet-wide. **Not started, not recommended by default** — this
+> needs an explicit operator call, weighing the real $ upside against a real security posture change.
 
 - [ ] [VERIFY] P1. Extend `classify-glue-workflows.sh`'s MOVE/STAY audit to the non-PM fleet: for each of the ~24 repos,
-      inventory the fleet-template copies (`main-backmerge-to-ldr`, `image-build-validate`/`image-build-gate`,
-      `semver-agent`, `major-bump-issue-handler`, `request-major-bump`, `update-dependency-version`,
+      inventory the fleet-template copies (`main-backmerge-to-ldr`, `image-build-validate`/`image-build-gate` — **this
+      one's own security review is DONE, see the Operator decision note above: safe, blocked only on runner
+      registration** — `semver-agent`, `major-bump-issue-handler`, `request-major-bump`, `update-dependency-version`,
       `version-registry-notify`, plus any repo-owned automation beyond the templates) and classify each the same way
-      PM's 37 movers were classified — do not assume the PM split transfers unchanged; some of these ARE already
-      `KEEP-T`/ `KEEP-R` by design (fleet templates, cross-repo reusables) and need the runner-registration fix below
-      before they can move at all.
+      PM's 37 movers were classified — do not assume the PM split transfers unchanged for the REST of this list; some
+      are already `KEEP-T`/ `KEEP-R` by design (fleet templates, cross-repo reusables) and need the runner-registration
+      fix below before they can move at all.
 - [ ] [INFRA] P1. Register additional self-hosted runner **processes** on existing VM capacity (planning VM /
       slot-worker VMs already have headroom) — one (or a few) scoped **per target repo** via that repo's own repo-level
       runner registration token. This does NOT require an org/GitHub-plan change or a repo-ownership migration (that was
