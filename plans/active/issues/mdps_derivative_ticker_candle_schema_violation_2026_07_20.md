@@ -191,9 +191,25 @@ contract under the SOURCE key as an alias. The workflow chooses + verifies befor
       new regression tests (`TestProcessAllTimeframesWriteFailureNotCountedAsSuccess`,
       `TestRunAdapterAndWriteAllWritesFailedMarksFailure`) + 3 existing tests fixed (they asserted a `None` write result
       was fine — that assertion codified the bug). Full QG green (2220 passed, 86.97% coverage).
-- [ ] 3. [DATA] P1. Sweep the OTHER candle data_types for the same class of contract drift before the backfill
-      (`trades`, `book_snapshot_5`, `liquidations`, `options_chain`, `futures_chain`, the DeFi set). A scoped
-      `/data-pipeline-check-mdps --legs force --require-captured --auto-day` per data_type is exactly the tool.
+- [x] 3. ✅ [DATA] P1. **DONE 2026-07-27 (slot-10)** — real-VM proof-sweep, representative
+      `(asset_group, venue,     data_type)` cells, `--legs force --require-captured --auto-day`. `futures_chain` has
+      ZERO enumerated cells under `--mvp-only` (not a live MDPS MVP data_type — confirmed via `--dry-enumerate`, out of
+      scope, not silently skipped). Results: `CEFI:BINANCE-FUTURES:book_snapshot_5` **9/9 clean** (68,535 candles);
+      `CEFI:BINANCE-FUTURES:liquidations` **485/489 clean** (3,693,275 candles) — the original derivative_ticker
+      missing-columns bug class does NOT reproduce on either. `options_chain` (CEFI) and both non-CEFI reps tried first
+      (`DEFI:AAVE-ETHEREUM:liquidations`, `TRADFI:AMEX:trades`) were **inconclusive** (`no_captured_input_for_cell` —
+      not reachable via `--auto-day`, not a failure verdict either way); `DEFI:UNISWAP_V3-ETHEREUM:liquidations` (2nd
+      DEFI rep) also inconclusive. **Surfaced TWO genuine NEW bugs, distinct from this issue's class, both filed**: (1)
+      `CEFI:BINANCE-FUTURES:liquidations` 4/489 FUTURE-instrument_type instruments hit a missing UAC `SchemaContract`
+      registration (`liq_agg_1d` never registered for `instrument_type=FUTURE`) —
+      `issues/mdps_liq_agg_contract_missing_future_instrument_type_2026_07_27.md`; (2) `TRADFI:NASDAQ:trades` crashed
+      ALL timeframes for both scoped instruments (IBIT, ETHA) on a corrupted raw-tick timestamp
+      (`Out of bounds nanosecond timestamp: 58317-01-15…`) — a data-quality/robustness gap, correctly non-zero exit (no
+      observability-gap recurrence) — `issues/mdps_tradfi_nasdaq_timestamp_overflow_candle_crash_2026_07_27.md`.
+      Combined report: `plans/audit/results/data_pipeline_e2e_check_mdps_2026_07_05.md` ADDENDUM. **Disposition**: the
+      fix holds broadly for the data_types/venues actually provable this session; options_chain + the DeFi set remain
+      genuinely unproven (no reachable captured input in this session's `--auto-day` search, not a pass) — a future
+      sweep session should pick different/more DEFI venues + retry options_chain on a different day.
 - [x] 4. ✅ [SCRIPT] P2. DONE (utl@69ff7fee + mdps@8890508) — **EXACT root cause + fix pinned 2026-07-21** (now the ONLY
       reason the skill reports "failed" on a fully-successful write). The force-leg manifest verify
       (`_verify_tf_output`, scripts/pipeline_e2e_check.py:1057) calls the engine

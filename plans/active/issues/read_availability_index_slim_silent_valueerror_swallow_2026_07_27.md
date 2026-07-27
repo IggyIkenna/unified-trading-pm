@@ -72,7 +72,7 @@ exact silent-placeholder anti-pattern the stale-consolidator raise above otherwi
 not just a stale-consolidator condition). A production caller with a missing/misconfigured `GCP_PROJECT_ID` (a deploy
 regression, a bad env-var rollout, a misconfigured local repro script like the one that found this) would get a silent
 "no data" result instead of a loud, actionable error — masking exactly the kind of regression
-`codex/02-data/honest-absence-downstream-handling.md` exists to prevent.
+`/codex/02-data/honest-absence-downstream-handling.md` exists to prevent.
 
 ## 3. Recommended fix (not yet implemented — needs a maintainer familiar with this module's full call-site surface)
 

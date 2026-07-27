@@ -14,7 +14,7 @@ summary: >-
   was verified to have no coverage gap. A third thread (a described "kill blocked-and-unanswered slot after ~10min"
   mechanism) was investigated and found to have NEVER existed in this repo's git history — explicitly NOT built here,
   see Progress Log.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -57,6 +57,16 @@ source: >-
 ---
 
 # AO worker session reset policy — plan-continuity gate + resume-threshold tuning
+
+> **🟢 ARCHIVED 2026-07-27** — all 7 todos shipped + operator-approved; the plan-continuity gate
+> (`agent-orchestrator@998574b`) and its operator-approved `plan_continuity_reset_enabled=True` flip
+> (`agent-orchestrator@0f85d03`) are both live on `live-defi-rollout`. Archival's own codex-alignment check found one
+> real staleness gap and fixed it: `agent-orchestrator-single-vm-architecture.md`'s "SECOND, independent persistence
+> gate" bullet still said "default False"/"Ships OFF by default", written before the same-session flip to `True` —
+> corrected to state the flip explicitly. No other referrer needed a path fix (the 3 other repo mentions of this plan's
+> slug are bare provenance citations, not path links). The live-`worker_plan_switch_reset`-volume watch noted below
+> remains genuinely open but ownerless and non-blocking — no dedicated follow-up doc filed for it, per its own "nothing
+> needs a human right now" recommendation; pick it up ad hoc via `/check-agent-orchestrator` whenever convenient.
 
 > **Codex SSOTs to check against / update on completion**:
 > `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (§ "Conversational context-resume is an
@@ -175,14 +185,25 @@ action or further work remains. This plan is ready for its own finalize/archival
 archival pass can fold the standard 6-step ritual directly here, or a dedicated finalize plan can be authored per the
 operator's usual preference for AO-dispatched plans — this one is LOCAL, so either is fine).
 
+**2026-07-27 (same session, continued) — archival ritual, folded directly here (no separate finalize plan; this plan was
+small enough).** Ran the standard 6-step ritual: (1) migrated the Deferred-work table's now-resolved archival item into
+the ARCHIVED banner; (2) codex-alignment check against both cited SSOTs — `agent-orchestrator-worker-liveness.md` was
+already accurate (correctly states `resume_fresh_context_pct` at 80), but
+`agent-orchestrator-single-vm-architecture.md`'s "SECOND, independent persistence gate" bullet was genuinely stale: it
+still said `plan_continuity_reset_enabled` "default False"/"Ships OFF by default", written before the same-session
+operator-approved flip to `True` — fixed to state the flip explicitly, with both SHAs; (3) no new CLAUDE.md contract
+needed (this is a narrow AO feature, not a workspace-wide rule change); (4) grepped corpus-wide for every reference to
+this plan's slug — 3 hits (`agent-orchestrator-worker-liveness.md`, `agent-orchestrator-single-vm-architecture.md`,
+`agents/worker.md`), all bare-slug provenance citations rather than path links, so no referrer path fixes were needed;
+(5) `locked_by`/`locked_since` were already blank — nothing to clear. `status` flipped to `complete`, moved to
+`plans/archive/2026_07/`.
+
 ## Deferred work after 2026-07-27
 
-| Item                                                                                                                              | State              | Blocked on                                                                                                                     |
-| --------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| Run the standard 6-step archival ritual on this plan (banner, codex-alignment re-check, referrer fixup, move to `plans/archive/`) | Not done           | Nobody — all 7 todos are done; this is routine closeout, not new work                                                          |
-| Watch live `worker_plan_switch_reset` volume now that `plan_continuity_reset_enabled=True` is deployed                            | Cannot be done yet | Elapsed time — needs the fleet to actually dispatch across plan/role boundaries post-deploy before there's anything to observe |
+| Item                                                                                                   | State                | Blocked on                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~Run the standard 6-step archival ritual on this plan~~                                               | **Done** — this pass | Closed by this archival pass: ARCHIVED banner added, codex-alignment check found + fixed one real stale bullet (`agent-orchestrator-single-vm-architecture.md`), referrers grepped (no path fixes needed — all bare-slug provenance mentions), moved to `plans/archive/2026_07/`, no lock to clear |
+| Watch live `worker_plan_switch_reset` volume now that `plan_continuity_reset_enabled=True` is deployed | Cannot be done yet   | Elapsed time — needs the fleet to actually dispatch across plan/role boundaries post-deploy before there's anything to observe; no dedicated follow-up doc, pick up ad hoc via `/check-agent-orchestrator`                                                                                         |
 
-**Recommended next item**: nothing needs a human right now — both remaining items are routine/observational, not
-blocking. When picked up again, the archival ritual is the quick one (few minutes); the live-volume watch is better
-suited to a future `/check-agent-orchestrator`-style read-only pass once the fleet has run for a while under the new
-flag.
+**Recommended next item**: nothing needs a human right now. The one remaining item is a non-blocking observational check
+with no owner and no deadline — pick it up whenever convenient, no dedicated plan needed.

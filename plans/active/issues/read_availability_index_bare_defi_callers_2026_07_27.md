@@ -220,8 +220,14 @@ not a mechanical column-list copy.
       (`test_read_availability_index_is_column_projected`) pinning the exact call signature so a future edit to either
       function is forced to also update the projection. Full test file green (12 tests) + `quality-gates.sh` green
       (302s).
-- [ ] [SCRIPT] P1. **ml-service** — `training/app/core/manifest_gap_handler.py:54` `apply_manifest_quality_flags`: same
-      treatment as the inference guard above.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-11)** — `ml-service@f615de1`. **ml-service** —
+      `training/app/core/manifest_gap_handler.py:54` `apply_manifest_quality_flags`: same treatment as the inference
+      guard above. Confirmed by direct read (not the guessed default): `_filter_manifest_to_window` reads
+      `date`/`asset_group`; `_build_per_day_status` reads `date`/`capture_status`/`error_reason` — no other columns
+      touched anywhere in the module. Projected `columns=["date","asset_group","capture_status","error_reason"]`
+      exactly. Added a regression test (`test_read_availability_index_is_column_projected`) pinning the exact call
+      signature (mirrors the inference guard's existing pattern), so a future edit to either function is forced to also
+      update the projection. Full `quality-gates.sh` green (227s, 2111 tests passed), shipped via quickmerge --agent.
 - [x] ✅ [SCRIPT] P0. **deployment-api** — `services/manifest_source.py:164` — **SHIPPED 2026-07-27 (slot-10)**,
       `deployment-api@489d747`. Reused the already-defined `DRILLDOWN_COLUMNS` (line 74) on the bare fallback branch,
       matching the pushdown branch above it exactly (no `filters=` — this IS the unfiltered stale-tolerant full read).
