@@ -62,6 +62,13 @@ drift_direction: advance-code
 creating an AO plan** — _"agent-orchestrator plan or human plan?"_ A `status: draft` plan is never ingested regardless
 of track — flip to `active` to dispatch.
 
+**Defaulting to `assigned_vm: NA` is not a one-way door — and the NA backlog is size-ratcheted (2026-07-27).** A LOCAL
+plan you're unsure about should still get a real look later: `/na-eligibility-audit` walks the whole `assigned_vm: NA`
+corpus and reclassifies genuinely bounded work to `planning` (never a rename — the flip happens in place). The backlog's
+doc/todo counts are hard-gated via `check_na_corpus_ratchet.py` in `run_hygiene_sweep.sh` — it must not grow unattended.
+Naming/pairing convention for any batch/finalize doc this produces, plus the shared conflict-check every
+reclassification runs before flipping: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`.
+
 ---
 
 ## 2. Frontmatter (copy the matching block)

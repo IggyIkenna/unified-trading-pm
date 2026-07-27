@@ -192,6 +192,15 @@ run_check "AG-closeout linkage (single-AG docs -> consolidated closeout, ratchet
 # terminal-status doc, never on the pre-existing backlog being cleared by
 # terminal_status_archival_backlog_sweep_2026_07_25.md.
 run_check "Terminal-status-archived (plan/issue docs -> plans/archive/, ratchet)" hard python3 "$SCRIPT_DIR/check_terminal_status_archived.py" --quiet
+# assigned_vm:NA corpus size ratchet (operator directive 2026-07-27) — the NA backlog (doc count +
+# open-todo count over assigned_vm:NA + status in {active,open}) must not grow unattended. Most NA
+# content is genuinely operator-gated/judgment work and correctly stays NA — the point is not to
+# drive it to zero, it's that new NA content must be offset by /na-eligibility-audit (or manual
+# triage) reclassifying/archiving existing NA content, not just piling up forever unreviewed. Same
+# shrinking-ratchet shape as the three checks above (na_corpus_baseline.yaml): hard-fails only when
+# the CURRENT count exceeds the baseline on either axis. SSOT:
+# codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 4.
+run_check "assigned_vm:NA corpus size (docs + open todos, ratchet)" hard python3 "$SCRIPT_DIR/check_na_corpus_ratchet.py" --quiet
 # Line caps (plans 500 soft/1000 hard; epics 2000 hard flat, NO umbrella-exemption escape hatch —
 # operator ruling 2026-07-24) — flipped from advisory to a real hard gate 2026-07-24 via the SAME
 # shrinking-ratchet shape as the reference-path check above (line_caps_baseline.yaml): hard-fails

@@ -1,0 +1,22 @@
+# Shrinking-ratchet baseline for the assigned_vm:NA corpus size (check_na_corpus_ratchet.py).
+#
+# Tracks two numbers over the LIVE `assigned_vm: NA` + status in {active, open} population
+# (plans/active/*.md + plans/active/issues/*.md) -- the same population
+# generate_na_doc_tranche_inventory.py already computes and /na-eligibility-audit walks. This is
+# a SHRINKING ratchet, same convention as doc_reference_baseline.yaml / doc_body_link_baseline.yaml:
+# a run that finds the CURRENT corpus bigger than this baseline on EITHER axis fails. The goal is
+# not "drive NA to zero" -- most NA content is genuinely operator-gated/judgment work and should
+# stay NA -- the goal is that the backlog cannot grow unattended: new NA content is fine when it's
+# genuinely NA-worthy, but it must be offset by /na-eligibility-audit (or manual triage)
+# reclassifying/archiving existing NA content, not just accumulated net forever.
+#
+# NEVER hand-raise these numbers to silence a run that just found the backlog grew -- only
+# --update-baseline after a genuine /na-eligibility-audit or manual triage pass. A deliberate raise
+# (a real spike in legitimate new NA-worthy work) is a real signal -- make it visible with why in
+# the commit message, same convention as any other ratchet exception in this corpus.
+#
+# See codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 4 for the full
+# rationale.
+max_na_docs: 390
+max_na_open_todos: 1369
+last_updated: "2026-07-27"
