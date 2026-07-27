@@ -611,7 +611,7 @@ drift_direction: advance-code
       `test_write_shard_fans_in_across_calls_same_day_underlying` +
       `test_collect_expiry_shard_records_options_chain_instrument_type` assert the v6 shape + fan-in + manifest match;
       `quality-gates.sh` green. Source: `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`.
-- [ ] [DATA] P1. **Audit recent CEFI Tardis backfill VM launches for actual vs claimed completion.** Enumerate recent
+- [x] ✅ [DATA] P1. **Audit recent CEFI Tardis backfill VM launches for actual vs claimed completion.** Enumerate recent
       `mtds-backfill-cefi-*` launches via `gcloud compute operations list` / the `vm-logs/{vm}/` GCS prefix, and
       cross-check each run's claimed-complete signal (VM self-delete + the "mtds-backfill loop complete" log line)
       against actual manifest coverage (`capture_status` by date/venue/symbol) for that VM's declared scope, flagging
@@ -619,7 +619,12 @@ drift_direction: advance-code
       market-tick-data-service, deployment-service (read-only). **Done when**: a findings table, appended to this issue
       doc, lists each recently-completed-looking CEFI backfill VM run with its claimed-vs-actual completion status,
       explicitly flagging any silent short-fall. Source:
-      `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`.
+      `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`. **DONE 2026-07-27**: findings table appended to
+      the issue doc's new "2026-07-27 recent-CEFI-backfill claimed-vs-actual completion audit" section — only 3 real
+      (non-smoke-test) `mtds-backfill-cefi-*` launches exist in the available audit window (2026-07-18→2026-07-27 ops
+      history + full GCS `vm-logs/` history), all 3 already this issue doc's own diagnosed OOM/hang incident, none ever
+      reached a claimed-complete state — zero silent short-falls found (the failure mode is a loud, immediately-detected
+      hang, not a silently short-falling "looks done" run). `unified-trading-pm@<pending-sha>`.
 - [ ] [PM] P1. **Verify + archive `mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md`.** Both its remaining open
       checkboxes are already shipped — grep unified-api-contracts (`registry/data_type_capability.py`,
       `canonical/crosscutting/_source_priority_data.py`, `canonical/crosscutting/pipeline_mode.py`,
