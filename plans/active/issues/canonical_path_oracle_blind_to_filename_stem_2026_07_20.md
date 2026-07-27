@@ -273,10 +273,17 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       — a SAMPLED, date-windowed number, NOT the corpus-wide re-measurement of § 1's historical 20.82%/~811,200 figure
       (that full-corpus re-scan is Tier-2 VM territory, out of this todo's bounded scope). 3. **The 1,697 § 6.1a
       colon_wire live objects are CONFIRMED gone from the current window** — 0/2,011 sampled non-canonical ids carry a
-      colon (`:`) in this post-fix window; the live-write fix (`mtds@953679de`, `sanitize_file_stem`) holds. **New
-      finding, not previously characterized**: the current non-canonical population (479/2,011 = 23.82% of this window)
-      is a DIFFERENT, BATCH-side defect — bare/no-colon raw wire symbols (`AAOI`, `ADA`, `BTC`, …), concentrated in
-      `(DERIBIT, FUTURE, batch_tardis)`: 6, `(EXTENDED-STARKNET, perpetual, batch_extended)`: 249,
+      colon (`:`) in this post-fix window; the live-write fix (`mtds@953679de`, `sanitize_file_stem`) holds.
+      **CORRECTION 2026-07-27 (slot-12)**: this "CONFIRMED gone" claim was a false negative — the sampled window
+      (`2026-07-20..2026-07-27`) never overlaps where the actual live cefi population lives (measured directly: every
+      live cefi object sits on `day=2026-06-21..2026-06-29`, a disjoint 9-day window). A DIRECT bounded listing of that
+      real window found 63 colon_wire objects still present (`BYBIT-FUTURES`/`OKX-FUTURES` `PERP:` stems) — migrated to
+      canonical (0 remaining) as part of closing `batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`'s own §
+      5 P1 item; see that doc for full evidence. Lesson: a sampled census's date window must be checked against where
+      the target population actually lives before citing "confirmed gone", not just assumed from proximity to "today".
+      **New finding, not previously characterized**: the current non-canonical population (479/2,011 = 23.82% of this
+      window) is a DIFFERENT, BATCH-side defect — bare/no-colon raw wire symbols (`AAOI`, `ADA`, `BTC`, …), concentrated
+      in `(DERIBIT, FUTURE, batch_tardis)`: 6, `(EXTENDED-STARKNET, perpetual, batch_extended)`: 249,
       `(OKX-FUTURES, FUTURE, batch_tardis)`: 224. This is NOT covered by § 7 item 2's `build_instrument_id` colon-guard
       (that guard only fires on a symbol carrying an embedded `:`; a bare symbol like `AAOI` has none, so it
       mints/passes through un-wrapped). Root cause not investigated this session (out of the bounded "restate the
