@@ -6,7 +6,7 @@ summary:
   still exit(1) in the cloud even though the deployed image now carries the UTL write-side dtype coercion — a SECOND,
   different failure the total observability gap hides. Ship exc_info=True on the swallowing catch, redeploy, re-run to
   finally see the real traceback, fix whatever it reveals, then backfill the missed windows.
-status: draft
+status: active
 nature: process
 asset_group: [prediction, cefi]
 stage: [data]
@@ -22,7 +22,7 @@ related:
 created: 2026-07-07
 last_updated: 2026-07-07
 parent_epic: instruments_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra

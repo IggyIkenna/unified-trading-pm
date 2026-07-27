@@ -6,7 +6,7 @@ summary:
   hypotheses), because a fresh 2026-07-25 re-measurement shows the manifest is STILL only 6 degenerate CEFI rows, 4 days
   AFTER the writer fix landed. Then fix + backfill the historical corpus so skip-if-fresh and honest coverage stop lying
   about candles. This plan does NOT own the Option-A candle-path migration (a separate, already-tracked effort).
-status: draft
+status: active
 nature: process
 asset_group: [cefi, defi, tradfi, prediction]
 stage: [data]
@@ -25,8 +25,8 @@ related:
 created: 2026-07-25
 last_updated: 2026-07-25
 parent_epic: mtds_mdps_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 6

@@ -17,8 +17,8 @@ tags: [backfill, manifest, honest-coverage, data-completion, cefi, data-correctn
 related: [/plans/active/data_completion_to_100_all_ag_2026_06_21.md]
 created: 2026-07-15
 parent_epic: manifest_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
@@ -29,6 +29,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
+assigned_role: data_engineering
 source: [data_completion_to_100_all_ag_2026_06_21 (M-1) — split 2026-07-15, plan-reconcile §8 operator ruling A]
 drift_direction: advance-code
 ---
