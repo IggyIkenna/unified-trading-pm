@@ -139,15 +139,56 @@ historical-backfill path cannot complete AT ALL today, at any Cloud Run-supporte
 
 ## 6. Open work
 
-- [ ] [CODE] P1. Profile `daily_is_enumeration.py`'s sports historical-window memory usage locally (`/usr/bin/time -v`
-      against a real historical `--start-date`/`--end-date` window) to find the actual peak-RSS driver, then implement
-      the durable chunked-scan / bounded-memory fix for the sports enum path (repo: instruments-service). This upgrades
-      and supersedes the standing P2 note in
-      `plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`.
+- [x] ✅ [CODE] P1. Profile `daily_is_enumeration.py`'s sports historical-window memory usage locally
+      (`/usr/bin/time -v` against a real historical `--start-date`/`--end-date` window) to find the actual peak-RSS
+      driver, then implement the durable chunked-scan / bounded-memory fix for the sports enum path (repo:
+      instruments-service). This upgrades and supersedes the standing P2 note in
+      `plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`. —
+      instruments-service@5134a5f0. See Progress Log below for the profiling method + numbers.
 - [ ] [VERIFY] P1. Once the durable fix lands, complete the sports backfill for 2026-06-28..2026-07-02 (the exact
       `--start-date`/`--end-date` args are proven correct in §1 above — only memory blocked it) and re-verify via
       `read_availability_index` that `expected_unattempted` drops to the same ~0-few-% baseline the healthy 07-03+ days
       show (repo: instruments-service).
+
+## Progress Log
+
+**2026-07-27 (slot-5)** — Profiled + fixed item 1 above.
+
+Method: rather than reproducing the full 54-92min multi-day historical OOM locally (expensive, burns real API_FOOTBALL
+quota, and the earlier §4 hypothesis already pointed at a specific reconciliation read), isolated + measured the exact
+`read_availability_index(sports_bucket)` call the sports enum path's per-date pre-flight/ completeness stages make,
+using `/usr/bin/time -v` against the REAL prod sports availability index
+(`instruments-store-sports-prd-central-element-323112`, 6,755,574 rows × 42 cols).
+
+Findings:
+
+- Full-schema `read_availability_index(bucket)` (no `columns=`): **6.24 GiB peak RSS** per call
+  (`Maximum resident set size: 6549776 kbytes`), ~11.0 GB deep pandas memory for the returned frame.
+- Slim `columns=` read of the same data: 4.86 GiB peak RSS (`Maximum resident set size: 4857888 kbytes`) — the
+  `_SLIM_MERGE_BASE_COLS` dedup-safety set still forces ~18 of 42 columns decoded, so this alone is a modest win.
+- **Grep of every call site found 3 places doing the full unfiltered read on the sports enum path**:
+  `process_preflight.py:_fixture_leagues_for_date` (once per run, cached),
+  `process_completeness.py: _scope_sports_expected_venues` (once per date, NOT cached beyond the 60s `_INDEX_CACHE_TTL`
+  — a multi-day historical run's per-date processing takes 18-46min per the §1 table, so this re-reads full-schema EVERY
+  date), and `process_completeness.py:_detect_thin_day_venues` — CeFi-only by design (`_THIN_DAY_ABS_FLOOR` docstring:
+  "never CeFi (sports days, etc.)") but called UNCONDITIONALLY from `_finalize_completeness` on every date of every
+  asset-group run, including sports/tradfi/defi/prediction runs that can only ever find zero CeFi rows — i.e. a
+  guaranteed-wasted full 6.2 GiB read on every single date of the reported historical backfill.
+
+Fix shipped (`instruments-service@5134a5f0`):
+
+1. `_fixture_leagues_for_date` + `_scope_sports_expected_venues` → `columns=["date","data_type","league_id"]` slim reads
+   (only columns actually used).
+2. `_finalize_completeness` now takes `asset_groups` and skips calling `_detect_thin_day_venues` (and its read) entirely
+   when `"cefi" not in asset_groups` — eliminates the 100%-wasted full read on every date of every non-CeFi run.
+   `_detect_thin_day_venues` itself also switched to a slim `columns=` read as defense-in-depth for the case a
+   CeFi-inclusive ("ALL") run does reach it.
+
+This removes the single biggest CONFIRMED per-date memory driver (`_detect_thin_day_venues`'s unconditional full read
+was pure waste on every sports date) plus the two genuinely-needed sports reads' ~1.4 GiB/call overhead. It is NOT a
+claim that this alone clears the full 32Gi ceiling on the actual multi-hour multi-day run — that can only be confirmed
+by item 2 below (the real backfill re-run), which stays open. `basedpyright`/tests/`quality-gates.sh` all green;
+targeted unit tests (`test_process_completeness_thin_day.py`, `test_silent_absent_fixes.py`) pass unchanged.
 
 ## 7. Codex SSOTs
 
