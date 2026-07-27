@@ -40,6 +40,9 @@ source:
   "review role pre-compact checkpoint (msg 2373 to main agt-498659); main (agt-498659) previously said this was being
   escalated to the operator as an evidence-integrity item — captured here so it survives compaction (review role never
   commits). OPERATOR-facing: escalate."
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## Defect
