@@ -373,10 +373,24 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 > session** — do not close this todo on the DEFI spot-check alone; re-measure each AG with the correct vocabulary before
 > flipping.
 
-- [ ] 7. [DATA] P0. **Root-cause the object↔manifest disconnect** (20,734 cefi candle objects on 2026-04-14 vs 6 MDPS
-      manifest rows corpus-wide). Either `record_captured` is not firing on the candle write path or per-VM shards never
-      consolidated. Blocks trustworthy skip-if-fresh, honest coverage, and features input-gating. **MEASURED +
-      CHARACTERIZED 2026-07-20** (direct pyarrow read of the consolidated
+- [x] ✅ 7. [DATA] P0. **ROOT-CAUSED + CODE FIX SHIPPED 2026-07-27 (slot-10)** — owned + closed on
+      `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md` per that doc's `source:` note (this plan
+      does not own MDPS writer work). Full write-up + evidence lives there (Todo 1 Findings + Todo 2 Progress Log
+      entry); linking here per the "flip with evidence, don't duplicate the writeup" convention. **Verdict**: structural
+      root cause is the `ohlcv_1m` emission-policy gate's self-referential upstream-completeness check
+      (`_build_ohlcv_1m_upstream_window` keyed at the SAME shard tuple as the row being written), permanently
+      STRICT_FAIL-locking every `trades`-sourced `ohlcv_1m:current`/`ohlcv_1h:current`/`book_snapshot_5` shard's
+      first-ever write — confirmed by direct code read (`canonical_writer_stamping.py`), not inferred. Fixed + shipped
+      `market-data-processing-service@caa995c` + a swallowed-exception classify-don't-swallow fix
+      (`record_failed_for_shard` now fires on manifest-write failure). **Scope note re: the 2026-07-27 (slot-12)
+      correction directly above** — this fix targets the TRADES-sourced gated path (primarily CEFI, plus
+      tradfi/prediction if their candle source_data_type is `trades`); it does NOT touch DEFI's `dex_pool_swaps` candle
+      path, which `_resolve_policy_output_data_type` never gates in the first place (returns `None` for `dex_pool_swaps`
+      → the whole `_publish_emission_check` gate is skipped → `record_captured` was never blocked by this bug for DEFI)
+      — consistent with slot-12's direct finding of 7,913 real DEFI manifest rows already existing. Historical-corpus
+      backfill (pre-existing objects written before this fix) and full live-prod verification are tracked separately
+      (disconnect-doc todos 3-6), not re-duplicated here. **MEASURED + CHARACTERIZED 2026-07-20** (original finding,
+      kept for provenance) — direct pyarrow read of the consolidated
       `market-data-tick-cefi-prd-…/_index/availability_index.parquet`, 166 MB / **10,363,628 rows**): by `service_name`
       → `market-tick-data-service` 6.78M, `instruments-service` 3.47M, `None` 114,749,
       **`market-data-processing-service` = 6**. The 6 candle rows are all `date=2026-04-14`, all written
