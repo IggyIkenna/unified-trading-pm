@@ -122,19 +122,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-                                                                                                                                                                              > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-                                                                                                                                                                              > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-                                                                                                                                                                              > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-                                                                                                                                                                              > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-                                                                                                                                                                              > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-                                                                                                                                                                              > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-                                                                                                                                                                              > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-                                                                                                                                                                              > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-                                                                                                                                                                              > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-                                                                                                                                                                              > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-                                                                                                                                                                              > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-                                                                                                                                                                              > — it caused no canonical-form regression. Recorded in
-                                                                                                                                                                              > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+                                                                                                                                                                                      > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+                                                                                                                                                                                      > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+                                                                                                                                                                                      > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+                                                                                                                                                                                      > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+                                                                                                                                                                                      > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+                                                                                                                                                                                      > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+                                                                                                                                                                                      > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+                                                                                                                                                                                      > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+                                                                                                                                                                                      > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+                                                                                                                                                                                      > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+                                                                                                                                                                                      > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+                                                                                                                                                                                      > — it caused no canonical-form regression. Recorded in
+                                                                                                                                                                                      > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
 - [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
       canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144.
@@ -875,6 +875,20 @@ formula.) (v9 `schema_version` uniformity is a SEPARATE P3 axis, HARD-gated on a
 > **➡️ SPLIT OUT 2026-07-15 → [`data_completion_defi_2026_07_15`](./data_completion_defi_2026_07_15.md)**
 > (plan-reconcile §8, operator ruling A — M-1 breached the absolute 5,000-line ceiling). This scope moved VERBATIM to
 > that plan; it is tracked THERE, not here. Nothing was dropped or reworded in the move.
+
+- [ ] [CODE] P1. **features-service: ban `category=defi` in on-disk GCS path reads.**
+      `features_service/onchain/adapters/mtds_canonical_reader.py::_legacy_twin()` (L71-72 + candidate builder L82-123)
+      explicitly builds the legacy `category=defi/` twin alongside the canonical `asset_group=defi/` for
+      backward-compatible reads of un-migrated on-disk data;
+      `features_service/onchain/app/calculators/     eigen_rewards_calculator.py:53-54` lists both the canonical
+      `asset_group=defi/` and legacy `category=defi/` suffixes (`ErrorCategory.*`, e.g. eigen L205, is the unrelated
+      error-classification enum — leave alone). **Relocated 2026-07-27** from the now-archived
+      `sports_manifest_canonicalisation_2026_06_01.md` — mis-filed there (this is DeFi work, not sports); moved via
+      `sports_closeout_track_s2_foldin_2026_07_25.md`, this plan being the real gating home. **GATED on defi C-GREEN —
+      currently NOT green as of this move**: `data_completion_defi_2026_07_15.md`'s C0 path+bucket canonicalisation todo
+      is still `- [ ]` open (the C0 walk has not run), so the legacy `category=defi/` parquets remain the only on-disk
+      copy for un-migrated data — removing the twin now would break defi reads. Removal is a clean one-shot once defi C0
+      reaches C-GREEN. (repo: features-service)
 
 ### From `bar_edge_left_vs_right_remediation_2026_06_08.md` (archived 2026-07-13 -- Bar-edge (open/left vs close/right) systemic remediation)
 
