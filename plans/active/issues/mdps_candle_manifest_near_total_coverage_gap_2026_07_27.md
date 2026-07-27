@@ -102,14 +102,44 @@ the candle layer instead of raw-tick.
 
 ## Recommended decision
 
-- [ ] [DIAG] P0. **Root-cause why `record_captured` is never reached (or never lands under a matching key) for the MDPS
-      candle writer across cefi/defi/tradfi/prediction**, contrasted against sports's working wiring. Check
-      `market-data-processing-service/market_data_processing_service/app/core/candle_write_mixin.py` +
-      `canonical_writer.py`/`canonical_writer_stamping.py` (the same files todo 7's `caa995c` fix touched) for whether
-      the emission-gate / manifest-write call is even reached for non-sports asset_groups, or whether it's reached but
-      silently swallowed (todo 7 also fixed a swallowed-exception path — check whether that fix's
-      `record_failed_for_shard` addition is actually catching anything now, or whether the failure is upstream of that
-      try/except entirely).
+- [x] ✅ [DIAG] P0. **Root-cause why `record_captured` is never reached (or never lands under a matching key) for the
+      MDPS candle writer across cefi/defi/tradfi/prediction**, contrasted against sports's working wiring —
+      market-data-processing-service@93a3680. Two distinct causes, not one: (1) **Historical, already-partially-fixed**
+      — cefi/tradfi/prediction show `E=0` across the board (zero NEW post-cutover orphans), so their near-total gap is
+      100% pre-cutover `F`. This matches the already-shipped `caa995c` fix to
+      `canonical_writer_stamping.py::_publish_emission_check` (the `ohlcv_1m:` passthrough bypassing the
+      self-referential upstream-manifest lookup that permanently STRICT_FAIL-locked every trades-sourced
+      `ohlcv_1m`/`ohlcv_1h`/`book_snapshot_5` shard's first-ever write). That fix only covers GOING-FORWARD writes for
+      that narrow trades-sourced ohlcv family, so the pre-fix historical corpus (the bulk of what's on GCS today)
+      permanently lacks a manifest row until the todo-2 backfill runs — expected, not a new live bug, for THIS slice. It
+      does NOT by itself explain non-ohlcv-family data_types (`derivative_ticker`, `dex_pool_swaps`, ...), which the
+      sweep also found unmanifested. (2) **Still-active, now fixed this todo** — DeFi is structurally different: `A=0`
+      AND a nonzero `E=7,936` objects written STRICTLY AFTER today's cutover with zero manifest coverage — proof of an
+      ACTIVE bug, since `dex_pool_swaps` was explicitly out of the `caa995c` fix's scope (policy resolver returns
+      `None`, no gate at all) and should otherwise call `record_captured` unconditionally. Root cause: DeFi's raw input
+      arrives as multi-instrument `ticks.parquet` bundles (e.g. Aave's 51 reserves in one file per
+      `live_workers_chain.py::_is_chain_data`'s own docstring) — `live_workers_chain.py::_chain_bundle_likely_from_path`
+      routes ANY blob path ending in `/ticks.parquet` (not just `options_chain`/`futures_chain`) to the STREAMING write
+      path (`canonical_writer_streaming.py::_process_chain_bundle_streaming` → `close_candle_streaming_writer`). That
+      function's `manifest_writer.record_captured/write/flush` except-branch (line ~517) only logged a `logger.warning`
+      on failure — UNLIKE the eager path's identical branch in `canonical_writer.py` (the "Gap 2 fix" from
+      `mdps_candle_manifest_population_disconnect_2026_07_25.md` Todo 2), which already falls back to
+      `record_failed_for_shard`. So ANY exception inside `record_captured` for a chain-bundle write (schema mismatch,
+      4-pillar validation, GCS transient, etc.) left the shard with literally NO manifest row — not even
+      `attempted_failed` — while the candle bytes were still uploaded to GCS beforehand (upload happens before the try
+      block). This exactly matches DeFi's signature (real on-disk objects, zero manifest rows, including post-cutover).
+      **Fixed**: added the same `_emit_status_for_shard(capture_status="attempted_failed", ...)` fallback to the
+      streaming path's except-branch + a regression test
+      (`tests/unit/test_streaming_write_per_tf.py::test_manifest_write_failure_records_attempted_failed`). This makes
+      future failures visible/retriable; it does not itself backfill the already-orphaned historical objects (todo 2).
+      **Ruled out**: a UAC `BUNDLED_DATA_TYPES` / MDPS `canonical_writer_shaping.py::_build_cluster_params` mismatch
+      (the latter only implements `futures_chain`/`options_chain`, returning `(None, None)` for every other bundled
+      type, which would unconditionally raise `MissingClusterValidationError` inside `record_captured`) — verified
+      `mdps_data_type_key()` always appends a `_<tf>` suffix to the aggregated key (e.g. `odds_snapshot` →
+      `odds_snapshot_<tf>`, `dex_pool_swaps` → `swaps_ohlcv_<tf>`), so the aggregated key passed as
+      `record_captured(data_type=...)` can never literally equal a `BUNDLED_DATA_TYPES` member — this guard is
+      structurally unreachable from MDPS's own candle writer today, which also explains why sports's
+      `odds_snapshot`/`odds_movement`/`arbitrage_opportunity` (which ARE UAC-bundled) don't hit it either.
 - [ ] [DATA] P1. **Once root-caused, scope + execute the historical backfill** for cefi/defi/tradfi/prediction's ~2.6M
       total F-classified (+7,936 E-classified for DeFi) unmanifested candle objects via `record_captured`-only backfill
       (never delete — mirrors `backfill_orphan_class_e.py`'s precedent). Given the scale (~1.1M for DeFi alone), this is
@@ -128,3 +158,12 @@ the candle layer instead of raw-tick.
   captured above from 4 completed Tier-2 SPOT VM runs against live prod data; spot-verified the cefi gap directly
   against the live manifest (not a tool artifact). Did not attempt the backfill (P1) — out of scope for this dispatch
   and a real infra decision (~2.6M-row scale) that deserves its own scoped campaign.
+- **2026-07-27** (AO dispatch, slot 8, `data_engineering`) — Completed todo 1 (DIAG). Read-through of
+  `candle_write_mixin.py` → `canonical_writer.py` → `canonical_writer_stamping.py` → `canonical_writer_streaming.py` →
+  UTL `manifest_writer/_writer_captured.py`. Found the historical (cefi/tradfi/prediction, `E=0`) gap is fully
+  consistent with the already-shipped `caa995c` ohlcv self-lock fix being GOING-FORWARD only. Found + fixed a DISTINCT,
+  ACTIVE bug explaining DeFi's `A=0` + nonzero post-cutover `E=7,936`: the streaming (chain-bundle) write path's
+  manifest-write except-branch silently swallowed failures with no `attempted_failed` fallback, unlike the eager path's
+  identical branch — shipped market-data-processing-service@93a3680 (fix + regression test, QG green). Did not attempt
+  the P1 backfill (own VM-launch campaign, ~2.6M rows) or the P2 sports full-corpus sweep / P2 review cross-check —
+  those remain queued as their own todos.
