@@ -157,7 +157,11 @@ change required.
       (a same-day probe cannot distinguish transient from structural); if still broken after a multi-day window,
       research replacement subgraph deployment IDs via The Graph Explorer/Network Subgraph, or add a taxonomy reason +
       runtime detection for this distinct "bad indexers" condition (mirroring `EXPECTED_SUBGRAPH_DEINDEXED` but NOT
-      reusing it — the semantics differ). Repo: market-tick-data-service, unified-api-contracts.
+      reusing it — the semantics differ). Repo: market-tick-data-service, unified-api-contracts. **STILL OPEN — partial
+      same-day re-probe evidence added 2026-07-27 (slot-5, ~2h later): PANCAKESWAP_V3/BSC self-healed (transient),
+      UNISWAP_V3/OPTIMISM did NOT (identical 3 indexer addresses/errors both times) — see "Verified live (re-probe...)"
+      below. Still same-day data; the multi-day re-check this todo asks for has not happened yet — do not close on this
+      evidence alone.**
 - [x] ✅ [SCRIPT] P2. **PARTIALLY DONE 2026-07-27 (slot-11), independently converged on the same finding.**
       TRADER_JOE_V2/AVALANCHE + VELODROME_V2/OPTIMISM: SPOT backfill VM `mtds-dex-swaps-historical`
       (`--protocols trader_joe_v2,velodrome_v2 --start 2023-01-01 --end 2024-10-06`) launched, T+10min health-verified
@@ -169,6 +173,16 @@ change required.
       276-294) was independently flipped `[x]` by slot-11 in the same window, citing this doc directly ("folded as
       corroborating evidence into the existing 2026-07-27 (slot-2) scope-extension todo in the source issue doc") — no
       annotation needed, already cross-referenced both ways. Repo: unified-trading-pm.
+- [ ] [DATA] P3. **NEW finding, 2026-07-27 (slot-5 re-probe, see "Verified live (re-probe...)" below).**
+      UNISWAP_V4/ETHEREUM carries 7 `dex_pool_swaps` `attempted_failed` rows whose `error_reason` starts with
+      `build_instrument_id` — NOT a subgraph-query failure (the subgraph itself live-probed HEALTHY, fresh block, no
+      indexing errors). This looks like a generic instrument-id-construction error (likely from a shared UAC
+      `build_instrument_id()`-style helper, not `dex_swaps_handler.py`'s own cascade code — grep for
+      `build_instrument_id` inside `dex_swaps_handler.py` returns zero hits) being surfaced as the row's error_reason.
+      Root-cause not yet dug into — get the untruncated `error_reason` for these 7 rows from
+      `_index/availability_index.parquet` (venue=UNISWAP_V4, chain=ETHEREUM, data_type=dex_pool_swaps,
+      capture_status=attempted_failed, error_reason LIKE 'build_instrument_id%'), trace the actual raise site, and fix
+      or reclassify. Small blast radius (7 rows). Repo: market-tick-data-service.
 
 ## Verified live (2026-07-27)
 
@@ -186,3 +200,67 @@ summarized in the table above. Key raw responses:
   \`account\`"}]}`; `messari_from` schema → real swap data (5 rows, pool names/tokens/amounts populated).
 - aerodrome_v3/BASE, uniswap_v4/ETHEREUM, uniswap_v3/POLYGON, pancakeswap_v3/ETHEREUM, velodrome_v2/OPTIMISM: minimal
   `{ swaps(first: 1) { id timestamp } }` probe returned real data for all 5.
+
+## Verified live (re-probe, 2026-07-27, ~2h later — slot-5)
+
+Dispatched as `defi_satellite_ao_dispatch_batch1-014` ("spot-check live subgraph health for the remaining
+un-investigated `dex_pool_swaps` long-tail", source
+`plans/archive/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`). That todo predates this doc — by the
+time this session started, the comprehensive same-day investigation above (slot-2) already covered every named subgraph.
+Rather than fork a duplicate issue doc, re-ran the live-probe against the same subgraph IDs a few hours later (23:2x
+UTC) using the exact production path
+(`market_tick_data_service.market_interface.clients.thegraph_base_client.async_post_to_subgraph`, i.e. aiohttp +
+`https://gateway.thegraph.com/api/{key}/subgraphs/id/{id}` — a bare `urllib` probe from this host gets Cloudflare error
+1010, client-fingerprint-blocked; the aiohttp path production actually uses does not).
+
+**Current row counts** (fresh read of prod `_index/availability_index.parquet`, 26,819,985 total rows,
+`market-data-tick-defi-prd-central-element-323112`), `dex_pool_swaps` `attempted_failed` = 866 total, grouped by (venue,
+chain, error_reason):
+
+| venue          | chain     | error_reason (80-char truncated)                                                 | count | date range             | max attempted_at (UTC) |
+| -------------- | --------- | -------------------------------------------------------------------------------- | ----- | ---------------------- | ---------------------- |
+| UNISWAP_V3     | OPTIMISM  | All 8 cascade schemas drifted for uniswap_v3/OPTIMISM (subgraph=Cghf4LfVqPiFw6fp | 344   | 2023-01-01..2026-07-26 | 2026-07-27T22:55:33Z   |
+| CURVE          | OPTIMISM  | All 5 cascade schemas returned GraphQL errors for curve/OPTIMISM (subgraph=CXDZP | 339   | 2023-01-01..2026-07-25 | 2026-07-27T22:31:01Z   |
+| VELODROME_V2   | OPTIMISM  | All 5 cascade schemas drifted for velodrome_v2/OPTIMISM (subgraph=A4Y1A82YhSLTn9 | 118   | 2023-01-01..2025-06-10 | 2026-07-27T23:07:36Z   |
+| TRADER_JOE_V2  | AVALANCHE | All 5 cascade schemas returned GraphQL errors for trader_joe_v2/AVALANCHE (subgr | 28    | 2024-10-07..2026-01-01 | 2026-07-23T19:36:07Z   |
+| PANCAKESWAP_V3 | BSC       | All 8 cascade schemas drifted for pancakeswap_v3/BSC (subgraph=Hv1GncLY5docZoGtX | 15    | 2024-10-12..2025-06-09 | 2026-07-27T11:40:13Z   |
+| UNISWAP_V4     | ETHEREUM  | build_instrument_id                                                              | 7     | 2026-02-15..2026-04-20 | 2026-07-26T15:27:17Z   |
+| UNISWAP_V4     | ETHEREUM  | All 1 cascade schemas returned GraphQL errors for uniswap_v4/ETHEREUM (subgraph= | 5     | 2023-01-31..2026-04-28 | 2026-07-27T05:32:25Z   |
+| UNISWAP_V2     | ETHEREUM  | All 1 cascade schemas returned GraphQL errors for uniswap_v2/ETHEREUM (subgraph= | 5     | 2023-01-06..2023-01-10 | 2026-07-22T17:06:48Z   |
+| PANCAKESWAP_V3 | ETHEREUM  | All 8 cascade schemas drifted for pancakeswap_v3/ETHEREUM (subgraph=CJYGNhb7Rvnh | 2     | 2025-05-21..2025-06-09 | 2026-07-27T16:06:50Z   |
+| UNISWAP_V3     | POLYGON   | All 8 cascade schemas returned GraphQL errors for uniswap_v3/POLYGON (subgraph=3 | 2     | 2024-11-05..2024-11-19 | 2026-07-25T13:29:00Z   |
+| AERODROME_V3   | BASE      | All 8 cascade schemas drifted for aerodrome_v3/BASE (subgraph=GENunSHWLBXm59mBSg | 1     | 2026-02-09..2026-02-09 | 2026-07-24T23:21:21Z   |
+
+**Live-probe verdicts** (`{ _meta { block { number timestamp } hasIndexingErrors } }` against each subgraph ID):
+
+| venue/chain             | subgraph (short) | verdict this probe                                                                                                                                                                                                                                                                          |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UNISWAP_V3/OPTIMISM     | `Cghf4Lf...`     | **STILL "bad indexers"** — `{0xeccdf823...: Unavailable(too far behind), 0xf92f430d...: BadResponse(no attestation: indexing_error), 0xfeff9093...: Unavailable(no status: indexer not available)}` — **identical 3 addresses/errors** to the original probe several hours earlier          |
+| VELODROME_V2/OPTIMISM   | `A4Y1A82Y...`    | HEALTHY — `block.timestamp=1785194945 block.number=154798084 hasIndexingErrors=false`                                                                                                                                                                                                       |
+| PANCAKESWAP_V3/BSC      | `Hv1GncLY...`    | **SELF-HEALED** (was "bad indexers" earlier same day) — HEALTHY now, `block.timestamp=1777378878 block.number=95169690`, but `hasIndexingErrors=true` (gateway routing recovered; the subgraph itself still self-reports indexing errors — worth another look if this bucket keeps failing) |
+| UNISWAP_V4/ETHEREUM     | `DiYPVdyg...`    | HEALTHY — `block.timestamp=1785194927`. Confirms the 7 `build_instrument_id` rows are NOT a subgraph-health issue (see new todo above).                                                                                                                                                     |
+| UNISWAP_V2/ETHEREUM     | `A3Np3RQb...`    | HEALTHY — `block.timestamp=1785194939`                                                                                                                                                                                                                                                      |
+| PANCAKESWAP_V3/ETHEREUM | `CJYGNhb7...`    | HEALTHY — `block.timestamp=1785194939`                                                                                                                                                                                                                                                      |
+| UNISWAP_V3/POLYGON      | `3hCPRGf4...`    | HEALTHY — `block.timestamp=1785194946`                                                                                                                                                                                                                                                      |
+| AERODROME_V3/BASE       | `GENunSHW...`    | HEALTHY — `block.timestamp=1785194945`                                                                                                                                                                                                                                                      |
+
+**Takeaways**:
+
+1. **PANCAKESWAP_V3/BSC's "bad indexers" condition is confirmed transient** — same subgraph, same day, healed within a
+   few hours. This directly answers half of the open P2 todo above (it does NOT need a taxonomy reason / runtime
+   detection / replacement deployment ID — a plain retry resolves it).
+2. **UNISWAP_V3/OPTIMISM's condition reproduced IDENTICALLY** (same 3 indexer addresses, same error kinds) several hours
+   apart — stronger evidence it is NOT a random blip like PANCAKESWAP_V3/BSC's, but still same-day so this alone does
+   not prove "permanent" (the todo's own bar is a multi-day re-check). Left the P2 todo OPEN.
+3. **CURVE/OPTIMISM is still generating fresh `attempted_failed` rows with the OLD pre-fix error signature as of
+   2026-07-27T22:31Z** — ~30min before the CURVE/OPTIMISM `EXPECTED_SUBGRAPH_DEINDEXED` runtime-detection fix
+   (`market-tick-data-service@dddd1b21`, this doc's item 1, marked DONE) would have suppressed it. Most likely
+   explanation: a currently-running backfill VM was launched on the pre-fix code and hasn't picked up the new deploy
+   (VMs don't live-reload) — an operational note, not a new root cause; out of scope to chase down further in this
+   read-only todo. Flagging here so whoever next touches CURVE/OPTIMISM row counts isn't surprised the count didn't drop
+   to zero immediately after the fix shipped.
+4. **NEW finding**: UNISWAP_V4/ETHEREUM's 7 `build_instrument_id`-prefixed `attempted_failed` rows are a distinct,
+   not-yet-root-caused bug unrelated to subgraph health (the subgraph itself is healthy) — new todo added above.
+
+Source task: `defi_satellite_ao_dispatch_batch1_2026_07_25.md` ("Spot-check live subgraph health for the remaining
+un-investigated `dex_pool_swaps` long-tail").

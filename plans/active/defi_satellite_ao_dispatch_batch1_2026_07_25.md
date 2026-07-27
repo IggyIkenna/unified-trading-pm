@@ -295,14 +295,27 @@ drift_direction: advance-code
       (which names TRADER_JOE_V2/AVALANCHE specifically). Repos: market-tick-data-service, deployment-service. Source:
       `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
       `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`.
-- [ ] [SCRIPT] P1. Spot-check live subgraph health for the remaining un-investigated `dex_pool_swaps` long-tail
-      `attempted_failed` buckets (`UNISWAP_V3` TimeoutError×25, `UNISWAP_V3`/POLYGON schema-drift×24, 1-5-row long-tail
-      buckets) — repeat the doc's live-probe methodology (direct POST to each subgraph's TheGraph gateway; fresh
-      `_meta.block.timestamp` = healthy vs 200-with-`errors[]` "no allocations" = dead); re-measure each bucket's
-      current row count against prod `_index/availability_index.parquet`. Read-only. Repo: market-tick-data-service.
-      **Done when**: every distinct (venue, chain) subgraph ID backing the remaining long-tail buckets has a recorded
-      live-probe verdict + current row count, written up as a follow-up issue doc. Source:
-      `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-5) — no code shipped (read-only spot-check).** The 2026-07-15-era bucket
+      labels named in this todo (`UNISWAP_V3` TimeoutError×25, `UNISWAP_V3`/POLYGON schema-drift×24) no longer match
+      current reality — re-measured fresh against prod `_index/availability_index.parquet` (26,819,985 rows):
+      `dex_pool_swaps` `attempted_failed` is now 866 rows across 11 (venue, chain, error_reason) buckets. Found this
+      exact investigation had ALREADY been done comprehensively same-day by slot-2
+      (`issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`, filed hours earlier) — rather than
+      fork a duplicate doc, live-probed the same subgraph IDs again ~2h later (production `async_post_to_subgraph` path
+      — aiohttp, not bare `urllib`, which Cloudflare-1010-blocks on this host) and appended the re-probe as new evidence
+      to that doc: confirmed every distinct (venue, chain) subgraph backing the current long-tail now has a recorded
+      live-probe verdict + current row count (table in the doc's new "Verified live (re-probe...)" section). Net new
+      signal: PANCAKESWAP_V3/BSC's "bad indexers" condition self-healed within the day (transient, confirmed);
+      UNISWAP_V3/OPTIMISM reproduced the IDENTICAL "bad indexers" error (same 3 indexer addresses) hours apart
+      (stronger-but-not-yet-conclusive evidence toward structural, not blip — existing P2 todo left OPEN pending a
+      genuine multi-day re-check); surfaced a NEW, previously-untracked finding (UNISWAP_V4/ETHEREUM 7 rows,
+      error_reason `build_instrument_id` — a code-level id-construction bug, NOT a subgraph-health issue; the subgraph
+      itself live-probed healthy) with its own new todo added to that doc. Also noted CURVE/OPTIMISM is still emitting
+      fresh `attempted_failed` rows with the pre-fix error signature as of minutes before the probe (likely a
+      not-yet-restarted backfill VM running pre-fix code — operational note, out of this todo's scope). Repo:
+      unified-trading-pm (issue-doc update only; no production code touched this todo). Source:
+      `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
+      `issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`.
 - [ ] [PM] P1. File a new tracked issue doc for the `collect-mev-events` pagination gap: `mev_events_handler.py` only
       pages the newest ~100 Flashbots relay rows/day (hard-exits after the first page), under-covering any day with >100
       MEV-Boost relay payloads — already fully root-caused in the source doc, no new investigation needed. Correct
