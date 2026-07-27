@@ -163,3 +163,12 @@ handler's setup code not yet grepped). The fix-todo below should trace and fix B
   failed, basedpyright clean, adapter-contract-call ratchet clean). Both delta_one CEFI candle-reader paths (the
   bulk-preload path from todo 2 and the per-instrument path from this todo) now thread a resolved `pipeline_mode`. Todo
   3 (re-run the real-day proof for `features_by_date_root_canonicalisation_2026_07_21.md` todo 6) is now unblocked.
+- **2026-07-27 (slot 8)** — Independently arrived at the identical todo-1 fix (same helper name, same
+  `resolve_pipeline_mode` call shape, same never-raising contract) while working
+  `features_by_date_root_canonicalisation_2026_07_21.md` todo 6; discovered on rebase that slot-6 had landed it moments
+  earlier (features-service@e9430f0d) — dropped my redundant local diff/test rather than double-ship. Also independently
+  hit + filed the SAME QG STEP 5.83 timeout as slot-6, under a different name
+  (`/plans/active/issues/qg_5_83_adapter_contract_regression_workspace_scan_timeout_2026_07_27.md`,
+  unified-trading-pm@7575271a4) — duplicate of slot-6's
+  `adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`; flagging for consolidation
+  rather than re-filing a third time. Proceeding to todo 3 (the real-day proof) next.
