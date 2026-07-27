@@ -232,15 +232,13 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
 - **[DATA] P0. 11b.** The actual cross-repo orphan/lineage report — remains open, tracked via the 4 todos in
   `issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md` (build+run MDPS/features/ml-strategy sweeps,
   then write the combined report). Non-checkbox pointer per the scoping above.
-- [ ] 11c. [DATA] P0. [OPERATOR] **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS
-      manifest (via the safe additive `merge_manifest_from_canonical_paths()` shipped in 11a, never the destructive
-      `rebuild_manifest_from_canonical_paths`), so it needs delete-safety/reversibility review before any `--apply` even
-      though the additive path only ADDS rows (per `task_template.md` finding O's safe-idempotent carve-out, once
-      confirmed against 11b's actual findings — do not assume every orphan class 11b finds is additive-only; some may
-      require a real GCS data migration, not just a manifest backfill, which IS destructive/hard-to-reverse and needs
-      the full delete-safety protocol). Runs on a VM, never in-session. `depends_on: 11b` (the audit's findings are the
-      actual work list — do not launch a migration VM before the audit report exists). Migrations run to real completion
-      per the data-pipeline-correctness HARD RULE — no asset_group skipped, no deadline deferral.
+- [ ] 11c. [DATA] P0. **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS manifest
+      (safe additive `merge_manifest_from_canonical_paths()` from 11a, never destructive
+      `rebuild_manifest_from_canonical_paths`). **Not `[OPERATOR]`-pre-gated** (corrected 2026-07-27 — the additive path
+      only ADDS rows, finding O's carve-out applies). **Once 11b lands**: any orphan class needing a real GCS migration
+      re-checks that bucket's soft-delete fresh via `gcs_bucket_soft_delete_retention_seconds()` — `>=604800s` →
+      autonomous (finding T, §3a); else tag `[OPERATOR]` then, not before. VM-only, never in-session. `depends_on: 11b`.
+      Migrations run to real completion per the data-pipeline-correctness HARD RULE.
 - [ ] 12. [SCRIPT] P1. Backfill-processing path (download→process→upload) code-ready + OPTIMIZED learning from cefi
       (within-VM multiproc, faster-libs/Rust where it pays, 250GB disk, fleet-wide since not Tardis-capped).
 - [x] 13. [DATA] P0. **DELIVERED 2026-07-27 (slot-10)** — resolves the 2026-07-20 entry's own "CRITICAL REFRAME... MUST
