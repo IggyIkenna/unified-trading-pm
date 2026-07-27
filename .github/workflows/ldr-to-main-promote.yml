@@ -200,6 +200,36 @@ jobs:
               { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
               exit 0
             fi
+
+            # ── Don't preempt an in-flight validation (2026-07-27) ──────────────────────────
+            # Without this, the superseded-ref cleanup below closes whatever promote PR is
+            # currently open the moment LDR's tip moves at all — even if that PR's
+            # quality-gates-v2 run is mid-flight and about to pass. Under PM's commit velocity
+            # (18-26/hr) almost every tick observes a new tip, so almost every attempt got
+            # killed before its ~1-3 min v2 run could finish — only a tick landing in a window
+            # with ZERO new commits for that whole duration ever survived to merge (observed:
+            # v2 re-ran 15-20x in 45 min). Fix: if an existing open promote/* PR's v2 run for
+            # its own head SHA hasn't reached a terminal state yet, skip this tick entirely —
+            # let it finish (merges on success; superseded on the NEXT tick if it fails). This
+            # doesn't skip validating any commit — it just stops restarting validation from zero
+            # every time one lands mid-run, the same batching a merge queue gives you natively.
+            # Fail-open on a query error (never let a broken check wedge the drain forever).
+            _INFLIGHT_HEAD=$(gh pr list --repo "$OWNER/$REPO" --base main --state open \
+              --json headRefName --jq ".[] | select(.headRefName | startswith(\"promote/$REPO/\")) | .headRefName" 2>/dev/null | head -1)
+            if [ -n "$_INFLIGHT_HEAD" ] && [ "$_INFLIGHT_HEAD" != "$PROMOTE_HEAD" ]; then
+              _INFLIGHT_SHA=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$_INFLIGHT_HEAD" \
+                --state open --json headRefOid --jq '.[0].headRefOid' 2>/dev/null || echo "")
+              if [ -n "$_INFLIGHT_SHA" ]; then
+                _V2_INFLIGHT=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 20 \
+                  --json headSha,status --jq "[.[]|select(.headSha==\"$_INFLIGHT_SHA\" and .status!=\"completed\")]|length" 2>/dev/null || echo "0")
+                if [ "${_V2_INFLIGHT:-0}" != "0" ]; then
+                  echo "⏳ existing promote PR (head=$_INFLIGHT_HEAD) has quality-gates-v2 still running — not superseding this tick, letting it finish"
+                  { echo "action=inflight_wait"; echo "pr="; } >> "$GITHUB_OUTPUT"
+                  exit 0
+                fi
+              fi
+            fi
+
             if [ "$DRY_RUN" = "true" ]; then
               echo "DRY-RUN: would open LDR→main PR ($FILES changed file(s))"
               { echo "action=would-open"; echo "pr="; } >> "$GITHUB_OUTPUT"

@@ -797,6 +797,31 @@ jobs:
               _done BLOCKED; return 0
             fi
 
+            # ── Don't preempt an in-flight validation (2026-07-27) ──────────────────────────
+            # Mirrors the same fix in ldr-to-main-promote.yml (PM-only bot): without this, the
+            # superseded-ref cleanup below closes whatever promote/* PR is open the moment LDR's
+            # tip moves at all — even mid-flight quality-gates-v2. Under fleet commit velocity
+            # almost every tick observes a new tip, so almost every attempt got killed before its
+            # v2 run could finish (observed: v2 re-ran 15-20x/45min on some repos). Skip cutting a
+            # new ref/PR this tick if an existing open promote/* PR's v2 run for its OWN head SHA
+            # hasn't reached a terminal state yet — let it finish (merges on success; superseded
+            # next tick on failure). Every commit still gets validated, just batched with whatever
+            # else lands during the same in-flight run. Fail-open on a query error.
+            _INFLIGHT_HEAD=$(gh pr list --repo "$OWNER/$REPO" --base main --state open \
+              --json headRefName --jq ".[] | select(.headRefName | startswith(\"promote/$REPO/\")) | .headRefName" 2>/dev/null | head -1)
+            if [ -n "$_INFLIGHT_HEAD" ] && [ "$_INFLIGHT_HEAD" != "$PROMOTE_HEAD" ]; then
+              _INFLIGHT_SHA=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$_INFLIGHT_HEAD" \
+                --state open --json headRefOid --jq '.[0].headRefOid' 2>/dev/null || echo "")
+              if [ -n "$_INFLIGHT_SHA" ]; then
+                _V2_INFLIGHT=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 20 \
+                  --json headSha,status --jq "[.[]|select(.headSha==\"$_INFLIGHT_SHA\" and .status!=\"completed\")]|length" 2>/dev/null || echo "0")
+                if [ "${_V2_INFLIGHT:-0}" != "0" ]; then
+                  echo "  ⏳ $REPO: existing promote PR (head=$_INFLIGHT_HEAD) has quality-gates-v2 still running — not superseding this tick"
+                  _done BLOCKED; return 0
+                fi
+              fi
+            fi
+
             # ── STEP 1 (frozen-head): pin the promote head to the SIT-validated commit ────────────
             # We only reach here PAST the content + SIT gates, so $LDR_SHA is gate-validated content: a
             # BREAKING delta passed only because sit_validated_tree == this LDR tree; a non-breaking delta
