@@ -90,15 +90,24 @@ drift_direction: advance-code
       assume this split (`unified-api-contracts/tests/unit/test_mvp_scope.py`, multiple
       `is_mvp("sports",       "ODDS_API", "FIXED_ODDS", ...)` calls). `ODDS_API` remains a legitimate real venue for
       `markets`/`outcomes`/ `settlements` going forward — only these 33 legacy `odds`-type rows are in scope for this
-      migration. - **`PINNACLE` (32,616 rows) → FIXED_ODDS, no special case.** `PINNACLE_AS_LINE`
-      (`_sports_prediction_contracts.py:       213,248`) is an orthogonal schema-column tag (which venues populate the
-      optional `max_bet` column on `SPORTS_ODDS_SNAPSHOT`) — it operates at a different layer than the
-      `EXCHANGE_ODDS`/`FIXED_ODDS` `InstrumentType` split (`_instrument_enums.py:95-109` documents these as separate
-      layers) and does not conflict with it. PINNACLE is already classified FIXED_ODDS everywhere else in the codebase
-      (`venue_constants.py:184,500` `SPORTS_BOOKMAKER_API_VENUES`; `bookmaker_registry.py` `BOOKMAKER_API`;
-      `system-integration-tests/.../test_instrument_alignment.py:240-241` asserts
-      `"FIXED_ODDS" in       venue_types["PINNACLE"]`). - **Adjacent bug found + fixed while investigating (not one of
-      the 3 target venues, findings-triage "adjacent" fix)**: `venue_constants.py:180`'s `SPORTS_EXCHANGE_VENUES`
+      migration. **Cross-checked 2026-07-27** (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phase 0-4, which
+      fixed a genuine, DIFFERENT `venue=ODDS_API` conflation in MDPS's `reprocess_sports_odds.py`): this ruling is NOT
+      the same bug — `markets`/`outcomes`/`settlements` are genuinely vendor-scoped listing/settlement data with no
+      per-bookmaker breakdown to attribute (matches UAC's own `VENUES_BY_ASSET_GROUP["sports"]` registry entry for
+      `ODDS_API`, "Multi-bookmaker odds aggregator (raw tick data source)" — see `codex/02-data/venue-availability.md`),
+      unlike the fixed bug (a manifest row for data that DID already carry a real per-row `bookmaker_key`, just never
+      read). This ruling stands. **Before dispatching the pending "move these 3 venues" todo below**, re-verify against
+      `plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (P0, open as of this note) —
+      that doc found the live `instrument_type=odds` population is far larger (~27 venues, 54.8M rows) than this doc's
+      8-venue/561,260-row scope and gates the move todos until reconciled. - **`PINNACLE` (32,616 rows) → FIXED_ODDS, no
+      special case.** `PINNACLE_AS_LINE` (`_sports_prediction_contracts.py:       213,248`) is an orthogonal
+      schema-column tag (which venues populate the optional `max_bet` column on `SPORTS_ODDS_SNAPSHOT`) — it operates at
+      a different layer than the `EXCHANGE_ODDS`/`FIXED_ODDS` `InstrumentType` split (`_instrument_enums.py:95-109`
+      documents these as separate layers) and does not conflict with it. PINNACLE is already classified FIXED_ODDS
+      everywhere else in the codebase (`venue_constants.py:184,500` `SPORTS_BOOKMAKER_API_VENUES`;
+      `bookmaker_registry.py` `BOOKMAKER_API`; `system-integration-tests/.../test_instrument_alignment.py:240-241`
+      asserts `"FIXED_ODDS" in       venue_types["PINNACLE"]`). - **Adjacent bug found + fixed while investigating (not
+      one of the 3 target venues, findings-triage "adjacent" fix)**: `venue_constants.py:180`'s `SPORTS_EXCHANGE_VENUES`
       incorrectly included `BETFAIR_SB_UK` — the Sportsbook, contradicting this same plan's own already-resolved pole
       (`BETFAIR_SB_UK` → FIXED_ODDS, line above) and its own name ("SB" = Sportsbook). Fixed 2026-07-26: moved
       `BETFAIR_SB_UK` from `SPORTS_EXCHANGE_VENUES` to `SPORTS_BOOKMAKER_WEB_VENUES` (alongside `BETMGM`, its correct
@@ -188,13 +197,17 @@ drift_direction: advance-code
       now-superseded K1/K2 UPPER-casing migration, which copied but never deleted) — left untouched; recorded as an
       addendum on `sports_consolidated_closeout_2026_07_19.md`'s open K1/K2-revert todo (Step 3) since it's already
       tracked there.
-- [ ] [DATA] P1. **Now that the mapping todo above is ruled (2026-07-26: bare `BETFAIR`→EXCHANGE_ODDS,
-      `ODDS_API`→FIXED_ODDS, `PINNACLE`→FIXED_ODDS), move those 3 venues' GCS objects the same way** (same snapshot →
-      move → independent re-read count pattern as the unambiguous-venue todo above: `BETFAIR`→`exchange_odds/`;
-      `ODDS_API`, `PINNACLE`→`fixed_odds/`). **Un-gated from `[OPERATOR]` to `[DATA]` 2026-07-26** — it was
-      `[OPERATOR]`-tagged only because it couldn't execute correctly until the mapping decision landed; that decision is
-      now recorded above, so this is a normal bounded, dispatchable data-move with a determinable done-when, no further
-      human judgment call required. Via UTL `gcs_copy_object`/`gcs_delete_object` (never subprocess gsutil). (repo:
+- [ ] [DATA] P1. **⛔ GATED 2026-07-27 — do not dispatch without re-reading
+      `plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (P0, open as of this note)
+      FIRST** — that doc found the live `instrument_type=odds` population (~27 venues, 54.8M rows) is far larger than
+      this plan's 8-venue/561,260-row scope and explicitly blocks this exact todo pending reconciliation. **Now that the
+      mapping todo above is ruled (2026-07-26: bare `BETFAIR`→EXCHANGE_ODDS, `ODDS_API`→FIXED_ODDS,
+      `PINNACLE`→FIXED_ODDS), move those 3 venues' GCS objects the same way** (same snapshot → move → independent
+      re-read count pattern as the unambiguous-venue todo above: `BETFAIR`→`exchange_odds/`; `ODDS_API`,
+      `PINNACLE`→`fixed_odds/`). **Un-gated from `[OPERATOR]` to `[DATA]` 2026-07-26** — it was `[OPERATOR]`-tagged only
+      because it couldn't execute correctly until the mapping decision landed; that decision is now recorded above, so
+      this is a normal bounded, dispatchable data-move with a determinable done-when, no further human judgment call
+      required. Via UTL `gcs_copy_object`/`gcs_delete_object` (never subprocess gsutil). (repo:
       market-data-processing-service / instruments-service). **Done when**: the same re-read-count check passes for all
       3 previously-ambiguous venues once moved, citing the operator's ruling from the mapping todo above, with 0 objects
       lost.

@@ -103,7 +103,12 @@ Citations are file:line or plan/commit.
 - **A4 `LANDED`** — **sports = TWO registries, EXEMPT from set-equality.** IS owns reference-data providers
   (`API_FOOTBALL`/`FOOTYSTATS`/`UNDERSTAT`/`TRANSFERMARKT`/`SOCCER_FOOTBALL_INFO`/`OPEN_METEO`); UAC sports = MTDS
   **odds** venues (`ODDS_API`/`PINNACLE`/`BETFAIR*`/`DRAFTKINGS`/`FANDUEL`). Do **NOT** merge. _(registry Decision C.)_
-  **Conflicts:** plans that merge the two sports registries or expect odds venues in the IS producer.
+  **Conflicts:** plans that merge the two sports registries or expect odds venues in the IS producer. **Note
+  (2026-07-27, confirmed via `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phase 4)**: `ODDS_API` in this list is
+  the vendor/aggregator-class registry entry (real objects are only stamped `venue=ODDS_API` for the non-per-bookmaker
+  meta-snapshot raw shape), not a bookmaker like the other 4 listed — this decision (registry membership) is still
+  correct as written; the distinction only matters if a per-row/per-shard manifest write ever conflates the two, which
+  was a separate, now-fixed bug in MDPS's `reprocess_sports_odds.py` (unrelated to this A4 registry-merge decision).
 - **A5 `LANDED`** — prediction venues `{POLYMARKET, KALSHI}` (binary markets) are **DISTINCT** from cefi
   `KALSHI-PERP`/`POLYMARKET-PERP`. **KEEP BOTH; no adapter collapse.** _(registry Decision B / INV-1.)_ **Conflicts:**
   plans proposing to collapse the prediction & perp adapters/venues into one.

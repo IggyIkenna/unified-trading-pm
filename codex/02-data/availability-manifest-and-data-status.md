@@ -630,7 +630,15 @@ class AvailabilityRecord:
   (`market_tick_data_service/scripts/migrate_mtds_defi_legacy_venue_underscore.py`). Read-time fallback removed in
   deployment-api 2026-05-07 (commit 64d2be9). Canonical underscore forms per UAC `ALL_DEFI_VENUES` (e.g.
   `TRADER_JOE_V2`, `VELODROME_V2`) are preserved — only the legacy run-together forms are aliased.
-- **`venue` for SPORTS (MTDS)** = individual bookmaker (PINNACLE, BETFAIR_EX, DRAFTKINGS), not "ODDS_API".
+- **`venue` for SPORTS (MTDS)** = individual bookmaker (PINNACLE, BETFAIR_EX, DRAFTKINGS), not "ODDS_API". This applies
+  to FINE per-shard/per-row manifest cells wherever a real bookmaker is knowable from the data — it does NOT forbid a
+  genuinely coarse AGGREGATE SENTINEL row (e.g. a per-day "some bookmaker captured this date" summary) from using
+  `ODDS_API` deliberately, as long as that's documented as a sentinel and not conflated with a fine-grained claim.
+  MDPS's `reprocess_sports_odds.py` `odds_horizon_bucket` manifest got this wrong at the FINE grain until 2026-07-27
+  (stamped `venue=ODDS_API` on every per-`(league_id, timeframe)` row despite the underlying shard already carrying a
+  real per-row `bookmaker_key`) — fixed forward (`market-data-processing-service@6f7422e`) + backfilled (`@a047b29`);
+  see `plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phases 0-3 for the full investigation and
+  the coarse-vs-fine distinction this rule now codifies.
 - **No `data_source` column for non-TradFi rows.** Track what the data IS (transfers, injuries, odds), not where it came
   from (Transfermarkt, API Football, Tardis). If you swap providers, the manifest stays the same.
 - **`source` field (v9, universal).** Every external-vendor cell across all 5 asset groups now carries `source`. The

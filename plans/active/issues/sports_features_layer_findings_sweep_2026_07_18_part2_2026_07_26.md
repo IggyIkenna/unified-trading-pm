@@ -442,10 +442,27 @@ Migrating rows without fixing writers guarantees regression on the next capture.
       `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C — this UPPER-case direction was itself REVERTED
       back to lower-case fleet-wide; see that doc for execution).
 - [x] [CODE] P1. Make MDPS odds writers stamp `venue = <bookmaker_key>` and `source = odds_api`, instead of
-      `venue=ODDS_API`. `_SPORTS_VENUES = frozenset({"ODDS_API"})`
-      (`market_tick_data_service/adapters/umi_tick_provider.py:110`) is the declaration to change. — ⛔ SUPERSEDED
-      2026-07-23 (lowercase revert) — already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md`
-      (Track C; see that doc for execution).
+      `venue=ODDS_API`. ~~`_SPORTS_VENUES = frozenset({"ODDS_API"})`
+      (`market_tick_data_service/adapters/umi_tick_provider.py:110`) is the declaration to change.~~ — **CORRECTED
+      2026-07-27, was falsely closed** (supersedes a concurrent "⛔ SUPERSEDED 2026-07-23 (lowercase revert)" pass on
+      this same line — that marker was about an unrelated data_type-casing revert, not this venue conflation, and
+      pre-dates the real fix below): this checkbox was marked `[x]` "already covered by Track C" but (a) Track C never
+      actually shipped this fix (its own text said "Do NOT touch the deliberate `mdps_odds_horizon_bucket`
+      `venue=ODDS_API` aggregate... that's a different, intentional aggregate identity, not this bug" — now corrected,
+      see that doc), and (b) the cited target (`_SPORTS_VENUES` in `umi_tick_provider.py`) was the WRONG symbol entirely
+      — that's a CLI/dispatch-level venue selector ("which adapter category to invoke for a `--venue ODDS_API` backfill
+      job"), not a per-row manifest stamp; changing it wouldn't make sense (the vendor endpoint genuinely is invoked at
+      the ODDS_API level, then internally fans out to real per-bookmaker rows). **The REAL fix, now genuinely done
+      (2026-07-27, `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phase 1-2)**: MDPS's
+      `market-data-processing-service/scripts/reprocess_sports_odds.py` — the actual odds_horizon_bucket manifest writer
+      — was stamping every FINE per-`(league_id, timeframe)` manifest row `venue=ODDS_API`. Fixed forward
+      (`market-data-processing-service@6f7422e`, fine rows now split per real `bookmaker_key`, one manifest row per
+      distinct bookmaker present in the underlying shard) + backfilled for existing rows
+      (`market-data-processing-service@a047b29`, VM-applied migration — see the issue doc's closing Update for the real
+      row-count evidence). `source` stays `odds_api`'s SIBLING derived-product identity `mdps_odds_horizon_bucket`
+      (investigated + confirmed correct, NOT `odds_api` — see the issue doc Phase 0/4). The COARSE per-day summary row
+      deliberately keeps `venue=ODDS_API` as a documented aggregate sentinel (not a per-row conflation) — see
+      `reprocess_sports_odds.py`'s `_MANIFEST_VENUE_AGGREGATE` docstring.
 - [x] [CODE] P1. Stop writing bookmakers + `odds` into `instrument_type`; introduce the sports instrument_type
       vocabulary (betting market: match_odds / over_under / btts / spread). NOTE `canonical_writer_shaping.py:218`
       asserts _"the correct instrument_type IS 'odds'"_ — that claim must be reconciled against the shard atom

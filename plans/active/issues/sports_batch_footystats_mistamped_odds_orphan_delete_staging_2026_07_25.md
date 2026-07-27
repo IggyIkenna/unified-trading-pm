@@ -45,6 +45,14 @@ depends_on: []
 
 # batch_footystats mis-stamped ODDS_API population — orphaned objects, staged delete-suggestion
 
+> **Cross-reference note (2026-07-27)**: `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phases 0-3 fixed a
+> DIFFERENT `venue=ODDS_API` conflation (MDPS's `reprocess_sports_odds.py` odds_horizon_bucket manifest writer). This
+> doc's population (`pipeline_mode=batch_footystats`, raw `instrument_type=/data_type=odds/` migration artifacts) is a
+> separate object population and its delete-staging logic does not rely on the same premise — it uses raw content-key
+> comparison against canonical (already-correct, real-bookmaker-venued) `batch_odds_api` objects, not a claim that
+> `venue=ODDS_API` is itself correct here. No change needed to this doc's disposition; noted for completeness since a
+> read-only recon pass flagged the surface-level `venue=ODDS_API` similarity.
+
 ## What I found (2026-07-25, slot 7, data_engineering)
 
 Following the operator's answer to `BLK-8e3fdaff` (scoped re-verification of the archived doc's residual), I re-checked

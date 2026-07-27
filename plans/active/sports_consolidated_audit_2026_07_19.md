@@ -112,7 +112,7 @@ Manifest 1,974,679 rows (unchanged since 07-18 — no migration has run). Covera
 | odds_api                 |   388,868 | **28 distinct bookmaker venues, all 23 declared present, ZERO gaps** |
 | footystats               |    42,476 | all mislabeled `venue=ODDS_API` (legacy bundle)                      |
 | api_football (sentinels) | 1,398,256 | 1,247,647 empty_confirmed                                            |
-| mdps_odds_horizon_bucket |   124,294 | deliberate cross-bookmaker aggregate                                 |
+| mdps_odds_horizon_bucket |   124,294 | (stale count; 465,743 as of 2026-07-27 — see below)                  |
 | polymarket_clob          |    20,785 |                                                                      |
 
 **Markets vocabulary already exists**: `ODDS_API_MARKET_TO_CANONICAL` (h2h→MATCH_ODDS, spreads→ASIAN_HANDICAP,
@@ -133,6 +133,14 @@ active fixtures' single-fetch `bm_minutes_to_kickoff` (~1144–1266 min) all lan
 output → `ADAPTER_RETURNED_EMPTY_OUTPUT`. 2025-12-24 is genuine honest-absence (0 in-window). A normal match day
 (2025-12-20) buckets 11,018 rows through cleanly. **F3 timeframe migration is DONE** for the live canonical writer
 (124,294 rows, `timeframe` populated). Leakage guard is on the correct column (`bm_minutes_to_kickoff`).
+
+**CORRECTED 2026-07-27** (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phase 0-3): the "deliberate
+cross-bookmaker aggregate" framing above (and the stale 124,294 count — the actual live count as of 2026-07-27 is
+465,743 `source=mdps_odds_horizon_bucket` rows, 200,512 `captured`) applied correctly only to the COARSE per-day
+manifest row (unchanged, still a real aggregate sentinel `venue=ODDS_API`). The FINE per-`(league_id, timeframe)`
+manifest rows were ALSO stamped `venue=ODDS_API` — a genuine, now-fixed conflation, since the underlying shard already
+carries a real per-row `bookmaker_key`. Fixed forward (`market-data-processing-service@6f7422e`) + backfilled
+(`@a047b29`, VM-applied) — see the cited issue doc for full evidence.
 
 ### 1.4 features-service — feature groups (bucket `features-sports-prd`)
 
