@@ -112,9 +112,22 @@ and final verify/reconcile.
 
 ## Todos
 
-- [ ] 1. [DATA] P0. Rebuild code tarballs (`refresh_code_tarballs.sh`) for the 4 already-shipped repos
+- [x] 1. ✅ [DATA] P0. Rebuild code tarballs (`refresh_code_tarballs.sh`) for the 4 already-shipped repos
       (unified-trading-library, market-data-processing-service, features-service, unified-trading-api) so the
-      canonical-shape writer/reader changes are live on VM images. (RESUME ORDER step 4a.)
+      canonical-shape writer/reader changes are live on VM images. (RESUME ORDER step 4a.) — deployment-service@<script
+      run, no code change>. `unified-trading-library` was already up to date at LDR tip (0d3b959c2de2, includes the
+      writer/reader lockstep changes). `unified-trading-api` is NOT part of the VM-tarball fleet (`REPOS` list in
+      `refresh_code_tarballs.sh`) — it deploys via a different path, not VM tarballs, so N/A here. Rebuilt+uploaded:
+      `market-data-processing-service-code` (sha=a35ccb71a991, confirms `mdps@752eaff` as ancestor — the shipped writer
+      fix is live) and `features-service-code` (sha=568c56303d83, confirms `features@99d5554e` as ancestor — the shipped
+      reader fix is live), plus 3 other stale VM tarballs (market-tick-data-service, deployment-service,
+      batch-live-reconciliation-service) that the SHA-skip scan also found changed. Found + fixed a real bug along the
+      way: this slot's `deployment-service` checkout had no `.venv`, so `gcs_upload_via_adc.py`'s
+      `${DS_ROOT}/.venv/bin/python` fallback silently hit bare `python3` (no `deployment_service` package installed) →
+      every upload failed with `ModuleNotFoundError`. Fixed via
+      `uv venv .venv && UV_PROJECT_ENVIRONMENT=.venv uv sync     --frozen` in this slot's deployment-service clone (an
+      environment/local-venv fix, not a code change — no commit needed). Manifest SHAs verified post-upload via
+      `gcloud storage cat`.
 - [ ] 2. [DATA] P0. VERIFY on `-test-` via `/data-pipeline-check-mdps` (force+skip+canonical legs) that the writer now
       emits the canonical shape (`instrument_type=` present, SOURCE `data_type`, path==manifest). **THIS IS THE GATE
       before any prod-data executor** — do not start todo 5+ before this passes. (RESUME ORDER step 4b.)
