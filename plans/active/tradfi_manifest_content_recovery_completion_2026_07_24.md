@@ -264,13 +264,18 @@ source: >-
       `SELF-VERIFY: 4,988,822/4,988,822 UPPERCASE` — corroborates 0 residual with a second, later read. Bundle atoms
       `futures_chain`/`options_chain` are a SEPARATE partition-grain axis (manifest-only, null-id) — kept distinct, NOT
       folded into the enum, per design. (repos: market-tick-data-service, unified-trading-library, instruments-service)
-- [ ] [DATA] P1. **Residual from the casing migration above — semantic-mislabel relabel + null/blank resolve are
-      SEPARATE, STILL OPEN sub-scopes.** The 2026-07-25 casing script deliberately did NOT touch: (a) the ~566,630 (57%)
-      semantically-mismatched rows (options mislabeled `FUTURE`→should-be-`OPTION`, combos→should-be-`COMBO` — a
-      re-derive-from-classifier job, different defect class from casing); (b) `<null>`/`''`/`UNKNOWN` `instrument_type`
-      rows (2026-07-25 live count: 329,513 null + 85,096 blank) — left untouched by design (honest-absence: guessing a
-      value would be fabrication) pending a classify-or-quarantine decision. Scope + execute both, re-measure live after
-      each. (repos: market-tick-data-service, unified-trading-library, instruments-service)
+- [x] ✅ [DATA] P1. **Semantic-mislabel relabel + null/blank resolve — CLOSED 2026-07-27, mtds@132ea6b1.** Surface B
+      left `QUARANTINE_COMBO` untouched + null/blank/UNKNOWN "OUT OF SCOPE" — the actual gap. New in-place-CAS
+      `scripts/migrate_tradfi_manifest_itype_semantic_relabel_2026_07_27.py` relabels only on
+      `OK`/`ALREADY_CANONICAL`/`QUARANTINE_COMBO`, else honest-absence. **Plan's cited counts were STALE** — real
+      residual: 2,058,772 evaluated, 1,587 changed (301 COMBO + 1,286 OK-derived); 0 null/blank had a determinable
+      type. Applied live (CAS+snapshot, succeeded after pausing consolidator), independent re-read confirms held, 0
+      remaining. Tests + QG green. New finding filed:
+      `plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md`. (repos: market-tick-data-service,
+      unified-trading-library, instruments-service)
+- [ ] [DATA] P1. **Casing re-drift found 2026-07-27** — ~63,143 tradfi rows still lowercase, see
+      `plans/active/issues/tradfi_casing_100pct_redrift_2026_07_27.md`. (repos: market-tick-data-service,
+      unified-trading-library)
 - [x] ✅ [BACKEND] P0. **Converge every WRITER's `instrument_type` emission to the UPPERCASE enum (catalogue SSOT,
       operator 2026-07-18)** so forward-writes don't re-drift the manifest to lowercase after the Phase-B re-stamp.
       **SHIPPED 2026-07-25 — mtds@020b703e "fix(tradfi): route manifest instrument_type casing through one canonical
