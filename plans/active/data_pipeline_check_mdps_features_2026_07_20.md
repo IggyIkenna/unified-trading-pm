@@ -962,37 +962,33 @@ on that plan's completion.
 
 ### 2026-07-27 (slot-7) — todo "Run /data-pipeline-check-features across ALL shards" IN FLIGHT, not blocked
 
-Phase 0 bucket check PASSED cleanly (all 6 `features-*-test-*` buckets exist; `cefi`/`defi`/`tradfi`/`pred`/`sports`/
-`calendar` all now carry objects — improved since the 2026-07-20 baseline note that only cefi had objects). First cell
-attempt (`delta_one`/`CEFI`, `--day 2026-07-05`, force+skip, background+watchdog) crashed immediately — **NOT the
-documented shared-host-RAM-exhaustion issue**, a plain env-config gap: direct `pipeline_e2e_check.py` invocation needs
-`GCP_PROJECT_ID`/`AWS_ACCOUNT_ID` set or `--project` passed (`get_project_id()` raises otherwise); fixed by adding
-`--project central-element-323112`.
+Phase 0 bucket check passed (all 6 `features-*-test-*` buckets carry objects now). 4 retries this session, condensed:
+(1) `CEFI/delta_one` crashed on a plain env gap (`--project central-element-323112` needed, not RAM-exhaustion); (2)
+retry launched a real VM then was silently killed ~66s into polling (zero traceback) — matches `WorkerLivenessWatchdog`,
+independently diagnosed live by slot-3 on the SAME shard (todo 9,
+`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`); their proven fix: heartbeat
+`/api/slots/<N>/progress` ~240s (under the ~900s threshold) via a `Monitor` loop while the driver runs; (3)
+`DEFI/delta_one` (avoiding slot-3's CEFI collision) completed cleanly in 11s — honest `no_captured_input_for_window`.
+Report: `plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.{md,json}`. (4) `TRADFI/delta_one` — local
+driver died silently TWICE MORE despite the heartbeat mitigation, but both underlying VMs
+(`features-e2e-tradfi-20260727-054450-2b064d`, `...-060813-2b064d`) completed independently; ground-truthed via direct
+`gcloud storage cat` of `run.log` (not the driver's never-written report): reproducible
+`DEPENDENCY CHECK FAILED — Missing market-data-processing-service, Path gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-07-04/, No data`,
+exit_code=1. The driver's `--require-captured` pre-check wrongly accepted this window as covered — filed as todo below.
 
-**Retry #2** (`delta_one`/CEFI again, with `--project`) launched a real VM (`features-e2e-cefi-20260727-053037-025349`),
-confirmed present, then was **silently killed ~66s into EXIT_STATUS-polling — zero traceback, zero log output, process
-simply gone** (verified via `ps aux`, not just the Monitor's own liveness check). This matches the
-`WorkerLivenessWatchdog` mechanism another slot (slot-3) independently diagnosed live in the SAME time window on the
-SAME shard (todo 9 of `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`) — their fix,
-confirmed on a real ~9min run: heartbeat `/api/slots/<N>/progress` every ~240s (well under the ~900s watchdog threshold)
-via a companion `Monitor` loop WHILE the driver runs, not just the driver's own local log activity.
-
-**Retry #3** (this slot, adopting slot-3's fix + switching to `DEFI`/`delta_one` to avoid colliding with slot-3's active
-CEFI retries): completed cleanly in 11s — real, honest terminal verdict `no_captured_input_for_window` (DEFI candle
-backfill hasn't reached this window yet, matches the plan's own documented reality-check). Report committed:
-`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.{md,json}`.
-
-**Retry #4** (`TRADFI`/`delta_one`, same fix): a covered candle window exists for TRADFI (no auto-day slide needed) —
-real VM launched (`features-e2e-tradfi-20260727-054139-2b064d`), in flight as of this checkpoint with the
-240s-orchestrator-heartbeat Monitor active; not yet resolved.
-
-**Resume here** (whichever slot picks this up next): the working invocation pattern is
+**Resume**:
 `cd features-service && .venv/bin/python scripts/pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day --asset-group <AG> --family <FAM> --project central-element-323112`,
-backgrounded (`nohup ... & disown`), watched via a `Monitor` command that ALSO POSTs `/api/slots/<N>/progress` (or
-`/heartbeat`) every ~120-150s of wall-clock WHILE the VM runs — the local Monitor liveness check alone is NOT
-sufficient, only the orchestrator-facing heartbeat prevents the watchdog kill. `delta_one` MUST run first per-AG (feeds
-`multi_timeframe`/`cross_instrument`). CEFI is being worked by slot-3 — avoid re-launching CEFI cells to prevent
-collision; PREDICTION/SPORTS and all derived families (`volatility`, `onchain`, `calendar`, `cross_instrument`,
-`multi_timeframe`, `commodity`) remain untouched. 29 viable cells total per SKILL.md's matrix; 2 done this session (DEFI
-honest-skip, TRADFI in flight), rest open. This todo stays OPEN until the full matrix is proven or a genuine blocker
-surfaces.
+backgrounded + Monitor-heartbeated (~120-150s to `/api/slots/<N>/progress`) — this REDUCES but does not eliminate silent
+kills (2/4 still died with it active; likely genuine shared-host RAM contention per
+`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`). **On a local-driver death, check
+`gcloud compute instances list --filter="name~'features-e2e-<ag>'"` first** — the VM often outlives the poller;
+ground-truth via its `run.log` directly rather than re-launching blind. `delta_one` runs first per-AG. CEFI is slot-3's
+— avoid collision. 29 viable cells total; 2 done (DEFI skip, TRADFI failure), 27 open. Stays OPEN until the matrix is
+proven or a genuine blocker surfaces.
+
+- [ ] NEW todo. [DATA] P1. **Coverage-check discrepancy**: driver's `--require-captured` reported `TRADFI:delta_one`'s
+      `2026-07-04..2026-07-05` window covered, but the VM's own dependency check found NO object at the expected candle
+      path (2 independent runs, identical). Determine: phantom manifest row claiming `captured` with no backing object,
+      or a cross-checker vocabulary mismatch (same class as the already-fixed
+      `mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`). Evidence:
+      `plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.md` Note section.
