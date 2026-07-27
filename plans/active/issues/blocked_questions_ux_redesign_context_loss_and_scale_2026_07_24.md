@@ -14,7 +14,7 @@ summary:
   than E1's scoped-link fix, a real UX/API redesign, pick up later.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui]
 scope: [engineer, admin]

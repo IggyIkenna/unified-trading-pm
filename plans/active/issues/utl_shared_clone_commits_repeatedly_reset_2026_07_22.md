@@ -17,7 +17,7 @@ summary: >-
   further.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [unified-trading-library]
 scope: [engineer, admin]

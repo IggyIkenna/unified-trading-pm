@@ -11,7 +11,7 @@ summary: >-
   Every todo below targets files disjoint from every sibling todo, so the plan needs no `sequential` gate.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm, deployment-ui, unified-trading-system-ui]
 scope: [engineer]

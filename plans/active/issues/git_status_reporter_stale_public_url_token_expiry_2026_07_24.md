@@ -19,7 +19,7 @@ summary:
   (observability-integrity, not operational) — but it recurs on every token rotation and spams the activity feed.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]

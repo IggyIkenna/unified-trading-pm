@@ -15,7 +15,7 @@ summary: >-
   process has been armed on the orchestrator VM to try to catch a recurrence in the act.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

@@ -6,7 +6,7 @@ summary:
   to `rootm` — the collision class fixed by the VM-name-scoped prefix, 2026-06-04)..."
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos:
   [

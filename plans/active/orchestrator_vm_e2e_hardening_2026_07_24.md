@@ -7,7 +7,7 @@ summary: >-
   not the CI-dashboard/fleet-git-health mission the parent plan owns).
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service]
 scope: [engineer, admin]

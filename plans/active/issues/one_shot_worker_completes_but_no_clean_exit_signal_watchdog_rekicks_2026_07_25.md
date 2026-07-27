@@ -23,7 +23,7 @@ summary: >-
   (that is a compact-submission wedge on slot 4; this is a one-shot completion-exit-signal gap on slot 2).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

@@ -8,7 +8,7 @@ summary:
   root-cause why the escalators fail rather than only capping them.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]

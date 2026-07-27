@@ -7,7 +7,7 @@ summary:
   pre-spawn, and nothing was trying to spawn into slot 14.
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer]

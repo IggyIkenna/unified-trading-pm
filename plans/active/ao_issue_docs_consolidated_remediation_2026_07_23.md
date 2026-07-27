@@ -9,7 +9,7 @@ summary:
   of it dispatches; each becomes an AO todo only once the operator rules or the blocker clears.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer]

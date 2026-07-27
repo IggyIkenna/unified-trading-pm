@@ -24,7 +24,7 @@ summary: >-
   work" answer because the backend keeps handing the SAME gated task back.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
