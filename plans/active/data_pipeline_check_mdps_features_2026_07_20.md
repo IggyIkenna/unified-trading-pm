@@ -56,7 +56,7 @@ related:
     ../../cursor-configs/skills/data-pipeline-check-is/SKILL.md,
   ]
 created: 2026-07-20
-last_updated: 2026-07-24
+last_updated: 2026-07-27
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -774,7 +774,8 @@ lever, and it does NOT require raising in-process `max_workers` first.
       radius..." item just below.
 - [ ] NEW todo. [DATA] P1. Blast radius: did any PAST prod MDPS run use max_workers>1 over a heterogeneous list? If so
       those shards may carry wrong leading-bin seeds and need re-derivation.
-- [ ] NEW todo. [SCRIPT] P0. Implement R1 (concurrent date-subprocesses) — the months->weeks lever that is SAFE today.
+- [x] ✅ NEW todo. [SCRIPT] P0. **WIRED 2026-07-27** — R1 shipped (mdps@b3376b8) but unused; wired opt-in
+      `--date-concurrency` into both launchers, default=serial. deployment-service@96be4cf
 
 > The "✅ P0 derivative_ticker FIXED + shipped" entry (2026-07-20, no open todos) was extracted verbatim to
 > `/plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md`.
