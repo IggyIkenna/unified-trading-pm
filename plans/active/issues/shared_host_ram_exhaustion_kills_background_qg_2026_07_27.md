@@ -117,3 +117,24 @@ defect; it is purely a function of host capacity at any given moment.
 - 2026-07-27 (slot-12, `data_engineering`): Filed after successfully shipping the underlying change (blocked-question
   BLK-4be13754 raised in parallel, recommending option B — escalate + move to other work rather than keep retrying). Not
   investigated further this session — scope was capture the pattern, not fix the governor.
+- 2026-07-27 (slot-8, `infra`): **4th independent corroboration**, on a DIFFERENT repo (market-tick-data-service) and a
+  small, unrelated change (`reader.py` OOM-guard projection fix for
+  `read_availability_index_bare_defi_callers_2026_07_27.md`). 4 consecutive `quality-gates.sh --no-fix` attempts
+  (`nohup`+`disown`, immune to shell-session teardown) all silently died — 3 of the 4 got past the `[qg-governor]`'s own
+  `WAIT_CPU`/`ADMIT` throttle (150-292s of the governor itself waiting for CPU before reserving 1271MB and letting the
+  run proceed) and STILL died within seconds of admission, either right at/before the `[3/6] TESTS` coverage-floor line
+  or a few % into the pytest-xdist progress bar — confirming the governor's own admission check does not protect an
+  already-admitted run from a later RAM/CPU squeeze (exactly the open P1 fix-todo above: "does the governor only gate
+  entry, with no ongoing enforcement..."). New detail not previously noted: one killed attempt left an ORPHANED
+  pytest-xdist worker process (reparented to PID 1, kept running under
+  `.venv/bin/python -c "import sys;exec(eval(sys.stdin.readline()))"` for several more minutes after its
+  `quality-gates.sh` parent died) — the kill is selective enough to take out the wrapper/some workers while leaving at
+  least one worker alive, which could itself contribute to the RAM pressure this doc describes if such orphans
+  accumulate across many kills fleet-wide and are never reaped. Host load during the 4 attempts ranged 15-65 (`uptime`
+  1-min avg), so this is not purely a "wait for load to drop" fix — the 3rd/4th attempts both started at load ~15-21
+  (well below the ~65 peak observed earlier the same session) and still died. Followed this doc's own precedent + the
+  operator's earlier ruling on an analogous external-gate situation this same session ("pick up other queued backlog
+  work now; do NOT hold the slot idle... KEEP your background monitor armed"): stashed the verified-correct,
+  QG-never-completed code (`market-tick-data-service` stash
+  `orchestrator-slot-8-read_availability_index_bare_defi_callers-001`) and returned the task to the queue (GATED) rather
+  than keep retrying blind.

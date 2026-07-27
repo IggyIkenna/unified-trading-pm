@@ -33,6 +33,7 @@ related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master
@@ -200,15 +201,22 @@ not a mechanical column-list copy.
       (`date`/`capture_status`/`instrument_count`/`error_reason` for the skip-mask,
       `venue`/`data_type`/`instrument_id`/`underlying`/`quote_asset`/`margin_type` in the per-row atom loop) — re-verify
       by direct read before shipping, same incident class as `mtds_backfill_vm_startup_oom_rc137_2026_07_14`.
-- [ ] [SCRIPT] P0. **ml-service** — `inference/app/core/manifest_inference_guard.py:46` `check_manifest_for_inference`:
-      project to the columns `_filter_to_day`/`_classify_day_rows` actually read (verify by direct read: likely `date`,
-      `asset_group`, `capture_status` — confirm before shipping). Live inference hot path — highest urgency of the
-      ml-service findings.
+- [x] ✅ [SCRIPT] P0. **ml-service** — `inference/app/core/manifest_inference_guard.py:46`
+      `check_manifest_for_inference` — **SHIPPED 2026-07-27 (slot-10)**, `ml-service@0bd5e6a`. Confirmed by direct read
+      (not the guessed default): `_filter_to_day` reads `date`/`asset_group`; `_classify_day_rows` reads
+      `capture_status` — no other columns touched anywhere in the module. Projected
+      `columns=["date","asset_group","capture_status"]` exactly. Added a regression test
+      (`test_read_availability_index_is_column_projected`) pinning the exact call signature so a future edit to either
+      function is forced to also update the projection. Full test file green (12 tests) + `quality-gates.sh` green
+      (302s).
 - [ ] [SCRIPT] P1. **ml-service** — `training/app/core/manifest_gap_handler.py:54` `apply_manifest_quality_flags`: same
       treatment as the inference guard above.
-- [ ] [SCRIPT] P0. **deployment-api** — `services/manifest_source.py:164`: reuse the already-defined `DRILLDOWN_COLUMNS`
-      (line 74, already used on the pushdown branch) on the bare fallback branch too. Single highest-blast-radius fix
-      (feeds ~10 downstream dashboard endpoints transitively).
+- [x] ✅ [SCRIPT] P0. **deployment-api** — `services/manifest_source.py:164` — **SHIPPED 2026-07-27 (slot-10)**,
+      `deployment-api@489d747`. Reused the already-defined `DRILLDOWN_COLUMNS` (line 74) on the bare fallback branch,
+      matching the pushdown branch above it exactly (no `filters=` — this IS the unfiltered stale-tolerant full read).
+      Single highest-blast-radius fix in this audit (feeds ~10 downstream dashboard endpoints transitively). Updated the
+      one existing test asserting the exact call signature (`test_live_mode_delegates_to_utl_reader`); full test file
+      green (9 tests) + `quality-gates.sh` green (260s).
 - [ ] [SCRIPT] P1. **deployment-api** — `routes/data_status/_catalogue.py:186` +
       `routes/data_status/_live_coverage.py:457`: project both raw-UTL-import call sites; read each caller's actual
       downstream column usage first.

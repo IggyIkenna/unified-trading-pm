@@ -639,3 +639,16 @@ every todo executes an already-decided spec from the parent doc.
   (same date range, `ON_DEMAND=true`, `e2-standard-16` — or `-8` if `-16` stockouts again) anything that shows a NEW
   preemption, and once every one of the 42 shards has a genuine `EXIT_STATUS=0`, proceed to the plan's own next steps
   (corpus-wide idempotency `--dry-run`, the 4-script done-when check, the enumeration audit, then flip todo 3).
+- **2026-07-27T05:47Z — continued-stability confirmation, ~30 min post-pivot; noting an unrelated concurrent-slot
+  finding for the record.** Fresh direct re-check: 41 RUNNING + `cs1-1r` completed = 42 accounted for, preemption-ops
+  count still exactly 42 (0 new since the pivot), 0 `verify_failed`/`VERIFY FAILED` hits sampled across 5 diverse
+  shards, all sampled shards show steady forward progress (3.3-9.8 files/sec, e.g. `cs8-1d` 3,600/94,157 @ 368s,
+  `cs10-5d` 3,800/201,581 @ 491s) — fleet is healthy and stable on `ON_DEMAND`. **Unrelated, for cross-plan awareness
+  only**: the operator confirmed a concurrent AO slot (slot-13) independently shipped **todo 4's** code portion
+  (`market-tick-data-service@a4f90769` — canonical→raw resolution in the downloader + smoke-check sampler fix) while
+  this campaign was running; it left the live re-fetch proof as a residual, deferred to todo 5/a follow-up. Not this
+  dispatch's todo (leaving todo 4 alone), noted here only so a future pass on the same repo doesn't collide with or
+  duplicate that commit. **Continuing to poll at sensible (not tight-loop) intervals** per the operator's explicit
+  instruction — this will span several more resumed turns given the ~5h projected remainder; next checkpoint will follow
+  once either a new preemption is found, a meaningful batch of shards completes, or another natural pause point is
+  reached.

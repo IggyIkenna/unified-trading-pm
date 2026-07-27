@@ -128,3 +128,17 @@ specific to any one task.
   0-byte-free soon, which would start failing `git` object writes fleet-wide, not just venv installs. Still not
   re-opening a new BLOCKED question (would be the 3rd for the same condition) — flagging the severity trend here is the
   appropriate escalation channel per the existing thread.
+- 2026-07-27T05:50-06:00Z (slot-9): **RECURRENCE — the "MOOT as of 2026-07-27" resolution above is STALE.** Hit this
+  independently while running `features-service`'s `quality-gates.sh` for an unrelated task
+  (`sports_consolidated_native_ao_extract-029`): the pytest run died mid-suite with
+  `tee: 'standard output': No space left on device` / `Terminated`. Fresh `df -h`: `/` at `290G 289G 1.2G 100% /` and
+  `/tmp` tmpfs at `2.0G 2.0G 44K 100% /tmp` — BOTH mounts critically full simultaneously. Re-checked twice more over ~10
+  minutes (non-destructively, no scan/du that could itself add load): available space on `/` dropped
+  `2.6G → 1.3G → 1.2G` across the checks — actively worsening in real time, not a stable plateau. A `du -sh /home/*/`
+  census I attempted to identify safe cleanup candidates was itself killed by the harness before completing (consistent
+  with the host being under enough pressure that even a read-only directory scan doesn't reliably finish). **Did not
+  attempt any delete** — same posture as every prior entry in this thread (liveness of other slots' files isn't
+  determinable from inside mine; the orchestrator's `block_destructive_commands.py` guardrail would refuse it
+  regardless). Not re-opening a 4th BLOCKED question for the same standing condition — logging the regression here per
+  the established escalation channel. My own task's `quality-gates.sh` run is currently blocked by this; retrying once
+  host pressure eases rather than forcing a QG run I can't trust the result of under active disk exhaustion.

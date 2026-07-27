@@ -226,7 +226,13 @@ source: >-
       `CLOUDSDK_CORE_ACCOUNT=<working-service-account>` env var scoped to just the launch command (NOT
       `gcloud config set account`, which mutates global machine-wide state shared by every concurrent slot on this
       laptop — did that once by mistake mid-diagnosis and immediately reverted it). Relaunched as
-      `af-backfill-20260727-055450`, verified RUNNING + chunked task. Current: `af-backfill-20260727-055450`.
+      `af-backfill-20260727-055450`, verified RUNNING + chunked task. **2nd SPOT preemption 2026-07-27T05:31:15Z**
+      (~44min after the first relaunch, `last_completed_date=2022-02-24` — 1 day short of finishing chunk 7/25) — same
+      clean vanish pattern, no OOM, no crash; the persistent local `gcloud` auth issue (interactive account token
+      expired, workaround: `--account=`/`CLOUDSDK_CORE_ACCOUNT=1060025368044-compute@developer.gserviceaccount.com` per
+      command, never `gcloud config set account` globally) is now a known non-issue baked into the monitoring loop's own
+      instructions. Relaunched as `af-backfill-20260727-064958`, verified RUNNING + chunked task resuming correctly.
+      Current: `af-backfill-20260727-064958`.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 

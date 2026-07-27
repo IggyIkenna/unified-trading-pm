@@ -220,17 +220,18 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (corrected in the same session) for its
       next session's actual Tier-2 SPOT VM run. **(Promoted 2026-07-27 from a nested sub-item to a first-class,
       independently-dispatchable todo per BLK-1db5424c.)**
-- [ ] 11b. [DATA] P0. **Cross-repo orphan/lineage audit** (MTDS→MDPS→features→ml/strategy) — read-only, single-walk,
-      runs on a Tier-2 SPOT VM (never in-session per the heavy-I/O rule), agent-doable. Scope: for each asset_group,
-      trace an instrument/day through the full pipeline (raw MTDS capture → MDPS candle derivation → features-service
-      output → ml/strategy consumption) and enumerate every orphan class found along the way (objects with no manifest
-      row, manifest rows with no object, and — the newly-discovered class this session — manifest coverage measured
-      under the WRONG `data_type` vocabulary producing false "never populated" verdicts, per
-      `issues/candle_feature_canonical_path_divergence_2026_07_20.md` todo 7's correction). Write a report enumerating
-      the corpus-wide orphan counts per asset_group per lineage stage. References:
-      `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (now unblocked, CEFI-scoped candle-manifest
-      slice), `issues/estate_orphan_assessment_2026_07_21.md` (raw MTDS orphan sweep, prior art for defi/cefi/tradfi/
-      prediction). Feeds 11c's denominator.
+- [x] 11b-scope. ✅ [DATA] P0. **DONE 2026-07-27 (slot-15)** — Scoped the cross-repo orphan/lineage audit
+      (MTDS→MDPS→features→ml/strategy) before attempting it as one VM run. Confirmed no orphan-detection tooling exists
+      for MDPS/features/ml/strategy (only raw-MTDS has `migration_orphan_sweep.py`; independently verified via
+      `codex/02-data/orphan-object-detection.md` §2c/§5's own "no known orphan coverage" finding for candles/features)
+      and no generic framework to reuse (sports needed its own 771-line fork of the raw-tick sweep; candle/feature/
+      ml-strategy shard keys are each a different shape). Split the original single all-or-nothing checkbox into 4
+      independently-dispatchable build/run/report todos rather than risk a rushed, unsafe attempt at the full scope in
+      one dispatch. Full scoping + the 4 todos:
+      `issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md`.
+- **[DATA] P0. 11b.** The actual cross-repo orphan/lineage report — remains open, tracked via the 4 todos in
+  `issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md` (build+run MDPS/features/ml-strategy sweeps,
+  then write the combined report). Non-checkbox pointer per the scoping above.
 - [ ] 11c. [DATA] P0. [OPERATOR] **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS
       manifest (via the safe additive `merge_manifest_from_canonical_paths()` shipped in 11a, never the destructive
       `rebuild_manifest_from_canonical_paths`), so it needs delete-safety/reversibility review before any `--apply` even

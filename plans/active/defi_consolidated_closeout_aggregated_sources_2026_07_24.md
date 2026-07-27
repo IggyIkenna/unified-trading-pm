@@ -766,3 +766,15 @@ drift_direction: none
     — e2e defi-strategy funding/APR/gas/lending-rate correctness bugs, `parent_epic: defi_master`.
   - [`e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`](/plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md)
     — e2e DeFi strategy configs taxonomy/wizard round-trip fidelity gaps; repos/paths all `e2e-testing/scripts/defi/*`.
+
+- **Newly discovered (ag_closeout_auditor sweep, 2026-07-27)**:
+  - [`issues/read_availability_index_bare_defi_callers_2026_07_27.md`](/plans/active/issues/read_availability_index_bare_defi_callers_2026_07_27.md)
+    (`asset_group: [defi]`, `status: open`, `assigned_vm: planning` — already checkbox-formatted, 17 real todos, not
+    previously named in this section) — full-corpus audit of ~35-40 bare `read_availability_index()` call sites across 8
+    repos reachable on the 1.58 GB defi availability index with no `columns=`/`filters=` projection (OOM risk, matching
+    the `mtds_backfill_vm_startup_oom_rc137_2026_07_14` incident class). **[SCRIPT] P0.** deployment-api
+    `services/manifest_source.py:164` fallback — single highest-blast-radius fix (feeds ~10 dashboard endpoints).
+    **[SCRIPT] P0.** market-tick-data-service `reader.py:839` + `engine/orchestrator/__init__.py:509`. **[SCRIPT] P0.**
+    ml-service live-inference `manifest_inference_guard.py:46`. — see file for the remaining 13 P1-P3 items across
+    unified-trading-library/features-service/instruments-service/strategy-service/deployment-service/e2e-testing, plus a
+    proposed new QG gate to prevent regressions.
