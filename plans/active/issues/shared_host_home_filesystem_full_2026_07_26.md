@@ -207,3 +207,24 @@ specific to any one task.
   observation about background processes dying under this condition; do not trust a reported "completed" status here
   without independently re-verifying `df` afterward. Did not attempt any cleanup/delete. Eventually landed the commit at
   a 31M-avail blip.
+- 2026-07-27T~07:47Z (new angle — this hits CI infra, not just interactive slot sessions, and has a concrete downstream
+  consequence): investigating why `agent-orchestrator@1badd41` (a shipped, LDR-landed dashboard fix) hadn't reached
+  `main` despite the deployment-api CI dashboard showing `ldr-to-main-promote-fleet` as "success" — pulled that run's
+  full job log (`gh api .../actions/jobs/89906535986/logs`, run 30243858741, self-hosted runner `glue-1`, a DISTINCT
+  host from every interactive-session host in this doc's prior entries) and found it saturated with the same signature:
+  `printf: write error: No space left on device` (repeated dozens of times),
+  `fatal: cannot copy '.../git-core/templates/...'` on every per-repo temp-clone, and one genuine
+  `fatal: No url found for submodule path '.claude/worktrees/agent-...'` / `git' failed with exit code 128` at job
+  cleanup. The job's own top-level exit code was still 0 ("success") — but its per-repo promotion loop silently stopped
+  after only ~8 of the 24 `ldr_main` repos (`Promoted (3): instruments-service execution-service features-service`,
+  `Dep-order/Tier-A blocked (1): unified-trading-library` — nothing else logged, no error, no explicit skip line).
+  `agent-orchestrator` passed the earlier dep-order READY check (`✅ READY: agent-orchestrator — all deps on main`) but
+  never appears again after that — it's not "blocked", it's silently un-evaluated. Net effect: `main` is currently **405
+  commits behind `live-defi-rollout`** for agent-orchestrator (`ahead_by=405` via
+  `/api/repo-ci/agent-orchestrator/detail`), and a CI status tile reading "success, Nm ago" is actively misleading — it
+  reflects the job's exit code, not whether any given repo was actually processed. Did not attempt to fix the
+  loop-truncation itself (out of scope for this doc; flagging as a downstream consequence of the disk-full condition,
+  corroborating evidence only). Separately: agent-orchestrator ALSO has its own pre-existing, already-tracked,
+  disk-unrelated promotion-lag bug — see
+  [`sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20`](sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md)
+  — so once disk pressure clears, that SECOND mechanism may still delay this specific repo's promotion further.
