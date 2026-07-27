@@ -245,3 +245,15 @@ TRADFI:delta_one's fast exit was a different bug, not evidence either way.
   todo 1 ("add a concurrency guard") — that doc's own todo already reflects `_find_inflight_duplicate_vm` as the answer;
   not editing that doc's checkbox here since it wasn't this task's assignment, but flagging the overlap for whoever
   picks it up next.
+- 2026-07-27 (slot-3, todo 10 benchmark work): **THIRD confirmed-affected family: `SPORTS:sports`.** Running the
+  `--legs benchmark --benchmark-days 30` leg (day=2026-07-19), the driver reported `timeout_no_exit_status` at exactly
+  2400s (the `_DEFAULT_TIMEOUT_SEC` floor — `sports` has no `_FAMILY_TIMEOUT_OVERRIDES` entry). Directly observed via
+  `gcloud storage cat .../run.log` that the VM (`features-e2e-sports-20260727-171104-281e78`) was STILL genuinely
+  computing well past the driver's abandonment — confirmed again ~1h20min later (6,591 log lines, timestamp within the
+  same minute as the check, real per-day fixture/reference-data processing, not stalled) — same exact pattern as
+  CEFI:delta_one/TRADFI:volatility. A 7-day retry (well within the 2400s budget at the measured ~244s/shard-day rate)
+  completed cleanly (`EXIT_STATUS=0`, 1708s wall-clock, 23 objects). **Recommended**: add `("sports", "SPORTS")` to
+  `_FAMILY_TIMEOUT_OVERRIDES` (measured ~244s/shard-day means the 2400s default caps out around 9-10 benchmark-days;
+  suggest ~3600-7200s for headroom). The abandoned 30-day VM was left running per the VM-delete guardrail (genuinely
+  progressing, not stalled) — not verified to completion this session; a future check should confirm it eventually
+  self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`.
