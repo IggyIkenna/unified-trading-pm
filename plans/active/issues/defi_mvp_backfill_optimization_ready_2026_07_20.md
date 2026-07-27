@@ -89,6 +89,36 @@ watch the 429 rate before any wide wave.**
       shard isolation preserved, no `raise` in per-shard loops, `record_captured` grain unchanged, no upload
       reorder/drop. **CANARY at 2 VMs, watch 429, before any wide wave.**
 
+      **IN PROGRESS 2026-07-27 (slot-6, paused mid-task at high context usage — resume here, do not re-investigate):**
+          Verified (a)/(b)/(c) as originally scoped are ALREADY SHIPPED — `mtds@ff1b5d51` "feat(defi): MTDS DeFi perf
+          bundle -- concurrency knobs + async fan-out + executor-offload", confirmed ancestor of `origin/live-defi-rollout`.
+          `defi_max_inflight_tasks`/`defi_max_concurrent_uploads` are live-consumed (`ParallelPerSymbolRunner` fan-out in
+          `solana_defi_handler.py`/`dex_pools_handler.py`; dedicated `_defi_upload_executor.py` mirroring
+          `tardis_csv_transport._get_parse_executor`). **ONE confirmed real gap**: `defi_max_concurrent_fetches` was
+          declared in `service_config.py` (its own docstring promises it "Bounds the actual I/O-bound fetch stage,
+          decoupled from defi_max_inflight_tasks the same way tardis_max_concurrent_downloads is decoupled...") but NOTHING
+          read it — grep confirmed zero non-definition references. Fixed, uncommitted in the market-tick-data-service slot
+          clone (`.tabs/6`), syntax-checked (`python3 -c "import ast; ast.parse(...)"` on all 3 files), NOT yet
+          test-run/QG'd/shipped:
+          - NEW `market_tick_data_service/cli/handlers/_defi_fetch_semaphore.py` — lazy-singleton `asyncio.Semaphore`
+            sized from `get_config().defi_max_concurrent_fetches`, mirrors `_defi_upload_executor.py`'s
+            lock-guarded-singleton shape.
+          - `solana_defi_handler.py`: `_collect_protocol`'s `df = await collector(session)` now wrapped
+            `async with get_defi_fetch_semaphore():`.
+          - `_dex_pools_subgraph.py`: TWO sites — `_collect_solana_dex`'s `fetch_kamino_vault`/`fetch_orca`/
+            `fetch_raydium`/`fetch_phoenix` dispatch, AND `_execute_subgraph_query`'s `session.post(...)` (the shared
+            TheGraph key-pool chokepoint this doc's own "structural fact" section names as the real ceiling — held only
+            for the request itself, released before the retry backoff `sleep`).
+          - NEW `tests/unit/test_defi_fetch_semaphore.py` — singleton/sizing tests + a static call-site guard, mirrors
+            `test_defi_upload_executor_dedicated.py`'s pattern for the sibling knob (c).
+          **TO RESUME**: `cd market-tick-data-service && bash scripts/setup.sh` (venv didn't exist in this slot clone) →
+          `.venv/bin/python3 -m pytest tests/unit/test_defi_fetch_semaphore.py tests/unit/test_defi_upload_executor_dedicated.py -v`
+          → if green, `bash scripts/quality-gates.sh` (full) → commit (files: the 4 above) → `quickmerge.sh --agent` → flip
+          this checkbox with the shipped sha → `/done` on AO task `defi_mvp_backfill_optimization_ready-003`. Deliberately
+          NOT touching `evm_defi_handler.py`/`lending_indices_handler.py`/`risk_params_handler.py` — each has its OWN
+          separate `_execute_subgraph_query` copy, out of this todo's named scope (only `solana_defi_handler.py` +
+          `dex_pools_handler.py`).
+
 ## Descoped / do-NOT-implement-as-specced (workflow demolished these)
 
 - Multi-day batched subgraph "~300× fewer round-trips" — **WRONG**: pools are already batched 500-at-a-time, real

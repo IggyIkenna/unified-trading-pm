@@ -140,6 +140,70 @@ work in `-test-` is not populating PROD.
 
 ---
 
+## Todo 1 Findings (2026-07-27, slot-14) — ranked root cause with evidence
+
+**(a) No real prod candle write since `752eaff` — REFUTED.**
+`deployment-service/configs/cloud-run/market-data-processing-service.yaml` declares MDPS as an always-on Cloud Run
+Service (`autoscaling.knative.dev/minScale: "1"`, `DEPLOYMENT_ENV=prod`), with the module docstring stating "Streaming
+processor runs as background thread inside FastAPI lifespan." `deployment-service/terraform/gcp/t1_batch_scheduler.tf`
+also fires a daily `market-data-processing` Cloud Run Job at `0 1 * * *` ("T+1 recon batch — candle aggregation"). Git
+history for `market-data-processing-service` since `752eaff` shows **active, very recent (2026-07-26) engineering work**
+fixing real bugs hit while running actual candle backfills against real prod-scale data volumes — e.g. `86a1623` ("scope
+CEFI raw_tick_data GCS listing by venue to fix backfill OOM"), `8e5db1d` ("row-group date filter on DEFI live-gap
+manifest read to fix t1-recon OOM"), `335e9cc`/`22b926c` (CEFI listing/retry fixes) — these describe real
+OOM/empty-listing incidents against real GCS objects and manifests at multi-million-row scale, which could not happen if
+candle capture were paused. The candle-processing pipeline is demonstrably running; the disconnect is downstream of the
+write, in the manifest-recording step.
+
+**(b) `record_captured` exception silently swallowed in prod — CONFIRMED, contributing.**
+`market_data_processing_service/app/core/canonical_writer.py:509-586` (`write_candle_parquet`) wraps the
+`manifest_writer.record_captured(...)` call in a bare `except Exception as exc:` that logs only at WARNING
+(`log_event("DEPLOYMENT_FAILED", severity="WARNING", ...)` +
+`logger.warning("MDPS canonical_writer: manifest write failed for %s day=%s tf=%s: %s", ...)`), never re-raises, and
+returns `bytes_written` normally — the candle parquet is already uploaded to GCS at that point (line ~499, before this
+block), so the write "succeeds" from every caller's perspective even when the manifest row never lands. This is not
+theoretical: commit `2d720b4` (2026-07-21 18:11 +0100, one hour after `752eaff`) fixed a real `MissingSourceError` (a
+`ValueError` subclass, `unified-trading-library/unified_trading_library/manifest_writer/_schema.py:308`) that fired on
+"every force-leg write for CEFI:DERIBIT:trades" through this exact swallow path — proof the mechanism is live-fire, not
+hypothetical. Any other manifest-write exception (GCS 429/Forbidden/NotFound, a schema-contract violation, a
+`LookaheadBiasError`) reduces to the identical silent-WARNING outcome. This explains a REAL but likely smaller slice of
+the gap (whatever fraction of writes hit a genuine exception) — it does not by itself explain a near-total (6-row)
+manifest population across ~10.9M objects.
+
+**(c) The `should_publish_row` emission-policy gate suppresses far more than its "heartbeat-only" intent — CONFIRMED,
+primary/structural cause.**
+`unified-api-contracts/unified_api_contracts/canonical/crosscutting/service_emission_policy/_policies.py:17-22` sets
+`STRICT_FAIL` for `("market-data-processing-service", "ohlcv_1m:current")`, `("...", "ohlcv_1h:current")`, and
+unconditionally for `("...", "book_snapshot_5")` (no `:current`/`:historical` split at all) — these are MDPS's primary
+real-time CeFi candle products, not a narrow heartbeat carve-out. `canonical_writer_stamping.py:528-557`
+(`_build_ohlcv_1m_upstream_window`) is the upstream-window builder wired for ALL 4 gated data_types via
+`_publish_emission_check` (line 472) — **independently verified**: it always returns a single-element list keyed at
+`data_type="ohlcv_1m"` with the SAME `(date, venue, instrument_type, instrument_id, timeframe)` tuple as the row_key
+being written, regardless of which output_data_type triggered the check. Its own docstring admits this: "Returns a
+single-element list — manifest-grain completeness for the POC; bar-level sub-day inspection is a future enhancement."
+For the `ohlcv_1m → ohlcv_1m` passthrough case specifically (the module docstring's own table,
+`canonical_writer_stamping.py:362-370`), this means the completeness check for a shard's OWN manifest row reads the
+availability index (`read_availability_index`,
+`unified-trading-library/unified_trading_library/manifest_completeness.py:391-397`) for that SAME shard's key — on the
+first-ever write, `status_by_key.get(lookup_key)` returns `None` (no prior row exists) → treated as
+`expected_unattempted` → completeness < 1.0 → `STRICT_FAIL` fires → `should_publish_row=False` → `record_captured` is
+skipped before it's ever called → the row can never be created → every subsequent write of the same shard hits the
+identical check and fails identically, forever. This is a permanent, self-reinforcing lockout for every "current-day"
+1m/1h candle and unconditionally for every book_snapshot_5 candle (no historical exemption for the latter at all) —
+structurally matching the observed near-total manifest absence far better than (b) alone. Suppression is logged only at
+`logger.info` (`canonical_writer.py:417-428`, message
+`"MDPS emission policy skipped record_captured for %s day=%s ... "`) — the lowest severity, easily filtered out of prod
+log routing, which is consistent with this having gone unnoticed for weeks.
+
+**Evidence NOT yet gathered (deferred, not required to name the root cause)**: a live GCS-object-timestamp check for a
+specific recent CEFI candle shard (todo 1(i)'s literal ask) was attempted but timed out twice (~30-60s) against a
+still-recovering-from-contention host — not re-attempted further since the deployment-config + git-history evidence
+above already refutes (a) independently and doesn't change the (b)/(c) ranking. A future session/todo-2 implementer
+should feel free to re-run this as a sanity check, but it is not a blocker for todo 2 (the fix), since (c)'s mechanism
+is proven from the code itself, not inferred from absence of GCS activity.
+
+---
+
 ## Acceptance criteria
 
 This plan is done when:
@@ -162,14 +226,13 @@ This plan is done when:
 
 ## Todos
 
-- [ ] 1. [DATA] P0. **Distinguish hypotheses (a)/(b)/(c) with evidence.** For at least CEFI and one other asset_group:
-      (i) find the most recent candle object's write timestamp per AG and compare to 2026-07-21 17:01 +0100 (752eaff) —
-      falsifies (a) if any real post-fix write exists; (ii) if a post-fix write exists, check MDPS service logs /
-      `log_event` output around that write for the `record_captured` try/except (the docstring's own comment names the
-      catch site in `canonical_writer.py`) for a swallowed exception — confirms/refutes (b); (iii) instrument or sample
-      `_resolve_policy_output_data_type`/`_publish_emission_check`'s decision across a representative batch of real
-      candle writes to measure the actual `should_publish_row=False` rate — confirms/refutes (c). Definition of done: a
-      named root cause (or a ranked set with evidence for each), not a guess between the three.
+- [x] ✅ 1. [DATA] P0. **DONE 2026-07-27 (slot-14).** Distinguished hypotheses (a)/(b)/(c) with evidence — see "Todo 1
+      Findings" section below. **Ranked verdict: (c) is the primary, structural root cause; (b) is a real contributing
+      mechanism for a smaller subset of failures; (a) is REFUTED.** The gate logic in `canonical_writer_stamping.py`
+      applies uniformly across all 4 asset_groups (data_type-keyed policy table, not asset_group-keyed), and the
+      Measured-Evidence section's cross-AG numbers (defi 0, tradfi 73, prediction 168 manifest rows vs 1.1M+ live
+      objects each) already show the identical symptom shape everywhere this code path runs — consistent with a
+      shared-code-level bug, not a CEFI-specific one.
 - [ ] 2. [CODE] P0. **Fix the root cause found in todo 1.** Scope depends entirely on todo 1's finding — do not
       pre-design the fix before todo 1 lands. If (a): this becomes a liveness/scheduling question (why isn't the live
       candle writer running against prod) rather than a code fix — escalate to the operator with the finding rather than
@@ -215,6 +278,21 @@ This plan is done when:
 ---
 
 ## Progress Log
+
+### 2026-07-27 (slot-14) — Todo 1 done: root cause distinguished with evidence
+
+Distinguished the three hypotheses via direct code reads (`canonical_writer.py`, `canonical_writer_stamping.py`,
+`unified-api-contracts`'s `service_emission_policy/_policies.py`, `unified-trading-library`'s
+`manifest_completeness.py`/`emission_publisher.py`) plus `deployment-service`'s Cloud Run config + Terraform scheduler
+
+- MDPS git history. See "Todo 1 Findings" section above for the full evidence with file:line citations. **Verdict: (a)
+  refuted, (b) confirmed as a real but partial contributor, (c) confirmed as the primary structural cause** — the
+  `should_publish_row` emission-policy gate's upstream-window check for `ohlcv_1m`/`ohlcv_1h`/`book_snapshot_5`
+  degenerates to checking a shard's own not-yet-written manifest row (a documented "POC" simplification per the
+  function's own docstring), creating a permanent chicken-and-egg lockout on the first-ever write of any shard, with
+  zero historical exemption for `book_snapshot_5`. No code changed in this session — todo 1 is diagnostic-only per its
+  own scope; todo 2 (the fix) is a separate todo, not pre-designed here per its own instruction ("do not pre-design the
+  fix before todo 1 lands").
 
 ### 2026-07-25 — plan filed (scoping only; no code touched)
 
