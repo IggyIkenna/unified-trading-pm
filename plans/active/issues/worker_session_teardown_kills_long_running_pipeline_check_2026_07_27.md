@@ -14,7 +14,6 @@ stage: [meta]
 repos: [unified-trading-library, market-data-processing-service, agent-orchestrator]
 scope: [engineer, admin]
 created: 2026-07-27
-author: slot-7 (data_pipeline_check_mdps_features-001)
 assigned_vm: NA
 parent_epic: infrastructure_master
 resolved_by:
@@ -27,6 +26,9 @@ related:
   ]
 tags: [infra, worker-lifecycle, data-pipeline-check, flakiness]
 priority: P1
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Worker interactive-session teardown repeatedly kills long-running data-pipeline-check-* driver processes
