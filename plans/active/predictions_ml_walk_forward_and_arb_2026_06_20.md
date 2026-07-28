@@ -16,7 +16,7 @@ created: "2026-06-12"
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P0
+priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8

@@ -30,7 +30,7 @@ last_updated: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
@@ -107,11 +107,11 @@ items:
       derived pipeline_mode/source in-place + bumped to 9; ALSO filled 903k blank pipeline_mode + 1.4M blank source on
       already-v9 rows. Written index = 100% v9 / 6.81M rows, captures UNCHANGED (734102), GATE-passed, snapshot kept).
       **(was: unqualified "100% v9" — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 180: a 2026-06-27
-      audit — `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`, after
-      fixing an unrelated string-vs-int display bug that had been masking the true count — found a genuine ~98,476-row
-      (~4%) tradfi non-v9 residual (legacy `'4'` + empty `''` + instrument-key-contaminated `schema_version` values)
-      still present 5 days after this "100% v9" claim. That audit's operator-decision item to clean the residual was
-      still `- [ ]` open as of this correction; the "100% v9" completeness claim above does not hold as stated.)**
+      audit — `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`,
+      after fixing an unrelated string-vs-int display bug that had been masking the true count — found a genuine
+      ~98,476-row (~4%) tradfi non-v9 residual (legacy `'4'` + empty `''` + instrument-key-contaminated `schema_version`
+      values) still present 5 days after this "100% v9" claim. That audit's operator-decision item to clean the residual
+      was still `- [ ]` open as of this correction; the "100% v9" completeness claim above does not hold as stated.)**
       **`DP_NOT_V9`** originally (13,670 tradfi rows NOT at canonical schema_version=9), surfaced by the now-live
       `manifest_hygiene_daily` audit. Re-walk/canonicalise those rows to v9. — market-tick-data-service
 - [ ] [DATA] P1. **Retry the tradfi `attempted_failed`** (13 cells / ~12.5k rows) — surfaced by the digest. Re-run the
@@ -230,34 +230,34 @@ items:
       (per-venue backfill-vs-scope decision; operator HARD RULE = NO flat clip).**
 
       — the 2026-06-22 triage (divergence CSV + measured first-capture cross-ref) split the post-`coverage_start`
-                                                                                                                                                          residual into two REAL classes, all historical (≤2025-11-18, 0 in operational window): **(a) data_type
-                                                                                                                                                          NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
-                                                                                                                                                          (`_DEFI_LENDING_*_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/
-                                                                                                                                                          `lending_indices` but the manifest CAPTURED `liquidations`/`rate_indices`/`utilization` (legacy
-                                                                                                                                                          `liquidations_handler.py` still exists alongside `liquidation_events_handler.py`; MORPHO subgraph emits
-                                                                                                                                                          `rate_indices`/`utilization` not the AAVE-style names). The data EXISTS under a different data_type name →
-                                                                                                                                                          diagnose both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or
-                                                                                                                                                          correct the oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real
-                                                                                                                                                          gaps (~7k cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS `bridge_events`,
-                                                                                                                                                          PYTH `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding` (GMX half MOOT — REMOVED 2026-07-25,
-                                                                                                                                                          see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; ASTER decision still open), FLUID lending, AAVE `governance_events`,
-                                                                                                                                                          ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields` — the adapter never ran a historical backfill,
-                                                                                                                                                          OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the
-                                                                                                                                                          `carry_staked_basis`/`arbitrage_price_dispersion` data needs). Decision per venue: real-MVP-need → defi MTDS
-                                                                                                                                                          historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to
-                                                                                                                                                          `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED` or trim the oracle scope. Candidate CSV:
-                                                                                                                                                          `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). —
-                                                                                                                                                          **unified-api-contracts, market-tick-data-service**
+                                                                                                                                                                  residual into two REAL classes, all historical (≤2025-11-18, 0 in operational window): **(a) data_type
+                                                                                                                                                                  NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
+                                                                                                                                                                  (`_DEFI_LENDING_*_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/
+                                                                                                                                                                  `lending_indices` but the manifest CAPTURED `liquidations`/`rate_indices`/`utilization` (legacy
+                                                                                                                                                                  `liquidations_handler.py` still exists alongside `liquidation_events_handler.py`; MORPHO subgraph emits
+                                                                                                                                                                  `rate_indices`/`utilization` not the AAVE-style names). The data EXISTS under a different data_type name →
+                                                                                                                                                                  diagnose both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or
+                                                                                                                                                                  correct the oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real
+                                                                                                                                                                  gaps (~7k cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS `bridge_events`,
+                                                                                                                                                                  PYTH `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding` (GMX half MOOT — REMOVED 2026-07-25,
+                                                                                                                                                                  see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; ASTER decision still open), FLUID lending, AAVE `governance_events`,
+                                                                                                                                                                  ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields` — the adapter never ran a historical backfill,
+                                                                                                                                                                  OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the
+                                                                                                                                                                  `carry_staked_basis`/`arbitrage_price_dispersion` data needs). Decision per venue: real-MVP-need → defi MTDS
+                                                                                                                                                                  historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to
+                                                                                                                                                                  `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED` or trim the oracle scope. Candidate CSV:
+                                                                                                                                                                  `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). —
+                                                                                                                                                                  **unified-api-contracts, market-tick-data-service**
 
-                                                                                                                                                          **RE-VERIFIED AGAIN 2026-06-22 resume-run** (fresh `detect_manifest_divergence.py --asset-group defi` on live
-                                                                                                                                                          prod `_index`, 2,436,439 cells): **DIVERGENT_EMPTY = 13,760 EXACTLY (stable — auto-flip reclassifier holding it,
-                                                                                                                                                          not growing); max date 2025-11-18; ZERO in the operational window (≥2025-11-19) — all historical, NOT
-                                                                                                                                                          blocking.** Breakdown re-confirmed = the two classes (name-drift-suspect lending + never-collected/out-of-MVP).
-                                                                                                                                                          **Sub-finding (refines class-a):** the `dex_pool_swaps` DIVERGENT_EMPTY cells (UNISWAP_V3 350 / BALANCER 355 /
-                                                                                                                                                          CURVE 43) are NOT name-drift — `dex_pool_swaps` IS actively captured (4,392 OK_CAPTURED cells), so these are
-                                                                                                                                                          genuine date-specific historical swap gaps on those venues → resolve via per-venue historical DEX-swaps backfill
-                                                                                                                                                          (PER-CHAIN launch dates), not an oracle rename. Stays the tracked per-venue backfill-vs-scope campaign (operator
-                                                                                                                                                          HARD RULE: NO flat clip).
+                                                                                                                                                                  **RE-VERIFIED AGAIN 2026-06-22 resume-run** (fresh `detect_manifest_divergence.py --asset-group defi` on live
+                                                                                                                                                                  prod `_index`, 2,436,439 cells): **DIVERGENT_EMPTY = 13,760 EXACTLY (stable — auto-flip reclassifier holding it,
+                                                                                                                                                                  not growing); max date 2025-11-18; ZERO in the operational window (≥2025-11-19) — all historical, NOT
+                                                                                                                                                                  blocking.** Breakdown re-confirmed = the two classes (name-drift-suspect lending + never-collected/out-of-MVP).
+                                                                                                                                                                  **Sub-finding (refines class-a):** the `dex_pool_swaps` DIVERGENT_EMPTY cells (UNISWAP_V3 350 / BALANCER 355 /
+                                                                                                                                                                  CURVE 43) are NOT name-drift — `dex_pool_swaps` IS actively captured (4,392 OK_CAPTURED cells), so these are
+                                                                                                                                                                  genuine date-specific historical swap gaps on those venues → resolve via per-venue historical DEX-swaps backfill
+                                                                                                                                                                  (PER-CHAIN launch dates), not an oracle rename. Stays the tracked per-venue backfill-vs-scope campaign (operator
+                                                                                                                                                                  HARD RULE: NO flat clip).
 
 ## Residual from per-AG hardening dispatch (DeFi agent)
 

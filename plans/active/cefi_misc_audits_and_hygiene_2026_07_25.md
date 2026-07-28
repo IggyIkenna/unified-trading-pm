@@ -31,7 +31,7 @@ last_updated: "2026-07-25"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P1
+priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.5

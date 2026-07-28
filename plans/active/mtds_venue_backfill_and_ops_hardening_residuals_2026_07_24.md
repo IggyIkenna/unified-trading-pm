@@ -46,7 +46,7 @@ created: "2026-07-24"
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4

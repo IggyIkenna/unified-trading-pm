@@ -121,7 +121,7 @@ gate_on_depends:
   # prerequisite in defi_lending_writer_retire_prerequisite_2026_07_20 — real, un-machine-enforced cross-plan gates
   # found by the 2026-07-24 AO-flip-safety audit; encoded here so a future `assigned_vm: planning` flip can't dispatch
   # gated tracks before their real prerequisites land.
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 12.0
 estimate_calibrated_ai_days: 9.6

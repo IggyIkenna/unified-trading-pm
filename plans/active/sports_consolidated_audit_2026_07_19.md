@@ -33,7 +33,7 @@ last_updated: "2026-07-19"
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P0
+priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2.4

@@ -30,7 +30,7 @@ last_updated: "2026-07-24"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8

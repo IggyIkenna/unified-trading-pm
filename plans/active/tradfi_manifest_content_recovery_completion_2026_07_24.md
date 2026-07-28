@@ -47,7 +47,7 @@ last_updated: "2026-07-24"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 6.0
 estimate_calibrated_ai_days: 4.8

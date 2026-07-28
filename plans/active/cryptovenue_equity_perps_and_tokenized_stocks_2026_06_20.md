@@ -16,7 +16,7 @@ created: 2026-06-20
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
