@@ -363,10 +363,25 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       figure is the safe upper bound to plan against.
 - [ ] 14. [SCRIPT] P2. Ship everything via quickmerge --agent per repo; flip these checkboxes same-turn; rule-9 final
       report. Post-phase codex audit (update contracts / stub patterns / CLAUDE.md one-liner for the two new skills).
-- [ ] 15. [DATA] P1. Full DeFi-MVP candle backfill on real infra — GATED on
-      `/plans/active/candle_canonical_path_migration_execution_2026_07_24.md` (the Option-A canonical-path migration
-      epic) reaching its P8 verify/reconcile; do NOT backfill the corpus into the pre-migration shape (see this plan's
-      `depends_on` frontmatter).
+- [x] ✅ 15. [DATA] P1. **LAUNCHED + VERIFIED HEALTHY (2026-07-28, slot-8)**. Gate confirmed satisfied first:
+      `candle_canonical_path_migration_execution_2026_07_24.md` has all 16 todos closed, P8 verify/reconcile
+      independently re-confirmed clean 2026-07-23/2026-07-27 (that plan's own todo 15). Checked live fleet first: zero
+      `mdps-defi-*` VMs running (no duplicate-launch risk). Found + fixed 2 stale/dangerous doc bugs in the launcher
+      before using it (`deployment-service@679f826`): (a) header claimed "DeFi: SKIPPED — pass-through, no MDPS work"
+      (written 2026-04-28) though DeFi support shipped 2026-05-05 (`489ec0e`) and the comment was never updated; (b)
+      post-backfill reminder pointed at the DANGEROUS `rebuild_manifest_from_canonical_paths()` (the exact
+      whole-bucket-wipe bug this plan's own todo 11a fixed) — repointed to the safe additive
+      `merge_manifest_from_canonical_paths()`. **Launched** the real fleet:
+      `launch-mdps-sharded-backfill.sh defi     --env prod` — 5 SPOT VMs, year-sharded 2022-2026
+      (run-ts=20260728-044648), e2-standard-8. All 5 verified STARTED (RUNNING <60s). Ground-truthed via `run.log` at
+      T+~7min (not just VM status): 4/5 shards actively processing — DeFi instrument universes loaded (2979-10367/year),
+      dependency checks passing, fresh GCS heartbeats every ~30s. Shard 2026 looked stalled (4+min silent after
+      "Installing system packages...") but recovered on recheck — normal SPOT boot variance, now progressing through the
+      same code-deploy sequence as its siblings. This is a multi-day background operation, not a same-session completion
+      — superseding this checkbox with LAUNCHED+HEALTHY, matching this doc's own precedent for VM-fleet todos (see
+      cefi_hl_aster_batch_data_gaps_2026_06_22.md). **Next check-in should verify**: per-shard
+      `DEPLOYMENT_COMPLETED exit_code=0` + real candle-object counts under `processed_candles/by_date/` for DEFI, not
+      just RUNNING/heartbeat status.
 - [ ] 10-followup-a. [SCRIPT] P2. **NEW 2026-07-28 (slot-13, from todo 10's benchmark).** features-service `delta_one`
       compute independently re-runs the per-(instrument,date) MDPS-candle-availability dependency check ONCE PER
       SUB-FAMILY (technical_indicators/moving_averages/oscillators/volatility_realized — 4x total), directly observed
