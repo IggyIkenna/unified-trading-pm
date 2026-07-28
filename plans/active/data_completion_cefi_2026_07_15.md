@@ -224,11 +224,17 @@ MTDS consolidation ruling.)**
       SESSION — execute the migration" P0 todo immediately below** — see its updated note. **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. **SUPERSEDED-BY `plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`
-      (2026-07-28, slot-4, main ruling BLK-650261be) — checkbox left UNCHECKED, no sweep has run.** **NEXT SESSION —
-      execute the migration** (after the dry-run validates perf) — **🔴 BLOCKED 2026-07-28 (slot-12): the dry-run did
-      NOT validate cleanly** — `phantom_to_failed=490,639` (~8.6% of the prior index) is a confirmed false-phantom bug
-      (itype/underlying column drift), not real orphans; see
+- [ ] [OPERATOR] P0. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-9)**: this todo's own action is now entirely
+      contained in the `[OPERATOR]`-tagged phases of its successor plan (see SUPERSEDED-BY below) — retagging so the
+      backlog regen classifies it `operator_gated` (never dispatched to a worker) instead of redispatching this
+      already-resolved-non-actionable item to yet another `data_engineering` session (3 prior sessions — slot-14
+      2026-07-27, slot-4 and slot-12 2026-07-28 — already independently reached "do not execute" here; this session,
+      slot-9, was the 4th dispatch of the same dead end). **SUPERSEDED-BY
+      `plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (2026-07-28, slot-4, main ruling
+      BLK-650261be) — checkbox left UNCHECKED, no sweep has run.** **NEXT SESSION — execute the migration** (after the
+      dry-run validates perf) — **🔴 BLOCKED 2026-07-28 (slot-12): the dry-run did NOT validate cleanly** —
+      `phantom_to_failed=490,639` (~8.6% of the prior index) is a confirmed false-phantom bug (itype/underlying column
+      drift), not real orphans; see
       `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`. Running this todo's
       `--apply` migration as-is would `record_failed` ~490K genuinely-present rows for real — do NOT run until that
       issue's fix lands + a clean re-run confirms `phantom_to_failed` drops to a small DERIBIT-chain-style residual.
@@ -280,19 +286,22 @@ MTDS consolidation ruling.)**
       readout. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation
       ruling.)**
 
-- [ ] [DATA] P0. **SUPERSEDED-BY `plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`
-      (2026-07-28, slot-4, main ruling BLK-650261be) — checkbox left UNCHECKED, this measured evidence is folded into
-      that plan's Phase B.** **Orphan sweep + bucket-state evidence (slot/Harsh bucket-state verification 2026-06-02).**
-      Measured (Cloud Monitoring `storage/v2/total_count`, live-object): `market-data-tick-cefi-prd` 1,545,850 (~65% of
-      legacy 2,377,168) and **~17 days STALE — `-prd` latest `day=2026-05-07` vs legacy `day=2026-05-24`** (consistent
-      with the 5,233 legacy-only cells; the C0 gap-fill closes it by reading legacy as source). `-prd` is INTERMEDIATE
-      FORM: `asset_group=cefi` is in the PATH but there is **NO `pipeline_mode=` partition** (confirmed at the data
-      level, not just the manifest). So the E4 walk writes NEW `pipeline_mode=` paths → the pre-existing legacy-FORM
-      `-prd` objects become ORPHANS; E5 rebuild / E7 verify MUST delete the legacy-FORM `-prd` objects too (not only the
-      legacy SOURCE bucket), else the rebuild double-counts. Legacy carries 3.81M noncurrent objects → the E8 delete
-      must also purge noncurrent versions, and the "canonical ≥ legacy" count gate must use Monitoring
-      `type=live-object` (never a naive recursive `ls`, which counts versions + soft-deleted). **(MIGRATED FROM:
-      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [ ] [OPERATOR] P0. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-9)**: same reclassification as its sibling todo above
+      — the action lives entirely in the successor plan's `[OPERATOR]` phases, so this retag stops the backlog regen
+      from redispatching an already-superseded, non-actionable item to a `data_engineering` worker. **SUPERSEDED-BY
+      `plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (2026-07-28, slot-4, main ruling
+      BLK-650261be) — checkbox left UNCHECKED, this measured evidence is folded into that plan's Phase B.** **Orphan
+      sweep + bucket-state evidence (slot/Harsh bucket-state verification 2026-06-02).** Measured (Cloud Monitoring
+      `storage/v2/total_count`, live-object): `market-data-tick-cefi-prd` 1,545,850 (~65% of legacy 2,377,168) and **~17
+      days STALE — `-prd` latest `day=2026-05-07` vs legacy `day=2026-05-24`** (consistent with the 5,233 legacy-only
+      cells; the C0 gap-fill closes it by reading legacy as source). `-prd` is INTERMEDIATE FORM: `asset_group=cefi` is
+      in the PATH but there is **NO `pipeline_mode=` partition** (confirmed at the data level, not just the manifest).
+      So the E4 walk writes NEW `pipeline_mode=` paths → the pre-existing legacy-FORM `-prd` objects become ORPHANS; E5
+      rebuild / E7 verify MUST delete the legacy-FORM `-prd` objects too (not only the legacy SOURCE bucket), else the
+      rebuild double-counts. Legacy carries 3.81M noncurrent objects → the E8 delete must also purge noncurrent
+      versions, and the "canonical ≥ legacy" count gate must use Monitoring `type=live-object` (never a naive recursive
+      `ls`, which counts versions + soft-deleted). **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [DATA] P0. **RE-VERIFIED 2026-07-27 (slot-9)**: this todo is itself a diagnostic conclusion ("no migrator fix
       is needed"), not an action item — flipping now that its core technical claim has been spot-checked live rather
@@ -309,21 +318,24 @@ MTDS consolidation ruling.)**
       migrator fix is needed. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
 
-- [ ] [DATA] P0. **SUPERSEDED-BY `plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`
-      (2026-07-28, slot-4, main ruling BLK-650261be) — checkbox left UNCHECKED, the sweep has not run against prod.**
-      **E4 remaining work = ORPHAN SWEEP + gap-fill, NOT a path walk.** (slot-3 verify 2026-06-03: the `pipeline_mode=`
-      migration is COMPLETE corpus-wide — sampled days 2020→2026 ALL have both forms; the **9 L-flat orphans are ALSO
-      migrated** (e.g. `SOL-ETH.parquet` → `day=2024-11-07/pipeline_mode=batch_tardis/…/SOL-ETH.parquet` exists; the 9
-      root files remain only as orphans). So the ONLY additive work left is the legacy gap-fill.) (a) **🛑 IRREVERSIBLE
-      — delete the OLD `day=/asset_group=cefi/…` (no-`pipeline_mode=`) orphan objects corpus-wide (~474/day × ~2,613
-      days ≈ 1.2M) + the 9 root L-flat orphans** now their `pipeline_mode=` forms exist. PRE-DELETE GUARANTEE
-      (mandatory): first run `migrate_cefi_flat_to_v9_canonical --apply` over the FULL range once (idempotent — copies
-      any orphan still lacking a sibling, skips the rest) so EVERY orphan provably has a migrated dest; THEN delete
-      (count via Monitoring live-object, NOT naive recursive `ls`; per-object isolation; idempotent). This IS the E7
-      orphan-sweep. (b) `--also-legacy` 5,233-cell legacy→canonical gap-fill (additive; VM-scale — the 1.9M legacy
-      listing stalled an e2-standard-4, so shard/bigger-mem). **Deliberate execution (irreversible deletes + VM-scale) —
-      not to be rushed.** Repo: market-tick-data-service. **(MIGRATED FROM:
-      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [ ] [OPERATOR] P0. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-9)**: same reclassification as the two sibling todos
+      above — the action lives entirely in the successor plan's `[OPERATOR]` phases, so this retag stops the backlog
+      regen from redispatching an already-superseded, non-actionable item to a `data_engineering` worker.
+      **SUPERSEDED-BY `plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (2026-07-28,
+      slot-4, main ruling BLK-650261be) — checkbox left UNCHECKED, the sweep has not run against prod.** **E4 remaining
+      work = ORPHAN SWEEP + gap-fill, NOT a path walk.** (slot-3 verify 2026-06-03: the `pipeline_mode=` migration is
+      COMPLETE corpus-wide — sampled days 2020→2026 ALL have both forms; the **9 L-flat orphans are ALSO migrated**
+      (e.g. `SOL-ETH.parquet` → `day=2024-11-07/pipeline_mode=batch_tardis/…/SOL-ETH.parquet` exists; the 9 root files
+      remain only as orphans). So the ONLY additive work left is the legacy gap-fill.) (a) **🛑 IRREVERSIBLE — delete
+      the OLD `day=/asset_group=cefi/…` (no-`pipeline_mode=`) orphan objects corpus-wide (~474/day × ~2,613 days ≈
+      1.2M) + the 9 root L-flat orphans** now their `pipeline_mode=` forms exist. PRE-DELETE GUARANTEE (mandatory):
+      first run `migrate_cefi_flat_to_v9_canonical --apply` over the FULL range once (idempotent — copies any orphan
+      still lacking a sibling, skips the rest) so EVERY orphan provably has a migrated dest; THEN delete (count via
+      Monitoring live-object, NOT naive recursive `ls`; per-object isolation; idempotent). This IS the E7 orphan-sweep.
+      (b) `--also-legacy` 5,233-cell legacy→canonical gap-fill (additive; VM-scale — the 1.9M legacy listing stalled an
+      e2-standard-4, so shard/bigger-mem). **Deliberate execution (irreversible deletes + VM-scale) — not to be
+      rushed.** Repo: market-tick-data-service. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): `rebuild_cefi_manifest.py` encodes the
       per-instrument row key (the LIVE writer key =
@@ -686,3 +698,21 @@ pass, B: the irreversible orphan-sweep delete, C: legacy gap-fill, D: E5 rebuild
 verify, F: E8 legacy-bucket delete triple-gated) all `[OPERATOR]`/human-supervised. All three source todos above
 annotated `SUPERSEDED-BY` inline (checkboxes left UNCHECKED — no sweep has run against prod). Did **not** flip any of
 the three todos' checkboxes.
+
+### 2026-07-28 (slot-9, `data_engineering`) — retagged the 3 SUPERSEDED-BY todos `[DATA]`→`[OPERATOR]` (backlog-thrash fix)
+
+Dispatched `data_completion_cefi-036` (the "NEXT SESSION — execute the migration" todo, line ~227). Confirmed via the
+Progress Log above that this todo, its sibling `data_completion_cefi-013`/`-015`, and the successor plan
+`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` were already fully investigated and resolved by 3
+prior sessions (slot-14 2026-07-27, slot-4 and slot-12 2026-07-28) — every one of them independently concluded "do not
+execute" (irreversible/VM-scale, human-only per delete-safety §3a hard-stop #2, and additionally blocked on the
+false-phantom itype/underlying-drift fix). Nothing new to add on the merits; the only action available to a
+`data_engineering` worker here is a repeat of the same "do not execute" conclusion, which had already been reached and
+recorded 3 times. Root-caused why this same non-actionable todo kept being redispatched: all 3 SUPERSEDED-BY todos were
+still tagged `[DATA]`, and `regen_backlog_from_plan.py`'s `_OPERATOR_TAG_PREFIX_RE`/`operator_gated` check
+(`server/regen_backlog_from_plan.py:1462-1469`) only stops dispatch for a todo's own leading `[OPERATOR]` tag — a
+`[DATA]`-tagged todo, however thoroughly annotated SUPERSEDED-BY in its body prose, is still offered to
+`data_engineering` workers every regen tick. Retagged all 3 (lines ~227, ~283, ~312 pre-edit) `[DATA]`→`[OPERATOR]` —
+matches how every phase of the actual successor plan is tagged, and is the same mechanism (`operator_gated: true`) the
+codebase already uses to mark a todo "ingested (visible + prunable) but never dispatchable." Checkboxes left UNCHECKED
+(unchanged — no sweep has run); no code shipped, no irreversible action taken; plan-only change.
