@@ -1,0 +1,663 @@
+{
+  "generated_at": "2026-07-28T06:48:50.468750+00:00",
+  "repository": "unified-trading-system",
+  "packages": {
+    "alerting-service": {
+      "total_versions": 93,
+      "flagged_count": 74,
+      "flagged_bytes": 104380448835,
+      "flagged_sample": [
+        {
+          "digest": "sha256:351eb318c3ea8",
+          "createTime": "2026-07-23T12:54:32.212399Z",
+          "tags": ["bdd725b"],
+          "sizeBytes": 1042111315
+        },
+        {
+          "digest": "sha256:23335348f42b2",
+          "createTime": "2026-07-23T00:57:13.418879Z",
+          "tags": ["10a88f6", "737391f"],
+          "sizeBytes": 1040876120
+        },
+        {
+          "digest": "sha256:8031f5509348b",
+          "createTime": "2026-07-22T18:41:53.753327Z",
+          "tags": ["0945dc9"],
+          "sizeBytes": 1040739485
+        },
+        {
+          "digest": "sha256:a6db3c188d319",
+          "createTime": "2026-07-22T12:52:52.171887Z",
+          "tags": ["786c527", "d538bc1"],
+          "sizeBytes": 1040526578
+        },
+        {
+          "digest": "sha256:c03ad51ea4ef8",
+          "createTime": "2026-07-22T07:08:03.770255Z",
+          "tags": ["8ac2f0d"],
+          "sizeBytes": 1040493000
+        }
+      ]
+    },
+    "batch-live-reconciliation-service": {
+      "total_versions": 80,
+      "flagged_count": 63,
+      "flagged_bytes": 56208447374,
+      "flagged_sample": [
+        {
+          "digest": "sha256:a6d3547a3028b",
+          "createTime": "2026-07-23T16:05:56.021391Z",
+          "tags": ["494629c"],
+          "sizeBytes": 918175886
+        },
+        {
+          "digest": "sha256:a29fdafaa28cb",
+          "createTime": "2026-07-23T12:55:53.774255Z",
+          "tags": ["6d542ab"],
+          "sizeBytes": 918174119
+        },
+        {
+          "digest": "sha256:3e103a75b8053",
+          "createTime": "2026-07-23T00:58:58.077311Z",
+          "tags": ["248e8ea", "a679974"],
+          "sizeBytes": 917576577
+        },
+        {
+          "digest": "sha256:a23a0d086c10b",
+          "createTime": "2026-07-22T18:43:51.220863Z",
+          "tags": ["4de5df3"],
+          "sizeBytes": 917046656
+        },
+        {
+          "digest": "sha256:38e8a3d046ad7",
+          "createTime": "2026-07-22T12:54:54.018191Z",
+          "tags": ["aa0a8b7", "b1a6afb"],
+          "sizeBytes": 916935475
+        }
+      ]
+    },
+    "client-reporting-api": {
+      "total_versions": 105,
+      "flagged_count": 90,
+      "flagged_bytes": 93318513114,
+      "flagged_sample": [
+        {
+          "digest": "sha256:69743291439a2",
+          "createTime": "2026-07-23T12:54:14.236287Z",
+          "tags": ["44319b0"],
+          "sizeBytes": 1069164387
+        },
+        {
+          "digest": "sha256:5f1ea8deb4b6b",
+          "createTime": "2026-07-23T08:39:27.840415Z",
+          "tags": ["7aac7d5"],
+          "sizeBytes": 1067948636
+        },
+        {
+          "digest": "sha256:92425f3f4e937",
+          "createTime": "2026-07-23T00:56:37.350607Z",
+          "tags": ["fc30356"],
+          "sizeBytes": 1067924553
+        },
+        {
+          "digest": "sha256:cf40eb9e9888c",
+          "createTime": "2026-07-22T18:41:59.532207Z",
+          "tags": ["4b5a993"],
+          "sizeBytes": 1067783326
+        },
+        {
+          "digest": "sha256:e9ebe807dbaeb",
+          "createTime": "2026-07-22T13:57:32.008863Z",
+          "tags": ["c32f157"],
+          "sizeBytes": 1067579594
+        }
+      ]
+    },
+    "client-reporting-batch": {
+      "total_versions": 12,
+      "flagged_count": 7,
+      "flagged_bytes": 7505147516,
+      "flagged_sample": [
+        {
+          "digest": "sha256:e38d6b747607e",
+          "createTime": "2026-04-08T14:35:26.084143Z",
+          "tags": ["fix-sm-202604081532"],
+          "sizeBytes": 1079513993
+        },
+        {
+          "digest": "sha256:710923ea468ba",
+          "createTime": "2026-04-08T14:24:28.044591Z",
+          "tags": ["fix-gcs-202604081522"],
+          "sizeBytes": 1079511387
+        },
+        {
+          "digest": "sha256:b881944576ad6",
+          "createTime": "2026-04-08T14:11:36.043375Z",
+          "tags": ["fix-logging-202604081509"],
+          "sizeBytes": 1079516099
+        },
+        {
+          "digest": "sha256:eeea952194b03",
+          "createTime": "2026-04-08T13:57:56.991055Z",
+          "tags": ["fix-paths-202604081455"],
+          "sizeBytes": 1079509113
+        },
+        {
+          "digest": "sha256:19015febb037b",
+          "createTime": "2026-04-08T10:49:30.049759Z",
+          "tags": ["manual-202604081146"],
+          "sizeBytes": 1079516108
+        }
+      ]
+    },
+    "deployment-api": {
+      "total_versions": 326,
+      "flagged_count": 287,
+      "flagged_bytes": 309738595556,
+      "flagged_sample": [
+        {
+          "digest": "sha256:1282490246ad3",
+          "createTime": "2026-07-25T06:09:16.000303Z",
+          "tags": ["2efbbcb"],
+          "sizeBytes": 1156797977
+        },
+        {
+          "digest": "sha256:fcf70f95e196f",
+          "createTime": "2026-07-25T02:47:38.056063Z",
+          "tags": ["273c951"],
+          "sizeBytes": 1156765077
+        },
+        {
+          "digest": "sha256:0da17cde6dee2",
+          "createTime": "2026-07-25T00:58:57.171727Z",
+          "tags": ["af1d72c"],
+          "sizeBytes": 1156747833
+        },
+        {
+          "digest": "sha256:6f918df32c60f",
+          "createTime": "2026-07-25T00:18:33.905487Z",
+          "tags": ["cd002cc"],
+          "sizeBytes": 1156738343
+        },
+        {
+          "digest": "sha256:c192eff987861",
+          "createTime": "2026-07-24T23:21:32.413679Z",
+          "tags": ["366154d"],
+          "sizeBytes": 1156734822
+        }
+      ]
+    },
+    "deployment-service": {
+      "total_versions": 210,
+      "flagged_count": 178,
+      "flagged_bytes": 192092267540,
+      "flagged_sample": [
+        {
+          "digest": "sha256:6ff53ffcdadd5",
+          "createTime": "2026-07-25T05:05:52.422271Z",
+          "tags": [],
+          "sizeBytes": 1128365384
+        },
+        {
+          "digest": "sha256:ece23251b7cf5",
+          "createTime": "2026-07-25T01:41:52.284527Z",
+          "tags": [],
+          "sizeBytes": 1128364701
+        },
+        {
+          "digest": "sha256:f6fd55bdf3cb6",
+          "createTime": "2026-07-25T00:15:48.915823Z",
+          "tags": [],
+          "sizeBytes": 1128354761
+        },
+        {
+          "digest": "sha256:a3f3bd39e8214",
+          "createTime": "2026-07-24T23:43:01.123167Z",
+          "tags": [],
+          "sizeBytes": 1128348596
+        },
+        {
+          "digest": "sha256:1cac5b6484140",
+          "createTime": "2026-07-24T22:22:52.765279Z",
+          "tags": [],
+          "sizeBytes": 1128346137
+        }
+      ]
+    },
+    "e2e-audit": {
+      "total_versions": 1,
+      "flagged_count": 0,
+      "flagged_bytes": 0,
+      "flagged_sample": []
+    },
+    "execution-service": {
+      "total_versions": 106,
+      "flagged_count": 84,
+      "flagged_bytes": 183864423575,
+      "flagged_sample": [
+        {
+          "digest": "sha256:59a92f87fd6a0",
+          "createTime": "2026-07-24T21:58:18.745087Z",
+          "tags": ["c5ec024"],
+          "sizeBytes": 2224660274
+        },
+        {
+          "digest": "sha256:f587746ac049a",
+          "createTime": "2026-07-24T11:33:43.524831Z",
+          "tags": ["ce1614e"],
+          "sizeBytes": 2224622661
+        },
+        {
+          "digest": "sha256:a9ab5818e0e5e",
+          "createTime": "2026-07-24T01:40:32.605647Z",
+          "tags": ["c2ca175"],
+          "sizeBytes": 2224606576
+        },
+        {
+          "digest": "sha256:cb547ba49148e",
+          "createTime": "2026-07-23T18:29:46.794575Z",
+          "tags": ["2b90834"],
+          "sizeBytes": 2224599444
+        },
+        {
+          "digest": "sha256:09d657c58f600",
+          "createTime": "2026-07-23T16:09:43.208591Z",
+          "tags": ["fa366ef"],
+          "sizeBytes": 2224596413
+        }
+      ]
+    },
+    "features-service": {
+      "total_versions": 114,
+      "flagged_count": 75,
+      "flagged_bytes": 101751691318,
+      "flagged_sample": [
+        {
+          "digest": "sha256:3722dc1b85728",
+          "createTime": "2026-07-23T13:10:52.663535Z",
+          "tags": ["190a1c9"],
+          "sizeBytes": 1448453738
+        },
+        {
+          "digest": "sha256:847daed318b58",
+          "createTime": "2026-07-23T08:27:17.843295Z",
+          "tags": ["fd6e855"],
+          "sizeBytes": 1447246678
+        },
+        {
+          "digest": "sha256:20492a2bf6ee4",
+          "createTime": "2026-07-23T05:21:10.824287Z",
+          "tags": ["7b03250"],
+          "sizeBytes": 1447215313
+        },
+        {
+          "digest": "sha256:8fdc76cf1842a",
+          "createTime": "2026-07-23T01:14:09.660847Z",
+          "tags": ["08738eb"],
+          "sizeBytes": 1447206037
+        },
+        {
+          "digest": "sha256:a498bd1fb7f2b",
+          "createTime": "2026-07-22T18:58:11.166655Z",
+          "tags": ["5c6b829"],
+          "sizeBytes": 1446135820
+        }
+      ]
+    },
+    "features-sports-service": {
+      "total_versions": 2,
+      "flagged_count": 0,
+      "flagged_bytes": 0,
+      "flagged_sample": []
+    },
+    "fund-administration-service": {
+      "total_versions": 64,
+      "flagged_count": 55,
+      "flagged_bytes": 50582419079,
+      "flagged_sample": [
+        {
+          "digest": "sha256:63deb7c4fe51f",
+          "createTime": "2026-07-23T12:55:20.682607Z",
+          "tags": ["b598d87"],
+          "sizeBytes": 940968991
+        },
+        {
+          "digest": "sha256:287ee989b3591",
+          "createTime": "2026-07-23T00:58:07.895791Z",
+          "tags": ["c548d98", "f4218fc"],
+          "sizeBytes": 940349567
+        },
+        {
+          "digest": "sha256:cdfef63eed450",
+          "createTime": "2026-07-22T18:42:57.830815Z",
+          "tags": ["6d0e5cd"],
+          "sizeBytes": 940704860
+        },
+        {
+          "digest": "sha256:72a1e1f6beb17",
+          "createTime": "2026-07-22T12:54:14.757279Z",
+          "tags": ["c775154", "e3a7ec7"],
+          "sizeBytes": 940585417
+        },
+        {
+          "digest": "sha256:7c185de23179a",
+          "createTime": "2026-07-22T07:09:06.587071Z",
+          "tags": ["fc0e515"],
+          "sizeBytes": 940563390
+        }
+      ]
+    },
+    "greeks-service": {
+      "total_versions": 63,
+      "flagged_count": 47,
+      "flagged_bytes": 85593621529,
+      "flagged_sample": [
+        {
+          "digest": "sha256:7df0d39e679e2",
+          "createTime": "2026-07-23T16:08:48.192239Z",
+          "tags": ["d50cd83"],
+          "sizeBytes": 1852341940
+        },
+        {
+          "digest": "sha256:673c3ea7cdf54",
+          "createTime": "2026-07-23T13:00:18.107391Z",
+          "tags": ["a980f50"],
+          "sizeBytes": 1852303733
+        },
+        {
+          "digest": "sha256:cde22d4fe8757",
+          "createTime": "2026-07-23T08:10:39.841439Z",
+          "tags": ["1ee7c32"],
+          "sizeBytes": 1851046814
+        },
+        {
+          "digest": "sha256:b685dd8758197",
+          "createTime": "2026-07-23T01:03:27.142751Z",
+          "tags": ["22062d1"],
+          "sizeBytes": 1851021266
+        },
+        {
+          "digest": "sha256:7dea7af5e7495",
+          "createTime": "2026-07-22T18:47:00.004479Z",
+          "tags": ["bfbe6df"],
+          "sizeBytes": 1849940867
+        }
+      ]
+    },
+    "instruments-service": {
+      "total_versions": 276,
+      "flagged_count": 234,
+      "flagged_bytes": 240824334616,
+      "flagged_sample": [
+        {
+          "digest": "sha256:e88f3ded525a1",
+          "createTime": "2026-07-23T15:22:30.542607Z",
+          "tags": ["f539945"],
+          "sizeBytes": 1066180727
+        },
+        {
+          "digest": "sha256:d6806717228c7",
+          "createTime": "2026-07-23T14:30:38.412767Z",
+          "tags": ["d2bab47"],
+          "sizeBytes": 1066164894
+        },
+        {
+          "digest": "sha256:8cedbaf808f71",
+          "createTime": "2026-07-23T12:54:50.217887Z",
+          "tags": ["10a7027"],
+          "sizeBytes": 1066157073
+        },
+        {
+          "digest": "sha256:b3d4522fad6ff",
+          "createTime": "2026-07-23T10:58:25.811887Z",
+          "tags": ["878826b"],
+          "sizeBytes": 1064949575
+        },
+        {
+          "digest": "sha256:657538e5fe775",
+          "createTime": "2026-07-23T10:06:47.184799Z",
+          "tags": ["53ff2ab"],
+          "sizeBytes": 1064943762
+        }
+      ]
+    },
+    "market-data-processing-service": {
+      "total_versions": 127,
+      "flagged_count": 89,
+      "flagged_bytes": 98716127223,
+      "flagged_sample": [
+        {
+          "digest": "sha256:9eda66043c886",
+          "createTime": "2026-07-23T12:55:13.709999Z",
+          "tags": ["5692f74"],
+          "sizeBytes": 1143026069
+        },
+        {
+          "digest": "sha256:bafd83fc4dd33",
+          "createTime": "2026-07-23T09:06:56.822975Z",
+          "tags": ["f04564f"],
+          "sizeBytes": 1141821286
+        },
+        {
+          "digest": "sha256:a50f4a1940588",
+          "createTime": "2026-07-23T08:06:31.878207Z",
+          "tags": ["9ebc710"],
+          "sizeBytes": 1141817989
+        },
+        {
+          "digest": "sha256:5b1bb9f4e92b8",
+          "createTime": "2026-07-23T00:58:10.526927Z",
+          "tags": ["d5047a9"],
+          "sizeBytes": 1141788891
+        },
+        {
+          "digest": "sha256:4bfacdaf094ae",
+          "createTime": "2026-07-22T18:42:29.135615Z",
+          "tags": ["fad2799"],
+          "sizeBytes": 1141644537
+        }
+      ]
+    },
+    "market-tick-data-service": {
+      "total_versions": 2189,
+      "flagged_count": 1987,
+      "flagged_bytes": 2912138249494,
+      "flagged_sample": [
+        {
+          "digest": "sha256:2058449fa4b1e",
+          "createTime": "2026-07-25T06:09:26.173311Z",
+          "tags": ["e32c413"],
+          "sizeBytes": 1737808086
+        },
+        {
+          "digest": "sha256:6f31e9c339365",
+          "createTime": "2026-07-25T06:08:32.872895Z",
+          "tags": ["5f3fdad"],
+          "sizeBytes": 1737808011
+        },
+        {
+          "digest": "sha256:5c7d63d12d8f2",
+          "createTime": "2026-07-25T05:39:55.868639Z",
+          "tags": ["c03890b"],
+          "sizeBytes": 1737808256
+        },
+        {
+          "digest": "sha256:b78bb07f6414f",
+          "createTime": "2026-07-25T05:09:57.546063Z",
+          "tags": ["283f559"],
+          "sizeBytes": 1737787137
+        },
+        {
+          "digest": "sha256:83458eacbd040",
+          "createTime": "2026-07-25T05:09:47.096031Z",
+          "tags": ["0cb8dca"],
+          "sizeBytes": 1737787011
+        }
+      ]
+    },
+    "ml-service": {
+      "total_versions": 91,
+      "flagged_count": 74,
+      "flagged_bytes": 125300787571,
+      "flagged_sample": [
+        {
+          "digest": "sha256:f0ce903d58f32",
+          "createTime": "2026-07-23T13:02:35.344143Z",
+          "tags": ["0556252"],
+          "sizeBytes": 1716028888
+        },
+        {
+          "digest": "sha256:7d94423d94ad0",
+          "createTime": "2026-07-23T08:15:41.485407Z",
+          "tags": ["56a674a"],
+          "sizeBytes": 1714688658
+        },
+        {
+          "digest": "sha256:0d6cfd10b00be",
+          "createTime": "2026-07-23T01:05:30.398367Z",
+          "tags": ["b1a69ae"],
+          "sizeBytes": 1714671513
+        },
+        {
+          "digest": "sha256:568f24c02e435",
+          "createTime": "2026-07-22T18:50:55.779391Z",
+          "tags": ["46ecd48"],
+          "sizeBytes": 1714471167
+        },
+        {
+          "digest": "sha256:622486c8a6ce3",
+          "createTime": "2026-07-22T14:05:48.014815Z",
+          "tags": ["63f3dae"],
+          "sizeBytes": 1714279877
+        }
+      ]
+    },
+    "strategy-service": {
+      "total_versions": 123,
+      "flagged_count": 98,
+      "flagged_bytes": 199558922472,
+      "flagged_sample": [
+        {
+          "digest": "sha256:943ec9392b11e",
+          "createTime": "2026-07-25T01:02:41.063631Z",
+          "tags": ["0c16dc8"],
+          "sizeBytes": 2074951549
+        },
+        {
+          "digest": "sha256:673457d18ec9a",
+          "createTime": "2026-07-24T07:11:55.323567Z",
+          "tags": ["50590f4"],
+          "sizeBytes": 2074810668
+        },
+        {
+          "digest": "sha256:064a79255f237",
+          "createTime": "2026-07-23T16:08:16.360991Z",
+          "tags": ["847a9db"],
+          "sizeBytes": 2074624824
+        },
+        {
+          "digest": "sha256:55237a9627f99",
+          "createTime": "2026-07-23T14:36:13.364543Z",
+          "tags": ["c8666c2"],
+          "sizeBytes": 2074507096
+        },
+        {
+          "digest": "sha256:19a9b04169d51",
+          "createTime": "2026-07-23T13:40:16.578879Z",
+          "tags": ["834a0e9"],
+          "sizeBytes": 2074453645
+        }
+      ]
+    },
+    "trading-agent-service": {
+      "total_versions": 70,
+      "flagged_count": 58,
+      "flagged_bytes": 58488865725,
+      "flagged_sample": [
+        {
+          "digest": "sha256:a0cfdb4708b51",
+          "createTime": "2026-07-23T12:54:40.654287Z",
+          "tags": ["413910b"],
+          "sizeBytes": 1044389291
+        },
+        {
+          "digest": "sha256:59f5f33044c91",
+          "createTime": "2026-07-23T08:13:59.734335Z",
+          "tags": ["6877798"],
+          "sizeBytes": 1043104234
+        },
+        {
+          "digest": "sha256:b1bb957db5800",
+          "createTime": "2026-07-23T00:57:44.524207Z",
+          "tags": ["598bc77"],
+          "sizeBytes": 1043137599
+        },
+        {
+          "digest": "sha256:058c2a0fdd7b9",
+          "createTime": "2026-07-22T18:42:01.356303Z",
+          "tags": ["a71d939"],
+          "sizeBytes": 1042910882
+        },
+        {
+          "digest": "sha256:9e8e1ce14b9a6",
+          "createTime": "2026-07-22T13:58:41.567167Z",
+          "tags": ["cf78a9b"],
+          "sizeBytes": 1042699083
+        }
+      ]
+    },
+    "unified-trading-system-ui": {
+      "total_versions": 14,
+      "flagged_count": 9,
+      "flagged_bytes": 3468609889,
+      "flagged_sample": [
+        {
+          "digest": "sha256:8c05e89c89604",
+          "createTime": "2026-03-23T15:49:54.092895Z",
+          "tags": [],
+          "sizeBytes": 428895436
+        },
+        {
+          "digest": "sha256:1f6f818ec6fba",
+          "createTime": "2026-03-23T14:53:02.751663Z",
+          "tags": ["3843a4f"],
+          "sizeBytes": 428919925
+        },
+        {
+          "digest": "sha256:632ea1e23457b",
+          "createTime": "2026-03-23T14:09:58.953631Z",
+          "tags": ["689681b"],
+          "sizeBytes": 419374652
+        },
+        {
+          "digest": "sha256:119f8694e12dc",
+          "createTime": "2026-03-23T13:16:33.010783Z",
+          "tags": ["2bbd423"],
+          "sizeBytes": 417668234
+        },
+        {
+          "digest": "sha256:5444f7ed18680",
+          "createTime": "2026-03-20T18:27:23.624719Z",
+          "tags": ["4351607"],
+          "sizeBytes": 406682041
+        }
+      ]
+    },
+    "uts-ui-papertrading": {
+      "total_versions": 1,
+      "flagged_count": 0,
+      "flagged_bytes": 0,
+      "flagged_sample": []
+    }
+  },
+  "totals": {
+    "total_versions_scanned": 4067,
+    "total_flagged_count": 3509,
+    "total_flagged_bytes": 4823531472426,
+    "total_flagged_gb": 4492.26
+  },
+  "zero_intersection_check": {
+    "deployed_digest_hits_in_flagged_set": [],
+    "passes": true
+  }
+}

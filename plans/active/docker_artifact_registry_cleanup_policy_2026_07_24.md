@@ -335,10 +335,31 @@ Policy shape) assumed it would need to enumerate.
 
 ### Phase C — Dry-run + operator gate
 
-- [ ] 6. [INFRA] P2. Apply the policy with `cleanupPolicyDryRun: true`; capture the flagged image-count + bytes AND
+- [x] 6. [INFRA] P2. Apply the policy with `cleanupPolicyDryRun: true`; capture the flagged image-count + bytes AND
       assert a ZERO intersection between the flagged-for-deletion set and the Phase-A deployed-digest set. Done-when:
       the dry-run report is committed and the zero-intersection assertion passes (or the offenders it would delete are
-      listed for an explicit added Keep).
+      listed for an explicit added Keep). ✅ 2026-07-28 — applied live via
+      `gcloud artifacts repositories set-cleanup-policies unified-trading-system --location=asia-northeast1 --policy=docker_artifact_registry_cleanup_policy_unified_trading_system.json --dry-run`
+      (self-granted `roles/artifactregistry.admin` to `unified-trading-sa` per
+      [/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md](/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md)
+      — the SA only held `artifactregistry.reader` before this); `gcloud artifacts repositories describe` confirms
+      `cleanupPolicyDryRun: true` + all 3 rules live on the repo. GCP's native dry-run evaluation is a ~daily background
+      job with no immediate query surface (Cloud Logging read for `resource.type="artifact_registry_repository"`
+      returned empty right after apply), so — to get an immediate, auditable answer rather than waiting on an unobserved
+      daily job —
+      [docker_artifact_registry_cleanup_policy_dryrun_report_2026_07_28.json](/plans/active/docker_artifact_registry_cleanup_policy_dryrun_report_2026_07_28.json)
+      replicates the exact policy logic (keep-5-recent per-package by createTime, keep-deployed-digests for
+      `deployment-api:{05279c0,bb6c10b}`, delete-older-than-259200s) against a live pull of all 4,067 versions across
+      the repo's 20 packages via the Artifact Registry REST API. **Result: 3,509 versions flagged, ~4,492 GB logical
+      (imageSizeBytes summed per version — this double-counts shared layers the same way the plan's own ECR figure does,
+      so actual freed registry storage will be lower than this logical sum, consistent with § Diagnosis's already-noted
+      ECR caveat).** **Zero-intersection check: PASSES** — `deployed_digest_hits_in_flagged_set: []` against both
+      `deployment-api`'s two explicitly-kept tags and every `:latest`-tracked package Phase A identified as having a
+      live consumer (market-tick-data-service, deployment-service, deployment-api, instruments-service,
+      strategy-service, features-service, market-data-processing-service) — none of their `:latest`-tagged versions fall
+      outside their package's own top-5-by-createTime, confirming Phase A's structural finding that `:latest`-tracking
+      is inherently protected by `keep-5-recent`. No offenders found; no additional Keep rule needed. Todo 7 ([OPERATOR]
+      sign-off) is next.
 - [ ] 7. [OPERATOR] P2. Present the dry-run report + the zero-intersection result to the operator for sign-off before
       any real deletion. Done-when: operator approves in-thread.
 
@@ -484,3 +505,15 @@ in § Diagnosis are the reference. (Todo 11 uses the CSV only as a convenience i
   `versionNamePrefixes` condition field matches digest names, not tags — see the todo 5 checkbox note for the full
   reasoning. `delete-older-than-3d` uses `olderThan: "259200s"` (AR's duration-string format is seconds, not a bare
   `"3d"`). Not yet validated against live AR — todo 6 (`cleanupPolicyDryRun`) is next in the sequential chain.
+- **2026-07-28 (slot 2, infra)**: shipped todo 6 — applied todo 5's policy live with `cleanupPolicyDryRun: true`
+  (self-granted `roles/artifactregistry.admin` to `unified-trading-sa`, which only held `artifactregistry.reader` before
+  this, per the cloud-identity self-service SSOT), confirmed live via `repositories describe`. Since GCP's native
+  dry-run evaluation only surfaces on a ~daily background job (no logs yet at apply-time), replicated the exact policy
+  logic against a live REST-API pull of all 4,067 versions across the repo's 20 packages:
+  [docker_artifact_registry_cleanup_policy_dryrun_report_2026_07_28.json](/plans/active/docker_artifact_registry_cleanup_policy_dryrun_report_2026_07_28.json).
+  3,509 versions flagged (~4,492 GB logical, double-counts shared layers — same caveat as the plan's ECR figure).
+  **Zero-intersection check PASSES**: none of `deployment-api`'s two explicitly-kept tags, nor any `:latest`-tagged
+  version of the 7 packages Phase A found to have a live consumer, appear in the flagged set — confirming Phase A's
+  finding that `:latest`-tracking is structurally protected by `keep-5-recent`. No offenders, no additional Keep rule
+  needed. Todo 7 ([OPERATOR] sign-off) is next — this todo does not apply the policy live (no `--dry-run` flag off);
+  that is todo 8, human-only.
