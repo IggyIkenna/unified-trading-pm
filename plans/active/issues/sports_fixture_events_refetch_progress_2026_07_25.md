@@ -337,4 +337,9 @@ No new durable contract. Executes the OR-1 fixture_events re-fetch campaign alre
       error/stall signature. Not completable this turn (~5.5 years of the `2020-06-06→2026-07-25` range remain).
       Releasing via `/skip-current-task {"reason_code": "GATED"}` per this doc's own DEDUP NOTE instruction, not
       repeating the redispatch-churn pattern already flagged above (9+ prior health-check redispatches, unresolved
-      `/blocked`) — not re-escalating, just complying with the documented next-action.
+      `/blocked`) — not re-escalating, just complying with the documented next-action. — **Health-checked
+      2026-07-28T15:55Z (slot 14, data_engineering), RUNNING, confirms slot 8's 15:23Z check**:
+      `gcloud compute     instances list` confirms `RUNNING`; heartbeat fresh; `date=` boundary advanced
+      `2020-12-16→2021-02-06` (~32min gap, genuine forward progress), live per-fixture fetches + normal rate-limit
+      sleep/retry cycling, no error/stall/terminal marker. Not completable this turn (~5.4 years remain). Releasing via
+      `/skip-current-task {"reason_code": "GATED"}`, same as slot 8.
