@@ -1589,8 +1589,22 @@ if [ -n "$FILES_ARG" ]; then
     fi
   done
   if [ "$ADDED_ANY" = 0 ]; then
-    echo "[$REPO_NAME] ❌ No valid paths from --files. Nothing to commit."
-    exit 1
+    # None of the --files paths exist on disk, are index-tracked, or show up in a
+    # `git diff --cached` — the shape of a path that is a FULLY COMMITTED deletion (not just
+    # staged): `git rm` + `git commit` already ran before quickmerge was invoked, so the
+    # worktree AND the index AND HEAD all agree the path is gone — there is nothing left for
+    # `git add`/`git diff --cached` to see. That is the exact documented worker flow
+    # (`git rm` each file -> commit -> quality-gates.sh -> quickmerge --agent --files
+    # '<paths>'), not a caller error — mirror the same "already committed, ahead of main"
+    # fallback used a few lines below for the empty-staged-diff case instead of hard-failing
+    # a real, already-shipped-locally deletion commit (quickmerge_agent_files_pure_deletion_gap_2026_07_26.md).
+    AHEAD_COUNT=$(git rev-list origin/main..HEAD --count 2>/dev/null || echo "0")
+    if [ "$AHEAD_COUNT" -gt 0 ]; then
+      echo "[$REPO_NAME] ℹ️  --files paths are a fully committed deletion (not on disk, not tracked, nothing staged); branch is $AHEAD_COUNT commit(s) ahead of main — changes already committed. Proceeding to push + PR."
+    else
+      echo "[$REPO_NAME] ❌ No valid paths from --files. Nothing to commit."
+      exit 1
+    fi
   fi
   if [ -z "$(git diff --cached --name-only)" ]; then
     # No staged changes in --files paths. If the branch is already ahead of main,
