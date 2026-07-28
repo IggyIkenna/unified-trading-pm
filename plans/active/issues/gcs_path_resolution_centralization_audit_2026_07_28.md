@@ -53,6 +53,7 @@ source: >-
   4-agent CEFI-scoped audit dispatched 2026-07-28 per operator directive, then scope-expanded to
   defi/tradfi/sports/prediction + batch/paper/live under /autonomous.
 resolved_by:
+depends_on: []
 ---
 
 # GCS path resolution centralization audit
