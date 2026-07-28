@@ -96,7 +96,13 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
 - [ ] [CI] P2. Fold the same `--precommit` (or a `--staged`) sweep into PM `quality-gates-v2` as a
       content-sentinel-gated step (server backstop on PM PRs), THEN retire the standalone `plan-health-gate` GHA job —
       **RULE-11 prove-then-retire**: prove the prek + v2-step combo catches the same hard failures on PM before deleting
-      the job (don't open a gap). repo: unified-trading-pm.
+      the job (don't open a gap). repo: unified-trading-pm. **REHOMED 2026-07-27** — true orphan (per
+      `june_2026_vintage_audit_findings_2026_07_27.md` §4), filed as a new todo directly into
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (own repo section, before its `## Deferred`), placed next to
+      the RULE-11 (a) todo below since both are the two halves of the same `plan-health-gate` CI-architecture
+      rationalization — chosen over `infra_consolidated_closeout_2026_07_25.md` Track 1 because that track is scoped to
+      repo/script governance + dependency/CVE management, not CI-gate architecture. Not executed yet — tracked there
+      going forward; not duplicating here.
 - [x] ✅ [SCRIPT] P1. **24h agentic contradiction RESOLUTION** — DONE 2026-06-10 (`plan-health-agent.yml` STEP 4). Added
       STEP 4 to the daily `plan-health-agent.yml` job: a non-empty `contradictions[]` / `doc_drift[]` result now
       DISPATCHES one `escalate-to-orchestrator.yml` run per finding with `wall_type=plan_health` → the built
@@ -139,8 +145,22 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md (the plan-reconciler timer has been installed and
       firing daily on central since ~2026-07-23) (see that doc for execution).
 
-- [ ] [CI] P2. **RULE-11 prove-then-retire** (after ≥3 green reconciler runs on central): (a) drop the `schedule:`
-      trigger + Haiku steps from `plan-health-agent.yml` (KEEP the `pull_request` `plan-health-gate` job + the
+- [x] ✅ [CI] P2. **MIGRATED 2026-07-27 — tracked + [OPERATOR]-tagged in
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md`** (verified: the prerequisite this item gates on — ≥3 green
+      reconciler runs on central — is satisfied, per that todo's own citation). **Operator decision 2026-07-27**
+      (`june_2026_vintage_audit_findings_2026_07_27.md` §5#21/§5-RESOLVED #21): RULE-11 is APPROVED to execute. **Not
+      yet executed** — this migration pass located the exact files to save the next pass's investigation time but did
+      NOT touch them (out of this specific migration task's file scope): (a) `.github/workflows/plan-health-agent.yml`
+      (has the `schedule: cron "0 2 * * *"` trigger + the `plan-health` job with the Haiku contradiction-detection
+      steps; the `pull_request`-triggered `plan-health-gate` job is a separate job in the same file and must stay) + its
+      template twin `scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml` (needs the same edit, then
+      `rollout-workflow-templates.sh`); (b) the live Cloud Run Job is `uts-prod-plan-hygiene-sweep` (from
+      `${local.env_prefix}-plan-hygiene-sweep` in `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`,
+      `env_prefix=uts-prod`, GCP project `central-element-323112`) + its Cloud Scheduler
+      `uts-prod-plan-hygiene-sweep-cron` + `deployment-service/scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`;
+      (c) update CLAUDE.md § "Plan Hygiene" + `/codex/11-project-management/plan-hygiene.md` after (a)+(b) land. Was:
+      **RULE-11 prove-then-retire** (after ≥3 green reconciler runs on central): (a) drop the `schedule:` trigger +
+      Haiku steps from `plan-health-agent.yml` (KEEP the `pull_request` `plan-health-gate` job + the
       escalate-on-gate-failure path); (b) delete the Cloud Run job `uts-prod-plan-hygiene-sweep` + its scheduler + TF
       (`deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`) + `cron_hygiene_sweep_entrypoint.sh`; (c) update
       CLAUDE.md § "Plan Hygiene" + `/codex/11-project-management/plan-hygiene.md` to the timer-on-central model. repos:
@@ -186,3 +206,23 @@ A `docs(plans):` flip is the most common plan change and it bypasses full QG (pr
 effectively ungated at commit time, and contradictions were detected-but-never-fixed. This closes both: cheap hygiene
 gates every plan commit locally (staged-safe), and the daily LLM check becomes agentic (detect → resolve), not a
 Slack-only report.
+
+## Archive-readiness verdict (2026-07-27, `/plan-vintage-audit` migration pass)
+
+9/11 todos in this doc are done. Both remaining items now have a real home: item (a) RULE-11 (this doc's
+`[CI] P2. **RULE-11 prove-then-retire**` item) is migrated + `[OPERATOR]`-tagged + open in
+`infra_satellite_ao_dispatch_batch1_2026_07_26.md`, flipped `[x]` here citing that migration; operator approval to
+execute is on record (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #21) but the actual execution
+(editing `.github/workflows/plan-health-agent.yml` + its template twin, deleting the live `uts-prod-plan-hygiene-sweep`
+Cloud Run job + scheduler, editing `deployment-service` terraform) was **not done this session** — those files are
+outside this migration task's assigned scope (a different repo + live-prod-delete territory deserving its own focused
+pass), so batch1's copy of the todo stays unchecked with a note pointing the next pass at the exact files (already
+located, zero re-investigation needed). Item (b) ("fold `--precommit` sweep into quality-gates-v2 + retire standalone
+`plan-health-gate` GHA job") was a true orphan, now filed as a new todo in
+`infra_satellite_ao_dispatch_batch1_2026_07_26.md` next to RULE-11 (not `infra_consolidated_closeout_2026_07_25.md`
+Track 1 — that track is scoped to repo/script governance + CVE/dependency management, not CI-gate architecture). **NOT
+archived**: this doc carries `locked_by: live-defi-rollout` and no `[unlock-plan]` grant exists for it specifically (the
+2026-07-27 operator session granted unlocks only for `codex_violations_ratchet_to_five_2026_06_10.md` and
+`utl_uac_reuse_consolidation_remediation_2026_06_10.md`) — archiving a locked doc without an explicit grant is a
+STOP-and-report condition. With both remaining items now homed, this doc is otherwise ready to archive the moment an
+`[unlock-plan]` is granted.

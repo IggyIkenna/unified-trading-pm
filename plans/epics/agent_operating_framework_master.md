@@ -30,7 +30,7 @@ related_plans:
   - ../active/active_plan_inventory_dashboard_2026_07_24.md
   - ../active/asset_class_to_asset_group_rename_2026_07_21.md
   - ../active/docs_retrieval_layer_reconcile_2026_07_23.md
-  - ../active/l0_doc_index_generator_2026_06_24.md
+  - ../archive/2026_07/l0_doc_index_generator_2026_06_24.md
   - ../active/task_template.md
 last_updated: 2026-07-23
 locked_by: live-defi-rollout
@@ -393,7 +393,7 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Docs retrieval-layer reconcile — AGENTS.md
 doctrine gap + schema/generator parity QG + /docs-reconcile skill
 
-### [`l0_doc_index_generator_2026_06_24`](../active/l0_doc_index_generator_2026_06_24.md)
+### [`l0_doc_index_generator_2026_06_24`](../archive/2026_07/l0_doc_index_generator_2026_06_24.md) — ARCHIVED 2026-07-27
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: L0 doc-index generator (grep-native map) +
 FF-cron auto-regen

@@ -125,28 +125,48 @@ the churn the pin prevents). Align the fleet TO the pin.
       log_ok "Installed uv 0.10.8 (pinned, pip fallback)"
   fi
   ```
-- [ ] [INFRA] P2. Roll the fixed `setup.sh` out fleet-wide
+- [x] ✅ [INFRA] P2. **DONE — verified 2026-07-27 via `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Fix the
+      `scripts/setup.sh` bootstrap-uv fallback ... fleet-wide" todo**: 25/25 repos + PM now carry the astral-installer
+      fallback, all committed+pushed. `agent-orchestrator` (the repo that never had a `scripts/setup.sh`) was the last
+      one to close, shipped `agent-orchestrator@89ca717` per that todo's slot-7 re-check note ("24/25 shipped, only
+      agent-orchestrator remains" → closed). Roll the fixed `setup.sh` out fleet-wide
       (`python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py`) and commit the updated
       `scripts/setup.sh` to **every repo's** `live-defi-rollout` in the same unit (the rollout is NOT done until all
       per-repo copies are committed + pushed — leaving them dirty jams the `slot-cron-ff-pull` cron). Target repos: all
       25 in `workspace-manifest.json`.
 - [ ] [INFRA] P3. Move the `0.10.8` constant out of the 3 hardcoded sites (`setup.sh`, `base-service.sh:297`,
       `base-library.sh:167`) into `scripts/workspace/resolve-canonical-versions.py` so it is read, not duplicated (the
-      deferred "Phase 1" from `uv_lockfile_determinism_2026_06_02.md`).
+      deferred "Phase 1" from `uv_lockfile_determinism_2026_06_02.md`). **PARKED 2026-07-27** — carried forward verbatim
+      as `infra_satellite_ao_dispatch_batch1_2026_07_26.md` § Deferred item 3 (real content, not a placeholder: names
+      the same 3 hardcoded sites and the `base-service.sh`/`base-library.sh` contention). Stays open here until that
+      batch (or its successor `batch2`) actually lands it — do not duplicate-dispatch.
 - [ ] [INFRA] P3. Add a uv-version drift-guard (warn) to `base-service.sh`/`base-library.sh` or
       `verify-slot-host-symmetry.sh` so a future drift surfaces loudly. Composes with the existing low-priority
-      drift-guard note in `plans/epics/infrastructure_master.md`.
+      drift-guard note in `plans/epics/infrastructure_master.md`. **PARKED 2026-07-27** — carried forward (as one of 4
+      bundled items) in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` § Deferred item 2 ("PM `base-service.sh` /
+      `base-library.sh` items ... and the uv drift-guard"), ruled 2026-07-26 to batch into ONE `sequential: true` unit
+      with 3 sibling `base-service.sh`/`base-library.sh` edits in the next infra batch (operator ruling,
+      `autonomous_session_operator_decisions_2026_07_25.md` #36 option A). Stays open here until that batch lands.
 - [ ] [INFRA] P2. Realign uv → 0.10.8 on Harsh's laptop (run the astral one-liner above) + on every epic VM at next
-      relaunch (until the durable P1+P2 setup.sh fix lands, a relaunched VM re-drifts).
-
-### Separate finding surfaced during the same bootstrap (not uv-related)
-
-- [ ] [INFRA] P2. human-planning-vm per-repo setup: 19/23 OK, 6 failures — `strategy-service` +
-      `fund-administration-service` (+1 Tier-4) "Project editable install failed — check pyproject.toml/uv.lock";
-      `unified-trading-system-ui` needs `pnpm` (`npm i -g pnpm`); `e2e-testing` + `system-integration-tests` cascade
-      from strategy-service. Diagnose the editable-install failures (likely stale lock — `uv lock` — or a real dep
-      conflict); these block local `quality-gates.sh` in those 6 repos only. `.venv-workspace` + the other 19 repos are
-      fine.
+      relaunch (until the durable P1+P2 setup.sh fix lands, a relaunched VM re-drifts). **RE-VERIFIED 2026-07-27**: this
+      item is **NOT** covered anywhere in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (grepped the full doc for
+      "harsh"/"laptop"/"epic VM" — zero hits), contrary to what a prior migration note assumed. Partial mootness: the
+      **epic-VM half is now MOOT** — the durable `setup.sh` fix (the item above) has shipped fleet-wide, so any epic VM
+      that relaunches from here on self-realigns to 0.10.8 automatically; the original "until the durable fix lands, a
+      relaunched VM re-drifts" caveat no longer applies. The **Harsh's-laptop half remains a small, genuine, one-off
+      manual step** (run the one-liner on that specific machine) with no tracked successor — left open here rather than
+      inventing new batch1 coverage for it (small/clear, out of this migration's named scope).
+- [x] ✅ [INFRA] P2. **STALE — RESOLVED, closing citing this doc's own later section.** human-planning-vm per-repo
+      setup: 19/23 OK, 6 failures — `strategy-service` + `fund-administration-service` (+1 Tier-4) "Project editable
+      install failed — check pyproject.toml/uv.lock"; `unified-trading-system-ui` needs `pnpm` (`npm i -g pnpm`);
+      `e2e-testing` + `system-integration-tests` cascade from strategy-service. This doc's own "UPDATE 2026-06-22"
+      section (§ "BIG FINDING — starlette cross-repo dep conflict") records the re-verification that already closed
+      this: "Verified: `strategy-service` editable install now EXIT=0; all 6 previously-failing repos set up OK (0
+      failed). NO T0 change." `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own "Findings surfaced during
+      extraction" section independently reached the same conclusion 2026-07-26 (flagging this exact box as "provably
+      stale"). Flipping here per that finding rather than leaving it as false-open. Diagnose the editable-install
+      failures (likely stale lock — `uv lock` — or a real dep conflict); these block local `quality-gates.sh` in those 6
+      repos only. `.venv-workspace` + the other 19 repos are fine.
 
 ---
 
@@ -266,3 +286,20 @@ assert **58**:
       matching todo at PM@849f13cf8. Verified GREEN: `quality-gates-v2` on `live-defi-rollout` run 30277952717, success,
       2026-07-27T15:01:30Z (post-fix). PR #498 itself was already MERGED 2026-06-22 — this was a plan-flip lag on a
       residual-blocker todo the fix silently closed out, not outstanding work.
+
+---
+
+## Archive-readiness verdict (2026-07-27, `/plan-vintage-audit` migration pass)
+
+The durable `scripts/setup.sh` fix + its fleet-wide rollout are fully DONE (flipped above, verified against
+`infra_satellite_ao_dispatch_batch1_2026_07_26.md`); the human-planning-vm 6-failure finding is stale-resolved (flipped
+above). The 3 remaining P3/P2 residue items (0.10.8 constant centralization, uv-version drift-guard, Harsh's-laptop
+realignment) are genuinely still open — 2 of the 3 are parked with real content in
+`infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred section (items 2 and 3); the Harsh's-laptop item has no
+tracked successor anywhere (small, left open here). **NOT archived**: this doc carries `locked_by: live-defi-rollout`
+and no `[unlock-plan]` grant exists for it specifically (the 2026-07-27 operator interactive session granted unlocks
+only for `codex_violations_ratchet_to_five_2026_06_10.md` and `utl_uac_reuse_consolidation_remediation_2026_06_10.md` —
+this doc was not named). Per CLAUDE.md's plan-locking rule and this migration's own instructions, archiving a locked doc
+without an explicit grant is a STOP-and-report condition, not an autonomous action — flagging for the operator rather
+than archiving. The doc otherwise reads as ready to archive the moment an `[unlock-plan]` is granted (only the 3 small
+residue items above would remain, all already tracked elsewhere or explicitly small-and-orphaned).
