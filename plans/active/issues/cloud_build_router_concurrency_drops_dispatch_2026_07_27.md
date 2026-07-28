@@ -102,12 +102,17 @@ affects the LAST mile (does the fix actually run in prod) with zero observabilit
       shares this footgun (grepped for `group:.*github.workflow.*github.ref` + `workflow_call:` co-occurrence — only
       this file matched with multiple distinct callers). Same-repo dispatches still serialize via
       `cloud-build-router.yml`'s own per-repo group, unaffected by this change.
-- [ ] [INFRA] P2. Add a loud failure signal for a cancelled/dropped dispatch — e.g. a scheduled reconciliation check
-      that compares each `ldr_main` repo's main-branch HEAD commit timestamp against its `:latest` image's push
-      timestamp in Artifact Registry, and pages if an image is stale by more than the expected build+dispatch latency
-      (repo: unified-trading-pm or deployment-service, wherever fleet observability jobs live). This is the same "silent
-      failure with no alert" pattern as the SIT gate issue — the fleet has no independent "did the thing I expect to
-      have happened, actually happen" check for deploys.
+- [x] [INFRA] P2. ✅ — unified-trading-pm@\<sha\>. Added `scripts/cicd/check_image_deploy_staleness.py` +
+      `.github/workflows/image-deploy-staleness-check.yml` (schedule `*/30`): compares each fleet repo's `main` HEAD
+      commit timestamp against its `:latest` image's push timestamp in Artifact Registry (via
+      `gcloud artifacts docker images list --format=json`, the `updateTime` field — `docker images describe` was
+      verified live to carry NO timestamp field at all), alarms via `notify-slack.yml` (dedup_key `image-deploy-stale`,
+      cooldown 60min, WARNING) when the gap exceeds the expected build+dispatch latency. Fail-open per-repo on
+      uncertainty; an all-UNKNOWN run is its own distinct alarm (never silently read as "0 stale"). Verified end-to-end
+      live against real `gh`/`gcloud`: corrected two wrong assumptions found during implementation — the real AR docker
+      repo is `unified-trading-system` (not `unified-trading` as the `cloud-build-router.yml` substitution name
+      implied), and `agent-orchestrator` is excluded from the fleet list (it runs as a VM process, not a Cloud Run
+      image, so it has no package in this AR repo — including it would make every run report a permanent false UNKNOWN).
 
 ## Codex SSOTs
 
