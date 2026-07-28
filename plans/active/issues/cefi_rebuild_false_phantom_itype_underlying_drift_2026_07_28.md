@@ -255,6 +255,20 @@ and a clean re-run must confirm before the migration proceeds.
       confirmed correct against all 3 live repros) and can be restored + finished quickly once re-validated against this
       gated re-run's actual residual. **Background this run via a properly harness-tracked bg task** (same orphan-reaper
       caveat as todo 4 below). (repo: market-tick-data-service)
+
+      **🟡 2026-07-28 (slot-12) — triple-dispatch found, do NOT launch another copy of this re-run.** Landed here via
+          `data_completion_cefi_2026_07_15.md`'s blocked todo (whose own note points to this issue doc as the real
+          predecessor). On arrival, `ps aux` showed this EXACT full-corpus dry-run (same start/end dates, same gated
+          `market-tick-data-service@42a2fd9f`) already running concurrently in **two** other slot worktrees: slot-2
+          (`.tabs/2`, started 10:49, holds the stashed WIP normalizer referenced above — likely this todo's true owner) and
+          slot-15 (`.tabs/15`, started 10:57, log explicitly named `rebuild_cefi_dryrun_42a2fd9f_run2.log`). I had already
+          launched a third copy before checking; killed it immediately (PID 3023906, reached only `date=2023-07-22` of
+          2019-01-01..2026-07-28, no output written) to avoid a third full-corpus GCS scan for identical work. **Whichever
+          of slot-2/slot-15 finishes first should update this todo with the re-diagnosed per-venue breakdown** — do not
+          dispatch a fourth run. If both stall or die without updating this doc within a few hours, the next session should
+          check `ps aux` for a live `rebuild_cefi_manifest` process before re-launching, not just check this doc's checkbox
+          state.
+
 - [ ] [DATA] P0. Design + implement a venue-aware instrument_id-format normalizer for the CF-11 shadow-suppression in
       `market-tick-data-service/market_tick_data_service/scripts/_rebuild_cefi_cf11.py`
       (`_build_shadow_keys_ignoring_itype_and_underlying`, `reemit_cefi_honest_absence_rows` lines ~227-357) so a prior
