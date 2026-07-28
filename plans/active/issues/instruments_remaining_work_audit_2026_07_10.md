@@ -85,6 +85,12 @@ locked_since:
 > existing (not re-listed in full) — that doc is the SSOT for its own sub-detail; this doc surfaces the genuinely
 > SEPARATE canonicalization work that effort does not already track.
 
+> **🟡 HISTORICAL SNAPSHOT as of 2026-07-10.** This doc is a discoverability index, not a live tracker — several of the
+> docs it points at have since split, been archived, or had their own status move on. It does not self-update; treat
+> every entry below as "what was true on 2026-07-10" and confirm current state against the cited source doc (its own
+> checkboxes/Progress Log are the SSOT) before acting on anything here. Added 2026-07-28 per
+> `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`'s Track 15 follow-up.
+
 # Instruments remaining-work audit (2026-07-10)
 
 ## Category definitions
@@ -195,8 +201,8 @@ Real code fixes / features needed (not backfills, not pure doc drift).
     QG) `plans/active/issues/fleet_data_acquisition_health_2026_06_21.md`
 
 11. **instruments-service's `--run-tag` CLI flag doesn't do what its help text says**
-    `plans/active/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md` 3 todos unchecked: decide
-    direction, implement, ship.
+    `/plans/archive/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md` (archived 2026-07-28, resolved
+    instruments-service@f7e64c54) 3 todos unchecked at the time of this audit: decide direction, implement, ship.
 
 12. **TradFi's mvp_mode fetch-time filter is unreachable dead code**
     `plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` Zero callers workspace-wide; 3 todos
@@ -627,7 +633,7 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
    MVP-for-features selector, honest-coverage smoke harness, execution fidelity tiers, Polars engine sharpening, etc.).
 
 5. **market-tick-data-service quality-gates.sh Codex compliance red repo-wide** (empty-string-fallback ratchet)
-   `plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` Ongoing churn (overage
+   `plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` Ongoing churn (overage
    bouncing 380→368→377→372 across concurrent sessions); latest entry shows instruments-service still 3 sites over its
    ratchet baseline, still blocking quickmerge pushes.
 

@@ -19,7 +19,7 @@ summary: >-
   silent-failure runs cost a full quality-gates.sh cycle (60-300s depending on host load) for zero effect — pure wasted
   compute under exactly the contention regime (many concurrent slots on one shared branch) this fleet runs in
   constantly.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -28,7 +28,7 @@ scope: [engineer]
 tags: [quickmerge, git-push, silent-failure, race-condition, branch-contention, ci-cd, ldr]
 related: [/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md, /codex/08-workflows/ci-cd-flow.md]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-07-28"
 parent_epic: infrastructure_master
 source:
   "slot-11 (infra), discovered while shipping ao_satellite_ao_dispatch_batch1_2026_07_26.md item 3 (5 consecutive
@@ -38,13 +38,19 @@ execution_scope: local-only
 priority: P1
 estimate_class: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: unified-trading-pm@0e48ffe51 (2026-07-27, already shipped before this doc's own todo was verified)
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 depends_on: []
 ---
+
+> **✅ RESOLVED — `unified-trading-pm@0e48ffe51`.** Already fixed by a concurrent session before this doc's todo was
+> picked up: the final push now runs a bounded, exit-code-checked retry loop with a rebase-and-retry cycle between
+> attempts, exactly per this doc's own recommendation. Archived. (A separate, still-open sibling doc —
+> `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md` — tracks unrelated follow-on polish
+> on the same code path.)
 
 # quickmerge.sh's final push silently swallows non-fast-forward rejections
 
@@ -127,10 +133,15 @@ loudly (non-zero exit, stderr visible) rather than silently proceeding into PR-c
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Fix `scripts/quickmerge.sh`'s final `git push -u origin "$BRANCH"` (currently line ~1667) to check
-      the push's exit code and fail loudly (non-zero exit + visible error) on rejection, instead of the current
-      `--quiet 2>/dev/null` silent-swallow. Strongly prefer adding one rebase-and-retry cycle (mirroring STAGE 0.4's
-      existing "Not-Behind Gate" pattern) since a single retry would have fixed 100% of the reproduction cases above.
-      **Done-when:** a deliberately-staged non-fast-forward push (push to a test branch, have another process land a
-      commit on it between quickmerge's pre-check and its final push, confirm quickmerge either recovers via retry or
-      exits non-zero with a visible error) no longer silently exits 0 with nothing pushed. (repo: unified-trading-pm)
+- [x] [SCRIPT] P1. ✅ **STALE-CONFIRMED-DONE (2026-07-28)** — already fixed by a concurrent session:
+      `unified-trading-pm@0e48ffe51` ("quickmerge Stage 5 hardening ... bounded retry on the final push") replaced the
+      bare `git push -u origin "$BRANCH" --quiet 2>/dev/null` with exactly the recommended shape (and more robust than
+      the doc's own inline snippet): a bounded retry loop (`_QM_PUSH_RETRIES`, default 5, `QUICKMERGE_PUSH_RETRIES`
+      override), exit code checked every attempt (`git push ... && { _qm_push_ok=1; break; }`), a
+      `git pull --rebase --autostash` between attempts (mirroring STAGE 0.4's Not-Behind Gate), a hard exit 1 with the
+      captured stderr (`$_qm_push_err`) if all retries are exhausted or the rebase hits a real conflict — no path
+      through this code can silently exit 0 without a real push landing. Re-read the live code at
+      `scripts/quickmerge.sh` lines ~1764-1779 to confirm this is still in place and unmodified from the fix's intent —
+      it is. Confirming + citing the existing fix; no new code needed for this item. (A separate, still-open sibling
+      doc — `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md` — tracks unrelated
+      follow-on polish on the same code path; out of this item's scope, not touched here.)

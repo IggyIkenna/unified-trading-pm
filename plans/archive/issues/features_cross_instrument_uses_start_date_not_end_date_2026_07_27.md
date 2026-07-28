@@ -12,7 +12,7 @@ summary: >-
   wrong path whenever start_date != end_date. Not confirmed as a live failure (this session's
   CEFI/TRADFI:cross_instrument runs happened to succeed/fail for unrelated reasons — see cascade note below), so filed
   as a finding to verify, not a confirmed bug.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, tradfi, prediction]
 stage: [data]
@@ -32,10 +32,12 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: features-service@c5e0f336
 locked_by:
 locked_since:
 ---
+
+> **🟢 RESOLVED 2026-07-28** — confirmed + fixed via `features-service@c5e0f336`. Archived.
 
 # cross_instrument's --date fallback prefers --start-date, not --end-date (unverified, adjacent finding)
 
@@ -71,9 +73,9 @@ future work on this file.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Verify whether `cross_instrument`'s `start_date` fallback ever diverges from `end_date` in a real run
-      (any family/AG whose lookback window spans >1 day) and, if so, whether it actually fails to find delta_one's
-      output (or coincidentally still finds valid data, as happened for CEFI in this session's run — see the referenced
-      doc's Root cause C entry, where a valid 115,584-row dataset was loaded from `day=2026-06-28` despite the target
-      day being `2026-06-29`). If confirmed broken, switch the fallback to `end_date` mirroring the `multi_timeframe`
-      fix (`features-service` commit for root cause B).
+- [x] ✅ [SCRIPT] P3. **CONFIRMED + FIXED 2026-07-28** — switched the fallback to `end_date` in both `validate_config`
+      (log detail) and `run()` (actual date passed to `BatchHandler.run`), mirroring the `multi_timeframe` fix.
+      Extracted a `_resolve_run_args` helper to keep `run()` under the 50-line method-size gate after the change. Added
+      a regression test (`test_compute_handler_run_batch_falls_back_to_end_date_not_start_date`) asserting the batch
+      handler receives `--end-date`, not `--start-date`, when `--date` is omitted and the two diverge.
+      `bash scripts/quality-gates.sh --no-fix` green (17974+ tests). — features-service@c5e0f336

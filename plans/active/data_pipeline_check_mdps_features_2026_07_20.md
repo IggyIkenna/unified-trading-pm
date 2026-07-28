@@ -810,8 +810,12 @@ for calendar: TEST object created `2026-07-27T14:58:41Z`, no PROD equivalent exi
    TRADFI — the highest-value fix, asset_group-agnostic; (C) a genuine OOM (exit=137) during CEFI:cross_instrument's
    `regime_detection` HMM fit (also independently seen by slot-3); (D) SPORTS:sports skip-leg hit a stale manifest
    consolidator + a local/VM env-parity gap; (E) TRADFI:commodity's external vendors (EIA/CFTC/Baker Hughes) 403/404'd —
-   credential/config, `[OPERATOR]`-tagged (also independently seen by slot-3); (F) a cascade of (A). 12 skips were
-   honest and correctly not counted as failures.
+   **RULED 2026-07-28 (retagged from `[OPERATOR]`): CFTC + Baker Hughes turned out to be code bugs, not credential gaps,
+   and are already fixed (see the widespread-failures issue doc for the fix commits); EIA's free API-key registration is
+   the one real remaining credential ask, and the operator explicitly DECLINED it — "no one cares about EIA right now";
+   do NOT register an EIA key or build toward it. Closed as declined, not deferred; the `storage_alpha` commodity factor
+   stays without EIA natural-gas/crude storage data indefinitely** (also independently seen by slot-3); (F) a cascade of
+   (A). 12 skips were honest and correctly not counted as failures.
 
 **Cross-referenced all 4 issue docs** (this session's 2 + slot-3's 2) so root causes A and the timeout defect each have
 exactly ONE tracked fix-todo. **Corrected an error made mid-session**: an earlier version of the timeout doc mistook
@@ -956,7 +960,9 @@ genuine, individually root-caused issues (none a driver bug):
   bug, so a future re-test needs both the code fix AND a day ≥2026-07-25.
 - `TRADFI:commodity`: reproduces the already-known Baker Hughes vendor issue (timeout + "unexpected file format"),
   correctly failing each day rather than emitting a partial/fake signal (`ManifestWriter.record_empty` itself refused to
-  record a false "empty" verdict without real `FetchEvidence` — the honest-absence guard working as designed).
+  record a false "empty" verdict without real `FetchEvidence` — the honest-absence guard working as designed). **RULED
+  2026-07-28: Baker Hughes is a code bug (already fixed), not a credential gap; the sibling EIA credential ask was
+  explicitly DECLINED by the operator — do not register an EIA key. Not a blocker for this check going forward.**
 
 **Full round now complete**: 7 families/AGs attempted this session (calendar, sports, TRADFI:delta_one, DEFI:onchain,
 TRADFI:volatility, PREDICTION:delta_one, TRADFI:commodity) — 2 measured (calendar ~8s/shard-day, sports

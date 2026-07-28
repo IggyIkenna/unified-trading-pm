@@ -373,12 +373,18 @@ Two secondary findings:
       same run before the actual delete** (cheap, and keeps the finding-T check genuinely same-run for the destructive
       step itself) rather than treating this citation as a substitute for that — but no fresh operator ask is needed to
       START this dispatch.
-- [ ] [FIX] P3. **BLOCKED-OPERATOR-DECISION — extend the live-probe mechanism to cefi CEX venues.** Adding
-      `CEFI:     ("binance","bybit","kraken","okx")` to `_EXTRA_LIVE_PROBE_SOURCES_BY_AG` (UAC `possible_manifest.py`)
-      would let the phantom-auditor find real `live_binance`/`live_kraken` shards (~35 currently mis-flagged), but it
-      CONTRADICTS the deliberate RULE 11 `test_prediction_live_union_is_prediction_scoped_only` invariant (extra-probes
-      are prediction-scoped by design). Low value (35 rows) vs a UAC design-invariant change — needs an explicit
-      operator ruling to relax RULE 11 + update the test, not an autonomous decision.
+- [ ] [FIX] P3. **RULED 2026-07-28 (retagged from `[FIX] P3. BLOCKED-OPERATOR-DECISION`) — RELAX RULE 11 to cover cefi
+      CEX venues.** Ruling applies the operator's standing live-probing-scope theme directly: "live probing should be
+      relaxed to cover all asset groups and shards wherever needed — err toward broader/more permissive scope, not
+      narrower." That resolves this in favor of relaxing, not leaving it as a known gap. Concrete task: add
+      `CEFI: ("binance","bybit","kraken","okx")` to `_EXTRA_LIVE_PROBE_SOURCES_BY_AG` (UAC `possible_manifest.py`);
+      relax/rename `test_prediction_live_union_is_prediction_scoped_only` so its name + docstring assert the new
+      (prediction + cefi CEX) scope rather than claiming prediction-only (a stale invariant name after this change is
+      its own future false-confidence trap); re-run the phantom-row auditor to confirm the ~35 currently mis-flagged
+      real live shards (20 live_kraken + 15 live_binance) flip from `phantom_captured_no_parquet` to `captured`.
+      Full-completion mandate (no shortcuts): grep for any OTHER consumer that assumes RULE 11 is prediction-exclusive
+      before landing, so no half-relaxed invariant is left contradicting the code elsewhere. (repo:
+      unified-api-contracts)
 
 ## Progress Log
 

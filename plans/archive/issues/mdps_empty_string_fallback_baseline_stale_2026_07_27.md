@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [quality-gates, baseline-ratchet, empty-string-fallback, mdps, blocking]
 related:
   [
-    /plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+    /plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
   ]
 created: "2026-07-27"

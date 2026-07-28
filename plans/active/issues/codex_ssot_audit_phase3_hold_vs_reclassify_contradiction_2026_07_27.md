@@ -8,7 +8,7 @@ summary: >-
   on 2026-07-27 and Phase 3 (that very apply) was dispatched to a worker. Executing ~20-repo irreversible
   REDIRECT/DELETE doc conversions against a standing operator hold is an operator-authority call — a worker cannot infer
   the hold is lifted. BLOCKED pending an explicit operator ruling.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -36,7 +36,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: gate-clearance-pass-2026-07-28
 source:
   [
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
@@ -46,16 +46,25 @@ source:
 
 # Phase-3 apply: operator hold vs reclassification contradiction
 
-> **STATUS: `BLOCKED-OPERATOR-DECISION`.** Server block `BLK-d1b29089` (slot 16, 2026-07-27) escalated this to the
-> operator; main answered SPLIT-DECISION and escalated GATE-1 up. This doc is the durable capture so a fresh session
-> does not re-derive the block from scratch or plow ahead into held work.
+> **STATUS: RESOLVED 2026-07-28 (operator gate-clearance pass).** Ruling: **Option A** — the FIX-STALE-only hold is
+> **LIFTED** (the deliberate 2026-07-27 `NA→planning` reclassification is treated as the authorization signal that was
+> intended), AND the plan-sanctioned **opus** sub-agent fan-out is authorized/required for the redirect/slim editorial
+> judgment (folding in Option C's model-tier discipline rather than treating it as a separate contingent path).
+> Reasoning: per the operator's standing general instruction on gated design-choice items with no specific answer on
+> file — "unpause whatever needs unpausing to unblock a task" and "opt for full completions, no shortcuts" — a hold that
+> is only blocking a deliberate, already-reclassified dispatch state, with no fresh risk introduced since 2026-06-01, is
+> exactly the kind of pause that should lift rather than persist as a standing contradiction. The plan
+> (`codex_vs_repo_docs_ssot_audit_2026_06_01.md`) has been flipped back `assigned_vm: NA → planning`, its banner
+> updated, and Phases 3/4's gate language updated to reflect the clearance — see that plan for the live execution state.
+> This issue doc stays as the durable record of the contradiction + ruling; no further action needed here.
 >
-> **UPDATE 2026-07-28 (main agt-4d8de7):** the block RECURRED as predicted — slot-12 hit it on task
+> **Prior history (superseded by the ruling above, kept for record)**: Server block `BLK-d1b29089` (slot 16, 2026-07-27)
+> escalated this to the operator; main answered SPLIT-DECISION and escalated GATE-1 up. **UPDATE 2026-07-28 (main
+> agt-4d8de7, pre-ruling):** the block RECURRED as predicted — slot-12 hit it on task
 > `codex_vs_repo_docs_ssot_audit-006` (BLK-613a61ff). Main answered PARK and, to stop the re-dispatch churn, executed
 > issue-doc **Option B's park mechanism**: flipped the plan `assigned_vm: planning → NA`
-> (`unified-trading-pm@b1651c1c4`, banner added to the plan). This is a REVERSIBLE coordination stop-gap, NOT the GATE-1
-> resolution — the operator todo below is still OPEN and owns the substantive lift/hold decision. When the operator
-> rules the hold LIFTED (Option A/C), flip the plan back to `planning`.
+> (`unified-trading-pm@b1651c1c4`, banner added to the plan). That was always a REVERSIBLE coordination stop-gap, not
+> the GATE-1 resolution itself — the ruling above is the actual resolution.
 
 ## What I found
 
@@ -113,7 +122,10 @@ repos already used the live form. This did NOT touch any REDIRECT/DELETE apply.
 
 ## Todos
 
-- [ ] [OPERATOR-DECISION] P1. **Rule on GATE-1**: is the 2026-06-01 FIX-STALE-only hold LIFTED for
-      `codex_vs_repo_docs_ssot_audit_2026_06_01` (Option A), still in force (Option B), or lift+re-dispatch-to-opus
-      (Option C)? Then reconcile the plan so its dispatch state and its registry hold-language agree. (repo:
-      unified-trading-pm)
+- [x] ✅ [DOCS] P1. **RULED 2026-07-28 (retagged from [OPERATOR-DECISION]) — GATE-1 resolved: Option A (hold LIFTED),
+      folding in Option C's opus-tier discipline.** Reconciled the plan (`codex_vs_repo_docs_ssot_audit_2026_06_01.md`):
+      flipped `assigned_vm: NA → planning`, updated its banner + Phase 3/4 gate text to state the hold is lifted rather
+      than pending, and flagged (in that plan's own banner) that every per-repo registry note still saying "Apply stays
+      Phase-3/4 under the operator's FIX-STALE-only hold" is now historical language, not a live gate — whoever executes
+      Phase 3/4 should update those notes as each repo's apply lands, so the plan does not drift back into
+      self-contradiction. (repo: unified-trading-pm)

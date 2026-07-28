@@ -97,9 +97,48 @@ to see whether either item has settled enough for a batch2 candidate.
 **Net effect**: no `defi_satellite_ao_dispatch_batch2` item drafted from this doc. Re-check again at the next batch
 cycle only if item 1's resolver/scope question gets independently investigated elsewhere first.
 
+## Update 2026-07-28 — Item 1 SUPERSEDED (root cause + fix landed under a different plan)
+
+Item 1's own resolver question ("pool address → symbol/venue/chain lookup ... join against it rather than re-deriving")
+got independently investigated exactly as the 2026-07-25 update anticipated, but not from this doc —
+`plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (opened the same day as this doc's last re-check,
+for an unrelated FLAGGED-marker investigation) found and fixed the actual root cause first, making the resolver-build
+unnecessary.
+
+**Verified by code read (this task, 2026-07-28)**: `_dex_pools_subgraph.py`'s protocol table maps exactly
+`curve`/`sushiswap`/`velodrome_v2`/`trader_joe_v2` to the `messari_basic` entry (`_dex_pools_subgraph.py:300-308`) — no
+other protocol uses it. Before the fix, `messari_basic` parsed responses via `_parse_curve`
+(`_dex_pools_parsers.py:164-194`), which never reads `inputTokens` at all — genuinely **zero** symbol/venue/chain
+columns, confirming this doc's original Item 1 description was accurate, not a description of a degraded-value case.
+This is the exact same bare-`0x<address>.parquet` shape Item 1 described, for the exact same protocol set.
+
+**The fix (shipped under the sibling plan, not this one)**: rather than building a pool-address→catalogue resolver to
+backfill identity onto the old address-keyed leaves, the sibling plan fixed the query/parser at the source
+(`_CURVE_QUERY` now requests `inputTokens { symbol }`/`fees`, and `messari_basic` now routes through
+`_parse_messari_dex` instead of `_parse_curve` — `market-tick-data-service@63199601`) and re-backfilled the full
+historical range directly from the subgraph with real symbols attached, no resolver needed:
+
+- Query/parser fix: `market-tick-data-service@63199601` (2026-07-27).
+- Per-subgraph 2022-indexing feasibility live-test: `market-tick-data-service@0f40a69f` (2026-07-27) — curve (ETHEREUM,
+  AVALANCHE), sushiswap (ARBITRUM), trader_joe_v2 (AVALANCHE) fully recoverable; curve/OPTIMISM confirmed deindexed (no
+  replacement possible, excluded); velodrome_v2/OPTIMISM recoverable from ~2023-06/07 (genuine protocol launch window,
+  not a gap).
+- Historical re-backfill with the fixed query: completed 2026-07-28 (`mtds-dex-pools-symbolfix-batch1c` +
+  `mtds-dex-pools-symbolfix-batch2`), manifest spot-checked (creation-timestamp-verified) for every in-scope
+  protocol/chain.
+- Purge of the now-superseded old address-keyed leaves: script shipped `market-tick-data-service@249dc019`; category-2
+  (address-keyed leaf) `--apply` run confirmed complete + independently re-verified 2026-07-28 (190,955 leaves deleted,
+  5/5 spot-checked genuinely absent from GCS); category-1 (`_migrated_*` marker) purge in progress as of this edit (not
+  blocking — a cleanup of redundant backup copies, not the identity gap this item was about).
+
+**Disposition**: Item 1 is closed by this superseding work — no separate resolver or historical-migration build is
+needed, and starting one now would duplicate/conflict with the sibling plan's in-flight purge todo. Full detail:
+`plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todos 2-5 + Progress Log.
+
 ## Todos
 
-- [ ] [BACKEND] P2. **Scope + build the `batch_onchain_subgraph` second-writer-path historical migration** — Item 1
-      (bare `0x<address>.parquet` files with no symbol/venue/chain columns) is still genuinely too-large/risky and
-      unchanged since 2026-07-10; needs a pool-address→symbol/venue/chain resolver before a VM-eligible historical
-      migration can be scoped. No `defi_satellite_ao_dispatch_batch2` item has been drafted from this doc.
+- [x] ✅ [BACKEND] P2. **Scope + build the `batch_onchain_subgraph` second-writer-path historical migration** — Item 1.
+      **SUPERSEDED, no build needed** — root-caused + fixed at the source (subgraph query/parser, not a resolver) and
+      historically re-backfilled under `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`
+      (`market-tick-data-service@63199601`, `@0f40a69f`, `@249dc019`; backfill VMs completed + spot-verified
+      2026-07-28). See "Update 2026-07-28" above for full evidence.

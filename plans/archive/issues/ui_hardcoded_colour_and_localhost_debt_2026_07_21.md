@@ -12,7 +12,7 @@ summary: >-
   deployment-ui precedent). The remaining 554 colour hits across 79 files are real ad-hoc UI-styling debt — too large
   and visually risky to blind-fix in one pass (trading/chart/marketing components with no running dev-server/Playwright
   visual QA in this session) — tracked here as batched follow-up todos.
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -32,10 +32,19 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [ui_codex_gate_blind_to_app_router_layout-003]
-resolved_by:
+resolved_by: unified-trading-system-ui@145bf5dd
 locked_by:
 depends_on: []
 ---
+
+> 🟢 **ARCHIVED — ACKED-INTO-CODE (2026-07-28).** All 5 colour-migration batches + the retroactive Playwright-evidence
+> follow-up are done. Final fix: `unified-trading-system-ui@145bf5dd` added
+> `tests/smoke/marketing-platform-misc-colour-migration.smoke.spec.ts`. `pw:L2` genuinely green for 4/6 tests (public
+> home page, both themes); the 2 admin-gated heatmap-page tests are blocked by a pre-existing,
+> reproduced-against-two-unrelated-specs, host-contention auth-redirect race — NOT a regression in this change, not
+> fabricated as passing, tracked as its own issue:
+> `/plans/active/issues/ui_playwright_admin_gated_route_login_redirect_race_under_host_contention_2026_07_28.md`.
+> Superseded-by: none — fully resolved (the one still-open thread is that new, separate issue doc, not this one).
 
 # Hardcoded-colour + localhost debt surfaced by the app-router gate fix
 
@@ -253,9 +262,9 @@ rather than a single CSS var.
       high-churn repo (all clean fast-forwards or a single-key `codex_ui_violation_baseline.json` conflict, resolved by
       re-measuring the true combined state on each merged tree rather than guessing — final combined colour count
       171→96). `tsc --noEmit`/`eslint` clean across all 26 files, `quality-gates.sh` green end-to-end.
-- [ ] [UI] P2. Retroactive Playwright evidence for Batch 5 — the Batch-5 flip (`unified-trading-system-ui@816a0c53`)
-      cited full `quality-gates.sh` green + `tsc`/`eslint` clean but carries NO `pw:L2` citation and NO honest "no
-      fabricated pw:L2" note, unlike Batches 1/3/4. Per the UI HARD RULE
+- [x] [AGENT][UI] P2. Retroactive Playwright evidence for Batch 5 — the Batch-5 flip
+      (`unified-trading-system-ui@816a0c53`) cited full `quality-gates.sh` green + `tsc`/`eslint` clean but carries NO
+      `pw:L2` citation and NO honest "no fabricated pw:L2" note, unlike Batches 1/3/4. Per the UI HARD RULE
       (`/codex/06-coding-standards/ui-testing-layers.md`): no UI tick lands without `[UI]` + `pw:L2 ✓` + a cited
       regression spec, and a silent omission is not a documented exemption. Batch 5 touched genuinely visual-risk
       surfaces — `components/marketing/galaxy-canvas.tsx` + `components/marketing/arbitrage-galaxy.tsx` (raw Canvas 2D
@@ -268,7 +277,33 @@ rather than a single CSS var.
       hit Batches 1/4 still applies — by recording an honest documented "no fabricated pw:L2" note with the measured
       reason (matching the sibling-batch pattern). Do NOT retroactively un-tick the completed colour migration (that
       work is real and green); this todo tracks only the missing test evidence. (repo: unified-trading-system-ui) —
-      flagged by review-role spot-check 2026-07-22 (msg 1683).
+      flagged by review-role spot-check 2026-07-22 (msg 1683). — ✅ `unified-trading-system-ui@145bf5dd`. Added
+      `tests/smoke/marketing-platform-misc-colour-migration.smoke.spec.ts` (new, 6 tests × {light, dark} theme, forced
+      via `localStorage['theme']` per next-themes' `attribute="class"` config in `app/layout.tsx`) covering all three
+      named surfaces: (1) `arbitrage-galaxy.tsx`'s canvas — added `data-testid="arbitrage-galaxy-canvas"` and read back
+      real pixel data via `getImageData` (sampling every 97th byte's alpha channel) to prove the
+      `getComputedStyle`-resolved tokens actually painted, à la Batch 1's lightweight-charts verification, not just "no
+      error"; (2) `_home-client.tsx`'s Hero section — added `data-testid="home-hero-section"` and asserted its computed
+      `background-color` resolves to a real (non-transparent) colour under BOTH themes, proving the deliberately
+      theme-invariant palette actually renders regardless of the site's toggle; (3) the heatmap page's `color-mix()`
+      cells — added `data-testid="heatmap-cell"` and spot-checked 3 cells' computed background-colors across the grid.
+      **`galaxy-canvas.tsx`'s `AssetGalaxy` export is orphaned** (grep-confirmed zero import sites anywhere in the app —
+      not mounted on any route) — documented in the spec file's own header rather than silently skipped; cannot be
+      exercised via page navigation, extend the same pixel-read assertion if it's ever wired up. `tsc --noEmit`/`eslint`
+      clean, full `npm test` (3287/3289) green. **`pw:L2` — PARTIAL, honestly**: the 4 tests against the PUBLIC home
+      page (`/`, both themes — surfaces 1+2 above) passed reliably across 3 separate runs including 2 retries. The 2
+      heatmap-page tests (admin-gated `(platform)` route, surface 3) hit the SAME documented host-contention blocker as
+      Batches 1/4 (`uptime` load 13-65/10 cores this session) — confirmed NOT a regression in this change by reproducing
+      the identical failure signature against TWO pre-existing, unmodified, already-`pw:L2`-cited specs this session
+      touched nothing in (`tests/smoke/research-real-data.smoke.spec.ts`,
+      `tests/smoke/trading-predictions-colour-migration.smoke.spec.ts` — the latter itself Batch 4's own shipped spec)
+      across a fresh run + 2 retries each. Root-caused far enough to rule out a defect in this change (a
+      `DemoAuthProvider.restore()` async-fetch-vs-route-guard race, amplified by load, not caused by colour-token
+      changes) but not fixed — filed as its own tracked issue, not left as a dangling claim:
+      `/plans/active/issues/ui_playwright_admin_gated_route_login_redirect_race_under_host_contention_2026_07_28.md`. No
+      fabricated `pw:L2 ✓` for the heatmap sub-tests; the spec is left in place (will pass under normal host load — it's
+      the identical assert pattern the 4 passing tests use) rather than deleted, since removing it would drop real
+      regression coverage the doc explicitly asked for.
 
 ## Codex SSOTs
 

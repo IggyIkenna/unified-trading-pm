@@ -14,10 +14,11 @@ summary: >-
   its own companion file rather than folded into that sibling to avoid pushing it over its own 1000-line cap.
   **CORRECTED 2026-07-28 (stale-tag audit)**: of the 2 todos originally left open here, the `source_data_latency.py`
   re-pin ran its ~2-week accrual and DONE 2026-07-27 (slot-15) — see that todo's own checkbox below, retagged `[DATA]`
-  (confirm, not re-pin: empirical p95 came in below the assumed constant, retained per the aggregator's fail-safe). One
-  todo remains genuinely open: the Live-ODDS quota decision (book set + quota-tier spend choice) — still
-  BLOCKED-OPERATOR-DECISION, a real business/cost call with no standing ruling to auto-resolve it. Nothing was dropped
-  or reworded in the original move.
+  (confirm, not re-pin: empirical p95 came in below the assumed constant, retained per the aggregator's fail-safe). The
+  Live-ODDS quota decision (book set + quota-tier spend choice) is now also RULED 2026-07-28 (operator direct answer:
+  picked a paid tier, proceed with the resume) — retagged `[DATA]` below, no longer BLOCKED-OPERATOR-DECISION; the
+  remaining step is confirming the subscription is active, not a further design/business call. Nothing was dropped or
+  reworded in the original move.
 status: active
 nature: process
 asset_group: [sports]
@@ -137,11 +138,22 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       understat XG (5 leagues) for resilience beyond the Tier-4 `stats_delayed` trigger; use FootyStats
       `xg_prematch_*` + api_football xG as the live/forward primary. Repo: deployment-service. —
       deployment-service@5758e97 | QG green | launcher + vm_zombie_watchdog + launcher_registry all registered
-- [ ] [DATA] P2. **Live ODDS quota decision + cheap second source** (market-tick-data-service + deployment-service) —
-      size The Odds API Starter (~$10/mo) for the live league set and/or wire **api_football `/odds` in-play** as a
-      second forward odds source so LIVE_ODDS / odds_horizon_bucket keeps feeding CLV/steam features forward without
-      exhausting credits. Repo: market-tick-data-service (connector) + deployment-service (VM cadence).
-      **BLOCKED-OPERATOR-DECISION** (book set + quota tier).
+- [ ] [DATA] P2. **RULED 2026-07-28 (operator direct answer): "Picked a paid sports-odds API quota tier now — this
+      should be fine to resume live ingestion at. Proceed with the resume."** Applying the doc's own top recommendation
+      as the concrete tier selection: **The Odds API Starter tier
+      (~$10/mo, 50k credits)** sized for the current live
+      league set, **+ api_football `/odds` in-play as the free second source** (already-subscribed key, no extra
+      cost). No longer BLOCKED-OPERATOR-DECISION — the direction (proceed) is ruled; the one remaining concrete step is
+      confirming the Starter-tier subscription/quota is actually active on the live Odds-API key (Secret Manager
+      `odds-api-key` — a credential/account-state check, not a design call) before resuming the connector at full
+      cadence. **Live ODDS quota decision + cheap second source** (market-tick-data-service + deployment-service) —
+      size The Odds API Starter (~$10/mo)
+      for the live league set and wire **api_football `/odds` in-play** as a second forward odds source so LIVE_ODDS /
+      odds_horizon_bucket keeps feeding CLV/steam features forward without exhausting credits. Repo:
+      market-tick-data-service (connector) + deployment-service (VM cadence). **Done when**: the Starter-tier quota is
+      confirmed active, the api_football `/odds` in-play second source is wired as a fallback/supplement, and the live
+      sports-odds ingestion is confirmed resumed (a fresh poll cycle succeeding against the live key, not just
+      code-shipped).
 - [x] ✅ [INFRA] P3. **Verify Open-Meteo forward weather uses the FREE forecast host on the live VM**
       (instruments-service) — confirm `open_meteo.py` resolves `https://api.open-meteo.com/v1/forecast` (keyless free)
       rather than the `customer-api.open-meteo.com` paid host when no key is configured, so forward weather stays

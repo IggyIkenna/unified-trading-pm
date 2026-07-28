@@ -269,16 +269,23 @@ unified-api-contracts.
       P2-Solana (`BATCH_DEFILLAMA`) orphan todos. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
       Provenance: slot-2 ⑪ pre-apply audit 2026-06-08.
 - [ ] [UAC] P2. **`SOURCE_PRIORITY` is CHAIN-AGNOSTIC per `(asset_group, data_type)` → mis-attributes SOLANA DeFi source
-      (BLOCKED-OPERATOR-DECISION).** `solana_defi_handler` fetches ORCA/RAYDIUM/KAMINO pools + Kamino/Marginfi/Solend
-      lending via **Solana RPC / Helius / DeFiLlama** (NOT The Graph), but `SOURCE_PRIORITY(defi,dex_pool_state)` /
-      `(defi,lending_indices)` resolve to `onchain_subgraph` for ALL chains →
-      `derive_pipeline_mode_for_row(ORCA,defi,dex_pool_state)` = `batch_onchain_subgraph` (verified). So both the
-      migrator AND a derive-based live handler would stamp `source=onchain_subgraph` on genuinely Solana-RPC/DeFiLlama
-      data — a coarse provenance mislabel (the DATA is correct; only the `source` label is wrong). NOT introduced by the
-      migration (pre-existing model coarseness it bakes). Proper fix needs per-chain (or per-venue) source resolution in
-      `SOURCE_PRIORITY`/`derive_pipeline_mode_for_row` (e.g. a Solana-DEX source `solana_rpc`/`helius`/`defillama`) — an
-      operator/design call (which Solana source is canonical). Repo: unified-api-contracts (`source_priority.py` +
-      `pipeline_mode_resolver.py`). parent_epic: manifest_master. Provenance: slot-2 ⑪ pre-apply audit 2026-06-08.
+      — RULED 2026-07-28 (retagged from `BLOCKED-OPERATOR-DECISION`): adopt the per-venue mapping below.**
+      `solana_defi_handler` fetches ORCA/RAYDIUM/KAMINO pools + Kamino/Marginfi/Solend lending via **Solana RPC / Helius
+      / DeFiLlama** (NOT The Graph), but `SOURCE_PRIORITY(defi,dex_pool_state)` / `(defi,lending_indices)` resolve to
+      `onchain_subgraph` for ALL chains → `derive_pipeline_mode_for_row(ORCA,defi,dex_pool_state)` =
+      `batch_onchain_subgraph` (verified). So both the migrator AND a derive-based live handler would stamp
+      `source=onchain_subgraph` on genuinely Solana-RPC/DeFiLlama data — a coarse provenance mislabel (the DATA is
+      correct; only the `source` label is wrong). NOT introduced by the migration (pre-existing model coarseness it
+      bakes). **Ruling**: adopt the per-venue mapping already sketched in this same audit (line ~498 below) as the
+      canonical taxonomy — `ORCA`/`RAYDIUM`/`PHOENIX`/`KAMINO`/`MARINADE`/`JITO` → `solana_rpc`; `DRIFT` → `helius`;
+      `MARGINFI`/`SOLEND` → `defillama`. Reasoning: this is canonicalisation work (correcting a provenance label to
+      match the real fetch source), not a hack — the general mandate for this pass is to do canonicalisation properly,
+      no shortcuts, so the concrete mapping is adopted rather than left as an open design question. Full-completion
+      scope (no partial fix): add per-chain (or per-venue) source resolution to `SOURCE_PRIORITY`/
+      `derive_pipeline_mode_for_row` for every venue in the mapping, not just a sample; see the sibling P2 todo below
+      (line ~498) for the exact enum-member + override implementation this folds into. Repo: unified-api-contracts
+      (`source_priority.py` + `pipeline_mode_resolver.py`). parent_epic: manifest_master. Provenance: slot-2 ⑪ pre-apply
+      audit 2026-06-08.
 
 #### ①–⑫ AUDIT VERDICT — DeFi pre-apply (slot-2, 2026-06-08, real-prod data-state)
 
@@ -506,11 +513,20 @@ P1 redirect todo below.)
       `batch_hyperliquid` for ALL defi perp venues — ASTER, GMX, PACIFICA, **Solana DRIFT** all resolve to
       `batch_hyperliquid`/`source=hyperliquid` (only LIGHTER has an override → `batch_tardis`). This is CONSISTENT
       (object==manifest==migrator all derive the same, so the M-COORD-7 fix + the migration are correct) but the source
-      LABEL is wrong for non-Hyperliquid perp DEXs. The accuracy fix is the same as Solana: add per-venue overrides
-      (ASTER→`batch_aster`?, DRIFT→`batch_drift`/helius, PACIFICA→…) — needs the operator's per-venue source decision +
-      the corresponding `BATCH*<VENUE>` enum members. Until then perp source is coarse-but-consistent. (GMX dropped from
-      this list — REMOVED 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; no `batch_gmx`
-      override needed.)
+      LABEL is wrong for non-Hyperliquid perp DEXs. **RULED 2026-07-28 (retagged — this per-venue source decision is no
+      longer operator-gated): add real per-venue overrides — `ASTER` → `batch_aster` (source `"aster"`, new
+      `BATCH_ASTER` enum member — ASTER funding is fetched from ASTER's own API, not Hyperliquid), `DRIFT` →
+      `batch_helius_rpc` (source `"helius"`, consistent with DRIFT's DEX-side label above — same Solana RPC/Helius
+      provenance for its funding data), `PACIFICA` → `batch_pacifica` (source `"pacifica"`, new `BATCH_PACIFICA` enum
+      member).** Reasoning: same as the Solana dex/lending ruling above — this is canonicalisation, not a hack; the
+      mandate is to do it properly rather than leave the coarse-but-consistent label in place indefinitely.
+      Full-completion scope: add the missing `BATCH_ASTER`/`BATCH_PACIFICA` (and `BATCH_DEFILLAMA`/`LIVE_DEFILLAMA`/
+      `REPLAY_DEFILLAMA` from the Solana side) enum members to UAC `pipeline_mode.py`, wire `source_string_for` +
+      `default_transport_for_source` for each, add the venue overrides to UTL `_VENUE_OVERRIDES`, drop the handler
+      hardcodes so `derive_pipeline_mode_for_row` is the single SSOT, and update the closed-set symmetry tests — no
+      partial rollout that leaves some venues on the coarse `hyperliquid`/`onchain_subgraph` label and others fixed.
+      (GMX dropped from this list — REMOVED 2026-07-25, see
+      `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; no `batch_gmx` override needed.)
 
 **Note on the migrated-bucket residue (NOT orphans):** `dex-pools-prd`/`dex-swaps-prd` carry BOTH old-format
 `day=/category=defi/` AND partial prior-apply canonical objects (one sample showed `pipeline_mode=BATCH_ONCHAIN_RPC`

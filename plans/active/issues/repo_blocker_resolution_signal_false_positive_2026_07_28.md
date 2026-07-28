@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [repo-blocker, multi-agent-safety, false-positive, reliability, quality-gates]
 related:
   [
-    /plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+    /plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     /plans/active/sports_track_h_denominator_prereqs_2026_07_28.md,
   ]
 created: 2026-07-28

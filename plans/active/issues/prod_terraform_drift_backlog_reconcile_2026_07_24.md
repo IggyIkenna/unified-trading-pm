@@ -148,15 +148,24 @@ todo below.
       deadman apply (targeted to avoid sweeping these blindly). — DONE (2026-07-26, slot-11): re-ran `tofu plan` fresh
       (see § above — the 2026-06-23 backlog is entirely gone, replaced by a fresh 10-add/67-change set) and produced the
       full three-way classification. Superseded by the 3 scoped follow-ups below.
-- [ ] [OPERATOR] P1. **Gated apply of the 12 INTENDED resources** classified above (`deployment-service/terraform/gcp`,
-      state `terraform/state/prod`) — `tofu apply` targeted to just these 12, in the recommended order above. Requires
-      an operator with prod-apply authority; do NOT blanket-apply the whole 77-resource diff (65 of the 77 are cosmetic
-      and will just re-drift on the next deploy). **Done when**: a `tofu plan` run under a permission set that can see
-      them shows zero remaining diff for these 12. Not downgraded (2026-07-27 gating pass) — genuinely uncertain fit:
-      this is a terraform CREATE/apply that activates new prod IAM bindings plus a live scheduled job
-      (`defi_removal_probe_daily`), not a GCS-bucket delete/migration the reversibility carve-out (finding T,
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a) is scoped to — no equivalent
-      reversibility-verification recipe exists for a terraform apply, so left gated rather than guessed.
+- [ ] [INFRA] P1. **RULED 2026-07-28 (applying the operator's general theme: "full backfills/migrations... DO IT",
+      "unpause whatever needs unpausing to unblock a task", "do not allow anything to partially complete") — retagged
+      away from `[OPERATOR]`, APPROVED to apply.** All 12 resources classified above are INTENDED — each traces to an
+      already-shipped, already-reviewed code commit whose terraform counterpart is simply un-applied; the classification
+      found none stale, abandoned, or deliberately-staged-ahead of a cutover. These are CREATE-only (plus 2 label-only
+      updates) — not a delete — so the reversibility concern the original gate cited does not actually apply at the same
+      bar as a GCS-bucket delete (a `tofu destroy`/revert remains available if any of these 12 turns out wrong). **Scope
+      note before executing (full-completion mandate)**: the permission-grant todo below (done 2026-07-27) revealed the
+      diff is NOT static — once `unified-trading-sa` could see the previously-unreadable 112 resources, a fresh
+      `tofu plan` showed **17 to add / 71 to change**, a different, larger, now-fully-visible composition than the 10/67
+      this doc's 12-resource classification was built from. Per "do not allow anything to partially complete," do NOT
+      apply only the stale 12 in isolation: first re-run the same three-way (INTENDED / cosmetic-provider-quirk /
+      stale-or-conflicting) classification over the CURRENT full 17/71 diff (the 12 already classified here should still
+      qualify as INTENDED, but the newly-visible resources need the same review before anything is applied), then
+      `tofu apply` every resource classified INTENDED in one pass, in dependency order, skipping the confirmed cosmetic
+      `client`/`client_version` diffs (ship the P2 `ignore_changes` fix below first if convenient, so the cosmetic set
+      stops re-appearing in the same plan run). **Done when**: a `tofu plan` run shows zero remaining diff for every
+      resource classified INTENDED in the refreshed pass.
 - [x] [INFRA] P1. ✅ **DONE 2026-07-27** — **downgraded from `[OPERATOR]` per finding W**
       (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`): a permission gap on
       `unified-trading-sa`'s own identity is self-fixable, not an operator escalation (the earlier gating pass predates

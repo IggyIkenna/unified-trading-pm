@@ -294,7 +294,7 @@ sweep "in one pass instead of discovering them one push at a time". **Nobody had
 2026-07-16 across 25 repos: 19 OK, 5 WARN (ratchet DOWN), and **1 FAIL — `agent-orchestrator` at 26 > baseline 25**
 (`server/worker_liveness/_git_alerts.py:364`), meaning **AO's own `quality-gates.sh` is currently red for every push**,
 in the very repo the remediation work is about to touch. Recorded as a P1 todo on the owning doc
-[`mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08`](../active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md),
+[`mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08`](../archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md),
 along with 5 unbanked DOWN-ratchets (incl. market-tick-data-service **199→62**, a 137-site improvement never banked —
 unbanked headroom is exactly how `agent-orchestrator` reached 26 unnoticed).
 

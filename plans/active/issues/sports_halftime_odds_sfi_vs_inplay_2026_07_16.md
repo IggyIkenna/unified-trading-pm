@@ -152,12 +152,17 @@ in the RE-TRIAGE section below. Full original investigation, evidence, and shipp
 > 1, and the "T-0 recompute leg" list in history part 2 — see those docs for the DONE/PARTIAL items around them) during
 > the 2026-07-25 line-cap split. Text unchanged from the original.
 
-- [ ] [CODE] P1. **`_apply_ht_odds_pit_gate`'s default-cutoff branch is unreachable in production.** The only caller
-      guards with `if ht_break_minutes:` (`odds_features_exporter.py:232`), so the `if not ht_break_minutes:` default
-      `-55` branch (lines 65–83) can never run outside tests → **when HT break times are unknown, NO PIT gate is applied
-      at all** and post-kickoff odds flow into HT features ungated (measured: 12,463 T-0 rows at `bm < -55`, 1,406 at
-      `bm < -110`, worst −374.6 = 6.2h after kickoff / well after full time). Either call the gate unconditionally
-      (letting it apply its documented default) or delete the dead branch.
+- [x] ✅ [CODE] P1. **SHIPPED — `features-service@4f365d23`** (2026-07-26, via
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s AO-dispatched copy of this todo; checkbox-drift fixup
+      2026-07-28). `_apply_ht_odds_pit_gate` is now called unconditionally (fixes the `if ht_break_minutes:`-guarded
+      dead default-cutoff branch this todo describes), with a regression test proving it fires on the
+      `ht_break_minutes`-unknown path. Independently re-run: 103 tests passed, 0 failed. **`_apply_ht_odds_pit_gate`'s
+      default-cutoff branch is unreachable in production.** The only caller guards with `if ht_break_minutes:`
+      (`odds_features_exporter.py:232`), so the `if not ht_break_minutes:` default `-55` branch (lines 65–83) can never
+      run outside tests → **when HT break times are unknown, NO PIT gate is applied at all** and post-kickoff odds flow
+      into HT features ungated (measured: 12,463 T-0 rows at `bm < -55`, 1,406 at `bm < -110`, worst −374.6 = 6.2h after
+      kickoff / well after full time). Either call the gate unconditionally (letting it apply its documented default) or
+      delete the dead branch.
 - [ ] [DATA] P1. **The blank-`fixture_id` raw generation is STILL BEING WRITTEN — fix the upstream writer.** The
       collapse signature reaches the **corpus edge** (last collapsed date **2026-06-20**; 2026-04: 28 dates · 2026-05:
       28 · 2026-06: 8 — only **9** healthy dates in all of 2026), so the current ODDS_API capture path emits
@@ -167,14 +172,18 @@ in the RE-TRIAGE section below. Full original investigation, evidence, and shipp
       column rather than writing it blank (a blank-but-present column is a placeholder that looks populated —
       `/codex/02-data/honest-absence-downstream-handling.md`). Owner: MTDS (the ODDS_API writer). Measured by the
       2026-07-17 blast-radius census (2,221 dates, 0 gaps).
-- [ ] [DATA] P1. **Re-calibrate the `verify_ml_readiness.py` 95% non-NULL threshold against the HONEST matrix.** The
-      gate now fails 1,683/1,860 dates at ~69-80% non-NULL — **not a regression**: the threshold was calibrated when the
-      closing line was broadcast into every T-24h row, i.e. against a leaking matrix, so 95% was only ever reachable
-      _because_ of the leak. Post-purge, a T-24h row legitimately carries NULL for every closing-derived column
-      (`clv_*`/`odds_movement_*`/`velocity_*_1h_to_0`/`steam_*`, ~27+ columns), so the gate is now structurally
-      unmeetable at 95% and measures the wrong thing. Re-base it per-horizon on the columns each horizon can honestly
-      know (`FEATURE_HORIZONS[h]` / the `min_horizon` registry) rather than on a flat cell-count. **Deliberately NOT
-      tuned in this leg** — lowering a number to make a gate green is the anti-pattern.
+- [x] ✅ [DATA] P1. **SHIPPED — `features-service@4f365d23`** (2026-07-26, via
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s AO-dispatched copy of this todo; checkbox-drift fixup
+      2026-07-28). `ml_readiness_check.py`'s threshold is now rebased per-horizon (not a flat cell-count), per this
+      todo's own prescription. Re-run against real prod `features-sports-prd` 2026-04-15..2026-05-15: 29/31 dates PASS
+      at 100%, `gate_met=YES`. **Re-calibrate the `verify_ml_readiness.py` 95% non-NULL threshold against the HONEST
+      matrix.** The gate now fails 1,683/1,860 dates at ~69-80% non-NULL — **not a regression**: the threshold was
+      calibrated when the closing line was broadcast into every T-24h row, i.e. against a leaking matrix, so 95% was
+      only ever reachable _because_ of the leak. Post-purge, a T-24h row legitimately carries NULL for every
+      closing-derived column (`clv_*`/`odds_movement_*`/`velocity_*_1h_to_0`/`steam_*`, ~27+ columns), so the gate is
+      now structurally unmeetable at 95% and measures the wrong thing. Re-base it per-horizon on the columns each
+      horizon can honestly know (`FEATURE_HORIZONS[h]` / the `min_horizon` registry) rather than on a flat cell-count.
+      **Deliberately NOT tuned in this leg** — lowering a number to make a gate green is the anti-pattern.
 - [ ] [DATA] P1. **Reconcile the market-data-sports manifest for the 2,436 deleted T-0 shards.** They still read as
       `captured` in the availability index; they should be `empty_confirmed` (honest absence). NOT done here: the
       operator scoped this session's manifest work to the FEATURES surface only, and the market-data-sports consolidator
@@ -186,6 +195,10 @@ in the RE-TRIAGE section below. Full original investigation, evidence, and shipp
 ---
 
 ## RE-TRIAGE (2026-07-23, count corrected 2026-07-24)
+
+> **SUPERSEDED for items 1 and 3 (2026-07-28, checkbox-drift reconciliation).** Both shipped 2026-07-26 as
+> `features-service@4f365d23` — see the flipped `[x]` checkboxes above. Items 2, 4, and 5 below remain genuinely open
+> (re-verified as part of this same reconciliation pass — no further change found).
 
 **Verdict: RESOLVED BY LATER WORK** (core investigation + all spun-off P0/CODE items), **but the 2026-07-23 pass
 undercounted this doc's own remaining Todos** — it named "one residual P1" (the PIT-gate item only). A direct

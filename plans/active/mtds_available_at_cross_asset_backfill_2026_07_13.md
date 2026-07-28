@@ -283,21 +283,24 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       (`DefiManifestRecorder` in `_defi_manifest.py`) that never threads `available_at` at all (blanket `""` for all of
       them, not a per-data_type formula gap). A handful of non-defi files living in the same directory (cefi/tradfi) use
       different, unrelated write paths.
-- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — present the defi audit (prior todo) plus a scoped design option for a
-      go/no-go. **Updated design option, 2026-07-14 (slot-8) per the audit's headline correction**: since 36/~40 handler
+- [ ] [DATA] P2. **RULED 2026-07-28 — GO. Retagged from `[OPERATOR]` BLOCKED-OPERATOR-DECISION** (no specific operator
+      answer was given for this go/no-go; applying the standing workspace theme instead: full backfills/migrations get
+      done — as long as not superseded by newer work — and this one isn't; cost is a one-time manifest-only compute
+      pass, nowhere near the pre-approved $100 threshold; "audit-and-decide" was the only gate, not a real blocker).
+      Design option adopted (2026-07-14, slot-8's headline-correction option, unchanged): since 36/~40 defi handler
       files share ONE write path (`DefiManifestRecorder._emit_captured_add` → `ManifestWriter.add()` with no
       `available_at=`), the fix is a single shim-level change — thread an honest per-shard `available_at` proxy (mirror
       the tradfi/sports blob-`time_created` pattern from `market-tick-data-service@65a6f9e0`) into
       `_emit_captured_add`'s `self._writer.add(...)` call, then rebuild-and-apply via a NEW backfill entrypoint (no
-      existing rebuild script touches captured defi rows — `rebuild_defi_manifest.py` only does gap-filling). This is
-      narrower in CODE surface than originally scoped (one shim, not ~30 formulas) but the blast radius is still ALL
-      defi captured rows at once (3.0M rows, one shared code path) — still materially riskier than prediction/tradfi's
-      centralized-rebuild-script case, still needs its own dry-run/snapshot/pause-cron/guardrail-verify/resume-cron
-      protocol; do not write the defi backfill code before this is decided. (repo: NA)
-- [ ] [DATA] P3. _(stretch, optional)_ Once the prior todo is decided GO, implement the chosen defi backfill mechanism
-      with unit-test coverage and a `--force` dry-run preview before any live write — follow the same
-      dry-run/snapshot/pause-cron/guardrail-verify/resume-cron protocol as prediction and tradfi above. (repo:
-      market-tick-data-service, unified-trading-library)
+      existing rebuild script touches captured defi rows — `rebuild_defi_manifest.py` only does gap-filling). Full
+      completion mandate for the next todo — do not ship a partial/MVP version of this shim or backfill only a subset of
+      the 3.0M rows. (repo: NA — this todo records the decision; implementation is the next todo)
+- [ ] [DATA] P3. **No longer stretch/optional — retagged 2026-07-28, same GO ruling as the todo above.** Implement the
+      chosen defi backfill mechanism (the shim + new backfill entrypoint above) with unit-test coverage and a dry-run
+      preview before any live write, then apply for real across the full 3.0M-row defi captured corpus (no partial
+      subset) — follow the same dry-run/snapshot/pause-cron/guardrail-verify/resume-cron protocol as prediction and
+      tradfi above, including the same 2026-07-28 Governance-section ruling that the cron pause/resume itself needs no
+      further operator scheduling round-trip. (repo: market-tick-data-service, unified-trading-library)
 
 ## Codex SSOTs
 

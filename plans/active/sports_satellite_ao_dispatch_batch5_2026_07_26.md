@@ -158,16 +158,29 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 
-- **`plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md`**: Confirmed the Phase-1 gap: §7 todo 1
-  ([OPERATOR] P1, "Rule on the 1,492 v2 pre-floor rows: fold into the existing pre-floor-wipe scope … or confirm they're
-  already covered by a follow-up pass") is the sole remaining uncovered item — todos 2-5 are done or explicitly closed
-  by batch2 (grep-confirmed above), and the 2026-07-23 RE-TRIAGE section reconfirms it as still open/unexecuted. GENUINE
-  CONFLICT found on the SAME underlying data (not just "is it cited" — a different mechanism is prescribed for the same
-  rows). Two live docs carry an unexecuted `[ ]` todo to bulk-delete the entire `sports_reference_v2/by_date/` tree on
-  the premise that it is "dead / frozen 2026-04-20 / no entities": - `sports_consolidated_closeout_2026_07_19.md`
-  (status: active) lines 437-438: "Snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout … Confirm no
-  reader consumes it first." - `sports_consolidated_native_ao_extract_2026_07_25.md` (status: draft) lines 122-128
-  mirrors the same todo verbatim as an AO-dispatch-ready "Track S" item, explicitly marked **"Self-justified, not
+- **`plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md`**: **RULED 2026-07-28 — fold explicitly into the
+  existing pre-floor-wipe scope** (§7 todo 1's option A). Reasoning: these 1,492 rows are the sole surviving copy of
+  that data (no canonical twin exists), so an explicit routing decision is safer than assuming a different, competing
+  mechanism already covers them — and the sports 2020-06 data-floor policy
+  (`/codex/02-data/sports-2020-06-data-floor.md`) already establishes that pre-floor sports data is the class this wipe
+  scope is FOR; folding these rows into it explicitly (rather than letting them fall through the OTHER bulk-cull todo's
+  reader-check-only safety gate, which the conflict below shows does not actually cover twin-existence) is applying the
+  already-ratified policy correctly, not opening a new one. **The retag itself (the §7 todo 1 checkbox) lives in
+  `sports_legacy_duplicate_triage_2026_07_22.md`, out of scope for this file's edit pass** — this note records the
+  ruling; a follow-up pass should (a) flip that doc's §7 todo 1 to reflect "fold into pre-floor wipe scope" as the
+  ratified disposition, and (b) amend the two colliding cull todos (`sports_consolidated_closeout_2026_07_19.md` and
+  `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track S bullets) per option (2) below so neither silently
+  deletes these 1,492 rows via the wrong (reader-check-only) mechanism first. Original Phase-1 gap + conflict evidence
+  (unchanged, still the basis for the ruling): Confirmed the Phase-1 gap: §7 todo 1 (previously [OPERATOR] P1, "Rule on
+  the 1,492 v2 pre-floor rows: fold into the existing pre-floor-wipe scope … or confirm they're already covered by a
+  follow-up pass") is the sole remaining uncovered item — todos 2-5 are done or explicitly closed by batch2
+  (grep-confirmed above), and the 2026-07-23 RE-TRIAGE section reconfirms it as still open/unexecuted. GENUINE CONFLICT
+  found on the SAME underlying data (not just "is it cited" — a different mechanism is prescribed for the same rows).
+  Two live docs carry an unexecuted `[ ]` todo to bulk-delete the entire `sports_reference_v2/by_date/` tree on the
+  premise that it is "dead / frozen 2026-04-20 / no entities": - `sports_consolidated_closeout_2026_07_19.md` (status:
+  active) lines 437-438: "Snapshot-then-cull the dead `sports_reference_v2/by_date/` dual-layout … Confirm no reader
+  consumes it first." - `sports_consolidated_native_ao_extract_2026_07_25.md` (status: draft) lines 122-128 mirrors the
+  same todo verbatim as an AO-dispatch-ready "Track S" item, explicitly marked **"Self-justified, not
   [OPERATOR]-gated"** with its ONLY safety gate being a reader-check (no twin-existence check), Done-when =
   "reader-check recorded AND snapshot+delete executed with post-delete 0-objects listing." This directly collides with
   this triage doc's own finding: 1,492 of the v2 rows (the pre-floor subset) are NOT dead inert bytes — they were
@@ -301,10 +314,24 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
 
 ## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION, not batchable)
 
-- **`plans/active/data_completion_sports_2026_07_24.md`**: Confirmed the two genuinely uncovered items (lines 397-406
-  rate-limit calibration probe; line 797 API-Football daily-quota bump) are NOT cited or overlapped by any doc in the
-  covering set. Grep of calibrate_source_rate_limit.py / ramp-to-429 / SOURCE_RATE_LIMITS_RPM / SOURCE_PER_IP_LIMITS
-  across all 16 covering-set docs returns zero hits outside the target doc itself. Grep of 'API-Football' + 'daily
+- **`plans/active/data_completion_sports_2026_07_24.md`**: **RULED 2026-07-28 — proceed with BOTH asks.** (1) The
+  rate-limit calibration probe: applying the general theme's "live probing should be relaxed to cover all asset groups
+  and shards wherever needed — err toward broader/more permissive scope, not narrower," authorize the one-time
+  calibration probe as scoped (a bounded, time-boxed test from a disposable VM IP, not a shared production IP, so a
+  temporary ban doesn't touch live captures — same isolation principle already applied to Tardis VM concurrency
+  elsewhere in this workspace). (2) The API-Football daily-quota bump (300k→1.5M/day, 5x): applying "cost under $100 is
+  not a concern, full backfills/migrations get done, don't let spend block completion" — proceed with the bump to reach
+  full coverage faster rather than the slower skip-fresh-reruns branch. **Residual for the operator (per the
+  credential-or-spend carve-out): the actual account-tier upgrade with the vendor is the one remaining concrete step**
+  only the operator (or AO's self-service ambient identity, if it can provision this per finding W) can complete — the
+  DIRECTION (yes, bump; yes, probe) is ruled here, the account action itself is not invented as already-done. **Done
+  when**: the probe runs once (from an isolated VM) with each provider's real break-rate recorded, AND the quota-bump
+  account action is completed + the backfill proceeds at the new ceiling — or, if the operator's own vendor-account step
+  is still pending, the code/launcher side is fully prepped (scoped, ready to fire) with the account step named as the
+  sole blocking residual. Confirmed the two genuinely uncovered items (lines 397-406 rate-limit calibration probe; line
+  797 API-Football daily-quota bump) are NOT cited or overlapped by any doc in the covering set. Grep of
+  calibrate_source_rate_limit.py / ramp-to-429 / SOURCE_RATE_LIMITS_RPM / SOURCE_PER_IP_LIMITS across all 16
+  covering-set docs returns zero hits outside the target doc itself. Grep of 'API-Football' + 'daily
   cap/quota/Custom300/1.5M' hits batch2 (lines 168, 265, 501, 702-722) and sports_consolidated_closeout_2026_07_19.md
   line 614, but those are DIFFERENT concerns: batch2's hits describe (a) enrichment coverage percentages by data-type as
   diagnostic context, and (b) a VM-stop/relaunch incident triggered by hitting the SAME daily quota ceiling
@@ -327,18 +354,26 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
   whole classifies operator_gated rather than yielding a batchable todo. Recommended resolution: raise a single operator
   question bundling both asks (probe-VM go-ahead + quota-bump-vs-skip-fresh choice) in the next operator-decision-needed
   batch; once ruled, a follow-up pass can draft the now-bounded todo(s) against whichever branch is authorized.
-- **`plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`**: Confirmed the
-  Phase-1 uncovered item: todos 12/13/14 (the manifest-consolidator TOCTOU fix, its deploy, then a re-run+hold-verify of
-  the cross_ag_prediction remediation) are not cited or covered by any doc in the covering set. Todo 15 (the separate
-  market-data-tick-sports-prd KALSHI empty_confirmed population) IS fully covered by
-  sports_satellite_ao_dispatch_batch3_2026_07_25.md, which explicitly scopes itself as read-only classification and
-  explicitly defers todos 12-14's fix as "explicitly BLOCKED-OPERATOR-DECISION" — so batch3 does not attempt to cover
-  12-14 either. CONFLICT CHECK finding (genuine, resolves by logic, not a competing-fix situation): todo 12's exact
-  prescribed fix — capture unified-trading-library's manifest_consolidator._write_consolidated()'s CAS
-  `if_generation_match` token from the SAME read that produces the merge payload (via download_bytes_with_generation),
-  instead of a late blob.reload() — has ALREADY SHIPPED as unified-trading-library@14301571, closing the identical
-  TOCTOU race in the same shared function, resolving the sibling issue docs
-  plans/archive/issues/sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md and
+- **`plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`**: **RULED
+  2026-07-28 — authorize the third remediation attempt once the deploy is confirmed** (general theme: full
+  backfills/migrations get done when not a regression; the underlying fix has already shipped and proven stable across 5
+  consolidator cycles on a sibling bucket). This converts the standing "confirming + authorizing" ask below into a
+  bounded, dispatchable sequence: (1) verify-deploy of `unified-trading-library@14301571` to the
+  `uts-prod-manifest-consolidator-instruments-sports` Cloud Run job specifically; (2) deploy it if not yet deployed; (3)
+  re-run `remediate_cross_ag_prediction_bleed_round3_2026_07_24.py` against `instruments-store-sports-prd`; (4)
+  hold-verify across ≥2 real consolidator cycles (full completion, not a single immediate check) before closing. The
+  actual todos (12-14) live in the archived issue doc itself, out of scope for this file's edit pass — this ruling is
+  recorded here so a follow-up pass retags them. Confirmed the Phase-1 uncovered item: todos 12/13/14 (the
+  manifest-consolidator TOCTOU fix, its deploy, then a re-run+hold-verify of the cross_ag_prediction remediation) are
+  not cited or covered by any doc in the covering set. Todo 15 (the separate market-data-tick-sports-prd KALSHI
+  empty_confirmed population) IS fully covered by sports_satellite_ao_dispatch_batch3_2026_07_25.md, which explicitly
+  scopes itself as read-only classification and explicitly defers todos 12-14's fix as "explicitly
+  BLOCKED-OPERATOR-DECISION" — so batch3 does not attempt to cover 12-14 either. CONFLICT CHECK finding (genuine,
+  resolves by logic, not a competing-fix situation): todo 12's exact prescribed fix — capture unified-trading-library's
+  manifest_consolidator._write_consolidated()'s CAS `if_generation_match` token from the SAME read that produces the
+  merge payload (via download_bytes_with_generation), instead of a late blob.reload() — has ALREADY SHIPPED as
+  unified-trading-library@14301571, closing the identical TOCTOU race in the same shared function, resolving the sibling
+  issue docs plans/archive/issues/sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md and
   sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md (both status:resolved, full
   quality-gates green, 98/98 + 60/60 tests passing). Because _write_consolidated is a single shared library function
   used by every asset_group's consolidator (per our target doc's own ROUND 6 scope note), this fix's code-level content
@@ -372,14 +407,27 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
   verify) hold-check before re-closing this doc. Once the operator gives that go-ahead, todos 13+14 collapse into a
   single bounded, checkable AO-eligible todo (verify-deploy -> run script -> poll N cycles -> record result) that a
   worker could execute without further judgment calls.
-- **`plans/active/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md`**: Confirmed via full doc read:
-  the doc's single open [DIAG] P2 todo asks to "decide + execute the resolution" for 55,233 duplicate legacy FIXTURES
-  manifest rows, among three explicitly-offered options — (1) leave as permanent noise, (2) scoped verified DELETE
-  against the real prod manifest bucket (instruments-store-sports-prd-central-element-323112), or (3) investigate/build
-  a tombstone mechanism that isn't verified to exist yet. The doc itself states this "is a genuine design call, not
-  something to decide unilaterally." Conflict check: grepped every doc in the covering set for "55,233" / the doc's
-  slug. Three hits are pure citations, not competing/executing todos: sports_consolidated_closeout_2026_07_19.md (line
-  ~321) just marks the parent restamp todo PARTIAL and points at this issue doc as the open tracker;
+- **`plans/active/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md`**: **RULED 2026-07-28 — option
+  (2), a scoped, verified DELETE against the production manifest.** Applying the general theme (opt for full
+  completions, no shortcuts — permanent noise / tech debt is the option to AVOID; a tombstone mechanism that doesn't
+  exist yet is unnecessary new tooling for what is a straightforward label-only duplicate cleanup, not sole-surviving
+  data): these 55,233 rows are dedup-key collisions from an already-executed restamp (not the sole surviving copy of
+  anything — a canonical twin/relabeling already exists per the doc's own framing), so leaving them as permanent noise
+  or building new tombstone tooling are both worse than just deleting the duplicates properly. Execution: the standard
+  delete-safety protocol applies (5-part proof, snapshot-then-write, fresh `gcs_bucket_soft_delete_retention_seconds()`
+  check per finding T/U — if ≥604800s, this qualifies as reversibility-verified and does not need a fresh `[OPERATOR]`
+  gate per CLAUDE.md's carve-out, mirroring the precedent already applied elsewhere in this exact corpus, e.g. this same
+  file's `prediction_phantom_reconciler_wipes_bundle_atom` todo). **Done when**: all 55,233 duplicate rows are removed
+  with a before/after manifest census confirming only the intended duplicate population changed and every
+  restamped/canonical row survives untouched — full completion, not a partial run. The actual todo checkbox lives in the
+  target issue doc, out of scope for this file's edit pass; this ruling is recorded here for a follow-up pass to retag
+  it. Confirmed via full doc read: the doc's single open [DIAG] P2 todo asks to "decide + execute the resolution" for
+  55,233 duplicate legacy FIXTURES manifest rows, among three explicitly-offered options — (1) leave as permanent noise,
+  (2) scoped verified DELETE against the real prod manifest bucket
+  (instruments-store-sports-prd-central-element-323112), or (3) investigate/build a tombstone mechanism that isn't
+  verified to exist yet. Conflict check: grepped every doc in the covering set for "55,233" / the doc's slug. Three hits
+  are pure citations, not competing/executing todos: sports_consolidated_closeout_2026_07_19.md (line ~321) just marks
+  the parent restamp todo PARTIAL and points at this issue doc as the open tracker;
   sports_satellite_ao_dispatch_batch4_2026_07_25.md's todo (lines ~92-111) explicitly does a _reconciliation-only_ pass
   on a sibling doc (fixtures_manifest_legacy_backfill_2026_07_24.md) — its own "Conflict-check clearance (2026-07-25
   re-check)" note confirms it deliberately defers the actual delete-vs-leave call to this doc and performs zero
@@ -395,24 +443,28 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
   f14b13ae/8e783d70 resurrection-safety verification to this bucket first) vs. tombstone (unverified feasibility)" —
   once ruled, the resulting concrete action (e.g. "run the verified-delete procedure" or "record the leave-as-noise
   decision in the doc") becomes a clean, batchable AO todo in the next dispatch batch.
-- **`plans/active/issues/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`**: Conflict check: grepped
-  the consolidated closeout (sports_consolidated_closeout_2026_07_19.md) and every batch2/3/4(+finalize) doc for the
-  target objects (`day=all/entity=teams/teams.parquet`, `day=all/entity=venues/venues.parquet`) and the delete mechanism
-  (`_legacy_archive`). Only batch2 (sports_satellite_ao_dispatch_batch2_2026_07_24.md) mentions these paths at all, and
-  strictly to close ITS OWN investigation todo as "resolved-as-investigated" — it explicitly punts the actual delete,
-  stating it "needs explicit operator sign-off... not a unilateral fold-that-can't-work or an irreversible delete." No
-  genuine overlap/duplicate exists; nothing else claims this ground with a different approach. So there is no conflict
-  to gate on. Eligibility: the single remaining todo is tagged `[OPERATOR] P2` and its own text states "Prod-bucket
-  delete, human-gated — no agent runs this." This is a soft-delete=0 (irreversible) GCS delete against a PROD bucket
-  (`instruments-store-sports-prd`), which per workspace HARD RULE is human-only regardless of scope-boundedness (the
-  mechanical steps — backup-copy, verify, delete, verify-gone — are well-specified, but execution authority is
-  explicitly withheld from agents by the doc author and by the corpus-wide prod-bucket-delete-is-human-only rule). The
-  operator already gave in-session Option-A authorization (2026-07-25 banner) — what remains is not a design/judgment
-  decision but literal execution of an irreversible prod delete, which stays human-only regardless. This is NOT a
-  batchable AO todo; it cannot be drafted as a worker-executable candidate. Recommended resolution: this item stays
-  parked as an `[OPERATOR]`-only action item for the operator (or an operator-supervised session) to physically execute
-  per the doc's already-written backup→verify→delete→verify-gone steps; no new plan/todo should be drafted to route it
-  through AO dispatch.
+- **`plans/active/issues/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`**: **Reviewed 2026-07-28,
+  confirmed remains a permanent hard-stop — NOT retagged.** This is an irreversible prod-bucket GCS delete
+  (`instruments-store-sports-prd`, soft-delete=0 per the doc's own framing) with execution authority withheld from
+  agents by workspace HARD RULE regardless of how well-specified the mechanical steps already are (the operator already
+  gave in-session Option-A authorization 2026-07-25 — what remains is literal human execution, not a decision). Conflict
+  check: grepped the consolidated closeout (sports_consolidated_closeout_2026_07_19.md) and every batch2/3/4(+finalize)
+  doc for the target objects (`day=all/entity=teams/teams.parquet`, `day=all/entity=venues/venues.parquet`) and the
+  delete mechanism (`_legacy_archive`). Only batch2 (sports_satellite_ao_dispatch_batch2_2026_07_24.md) mentions these
+  paths at all, and strictly to close ITS OWN investigation todo as "resolved-as-investigated" — it explicitly punts the
+  actual delete, stating it "needs explicit operator sign-off... not a unilateral fold-that-can't-work or an
+  irreversible delete." No genuine overlap/duplicate exists; nothing else claims this ground with a different approach.
+  So there is no conflict to gate on. Eligibility: the single remaining todo is tagged `[OPERATOR] P2` and its own text
+  states "Prod-bucket delete, human-gated — no agent runs this." This is a soft-delete=0 (irreversible) GCS delete
+  against a PROD bucket (`instruments-store-sports-prd`), which per workspace HARD RULE is human-only regardless of
+  scope-boundedness (the mechanical steps — backup-copy, verify, delete, verify-gone — are well-specified, but execution
+  authority is explicitly withheld from agents by the doc author and by the corpus-wide prod-bucket-delete-is-human-only
+  rule). The operator already gave in-session Option-A authorization (2026-07-25 banner) — what remains is not a
+  design/judgment decision but literal execution of an irreversible prod delete, which stays human-only regardless. This
+  is NOT a batchable AO todo; it cannot be drafted as a worker-executable candidate. Recommended resolution: this item
+  stays parked as an `[OPERATOR]`-only action item for the operator (or an operator-supervised session) to physically
+  execute per the doc's already-written backup→verify→delete→verify-gone steps; no new plan/todo should be drafted to
+  route it through AO dispatch.
 - **`plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`**: Confirmed the doc's 4 remaining
   open todos: (A) manifest-slice replacement for check_api_football_dependency() [shipped in batch2,
   instruments-service@bd1da540 — Phase-1's covered item], (B) share path-template constants between writer and checker,
@@ -518,22 +570,18 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
   to that same re-check (or a follow-up doc) at that time. No new AO-dispatch todo should be drafted now — doing so
   would either restate the design question as a fake "todo" (violating the eligibility rule) or duplicate the re-check
   mechanism batch2_finalize already owns.
-- **`plans/active/sports_live_availability_and_source_latency_2026_07_24.md`**: Confirmed uncovered item (lines
-  134-138): "[DATA] P2. Live ODDS quota decision + cheap second source" — size The Odds API Starter tier (~$10/mo, 50k
-  credits) for the live league set and/or wire api_football `/odds` in-play as a second forward source, so LIVE_ODDS /
-  odds_horizon_bucket keeps feeding CLV/steam features forward without exhausting quota. The todo is explicitly tagged
-  **BLOCKED-OPERATOR-DECISION (book set + quota tier)** in the source doc itself — it is a spend/product decision (which
-  paid tier to commit to, which books to cover), not a determinable technical outcome a worker can execute alone.
-  Conflict check: grepped the consolidated closeout (2026_07_19) and every batch2/3/4(+finalize) doc for "odds
-  api"/"live.odds"/"book.set"/"quota tier"/"odds_horizon"/"LIVE_ODDS". All hits found
-  (sports_consolidated_closeout_2026_07_19.md:516, batch2:812/826/847/867/878/898/962/978, batch4:112/116) concern the
-  MDPS `odds_horizon_bucket` REPROCESS/canonicalization migration (109,312-object league_id-casing reprocess of
-  already-captured historical odds_horizon_bucket data) and a separate fixture_id-blank collapse diagnostic — a distinct
-  mechanism (historical data correctness/migration) from the target's concern (live-VM polling cost/quota-tier sizing
-  for forward LIVE_ODDS capture going forward). No file/mechanism overlap; no conflict to gate on. Once the operator
-  rules on book set + quota tier, the resulting connector-tuning + VM-cadence change (market-tick-data-service +
-  deployment-service) is itself a bounded, worker-executable AO todo — but drafting it now would bake in an unmade
-  decision, so it stays operator_gated rather than batchable.
+- **`plans/active/sports_live_availability_and_source_latency_2026_07_24.md`**: **RESOLVED 2026-07-28 — operator direct
+  answer: picked a paid sports-odds API quota tier and authorized proceeding with the resume.** The source doc's own
+  todo (lines 134-138, "[DATA] P2. Live ODDS quota decision + cheap second source") is retagged there directly (see that
+  file) — applying the doc's own top recommendation as the concrete tier (The Odds API Starter, ~$10/mo, 50k credits,
+  for the live league set) + api_football `/odds` in-play as the free second source, per the operator's ruling. No
+  longer operator_gated; the resulting connector-tuning + VM-cadence change is now a bounded, batchable AO todo (see the
+  retagged checkbox in that doc). Prior conflict-check note (for provenance, still accurate): grepped the consolidated
+  closeout (2026_07_19) and every batch2/3/4(+finalize) doc for "odds api"/"live.odds"/"book.set"/"quota
+  tier"/"odds_horizon"/"LIVE_ODDS" — all hits found (sports_consolidated_closeout_2026_07_19.md:516,
+  batch2:812/826/847/867/878/898/962/978, batch4:112/116) concern the MDPS `odds_horizon_bucket`
+  REPROCESS/canonicalization migration (a distinct, unrelated mechanism), so no file/mechanism overlap exists for the
+  now-unblocked quota-tier work either.
 - **`plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md`**: The doc's entire remaining-work
   surface is a single sequential chain gated at its first step by an unresolved OPERATOR decision (pursue live
   sports-odds ingestion or not), with every downstream todo explicitly conditioned on that yes/no, and the chain's
@@ -573,18 +621,27 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
   Todo 1 itself is explicitly tagged [OPERATOR]. Suggest surfacing this single question to the operator as a standalone
   decision ask (not a plan-of-work): "Pursue live sports-odds ingestion (new MTDS live connector +
   SOURCE_MODE_CAPABILITY entry) — yes, scope it as a follow-up plan, or no, mark this plan `status: cancelled`?"
-- **`plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md`**: Confirmed against the doc text (todo 2, lines
-  85-92): the C3 pre-launch-window corpus (10,345 objects) requires an explicit operator ruling between two mutually
+- **`plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md`**: **RULED 2026-07-28 — option (a): extend the
+  coverage-start dates and backfill this data in.** Applying the general theme directly ("full backfills, full
+  migrations — as long as an item isn't superseded by more recent work, DO IT"; "opt for full completions, no
+  shortcuts... even if not MVP"; "cost under $100 is not a concern"): this is 10,345 real, non-fabricated objects (not a
+  data-floor/fabrication case like the sports 2020-06-06 odds floor) sitting just outside the current official
+  coverage-start constants — writing them off as permanently out-of-scope is the shortcut the theme says to avoid, and
+  the backfill compute cost is trivial. **Full-completion mandate for whoever dispatches this**: this is a system-wide
+  constant change, not a one-line edit — update `SOURCE_COVERAGE_START["footystats"]` (2019-01-01→2018-01-01) AND the
+  api_football `DATA_TYPE_COVERAGE_START` sub-entity windows together, then propagate through every consumer
+  (`clip_dates_to_source_coverage`, backfill orchestrators, data-status denominators, the phantom audit) — not just flip
+  the constant and leave downstream consumers stale. Re-run `backfill_orphan_class_e_sports.py` afterward to manifest
+  the corpus. The actual todo checkbox lives in the target doc, out of scope for this file's edit pass; this ruling is
+  recorded here for a follow-up pass to retag it. Confirmed against the doc text (todo 2, lines 85-92): the C3
+  pre-launch-window corpus (10,345 objects) previously required an explicit operator ruling between two mutually
   exclusive actions with real blast radius — (a) extend UAC coverage windows (SOURCE_COVERAGE_START["footystats"]
   2019-01-01→2018-01-01 + api_football DATA_TYPE_COVERAGE_START sub-entity windows) and re-run
   backfill_orphan_class_e_sports.py to manifest the corpus, or (b) ratify the corpus as permanently outside-window
-  (becomes a CF-21-style cleanup candidate). A window change affects backfill orchestrators
-  (clip_dates_to_source_coverage), data-status denominators, and the phantom audit — this is not a worker-determinable
-  outcome, it is a two-option fork needing operator sign-off, exactly as the doc itself labels it ("operator-gated").
-  Conflict check: grepped the consolidated closeout (sports_consolidated_closeout_2026_07_19.md) and every
-  batch2/3/4(+finalize)/fork/foldin/hygiene/native-ao-extract doc for
-  C3/footystats/SOURCE_COVERAGE_START/orphan_sweep_sports/backfill_orphan_class_e_sports/pre-launch-window. Found one
-  substantive hit: sports_satellite_ao_dispatch_batch2_2026_07_24.md lines 550-567, a SHIPPED (checked,
+  (becomes a CF-21-style cleanup candidate). Conflict check: grepped the consolidated closeout
+  (sports_consolidated_closeout_2026_07_19.md) and every batch2/3/4(+finalize)/fork/foldin/hygiene/native-ao-extract doc
+  for C3/footystats/SOURCE_COVERAGE_START/orphan_sweep_sports/backfill_orphan_class_e_sports/pre-launch-window. Found
+  one substantive hit: sports_satellite_ao_dispatch_batch2_2026_07_24.md lines 550-567, a SHIPPED (checked,
   instruments-service@6cf44d31) fix to migration_orphan_sweep_sports.py's classifier ordering
   (is_covered_sports-before-_is_pre_launch bug causing stale pre-floor rows to misclassify as B_legacy_duplicate instead
   of C3_pre_launch_window). This is a classification-correctness bugfix, not a resolution of the underlying policy

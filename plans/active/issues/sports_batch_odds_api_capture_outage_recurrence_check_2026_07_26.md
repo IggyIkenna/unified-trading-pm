@@ -72,6 +72,26 @@ source:
 
 # batch_odds_api capture outage recurrence check — live bug found + fixed, backfill decision needed
 
+> # 🔴 BLOCKED-CREDENTIALS 2026-07-28 (slot 6) — item 1's backfill-launch todo conflicts with a same-day operator ruling elsewhere; NOT launched.
+>
+> This doc's item 1 todo cites an operator ruling ("Yes, do it — launch the ~1-month sports odds gap backfill,
+> scope+spend approved") dated 2026-07-28. But `sports_odds_api_key_deactivated_2026_07_26.md` carries a SEPARATE
+> operator ruling, ALSO dated 2026-07-28: reactivation of the `odds-api-key` Secret Manager secret is **DECLINED** ("we
+> can use the odds API keys we already have for live+batch odds... do not reactivate or rotate the key"). I
+> live-verified just now (via `unified-trading-sa`, direct `curl https://api.the-odds-api.com/v4/sports?apiKey=...`)
+> that this exact secret — the ONLY `secret_name` hardcoded in `odds_api_adapter.py:229`, used for BOTH the live
+> `/sports/{sport}/odds` endpoint AND the `/historical/sports/{sport}/odds` endpoint this backfill needs — still returns
+> `error_code=DEACTIVATED_KEY`, unchanged since 2026-07-26 (matches every prior re-check through today, including that
+> doc's own slot-7 entry dated 2026-07-28). I also grepped every other sports adapter
+> (odds_engine/metabet/opticodds/polymarket/betfair) and the 5 other odds-adjacent GCP secrets
+> (`odds-api-io-key`/`oddsjam-api-key`/`oddspapi-api-key(s)`/`opticodds-api-key`) — none are wired to any code path for
+> `batch_odds_api` (corpus-wide zero code hits, per that doc's own 2026-07-27 audit). **There is no alternate
+> already-working odds-api mechanism in this codebase.** Launching this backfill right now would 401 every request and
+> burn VM spend for zero rows. Filed `BLK-e9c1c362` to the operator to reconcile the two same-day rulings — **not
+> launching until answered.** Item 1's todo is retagged `BLOCKED-CREDENTIALS` above (on the checkbox's own line, per the
+> `blocked_marker_continuation_line_not_scanned_2026_07_26.md` lesson) so `regen_backlog_from_plan.py` excludes it from
+> re-dispatch until this is resolved.
+
 > # 🟡 CORRECTED IN PART 2026-07-26 (same session, follow-up task) — the § (b) DENSITY MEASUREMENT checked the WRONG
 >
 > > BUCKET for the most recent week; the CODE BUG + FIX below are UNCHANGED and still correct.
@@ -222,6 +242,10 @@ write a manifest row of any kind — not even `attempted_failed`).
 
 ## Recommended decision / next steps
 
+> **Item 1's backfill fork RULED 2026-07-28 (operator direct answer: "Yes, do it — scope + spend approved").** This
+> prose section is kept verbatim as the historical record the `## Todos` section was converted from; see that section's
+> item 1 for the current retagged `[DATA] P0` status and the full backfill mandate.
+
 1. **[OPERATOR] P0 — confirm deploy + decide on backfill.** Confirm the fix (`market-tick-data-service@410d7569`) has
    reached the production `uts-prod-market-tick-data-service-fast-t1-recon` image (check `gcloud run jobs describe`
    image digest / trigger a redeploy if the standard promote pipeline hasn't picked it up yet), then confirm the
@@ -246,16 +270,22 @@ write a manifest row of any kind — not even `attempted_failed`).
 > checkboxes, and this doc previously carried none despite `assigned_vm: planning`, making its work structurally
 > invisible to the backlog.
 
-- [ ] [OPERATOR] P0 — confirm deploy + decide on backfill. Confirm the fix (`market-tick-data-service@410d7569`) has
-      reached the production `uts-prod-market-tick-data-service-fast-t1-recon` image (check `gcloud run jobs describe`
-      image digest / trigger a redeploy if the standard promote pipeline hasn't picked it up yet), then confirm the
-      `DATA_NOT_AVAILABLE` error stops appearing in fresh executions. Separately: decide whether the ~1-month gap
-      (2026-06-25…2026-07-25, all leagues) should be backfilled via the Odds-API historical endpoint (credits-cost /
-      priority tradeoff — an operator call, not a worker one). **Note (2026-07-28)**: the DEPLOY half is already
-      satisfied — see the dated correction banner above ("DEPLOY CONFIRMED (2026-07-26, directly verified, not
-      inferred)", image `f6ea001`/`410d756` digests + a log-inspected post-deploy execution with zero
-      `DATA_NOT_AVAILABLE`) — only the backfill decision fork (and the reframed two-sub-question backfill scope from the
-      same banner) remains open for the operator.
+- [ ] [DATA] P0 — BLOCKED-CREDENTIALS 2026-07-28 (slot 6) — confirm deploy (DONE, see banner) + backfill RULED, launch
+      it. Deploy confirmation: DEPLOY CONFIRMED (2026-07-26, directly verified, not inferred) — see the dated correction
+      banner above, image `f6ea001`/`410d756` digests + a log-inspected post-deploy execution with zero
+      `DATA_NOT_AVAILABLE`. **Backfill: RULED 2026-07-28 — OPERATOR DIRECT ANSWER: "Yes, do it — launch the ~1-month
+      sports odds gap backfill (scope + spend approved)."** Retagged from `[OPERATOR]` to `[DATA]` (approved,
+      execution-ready). Per the reframed two-sub-question scope from the correction banner above, launch BOTH windows
+      via the Odds-API historical endpoint, in full (no partial-window shortcut — per the operator's general "do not
+      allow anything to partially complete" + "full backfills... DO IT" theme): 1. **The 2026-06-27…2026-07-15 total-gap
+      window (~19 days, zero data)** — genuinely missing days; backfill every league's odds via the historical endpoint
+      for this exact range. 2. **The 2026-07-16…2026-07-25 granularity-loss window (~10 days, one late T+1 snapshot
+      instead of the intended 8-point pre-match horizon grid: T-24h/T-12h/T-6h/T-4h/T-2h/T-1h/T-10m/T-0)** — re-fetch at
+      the correct historical T-minus offsets for each fixture in this range to recover the lost odds-trajectory signal
+      (CLV, drift, steam-move features), not just the single already-captured daily snapshot. **Done when**: both
+      windows show full historical coverage in the manifest (verified via
+      `read_capture_status_counts`/`read_availability_index`, manifest-only, no GCS walk) at the intended granularity,
+      and this todo cites the launcher/dispatch evidence.
 - [x] [DATA] P1. Verify DeFi's same-day capture was/wasn't also blocked, once
       `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator is confirmed healthy (see the
       ManifestConsolidatorStaleError above — this itself may need its own issue doc if it's still stale; worker should
@@ -321,6 +351,17 @@ timing). Added a correction banner + this log entry; did not retract the core fi
 fix remain correct and necessary) — only the severity/framing of § (b)'s density argument for the most recent week.
 Backfill decision reframed into two distinct sub-questions (true 06-27…07-15 dormancy vs 07-16…07-25
 lost-granularity-not-lost-days) for the operator.
+
+**2026-07-28 (slot 6, data_engineering)** — Dispatched item 1 (backfill launch). Read the sibling
+`sports_odds_api_key_deactivated_2026_07_26.md` per the pre-task plan/issue conflict-check HARD RULE and found a
+same-day operator-ruling contradiction (see banner above). Live-verified via `unified-trading-sa` (switched off the
+ambiently-active `github-actions-deploy` identity, which lacked `secretmanager.versions.access`) that the `odds-api-key`
+secret — the sole credential `odds_api_adapter.py` uses for both live and historical the-odds-api.com calls — still 401s
+`DEACTIVATED_KEY`. Confirmed no alternate wired odds-api mechanism exists (grepped every sports adapter + all 6
+odds-adjacent GCP secrets). Filed `BLK-e9c1c362` with 3 options (don't launch / launch anyway / investigate further),
+recommending "don't launch." Not launching any VM or spending compute against a credential confirmed dead 2 days
+running. Tagged the todo `BLOCKED-CREDENTIALS` and added this banner so the contradiction is visible before anyone else
+re-dispatches this todo blind.
 
 **2026-07-28 (slot 14, data_engineering)** — Worked `sports_satellite_ao_dispatch_batch6_2026_07_26.md`'s todo (this doc
 was `assigned_vm: planning` but carried zero checkboxes, making its work invisible to `regen_backlog_from_plan.py`).

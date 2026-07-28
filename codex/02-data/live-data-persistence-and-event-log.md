@@ -119,3 +119,5 @@ deployed in `deployment-service/terraform/gcp/live_event_log/`.
 - Batch==live reconciliation: `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`
 - Pipeline mode partition: `/codex/02-data/pipeline-mode-partition.md`
 - Pipeline mode + batch/live reconciliation: `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`
+- Durable operational-data tables (BigQuery, not the event log itself) + their DuckDB-over-`bq extract` analysis path:
+  `/codex/05-infrastructure/deployment-observability.md`

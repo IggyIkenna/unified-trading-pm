@@ -9,8 +9,8 @@ summary: >-
   that `git mv`s the plan file to `plans/archive/`. This is exactly the archival pattern CLAUDE.md itself mandates
   ("this finalize doc itself gets archived alongside it in the same commit") — so the gate structurally cannot verify
   the standard, correct workflow for the final archival todo of every satellite-AO finalize plan.
-status: open
-resolved_by:
+status: resolved
+resolved_by: "agent-orchestrator@587c8db"
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -38,6 +38,10 @@ execution_scope: local-only
 depends_on: []
 locked_by:
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. Fixed in the same commit as the companion doc
+> `/plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md`
+> (`agent-orchestrator@587c8db`, same root function `check_plan_flip`).
 
 # M3 plan-flip verification is blind to archival renames
 
@@ -107,6 +111,14 @@ own independently-scoped follow-up.
 
 ## Todos
 
-- [ ] [ENGINEER] P2. **Fix M3's `check_plan_flip` to handle archival-rename-bundled checkbox flips** — either resolve
-      the rename via `git log --follow --diff-filter=R` and diff the new path, or fall back to diffing the corresponding
-      added path (matched by basename) when the old-path diff is a pure deletion. Repo: agent-orchestrator.
+- [x] ✅ [ENGINEER] P2. **DONE 2026-07-28 — `agent-orchestrator@587c8db`.** Fixed `check_plan_flip`'s diff-based
+      detection (both Mode 1 and Mode 2, same root cause) to follow a same-commit archival rename: a new
+      `_same_commit_added_path_matching_basename()` helper runs `git show -M --name-status <sha>` to find a file this
+      same commit ADDED (or that git DID detect as a rename via `-M`) sharing the old path's basename, and
+      `_flips_at_path_or_rename()`/`_cancels_at_path_or_rename()`/`_defers_at_path_or_rename()` wrap the existing
+      `_diff_flips_checkbox`/etc. checks to retry at that resolved path when the literal old-path diff shows no flip
+      (the pure-deletion case this doc diagnosed). Regression tests: `test_done_gate_plan_flip_hard_reject.py::
+      test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv` (cross-repo, the exact scenario
+      this doc reproduces) + `::test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv`
+      (mode-1 sibling). Full `quality-gates.sh` green (1915 passed). Companion fix (the fallback path, a related but
+      distinct gap) shipped in the same commit — see `ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md`.

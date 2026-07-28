@@ -112,10 +112,32 @@ _qg_kill_children() {
     done
 }
 
+# ── SIGNAL TRAP: loud "killed" marker on a genuinely-CAUGHT kill signal ──
+# Mirror of base-service.sh/base-library.sh's own signal trap (see base-service.sh for
+# the full rationale) — shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md's
+# silent-kill pattern is not tier-specific, so UI repos get the same fix. SIGKILL stays
+# fundamentally UNCATCHABLE (no trap fires for it); this closes the CATCHABLE-signal
+# slice only (SIGTERM/SIGINT/SIGHUP).
+_qg_write_killed_marker() {
+    local sig="$1" marker_dir marker
+    marker_dir="${WORKSPACE_ROOT:-.}/.benchmarks/qg-governor"
+    mkdir -p "$marker_dir" 2>/dev/null || true
+    marker="${marker_dir}/killed.$$"
+    {
+        echo "killed_by_signal=${sig}"
+        echo "pid=$$"
+        echo "repo=${SERVICE_NAME:-unknown}"
+        echo "killed_at_epoch=$(date +%s 2>/dev/null || echo 0)"
+    } > "$marker" 2>/dev/null || true
+    echo "❌ [quality-gates] received SIG${sig} — wrote kill marker (${marker}) before exit; a poller can now tell this apart from a still-running or a normal-exit run" >&2
+}
+
 # ── UI TRAP OVERRIDES (add _qg_kill_children to EXIT, handle INT/TERM/HUP) ──
 # Overrides the default _qg_record_failure-only trap from qg-common.sh
 trap '_qg_record_failure; _qg_kill_children' EXIT
-trap '_qg_kill_children; exit 130' INT TERM HUP
+trap '_qg_write_killed_marker INT; _qg_kill_children; exit 130' INT
+trap '_qg_write_killed_marker TERM; _qg_kill_children; exit 130' TERM
+trap '_qg_write_killed_marker HUP; _qg_kill_children; exit 130' HUP
 
 # ── MODE ───────────────────────────────────────────────────────────────────
 SKIP_LINT=false

@@ -189,7 +189,7 @@ Two things this adds to the open P2 shutdown-hang todo:
 2. **28.8G RSS + 15.4G swap peak per cycle** — the orchestrator's own memory footprint is enormous and heavily swapped.
    This is very likely _why_ the graceful stop hangs (a swapped-out process is slow to respond to SIGTERM → systemd hits
    `TimeoutStopSec` → SIGKILL), and it plausibly links this doc to the host-RAM-exhaustion cluster
-   (`/plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`): an orchestrator peaking at
+   (`/plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`): an orchestrator peaking at
    28.8G + 15.4G swap on a shared host is a prime contributor to the low-FREE-RAM condition that's been reaping
    background QG/quickmerge processes. Worth investigating the two together — the memory footprint may be the common
    root, not two independent problems.

@@ -159,7 +159,7 @@ drift_direction: advance-code
       `fleet_data_acquisition_health_2026_06_21.md`. Done when: each of the 4 items has either a shipped fix (repo@sha
       cited) or a confirmed-resolved/no-longer-reproducible note, logged into the doc's body/Progress Log, and its
       `status:` frontmatter updated to `resolved` if all 4 close.
-- [ ] [UTL] P2. **Bound the un-evicted `_CANONICAL_CACHE` to stop the manifest-read OOM (Option A, lowest-risk)** — in
+- [x] ✅ [UTL] P2. **Bound the un-evicted `_CANONICAL_CACHE` to stop the manifest-read OOM (Option A, lowest-risk)** — in
       `unified_trading_library/manifest_writer/_state.py`'s `_invalidate_index_cache` (~L142-166), cap
       `_CANONICAL_CACHE` to the single current bucket: on a bucket-change, `del` the prior bucket's cached DataFrame
       before caching the new one, instead of leaving every visited bucket's merged index pinned in the process-global
@@ -174,11 +174,16 @@ drift_direction: advance-code
       regression test to confirm the same-bucket warm-read path (`~27s` avoided re-read) is unaffected — this is
       cross-cutting shared code on the LIVE cefi/sports/tradfi manifest-read path, so the no-regression check on the
       warm-cache win is mandatory, not optional. Source:
-      `plans/active/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md`. Done when: the per-bucket eviction is
+      `plans/archive/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md`. Done when: the per-bucket eviction is
       implemented in `_state.py`, the new eviction unit test and the existing sports warm-cache test both pass,
       `quality-gates.sh` is green, and the change is shipped via quickmerge with the issue doc's frontmatter `status`
       flipped to reflect the resolved Option A (leaving Option B noted as a still-open, separately-scoped follow-on if
-      desired, not silently implied done).
+      desired, not silently implied done). — **DONE 2026-07-28**: `unified-trading-library@0db19a72`. Option A shipped
+      exactly as specified; new tests `test_invalidate_index_cache_evicts_other_buckets_canonical_cache` (bucket-switch
+      eviction) and `test_invalidate_index_cache_noop_on_single_bucket` (same-bucket warm-read path unaffected — no
+      pre-existing named "sports warm-cache" test existed under that name, so this new test fills that exact role) in
+      `tests/unit/test_manifest_read_index_slim.py`; `quality-gates.sh` green; source issue doc archived with
+      `status: resolved`. Option B untouched, still open/separately-scoped if the fleet needs it.
 - [ ] [DOC] P2. Close the mechanical/AO-eligible remainder of `mtds_plan_reconciliation_2026_06_29.md`'s live findings
       (Section F): (a) **M-C1/M30.5** flip M7 IN-FLIGHT→LANDED in the doc's Section A ledger + fix codex
       `pipeline-mode-partition.md` normative prose (still teaches `live_websocket`, ~lines 84/124/167-180) to reflect

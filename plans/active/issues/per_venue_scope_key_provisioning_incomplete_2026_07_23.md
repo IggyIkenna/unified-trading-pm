@@ -130,8 +130,13 @@ All three are real design/priority calls, not something determinable from code o
 - [x] [AGENT] P2. **Wire Bybit's trade-scope credential lookup with safe fallback** — execution-service
       `_load_venue_trade_credentials` now prefers `bybit-trade-api-key`/`-secret`, falls back to the unscoped pair; 3
       new unit tests.
-- [ ] [HUMAN] P1. **Create `bybit-trade-api-key`/`bybit-trade-api-key-secret`** in GCP per the checklist above — the one
-      remaining step to actually complete Bybit's scope split.
+- [ ] [HUMAN] P1. **RULED 2026-07-28 (applying the operator's general theme — recurring cost here is $0, this is a
+      security-hardening control reducing a compromised-key's blast radius, and the theme favors full completion of
+      exactly this kind of item — DIRECTION APPROVED, proceed).** Create `bybit-trade-api-key`/
+      `bybit-trade-api-key-secret` in GCP per the checklist above — the one remaining step to actually complete Bybit's
+      scope split. The decision to do this is no longer open; only the credential-creation ACTION remains, and only the
+      operator's own Bybit exchange login can perform it (no cloud identity or automation can create a new exchange-side
+      API key) — that is why the tag stays `[HUMAN]` rather than moving to an AO execution tag.
 - [ ] [HUMAN] P2. **Decide on OKX/Hyperliquid's scope-separation design**, if wanted at all, since neither fits the
       Binance/Deribit pattern.
 - [ ] [HUMAN] P3. **Decide whether to build the Aster execution adapter** (scoped above) and/or provision

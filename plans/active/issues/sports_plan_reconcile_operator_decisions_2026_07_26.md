@@ -34,8 +34,8 @@ related:
 created: 2026-07-26
 last_updated: 2026-07-26
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.3
@@ -216,6 +216,21 @@ A 6th fix of the same class as #3 was written, verified, and then reverted unapp
       session's scope — `sports_master.md` is a separate file, `locked_by: live-defi-rollout`): someone with access to
       that epic file should flip its `:448` `[OPERATOR] P0` line to `[x]` citing this same evidence chain, and downgrade
       its tag off `[OPERATOR]` since the ruling is now recorded here.
-- [ ] [OPERATOR] P1. **Rule on splitting `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (item 3)** — the
-      1216L doc is over the line-cap hard gate, blocking even unrelated correctness fixes from being committed; needs an
-      operator decision on split vs promote-to-epic vs leave frozen.
+- [ ] [DOCS] P1. **RULED 2026-07-28 (no specific operator answer given — applying the standing workspace design-choice
+      theme; retagged from `[OPERATOR]`): Option A — split `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`**
+      along its own §3/§4/Phase-5 section boundaries into a parent + one child doc, mirroring the treatment the 5 AG
+      consolidated closeouts got on 2026-07-25. Reasoning: the theme's standing rule is the full/proper fix over a
+      shortcut — Option B (promote to a real epic just to raise the cap) uses the wrong `doc_type` purely to dodge the
+      size gate, and Option C (leave frozen) is exactly the permanent partial-completion the theme rules against (a doc
+      nobody can ever land a fix to again). **Status note (re-verified 2026-07-28, `check_line_caps.sh` run directly
+      against the file)**: the target file is now exactly 1000 lines — at the hard cap, not over it, because a
+      2026-07-26 archive-extraction pass (moving 2 large historical sections to
+      `/plans/archive/2026_07/sports_shard_enumeration_cartesian_blowup_deferred_history_2026_07_22.md`) already brought
+      it down from the 1216L this item's premise describes. `check_line_caps.sh` reports SOFT, not HARD, on it today —
+      the file is NOT currently blocked from new commits, and the still-pending hunter-7 `### 3.2` heading fix (patch
+      text in item 3's original write-up above) can be re-applied and committed right now without waiting for the split.
+      The split remains the assigned durable fix regardless (zero lines of headroom at exactly-1000 is fragile — any
+      future net-positive edit re-trips the HARD gate the moment it's staged), so this todo stays open, not moot.
+      Done-when: content split parent+child under `plans/active/issues/`, both files under 1000L, the hunter-7 patch
+      applied in whichever file now owns §3.2, and every corpus referrer to the original doc's now-relocated sections
+      repointed per the cross-reference convention. (repo: unified-trading-pm)

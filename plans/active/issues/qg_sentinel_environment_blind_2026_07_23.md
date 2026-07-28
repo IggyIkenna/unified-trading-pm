@@ -117,10 +117,35 @@ Both readings are defensible and the operator should pick — they lead to diffe
   cannot satisfy a prod-context run, or vice-versa. **This one should be fixed regardless of the other two**, because it
   is what converts a loud failure into a silent pass.
 
+### RULED 2026-07-28 (operator gate-cleanup pass) — BOTH, not a pick-one
+
+No specific answer was on file for this item; applying the operator's standing general theme (full completions over
+partial/cheap fixes; "do not allow anything to partially complete") to the analysis above: **fix the tests AND fix the
+gate's environment inconsistency — not one or the other.** Reasoning:
+
+- Fixing only the tests (the smaller, contained change) silences the SYMPTOM in 3-4 repos but leaves the actual root
+  inconsistency standing: quickmerge always verifies in `development`, a standalone recovery run always verifies in the
+  `prod` default, and any future test/config that happens to be environment-sensitive can reproduce this exact class of
+  gate-bypass again. That is a shortcut, not a full completion.
+- "Fix the gate" does NOT mean flip quickmerge itself to run as `ENVIRONMENT=production` — that would trade this hazard
+  for a worse one (every slot's every commit touching real prod credentials/buckets during test runs), which is not what
+  "do it properly" calls for. It means: **quickmerge's resolved environment and a standalone `quality-gates.sh --no-fix`
+  run's resolved environment must agree, explicitly, for the same branch context** — no more silent divergence where one
+  path defaults to `development` and the other defaults to `prod` for the identical tree. Making that binding explicit
+  (rather than two independent ambient defaults) is the durable, canonicalization- grade fix, not a hack.
+- The sentinel hardening (item 2 below) proceeds independently either way, per the doc's own "fix this regardless"
+  finding — it closes the actual silent-bypass hazard on its own.
+
+Full-completion mandate for the two retagged todos below: no partial coverage (all repos, not "the easy ones"), no
+guessed/placeholder environment values, cost is not a blocker (this is code + CI config, not paid infra).
+
 ## Resolution checklist
 
-- [ ] [OPERATOR] P1. Decide the split: fix the tests, the gate's environment, or both — and confirm the sentinel
-      hardening below proceeds independently.
+- [x] ✅ [DOCS] P1. ~~Decide the split: fix the tests, the gate's environment, or both~~ — **RULED 2026-07-28 (operator
+      gate-cleanup pass, general design-choice theme applied, no specific answer was on file): BOTH.** See "RULED
+      2026-07-28" under § "Which side is actually wrong?" above for the full reasoning. Confirmed: the sentinel
+      hardening below proceeds independently regardless. Retagged away from `[OPERATOR]` — the two concrete pieces of
+      follow-on work are items 3 and 5 below.
 - [ ] [INFRA] P1. **Bind configuration into the sentinel** (`scripts/base-service.sh` / `scripts/quickmerge.sh`): mix
       `ENVIRONMENT` (and any other gate-affecting env var) into the sentinel hash so a sentinel produced under one
       configuration cannot satisfy a run under another. Add a regression test that a dev-written sentinel does NOT
@@ -150,3 +175,20 @@ Both readings are defensible and the operator should pick — they lead to diffe
 - [ ] [DOC] P2. Correct the "re-run quality-gates.sh --no-fix then retry" guidance wherever it is taught (agent prompts,
       runbooks): as written it is a sentinel-laundering step, not a fix. It is only safe once the sentinel binds
       configuration.
+- [ ] [INFRA] P2. **The "fix the gate" half of the 2026-07-28 BOTH ruling — make quickmerge's and a standalone
+      `quality-gates.sh --no-fix` run resolve the SAME explicit `ENVIRONMENT` for the same branch context**, so the two
+      invocation paths can never again silently diverge (today: quickmerge always exports `development` for any
+      non-`main` branch per `scripts/quickmerge.sh:1216-1222`; a standalone run leaves `ENVIRONMENT` unset and the
+      bucket resolver defaults to `prod`). Do NOT flip quickmerge itself to `production` — that introduces a new hazard
+      (every slot's every commit would touch real prod credentials/buckets during test runs) and is explicitly not the
+      intent of this ruling. Instead: make the standalone `quality-gates.sh` entrypoint export the SAME
+      branch-conditional `ENVIRONMENT` value quickmerge would use for the current branch (mirroring
+      `scripts/quickmerge.sh:1216-1222`'s own branch check), so a developer/agent running the gate standalone always
+      verifies under the identical configuration quickmerge will actually gate on — closing the divergence at the source
+      rather than only downstream at the sentinel. **Full-completion mandate**: cover every repo's
+      `quality-gates.sh`/`base-service.sh` entrypoint, not just the 3-4 repos currently affected by hardcoded prod
+      bucket names in tests — this is a shared-script fix, so it protects every repo going forward, not only today's
+      known offenders. Add a regression test asserting standalone and quickmerge-invoked runs resolve identical
+      `ENVIRONMENT` for the same branch. **Done when**: `scripts/base-service.sh` (or the equivalent shared entrypoint)
+      derives `ENVIRONMENT` from the same branch-conditional logic quickmerge uses regardless of invocation path, the
+      regression test passes, and `quality-gates.sh` is green in every repo touched.

@@ -174,7 +174,7 @@ whole suite (1609 passed).
       quickmerge (STEP 5.101 scans the whole workspace root, not just the touching diff) until fixed or explicitly
       exempted. Found as a side effect of an unrelated attempted commit 2026-07-24; not investigated further (out of
       scope, unfamiliar file, not touched by this session). SSOT for the ratchet:
-      `plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`. **Gate**: rewrite the
+      `plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`. **Gate**: rewrite the
       site to fail fast, or add `# noqa: qg-empty-fallback` with a one-line reason per that SSOT's own recipe. — already
       covered by plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (measured 2026-07-26:
       check_no_empty_string_fallback.py --scope unified-trading-pm reports 319 == baseline) (see that doc for

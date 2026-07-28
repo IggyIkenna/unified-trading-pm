@@ -14,7 +14,7 @@ summary: >-
   archival-ritual task that legitimately flips its own todo's checkbox and archives the very file that checkbox lives
   in, in one commit, can NEVER satisfy this gate -- reproduced live on
   `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize-003` (`unified-trading-pm@2641d8844`).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -37,9 +37,13 @@ execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: "agent-orchestrator@587c8db"
 locked_by:
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. Both todos closed:
+> `agent-orchestrator@587c8db` (server/verify.py Mode-2/Mode-1 fallback + regression tests); the P3 doc
+> follow-up resolved as now-moot.
 
 # /done checkbox-flip verification can't handle a self-archiving finalize task
 
@@ -93,15 +97,20 @@ for a FUTURE such task, but can't retroactively fix an already-pushed single com
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Fix `server/verify.py`'s Mode-2 fallback: when `pm_ref_matched` (or any candidate path) no longer
-      exists on disk, fall through to checking the OTHER candidate paths (including a plausible
-      `plans/archive/**/<basename>` glob, or by following the git rename explicitly via `git log --follow -- <path>` /
-      `git diff -M` to resolve the file's new location) for the checked-and-flipped content, rather than only checking
-      the literal historically-matched path. Add a regression test mirroring this exact case: a single commit that both
-      flips a plan's checkbox AND `git mv`s the file to `plans/archive/`. Repo: agent-orchestrator.
-- [ ] [DOC] P3. Once the fix above ships, consider whether the archival-ritual's own "Done when" text (task_template.md
-      / the 6-step-ritual convention) should recommend the safer two-commit split (flip in place → then `git mv`) as a
-      workaround until the server-side fix lands, to avoid other workers hitting the same wall in the meantime.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-28 — `agent-orchestrator@587c8db`.** Fixed `server/verify.py`'s Mode-2 (and,
+      as a bonus consistency fix, Mode-1) fallback: `_resolve_current_plan_text()` now tries every literal candidate
+      path first, then falls through to a `plans/archive/**/<basename>` glob when none exist on disk — no longer
+      pinned to `pm_ref_matched` (the historically-matched OLD path) once it's gone from disk. Regression tests added
+      mirroring this exact case (a single commit that both flips a plan's checkbox AND `git mv`s the file to
+      `plans/archive/`), both cross-repo and single-repo:
+      `tests/test_done_gate_plan_flip_hard_reject.py::test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv`
+      and `::test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv`. Full `quality-gates.sh`
+      green (1915 passed). See the companion fix in `ao_m3_verify_plan_flip_blind_to_archival_rename_2026_07_26.md`
+      (same commit, same root function — the diff-based detection ALSO now follows a same-commit archival rename).
+- [x] ✅ [DOC] P3. **RESOLVED — now moot, no doc change needed.** The server-side fix above makes the bundled
+      "flip + `git mv`" single-commit pattern (CLAUDE.md's own prescribed archival wording) work correctly through
+      `/done` — there is no longer a wall for the two-commit-split workaround to route around. Recommending the
+      workaround now would just be extra ritual friction for a gap that no longer exists.
 
 ## Progress Log
 

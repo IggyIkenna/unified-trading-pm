@@ -430,12 +430,27 @@ context; recommended owner strategy-service PBM):
       `quality-gates.sh` green (553s). No UTL-side change needed — UTL's margin models consume an already-computed
       `collateral_usd`, not raw haircut data; grepped UTL for `collateral_registry`/`COLLATERAL_REGISTRY` — zero hits,
       confirming no other consumer expectation exists there.
-- [ ] [UI] P2. uts-ui Stage-A jurisdiction-filter surface is the follow-on consumer of the UAC jurisdiction overlay
+- [x] ✅ [UI] P2. uts-ui Stage-A jurisdiction-filter surface is the follow-on consumer of the UAC jurisdiction overlay
       registry (`unified_api_contracts.internal.architecture_v2.jurisdiction_overlay` — `Jurisdiction` /
       `JURISDICTION_VENUE_POLICIES` / `allowed_venues_for_jurisdiction` / `is_venue_allowed`, backfilled 2026-06-13):
       the wizard reads the investor entity's jurisdiction and filters the venue/instrument picklist so a config can
       never include a venue the jurisdiction cannot legally touch (conservative default = blocked + needs_legal_review).
-      UI repo; registry layer is done — this is the thin Stage-A filter surface only.
+      UI repo; registry layer is done — this is the thin Stage-A filter surface only. — **EVIDENCE-ONLY CLOSURE
+      2026-07-28 (slot-12)**: already shipped by slot-13 same-day and the checkbox was simply never flipped (`git log`
+      confirms `unified-trading-system-ui@49a6fc9f` "feat(wizard): Stage-A jurisdiction filter for the capability
+      wizard", ancestor of current HEAD on `live-defi-rollout`). Re-verified the implementation directly against this
+      todo's spec rather than trusting the commit message: `lib/wizard/graph.ts` `applyJurisdictionFilter()` marks an
+      in-scope disallowed venue `disabled`+`status: "not_available"` with a policy-reason prefix (never un-disables a
+      venue already blocked for capability reasons), `lib/registry/jurisdiction-overlay.ts` is the typed TS mirror of
+      the UAC registry reading `ui-reference-data.json`, and `app/(wizard)/wizard/page.tsx` wires a
+      `jurisdiction-select` dropdown into Stage A (`data-testid="stage-A-jurisdiction-filter"`) feeding the Stage-E
+      venue/leg-group filtering. Note: the registry (and this filter) is venue-scoped, not instrument-scoped — the UAC
+      `JurisdictionVenuePolicy` has no instrument axis, so "venue/instrument picklist" in the todo's prose is satisfied
+      via venue-gating (an instrument is only reachable through an allowed venue). Re-ran the existing regression spec
+      fresh (not just re-reading it):
+      `npx playwright test --project=chromium tests/smoke/wizard-jurisdiction-filter.spec.ts` — 2/2 passed (US_CFTC
+      blocks known CeFi-perp venues at Stage E; unset jurisdiction is a no-op). No code change required. —
+      unified-trading-system-ui@49a6fc9f | pw:L2 ✓ | regression: tests/smoke/wizard-jurisdiction-filter.spec.ts
 
 ## Closest-to-unlock roadmap (auto-emitted)
 

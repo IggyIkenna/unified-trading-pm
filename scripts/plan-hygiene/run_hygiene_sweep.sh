@@ -217,6 +217,11 @@ run_check "CLAUDE↔SUB_AGENT topic parity"    soft "$SCRIPT_DIR/check_claude_su
 # signal only, feeds /plan-reconcile's AO-dispatch-readiness hunter for real judgment; soft because
 # a regex cannot decide whether a self-justification is actually sound.
 run_check "Delete/VM-launch todo tagging (AO plans, candidate signal)" soft "$SCRIPT_DIR/check_delete_vm_launch_gating.sh"
+# Priority vs. tier policy (operator ruling 2026-07-28, plan_priority_policy_qg_validation_2026_07_28.md) —
+# flags a bare sports/tradfi-tagged doc sitting at P0/P1 with no title/frontmatter signal of
+# backfill-completion-critical work, per plan-priority-tier-and-dispatch-ordering.md. Soft/advisory:
+# a keyword heuristic can only surface a re-triage candidate, never decide the judgment call itself.
+run_check "Priority vs. asset-group tier policy (candidate signal)" soft python3 "$SCRIPT_DIR/check_priority_tier_policy.py"
 
 # Archive candidates is informational — always "passes"
 echo ""

@@ -166,16 +166,21 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
 
 ## Todos
 
-- [ ] [OPERATOR] P3. Decide whether to pursue a live sports-odds ingestion path at all (the structural blocker above) —
-      this is a real, scoped infrastructure investment (a new MTDS live-mode connector + a declared
-      `SOURCE_MODE_CAPABILITY` entry), not a flag flip. Until this is decided yes, none of the chain below can start; if
-      decided no (sports stays batch-only for the foreseeable future), this plan should be marked
-      `status:     cancelled` with that ruling recorded, not left open indefinitely.
-- [ ] [INFRA] P3. Once Todo 1 is a yes: scope the MTDS live-odds connector (which source — `odds_api` aggregator is the
-      only currently-viable live-ish path per `sports-live-odds-connectivity.md` — REST poll, near-real-time, no
-      login) + the UAC `SOURCE_MODE_CAPABILITY`/`SOURCE_PRIORITY` entries it needs, as its own follow-up plan (this plan
-      only names it — building it is real, separately-estimated work). (repo: market-tick-data-service,
-      unified-api-contracts)
+- [x] ✅ [INFRA] P3. **RULED 2026-07-28: YES — pursue it.** Was `[OPERATOR] P3` "Decide whether to pursue a live
+      sports-odds ingestion path at all." Reasoning: (1) the operator has already ruled, in this exact same corpus and
+      timeframe (`sports_live_availability_and_source_latency_2026_07_24.md`'s Live-ODDS quota decision, 2026-07-28), to
+      proceed with resuming live sports-odds ingestion generally — that data-capture path is being actively invested in,
+      not abandoned; (2) the general theme's "opt for full completions, no shortcuts, full functionality" favors
+      building the plumbing properly over settling for batch-only when a live path is buildable; (3) this decision's own
+      downstream risk is low — the actual live-TRADING activation (real capital) stays behind Todo 5's permanent,
+      un-liftable `[OPERATOR]` hard-stop below regardless of this ruling, so saying "yes, scope it" only unblocks
+      READINESS/plumbing work, not capital risk. This does NOT cancel the plan; it converts Todo 1 into "yes" and folds
+      directly into Todo 2 below (no separate action needed — Todo 2 already reads "Once Todo 1 is a yes: scope...").
+- [ ] [INFRA] P3. Todo 1 is now a yes (ruled 2026-07-28 above): scope the MTDS live-odds connector (which source —
+      `odds_api` aggregator is the only currently-viable live-ish path per `sports-live-odds-connectivity.md` — REST
+      poll, near-real-time, no login) + the UAC `SOURCE_MODE_CAPABILITY`/`SOURCE_PRIORITY` entries it needs, as its own
+      follow-up plan (this plan only names it — building it is real, separately-estimated work). (repo:
+      market-tick-data-service, unified-api-contracts)
 - [ ] [INFRA] P3. Once the MTDS connector lands: build `launch-mtds-live-sports.sh` +
       `launch-mdps-features-live-sports.sh`, mirroring the cefi/defi precedent
       (`plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md`); MDPS's `LiveModeHandler` already exists,
@@ -193,7 +198,10 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
 - [ ] [OPERATOR] P3. Final explicit go-ahead to flip sports (and separately, prediction, once it reaches this rung) from
       paper to live trading — requires the full readiness-ladder checklist (Groups A-H,
       `master_to_live_defi_2026_05_23.md`) passing for the asset group, same bar cefi/defi cleared. **This is the actual
-      activation step; nothing above it authorizes live trading on its own.**
+      activation step; nothing above it authorizes live trading on its own.** **Reviewed 2026-07-28, confirmed remains a
+      permanent hard-stop — NOT retagged.** Flipping paper→live puts real capital at risk; per workspace HARD RULE this
+      always requires a human's explicit, personal go-ahead, same as every other live-trading activation (cefi/defi's
+      May-23 gate). No amount of readiness-ladder completion below removes this gate.
 
 ## Codex SSOTs
 

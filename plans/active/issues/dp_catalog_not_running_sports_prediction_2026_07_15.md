@@ -248,22 +248,28 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
       The real mechanism is cefi-only post-merge dedup passes correctly collapsing already-delisted duplicate rows.
       Live-verified `CATALOGUE_PROMOTED` 2026-07-28 (429293 rows, `decision=ACCEPT`) satisfies this todo's literal
       done-when. Repo: instruments-service (diagnosis only, no commit).
-- [ ] [OPERATOR] P3. **Decide whether to make the cefi monotonic guard dedup-aware, or leave the current
-      block-then-self-heal behavior as-is.** Per the 2026-07-28 update below, cefi's daily incremental job
-      intermittently trips `CATALOGUE_SHRINK_BLOCKED` (07-16, 07-23 through 07-27 observed) purely because the cefi-only
-      Phase D dedup passes (`_dedup_bybit_future_base_asset_parsing`, `_dedup_cefi_expiry_off_by_one`,
-      `_dedup_cefi_margin_type_mislabel`) collapse already-delisted duplicate rows below the guard's not-equally-deduped
-      previous-catalogue baseline — confirmed safe every time observed (`dropped_active: 0` on 07-23 and 07-27; every
-      dropped row was already closed in the prev catalogue, sample IDs match the dedups' documented ambiguous-wire-key
-      scope exactly). The guard self-heals whenever a day's net new listings outpace that day's dedup collapses
-      (happened 07-28: 429293 rows, `ACCEPT`) — same pattern already observed and accepted for defi (self-healed
-      2026-07-23, no code fix). This is a genuine operator-facing design/policy call, NOT a bounded worker todo: (a)
-      leave as-is (occasional day-level `CATALOGUE_SHRINK_BLOCKED` + self-heal is cosmetic noise, not data loss — the P3
-      IAM-403 fix above already gets these into the structured event log for visibility), or (b) change
-      `promote_catalogue`'s guard to compare against a dedup-normalized baseline (re-run the same Phase D dedups over
-      the CURRENT prod catalogue before counting it) so a purely-cosmetic dedup-driven shrink never blocks promotion — a
-      change to production monotonic-guard semantics that needs explicit operator sign-off before shipping, not a
-      worker's unilateral call. Repo: instruments-service.
+- [ ] [DATA] P3. **RULED 2026-07-28 (was `[OPERATOR]`) — make the guard dedup-aware; ship option (b), not (a).**
+      Reasoning applied from the operator's standing general ruling: "Opt for full completions, no shortcuts, full
+      functionality... if it's about canonicalisation rather than a hack, do it properly" — leaving a production
+      monotonic guard producing recurring, already-diagnosed cosmetic `CATALOGUE_SHRINK_BLOCKED` noise (07-16, 07-23
+      through 07-27 observed, confirmed safe every time — `dropped_active: 0`) purely because it compares against a
+      not-equally-deduped baseline is exactly the kind of half-fixed state the ruling rejects, even though it self-heals
+      within days; "things should recover FULLY... prefer building the full automatic recovery, not just [accepting an
+      interim state]" applies by the same logic — the current behavior is a PARTIAL auto-recovery (correct eventually,
+      noisy and block-then-wait in the meantime), and the proper fix removes the false trip entirely rather than just
+      tolerating it. **Critically, this fix does not reduce guard rigor or create a new data-loss blind spot** —
+      re-running the SAME Phase D dedup passes (`_dedup_bybit_future_base_asset_parsing`,
+      `_dedup_cefi_expiry_off_by_one`, `_dedup_cefi_margin_type_mislabel`) over the CURRENT prod baseline before
+      comparing makes the comparison MORE precise (both sides deduped identically), not looser — a genuine
+      `dropped_active > 0` shrink would still trip the guard exactly as before; only the already-confirmed-safe
+      `dropped_delisted`-only case stops false-tripping. Concrete full-completion mandate: modify `promote_catalogue`'s
+      monotonic-guard comparison in `build_instrument_catalogue.py` to run the three cefi-only Phase D dedup functions
+      over the CURRENT prod catalogue before computing `current` for the guard's row-count comparison (mirrors, does not
+      replace, the existing `_shrink_drop_diagnostics`' `dropped_active`/`dropped_delisted` split — that diagnostic
+      stays as the safety cross-check, not a substitute for fixing the comparison itself); add a regression test proving
+      (i) a dedup-only-driven shrink no longer trips `CATALOGUE_SHRINK_BLOCKED`, and (ii) an injected genuine active-row
+      drop still does. Full `quality-gates.sh` green before shipping — this touches a production reference-data safety
+      guard, so no shortcuts on test coverage. Repo: instruments-service.
 
 ## Progress Log
 
@@ -449,3 +455,13 @@ and touching the cefi monotonic-guard/dedup interaction for real (making the gua
 reference-data policy decision, not a diagnostic fact — filed as a new `[OPERATOR]` P3 todo above rather than decided
 unilaterally, consistent with this doc's own standing instruction ("operator should decide … before anyone runs
 `--allow-catalogue-shrink` on production reference data").
+
+## 2026-07-28 (gated-decision retag sweep)
+
+Applied the operator's general-theme ruling to the cefi dedup-aware-guard `[OPERATOR]` P3 todo above: ship option (b)
+(make the guard dedup-aware) rather than leave the recurring cosmetic block-then-self-heal noise as-is, since the
+theme's "full completions, no shortcuts" + "prefer full automatic recovery" disposition rejects tolerating a partial fix
+when a proper one is available and — critically — verified NOT to weaken the guard's real data-loss protection
+(re-running the same dedup passes over the current baseline makes the comparison more precise, not looser). Retagged the
+todo from `[OPERATOR]` to `[DATA]` with the ruling + reasoning + a concrete implementation + regression-test mandate
+written in. Docs-only, no code changed.

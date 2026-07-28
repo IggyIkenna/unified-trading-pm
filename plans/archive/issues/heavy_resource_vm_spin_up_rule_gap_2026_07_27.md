@@ -25,7 +25,7 @@ scope: [engineer, admin]
 tags: [infra, ram, memory, oom, shared-host, vm-launcher, heavy-io, cgroup, ad-hoc-scripts, quality-gates, fleet-wide]
 related:
   [
-    /plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
+    /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
     /plans/active/issues/shared_host_tmp_tmpfs_full_2026_07_26.md,
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,

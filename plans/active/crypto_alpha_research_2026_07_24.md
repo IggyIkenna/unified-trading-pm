@@ -92,6 +92,12 @@ drift_direction: advance-code
 > class). They accumulated in this plan's Progress Log but are a DIFFERENT workstream from the paper-batch-live spine.
 > **Recommendation: migrate these to a dedicated `plans/active/crypto_alpha_research_2026_06_23.md` under the strategy
 > epic** so this determinism plan stays focused. (Say the word and I'll do the migration with `MIGRATED FROM:` banners.)
+>
+> **Reviewed 2026-07-28 (operator gate-clearance pass): confirmed PERMANENT hard-stop, NOT unlocked.** Book sizing,
+> hedge design, and which alpha legs ship are trading-book judgment calls with real capital consequences — the same
+> class of decision CLAUDE.md reserves for a human permanently (wallet keys, force-push main). This category is
+> explicitly excluded from the general "unpause/relax/complete-in-full" theme applied elsewhere in this pass; these 16
+> items stay `BLOCKED-OPERATOR-DECISION` indefinitely and are not retagged.
 
 - Short sleeve: re-cast as a basis tail-hedge · re-evaluate book weight (15%→smaller/0) · wire the R8 confirmed-momentum
   short gate into production · ship the de-risk overlay + 12% short.

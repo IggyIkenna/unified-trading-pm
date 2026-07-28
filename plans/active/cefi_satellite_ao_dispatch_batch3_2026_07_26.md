@@ -9,7 +9,9 @@ summary: >-
   gates re-verified still closed — batch2 was authored the same day, so nothing had cleared) and then ran a fresh
   Phase-1/Phase-3 pass over the residual, including two docs batch2 could not have seen because its own work created
   them. 5 items cleared the conflict-check into todos below; everything else is held in Deferred with its blocking class
-  named. One genuine cross-tranche conflict was found and is PARKED for the operator rather than guessed at.
+  named. One genuine cross-tranche conflict was found and initially PARKED for the operator; **ruled 2026-07-28**
+  (operator gate-cleanup pass, general design-choice theme applied) and promoted to a 6th dispatchable todo — see
+  "Deferred — BLOCKED-OPERATOR-DECISION" below for the resolution record.
 status: active
 nature: process
 asset_group: [cefi]
@@ -57,11 +59,13 @@ drift_direction: advance-code
 > operator unreachable, so the flip is explicitly reserved for operator review. Flip this frontmatter's `status` to
 > `active` only after that review.
 
-> **Cross-todo file-collision check: PASS.** The 5 todos touch, respectively:
+> **Cross-todo file-collision check: PASS.** The 6 todos touch, respectively:
 > `plans/active/data_completion_cefi_2026_07_15.md` · instruments-service CLI + `t1_batch_scheduler.tf` ·
 > `/codex/05-infrastructure/deployment-observability.md` · MTDS `engine/orchestrator/sentinels.py`+`__init__.py` ·
-> (read-only, no code edit). Todos 1 and 3 are both in unified-trading-pm but touch different files. Todos 4 and 5 are
-> both market-tick-data-service but todo 5 makes no code change. Safe to dispatch concurrently.
+> (read-only, no code edit) · a new one-off MTDS manifest-repair script (blank-`data_type` backfill/reclassify — todo
+> 6). Todos 1 and 3 are both in unified-trading-pm but touch different files. Todos 4, 5, and 6 are all
+> market-tick-data-service but todo 5 makes no code change, and todo 6 is a new one-off script (no overlap with todo 4's
+> orchestrator-module edit). Safe to dispatch concurrently.
 
 ## Todos
 
@@ -142,8 +146,39 @@ drift_direction: advance-code
       attributing the ~17s across the three phases with measured numbers is appended to that issue doc, the doc states
       explicitly which of options A/B the evidence favours **as information for the operator** without adopting either,
       and zero code/GCS/manifest mutations occurred.
+- [ ] [DATA] P2. **Blank-`data_type` cefi manifest rows — backfill the resolved-venue majority, reclassify the
+      bare-venue residual.** **RULED 2026-07-28 (operator gate-cleanup pass)** — resolves the cross-tranche conflict
+      previously parked below as `BLOCKED-OPERATOR-DECISION`: no specific answer was on file, so the operator's general
+      design-choice theme was applied (full completions/backfills where determinable, no shortcuts; never fabricate a
+      value when honest-absence/reclassify is the correct call). The apparent conflict between
+      `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`'s `[DATA] P3` (9,750 blank-`data_type`
+      rows, "either backfill or confirm honest-absence") and
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`'s `[DATA] P2` (COINBASE(7)+OKX(7),
+      "reclassify") dissolves once read precisely — they are different-sized, only-partially-overlapping populations:
+      **(a) 9,736 rows** where `venue` is ALREADY market-type-suffixed (BYBIT/BINANCE-FUTURES/OKX-SWAP/UPBIT/
+      HYPERLIQUID/DERIBIT/BINANCE-SPOT/COINBASE-SPOT/OKX-SPOT/OKX-FUTURES) and only `data_type` is blank — **BACKFILL**:
+      root-cause the writer path that stamps `capture_status=captured` before `data_type` resolution, join each row back
+      to its actual captured GCS object's `data_type=` path segment, correct the manifest field. This is mechanically
+      determinable (venue unambiguous) so it gets a full backfill per the no-partial-completion mandate, not a
+      diagnose-only close; well under the $100 cost-is-not-a-blocker threshold (manifest correction, no new paid infra).
+      **(b) 14 rows** (bare `OKX`×7 + `COINBASE`×7, the literal overlap between the two docs) where `venue` itself is
+      ambiguous (SPOT/FUTURES/SWAP) — **RECLASSIFY**, exactly as
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449` already prescribes: do not fabricate a
+      guessed venue-suffix/`data_type`, since the real per-market data is already captured correctly under the suffixed
+      venues elsewhere — the bare-venue row is a malformed/duplicate manifest artifact, and inventing a value would
+      violate the workspace's honest-absence/no-fabricated-placeholder rule. Repo: market-tick-data-service. Sources:
+      `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` (ruling recorded there too) and
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449` (disposition confirmed, unchanged). **Done
+      when**: a re-measured manifest read shows blank-`data_type` `captured` rows at 0 for the 9,736-row resolved-venue
+      population (backfilled with the correct `data_type` per row, verified against each row's actual GCS object), the
+      14-row bare-venue subset is reclassified (marked malformed/superseded — NOT backfilled with a guessed value), and
+      both source docs' checkboxes are flipped `[x]` with the commit(s) cited.
 
 ## Deferred — BLOCKED-OPERATOR-DECISION (a genuine conflict, parked not guessed)
+
+**RESOLVED 2026-07-28 (operator gate-cleanup pass)** — the blank-`data_type` conflict previously parked here is ruled
+and promoted to a dispatchable todo above (backfill the resolved-venue majority, reclassify the bare-venue residual);
+this section is retained only as the original conflict record for provenance:
 
 - **Blank-`data_type` cefi manifest rows — two docs in two tranches claim overlapping ground with different
   dispositions.** `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`'s `[DATA] P3` proposes
@@ -156,7 +191,9 @@ drift_direction: advance-code
   doc found tracking this specific population" — that claim is **wrong**, and the reason is instructive: it grepped for
   lowercase "blank data_type" and the exact row count, while the cross-cutting doc writes "BLANK
   data_type/instrument_type". Two todos, different prescribed fixes, same manifest rows, no evidence that settles which
-  is right. Not drafted; see the operator question raised by this run.
+  is right — resolved above by observing the two docs actually name different-sized, only-partially-overlapping
+  populations (9,736 resolved-venue rows vs. 14 bare-venue rows), so both prescriptions were correct for their own
+  slice.
 
 ## Deferred — operator-gated (re-verified 2026-07-26, all still closed)
 

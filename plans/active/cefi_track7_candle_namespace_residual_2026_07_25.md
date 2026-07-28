@@ -24,7 +24,7 @@ related:
     /plans/active/cefi_track7_candle_namespace_residual_finalize_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-28" # (was: 2026-07-25; hard-stop review 2026-07-28 — confirmed remains permanent, no unlock)
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -94,6 +94,13 @@ drift_direction: advance-code
       auto-unblocking once the prerequisite lands. **This todo stays open and gated** — the correct resolution of the
       operator question is "not ready, here is exactly what's missing," not a forced premature answer. Unblocks when:
       candidate-7 lands AND a human executes the delete per hard-stop #2.
+
+> **Hard-stop review, 2026-07-28 (operator gated-decision closeout pass).** This 149-object delete was reviewed together
+> with the cefi orphan-sweep + legacy-bucket deletes in
+> `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` and the Artifact Registry cleanup policy flip.
+> **Confirmed to remain a permanent, human-only hard-stop** — delete-safety-protocol hard-stop #2 (any legacy-object
+> delete after copy) has no §3a reversibility carve-out, regardless of how completely the verify/backfill gate above is
+> satisfied. **Not retagged, not unlocked**: the todo stays `[OPERATOR]`.
 
 ## Reconciliation
 

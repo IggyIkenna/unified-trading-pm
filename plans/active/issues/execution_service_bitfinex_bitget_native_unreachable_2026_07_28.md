@@ -87,10 +87,28 @@ scratch. That's why this was kept out of the binance/bybit/okx todo's scope rath
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P3. Decide whether Bitfinex/Bitget are still wanted as execution venues at all (this question is
-      already open in `per_venue_scope_key_provisioning_incomplete_2026_07_23.md` — this issue just flags that the
-      native-adapter reachability gap is a second, related symptom of the same unresolved question, not a separate
-      decision). If YES: file a follow-up todo to wire `bitfinex_native.py`/`bitget_native.py` into `factory.py`
-      (mirroring `DIRECT_REST_VENUES`/`_create_direct_rest_adapter`) once credentials exist. If NO (or "not soon"): file
-      a follow-up todo to delete both files + their dedicated tests, citing this issue doc + the adapter-dead-code-ban
-      SSOT, same pattern as `execution-service@6c9645a5`.
+> **RULED 2026-07-28** (operator general theme applied — no venue-specific answer was given, this decision falls under
+> the standing design-choice theme: "opt for full completions, no shortcuts... no half-built, half-referenced adaptors
+> left lying around either way" + "all adaptors should be FINISHED unless it is literally proven the data/access cannot
+> be obtained, in which case FULLY REMOVE"). **Ruling: KEEP Bitfinex/Bitget as execution venues — wire the existing
+> native adapters back in.** Reasoning: nothing here proves credentials are literally unobtainable (only that they
+> haven't been requested yet, months after the adapters were built) — deleting complete, tested, working adapter code
+> because it hasn't been connected yet is exactly the "cheap"/shortcut path the theme rejects; the adapters are already
+> a FULL implementation (signing, rate limiting, error classification, `parse_order_response` contract tests — see "What
+> I found" above), not a half-built scaffold, so completing the wiring (not deleting the work) is the
+> full-completion-mandate answer. This also resolves the identical open sub-question in
+> `per_venue_scope_key_provisioning_incomplete_2026_07_23.md`'s "Aster" section for these 2 venues — same ruling applies
+> there.
+
+- [ ] [SCRIPT] P3. **Wire `bitfinex_native.py`/`bitget_native.py` into `factory.py`** — add BITFINEX/BITGET to a
+      `DIRECT_REST_VENUES`-style set, a `_create_direct_rest_adapter`-style dispatch branch routing to
+      `BitfinexCeFiAdapter`/`BitgetCeFiAdapter`, and both venues into `get_supported_venues()`'s returned list,
+      mirroring the existing `DIRECT_REST_VENUES` pattern exactly — full wiring for BOTH venues in the same change, no
+      partial (wire-one-skip-the-other) landing. **Do not gate this code change on credentials existing** — the adapter
+      code already compiles and is unit-tested; wiring it is independent of whether live keys exist yet (the existing
+      `_load_secret`-style credential path 404s safe-closed exactly like every other unprovisioned venue until keys
+      land, same shape as Kalshi's pre-fix state in `kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`).
+      **Remaining concrete step this ruling does NOT cover**: acquiring real Bitfinex/Bitget API credentials (account
+      creation + key generation on each exchange) is a real-world vendor-account action for the operator (or AO's own
+      ambient identity, if a self-service path exists for these two vendors — unconfirmed) to complete before live
+      trading can actually use these venues; it does not block landing this wiring todo.

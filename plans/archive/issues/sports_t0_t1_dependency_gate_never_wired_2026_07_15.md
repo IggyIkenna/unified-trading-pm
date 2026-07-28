@@ -15,7 +15,7 @@ summary:
   the gate were actually enforced. The dependency IS real in the data sense (T1 adapters do read api-football's
   canonical fixture IDs for joining), but the fail-loud SAFETY NET around it has silently never fired since it was
   built."
-status: open
+status: resolved
 priority: P2
 nature: notes
 asset_group: [sports]
@@ -34,13 +34,23 @@ source:
   "Interactive session 2026-07-15, investigating operator question: does api-football's this-session fixture backfill
   require re-running dependent T1 sources?"
 locked_by:
-resolved_by:
+resolved_by: cross-repo quick-fix batch, 2026-07-28 (verified already-shipped by a prior slot)
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 drift_direction: advance-code
 assigned_vm: planning
 depends_on: []
 ---
+
+> **🟢 RESOLVED 2026-07-28.** Threaded `date=`/`bucket=` through all 5 real T1 call sites (`footystats.py` x3,
+> `transfermarkt.py`, `understat.py`, `sfi.py`) — `instruments-service@3c424e61` ("fix(sports): wire T0/T1 dependency
+> gate into every real footystats/transfermarkt/understat/sfi call site"), already on `origin/live-defi-rollout` HEAD
+> with a dedicated regression test (`tests/unit/test_sports_t0_t1_gate_real_callers.py`, 4 tests proving a real
+> T0-before-T1 ordering violation raises `DependencyError` from the actual orchestrator functions). Independently
+> re-verified live during this pass (not just trusting the commit message): every real call site now reads
+> `date=date, bucket=bucket`, `3c424e61` is an ancestor of current HEAD. This work was already tracked + checked off in
+> `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` (Track E) — archiving this issue per
+> issue-doc-lifecycle's ACKED-INTO-CODE trigger.
 
 ## What I found
 
@@ -107,12 +117,15 @@ unexpectedly).
 
 ## Recommended decision + todo
 
-- [ ] [SCRIPT] P2. **Thread `date` through every T1 call site of `create_sports_reference_adapter()`** (`footystats.py`
-      x3, `transfermarkt.py`, `understat.py`, `sfi.py`) so the existing, already-tested `DependencyError` gate actually
-      fires as designed. This is a pure wiring fix — no change to `sports_dependency.py` itself. Verify post-fix that it
-      does NOT retroactively break understat's pre-2018 captures (expected: it won't, since those captures already
-      succeeded and are cached/complete — the gate only affects NEW fetch attempts going forward for genuinely-missing
-      dates). (repo: instruments-service)
+- [x] [SCRIPT] P2. ✅ **DONE — already shipped, verified 2026-07-28.** ~~Thread `date` through every T1 call site of
+      `create_sports_reference_adapter()` (`footystats.py` x3, `transfermarkt.py`, `understat.py`, `sfi.py`) so the
+      existing, already-tested `DependencyError` gate actually fires as designed. This is a pure wiring fix — no change
+      to `sports_dependency.py` itself. Verify post-fix that it does NOT retroactively break understat's pre-2018
+      captures (expected: it won't, since those captures already succeeded and are cached/complete — the gate only
+      affects NEW fetch attempts going forward for genuinely-missing dates).~~ — `instruments-service@3c424e61`
+      threaded `date=`/`bucket=` through all 5 sites, placed AFTER each function's own skip/guard checks (avoids
+      retroactively breaking understat's pre-2018 idempotent re-runs, exactly as this todo asked to verify). (repo:
+      instruments-service)
 
 ## RE-TRIAGE (2026-07-23)
 

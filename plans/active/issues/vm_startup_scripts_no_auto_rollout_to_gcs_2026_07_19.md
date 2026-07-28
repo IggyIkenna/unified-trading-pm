@@ -104,13 +104,20 @@ verified FRESH). So the fleet is currently in sync; the open work is the DURABLE
 > per-launcher freshness check vs process-only), so it is captured below as an `[OPERATOR]`-gated decision exactly per
 > `task_template.md`'s bounded-outcome rule, and raised as a `/plan-reconcile` operator question in the same pass.
 
-- [ ] [OPERATOR] P1. **Rule on which durable fix shape to build** for "a committed change to a GCS-hosted
-      `deployment-service/scripts/vm/` startup/helper script must reach `gs://deployment-scripts-<project>/vm/`
-      automatically". The three options are stated verbatim in § "Fix options (for operator decision)" above: **(1)** a
-      CI job triggered on changes under `deployment-service/scripts/vm/` that `gsutil cp`s the changed files (smallest
-      blast radius); **(2)** a per-launcher freshness check mirroring `lc_verify_tarball_freshness` (more robust, more
-      code); **(3)** interim/process-only — document the manual `bash scripts/vm/create-code-tarballs.sh` step as a HARD
-      post-change requirement in the ship checklist (the doc itself calls this "the minimum until (1) or (2) lands", not
-      a substitute for them). **Done when**: one option is recorded in this doc with a dated operator line, and the
-      chosen option is written up as its own bounded implementation todo here. Repo: deployment-service (+
-      unified-trading-pm if (3) adds a checklist/codex step).
+- [ ] [SCRIPT] P1. **RULED 2026-07-28** (operator general theme applied — no item-specific answer was given, so the
+      standing theme governs: "things should recover FULLY if they die or restart... prefer building the full automatic
+      recovery, not just a manual runbook note"). **Ruling: Option (1) — a CI job triggered on changes under
+      `deployment-service/scripts/vm/` that `gsutil cp`s the changed files to `gs://deployment-scripts-<project>/vm/` on
+      every merge.** Reasoning: it closes the gap automatically at the exact ship boundary where the drift is created
+      (no dependency on every launcher separately remembering to adopt a freshness check, unlike Option (2)), needs no
+      per-launcher code changes, and directly matches the operator's stated preference for full automatic recovery over
+      a check that merely warns or a process step that merely documents. Build it as a full-completion fix, not a
+      partial one: cover EVERY GCS-hosted file under `deployment-service/scripts/vm/` (not just the two files this
+      incident found stale), trigger on every push to `live-defi-rollout` (not just a manual/scheduled cadence), and
+      verify post-upload (hash/etag compare) rather than assuming the `gsutil cp` succeeded silently. **Keep Option (3)
+      as a standing safety net regardless** — the manual `bash scripts/vm/create-code-tarballs.sh` step stays documented
+      in the ship checklist as a fallback for the rare case the CI job itself is down, per the doc's own "Immediate
+      state" section already treating it as the interim control. **Done when**: the CI job is wired, a real commit
+      touching a `vm/` script is verified to land in GCS automatically (no manual `create-code-tarballs.sh` run needed),
+      and this todo is flipped with the CI run/commit evidence. Repo: deployment-service (+ unified-trading-pm if the
+      checklist doc also needs a "no longer required, CI-automated" update).

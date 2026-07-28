@@ -370,14 +370,22 @@ thorough alert coverage** — do that audit first, then write the plan.
 
 ## WS-6 — Durable resource-metrics timeline (design first — decision deferred by operator)
 
-> **✅ RESOLVED + SPLIT 2026-07-21** — write-path decided: **event-spine → BigQuery** (operator chose it over
-> GCS-batched / Ops-Agent; the VM just publishes an event, cost ~$0). Expanded beyond resource stats to THREE durable
-> signals — VM resource stats + a run-ledger (fixes the live-confirmed 30-day archive TTL) + idle/orphan-spend trend —
-> all in one BigQuery dataset. **No live interactive timeline chart** (operator: nice-to-have, dropped); analysis =
-> download + local DuckDB. **Git-health snapshot history DROPPED** (not necessary). Executable plan:
-> [`/plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md`](/plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md)
-> (archived 2026-07-28, zero open todos). Section below stays as the pre-decision record + the three write-path options
-> considered.
+> **✅ RESOLVED + SPLIT 2026-07-21; SYNCED 2026-07-28 — the split plan has moved well past this tracker's stale
+> record.** Write-path decided 2026-07-21: **event-spine → BigQuery** (operator chose it over GCS-batched / Ops-Agent;
+> the VM just publishes an event, cost ~$0). A follow-on technical snag (PR-1 — the shared-topic nested envelope
+> couldn't yield typed BQ columns) briefly HELD the split plan `draft` 2026-07-21→27, but that too is now **RESOLVED
+> 2026-07-27** (operator ruling: dedicated Pub/Sub topics + a registered flat schema per signal, migration cost verified
+> near-zero via a full consumer-search — zero real Pub/Sub consumers of the old shared topic exist). Scope also EXPANDED
+> to FOUR durable signals (added: per-process category breakdown for multi-tenant hosts) and the **"no live chart" call
+> was REVERSED 2026-07-27** — a rolling 1h/4h/24h/1wk view is now embedded in the existing Host Resources panel, not
+> just download/DuckDB analysis. **Git-health snapshot history stays DROPPED** (not necessary). The split plan is now
+> `status: active` (not `draft`) and functionally complete — 4 of 4 signals verified live against real infra; the only
+> genuinely open items are: the systemd timer for the process-category sampler failing to start unattended (root-cause
+> not yet found, safety-net bridge cron still running), the process-category UI wiring in deployment-ui, the
+> analysis-path doc, and one codex cross-ref. Executable plan:
+> [`deployment_durable_operational_data_bigquery_2026_07_21.md`](deployment_durable_operational_data_bigquery_2026_07_21.md).
+> Section below stays as the pre-decision record + the three write-path options originally considered — no longer live,
+> kept for history only.
 
 ### Operator ask (2026-07-17, near-verbatim)
 
@@ -425,38 +433,47 @@ and catch outliers / OOM / disk hiccups. Requirements dictated —
 
 ### WS-6 todos
 
-- [ ] [OPERATOR] P0. Decide the write path — (a) GCS-batched / (b) event-spine→BigQuery / (c) Ops-Agent-backed (or a
-      hybrid). BLOCKED-OPERATOR-DECISION — explicitly deferred by the operator 2026-07-17.
-- [ ] [REVIEW] P0. Pre-decision audit for (c) — is the Ops Agent (or any host-metric export) already running on the
-      fleet VMs? What retention/granularity does it give, and can deployment-api query it per VM name? A yes here may
-      delete most of the build.
-- [ ] [BACKEND] P0. Decision doc for the operator — per option: writes/day, objects/day, storage/mo, query-cost model,
-      lifecycle spec (mirror the vm-logs TTL semantics; plain replace, no soft-delete/versioning — operator
-      requirement), sample schema (D.1 fields + `vm_name`/`service`/`asset_group`/`mode`/`deployment_id` keys), SPOT
-      flush-on-SIGTERM behaviour, and the dual-cloud answer. Feeds the operator decision above.
-- [ ] [BACKEND] P0. (post-decision) Writer on the heartbeat-daemon path per the chosen design (batch/flush cadence;
-      SIGTERM flush; NEVER blocks the authoritative heartbeat/registry write — same best-effort contract as the
-      dual-write mirror).
-- [ ] [BACKEND] P0. Read/query API — a VM's full-run timeline + a cross-VM comparison slice (filter service /
-      asset_group / mode / time window).
-- [ ] [UI] P0. Historic timeline chart in the VM drill-down (CPU/RAM/disk over the run, spike/OOM markers) + a
-      **dedicated comparison page** — overlay N VMs filtered by service × asset_group × mode (the operator's
-      right-sizing workflow — "ten different VMs running instruments-service — what were their resources?"). `pw:L2 ✓` +
-      cited regression spec.
-- [ ] [REVIEW] P0. End-to-end verify on a real backfill VM incl. a SPOT preemption — flush-on-SIGTERM works; sample loss
-      bounded to the buffer window; TTL/replace lifecycle behaves.
+> **2026-07-28 retag — all decision-gated todos below are RESOLVED, not open.** The write-path decision, the PR-1
+> technical follow-on, and the build itself all completed in the split plan
+> (`deployment_durable_operational_data_bigquery_2026_07_21.md`, `status: active`). This tracker section is kept as the
+> historical pre-decision record; live status/remaining work tracking now belongs entirely to the split plan. The items
+> below are struck through to `[x]` with a one-line pointer rather than left as live `[OPERATOR]`/`[REVIEW]` todos
+> nobody will ever pick up here again.
+
+- [x] ✅ [REVIEW] P0. **RESOLVED 2026-07-21, then 2026-07-27** (was `[OPERATOR]` BLOCKED-OPERATOR-DECISION "decide the
+      write path"). Operator chose (b) event-spine→BigQuery 2026-07-21; a follow-on wire-format snag (PR-1) resolved
+      2026-07-27 as dedicated topics + flat schema per signal. See the split plan's "PR-1 resolution" section for the
+      full decision + verified-near-zero migration-cost proof. No further decision needed.
+- [x] ✅ [REVIEW] P0. Pre-decision audit for (c) Ops-Agent — **superseded**, moot once (b) was chosen; not run, not
+      needed.
+- [x] ✅ [BACKEND] P0. Decision doc for the operator — **done** as the split plan's "Decisions (operator, 2026-07-21; #2
+      REVERSED and #5 ADDED 2026-07-27)" section; feeds directly into the todos below.
+- [x] ✅ [BACKEND] P0. Writer on the heartbeat-daemon path — **DONE**, both publisher call sites wired
+      (`heartbeat_cli.py` + `deployment_heartbeat.py`), best-effort alongside the Firestore rolling-window write. See
+      split plan PR-3.
+- [x] ✅ [BACKEND] P0. Read/query API — **DONE**, `/api/vm-resources/rolling` + `/api/vm-resources/process-category` in
+      deployment-api, 21 unit tests, verified live.
+- [x] ⚠️ [UI] P0. Historic timeline chart + comparison page — **DONE, filter SIMPLIFIED**. `WorkHealthCard` rolling
+      window selector (Live/1h/4h/24h/1wk) + `/ops/vm-resources` comparison page both live, verified via Playwright. The
+      comparison page's filter is service-name-text only today, not the full service×asset_group×mode facet set
+      originally asked for — a real, tracked gap in the split plan, not a silent shortfall.
+- [x] ⚠️ [REVIEW] P0. End-to-end verify — **DONE for the mechanism** (real IAM grant, real publish→BQ round-trip, real
+      idle-spend snapshot against 39 VMs/40 disks), but the resource-samples/run-ledger pipelines are proven only via
+      manual test messages, not yet observed from a real `HeartbeatDaemon` run in production, and the process-category
+      sampler's systemd timer fails to start unattended (bridge cron correctly still running as the safety net) — both
+      are open items tracked in the split plan, not silently dropped.
 
 ---
 
 ## Split map (when the operator finalises — before ANY dispatch)
 
-| Child plan                   | Contents                                                                                                                                 | Readiness                                                                                                               |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| WS-1 cost accuracy           | ✅ split — `deployment_ui_cost_per_day_accuracy_2026_07_20.md`                                                                           | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test, must-do fixes applied)                                   |
-| WS-2 + WS-3 filters & search | ✅ split — `deployment_ui_date_range_filter_and_search_2026_07_20.md`                                                                    | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test; owns the Deployments.tsx extraction)                     |
-| WS-4 VM logs                 | ✅ split — `deployment_ui_vm_log_viewer_2026_07_20.md`                                                                                   | 🟢 **ACTIVE 2026-07-21** — 2nd-wave dispatch (must-do fixes applied; do NOT co-run with WS-6/daemon)                    |
-| WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred                                                          | 🟢 **Plan A + Plan B both ACTIVE 2026-07-21** — Plan B `gate_on_depends: true` (machine-held until A + WS-2/3 done)     |
-| WS-6 resource timeline       | ✅ resolved — `deployment_durable_operational_data_bigquery_2026_07_21.md` (event-spine→BQ; +run-ledger +idle-spend; git-health dropped) | 🔴 **HELD `draft` 2026-07-21** — review found the write-path premise broken (PR-1); operator design decision 2026-07-22 |
+| Child plan                   | Contents                                                                                                                                                   | Readiness                                                                                                                                                                                                                                      |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WS-1 cost accuracy           | ✅ split — `deployment_ui_cost_per_day_accuracy_2026_07_20.md`                                                                                             | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test, must-do fixes applied)                                                                                                                                                          |
+| WS-2 + WS-3 filters & search | ✅ split — `deployment_ui_date_range_filter_and_search_2026_07_20.md`                                                                                      | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test; owns the Deployments.tsx extraction)                                                                                                                                            |
+| WS-4 VM logs                 | ✅ split — `deployment_ui_vm_log_viewer_2026_07_20.md`                                                                                                     | 🟢 **ACTIVE 2026-07-21** — 2nd-wave dispatch (must-do fixes applied; do NOT co-run with WS-6/daemon)                                                                                                                                           |
+| WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred                                                                            | 🟢 **Plan A + Plan B both ACTIVE 2026-07-21** — Plan B `gate_on_depends: true` (machine-held until A + WS-2/3 done)                                                                                                                            |
+| WS-6 resource timeline       | ✅ resolved — `deployment_durable_operational_data_bigquery_2026_07_21.md` (event-spine→BQ; +run-ledger +idle-spend +process-category; git-health dropped) | 🟢 **ACTIVE, functionally complete 2026-07-28** — PR-1 write-path snag resolved 2026-07-27; 4/4 signals live-verified; remaining open items (systemd timer, process-category UI, analysis-path doc) tracked in the split plan itself, not here |
 
 Per task_template §4 — each child gets 10–20 todos, intra-plan concurrency (independent same-priority todos fan out
 across workers; use `sequential: true` / `depends_on`+`gate_on_depends` for real chains), audits separable, draft-gated
@@ -575,6 +592,14 @@ phases where a build depends on an audit/decision.
   explicit per-task prereqs" — both wrong), and per operator decision (1a intra-plan concurrency IS the model; 2a
   document split-into-plans, don't build per-task prereq syntax) **fixed the guidance across `task_template.md`,
   `PLAN_FORMAT.md`, `doc-frontmatter-schema.md`, `CLAUDE.md`** (pushed `unified-trading-pm@def0234d1`).
+- **2026-07-28 (gated-decision retag sweep)** — This tracker's own WS-6 section was found stale against its successor
+  plan: it still showed the WS-6 write-path pick as a live `[OPERATOR]` BLOCKED-OPERATOR-DECISION todo (from the
+  original 2026-07-17 dictation) even though `deployment_durable_operational_data_bigquery_2026_07_21.md` had already
+  resolved that decision 2026-07-21, resolved its own follow-on PR-1 technical snag 2026-07-27, expanded to a 4th
+  signal, reversed the "no live chart" call, and shipped 4/4 signals live-verified — that plan is `status: active`, not
+  `draft`. No new decision was needed here; synced the WS-6 header note, retagged/struck-through the WS-6 todos list,
+  the Split map table row, and the Deferred-work table row to point at the resolved successor plan instead of the stale
+  2026-07-22 "operator design decision" reference. No code changed; docs-only sync.
 
   ### Deferred work after 2026-07-21
 
@@ -584,12 +609,12 @@ phases where a build depends on an audit/decision.
   | WS-2-3 / WS-5A execution | **Cannot be done yet** — active in AO, workers running them                                                  | AO workers (in flight)    |
   | WS-5B execution          | **Cannot be done yet** — activated + `gate_on_depends: true`; AO machine-holds until WS-5A + WS-2/3 complete | WS-5A + WS-2/3 completing |
   | Fleet execution          | **Cannot be done yet** — activated + `gate_on_depends: true`; AO machine-holds until WS-2/3 completes        | WS-2/3 completing         |
-  | WS-6 activation          | **Operator-owned** — HELD `draft`; write-path premise broken (PR-1), needs an operator design decision       | operator, 2026-07-22      |
+  | WS-6 activation          | ✅ **DONE — resolved 2026-07-27, functionally complete 2026-07-28** (see 2026-07-28 sync note below)         | —                         |
 
-  **Recommended NEXT:** nothing to activate by hand — WS-5B + Fleet are activated and machine-gated, so AO dispatches
-  them automatically as WS-2/3 (and, for WS-5B, WS-5A) finish. The one operator action outstanding is the **WS-6 PR-1
-  design decision** (2026-07-22): choose (A) dedicated topic per signal + flat schema, (B) message attributes +
-  subscription filters, or (C) raw-JSON column + query-time extraction. Until then WS-6 stays `draft`.
+  **Recommended NEXT (as of the 2026-07-28 sync):** nothing left to activate — WS-6's split plan resolved its own PR-1
+  design decision 2026-07-27 (dedicated topic + flat schema per signal, option A) and shipped all 4 signals, verified
+  live. Its few remaining open items (systemd-timer diagnosis, process-category UI wiring, an analysis-path doc, one
+  codex cross-ref) are tracked inside that plan directly — no tracker-level action needed.
 
   ### Lessons (would be re-learned the hard way otherwise)
   - **AO backend is a mechanical translator, not a planner** — it can't decide parallel-vs-serial; the plan-writer

@@ -738,7 +738,7 @@ drift_direction: advance-code
 
 ## Note — 1 mistag found, not actioned here (flag for a follow-up retag)
 
-- `plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged
+- `plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged
   `asset_group: [defi]` only incidentally; real content is a fleet-wide QG STEP 5.101 infra/CI issue, not defi-specific.
   Should be retagged (likely `cross-cutting` or `infra`), not folded into a defi batch.
 

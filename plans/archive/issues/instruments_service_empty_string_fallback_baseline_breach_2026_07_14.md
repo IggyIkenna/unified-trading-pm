@@ -27,7 +27,7 @@ scope: [engineer]
 tags: [quality-gates, empty-string-fallback, baseline-ratchet, ci-blocking, qg-red]
 related:
   [
-    plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+    plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
   ]
 created: 2026-07-14

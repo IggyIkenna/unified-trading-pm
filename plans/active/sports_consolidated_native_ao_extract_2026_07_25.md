@@ -221,6 +221,16 @@ drift_direction: advance-code
       `create_sports_reference_adapter` stub lambdas didn't accept the new kwargs. Full `quality-gates.sh` green (4978
       tests passed). `sports_t0_t1_dependency_gate_never_wired_2026_07_15`. Source:
       `sports_consolidated_closeout_2026_07_19.md:450-453`.
+- [ ] [CODE] P3. **Track E follow-up — the gate's `DependencyError` remediation message still names the FROZEN bare
+      `entity=fixtures` path, not the live split `entity=fixtures_schedule`.** Now that the gate fires for real (Track E
+      above), this is a live operator-facing message, not dead-code text.
+      `sports_dependency.py::check_api_football_dependency` correctly PROBES the split-entity paths first (functionally
+      fine, no false `DependencyError`), but its `_build_remediation_message(date, resolved_bucket, canonical_path)`
+      call at the bottom of the function still passes the old bare-entity `canonical_path` constant for display, so an
+      operator who genuinely hits the gate sees a path that's been dead since 2026-05-23. Fix: pass the split
+      `entity=fixtures_schedule` path (or list all 3 candidate paths) into the message instead. Cosmetic-only (the
+      remediation CLI command shown is still correct) — hence P3, not a data-correctness bug. (repo:
+      instruments-service)
 - [x] [DIAG] P1. ✅ **HYPOTHESIS DENIED — root-caused, DIAGNOSIS ONLY, not relabeled.** `_SNAPSHOT_VENUES`
       (`unified-api-contracts/unified_api_contracts/internal/schemas/_sports_prediction_contracts.py:240`, frozenset
       `{BETFAIR, MATCHBOOK, ODDS_API, PINNACLE_AS_LINE}`) is **inert dead code** — zero runtime consumers anywhere in

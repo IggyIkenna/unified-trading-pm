@@ -185,10 +185,14 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
 
 ## Recommended decision
 
-1. **[OPERATOR] Confirm intent.** Was the 2026-07-14 `market-data-tick-cefi-central-element-323112` deletion a
-   deliberate, informed decision (e.g., the operator independently verified via some out-of-band check that the 838-cell
-   gap was already closed, or accepted the loss), or was it an accidental extension of the 2026-07-13 prediction
-   decommission run to cefi by mistake? This determines whether any recovery effort is warranted at all.
+1. **[OPERATOR] Confirm intent. — ✅ ANSWERED 2026-07-28: "Yes, confirmed — it was a legacy bucket. Intent confirmed."**
+   Was the 2026-07-14 `market-data-tick-cefi-central-element-323112` deletion a deliberate, informed decision (e.g., the
+   operator independently verified via some out-of-band check that the 838-cell gap was already closed, or accepted the
+   loss), or was it an accidental extension of the 2026-07-13 prediction decommission run to cefi by mistake? This
+   determines whether any recovery effort is warranted at all. **Resolved**: deliberate legacy-bucket decommission, not
+   accidental. Whether the specific ~8-day window / 838+ cells' loss is accepted vs. worth recovering was not separately
+   addressed by this answer — proceed via the recovery-investigation todos below (check other backups; run the proper
+   normalization-aware comparison) before treating it as settled either way.
 2. **[DATA] If recovery is warranted**, check whether any OTHER backup exists beyond the ~136MB snapshot found here
    (e.g. a fuller snapshot under a different prefix/bucket, a BigQuery external-table copy, or a downstream consumer
    that already ingested the legacy-only cells) before concluding data is lost.
@@ -202,10 +206,20 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Confirm whether the 2026-07-14 `market-data-tick-cefi-central-element-323112` deletion was
-      intentional/informed or accidental, and whether any data-loss risk (the ~8-day 2026-05-16→05-24 window, plus any
-      of the 838+ legacy-only cells never confirmed migrated) is accepted or needs recovery effort. (repo:
-      unified-trading-pm — decision doc, no code)
+- [x] ✅ [REVIEW] P0. **ANSWERED 2026-07-28 — OPERATOR DIRECT ANSWER: "Yes, confirmed — it was a legacy bucket. Intent
+      confirmed."** The 2026-07-14 `market-data-tick-cefi-central-element-323112` deletion was a deliberate, informed
+      decommission of a known legacy bucket, NOT an accidental extension of the prior day's `prediction` decommission
+      run. This resolves the "deliberate vs accidental" half of this todo directly (business-fact-confirm — applied
+      verbatim, not inferred). The operator's answer did not separately state "accept the loss" or "pursue recovery" for
+      the ~8-day (2026-05-16→05-24) window / the 838+ legacy-only cells — that is a distinct question this doc cannot
+      answer by guessing a fact, so it is NOT closed here by inference from "intent confirmed" alone. Per the operator's
+      standing general ruling on full-completion (no accepting an open data-loss question on a shortcut, no
+      half-measures on data-pipeline correctness): the correct next step is to EXHAUST the recovery-investigation
+      avenues already scoped as their own todos below (check for any additional backup beyond the ~136MB snapshot; run
+      the proper CF-11 normalization-aware legacy-vs-canonical comparison) before anyone concludes data is actually lost
+      or accepts it as such — do not skip straight to "accept the loss" without that investigation completing first.
+      Retagged away from `[OPERATOR]`/BLOCKED since the intent question itself is now answered; the remaining work is
+      normal `[DATA]` investigation, already tracked below, not a second operator-only gate.
 - [ ] [DATA] P1. Once the operator's call above lands: reconcile `data_completion_cefi_2026_07_15.md`'s E4 orphan-
       sweep/gap-fill todo (line ~307) and the "NEXT SESSION — execute the migration" P0 todo (line ~227) — both
       currently describe reading/sweeping the legacy bucket, which no longer exists; mark them superseded or re-scope to
@@ -225,3 +239,12 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
       INCONCLUSIVE (52,499 raw mismatches, 39,651 residual after excluding known naming-drift causes; see "Attempted
       read-only migration-before-delete verification" above) and must not be treated as a real gap count either way.
       (repo: market-tick-data-service)
+
+## Progress Log
+
+- **2026-07-28 (gated-decision retag sweep)** — Applied the operator's direct answer to the P0 confirm-intent todo:
+  "Yes, confirmed — it was a legacy bucket. Intent confirmed." Retagged that todo from `[OPERATOR]` to `[x]` done
+  (business-fact-confirm, applied verbatim, not inferred). The narrower "accept the loss vs. pursue recovery" question
+  was not separately answered by the operator's response, so it is NOT closed by inference — the existing `[DATA]`
+  recovery-investigation todos (additional-backup check, proper CF-11 normalization-aware comparison) remain open and
+  are the correct next step before anyone concludes data is actually lost. Docs-only, no GCS/manifest action taken.

@@ -237,9 +237,16 @@ def _iter_py_files(root: Path) -> Iterator[Path]:
         yield root
         return
     for path in root.rglob("*.py"):
+        # Only the RELATIVE (to the scanned root) path is checked here. A per-slot worktree
+        # lives at `<workspace_root>/.tabs/<slot>/<repo>/...`, so `.tabs` is ALWAYS a
+        # component of every file's ABSOLUTE path when the scan is invoked from inside a
+        # slot clone (the standing local topology) — checking the absolute path too would
+        # exclude every file in every repo unconditionally, silently no-opping the ratchet
+        # for 100% of local runs (only CI, whose checkout has no `.tabs` segment, would ever
+        # see a real hit). The relative-path check alone already covers the intended case
+        # (a NESTED worktree/`.tabs/<N>` copy found INSIDE the scan root, which would
+        # double-count) without excluding the ambient slot directory the scan runs from.
         if _is_excluded_path(path.relative_to(root) if path.is_relative_to(root) else path):
-            continue
-        if _is_excluded_path(path):
             continue
         yield path
 

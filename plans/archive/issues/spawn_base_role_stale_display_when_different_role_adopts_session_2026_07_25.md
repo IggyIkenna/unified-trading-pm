@@ -17,7 +17,7 @@ summary: >-
   currently registered AgentRows (/api/agents), consistent with the stuck-display being a stale field rather than a live
   ownership error. Worth closing only if/when it confuses the dashboard or operator view; filed now so the observation
   is not lost.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -56,6 +56,8 @@ locked_by:
 depends_on: []
 ---
 
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. Fixed: `agent-orchestrator@c72197d`.
+
 # spawn_base_role stale-display when a different-role agent adopts a session already stuck at a prior one-off role
 
 ## Evidence (review live-observed FYI + main read-only confirmation, 2026-07-25)
@@ -79,11 +81,21 @@ prior one-off role's strings in place.
 
 ## Todos
 
-- [ ] [BACKEND] P3. When `find_active_agent_for_session` finds a live AgentRow whose role differs from the stuck
-      `spawn_base_role`, refresh the slot's `spawn_base_role` / `dispatch_reason` / `last_msg` to the owning agent's
-      actual role (instead of only clearing when NO live AgentRow exists). **Done when**: a slot whose session is
-      adopted by a different-role live agent shows that agent's role in the dashboard/operator view, not the prior
-      one-off role.
+- [x] ✅ [BACKEND] P3. **DONE 2026-07-28 — `agent-orchestrator@c72197d`.** `_typed_occupant_liveness`
+      (`server/routes/slots_worker.py`) now refreshes `slot.spawn_base_role` / `last_msg` to the owning live agent's
+      actual identity whenever it differs from the stuck value — compared on `AgentRow.agent_kind` (falling back to
+      `role`), NOT `AgentRow.role` directly: `role` is the coarse chat-thread field ("main"/"review"/"custom" — every
+      typed one-off registers under `role="custom"`), so comparing on `role` would have false-fired on every
+      genuinely-still-alive SAME occupant; `agent_kind` is the specific identity a live SAME occupant's own
+      registration always sets equal to `spawn_base_role` (confirmed by reading `escalation.py`/`plan_health.py`'s
+      registration call sites). `boot_slot`'s own display-string construction was also fixed to read
+      `spawn_base_role` AFTER the liveness check (it previously captured it before, which would have shown the
+      stale value even with the refresh in place). Regression tests:
+      `test_boot_typed_role_gate.py::test_spawn_base_role_refreshes_to_owning_agent_kind_on_different_role_adoption`
+      (the exact live incident — slot stuck at `cicd`, a live `review` agent owns the session) +
+      `::test_spawn_base_role_untouched_when_owning_agent_kind_matches` (regression guard — a genuine same-occupant
+      match must NOT trigger a rewrite). Full `quality-gates.sh` green (1915 passed). **Done-when met**: the slot's
+      `spawn_base_role`/`last_msg` now show the live owning agent's actual identity, not the prior one-off role.
 
 ## Triage / charter note
 

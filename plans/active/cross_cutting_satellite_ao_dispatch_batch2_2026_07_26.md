@@ -434,26 +434,21 @@ drift_direction: advance-code
       Source: `issues/read_availability_index_unfiltered_callsite_audit_2026_07_26.md`. **Done when**: every
       per-date-loop site is converted and every remaining site is explicitly documented as safe, with no site left
       unaudited, and the source checkbox is flipped.
-- [ ] [DOC] P1. **Reconcile the `gcs_data_access_audit_log_cost` duplicate and add the missing historical-snapshot
-      banner.** (a) **Duplicate doc, measured this pass**: `gcs_data_access_audit_log_cost_2026_07_24.md` exists in BOTH
-      `plans/active/issues/` (364L, `status: open`, 1 open `[DEVOPS] P2` todo) AND `plans/archive/2026_07/` (368L,
-      `status: resolved`, `resolved_by: operator (ikenna@odum-research.com, 2026-07-25)`, **0 open todos**) — the
-      archived copy is the later, authoritative one and the operator did complete the `setIamPolicy` `auditConfigs`
-      removal on 2026-07-25, exactly as the cross-cutting closeout's Track 6 already records. So the correct action is
-      to **delete the stale `plans/active/issues/` duplicate** and repoint any referrer at the archive path — **NOT** to
-      run the 6-step archival ritual on the active copy, which is what
-      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md`'s todo 3 currently instructs and which would
-      overwrite the resolved archived copy with the stale open one. Amend that finalize todo's text to match this
-      finding as part of this work. Confirm `locked_by` is empty on the active copy (it is, checked 2026-07-26) so no
-      `[unlock-plan]` is needed, and re-run `scripts/plan-hygiene/check_ag_closeout_linkage.py` plus
-      `.venv/bin/python scripts/plan-hygiene/regenerate_active_plan_inventory.py` afterwards — the duplicate is
-      currently inflating the active-plan inventory by one doc and one phantom open todo. (b) Add the "historical
-      snapshot as of 2026-07-10" banner to `issues/instruments_remaining_work_audit_2026_07_10.md` (965L, 0 checkbox
-      todos, a discoverability index that several of the docs it indexed have since split or archived away from) so it
-      is not mistaken for current inventory — the one action the cross-cutting closeout's Track 15 asks of it. Sources:
-      `issues/gcs_data_access_audit_log_cost_2026_07_24.md`, `issues/instruments_remaining_work_audit_2026_07_10.md`.
-      **Done when**: only the archive copy of the gcs doc remains, every corpus referrer resolves, the batch1-finalize
-      todo text is corrected, the inventory regenerates with 0 orphans, and the historical-snapshot banner is in place.
+- [x] ✅ [DOC] P1. **Reconcile the `gcs_data_access_audit_log_cost` duplicate and add the missing historical-snapshot
+      banner.** — `unified-trading-pm@61407412c`. (a) was already done by a prior pass when this task dispatched:
+      `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md` no longer exists (confirmed absent), and
+      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md`'s todo 3 already carries the "⚠️ CORRECTED
+      2026-07-26" banner directing DELETE-not-archive (matches this todo's own instruction verbatim) — nothing left to
+      amend there. Re-ran both hygiene scripts fresh this pass: `check_ag_closeout_linkage.py` → 0 orphans (baseline 0);
+      `scripts/plans/regenerate_active_plan_inventory.py` (corrected path — `plan-hygiene/` no longer has this script) →
+      249 plans, 0 orphans, 0 TBD. The one remaining live reference to the old active-path filename
+      (`ag_closeout_audit_rollout_2026_07_25.md:700`) is a timestamped Progress-Log historical note ("as of 2026-07-25
+      compaction time"), not a live pointer — left as-is, it's a record of a past event, not a broken cross-reference.
+      (b) Added the historical-snapshot banner to `issues/instruments_remaining_work_audit_2026_07_10.md` (973L now)
+      right after its "How to read this doc" block, dated 2026-07-28, citing this todo. **Done when** criteria all met:
+      only the archive copy of the gcs doc remains, corpus referrers resolve (the one exception is a historical log
+      entry, not a broken link), the finalize todo text was already corrected, the inventory regenerates with 0 orphans,
+      and the historical-snapshot banner is in place.
 
 ## Deferred — conflict-gated (a competing claim is genuinely unresolved; do not draft against these)
 

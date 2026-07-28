@@ -313,8 +313,28 @@ stays its own scoped, `[OPERATOR]`-adjacent follow-up, not attempted here.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Confirm/rule out the Databento billing-guard gap, and scope the FX manifest-id backfill** — per
-      the "Deferred work after 2026-07-26" table, confirming/ruling out an actual Databento billing-guard gap for the
-      pre-fix window is "Not done" (needs Databento request-log access, not just code reading); separately, the
-      ~4,310-row historical FX `SPOT_PAIR` manifest `instrument_id` backfill stays out of scope and needs its own scoped
-      design/apply plan.
+- [x] [OPERATOR] P3. **CLOSED 2026-07-28 — operator ruling, verbatim: "This is low priority -- we only need 24h OHLCV
+      for these. It is blocked by Databento's allowlist for our billing account and that will NOT change. Leave
+      deprioritized/blocked on the allowlist; do not re-ask, do not treat as urgent."** Confirming/ruling out an actual
+      Databento billing-guard gap for the pre-fix window (ICE/KRX/FX `ohlcv_24h` mislabel window) is permanently
+      deprioritized — do not chase Databento request-log access for this, do not re-raise. Downgraded from P0 to P3 and
+      closed as declined-not-urgent, not left pending.
+- [ ] [DATA] P2. **RULED 2026-07-28 — scope + build + apply the ~4,310-row FX `SPOT_PAIR` manifest `instrument_id`
+      historical backfill** (design-choice half of the original todo; no specific operator answer for this part —
+      applying the standing workspace theme instead: full backfills get done, not indefinitely deferred as "needs its
+      own plan," when not superseded by newer work, and a canonicalisation fix is done properly, not as a cheap
+      partial). Note: the OTHER historical re-stamp this doc tracks (the 1,141-row ICE/KRX/FX `ohlcv_24h` mis-stamp) was
+      already separately re-tagged `[DATA]` 2026-07-28 in the "Deferred work" table above — this todo is only the FX
+      `instrument_id` half, do not duplicate that one. The write-path fix for this half already shipped
+      (`market-tick-data-service@020b703e` + comment-currency fix `b0fedf91`) — only the historical rows remain (blank
+      2,812 / literal `"ticks"` 983 / bare-pair-no-prefix 501 / near-correct 13, all pre-2026-07-25). Full completion
+      mandate — do not ship a partial fix or leave this "needs its own plan" indefinitely: (1) re-verify a FRESH
+      `gcs_bucket_soft_delete_retention_seconds()` check on `market-data-tick-tradfi-prd-central-element-323112`
+      (≥604800s qualifies, no operator sign-off needed once fresh per finding T / delete-safety §3a); (2) snapshot the
+      manifest index first; (3) build a manifest-only re-stamp script (NOT a GCS content rewrite — the parquet files
+      already carry the correct id, this is a manifest `instrument_id` column repair, mirroring the
+      `record_captured`-style re-stamp pattern already used for the sibling ICE/KRX/FX fix and the MTDS lending restamp)
+      that rewrites all 4 shapes above to the canonical `FX:SPOT_PAIR:XXX-USD` form; (4) CAS-apply; (5) verify rows-in
+      == rows-out, 0 duplicate row_keys, and a post-apply `FX:SPOT_PAIR:` prefix on 100% of FX captured rows; (6) resume
+      the consolidator cron. Cost is one-time manifest-only compute, well under the pre-approved $100 threshold — not a
+      blocker. (repo: market-tick-data-service)

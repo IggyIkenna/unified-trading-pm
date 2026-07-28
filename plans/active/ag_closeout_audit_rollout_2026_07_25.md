@@ -114,7 +114,7 @@ source: >-
   finalize-plan-coverage QG rule (task_template.md + check_finalize_plan_coverage.py + baseline), landed the
   verify-slot-host-symmetry.sh RECOVERED-bookend fix, built + shipped the /ag-closeout-audit skill (6 branch-drift /
   shared-venv-corruption retries — all confirmed transient, none real defects), filed
-  `issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` (found while shipping the
+  `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` (found while shipping the
   skill — real flakiness in a pre-existing test, not caused by this session's changes). Launched a 53-agent Workflow
   classifying every sports-primary doc (`wf_8cdc5fb5-b1f`) — in flight when /autonomous was invoked.
 
@@ -320,7 +320,7 @@ source: >-
   authored `infra_capture_and_devops_leftovers_2026_07_06_finalize_2026_07_25.md` (3 todos: re-verify the ASTER
   connector prereqs, re-check the 4 credential/operator gates, conditionally archive) to backfill the gap — back to
   baseline=1. (2) `test_build_index_is_deterministic` flaked again (same pre-filed
-  `issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` class — two `build_index()`
+  `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` class — two `build_index()`
   calls inside one test observed different `status:` values for the same doc, i.e. genuine concurrent-write racing
   during the test, not caused by my changeset) — confirmed transient, retried clean.
 
@@ -451,7 +451,7 @@ GCS-path context + verification commands in chat; still awaiting the operator's 
   finalize plan, not worked around.
 - The `--files` comma-vs-space invocation trap — root-caused (after an initial wrong theory, corrected in-place before
   it shipped anywhere) and documented in the actual SSOT.
-- `issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` — filed earlier this session,
+- `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` — filed earlier this session,
   re-confirmed transient (not caused by this session's changes) every time it recurred.
 
 **Verified end-state**: `git status --porcelain` clean, `git rev-list --count origin/live-defi-rollout..HEAD` = 0 (both

@@ -8,6 +8,12 @@
 #
 # Auth: GCP Secret Manager `SLACK_ALERTS_READER_BOT_TOKEN` (bot must be a member of the
 #   channel). The token never touches disk or argv — resolved in-process via gcloud ADC.
+#   Fallback (degraded path, gcloud ADC stays primary): a `SLACK_ALERTS_READER_BOT_TOKEN` env
+#   var, for the case every gcloud identity available in the session hits `PERMISSION_DENIED`
+#   on `secretmanager.versions.access` or a stale-token reauth prompt that can't run
+#   non-interactively (confirmed 2026-07-24,
+#   plan_health_tests_leak_real_slack_alerts_2026_07_24.md — the operator supplied the token
+#   directly from `.act-secrets` that session since neither gcloud path worked).
 #
 # TRAPS learned building this (do not re-learn):
 #   * Carrier posts (notify-slack.yml) put the REAL content in Block Kit `blocks`, not in
@@ -18,7 +24,9 @@
 #
 # Usage: slack-read-channel.py [channel=ci-failures] [hours=24] [--json-only]
 #   Raw dump: ./slack-<channel>-<hours>h.json in the CWD.
+#   Degraded-path auth: SLACK_ALERTS_READER_BOT_TOKEN=<token> python3 slack-read-channel.py ...
 import json
+import os
 import subprocess
 import sys
 import time
@@ -30,21 +38,35 @@ CHANNEL = args[0] if len(args) > 0 else "ci-failures"
 HOURS = float(args[1]) if len(args) > 1 else 24.0
 JSON_ONLY = "--json-only" in sys.argv
 
-tok = subprocess.run(
-    [
-        "gcloud",
-        "secrets",
-        "versions",
-        "access",
-        "latest",
-        "--secret=SLACK_ALERTS_READER_BOT_TOKEN",
-        # project comes from the active gcloud config — every host this runs on
-        # (operator machines, slots, VMs) is configured for the prod project.
-    ],
-    capture_output=True,
-    text=True,
-    check=True,
-).stdout.strip()
+try:
+    tok = subprocess.run(
+        [
+            "gcloud",
+            "secrets",
+            "versions",
+            "access",
+            "latest",
+            "--secret=SLACK_ALERTS_READER_BOT_TOKEN",
+            # project comes from the active gcloud config — every host this runs on
+            # (operator machines, slots, VMs) is configured for the prod project.
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+    # Degraded path: gcloud ADC failed (no gcloud binary, PERMISSION_DENIED on
+    # secretmanager.versions.access, or a stale-token reauth prompt that can't run
+    # non-interactively). Never silently substitute an empty string — an env var is the
+    # documented secondary source, never a default.
+    tok = os.environ.get("SLACK_ALERTS_READER_BOT_TOKEN", "")  # noqa: qg-empty-fallback — env var legitimately absent; checked via `if not tok` immediately below
+    if not tok:
+        sys.exit(
+            f"gcloud ADC failed to resolve SLACK_ALERTS_READER_BOT_TOKEN ({exc}) and no "
+            "SLACK_ALERTS_READER_BOT_TOKEN env var is set as a fallback. Either fix gcloud auth, "
+            "or supply the token directly: "
+            "SLACK_ALERTS_READER_BOT_TOKEN=<token> python3 scripts/dev/slack-read-channel.py ..."
+        )
 
 
 def api(method: str, **params):

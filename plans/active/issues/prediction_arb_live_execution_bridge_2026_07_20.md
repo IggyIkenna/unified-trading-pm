@@ -144,7 +144,7 @@ adversarially verified since:
   (identical fills across re-runs, `execution_alpha_bps == 0`). Config: `strategy-service@d07e7240` (all-soccer PAPER
   template, operator values).
 
-### The single remaining LIVE blocker (needs an OPERATOR-DIRECTED architectural decision)
+### The single remaining LIVE blocker — RULED 2026-07-28, no longer an open architectural decision
 
 **There is no paper-LIVE / live tick runtime that routes an emitted `AtomicInstruction` to `AtomicLegExecutor`.** Traced
 end-to-end: `emit_instructions` (`base.py:336-340`) only records; `V2EngineOrchestrator.on_tick` returns the list "for
@@ -152,10 +152,20 @@ the caller to forward to execution-service"; the ONLY realized caller is `GroupB
 (`backtest/runner.py:234-254`) → `BenchmarkFillEngine.settle` (the backtest/paper path, now proven). `AtomicLegExecutor`
 and `V2InstructionRouter` are both **unwired** in production, and the legacy `live_execution_handler` speaks the old
 single-`BET` `Instruction`, not `AtomicInstruction`/LEADER_HEDGE. **Tier rules forbid strategy-service importing
-execution-service**, so the seam cannot be a direct call — it needs a transport decision (the UTL `EventTransport`
-event-log seam is the architecturally-indicated option: strategy publishes envelopes, execution subscribes and routes
-each atomic to the executor). That decision is the operator's; the cross-repo integration test belongs in
-`e2e-testing`/`system-integration-tests` (which may import both).
+execution-service**, so the seam cannot be a direct call.
+
+**Ruling (2026-07-28): use the UTL `EventTransport` event-log seam.** This is not a fresh design choice — it is the
+already-standing, codex-mandated workspace architecture for exactly this cross-tier shape
+(`/codex/02-data/live-data-persistence-and-event-log.md` § "Live = batch (event-log spine)": MTDS/MDPS/features/ml/
+execution all publish/read via the UTL `EventTransport` facade, `unified_trading_library.streaming.event_facade`;
+`InMemoryTransport` for paper/colocated, Pub/Sub for live — same code path). Applying it here: strategy-service
+publishes the emitted `AtomicInstruction` as an event envelope via the facade; execution-service subscribes and routes
+each atomic to `AtomicLegExecutor`. `InMemoryTransport` covers the paper/colocated tick runtime (keeping
+`paper(W)==batch-rerun(W)` determinism intact, same as every other producer/ consumer pair on this spine); Pub/Sub is
+the transport for a real live deployment. This respects the tier rule (strategy-service never imports execution-service
+directly) without inventing a new mechanism — it is the same seam every other live=batch producer/consumer pair in this
+workspace already uses. The cross-repo integration test belongs in `e2e-testing`/`system-integration-tests` (which may
+import both).
 
 ### Smaller open items (documented, not blocking paper)
 
@@ -189,8 +199,19 @@ each atomic to the executor). That decision is the operator's; the cross-repo in
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Decide + build the paper-LIVE routing seam for `AtomicInstruction` → `AtomicLegExecutor`** — no
-      live tick runtime currently routes an emitted `AtomicInstruction` to the executor (`AtomicLegExecutor` and
-      `V2InstructionRouter` are both unwired in production); needs an operator-directed architectural decision on the
-      cross-repo transport (tier rules forbid strategy-service importing execution-service directly, so the UTL
-      `EventTransport` event-log seam is the architecturally-indicated option).
+- [ ] [BACKEND] P1. **Build the paper-LIVE routing seam for `AtomicInstruction` → `AtomicLegExecutor` via the UTL
+      `EventTransport` facade — RULED 2026-07-28 (see ruling above), no operator decision remains.** No live tick
+      runtime currently routes an emitted `AtomicInstruction` to the executor (`AtomicLegExecutor` and
+      `V2InstructionRouter` are both unwired in production). Build: (1) strategy-service publishes each emitted
+      `AtomicInstruction` as an event envelope via `unified_trading_library.streaming.event_facade`'s `EventTransport`;
+      (2) execution-service subscribes and routes each atomic to `AtomicLegExecutor.execute`; (3) wire
+      `InMemoryTransport` for the paper/colocated tick runtime (default, matches every other paper producer/consumer
+      pair on this spine — must NOT change `paper(W)==batch-rerun(W)` determinism), Pub/Sub for a real live deployment
+      (not exercised until live trading is separately authorized, per this doc's own OPERATOR DECISIONS list —
+      paper-vs-live promotion and Betfair account/credential/jurisdiction sign-off stay gated exactly as already
+      documented above; only the paper-LIVE routing plumbing itself is unblocked by this ruling). Repos: strategy-
+      service, execution-service, unified-trading-library. Cross-repo integration test in `e2e-testing`/
+      `system-integration-tests`. **Done when**: a strategy-emitted `AtomicInstruction` (via `InMemoryTransport`)
+      reaches `AtomicLegExecutor.execute` end-to-end in a new test proving the full round trip (mirroring the existing
+      `test_prediction_arb_3venue_paper_proof.py` benchmark-fill proof pattern), and `quality-gates.sh` is green across
+      both repos.

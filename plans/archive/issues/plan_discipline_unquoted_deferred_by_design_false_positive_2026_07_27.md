@@ -15,7 +15,7 @@ summary: >-
   1), discovered while shipping an unrelated `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` doc correction
   (worked around via the CLAUDE.md "pure doc/plan-flip -> prek only" carve-out, which does not run this corpus-wide
   check).
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -29,6 +29,7 @@ related:
     /plans/archive/issues/plan_discipline_quoted_deferred_false_positive_2026_07_26.md,
   ]
 created: 2026-07-27
+last_updated: 2026-07-28
 parent_epic: agent_operating_framework_master
 priority: P3
 estimate_class: refactor
@@ -40,9 +41,13 @@ depends_on: []
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@ddf138deb (2026-07-27, already shipped before this doc's own todo was verified)
 source: ["slot 8, data_engineering, 2026-07-27, discovered while shipping sports_satellite_ao_dispatch_batch3-011"]
 ---
+
+> **✅ RESOLVED — `unified-trading-pm@ddf138deb`.** Already fixed by a concurrent session before this doc's todo was
+> picked up: `_DEFERRED_BY_DESIGN_RE` fullmatch exclusion added, covering exactly this unquoted-report-prose class,
+> with a regression test using this doc's own cited text. Archived.
 
 ## What I found
 
@@ -71,7 +76,14 @@ or, more robustly, only treat a DEFERRED token as a live in-doc marker when it a
 todo line for THIS doc (vintage-audit / consolidated-findings report docs enumerate other docs' items as prose, not as
 their own todos). Re-baseline `plan_discipline_baseline.yaml` to 0 after the fix.
 
-- [ ] [SCRIPT] P3. Extend `check_plan_discipline.py`'s `_has_live_deferred_marker()` exclusion to cover unquoted
-      report-prose mentions of another doc's deferred status (e.g. `june_2026_vintage_audit_findings_2026_07_27.md:378`
-      "confirmed stays DEFERRED-BY-DESIGN"), add a regression test alongside the existing quoted-reference test, and
-      re-run `check_plan_discipline.py` full-corpus to confirm it returns to baseline 0. Repo: unified-trading-pm.
+- [x] [SCRIPT] P3. ✅ **STALE-CONFIRMED-DONE (2026-07-28)** — already fixed by a concurrent session, prior to this pickup:
+      `unified-trading-pm@ddf138deb` ("plan-discipline DEFERRED-BY-DESIGN false-positive fix") added
+      `_DEFERRED_BY_DESIGN_RE = re.compile(r"\bDEFERRED-BY-DESIGN\b")` + a `fullmatch` exclusion in
+      `_has_live_deferred_marker()` for exactly this class (any first-party `DEFERRED-BY-DESIGN` token, quoted or not —
+      it's a closed/permanent ruling, not a live marker needing a migration banner), plus a regression test
+      (`tests/unit/test_check_plan_discipline.py::test_deferred_by_design_is_not_live`, using the EXACT
+      `june_2026_vintage_audit_findings_2026_07_27.md:378` text this issue cites) and a companion
+      `test_deferred_by_design_does_not_mask_a_real_marker_elsewhere`. Re-verified live: full-corpus
+      `check_plan_discipline.py --workspace-root <ws>` → `Scanned plans/active/ (252 plans) + issues + archive — 0
+      violation(s). ✅ At baseline (0).`; `pytest tests/unit/test_check_plan_discipline.py` → 10 passed. No new code
+      needed — confirming + citing the existing fix.

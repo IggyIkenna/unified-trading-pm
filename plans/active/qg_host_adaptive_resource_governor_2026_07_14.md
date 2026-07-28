@@ -612,7 +612,7 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
 ### 2026-07-27 — Runtime abort-monitor shipped (self-scoped v1) — closes the P0 (slot 5, `infra`)
 
 - **Trigger**: dispatched to investigate
-  `/plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s P1 ("does the governor only gate
+  `/plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s P1 ("does the governor only gate
   entry, with no ongoing enforcement..."). Confirmed by reading `_qg_admit_check`/`_qg_governor_acquire_reservation`
   directly: YES — admission is a one-time check; nothing re-verifies an admitted run against live RAM pressure that
   develops afterward. That confirmation IS this plan's own already-open P0 above; closing both from one fix rather than

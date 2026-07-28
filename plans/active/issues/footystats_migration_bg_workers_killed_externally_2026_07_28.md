@@ -224,3 +224,66 @@ slow (~1.5s/marker, ~2h projected for this 5,000-item batch) — a contention-dr
 the process climbs steadily, `ps` shows healthy RSS ~150MB, not swapping). Letting it run to completion rather than
 interrupting a working approach; will relaunch subsequent batches (~9,500 markers remain after this one) the same way
 (direct `run_in_background`, no `nohup`) once this one lands.
+
+## Update 2026-07-28 (later still, slot-14) — harness-tracked run DID eventually die too, but survived ~10x longer than nohup-detached attempts; refining the mechanism theory, not discarding it
+
+After restarting once more at doubled concurrency (`--discover-workers 8 --verify-workers 8`, no `--limit`, still no
+`nohup`) to process the full remaining ~13k-marker scope in one run, the process ran healthily for a long stretch —
+resume-log climbed steadily from 10,620 through 14,538 (3,918 markers processed) over roughly 90+ minutes of wall-clock,
+well past the earlier confirmed-sustained checkpoint. It then went silent: the harness itself returned a
+`status: "stopped"` task-notification with **no completion record** ("may have been stopped via the UI, Monitor timeout,
+or agent teardown — these leave no transcript marker, or it may have been running when the previous Claude Code process
+exited"). `ps aux` confirmed the process is genuinely gone. Resume-log survived intact at 14,538 entries — no data lost,
+safely resumable per the established contract.
+
+**Host state at the moment this was discovered** (checked immediately after the notification, not assumed):
+`cat /proc/loadavg` → `93.52 74.77 69.15` (1-min spiking back up while 5/15-min were still elevated-but-lower — a fresh
+spike, not a sustained plateau) and, critically, `free -h` → **swap 15Gi/15Gi used (100%, only 275Mi free)**, RAM free
+only 1.1Gi. This is the MOST severe memory-pressure reading of this entire incident sequence — every prior reading had
+at least some swap headroom (52-87% used); this one shows swap **fully exhausted**. A fully-exhausted swap is the
+textbook precondition for the kernel OOM-killer to activate aggressively regardless of any single process's own
+footprint, and is consistent with either the specific tracked process being reaped OR (per the notification's own
+wording) the surrounding session/tooling layer itself being torn down under the same pressure.
+
+**Refining, not discarding, the nohup-detachment theory**: the harness-tracked (non-nohup) approach survived roughly
+**10x longer** than any nohup-detached attempt (90+ minutes vs. 1-3 minutes) before finally succumbing to what looks
+like a genuine, severe resource-exhaustion event (100% swap) rather than the earlier session/cgroup- boundary pattern
+(which killed nohup'd processes at a consistent short duration regardless of load level). Both mechanisms are real:
+nohup+disown detachment is a near-immediate, load-independent kill; sustained/peak host resource exhaustion is a
+separate, less frequent but still real risk that eventually catches even a properly harness-tracked background process.
+Avoiding `nohup` remains clearly worth doing (it moved the failure mode from "minutes" to "an hour-plus"), but does not
+make a long-running local process on this host bulletproof against a genuine capacity spike.
+
+**Next step**: NOT retrying into a 100%-swap host immediately. Waiting for swap/load to show real recovery before the
+next resume attempt (same recipe: harness `run_in_background`, no `nohup`, `--resume-log` pointed at the same
+14,538-entry checkpoint).
+
+## Update 2026-07-28 (later still, slot-14) — checked ~20 min later expecting recovery; instead WORSE — new peak, host-wide crisis is not self-resolving
+
+Re-checked host state before considering a resume attempt, expecting some recovery after a ~20-minute wait. Instead:
+`cat /proc/loadavg` → **180.00 305.13 324.96** — a NEW peak, higher than the previous worst reading in this doc (185.17
+259.50 252.63). `free -h` → RAM 26Gi/30Gi used, only **669Mi free** / 4.3Gi available; swap **15Gi/15Gi used (100%, only
+23Mi free)** — swap has now been at or near full exhaustion across two consecutive checks roughly 20 minutes apart, not
+a transient spike that self-clears. Resume-log unchanged at 14,538 (no attempt made this check — correctly held off per
+the prior update's own guidance).
+
+**This is not resolving on its own.** Two independent severe readings 20 minutes apart, one of them a new all-time peak
+for this doc, strongly suggests a sustained fleet-wide condition (many concurrent slots' heavy work, consistent with the
+earlier-corroborated "31 concurrent full QGs vs. a 4-QG cap" finding from an unrelated slot) rather than a transient
+burst that will clear itself shortly. Continuing to hold off on any new local background launch on this host. Given this
+has now degraded to a NEW worst-recorded state while multiple workers (this one included) are deliberately backing off
+and waiting, the mitigation available to a single worker (waiting) does not appear to be converging — this may need
+operator-level intervention (identifying/throttling whatever is driving the fleet-wide over-concurrency, e.g. enforcing
+the existing "≤2 full QGs at once" rule, or reducing total active slot count) rather than more individual workers
+independently waiting it out.
+
+## Update 2026-07-28 (later still, slot-14) — swap recovered meaningfully ~30 min after the new-peak reading; resumed
+
+Checked again roughly 30 minutes after the worst reading (180/305/325 load, 100% swap). This time real recovery:
+`free -h` → swap **3.0Gi/15Gi used (20%), 12Gi free** (down from 100%) and RAM 8.1Gi free / 20Gi available.
+`cat /proc/loadavg` → `79.08 220.26 290.47` — 1-min already down to 79 (from the 180 peak); 5/15-min still show the
+decaying tail of the recent spike (expected, rolling averages lag), not a fresh one. Swap recovery is the more direct
+signal here (it doesn't lag the way a 15-min load average does), so treated this as genuine recovery, not another lull.
+Resumed the dry-run from the 14,538 checkpoint (harness `run_in_background`, no `nohup`, same 8/8 workers, no limit) —
+confirmed running (PID 694347) immediately after launch. Monitoring for whether it now runs to completion or hits the
+same wall again.

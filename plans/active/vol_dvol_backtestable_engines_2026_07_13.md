@@ -26,7 +26,7 @@ estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
 assigned_role: backend_engineer
 drift_direction: advance-code
-last_updated: 2026-06-27
+last_updated: 2026-07-28
 locked_by:
 locked_since:
 depends_on:
@@ -121,17 +121,34 @@ what's missing.
       contention from the rest of the fleet right now — a genuine manifest flush took ~9 retry attempts / ~9 min
       wall-clock to land under this session's load. Not a defect in this handler, but worth knowing before scheduling
       the full 2021→now historical pull (many more shards writing to the same contended index).
-- [ ] [OPERATOR] P1. **BLOCKED-OPERATOR-DECISION**: get an explicit operator go + desired historical depth (full
-      2021-03-24→now vs. a shorter window) before pulling the DVOL history the actual backtest will run against. DVOL is
-      free/credential-free, but per the parent plan's 2026-06-15 constraint ("backfills wait for explicit go... where
-      applicable, the paid vendor") a bulk historical pull is still a backfill decision, not something to run unattended
-      even on a free source. **Not dispatchable — stays visible, never auto-ingested.**
-- [ ] [SCRIPT] P1. **BLOCKED-OPERATOR-DECISION (same gate as the todo immediately above — no historical DVOL series
-      exists yet)**: DO NOT WORK THIS TODO until the `[OPERATOR]` todo above is checked off and a real DVOL history pull
-      has landed — check the manifest for `data_type=volatility_index` rows spanning the approved window BEFORE picking
-      this up; if none exist, `/skip-current-task` immediately rather than re-verifying from scratch (3 slots already
-      burned a dispatch on this exact check — see Progress Log). Once available: wire it + the underlying's realised-vol
-      close series as `GroupBRunner` backtest input for **VOL_CARRY** and run the backtest.
+- [ ] [DATA] P1. **RULED 2026-07-28 (operator general-theme ruling — no longer operator-gated, now AO-dispatchable)**:
+      pull the FULL DVOL historical series, 2021-03-24 → now, for both BTC and ETH, via the
+      `collect-deribit-volatility-index` handler built in the todo above. **Ruling: full history, not a shorter window —
+      go-ahead granted.** **Reasoning (operator's standing 2026-07-28 theme, applied here)**: (1) "full backfills/full
+      migrations — as long as an item isn't superseded by more recent work, do it": this plan is confirmed still active
+      and not superseded (checked 2026-07-28 — `v2_engine_venue_buildout_2026_06_15.md`,
+      `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`, and
+      `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` all still list this plan as the live open item for
+      VOL_CARRY/VOL_ARB_RV_IV); (2) DVOL is free/credential-free (Deribit public REST, no auth) so "cost under
+      $100 is
+      not a concern" doesn't even need invoking — this pull is $0; (3) "opt for full completions, no
+      shortcuts... no cheap implementations" — a shorter recent-only window risks covering too few volatility regimes
+      for a defensible backtest verdict under the HARD CONTRACT above (a false `not_available` from under-coverage is
+      exactly the partial/cheap outcome the theme rules against). **This resolves `BLK-011c84cb`** (the standing
+      operator-decision escalation raised 2026-07-14, still open as of the 2026-07-25 Progress Log entry below).
+      **Full-completion bar for whoever dispatches this** (no partial runs): pull EVERY day 2021-03-24→now for BOTH BTC
+      and ETH, verify manifest rows show `capture_status=captured` across the COMPLETE window (spot-check the 2021-03-24
+      launch-day boundary AND the most recent day, not just a middle sample), and re-run to closure if any days land
+      `attempted_failed`/`empty` rather than leaving partial coverage. Expect the shared `availability_index.parquet`
+      write-contention already noted in the todo above (retries, not failure) — that is not a reason to shrink scope.
+- [ ] [SCRIPT] P1. **Gate resolved 2026-07-28 (was BLOCKED-OPERATOR-DECISION — the operator decision is now RULED, see
+      the `[DATA]` todo immediately above)**: the remaining prerequisite is a REAL data dependency, not an operator gate
+      — DO NOT WORK THIS TODO until the `[DATA]` todo above is actually complete and the full DVOL history pull has
+      landed. Check the manifest for `data_type=volatility_index` rows spanning the FULL 2021-03-24→now window BEFORE
+      picking this up; if the range is incomplete, pick up the `[DATA]` todo instead rather than re-verifying from
+      scratch (3 slots already burned a dispatch on the old operator-gate confusion — see Progress Log). Once the full
+      history is available: wire it + the underlying's realised-vol close series as `GroupBRunner` backtest input for
+      **VOL_CARRY** and run the backtest.
 - [ ] [SCRIPT] P1. If VOL_CARRY's backtest passes the HARD CONTRACT bar above, register it in
       `ARCHETYPE_ENGINE_REGISTRY`. If it does not pass, leave `not_available` and file a new `BLOCKED-*` todo naming the
       specific failure (e.g. degenerate PnL, insufficient sample). Repo: strategy-service.
@@ -186,3 +203,20 @@ what's missing.
   non-ingested predecessors** — flagging this as a cross-cutting AO limitation (not vol-specific) rather than
   re-attempting a doc-only workaround. Added an inline `BLOCKED-OPERATOR-DECISION` self-skip warning to the SCRIPT todo
   above so a dispatched worker can bail in one read without re-deriving this.
+- 2026-07-28 (gate-clearing pass, operator general-theme ruling applied — corpus-wide 87-mentions/73-decisions
+  gated-item review): the standing `[OPERATOR] BLOCKED-OPERATOR-DECISION` todo (full-history-vs-shorter-window +
+  go-ahead) is now **RULED**: full 2021-03-24→now history, go-ahead granted, per the operator's 2026-07-28 general theme
+  covering every gated design-choice without a specific per-item answer (not superseded → do it; free source → cost
+  floor moot; full-completion-over-shortcuts → full window, not a sample). This resolves `BLK-011c84cb`. Retagged that
+  todo `[OPERATOR]` → `[DATA]` and wrote the ruling + full-completion mandate directly into its text. Also updated the
+  immediately-following `[SCRIPT]` todo's stale "BLOCKED-OPERATOR-DECISION" wording (that phrase described the
+  now-resolved gate, not a separate blocker) to instead describe the real remaining prerequisite — the historical pull
+  must actually land in the manifest before the backtest-wiring todo can start. Side note for whoever dispatches next:
+  the predecessor todo is no longer `[OPERATOR]`-tagged, so it should now count as a normal ingestable backlog task id —
+  the AO gating gap diagnosed in the 2026-07-25 entry above (a non-ingested `[OPERATOR]`/`BLOCKED-*` predecessor skipped
+  when `sequential: true` computes the "immediate predecessor") should no longer apply to this specific pair, since the
+  predecessor is now a normal `[DATA]` todo; this was NOT independently re-verified against a live
+  `regen_backlog_from_plan.py` run, so still confirm the `[SCRIPT]` todo isn't dispatched before the `[DATA]` todo's
+  manifest rows actually exist. **No production action taken in this pass** (no GCS writes, no VM launches, no `--apply`
+  runs) — this was a docs/backlog-unblocking edit only; the actual full historical pull is the next AO-dispatchable
+  step.

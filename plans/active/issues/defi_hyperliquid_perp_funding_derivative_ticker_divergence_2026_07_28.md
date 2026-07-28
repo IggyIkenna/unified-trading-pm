@@ -106,16 +106,35 @@ script's own instruction: "File any genuine divergence via standard findings-tri
 
 - [x] [PM] P1. This issue doc itself (filed + cross-referenced) satisfies the "file any genuine divergence" instruction
       from the parity-check todo. DONE 2026-07-28 (slot-6, data_engineering).
-- [ ] [OPERATOR] P1. Decide whether the 2026-07-08 HYPERLIQUID/ASTER/LIGHTER-ZKSYNC `perp_funding` retirement should be
-      REVERSED (re-declare `perp_funding` as a live capability and resume capturing it going forward) given the measured
-      60.7% match rate, or whether `derivative_ticker`'s embedded funding_rate is an ACCEPTABLE proxy for downstream
-      consumers despite the divergence (e.g. if features/strategy consumers only need the live/estimate signal, not the
-      realized-settlement value). This is a genuine judgment call about what "funding rate" should mean downstream — not
-      a worker-determinable fact.
-- [ ] [DESIGN] P1. Close the `[DESIGN] P1` "demote perp_funding to a derived view" todo in
+- [ ] [DATA] P1. **RULED 2026-07-28 (was `[OPERATOR]`) — REVERSE the 2026-07-08 retirement; resume dedicated
+      `perp_funding` capture for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC.** Reasoning applied from the operator's standing
+      general ruling: (a) "All adaptors should be FINISHED with respect to data, UNLESS it is literally proven the data
+      cannot be obtained" — dedicated `perp_funding` capture is NOT proven unobtainable for any of these three venues
+      (HYPERLIQUID's dedicated `/fundingRates` endpoint demonstrably worked before the 2026-07-08 retirement — this is
+      exactly a case of turning off a working capability on a since-disproven premise, not a genuine data-availability
+      gap); the "remove fully if unobtainable" branch does not apply, so the "finish it" branch does — resume capture,
+      do not leave it decommissioned. (b) "Opt for full completions, no shortcuts... if it's about canonicalisation
+      rather than a hack, do it properly" — the retirement substituted a proxy signal (a live-updating estimate) for
+      what should be the canonical realized-settlement value; the measured 60.7% match rate (worst-case divergence 10x
+      the signal's typical magnitude) proves the proxy is NOT the same signal, so relying on it is exactly the kind of
+      cheap substitute the ruling rejects. (c) Cost is not a blocker (<$100 tier) — resuming a previously-working
+      capture path is a small, well-scoped restoration, not a new build. Concrete full-completion mandate: (1)
+      re-declare `perp_funding` as a live UAC `VENUE_DATA_TYPE_CAPABILITIES` capability for HYPERLIQUID, ASTER, and
+      LIGHTER-ZKSYNC (reversing the 2026-07-08 registry edit at `market_data_categories.py:168-186`); (2) resume live
+      capture going forward for all three — even though only HYPERLIQUID currently has comparable historical data to
+      prove the divergence, the SAME disproven "byte-identical" premise removed capture for all three, so all three get
+      the same reversal (no partial fix that fixes HYPERLIQUID alone while leaving ASTER/LIGHTER-ZKSYNC on an unverified
+      proxy); (3) if a live-fetch probe for ASTER or LIGHTER-ZKSYNC later PROVES their dedicated `perp_funding` endpoint
+      genuinely cannot be captured (not merely "wasn't measured"), that specific venue's `perp_funding` should instead
+      be FULLY removed (code, UAC, manifest, GCS, docs) per the adaptor-completion theme's other branch — do not leave a
+      half-reversed, half-proxy state. No partial rollout satisfies this ruling.
+- [ ] [DESIGN] P1. **Resolved-condition NOW MET (2026-07-28) — no longer pending.** Close the `[DESIGN] P1` "demote
+      perp_funding to a derived view" todo in
       `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` citing this doc: parity FAILS for
-      HYPERLIQUID (the only venue with comparable historical data), so the todo should resolve as "keep both — parity
-      report explains why" per its own stated closing condition, pending the operator decision above.
+      HYPERLIQUID (the only venue with comparable historical data), so the todo resolves as "keep both — parity report
+      explains why" per its own stated closing condition. The operator-decision gate this was pending on above is now
+      resolved (retirement reversed, dedicated capture resuming) — this closing action can proceed immediately, no
+      further wait needed.
 - [ ] [DIAG] P2. Determine whether `derivative_ticker.predicted_funding_rate` (the asset_ctxs `premium` column,
       currently unused in this comparison) tracks `perp_funding.funding_rate` more closely than `funding_rate` does — if
       Hyperliquid's realized hourly rate is actually closer to a smoothed/clamped function of the premium than to the
@@ -125,6 +144,12 @@ script's own instruction: "File any genuine divergence via standard findings-tri
 
 ## Progress log
 
+- **2026-07-28 (gated-decision retag sweep)** — Applied the operator's general-theme ruling: reverse the 2026-07-08
+  `perp_funding` retirement for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC and resume dedicated capture, since the
+  "byte-identical" premise it was retired on is now disproven and the data is not proven unobtainable
+  (adaptors-finished-unless-proven- unobtainable theme). Retagged the operator todo to `[DATA]` with the ruling +
+  reasoning + a full-completion mandate (all three venues, no partial fix) written in; unblocked the dependent
+  `[DESIGN]` close-out todo, which was only waiting on this decision. Docs-only, no code/UAC change made.
 - 2026-07-28 (slot-6, data_engineering): Filed from the `defi_satellite_ao_dispatch_batch1_2026_07_25.md` funding-parity
   todo's own findings-triage instruction. Script:
   `market-tick-data-service/scripts/one_offs/defi_perp_funding_derivative_ticker_parity_check_2026_07_28.py` (read-only,

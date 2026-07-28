@@ -108,11 +108,15 @@ Two independent, non-exclusive fixes:
 
 ## Todos
 
-- [ ] 1. [INFRA] P2 (downgraded from P0 — see progress log 2026-07-27 cicd/slot-5: todo 2's fix alone resolved the
-      timeout, this is now optional defense-in-depth, not a blocker). Raise `run_timeout 60` in
-      `scripts/quality-gates.sh` STEP 5.83 (per-repo file, not templated — a fleet-wide bump means editing every
-      consuming repo's copy) as extra headroom against pathological host I/O contention. (repo: unified-trading-pm +
-      every consuming repo)
+- [x] 1. [INFRA] P2 (downgraded from P0 — see progress log 2026-07-27 cicd/slot-5: todo 2's fix alone resolved the
+      timeout, this is now optional defense-in-depth, not a blocker). ✅ **STALE-CONFIRMED-DONE (2026-07-28)** —
+      already fixed by a concurrent session prior to this pickup: `features-service@1f7fec3f8` ("raise STEP 5.83
+      adapter-contract-regression run_timeout 60->300s", citing this exact todo) bumped the timeout for the STEP 5.83
+      block found there. Re-verified live across the WHOLE workspace (grep every repo's `scripts/quality-gates.sh` for
+      the `no_adapter_contract_regression.sh` invocation, per-repo file, not templated): `execution-service`,
+      `features-service`, `instruments-service`, `market-tick-data-service` are the only 4 repos carrying this STEP —
+      all 4 already read `run_timeout 300`; zero repos left with the vulnerable `run_timeout 60` form. No new code
+      needed — confirming + citing the existing fix.
 - [x] 2. [INFRA] P1. Make `check_adapter_contract_regression.py`'s scan stop walking the full workspace — read only the
       baseline's own files (`read_baseline_files()`), scoped to present repos, instead of `rglob("*.py")`-ing every file
       in every repo. Runtime is now O(baseline size ≈ 332 files), not O(workspace size) — measured 0.5-0.65s standalone

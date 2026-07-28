@@ -337,3 +337,17 @@ design's counts are 2026-07-13).
   Full detail on the flipped todo above. Residual: the marker object couldn't be deleted (autonomous-worker GCS-delete
   guardrail) — harmless, flagged for optional operator cleanup. **Fold A is now 100% closed** except the two todos this
   task was explicitly told to leave alone: IAM + lifecycle Group-B join, and alias sunset (P3) — both untouched.
+
+- **2026-07-28, PARTIAL verify on the "Alias sunset" P3 todo (UTL half only; NOT flipped — joint todo).** Verified
+  `unified-trading-library`'s `_KIND_ALIASES` (`unified_trading_library/cloud_interface/bucket_naming.py`) is already
+  grep-clean: the 5 retired per-kind feature aliases (delta-one/volatility/onchain/xinstrument/mtf) were hard-removed
+  earlier this same fold at `unified-trading-library@055948e3` (2026-07-19, "sunset the 11 coupled bucket-kind aliases
+  (features-_/ml-_/execution-store-prediction)") — confirmed via `git log`/`git show --stat` and a fresh grep of the
+  live dict: only 3 entries remain (`features-cross-instrument`→`features`, `features-multi-timeframe`→`features` — both
+  PERMANENT long-form consumer vocabulary per the in-file comment, not retired; `tick-data`→`market-data`, unrelated to
+  this fold). No dead UTL-side alias entries exist to remove. **What still remains for this todo (NOT done, not touched
+  by me)**: the "+ retired yaml keys; `terraform plan` green" half — removing the retired `cloud-providers.yaml` feature
+  keys and the Group-B terraform/IAM state — lives in `deployment-service` (`configs/cloud-providers.yaml` + terraform),
+  being handled by a separate agent this same tick (also covering this plan's sibling "IAM + lifecycle" P2 todo above).
+  Leaving the "Alias sunset" checkbox unchecked since it's one joint todo spanning both repos' work — flip it only once
+  the deployment-service terraform/yaml-key half also lands.

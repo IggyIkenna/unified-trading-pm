@@ -782,7 +782,10 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
 ## Temporary states + their canonical follow-up plans
 
 - P7.3 (live leg) is `BLOCKED-OPERATOR-DECISION` until a live wallet/custody is approved (hard-stop: wallet keys are
-  human-only). The paper↔batch determinism proof (P7.2) does not depend on it.
+  human-only). The paper↔batch determinism proof (P7.2) does not depend on it. **Reviewed 2026-07-28 (operator
+  gate-cleanup pass) — confirmed remains a PERMANENT hard-stop**: live wallet/custody approval (Copper/CEFFU) is named
+  in CLAUDE.md as a permanent, human-only hard-stop alongside force-push-main and 1.0.0 graduation, regardless of how
+  complete the rest of the reconciliation spine is (P7.1/P7.2 are both DONE/proven ε=0). Not retagged, not unlocked.
 
 ## Progress Log
 

@@ -20,7 +20,7 @@ scope: [engineer, admin]
 tags: [quickmerge, ci-infra, branch-drift, shared-host, fleet-wide, blocking]
 related:
   [
-    /plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
+    /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
   ]
 created: 2026-07-27

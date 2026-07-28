@@ -295,7 +295,14 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
       xg/stats cols all NULL). Coverage check across 5 days 2018→2026: archive `af_fixture_id` ⊆ canonical
       `af_fixture_id` (**canon-only=0**; canonical equal-or-superset). The v2 canonical stores `af_*` ids + canonical
       `league=` path + derives human-readable via UAC registries (the by-design store-id/derive-name pattern), so the
-      archive's data is fully represented. Delete it with the legacy sweep (snapshot-first).
+      archive's data is fully represented. Delete it with the legacy sweep (snapshot-first). **DONE-FOR-CODE
+      2026-06-26** (via `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s AO-dispatched copy of this todo, full
+      evidence in `plans/archive/2026_07/sports_satellite_ao_dispatch_batch5_completed_todos_2026_07_26.md`):
+      `--drop-stale` implemented+unit-tested+dry-run-verified twin-safe on both surfaces
+      (`market-tick-data-service@08439787` + `@236d945e`, verified real commits). Checkbox stays unchecked — the actual
+      irreversible `--apply`/`--drop-stale` firing remains **BLOCKED-OPERATOR** pending explicit sign-off (a 2026-07-27
+      re-check flagged it's likely just a finding-T/U soft-delete-retention re-tag away from qualifying, not yet
+      re-tagged). Re-run once the operator authorizes the delete.
 - [x] ✅ [DATA] P0. **`_index` CF-2/3/4 stamp DONE — BOTH sports surfaces now CF-GREEN 2026-06-24** via the new
       `instruments-service/scripts/canonicalize_sports_index_cf234_2026_06_24.py` (in-place, preserves everything;
       source = `pipeline_mode` minus its `{mode}_` prefix, `expected_unattempted` source-exempt; asset_group=sports;

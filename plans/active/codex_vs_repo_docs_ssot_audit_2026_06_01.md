@@ -22,7 +22,7 @@ tags: [audit, documentation, ssot, codex, consolidation, deduplication]
 related: []
 created: 2026-06-01
 parent_epic: plan_hygiene_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
@@ -49,15 +49,24 @@ thinking: high
 
 # Codex-vs-repo-docs SSOT audit + consolidation
 
-> **🅿️ PARKED `assigned_vm: NA` — 2026-07-28 (main agt-4d8de7).** All 15 remaining open todos are Phase-3/4/5
-> REDIRECT/DELETE/slim APPLY work, which is held under the operator's standing 2026-06-01 **FIX-STALE-only hold**. The
-> permitted FIX-STALE slice already landed (`mtds@d97ca3c`), so no operator-permitted work remains — yet the plan kept
-> re-dispatching held apply to workers (slot-12 blocked BLK-613a61ff, slot-16 before it). Flipped `planning → NA` to
-> stop the re-dispatch churn while **GATE-1 is pending an operator ruling** (escalated: server block `BLK-d1b29089` +
-> main SPLIT-DECISION). This is a reversible coordination park, NOT a resolution — the moment the operator rules the
-> hold LIFTED (issue-doc Option A/C), flip back to `planning`. Do NOT execute any REDIRECT/DELETE/migrate/slim until
-> then. SSOT for the contradiction + decision:
-> `/plans/active/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md`.
+> **🟢 GATE-1 RULED 2026-07-28 (operator gate-clearance pass) — hold LIFTED, flipped back `NA → planning`.** The
+> 2026-06-01 FIX-STALE-only hold is **LIFTED** for this plan: Option A of
+> `/plans/active/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md` is the ruling — the
+> deliberate 2026-07-27 `NA→planning` reclassification was the authorization signal, confirming it just removes the
+> standing contradiction rather than creating a new risk. Phases 3/4 (REDIRECT/DELETE/slim APPLY, ~20 repos) may now
+> proceed. **Unchanged safeguard**: this work stays `model_tier: opus-required` / `execution_model: opus-1m` per this
+> plan's own "Execution model" section — a sonnet orchestrator may drive dispatch, but the actual redirect/slim
+> editorial judgment must run on an opus sub-agent fan-out (plan-sanctioned), never a default-tier worker delegating the
+> call out. **Mandate for whoever executes Phases 3/4**: full completion across every repo in the per-repo rollout list
+> below — no partial/half-applied REDIRECT or DELETE passes, no repo skipped because it "looked fine last time." Once
+> applied, update every per-repo registry note below that still says "Apply stays Phase-3/4 under the operator's
+> FIX-STALE-only hold" — that phrase is now historical (describes the audit-time state, 2026-06-01 through 2026-07-27),
+> not a current gate; leaving it unedited after Phase 3/4 land would itself become a stale contradiction of the kind
+> this exact gate was created to catch.
+>
+> _Prior park (superseded by the ruling above, kept for history)_: 🅿️ PARKED `assigned_vm: NA` — 2026-07-28 (main
+> agt-4d8de7). Flipped `planning → NA` to stop re-dispatch churn (slot-12 BLK-613a61ff, slot-16 before it) while GATE-1
+> was pending (escalated: server block `BLK-d1b29089` + main SPLIT-DECISION). See the issue doc for the full history.
 
 > **Goal**: `unified-trading-pm/codex/` is the single source of truth for all canonical / cross-cutting documentation.
 > Every repo `docs/` folder is audited against it; duplicated content is removed and replaced with a link to the codex
@@ -173,17 +182,18 @@ from scope).
       (2026-07-23: a non-determinable operator gate must not keep an otherwise-complete, worker-determinable phase open
       indefinitely / re-dispatching). Phase 3 (redirect + slim) can proceed on schedule.
 - [ ] [DOCS] P1. **Phase 3 — redirect + slim.** Convert REDIRECT docs to the S5.11 template; slim KEEP-ESSENTIAL docs to
-      repo-local + codex links. Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service). >
-      **🛑 GATE (2026-07-27): the REDIRECT/DELETE APPLY here is BLOCKED-OPERATOR-DECISION — do NOT execute it yet.** >
-      This plan's registries say the apply "stays under the operator's standing 2026-06-01 FIX-STALE-only hold", yet >
-      the plan was reclassified NA→planning (dispatching this todo) the same day — a self-contradiction. A worker >
-      cannot infer the hold is lifted. ALSO opus-gated (redirect/slim judgment must run on opus, not sonnet). Await
-      the > operator ruling in >
-      `/plans/active/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md` (server block >
-      `BLK-d1b29089`). The mechanical FIX-STALE archived-mirror sweep (line ~519) IS permitted and already DONE.
+      repo-local + codex links. Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service). **✅
+      GATE CLEARED 2026-07-28 (operator ruling, Option A of the issue doc below): the FIX-STALE-only hold is LIFTED —
+      this REDIRECT/DELETE APPLY is cleared to execute.** Still opus-gated (redirect/slim editorial judgment must run on
+      an opus sub-agent per this plan's "Execution model" section, not a default-tier worker delegating the call out) —
+      that requirement is unchanged, only the hold itself lifted. Full-completion mandate: apply REDIRECT/slim across
+      every repo in the per-repo rollout list (Appendix A/B) in this pass, not a partial subset; the mechanical
+      FIX-STALE archived-mirror sweep (line ~519) was already DONE under the old hold and does not need repeating. SSOT
+      for the ruling: `/plans/active/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md`.
 - [ ] [DOCS] P1. **Phase 4 — delete pure-dups.** Remove DELETE-class docs (migration already done in Phase 2). Update
-      any `INDEX.md` / README doc-index links. **🛑 Same GATE as Phase 3 — DELETE-class apply is
-      BLOCKED-OPERATOR-DECISION (see the Phase-3 gate note + issue doc above).**
+      any `INDEX.md` / README doc-index links. **✅ Same gate-clearance as Phase 3 — DELETE-class apply is cleared to
+      execute (2026-07-28 operator ruling, see the Phase-3 note + issue doc above).** Full-completion mandate applies
+      here too: every DELETE-class doc identified in Appendix A/B, not a partial sweep.
 - [ ] [DOCS] P2. **Phase 5 — verify + enforce.** Run S5.7 audit per repo; add a QG/CI check that flags repo docs
       duplicating a codex table/contract (or hardcoding a resolver-owned literal); confirm all redirect links resolve.
 
@@ -199,15 +209,14 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
   `org-fund-client-entity-model.md` + `capital-structure-and-regulatory.md`; the remaining Elysium refs are the client
   POD, not the removed provider). **Zero codex writes were needed** — codex already holds the canonical content for all
   three.
-- **2 genuine MIGRATE-TO-CODEX deltas (client-reporting-api commercial facts) → OPERATOR-GATED, NOT migrated.**
+- **2 genuine MIGRATE-TO-CODEX deltas (client-reporting-api commercial facts) → RULED 2026-07-28, cleared to migrate.**
   Confirmed codex-missing (`codex/14-customer-journeys/commercial-model/` has no client-roster/fee-tier/three-HWM SSOT)
   and source docs present (`CLIENT_OPERATIONS_GUIDE.md`, `PNL_AND_INVOICING_GUIDE.md`). These carry **real client IDs +
-  per-client fee %s + org hierarchy** — per the `[OPERATOR-DECISION]` todo in Appendix B ("confirm the fee
-  numbers/roster are current before migrating; committing stale commercial facts to codex-as-SSOT is worse than leaving
-  them repo-local"), the migration is **BLOCKED-OPERATOR-DECISION**. Tracked on its OWN separate todo (line ~479 below)
-  — it is not re-blocking the Phase-2 umbrella checkbox (closed 2026-07-27, see below); once the operator confirms
-  currency, the migration target is `/codex/14-customer-journeys/commercial-model/` (new roster+fees SSOT) per that
-  todo.
+  per-client fee %s + org hierarchy** — the operator has now confirmed directly ("Yes, the client roster/fee numbers ARE
+  still current. Confirmed, no re-check needed."), so the currency-gate that held this migration is resolved. Tracked on
+  its OWN separate todo (line ~479 below) — it is not re-blocking the Phase-2 umbrella checkbox (closed 2026-07-27, see
+  below); the migration target is `/codex/14-customer-journeys/commercial-model/` (new roster+fees SSOT) per that todo,
+  now AO-dispatchable.
 - **1 marginal-MIGRATE candidate → VERIFIED already-satisfied, no codex write needed (closes Phase 2, 2026-07-27).** The
   deployment-service refreshed registry (below) flagged `SHARDING_AND_DATA_ALIGNMENT.md`'s shard-atom taxonomy (sports
   `(league_id, day)`, prediction `(canonical_question_group, day)`, ML/strategy/execution `job_id` v7 column) as "worth
@@ -553,18 +562,19 @@ genuine-UI, out of scope.
       `agent-orchestrator/AUTH_INVENTORY.md`'s staleness (retired `agents/worker.md`/`main.md` PATHS — now under
       `unified-trading-pm/agents/`) is a **separate non-archived-mirror FIX-STALE** tracked in the Appendix-B
       agent-orchestrator entry, NOT this `unified-trading-codex/`-repoint todo's scope.
-- [ ] [DOCS] P1. **[OPERATOR-DECISION] client-reporting-api commercial-facts SSOT gap (⚠️ cross-repo SSOT
-      contradiction)**: the committed client roster + org hierarchy + per-client trader/Odum/introducer fee %s +
-      three-HWM invoicing model live ONLY in
-      `client-reporting-api/docs/{CLIENT_OPERATIONS_GUIDE,PNL_AND_INVOICING_GUIDE}.md`, NOT in
+- [ ] [DOCS] P1. **client-reporting-api commercial-facts migration into codex — RULED, cleared to execute (operator
+      confirmed 2026-07-28: "Yes, the client roster/fee numbers ARE still current. Confirmed, no re-check needed.").**
+      The committed client roster + org hierarchy + per-client trader/Odum/introducer fee %s + three-HWM invoicing model
+      live ONLY in `client-reporting-api/docs/{CLIENT_OPERATIONS_GUIDE,PNL_AND_INVOICING_GUIDE}.md`, NOT in
       `/codex/14-customer-journeys/commercial-model/` — directly undercuts CLAUDE.md's "grep codex before asking the
-      operator for committed numbers." Phase-2 migration target = `/codex/14-customer-journeys/commercial-model/` (new
+      operator for committed numbers." Migration target = `/codex/14-customer-journeys/commercial-model/` (new
       roster+fees SSOT), with `client-reporting-architecture.md` cross-referencing it; the onboarding/backfill/Cloud-Run
       runbook portion stays repo-local (must gain `owner/cadence/verifier/last_executed` runbook frontmatter).
       `CLIENT_OPERATIONS_GUIDE.md` also hardcodes real project id `central-element-323112` (L378) — a `{project_id}`
-      placeholder violation to fix on migration. OPERATOR-GATED: confirm the fee numbers/roster are current before
-      migrating (committing stale commercial facts to codex-as-SSOT is worse than leaving them repo-local). (repo:
-      client-reporting-api, unified-trading-pm)
+      placeholder violation to fix on migration. Full-completion mandate: migrate the commercial facts into codex FIRST
+      (this plan's own Principle 2 — never lose the delta), then convert the repo docs to S5.11 redirects; no partial
+      migration that leaves half the commercial facts still repo-local-only. (repo: client-reporting-api,
+      unified-trading-pm)
 - [ ] [DOCS] P2. **[OPERATOR-DECISION] ibkr-gateway-infra internal contradictions (⚠️ ground-truth needed)**: the repo
       contradicts itself on (a) archived-vs-live status (`QUALITY_GATE_BYPASS_AUDIT.md` says archived;
       README/docs/coverage-floor treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human

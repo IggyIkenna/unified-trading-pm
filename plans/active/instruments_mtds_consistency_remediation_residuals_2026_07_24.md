@@ -451,7 +451,13 @@ invariants: `venue_noncanon_remaining=0`, `captured_venue_not_on_gcs_remaining=0
       blank-shard-dim aggregate captured rows with no concrete object; the bare→suffixed map is AMBIGUOUS (SPOT vs
       FUTURES vs SWAP) so NOT a mechanical spelling-canon. Diagnose the writer that emitted blank-dim bare-venue rows;
       reclassify (the real per-market data is captured under the suffixed venues). EXTENDED-STARKNET(1) IS on GCS
-      (sample miss, no action). — market-tick-data-service
+      (sample miss, no action). — market-tick-data-service. **RULED 2026-07-28 (operator gate-cleanup pass) — this
+      disposition (reclassify, do not backfill) is CONFIRMED correct and no longer conflicts with
+      `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`'s overlapping-looking `[DATA] P3`
+      todo**: that doc's 9,750-row population is overwhelmingly (9,736 rows) a DIFFERENT, already-venue-resolved subset
+      (suffixed venues, blank `data_type` only) which DOES get backfilled — only this doc's narrow 14-row bare-venue
+      subset (venue itself ambiguous) gets reclassified, exactly as written here. No change needed to this todo's own
+      disposition; see the cross-cutting reasoning + the "Done when" for both halves recorded in that doc.
 - [x] ✅ [DATA] P2. **sports `_index`: `UNIBET_EU`(11)+`UNKNOWN` captured rows under wrong `pipeline_mode`** — DONE
       2026-06-19 (mtds@ba21ee5 `recover_sports_mtds_index_leagues_2026_06_19.py`, APPLIED+verified live). GCS-verified
       remap: the captured UNIBET_EU objects live under `pipeline_mode=batch_odds_api/venue=UNIBET_EU/league_id=<L>/` →
@@ -861,13 +867,13 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
 
       CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-                                                                                                              chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
-                                                                                                              even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
-                                                                                                              UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-                                                                                                              column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-                                                                                                              migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
-                                                                                                              canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
-                                                                                                              AG. — market-tick-data-service
+                                                                                                                      chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+                                                                                                                      even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
+                                                                                                                      UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
+                                                                                                                      column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+                                                                                                                      migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+                                                                                                                      canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
+                                                                                                                      AG. — market-tick-data-service
 
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured

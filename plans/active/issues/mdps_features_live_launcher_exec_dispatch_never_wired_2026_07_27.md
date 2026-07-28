@@ -123,12 +123,31 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide the intended exec-dispatch shape for `VM_TASK=mdps-features-live`: (a) does MDPS run one
+- [ ] [OPERATOR] P2. **PARTIALLY RULED 2026-07-28** (operator general theme applied to the part it determines; the
+      remainder is a genuine business-fact gap — see below). **Process topology: RULED — option (a)**: MDPS runs one
       process per live shard (`ASSET_GROUP:VENUE:DATA_TYPE`) discovered from the instruments universe, with
-      features-service running once per applicable `--feature-family` subscribing to the same asset_group's
-      `candle_computed` stream — or (b) some other shape entirely? Needs sign-off before a worker can wire the actual
-      branch. Reference: Phase 15 successor plan (`live_pipeline_mtds_mdps_features_2026_05_08.md`, if a successor plan
-      exists — none found under `plans/active/` as of this issue's filing; may need to be created).
+      features-service running one process per applicable `--feature-family`, both subscribing to the same asset_group's
+      `candle_computed` stream. Reasoning: this is the theme's "relaxed/broader" default — the most granular,
+      fully-decomposed shape (per-shard MDPS + per-family features-service) rather than a monolithic co-located
+      consumer, consistent with "opt for full completions, no shortcuts" and the standing preference for broader
+      coverage over a narrower, cheaper architecture; it's also the only shape offered in this issue with no viable
+      named alternative, so there's nothing to adjudicate between. **Still genuinely OPEN (not resolved by the theme —
+      flagging why, per this task's own instructions)**: which of the 9 `--feature-family` sub-packages apply to which
+      `asset_group` is a real product/strategy decision, not a lookup — a quick code check
+      (`features_service/*/config.py`) only proves 2 of 9 unambiguously by construction (`onchain` hardcodes
+      `asset_group="defi"` regardless of caller input; `calendar` has NO asset_group axis at all — it's a shared/global
+      family, not per-domain), and confirms `sports` is sports-only by naming — but the remaining 6 (`delta_one`,
+      `cross_instrument`, `multi_timeframe`, `volatility`, `commodity`, `performance_features`) are all generically
+      `asset_group`-parameterized in code with no authoritative mapping of WHICH domains they're meant to run live for
+      (e.g. does `commodity` apply to `cefi`/`defi` at all; does `cross_instrument` run for `sports`). None of the
+      general theme's bullets (backfill/migration completion, adaptor-finish-or-remove, cost, pause/unpause, manifest
+      version, auto-recovery, live-probing breadth, credential direction) speaks to "which trading-strategy feature
+      families are meant to run for which asset class" — that's a strategy-design fact, not inferable from code or
+      covered by the theme, so this half is left genuinely open per this task's own instructions. Needs operator
+      sign-off on the family↔asset_group mapping before a worker wires the actual per-family branches; the topology half
+      above (per-shard/per-family process decomposition) is unblocked and can be wired now. Reference: Phase 15
+      successor plan (`live_pipeline_mtds_mdps_features_2026_05_08.md`, if a successor plan exists — none found under
+      `plans/active/` as of this issue's filing; may need to be created).
 - [ ] [SCRIPT] P2. Once the shape is decided: add a `VM_TASK == "mdps-features-live"` (or generic "+"-split) branch to
       `setup-data-pipeline-vm.sh`'s exec-dispatch section (mirrors the existing tarball-resolution split + the
       multi-worker sharding pattern at ~line 2031 for backgrounding N python processes under one `_launch_with_tee`

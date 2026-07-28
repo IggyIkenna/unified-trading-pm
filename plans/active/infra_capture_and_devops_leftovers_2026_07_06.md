@@ -67,18 +67,19 @@ source:
 
 ## Capture wiring (dispatchable)
 
-- [ ] 🚧 **BLOCKED-OPERATOR-DECISION** [DATA] P1. **Register + launch the ASTER live connector** —
-      `aster_book_liq_ws.py` into `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi
-      template). **PREREQ: Plan 1's enumerator `start_date` support + the UAC capability flip for ASTER
-      book5/liquidations have landed** (else you re-create the 17,282-row over-seed). Verify `live_aster` rows land
-      (per-VM shard spot-check at T+10-15min). **This gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT:
-      `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG #4. Gate: `live_aster` book5/liquidations rows landing
-      daily. **STATUS 2026-07-07 06:31 UTC — BLOCKED-PREREQUISITES** (main-agent answer to `BLK-26ed6571`, task 001
-      pickup, slot-9): both hard prereqs unmet on LDR — (a) `instruments-service/scripts/expected_universe.py` has zero
-      `get_venue_data_type_start_date` awareness on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT
-      been quickmerged yet); (b) UAC `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only
-      lists trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations (**stale as of 2026-07-07 08:10
-      UTC — corrected 2026-07-12, finding id 114, §A2 B-queue ruling**: `unified-api-contracts@3652f99f`, verified via
+- [ ] [DATA] P1. **RETAGGED 2026-07-28 (was `🚧 BLOCKED-OPERATOR-DECISION`) — RULED, see the 2026-07-28 note appended at
+      the end of this task's history below.** Register + launch the ASTER live connector — `aster_book_liq_ws.py` into
+      `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi template). **PREREQ: Plan 1's
+      enumerator `start_date` support + the UAC capability flip for ASTER book5/liquidations have landed** (else you
+      re-create the 17,282-row over-seed). Verify `live_aster` rows land (per-VM shard spot-check at T+10-15min). **This
+      gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG
+      #4. Gate: `live_aster` book5/liquidations rows landing daily. **STATUS 2026-07-07 06:31 UTC —
+      BLOCKED-PREREQUISITES** (main-agent answer to `BLK-26ed6571`, task 001 pickup, slot-9): both hard prereqs unmet on
+      LDR — (a) `instruments-service/scripts/expected_universe.py` has zero `get_venue_data_type_start_date` awareness
+      on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT been quickmerged yet); (b) UAC
+      `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only lists
+      trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations (**stale as of 2026-07-07 08:10 UTC —
+      corrected 2026-07-12, finding id 114, §A2 B-queue ruling**: `unified-api-contracts@3652f99f`, verified via
       `git log`/`git show` on `live-defi-rollout`, added `book_snapshot_5` + `liquidations` to
       `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` (`start_date=2026-06-23`), landing ~2h after this 06:31 UTC status check.
       Current tree confirms both keys present. The (a) prereq — `enumerate_expected_universe.py` per-(venue,dt)
@@ -136,6 +137,29 @@ source:
       BLOCKED-OPERATOR-DECISION, not failed — it is complete except for this gated launch; (3) when the freeze lifts,
       prefer folding ASTER into `launch-mtds-live-cefi-consolidated.sh` over a standalone always-on VM, to honor the
       cost-consolidation intent; (4) main is surfacing the freeze-lift decision to the operator — it is theirs to make.
+      **RULED 2026-07-28 (operator general-theme ruling on all remaining gated design-choice decisions, applied here):
+      LIFT the freeze, and do the FULL consolidation properly — not a standalone shortcut.** Reasoning applied from the
+      operator's standing general ruling: (a) "unpause whatever needs unpausing to unblock a task ... operator
+      authorizes both directions as needed" — the freeze exists to protect a migration that has now sat unlaunched for
+      3+ weeks with zero fleet-wide CeFi live-capture running at all (re-verified dormant as of the 2026-07-25 GCE
+      listing above); it is blocking real, ready-to-ship connector code (ASTER book_snapshot_5 + liquidations, prereqs
+      met) for no active benefit. (b) "Opt for full completions, no shortcuts ... even if not MVP" — the standalone-VM
+      option is explicitly the shortcut the freeze was designed to prevent (it "cuts against the exact
+      cost-consolidation intent"), so the ruling is NOT "launch ASTER standalone" — it is: **launch/build the actual
+      consolidated CeFi live-capture VM this session** (`launch-mtds-live-cefi-consolidated.sh`, per the guardrails
+      already on file above) **with ASTER's book_snapshot_5 + liquidations shards folded into its MVP shard list as part
+      of that same completion**, not deferred to a later re-run. (c) Cost is not a blocker (<$100 tier). Concrete,
+      full-completion mandate for whoever dispatches this next: (1) launch the consolidated VM for real, on-demand per
+      the live/forward VM rule (SPOT is backfill-only) — one standing capture host covering every CeFi live-WS venue the
+      migration was scoped for, not a partial subset; (2) add ASTER `book_snapshot_5` + `liquidations` to its MVP shard
+      spec in the same launch, using the already-registered `launch-mtds-live.sh` per-shard invocation documented above
+      as the reference command if the consolidated launcher needs the shard added; (3) verify per the plan's standing
+      no-fire-and-forget guard (STARTED <60s, ≥1 progress/hr, T+10-15min data-quality spot-check that `live_aster`
+      book5/liquidations rows are actually landing, not just that the VM booted); (4) once verified, archive/retire the
+      two prior "dormancy is an intentional pause" issue docs
+      (`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`) as resolved rather than leaving them
+      referencing a freeze that no longer applies. No partial launch (e.g. ASTER-only, or the consolidated VM minus
+      ASTER) satisfies this ruling — both halves ship together.
 - [x] ✅ [DATA] P1. **Deribit `options_chain` live runner** — wire a live cron/VM to run
       `--operation deribit-options-chain` (the handler `mtds@9ecd1e29e` is **live/replay only — no backfill**,
       `process()` collects `date.today()`), so it captures BTC/ETH `options_chain` daily → then feeds Plan 4's
@@ -215,6 +239,18 @@ source:
       (slot 9, finalize task)**: no sanction found; only restated in
       `plans/active/instruments_completion_tracker_2026_07_06.md` and
       `plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`. Genuinely still operator-decision-gated.
+      **RE-REVIEWED 2026-07-28 against the operator's 2026-07-28 general-theme ruling (backfills/migrations/cost/
+      adaptors/live-probing-scope/pause-unpause) — the theme does NOT resolve this one, remains genuinely gated.** None
+      of the theme's bullets speak to this decision: it is not a backfill, migration, adaptor completion, cost question
+      (cost is not the blocker here), manifest-version gate, auto-recovery question, or "live probing scope" in the
+      data-capture sense (that theme item is about widening OUR OWN expected-universe/live-capture probing breadth
+      across asset groups/shards — a different meaning of "probing" than deliberately stress-testing a THIRD PARTY
+      VENDOR'S rate limits from a disposable IP, which is what this task actually is). The stated `why_operator_only`
+      reasoning holds unchanged: running an intentionally adversarial probe against an external vendor's infrastructure
+      carries reputational/ToS/abuse-detection exposure that is a business risk-tolerance judgment, not a data-derivable
+      fact or an engineering prerequisite a worker can clear. Left as BLOCKED-OPERATOR-DECISION — this is the one
+      decision in this file's assigned set that the general theme does not determine; it needs the operator's own direct
+      yes/no.
 - [x] ✅ [DATA] P1. **CLASSIFICATION ALREADY DECIDED — remaining scope is enumerator/data-status consistency** (was:
       "BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification (Lighter / Pacifica / Extended): are these
       cefi or a distinct on-chain-CLOB group? Operator classification call." — corrected 2026-07-14, doc-reconciliation
@@ -260,6 +296,17 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-28 (gated-decision retag sweep)** — Applied the operator's 2026-07-28 general-theme ruling to this file's
+  two remaining gated design-choice decisions. **Task 001 (ASTER live connector / CeFi freeze)**: RULED — lift the
+  freeze and do the full consolidation properly (launch the actual consolidated CeFi live-capture VM with ASTER's
+  book_snapshot_5 + liquidations folded into its MVP shard list in the same completion, not a standalone shortcut);
+  retagged the checkbox away from `BLOCKED-OPERATOR-DECISION` to a normal `[DATA]` execution todo with the full ruling
+  - reasoning + a concrete no-partial-completion mandate written in. **Rate-limit probe VM task**: re-reviewed against
+    the theme and left AS-IS — none of the theme's bullets (backfill/migration/cost/adaptor/manifest/pause-unpause/
+    live-probing-scope) determine an answer for a decision that is really "is it acceptable to deliberately stress-test
+    a third-party vendor's rate limits from a disposable IP," a reputational/ToS risk-tolerance call with no
+    data-derivable answer — stays `BLOCKED-OPERATOR-DECISION`, genuinely unresolved. Docs-only, no VM launched, no code
+    changed, no production action taken.
 - **2026-07-25** — **Task 001 `BLK-4f52080e` answered: HOLD, do NOT launch** (main). Confirms recommendation B: the
   2026-07-14 cost-control freeze on CeFi live capture (`BLK-55d45a68`) covers ANY new CeFi live-capture VM, not just a
   relaunch of the paused consolidated migration — a standalone always-on ASTER VM would itself cut against the

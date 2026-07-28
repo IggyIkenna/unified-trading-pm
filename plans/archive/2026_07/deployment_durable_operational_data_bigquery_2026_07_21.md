@@ -492,6 +492,71 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
     as its own issue doc (`plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md`) since
     it's a different plan's lifecycle (the GHA fan-out, not this BQ plan) — not tracked here beyond this pointer.
 
+## Post-archival addendum (2026-07-28, `/autonomous`)
+
+This plan was archived (`unified-trading-pm@fdbafb3be`, a concurrent slot's zero-open-todo hygiene sweep) while the
+three items the "Still open" note above named were mid-flight in a separate, concurrently-running session. Recording
+what actually landed, for provenance, since none of it could be flipped in-place once the file moved:
+
+- **Analysis-path doc — DONE** (by the time this session reached it, already written into
+  `deployment-observability.md`'s "Analysis path — DuckDB over `bq extract`" section by whichever concurrent process got
+  there first — verified present, not rewritten here).
+- **Codex cross-ref — DONE 2026-07-28** — added the one-liner pointer in
+  `/codex/02-data/live-data-persistence-and-event-log.md`'s Cross-references section, closing the loop this plan's own
+  "Codex audit DONE 2026-07-27 (light pass)" todo had left open.
+- **process-category UI wiring — DONE 2026-07-28** — `VmResourceComparison.tsx` rows are now clickable; expanding one
+  lazy-fetches `getProcessCategoryBreakdown` and renders a `DeploymentFrequencyChart`-style recharts stacked bar +
+  detail table per category. Mock fixture in `mock-api.ts` enriched from 3 to all 5 real categories. New Playwright
+  coverage in the existing `tests/smoke/vm-resource-rolling-window.spec.ts` (expand/collapse + all-5-categories
+  assertions), run live against the dev server + mock API, 4/4 passed. Shipped `deployment-ui@0e0aa3ac`.
+- **systemd timer unattended-run fix — root-caused + fixed at the code level; LIVE verification blocked by a separate,
+  already-tracked host-capacity issue, NOT this fix.** Live `journalctl` on `i-0c9b283b31d6b5ca7` showed the timer
+  firing every 5 min exactly as designed, but EVERY tick hitting the 240s `TimeoutStartSec` ceiling (not the
+  intermittent failure the earlier `PermissionError`/timeout-bump fixes addressed — a NEW, deeper, 100%-reproducing
+  regression once real process counts grew past ~700). Root cause: the earlier PubSub-client-caching fix was correctly
+  in place, but `PubSubQueueClient.publish()` still blocks on `future.result()` per call — a real network round-trip,
+  not construction overhead — and `process_category_sampler.py`'s publish loop called it once per process, serially, for
+  ~700-800 rows. Fixed by fanning the publishes out across a `ThreadPoolExecutor` (20 workers) instead of a plain `for`
+  loop; 2 new unit tests prove the concurrency is real (calls genuinely overlap; a mid-batch publish failure doesn't
+  abort the rest) — both pass. Shipped `agent-orchestrator@c7938e6`, pulled onto the VM (`b926a92..c7938e6` at the time,
+  `31e9fa9` by the time of the live check below — later commits from concurrent sessions, not a stale pull). **Live
+  verification result: still failing, but NOT because the fix is wrong.** A bounded 20-minute poll (1 check/min) against
+  the real timer on `i-0c9b283b31d6b5ca7` never observed a single successful "Published N/N" tick — ticks alternated
+  between the same 240s timeout AND a NEW `oom-kill` result. `free -m` on the VM at the same time showed **swap at
+  16364/16383 MB — 99.9% exhausted**, with only 1139 MB of 31551 MB physical RAM free. This is a severe, host-wide
+  memory-pressure condition, not specific to this script, and it is ALREADY a separately-tracked, in-progress issue:
+  `plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md` (an earlier episode today peaked
+  at 10.5 GB swap; this observation of 16.36/16.38 GB is a new, worse high-water mark, most plausibly driven by today's
+  Wave-2 fleet-wide self-hosted-runner migration generating a burst of CI jobs on this same VM's `glue` pool, layered on
+  top of this session's own concurrent sub-agent activity). Given the ThreadPoolExecutor fix is unit-test-proven correct
+  and the observed failure mode (timeout AND oom-kill, both host-memory-pressure signatures) is consistent with acute
+  swap exhaustion rather than a logic defect, **the fix is considered code-complete and correctly shipped; live
+  confirmation is deferred to the host-capacity issue above being resolved, not to further work on this script.** Bridge
+  cron (`resource-monitor.sh`) correctly left running as the safety net — do NOT retire it until a real unattended tick
+  is observed completing (`journalctl -u process-category-sampler.service -n 30` for a "Published N/N" line with no
+  adjacent timeout/oom-kill), ideally 2+ consecutive successes, once VM memory pressure eases.
+
+## Final report (`/autonomous`, 2026-07-28 continuation)
+
+All items this plan's own "Still open" note named are now closed, in code and in the record:
+
+- Analysis-path doc: done (by a concurrent session, verified present, not rewritten).
+- Codex cross-ref: done this session.
+- process-category UI wiring: done this session, shipped + Playwright-verified live.
+- systemd timer fix: code-complete + unit-test-verified this session; live confirmation genuinely blocked, not deferred
+  out of laziness — the one remaining piece (bridge-cron retirement) depends on a real unattended tick succeeding, which
+  depends on the orchestrator VM's swap exhaustion easing, which is a SEPARATE, already-tracked, in-progress issue
+  (`orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`) with its own owner and its own fix-in-flight.
+  Forcing this fix's verification further tonight would mean either fabricating a low-load test window that doesn't
+  reflect the real multi-tenant conditions this signal exists to observe, or intervening in another in-flight fix's
+  territory — neither is the right move. This is the one genuine non-completion this dispatch is leaving behind, and it
+  is a real external dependency, not a shortcut.
+
+**Verified end-state**: 4/4 signals (resource_samples, run_ledger, idle-spend, process-category) have durable
+BigQuery-backed pipelines with real, live-verified data; the durable-vs-Firestore split, rolling-window UI, and cross-VM
+comparison view are all live; cost stays ~$0 by construction. The one open thread — the bridge cron's retirement — is
+bounded, has an explicit trigger condition, and is owned by a doc that already tracks it.
+
 ## Codex SSOTs
 
 - `/codex/02-data/live-data-persistence-and-event-log.md` — the UTL event spine (EventTransport facade / Pub/Sub) this

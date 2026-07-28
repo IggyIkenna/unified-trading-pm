@@ -408,13 +408,22 @@ codex, or a future staging re-entry gets a dead pipeline.
 
 ## Resolution checklist
 
-- [ ] [OPERATOR] P0→**DEFERRED (operator ruling 2026-07-23)**. **F1 (kill-switch).** Either implement the
-      `halt-order-flow`/`resume-order-flow` listener in execution-service, or delete the kill-switch call path — but do
-      not leave a safety mechanism that reports success while doing nothing. **Operator ruling 2026-07-23: KEEP TRACKED,
-      DO NOT FIX YET.** Rationale: not in production, and no execution-service is currently running — so the no-op
-      kill-switch cannot presently mask a real halt failure. To be fixed **when execution-service work starts**. ⚠️
-      **Re-entry gate: this item must be closed BEFORE execution-service handles live order flow** — the defect is
-      invisible at runtime (204 reads as success), so it will not resurface on its own. Whoever picks up
+- [ ] [BACKEND] P0→**TIME-GATED (re-affirmed 2026-07-28, retagged away from `[OPERATOR]`)**. **F1 (kill-switch).** RULED
+      2026-07-28 (2026-07-28 operator-decisions pass, applying the general theme): this stays correctly DEFERRED — not
+      because it is still awaiting an operator authority decision, but because execution-service genuinely does not run
+      live order flow yet, so there is nothing to implement/verify a halt against yet. Retagged away from `[OPERATOR]`
+      because no further operator input is needed to keep this on track — it activates automatically as a normal
+      engineering todo the moment its own gate condition (below) is met. **Standing 2026-07-23 ruling preserved
+      verbatim**: KEEP TRACKED, DO NOT FIX YET. Rationale: not in production, and no execution-service is currently
+      running — so the no-op kill-switch cannot presently mask a real halt failure. To be fixed **when execution-service
+      work starts**. **Directional guidance for when the gate opens** (applying the operator's full-completion theme —
+      "things should recover FULLY if they die or restart... prefer building the full automatic recovery, not just a
+      manual runbook note" — to a live-trading safety mechanism): the default answer when this activates should be
+      **IMPLEMENT the real `halt-order-flow`/`resume-order-flow` listener in execution-service**, not delete the
+      kill-switch call path — a genuine trading-safety control should be built properly, not removed to avoid the work,
+      unless whoever picks up execution-service work finds a concrete reason the mechanism itself is obsolete by then.
+      ⚠️ **Re-entry gate unchanged: this item must be closed BEFORE execution-service handles live order flow** — the
+      defect is invisible at runtime (204 reads as success), so it will not resurface on its own. Whoever picks up
       execution-service work owns this.
 - [ ] ⛔ [INFRA] P1. **SUPERSEDED 2026-07-25 — DO NOT IMPLEMENT AS WRITTEN.** ~~F2 — restore version minting via OPTION
       B (the PM reconciler), NOT the per-repo agent.~~ **F2's OUTCOME (version minting restored) IS ACHIEVED — by the

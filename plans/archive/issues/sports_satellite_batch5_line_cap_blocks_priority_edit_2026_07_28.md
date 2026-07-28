@@ -6,7 +6,10 @@ summary:
   lines (over the 1000-line hard cap) BEFORE the resort touched it, so `check_line_caps.sh` blocked staging its 1-line
   `priority:` edit. Excluded from that commit; left at its current priority pending the standard line-cap remediation
   (extract closed Progress Log sections into an archive-bound history doc, per plan_line_cap_remediation_2026_07_23.md's
-  precedent).
+  precedent). SECOND COLLISION 2026-07-28 (same day, operator-gate retag pass) — the same file also carries 2
+  now-resolved `[OPERATOR]` gates (the A2 purge todo, the sports_reference_v1_archive delete todo) that the retag
+  workflow could not land for the same reason — file already over cap before any new content. Reverted that edit too
+  rather than force it over cap further; bumped priority since this has now blocked two independent fixes in one day.
 status: resolved
 nature: process
 asset_group: [sports]
@@ -75,3 +78,10 @@ resolved_by:
       "✅ ... within cap" (585L, SOFT tier only, `todos=2`); `priority:` frontmatter now reads `P2`. Todo-count
       conservation checked directly (not the script): 25 total todos ever on this plan = 2 open (still in parent) + 23
       closed (all in the archive doc), matching before/after.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-28 (interactive session, same-day).** Retagged both now-resolved `[OPERATOR]` gates
+      before discovering the sibling extraction above had already landed: the A2 dead-dimension manifest-purge todo (→
+      `[DATA]`, citing features-service@d564bf6f) and the `sports_reference_v1_archive` delete todo (→
+      `[DATA]`/`[SCRIPT]`, citing the extended §3a reversibility carve-out + the existing twin-verified dry-run at
+      `market-tick-data-service@236d945e`/`@08439787`). Both items are now archived (closed, `[x]`) inside
+      `sports_satellite_ao_dispatch_batch5_completed_todos_2026_07_26.md` per the extraction above — retag applied to
+      that archived copy so the historical record reflects the correct final tag, not the stale `[OPERATOR]` one.
