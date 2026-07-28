@@ -276,3 +276,14 @@ and waiting, the mitigation available to a single worker (waiting) does not appe
 operator-level intervention (identifying/throttling whatever is driving the fleet-wide over-concurrency, e.g. enforcing
 the existing "≤2 full QGs at once" rule, or reducing total active slot count) rather than more individual workers
 independently waiting it out.
+
+## Update 2026-07-28 (later still, slot-14) — swap recovered meaningfully ~30 min after the new-peak reading; resumed
+
+Checked again roughly 30 minutes after the worst reading (180/305/325 load, 100% swap). This time real recovery:
+`free -h` → swap **3.0Gi/15Gi used (20%), 12Gi free** (down from 100%) and RAM 8.1Gi free / 20Gi available.
+`cat /proc/loadavg` → `79.08 220.26 290.47` — 1-min already down to 79 (from the 180 peak); 5/15-min still show the
+decaying tail of the recent spike (expected, rolling averages lag), not a fresh one. Swap recovery is the more direct
+signal here (it doesn't lag the way a 15-min load average does), so treated this as genuine recovery, not another lull.
+Resumed the dry-run from the 14,538 checkpoint (harness `run_in_background`, no `nohup`, same 8/8 workers, no limit) —
+confirmed running (PID 694347) immediately after launch. Monitoring for whether it now runs to completion or hits the
+same wall again.
