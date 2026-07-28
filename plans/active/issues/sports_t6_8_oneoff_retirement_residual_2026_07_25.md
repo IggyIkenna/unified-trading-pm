@@ -165,7 +165,7 @@ is genuine follow-up work, not silently dropped scope.
       market-tick-data-service) — already covered by `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md`
       (tracked as residual, not dropped) and `plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md` (already
       attempted this pure-deletion commit, hit a tooling gap filed as
-      `plans/active/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`; see those docs for execution).
+      `plans/archive/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`; see those docs for execution).
 - [ ] [BACKEND] P2. Fix `census_fixture_events_schema_variants_2026_07_25.py` to drop `include_legacy_archive=True`,
       then retire the `include_legacy_archive` knob entirely from `gcs_paths.py`/`candidate_parquet_uris` +
       `partition_paths.py`'s passthrough; re-verify zero `include_legacy_archive` hits workspace-wide. (repos:

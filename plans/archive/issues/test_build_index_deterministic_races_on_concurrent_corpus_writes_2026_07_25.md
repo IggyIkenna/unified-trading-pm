@@ -8,7 +8,7 @@ summary: >-
   frontmatter can change between the two calls, producing a spurious diff and a false-negative QG failure. Observed
   directly 2026-07-25: the diff was exactly one issue doc's `status=resolved` -> `status=open` (a concurrent edit
   landing mid-test), not a real determinism bug in build_index()'s own logic.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -18,12 +18,12 @@ tags: [testing, flaky, doc-index, concurrency, quality-gates]
 related:
   - /plans/active/task_template.md
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-28"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 priority: P3
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@91324d0b1 (2026-07-28)
 source: >-
   Discovered 2026-07-25 during quickmerge of cursor-configs/skills/ag-closeout-audit/SKILL.md — Stage 3 re-gate failed
   on this test, retry with no code change passed clean.
@@ -31,6 +31,9 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **✅ RESOLVED 2026-07-28 — `unified-trading-pm@91324d0b1`.** Fixed by rewriting the test to build from a frozen
+> `tmp_path` fixture instead of two live walks of the shared, concurrently-mutated `pm_root`. Archived.
 
 # test_build_index_is_deterministic races against concurrent doc-corpus writes
 

@@ -6,7 +6,7 @@ summary: >-
   `quickmerge.sh` exits 1 with "No valid paths from --files. Nothing to commit." instead of falling through to its own
   existing "already committed, ahead of main — proceeding to push + PR" handling. A one-line ADDED_ANY==0 guard blocks
   the sibling code path from ever being reached.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -15,6 +15,7 @@ scope: [engineer]
 tags: [quickmerge, tooling-gap, ci-cd, worker-lifecycle]
 related: []
 created: 2026-07-26
+last_updated: 2026-07-28
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -27,12 +28,16 @@ source:
     "Found 2026-07-26 (slot-7, backend_engineer) while shipping sports_satellite_ao_dispatch_batch5_2026_07_26.md's T6.8
     residual todo — two pure-deletion commits (market-tick-data-service, instruments-service) both hit this.",
   ]
-resolved_by:
+resolved_by: unified-trading-pm@5acc25839 (2026-07-28)
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 ---
+
+> **✅ RESOLVED 2026-07-28 — `unified-trading-pm@5acc25839`.** The `--files` staging loop now checks
+> `AHEAD_COUNT=$(git rev-list origin/main..HEAD --count)` when `ADDED_ANY` stays 0 and falls through to the
+> already-committed push path instead of hard-failing. Archived.
 
 # quickmerge.sh --agent --files errors on a fully-committed pure-deletion commit
 

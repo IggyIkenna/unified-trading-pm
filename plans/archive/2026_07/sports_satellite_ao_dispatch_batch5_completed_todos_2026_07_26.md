@@ -449,7 +449,7 @@ locked_by:
       `instruments-service@4987e465`. Dropped the 2 deleted files from `sports_consolidated_closeout_2026_07_19.md`
       Track E's repoint list (moot). Tooling gap found + filed (not fixed, outside craft scope):
       `quickmerge.sh --agent --files` errors on an already-fully-committed pure-deletion commit —
-      `plans/active/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`. Source:
+      `plans/archive/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`. Source:
       `sports_t6_8_oneoff_retirement_residual_2026_07_25.md`.
 - [x] ✅ [SCRIPT] P0. **DONE 2026-07-26 (slot-4, `data_engineering`) — Understat bulk backfill — close out the full
       sequential chain (§4/§6/§8).** Discovery: every substantive step of this chain was ALREADY completed via the

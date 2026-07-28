@@ -16,7 +16,7 @@ summary: >-
   CI (checkout at `/home/runner/work/<repo>/<repo>`, no `.tabs` in the path) actually enforces the ratchet; that is
   where `instruments-service`'s `ldr_qg_failure` (escalation agt-3968a1, `3ffd1adf`'s 12 uncited SushiSwap/Uniswap
   factory addresses) was actually caught — never locally, by any slot, before push.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -25,6 +25,7 @@ scope: [engineer]
 tags: [quality-gates, citation-ratchet, defi, false-green, tooling-bug]
 related: []
 created: "2026-07-21"
+last_updated: "2026-07-28"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -41,9 +42,12 @@ source:
     tried to locally verify a citation fix via the standalone checker and via full quality-gates.sh, both silently
     passed regardless of fix content once run from inside .tabs/<slot>/",
   ]
-resolved_by:
+resolved_by: unified-trading-pm@4c8dbb8bc (2026-07-28)
 locked_by:
 ---
+
+> **✅ RESOLVED 2026-07-28 — `unified-trading-pm@4c8dbb8bc`.** Dropped the redundant absolute-path
+> `_is_excluded_path()` call; the relative-path check alone already covers the intended nested-worktree case. Archived.
 
 # DeFi citation ratchet false-green under `.tabs/<slot>/` worktrees
 

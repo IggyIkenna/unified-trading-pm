@@ -104,9 +104,9 @@ citing file):
 | `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`                                    | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
 | `issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md`                       | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
 | `issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`                          | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
-| `issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`                           | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
+| `archive/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`                           | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
 | `issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`                       | ao      | `ao_satellite_ao_dispatch_batch1_2026_07_26.md`, `ao_open_issues_consolidated_close_out_2026_07_17.md`                                 |
-| `issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md`                             | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
+| `/plans/archive/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md`              | infra   | `infra_consolidated_closeout_2026_07_25.md` (ARCHIVED — resolved, unified-trading-system-ui@145bf5dd)                                  |
 | `issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md` | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
 | `issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`     | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
 | `issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md`           | ao      | `ao_satellite_ao_dispatch_batch1_2026_07_26.md`                                                                                        |
@@ -136,7 +136,7 @@ citing file):
 | `issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md`                            | ci            | `cloud-build-router.yml` concurrency-group bug                      |
 | `issues/cost_observability_deferred_followups_2026_07_10.md`                                    | infra         | deployment `/ops/costs` UI follow-ups                               |
 | `issues/credential_ask_orphan_checker_ping_format_stale_2026_07_27.md`                          | infra         | plan-hygiene checker false positive                                 |
-| `issues/defi_citation_ratchet_tabs_path_exclusion_bug_2026_07_21.md`                            | ci            | QG script path-exclusion bug (tooling, not defi content)            |
+| `archive/issues/defi_citation_ratchet_tabs_path_exclusion_bug_2026_07_21.md`                            | ci            | QG script path-exclusion bug (tooling, not defi content)            |
 | `issues/deployment_api_live_mock_parity_2026_07_17.md`                                          | infra         | deployment-api live/mock contract drift                             |
 | `issues/deployment_api_sigabrt_crash_loop_2026_07_24.md`                                        | infra         | deployment-api crash loop                                           |
 | `issues/deployment_ui_nav_consolidation_2026_07_17.md`                                          | infra         | deployment-ui nav rebuild                                           |
@@ -155,7 +155,7 @@ citing file):
 | `issues/shared_host_tmp_tmpfs_full_2026_07_26.md`                                               | infra         | shared-host `/tmp` capacity incident                                |
 | `issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md`                                | ci            | `sit-gate/fleet-green` CI gate stuck                                |
 | `/plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md`                | ao            | AO slot-dispatcher stale-role bug                                   |
-| `issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md`         | ci            | doc-index determinism test, same flake class                        |
+| `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md`         | ci            | doc-index determinism test, same flake class                        |
 | `/plans/archive/issues/uac_service_emission_policy_duplicate_module_2026_07_27.md`              | cross-cutting | UAC duplicate-module bug, shared schema layer                       |
 | `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`                | ao            | AO worker interactive-session teardown behavior                     |
 
