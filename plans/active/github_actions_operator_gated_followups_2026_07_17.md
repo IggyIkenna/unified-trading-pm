@@ -33,7 +33,7 @@ related:
     /plans/active/deployment_durable_operational_data_bigquery_2026_07_21.md,
   ]
 created: "2026-07-24"
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -630,48 +630,48 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
       is retired in favour of it — do not judge this off a single point-in-time SSM check.
 
               **Phase 7's scope (thin push/repository_dispatch glue only —
-                                                                                              main-backmerge-to-ldr, image-build-gate's polling wrapper, update-dependency-version, etc.) is still fine to add
-                                                                                              here** — none of it is CPU-heavy. A dedicated, appropriately-sized runner host (separate from the orchestrator
-                                                                                              box) would be needed before any CPU-heavy workload could safely self-host, which is its own cost to weigh against
-                                                                                              the savings.
+                                                                                                      main-backmerge-to-ldr, image-build-gate's polling wrapper, update-dependency-version, etc.) is still fine to add
+                                                                                                      here** — none of it is CPU-heavy. A dedicated, appropriately-sized runner host (separate from the orchestrator
+                                                                                                      box) would be needed before any CPU-heavy workload could safely self-host, which is its own cost to weigh against
+                                                                                                      the savings.
 
-                                                      **⚠️ That CPU-heavy boundary has already been crossed for ≥9 repos, and there's now real measured
-                                                      contention evidence (2026-07-27, ~23:20 UTC).** `python-quality-gates-v2.yml`'s `qg-slices` job (the
-                                                      REAL pytest/typecheck/lint compute, not glue) takes a `self_hosted_runner_labels` input — default empty
-                                                      → `ubuntu-latest`, but grep across the fleet shows agent-orchestrator, execution-service,
-                                                      deployment-service, batch-live-reconciliation-service, e2e-testing, ml-service, strategy-service,
-                                                      greeks-service, and instruments-service have ALL already opted in (`self_hosted_runner_labels` set in
-                                                      their own `quality-gates-v2.yml` caller). Every one of these repos' "glue" runners
-                                                      (`glue-ip-172-31-5-118-{1,2}`) resolve to the SAME physical host as the orchestrator VM itself
-                                                      (`i-0c9b283b31d6b5ca7`, confirmed via `aws ec2 describe-instances --filters
-                                                      Name=private-ip-address,Values=172.31.5.118`) — i.e. real pytest/typecheck compute for ≥9 repos is now
-                                                      running on the exact box that also hosts the AO dispatch system and every interactive/autonomous agent
-                                                      slot. Measured just now: CPU is NOT the bottleneck (CloudWatch `CPUUtilization` over the last 2h:
-                                                      23-58% avg, 26-64% max — well within the 50-70% target range above) but the attached `gp3` EBS volume
-                                                      (`vol-0b4f0237fa0f5cd0f`, 500GB @ baseline 3000 IOPS / 125 MB/s — never upsized alongside the CPU/RAM
-                                                      resize) shows a SUSTAINED `VolumeQueueLength` of ~2.5-2.9 for the full 2-hour window checked, not a
-                                                      spike — consistent with the real symptoms observed same-day: a deployment-service QG job that normally
-                                                      takes minutes was still `in_progress` after 77+ minutes (well inside its generous 135m timeout, so it
-                                                      may still complete, but that's degraded, not healthy), plus the independently-root-caused
-                                                      `SETUPTOOLS_SCM_SUBPROCESS_TIMEOUT` git-status-timeout fix already landed in this same workflow file
-                                                      today for the identical contention signature on execution-service. **This reads as disk I/O
-                                                      provisioning, not CPU provisioning, being the actual constraint** — the CPU/RAM resize earlier today
-                                                      addressed a real problem but not this one; an EBS `iops`/`throughput` bump on `vol-0b4f0237fa0f5cd0f`
-                                                      (a live, non-disruptive `gp3` modify-volume operation) is the more targeted fix to actually try before
-                                                      reaching for the heavier "dedicated separate runner host" option this todo already named. Not actioned
-                                                      — operator-level shared-host capacity/cost decision, same class as the CPU/RAM resize itself.
+                                                              **⚠️ That CPU-heavy boundary has already been crossed for ≥9 repos, and there's now real measured
+                                                              contention evidence (2026-07-27, ~23:20 UTC).** `python-quality-gates-v2.yml`'s `qg-slices` job (the
+                                                              REAL pytest/typecheck/lint compute, not glue) takes a `self_hosted_runner_labels` input — default empty
+                                                              → `ubuntu-latest`, but grep across the fleet shows agent-orchestrator, execution-service,
+                                                              deployment-service, batch-live-reconciliation-service, e2e-testing, ml-service, strategy-service,
+                                                              greeks-service, and instruments-service have ALL already opted in (`self_hosted_runner_labels` set in
+                                                              their own `quality-gates-v2.yml` caller). Every one of these repos' "glue" runners
+                                                              (`glue-ip-172-31-5-118-{1,2}`) resolve to the SAME physical host as the orchestrator VM itself
+                                                              (`i-0c9b283b31d6b5ca7`, confirmed via `aws ec2 describe-instances --filters
+                                                              Name=private-ip-address,Values=172.31.5.118`) — i.e. real pytest/typecheck compute for ≥9 repos is now
+                                                              running on the exact box that also hosts the AO dispatch system and every interactive/autonomous agent
+                                                              slot. Measured just now: CPU is NOT the bottleneck (CloudWatch `CPUUtilization` over the last 2h:
+                                                              23-58% avg, 26-64% max — well within the 50-70% target range above) but the attached `gp3` EBS volume
+                                                              (`vol-0b4f0237fa0f5cd0f`, 500GB @ baseline 3000 IOPS / 125 MB/s — never upsized alongside the CPU/RAM
+                                                              resize) shows a SUSTAINED `VolumeQueueLength` of ~2.5-2.9 for the full 2-hour window checked, not a
+                                                              spike — consistent with the real symptoms observed same-day: a deployment-service QG job that normally
+                                                              takes minutes was still `in_progress` after 77+ minutes (well inside its generous 135m timeout, so it
+                                                              may still complete, but that's degraded, not healthy), plus the independently-root-caused
+                                                              `SETUPTOOLS_SCM_SUBPROCESS_TIMEOUT` git-status-timeout fix already landed in this same workflow file
+                                                              today for the identical contention signature on execution-service. **This reads as disk I/O
+                                                              provisioning, not CPU provisioning, being the actual constraint** — the CPU/RAM resize earlier today
+                                                              addressed a real problem but not this one; an EBS `iops`/`throughput` bump on `vol-0b4f0237fa0f5cd0f`
+                                                              (a live, non-disruptive `gp3` modify-volume operation) is the more targeted fix to actually try before
+                                                              reaching for the heavier "dedicated separate runner host" option this todo already named. Not actioned
+                                                              — operator-level shared-host capacity/cost decision, same class as the CPU/RAM resize itself.
 
-                                                      **This corroborates, and is a smaller-magnitude AFTER-picture of,**
-                                                      `plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md` — the SAME Phase-7
-                                                      runner-registration burst drove this exact box to 66→93% iowait / load-avg 74→119 / swap growing / disk
-                                                      90% full a few hours earlier (with the operator's OWN interactive AO slot-workers observed in D-state
-                                                      alongside the runner processes), which is why `glue-2` was disabled across all 23 newly-registered
-                                                      pools as an immediate mitigation. The `VolumeQueueLength` ~2.5-2.9 measured here is the RESIDUAL level
-                                                      AFTER that halving — not the raw pre-mitigation severity — so the fact meaningful queueing is still
-                                                      sustained post-mitigation is itself evidence this is a real steady-state capacity gap, not just burst
-                                                      noise that self-resolves. See that doc for the fuller live diagnosis and the still-open P1/P2 follow-up
-                                                      verification todos (confirm iowait actually eased, re-attempt the runners still showing
-                                                      `total_count: 0`, and the longer-term glue-2-disabled-or-not capacity-planning call).
+                                                              **This corroborates, and is a smaller-magnitude AFTER-picture of,**
+                                                              `plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md` — the SAME Phase-7
+                                                              runner-registration burst drove this exact box to 66→93% iowait / load-avg 74→119 / swap growing / disk
+                                                              90% full a few hours earlier (with the operator's OWN interactive AO slot-workers observed in D-state
+                                                              alongside the runner processes), which is why `glue-2` was disabled across all 23 newly-registered
+                                                              pools as an immediate mitigation. The `VolumeQueueLength` ~2.5-2.9 measured here is the RESIDUAL level
+                                                              AFTER that halving — not the raw pre-mitigation severity — so the fact meaningful queueing is still
+                                                              sustained post-mitigation is itself evidence this is a real steady-state capacity gap, not just burst
+                                                              noise that self-resolves. See that doc for the fuller live diagnosis and the still-open P1/P2 follow-up
+                                                              verification todos (confirm iowait actually eased, re-attempt the runners still showing
+                                                              `total_count: 0`, and the longer-term glue-2-disabled-or-not capacity-planning call).
 
 - [x] ✅ **DONE 2026-07-27 — `setup-glue-runners.sh` multi-tenancy fix, shipped + verified live
       (`unified-trading-pm@30872b269` + 2 same-day follow-ups `ab418de3a`/`dafa68ec4`).** Implemented the `POOL_TAG`
@@ -744,19 +744,32 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
       — the naive fleet aggregate is what masked PM's real win before) and compare against this week's baseline (fleet
       ~$37/day, non-PM ~$23/day, measured Jul23-26 2026) — this is the number the original plan's own "fleet
       ~$1,000/mo → ~$300-400/mo" target was about, and the one that has never yet moved.
+- [x] ✅ **DONE 2026-07-28 — root-caused features-service's `quality-gates-v2` ~15-16×/day `workflow_dispatch` firing
+      (was the (a) half of the P3 REVIEW below).** Traced to
+      `unified-trading-pm/scripts/repo-management/ldr_ci_monitor.py` (hourly `ldr-ci-monitor.yml`): it conditionally
+      re-dispatches `quality-gates-v2` against the LDR ref only when the LDR tip has moved since the last dispatch (the
+      script's own docstring names this the deliberate anti-waste guard against "the unconditional-x24-repos Actions
+      waste that got [caused] the [2026-06-11] billing wall"). Pulled features-service's actual dispatch history
+      (`gh api .../workflows/quality-gates-v2.yml/runs?event=workflow_dispatch`): head SHA differs on almost every
+      dispatch — this repo just has unusually high commit velocity, not a stuck/red LDR triggering the unconditional
+      RED-repo re-check path. **Verdict: working as intended, not waste. No action needed.**
 - [ ] [REVIEW] P3. **This is the actual path to 50%, not Phase 7** (see the Expected-savings note above — Phase 7 nets
       ~3-6% of the fleet total on its own). `quality-gates-v2`'s real test/lint job is ~90%+ of a service repo's billed
-      minutes and scales with commit/PR volume, which rises with agent parallelism. Two angles, both
-      correctness-adjacent so scope carefully: **(a) run-frequency** — features-service's `quality-gates-v2` fired via
-      `workflow_dispatch` ~15×/day this week, ALL triggered by actor `IggyIkenna` (a token/bot identity, not a human
-      clicking re-run) at roughly hourly cadence; NOT yet root-caused — could be the promote-fleet cron's own
-      re-verification (legitimate) or redundant re-dispatch on top of the `push`/`pull_request` runs that already cover
-      the same commit (waste). Root-cause this FIRST, cheaply (grep the dispatching workflow's
-      `gh workflow run quality-gates-v2` call sites), before assuming it's either. **(b) per-run duration** —
+      minutes and scales with commit/PR volume, which rises with agent parallelism. **Per-run duration** —
       test-impact/selective execution (skip tests the diff can't affect) cuts the ~9min `QG slice (tests)` leg directly
       but carries real risk of silently under-testing; do not attempt without a design that a missed regression is
-      structurally impossible, not just unlikely. Do not reach for either before Phase 7's smaller, structurally-safe
-      win is measured and confirmed.
+      structurally impossible, not just unlikely. Do not reach for this before Phase 7's smaller, structurally-safe win
+      is measured and confirmed.
+- [ ] [REVIEW] P2. **Operator-approved 2026-07-28: scope a design (design only, no implementation) for test-impact/
+      selective test execution.** The design doc must specify, before any code is written: (1) the safety guarantee —
+      what makes a missed regression structurally impossible rather than merely unlikely; (2) the change→affected-tests
+      mapping mechanism (e.g. import-graph reachability from changed files) and its known blind spots (dynamic imports,
+      fixture-level coupling, config/data-driven tests); (3) the fallback rule — any ambiguity in the mapping must fall
+      back to running the full suite, never a partial one; (4) how the design is itself tested (a false-negative in the
+      selection logic is a silent coverage hole, so the selector needs its own regression tests). Blocked on nothing
+      else — Phase 7's fan-out does not need to complete first, but implementation should not start until this design is
+      reviewed. Do not implement from this todo directly; a follow-up todo authorizing implementation should cite this
+      design once it exists.
 - [ ] [REVIEW] P3. Longer-horizon alternative to per-repo runner registration, NOT recommended to start now: migrating
       the personal-account repos (`IggyIkenna/*`) into a GitHub organization to unlock a shared org-level runner group
       (free on GitHub's org tier — no Team/Enterprise upgrade needed for runner groups themselves). This would let ONE
