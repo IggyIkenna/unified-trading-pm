@@ -375,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                                                      (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                                                      discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                                                      **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                                                      ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                                                      UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                                                      objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                                                      the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                                                      Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                                                      decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                                                      "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                                                      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -681,13 +681,15 @@ drift_direction: advance-code
       corpus hits are out-of-scope (alerting code `defi_aave_utilization_spike`, the
       `normalize_defillama_tvl_history_point` DefiLlama normalizer, and docstrings documenting the rename), not the
       feature_group vocabulary.
-- [ ] [SCRIPT] P1. Add a machine check to e2e-testing that imports the onchain feature_group vocabulary from
-      unified-api-contracts' `FEATURE_GROUP_TO_FAMILY`, features-service onchain CLI's `FEATURE_GROUPS`, and
-      ml-service's `DEFI_FEATURE_GROUPS`, using the same cross-repo `sys.path` pattern e2e-testing already uses in
-      `scripts/defi/colocated_engine.py`, computes pairwise set differences, and prints/asserts a diff report. Repo:
-      e2e-testing. **Done when**: a new script/pytest exists that runs standalone, imports all three vocabularies, and
-      reports pairwise set differences (verified by running it once); wired into e2e-testing's `quality-gates.sh` if a
-      test, lifecycle-marked if a script. Source:
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-28 (slot-9, verified 2026-07-28 by slot-4).** Already shipped at
+      `e2e-testing@bc6a7be` (`scripts/defi/onchain_feature_group_vocabulary_check.py`) — lifecycle-marked script
+      (`# Epic/Lifecycle/Delete-when`), cross-repo `sys.path` pattern matching `colocated_engine.py`, imports all three
+      vocabularies (UAC `FEATURE_GROUP_TO_FAMILY[onchain]`, features-service onchain CLI `FEATURE_GROUPS`, ml-service
+      `DEFI_FEATURE_GROUPS`), computes + prints pairwise set differences. **Re-ran it live to verify**: features-service
+      == UAC-onchain (13/13 identical — confirms the 2026-07-21 rename ruling holds); ml-service diverges from both (12
+      groups, only `lending_rates` overlaps — pre-existing, separately-tracked drift per the source issue doc, correctly
+      reported not asserted-away). `quality-gates.sh` green (sentinel matches HEAD). No test-wiring needed (script path,
+      already lifecycle-marked). Source:
       `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.
 - [x] ✅ [DIAG] P1. Verify the 2 unverified signals in the issue doc's §8: (a) sample onchain feature parquets under
       `gs://features-defi-prd-.../onchain/` (e.g. day=2026-03-05, day=2026-05-20) for exact duplicate rows (same
