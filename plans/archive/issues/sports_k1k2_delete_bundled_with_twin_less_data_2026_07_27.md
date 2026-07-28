@@ -49,6 +49,12 @@ drift_direction: advance-code
 locked_since:
 ---
 
+> **🟢 RESOLVED 2026-07-28** — K1/K2 casing-revert data migration + gated delete both executed and independently
+> verified complete: `market-tick-data-service@fa6fd4cd` (migration, 345,852/345,852 objects), `@26201c44` +
+> `deployment-service@8b93ae7` (gated delete, 345,852 deleted / 0 failed), `unified-trading-pm@4a1ebf203` (corpus-wide
+> referrer reconciliation). See `resolved_by:` above and the Recommended-decision todos below for full evidence.
+> Archived per the standard 6-step ritual.
+
 ## What I found
 
 `sports_satellite_ao_dispatch_batch7_2026_07_27.md` todo 1 (P0) asked me to "Execute the 5-part-proof-gated DELETE of

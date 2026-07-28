@@ -34,7 +34,7 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-system-ui, strategy-service]
 scope: [engineer, admin]
 tags: [drift-solana-cull, architecture-v2, leg-specs, strategy-archetype, venue-residue, ui-reference-data]
-related: []
+related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: 2026-07-16
 last_updated: 2026-07-26
 parent_epic: defi_master

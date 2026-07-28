@@ -10,7 +10,7 @@ summary:
   lifecycle rule for the separate code-tarball bucket (a different artifact class, GCS not AR). Local-only — AR/ECR
   image-version deletes stay human-gated (no undelete mechanism exists for AR image versions — untouched by the
   2026-07-28 §3a extension); the legacy GCR bucket delete is a whole-bucket destroy that IS now reversibility-qualified
-  (2026-07-28 ruling, codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a extended) provided a fresh same-run
+  (2026-07-28 ruling, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a extended) provided a fresh same-run
   soft-delete-retention check clears.
 status: active
 nature: process
@@ -97,7 +97,7 @@ source:
       is presented to the operator for the same sign-off gate as the parent plan's Phase C.
 - [ ] 13. [INFRA] P3. Delete the legacy GCR bucket `gs://artifacts.central-element-323112.appspot.com` (8.9 GiB, GCR is
       shut down). **Downgraded from [OPERATOR] 2026-07-28** — operator ruling 2026-07-28
-      (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended): whole-bucket destroys are now
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended): whole-bucket destroys are now
       reversibility-qualified the same way object/version deletes already were, PROVIDED a fresh same-run
       `gcs_bucket_soft_delete_retention_seconds(bucket)` check on THIS bucket clears (>=604800s) immediately before the
       delete. A 2026-07-27 check found `soft_delete_policy.retentionDurationSeconds=604800` on this bucket — that

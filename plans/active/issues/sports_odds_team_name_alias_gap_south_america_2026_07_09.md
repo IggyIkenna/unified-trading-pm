@@ -29,6 +29,7 @@ related:
     instruments-service/docs/SPORTS_INSTRUMENTS.md,
     plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-09
 last_updated: 2026-07-09

@@ -397,13 +397,14 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       lowercase + manifest swap (ADD 344,912/REMOVE 215,041, `stale_remaining=0`) — `market-tick-data-service@fa6fd4cd`
       (on-demand run #4, 2026-07-28). Corpus-wide independent post-delete census (2243-day dry-run scan): zero
       UPPER-case `instrument_type=ODDS`/`data_type=TRADES` values remain anywhere. Full detail:
-      `issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md` "Recommended decision" todos 1-2. **Adjacent
-      finding STILL OPEN (2026-07-27, slot-8)**: 6 venues (`BETFAIR_EX_UK`/`BETFAIR_EX_EU`/`SMARKETS`/`MATCHBOOK`/
-      `BETFAIR_SB_UK`/`BETMGM`) have STALE pre-existing lowercase `odds`/`trades` duplicates left behind by an unrelated
-      earlier fork (`sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` todo 5 moved their manifest-tracked shards
-      to `exchange_odds`/`fixed_odds` but never touched these unregistered lowercase originals) — content-identical to
-      data now correctly living at the fork target. NOT part of this K1/K2 revert (different population, no uppercase
-      twin involved) — needs its own verify-then-delete pass, folded into the Track V delete todo at line ~698.
+      `plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md` "Recommended decision" todos
+      1-2. **Adjacent finding STILL OPEN (2026-07-27, slot-8)**: 6 venues
+      (`BETFAIR_EX_UK`/`BETFAIR_EX_EU`/`SMARKETS`/`MATCHBOOK`/ `BETFAIR_SB_UK`/`BETMGM`) have STALE pre-existing
+      lowercase `odds`/`trades` duplicates left behind by an unrelated earlier fork
+      (`sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` todo 5 moved their manifest-tracked shards to
+      `exchange_odds`/`fixed_odds` but never touched these unregistered lowercase originals) — content-identical to data
+      now correctly living at the fork target. NOT part of this K1/K2 revert (different population, no uppercase twin
+      involved) — needs its own verify-then-delete pass, folded into the Track V delete todo at line ~698.
 - [x] [REVIEW] P1. ✅ Superseded by actual execution — `delete_stale_uppercase_2026_07_27.py` fresh-re-verifies each
       object immediately before its own delete (never trusts a prior candidate list), and the population is now
       independently confirmed empty (0 uppercase objects, full-corpus post-delete scan). No stale-list risk remains.
@@ -720,8 +721,9 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       skipped/failed, `rc=0`; independently re-verified via a fresh full-corpus dry-run scan showing 0 uppercase objects
       remain. The ~7,251 api_football captured-cell objects half was already separately resolved (verified never existed
       on GCS — 0/197 relevant days + 0/16 direct probes — no delete action required; see
-      `issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md` "Note on the api_football half"). Full
-      detail: same issue doc's todo 2 (also cites the archive history doc's 2026-07-23 root-cause-sweep section).
+      `plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md` "Note on the api_football
+      half"). Full detail: same issue doc's todo 2 (also cites the archive history doc's 2026-07-23 root-cause-sweep
+      section).
 - [x] [DOC] P2. ✅ **RETAGGED 2026-07-28 (stale-tag audit — already answered, `[OPERATOR]` never removed).** §T decision
       — ANSWERED 2026-07-20 (decision 3): pre-2019 (2013–2018) is OUT OF SCOPE, intentionally excluded, no further
       api-football spend. ~~BLOCKED-OPERATOR-DECISION~~ was stale framing, corrected 2026-07-23. Remaining work is

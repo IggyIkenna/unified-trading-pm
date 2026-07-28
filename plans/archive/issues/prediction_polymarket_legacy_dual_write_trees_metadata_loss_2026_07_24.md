@@ -71,12 +71,12 @@ source:
     2026-07-24/25,
     read-only against prod GCS central-element-323112 (market-data-tick-pred-prd-central-element-323112),
   ]
-resolved_by:
+resolved_by: >-
   ACKED-INTO-PLAN. Schema extension + writer fix shipped (unified-api-contracts@90ddcc01 added title/slug/event_slug as
   first-class canonical `trades` ColumnSpec entries; market-tick-data-service@84154e1a stopped the writer dropping them
-  at ingest); both registered in codex/02-data/canonical-cutover-register.md §6e +
-  codex/02-data/non-canonical-path-inventory.md row 22. The still-open historical raw-object migration (shapes #3/#3b/#4,
-  explicitly registered `no-migrate-first`, not yet done) is absorbed by the still-active
+  at ingest); both registered in /codex/02-data/canonical-cutover-register.md §6e +
+  /codex/02-data/non-canonical-path-inventory.md row 22. The still-open historical raw-object migration (shapes
+  #3/#3b/#4, explicitly registered `no-migrate-first`, not yet done) is absorbed by the still-active
   /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md (todo 4b) -- not lost, tracked there.
 locked_by:
 estimate_class: research
@@ -265,10 +265,10 @@ venue.
 - [x] ✅ [DATA] P2. Register the extended schema + this migration in `canonical-cutover-register.md` and
       `non-canonical-path-inventory.md` so a future reconciliation pass doesn't re-flag the (now-closed) gap. Repo:
       `unified-trading-pm`. — **DONE, verified 2026-07-28 (already present, not re-added).** Both registers already
-      carry the exact disposition this todo asks for: `codex/02-data/canonical-cutover-register.md` § 6e ("prediction
+      carry the exact disposition this todo asks for: `/codex/02-data/canonical-cutover-register.md` § 6e ("prediction
       `trades` schema — POLYMARKET market-question metadata") documents the Q3 ruling, the writer-root fix SHAs, and an
       explicit `effective-from 2026-07-28 (new writes) / NOT migrated (historical)` state table;
-      `codex/02-data/non-canonical-path-inventory.md` row 22 documents shapes #3/#3b/#4 with the same disposition
+      `/codex/02-data/non-canonical-path-inventory.md` row 22 documents shapes #3/#3b/#4 with the same disposition
       (`no-migrate-first`), the exact row/date counts, and a pointer to
       `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b for the still-open migration. **Not marking this
       gap fully closed** — deliberately, matching the register's own wording: the writer fix is registered as done, but

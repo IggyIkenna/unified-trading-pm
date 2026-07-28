@@ -23,6 +23,7 @@ related:
   [
     /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     /plans/archive/issues/defi_fork1_prep_audit_2026_05_08.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 parent_epic: defi_master

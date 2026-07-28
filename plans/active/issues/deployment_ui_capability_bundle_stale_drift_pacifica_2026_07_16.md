@@ -28,7 +28,12 @@ stage: [meta]
 repos: [deployment-ui, unified-api-contracts]
 scope: [engineer]
 tags: [drift, pacifica, solana, capability-manifest, stale-bundle, data-correctness, ui]
-related: [/codex/04-architecture/solana-defi-coverage.md, /codex/06-coding-standards/ui-testing-layers.md]
+related:
+  [
+    /codex/04-architecture/solana-defi-coverage.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 created: 2026-07-16
 parent_epic: defi_master
 priority: P2
