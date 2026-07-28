@@ -127,15 +127,21 @@ commit; it resets the branch to origin and drops it:
   `.orch-orphan-commits-recovery/slot13_d1c1ad8a_features-service.patch`.
 - **slot-11 `ffc02a8c`** (market-tick-data-service CODE,
   `fix(sports): add consecutive-non-422-failure counter to odds_api_adapter fetch loop` +
-  `test_odds_api_consecutive_failures.py`) — dead (worker_alive=false, tmux_alive=false, last_ping 23:50:08Z),
-  `ahead=1`, drift_violation=true. Same mechanism will orphan it next. Backstop patch:
-  `.orch-orphan-commits-recovery/slot11_ffc02a8c_market-tick-data-service.patch` (content == the earlier `0a822e98`
-  patch; sha changed under an ff-pull rebase). Flagged by the review role (msg 2450).
+  `test_odds_api_consecutive_failures.py`) — **RECLASSIFIED 2026-07-28T00:29Z (main): NOT a dead orphan — LIVE-owned
+  blocked-WIP, PROTECTED.** When msg 2450 flagged it the slot read dead; it has since RESPAWNED. Re-verified
+  `/api/state`: slot-11 is flapping/booting (`tmux_alive=true`, `tmux_session=orch-slot-11`, `status=working`,
+  `phase=pre_boot`, last_msg "waiting on repo-blocker RB-6ee2583c"). `ffc02a8c` is still `ahead=1` (NOT reset/orphaned;
+  `merge-base` deferred because touching a live slot's worktree is banned). The live worker committed locally and is
+  holding the push until RB-6ee2583c clears — legit blocked-WIP, not data loss. Liveness gate → PROTECT, do NOT recover.
+  Backstop `.orch-orphan-commits-recovery/slot11_ffc02a8c_market-tick-data-service.patch` RETAINED only as a safety net
+  should the in-flight respawn's branch-reset orphan it (third-wave PM-docs case proves that risk is real); it becomes a
+  recovery candidate ONLY if a future reflog confirms `branch: Reset` dropped it. Corrected per review msg 2459.
 
-- [ ] [WORKER] P1. Recover the two second-wave orphaned CODE commits above (slot-13 `d1c1ad8a`, slot-11 `ffc02a8c`):
-      cherry-pick each from its `.tabs/<n>/<repo>` reflog (or apply the saved backstop patch) onto current
-      `origin/live-defi-rollout`, then SHIP VIA QUICKMERGE (`--agent --files <the named file(s)>`). Both are clean +
-      complete + test-backed (review-verified). Code MUST go through quickmerge (QG + provenance trailer).
+- [ ] [WORKER] P1. Recover the confirmed dead-orphan CODE commit (slot-13 `d1c1ad8a` ONLY — slot-11 `ffc02a8c` was
+      reclassified LIVE-owned blocked-WIP above, do NOT recover it while slot-11 is alive): cherry-pick `d1c1ad8a` from
+      `.tabs/13/features-service` reflog (or apply the saved backstop patch) onto current `origin/live-defi-rollout`,
+      then SHIP VIA QUICKMERGE (`--agent --files <the named file(s)>`). Clean + complete + test-backed
+      (review-verified). Code MUST go through quickmerge (QG + provenance trailer).
 
 > **⚠️ DISPATCH GAP (main, 2026-07-27T23:54Z):** these `[WORKER]` recovery todos live in an `assigned_vm: NA` issue doc,
 > so they are NOT auto-dispatched to any worker — they will rot unless (a) migrated into a dispatched plan
