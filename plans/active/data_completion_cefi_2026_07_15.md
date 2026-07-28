@@ -260,16 +260,22 @@ MTDS consolidation ruling.)**
       (closes `data_source_provenance` cefi). **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
       2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. Post-walk: re-read the canonical `_index` DATA-STATE (re-run the reusable audit tool) → **100% of rows
+- [ ] [DATA] P0. **🔴 BLOCKED 2026-07-28 (slot-8, confirmed by main) — real predecessor is
+      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`, not this todo's own
+      action.** Post-walk: re-read the canonical `_index` DATA-STATE (re-run the reusable audit tool) → **100% of rows
       v9** (was 100% v8); **`source` populated on every cell** (zero blank; `tardis`, swap-resilient); **`asset_group`
       column/key present** (no `category`/blank); **`pipeline_mode` non-blank + partition present**; typed reasons;
       **legacy-only CELLS = 0** (838-gap closed). Closes `data_source_provenance` cefi + `pipeline_mode_partition` cefi.
-      C-GREEN signal for `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission. **RE-RUN 2026-07-28 (slot-8,
-      live, `mode=changed`, no `--apply`) — STILL RED, criteria NOT met**: v9=97.4% (not 100%), source blank=24.0% (not
-      0%), pipeline_mode blank=1.4% (not 0%) — expected, since the underlying walk this todo is post- has not executed
-      yet (still blocked on the false-phantom fix, see the 2026-07-28 slot-12 entry above). Do not flip until a re-run
-      reads GREEN on CF-1/CF-3/CF-4. See the 2026-07-28 (slot-8) Progress Log entry for the full per-CF readout.
-      **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      C-GREEN signal for `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission — **this is a GATE, do not flip
+      it on a RED audit (data-pipeline-correctness HARD RULE + foundation-completion-gate).** **RE-RUN 2026-07-28
+      (slot-8, live, `mode=changed`, no `--apply`) — STILL RED, criteria NOT met**: v9=97.4% (not 100%), source
+      blank=24.0% (not 0%), pipeline_mode blank=1.4% (not 0%), Era-B chain-dtype rows=490,332 (not 0) — expected, since
+      the underlying walk this todo is post- has not executed yet and remains blocked on the false-phantom itype/
+      underlying-drift fix (see the 2026-07-28 slot-12 entry above + the issue doc linked at the top of this item). **Do
+      not flip until the walk executes AND a fresh audit reads GREEN on all four criteria** (v9=100% / source blank=0% /
+      pipeline_mode blank=0% / Era-B chain rows=0). See the 2026-07-28 (slot-8) Progress Log entry for the full per-CF
+      readout. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation
+      ruling.)**
 
 - [ ] [DATA] P0. **Orphan sweep + bucket-state evidence (slot/Harsh bucket-state verification 2026-06-02).** Measured
       (Cloud Monitoring `storage/v2/total_count`, live-object): `market-data-tick-cefi-prd` 1,545,850 (~65% of legacy
