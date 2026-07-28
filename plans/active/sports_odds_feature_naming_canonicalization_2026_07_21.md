@@ -158,16 +158,19 @@ evidence. Summary of what each site currently uses:
 - [ ] [BACKEND] P2. Migrate the legacy `strategy_service/adapters/sports_feature_subscriber.py` (currently
       `ht_odds_home_implied` etc.) to the same UAC-chosen names — this is a third, separate convention from the v2
       engines and must not be left behind as a 5th orphaned dialect. (repo: strategy-service)
-- [ ] [DATA] P2. **Found 2026-07-25 (slot 4, while shipping the ODDS_COLUMNS migration todo above)**: migrate 4
-      ml-service files still using the pre-migration odds-feature names, missed by the earlier ml-service migration
-      commits (`unified-api-contracts@689efa54`/`ml-service@91f031a` covered only the schema/loader, not these) —
-      `ml_service/training/engine/mock_data_provider.py`, `ml_service/training/app/core/sports_target_generator.py`,
-      `tests/training/unit/test_sports_feature_loader.py`, `tests/training/unit/test_horizon_gate_shield.py`. Apply the
-      same generative scheme + UAC-ground-truth mapping this todo's own commit used (re-derive from the scheme table
-      above + UAC's `OddsFeaturesMixin` docstring, don't hand-guess); watch for the same f-string dynamically-built-name
-      gap that bit the FSS pass (quoted-literal search alone is insufficient). (repo: ml-service). **Done when**: a
-      repo-wide grep of ml-service for any of the old `ODDS_COLUMNS` names (quoted literal AND f-string prefix forms)
-      returns zero hits; `quality-gates.sh` green.
+- [x] ✅ [DATA] P2. **SHIPPED — `ml-service@10e219f`** (2026-07-26, slot-10, `data_engineering`, via
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s AO-dispatched copy of this todo; checkbox-drift fix
+      2026-07-28). Migrated 4 ml-service files still using the pre-migration odds-feature names, missed by the earlier
+      ml-service migration commits (`unified-api-contracts@689efa54`/`ml-service@91f031a` covered only the
+      schema/loader, not these) — `ml_service/training/engine/mock_data_provider.py` (6 genuine hits, re-derived
+      positionally from the shipped `features-service@0ded2449` migration diff), `test_horizon_gate_shield.py` (1
+      genuine hit, 3 sites), `test_sports_feature_loader.py` (8 sites, `TestOddsJoinKeyCrosswalk` incidental
+      join-key-crosswalk names). `ml_service/training/app/core/sports_target_generator.py` needed NO change — an earlier
+      unrelated fix (`ml-service@a14985b`) had already replaced its bare CLV/velocity names. Deliberately left
+      `test_naming_mismatch_raises_loudly`'s intentional old-name fixture unchanged (would defeat the test's own
+      purpose). Post-fix repo-wide grep of all 125 old names across the 4 files: zero functional hits.
+      `quality-gates.sh` full run green. Re-verified `10e219f` is a real, current commit in `ml-service` before this
+      flip (`git show --no-patch` confirms).
 - [ ] [REVIEW] P3. Once todos 2–6 land, write the FSS-output ↔ ml-service-input ↔ strategy-service-input parity test
       originally requested by `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` — against the
       now-real UAC contract. This is the deliverable the parent issue's own todo 2 asked for; it was blocked until this

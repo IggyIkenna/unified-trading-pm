@@ -129,4 +129,14 @@ HARD RULE this needs an interactive/operator-directed session, not autonomous AO
       its todo 2 `[x]` (already shipped as `features-service@daa373bd`), decide whether to commit the uncommitted todo-4
       rename diff sitting in slot 3's `features-service` worktree (verify UAC's `OddsFeaturesMixin` field set matches
       first), and re-confirm whether this plan's `assigned_vm: NA` / LOCAL-only designation still matches how it's
-      actually being executed.
+      actually being executed. **PARTIALLY RESOLVED (2026-07-28, via
+      `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md`'s reconciliation pass)**: sub-parts 1 and 2 are now
+      moot — the target plan's checkboxes were independently reconciled since this doc was filed: todo 2 is flipped
+      `[x]` (citing `features-service@b03a6de4`, the actual base commit that added the `odds_decimal_<outcome>_<venue>`
+      columns — a more precise citation than this doc's suggested `daa373bd`, which is a later PIT-gating commit on top
+      of it), and todo 4 (the previously-uncommitted diff) shipped as `features-service@0ded2449`/`e240eca2`/`0ab873b3`
+      and is flipped `[x]`. The plan's downstream todo 8 (4 remaining ml-service files) has now also been flipped `[x]`
+      (`ml-service@10e219f`) in this same pass. Sub-part 3 — re-confirming whether the plan's
+      `assigned_vm: NA`/LOCAL-only designation still matches how it's actually being executed (real cross-repo migration
+      code keeps landing against it) — remains a genuine judgment call for the doc owner/operator, not resolved by this
+      reconciliation pass; left open below.

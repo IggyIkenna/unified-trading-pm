@@ -53,7 +53,32 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 25 distinct source docs' checkboxes.** For each of
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-28 (slot-2, `data_engineering`).** Verified all 24 distinct source docs (23 from
+      the archived completed-todos history + the `sports_curated_universe_faroe_wales_leagues` item, plus the 2
+      additional docs behind the "2 todos cite two source docs" note —
+      `sports_odds_feature_naming_canonicalization_2026_07_21.md` todo 8 and its sibling
+      `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md`) via 8 parallel read-only research
+      passes cross-checking every cited commit SHA against live git history, then applied 6 fixes for genuine drift
+      found (most of the 24 were already correctly flipped): (1) filled an unfilled `<sha>` placeholder in
+      `mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md` with the verified real SHA
+      `market-tick-data-service@25916f6e`; (2) flipped `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s
+      todo 8 (`ml-service@10e219f`, verified); (3) annotated
+      `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md` noting its todo's sub-parts 1+2
+      are now moot (already independently reconciled) while sub-part 3 stays a genuine judgment call; (4) updated
+      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`'s E8 line — was still untouched
+      reading "UNIMPLEMENTED stub" despite the code shipping — added the DONE-FOR-CODE/ BLOCKED-OPERATOR state
+      (`market-tick-data-service@08439787`+`@236d945e`, verified), checkbox correctly stays unchecked (apply not fired);
+      (5) flipped 2 stale-but-actually-shipped checkboxes + added a SUPERSEDED note to a stale RE-TRIAGE section in
+      `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` (`features-service@4f365d23`, verified) — sub-item (c) retrain
+      correctly stays open; (6) flipped 2 stale-but-shipped checkboxes in
+      `sports_t6_8_oneoff_retirement_residual_2026_07_25.md` (`instruments-service@5ff530f9`+`@4987e465`, both
+      verified + live re-confirmed zero workspace-wide `include_legacy_archive` hits) and flipped that doc's own
+      `status` to `resolved` (0 open todos remaining). Every other doc checked (14 more) was already correctly
+      flipped/archived with 0 open todos where genuinely done, or correctly left open/partial where real work remains
+      (e.g. `canonical_player_stats_fixture_events_quality_2026_07_16.md` — Finding 1 resolved but Finding 2/Defect 3
+      genuinely still open; `sports_features_layer_findings_sweep_2026_07_18.md`'s 3-part split — 23 genuinely open
+      across the 3 parts). No doc was flipped to `resolved` status without independently re-verifying it reaches 0 open
+      todos (checkbox AND prose-form). **Reconcile all 25 distinct source docs' checkboxes.** For each of
       `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s now-done todos: flip the corresponding checkbox/section in
       its named source doc(s) (each todo's text ends with "Source: `<doc>.md`" — 2 todos cite two source docs each, the
       ml-service odds-feature-naming migration and the T2.9/T2.10 MDT schema-drift fix; flip both cited docs for those),

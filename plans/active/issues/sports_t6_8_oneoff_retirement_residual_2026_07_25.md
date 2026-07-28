@@ -12,7 +12,7 @@ summary: >-
   2026-07-13 migration script -- deleting it as originally instructed would have broken that import (caught before
   shipping). This doc tracks the safely-verified deletions actually shipped vs. the residual that needs dedicated
   follow-up.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -39,6 +39,9 @@ source:
     surfaced a materially different picture than the todo assumed.",
   ]
 resolved_by:
+  "All 3 Recommended-decision todos [x] — instruments-service@5ff530f9 (item 2, 2026-07-25) +
+  instruments-service@4987e465 (item 3, 2026-07-26) + item 1's v9-cluster decision (mtds@f1bfd991, 2026-07-26).
+  Reconciled 2026-07-28 via sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md."
 locked_by:
 locked_since:
 supersedes:
@@ -166,10 +169,21 @@ is genuine follow-up work, not silently dropped scope.
       (tracked as residual, not dropped) and `plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md` (already
       attempted this pure-deletion commit, hit a tooling gap filed as
       `plans/archive/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`; see those docs for execution).
-- [ ] [BACKEND] P2. Fix `census_fixture_events_schema_variants_2026_07_25.py` to drop `include_legacy_archive=True`,
-      then retire the `include_legacy_archive` knob entirely from `gcs_paths.py`/`candidate_parquet_uris` +
-      `partition_paths.py`'s passthrough; re-verify zero `include_legacy_archive` hits workspace-wide. (repos:
-      instruments-service, unified-api-contracts)
-- [ ] [DATA] P3. For the 6 Delete-when-unverifiable instruments-service one-offs (§3 third bullet), do a live-manifest
-      check per file's stated condition (e.g. "manifest captured count climbed", "purge confirmed in live consolidated
-      _index") and delete or keep accordingly. (repo: instruments-service)
+- [x] ✅ [BACKEND] P2. **DONE — `instruments-service@5ff530f9`.** Dropped `include_legacy_archive=True` from
+      `census_fixture_events_schema_variants_2026_07_25.py`'s `candidate_parquet_paths(...)` call. Re-verified
+      (2026-07-28, checkbox-drift reconciliation pass): a fresh workspace-wide `rg 'include_legacy_archive'` across
+      every repo returns **zero hits** — the knob is fully retired from
+      `gcs_paths.py`/`candidate_parquet_uris`/`partition_paths.py`'s passthrough as well, satisfying this todo's own
+      done-when in full. Fix `census_fixture_events_schema_variants_2026_07_25.py` to drop
+      `include_legacy_archive=True`, then retire the `include_legacy_archive` knob entirely from
+      `gcs_paths.py`/`candidate_parquet_uris` + `partition_paths.py`'s passthrough; re-verify zero
+      `include_legacy_archive` hits workspace-wide. (repos: instruments-service, unified-api-contracts)
+- [x] ✅ [DATA] P3. **DONE — `instruments-service@4987e465`** (2026-07-26, slot-7, `backend_engineer`; commit cites
+      "Source: ... item 3"). Live-confirmed the target bucket (`instruments-store-sports-central-element-323112`)
+      returns 404 (`gcloud storage buckets describe`, permanently deleted 2026-07-16 per T5.4) with no `--bucket`
+      override anywhere in any of the 6 files, making every one of them permanently inert — deleted all 6
+      (`purge_legacy_unsharded_manifest_rows.py`, `add_canonical_fixture_ids.py`, `backfill_weather.py`,
+      `backfill_sports_fixture_stats_manifest.py`, `migrate_bare_to_per_league.py`, `migrate_entity_paths.sh`) plus
+      their orphaned test + 2 report JSONs. For the 6 Delete-when-unverifiable instruments-service one-offs (§3 third
+      bullet), do a live-manifest check per file's stated condition (e.g. "manifest captured count climbed", "purge
+      confirmed in live consolidated _index") and delete or keep accordingly. (repo: instruments-service)

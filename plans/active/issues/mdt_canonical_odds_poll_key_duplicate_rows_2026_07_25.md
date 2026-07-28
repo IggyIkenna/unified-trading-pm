@@ -126,7 +126,7 @@ dedup-on-write mechanism named anywhere in the investigation, and it will never 
       Tier 1 exact match, Tier 2 accent/case/whitespace-normalized match against `_UNIVERSAL_REVERSE`. **On
       `TeamResolutionError` (name matches neither tier), it falls back to `build_team_id(name)` — a raw slug of whatever
       literal string the vendor sent THAT poll** — and this is what feeds `build_instrument_id`'s
-      `home_team_id`/`away_team_id`. **Step (b) full-population measure** (`market-tick-data-service@<sha>`, added
+      `home_team_id`/`away_team_id`. **Step (b) full-population measure** (`market-tick-data-service@25916f6e`, added
       `--full`/`--output` to `measure_odds_api_poll_key_duplicates_2026_07_26.py`): all 275,136 captured
       `batch_odds_api` cells scanned (single bounded manifest read, no new GCS walk) — **4,045/275,136 (1.5%) affected
       objects**, 55,872 duplicate rows total. **Design correction found via live-data validation**: the decidable rule
