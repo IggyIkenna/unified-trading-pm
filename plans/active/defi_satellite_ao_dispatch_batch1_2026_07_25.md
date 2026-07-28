@@ -375,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                                                                                                                                      (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                                                                                                                                      discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                                                                                                                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                                                                                                                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                                                                                                                                      **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                                                                                                                                      ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                                                                                                                                      UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                                                                                                                                      objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                                                                                                                                      the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                                                                                                                                      Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                                                                                                                                      decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                                                                                                                                      "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                                                                                                                                      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                                                                                                                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                                                                                                                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                                                                                                                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                                                                                                                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                                                                                                                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                                                                                                                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                                                                                                                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                                                                                                                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                                                                                                                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -784,17 +784,14 @@ drift_direction: advance-code
       batch CLI, per-token genesis→today, no new tooling); backfill not executed (out of scope). Cross-linked from the
       source doc's deferred-work row + P2 todo. Repo: unified-trading-pm (read-only). Source:
       `issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`.
-- [ ] [SCRIPT] P1. Diagnose the root cause of the 2026-06-28 defi phantom-capture batch-writer failure (219,529 manifest
-      rows recorded `captured` with no backing parquet — concentrated in the 7 `swaps_ohlcv_*` granularities at ~25,400
-      each, plus 20,586 `dex_pool_swaps` and 12,249 `gas_fees`/ALCHEMY, UNISWAP_V4 largest venue at 69,573). Pull DeFi
-      OHLCV batch-writer logs/git history for the affected window and determine whether the writer logged `captured`
-      before crashing pre-flush. Note: the capture-BATCH model this writer belonged to was RETIRED 2026-07-18/19 for a
-      per-instrument writer re-architecture — if the implicated code path no longer exists or logs expired, that is
-      itself a valid, documentable finding (do not force a live fix on retired code). Repo: market-tick-data-service
-      (read-only log/git investigation). **Done when**: either (a) a documented root-cause finding (citing log
-      excerpts/commit) is recorded as an update in the issue doc, or (b) it is confirmed and documented that retroactive
-      diagnosis is no longer possible because the writer was retired and/or logs expired — either outcome closes this
-      todo; no live code fix required. Source: `issues/phantom_captures_defi_2026_06_28.md`.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-28 (slot-15, data_engineering).** Diagnose the root cause of the 2026-06-28 defi
+      phantom-capture batch-writer failure. Writer-ordering bug RULED OUT for both MDPS candle-write paths (repo-scope
+      corrected: swaps_ohlcv is MDPS, not MTDS) at the incident-date commit — both already upload-before-record.
+      Strongest evidence-based root cause: the pre-fix UTL manifest-consolidator column-misalignment bug
+      (`unified-trading-library@6b0520a6`, 2026-06-27, ~18h pre-audit) — a positional `UNION ALL` merging
+      differently-ordered shard columns into canonical explains both the spurious `captured` rows and their near-uniform
+      per-granularity counts. No live fix needed (bug already fixed + rows already reconciled). Full evidence in
+      `issues/phantom_captures_defi_2026_06_28.md` Progress Log. Source: same doc.
 - [ ] [VERIFY] P1. Confirm whether adding a data_type to `DATA_TYPES_BY_ASSET_GROUP["defi"]` (for an already-registered
       venue×instrument_type combination) actually changes expected_unattempted materialisation / completeness_pct, or
       whether that denominator is scoped independently — small, cheap, read-only check mirroring the equivalent
