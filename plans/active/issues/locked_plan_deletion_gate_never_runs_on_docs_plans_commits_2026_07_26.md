@@ -137,10 +137,14 @@ lesson, and it silently erodes the one guardrail that is supposed to be un-autom
       code for its own use case, and now fully superseded by the commit-msg hook, which reads `$1` — the real
       message-to-be — not `git log -1`). Proven by the same P1 verification: the commit-msg hook correctly read
       `[unlock-plan]` from the message of the commit BEING CREATED (see Progress Log real hook output).
-- [ ] [DOC] P2. **Retro-clean the one doc this already affected** — `plans/archive/issues/`
+- [x] ✅ [DOC] P2. **Retro-clean the one doc this already affected** — `plans/archive/issues/`
       `mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` still carries `locked_by: live-defi-rollout` while
       archived; clear the lock (or restore the doc to `plans/active/` if the operator rules the archival was premature).
-      **Done when**: the archived doc has an empty `locked_by:` and a dated note recording which way it was ruled.
+      **Done when**: the archived doc has an empty `locked_by:` and a dated note recording which way it was ruled. —
+      **Already done**: `unified-trading-pm@2c61a8dc4` (2026-07-26, cross_cutting #10/#11 operator-decision resolution)
+      cleared `locked_by:`/`locked_since:` in the archived doc's frontmatter and added the dated "2026-07-26 —
+      `locked_by:` cleared" note recording the ruling (retro-clean, per option A — the archival itself was independently
+      re-verified correct). This todo was simply never checked off after that commit landed.
 
 ## Codex SSOTs (read before touching a todo)
 
