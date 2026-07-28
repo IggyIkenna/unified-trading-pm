@@ -129,20 +129,20 @@ This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically
       what's constrained here.
 
       **Update 2026-07-28 ~06:25 UTC — contention has substantially EASED, likely on its own as the fan-out's own
-                  CI/QG batch finished draining, not from any further intervention.** Re-checked `VolumeQueueLength` across a
-                  1h window (6 datapoints, 10-min granularity) after ~5h holding flat at the elevated `5.6-6.5` level (3
-                  consecutive prior checks, ~00:20-01:35 UTC): the LATEST readings are `0.84 → 0.81 → 1.88 → 5.53 → 1.93 → 0.50`
-                  — mostly back down near the pre-burst `0.5-2` baseline range, with one brief `5.53` spike (a single 10-min
-                  bucket, not sustained). Fleet-wide sweep the same check found only 3 failures, ALL already resolved by a
-                  newer green run on retry (instruments-service, system-integration-tests, trading-agent-service) — no
-                  lingering `[qg-governor] all 4 tokens busy` or SIT `ci-status-update` timeout signatures observed this pass,
-                  consistent with the queue backlog having actually cleared rather than just gone quiet. **Net read: this
-                  looks like the burst genuinely working itself out over ~5-6h as PM's own fan-out's git/QG activity tapered
-                  (the doc's own original prediction), not evidence the underlying capacity gap was fixed** — the EBS
-                  iops/throughput headroom question above remains open and worth doing before the NEXT bulk registration or
-                  fan-out event reproduces this, but it is no longer an active, ongoing symptom as of this check. Downgrading
-                  urgency accordingly; re-verify if/when the next bulk self-hosted-runner change happens rather than continuing
-                  to poll an already-recovered metric.
+                          CI/QG batch finished draining, not from any further intervention.** Re-checked `VolumeQueueLength` across a
+                          1h window (6 datapoints, 10-min granularity) after ~5h holding flat at the elevated `5.6-6.5` level (3
+                          consecutive prior checks, ~00:20-01:35 UTC): the LATEST readings are `0.84 → 0.81 → 1.88 → 5.53 → 1.93 → 0.50`
+                          — mostly back down near the pre-burst `0.5-2` baseline range, with one brief `5.53` spike (a single 10-min
+                          bucket, not sustained). Fleet-wide sweep the same check found only 3 failures, ALL already resolved by a
+                          newer green run on retry (instruments-service, system-integration-tests, trading-agent-service) — no
+                          lingering `[qg-governor] all 4 tokens busy` or SIT `ci-status-update` timeout signatures observed this pass,
+                          consistent with the queue backlog having actually cleared rather than just gone quiet. **Net read: this
+                          looks like the burst genuinely working itself out over ~5-6h as PM's own fan-out's git/QG activity tapered
+                          (the doc's own original prediction), not evidence the underlying capacity gap was fixed** — the EBS
+                          iops/throughput headroom question above remains open and worth doing before the NEXT bulk registration or
+                          fan-out event reproduces this, but it is no longer an active, ongoing symptom as of this check. Downgrading
+                          urgency accordingly; re-verify if/when the next bulk self-hosted-runner change happens rather than continuing
+                          to poll an already-recovered metric.
 
 - [ ] [REVIEW] P3. The AO dashboard's Host Resources panel reporting only `us+sy+ni` (no iowait) means an operator
       glancing at "CPU 41%" during an episode like this would not see the real problem. Consider whether the panel
@@ -170,3 +170,74 @@ This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically
       script change needs the same "verify blast radius on one consumer before fleet rollout" discipline as any other
       shared QG change, not a silent per-repo override (a per-repo bump would mask recurrence of the SAME root cause
       instead of surfacing it).
+
+- [x] ✅ [OPERATOR] P1. **RAM right-sized 2026-07-28 ~08:40-08:59 UTC — resized the orchestrator VM
+      `i-0c9b283b31d6b5ca7` from `m8i.4xlarge` (16 vCPU / 64GB,
+      $1.09368/hr) to `c7i.4xlarge` (16 vCPU / 32GB,
+      $0.8988/hr) — same vCPU count (preserves the 2026-07-27
+      CPU-oversubscription fix), ~~18%/~~$141/month cheaper, right-sized to actual usage (live `free -h` before the
+      resize: 8GB used / 53GB available out of 61GB — real usage was ~13% of capacity; even this episode's peak swap
+      only reached 10.5GB).** Operator-authorized ("implement in full /autonomous", 2-hour window) — full pre-flight +
+      execution + post-verify below.
+  - **Pre-flight (parallel adversarial workflow, 3 independent checks, all before touching anything)**: (1) real-time
+    safety check via SSM — reviewed all ~15 live `ps` entries + all 10-then-visible `orch-*` tmux panes for a critical
+    uninterruptible operation; found none (routine agent work only: a QG test run, plan edits, a resumable quickmerge
+    push, a monitoring loop for an ALREADY-completed separate-host VM launch) — verdict `safe_to_stop_now=true`. (2)
+    full adversarial code-safety read of `clean-restart-vm.sh` — surfaced a REAL gap: if `aws ec2 start-instances` fails
+    after `modify-instance-attribute` already succeeded (e.g. `InsufficientInstanceCapacity` for the new type),
+    `set -euo pipefail` aborts with the instance left STOPPED, type already changed, zero auto-retry/rollback, no
+    `trap ERR` — script verdict `safe_to_run=true` but explicitly "attended only, never fire-and-forget," with the exact
+    rollback command (`./clean-restart-vm.sh i-0c9b283b31d6b5ca7 m8i.4xlarge 900`) pre-staged. (3) independent live
+    re-derivation of every compatibility/cost claim via fresh
+    `describe-instance-types`/`describe-instance-type-offerings`/ `pricing get-products` calls (not trusting the earlier
+    solo numbers) — all 5 claims (same vCPU, ~32GB RAM, Nitro-compatible in-place resize, available in ap-northeast-1c,
+    cheaper) independently confirmed with the same $1.09368/$0.8988 figures.
+  - **Execution, watched live end-to-end (not backgrounded) per the script review's own recommendation**: Phase 1
+    checkpoint (900s budget) — 1/15 `orch-*` sessions (`orch-slot-5`) checkpointed in time via `/pre-compact`; the other
+    14 timed out and were left running as-is (the script's own documented best-effort design, not a malfunction). Phase
+    2 stop→modify→start completed cleanly with NO failure at either of the two risky points the review flagged (modify
+    succeeded, start succeeded) — independently cross-checked mid-run via a separate `describe-instances` call showing
+    `running`/`c7i.4xlarge` before the script's own Phase 3 even started. Phase 3 SSM reachability returned `Online`
+    within ~13s of the instance reporting `running`.
+  - **Post-verify**: `orchestrator.service` active (PID 782, 2.5G used); AutoSpawn confirmed ACTIVELY self-healing (not
+    just designed to) — live `journalctl` showed `orch-slot-1` and `orch-agent-main` respawned fresh within 9-30s of
+    restart, `PlanRegenLoop`/`AgentKeeper` ticking normally, zero errors; 21 glue-runner systemd units reconnected; the
+    tmux SERVER itself was killed by the stop (expected — a hard poweroff, not a live migration — so all 15 sessions'
+    conversational continuity was lost regardless of checkpoint status, not just the 14 that timed out; this is the
+    accepted, documented cost of this maintenance class, and AutoSpawn is the system's own designed recovery for exactly
+    this). `docker-disk-cleanup.timer` (below) survived the reboot, still active.
+  - **Byproduct fix, found during post-verify**: `orchestrator.service`'s own cgroup memory guard
+    (`orchestrator.service.d/memory-cap.conf`) was HARDCODED to `MemoryMax=56G`/`MemorySwapMax=16G` in
+    `agent-orchestrator/scripts/bootstrap_vm.sh` (Step 5.7) — a cap ABOVE the new 32GB box's total RAM defeats the
+    entire point of the guard (the kernel OOMs the whole host before a 56G cgroup limit can ever bind); a stray,
+    untracked `MemoryHigh=48G` (set via some undocumented past `systemctl set-property`, not found anywhere in version
+    control) had the same problem. **Fixed on the live box immediately**: recomputed as 87.5%/75% of actual
+    `/proc/meminfo` MemTotal (23G high / 26G max / 15G swap — same ratios the original 56G/48G/16G values were
+    hand-tuned for on the old 64GB box), applied via a corrected drop-in file + `daemon-reload` (verified live via
+    `systemctl show`, took effect without a service restart), `orchestrator. service` confirmed still `active`
+    throughout. **Made the fix durable in `bootstrap_vm.sh` itself** (compute the same ratios from live `/proc/meminfo`
+    at bootstrap time instead of hardcoding constants — self-corrects on every future resize, up or down) — **written
+    and locally verified (`bash -n` clean, arithmetic hand-tested against both the old 64GB and new 32GB box) but NOT
+    YET SHIPPED**: blocked by the already-filed, unrelated, correctly-triaged-elsewhere P0
+    `fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` SSOT contradiction, which independently also
+    breaks `agent-orchestrator`'s own `.venv` test collection (confirmed: `fastapi==0.136.1` there, missing
+    `iter_route_contexts`, same signature as that doc's PM/UTL finding) — not something to fix unilaterally per that
+    doc's own explicit instruction. **Ship this once that blocker clears**: `git diff   -- scripts/bootstrap_vm.sh` in
+    `agent-orchestrator` has the change ready, just needs `quality-gates.sh` to pass once agent-orchestrator's own
+    `.venv` picks up whatever direction that SSOT contradiction resolves to.
+  - **Explicitly considered and rejected, both correctly**: (1) sharing the per-runner-pool `RUNNER_TOOL_CACHE` across
+    the 25 pools to save disk — `setup-glue-runners.sh`'s own header comment already documents why this is deliberately
+    per-pool (`actions/setup-python` is delete-then-create and races across concurrent runners); confirmed toolcache is
+    only ~26% of a pool's footprint anyway (agent-orchestrator's own pool: 5.0GB total, 1.28GB toolcache, 1.78GB
+    runner-software "externals", 674MB `_work`), so sharing it wouldn't have been the win it looked like. (2) shrinking
+    the EBS volume from 700GB (already bumped up from 500GB earlier the same day, `vol-0b4f0237fa0f5cd0f`) to 600GB —
+    live `df -h` showed 503GB/678GB (75%) used, trending UP not down across this session, and EBS volumes can't shrink
+    in-place in AWS regardless (would need a snapshot + new volume + migrate, real downtime/risk for a saving that isn't
+    safely there). Neither actioned.
+  - **Also shipped, host-wide, same session**: `docker-disk-cleanup.sh`/`.service`/`.timer` (new,
+    `unified-trading-pm/scripts/self-hosted-runners/`) — confirmed zero prior cleanup automation existed for docker
+    (`docker system df` showed 51GB images / 12.89GB immediately reclaimable; only the generic
+    `systemd-tmpfiles-clean.timer` existed, which doesn't touch docker's storage driver). Deployed + enabled via SSM,
+    runs every 6h (`docker image/container/builder prune -af --filter until=24h`, safe by construction since docker's
+    own "unused" accounting already excludes anything a running/restartable container references). Confirmed `active`
+    both before and after the VM resize/reboot.
