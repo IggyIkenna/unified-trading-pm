@@ -21,9 +21,9 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md,
     /plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
-    /plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md,
+    /plans/archive/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md,
     /plans/active/stash_pile_workspace_cleanup_2026_06_03.md,
-    /plans/active/org_migration_to_odumresearch_2026_06_07.md,
+    /plans/archive/2026_07/org_migration_to_odumresearch_2026_06_07.md,
     /plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md,
   ]
 created: "2026-07-26"
@@ -137,6 +137,18 @@ auto-inventory does not (it is grouped/annotated by theme, which the generated t
 generator maintaining a second index. C: Leave as-is and mute the digest check — cheapest, but keeps a doc that actively
 lies to readers about being canonical. Other: operator can type a custom answer
 
+**Status**: resolved — **option B** (operator decision 2026-07-27,
+`plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5#26, resolving
+`issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md` Finding 2 directly): KEEP INDEX.md, auto-generate it — the
+grouped/annotated-by-theme view this option's own reasoning called out as the reason to build a regenerator rather than
+deprecate. **Built same session**: `scripts/plans/regenerate_active_plan_index.py` (mirrors
+`regenerate_active_plan_inventory.py`'s pattern) reads every active plan's own `asset_group:`/`summary:` frontmatter and
+regenerates a domain-grouped `<!-- AUTO-INDEX-START/END -->` block in `plans/active/INDEX.md`; wired into
+`scripts/plan-hygiene/run_hygiene_sweep.sh` alongside the inventory regenerator. Regenerated 2026-07-27: 263 plans
+across all 10 declared `asset_group` domains, 0 uncategorized, idempotent on re-run. Drift is now structurally
+impossible (the block is regenerated from source, never hand-edited) rather than merely reconciled once.
+`unified-trading-pm` this commit.
+
 **Status**: open
 
 ---
@@ -196,7 +208,11 @@ org secrets / team access / bus-factor; if so it needs a cutover window and Phas
 re-verified against `/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` first (per the plan's own 2026-07-14
 finding-92 note). Other: operator can type a custom answer
 
-**Status**: open
+**Status**: resolved — **option A** (operator decision 2026-07-27,
+`plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5#39): formally abandoned — stay on `IggyIkenna` Pro.
+`org_migration_to_odumresearch_2026_06_07.md` `status: paused` → `cancelled`, all 27 todos marked WON'T-DO, archived to
+`/plans/archive/2026_07/org_migration_to_odumresearch_2026_06_07.md` with a banner recording the decision. Track 2's
+close-out criterion updated below (this commit) to drop the org-migration clause. `unified-trading-pm` this commit.
 
 ---
 

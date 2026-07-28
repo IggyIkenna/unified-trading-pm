@@ -6,7 +6,7 @@ summary:
   `LDR→staging` promote PRs (observed on UTL #475, head `53852d11`). It is **not a broken build** — CodeBuild's own
   status description says the build was never triggered because it requires PR approval first; cosmetic noise, not a
   real CI failure."
-status: open
+status: resolved
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -24,13 +24,18 @@ source:
     "deployment-service/terraform/modules/cloud-build/aws/main.tf (webhook NOTE, lines 263–275)",
   ]
 assigned_vm: planning
-resolved_by:
-locked_by: live-defi-rollout
+resolved_by: unified-trading-pm this commit (2026-07-27)
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-27
 ---
+
+> **🟢 ARCHIVED 2026-07-27 — CONFIRMED RESOLVED** (operator interactive session,
+> `plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5#21): live-verified via `gh pr view` — the "AWS
+> CodeBuild" status check shows `SKIPPED`, not the red `FAILURE` this finding described, on `unified-api-contracts#776`
+> and `deployment-service#571`. `unified-trading-pm` this commit.
 
 > **[2026-07-12 correction, findings 347 (P1) + 86 (P2, near-duplicate), §A2 B-queue**
 > (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`)**]**: this doc's "`staging→main` /

@@ -4,7 +4,7 @@ title: GitHub Org Migration — IggyIkenna → OdumResearch (fleet-wide, incl. G
 summary:
   Fleet-wide migration of all repos from IggyIkenna GitHub org to OdumResearch — including GCP/AWS trust configuration,
   Cloud Build triggers, Workload Identity Federation, and deploy pipelines.
-status: paused
+status: cancelled
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -28,9 +28,9 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
-last_updated: 2026-07-12
-locked_by: live-defi-rollout
-locked_since: 2026-06-07
+last_updated: 2026-07-27
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on: []
@@ -41,6 +41,16 @@ drift_direction: advance-code
 ---
 
 # GitHub Org Migration — `IggyIkenna` → `OdumResearch`
+
+> **🔴 CANCELLED 2026-07-27 — operator decision: STAY on `IggyIkenna` Pro, do not migrate to the `OdumResearch` org**
+> (`plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5#39). This closes the `status: paused` "operator
+> call" this plan had been sitting on since the 2026-06-07 finding below removed the only hard driver (rulesets work
+> fine on native private repos under Pro — proven by test, `agent-orchestrator` recreated native). The remaining
+> "nice-to-have" org benefits (org-level secrets consolidation, team access, bus-factor) were not judged worth the
+> fleet-wide cutover risk/cost. **Every Phase 0-5 todo below is marked WON'T-DO** — this plan is a reference blueprint
+> only, kept for its pre-audit surface-mapping (985 refs / 331 files classified by redirect-safety) should the decision
+> ever get revisited, not actionable scope. Do not dispatch any todo from here. Remotes/READMEs correctly keep
+> defaulting to `IggyIkenna` — that is now the permanent answer, not drift.
 
 > **⚠️ 2026-06-07 MAJOR UPDATE — the rulesets justification is GONE; migration is now OPTIONAL/low-priority.** Proven by
 > test (native private repo on Pro created a ruleset fine, id 17369688): **rulesets DO work on private repos under Pro
@@ -188,90 +198,117 @@ which as of 2026-07-12 declares the pipeline healthy/simplified end-to-end (Phas
 Re-verify pipeline health against that doc, not this stale reference, before un-pausing Phase 0. [finding 92, synced
 2026-07-14])
 
-- [ ] [CICD] P0. Finish the fleet LDR→staging→main drain (deployment-service 31 / greeks 15 / uac 7 behind LDR; 11/18
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [CICD] P0. Finish the fleet LDR→staging→main drain (deployment-service 31 / greeks 15 / uac 7 behind LDR; 11/18
       promote PRs DIRTY/BLOCKED on uac-0.2.0/utl-0.4.0 dep-bumps). Pipeline self-sustaining BEFORE the cut.
-- [ ] [CICD] P0. UTL green on LDR (`utl_full_quality_gates_green` 13 open — T0 base) so downstream promotes.
-- [ ] [CICD] P1. Propagate canonical workflow templates to all repos' main+staging (the rule-11b fix) so workflow-file
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [CICD] P0. UTL green on LDR (`utl_full_quality_gates_green` 13 open — T0 base) so downstream promotes.
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [CICD] P1. Propagate canonical workflow templates to all repos' main+staging (the rule-11b fix) so workflow-file
       checkers pass on PRs-to-main; THEN re-harden `[5.5]`/bash-guard. (Currently `[5.5]` non-fatal transitional.)
-- [ ] [CICD] P1. Reclassify the AO branch-pin item: NOT "needs Pro" — it needs the Team-org (this plan). Update
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [CICD] P1. Reclassify the AO branch-pin item: NOT "needs Pro" — it needs the Team-org (this plan). Update
       `agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` G-item + the codex note.
 
 ### PHASE 1 — Org setup + transfer prep (reversible; no ownership change yet)
 
-- [ ] [INFRA] P0. Create GitHub **Team org `OdumResearch`**; add Ikenna (Owner) + Harsh (Member); enable Actions, set
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P0. Create GitHub **Team org `OdumResearch`**; add Ikenna (Owner) + Harsh (Member); enable Actions, set
       org Actions policy (allow reusable workflows + the composite actions).
-- [ ] [INFRA] P0. Set **org-level secrets** (`GH_PAT`, `SLACK_WEBHOOK_URL`, `SLACK_CI_WEBHOOK_URL`, `ANTHROPIC_API_KEY`,
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P0. Set **org-level secrets** (`GH_PAT`, `SLACK_WEBHOOK_URL`, `SLACK_CI_WEBHOOK_URL`, `ANTHROPIC_API_KEY`,
       `GCP_SA_KEY`, `TELEGRAM_BOT_TOKEN`, `WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT`, `AWS_ACCESS_KEY_ID/SECRET`) scoped to
       all repos. Do NOT yet delete per-repo copies (keep until Phase 3 verify).
-- [ ] [INFRA] P0. **AO recreate-fresh prep** (Blocker H resolved — it's a fork of `CosmicTrader/orchastrator`): merge/
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P0. **AO recreate-fresh prep** (Blocker H resolved — it's a fork of `CosmicTrader/orchastrator`): merge/
       close AO's 1 open PR; confirm 0 issues/0 tags/30 branches; stage the `git push --mirror` plan. (Recreate fresh in
       Phase 2 instead of transferring — forks can't be transferred.)
-- [ ] [SCRIPT] P0. Build `scripts/migration/org_rename_sweep.py` (idempotent, `--dry-run`/`--apply`,
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [SCRIPT] P0. Build `scripts/migration/org_rename_sweep.py` (idempotent, `--dry-run`/`--apply`,
       `--scope     functional|docs|all`): rewrites `IggyIkenna/` → `OdumResearch/` across the MUST-CHANGE surface (A) —
       manifest 24 urls, `deployment_config.py` github_org + its test, the reusable `uses:` SSOT templates, the ~108
       hardcoded-literal workflow refs incl. the `main-backmerge` guard, the 76 PM-script refs, terraform `github_owner`,
       the VM-launcher + cloudbuild clone URLs + `dispatches`. Dry-run it; record the exact change count per file. DO NOT
       apply yet.
-- [ ] [INFRA] P1. **Snapshot for rollback:** export current rulesets (4 repos), per-repo secret name inventory, WIF pool
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P1. **Snapshot for rollback:** export current rulesets (4 repos), per-repo secret name inventory, WIF pool
       attribute-condition + all principalSet bindings, terraform state, Cloud Build/CodeStar connection ids.
-- [ ] [INFRA] P1. Coordinate a **cutover window** (no active deploys/promotes mid-flight; pause FF-crons + AutoSpawn;
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P1. Coordinate a **cutover window** (no active deploys/promotes mid-flight; pause FF-crons + AutoSpawn;
       announce on every active plan banner `> 🟡 ORG MIGRATION IN PROGRESS`).
 
 ### PHASE 2 — THE CUT (transfer + re-point, single window) ⚠️ irreversible-ish (redirects are the net)
 
-- [ ] [INFRA] P0. **Transfer the 23 NATIVE repos** `IggyIkenna/*` → `OdumResearch/*`. GitHub auto-creates owner
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P0. **Transfer the 23 NATIVE repos** `IggyIkenna/*` → `OdumResearch/*`. GitHub auto-creates owner
       redirects. Verify each lands + redirect active.
-- [ ] [INFRA] P0. **AO recreate-fresh** (it's a fork, can't transfer): create native `OdumResearch/agent-orchestrator` →
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P0. **AO recreate-fresh** (it's a fork, can't transfer): create native `OdumResearch/agent-orchestrator` →
       `git push --mirror` all 30 branches + history → re-create settings/secrets/ruleset → verify build + WIF +
       bootstrap_vm clone green → **then delete the old fork** `IggyIkenna/agent-orchestrator` (keep as rollback until
       verified).
-- [ ] [INFRA] P0. Re-point **parent-clone `origin` remotes** to OdumResearch on: both operator laptops + EVERY live VM
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P0. Re-point **parent-clone `origin` remotes** to OdumResearch on: both operator laptops + EVERY live VM
       (`git remote set-url origin git@github.com:OdumResearch/<repo>.git`). One per repo covers all its slot worktrees
       (worktrees share `.git/config`). `setup-tab-worktrees.sh` uses `origin` symbolically — no edit.
-- [ ] [SCRIPT] P0. **Apply `org_rename_sweep.py --apply --scope functional`** on LDR: manifest, deployment_config.py
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [SCRIPT] P0. **Apply `org_rename_sweep.py --apply --scope functional`** on LDR: manifest, deployment_config.py
       (+test), reusable-workflow SSOT templates, the ~108 hardcoded-literal refs (esp. `main-backmerge` guard), 76
       script refs. Commit per logical unit; QG-green; quickmerge. Then `rollout-*` the re-rendered workflow templates +
       composite-action refs to all repos.
 
 ### PHASE 3 — Re-wire cloud + deploy (after transfer; redirects buy time)
 
-- [ ] [INFRA] P0. **GCP WIF:** update pool `--attribute-condition` to `repository_owner=='OdumResearch'`; re-create
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P0. **GCP WIF:** update pool `--attribute-condition` to `repository_owner=='OdumResearch'`; re-create
       every per-repo `iam.workloadIdentityUser` principalSet binding to `attribute.repository/OdumResearch/<repo>`.
       Verify `agent-orchestrator/deploy-dashboard.yml` + `uac/weekly-validation.yml` auth succeeds.
-- [ ] [INFRA] P0. **GCP Cloud Build:** flip `terraform/cloud-build/gcp` `github_owner=OdumResearch`; **re-authorize the
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P0. **GCP Cloud Build:** flip `terraform/cloud-build/gcp` `github_owner=OdumResearch`; **re-authorize the
       2nd-gen connection** to the OdumResearch org (rename/replace `iggyikenna-github`); `terraform apply`; trigger a
       build to confirm.
-- [ ] [INFRA] P0. **AWS CodeStar:** flip `terraform/cloud-build/aws` `github_owner=OdumResearch`; **re-authorize the
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P0. **AWS CodeStar:** flip `terraform/cloud-build/aws` `github_owner=OdumResearch`; **re-authorize the
       CodeStar connection** `unified-trading-github` to OdumResearch; `terraform apply`; confirm a build location
       resolves. Verify AWS static-key flows (`persist-cicd-event.yml`) still work (unaffected, but smoke).
-- [ ] [SCRIPT] P0. **Deploy/VM clone URLs:** apply sweep to the ~10 VM launchers + `bootstrap_vm.sh` +
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [SCRIPT] P0. **Deploy/VM clone URLs:** apply sweep to the ~10 VM launchers + `bootstrap_vm.sh` +
       `setup-cloud-build-triggers.sh` + ~14 `cloudbuild.yaml`/`buildspec.aws.yaml` (clone URLs + `dispatches`
       callbacks). **Rebuild the AO AMI** (`warm-cache.sh` bakes 4 clones). Roll out per-repo build configs.
-- [ ] [INFRA] P1. **Org rulesets:** re-run `pin_branch_protection_rulesets.py` against OdumResearch (or define ONE
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P1. **Org rulesets:** re-run `pin_branch_protection_rulesets.py` against OdumResearch (or define ONE
       org-level ruleset): `quality-gates-v2` required + `enforce_admins` on `main` (+ `staging` lock) for ALL repos —
       **including agent-orchestrator** (finally gated; closes the AO branch-pin item).
-- [ ] [INFRA] P1. **Consolidate secrets:** confirm org secrets resolve in CI; delete redundant per-repo copies.
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P1. **Consolidate secrets:** confirm org secrets resolve in CI; delete redundant per-repo copies.
 
 ### PHASE 4 — Verify (the cut is "done")
 
-- [ ] [VERIFY] P0. `rg "IggyIkenna/" --glob '!**/*.md'` across the workspace = **0 functional refs** (docs may lag to
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [VERIFY] P0. `rg "IggyIkenna/" --glob '!**/*.md'` across the workspace = **0 functional refs** (docs may lag to
       Phase 5). No `github.repository == 'IggyIkenna/...'` guards remain.
-- [ ] [VERIFY] P0. `quality-gates-v2` green on every repo under OdumResearch (trigger v2 per repo); the
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [VERIFY] P0. `quality-gates-v2` green on every repo under OdumResearch (trigger v2 per repo); the
       reusable-workflow `uses:` resolves to the new owner; promote cascade (LDR→staging→SIT→main) fires; semver-agent +
       tab-mirror + `main-backmerge` guard all fire under the new owner.
-- [ ] [VERIFY] P0. WIF auth works (run deploy-dashboard / weekly-validation); GCP Cloud Build + AWS CodeStar triggers
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [VERIFY] P0. WIF auth works (run deploy-dashboard / weekly-validation); GCP Cloud Build + AWS CodeStar triggers
       fire; **launch one test VM end-to-end** (clones from OdumResearch at boot, comes up healthy) before trusting the
       fleet launchers.
-- [ ] [VERIFY] P1. AO ruleset active + `enforce_admins` on; `verify_branch_protection_check_names.py` clean fleet-wide;
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [VERIFY] P1. AO ruleset active + `enforce_admins` on; `verify_branch_protection_check_names.py` clean fleet-wide;
       `regenerate_active_plan_inventory.py` clean.
 
 ### PHASE 5 — Cleanup + docs + archival
 
-- [ ] [DOCS] P2. Sweep the 204 `.md` + codex (`auth-setup.md`, `gha-wif-migration.md`, AO `OPERATIONS.md`, CLAUDE.md +
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [DOCS] P2. Sweep the 204 `.md` + codex (`auth-setup.md`, `gha-wif-migration.md`, AO `OPERATIONS.md`, CLAUDE.md +
       SUB_AGENT/AUTONOMOUS rules version-graduation examples) `IggyIkenna` → `OdumResearch`.
-- [ ] [DOCS] P2. Post-phase codex audit: update every SSOT the migration touched; add `MIGRATED` banner where ownership
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [DOCS] P2. Post-phase codex audit: update every SSOT the migration touched; add `MIGRATED` banner where ownership
       assumptions changed. Update this plan's Progress Log + archive (5-step) when all phases green.
-- [ ] [INFRA] P3. Keep GitHub redirects as the rollback net for a grace period (≥2 weeks); then optionally retire.
+- [x] 🚫 **WON'T-DO (2026-07-27, operator declined — org migration off, staying on IggyIkenna Pro; see banner above).**
+      [INFRA] P3. Keep GitHub redirects as the rollback net for a grace period (≥2 weeks); then optionally retire.
 
 ---
 
@@ -302,6 +339,9 @@ org level; redirects retained as net. Every forced-tradeoff + impossibility reco
   `CosmicTrader/orchastrator` (forks can't be transferred). All 23 other repos native/transferrable. Fix = recreate AO
   fresh (`git push --mirror`, near-zero loss: 0 issues/0 tags/30 branches/1 PR) → no hard blocker remains; migration
   urgency LOW (improvement, nothing broken). Plan updated: Phase 2 = 23 transfers + 1 AO recreate-fresh.
+- 2026-07-27: **CANCELLED.** Operator ruling (`june_2026_vintage_audit_findings_2026_07_27.md` §5#39): stay on
+  `IggyIkenna` Pro, decline the org migration. `status: paused` → `cancelled`; all 27 open Phase 0-5 todos marked
+  WON'T-DO; `locked_by` cleared; archiving per the 6-step ritual. unified-trading-pm this commit.
 - 2026-06-07 (**AO RECREATED NATIVE — done; rulesets justification for the whole migration is now MOOT**): proved
   native-private+Pro does rulesets (test repo id 17369688). Recreated `IggyIkenna/agent-orchestrator` native: full
   mirror-backup `/tmp/ao-mirror-backup.git`; renamed old fork → `agent-orchestrator-fork-bak` (kept as rollback);

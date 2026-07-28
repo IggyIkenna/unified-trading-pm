@@ -92,10 +92,10 @@ fleet-wide; PM typecheck debt cleared; UTL/UAC dedup shipped; Dockerfile pattern
 
 ## Track 2 — Org/account admin + terraform drift · P1
 
-**Sources**: [org_migration_to_odumresearch_2026_06_07.md](/plans/active/org_migration_to_odumresearch_2026_06_07.md)
-(GitHub org migration, IggyIkenna→OdumResearch, fleet-wide — **CANCELLED 2026-07-27**, operator declined, staying on
-`IggyIkenna` Pro; `june_2026_vintage_audit_findings_2026_07_27.md` §5#39 — still `plans/active/`, not yet archived
-despite the cancellation; link corrected 2026-07-27 slot-5) ·
+**Sources**:
+[org_migration_to_odumresearch_2026_06_07.md](/plans/archive/2026_07/org_migration_to_odumresearch_2026_06_07.md)
+(ARCHIVED; GitHub org migration, IggyIkenna→OdumResearch, fleet-wide — **CANCELLED 2026-07-27**, operator declined,
+staying on `IggyIkenna` Pro; `june_2026_vintage_audit_findings_2026_07_27.md` §5#39) ·
 [issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md](/plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md)
 (prod terraform drift backlog — 21 add / 18 change — reconcile-apply) ·
 [issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md](/plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md)
@@ -125,10 +125,11 @@ this whole `/ag-closeout-audit` rollout — self-referential, included for compl
 (plan-quality four-line-of-defense architecture: task_template/QG hygiene/reconcile skills) ·
 [issues/reference_path_convention_2026_07_23.md](/plans/active/issues/reference_path_convention_2026_07_23.md)
 (cross-reference leading-slash path convention rollout) ·
-[l0_doc_index_generator_2026_06_24.md](/plans/active/l0_doc_index_generator_2026_06_24.md) (NOT yet archived despite a
-prior "ARCHIVED 2026-07-27" claim here — `status: active`, still sitting in `plans/active/`, corrected 2026-07-28; its 2
-remaining items genuinely did migrate to `infra_satellite_ao_dispatch_batch1_2026_07_26.md` and are tracked there, so
-the archival move itself is ready to execute, just not yet done; L0 doc-index generator + FF-cron auto-regen) ·
+[l0_doc_index_generator_2026_06_24.md](/plans/archive/2026_07/l0_doc_index_generator_2026_06_24.md) (ARCHIVED 2026-07-27
+— re-verified 2026-07-28 directly against the filesystem after a false "not yet archived" correction landed here
+transiently: `plans/active/l0_doc_index_generator_2026_06_24.md` does not exist,
+`plans/archive/2026_07/l0_doc_index_generator_2026_06_24.md` does; its 2 remaining items migrated to
+`infra_satellite_ao_dispatch_batch1_2026_07_26.md` and are tracked there; L0 doc-index generator + FF-cron auto-regen) ·
 `task_template.md` (the plan-authoring template/rules doc itself) ·
 [codex_vs_repo_docs_ssot_audit_2026_06_01.md](/plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md) (generic "audit
 all active repo docs vs codex SSOT" hygiene) ·
@@ -139,10 +140,11 @@ operator's original catalogue/process doc for background-agent-driven issue reme
 (code-fixable-items sweep across the issue-doc backlog) ·
 [issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md](/plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md)
 (plan-hygiene tooling migration: prek + fold-to-QG + agentic contradiction resolution) ·
-[issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md](/plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md)
-(NOT archived — `status: open`, genuinely NOT ready: its P3 todo is a real un-decided operator-gated call
-(`plans/active/INDEX.md` deprecate-vs-regenerate) with no resolution recorded yet, corrected 2026-07-28; stale codex
-pointer + abandoned INDEX.md drift findings from the daily plan-reconciler) ·
+[issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md](/plans/archive/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md)
+(**ARCHIVED 2026-07-27/28** — the "NOT archived" note above was accurate when written but is now stale: the operator
+resolved the P3 decision the same session, `june_2026_vintage_audit_findings_2026_07_27.md` §5#26, KEEP+auto-generate
+INDEX.md; `scripts/plans/regenerate_active_plan_index.py` built + wired into `run_hygiene_sweep.sh` + regenerated live
+263 plans/10 domains; both findings resolved, doc archived) ·
 [issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md](/plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md)
 (generic UI e2e test-helper `?persona=` bug, unrelated to any AG/AO/CI concern).
 
