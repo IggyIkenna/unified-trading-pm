@@ -222,20 +222,19 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   **post-phase codex audit** (update changed contracts / stub new patterns / SUPERSEDED-banner invalidated docs; codex
   paths enumerated in the plan or it's review-blocking).
 - **Estimate calibration** (apply at plan-write time): `refactor` 0.4× · `design` 0.6× · `infra` 0.8× · `brand-new` 1.0×
-  · `research` 1.2×. **Capture discoveries as plan todos immediately** (P0-P3 + provenance; never
-  auto-memory/chat-summary; every deferral in a summary must already be a `- [ ]` todo). **Fanning out work = a tracked
-  plan todo** (target repo named; never verbal dispatch). **Plan locking** `locked_by:` blocks archival without
-  `[unlock-plan]` (ASK, never autonomous); archival = the 6-step ritual (migrate DEFERRED → banner → codex-alignment
-  check → update CLAUDE.md/codex on a new contract → **update every referrer's path corpus-wide** (grep for the old doc,
-  fix each hit — added 2026-07-23, checked-in gap: the prior 5 steps never actually named this, so it wasn't a
-  regression to fix, just missing) → clear lock). **Cross-doc references** are `/plans/...`/`/codex/...` leading-slash,
-  repo-root-relative — never a bare filename, never `../`-relative (fragile: breaks if the CITING file ever moves, even
-  though the target didn't); enforced hard via a shrinking-ratchet baseline (`check_reference_paths.py`, corpus-wide
-  migration done 2026-07-23) — `depends_on`/`parent_epic`/`supersedes`/ `superseded_by`/`entry_point_for` stay bare
-  slugs (machine-parsed, out of scope). **Plan hygiene** `run_hygiene_sweep.sh`; inventory
-  `regenerate_active_plan_inventory.py` (orphan count >0 is review-blocking). **NA-backlog ratchet**:
-  `check_na_corpus_ratchet.py` (hygiene sweep) caps `assigned_vm:NA` size (docs+todos); shrink via
-  `/na-eligibility-audit`. **Line caps** (plans 500 soft/1000 hard; epics `plans/epics/*.md` 2000 hard flat — NO
+  · `research` 1.2×. **HARD RULE — every follow-up is a `- [ ]` todo, never prose** (P0-P3 + provenance; never
+  auto-memory/chat-summary/a prose "next steps" note — a recurring violation). **Fanning out work = a tracked plan
+  todo** (target repo named; never verbal dispatch). **A plan with every todo done + unlocked MUST be archived
+  immediately (HARD RULE, recurring gap)** — don't leave it sitting `active`; `locked_by:` blocks archival without
+  `[unlock-plan]` (ASK, never autonomous). SSOT for both:
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. **Cross-doc references** are
+  `/plans/...`/`/codex/...` leading-slash, repo-root-relative — never a bare filename, never `../`-relative (fragile:
+  breaks if the CITING file ever moves, even though the target didn't); enforced hard via a shrinking-ratchet baseline
+  (`check_reference_paths.py`, corpus-wide migration done 2026-07-23) — `depends_on`/`parent_epic`/`supersedes`/
+  `superseded_by`/`entry_point_for` stay bare slugs (machine-parsed, out of scope). **Plan hygiene**
+  `run_hygiene_sweep.sh`; inventory `regenerate_active_plan_inventory.py` (orphan count >0 is review-blocking).
+  **NA-backlog ratchet**: `check_na_corpus_ratchet.py` (hygiene sweep) caps `assigned_vm:NA` size (docs+todos); shrink
+  via `/na-eligibility-audit`. **Line caps** (plans 500 soft/1000 hard; epics `plans/epics/*.md` 2000 hard flat — NO
   `umbrella:`/`locked_by`+todos exemption, 2026-07-24 ruling) are a REAL hard gate (ratchet-baselined,
   `check_line_caps.sh`) in the sweep AND prek `--precommit`: a plan/epic you stage must not be over its cap. SSOTs:
   `codex/11-project-management/`, `/codex/08-workflows/estimation-calibration.md`,
