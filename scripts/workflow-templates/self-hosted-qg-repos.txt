@@ -9,27 +9,13 @@
 # appears). github_actions_operator_gated_followups_2026_07_17.md.
 #
 # One repo name per line, exact match against workspace-manifest.json repo names.
+# TRIMMED 2026-07-28 (fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md, P0 SCRIPT fix): the Phase-7
+# fanout landed 19-24 repos on this list, each with only its own lone 1-runner pool, ALL colocated on the same
+# shared 16-vCPU/64GB EC2 instance (i-0c9b283b31d6b5ca7) that also hosts PM's + agent-orchestrator's pools.
+# That is >20 runner processes fighting over 16 vCPUs — the HARD RULE above ("verified healthy" pool) was never
+# actually met for any of the removed entries. 9+ independent per-repo whack-a-mole reverts already happened
+# overnight; this trims the SOURCE so future rollout-workflow-templates.sh runs can't re-arm it. Re-add a repo
+# here only after it has its own dedicated, capacity-planned pool (not a lone runner sharing the fleet box) —
+# see that issue doc's still-open [OPERATOR] P0 fleet-posture + [DATA]/[VERIFY] capacity-planning todos.
 agent-orchestrator
-alerting-service
-batch-live-reconciliation-service
-client-reporting-api
-deployment-api
-deployment-service
-deployment-ui
-e2e-testing
-execution-service
-features-service
-fund-administration-service
-greeks-service
-ibkr-gateway-infra
-instruments-service
-market-data-processing-service
-market-tick-data-service
-ml-service
-strategy-service
-system-integration-tests
-trading-agent-service
-unified-api-contracts
-unified-trading-api
-unified-trading-library
-unified-trading-system-ui
+unified-trading-pm
