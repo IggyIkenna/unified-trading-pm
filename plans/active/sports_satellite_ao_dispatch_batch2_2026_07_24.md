@@ -863,6 +863,17 @@ source: >-
 - **2026-07-25 (slot 7) — League_id casing migration, MDPS `odds_horizon_bucket` reprocess**: launched as a 4-way
   sharded split (`mdps-sports-bucket-20260725-{035949,040027,040053,040119}`, SPOT), all completed cleanly — see the
   casing-migration todo above for final numbers and manifest-stability verification.
+- **2026-07-27→28 — FIXTURES backfill OOM, take 2: the chunking fix was insufficient, real fix + relaunch shipped**:
+  `af-backfill-20260727-064958` self-reported `exit_code=0` complete, but 14/25 chunks (2023-05-13→2026-07-25) were
+  silently OOM-killed mid-range and skipped by the loop's `|| true` — ~832 days of FIXTURES never actually processed.
+  Root cause: `VM_NAME` (and the per-VM manifest shard it names) is constant for the VM's whole lifetime, so the
+  2026-07-27 chunking fix reset each chunk's process memory but not the shared, ever-growing shard. Real fix shipped
+  `deployment-service@20ce4c9`: per-chunk `VM_NAME` suffix (bounds each chunk's shard to its own rows — verified live,
+  `af-backfill-20260728-091755`'s chunk 3 shard is `per_vm/{vm}-c3.parquet`, 359 entries, not 280K+) + bounded 4-attempt
+  chunk retry. Full root-cause history + the deferred library-fix re-evaluation (would not have helped — doesn't cut
+  peak memory): `issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`. Relaunched
+  `af-backfill-20260728-091755` for the full range (skip-if-fresh fast-forwards chunks 1-12, real work starts at the
+  gap, chunk 13+) — monitoring to completion.
 
 ## Reconciliation
 
