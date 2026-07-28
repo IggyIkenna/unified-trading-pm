@@ -620,3 +620,46 @@ re-run this exact audit and flip both this checkbox and the `cefi_master_audit_i
 once CF-1/CF-3/CF-4/CF-8/Era-B/CF-2-paths all read GREEN (CF-8 and CF-2-paths pending a decision on whether the
 finding-144-waived characteristics count against this specific acceptance bar or are out of scope for it — flagged for
 whoever picks this up next, not resolved here).
+
+### 2026-07-28 (slot-3, `data_engineering`) — E4 orphan-sweep todo (line ~307): built the missing `--drop-stale` tool, did NOT run it against prod
+
+Dispatched task `data_completion_cefi-015` = "E4 remaining work = ORPHAN SWEEP + gap-fill, NOT a path walk" — the todo's
+own text already flags it as "**Deliberate execution (irreversible deletes + VM-scale) — not to be rushed**", matching
+the same bundled-irreversible-VM-scale shape the 2026-07-27 (slot-14) entry above correctly declined to rush for the
+sibling "NEXT SESSION — execute the migration" todo. Before rushing the same class of mistake here, checked what tooling
+this todo's part (a) (the irreversible orphan-delete, gated on the PRE-DELETE GUARANTEE) actually requires: **no delete
+mechanism existed for cefi at all** — `migrate_cefi_flat_to_v9_canonical.py` (market-tick-data-service) only ever COPIES
+(day-tree pipeline_mode= insert + L-flat fan-out), it has no `--drop-stale`/delete path, unlike its sibling
+`migrate_sports_canonical_v9.py`, which already has a proven, twin-verified, backup-then-delete E8 sweep
+(`_migrate_drop_stale.py`: snapshot-first → per-object twin-verify → backup-copy → parity-check → delete → verify gone →
+HARD-ABORT on any mismatch, never a naive delete).
+
+**What shipped this session** (`market-tick-data-service@e663d72f`, QG green — 7335/7335 tests incl. 3 new tests I fixed
+after an initial mock-ordering bug in my own test, 238s): added a `--drop-stale` mode to
+`migrate_cefi_flat_to_v9_canonical.py` reusing the SAME shared `_migrate_drop_stale.py` helper (generalised its
+docstring — the module was already bucket/prefix-agnostic, sports was just its only caller until now; zero behavior
+change to the sports E8 sweep). New code: `_cefi_dispatch_day_rel` (adapter matching the shared helper's
+`dispatch_fn(full, bucket, surface=)` signature, delegating to the existing `_canon_day_rel`),
+`_drop_stale_flat_orphans` (the 9 L-flat root orphans need a DIFFERENT check than the day-tree — a flat file fans out
+1-to-many, so this verifies EVERY row's canonical destination exists before allowing the source file's delete, never a
+partial-coverage delete), and `run_drop_stale` (orchestrates: manifest `_index` snapshot → day-tree raw+candle sweep →
+flat-orphan sweep). Wired behind `--drop-stale` (dry-run safe by default, same convention as `--apply`). 3 new unit test
+files/additions covering the adapter, the flat-orphan coverage-gate logic (fully-covered deletes, partial-coverage
+never-deletes, dry-run reports-only, empty/unreadable files skipped), and the orchestration wiring — all mocked at the
+`unified_trading_library.cloud_interface` boundary, no live GCS.
+
+**What did NOT run**: the actual `--drop-stale --apply` sweep against production, and the separate `--also-legacy`
+5,233-cell gap-fill. Both remain genuinely VM-scale (this same doc's E4 text: the legacy listing alone "stalled an
+e2-standard-4"; the `--drop-stale` corpus-wide day-tree walk is ~2,613 days × ~474 objects/day ≈ 1.2M candidate objects)
+and the delete leg is irreversible — running it start-to-finish inside one ~1h interactive dispatch would be exactly the
+same mistake the slot-14 entry above already called out, not a fix for it. The existing
+`launch-canonical-migration-vm.sh cefi <start> <end> {dry|full}` launcher already wires the base migrate-copy pass
+(registered `canonical-migration-cefi-` VM prefix confirmed); it does NOT yet pass `--drop-stale` through — that's the
+next concrete step (either a small launcher change to thread `--drop-stale` for a `cefi-drop-stale` category, or an env
+override), followed by: (1) a fresh `--apply` copy pass over the FULL corpus range (the mandatory PRE-DELETE GUARANTEE —
+confirms every orphan has a migrated dest), (2) `--drop-stale --apply` on a dedicated SPOT VM (per the heavy-I/O +
+backfill-SPOT-default rules), monitored properly (no fire-and-forget), then (3) the `--also-legacy` gap-fill as its own
+separately-launched, sharded VM pass. Did **not** flip this todo's checkbox — the sweep itself hasn't executed against
+prod; flipping now would be the exact false-completion class `check_evidence_backed_completion.py` exists to catch. No
+new issue doc filed (this is in-scope, bounded follow-up already named by the todo's own text, not an out-of-plan
+finding).
