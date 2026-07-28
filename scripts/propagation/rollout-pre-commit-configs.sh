@@ -127,6 +127,34 @@ for repo in $REPOS; do
     continue
   fi
 
+  # Propagate PM's canonical .gitleaks.toml as a REAL FILE COPY (never a symlink — a
+  # sibling-repo-relative symlink resolves fine in the operator's local multi-repo layout but is a
+  # dangling ENOENT in any standalone single-repo CI checkout, where the sibling unified-trading-pm
+  # directory does not exist; this exact regression broke unified-trading-system-ui's e2e build on
+  # 2026-07-28, re-introducing a bug already fixed once via commit a4ec4985 on 2026-06-23).
+  # PM itself owns the canonical .gitleaks.toml — skip copying it onto itself.
+  # Deliberately runs BEFORE the .pre-commit-config.yaml "already current" continue below — this is
+  # an independent propagation concern and must not go dead just because the template hasn't
+  # changed (this exact ordering bug is why agent-orchestrator/strategy-service/unified-trading-
+  # library were STILL silently symlinked despite this script running regularly).
+  if [ "$repo" != "unified-trading-pm" ]; then
+    leaks_src="$WORKSPACE_ROOT/unified-trading-pm/.gitleaks.toml"
+    leaks_target="$repo_dir/.gitleaks.toml"
+    # -L check is required, not just the diff: a symlink whose target happens to resolve locally
+    # (operator's sibling-repo layout) diffs byte-identical to leaks_src, so content comparison
+    # ALONE can never detect "this is still a symlink and needs to become a real file".
+    if [ -L "$leaks_target" ] || [ ! -f "$leaks_target" ] || ! diff -q "$leaks_src" "$leaks_target" >/dev/null 2>&1; then
+      if [ "$DRY_RUN" = true ]; then
+        echo "  [dry]  $repo <- .gitleaks.toml (copy)"
+      else
+        # Remove a stale symlink/file if any, then copy the real content.
+        rm -f "$leaks_target"
+        cp "$leaks_src" "$leaks_target"
+        echo "  [ok]   $repo <- .gitleaks.toml (copy)"
+      fi
+    fi
+  fi
+
   target="$repo_dir/.pre-commit-config.yaml"
 
   # Check if already current (byte-for-byte identical)
@@ -151,23 +179,6 @@ for repo in $REPOS; do
     echo "  [ok]   $repo <- $template_label ($action)"
   fi
   updated=$((updated+1))
-
-  # Ensure .gitleaks.toml symlink points to PM SSOT (templates expect repo-root-relative .gitleaks.toml).
-  # PM itself owns the canonical .gitleaks.toml — skip symlinking it onto itself.
-  if [ "$repo" != "unified-trading-pm" ]; then
-    leaks_link="$repo_dir/.gitleaks.toml"
-    leaks_target="../unified-trading-pm/.gitleaks.toml"
-    if [ ! -L "$leaks_link" ] || [ "$(readlink "$leaks_link")" != "$leaks_target" ]; then
-      if [ "$DRY_RUN" = true ]; then
-        echo "  [dry]  $repo <- .gitleaks.toml symlink ($leaks_target)"
-      else
-        # Remove stale file/link if any, then create the symlink.
-        rm -f "$leaks_link"
-        ln -s "$leaks_target" "$leaks_link"
-        echo "  [ok]   $repo <- .gitleaks.toml -> $leaks_target"
-      fi
-    fi
-  fi
 done
 
 echo ""
