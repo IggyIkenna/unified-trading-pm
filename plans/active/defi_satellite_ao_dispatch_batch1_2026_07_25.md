@@ -316,13 +316,17 @@ drift_direction: advance-code
       unified-trading-pm (issue-doc update only; no production code touched this todo). Source:
       `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
       `issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`.
-- [ ] [PM] P1. File a new tracked issue doc for the `collect-mev-events` pagination gap: `mev_events_handler.py` only
-      pages the newest ~100 Flashbots relay rows/day (hard-exits after the first page), under-covering any day with >100
-      MEV-Boost relay payloads — already fully root-caused in the source doc, no new investigation needed. Correct
-      frontmatter (`doc_type: issue`, `asset_group: [defi]`, `repos:     [market-tick-data-service]`). Repo:
-      unified-trading-pm. **Done when**: a new `plans/active/issues/defi_mev_events_pagination_gap_<date>.md` exists
-      with the file:line citation + correct frontmatter, cross-referenced from the source doc's follow-up line. Source:
-      `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
+- [x] ✅ [PM] P1. **DONE 2026-07-28 (slot-11).** Filed
+      `plans/active/issues/defi_mev_events_pagination_gap_2026_07_28.md` — root cause is the pagination loop's exit
+      branch (`mev_events_handler.py:235`, `cursor = from_slot`) hard-setting the cursor to the loop's own termination
+      value on the "more data" branch, so any day with >100 Flashbots relay payloads only ever captures its newest page
+      (~100 rows) with no `attempted_failed`/partial signal — silent under-coverage, not an outage. Correct frontmatter
+      (`doc_type: issue`, `asset_group: [defi]`, `repos: [market-tick-data-service]`) + a concrete `[BACKEND] P2` fix
+      todo (confirm cursor semantics, decrement correctly, add multi-page unit test, re-verify with a live sample-day
+      backfill). Cross-referenced from the source doc's deferred-work row: updated
+      `plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md` line 266 ("File the
+      mev_events >100-payload/day pagination gap") from "Not filed" to point at the new doc. Repo: unified-trading-pm.
+      Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
 - [ ] [PM] P1. File a new tracked issue doc for the collect-* Terraform stagger's pre-existing T+1 freshness-deadline
       risk: `defi_collection_scheduler.tf`'s header requires the stagger finish by 02:25 UTC for `features-onchain` T+1
       freshness, but `solana-defi` alone (02:05 start, 1500s timeout) can already finish ~02:30 — appears
