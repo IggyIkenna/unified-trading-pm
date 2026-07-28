@@ -18,13 +18,15 @@ scope: [engineer, admin]
 tags: [vm-launcher, hyperliquid, aster, data-types, runbook-gap, efficiency]
 related: [defi_satellite_ao_dispatch_batch1_2026_07_25]
 created: 2026-07-28
-author: slot-4
 assigned_vm: NA
 parent_epic: infrastructure_master
 priority: P2
 source: defi_satellite_ao_dispatch_batch1_2026_07_25
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # launch-mtds-backfill-vm.sh silently ignores --data-types for HL/ASTER (2026-07-28)
