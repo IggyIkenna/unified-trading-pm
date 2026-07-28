@@ -1404,16 +1404,11 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     #   absolute path. The fleet stays on the vulnerable pip line because the next pip release is incompatible with
     #   the pinned vcrpy (operator-accepted 2026-06-05). Exploit surface nil — the fleet never pip-installs untrusted
     #   packages at runtime. SUCCESSOR (remove this ignore): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
-    # CVE-2026-54283 / -54282: starlette <=1.1.0 (transitive via fastapi) — 2026-06-15 advisory batch.
-    #   -54283: request.form() ignores max_fields/max_part_size for application/x-www-form-urlencoded → DoS (event-loop
-    #   block on a ~1M-field body / unbounded memory on a large field). -54282: request.url is rebuilt from an
-    #   unvalidated path, so a request-target without a leading "/" can move the authority boundary → request.url.hostname
-    #   becomes attacker-controlled (only reachable by code reading request.url before routing). fix_versions=[1.3.1/1.3.0].
-    #   TRANSITIVE pin (fastapi pins starlette); covered by the operator "speed > security: transitive CVEs WARN not
-    #   block" policy (2026-06-12). Fleet services sit behind auth + a body-size-limiting reverse proxy and do not make
-    #   host-based trust decisions from request.url → exploit surface low. SUCCESSOR (remove this ignore): bump the
-    #   fastapi/starlette floor to a >=1.3.1 line + fleet lock-regen. Tracked: v2_engine_venue_buildout_2026_06_15.md
-    #   follow-ups (alongside the cryptography bump).
+    # CVE-2026-54283 / -54282 (starlette <1.3.1, transitive via fastapi) — RESOLVED 2026-07-28: fastapi/starlette
+    #   floor lifted to fastapi>=0.137.0/starlette>=1.3.1 fleet-wide (the _IncludedRouter route-introspection break
+    #   fixed via UTL service_framework.fastapi_factory.get_route_paths/find_matching_route). Ignore DROPPED from
+    #   QG_PIP_AUDIT_COMMON_IGNORES (qg-common.sh). See
+    #   plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md.
     # GHSA-6v7p-g79w-8964: msgpack <=1.1.2 (TRANSITIVE) — Unpacker re-used AFTER an unpack error can SEGV the process.
     #   Exploit surface nil for us: we never feed untrusted msgpack to an Unpacker and then re-use it post-error.
     #   A real fix exists (1.2.1) but msgpack is a transitive pin → bumping is a fleet-wide lock-regen campaign.

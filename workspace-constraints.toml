@@ -38,8 +38,14 @@ db_dtypes = "db-dtypes>=1.5.0,<2.0.0"
 docker = "docker>=7.1.0,<8.0.0"
 eth_abi = "eth-abi>=5.0.1,<6.0.0"
 exchange_calendars = "exchange-calendars>=4.5.0,<5.0.0"
-# CEILING <0.137 (Phase 1.5b 2026-06-18): fastapi 0.137.2 pulls starlette 1.3.1 (breaking — see starlette below). Keep working 0.135.1. SSOT: plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
-fastapi = "fastapi>=0.115.0,<0.137.0"
+# CEILING LIFTED 2026-07-28: fastapi>=0.137 (pulls starlette>=1.3.1, see starlette below) — the
+# `_IncludedRouter` route-introspection break is fixed via UTL
+# `service_framework.fastapi_factory.get_route_paths`/`find_matching_route`. Also closes the
+# transitive starlette CVE-2026-54283/-54282 --ignore-vuln entries. Direction-A ratification of
+# /plans/active/issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md pending
+# operator sign-off — see that doc's Progress Log (slot-12). SSOT:
+# plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
+fastapi = "fastapi>=0.137.0,<1.0.0"
 fastparquet = "fastparquet>=0.8.0,<1.0.0"
 freezegun = "freezegun>=1.2.2,<2.0.0"
 fsspec = "fsspec>=2025.2.0,<2026.0.0"
@@ -116,8 +122,15 @@ slowapi = "slowapi>=0.1.9,<1.0.0"
 soupsieve = "soupsieve>=2.8.4,<3.0.0"
 sqlalchemy = "sqlalchemy>=2.0.0,<3.0.0"
 sse_starlette = "sse-starlette>=1.6.1,<2.0.0"
-# WORKING 1.1.0, CEILING <1.3 (Phase 1.5b 2026-06-18): starlette 1.3.1 wraps included routers as _IncludedRouter (no .path) → breaks route-introspection QG in strategy/client-reporting-api/features. Floor lowered from 1.3.1 (was the CVE-fix floor; CVE-2026-54283/-54282 stays in the --ignore-vuln block). Adopt 1.3.1+ WITH the r.path fix in the one-by-one exercise. SSOT: plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
-starlette = "starlette>=1.1.0,<1.3.0"
+# FLOOR RAISED 2026-07-28: starlette>=1.3.1 — the _IncludedRouter route-introspection break
+# (no .path on app.routes once a router is include_router()'d) is fixed via UTL
+# service_framework.fastapi_factory.get_route_paths/find_matching_route across
+# strategy-service/client-reporting-api/features-service/market-tick-data-service/
+# deployment-api. This also closes the CVE-2026-54283/-54282 --ignore-vuln entries (fix
+# floor reached). Direction-A ratification of
+# /plans/active/issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md pending
+# operator sign-off. SSOT: plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
+starlette = "starlette>=1.3.1,<2.0.0"
 structlog = "structlog>=25.5.0,<26.0.0"
 ta_lib = "ta-lib>=0.6.8,<1.0.0"
 tardis_client = "tardis-client>=1.3.7,<2.0.0"

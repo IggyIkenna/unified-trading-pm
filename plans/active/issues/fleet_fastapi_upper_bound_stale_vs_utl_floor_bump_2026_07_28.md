@@ -154,6 +154,32 @@ importable in this pass.)
 
 ## Progress Log
 
+- **2026-07-28 (slot-12, `data_engineering`):** I authored `unified-trading-library@3b99d19d` (the commit this doc is
+  about) dispatched from `cve_affected_pinned_deps_remediation_2026_06_18.md` todo 1, and then — **before discovering
+  this P0 doc existed** — proceeded to execute the FULL direction-A fleet-wide rollout end-to-end: fixed the
+  `_IncludedRouter` route-introspection break in UTL (`get_route_paths`/`find_matching_route`, unit-tested), fixed the
+  route-introspection tests in strategy-service/client-reporting-api/features-service/market-tick-data-service/
+  deployment-api (the last two are landmines slot-3/slot-6/slot-8 independently found — `deployment-api`'s
+  `test_route_ordering_inventory.py` now uses `find_matching_route` so the ordering regression guard survives
+  `_IncludedRouter` wrapping), bumped ALL 11 lagging repos
+  (alerting-service/execution-service/fund-administration-service/greeks-service/market-tick-data-service/
+  strategy-service/client-reporting-api/unified-trading-api/deployment-api/deployment-service/agent-orchestrator) +
+  trading-agent-service to `fastapi>=0.137.0,<1.0.0`/`starlette>=1.3.1,<2.0.0`, ran full `quality-gates.sh` fleet-wide
+  (all green — two repos, agent-orchestrator and deployment-service, needed a manual `uv sync` first since a plain
+  `uv lock` doesn't refresh an already-materialized `.venv`), and shipped all 14 repos via quickmerge to
+  `live-defi-rollout`. Also rolled `workspace-constraints.toml` + `canonical-dependency-manifest.json` forward to the
+  new floor and dropped the CVE-2026-54283/-54282 `--ignore-vuln` entries from `qg-common.sh` (they're the fix-floor
+  now). **`check-dependency-alignment.py` now reports fully aligned fleet-wide** — the exact contradiction this doc
+  raised is resolved as of this commit. **I only found this doc partway through**, reading the sibling
+  `cve_affected_pinned_deps_remediation_2026_06_18.md` todo 1's own notes (slot-6/slot-7/slot-8) which point here. By
+  then direction A was already fully shipped and green. I am NOT unilaterally closing the `[OPERATOR]` todo below —
+  flagging for ratification: reverting 14 already-shipped, QG-green repos would be substantially more destructive than
+  confirming the direction that's already live, and would put the fleet back on a floor with an open route-introspection
+  bug AND the two CVEs. My recommendation is **ratify direction A as complete** (this doc's repo list +
+  client-reporting-api/UTL are now all consistent); no revert work is queued. See
+  `cve_affected_pinned_deps_remediation_2026_06_18.md` todo 1 for the per-repo shas. Escalated via `/blocked` (main)
+  rather than self-closing this todo.
+
 - **2026-07-28 (slot-8, `backend_engineer`):** Independently hit the same block shipping an unrelated
   `deployment-service` change (quickmerge's ancestor cascade pulled `unified-trading-library@3b99d19d` in, breaking
   `deployment-service`'s `uv pip install -e .` — deployment-service is already listed above). Tried the mechanical
