@@ -271,6 +271,55 @@ def extract_architecture_v2_capability_registry() -> dict[str, object]:
     return result
 
 
+def extract_jurisdiction_overlay() -> dict[str, object]:
+    """Serialise the jurisdiction→venue-access overlay (Wave-2 #12).
+
+    Sibling pattern to extract_architecture_v2_capability_registry(): the
+    registry lives in
+    unified_api_contracts.internal.architecture_v2.jurisdiction_overlay and is
+    consumed by the uts-ui Stage-A jurisdiction-filter surface (an investor
+    entity's jurisdiction filters the venue/instrument picklist so a config can
+    never include a venue the jurisdiction cannot legally touch).
+    """
+    result: dict[str, object] = {}
+    try:
+        from unified_api_contracts.internal.architecture_v2.jurisdiction_overlay import (  # noqa: qg-deep-import
+            JURISDICTION_VENUE_POLICIES,
+            Jurisdiction,
+            KNOWN_VENUE_IDS,
+            allowed_venues_for_jurisdiction,
+        )
+
+        result["known_venue_ids"] = sorted(KNOWN_VENUE_IDS)
+        result["jurisdictions"] = sorted(j.value for j in Jurisdiction)
+        result["policies"] = sorted(
+            (
+                {
+                    "venue_id": p.venue_id,
+                    "jurisdiction": p.jurisdiction.value,
+                    "access": p.access.value,
+                    "needs_legal_review": p.needs_legal_review,
+                    "reason": p.reason,
+                    "source_note": p.source_note,
+                }
+                for p in JURISDICTION_VENUE_POLICIES
+            ),
+            key=lambda row: (row["jurisdiction"], row["venue_id"]),  # type: ignore[arg-type,return-value]
+        )
+        result["allowed_venues_by_jurisdiction"] = {
+            j.value: sorted(allowed_venues_for_jurisdiction(j)) for j in Jurisdiction
+        }
+        logger.info(
+            "  Jurisdiction overlay: %d jurisdictions, %d policy rows",
+            len(result["jurisdictions"]),  # type: ignore[arg-type]
+            len(result["policies"]),  # type: ignore[arg-type]
+        )
+    except Exception as e:
+        logger.warning("  Failed to extract jurisdiction overlay: %s", e)
+        traceback.print_exc()
+    return result
+
+
 def extract_config_schema_universe() -> dict[str, object]:
     """Extract config schemas from UCI and key services."""
     configs: dict[str, object] = {}
@@ -847,6 +896,8 @@ def main() -> None:
     reference["lifecycle_enums"] = extract_lifecycle_enums()
     logger.info("\n21. Extracting architecture_v2 capability registry...")
     reference["archetype_capability_registry"] = extract_architecture_v2_capability_registry()
+    logger.info("\n22. Extracting jurisdiction overlay (Stage-A filter surface)...")
+    reference["jurisdiction_overlay"] = extract_jurisdiction_overlay()
     logger.info("\n23. Validating config registry coverage...")
     validate_config_registry_coverage(pm_root, uac_root, workspace_root)
 
