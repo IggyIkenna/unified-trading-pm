@@ -129,39 +129,39 @@ This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically
       what's constrained here.
 
       **Update 2026-07-28 ~06:25 UTC — contention has substantially EASED, likely on its own as the fan-out's own
-                                                  CI/QG batch finished draining, not from any further intervention.** Re-checked `VolumeQueueLength` across a
-                                                  1h window (6 datapoints, 10-min granularity) after ~5h holding flat at the elevated `5.6-6.5` level (3
-                                                  consecutive prior checks, ~00:20-01:35 UTC): the LATEST readings are `0.84 → 0.81 → 1.88 → 5.53 → 1.93 → 0.50`
-                                                  — mostly back down near the pre-burst `0.5-2` baseline range, with one brief `5.53` spike (a single 10-min
-                                                  bucket, not sustained). Fleet-wide sweep the same check found only 3 failures, ALL already resolved by a
-                                                  newer green run on retry (instruments-service, system-integration-tests, trading-agent-service) — no
-                                                  lingering `[qg-governor] all 4 tokens busy` or SIT `ci-status-update` timeout signatures observed this pass,
-                                                  consistent with the queue backlog having actually cleared rather than just gone quiet. **Net read: this
-                                                  looks like the burst genuinely working itself out over ~5-6h as PM's own fan-out's git/QG activity tapered
-                                                  (the doc's own original prediction), not evidence the underlying capacity gap was fixed** — the EBS
-                                                  iops/throughput headroom question above remains open and worth doing before the NEXT bulk registration or
-                                                  fan-out event reproduces this, but it is no longer an active, ongoing symptom as of this check. Downgrading
-                                                  urgency accordingly; re-verify if/when the next bulk self-hosted-runner change happens rather than continuing
-                                                  to poll an already-recovered metric.
+                                                                                      CI/QG batch finished draining, not from any further intervention.** Re-checked `VolumeQueueLength` across a
+                                                                                      1h window (6 datapoints, 10-min granularity) after ~5h holding flat at the elevated `5.6-6.5` level (3
+                                                                                      consecutive prior checks, ~00:20-01:35 UTC): the LATEST readings are `0.84 → 0.81 → 1.88 → 5.53 → 1.93 → 0.50`
+                                                                                      — mostly back down near the pre-burst `0.5-2` baseline range, with one brief `5.53` spike (a single 10-min
+                                                                                      bucket, not sustained). Fleet-wide sweep the same check found only 3 failures, ALL already resolved by a
+                                                                                      newer green run on retry (instruments-service, system-integration-tests, trading-agent-service) — no
+                                                                                      lingering `[qg-governor] all 4 tokens busy` or SIT `ci-status-update` timeout signatures observed this pass,
+                                                                                      consistent with the queue backlog having actually cleared rather than just gone quiet. **Net read: this
+                                                                                      looks like the burst genuinely working itself out over ~5-6h as PM's own fan-out's git/QG activity tapered
+                                                                                      (the doc's own original prediction), not evidence the underlying capacity gap was fixed** — the EBS
+                                                                                      iops/throughput headroom question above remains open and worth doing before the NEXT bulk registration or
+                                                                                      fan-out event reproduces this, but it is no longer an active, ongoing symptom as of this check. Downgrading
+                                                                                      urgency accordingly; re-verify if/when the next bulk self-hosted-runner change happens rather than continuing
+                                                                                      to poll an already-recovered metric.
 
-              **Update 2026-07-28 ~18:40 UTC — recurred, EBS iops/throughput bump now actually applied (correcting an
-              overclaim in this plan's own "Final report" section, which said "IOPS/throughput/size all bumped" — only SIZE
-              was bumped that session; the iops/throughput half was a recommendation, still explicitly open per the ~06:25
-              UTC update directly above, until now).** Adding `deployment-ui` to the self-hosted fleet (separate session,
-              same root cause) reproduced the exact pattern live: `iostat -x 1 5` on `i-0c9b283b31d6b5ca7` showed `nvme0n1`
-              at 74-85% util, ~8,000-9,200 combined IOPS, 30-46 request queue depth, sustained across 5 samples — confirmed
-              via `aws ec2 describe-volumes` the volume (`vol-0b4f0237fa0f5cd0f`, gp3) was provisioned for exactly 8,000 IOPS
-              / 500 MB/s, i.e. running AT its own ceiling continuously, not merely "busy." Real-world impact this time, not
-              just a metric: `deployment-ui`'s CI job (`actions/setup-node`'s npm-cache-save step alone took ~4m40s vs
-              near-instant on `ubuntu-latest`) blew its 10-min job timeout, and a real open promotion PR (#440) sat queued
-              over an hour behind it on the repo's single runner, then failed its own run (a `tsc` type-check hit its
-              internal 60s step timeout — the SAME contention, a different layer). **Action taken**: live `aws ec2
-              modify-volume --volume-id vol-0b4f0237fa0f5cd0f --iops 16000 --throughput 1000` (gp3's max short of migrating
-              volume type; no downtime, reversible) — confirmed `ModificationState: optimizing` (new limits already active)
-              within ~2min. This is the fix this todo's own ~06:25 UTC update named as "worth trying" — now done, not just
-              recommended. Re-verify under the next real burst rather than assuming this closes the capacity question
-              permanently; 16,000 IOPS is a higher ceiling, not an unlimited one, and this box still hosts >23 runner pools
-              it never had when originally sized.
+                                                  **Update 2026-07-28 ~18:40 UTC — recurred, EBS iops/throughput bump now actually applied (correcting an
+                                                  overclaim in this plan's own "Final report" section, which said "IOPS/throughput/size all bumped" — only SIZE
+                                                  was bumped that session; the iops/throughput half was a recommendation, still explicitly open per the ~06:25
+                                                  UTC update directly above, until now).** Adding `deployment-ui` to the self-hosted fleet (separate session,
+                                                  same root cause) reproduced the exact pattern live: `iostat -x 1 5` on `i-0c9b283b31d6b5ca7` showed `nvme0n1`
+                                                  at 74-85% util, ~8,000-9,200 combined IOPS, 30-46 request queue depth, sustained across 5 samples — confirmed
+                                                  via `aws ec2 describe-volumes` the volume (`vol-0b4f0237fa0f5cd0f`, gp3) was provisioned for exactly 8,000 IOPS
+                                                  / 500 MB/s, i.e. running AT its own ceiling continuously, not merely "busy." Real-world impact this time, not
+                                                  just a metric: `deployment-ui`'s CI job (`actions/setup-node`'s npm-cache-save step alone took ~4m40s vs
+                                                  near-instant on `ubuntu-latest`) blew its 10-min job timeout, and a real open promotion PR (#440) sat queued
+                                                  over an hour behind it on the repo's single runner, then failed its own run (a `tsc` type-check hit its
+                                                  internal 60s step timeout — the SAME contention, a different layer). **Action taken**: live `aws ec2
+                                                  modify-volume --volume-id vol-0b4f0237fa0f5cd0f --iops 16000 --throughput 1000` (gp3's max short of migrating
+                                                  volume type; no downtime, reversible) — confirmed `ModificationState: optimizing` (new limits already active)
+                                                  within ~2min. This is the fix this todo's own ~06:25 UTC update named as "worth trying" — now done, not just
+                                                  recommended. Re-verify under the next real burst rather than assuming this closes the capacity question
+                                                  permanently; 16,000 IOPS is a higher ceiling, not an unlimited one, and this box still hosts >23 runner pools
+                                                  it never had when originally sized.
 
 - [x] ✅ [REVIEW] P3. **DONE 2026-07-28 — AO dashboard's Host Resources panel now surfaces iowait% and load average**,
       closing the exact blind spot this todo named (the panel showed "CPU 41%"/"CPU 9%" while the box was genuinely
@@ -274,3 +274,17 @@ This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically
     runs every 6h (`docker image/container/builder prune -af --filter until=24h`, safe by construction since docker's
     own "unused" accounting already excludes anything a running/restartable container references). Confirmed `active`
     both before and after the VM resize/reboot.
+
+**Update 2026-07-28 ~19:37 UTC — deployment-ui's LDR verification blocked on what looks like the SAME class of incident
+tracked in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (not duplicating that doc —
+cross-referencing).** After the EBS iops/throughput bump above, a fresh `quality-gates-v2` run against
+`live-defi- rollout` still failed — but this time NOT a job-level timeout (already bumped 10→25min) and not the original
+60s TS-check timeout (another process already bumped that to 300s) — it hit the NEW 300s TS-check budget and still
+didn't finish. Live `uptime`/`top`/`free` check: load average 77.86/74.02/69.30, `%Cpu(s)` now 34.3 us + 15.7 sy + 10.3
+ni (real compute load, not just iowait like earlier today) + 39.7 wa, and **swap at 97.8% (355MB free of 16GB)** — worse
+than the 87-93% swap readings `self-hosted-qg-repos.txt`'s own recent revert notes describe for the concurrent
+`unified-trading-library` incident. Read as the same underlying capacity problem, now compounding. Per autonomous
+stall-safety: NOT retrying a third time on an identical failure class — that other doc's incident is already being
+actively worked by a separate process; duplicating remediation here risks conflicting with it. Deferred as "cannot be
+done yet" (waiting on an external event — that incident clearing), not "blocked-operator" — will re-verify once host
+load is back to a sane baseline rather than polling tightly.
