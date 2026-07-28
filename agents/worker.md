@@ -509,6 +509,15 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/progress \
 Long QG runs are fine — just send "running QG" first and the timestamp resets. Treat 10 min of silence as a bug in your
 own loop.
 
+**Never `nohup <cmd> & echo $!` to background a long-running script (HARD RULE, codified 2026-07-27/28,
+`plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`).** This detaches the real
+process from your tracked session tree; `agent-orchestrator/server/orphan_reap.py`'s sweep then classifies it as an
+orphan and SIGKILLs it ~300-355s later, silently discarding real in-flight work (fleet-wide recurring trap — hit 5+
+slots in one hour on 2026-07-27, reproduced again on slot 7 on 2026-07-28 mid-backfill). Pass the long-running command
+directly to the Bash tool with `run_in_background: true` and **no** `nohup`/`&` wrapper — the harness's own
+backgrounding keeps the process correctly parented, and its exit is the tracked wake. Full detail:
+`/codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher coverage".
+
 ## Chat-turn narration — give a human skimming the dashboard enough to follow along
 
 The `/progress` **message field** above stays a short one-liner — that's a frequent API payload, keep it cheap. Your
