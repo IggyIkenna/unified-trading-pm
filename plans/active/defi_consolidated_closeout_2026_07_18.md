@@ -76,7 +76,7 @@ related:
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
     /plans/archive/2026_07/ao_dispatch_cooldown_and_park_2026_07_20.md,
     issues/estate_orphan_assessment_2026_07_21.md,
-    issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md,
+    /plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md,
     issues/defi_five_never_captured_venues_fix_2026_07_22.md,
     issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
     issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md,
@@ -106,8 +106,8 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: 2026-06-27
-  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+last_updated:
+  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"; "2026-07-27" session-3 lending-resolver close-out (todo 18)
@@ -544,20 +544,21 @@ file, not here.
       `adapters/defi_adapter.py`, per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition of
       done: a written finding per module (kept/fixed/removed + reason). (repos: instruments-service,
       market-tick-data-service, execution-service)
-- [ ] [CONFIG] P2. **F4 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, was falsely cited "0
-      open todos" there — corrected 2026-07-27) — Curve DEX pools dead: decommissioned subgraph.**
+- [ ] [CONFIG] P2. **F4 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, was
+      falsely cited "0 open todos" there — corrected 2026-07-27) — Curve DEX pools dead: decommissioned subgraph.**
       `mtds-dex-pools-backfill` VM: `curve_adapter.py`'s hosted-service subgraph URL was decommissioned by The Graph;
       the gateway subgraph ID returns "no allocations" (no indexers serve it). Curve REST (`api.curve.finance`) is alive
       but current-snapshot-only, not historical `dex_pool_state`. **BLOCKED-CREDENTIALS**: needs either a current
       indexer-allocated Curve subgraph ID (The Graph gateway API key) or an RPC key (`_query_curve_pool_at_block`,
       Alchemy) for historical block-level state — or accept honest-absence for Curve pools until a source is wired.
       (repo: market-tick-data-service)
-- [ ] [DATA] P3. **F6 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, same correction) —
-      DeFi lending-indices: heavy instruments-store fallback, ~39% zero-row writes.** `mtds-lending-indices-20260628`
-      VM: instruments-store-defi parquet missing for `{aave_v3,compound_v3}`/`<chain>`/`<date>` combos → falls back to
-      subgraph discovery, yields little (aave OPTIMISM/LINEA, compound mostly empty). Confirm whether this is an
-      instruments-service backfill gap (if so, backfill it) or legit venue-not-deployed-in-period absence — not a quick
-      MTDS code fix either way. (repos: instruments-service, market-tick-data-service)
+- [ ] [DATA] P3. **F6 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, same
+      correction) — DeFi lending-indices: heavy instruments-store fallback, ~39% zero-row writes.**
+      `mtds-lending-indices-20260628` VM: instruments-store-defi parquet missing for
+      `{aave_v3,compound_v3}`/`<chain>`/`<date>` combos → falls back to subgraph discovery, yields little (aave
+      OPTIMISM/LINEA, compound mostly empty). Confirm whether this is an instruments-service backfill gap (if so,
+      backfill it) or legit venue-not-deployed-in-period absence — not a quick MTDS code fix either way. (repos:
+      instruments-service, market-tick-data-service)
 
 > **VM status** (full narrative archived 2026-07-25, 2nd extraction pass — see
 > [`defi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/defi_consolidated_closeout_history_2026_07_25.md)):

@@ -31,7 +31,7 @@ related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
-    /plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md,
+    /plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md,
   ]
 created: 2026-07-24
 parent_epic: defi_master

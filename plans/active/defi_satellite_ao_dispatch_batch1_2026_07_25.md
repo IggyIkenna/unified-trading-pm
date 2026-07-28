@@ -375,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                                                                                                                                                                  (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                                                                                                                                                                  discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                                                                                                                                                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                                                                                                                                                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                                                                                                                                                                  **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                                                                                                                                                                  ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                                                                                                                                                                  UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                                                                                                                                                                  objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                                                                                                                                                                  the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                                                                                                                                                                  Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                                                                                                                                                                  decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                                                                                                                                                                  "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                                                                                                                                                                  `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                                                                                                                                                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                                                                                                                                                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                                                                                                                                                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                                                                                                                                                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                                                                                                                                                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                                                                                                                                                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                                                                                                                                                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                                                                                                                                                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                                                                                                                                                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -803,20 +803,14 @@ drift_direction: advance-code
       `PROTOCOL_CAPABILITIES` (`market_data_categories.py:1443-1517`), so this specific inertness is due to
       HYPERLIQUID's asset_group placement, not the mechanism itself. No code/schema/manifest changes made. Full finding:
       `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md` Progress Log (2026-07-28).
-- [ ] [DATA] P1. **Resolve the Kamino/Solend `lending_indices` `instrument_type` shape conflict — probe BOTH candidate
-      paths.** `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` item 4 left this
-      "inconclusive, not a clean bill": its own targeted shape (`instrument_type=solana_lending`, per
-      `lending_indices_handler.py::resolve_lending_instrument_type()`) conflicts with
-      `defi_consolidated_closeout_2026_07_18.md` Track 2's independent 2026-07-20 live GCS probe, which found 47 real
-      KAMINO `lending_indices` objects under `instrument_type=solana_amm_pool` instead. Operator ruling 2026-07-25
-      (queued entry #3 in `issues/autonomous_session_operator_decisions_2026_07_25.md`, answered): probe BOTH shapes and
-      explicitly reconcile against the 47-object Track-2 finding before filing any verdict — do not conclude "clean
-      bill" from checking only `solana_lending`. Repo: market-tick-data-service (read-only probe). Source:
-      `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` item 6 (added 2026-07-25 per the
-      operator's ruling). **Done when**: both `instrument_type=solana_lending` and `instrument_type=solana_amm_pool` are
-      sampled for real KAMINO/SOLEND objects (uri + timestamp-vs-day= check, same method as items 4/5 in the source
-      doc), the 47-object Track-2 population is accounted for, and a definitive verdict (clean / same fabrication bug as
-      the dex_pools class / a different issue) is recorded in the source doc.
+- [x] ✅ [DATA] P1. **Resolve the Kamino/Solend `lending_indices` `instrument_type` shape conflict** — probe BOTH
+      candidate paths (`solana_lending` vs the Track-2-claimed `solana_amm_pool`) and reconcile against the 47-object
+      Track-2 finding. **✅ 2026-07-28 (slot-2)**: `solana_amm_pool` never existed for KAMINO `lending_indices` — Track
+      2's prose was a mislabeling; the real legacy shape is `instrument_type=lending`, clean on Track 2's own probe day.
+      Probing OTHER days surfaced a NEW confirmed fabrication (a frozen 2026-05-04/05 snapshot duplicated across ~21
+      months of `day=` partitions) — same bug class as the source issue, filed separately:
+      `/plans/active/issues/defi_kamino_solend_lending_indices_legacy_shape_fabricated_history_2026_07_28.md`. Source
+      doc archived: `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`.
 
 ## Progress Log
 
@@ -977,13 +971,14 @@ candidates.
 
 ### Needs operator ruling — RESOLVED 2026-07-25, moved into Todos above
 
-`issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`'s sole candidate ("Determine whether the
-dex_pools-class fake-history-snapshot bug also affects Kamino/Solend Solana lending_indices in the `-prd-` bucket") was
-a genuine cross-doc contradiction (`instrument_type=solana_lending` per the writer code vs. an independent
-`instrument_type=solana_amm_pool` live-probe finding, 47 objects, in `defi_consolidated_closeout_2026_07_18.md` Track
-2). Filed as entry 3 in `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`; the operator answered
-same-day: probe both shapes before concluding. Widened + dispatched as a Todos-section item above (source doc also
-updated with a new item 6 carrying the same widened scope).
+`/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`'s sole candidate
+("Determine whether the dex_pools-class fake-history-snapshot bug also affects Kamino/Solend Solana lending_indices in
+the `-prd-` bucket") was a genuine cross-doc contradiction (`instrument_type=solana_lending` per the writer code vs. an
+independent `instrument_type=solana_amm_pool` live-probe finding, 47 objects, in
+`defi_consolidated_closeout_2026_07_18.md` Track 2). Filed as entry 3 in
+`plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`; the operator answered same-day: probe both
+shapes before concluding. Widened + dispatched as a Todos-section item above (source doc also updated with a new item 6
+carrying the same widened scope).
 
 ## Reconciliation
 
