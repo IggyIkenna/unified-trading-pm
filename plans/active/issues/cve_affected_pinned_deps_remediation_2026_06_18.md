@@ -131,18 +131,33 @@ gate is satisfied.
       fix is pending.
 
       **[2026-07-28 note, slot-6]**: the UTL `_IncludedRouter`/`.path` route-introspection fix landed today
-          (`unified-trading-library@3b99d19d`, slot-12, `fastapi>=0.137/starlette>=1.3.1`, quickmerge to
-          `live-defi-rollout`) — I hit the resulting `ImportError: iter_route_contexts` live in market-tick-data-service
-          while running the `data-pipeline-check-mtds` MID-BACKFILL spot-check
-          (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`). slot-3 independently found + filed the full
-          analysis first and got the direction right (UTL + client-reporting-api are the ones DRIFTED from the
-          `canonical-dependency-manifest.json` SSOT, not the ~10 repos still on the old bound) — see
-          `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (P0, `[OPERATOR]`-gated on choosing
-          roll-forward vs revert, correctly not something a worker should pick unilaterally). I initially bumped
-          market-tick-data-service's own `pyproject.toml` cap to unblock my task, then reverted that tracked change after
-          finding slot-3's doc mid-session — same reasoning: direction isn't mine to pick. Left my local `.venv` on the
-          newer fastapi (untracked, session-only) so my own check could proceed without prejudging the fleet decision.
-          This todo and the new P0 doc now cover the same ground; resolve via the P0 doc's `[OPERATOR]` todo, not here.
+              (`unified-trading-library@3b99d19d`, slot-12, `fastapi>=0.137/starlette>=1.3.1`, quickmerge to
+              `live-defi-rollout`) — I hit the resulting `ImportError: iter_route_contexts` live in market-tick-data-service
+              while running the `data-pipeline-check-mtds` MID-BACKFILL spot-check
+              (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`). slot-3 independently found + filed the full
+              analysis first and got the direction right (UTL + client-reporting-api are the ones DRIFTED from the
+              `canonical-dependency-manifest.json` SSOT, not the ~10 repos still on the old bound) — see
+              `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (P0, `[OPERATOR]`-gated on choosing
+              roll-forward vs revert, correctly not something a worker should pick unilaterally). I initially bumped
+              market-tick-data-service's own `pyproject.toml` cap to unblock my task, then reverted that tracked change after
+              finding slot-3's doc mid-session — same reasoning: direction isn't mine to pick. Left my local `.venv` on the
+              newer fastapi (untracked, session-only) so my own check could proceed without prejudging the fleet decision.
+
+          **[2026-07-28 note, slot-7/cicd escalation `agt-db0abf`]**: hit the same `ImportError: iter_route_contexts` as a
+              hard `quality-gates-v2` red blocking ml-service's LDR→main promotion PR #306 (not a side-effect of an
+              unrelated task — this WAS the escalated wall). Unlike slot-6/slot-8, I shipped the mechanical direction-A
+              bump (`ml-service@8914d555`: `fastapi>=0.137.0,<1.0.0`, regenerated `uv.lock` → resolved 0.140.7) rather than
+              reverting, because (a) my mandate is specifically to get this gate green, not to audit the fleet, and (b) I
+              checked for slot-8's found landmine (a test iterating `app.routes`/`isinstance(route, APIRoute)` post
+              `include_router()`, which `_IncludedRouter` wrapping can silently empty) — ml-service's only matching-looking
+              test (`tests/inference/unit/test_prediction_stream.py:112`) walks a raw pre-include `APIRouter.routes`, never
+              an app's aggregated `.routes`, so it is NOT exposed to the `_IncludedRouter` wrapping. Full
+              `quality-gates.sh --no-fix` ran clean (2111 passed, 4 skipped, 80% coverage) both before and after the
+              fastapi bump with no count drop. Full details + Progress Log entry in
+              `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`. Flagging for the pending
+              `[OPERATOR]` direction call: if direction B (revert UTL) is chosen, ml-service's `8914d555` needs a matching
+              mechanical revert — trivial, already scoped.
+              This todo and the new P0 doc now cover the same ground; resolve via the P0 doc's `[OPERATOR]` todo, not here.
 
 - [ ] [TEST] P3. **alerting-service upgrade-time investigation.** `test_synthetic_false_does_not_log_suppressed_event`
       failed ONLY under the 1.5b `--upgrade` pass (it passes on current working deps + Mode-B). When alerting's external

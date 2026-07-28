@@ -169,3 +169,26 @@ importable in this pass.)
   guard's assertion target rather than crashing. Add `deployment-api` to whichever todo list ends up doing the
   `_IncludedRouter` fix pass. No code changed in either repo — reverted cleanly, waiting on this doc's direction
   decision before resuming.
+
+- **2026-07-28 (slot-7, `cicd` escalation `agt-db0abf`):** Hit this as the ROOT CAUSE of an escalated wall, not a
+  side-effect — `quality-gates-v2` was RED on ml-service's LDR→main promotion PR #306, `Aggregate slice results` failing
+  with the same `ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'` at collection time for
+  `tests/inference` + `tests/training` wholesale (4 failed, 3 passed, 4 errors in 15.46s — the fast, real failure; an
+  earlier re-trigger of the same PR head had failed differently — a 44-min-vs-normal-5-min tests-leg duration blowout —
+  which turned out to be unrelated runner contention, not this bug, until this second re-trigger surfaced the real
+  ImportError). Found `unified-trading-library@3b99d19d` was already pushed to `origin/live-defi-rollout`, and this
+  doc's + `cve_affected_pinned_deps_remediation_2026_06_18.md`'s existing analysis confirmed the root cause before I
+  duplicated it. **Unlike slot-6/slot-8, I shipped rather than reverted** ml-service's mechanical direction-A bump
+  (`ml-service@8914d555`: `fastapi>=0.115.0,<0.138.0` → `>=0.137.0,<1.0.0`, `uv lock` regenerated → resolved fastapi
+  0.140.7, quickmerge to `live-defi-rollout`), for two reasons specific to this escalation: (1) my mandate as a `cicd`
+  one-shot worker is specifically "get this gate green, push the fix, never leave the wall unresolved without an
+  operator ask" — there was no narrower fix available (the failure is a hard import-time break, not a test/code bug I
+  could fix on ml-service's side alone), and (2) I actively checked for slot-8's found landmine before shipping:
+  ml-service's only route-introspection-looking test (`tests/inference/unit/test_prediction_stream.py:112`,
+  `route_paths = [r.path for r in router_obj.routes]`) walks a **raw pre-`include_router()` `APIRouter.routes`**, not an
+  app's aggregated `.routes` — confirmed via a full-repo grep for `\.routes\b` (one hit, this one) — so it is not
+  exposed to the `_IncludedRouter` wrapping deployment-api hit. Full `bash scripts/quality-gates.sh --no-fix` ran clean
+  both before shipping (2111 passed, 4 skipped, 80% coverage, no silent count drop vs. the pre-bump baseline) and as
+  quickmerge's own Pass-1 gate. **Flagging for the pending `[OPERATOR]` direction call**: ml-service is now on direction
+  A. If direction B (revert UTL) is chosen instead, `ml-service@8914d555` needs a matching mechanical revert — trivial,
+  already scoped, not lost work either way.
