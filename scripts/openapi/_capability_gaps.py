@@ -766,13 +766,17 @@ def extract_algo_compatibility() -> tuple[list[CapabilityNode], list[CapabilityE
         for key in sorted(EXECUTION_ALGOS):
             algo_node = f"execution_algo:{key}"
             if compat.not_registered:
+                # Same correct-negative case as the has_leg:legs self-edge in
+                # _capability_extract.py::extract_leg_structures() — an
+                # archetype with no leg structure is genuinely, cited-ly
+                # underivable (Phase 6A), never a fillable registry gap.
                 edges.append(
                     CapabilityEdge(
                         from_node_id=arch_node,
                         to_node_id=algo_node,
                         relation=REL_USES_ALGO,
-                        status=CapabilityEdgeStatus.NOT_REGISTERED,
-                        gap_type=CapabilityGapType.MISSING_REGISTRY,
+                        status=CapabilityEdgeStatus.NOT_AVAILABLE,
+                        gap_type=CapabilityGapType.LOGICAL_DEAD_END,
                         reason=f"archetype has no leg structure: {compat.not_registered_reason}",
                     )
                 )
