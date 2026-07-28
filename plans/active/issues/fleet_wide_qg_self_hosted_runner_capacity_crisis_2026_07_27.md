@@ -270,3 +270,24 @@ escalate to a `cicd` worker.
   self-hosted), and it completed **green in ~3m02s** (`checks` 1m54s, `tests` 2m24s) — back to normal, no contention;
   GH's own "QG Recovered" Slack step fired automatically. Did not touch the shared allowlist file, any other repo, or
   the VM — same scope boundary as the prior four fixes. No open repo-blockers existed for this repo at the time.
+
+- 2026-07-28 (cicd agent, slot-2, escalation `agt-f11cae`, `ldr_qg_failure` on `unified-trading-library`, originally
+  filed against promotion PR #674): **6th corroboration + per-repo fix**, same pattern. This repo's own Phase-7 rollout
+  commit `5f48d47f` ("feat(ci): Phase 7 + quality-gates-v2 self-host rollout for unified-trading-library") landed in the
+  same ~21:40-21:55 UTC 2026-07-27 window as the other 18. PR #674 (pinned to `5f48d47f`) failed `QG slice (tests)` with
+  3 genuine `pytest-timeout` failures on otherwise-fast tests
+  (`test_utc_aligned_scheduler.py::test_first_callback_fires_at_aligned_boundary_plus_grace` >60s,
+  `test_streaming_writer.py::TestDynamicFlush::test_flush_triggered_by_memory_pressure` >60s,
+  `synthetic/test_synthetic_harness.py::test_harness_auto_resolves_params_from_specs` >300s; 6801 passed, 3 failed) —
+  consistent with CPU contention rather than a code regression. #674 was auto-superseded by #675 (pinned to a later LDR
+  commit `080a84a0`, an unrelated consolidator fix already landed) before I could act on it; #675's own `pull_request`
+  quality-gates-v2 run (`30318034158`) hit the identical `QG slice (tests)` timeout failure at the SAME LDR head,
+  confirming the flakiness was runner-capacity, not the intervening commit. Runner check
+  (`gh api repos/IggyIkenna/unified-trading-library/actions/runners`) showed exactly 1 registered runner
+  (`glue-ip-172-31-5-118-1`), same shared-VM signature as the other 5. Applied the same precedented fix: reverted
+  `self_hosted_runner_labels` to empty (→ `ubuntu-latest`) via the same hand-edit pattern + `quickmerge --agent` —
+  `unified-trading-library@7677ff71`. Verified live: triggered a fresh run (`30326782451`) post-fix; both
+  `QG slice (tests)` and `QG slice (checks)` completed green, aggregate `quality-gates-v2` succeeded in ~6m38s total —
+  back to normal, no contention. Did not touch the shared allowlist file, any other repo, or the VM — same scope
+  boundary as the prior five fixes. No open repo-blockers existed for this repo at the time (`GET /api/repo-blockers` →
+  `{"open":[]}`).
