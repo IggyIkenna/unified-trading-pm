@@ -197,6 +197,33 @@ All MTDS launchers follow the same pattern. `CODE_BUCKET` resolves to `deploymen
 - **Duration**: 30 min – 4 hours depending on date range + asset group
 - **Failures**: Tarballs stale → run `create-code-tarballs.sh --asset-group X` first. BQ quota exceeded → reduce date
   range.
+- **`--data-types` scoping gap for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/EXTENDED-STARKNET**: for `VM_ASSET_GROUP != defi`
+  this launcher routes through `--operation download`, which does NOT honor `--data-types` filtering for these
+  on-chain-perp cefi venues — it silently fetches the handler's full data-type set (trades + book_snapshot_5 +
+  derivative_ticker) regardless of what you asked for, at real SPOT-VM wall-clock/cost tax with zero error signal. For
+  HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/EXTENDED-STARKNET with `--data-types` scoping, use
+  `launch-cefi-hl-aster-historical-backfill.sh` instead (below) — its `collect-onchain-perp-batch` operation DOES honor
+  per-data-type filtering. SSOT:
+  `plans/active/issues/mtds_backfill_vm_data_types_silently_ignored_for_hl_aster_2026_07_28.md`.
+
+### `launch-cefi-hl-aster-historical-backfill.sh`
+
+- **When**: Historical/backfill for on-chain-perp cefi venues — HYPERLIQUID, ASTER, LIGHTER-ZKSYNC, EXTENDED-STARKNET —
+  especially when scoping to specific `DATA_TYPES` (e.g. `trades` only). The dedicated, purpose-sharded launcher for
+  this venue class; use it INSTEAD OF `launch-mtds-backfill-vm.sh` whenever `--data-types` filtering matters (see the
+  gap noted above).
+- **Required**: none positionally — env-var driven. Key overrides: `VENUES` (default
+  `HYPERLIQUID ASTER LIGHTER-ZKSYNC EXTENDED-STARKNET`), `DATA_TYPES` (default `trades;book_snapshot_5;derivative_ticker`
+  — the handler auto-excludes each venue's live-only/dropped data_types), `SYMBOLS` (default `ALL`, catalogue-driven
+  instrument universe), `SHARD_DAYS` (sub-divide each year-shard into N-day VMs — omit for legacy one-VM-per-year),
+  `OVERRIDE_START_DATE` / `OVERRIDE_END_DATE` (clamp the real-data window), `YEARS` (allowlist to skip already-resolved
+  year-shards on a re-run), `FORCE`. Runs `--operation collect-onchain-perp-batch --onchain-perp-data-types` under the
+  hood (bypasses the orchestrator DeFi-strip that no-ops `--operation download` for these venues).
+- **Duration**: ~25s–6min/day-shard depending on `DATA_TYPES` scope (trades-only ≈ 25s/day; adding book_snapshot_5 +
+  derivative_ticker ≈ 6min/day) — use `SHARD_DAYS` to parallelize across many VMs instead of one long-running VM.
+- **Failures**: Same pattern as other MTDS launchers (stale tarballs, BQ quota). HYPERLIQUID uses requester-pays S3
+  (`aws-hyperliquid-s3` Secret Manager key) — exempt from the Tardis 1-VM cap (§ "Tardis Concurrent-VM Cap" below), not
+  rate-limited the same way.
 
 ### `launch-mtds-perp-funding-backfill-vm.sh`
 
