@@ -1,14 +1,19 @@
 ---
 doc_type: issue
-title: MAKER's vault_share_price manifest has a genuine, unexplained 29-day gap (2026-06-22..2026-07-20)
+title:
+  vault_share_price manifest has a handler-wide, root-caused 29-day gap (2026-06-22..2026-07-20) -- MAKER + 4 other
+  protocols, backfill still open
 summary: >-
   Found while verifying defi_satellite_ao_dispatch_batch2_2026_07_26.md's "90-day lst-rates backfill for
   ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER" todo. MAKER is NOT actually part of lst_rates_handler.py -- it is registered
   under vault_share_price_handler.py (data_type=vault_share_price), a different handler entirely. The 5 genuine LST-rate
   venues (ANKR/STADER/STAKEWISE/SWELL/MANTLE) show 90/90 days captured already (no backfill needed -- the daily cron
-  organically covers the window). MAKER's real data type, vault_share_price, has a genuine, completely absent (not
-  attempted_failed) 29-day gap: 2026-06-22 through 2026-07-20 inclusive. Not root-caused this pass -- flagging with
-  exact evidence rather than guessing at the cause.
+  organically covers the window). Originally filed as a MAKER-only gap; root-caused 2026-07-28 as HANDLER-WIDE (all 5
+  vault_share_price protocols -- ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARN_V3 -- show the identical missing 2026-06-22
+  through 2026-07-20 window). Cause: collect-vault-share-price had no Cloud Scheduler entry until
+  deployment-service@600d31c (2026-07-22); a post-fix retroactive backfill covered history only through 2026-06-21,
+  leaving this exact crack before the new cron's 2026-07-21 start. Underlying cause already fixed + healthy; only the
+  29-day backfill (now scoped to all 5 protocols) remains open.
 status: open
 nature: issue
 asset_group: [defi]
@@ -72,22 +77,65 @@ locked_since:
 ## Why it matters
 
 29 consecutive days of missing `vault_share_price` data for MAKER is a real coverage hole in the DeFi manifest,
-independent of (and not fixed by) the LST-rates backfill work this was originally found while verifying. Not yet
-root-caused — candidates not yet checked: a `vault_share_price`-specific crash-loop or outage during that exact window
-(parallel to the LST-rates crash-loop this session already confirmed + fixed), a contract/RPC config change that
-temporarily broke MAKER specifically within `vault_share_price_handler.py`, or a deliberate pause not yet documented
-anywhere.
+independent of (and not fixed by) the LST-rates backfill work this was originally found while verifying.
+
+## Root cause (found 2026-07-28, slot-9, `data_engineering`)
+
+**Not MAKER-specific — it's the whole `vault_share_price` handler, and the gap is already structurally fixed.**
+
+1. **The gap is identical across all 5 protocols, not just MAKER.** Direct manifest read of
+   `data_type=vault_share_price` for 2026-06-15..2026-07-25, grouped by `venue`, shows ETHENA / FRAX / MAKER /
+   MORPHOVAULTS / YEARN_V3 ALL missing the exact same 29 days (2026-06-22..2026-07-20 inclusive) — proving this is a
+   handler-wide scheduling gap, not a MAKER-specific contract/config bug. (Ruled out the config-change hypothesis too:
+   `git log --all -p -- vault_share_price_handler.py` shows the `sDAI` registry entry — address
+   `0x83F20F44975D03b1b09e64809B757c47f942BEeA`, chain, protocol, underlying — has never changed since it was first
+   added 2026-05-03, commit `9475e66b`.)
+
+2. **`collect-vault-share-price` had NO Cloud Scheduler / Cloud Run Job entry until 2026-07-22.** The handler code
+   (`VaultSharePriceHandler`) has existed since 2026-05-03 (commit `9475e66b`, market-tick-data-service), but it was
+   never wired into `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s `defi_collect_operations` map —
+   confirmed by `git log` on that file: commit `600d31c` ("feat(defi): schedule mev-events, bridge-events,
+   vault-share-price DeFi collect jobs (Terraform-only)", 2026-07-22T18:28:49+01:00 = 17:28:49Z) is the FIRST commit
+   that adds a `"vault-share-price"` block to `defi_collect_operations` (schedule `10 1 * * *`). Before that commit the
+   map only had 11 entries; `vault-share-price` wasn't one of them — the file's own header comment says so explicitly
+   ("none of which had a scheduler entry" pre-existed this class of fix). Cloud Logging confirms this empirically: the
+   Cloud Run Job `uts-prod-mtds-collect-vault-share-price`'s earliest log entry EVER is a `NOTICE` at
+   `2026-07-22T17:30:58Z` — 2 minutes after the terraform commit landed — i.e. that is the job's first-ever execution,
+   full stop. `gcloud run jobs executions list` shows only 7 executions total, all `2026-07-22` or later, all
+   `Completed True`, and it has run cleanly on the `10 1 * * *` schedule every day since (verified through
+   `2026-07-28`).
+
+3. **A retroactive backfill (run 2026-07-23) filled history back to 2023-01-18, but stopped one day short of where the
+   new organic cron picked up, leaving exactly this 29-day hole.** Per-row `written_at` timestamps for
+   `venue=MAKER,data_type=vault_share_price` show: every row from `2023-01-18` through `2026-06-21` was written in a
+   single batch on `2026-07-23T13:51:35Z..16:55:xxZ` (clearly a day-by-day backfill script, ~30-90s/day cadence,
+   matching `launch-mtds-vault-share-price-backfill-vm.sh`'s documented ~30s/day rate) — NOT organic daily capture. Then
+   `2026-07-21` was written `2026-07-22T17:33:39Z` (the new cron's first live run, 2 min after job creation — this is
+   what backfilled the "day before" gap boundary, not the scheduled 01:10 cron) and `2026-07-22` onward are organic
+   `01:10-01:11 UTC` daily runs. **Nothing ever wrote `2026-06-22..2026-07-20`** — the historical backfill's window
+   ended at `2026-06-21` (one day before the org cron began), so those 29 days fall in the crack between "backfill
+   covered up to X" and "cron started covering from Y" where X+1 != Y.
+
+**Net**: no code fix is needed — the underlying cause (missing scheduler wiring) was already fixed by `600d31c`
+(unrelated to this issue; it was fixing `mev-events`/`bridge-events`/`vault-share-price` scheduling together) and is
+confirmed running healthily. The only remaining action is the backfill for the 29-day crack, which is exactly what the
+`[SCRIPT] P2` todo below already covers — it is now UNBLOCKED (underlying cause confirmed fixed).
 
 ## Recommended decision
 
-- [ ] [DIAG] P2. Root-cause the 2026-06-22..2026-07-20 MAKER `vault_share_price` gap — check
-      `uts-prod-mtds-collect-vault-share-price-cron`'s (or the actual job name — verify via
-      `gcloud scheduler jobs list --location=asia-northeast1 | grep -i vault`) execution history for that exact window
-      for crash-loop/OOM symptoms, and check `vault_share_price_handler.py`'s MAKER-specific config/contract address for
-      a change around 2026-06-22 or 2026-07-20. (repo: market-tick-data-service)
-- [ ] [SCRIPT] P2. Once root-caused (and if the underlying cause is fixed): backfill the confirmed 29-day gap for MAKER
-      under `data_type=vault_share_price`, manifest-verify `record_captured` for all 29 days. Blocked on the `[DIAG] P2`
-      todo above. (repo: market-tick-data-service)
+- [x] [DIAG] P2. Root-cause the 2026-06-22..2026-07-20 MAKER `vault_share_price` gap — ✅ 2026-07-28 (slot-9,
+      data_engineering). Root cause: `collect-vault-share-price` had no Cloud Scheduler/Cloud Run Job entry until
+      `deployment-service@600d31c` (2026-07-22); a post-fix retroactive backfill (2026-07-23) covered history through
+      2026-06-21 but the org cron only started covering from 2026-07-21, leaving this exact 29-day crack. Confirmed
+      handler-wide (all 5 protocols show the identical gap, not just MAKER) and confirmed the underlying scheduling gap
+      is already fixed + healthy (7/7 executions `Completed True` since 2026-07-22, daily `01:10 UTC`). See "Root cause"
+      section above for full evidence. No code change required — nothing to ship in market-tick-data-service.
+- [ ] [SCRIPT] P2. Now UNBLOCKED. Backfill the confirmed 29-day gap (2026-06-22..2026-07-20) for ALL 5
+      `vault_share_price` protocols (ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARN_V3 — not just MAKER, per the root-cause
+      finding above that the gap is handler-wide) via
+      `deployment-service/scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh 2026-06-22 2026-07-20`,
+      manifest-verify `record_captured` for all 29 days × 5 protocols. (repo: market-tick-data-service,
+      deployment-service)
 
 ## Measurement trap (for the next reader)
 
@@ -103,3 +151,19 @@ for a targeted query — the same filtered read above completed in seconds.
   different handler/data_type than the parent todo assumed; did not attempt the RPC backfill (would have been wasted
   work) or root-cause the vault_share_price gap (out of scope for this pass — flagged with exact evidence rather than
   guessed at).
+- 2026-07-28 (slot-9, `data_engineering`): root-caused the `[DIAG] P2` todo. Direct manifest read
+  (`market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, columns+filters pushdown)
+  showed the 2026-06-22..2026-07-20 gap is IDENTICAL across all 5 `vault_share_price` protocols, not MAKER-specific —
+  reclassified the issue from MAKER-only to handler-wide (title/summary updated above). Confirmed via `git log` on
+  `deployment-service/terraform/gcp/defi_collection_scheduler.tf` that `collect-vault-share-price` had no Cloud
+  Scheduler/Cloud Run Job entry until commit `600d31c` (2026-07-22); confirmed empirically via
+  `gcloud logging read resource.type=cloud_run_job resource.labels.job_name=uts-prod-mtds-collect-vault-share-price`
+  that the job's earliest-ever log line is `2026-07-22T17:30:58Z` (2 min after that commit landed) and
+  `gcloud run jobs executions list` shows only 7 executions total, all post-2026-07-22, all `Completed True`. Confirmed
+  the retroactive backfill (per-row `written_at` timestamps, all clustered `2026-07-23T13:51..16:55Z` for
+  2023-01-18..2026-06-21) stopped one day short of where the new cron's organic coverage began (2026-07-21), producing
+  this exact crack. Ruled out a MAKER-specific config/contract-address change (`git log --all -p` on the handler shows
+  the `sDAI` registry entry unchanged since 2026-05-03). No code fix needed — the scheduling gap is already fixed and
+  running healthily; flipped `[DIAG] P2` to done and rescoped the remaining `[SCRIPT] P2` backfill todo to cover all 5
+  protocols (was MAKER-only) since the finding shows the gap is handler-wide. Did not run the backfill itself — separate
+  tracked todo, now unblocked for the next dispatch.
