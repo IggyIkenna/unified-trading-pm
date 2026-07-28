@@ -695,7 +695,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "coverage_pct": 88.24,
@@ -758,7 +758,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "warn_file_count": 10,
         "large_file_count": 9,
@@ -952,7 +952,7 @@
         "qg_red_reason": "basedpyright",
         "large_file_count": 0
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "strategy-service": {
       "promotion_model": "ldr_main",
@@ -1351,7 +1351,7 @@
         "large_file_count": 0,
         "qg_red_reason": null
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "unified-trading-system-ui": {
       "promotion_model": "ldr_main",
@@ -1415,7 +1415,7 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "skipped_gates": [],
       "semver_policy": "agent",
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 7,
@@ -1479,7 +1479,7 @@
         "coverage_pct": null,
         "large_file_count": 0
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "breaking_scan_dir": "tests"
     },
     "agent-orchestrator": {
@@ -1520,7 +1520,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 13
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "breaking_scan_dir": "server"
     }
   },
