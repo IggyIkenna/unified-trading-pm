@@ -526,3 +526,31 @@ VM-launched execution plan (matching the pattern used for the cefi Track-1/Track
 the E8 delete as its own final, separately-gated step confirmed against
 `legacy_bucket_dual_write_decommission_2026_07_24.md`'s L3-open rule at execution time, not bundled into one dispatch.
 Did not flip this todo's checkbox. Filed the same finding via `/blocked` for operator awareness given the scale/stakes.
+
+### 2026-07-28 (slot-8, `data_engineering`) — "Post-walk" audit todo (line 247): re-ran the reusable audit tool live — RED, checkbox correctly NOT flipped (walk still hasn't run)
+
+Dispatched task `data_completion_cefi-012` = the "Post-walk: re-read the canonical `_index` DATA-STATE (re-run the
+reusable audit tool)" todo. Ran `unified_trading_library.cf_manifest_audit.audit()` (the reusable tool named by the
+todo) read-only, `mode=changed` (index-only, no GCS bulk walk — single-walk discipline), directly against both live cefi
+buckets, no `--apply`:
+
+- **`instruments-store-cefi-prd-central-element-323112`** (84,507 rows): CF-1/CF-3/CF-4/CF-5/CF-6/CF-8/CF-13/Era-B all
+  **GREEN** (v9=100%, source blank=0%, pipeline_mode populated=100%). Only CF-2-paths/CF-3-partition RED — the
+  `entity=fixtures` non-hive path already documented as a pre-existing, accepted schema characteristic (2026-07-12
+  finding-144 waiver, quoted above in this same file), not this todo's raw-tick concern.
+- **`market-data-tick-cefi-prd-central-element-323112`** (9,177,562 rows) — the bucket this todo's criteria actually
+  gate — is **still RED on exactly the criteria this checkbox names**: CF-1 v9=**97.4%** (8,943,353/9,177,562; not
+  100%), CF-4 source blank=**24.0%** (2,206,913/9,177,562; not "populated on every cell"), CF-3 pipeline_mode
+  populated=**98.6%** (126,228 blank; CF-3-partition segment itself IS present=GREEN), CF-8 available_at RED (a
+  pre-existing schema-evolution artifact per the same finding-144 waiver, not a fresh defect), Era-B RED (**490,332**
+  rows still carry legacy-form `data_type=options_chain/futures_chain` instead of the post-Era-B `trades` scheme, so not
+  yet 0). CF-13 (source-aware pipeline_mode form) is GREEN on the populated subset.
+
+**Verdict: the "100% of rows v9 / source populated on every cell / pipeline_mode non-blank" acceptance bar is NOT met.**
+This is not a new problem — it reconfirms, with fresh live numbers, the already-tracked fact (2026-07-27/28 entries
+above) that the actual walk this checkbox is "post-" (the C0(b)/(d) source+pipeline_mode riders, the E4 gap-fill/orphan
+sweep, the E5 rebuild) has **not executed yet** and remains blocked on the false-phantom itype/underlying-drift bug
+(`plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`). Did **not** flip this todo's
+checkbox — doing so on a RED audit would be fabricated progress. No new issue doc filed (these findings corroborate, not
+introduce, the already-open blocker). Whoever unblocks the walk should re-run this exact audit command afterward; if
+CF-1/CF-3/CF-4 all read GREEN and Era-B reads 0, that todo can then honestly flip.
