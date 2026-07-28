@@ -203,17 +203,38 @@ MTDS consolidation ruling.)**
       writer's per-instrument path is unaffected (no clusters). Repo: UTL/MTDS — owning VM. **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P1. **Before the REAL `_index` rebuild — multi-year dry-run phantom spot-check**: re-run
-      `rebuild_cefi_manifest --dry-run` over a multi-year span (or the full corpus) and confirm `phantom_to_failed`
-      stays small + well-formed (DERIBIT-chain-style true phantoms only), `dropped_malformed_captured` is junk-only, and
-      `unparseable=0`. Cheap final gate before the irreversible-adjacent index overwrite. **(MIGRATED FROM:
+- [x] ✅ [DATA] P1. **Before the REAL `_index` rebuild — multi-year dry-run phantom spot-check — RE-RUN 2026-07-28
+      (slot-12), GATE FAILED — real finding, NOT a clean pass.** Ran `rebuild_cefi_manifest --dry-run` over the FULL
+      corpus (`--start-date 2019-01-01 --end-date 2026-07-28`, `GCP_PROJECT_ID=central-element-323112` exported — the
+      CF-11 pass silently no-ops without it, a first attempt without the env var falsely read "prior _index is
+      empty/missing"). `unparseable=0` ✅ and `dropped_malformed_captured=25,413` (~0.45% of the 5,677,228-row prior
+      index, junk-only per its predicate) ✅ — but **`phantom_to_failed=490,639` (~8.6% of the entire prior index) FAILS
+      the "stays small + DERIBIT-chain-style only" criterion** — per-venue spread is broad (OKX-FUTURES, HYPERLIQUID,
+      ASTER, BYBIT-SPOT, OKX-SWAP, BINANCE-FUTURES, COINBASE-FUTURES, BITFINEX-FUTURES, BITGET-FUTURES, KRAKEN-FUTURES
+      all show large counts; DERIBIT is a small minority of the total, not the dominant class). **Root cause CONFIRMED
+      live** (3 independent GCS spot-checks, 100% false-phantom hit rate — not real absences): the CF-11 covered-keys
+      dedup compares the prior manifest's stored `instrument_type`/`underlying` COLUMNS against the live object scan's
+      parsed path, and multiple venues' actual GCS folder structure (`instrument_type=perpetual` for OKX-FUTURES dated
+      futures / BYBIT-SPOT spot pairs; blank `underlying` for ASTER per-instrument shards) no longer matches what the
+      prior manifest recorded historically — the object is genuinely present, but the exact-tuple key match fails, so
+      it's falsely reclassified `PHANTOM_CAPTURED_NO_OBJECT`. Same bug class as the already-fixed `spot`→`spot_pair`
+      synonym (2026-06-11) and the slash-symbol stem fix (2026-06-04), but NOT covered by either. Full evidence + root
+      cause + recommended fix + follow-up todos:
+      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`. **This BLOCKS the "NEXT
+      SESSION — execute the migration" P0 todo immediately below** — see its updated note. **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. **NEXT SESSION — execute the migration** (after the dry-run validates perf): run the 8 year-sharded
-      `--also-legacy --apply` gap-fill (5,233 legacy-only cells), then the irreversible orphan-sweep (with the mandatory
-      pre-delete idempotent-`--apply`-over-full-range guarantee), then E5 manifest rebuild (now CF-11-canonical +
-      false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8 legacy-bucket delete. NOT this session (irreversible).
-      **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [ ] [DATA] P0. **NEXT SESSION — execute the migration** (after the dry-run validates perf) — **🔴 BLOCKED 2026-07-28
+      (slot-12): the dry-run did NOT validate cleanly** — `phantom_to_failed=490,639` (~8.6% of the prior index) is a
+      confirmed false-phantom bug (itype/underlying column drift), not real orphans; see
+      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`. Running this todo's
+      `--apply` migration as-is would `record_failed` ~490K genuinely-present rows for real — do NOT run until that
+      issue's fix lands + a clean re-run confirms `phantom_to_failed` drops to a small DERIBIT-chain-style residual.
+      Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
+      then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
+      then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
+      legacy-bucket delete. NOT this session (irreversible). **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi). **(MIGRATED FROM:
