@@ -85,11 +85,21 @@ parquet/manifest look sane, not just "some VM exited 0") until this is confirmed
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Find and fix the root cause of the duplicate launch in
+- [x] [SCRIPT] P2. ✅ Find and fix the root cause of the duplicate launch in
       `features-service/scripts/pipeline_e2e_check.py` (or wherever its VM-wait logic lives) — likely the same class of
       premature-timeout-treated-as-failure bug already fixed for MDPS in `unified-trading-library@137e219c`. Add a
       concurrency guard (check for an already-running VM for the same shard before launching another) if the shared UTL
-      launcher doesn't already provide one for this driver.
+      launcher doesn't already provide one for this driver. **Already shipped by another slot working the sibling doc**
+      (confirmed live on `origin/live-defi-rollout` this session): `features-service@6981b2b8` adds
+      `_find_inflight_duplicate_vm(project_id, family, asset_group)` — a `status="RUNNING"` label filter
+      (`labels.purpose/family/category`) — called at the top of BOTH `_run_force_leg` (line ~1262) and `_run_skip_leg`
+      (line ~1426) in `scripts/pipeline_e2e_check.py`; a hit returns
+      `status="skipped"`/`reason="duplicate_in_flight: ..."` instead of launching a second VM for the same
+      `(family, asset_group)` cell. `features-service@dcf8a3d0` adds an explicit `logger.warning(...)` at both call
+      sites naming the abandoned/in-flight VM so the skip decision is visible in real-time logs, not just the final
+      report row. 2 regression tests (`tests/unit/test_pipeline_e2e_check_duplicate_vm_warning.py`) assert the warning
+      fires and the leg resolves to `skipped`/`duplicate_in_flight` for both leg runners — confirmed present in the
+      current tree. — `features-service@dcf8a3d0`.
 - [ ] [DATA] P3. Once both VMs for this incident complete, spot-check the written TRADFI:volatility parquet/manifest for
       the 2026-01-29..2026-01-30 window to confirm no partial-write corruption from the concurrent writes (the
       determinism assumption above is unverified).
@@ -109,3 +119,13 @@ parquet/manifest look sane, not just "some VM exited 0") until this is confirmed
   in ONE of these two docs going forward (this one has the deeper root-cause trace to `utl@137e219c`'s sibling fix; the
   other has the broader multi-shard evidence) rather than splitting effort — not merged outright here to avoid
   clobbering either author's in-progress doc.
+- 2026-07-28 (slot-12): Picked up todo 1 as a dispatched backlog task. Per the sibling doc's 2026-07-27 (slot-2) entry,
+  the concurrency guard this todo asks for was already shipped while working THAT doc's todo 2 — that entry explicitly
+  noted the overlap with this doc's todo 1 without flipping this doc's checkbox. Verified directly against the
+  `features-service` tree (fetched `origin/live-defi-rollout`; both commits present and reachable, not just cited):
+  `_find_inflight_duplicate_vm` is defined at `scripts/pipeline_e2e_check.py:1148` and called at both `_run_force_leg`
+  (~1262) and `_run_skip_leg` (~1426), each guarded call site carrying an explicit `logger.warning`; both regression
+  test files (`tests/unit/test_pipeline_e2e_check_duplicate_vm_warning.py`,
+  `tests/unit/test_pipeline_e2e_check_timeout_override.py`) exist in the current tree. No further code change needed —
+  flipped todo 1 to reflect the already-shipped state. Todo 2 (spot-check the parquet/manifest for concurrent-write
+  corruption) remains open and unaddressed this session.
