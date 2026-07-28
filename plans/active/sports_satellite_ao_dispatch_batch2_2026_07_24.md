@@ -874,6 +874,23 @@ source: >-
   peak memory): `issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`. Relaunched
   `af-backfill-20260728-091755` for the full range (skip-if-fresh fast-forwards chunks 1-12, real work starts at the
   gap, chunk 13+) — monitoring to completion.
+- **2026-07-28 — FIXTURES backfill VERIFIED COMPLETE**: `af-backfill-20260728-091755` finished all 25/25 chunks cleanly
+  on the first attempt, reaching the target end date `2026-07-25` (`exit_code=0`, clean self-shutdown). Verified via a
+  full-log audit (115,631 lines), not just the exit code: zero `Killed`, zero `CHUNK_EXHAUSTED`, zero `CHUNK_RETRY`,
+  zero `Traceback` anywhere; exactly 25 `--- Chunk N/25 ---` boundaries and 25 matching `PROGRESS: chunk=N/25`
+  completions, no duplicates (no chunk needed a retry). Chunk 14 (2023-08-20→2023-11-17, one of the 14 chunks that died
+  in the take-2-insufficient run) completed its full 90-day range this time, confirming the per-chunk `VM_NAME`-suffixed
+  shard fix (`deployment-service@20ce4c9`) genuinely resolved the root cause — every chunk's per-VM shard reset to a few
+  hundred/thousand rows instead of accumulating the whole backfill's 280K+ rows. `last_completed_date` checkpoint stops
+  at `2026-07-11` (not `2026-07-25`) because the final ~2 weeks were already fresh via `SKIP` (kept current by the
+  separate rolling/live forward-poll path) — confirmed by the log itself: the very last date processed, `2026-07-25`,
+  shows `SKIP date=2026-07-25: all 1 venues/entities already fresh in manifest`, i.e. genuinely captured, not missing.
+  One unrelated, non-fatal issue surfaced at shutdown: a `RUN_LEDGER_RECORDED` Pub/Sub publish failed with
+  `IAM_PERMISSION_DENIED` (`pubsub.topics.publish` on `projects/central-element-323112/topics/run-ledger`) — a
+  downstream completion-bookkeeping record, not a data-write path; does not affect this backfill's correctness, flagged
+  as a small separate follow-up if it recurs elsewhere. Full root-cause history (MVP-league-scope leak → OOM take-1
+  insufficient chunking → OOM take-2 real per-chunk-shard fix, now verified complete):
+  `issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`.
 
 ## Reconciliation
 

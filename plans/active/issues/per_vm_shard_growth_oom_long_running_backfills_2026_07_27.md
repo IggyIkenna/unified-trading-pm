@@ -29,8 +29,13 @@ summary: >-
   tee-wrapper/heartbeat's own `VM_NAME` — used for `vm-logs/{vm}/PROGRESS.json` and liveness reporting — is untouched.
   Also added a bounded (4-attempt) per-chunk retry so a killed chunk resumes via skip-if-fresh instead of the loop
   silently moving on. Zero shared `unified-trading-library` code touched — this is entirely a launcher-script fix.
-status: open
-resolved_by:
+  **VERIFIED RESOLVED 2026-07-28**: relaunch `af-backfill-20260728-091755` completed all 25/25 chunks cleanly on the
+  first attempt (target end date `2026-07-25` reached) — a full-log audit (115,631 lines) confirms zero `Killed`, zero
+  `CHUNK_EXHAUSTED`, zero `CHUNK_RETRY`, zero `Traceback`; chunk 14 (one of the 14 that died in the take-2-insufficient
+  run) completed its full range this time. The core incident is closed; the two audit/generalization todos below remain
+  open as separate, non-blocking follow-on work.
+status: resolved
+resolved_by: deployment-service@20ce4c9e0524 (verified live af-backfill-20260728-091755, 2026-07-28)
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
