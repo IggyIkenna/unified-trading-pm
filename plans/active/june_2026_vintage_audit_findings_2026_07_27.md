@@ -595,7 +595,15 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
 8. tradfi_eu_not_draining — 4,655 stale Barchart manifest rows: **PURGE** (source retired 2026-07-19).
 9. data_completion_to_100_all_ag — BYBIT futures_chain legacy delete: **APPROVED**.
 10. monitoring_control_plane G4/G5 panels — **UNBLOCK**: no CI/CD billing wall anymore: proceed with the real Firestore
-    verdict-store generalisation (not the faithful-port workaround) for both panels.
+    verdict-store generalisation (not the faithful-port workaround) for both panels. **RESOLVED 2026-07-28** — the two
+    panels actually named in the source plan were the un-numbered "Version-coherence panel" item (this doc's "G4"
+    shorthand — the real G4, "Ruleset / branch-protection drift", is a DIFFERENT still-open item folded into
+    Rollout-ratchet panels, untouched here) and **G5** (Change-freeze window banner); both SHIPPED with the real
+    Firestore verdict-store generalisation (`scripts/cicd/verdict_store.py`, doc-per-key latest-wins CAS, shared by both
+    panels — not the faithful-port workaround). unified-trading-pm@24fd56819 + @170322056, deployment-api@e23328d (22
+    new tests, full QG green), deployment-ui@76dc977 (pw:L2 ✓ 34/34, tests/smoke/verdict-store-panels.spec.ts).
+    Evidence + full design rationale: `monitoring_control_plane_master_2026_06_10.md` (version-coherence panel item + G5
+    item).
 11. dp_alerts_dp_not_v9 — `populate_v9_index_columns_inplace.py --apply`: **APPROVED** to run.
 12. fleet_audit_triad Tardis paid key — UNBLOCKED (see general correction), proceed. GCS 22-day gap item unchanged
     (still under the 2026-06-01 "let it be" banner).
@@ -606,7 +614,22 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     present-set before the set-difference. G5 ownership: **unblock the 5 named per-AG plans** (manifest migrations done
     everywhere, G4 green all 5 AGs) but **wrap the actual todos into a newer backfill plan covering AWS parity in code**
     (switch-toggle to use AWS via config, as already designed — smoke-testable; GCP stays home for MTDS full backfills)
-    — check staleness of the 5 named plans' todos given their age since G4 unlocked.
+    — check staleness of the 5 named plans' todos given their age since G4 unlocked. — **DONE 2026-07-28** —
+    `instruments-service@691365ff`: new `_rollup_present_bundle_grain()` mirrors `_rollup_bundle_grain`'s LEAF→bundle
+    instrument_type collapse on `_build_present_set`/`_build_captured_set` (previously verbatim, no rollup), wired into
+    both the present-set match AND the oscillation-guard captured-set. 8 new/updated unit tests incl. an end-to-end
+    LEAF-shaped-capture-suppresses-seed regression proof. **Quantified before/after via a real scan-only production
+    run** (no `--apply-write`) against the live catalog + manifest: cefi (bounded 2026-01-01..2026-07-28 window) —
+    `expected_unattempted` 225,429 → 225,397 (**-32**: `futures_chain` -23, `options_chain` -9); tradfi (full
+    2018-01-01..2026-07-28 history) — 503,588 → 503,588 (**0 change** — a SEPARATE underlying-naming-convention mismatch
+    dominates tradfi `combo` today: real captured rows carry spelled-out commodity names as `underlying`
+    ("HEATING-OIL"/"PLATINUM") or a composite writer instrument_id the rollup's derivation heuristic mis-parses, neither
+    of which reconciles with the catalog's short-root-code convention ("HO"/"PL") — the present-set rollup fix IS doing
+    real work here (1.1M+ rows re-keyed, confirmed via direct probe) but the resulting `underlying` values still don't
+    match what the seed expects; filed as
+    `plans/active/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md`, a genuine
+    follow-up design question, not guessed at here). G5 ownership + the 5-per-AG-plan staleness check remain open (out
+    of this task's scope — that's the G4/backfill-plan half of this item, unrelated to the G1-ENUM present- set fix).
 15. citadel_paper_batch_live P2.7.3/P7.3 — stands, human-only custody gate, external.
 16. live_mode_event_sink_topic — **Option A chosen**: repoint UTL `_sink_factory.py` to canonical
     `service-lifecycle-events`; delete the interim unmanaged `market-tick-data-service-events` topic after.
@@ -616,7 +639,19 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     chosen**: self-hosted VM heartbeat, dispatch the promoter every 15min via `gh workflow run`. 20b. cicd_mvp
     quickmerge-provenance re-arm leak — **CLOSE the leak**: re-run the provenance check before re-arming an existing PR.
     20c. cicd_mvp WS-I service-to-service-auth — **still wanted**, re-home into a fresh active plan (not the other ~51
-    deferred hygiene todos from the archived source).
+    deferred hygiene todos from the archived source). — **20a/20b/20c ALL DONE 2026-07-28** — 20a:
+    `unified-trading-pm@6c09f4e86` (heartbeat script + systemd service/timer/installer, mirrors the existing
+    `reap-stale-blockers` pattern) + installed live on the orchestrator VM (`i-0c9b283b31d6b5ca7`, via SSM) + verified
+    with a real manual fire producing two genuine `gh workflow run` Actions runs (`30342345004`, `30342346846`). 20b:
+    `unified-trading-pm@105cebfde` — `provenance_check_ok()` factored + called from all 3 arm/re-arm sites in
+    `ldr-to-main-promote-fleet.yml`'s `process_repo()` (creation + both re-arm paths, closing the exact UAC #544 class);
+    new hermetic regression test `scripts/quality-gates-base/tests/test-ldr-promote-provenance-rearm-gate.sh`, 8/8
+    passing. 20c: same commit `unified-trading-pm@105cebfde` —
+    `/plans/active/ws_i_service_to_service_auth_migration_2026_07_28.md` (`assigned_vm: NA`); live-state verification
+    found execution-service's leg already shipped (`execution-service@7454c81a`, only the codex doc was stale — fixed in
+    the same commit), deployment-api held at its standing 2026-06-24 operator ruling. Full per-decision detail +
+    evidence: `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § "Operator decisions / notes"
+    (`unified-trading-pm@ac866246b` flipped the checkboxes there).
 18. aws_codebuild_pr_approval_status_noise — **CONFIRMED ALREADY RESOLVED**: verified live via `gh pr view` — the "AWS
     CodeBuild" status check shows `SKIPPED` (not the red `FAILURE` the finding described) on unified-api-contracts#776
     and deployment-service#571. Archive with this evidence, no fresh action. — **DONE 2026-07-28** —
@@ -937,3 +972,20 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
   deployment-api@`65f5593`) that this session's original 2026-07-18 finding-author never cross-linked — the source
   plan's Phase E line now points to it. Both halves of this §6 item are now dispositioned with evidence; nothing left
   unclear about it.
+- 2026-07-28 — **G1-ENUM fix + ModelsMvpRule — one of the 9 resumed autonomous agents, this item picked back up from a
+  genuine cold start** (no salvageable prior-crash artifacts existed for it per the crash entry above — both
+  instruments-service and unified-api-contracts checkouts were confirmed clean before starting). Both pieces are now
+  shipped, QG-green, with real quantification (not smoke-tested):
+  1. **G1-ENUM present-set symmetric rollup** (item 14 above) — `instruments-service@691365ff`. Before/after numbers
+     recorded in item 14. Surfaced one genuine new finding along the way (tradfi's `combo` underlying-naming mismatch,
+     filed as its own issue doc, not guessed at) per the findings-triage rule.
+  2. **`ModelsMvpRule`** (`mvp_scope_catalogue_tagging_2026_06_08.md` P2b) — `unified-api-contracts@0fb9821b`. The UAC
+     rule + `is_model_mvp` predicate + 19 new/updated unit tests are FULLY shipped (identity-axis matching against
+     `generate_model_id`/`parse_model_id`'s scheme, conservative empty default pending operator sign-off on concrete
+     membership). The data-status coverage CONSUMER (deployment-api `scope=mvp|could_exist|all` extended to ml-service
+     model output) was investigated and explicitly NOT built — there is no existing ml-service model-OUTPUT
+     tracking/manifest surface to build a coverage endpoint against (checked: `manifest_gap_handler.py` /
+     `manifest_inference_guard.py` read the market-data `availability_index` to gate on INPUT data quality, not to track
+     trained-model OUTPUT identities), so "what would this endpoint even enumerate against" is a genuine open
+     infra-design question, not a wiring job — per this task's own escape valve, split into a separate P2b-2 follow-up
+     todo in the source plan rather than guessed at under a compressed context window.
