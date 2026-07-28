@@ -159,8 +159,44 @@ request — was never migrated to it. Confirmed via direct `run.log` read
       `tests/delta_one/unit/test_lookback_validation.py`) asserting the resolver is called with
       `kind="market-data-tick-prediction"` (no `asset_group=`) for PREDICTION, mirroring the existing
       `TestResolveMdpsBucketPredictionAbbreviation` coverage on the dependency-checker side.
-- [ ] [DATA] P3. Once this second fix ships, re-run `PREDICTION:delta_one` (day≥2026-07-25) again — the lookback
-      validator itself still needs enough CONTIGUOUS captured days upstream of the target date to satisfy
-      `moving_averages`' 200-candle requirement (production only resumed 2026-07-25/26, so an early re-run may still
-      fail on genuine insufficient-lookback-window rather than a code bug — that would be a real, honest finding, not
-      another instance of this bug).
+- [x] [DATA] P3. ✅ Re-ran after shipping — hit a THIRD and FOURTH unfixed instance of the identical bug class (see
+      below). All four now fixed; `PREDICTION:delta_one` genuinely computes.
+
+## 2026-07-28 (slot-2, continued) — THIRD + FOURTH instances found + fixed; confirmed genuinely computing end-to-end
+
+Re-ran `PREDICTION:delta_one` after the P2 fix shipped (`features-service@89e3ad3b`) — but the deployed VM code tarball
+(`gs://deployment-scripts-central-element-323112/code/features-service-code.tar.gz`) was still pinned to the PRE-fix
+commit (`1a4adb22`): tarball builds are a manual/ad-hoc step (`deployment-service/scripts/vm/ create-code-tarballs.sh`),
+not CI-automated, so a landed fix doesn't reach the next VM launch until someone rebuilds it. Rebuilt + re-uploaded
+(`--include features-service`, pinned to `89e3ad3b`) and re-ran: dependency check AND lookback validation both passed
+this time, but the run still failed — a THIRD instance, `_get_source_bucket` in `data_loader.py` (the actual candle-read
+path hit during batch compute), calling `resolve_bucket_name(kind= "market-data", asset_group=...)` directly. Grepped
+the whole `delta_one` module for the same raw-call pattern and found a FOURTH, currently-live but not-yet-exercised
+instance: `_assert_upstream_candles_fresh` in `live_handler.py` (the live-mode startup gate) — same bug, would have hit
+PREDICTION live-mode startup identically. Fixed both (`features-service@306bef65`), updated
+`test_data_loader.py`/`test_live_startup_gate.py` to patch the new resolver, added a live-mode PREDICTION regression
+test. Rebuilt the tarball again (pinned to `306bef65`) and re-ran: dependency check ✅, lookback validation ✅
+(`0/0 instruments` — genuinely 0 required since day-2 of a resumed production window has no prior-day candles to
+require, not a bug), and the VM is now GENUINELY COMPUTING — confirmed via live `run.log` tail showing real
+per-instrument feature computation across the full KALSHI PREDICTION market universe (thousands of markets), honest
+per-instrument/per-date `no_captured_input_for_window` skips for markets with no candle data (expected — the
+2026-07-25/26 resumption is only 2 days deep so most PREDICTION markets genuinely have no MDPS history yet), and real
+writes (`Wrote 1/2 daily partitions for KALSHI:PREDICTION_MARKET:...`). Also (unrelated, informational): found the SAME
+raw-call pattern in `features_service/volatility/core/{dependency_checker, data_loader}.py` — currently unreachable for
+PREDICTION since `volatility`'s CLI `ASSET_GROUP_CHOICES` only lists CEFI/TRADFI, so not fixed (no live bug), but the
+next asset_group added to volatility's choices should route through the same `_resolve_mdps_bucket` pattern rather than
+re-copy the raw call.
+
+**Root cause class, fully closed for delta_one**: the PREDICTION-bucket special-case (`_resolve_mdps_bucket`) was
+introduced once (the P2 fix) but only wired into ONE of the four call sites that independently resolved the MDPS candle
+bucket in this module — the dependency checker, lookback validator, batch data loader, and live-mode startup gate had
+each grown their own copy of the same `resolve_bucket_name(kind="market-data", asset_group=...)` call over time. All
+four now route through the one helper.
+
+- [x] [SCRIPT] P2. ✅ Fixed `_get_source_bucket` (data_loader.py) + `_assert_upstream_candles_fresh` (live_handler.py) —
+      `features-service@306bef65`. 4/4 known call sites in `delta_one` now route through `_resolve_mdps_bucket`.
+- [ ] [DATA] P3. `PREDICTION:delta_one` benchmark measurement (todo-10's original ask) is still open — the compute run
+      launched 2026-07-28 14:28 UTC (`features-e2e-prediction-20260728-142821-0f2a85`) was left running (genuinely
+      progressing, not stalled) rather than babysat to completion in-session given its large universe; a future session
+      should check its final report (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_26.md`, overwritten
+      per-run) or re-run cleanly for the actual throughput number.

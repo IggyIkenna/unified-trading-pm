@@ -902,17 +902,32 @@ to the `_resolve_mdps_bucket` helper the first fix introduced). Root-caused via 
 regression-tested + shipped: `features-service@89e3ad3b`. Full writeup + fix todo in
 `issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` (2026-07-28 section).
 
-**Still open**: a genuine benchmark number for `PREDICTION:delta_one` — production only resumed 2026-07-25/26 (2
-contiguous days), and `moving_averages` (one of delta_one's 4 sub-families) needs a 200-candle lookback, so a re-run may
-still hit a real (not-a-bug) insufficient-lookback-window failure until more contiguous history accumulates. CEFI (data
-exists, 3-4 day contiguous windows available, fleet currently clear of duplicate VMs) and DEFI (sparse/non-contiguous
-recent coverage: 07-18, 07-22, 07-25 through 07-27) were investigated for data availability but not attempted this
-session — CEFI remains the operator-gated 8-VM billing-waste situation from
-`issues/ features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`, not re-attempted without an explicit
+**Update, same session**: re-running after the fix shipped hit a THIRD and FOURTH unfixed instance of the identical bug
+class — `data_loader.py`'s `_get_source_bucket` (the actual candle-read path) and `live_handler.py`'s
+`_assert_upstream_candles_fresh` (live-mode startup gate). Root cause: the `_resolve_mdps_bucket` PREDICTION
+special-case was introduced once but only wired into one of four independent call sites in the `delta_one` module that
+had each grown their own copy of the raw `resolve_bucket_name(kind="market-data", asset_group=...)` call. Fixed all four
+(`features-service@306bef65`) — also discovered a deployment-pipeline gap along the way: the VM code tarball
+(`create-code-tarballs.sh`) is a MANUAL/ad-hoc build, not CI-automated, so a landed fix silently doesn't reach the next
+VM launch until someone rebuilds it (rebuilt twice this session to actually verify each fix on real infra). Re-ran a
+third time on the fully-fixed + freshly-rebuilt code: dependency check ✅, lookback validation ✅, and the VM is
+confirmed GENUINELY COMPUTING via live `run.log` — real per-instrument feature computation across the full KALSHI
+PREDICTION universe (thousands of markets), honest per-instrument no-data skips, and real parquet writes
+(`Wrote 1/2 daily partitions for KALSHI:PREDICTION_MARKET:...`). Left running rather than babysat to completion given
+the large universe (`features-e2e-prediction-20260728-142821-0f2a85`, launched 14:28 UTC) — full writeup in
+`issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` (2026-07-28 continued
+section).
+
+CEFI (data exists, 3-4 day contiguous windows available, fleet currently clear of duplicate VMs) and DEFI
+(sparse/non-contiguous recent coverage: 07-18, 07-22, 07-25 through 07-27) were investigated for data availability but
+not attempted this session — CEFI remains the operator-gated 8-VM billing-waste situation from
+`issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`, not re-attempted without an explicit
 go-ahead.
 
-- [ ] [DATA] P2. Re-run `PREDICTION:delta_one` (day≥2026-07-25) now that `features-service@89e3ad3b` is shipped, to get
-      either a genuine benchmark number or an honestly-diagnosed insufficient-lookback-window result.
+- [ ] [DATA] P2. Check the final report from `features-e2e-prediction-20260728-142821-0f2a85`
+      (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_26.md`, overwritten per-run — read it before it's
+      clobbered by a later run) for the actual `PREDICTION:delta_one` throughput/benchmark number, now that the bug
+      class blocking it is fully fixed.
 
 ### 2026-07-27 (slot-3, continued) — todo 10: full round across 7 families complete; 1 real code bug found + filed
 
