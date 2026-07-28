@@ -89,21 +89,47 @@ Research done 2026-07-28 (two parallel investigation agents) established the cur
 
 ## Track 1 — Worker-tmux chat (new capability; build once, both desktop and mobile consume it)
 
-- [ ] [BACKEND] P0. Add a send-to-pane chat endpoint for a specific slot (extend `POST /api/slots/{slot_id}/message` or
+- [x] [BACKEND] P0. Add a send-to-pane chat endpoint for a specific slot (extend `POST /api/slots/{slot_id}/message` or
       add a sibling route in `server/routes/slots_ops.py`) that calls `tmux_spawn.submit_to_pane(session, text)`
       directly against that slot's live tmux session — NOT the existing `enqueue_message`/DB-queued path, which only
       surfaces on the worker's own next poll. Definition of done: sending a message via this endpoint causes the target
       slot's Claude session to visibly react (its next transcript entry reflects having received the text) within the
-      same interactive turn, not after a poll-cycle delay.
-- [ ] [BACKEND] P0. Add a "read the reply" endpoint/mechanism that tails `transcript_log.render_transcript` for the
+      same interactive turn, not after a poll-cycle delay. — agent-orchestrator@9e9b921 — shipped
+      `POST /api/slots/{slot_id}/message-live` (sibling route in `server/routes/slots_ops.py`), calling
+      `tmux_spawn.submit_to_pane` synchronously against the resolved live tmux session (stored `tmux_session` or the
+      derived canonical `orch-slot-N` name, mirroring `/log`'s existing fallback). Proven by
+      `tests/test_slot_message_live.py::test_message_live_calls_submit_to_pane_with_correct_session_and_text` (asserts
+      `submit_to_pane` is called with the exact session name + text — no DB enqueue in the path) +
+      `test_message_live_falls_back_to_derived_session_when_stored_missing` (fallback case) +
+      `test_message_live_404_when_no_live_tmux_session` (no live session → 404, submit never called).
+- [x] [BACKEND] P0. Add a "read the reply" endpoint/mechanism that tails `transcript_log.render_transcript` for the
       named slot's session, returning only entries newer than a client-supplied offset/cursor (do not re-read the whole
       transcript every poll). Definition of done: after a Track-1-send, polling this endpoint surfaces the worker's
       actual new output within one poll interval, sourced from the JSONL transcript (not `capture_pane`, which cannot
-      see scrollback under the alt-screen).
-- [ ] [BACKEND] P0. Exclude the new send-to-pane route from `ALLOW_ANONYMOUS`/loopback-bypass in `server/auth.py` —
+      see scrollback under the alt-screen). — agent-orchestrator@9e9b921 — shipped
+      `GET /api/slots/{slot_id}/transcript-tail` (`server/routes/slots_ops.py`) backed by new
+      `transcript_log.render_transcript_since(path, since_offset, max_lines) -> TranscriptTail` (byte-offset cursor;
+      only complete lines advance the offset so a poll landing mid-write doesn't skip the in-flight line; an
+      out-of-range offset resets to a fresh first-poll). Proven by
+      `tests/test_transcript_log.py::test_render_since_returns_only_new_entries_after_offset` (poll → append → poll
+      again with the returned offset → only the new entries come back, old ones absent) +
+      `test_render_since_does_not_advance_past_incomplete_trailing_line` +
+      `tests/test_slot_transcript_tail.py::test_transcript_tail_second_poll_with_returned_offset_sees_only_new_content`
+      (same proof at the route level, against a real temp transcript file, not a mocked function).
+- [x] [BACKEND] P0. Exclude the new send-to-pane route from `ALLOW_ANONYMOUS`/loopback-bypass in `server/auth.py` —
       require the same JWT bearer auth as the rest of the authenticated dashboard API regardless of caller origin.
       Definition of done: a request to the new endpoint without a valid JWT is rejected (401/403) even when called from
-      localhost on the orchestrator box itself.
+      localhost on the orchestrator box itself. — agent-orchestrator@9e9b921 — shipped `auth.require_authenticated_user`
+      (rejects the anonymous-claims fallback unconditionally — no `ALLOW_ANONYMOUS`/trusted-loopback bypass, composes on
+      top of `get_current_user`) wired as `STRICT_AUTHED_DEPS` (`server/routes/_deps.py`) on `/message-live` ONLY
+      (`/transcript-tail` stays on ordinary `AUTHED_DEPS`, matching its read-only blast radius). Proven by
+      `tests/test_require_authenticated_user.py::test_loopback_no_token_is_rejected_even_though_get_current_user_would_allow_it`
+      (asserts the baseline: `get_current_user` DOES grant anonymous access to this exact request, then asserts
+      `require_authenticated_user` rejects the identical request with 401) +
+      `test_loopback_no_token_rejected_even_with_allow_anonymous_true` (fails closed even with the permissive flag
+      explicitly True) + `tests/test_slot_message_live.py::test_message_live_route_is_wired_to_strict_auth_dependency`
+      (introspects the actual FastAPI route object to confirm `/message-live` carries `auth.require_authenticated_user`
+      — not just that the helper function works in isolation).
 - [ ] [UI] P1. Add a compose box + live-updating transcript view for a single slot — either extend `LogViewerModal` or
       add a sibling component — wired to the two Track-1 endpoints above. Definition of done: opening a slot's detail
       view on desktop shows an input box; submitting text sends via the new send-to-pane route; the visible transcript
@@ -147,3 +173,60 @@ Research done 2026-07-28 (two parallel investigation agents) established the cur
 
 - 2026-07-28 — Plan authored. Scoped via operator AskUserQuestion answers (human-driven plan, `assigned_vm: NA`) + two
   parallel research agents establishing exact current-state file/symbol references above. No implementation done yet.
+
+- 2026-07-28 — **Track 1 backend (all three `[BACKEND] P0` todos) shipped: `agent-orchestrator@9e9b921`.** Dispatched
+  autonomously (`/autonomous`) to implement + ship the send-to-pane endpoint, cursor-based transcript-tail read-back,
+  and the strict-auth exclusion, with real passing tests proving each.
+
+  **Decision under ambiguity #1 — inherited uncommitted WIP found at task start.** On starting this phase, the
+  agent-orchestrator working tree already had _uncommitted, unstaged_ changes to exactly the four files this task needed
+  to touch (`server/auth.py`, `server/routes/_deps.py`, `server/routes/slots_ops.py`, `server/transcript_log.py`), with
+  docstrings explicitly citing this plan's slug and Track 1 by name — evidently a prior attempt at this same dispatch
+  that never reached `quality-gates.sh`/quickmerge. No `.agent-claim` marker existed for it and file mtimes were ~55 min
+  old (≫120s), so per the workspace's dirty-WIP liveness rule (dead claim → inherit + commit) this was treated as
+  inheritable, not foreign-in-progress work to protect around. Read every diff in full, cross-checked each new
+  function/route against the real call signatures it used (`tmux_spawn.submit_to_pane`/`has_session`/`session_name`,
+  `state_store.get_slot`/`log_activity`, `transcript_log.resolve_transcript_path`) and against the established sibling
+  route `slot_log` for pattern-fidelity, confirmed it was complete and correct, then finished the phase (venv sync,
+  tests, gate, ship) on top of it rather than discarding it and re-implementing from scratch. Net new code beyond what
+  was inherited: all 4 test files (30 tests) and the venv sync.
+
+  **Decision under ambiguity #2 — pre-existing environment drift blocked even importing the code.** `.venv` had
+  `fastapi==0.136.1` installed while the committed `uv.lock` pinned `0.140.7` (confirmed pre-existing and
+  code-unrelated: reproduced identically with the inherited WIP stashed away against a clean HEAD). Ran
+  `uv sync --frozen` (frozen so it could not touch `uv.lock` itself — no re-lock, per the workspace's
+  no-internal-dep-relock rule) to bring the local dev `.venv` in line with the already-committed lockfile. This sandbox
+  checkout is a separate machine from the live EC2 orchestrator process, so this had zero effect on the running service.
+
+  **What shipped** (`agent-orchestrator@9e9b921`, `docs(plans):` flip is this same commit's PM-side companion):
+  - `POST /api/slots/{slot_id}/message-live` — synchronous tmux-direct send, `STRICT_AUTHED_DEPS`
+    (`auth.require_authenticated_user`). Request/response shape documented in full in the report back to the dispatching
+    agent (also captured below for the Frontend phase).
+  - `GET /api/slots/{slot_id}/transcript-tail?since_offset=N&max_lines=M` — cursor-based incremental transcript
+    read-back, ordinary `AUTHED_DEPS` (read-only). Backed by new `transcript_log.render_transcript_since` /
+    `TranscriptTail` dataclass.
+  - `auth.require_authenticated_user` + `_deps.STRICT_AUTHED_DEPS` — the no-anonymous-bypass dependency, applied ONLY to
+    `/message-live` (not `/transcript-tail`, which stays on the ordinary dependency — a read-only route has a smaller
+    blast radius than one that injects keystrokes into a live credentialed shell).
+
+  **Tests** (30 total, all passing; also verified failing-before/passing-after is not applicable since this is new code,
+  so instead each test was verified to actually exercise the mechanism it claims — e.g. the auth test asserts the SAME
+  request shape passes under `get_current_user` and fails under `require_authenticated_user`, so it cannot pass
+  vacuously):
+  - `tests/test_slot_message_live.py` (6 tests) — send-endpoint behavior + route-level strict-auth wiring assertion.
+  - `tests/test_slot_transcript_tail.py` (6 tests) — read-back route end-to-end against a real temp transcript file +
+    route-level ordinary-auth wiring assertion.
+  - `tests/test_require_authenticated_user.py` (7 tests) — the auth dependency itself, including the
+    fails-closed-even-under-ALLOW_ANONYMOUS=True case.
+  - `tests/test_transcript_log.py` (+11 tests appended) — `render_transcript_since` cursor math (new-entries-only,
+    incomplete-trailing-line handling, offset-past-EOF reset, truncation+flag).
+  - Re-run with: `cd agent-orchestrator && bash scripts/quality-gates.sh` (full gate, green: ruff/format/frontmatter/
+    basedpyright/1889 passed+1 skipped pytest/dashboard tsc+vitest — dashboard untouched this phase, confirmed no
+    regression) or narrowly:
+    `.venv/bin/python -m pytest tests/test_slot_message_live.py tests/test_slot_transcript_tail.py tests/test_require_authenticated_user.py tests/test_transcript_log.py -q`.
+
+  **Not done this phase (by design, out of scope)**: the `[UI]`/`[REVIEW]` todos under Track 1 (compose box + Playwright
+  spec) and all of Track 2/3/4 — this phase's dispatch was scoped explicitly to the three `[BACKEND]` todos. The live
+  orchestrator process was NOT restarted (per explicit instruction for this phase); the shipped commit reaches it
+  automatically via the existing `ao-self-pull.sh` cron (≤15 min, or instant for these `server/**.py` changes via the
+  uvicorn `--reload` watch) with no action needed.

@@ -1,0 +1,22 @@
+# glue-runner-crash-loop-watchdog.timer — check every 5 minutes for a crash-looping
+# self-hosted glue-runner unit.
+#
+# Epic: infrastructure_master (glue-runner GCP_PROJECT fleet outage, 2026-07-28)
+# Lifecycle: permanent   Delete-when: NA
+#
+# Cadence rationale: units in a genuine crash-loop restart every ~5-9s (RestartSec=5 per
+# github-glue-runner@.service), so 5 minutes is ample for NRestarts to clear the default
+# threshold of 5 well before a human/agent would otherwise notice via a routine CI sweep (found
+# 2026-07-28: that took ~3.5h). Persistent=true so a rebooted VM checks promptly rather than
+# waiting out the interval.
+[Unit]
+Description=Periodic self-hosted glue-runner crash-loop check
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=glue-runner-crash-loop-watchdog.service
+
+[Install]
+WantedBy=timers.target
