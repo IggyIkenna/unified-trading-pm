@@ -100,6 +100,18 @@ Given this session's actual task resolved via other means (see
 resolved/archived), this doc is filed to prevent the same wall from blocking the next defi manifest-recon need, not
 because it is currently blocking anything urgent.
 
-- [ ] [OPERATOR] P2. Decide direction 1 (bump default VM/Cloud-Run provisioning for defi manifest-recon) vs direction 2
-      (add a column-pruned read path for verification-only callers) vs both — see "Recommended decision" above. **Done
-      when**: a direction is chosen and follow-up todos are dispatched against it.
+- [ ] [INFRA] P2. **Retagged from [OPERATOR] 2026-07-28 — direction 1 adopted by default, no operator decision needed.**
+      `cf_manifest_audit.py`'s Cloud Run job (`deployment-service/terraform/gcp/cf_manifest_audit_scheduler.tf`) is the
+      existing, proven precedent for this exact corpus (32Gi/8vCPU, explicitly provisioned because 4Gi/16Gi OOM'd on the
+      same ~26.3M-row defi tick manifest) — adopt that sizing/pattern as the default for defi manifest-recon rather than
+      the ad-hoc per-run `MACHINE_TYPE` override this session used (`deployment-service@420c8be`): either bump the
+      defi-specific default VM machine type to a 32Gi+/8vCPU-equivalent size, or move defi manifest-recon passes to a
+      Cloud Run job mirroring `cf_manifest_audit_scheduler.tf`'s own provisioning (matching the manifest consolidator's
+      own established Cloud-Run-not-VM precedent). (repo: deployment-service)
+- [ ] [SCRIPT] P3. **Follow-on efficiency improvement (direction 2), not gating on the above.** Add a lighter-weight,
+      column-pruned read path to `merge_canonical_with_outstanding_shards` (or a scoped sibling helper) for callers that
+      only need a handful of columns / a single (venue, data_type) slice — mirroring the ad-hoc 6-column pyarrow read
+      this session used for verification (completed in well under a minute with no memory pressure on the same 27.3M-row
+      file). Reserve the expensive full-frame path for callers that genuinely need to WRITE back the whole index (the
+      real `--apply` mutation path, which needs full-frame safety guarantees regardless). (repo: instruments-service,
+      unified-trading-library)

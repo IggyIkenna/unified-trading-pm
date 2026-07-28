@@ -72,10 +72,12 @@ resolved_by:
 
 ## What's still open (this doc's scope)
 
-- [ ] [OPERATOR] P2. Confirm whether `ldr-to-main-promote-fleet.yml`'s `process_repo` step genuinely no-ops for
-      deployment-service (vs. a timing/eventual-consistency artifact that resolves on a later tick with no code change
-      needed) — watch the next few scheduled (`*/15`) ticks and confirm a `promote/deployment-service/ed2691f*` PR
-      appears and auto-merge arms. If it does NOT self-resolve within a few ticks, the bug is real and needs a fix in
+- [ ] [CI] P2. **Retagged from [OPERATOR] 2026-07-28** — this is plain CI-diagnosis monitoring, any AO worker can do it
+      the same way any other `gh run list`/`gh pr list` observation todo works, no operator judgment call needed.
+      Confirm whether `ldr-to-main-promote-fleet.yml`'s `process_repo` step genuinely no-ops for deployment-service (vs.
+      a timing/eventual-consistency artifact that resolves on a later tick with no code change needed) — watch the next
+      few scheduled (`*/15`) ticks and confirm a `promote/deployment-service/ed2691f*` PR appears and auto-merge arms.
+      If it does NOT self-resolve within a few ticks, the bug is real and needs a fix in
       `unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml`'s `process_repo` function (likely something
       swallowing an error via a `2>/dev/null || true` in the PR-create/list path for this specific repo — worth adding
       non-silenced diagnostic output to the bounded-parallel per-repo log capture, since `2>&1 &` backgrounding + a

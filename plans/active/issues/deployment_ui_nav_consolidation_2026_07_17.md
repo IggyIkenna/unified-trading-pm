@@ -84,11 +84,21 @@ screens lost.
       keeping both was deliberate so the two interaction models could be compared side by side. Known trade-off: the bar
       is in the Header so it survives every route; that was NOT true when it lived in the cockpit (it vanished on
       exactly the entries that navigate away). Once chosen, delete the loser.
-- [ ] [OPERATOR] P3. **Decide: delete the 7 remaining duplicate standalone routes?** `/deployments`,
+- [x] [DOCS] P3. **RESOLVED same day, 2026-07-17 (confirmed via code, workspace stale-gate audit 2026-07-28).** Original
+      ask: decide whether to delete the 7 remaining duplicate standalone routes (`/deployments`,
       `/ops/live-deployments`, `/chaos`, `/safety-ops`, `/research/ml-experiments`, `/research/strategy-backtests`,
-      `/research/execution-backtests` still render a SECOND copy of screens the cockpit already hosts. They are listed
-      in the nav's `legacy` group ("Duplicate routes — pending removal") so they can be compared before deletion.
-      Deleting them = the `legacy` group and its 11 entries go too.
+      `/research/execution-backtests`), which at the time still rendered a SECOND copy of screens the cockpit already
+      hosted via the `legacy` nav group ("Duplicate routes — pending removal"). **Resolved later the same day**:
+      `deployment-ui@079b29e` ("one URL scheme — plain routes, retire ?tab=", 2026-07-17 21:01 IST) — the operator
+      decision was to eliminate the duplication from the OTHER side: retire the cockpit `?tab=` variant instead of the
+      standalone routes, making each plain route (e.g. `/deployments`, `/chaos`, `/safety-ops`, the 3 `/research/*`
+      routes) the SOLE canonical URL for its screen. Verified directly in the live `deployment-ui` checkout:
+      `src/components/NavMenu.tsx`'s own comment states "The 'Duplicate routes — pending removal' quarantine group was
+      DELETED 2026-07-17 together with its routes... the standalone/redirect duplicates it existed to compare no longer
+      exist," and `NAV_GROUPS` today carries no `legacy: true` group at all. `/ops/live-deployments` specifically no
+      longer exists as a route (folded into `/deployments`, per `deployment-ui@50a6947` "merge live/batch/paper into one
+      Deployments tab"); the other 6 routes still exist in `src/App.tsx` today, but as the ONE canonical route for their
+      screen, not a duplicate. Nothing left to decide here.
 - [ ] [UI] P3. **Delete the 3 dead pages** — `pages/DeploymentsList.tsx`, `pages/DeployTrigger.tsx`,
       `pages/DeploymentHistory.tsx`. Verified imported by nothing (they are an earlier generation of the UI); the
       workspace rule is "delete deprecated code, no shims". Check `api/deploymentApi.ts` / `types/deploymentTypes.ts`

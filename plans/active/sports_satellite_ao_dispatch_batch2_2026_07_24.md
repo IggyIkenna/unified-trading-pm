@@ -456,7 +456,7 @@ source: >-
       `issues/sports_post_backfill_relabel_premise_resolved_residual_gap_2026_07_25.md` with the full measurement + 3
       correctly-scoped follow-up todos rather than force a stale-premise migration against a live-changing production
       manifest. Source: `data_completion_sports_2026_07_24.md`.
-- [x] ✅ [OPERATOR] P1. **Relaunch features-sfi-progressive** — code fix already shipped (`features-service@06c44c02`);
+- [x] ✅ [DATA] P1. **Relaunch features-sfi-progressive** — code fix already shipped (`features-service@06c44c02`);
       launcher confirmed pointed at `features_service.sports.scripts.compute_sfi_progressive_only`; confirmed
       market-tick-data-service clean; SPORTS tarball rebuilt (all 5 fresh: features-service@26c96a55, mtds@1dbdbb90,
       uac@0b979239, utl@5e89c404, deployment-service@184aa81d). Relaunched via
@@ -466,9 +466,11 @@ source: >-
       `captured_days=2087     failed_days=0`, `command exited rc=0`, `DEPLOYMENT_COMPLETED ... exit_code=0`. (repo:
       deployment-service `scripts/vm/launch-sfi-progressive-features-backfill-vm.sh`,
       `scripts/vm/create-code-tarballs.sh`; features-service
-      `features_service/sports/scripts/compute_sfi_progressive_only.py`). **[OPERATOR]**: `RECOMPUTE_FORCE=true --force`
-      overwrote captured prod manifest rows for 2020-01-01→2026-07-25 + launched a billed VM — operator go-ahead given
-      in-session 2026-07-25, cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Source:
+      `features_service/sports/scripts/compute_sfi_progressive_only.py`). **Already-resolved citation (was
+      `[OPERATOR]`)**: `RECOMPUTE_FORCE=true --force` overwrote captured prod manifest rows for 2020-01-01→2026-07-25 +
+      launched a billed VM — operator go-ahead was already given in-session 2026-07-25 and the run completed cleanly
+      (see "Done" above), cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. No further sign-off needed;
+      kept here only as the historical evidence trail for the already-executed action. Source:
       `data_completion_sports_2026_07_24.md`.
 
 ### From `sports_legacy_cutover_closeout_tasks_2026_07_24.md`
@@ -744,16 +746,20 @@ source: >-
       adapters now re-raise after `_emit_fetch_failed` instead of swallowing; 4 unit tests updated
       (`*_error_returns_empty` → `*_error_propagates`, mirrors the existing `get_injuries_error_propagates` precedent);
       full `quality-gates.sh` green (109s); orchestrator-level `TestCF11PerFixtureEntityFailurePath` suite (already
-      correct) confirms `_fetch_one`/`_handle_empty_fixture_entity` now actually receive the failure signal.
-      **BLOCKED-OPERATOR on my end**: could not execute the VM stop myself — `gcloud` auth expired mid-session
-      (`Unable to retrieve Identity Pool subject token: job is already completed`, both available accounts,
-      non-interactive reauth impossible) — flagged via `/progress` for another slot/main with working credentials to run
-      `gcloud compute instances stop af-backfill-20260725-032253     --zone asia-northeast1-c`. **Do NOT flip this
-      checkbox done yet**: (1) VM stop still pending execution, (2) once stopped, relaunch only after the API-Football
-      daily quota resets, (3) the window `08:12Z`→stop-time was written under the OLD buggy code — those dates'
-      `empty_confirmed` rows must be relabeled/re-fetched (issue doc todo 4), not trusted at face value by the eventual
-      re-census. Released via `/skip-current-task {"reason_code":     "GATED"}` — genuinely gated on the VM-stop +
-      quota-reset, not undoable from this slot.
+      correct) confirms `_fetch_one`/`_handle_empty_fixture_entity` now actually receive the failure signal. **Not an
+      operator gate (re-tagged 2026-07-28) — a transient local credential gap only**: this is the SAME ambient
+      `unified-trading-sa`/`uts-orchestrator-epic-role` identity every AO worker runs as, not a genuine cross-identity
+      authorization gap (`task_template.md` finding O/finding ii doesn't apply here). Could not execute the VM stop from
+      THIS slot — `gcloud` auth expired mid-session
+      (`Unable to retrieve Identity Pool subject token: job is already     completed`, both available accounts,
+      non-interactive reauth impossible this session) — dispatch to any worker/slot with a currently-valid `gcloud`
+      session to run `gcloud compute instances stop af-backfill-20260725-032253     --zone asia-northeast1-c` directly;
+      no operator authorization is structurally required to stop an already-flagged SPOT/idempotent VM. **Do NOT flip
+      this checkbox done yet**: (1) VM stop still pending execution, (2) once stopped, relaunch only after the
+      API-Football daily quota resets, (3) the window `08:12Z`→stop-time was written under the OLD buggy code — those
+      dates' `empty_confirmed` rows must be relabeled/re-fetched (issue doc todo 4), not trusted at face value by the
+      eventual re-census. Released via `/skip-current-task {"reason_code":     "GATED"}` — genuinely gated on the
+      VM-stop + quota-reset, not undoable from this slot.
 - [x] ✅ [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. — `instruments-service@f5fa9f8a`. Added a `player_stats` de-dup gate (drop

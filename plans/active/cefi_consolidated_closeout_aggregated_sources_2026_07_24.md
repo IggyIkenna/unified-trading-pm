@@ -181,8 +181,12 @@ drift_direction: advance-code
     - **[DATA] P3.** (stretch) Consider wiring `book_depth.py`'s `adv_30d_usd` input to the same Phase-1 utility with
       `window_days=30`.
   - [`plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md`](/plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md)
-    - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — once lock contention resolved, RE-RUN this plan's G4 verification from
-      a clean slate (gated on todos #1/#2, both open).
+    — 0 open todos (status: resolved, archived). **2026-07-28 stale-citation drop**: the prior BLOCKED-OPERATOR-DECISION
+    "RE-RUN G4 from a clean slate" bullet is stale — the archived doc's own copy of this todo is checked `[x]` and its
+    `resolved_by` field reads "GCS-lease mutex shipped + hardened to atomic CAS; production multi-VM wave confirmed zero
+    code=274 rows; superseded by CLAUDE.md/vm-launcher-runbook.md Tardis 1-VM-cap HARD RULE"
+    (`/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap). G4 re-verification itself is tracked under
+    `cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` per the archived doc's own todo #2 note.
   - [`plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`](/plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
@@ -240,7 +244,10 @@ drift_direction: advance-code
   - [`plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md`](/plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md)
     (status: open) — the 44-way sharded cefi content-canonicalisation `--apply` fleet did NOT complete corpus-wide (21
     of 44 shards died partway through).
-    - **[OPERATOR] P1.** Relaunch the 21 dead/incomplete shards.
+    - **[SCRIPT] P1.** Relaunch the 21 dead/incomplete shards. **2026-07-28 retag**: no `[OPERATOR]` gate needed — the
+      source doc itself already reclassified this to `[SCRIPT]` P1 (VM launches are AO-dispatchable by default per
+      `/codex/05-infrastructure/vm-launcher-runbook.md`; this is a bounded relaunch of 21 NAMED shards via an existing
+      idempotent script, not a new design/scope decision). Ordinary AO-dispatchable todo, no operator sign-off needed.
     - **[SCRIPT] P2.** Re-run the corpus-wide `run.log` grep to confirm all 44/44 complete once relaunched.
     - **[BACKEND] P2.** Cross-reference with `cefi_content_migration_vm_wedged_worker_2026_07_23.md`'s Recommendation
       item 1.

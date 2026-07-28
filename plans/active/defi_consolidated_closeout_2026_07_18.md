@@ -106,8 +106,9 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: 2026-06-27
-  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+last_updated:
+  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27
+  "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"; "2026-07-27" session-3 lending-resolver close-out (todo 18)
@@ -356,14 +357,20 @@ Discriminator = **does a manifest row exist**.
 > writer-order bug) + the stale-codex-docs correction, both done; full text verbatim in
 > [`defi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/defi_consolidated_closeout_history_2026_07_25.md).
 
-- [ ] [OPERATOR] P1. **Delete the lending-indices legacy bucket (C0f)** + resolve TF estate drift
-      (`market_data_defi_lending_indices_prd` still declared) + the bare `features-onchain` vs asset-group bucket. A
-      whole-BUCKET destroy is never reversibility-qualified regardless of soft-delete config (delete-safety-protocol
-      §3a) — stays snapshot-first + `[OPERATOR]`. Per §3a's approve-executes flow: stage the exact command + snapshot
-      evidence, open a structured BLOCKED question recommending "approve — execute now"; a FINAL operator answer
-      authorizes the SAME worker session to run it immediately (no second agent, no manual operator execution) — not the
-      old "an agent must never run it, a human runs it separately" framing. (repos: deployment-service,
-      market-tick-data-service)
+- [ ] [DATA] P1. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — operator ruling 2026-07-28
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended): whole-bucket destroys are now
+      reversibility-qualified the same way plain object deletes already were, PROVIDED a fresh
+      `gcs_bucket_soft_delete_retention_seconds()` check on the target bucket clears (>=604800s) — the "never
+      reversibility-qualified regardless of soft-delete config" line below is now stale/historical, superseded by this
+      ruling. **Delete the lending-indices legacy bucket (C0f)** + resolve TF estate drift
+      (`market_data_defi_lending_indices_prd` still declared) + the bare `features-onchain` vs asset-group bucket.
+      **Dispatch as**: run a FRESH `gcs_bucket_soft_delete_retention_seconds(bucket)` check on the target bucket right
+      now and cite the actual returned value; if >=604800s, execute the bucket delete via the sanctioned UTL helpers per
+      §3a — no operator step needed. If <604800s (or the check errors), this stays gated — fall back to §3a's
+      approve-executes flow: stage the exact command + snapshot evidence, open a structured BLOCKED question
+      recommending "approve — execute now"; a FINAL operator answer then authorizes the SAME worker session to run it
+      immediately (no second agent, no manual operator execution) — not the old "an agent must never run it, a human
+      runs it separately" framing. (repos: deployment-service, market-tick-data-service)
 - [ ] [BACKEND] P0. **NEW 2026-07-24 — `write_defi_rows()` writes the bare SYMBOL as the filename leaf, not the ruled
       canonical_instrument_id, AND DeFi batch capture is actively writing (NOT stopped as the codex/plan text assumes) —
       so this is a growing defect, not frozen residue.** 13/13 sampled objects fail the UAC id-form oracle
@@ -641,8 +648,11 @@ file, not here.
 - [ ] [BACKEND] P2. **Async fan-out + executor-offload for the DeFi write path — duplicate of the Track 5 item above**
       (same 4 upload sites, same design sketch, same 2026-07-24 correction re: the knobs NOT being a safe standalone
       step — see that item for full evidence). (repo: market-tick-data-service)
-- [ ] [OPERATOR] P2. **2-VM TheGraph canary** — code-only so far per the original session's instructions; launching the
-      canary VMs is operator-owned (Q3 ruling: "ship code + I run the canary").
+- [ ] [DATA] P2. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — cite finding W (ambient self-service
+      IAM identity; no different-identity credential requirement) plus the already-decided Q3 ruling: "ship code + I run
+      the canary" was the operator resolving the judgment call as "yes, run the canary", not a standing human-only
+      execution requirement. **2-VM TheGraph canary** — code is already shipped; launch the 2-VM canary via the standard
+      SPOT VM launcher process (monitored, no fire-and-forget) as a normal AO-dispatchable VM-launch todo.
 - [ ] [DATA] P1. **Resume paused DeFi crons NOT scoped to `dex_pool_state`** + fix the honest-coverage-nightly
       right-size + codex-drift doc — gated on Track 1 (LENDING migration + canon walk above) + Track 2 (path-shape-pin
       code half) + the currently-running per-instrument migration VM finishing first (resuming now would race live

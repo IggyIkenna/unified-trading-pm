@@ -460,14 +460,17 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       (wave-launcher, lifecycle_catalogue bucket-IAM) — could not classify those, filed as its own `[OPERATOR]`
       IAM-grant follow-up. 3 new todos filed in the source doc (2× `[OPERATOR]`, 1× `[INFRA]`).
 
-- [x] ✅ [OPERATOR] P2. **DONE 2026-07-28 — RULE-11 prove-then-retire the two superseded plan-hygiene runtimes
-      EXECUTED**, under an explicit operator autonomous-mode grant (this specific execution named: "archive 9
-      previously-locked docs..., including RULE-11 execution") on top of the standing approval below. (a) SHIPPED:
-      `.github/workflows/plan-health-agent.yml` + its `scripts/self-hosted-runners/hosted-baseline/` template twin both
-      dropped the `schedule:` trigger + the entire Haiku `plan-health`/`notify` job pair — only the
-      `pull_request`-triggered `plan-health-gate` hard gate remains (verified YAML-valid, both files byte-identical
-      post-edit). (b) SHIPPED: live-deleted `uts-prod-plan-hygiene-sweep-cron` (Cloud Scheduler) then
-      `uts-prod-plan-hygiene-sweep` (Cloud Run Job) via `gcloud scheduler jobs delete` / `gcloud run jobs delete` (both
+- [x] ✅ [INFRA] P2. **2026-07-28 retag** (was `[OPERATOR]` — the gated delete already EXECUTED under the operator's
+      explicit autonomous-mode grant + the standing RULE-11 approval on record below, so no live operator gate remains;
+      retagged to the reflecting `[INFRA]` tag per this file's convention for shipped infra work). **DONE 2026-07-28 —
+      RULE-11 prove-then-retire the two superseded plan-hygiene runtimes EXECUTED**, under an explicit operator
+      autonomous-mode grant (this specific execution named: "archive 9 previously-locked docs..., including RULE-11
+      execution") on top of the standing approval below. (a) SHIPPED: `.github/workflows/plan-health-agent.yml` + its
+      `scripts/self-hosted-runners/hosted-baseline/` template twin both dropped the `schedule:` trigger + the entire
+      Haiku `plan-health`/`notify` job pair — only the `pull_request`-triggered `plan-health-gate` hard gate remains
+      (verified YAML-valid, both files byte-identical post-edit). (b) SHIPPED: live-deleted
+      `uts-prod-plan-hygiene-sweep-cron` (Cloud Scheduler) then `uts-prod-plan-hygiene-sweep` (Cloud Run Job) via
+      `gcloud scheduler jobs delete` / `gcloud run jobs delete` (both
       `--project=central-element-323112 --region/location=asia-northeast1`); confirmed gone via
       `gcloud run jobs describe`/`gcloud scheduler jobs describe` (`NOT_FOUND`) and `gcloud run jobs list` (absent — the
       two `hygiene` hits remaining are unrelated `uts-prod-dp-manifest-hygiene-{changed,full}` data-pipeline jobs).

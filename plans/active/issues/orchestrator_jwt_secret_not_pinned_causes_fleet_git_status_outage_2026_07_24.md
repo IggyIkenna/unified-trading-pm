@@ -32,7 +32,7 @@ scope: [engineer]
 tags: [agent-orchestrator, auth, jwt, orch_token, slot-host-symmetry, git-status-report, alerting, outage]
 related: [/codex/04-architecture/agent-orchestrator-alerting.md, /codex/05-infrastructure/per-tab-worktrees.md]
 created: 2026-07-24
-last_updated: 2026-07-24
+last_updated: 2026-07-28
 priority: P1
 parent_epic: orchestrator_master
 source:
@@ -133,15 +133,20 @@ message. Fixed in `unified-trading-pm@<pending — see commit that ships this fi
 
 ## Remaining work (this issue)
 
-- [ ] [OPERATOR] P1. **Pin `ORCHESTRATOR_JWT_SECRET_GCS`** for `orchestrator.service`, mirroring the existing internal
+- [ ] [DEVOPS] P1. **Pin `ORCHESTRATOR_JWT_SECRET_GCS`** for `orchestrator.service`, mirroring the existing internal
       secret/key pattern: create a persisted secret object (e.g.
       `gs://central-element-323112-orchestrator-creds/orchestrator/jwt-secret.txt`, a random value, NOT derived from
       anything guessable), add `Environment=ORCHESTRATOR_JWT_SECRET_GCS=gs://...` to
       `/etc/systemd/system/orchestrator.service` (via `sudoedit` per the unit's own header comment), then
       `systemctl daemon-reload && systemctl restart orchestrator.service` — a deliberate restart of the shared
-      orchestrator, so this needs an operator-chosen maintenance window, not a silent agent action. **Done when**: a
-      restart of `orchestrator.service` no longer invalidates existing `.orch_token` files (verify: capture a token,
-      restart the service, re-use the same token, confirm it still validates).
+      orchestrator. **Retagged 2026-07-28** (was `[OPERATOR]`, gated on an operator-chosen maintenance window): operator
+      ruling 2026-07-28 (CLAUDE.md Governance section — maintenance-window restarts/pauses of shared infra no longer
+      need operator scheduling while pre-live-trading, brief downtime is acceptable) removes that gate. Dispatch
+      directly: group with any other pending restart/pause work on `orchestrator.service` or the same VM, execute now
+      (no scheduled window needed), and verify the service comes back healthy afterward. **Done when**: a restart of
+      `orchestrator.service` no longer invalidates existing `.orch_token` files (verify: capture a token, restart the
+      service, re-use the same token, confirm it still validates) AND the service reports healthy post-restart (e.g.
+      `/api/healthz`).
 - [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@421262a`.** Point `slot-git-status-report.sh`'s
       default `ORCH_URL` at `http://localhost:8765` when running ON the orchestrator VM itself (keep the public URL
       default for any future non-central host), so the existing `_is_trusted_loopback` escape hatch actually protects

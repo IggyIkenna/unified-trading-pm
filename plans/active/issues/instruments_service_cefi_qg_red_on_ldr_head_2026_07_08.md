@@ -155,11 +155,18 @@ Once decided:
 
 ## Todos
 
-- [ ] [DESIGN] P1. **BLOCKED-OPERATOR-DECISION (downgraded from P0 — shipping freeze already cleared by the interim
-      Option-B fix below)** — confirm keeping Option B as shipped (accept the permanent 2-tuple bare-BYBIT
-      `expected_unattempted` phantom) OR do the Option-A follow-up (declare `OKX-SPOT` its own cefi venue in
-      `VENUES_BY_ASSET_GROUP["cefi"]`, remove it from `instruments-service`'s `_CEFI_VENUE_FOLD`, re-remove bare-BYBIT
-      `SPOT_PAIR`, regenerate golden to 73 tuples) (repo: unified-api-contracts).
+- [x] ✅ [VERIFY] P1. **RESOLVED — retagged from [DESIGN] BLOCKED-OPERATOR-DECISION 2026-07-28, no fresh operator ask
+      needed.** `instruments_remaining_work_audit_2026_07_10.md`'s 2026-07-10 operator-decision-ledger entry #1 chose
+      **Option A** ("declare its own cefi venue (matches BYBIT-SPOT precedent), remove the `_CEFI_VENUE_FOLD` entry",
+      citing this doc by name) — and Option A is already fully shipped, confirmed live via direct commit inspection:
+      `unified-api-contracts@0ab1074a` ("fix(cefi): complete Option A — drop phantom bare-OKX/BYBIT SPOT_PAIR now that
+      OKX-SPOT is its own venue") declared `OKX-SPOT` its own cefi venue and dropped both phantom bare-OKX/BYBIT
+      `SPOT_PAIR` entries; `instruments-service@c0f5529c` ("fix(cefi): stop folding OKX-SPOT to bare OKX now that it is
+      a distinct UAC venue") removed the `_CEFI_VENUE_FOLD` entry so OKX-SPOT compares directly against its own EXPECTED
+      tuple, matching the BYBIT-SPOT precedent; both commits' own `quality-gates.sh` ran ALL PASSED. (The golden fixture
+      settled at 76 tuples in the final state, not the 73 originally estimated here — additional venue registrations
+      (COINBASE-CDE etc.) landed in the same 2026-07-10 decision wave and changed the total; no regeneration is
+      outstanding.) No further work needed on this todo.
 - [x] ✅ [FIX] P0. Shipped interim Option B — reverted `unified-api-contracts@23fa3a99`
       (`unified-api-contracts@1771d59a`, 2026-07-08, slot-5 planning), restoring `build_expected('cefi')` to the
       golden's 75 tuples. **Not the recommended Option A** — see "Action taken" note above; DESIGN todo re-opened above

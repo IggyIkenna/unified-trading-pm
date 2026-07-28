@@ -379,7 +379,12 @@ classify them by conventional-commit prefix (the rules above), compute the next 
 
 - [ ] [INFRA] P1. Implement conventional-commit bump computation + tag mint in `reconcile_release_tags.py`, reusing the
       proven rules. Gate behind an explicit `--mint` flag so the detector stays usable standalone.
-- [ ] [OPERATOR] P1. Rule on risk 2 (message-only classification vs dispatching the API-diff check).
+- [ ] ⛔ [DOC] P1. **SUPERSEDED 2026-07-25 — moot, not an open operator question.** Option B (this whole sub-steps list)
+      was never built; the per-repo `semver-agent` retarget shipped instead (see the ⛔ banner above this section + the
+      Resolution checklist's F2 item). There is no reconciler-side message-only-vs-API-diff tradeoff to rule on since
+      the reconciler itself does not exist and is not being built. Left unticked per the section banner's own "left
+      unticked on purpose" note — not re-tagged `[OPERATOR]` because there is nothing left for an operator to decide
+      here.
 - [ ] [INFRA] P1. Port the bump-rate circuit breaker to the reconciler (tag-mints/hour), plus a low `--max-creates` for
       the first drain.
 - [ ] [INFRA] P2. Batch the manifest write to ONE commit per run (the whole point of B) — verify by confirming a single

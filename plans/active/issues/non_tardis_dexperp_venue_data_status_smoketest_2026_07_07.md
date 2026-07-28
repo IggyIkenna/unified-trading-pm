@@ -303,11 +303,12 @@ Two secondary findings:
       PACIFICA was **decommissioned entirely on 2026-07-16** (operator ruling: all Solana perp DEXes dropped except
       Jupiter) — it is locked in `venue_adapter_keys.DECOMMISSIONED_VENUE_BASES`, purged from `data_type_capability.py`,
       and guarded by a test. The 2026-07-18 "keep PACIFICA MVP" answer therefore **CONTRADICTS the 2026-07-16
-      decommission**; resurrecting PACIFICA autonomously would undo a completed, locked decommission. **OPERATOR MUST
-      RESOLVE** (was 2026-07-18 a deliberate un-decommission of PACIFICA, or answered without the 2026-07-16 drop in
-      view?). Kept PACIFICA fully removed pending that ruling (a `PACIFICA-stays-removed` lock test was added
-      @a7ff8417). The remaining PACIFICA FIX/VERIFY todos below stay BLOCKED-OPERATOR-DECISION on this conflict; the
-      LIGHTER/EXTENDED ones are unblocked.
+      decommission**; resurrecting PACIFICA autonomously would undo a completed, locked decommission. **RESOLVED
+      2026-07-18** (stale "OPERATOR MUST RESOLVE" framing cleaned up 2026-07-28 — the conflict this entry raised was
+      answered the same day it was filed; see the `[DECISION]` todo directly above: operator ruled in favor of the
+      2026-07-16 decommission, "decommission pacifica for now"). PACIFICA stays fully removed (a
+      `PACIFICA-stays-removed` lock test was added @a7ff8417). The remaining PACIFICA FIX/VERIFY todos below are N/A per
+      that resolution (see each todo's own note); the LIGHTER/EXTENDED ones are unblocked.
 - [x] [FIX] P2. ✅ **N/A — PACIFICA decommissioned 2026-07-18 (venue fully removed; no pipeline to turn on).** ~~resolve
       the `derivative_ticker`/standalone-`perp_funding` duplicate-source risk~~ (`_umi_pacifica.py:227-276` and
       `_perp_funding_pacifica_lighter.py:125-175` both hit the same `/funding_rate/history` endpoint under two different
@@ -359,11 +360,19 @@ Two secondary findings:
       hardcode is the drift source; target bucket 404s; past its own `# Delete-when:`), so a re-run can never re-stamp
       DeFi HL/ASTER perp_funding. (Verify the `protocols` iterable no longer includes them before deleting.) — already
       covered by defi_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).
-- [ ] [INFRA] P3. **BLOCKED-OPERATOR-DECISION — reconcile the 916 HL + 642 ASTER `defi/perp_funding` legacy rows.** They
-      are redundant with `cefi/derivative_ticker.funding_rate`. Two options: (a) DELETE the orphaned defi/perp_funding
-      objects + manifest rows + rebuild the defi index (simplest, data is redundant), or (b) re-stamp `defi→cefi` + move
-      objects into the cefi bucket (preserves standalone funding history). Real GCS mutation + index rebuild — operator
-      picks delete-vs-re-home.
+- [ ] [INFRA] P3. **Auto-resolved 2026-07-28, retagged from BLOCKED-OPERATOR-DECISION.** Reconcile the 916 HL + 642
+      ASTER `defi/perp_funding` legacy rows (redundant with `cefi/derivative_ticker.funding_rate`) by executing option
+      (a) — DELETE the orphaned `defi/perp_funding` objects + manifest rows + rebuild the defi index (the
+      redundant/simpler default; option (b)'s re-stamp-and-move is not needed since the data is fully redundant with the
+      cefi-side funding history). Reversibility cleared per finding T /
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a:
+      `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` todo 7 confirmed the SAME bucket
+      (`market-data-tick-defi-prd-central-element-323112`) at `604800s` GCS Soft Delete retention as of 2026-07-27 (one
+      day prior to this retag, bucket-level retention config, not a per-object/day-to-day setting — no reason to expect
+      drift). **Whoever executes this todo should re-verify `gcs_bucket_soft_delete_retention_seconds()` fresh in the
+      same run before the actual delete** (cheap, and keeps the finding-T check genuinely same-run for the destructive
+      step itself) rather than treating this citation as a substitute for that — but no fresh operator ask is needed to
+      START this dispatch.
 - [ ] [FIX] P3. **BLOCKED-OPERATOR-DECISION — extend the live-probe mechanism to cefi CEX venues.** Adding
       `CEFI:     ("binance","bybit","kraken","okx")` to `_EXTRA_LIVE_PROBE_SOURCES_BY_AG` (UAC `possible_manifest.py`)
       would let the phantom-auditor find real `live_binance`/`live_kraken` shards (~35 currently mis-flagged), but it

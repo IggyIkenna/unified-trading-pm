@@ -129,20 +129,20 @@ This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically
       what's constrained here.
 
       **Update 2026-07-28 ~06:25 UTC — contention has substantially EASED, likely on its own as the fan-out's own
-                          CI/QG batch finished draining, not from any further intervention.** Re-checked `VolumeQueueLength` across a
-                          1h window (6 datapoints, 10-min granularity) after ~5h holding flat at the elevated `5.6-6.5` level (3
-                          consecutive prior checks, ~00:20-01:35 UTC): the LATEST readings are `0.84 → 0.81 → 1.88 → 5.53 → 1.93 → 0.50`
-                          — mostly back down near the pre-burst `0.5-2` baseline range, with one brief `5.53` spike (a single 10-min
-                          bucket, not sustained). Fleet-wide sweep the same check found only 3 failures, ALL already resolved by a
-                          newer green run on retry (instruments-service, system-integration-tests, trading-agent-service) — no
-                          lingering `[qg-governor] all 4 tokens busy` or SIT `ci-status-update` timeout signatures observed this pass,
-                          consistent with the queue backlog having actually cleared rather than just gone quiet. **Net read: this
-                          looks like the burst genuinely working itself out over ~5-6h as PM's own fan-out's git/QG activity tapered
-                          (the doc's own original prediction), not evidence the underlying capacity gap was fixed** — the EBS
-                          iops/throughput headroom question above remains open and worth doing before the NEXT bulk registration or
-                          fan-out event reproduces this, but it is no longer an active, ongoing symptom as of this check. Downgrading
-                          urgency accordingly; re-verify if/when the next bulk self-hosted-runner change happens rather than continuing
-                          to poll an already-recovered metric.
+                                          CI/QG batch finished draining, not from any further intervention.** Re-checked `VolumeQueueLength` across a
+                                          1h window (6 datapoints, 10-min granularity) after ~5h holding flat at the elevated `5.6-6.5` level (3
+                                          consecutive prior checks, ~00:20-01:35 UTC): the LATEST readings are `0.84 → 0.81 → 1.88 → 5.53 → 1.93 → 0.50`
+                                          — mostly back down near the pre-burst `0.5-2` baseline range, with one brief `5.53` spike (a single 10-min
+                                          bucket, not sustained). Fleet-wide sweep the same check found only 3 failures, ALL already resolved by a
+                                          newer green run on retry (instruments-service, system-integration-tests, trading-agent-service) — no
+                                          lingering `[qg-governor] all 4 tokens busy` or SIT `ci-status-update` timeout signatures observed this pass,
+                                          consistent with the queue backlog having actually cleared rather than just gone quiet. **Net read: this
+                                          looks like the burst genuinely working itself out over ~5-6h as PM's own fan-out's git/QG activity tapered
+                                          (the doc's own original prediction), not evidence the underlying capacity gap was fixed** — the EBS
+                                          iops/throughput headroom question above remains open and worth doing before the NEXT bulk registration or
+                                          fan-out event reproduces this, but it is no longer an active, ongoing symptom as of this check. Downgrading
+                                          urgency accordingly; re-verify if/when the next bulk self-hosted-runner change happens rather than continuing
+                                          to poll an already-recovered metric.
 
 - [ ] [REVIEW] P3. The AO dashboard's Host Resources panel reporting only `us+sy+ni` (no iowait) means an operator
       glancing at "CPU 41%" during an episode like this would not see the real problem. Consider whether the panel
@@ -171,14 +171,14 @@ This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically
       shared QG change, not a silent per-repo override (a per-repo bump would mask recurrence of the SAME root cause
       instead of surfacing it).
 
-- [x] ✅ [OPERATOR] P1. **RAM right-sized 2026-07-28 ~08:40-08:59 UTC — resized the orchestrator VM
-      `i-0c9b283b31d6b5ca7` from `m8i.4xlarge` (16 vCPU / 64GB,
-      $1.09368/hr) to `c7i.4xlarge` (16 vCPU / 32GB,
-      $0.8988/hr) — same vCPU count (preserves the 2026-07-27
-      CPU-oversubscription fix), ~~18%/~~$141/month cheaper, right-sized to actual usage (live `free -h` before the
-      resize: 8GB used / 53GB available out of 61GB — real usage was ~13% of capacity; even this episode's peak swap
-      only reached 10.5GB).** Operator-authorized ("implement in full /autonomous", 2-hour window) — full pre-flight +
-      execution + post-verify below.
+- [x] ✅ [INFRA] P1. **RETAGGED 2026-07-28 (workspace stale-gate audit) — already executed, operator-authorized action
+      complete.** RAM right-sized 2026-07-28 ~08:40-08:59 UTC — resized the orchestrator VM `i-0c9b283b31d6b5ca7` from
+      `m8i.4xlarge` (16 vCPU / 64GB, $1.09368/hr) to `c7i.4xlarge` (16 vCPU / 32GB,
+      $0.8988/hr) — same vCPU count
+      (preserves the 2026-07-27 CPU-oversubscription fix), ~~18%/~~$141/month cheaper, right-sized to actual usage (live
+      `free -h` before the resize: 8GB used / 53GB available out of 61GB — real usage was ~13% of capacity; even this
+      episode's peak swap only reached 10.5GB).** Operator-authorized ("implement in full /autonomous", 2-hour window) —
+      full pre-flight + execution + post-verify below.
   - **Pre-flight (parallel adversarial workflow, 3 independent checks, all before touching anything)**: (1) real-time
     safety check via SSM — reviewed all ~15 live `ps` entries + all 10-then-visible `orch-*` tmux panes for a critical
     uninterruptible operation; found none (routine agent work only: a QG test run, plan edits, a resumable quickmerge

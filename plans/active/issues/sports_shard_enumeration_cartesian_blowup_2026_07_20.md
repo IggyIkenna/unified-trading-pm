@@ -348,23 +348,25 @@ migration — not a currently-active bypass.** No quarantine needed; no code fix
 
 ## Part 2 — Vocabulary canonicalisation
 
-### 2.1 ⚠️ BLOCKED-OPERATOR-DECISION — do not run any case normalizer yet
+### 2.1 ✅ RESOLVED 2026-07-22 — see § 4.3 (was BLOCKED-OPERATOR-DECISION, now decided)
 
 The `ODDS`/`odds` (and `ODDS_SNAPSHOT`/`odds_snapshot`, `ODDS_MOVEMENT`/`odds_movement`) split is **frozen legacy, not
 an actively-writing bug** — both cohorts stop at 2026-04-14 while `trades` runs to 2026-06-27, and every live reference
 to uppercase `ODDS` is in a migration/rebuild script, none in the live writer.
 
-**The direction is contested and the codex is on the wrong side of the physical estate:**
+**The direction was contested and the codex was on the wrong side of the physical estate:**
 
-- `unified-trading-pm/codex/02-data/sports-data-types-catalog.md:32-41` K0-DECISION(b), 2026-07-18, declares **UPPER**
+- `unified-trading-pm/codex/02-data/sports-data-types-catalog.md:32-41` K0-DECISION(b), 2026-07-18, declared **UPPER**
   canonical for sports.
 - But GCS holds **only** `data_type=odds` directories on day=2020-07-21, day=2023-05-10 and day=2026-04-14 (5, 5, 2
   objects; **zero** `data_type=ODDS`), while the manifest carries both spellings for those same days. **Uppercase `ODDS`
   is a manifest-only phantom with no backing objects.**
 
-**Action:** put this to the operator (see 4.3). Do **not** touch `migrate_sports_canonical_v9.py:122-133` or
-`scripts/normalize_sports_mtds_data_type_case_2026_06_25.py:44-51` until the direction is re-confirmed — both currently
-point UPPER→lower, which K0 says is superseded, which GCS says is right.
+**Resolved:** § 4.3 below records the operator's 2026-07-22 decision — **REVERSES K0-DECISION(b)**, lowercase is now
+canonical. `migrate_sports_canonical_v9.py:122-133` and
+`scripts/normalize_sports_mtds_data_type_case_2026_06_25.py:44-51` (both UPPER→lower) are confirmed pointed in the
+CORRECT direction — re-point/complete them rather than reversing them. This section is no longer a live gate; read § 4.3
+for the ruling and its downstream todos (2.2/3.4).
 
 ### 2.2 Add a write-time closed-set guard on `data_type` (do this regardless of 2.1's outcome) — ✅ SHIPPED 2026-07-22
 

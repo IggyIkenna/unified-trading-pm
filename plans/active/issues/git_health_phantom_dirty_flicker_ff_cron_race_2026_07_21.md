@@ -510,7 +510,10 @@ orchestrator on review(slot1)'s behalf after they consolidated the thread and st
 2026-07-22 addendum appended by main from review msg 1650 (same subsystem — consolidated here rather than a duplicate
 doc).
 
-### 6. BLOCKED-OPERATOR (slot 2, 2026-07-24): item 6's `dirty_files=2172` measurement needs operator/interactive access
+### 6. RESOLVED 2026-07-24 (was BLOCKED-OPERATOR, slot 2; retagged 2026-07-28 workspace stale-gate audit) — item 6's
+
+`dirty_files=2172` measurement closed via §7's alternate live-measurement path below, no operator/interactive access
+needed after all
 
 `/plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md` item 6 asks to verify the unexplained
 `dirty_files=2172` row for `unified-trading-pm` on host `ip-172-31-0-185` slot 0 by running

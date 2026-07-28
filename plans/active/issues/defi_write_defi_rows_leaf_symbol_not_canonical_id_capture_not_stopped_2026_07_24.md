@@ -167,19 +167,18 @@ oracle's PRE-`d40c5d7d` behavior (structure-only), which would have reported the
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **Decide the sequencing implication of Fact 1**: since batch capture has not actually stopped, does
-      the writer-fix-then-migrate plan need to (a) stop the active batch/backfill crons until the leaf-naming fix ships,
-      (b) accept the growing backlog and let the eventual migration sweep it up, or (c) ship the leaf-naming fix on an
-      expedited timeline given it's now measurably live-growing rather than static? Options, not a recommendation from
-      this doc — needs the plan owner's call. **Status note (2026-07-27, category-A judgment call, left gated)**:
-      genuinely a real "which tradeoff do we accept" decision (crons were never actually stopped, so (a)/(b) carry real
-      operational cost/risk differences a worker can't weigh) — not downgraded. In practice, option (c) appears to have
-      been executed regardless of a formal sign-off: `write_defi_rows()`'s leaf fix shipped
-      `market-tick-data-service@0fddb95e` (2026-07-27, per
+- [x] [PM] P0. **RESOLVED 2026-07-28 (workspace stale-gate audit; retagged off [OPERATOR]).** Original ask: decide the
+      sequencing implication of Fact 1 — since batch capture had not actually stopped, does the writer-fix-then-migrate
+      plan need to (a) stop the active batch/backfill crons until the leaf-naming fix ships, (b) accept the growing
+      backlog and let the eventual migration sweep it up, or (c) ship the leaf-naming fix on an expedited timeline given
+      it's measurably live-growing rather than static? **Outcome confirmed closed in practice**: option (c) was executed
+      — `write_defi_rows()`'s leaf fix shipped `market-tick-data-service@0fddb95e` (2026-07-27, per
       `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s corresponding todo) on an expedited timeline
-      without stopping the crons. Left open for an explicit operator close/confirm rather than auto-resolved here, since
-      this doc's own scope (§ "What is NOT claimed") never asserted a fix timeline as sufficient to answer the
-      sequencing question on its own.
+      without stopping the crons, and the P1 census todo above (executed 2026-07-28) confirms the bare-symbol-leaf
+      violation rate collapsed to ~0-1% the day that fix went live — i.e. (a)/(b) never had to be chosen between,
+      because (c) landed fast enough that no material backlog accrued. The 2026-07-27 note left this open pending an
+      explicit operator close/confirm; the operator's 2026-07-28 review of the stale-gate audit closes it now on that
+      same evidence — no further sequencing action needed, nothing left for a worker to pick up here.
 - [x] [DIAG] P1. **Measure the scale**: how many `pipeline_mode=batch_*` DeFi objects have been written since 2026-07-20
       (the register's implicit "capture stopped" reference point) under the bare-symbol leaf shape? A bounded
       per-day-since-2026-07-20 delimiter descent (not a corpus walk) would answer this. — already covered by

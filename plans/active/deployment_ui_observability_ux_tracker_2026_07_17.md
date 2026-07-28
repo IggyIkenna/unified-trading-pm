@@ -161,7 +161,13 @@ Path:
 
 ### WS-1 todos
 
-- [ ] [OPERATOR] P0. Confirm the three design decisions above. BLOCKED-OPERATOR-DECISION.
+- [x] ✅ [REVIEW] P0. **2026-07-28 retag** (was `[OPERATOR]` BLOCKED-OPERATOR-DECISION) — confirmed already resolved:
+      the operator walked WS-1's decisions to closure 2026-07-20 (this file's own Progress Log entry, "walked WS-1's
+      four open decisions to closure") and split them into
+      `plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md`, whose "Decisions (operator, 2026-07-20
+      — all four confirmed, no longer open)" section records all three (plus a 4th partial-day-basis decision) and whose
+      every todo is checked `[x]` complete. No live decision remains open on this item; retagged to reflect completed
+      sign-off/review rather than a pending gate.
 - [ ] [REVIEW] P0. Reproduce + record the defect on live data — query `per_resource_daily(days=7)` for the VM showing
       `$4.4 / 7d $0.63 / 24h $4.4`; confirm it has exactly one billing day in the window; capture the `day_net` dict in
       the Progress Log as ground truth. No code change.

@@ -37,7 +37,7 @@ estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
-last_updated: "2026-07-24"
+last_updated: "2026-07-28"
 locked_by:
 locked_since:
 supersedes:
@@ -307,12 +307,29 @@ drift_direction: advance-code
       pre-apply audit) flags as carrying PHANTOM `(options_chain|futures_chain, trades)` `expected_unattempted` cells
       for cefi + tradfi specifically — so the cefi/tradfi `eu` counts above are known-inflated until that todo ships a
       fix; DONE means "seed materialised", not "seed correctness verified" for those 2 of the 4 AGs.
-- [ ] [DATA] P1. **G1.run-prediction — BLOCKED-OPERATOR-DECISION (grain): the prediction catalogue is per-conditionId
-      (870,987 markets) but the MTDS manifest is ~19,639 rows at the cqg/market grain** → a per-conditionId v2 seed
-      emits >50M rows that NEVER match the present-set (every cell a false `expected_unattempted`). Prediction
-      `expected_unattempted` must seed at the **cqg-bundle grain** (`prediction_canonical_question_group`), which is
-      gated on the cqg-writer decision (decision 338 / `predictions_master` Phase 3). Do NOT `--apply-write` prediction
-      v2 at conditionId grain. **DEFERRED** → `predictions_master` Phase 3 (cqg could-exist).
+- [ ] [DATA] P1. **G1.run-prediction — grain.** The prediction catalogue is per-conditionId (870,987 markets) but the
+      MTDS manifest is ~19,639 rows at the cqg/market grain → a per-conditionId v2 seed emits >50M rows that NEVER match
+      the present-set (every cell a false `expected_unattempted`). Prediction `expected_unattempted` must seed at the
+      **cqg-bundle grain** (`prediction_canonical_question_group`). **No longer `BLOCKED-OPERATOR-DECISION` (retagged
+      2026-07-28, investigated per `autonomous_session_operator_decisions_2026_07_25.md`)**: the operator-decision fork
+      this todo cited — "decision 338" — is the classifier registry-EXTENSION ruling (extend `canonical_question_group`
+      coverage vs. leave unmatched markets unclassified), NOT a separate ruling on seeder grain; it was ratified +
+      implemented 2026-06-16 (`unified-api-contracts@d4523602`, the OTHER-catch-all change) and independently
+      re-confirmed 2026-07-26/27 (`autonomous_session_operator_decisions_2026_07_25.md` entry #14;
+      `/plans/active/prediction_cqg_residual_2026_07_24.md` todo 1;
+      `/plans/active/prediction_satellite_ao_dispatch_batch5_2026_07_26.md` "Why this batch exists") —
+      `ClassifierConfidenceLow` measured 0.0000% for BOTH venues, so there is no remaining open operator fork on cqg
+      coverage. **Confirmed via the SAME resolution already applied to the identical registry-copy of this todo** in
+      `/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` § "Deferred work — migrated to:"
+      item 1 (retagged there 2026-07-28 — this file's own copy was simply never updated to match). **Still genuinely NOT
+      dispatchable as an `--apply-write` today, but for an ENGINEERING reason, not an operator one**: the IS
+      catalogue-rollup loader still yields `cqg_str=""` (confirmed 2026-07-27, `prediction_cqg_residual_2026_07_24.md`
+      todo 2 / `prediction_satellite_ao_dispatch_batch5_2026_07_26.md` todo 2, both still open as of this edit) — until
+      that loader wiring lands, a cqg-bundle-grain seed would still emit against an empty grain. **Do NOT
+      `--apply-write` prediction v2 at conditionId grain** (unchanged). Named successor for the loader-wiring
+      prerequisite: `prediction_cqg_residual_2026_07_24.md` todo 2 (repos: instruments-service, unified-api-contracts);
+      once that lands, this todo's cqg-bundle-grain seed run is normal AO-dispatchable engineering work
+      (`enumerate_expected_universe.py` at cqg-bundle grain), no further operator input needed.
 - [ ] [DATA] P2. **G1.run-full-history — extend the bounded-window seed to the FULL 2018→today per-instrument universe
       (~190M rows fleet-wide)** once the index-size/reader-perf impact is operator-reviewed (the bounded window keeps
       the LIVE denominator honest now; full history is the complete drilldown denominator). **DEFERRED** (named
@@ -354,13 +371,25 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
 
 ## Deferred work — migrated to:
 
-- G1.run-prediction (per-conditionId grain BLOCKED-OPERATOR-DECISION): migrated to `predictions_master` Phase 3 (cqg
-  could-exist decision).
+- G1.run-prediction (per-conditionId grain): **no longer migrated/BLOCKED-OPERATOR-DECISION as of 2026-07-28** — see the
+  todo's own updated text above. The operator-decision fork (decision 338) is ratified; the remaining gate is the IS
+  catalogue-rollup loader wiring (`prediction_cqg_residual_2026_07_24.md` todo 2), tracked there, not a
+  `predictions_master` Phase 3 operator decision.
 - G1.run-full-history (extend bounded-window seed to full 2018→today): N/A — no migration, named successor is this same
   item (gated on operator review of the 190M index-size blow-up), still owned + open in this plan.
 
 ## Progress Log
 
+- **2026-07-28 (gate-cleanup pass)**: retagged the `G1.run-prediction` todo — its cited "decision 338 /
+  `predictions_master` Phase 3" operator-decision fork is ratified (2026-06-16, re-confirmed 2026-07-26/27; see the
+  todo's own updated text + `/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` § "Deferred
+  work — migrated to:" item 1, which already carried the identical retag). Investigated via
+  `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` — decision 338 is NOT numbered as an item in
+  that file (its own numbering runs 1-38); its content is documented instead at entry #14 (the `OTHER` vs
+  `attempted_failed` ratification) plus `prediction_satellite_ao_dispatch_batch5_2026_07_26.md`'s detailed
+  reconstruction of what "decision 338" actually ruled (classifier registry EXTENSION, not seeder grain). No `--apply`
+  run; the todo remains genuinely un-dispatchable for an engineering (not operator) reason — the IS catalogue-rollup
+  loader wiring (`prediction_cqg_residual_2026_07_24.md` todo 2) is still open.
 - **2026-07-25**: `execution_scope` corrected `orchestrator-agent` → `local-only` to match `assigned_vm: NA`
   (`task_template.md`'s two valid paired tracks: LOCAL = NA+local-only, AO-DISPATCHED = planning+orchestrator-agent).
   Functionally inert either way — `assigned_vm: NA` alone already yields an empty owning-VM set in `_resolve_plan_vms`

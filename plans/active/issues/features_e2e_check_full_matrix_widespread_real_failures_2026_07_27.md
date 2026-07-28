@@ -299,15 +299,16 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
       (`features_service/commodity/adapters/{cftc,baker_hughes}.py`). **Done**: 340/340 `tests/commodity/` tests green
       (`tests/commodity/unit/{test_sources,test_sources_extra}.py` updated for the new fetch paths + regression tests
       added for the URL-resolution and NG/CL fragment fixes).
-- [x] [OPERATOR] P1. **Root cause E, part 2 — EIA** — operator ruling 2026-07-27: EIA IS free (email-only instant
-      registration at eia.gov/opendata) but there's no `eia-api-key` Secret Manager entry yet (confirmed via
-      `gcloud secrets describe`) and the credential ask has sat open since 2026-06-09
-      (`unified-trading-pm/ikenna_orchestrator/pings/slot_3.md`) — operator chose to defer registering it rather than
-      action it now. Per the external-data-always-available rule this stays `BLOCKED-CREDENTIALS`, not a permanent
-      descope: `storage_alpha` factor group removed from `DEFAULT_FACTOR_GROUPS` (features-service `config.py`) so the
-      live signal engine no longer tries it by default, but the `StorageDeviationFactor`/`eia_ng.py`/`eia_crude.py`
-      scaffold is untouched and still registered in `FACTOR_REGISTRY` — re-enable once the secret is provisioned AND the
-      adapters are wired to actually send `api_key=` (they currently don't, a separate small fix needed at that time).
+- [x] [PM] P1. **Root cause E, part 2 — EIA — RETAGGED 2026-07-28 (workspace stale-gate audit; operator ruling already
+      recorded, decision closed).** Operator ruling 2026-07-27: EIA IS free (email-only instant registration at
+      eia.gov/opendata) but there's no `eia-api-key` Secret Manager entry yet (confirmed via `gcloud secrets describe`)
+      and the credential ask has sat open since 2026-06-09 (`unified-trading-pm/ikenna_orchestrator/pings/slot_3.md`) —
+      operator chose to defer registering it rather than action it now. Per the external-data-always-available rule this
+      stays `BLOCKED-CREDENTIALS`, not a permanent descope: `storage_alpha` factor group removed from
+      `DEFAULT_FACTOR_GROUPS` (features-service `config.py`) so the live signal engine no longer tries it by default,
+      but the `StorageDeviationFactor`/`eia_ng.py`/`eia_crude.py` scaffold is untouched and still registered in
+      `FACTOR_REGISTRY` — re-enable once the secret is provisioned AND the adapters are wired to actually send
+      `api_key=` (they currently don't, a separate small fix needed at that time).
 - [ ] [DATA] P2. Once A-D land, re-run `/data-pipeline-check-features` for the affected 6 shards (CEFI/TRADFI:delta_one,
       CEFI/TRADFI:cross_instrument, CEFI/TRADFI:multi_timeframe, SPORTS:sports) and confirm genuine (non-error)
       verdicts; the report's pass rate should rise substantially once B alone is fixed (it affects every family/AG

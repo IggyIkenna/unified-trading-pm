@@ -11,9 +11,13 @@ summary: >-
   data_completion_to_100_all_ag_2026_06_21.md (M-1) on 2026-07-24 per the plan line-cap remediation
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md). This content is sports-specific (same class as the
   "Sports honest-coverage" section split into data_completion_sports_2026_07_24.md earlier the same day) but was kept as
-  its own companion file rather than folded into that sibling to avoid pushing it over its own 1000-line cap. Two todos
-  remain open here (Live-ODDS quota decision, source_data_latency.py re-pin); both are BLOCKED-OPERATOR-DECISION / gated
-  on ~2-week accrual, not orphaned. Nothing was dropped or reworded in the move.
+  its own companion file rather than folded into that sibling to avoid pushing it over its own 1000-line cap.
+  **CORRECTED 2026-07-28 (stale-tag audit)**: of the 2 todos originally left open here, the `source_data_latency.py`
+  re-pin ran its ~2-week accrual and DONE 2026-07-27 (slot-15) — see that todo's own checkbox below, retagged `[DATA]`
+  (confirm, not re-pin: empirical p95 came in below the assumed constant, retained per the aggregator's fail-safe). One
+  todo remains genuinely open: the Live-ODDS quota decision (book set + quota-tier spend choice) — still
+  BLOCKED-OPERATOR-DECISION, a real business/cost call with no standing ruling to auto-resolve it. Nothing was dropped
+  or reworded in the original move.
 status: active
 nature: process
 asset_group: [sports]
@@ -55,9 +59,11 @@ drift_direction: advance-code
 > **Split from M-1 on 2026-07-24** (`data_completion_to_100_all_ag_2026_06_21.md`, plan line-cap remediation,
 > `plans/active/issues/plan_line_cap_remediation_2026_07_23.md`). This is a **verbatim** extraction of the "Live/forward
 > sports data-availability matrix + continuation gaps" and "Source-latency validation" sections — no content was
-> altered, only relocated. The 2 open todos below (Live-ODDS quota + the source_data_latency.py re-pin) remain tracked
-> here, not archived. See `data_completion_to_100_all_ag_2026_06_21.md` for the cross-cutting coordinator hub and
-> `data_completion_sports_2026_07_24.md` for the rest of the sports parity-sibling scope.
+> altered, only relocated. Of the 2 todos originally left open below (Live-ODDS quota + the source_data_latency.py
+> re-pin), the re-pin todo is now DONE 2026-07-27 (see its checkbox below) — only the Live-ODDS quota decision remains
+> genuinely open, still tracked here, not archived. See `data_completion_to_100_all_ag_2026_06_21.md` for the
+> cross-cutting coordinator hub and `data_completion_sports_2026_07_24.md` for the rest of the sports parity-sibling
+> scope.
 
 ## Live/forward sports data-availability matrix + continuation gaps (2026-06-22)
 

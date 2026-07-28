@@ -244,11 +244,12 @@ same conclusion, plus two provenance details worth keeping on record:
       re-verification NOT YET DONE** — requires this fix to reach the deployed scheduler (LDR→staging→main promotion +
       redeploy) and a real fixture's `stats_delayed` window (~kickoff+25.25h..26.25h) to actually elapse post-deploy;
       tracked as a new todo below rather than claimed here.
-- [ ] [OPERATOR] P1. Live re-verification follow-up for the fix above (deployment-service@5b5d227): once this commit has
-      reached the deployed sports-trigger-scheduler (promoted past staging + redeployed — check `deployment-service`'s
-      CI/CD status for the promotion), query the live sports manifest for a FRESH `data_type=XG` `captured` row with
-      `pipeline_mode` != `batch_understat` (i.e. NOT the 2026-07-13..22 one-shot backfill) or a fresh
-      `_index/latency_observations/` row with `trigger_name=stats_delayed`, dated after the redeploy. **Done when**:
-      such a row is found (confirms the live fix works end-to-end) or, if none appears after a full day-plus of live
-      operation post-redeploy, escalate — that would mean a second, still-undiagnosed issue beyond the lookback bug
-      fixed here.
+- [ ] [VERIFY] P1. Live re-verification follow-up for the fix above (deployment-service@5b5d227): first check
+      `deployment-service`'s CI/CD status (`gh run list`/promotion PR state) to confirm the fix has reached the deployed
+      sports-trigger-scheduler (promoted past staging + redeployed) — dispatch normally rather than waiting on an
+      operator ask, since promotion status is a checkable fact. Once confirmed deployed, query the live sports manifest
+      for a FRESH `data_type=XG` `captured` row with `pipeline_mode` != `batch_understat` (i.e. NOT the 2026-07-13..22
+      one-shot backfill) or a fresh `_index/latency_observations/` row with `trigger_name=stats_delayed`, dated after
+      the redeploy. **Done when**: such a row is found (confirms the live fix works end-to-end) or, if none appears
+      after a full day-plus of live operation post-redeploy, escalate — that would mean a second, still-undiagnosed
+      issue beyond the lookback bug fixed here.

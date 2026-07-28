@@ -114,9 +114,20 @@ heartbeat
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **Un-block P3 cutover** — P3 (GCS decommission) is self-halted on a real data-loss guard (prod
-      Firestore `deployments` measured EMPTY 2026-07-17); the GCS blob delete stays blocked pending an explicit operator
-      GO/NO-GO, and P5 (verify + codex-sync) stays `draft` behind it.
+- [ ] [DEVOPS] P0. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — self-service, no operator sign-off
+      required: deploy `deployment-api` carrying the dual-write flag (`utl@bf56debe` + `deployment-api@8e93a82`,
+      `543860c`), enable `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE=true` (typed config, not `os.getenv`) on the fleet,
+      and soak per the operator's 2026-07-14 checklist already on record in
+      `deployment_registry_firestore_p3_cutover_2026_07_14.md`'s Progress Log — do not re-ask, re-derive, or re-litigate
+      that checklist. **Un-block P3 cutover**: verify all 4 published GO/NO-GO criteria directly — (1) Firestore
+      `deployments` doc count ≈ live-VM count with fresh `last_heartbeat_at`; (2) resource stats (cpu/mem/disk/
+      heartbeat) render from the Firestore surface in deployment-ui, not the GCS blob; (3) `GET /{id}/detail` returns
+      the full per-VM record from Firestore for a sampled set of live VMs; (4) parity — for N sampled live deployments
+      the Firestore doc equals the GCS blob (status, `last_heartbeat_at`, counters, resource fields). P3 (GCS
+      decommission) is self-halted on this real data-loss guard (prod Firestore `deployments` measured EMPTY
+      2026-07-17); the GCS blob delete stays blocked until all 4 criteria measure true, and P5 (verify + codex-sync)
+      stays `draft` behind it. **If any of the 4 measured criteria fails, re-open to a human** — do not proceed to P3's
+      drop-GCS-write / snapshot-then-delete todos regardless.
 
 ## Migration invariants (hold across every phase)
 

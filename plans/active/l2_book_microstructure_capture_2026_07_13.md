@@ -173,7 +173,14 @@ sequential: true
       `l2_book_microstructure_capture-008` (this todo) marked `done` with `done_sha=019276470203` — that SHA is actually
       todo 3's commit (the compute function only); no handler file existed in the repo before this dispatch. This plan
       doc's checkbox (the real SSOT) was correctly still unchecked; only the backlog DB row had drifted.
-- [ ] [SCRIPT] P2. **BLOCKED-OPERATOR-DECISION** — Extend
+- [ ] [SCRIPT] P2. **BLOCKED-DATA-CORRECTNESS** — retagged from `BLOCKED-OPERATOR-DECISION` (2026-07-28): the
+      architecture question this todo was originally waiting on is answered (issue doc
+      [`issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md`](issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md),
+      status resolved, Option C confirmed 2026-07-14) — see the resolution note further down in this same todo. What
+      remains is a real technical/data-correctness dependency, not an operator decision: Option A (the MDPS
+      column-pipeline extension this todo needs) is deferred until the `MarketMakingQueueMicrostructureEngine` backtest
+      gate (todo 7 below) is actually picked up, and todo 7 is itself `BLOCKED-DATA-CORRECTNESS` on the CeFi live-WS
+      capture pipeline being dormant (see todo 7's own note). Extend
       `features-service/.../book_microstructure_feature_extractor.py` (`extract_book_microstructure_feature_dict`) to
       surface `queue_position_bid`/`queue_position_ask`/ `book_depth_levels` when present — the honest-absence behavior
       for capped venues must be preserved exactly as today. `formula_version=1` on any new derived keys. Repo:

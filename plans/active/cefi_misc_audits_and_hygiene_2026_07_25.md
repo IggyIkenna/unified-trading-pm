@@ -63,7 +63,9 @@ drift_direction: advance-code
 
 ## Todos
 
-- [x] ✅ [OPERATOR] P1. **Decide whether to remove the UAC per-venue seed fallback**
+- [x] ✅ [PM] P1. **2026-07-28 retag** (was `[OPERATOR]` — ruling already recorded 2026-07-26, retagged per the
+      operator's 2026-07-28 stale-gate audit to the reflecting `[PM]` decision-record tag, matching this file's
+      archival-todo convention). **Decide whether to remove the UAC per-venue seed fallback**
       (`unified_api_contracts.registry.market_data_categories.get_expected_instruments_for_venue`'s fallback to the
       per-venue MVP seed when a present catalogue lacks a venue), using the blast-radius caller list produced by
       `cefi_consolidated_native_ao_extract_2026_07_25.md`'s own UAC-fallback-audit candidate (once it ships). The

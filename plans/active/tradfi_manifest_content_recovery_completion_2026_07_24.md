@@ -121,7 +121,7 @@ source: >-
       venv, "run it not read it"): `derive_tradfi_row_instrument_id` FUTURE `ESM26`→`CME:FUTURE:SP500-USD@LIN-20260619`,
       OPTION `E3AN6 C7960`→`CME:OPTION:SP500-USD@LIN-20260117-7960-C` (0 whitespace — fixes the operator-seen
       banned-space class; product root ES→SP500 resolved). (repo: market-tick-data-service)
-- [x] ✅ [OPERATOR] P0. **TradFi quote/margin ruling — DECIDED 2026-07-18: explicit `-USD`** (see the A1 banner above).
+- [x] ✅ [BACKEND] P0. **TradFi quote/margin ruling — DECIDED 2026-07-18: explicit `-USD`** (see the A1 banner above).
       All tradfi is USD-settled (no inverse), but the quote is carried anyway for cross-asset-class uniformity +
       non-ambiguity, consistent with the DERIBIT ruling. Target =
       `VENUE:TYPE:PRODUCT_ROOT-USD@LIN-YYYYMMDD[-STRIKE-C|P]`.
@@ -291,7 +291,7 @@ source: >-
 - [ ] [DATA] P1. **v9 schema / manifest-status finish** (`tradfi_v9_stage1_finish_2026_07_06.md`) — fresh CF-1…CF-12
       all-GREEN re-run; confirm live `_index.schema_version` is int64 not string `'9'`
       (`cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`); Layer-1 % recorded. **Legacy-twin bucket
-      DELETEs = BLOCKED-OPERATOR-DECISION** (hard-stop).
+      DELETEs — RETAGGED (extended §3a, 2026-07-28): reversibility-qualified, 604800s measured. Dispatch `[DATA]`.
 - [x] ✅ [PM] P1. **Reconcile the stale fork** `data_completion_tradfi_2026_07_15.md` against `tradfi_v9_stage1_finish`
       (flip done todos, re-scope open ones, delete its duplicate paragraph) so the backlog is honest. DONE 2026-07-21
       (docs-reconciliation pass, `/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md`):

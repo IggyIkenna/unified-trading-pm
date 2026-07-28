@@ -22,7 +22,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-07-28"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -169,9 +169,13 @@ source:
     `databento_future_option_blank_instrument_id_shard_atom_2026_07_19.md`)**: `databento_adapter.py:179-185`'s static
     `_PARTITION_INSTRUMENT_TYPE` writes EVERY Databento TradFi FUTURE/OPTION as a `futures_chain`/`options_chain` (blank
     `instrument_id`, `underlying=<root>`), so the checker's per-contract match finds `no_matching_row`. NASDAQ/NYSE pass
-    (EQUITY, id preserved). **BLOCKED-OPERATOR-DECISION**: shard-atom for a TradFi ohlcv_1m future = per-root chain (fix
-    checker, no migration) OR per-contract `-USD@LIN-YYYYMMDD` (fix writer + re-migrate). **HELD the CME/ICE MVP
-    backfills** pending the ruling; NASDAQ/NYSE ohlcv_1m + CBOE/FX ohlcv_24h (Yahoo) unaffected.
+    (EQUITY, id preserved). `BLOCKED-OPERATOR-DECISION` **[RESOLVED 2026-07-20, stale-tag cleanup 2026-07-28]**:
+    shard-atom for a TradFi ohlcv_1m future = per-root chain (fix checker, no migration) OR per-contract
+    `-USD@LIN-YYYYMMDD` (fix writer + re-migrate). **Ruling: Option A (per-root chain) — checker fixed
+    (`mtds@8e43da75`), writer UNCHANGED, no migration** — see
+    `plans/archive/issues/databento_future_option_blank_instrument_id_shard_atom_2026_07_19.md` (status: resolved,
+    Option B formally rejected). The CME/ICE MVP-backfill HOLD referenced below was LIFTED 2026-07-20 by that same
+    ruling; NASDAQ/NYSE ohlcv_1m + CBOE/FX ohlcv_24h (Yahoo) were never affected.
   - **State**: A3.1 optimization done+measured (1.56x); P0 launcher fleet-fix live; Phase-D check meaningful. The ONLY
     open blocker to closing the MVP is the CME shard-atom ruling. Next after ruling: writer/checker fix → run MVP
     backfills (optimized concurrency) → re-run MVP gate + IS 7-venue sweep → durability closure.
@@ -470,6 +474,16 @@ its 2026-07-24 12:43 UTC launch — well before session-end); no re-launch was n
 
 **Recommended next item**: read the CBOE VM's `run.log` first (cheapest, already in flight) before picking up anything
 else — it's the only item above that doesn't need new investigation, just a status check.
+
+### 2026-07-28 — gate-cleanup pass (stale [OPERATOR]-adjacent citation)
+
+The tick-18 entry's `BLOCKED-OPERATOR-DECISION` shard-atom citation (CME `ohlcv_1m` per-root-chain vs per-contract) was
+never annotated with its own resolution even though the ruling landed 2026-07-20, before this plan (forked 2026-07-24)
+even existed. Confirmed via `plans/archive/issues/databento_future_option_blank_instrument_id_shard_atom_2026_07_19.md`
+(`status: resolved`): Option A (per-root chain) ratified, checker fixed (`mtds@8e43da75`), writer unchanged, no
+migration, CME/ICE MVP-backfill HOLD lifted 2026-07-20. Annotated the tick-18 entry in place with this resolution — no
+other change; this is a distinct, already-resolved issue from the CME NAT-GAS-MNG / chain-bundle sampler mismatch
+tracked elsewhere in this doc, which remains genuinely open.
 
 ---
 

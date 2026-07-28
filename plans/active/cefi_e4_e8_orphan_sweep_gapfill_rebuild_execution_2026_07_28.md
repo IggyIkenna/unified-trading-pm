@@ -53,11 +53,15 @@ source: [data_completion_cefi_2026_07_15.md — consolidated 2026-07-28 per main
 > arrived at "this needs to be its own phased plan" rather than executed as a single dispatched todo. This plan is that
 > phased plan — authored 2026-07-28 (slot-4) per main-agent coordination ruling `BLK-650261be`.
 >
-> **Nothing in this plan auto-executes.** Every phase below is `[OPERATOR]` or requires an operator-supervised VM
-> launch + monitoring — see `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § "3. Human-only hard stops"
+> **Nothing irreversible in this plan auto-executes.** Phases B and F are `[OPERATOR]` or require an operator-supervised
+> VM launch + monitoring — see `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § "3. Human-only hard stops"
 > (#2, the LEGACY-COPIED-NOT-MOVED invariant, applies to the ENTIRE orphan-sweep-delete phase below — it is a
 > categorical hard stop, not eligible for the §3a reversibility carve-out, because §3a only narrows hard-stop #1,
-> general prod-object deletes; it does not touch hard-stop #2 at all).
+> general prod-object deletes; it does not touch hard-stop #2 at all). **Update (2026-07-28 gate-cleanup pass)**: Phase
+> A (the pre-delete copy-only pass) carries none of that irreversibility — no delete occurs in it — so it is retagged
+> `[DATA]` and dispatchable as a normal monitored VM launch per `/codex/05-infrastructure/vm-launcher-runbook.md`'s
+> default-dispatchable posture for ordinary migration VM launches. Phase B (the actual delete) is unaffected and remains
+> `[OPERATOR]`/hard-stop #2.
 
 ## Already-shipped tooling (credit, not a flip)
 
@@ -77,12 +81,17 @@ step.
 
 ## Phase A — E4a(i): PRE-DELETE GUARANTEE copy pass (additive, reversible, VM-launched)
 
-- [ ] [OPERATOR] P0. Launch a fresh full-corpus-range `--apply` COPY-ONLY pass (bare `cefi` category, **NOT**
-      `--drop-stale`) on a SPOT VM: `bash launch-canonical-migration-vm.sh cefi 2019-03-30 <today> full`. This is
-      additive/idempotent (already-copied objects skip) — no delete happens in this phase. Monitor to completion (no
-      fire-and-forget; ≥1 progress line/hr, verify STOPPED/FAILED). **Done when**: the VM's `run.log` reports a clean
-      full-range pass with 0 unexpected errors — this is the "every orphan provably has a migrated dest" guarantee the
-      delete phase below depends on. Cite the VM name + run.log tail as evidence.
+- [ ] [DATA] P0. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — copy-only, additive, idempotent (no
+      delete occurs in this phase), so none of the irreversibility that makes Phases B/F human-only applies here; per
+      `/codex/05-infrastructure/vm-launcher-runbook.md`'s default-dispatchable posture for an ordinary migration VM
+      launch, this is a normal AO-dispatchable monitored VM launch, not an `[OPERATOR]` gate. Launch a fresh
+      full-corpus-range `--apply` COPY-ONLY pass (bare `cefi` category, **NOT** `--drop-stale`) on a SPOT VM:
+      `bash launch-canonical-migration-vm.sh cefi 2019-03-30 <today> full`. This is additive/idempotent (already-copied
+      objects skip) — no delete happens in this phase. Monitor to completion (no fire-and-forget; ≥1 progress line/hr,
+      verify STOPPED/FAILED). **Done when**: the VM's `run.log` reports a clean full-range pass with 0 unexpected errors
+      — this is the "every orphan provably has a migrated dest" guarantee the delete phase below depends on. Cite the VM
+      name + run.log tail as evidence. **Phase B (the actual delete) stays `[OPERATOR]`, hard-stop #2 — unaffected by
+      this retag.**
 
 ## Phase B — E4a(ii): orphan-sweep DELETE (irreversible, `[OPERATOR]`, hard-stop #2)
 

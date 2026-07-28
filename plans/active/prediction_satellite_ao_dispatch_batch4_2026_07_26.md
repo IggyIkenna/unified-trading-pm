@@ -212,20 +212,22 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
         not smoke-test green"). Repo: market-tick-data-service. **Done when**: all 348 dates' shape#3/#3b objects are
         enriched into their canonical twins (verified via readback) and deleted (verified via
         `gcs_describe_object(...) is None`), 0 anomalies outstanding.
-  - [ ] [OPERATOR][SCRIPT] P2. **4b-ii — shape #4's corpus-wide extent (Tier-2 SPOT-VM single walk, separately
-        dispatched).** Shape #4 (10-segment `data_source=POLYMARKET_CLOB/...` tree) is explicitly OUT OF SCOPE for 4b-i
-        — its corpus-wide extent is GENUINELY UNKNOWN (the issue doc's "158+" figure is a ONE-DAY `day=2025-04-11`
-        sample only, live-confirmed exactly 158 objects for that one day, not a corpus total). Enumerating every day
-        shape #4 exists on IS a new whole-corpus walk (review-blocking per CLAUDE.md single-walk discipline) — it must
-        run as the ONE sanctioned Tier-2 SPOT VM single walk per
-        `/codex/02-data/reconciliation-census-and-compute-tiers.md`, never in an interactive worker session, hence
-        `[OPERATOR]` (VM launch gating). Once the corpus-wide extent is known, the merge logic is the SAME
-        read-transform-write-per-cell pattern as 4b-i's shipped script (shape #4 already carries `title`/`slug`/
-        `eventSlug` per the issue doc's content-verify — the merge direction may in fact be shape#4 -> shape#1, richer
-        source into the (possibly still-bare) canonical twin, mirroring 4b-i's alias-aware additive-only approach).
-        Repo: market-tick-data-service. **Done when**: shape #4's full corpus-wide object set is enumerated (VM-run),
-        merged into canonical with a verified 0-loss content-check per delete-safety Part 2, and legacy objects deleted
-        only after verification.
+  - [ ] [SCRIPT] P2. **4b-ii — shape #4's corpus-wide extent (Tier-2 SPOT-VM single walk, separately dispatched).**
+        Shape #4 (10-segment `data_source=POLYMARKET_CLOB/...` tree) is explicitly OUT OF SCOPE for 4b-i — its
+        corpus-wide extent is GENUINELY UNKNOWN (the issue doc's "158+" figure is a ONE-DAY `day=2025-04-11` sample
+        only, live-confirmed exactly 158 objects for that one day, not a corpus total). Enumerating every day shape #4
+        exists on IS a new whole-corpus walk (review-blocking per CLAUDE.md single-walk discipline) — it must run as the
+        ONE sanctioned Tier-2 SPOT VM single walk per `/codex/02-data/reconciliation-census-and-compute-tiers.md`.
+        **Re-tagged off `[OPERATOR]` (2026-07-28)**: the safe-idempotent justification per CLAUDE.md's VM-launch-gating
+        OR-clause is stated directly — this walk is a READ-ONLY enumeration (no GCS mutation), cheaply re-run on
+        preemption (idempotent re-listing, no partial-state risk), so it launches via the standard Tier-2 SPOT VM
+        single-walk mechanism without a separate operator sign-off. Once the corpus-wide extent is known, the merge
+        logic is the SAME read-transform-write-per-cell pattern as 4b-i's shipped script (shape #4 already carries
+        `title`/`slug`/ `eventSlug` per the issue doc's content-verify — the merge direction may in fact be shape#4 ->
+        shape#1, richer source into the (possibly still-bare) canonical twin, mirroring 4b-i's alias-aware additive-only
+        approach). Repo: market-tick-data-service. **Done when**: shape #4's full corpus-wide object set is enumerated
+        (VM-run), merged into canonical with a verified 0-loss content-check per delete-safety Part 2, and legacy
+        objects deleted only after verification.
   - [ ] [DATA] P2. **4c — register the writer cutover in `canonical-cutover-register.md` +
         `non-canonical-path-inventory.md`.** 4a's writer-root fix (title/slug/event_slug now flow to new canonical
         writes) is registerable now; the raw-object migration disposition (4b-i shapes #3/#3b, 4b-ii shape #4) must be
@@ -246,12 +248,13 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
   walk to avoid concurrent-write races on the same `_index`. Source:
   `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (P2/P3 residual-manifest items, both "NICE-TO-HAVE", both
   "ride the next prediction canonicalisation walk").
-- **[OPERATOR][SCRIPT] Re-enumerate the IS POLYMARKET universe for a recent past date → re-run the `book_snapshot_5`
-  batch backfill → verify `row_count>0`.** A bounded, idempotent re-enumeration+backfill, but it (a) shares the
-  POLYMARKET IS enumeration path with todo #1 so it should sequence AFTER #1 lands (else it re-enumerates against the
-  old write path), and (b) launches a backfill VM → `[OPERATOR]` per the VM-launch gating rule (safe-idempotent
-  justification: the shard re-runs cleanly on preemption). Source: `prediction_live_clob_depth_capture_2026_07_24.md`
-  (the "DEFERRED-CROSS-DEP" `book_snapshot_5` row-proof item).
+- **[SCRIPT] Re-enumerate the IS POLYMARKET universe for a recent past date → re-run the `book_snapshot_5` batch
+  backfill → verify `row_count>0`.** A bounded, idempotent re-enumeration+backfill; it shares the POLYMARKET IS
+  enumeration path with todo #1 so it should sequence AFTER #1 lands (else it re-enumerates against the old write path).
+  **Re-tagged off `[OPERATOR]` (2026-07-28)**: the safe-idempotent justification already stated here (the shard re-runs
+  cleanly on preemption) satisfies CLAUDE.md's VM-launch-gating OR-clause — launches via the standard backfill-VM
+  mechanism, no separate operator sign-off needed. Source: `prediction_live_clob_depth_capture_2026_07_24.md` (the
+  "DEFERRED-CROSS-DEP" `book_snapshot_5` row-proof item).
 
 ## Deferred — operator / design-gated (BLOCKED-OPERATOR-DECISION, not a bounded worker outcome)
 

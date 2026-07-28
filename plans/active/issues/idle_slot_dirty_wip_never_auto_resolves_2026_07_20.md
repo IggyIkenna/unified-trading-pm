@@ -98,13 +98,14 @@ relying solely on the next spawn attempt:
       against slots that are dirty AND provably dead (no live tmux session). **Gate**: a deliberately-idle dirty slot
       with no tmux and an expired claim is inherited within one sweep interval, evidenced by a
       `slot_dirty_state_resolved`-class activity row with **no adjacent spawn/autospawn event**.
-- [x] [OPERATOR] P3. **Spot-check the live fleet for a current instance before prioritising the above** — query
-      `/api/fleet/git-health` for any slot dirty >24h with no live session. If none exists, this is a structural gap
-      without an active incident (fine to sequence behind P1 work) — which is a reason to rank it, **not** a reason to
-      close it. **Gate**: the one-line finding recorded in this doc. → **FINDING (2026-07-25, main agt-52bb99, raised by
-      review slot-1 msg 1991)**: a live instance EXISTS — host `ip-172-31-0-185` slot 0 (reporter stale since 03:32Z,
-      `ff_cron_stale`, `ff_pull_last=skip:dirty`). See recurrence note below. This ranks the P2 sweep above (active
-      incident with a real blast radius), it does not close the structural gap.
+- [x] [DIAG] P3. **RETAGGED 2026-07-28 (workspace stale-gate audit) — this was audit/spot-check work, not a genuine
+      operator-decision gate; already executed and recorded.** Spot-check the live fleet for a current instance before
+      prioritising the above — query `/api/fleet/git-health` for any slot dirty >24h with no live session. If none
+      exists, this is a structural gap without an active incident (fine to sequence behind P1 work) — which is a reason
+      to rank it, **not** a reason to close it. **Gate**: the one-line finding recorded in this doc. → **FINDING
+      (2026-07-25, main agt-52bb99, raised by review slot-1 msg 1991)**: a live instance EXISTS — host `ip-172-31-0-185`
+      slot 0 (reporter stale since 03:32Z, `ff_cron_stale`, `ff_pull_last=skip:dirty`). See recurrence note below. This
+      ranks the P2 sweep above (active incident with a real blast radius), it does not close the structural gap.
 
 ## Concrete recurrence 2026-07-25 — ip-172-31-0-185 slot 0, 31 uncommitted plans at risk
 

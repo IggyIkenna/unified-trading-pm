@@ -213,8 +213,9 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       locked-plan-deletion gate correctly blocked their removal). Per CLAUDE.md, unlocking requires an explicit operator
       `[unlock-plan]` — never autonomous — so both copies (stale `plans/active/issues/` + correct
       `plans/archive/issues/`) currently coexist for these 4 pending that decision. New follow-up todo below.
-- [x] [OPERATOR] P2. **4 duplicate doc pairs need an explicit `[unlock-plan]` decision before the stale
-      `plans/active/issues/` copy can be removed** — unified-trading-pm@0703cb288 (`[unlock-plan]`, operator-granted).
+- [x] [REVIEW] P2. **RETAGGED 2026-07-28 (stale-tag audit — this item's own operator gate already resolved and executed,
+      `[OPERATOR]` never removed).** 4 duplicate doc pairs needed an explicit `[unlock-plan]` decision before the stale
+      `plans/active/issues/` copy could be removed — unified-trading-pm@0703cb288 (`[unlock-plan]`, operator-granted).
       Verified: all 4 stale `plans/active/issues/` copies removed, `plans/archive/issues/` copies confirmed present and
       correct, 7 live referrers repointed onto the archive path.
 - [ ] [SCRIPT] P3. **Widen `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership rule** — currently

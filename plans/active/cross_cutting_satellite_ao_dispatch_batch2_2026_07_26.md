@@ -392,9 +392,12 @@ drift_direction: advance-code
       clean for both AGs on those dates. No new MTDS code fix required in either case — both open classes are
       already-tracked residuals of live/completed backfill efforts, not fresh bugs. Full verdicts + evidence in each
       issue doc's new "Final triage verdict (2026-07-28, slot-5)" section. — unified-trading-pm (this commit).
-- [ ] [OPERATOR] P2. **Clean the contaminated defi/tradfi manifest `schema_version` rows — operator APPROVED 2026-07-27,
-      ready to dispatch.** Operator ruling (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 11,
-      interactive session 2026-07-27): "dp_alerts_dp_not_v9 — `populate_v9_index_columns_inplace.py --apply`:
+- [ ] [DATA] P2. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — the operator ruling below is the
+      standing approval this todo needs; nothing further is operator-gated, so this dispatches as a normal AO todo per
+      its own pre-apply sequence (snapshot defi+tradfi index → verify single-column contamination → run `--apply` →
+      verify row-count delta). **Clean the contaminated defi/tradfi manifest `schema_version` rows — operator APPROVED
+      2026-07-27, ready to dispatch.** Operator ruling (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED
+      item 11, interactive session 2026-07-27): "dp_alerts_dp_not_v9 — `populate_v9_index_columns_inplace.py --apply`:
       **APPROVED** to run." This is a prod-manifest **row mutation** (bumping `schema_version` on single-column-
       contaminated rows), not a GCS object delete, so the applicable gate is the manifest-mutation contract in
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § "Not a hard stop, but adjacent: manifest-row

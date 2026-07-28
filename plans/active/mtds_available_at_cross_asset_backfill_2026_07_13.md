@@ -24,7 +24,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-13
-last_updated: 2026-07-14
+last_updated: 2026-07-28
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -123,30 +123,38 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       (editable path source, both commits ancestors of LDR HEAD, no floor bump needed) and concluded no action needed;
       slot 8 additionally found the **production Docker digest pin** was stale (missed by that check) and shipped the
       fix — `market-tick-data-service@4d84268b`. Full evidence in Progress Log below.
-- [ ] [OPERATOR] P0. BLOCKED-OPERATOR-DECISION — coordinate a maintenance window with the operator for the prediction +
-      tradfi consolidator crons (per the sports Finding 1 cron-collision incident) before pausing either — get explicit
-      per-bucket go-ahead. (repo: NA)
+- [ ] [DATA] P0. **Retagged 2026-07-28 (was `[OPERATOR]` BLOCKED-OPERATOR-DECISION)** — pause the prediction + tradfi
+      consolidator crons for the backfill window below (per the sports Finding 1 cron-collision incident, still respect
+      the dry-run/snapshot/pause/guardrail-verify/resume protocol). Operator ruling 2026-07-28 (CLAUDE.md Governance
+      section: maintenance-window restarts/pauses of shared infra no longer need operator scheduling while
+      pre-live-trading, brief downtime is acceptable) removes the "coordinate a window with the operator first" gate —
+      dispatch directly: group prediction + tradfi's cron-pauses together (avoid the sports-precedent collision by
+      pausing both explicitly and verifying each is actually paused, not by getting a human go-ahead), execute now, and
+      verify each cron resumes healthy afterward per the todos below. (repo: NA)
 - [x] [DATA] P1. Dry-run `rebuild_prediction_manifest.py --dry-run` (no `--force` flag exists — see correction above)
       against `market-data-tick-pred-prd-central-element-323112`; spot-check the previewed `available_at_envelope`
       values against a handful of known-good rows before applying anything live. (repo: market-tick-data-service) — ✅
       2026-07-14 (slot 9): see Progress Log for full evidence (correction: the script has no `--force` flag — ran
       `--dry-run` instead, which is the actual no-writes preview mode).
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION — Snapshot the prediction canonical manifest index
-      (`_index/snapshots/pre_available_at_backfill_<ts>.parquet`) and pause its consolidator cron. (repo:
-      market-tick-data-service) — PARTIAL 2026-07-14 (slot 4): snapshot half DONE + verified —
+- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling as the P0 todo above)** —
+      Snapshot the prediction canonical manifest index (`_index/snapshots/pre_available_at_backfill_<ts>.parquet`) and
+      pause its consolidator cron. (repo: market-tick-data-service) — PARTIAL 2026-07-14 (slot 4): snapshot half DONE +
+      verified —
       `gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260714T000100Z.parquet`
       (47,908,172 bytes, byte-identical to the live index at snapshot time). Shipped
       `scripts/mtds_available_at_backfill_snapshot_prediction_2026_07_14.py` (market-tick-data-service@86467a0a).
-      Cron-pause half deliberately NOT done — same still-open P0 `BLOCKED-OPERATOR-DECISION` maintenance-window gate
-      slot 5 (`BLK-f3cdf442`) and slot 9 already deferred on; no operator go-ahead is on record. Leaving this checkbox
-      unflipped since the todo's full scope isn't complete.
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION — Apply `rebuild_prediction_manifest.py` (full date range, omit `--dry-run` —
-      no such flag as `--force`/`--no-dry-run`), force-consolidate, then re-run
-      `available_at_fill_rate_audit_2026_07_13.py` (or its successor) to confirm fill rate rose from 0% — verify the
-      `MANIFEST_COLUMN_FILL_REGRESSION` guardrail did NOT trip and total row count is unchanged before declaring
-      success. (repo: market-tick-data-service, unified-trading-library)
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION — Resume the prediction consolidator cron; record the before/after fill-rate
-      evidence in this plan's Progress Log. (repo: market-tick-data-service)
+      Cron-pause half was deliberately NOT done at the time (slot 5 `BLK-f3cdf442`, slot 9) because it was gated on the
+      P0 maintenance-window todo above — that gate is resolved 2026-07-28 (pre-live-trading maintenance windows no
+      longer need operator scheduling); pause the cron directly now and flip this checkbox once both halves are verified
+      complete.
+- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling)** — Apply
+      `rebuild_prediction_manifest.py` (full date range, omit `--dry-run` — no such flag as `--force`/`--no-dry-run`),
+      force-consolidate, then re-run `available_at_fill_rate_audit_2026_07_13.py` (or its successor) to confirm fill
+      rate rose from 0% — verify the `MANIFEST_COLUMN_FILL_REGRESSION` guardrail did NOT trip and total row count is
+      unchanged before declaring success. (repo: market-tick-data-service, unified-trading-library)
+- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling)** — Resume the prediction
+      consolidator cron; record the before/after fill-rate evidence in this plan's Progress Log. (repo:
+      market-tick-data-service)
 - [x] ✅ [DATA] P1. **NEW — 2026-07-14 correction**: query the tradfi canonical index (via `read_availability_index()` —
       single-walk-safe, NOT a raw GCS walk) for the bundled (`options_chain`/`futures_chain`/`event_contract`) vs
       non-bundled row-count split on `capture_status=captured` rows, so the true post-apply fill-rate ceiling is known
@@ -242,27 +250,29 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       `writer.record_captured_from_counts()`. Full `tests/unit/scripts/test_rebuild_tradfi_manifest_coverage.py` green
       (21/21, was 20). Shipped `market-tick-data-service@c8c01855` via quickmerge. No production writes made — code +
       tests only. (repo: market-tick-data-service)
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION — Snapshot the tradfi canonical manifest index and pause its consolidator
-      cron. (repo: market-tick-data-service) — PARTIAL 2026-07-14 (data_engineering slot-2, task
-      `mtds_available_at_cross_asset_backfill-007`): snapshot half DONE + verified, mirroring the prediction precedent's
-      split (slot 4's "Snapshot (safe half only)" entry above) — shipped
-      `scripts/mtds_available_at_backfill_snapshot_tradfi_2026_07_14.py` (`market-tick-data-service@8f131104`, QG green,
-      shipped via quickmerge), ran it against real prod:
+- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling as the P0 todo above)** —
+      Snapshot the tradfi canonical manifest index and pause its consolidator cron. (repo: market-tick-data-service) —
+      PARTIAL 2026-07-14 (data_engineering slot-2, task `mtds_available_at_cross_asset_backfill-007`): snapshot half
+      DONE + verified, mirroring the prediction precedent's split (slot 4's "Snapshot (safe half only)" entry above) —
+      shipped `scripts/mtds_available_at_backfill_snapshot_tradfi_2026_07_14.py` (`market-tick-data-service@8f131104`,
+      QG green, shipped via quickmerge), ran it against real prod:
       `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260714T011351Z.parquet`
       (162,825,635 bytes, byte-identical to the live index at snapshot time, independently re-verified via a fresh
-      `blob.reload()` read). Cron-pause half deliberately NOT done — same still-open P0 `BLOCKED-OPERATOR-DECISION`
-      maintenance-window gate (`BLK-272f061b`/`1e6326c7`/`f3cdf442`/`aa40e2b6`/ `b484ff7a`) — no operator go-ahead is on
-      record. Leaving this checkbox unflipped since the todo's full scope isn't complete.
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION — Apply `rebuild_tradfi_manifest.py` (full date range, omit `--dry-run` — no
-      `--force`/`--no-dry-run` flag exists), force-consolidate, then verify fill rate + guardrail + row count via the
-      audit script, same protocol as prediction. **Do not declare tradfi's backlog fully resolved from this alone** —
-      confirm the resulting fill rate matches the bundled-vs-non-bundled ceiling measured above (a rate matching only
-      the bundled fraction means the non-bundled follow-up is still open, not a bug). **Update, 2026-07-14 (slot 10)**:
-      per the reconciliation above, expect the post-apply fill rate to approach ~100% (not ~85%) since the bundled
-      branch appears dead code — a rate near 85% instead would mean the dead-code theory is wrong and needs
-      re-investigation before declaring success. (repo: market-tick-data-service, unified-trading-library)
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION — Resume the tradfi consolidator cron; record evidence in the Progress Log.
-      (repo: market-tick-data-service)
+      `blob.reload()` read). Cron-pause half was deliberately NOT done at the time (`BLK-272f061b`/`1e6326c7`/
+      `f3cdf442`/`aa40e2b6`/`b484ff7a`) because it was gated on the P0 maintenance-window todo above — that gate is
+      resolved 2026-07-28 (pre-live-trading maintenance windows no longer need operator scheduling); pause the cron
+      directly now and flip this checkbox once both halves are verified complete.
+- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling)** — Apply
+      `rebuild_tradfi_manifest.py` (full date range, omit `--dry-run` — no `--force`/`--no-dry-run` flag exists),
+      force-consolidate, then verify fill rate + guardrail + row count via the audit script, same protocol as
+      prediction. **Do not declare tradfi's backlog fully resolved from this alone** — confirm the resulting fill rate
+      matches the bundled-vs-non-bundled ceiling measured above (a rate matching only the bundled fraction means the
+      non-bundled follow-up is still open, not a bug). **Update, 2026-07-14 (slot 10)**: per the reconciliation above,
+      expect the post-apply fill rate to approach ~100% (not ~85%) since the bundled branch appears dead code — a rate
+      near 85% instead would mean the dead-code theory is wrong and needs re-investigation before declaring success.
+      (repo: market-tick-data-service, unified-trading-library)
+- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling)** — Resume the tradfi
+      consolidator cron; record evidence in the Progress Log. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P2. Audit each `market_tick_data_service/cli/handlers/*_handler.py` DeFi collector (~30 files) for how
       (or whether) it currently derives `available_at` at live-capture time — map the per-data_type derivation formula
       each already uses, since a retroactive backfill must reuse the SAME formula per data_type rather than one blanket
@@ -869,3 +879,17 @@ Shipped via the `docs(plans):` carve-out (plan-markdown-only change — this tod
 `market-tick-data-service` code touched, no production reads/writes beyond local git greps + reads on the already
 fresh-pulled clone). Flipped this todo's checkbox `[x]` — its full scope (map the derivation, feed the go/no-go todo) is
 complete.
+
+### 2026-07-28 — gate-cleanup pass (maintenance-window gate retagged)
+
+Operator ruling 2026-07-28 (CLAUDE.md Governance section): shared-infra maintenance-window restarts/pauses no longer
+need operator scheduling while pre-live-trading — brief downtime is acceptable. Retagged the P0
+`[OPERATOR] BLOCKED-OPERATOR-DECISION` cron-coordination todo (prediction + tradfi consolidator crons) from `[OPERATOR]`
+to `[DATA]`, and the 5 directly-dependent snapshot/apply/resume todos that were blocked solely on it (prediction ×3,
+tradfi ×3, minus overlap) from `BLOCKED-OPERATOR-DECISION` to normal open todos — dispatch directly, group both crons'
+pause together (respecting the sports-precedent cron-collision guard), execute now, verify each resumes healthy. The
+many historical Progress Log entries above that note "the P0 `[OPERATOR] BLOCKED-OPERATOR-DECISION` maintenance-window
+todo is still unchecked" were accurate at the time they were written and are left as-is (historical record); they
+predate this ruling. The separate `[OPERATOR] P2` defi design-decision gate (present the defi audit + scoped design
+option for a go/no-go) is UNAFFECTED — it is a design ruling, not a maintenance-window schedule, and stays gated. No
+cron paused, no backfill applied, as part of this pass — retag/dispatch-shape only.

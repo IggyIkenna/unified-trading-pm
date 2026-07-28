@@ -282,7 +282,8 @@ orchestrator-dispatched).
 
 ### Phase 4 — prod cutover [RESOLVED-BY-RULING 2026-07-14: DESCOPED — perps not MVP]
 
-- [x] [BLOCKED-OPERATOR-DECISION] P1. Confirm Kalshi + Polymarket perps **prod access** (Kalshi member-rollout
+- [x] [DOCS] P1. **RETAGGED 2026-07-28 (stale-tag audit — already answered, resolution never retagged off
+      `BLOCKED-OPERATOR-DECISION`).** Confirm Kalshi + Polymarket perps **prod access** (Kalshi member-rollout
       enrollment; Polymarket beta enrollment) + provide prod credential blobs (`kalshi-perp-prod`,
       `polymarket-perp-prod`). Gate: operator answers Q1 (access) + provides prod secrets. — **ANSWERED 2026-07-14
       (operator, chat): NO prod access — Kalshi/Polymarket perps are NOT part of MVP.** Polymarket perps beta-gated;

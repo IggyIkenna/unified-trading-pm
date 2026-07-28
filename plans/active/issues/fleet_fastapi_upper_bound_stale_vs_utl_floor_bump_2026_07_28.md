@@ -147,10 +147,16 @@ importable in this pass.)
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Decide direction A (roll canonical forward to fastapi>=0.137/starlette>=1.3.1, bump the ≥10 lagging
-      repos to match) vs direction B (revert UTL's `3b99d19d` bump, keep canonical at <0.137.0, find another fix for the
-      `_IncludedRouter` issue) — see "Recommended decision" above. **Done when**: a direction is chosen and this doc's
-      remaining todos are rewritten/dispatched against it.
+- [x] [VERIFY] P0. **RATIFIED 2026-07-28 — direction A confirmed complete, [OPERATOR] tag dropped, no revert work
+      queued.** Per the 2026-07-28 slot-12 Progress Log entry below: direction A (roll canonical forward to
+      fastapi>=0.137.0/starlette>=1.3.1) was already fully executed end-to-end BEFORE this doc's author found the doc —
+      all 14 affected repos (the ≥10 lagging repos + client-reporting-api + trading-agent-service) bumped and shipped,
+      `unified-trading-pm/canonical-dependency-manifest.json` + `workspace-constraints.toml` rolled forward to the new
+      floor, the CVE-2026-54283/-54282 `--ignore-vuln` entries dropped (0.137+ is the real fix), and
+      `check-dependency-alignment.py` now reports the fleet fully aligned (the exact contradiction this doc raised).
+      Direction B (revert) is objectively worse at this point — it would re-break 14 already-shipped, QG-green repos and
+      put the fleet back on a floor with an open route-introspection bug plus both CVEs. Ratifying direction A as
+      complete closes this decision; no further dispatch needed against this todo.
 
 ## Progress Log
 

@@ -141,17 +141,20 @@ time) — it will recur for any other collision-group-mate pair phrased with a s
       the 400 unverified-claim refusal, both 404s, the `plans/active/issues/` stale-plan_ref fallback, activity-event
       logging, and dispatched-row safety); full `quality-gates.sh` green (1821 passed, basedpyright/ruff/dashboard
       clean). Repo: agent-orchestrator.
-- [ ] [OPERATOR] P1. **Manually resolve `cefi_satellite_ao_dispatch_batch1-012`'s dispatched-but-undone state** — the
-      work is genuinely complete and verified (market-tick-data-service@94b4aff5, unified-trading-pm@dadf5db6e). Filed
-      as `/blocked` question `BLK-35875b16` with the same evidence; this todo exists so the fix is tracked even if the
-      blocked question is answered out-of-band. **Kept operator-gated on re-triage 2026-07-27**: even though the
-      evidence for THIS row is airtight, the only available fix today is a raw, out-of-band SQL write against the live
-      `state.db` (no `/api/backlog/<id>/reconcile-brief` endpoint exists yet — that's the second todo above, unshipped).
-      `ao_backlog_done_row_disappearance_2026_07_25.md` is an OPEN, unexplained investigation into exactly this class of
-      out-of-band write silently corrupting `done`-row audit history on this same DB — adding another untracked manual
-      UPDATE right now would add noise to that investigation's evidence trail, not just fix one row. Land the
-      reconcile-brief endpoint (or resolve the other investigation) first, then this becomes a normal, audit-logged,
-      non-operator action.
+- [ ] [SCRIPT] P1. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — the todo's own stated unblocking
+      condition (the `/api/backlog/<id>/reconcile-brief` endpoint existing) is now met: it shipped in the second todo
+      above (`agent-orchestrator@09cda29`), which is exactly the "normal, audit-logged, non-operator action" path this
+      todo said to wait for — no more raw out-of-band SQL write needed, so the `ao_backlog_done_row_disappearance` noise
+      concern this todo was held on no longer applies. **Manually resolve `cefi_satellite_ao_dispatch_batch1-012`'s
+      dispatched-but-undone state** — the work is genuinely complete and verified (market-tick-data-service@94b4aff5,
+      unified-trading-pm@dadf5db6e). Call `POST /api/backlog/cefi_satellite_ao_dispatch_batch1-012/reconcile-brief` with
+      `new_brief` set to the currently-checked todo text this task actually corresponds to —
+      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s "DONE 2026-07-27 (slot-5) — market-tick-data-service@94b4aff5.
+      Widened `_update_cluster_and_chain_counts`…" line (originally cited at `:386`, now at `:411` after subsequent plan
+      edits — resolve the CURRENT line number at execution time, don't assume either cited number) — then confirm the
+      task's stored `brief`/`brief_hash` now match and the row's `dispatched`-but-undone state is resolved. Filed as
+      `/blocked` question `BLK-35875b16` with the same evidence; that question can now be closed citing this resolution
+      path instead of left open.
 
 ## Evidence
 

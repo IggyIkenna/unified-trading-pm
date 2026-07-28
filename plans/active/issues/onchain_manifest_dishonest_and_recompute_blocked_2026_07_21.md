@@ -270,9 +270,20 @@ Update is diagnosis-only, per the sourcing todo's own scope).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Close the fix chain: delete the orphaned `onchain/_index/` tree + backfill honest root-manifest
-      registration** — (a) delete the dead migration-debris `onchain/_index/availability_index.parquet` tree (prod GCS
-      delete, needs the standard delete-safety check) and (b) decide how to bulk-register the historical
-      `onchain/by_date/` corpus (724 objects, Jan 25–Jul 26) into the LIVE root manifest via
-      `record_captured`/`record_empty`/`record_failed` rows per (date, feature_group); remediation stays open pending
-      this design decision (2026-07-28 slot-12/slot-13 Updates above).
+- [ ] [DATA] P1. **Retagged from [OPERATOR] 2026-07-28, split into the two halves per the doc's own two stated options —
+      no fresh operator ask needed for either.** (a) **Delete the orphaned `onchain/_index/` tree**
+      (`gs://features-defi-prd-central-element-323112/onchain/_index/`, dead migration debris with no live consolidator
+      owner, confirmed by the 2026-07-28 slot-12 Update above): run a FRESH `gcs_bucket_soft_delete_retention_seconds()`
+      against `features-defi-prd-central-element-323112` as part of executing this todo — if it returns `>=604800s`,
+      that same-run check satisfies delete-safety-protocol §3a (finding T), proceed with the delete citing the check's
+      own output as evidence, no separate operator sign-off required; if it returns below the threshold or errors, STOP
+      and escalate to the operator with the measured value. (b) **Bulk-register the historical `onchain/by_date/`
+      corpus** (724 objects, Jan 25–Jul 26) into the LIVE root manifest via
+      `record_captured`/`record_empty`/`record_failed` rows per (date, feature_group), re-validated against real GCS
+      content (the same captured-vs-featureless split this doc's own table already worked out for the 13 legacy rows) —
+      **dispatched as its own new-scope backfill (option (ii) from the doc's two stated options)**, not folded into a
+      "fix chain step 2" rerun, since the Update above is explicit this is new registration scope, not a rerun of
+      anything broken. Mirror the established `record_captured`-per-instrument registration recipe used for the
+      2026-07-21 defi dex_pools/lending_indices fold
+      (`/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`) rather than inventing a new
+      registration mechanism.
