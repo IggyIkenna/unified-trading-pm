@@ -188,3 +188,30 @@ blast radius than the earlier full-session death, but the same root mechanism.
 **No data lost, still resumable**: resume-log now at 9,033/23,588 entries, all repos in this slot clean. Not retrying
 again immediately — will back off and re-check host state before the next attempt, per this doc's own async-wait
 guidance, rather than repeatedly relaunching into the same condition.
+
+## Update 2026-07-28 (later still, slot-14) — LIKELY MECHANISM IDENTIFIED: nohup+disown detachment, not host load, is the proximate trigger for this specific class of kill
+
+A third resume attempt (`--discover-workers 2 --verify-workers 2 --limit 3000`, same `nohup ... & disown` launch pattern
+as the two prior attempts) died the same way — resume-log grew only 9,033 → 9,080 (47 more markers) before silent death,
+with load at the time actually LOWER (`49.23 64.89 105.83`) than either prior attempt. A fixed launch pattern dying at a
+similar small item-count/wall-clock position regardless of load level and regardless of worker count (130 → 47 markers
+processed across three attempts, all within roughly 1-3 minutes of the verification phase starting) does not fit a
+load-proportional OOM/reaper model — it fits a **fixed-duration or session/cgroup-boundary reap of nohup+disown-detached
+processes specifically**, independent of host load.
+
+**Test**: relaunched the identical script (`--discover-workers 4 --verify-workers 4 --limit 5000`) with NO
+`nohup`/`disown` at all — run directly in the foreground of the agent harness's own tracked background-task mechanism
+(`run_in_background: true` on the tool call itself, the process staying attached to that tracked task rather than being
+detached into an orphaned session). **Result: survived well past the ~1-3 minute death window that killed every
+nohup-detached attempt** — confirmed still running and making real progress (9,080 → 9,476 resume-log entries, i.e. 396
+markers processed) after 11+ minutes of wall-clock, at a similar/slightly worse host load (`69.54 76.20 85.45`) to the
+attempts that died in under 3 minutes.
+
+**Practical implication, refining this doc's own P3 recommendation**: this does NOT contradict the earlier
+`quality-gates.sh` finding that harness `run_in_background` is "not immune either" (that was a genuinely
+CPU/memory-heavy pytest run, plausibly a real OOM-killer victim by RSS/CPU badness score) — the two findings are about
+DIFFERENT process weight classes hitting DIFFERENT kill mechanisms. For a LIGHTWEIGHT, long-running, I/O-bound script
+(like this GCS-listing/verification purge), avoid `nohup ... & disown` entirely and run it directly under the harness's
+own tracked `run_in_background` — it appears meaningfully more durable for this weight class specifically. Still
+monitoring whether this run completes cleanly before treating this as fully confirmed rather than a promising single
+data point.
