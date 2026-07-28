@@ -283,6 +283,13 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   the date is marked OK regardless. Open question: are these failures recorded as honest-absence (`record_captured`
   failed/unattempted) or silently dropped — verify before deciding whether it's a vendor-gap skip-list fix or a
   recording-correctness bug. P2, open.
+- `issues/instruments_service_plan_reconciliation_2026_06_29.md` §C9 (rehomed here 2026-07-28 per operator ruling
+  2026-07-27, interactive session §5#27; source doc still active/locked, pending `[unlock-plan]` for its own eventual
+  archival — see that doc's C9 section) — EXTENDED candle/ohlcv fetch path (`_fetch_extended_candles_for_symbol`,
+  `adapters/_umi_extended.py:151`) silently swallows HTTP-error/exception/ empty-200 failures (no
+  `failed_per_instrument` param wired, unlike sibling `/funding`/`/trades`/`/orderbook`) — a real honest-absence
+  violation, low MVP urgency (ohlcv non-MVP today), ~10-line fix (thread the failure router + `record()` on error +
+  `record_empty()` on empty-200). P3, open.
 
 **Dispatched**: the non-Tardis cefi VM cross-machine-sharding sweep is candidate 2 of
 `cefi_consolidated_native_ao_extract_2026_07_25.md`.

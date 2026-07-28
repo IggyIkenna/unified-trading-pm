@@ -30,7 +30,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 9.6
-last_updated: 2026-06-27
+last_updated: 2026-07-28
 locked_by: live-defi-rollout
 locked_since: 2026-06-05
 supersedes:
@@ -347,9 +347,12 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       non-blank `pipeline_mode`/`source`/`asset_group`) — both verified present in the mtds repo history. **Parent
       checkbox left open**: the added regression test is defi-specific, not yet confirmed to cover every AG's rebuild
       script (the "cross-AG regression test" clause of this work unit), so full closure of this item is unverified.
-- [ ] [CODE] P1. **features delta_one reader pipeline_mode-aware** (#3) — `_build_blob_path`/`_resolve_blob_paths`
+- [x] ✅ [CODE] P1. **features delta_one reader pipeline_mode-aware** (#3) — `_build_blob_path`/`_resolve_blob_paths`
       include the `pipeline_mode=` segment (delegate to UAC `candidate_parquet_paths` or build inline like MDPS), with a
-      coverage regression. Repo: features-service. Owner: vm-ml.
+      coverage regression. Repo: features-service. Owner: vm-ml. **DONE 2026-06-16 — features-service@795e4f4** ("fix
+      (delta_one): pipeline_mode-aware candle reader (canonical pm path + bare fallback) (GATE-0 #3)"; already ticked in
+      the GATE-0 "Success criteria" list below at I3 — this was the stale unflipped parent box, confirmed 2026-07-28 via
+      `git log` on the cited sha (verify-rerun, `june_2026_vintage_audit_findings_2026_07_27.md` §4).
 - [x] ✅ [CODE] P1. **enumerate_expected_universe stamps pipeline_mode+source on `record_empty`** (#4) — is@03a93e10
       (2026-06-07). `_derive_pm_source_transport(asset_group, data_type)` derives pm/source/**transport** from the
       cell's primary external source in UAC `SOURCE_PRIORITY`; seeded `expected_unattempted`/`empty_confirmed` rows now
@@ -474,7 +477,7 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       (`availability-manifest-and-data-status.md`, `pipeline-mode-and-batch-live-reconciliation.md` — still has
       `BATCH_HYPERLIQUID_REST`/`hyperliquid_rest` refs — `honest-absence-downstream-handling.md`,
       `external-data-always-available-rule.md`) + CLAUDE.md + per-AG plans + `SUB_AGENT_MANDATORY_RULES.md`.
-- [ ] [CODE] P1. **UI reference-data registry regen** — `lib/registry/ui-reference-data.json` still lists the stale
+- [x] ✅ [CODE] P1. **UI reference-data registry regen** — `lib/registry/ui-reference-data.json` still lists the stale
       `batch_hyperliquid_rest` PipelineMode value. It is GENERATED from UAC (`generate_ui_reference_data.py` →
       `uac-registry-sync.yml`), so regenerate from the now-fixed UAC SSOT (uac@cc69b123) rather than hand-edit. **GATED
       on the UI playwright gate (HARD RULE)**: needs `pw:L2 ✓` + a regression spec on a UI-capable slot. Repo:
@@ -485,7 +488,12 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       `context/api-contracts/openapi/ui-reference-data.json`) are ALREADY clean (0 `hyperliquid_rest`); ONLY the synced
       `lib/registry/ui-reference-data.json` carries the 1 stale token → the regen diff is provably **purely the
       `batch_hyperliquid_rest`→`batch_hyperliquid` rename**. NOT hand-edited (generated-artifact rule); a UI slot runs
-      the sync (`uac-registry-sync.yml` / `generate_ui_reference_data.py`) + the playwright gate to tick.
+      the sync (`uac-registry-sync.yml` / `generate_ui_reference_data.py`) + the playwright gate to tick. **DONE,
+      re-verified 2026-07-28** (`june_2026_vintage_audit_findings_2026_07_27.md` §4) — `grep -c hyperliquid_rest`
+      returns 0 across all 4 named files (`unified-api-contracts/ui-reference-data.json`,
+      `unified-api-contracts/openapi/ui-reference-data.json`,
+      `unified-trading-system-ui/lib/registry/ui-reference-data.json`,
+      `unified-trading-system-ui/context/api-contracts/openapi/ui-reference-data.json`) — the regen has landed.
 
 ## Operator decisions needed (closed-set forks)
 
@@ -766,10 +774,14 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   to a no-op → emulator-free + order-independent (test-only, no prod-code change; 132 tests green after). Belongs to
   `sports_manifest_canonicalisation_2026_06_01`; done here to unblock the mtds QG gate.
 
-- [ ] [TEST] P2. **DEFERRED-followup** — make the broader sports `process_ticks` unit suite emulator-independent
-      fleet-wide (the 3 files were stubbed here; audit other `process_ticks`-calling sports unit tests in mtds for the
-      same `_check_sports_v9_columns` seeded-emulator dependency). Provenance: GATE-0 tick-5 sports-hermeticity finding.
-      Repo: market-tick-data-service. Parent: `sports_manifest_canonicalisation_2026_06_01`.
+- [x] 🟦 [TEST] P2. **REHOMED (2026-07-28)** — was: "DEFERRED-followup — make the broader sports `process_ticks` unit
+      suite emulator-independent fleet-wide (the 3 files were stubbed here; audit other `process_ticks`-calling sports
+      unit tests in mtds for the same `_check_sports_v9_columns` seeded-emulator dependency)." This was an orphan (its
+      named parent `sports_manifest_canonicalisation_2026_06_01` is not this doc's owning track, and no sports
+      test-hygiene track elsewhere claimed it) — filed as a standalone issue doc per
+      `june_2026_vintage_audit_findings_2026_07_27.md` §4:
+      `/plans/active/issues/sports_process_ticks_emulator_dependent_unit_tests_2026_07_27.md`. Provenance: GATE-0 tick-5
+      sports-hermeticity finding. Repo: market-tick-data-service.
 - **2026-06-16 (tick 6) — M1-BREAKING COMPLETE → GATE-0 8/9 (only M5c/d UI left).**
   `rg "live_websocket|LIVE_WEBSOCKET" --type py` = **0 fleet-wide**. Full ship set: execution@04218fbc · BLRS@3bad2fe ·
   deployment-api@aa18d8ae · mdps@30e7672 · mtds@84a15cc · UTL@2afb22bd · **UAC@28bd50e (alias member DELETED +
@@ -872,20 +884,26 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   breaking-cascade lock → every breaking-pending PR (BLRS #81/#82/#83) stayed blocked. **Immediate unstick**: dispatched
   quality-gates-v2 on FA LDR HEAD (6f3febc9) + a fresh sit-debounce → refreshes ci_status → SIT precondition clears →
   SIT runs → sit-unlock releases lock → PRs auto-merge (watcher confirming).
-- [ ] [CICD] P1. **SYSTEMIC: extend the stale-FAILING ci_status self-heal to the SIT-gate precondition (the same fix I
-      shipped for the Tier-C drain Tier-A gate).** `sit-gate.yml`/`lock-staging` hard-blocks when any pending
+- [x] 🟦 [CICD] P1. **SYSTEMIC: extend the stale-FAILING ci_status self-heal to the SIT-gate precondition (the same fix
+      I shipped for the Tier-C drain Tier-A gate).** `sit-gate.yml`/`lock-staging` hard-blocks when any pending
       repo`s ci_status==FAILING, even when that status is STALE vs the repo`s current LDR HEAD (no v2 run for HEAD`s
       sha) — a fixed-on-LDR repo permanently jams the SIT → the breaking lock never releases → ALL breaking promotions
       stall fleet-wide.
 
       Fix: in the SIT-readiness precondition, when a repo is FAILING but has NO quality-gates-v2 run for its current
-                                                                                                                                                          LDR HEAD, re-dispatch v2 on its LDR HEAD (refresh) instead of hard-blocking (mirror
-                                                                                                                                                          `ldr-to-staging-promote.yml`s tick-10 self-heal). Repo: unified-trading-pm (`.github/workflows/sit-gate.yml` +
-                                                                                                                                                          the precondition script that prints "not all pending repos SIT-ready"). Provenance: GATE-0 tick-11 (the FA jam).
-                                                                                                                                                          Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: this is CICD-infra scope, not
-                                                                                                                                                          `pipeline_mode` — belongs to `cicd_retire_staging_branch_2026_06_27`
-                                                                                                                                                          / cicd-hardening; tracked here only because it surfaced during GATE-0. Migrate to the cicd plan on next cicd
-                                                                                                                                                          touch.
+                                                                                                                                                                          LDR HEAD, re-dispatch v2 on its LDR HEAD (refresh) instead of hard-blocking (mirror
+                                                                                                                                                                          `ldr-to-staging-promote.yml`s tick-10 self-heal). Repo: unified-trading-pm (`.github/workflows/sit-gate.yml` +
+                                                                                                                                                                          the precondition script that prints "not all pending repos SIT-ready"). Provenance: GATE-0 tick-11 (the FA jam).
+                                                                                                                                                                          Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: this is CICD-infra scope, not
+                                                                                                                                                                          `pipeline_mode` — belongs to `cicd_retire_staging_branch_2026_06_27`
+                                                                                                                                                                          / cicd-hardening; tracked here only because it surfaced during GATE-0. Migrate to the cicd plan on next cicd
+                                                                                                                                                                          touch. **CLOSED-AS-SUPERSEDED (2026-07-28,
+                                                                                                                                                                          `june_2026_vintage_audit_findings_2026_07_27.md` §4)**: never implemented, and now moot —
+                                                                                                                                                                          `cicd_retire_staging_branch_2026_06_27.md` (the named migration destination) is archived
+                                                                                                                                                                          (`plans/archive/2026_06/`), and the default promotion model flipped LDR→main DIRECT with staging DORMANT
+                                                                                                                                                                          (`/codex/08-workflows/ci-cd-flow.md`) — the `sit-gate`/`lock-staging` precondition this finding was about no
+                                                                                                                                                                          longer sits on the live promotion path. If a similar stale-ci_status class resurfaces under the current
+                                                                                                                                                                          LDR→main pipeline it needs a fresh finding against that pipeline, not this one.
 
 - **2026-06-17 (tick 12) — BLRS fix reached LDR+staging but NOT main; root cause = bug-#11 stale `staging_commits`
   pointer (systemic).** Operator Q: "did it get to main?" Measured answer: NO — fix on LDR✅ staging✅ main✗
@@ -897,7 +915,7 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   Tier-C drains do NOT update it** → the pointer goes stale → staging-to-main IDEMPOTENT-skips the repo forever.
   **Immediate fix applied (documented bug-#11 fallback): manual staging→main PR (BLRS#85, `--merge`, auto-merge armed,
   v2 firing on head 78f05789a).**
-- [ ] [CICD] P1. **SYSTEMIC bug-#11 RECURRENCE: Tier-C `ldr-to-staging-promote` drain must update
+- [x] 🟦 [CICD] P1. **SYSTEMIC bug-#11 RECURRENCE: Tier-C `ldr-to-staging-promote` drain must update
       `staging_commits[repo]` to the new staging HEAD when it advances staging (non-breaking path).** Today only
       sit-gate's lock step writes `staging_commits`, so any repo whose staging moved via the non-breaking auto-drain
       (not a breaking SIT cascade) has a STALE pointer → `staging-to-main.yml` idempotent-skips it → its staging content
@@ -909,12 +927,23 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
       stranded on staging). Also audit how many OTHER repos currently have staging ahead-of-main with content (same
       stranding). Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: CICD-infra scope, not
       pipeline_mode — belongs to `cicd_retire_staging_branch_2026_06_27` / cicd-hardening; tracked here only because it
-      surfaced during GATE-0. Migrate to the cicd plan on next cicd touch.
+      surfaced during GATE-0. Migrate to the cicd plan on next cicd touch. **CLOSED-AS-SUPERSEDED (2026-07-28,
+      `june_2026_vintage_audit_findings_2026_07_27.md` §4)**: never implemented, and now moot for the same reason as the
+      item above — `cicd_retire_staging_branch_2026_06_27.md` is archived and staging is DORMANT under the current
+      LDR→main-direct promotion model (`/codex/08-workflows/ci-cd-flow.md`); the `staging_commits`/`staging-to-main.yml`
+      idempotency path this bug-#11 recurrence describes is not the live promotion path today.
 
 ## Deferred work — migrated to:
 
-**Not yet identified** — the `**DEFERRED**` P1 todo ("UI reference-data registry regen",
-`lib/registry/ui-reference-data.json` in `unified-trading-system-ui`) is deferred only for lack of a UI-capable slot /
-the playwright gate (`pw:L2 ✓` + regression spec), not because ownership moved to another plan. No other active plan
-claims this specific generated-artifact regen; it remains an open `- [ ]` todo in this plan and this plan remains the
-owner until a UI-capable slot picks it up.
+**RESOLVED 2026-07-28** — the former `**DEFERRED**` P1 todo ("UI reference-data registry regen",
+`lib/registry/ui-reference-data.json` in `unified-trading-system-ui`) shipped; re-verified 0 `hyperliquid_rest` hits
+across all 4 named registry files (see the flipped checkbox above). Nothing remains deferred-with-no-owner from this
+section.
+
+**Cross-reference (not a duplicate)**: the still-open Work-units items (M6 startup gate, M7 autonomous-recovery replay,
+T+1 batch/live reconciliation + live-TTL, M8 cadence column-wiring, 1 stale codex doc, the `_merge_dataframes` dedup-key
+design fix) are tracked here as the owning doc and ALSO surfaced (as a pointer, not duplicated content) in
+`/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` Track 1's G0 entry, so a reader of either doc sees the
+same live status. The 2 CICD todos + the sports test-hermeticity followup that were also cross-cutting-listed there have
+been closed/rehomed here (see below) — that cross-reference entry is stale on those 3 items specifically, not on
+M6/M7/T+1/M8.

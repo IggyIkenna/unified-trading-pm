@@ -29,7 +29,7 @@ source: [operator request 2026-06-29]
 assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
-last_updated: 2026-07-14 # bumped 2026-07-14 (was: 2026-07-03, unchanged despite substantive 2026-07-12 body corrections e.g. A19 §158; finding 129)
+last_updated: 2026-07-28 # bumped 2026-07-28 (C6/C9 dispositions closed — vintage-audit rehome pass; was 2026-07-14, unchanged despite substantive 2026-07-12 body corrections e.g. A19 §158; finding 129)
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
@@ -840,6 +840,19 @@ model. No behavioral bug; the re-fetch is genuine open work that should still ru
 re-fetch work, but that's execution, not a contradiction. These are all-AG completion plans, not the cefi_tick MVP
 plan.)_
 
+**RESOLVED-AS-MOOT (2026-07-28, vintage-audit rehome pass):**
+`issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` was suspected (name-match only,
+`plan_issue_epic_consolidation_2026_06_30` §3 fork ledger) to cover this finding — it does NOT. Read both: cefi_e6_cf7
+is a 2026-07-26 fresh re-measurement of the CURRENT `attempted_failed` population (the "50%/1.33M is stale, use
+11.61%/1,060,613" finding) and only mentions `VENUE_FETCH_FAILED` in passing as one of several `error_reason` buckets in
+that live count (219,071 rows, 20.7%) — it does not touch or reword the specific OPEN re-fetch **task wording** this C6
+finding is about. That said, C6's actual concern is now **moot**: 2 of its 3 named target docs are archived
+(`plans/archive/2026_07/path_to_100pct_backfill_mtds_is_2026_06_17.md`,
+`plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md`), and the third
+(`data_completion_to_100_all_ag_2026_06_21.md` / its cefi split `data_completion_cefi_2026_07_15.md`) no longer carries
+an open task selecting rows by the literal `VENUE_FETCH_FAILED` string — its only surviving mention is historical
+progress-log text, not a live todo. No successor doc needed; nothing to rehome.
+
 ### C7 — A19 certified Layer-1 % (cefi 65.91) cited as a hard "done" bar? (WRONG-1 / A19) — verdict NON-CONTRADICTION (the number is used correctly)
 
 **Concern (WRONG-1, pass-2 ledger note):** the certified Layer-1 %s are an **UPPER bound** (codex CK3 caveat: they move
@@ -909,6 +922,11 @@ denominator today. But it IS a genuine honest-absence gap and a latent trap if o
 
 **STATUS:** ⏸ AWAITING IKENNA. _(Code bug, not a plan contradiction — really an issue found mid-reconciliation. Low MVP
 urgency (ohlcv non-MVP) but a real honest-absence violation; recommend the ~10-line fix (a).)_
+
+**DECIDED + REHOMED (2026-07-27/28):** operator ruling 2026-07-27 (interactive session §5#27,
+`june_2026_vintage_audit_findings_2026_07_27.md`) — fold into `cefi_consolidated_closeout_2026_07_18.md` Track 6
+("Independent cefi data-correctness / hygiene items"). Added there 2026-07-28 as a P3 bullet citing this section
+verbatim. No further action needed from this doc.
 
 ## Progress Log
 

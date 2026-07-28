@@ -32,7 +32,7 @@ locked_by: harsh-fleet-audit
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-28
 ---
 
 # Deferred follow-ups — fleet-audit triad
@@ -50,19 +50,30 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
 
 ### From `canonical_vm_log_archival`
 
-- [ ] [INFRA] P2. **Rolling-archive + serial-capture crons committed but never `tofu apply`'d.** No
+- [x] ✅ [INFRA] P2. **Rolling-archive + serial-capture crons committed but never `tofu apply`'d.** No
       `log-archive/rolling/` or `log-archive/serial-rolling/` prefixes exist; no Cloud Run jobs / schedulers for them.
       Net effect: the **14-day TTL on `vm-logs/` is NOT actually survived in prod** — the durable-archive guarantee the
       plan was built for is not live. (Live `vm-logs/` 30s stream IS healthy.) Same "tofu-never-applied" pattern as
       `aws_manifest_consolidator_scope` P1.10. To activate: apply `vm_serial_capture_scheduler.tf` + stand up the daily
-      rolling rsync cron.
+      rolling rsync cron. **DONE — `infra_capture_and_devops_leftovers_2026_07_06.md:161` (verified 2026-07-07)**:
+      `deployment-service@3cd0b1d` — `scripts/vm/vm_log_archival_cron.py` copies `vm-logs/{vm}/run.log` →
+      `log-archive/rolling/{date}/{vm}/run.log` daily; Cloud Run Job `vm-log-archival-prd` + Cloud Scheduler
+      `0 2 * * * UTC` (ENABLED), Terraform `vm_log_archival_scheduler.tf` applied. Confirmed 2026-07-28
+      (`june_2026_vintage_audit_findings_2026_07_27.md` §4).
 - [ ] [INFRA] P3. **Doubled-path nesting** in the 2026-05-30 migration copy:
       `log-archive/snapshot_20260527_1300/snapshot_20260527_1300/<vm>/...`. Cosmetic; objects are intact + counted.
 
 ### From `cefi_venue_backfill_coverage_remediation`
 
 - [ ] [OPERATOR] P3. **Tardis paid key intentionally NOT activated.** All code is coverage-aware (free-only). Paid
-      historical CeFi backfill is out of scope until the operator activates `tardis-api-key`.
+      historical CeFi backfill is out of scope until the operator activates `tardis-api-key`. **ANNOTATION ONLY
+      (2026-07-28, not unparked)**: the Tardis API-key/billing block described here is now CLEARED — operator ruling
+      2026-07-12 (finding 228) activated the paid key + confirmed unlimited access, reconfirmed again 2026-07-27
+      (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED general correction, items #3/#12/#25); the paid
+      historical CeFi Tardis backfill is dispatched/in-progress elsewhere
+      (`cefi_hl_aster_batch_data_gaps_2026_06_22.md`, `data_completion_to_100_all_ag_2026_06_21.md`). This item itself
+      stays under the doc's standing 2026-06-01 "let it be" banner and is NOT actioned here — flagged per this wave's
+      instructions so the stale "NOT activated" framing isn't read as still-current.
 - [ ] [DATA] P3. **GCS manifest migration / 22-day-gap reconcile (2026-05-07→05-24) deferred until operator sees fit.**
       Manifest remains not-fully-trustworthy for a spend decision until phantom-sweep + re-consolidation runs. Playbook
       in `cefi_..._2026_05_27.md` §6I + `bucket_name_ssot_canonicalisation_2026_05_10`.
@@ -85,11 +96,18 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
 
 ### DeFi chain-column reprocess (folded in 2026-06-01)
 
-- [ ] [DATA] P2. **DeFi swaps_ohlcv `chain`-column reprocess** — 28,634 UNISWAP_V3-ETHEREUM `attempted_failed` rows + ~9
-      companion venues (UNISWAP_V2, AAVEV3-OPTIMISM, EIGENLAYER, CURVE, MAKER, FRAX, DRIFT-SOLANA,
+- [x] ✅ [DATA] P2. **DeFi swaps_ohlcv `chain`-column reprocess** — 28,634 UNISWAP_V3-ETHEREUM `attempted_failed` rows +
+      ~9 companion venues (UNISWAP_V2, AAVEV3-OPTIMISM, EIGENLAYER, CURVE, MAKER, FRAX, DRIFT-SOLANA,
       KAMINO/JITO/MARGINFI). Code fix shipped (mdps@7f1a5b5 + @3799c8d); only a retry pass is needed. Run all affected
       venues together as part of the DeFi backfill / GCS-migration pass — NOT piecemeal. Detail:
-      `uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md`.
+      `uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md`. **DONE —
+      `defi_satellite_ao_dispatch_batch3_2026_07_26.md:173` (2026-07-27, slot-2)**: live-manifest verified STALE PREMISE
+      — zero `attempted_failed` rows remain for UNISWAP_V3-ETHEREUM or any of the 10 companion venues under
+      `swaps_ohlcv`/`dex_pool_swaps`; `chain` column 100% populated fleet-wide (0/795 null); the C0 full-hive
+      canonicalisation migration (`canonical-migration-defi-20260618-180603`) already re-derived this data with the
+      fixed code, so no reprocess run was needed. (Also cited as D2 in `data_completion_defi_2026_07_15.md:217`, whose
+      own checkbox is still unflipped there — that doc's mirror is stale, not this finding.) Confirmed 2026-07-28
+      (`june_2026_vintage_audit_findings_2026_07_27.md` §4).
 
 ### From `deployment_ui_vm_and_venue_coverage_visibility`
 
