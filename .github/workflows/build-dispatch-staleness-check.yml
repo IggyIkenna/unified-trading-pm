@@ -1,0 +1,111 @@
+name: build-dispatch-staleness-check
+
+# Loud-failure signal for cloud-build-router.yml's silent build-dispatch drop
+# (plans/active/issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md,
+# recommended-decision todo P2). Every `ldr_main` repo's post-merge Cloud Build
+# dispatch can be silently CANCELLED under a merge-pileup (several repos'
+# promote PRs merging within the same few-minute window race each other's
+# freeze-check/build runs) — the only symptom is a stale deployed image with
+# every CI signal green (PR merged, quality-gates-v2 passed, no error anywhere).
+#
+# This scheduled check compares each image-building repo's `main` HEAD commit
+# timestamp against its `:latest` Artifact Registry image's most recent push,
+# and pages (#ci-failures) if the gap exceeds the expected build+dispatch
+# latency. Repo enumeration is self-updating (probes each `ldr_main` repo for a
+# `cloudbuild.yaml` on `main` at run time) — see
+# scripts/cicd/build_dispatch_staleness_monitor.py's module docstring for why
+# this deliberately does NOT reuse digest-drift-sweep.yml's hand-maintained
+# `IMAGE_REPOS` array (found stale during this investigation).
+#
+# SSOT: codex/08-workflows/ci-cd-flow.md
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      threshold_min:
+        description: "Minutes of un-built main HEAD age before paging"
+        required: false
+        default: "45"
+
+permissions:
+  contents: read
+  id-token: write # Required for GCP Workload Identity Federation (OIDC) auth
+
+concurrency:
+  group: build-dispatch-staleness-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
+    timeout-minutes: 10
+    outputs:
+      stale: ${{ steps.scan.outputs.stale }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v5
+      # No actions/setup-python: self-hosted glue pool's python3 IS the slot venv on 3.13 (see
+      # reconcile-release-tags.yml's identical note) — re-adding it would re-download a Python
+      # already resident on a box paid for 24/7.
+
+      - name: Authenticate to GCP via WIF
+        id: auth-wif
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (fallback)
+        id: auth-key
+        if: steps.auth-wif.outcome != 'success'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Scan for stale build dispatches
+        id: scan
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          THRESH: ${{ github.event.inputs.threshold_min || '45' }}
+        run: |
+          set +e
+          REPORT=$(python3 scripts/cicd/build_dispatch_staleness_monitor.py --threshold-min "$THRESH" --slack)
+          RC=$?
+          echo "$REPORT"
+          if [ "$RC" -eq 1 ]; then STALE=true; else STALE=false; fi
+          {
+            echo "stale=$STALE"
+            echo "report<<__EOR__"
+            echo "$REPORT"
+            echo "__EOR__"
+          } >> "$GITHUB_OUTPUT"
+          # A non-{0,1} exit (2, a crash, an unexpected traceback) is a genuine script failure —
+          # surface it as a red job, distinct from the "found stale repos" exit-1 case.
+          if [ "$RC" -ne 0 ] && [ "$RC" -ne 1 ]; then exit "$RC"; fi
+
+  notify:
+    needs: check
+    if: needs.check.outputs.stale == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.check.outputs.report }}
+      severity: WARNING
+      workflow_name: build-dispatch-staleness-check
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: build-dispatch-staleness
+      # A dropped dispatch never self-clears without a manual re-trigger, so a re-remind well
+      # short of a day (but well above the ~40min throttled promote cadence) keeps it visible
+      # without re-paging every 30min tick.
+      cooldown_min: 120
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
