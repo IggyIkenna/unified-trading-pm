@@ -84,16 +84,21 @@ inconsistent state.
 
 ## Recommended decision
 
-1. **Immediate mitigation already applied** (this task): wrapped each shard in a bash self-restarting supervisor loop
-   (`while ! success; do relaunch; done`, capped retries) so the migration makes forward progress regardless of repeated
-   external kills — this is a workaround, not a fix.
-2. **Follow-up** (not done here — needs root/sudo or `auditd` access this session lacked): whoever has host access
-   should check `auditd`/`journalctl -k` around the two kill timestamps (~13:xx UTC 2026-07-28, exact window recoverable
-   from `/tmp/footystats_shards/log_*.log` mtimes if still present) for the actual signal source (SIGKILL vs SIGTERM,
-   sender PID/command).
-3. **Standing guidance gap**: CLAUDE.md's existing HARD RULE ("Process kills — exact PID only, never a name-based
-   pattern") already covers the FIX for an agent's OWN pkill usage; it does NOT yet cover "how should a long background
-   job on a shared host defend against an unknown external killer" — the self-restarting-supervisor pattern used here
-   may be worth promoting to a documented convention for any future multi-hour local (non-VM) background migration, so
-   the next agent doesn't have to rediscover it. Not resolving that guidance question here — flagging for whoever next
-   authors/updates the async-wait-and-poll-discipline or per-tab-worktrees codex docs.
+1. **Immediate mitigation already applied** (this task, DONE): wrapped each shard in a bash self-restarting supervisor
+   loop (`while ! success; do relaunch; done`, capped retries), then switched to the harness's own `run_in_background`
+   tracked-task mechanism (which proved stable to completion — the raw `nohup`/`setsid` shell-backgrounding was what
+   kept dying, even fully session-detached). Migration completed successfully under this mitigation
+   (`sports_track_h_denominator_prereqs_2026_07_28.md` todo 2, 2026-07-28).
+
+- [ ] [OPERATOR] P2. Check `auditd`/`journalctl -k` (needs root/sudo this session lacked) around the two kill timestamps
+      (~13:15-13:22 UTC 2026-07-28, exact window recoverable from `/tmp/footystats_shards/log_*.log` mtimes if still
+      present) for the actual signal source (SIGKILL vs SIGTERM, sender PID/command) — confirms whether this is the same
+      `pkill -f` broad-pattern class as `pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md` or a different mechanism
+      (session/cgroup boundary reaping, given both the python child AND its bash supervisor parent vanished together
+      with no error, which a narrow `pkill -f <python-script-name>` alone would not explain).
+- [ ] [DOC] P3. Document the self-restarting-supervisor + harness-`run_in_background` pattern as the standard approach
+      for any future multi-hour LOCAL (non-VM) background migration on a shared slot host, in
+      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` or `/codex/05-infrastructure/per-tab-worktrees.md`
+      (whichever owns shared-host background-process guidance) — so the next agent doesn't have to rediscover that raw
+      `nohup`/`setsid` shell-backgrounding is NOT reliably durable across whatever is reaping processes on this host,
+      but the harness's own tracked background-task mechanism is. (repo: unified-trading-pm)

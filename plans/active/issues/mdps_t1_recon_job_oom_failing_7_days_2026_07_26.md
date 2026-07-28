@@ -764,7 +764,7 @@ decision, not a guessable fix. Filed as its own P2 todo below.
 `PredictionTradesAdapter`, and verified against real production data via both an absence-of-errors proof and a
 positive-output proof. The remaining `Completed=False` is a newly-surfaced, unrelated capacity issue.
 
-## Update 11 (2026-07-27/28, attended + follow-up session) — sports `odds_horizon_bucket` `venue=ODDS_API` conflation FIXED forward + docs/codex corrected; historical migration validated but NOT YET APPLIED (one step remains)
+## Update 11 (2026-07-27/28, attended + follow-up session) — sports `odds_horizon_bucket` `venue=ODDS_API` conflation FIXED forward + docs/codex corrected; historical migration validated and design confirmed sound (apply itself completed in Update 12)
 
 Separate thread — fix the `mdps_odds_horizon_bucket` manifest's `venue=ODDS_API` vendor-conflation "properly and fully"
 (writer + backfill + docs), not just flag it. **The agent driving this hit a hard Claude API session limit mid-flight
@@ -786,23 +786,23 @@ UAC-declared derived-product identity; the task's initial framing that it should
 wrong — multiple already-shipped scripts protect this exact value). 9 regression tests, QG green, promoted to `main`.
 New captures going forward are correct — verified by direct code read on `origin/main`.
 
-**Phase 2 — script shipped + dry-run validated; APPLY NOT YET RUN.** `market-data-processing-service@a047b29`:
-CAS-guarded backfill migration script (`scripts/migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py`), dry-run
-default, row-count-conservation enforced as a HARD abort (never best-effort). The agent validated it at n=15/n=50
-real-prod samples. **Independently re-verified by the coordinating session** (2026-07-28): downloaded the live manifest
-directly and confirmed **198,572 fine CAPTURED rows, 100% still `venue=ODDS_API`** — zero migrated so far (191,073 more
-fine rows are `expected_unattempted`, 63,562 `empty_confirmed`, 28 `attempted_failed` — none of those need migrating,
-only the 198,572 captured ones do). Ran the script's own sanctioned bounded local smoke test (`--limit 25`, after fixing
-a stale local `.venv` fastapi pin via `uv sync` — unrelated environment issue, not a script bug): **23/25 shards
-reconciled, row-count conservation held exactly (old_sum=273, new_sum=273), 2 pre-existing 2020-dated rows correctly
-left untouched** (`row_count is NaN in the manifest` — a genuine old data-quality gap on those specific rows, not a
-script defect). The script itself is confirmed sound and safe (never touches physical files, only manifest rows).
+**Phase 2 — ✅ APPLIED 2026-07-28, verified. See Update 12 for the full execution + root-cause story.**
+`market-data-processing-service@a047b29`: CAS-guarded backfill migration script
+(`scripts/migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py`), dry-run default, row-count-conservation
+enforced as a HARD abort (never best-effort). The agent validated it at n=15/n=50 real-prod samples. **Independently
+re-verified by the coordinating session** (2026-07-28): downloaded the live manifest directly and confirmed **198,572
+fine CAPTURED rows, 100% still `venue=ODDS_API`** — zero migrated so far (191,073 more fine rows are
+`expected_unattempted`, 63,562 `empty_confirmed`, 28 `attempted_failed` — none of those need migrating, only the 198,572
+captured ones do). Ran the script's own sanctioned bounded local smoke test (`--limit 25`, after fixing a stale local
+`.venv` fastapi pin via `uv sync` — unrelated environment issue, not a script bug): **23/25 shards reconciled, row-count
+conservation held exactly (old_sum=273, new_sum=273), 2 pre-existing 2020-dated rows correctly left untouched**
+(`row_count is NaN in the manifest` — a genuine old data-quality gap on those specific rows, not a script defect). The
+script itself is confirmed sound and safe (never touches physical files, only manifest rows).
 
 `deployment-service`: a `sports-odds-venue-mig` VM-launcher category was wired into the canonical-migration launcher
 (`0373a41`, `2d2a52c`) per the heavy-I/O hard rule (198,572 rows / 184,242 distinct shard-file reads — squarely "heavy
-I/O never runs from the operator's local machine"). **Confirmed via `gcloud compute instances list`: no VM under this
-category has ever successfully run** — the first launch attempt failed on a stale tarball; no second attempt landed
-before the session limit hit. **This is the one remaining step** — see Todos.
+I/O never runs from the operator's local machine"). Between this update and Update 12, three more real bugs were found
+and fixed by iterating against the actual live population (see Update 12 Phase 2a) before the apply finally landed.
 
 **Phase 3 — ✅ SHIPPED, verified on `origin/live-defi-rollout`.** `unified-trading-pm@0c28fa8f8` ("fix sports odds
 venue=ODDS_API conflation framing across the plan/codex corpus"): corrected Track C's wrong "not this bug" framing
@@ -822,140 +822,127 @@ explicitly not investigated/fixed this session, precedent-only).
 
 **Consumer-safety verdict**: features-service/ml-service reads are venue-agnostic by construction (path-based, no venue
 segment) — zero regression risk, confirmed not assumed. The one real dependency (the enumerator's coarse-row value) is
-preserved unchanged by design. Both Phase 1's forward-fix and Phase 3's doc corrections are genuinely done; only Phase
-2's apply step is outstanding.
+preserved unchanged by design. All four phases are now genuinely done — see Update 12 for Phase 2's completion.
+
+## Update 12 (2026-07-28, follow-up session) — Phase 2 APPLIED: historical migration executed, verified, root cause of the prior 5 failed VM attempts found and fixed
+
+Resolved Update 11's "wait for the stuck agent, or do it now" question directly ("do it properly /autonomous"). Checked
+what actually happened to the 5 prior VM attempts first rather than assuming a clean slate.
+
+**Phase 2a — 3 real bugs already fixed on `live-defi-rollout` but never deployed to a VM tarball.** GCS run-log
+inspection (`gs://deployment-scripts-.../vm-logs/canonical-migration-sports-odds-venue-mig-*`) showed the original agent
+launched the VM 5 times (17:52–21:04Z, 2026-07-27), iterating real fixes: `market-data-processing-service@b71441d`
+(NaN-safe `row_count` — a dry-run crashed at 100% resolved, zero writes attempted); `@f7e42fd` (O(N×M) full-manifest
+rescan fixed — **15h projected → <1s**, without which a full-scale apply wasn't completable); `@5ed5cda` (decoupled the
+~80-min resolve pass from the CAS-retry loop — the old code re-resolved from scratch on every retry, so a write could
+never win the race — and bumped `_MAX_ATTEMPTS` 3→20). All three were on LDR but not yet `main`, and — the actual cause
+of the last failure — the tarball deployed for attempt 5 (`...-210447`, full mode) predated `5ed5cda`: it hit exactly
+`EXHAUSTED 3 attempts (CAS races). NO WRITE PERFORMED.`, the bug that commit fixes.
+
+**Phase 2b — rebuilt the tarball; the FIRST apply attempt still failed, all 20/20 hardened retries lost.** Rebuilt via
+`create-code-tarballs.sh --asset-group SPORTS` (hit the same stale-`.venv` fastapi pin as Update 11, now in
+`deployment-service`'s own `.venv`; fixed via `uv sync`); confirmed deployed manifest pinned `346b50bb7f70` (all 3 fixes
+included). Launched `canonical-migration-sports-odds-venue-mig-20260728-131305` directly in `full` mode (skipped a
+separate dry-run VM — apply mode already re-resolves + re-validates conservation before every write, and 2 independent
+full-scale computations already agreed). **Still `EXHAUSTED 20 attempts (CAS races). NO WRITE PERFORMED.`** — 20
+straight `generation=... stale` losses over ~24 min. Per the async-wait/poll-discipline HARD RULE (flat metric → STOP
+and diagnose, don't burn ticks retrying), stopped relaunching and root-caused instead.
+
+**Root cause** (`/codex/05-infrastructure/manifest-consolidator-ssot.md`):
+`uts-prod-manifest-consolidator-instruments- sports-cron` fires `*/1min` against the exact bucket
+(`instruments-store-sports-prd-...`) this migration writes to — a ~145MB serialize+CAS-write cycle structurally cannot
+outrun a competitor guaranteed every 60s; no retry budget fixes that. The SSOT already documents the fix: § "Surgical
+ROW REMOVAL from the canonical", generalized (§ "Pause-first applies to ANY canonical read-modify-write, not only row
+removal") to cover this migration's exact read→mutate→CAS-write shape.
+
+**Phase 2c — pause-first recipe applied; write succeeded on attempt 1.** (1) Paused the cron
+(`gcloud scheduler jobs pause ... --location asia-northeast1`), confirmed no in-flight execution (polled `...-9gbvj`'s
+`completionTime`) and no `_index/consolidator.lock`. (2) Relaunched
+`canonical-migration-sports-odds-venue-mig-20260728-141141` (same pinned tarball; unrelated STALE warnings on
+MTDS/UAC/deployment-service tarballs noted but harmless — this script only imports UTL + its own MDPS code, both fresh).
+(3) **Write succeeded on attempt 1** (`generation=1785245730519090`): `166849 reconciled`,
+`row-count conservation: old_sum=5410990 new_sum=5410990: True`, `2229975 new per-bookmaker rows written`, post-write
+verify `rows=9191967 remaining unmigrated=3063`. (4) Resumed the cron; canonical generation held steady
+(`1785245730519090`) across ~10 min of post-resume cycles — no resurrection. The consolidator itself reported
+`no_op=true error_reason=locked` repeatedly; confirmed this is expected, not a hang — `instruments-sports` runs a
+deliberate **2400s (40-min) lock TTL** (Terraform override), set that high after a 2026-07-14/15 livelock incident where
+this bucket's legitimate 6-9 min merges were misclassified as crashed under the 300s default.
+
+**Phase 2d — independently re-verified manifest content, not just the script's self-report.** Downloaded the post-apply
+index locally (146MB, matches the write log's `serialized 145941438 bytes` exactly) and re-queried with the script's own
+`_fine_captured_mask` logic: **3,063 rows still `venue=ODDS_API`** (matches exactly); **2,229,975 new rows carry real
+bookmaker venues** (unibet 133,847, paddypower, pinnacle, draftkings, williamhill, betfair_ex_uk/eu, 20+ distinct
+bookmakers); **1,940 coarse aggregate rows, 100% still `ODDS_API`** (correct, by design). A first-pass naive `.notna()`
+check falsely flagged 17,393 remaining rows — the gap was a separate, already-documented, out-of-scope population
+(28,660 rows with `league_id` present but `timeframe` blank); caught before it became a false regression report.
+
+**The 3,063 remaining rows are a genuine, separate, pre-existing data-quality gap, not fixable by this script.** From
+the run log's sample errors: the bulk have `row_count` already `NaN` in the manifest, clustered at the 2020-06/07 edge
+of the sports data floor; a smaller set are `404 NotFound` (manifest says `captured`, physical `bucketed.parquet` shard
+doesn't exist); 5 are genuine row-count mismatches. The row-count-conservation HARD-abort is what made the real
+2,229,975-row write provably lossless — the same discipline correctly refuses to fabricate a breakdown against
+unverifiable source data. Tracked as a new P3 todo below.
 
 ## Todos
 
-- [x] [SCRIPT] P1. **Root-cause and fix the second OOM path** (the silent >28GB spike after DEFI `dex_pool_swaps`
-      finishes candle aggregation). **DONE** — root cause: `ManifestWriter`'s legacy (non-per-VM) canonical-index write
-      path does a full unfiltered read of the entire availability_index.parquet on every flush; fix: enabled
-      `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=mdps-t1-recon-job` for this job (live via `gcloud run jobs update`,
-      durable via `deployment-service@a6c640178b8e6dca7f1b12ae93172d85cd3fc383`). Verified:
-      `uts-prod-market-data-processing-service-t1-recon-p46vw`, `status.conditions[type=Completed].status = True`
-      ("Execution completed successfully in 19m9.03s") — 704/704 DEFI dex_pool_swaps files succeeded for 2026-07-25 (the
-      exact date/shard that OOM'd in both prior executions), 273/273 for 2026-07-26, 0 failures, RSS flat 565-808MiB
-      throughout (vs. the pre-fix climb toward 32Gi). See Update 4 for full evidence. (repo:
+- [x] [SCRIPT] P1. **Root-cause and fix the second OOM path** (silent >28GB spike after DEFI `dex_pool_swaps` candle
+      aggregation). **DONE** — `ManifestWriter`'s legacy write path did a full unfiltered index read on every flush;
+      fixed via `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME`
+      (`deployment-service@a6c640178b8e6dca7f1b12ae93172d85cd3fc383`). Verified: execution `...-p46vw` Completed=True in
+      19m9s, 704/704 + 273/273 files succeeded across both prior OOM dates, RSS flat 565-808MiB. See Update 4. (repo:
       market-data-processing-service, deployment-service)
 
-- [x] [SCRIPT] P1. **Register the missing UAC SchemaContract entries for SPORTS odds_movement_15m / odds_snapshot_15m /
-      odds_horizon_bucket** across the ~20 bookmaker venues enumerated in Update 4. **DONE, verified — but does NOT by
-      itself unblock a clean end-to-end run; see Update 5's two follow-on todos below.** Full error list re-pulled: 337
-      unique combos, 23 venues, 4 data_types (incl. previously-uncited `arbitrage_opportunity_15m`), 28
-      instrument_types. Root cause was NOT a venue-registration gap (venue was never in the `CONTRACT_REGISTRY` key at
-      all) — it was (a) `odds_snapshot` fully unregistered (omission) and (b) the registry's generic
-      `instrument_type="odds"` key never matching MDPS's real per-market lookup key (`MATCH_ODDS`,
-      `ASIAN_HANDICAP_0_25`, ... — continuously point-parameterised, genuinely unbounded, confirmed via
-      `build_instrument_id`). Fixed both mechanically (no schema invented — reused the existing, already-correct,
-      already-uniform-across-markets `CandleOutput` contract via a bounded `lookup_contract()` fallback + the missing
-      registration loop entry). `unified-api-contracts@ed5434b3` → `main` via PR #756. Verified `zero` "No
-      SchemaContract registered" errors for these 4 data_types at their documented `{1m,15m,1h}` timeframes across a
-      full unscoped run AND a forced sports-scoped re-run, both against the rebuilt production Docker image (not just
-      unit tests). See Update 5 for full investigation + the exact fallback design. (repo:
-      market-data-processing-service, unified-api-contracts)
+- [x] [SCRIPT] P1. **Register missing UAC SchemaContract entries for SPORTS odds_movement/odds_snapshot/
+      odds_horizon_bucket** (337 combos, 23 venues, 4 data_types). **DONE, verified** — root cause was `odds_snapshot`
+      fully unregistered + the generic `instrument_type="odds"` key never matching MDPS's real per-market keys; fixed
+      via a bounded `lookup_contract()` fallback, no new schema invented. `unified-api-contracts@ed5434b3` → `main` (PR
+      #756). Verified zero "No SchemaContract registered" errors against the rebuilt production image. See Update 5.
+      (repo: market-data-processing-service, unified-api-contracts)
 
-- [x] [SCRIPT] P1. **Fix UTL's `validate_partition_consistency` sports id-shape blindness** (surfaced immediately once
-      the SchemaContract todo above cleared — every sports write then failed `[partition_mismatch]` because
-      `_split_instrument_id()` read the sports id's SPORT token as "venue"). **DONE** —
-      `unified-trading-library@bcd73241` → `main`, asset_group threaded from the already-present `partition_path` string
-      (no new call-site parameter), sports-shape split added, 4 regression tests. Verified inside the rebuilt production
-      image before re-wiring. See Update 5.
+- [x] [SCRIPT] P1. **Fix UTL's `validate_partition_consistency` sports id-shape blindness** (every sports write then
+      failed `[partition_mismatch]` once the SchemaContract todo cleared). **DONE** — `unified-trading-library@bcd73241`
+      → `main`, sports-shape split added, 4 regression tests, verified in the rebuilt production image. See Update 5.
 
-- [x] [SCRIPT] P1. **Root-cause + fix MDPS's own candle-write batching mixing DIFFERENT sports markets into one
-      partition-scoped write**. **DONE** — market-data-processing-service@1390312. Root cause: _streaming_write_per_tf
-      (app/core/live_workers_streaming.py) derived a batch's write partition from only the FIRST batch, then force-wrote
-      every other batch (MATCH_ODDS + MATCH_ODDS_LAY) under it for sports' legacy-sentinel bundles (no real chain root).
-      **Fix**: no_real_chain_root flag groups batches by their OWN inferred instrument_type instead
-      (_streaming_write_one_group helper); true chains (options/futures/DeFi, real underlying=) are byte-for-byte
-      unaffected. Regression test test_streaming_write_group_by_type.py; QG green (2224 passed). **Re-verified
-      end-to-end (Update 7)**: execution ...-86jbn against main@eaf8127, zero partition_mismatch anywhere, two
-      independent MATCH_ODDS/MATCH_ODDS_LAY output pairs pulled from GCS confirmed uncontaminated. (repo:
+- [x] [SCRIPT] P1. **Root-cause + fix MDPS's candle-write batching mixing DIFFERENT sports markets into one write**.
+      **DONE** — `market-data-processing-service@1390312`: `_streaming_write_per_tf` derived a batch's write partition
+      from only the FIRST batch, force-writing others under it. Fixed via `no_real_chain_root` + per-group writes; true
+      chains (options/futures/DeFi) unaffected. Re-verified end-to-end (Update 7): execution `...-86jbn`, zero
+      `partition_mismatch`, GCS-pulled output confirmed uncontaminated. (repo: market-data-processing-service)
+
+- [x] [SCRIPT] P2. **Scope MDPS's per-asset-group candle timeframe iteration** — uniform `default_timeframes` threw
+      `No SchemaContract registered ..._4h` for sports (only `{1m,15m,1h}` registered). **DONE, verified** — added
+      `resolve_timeframes(asset_group)` sourcing UAC's per-AG ceiling constants (prediction deliberately excluded — its
+      trades data_type needs the broader set). A first attempt (`36e80cd`) had zero live effect because
+      `cli/parser.py`'s `--timeframes` default shadowed it; corrected via `f7d259e`. Verified against live execution
+      `...-krtkf`: zero `4h`/`24h` attempts, zero SchemaContract errors. See Update 8. (repo:
       market-data-processing-service)
 
-- [x] [SCRIPT] P2. **Scope MDPS's per-asset-group candle timeframe iteration** — `config.py`'s `default_timeframes`
-      (`["15s","1m","5m","15m","1h","4h","24h"]`) was applied uniformly to every asset_group; sports only has
-      SchemaContracts for `{1m,15m,1h}` (`_candle_contracts.py`'s declared "Sports {1m, 15m, 1h}" by strategy need), so
-      every run threw `No SchemaContract registered ..._4h` for all 4 sports-derived products. **DONE, verified** —
-      operator confirmed the general per-asset-group approach ("should be per AG scoped properly"). Added
-      `MarketDataProcessingServiceConfig.resolve_timeframes(asset_group)` (`config.py`), sourcing UAC's
-      `MDPS_TIMEFRAMES_SPORTS`/`MDPS_TIMEFRAMES_TRADFI` constants as confirmed-safe per-asset-group ceilings (cefi/defi
-      are no-ops; prediction deliberately excluded — its "trades" data_type needs the BROADER
-      `MDPS_TIMEFRAMES_PREDICTION_TRADES` set, so scoping it down would regress KALSHI/POLYMARKET trades coverage).
-      Wired into `orchestration_service.py::process_category()`. A first attempt (`36e80cd`) didn't actually take effect
-      on the real production path — `cli/parser.py`'s `--timeframes` argparse argument had its own hardcoded non-None
-      default, shadowing the new fallback; corrected (`f7d259e`) by defaulting `--timeframes` to `None`, the idiomatic
-      "unset vs explicit override" argparse pattern. Verified against a live sports-scoped `t1-recon` execution
-      (`uts-prod-market-data-processing-service-t1-recon-krtkf`): zero `4h`/`24h` candle aggregation attempts (13,007
-      `POLARS AGGREGATED` lines, all `1h`), zero "No SchemaContract registered" errors anywhere,
-      `odds_movement`/`odds_snapshot`/`arbitrage_opportunity` all 100% succeeded — the one remaining partial failure
-      (`odds_horizon_bucket`) is the already-tracked, unrelated `MalformedTickFieldError` bug (see the P2 todo below).
-      cefi/tradfi regression-checked via direct unit tests (`tests/unit/test_config.py::TestResolveTimeframes`) plus the
-      identical, category-agnostic call-site mechanism already proven live for sports — a live cefi/tradfi run wasn't
-      reachable cheaply through the real production entrypoint (see Update 8 for the full reasoning) and wasn't forced
-      given the strength of the existing evidence. See Update 8 for full investigation, the two-shipped-commits story,
-      and a documented residual gap in `LiveModeHandler` (out of scope, low risk, not fixed). (repo:
-      market-data-processing-service)
+- [x] [DESIGN] P2. **Build a genuine KALSHI trades→candle schema mapping in `PredictionTradesAdapter`.** **DONE,
+      verified (Update 10)** — `is_buy = (taker_outcome_side == "yes")` per Kalshi's own docs + downstream-consumer
+      trace; `count_fp` confirmed genuine trade size via docs + a 0/54,295-parse-failure real-data cross-check.
+      `market-data-processing-service@890748f` (PredictionTradesAdapter only, Polymarket path unaffected); codex fixed
+      (`unified-trading-pm@0c427d472`). Verified against real production data: execution `...-pr268` ran ~2h with zero
+      schema errors, real KALSHI candle output confirmed bounded [0,1] OHLCV with genuine volume/price movement.
+      `Completed=False` traced to a separate subprocess-timeout bug (below).
 
-- [x] [DESIGN] P2. **Build a genuine KALSHI trades→candle schema mapping in `PredictionTradesAdapter` — NOT a rename, a
-      real venue-schema design decision.** **DONE, verified (Update 10, 2026-07-27)** — both open design questions
-      resolved with real evidence: (A) `is_buy = (taker_outcome_side == "yes")`, per Kalshi's own API docs (confirmed
-      `taker_book_side` is the SAME axis, not an independent aggressor signal) + a downstream-consumer trace
-      (strategy-service BigQuery reader, unified-trading-api chart schema, ml-service's `taker_buy_sell_ratio` pattern);
-      (B) `count_fp` confirmed genuine trade size via Kalshi's own docs ("number of contracts... fixed-point...
-      fractional contract sizes") + a real-data cross-check (0/54,295 parse failures, plausible notional distribution).
-      Implemented in `PredictionTradesAdapter` only (`market-data-processing-service@890748f`) —
-      `CefiTradesAdapter`/`base_adapter.py` untouched, Polymarket path regression-tested unaffected. Codex doc fixed
-      (Decision 1) — `unified-trading-pm@0c427d472`. **Verified against real production data**: execution
-      `uts-prod-market-data-processing-service-t1-recon-pr268` ran ~2 hours with ZERO schema-related errors (previously
-      100% instant failure) and real written KALSHI candle output pulled from GCS confirmed bounded [0,1] OHLCV, correct
-      `count_fp`-derived volume, genuine buy/sell mix, and real price movement. Job's `Completed=False` is due to a NEW,
-      unrelated subprocess-per-date timeout bug (see the new todo below) — not the schema mapping, which is conclusively
-      proven correct. See Update 10 for full evidence (Update 6 has the original crash-site investigation this
-      superseded: KALSHI's raw schema vs. `CefiTradesAdapter`'s assumptions, confirmed-not-a-regression vs. Polymarket,
-      and the original open design questions this update answered).
-
-- [x] [SCRIPT] P2. **Investigate + fix `MalformedTickFieldError` for `bm_minutes_to_kickoff_or_h2h_columns` — a large
-      fraction of sports MATCH_ODDS instruments fail with "ticks present but downstream calc dropped all rows due to
-      NaN/malformed field"**, tracing to "No h2h data found in MTDS raw data — cannot produce odds" during the MTDS
-      long→wide pivot step. **DONE, verified (Update 9, 2026-07-27)** — root cause: a THIRD, previously-uncovered
-      vendor-metadata column (`af_fixture_id`, a best-effort cross-vendor join key that is legitimately NaN whenever a
-      writer generation never resolved it) was left in `pivot_mtds_to_wide()`'s `group_cols` pivot index; the "combined"
-      (no `fixture_id=` path partition) writer generation leaves it NaN on 100% of rows, so `pivot_table`'s default
-      NaN-index-drop behavior silently emptied the h2h pivot — same bug CLASS as the two already-fixed
-      `instrument_type`/`data_source`/`available_at` incidents documented in this file's own `_PIVOT_INDEX_EXCLUDE`
-      docstring, just a new column. Confirmed via a REAL failing-vs-succeeding raw `ticks.parquet` GCS comparison (not
-      guessed) — h2h ticks were genuinely present and correct; this is verdict (b), a genuine code gap, not absent
-      upstream data. **Fix**: `market-data-processing-service@67cb2ef` — added `af_fixture_id`/`af_fixture_match_status`
-      to `_PIVOT_INDEX_EXCLUDE`. 2 new regression tests (one using the exact real 25-column production schema),
-      confirmed to genuinely catch the regression (fail pre-fix via `git stash`, pass post-fix).
-      `quality-gates.sh --no-fix` → ALL QUALITY GATES PASSED. Shipped via `quickmerge.sh --agent`, confirmed on
-      `origin/live-defi-rollout` HEAD. Blast radius: 1098 error occurrences / 549 unique instrument_ids / 184 unique
-      fixtures across 14 venues in one 2-day sports-scoped execution alone — every occurrence is `MATCH_ODDS` (see the
-      new todo below for why ASIAN_HANDICAP/OVER_UNDER/MATCH_ODDS_LAY never appeared here — a separate, larger bug, not
-      this one). See Update 9 for full evidence. (repo: market-data-processing-service)
+- [x] [SCRIPT] P2. **Fix `MalformedTickFieldError` for `bm_minutes_to_kickoff_or_h2h_columns`** (large fraction of
+      sports MATCH_ODDS instruments failing "No h2h data found"). **DONE, verified (Update 9)** — root cause: a third
+      vendor-metadata column (`af_fixture_id`, legitimately NaN on unresolved writer generations) left in the pivot
+      index; the "combined" writer generation leaves it NaN on 100% of rows, silently emptying the h2h pivot. Confirmed
+      via real failing-vs-succeeding `ticks.parquet` comparison (verdict: genuine code gap, not absent data). Fix:
+      `market-data-processing-service@67cb2ef` (added to `_PIVOT_INDEX_EXCLUDE`), 2 regression tests (fail pre-fix, pass
+      post-fix). Blast radius: 1098 error occurrences / 549 instrument_ids / 184 fixtures / 14 venues in one 2-day
+      execution. See Update 9. (repo: market-data-processing-service)
 
 - [x] [SCRIPT] P1. ✅ DONE — RESOLVED 2026-07-27, all 3 layers fixed + verified against real production data, see
       `/plans/archive/issues/mdps_sports_odds_horizon_bucket_h2h_anchor_fix_2026_07_27.md`. **Fix sports
-      `odds_horizon_bucket`'s Path A½ honest-absence check silently suppressing ALL non-MATCH_ODDS candle output
-      (MATCH_ODDS_LAY/ASIAN_HANDICAP\__/OVER_UNDER\__), always, regardless of whether real market data exists.** Newly
-      discovered 2026-07-27 (Update 9) while investigating the `af_fixture_id` bug above — a SEPARATE root cause/code
-      path, not fixed there. `process_to_candles`'s Path A½ check (`tick_data["market_key"] == "h2h"`) was written
-      assuming `tick_data` is a full per-fixture/bookmaker bundle (correctly distinguishing "bookmaker doesn't offer
-      h2h" from a schema defect), but the actual production call path (`_iter_chain_symbol_dfs` grouping by
-      `instrument_id`) already slices `tick_data` to ONE market before `process_to_candles` is ever called — so for any
-      non-MATCH_ODDS instrument the check is unconditionally `True`, REGARDLESS of whether that instrument's own market
-      data is genuinely present. Confirmed with a real WILLIAMHILL file (12 genuine `market_key="totals"` rows for an
-      `OVER_UNDER_2_5::OVER` instrument) returning an EMPTY `CandleOutput` instead of real odds, and cross-checked
-      against real production output: `processed_candles/.../data_type=odds_horizon_bucket/` for day=2026-07-25 contains
-      ONLY `instrument_type=MATCH_ODDS/` objects — zero `MATCH_ODDS_LAY`/`ASIAN_HANDICAP_*`/`OVER_UNDER_*` output
-      anywhere, despite `pivot_mtds_to_wide()`/`_pivot_market()` explicitly implementing spreads/totals/btts pivoting
-      and Update 5's UAC SchemaContract fallback deliberately supporting all these `instrument_type`s. **Apparently
-      never worked for any market other than plain h2h, for the product's entire history.** Not fixed this session —
-      needs real judgment (does the fix generalize the check to "any recognized market_key present", could `btts` ever
-      legitimately co-occur with another market in one slice, is there a call path where `tick_data` is genuinely NOT
-      yet market-filtered) before guessing, same standard as the KALSHI investigation (Update 6). Flagged per
-      data-pipeline-correctness-is-the-heartbeat — this silently drops real market data across most of the sports
-      odds_horizon_bucket product. See Update 9 for full evidence. (repo: market-data-processing-service)
+      `odds_horizon_bucket`'s Path A½ honest-absence check silently suppressing ALL non-MATCH_ODDS candle output**
+      (MATCH_ODDS_LAY/ASIAN_HANDICAP/OVER_UNDER) — the check assumed `tick_data` was a full per-fixture/bookmaker
+      bundle, but production already slices it to ONE market before calling `process_to_candles`, so the check was
+      unconditionally `True` for any non-MATCH_ODDS instrument regardless of real data presence. Confirmed via a real
+      WILLIAMHILL file (12 genuine `totals` rows) returning an empty `CandleOutput`, and cross-checked against
+      production output showing zero non-MATCH_ODDS objects anywhere — apparently never worked for any market other than
+      h2h, for the product's entire history. See Update 9. (repo: market-data-processing-service)
 
 - [ ] [DESIGN] P2. **`subprocess-per-date`'s fixed 1800s (30-min) timeout is too short for a full day of PREDICTION
       candle derivation now that the KALSHI schema mapping actually works** — newly discovered 2026-07-27 (Update 10)
@@ -968,13 +955,25 @@ preserved unchanged by design. Both Phase 1's forward-fix and Phase 3's doc corr
       (raise the 1800s constant? split PREDICTION into narrower per-venue/per-cqg subprocess units? profile the real HFT
       feature compute cost?), not a guessable fix. (repo: market-data-processing-service)
 
-- [ ] [SCRIPT] P2. **Apply the `odds_horizon_bucket` venue=ODDS_API→bookmaker manifest migration on a VM** (Update 11
-      Phase 2) — the forward-fix (`market-data-processing-service@6f7422e`) and the migration script (`@a047b29`,
-      `scripts/migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py`) are shipped and validated (n=15/50
-      real-prod dry-run samples by the original agent + an independent n=25 local smoke test, both clean — row-count
-      conservation held exactly). The `sports-odds-venue-mig` VM-launcher category is already wired
-      (`deployment-service@0373a41`+`2d2a52c`) but has never successfully launched (first attempt failed on a stale
-      tarball). Population confirmed live 2026-07-28: 198,572 fine CAPTURED rows / ~184,242 shards, 100% still
-      `venue=ODDS_API`. Launch via the `sports-odds-venue-mig` category, run `--dry-run` (no `--limit`) first to confirm
-      the full-scale plan, THEN `--apply`; verify row-count conservation held and re-query the manifest post-apply to
-      confirm real bookmaker venues appear. (repo: market-data-processing-service, deployment-service)
+- [x] [SCRIPT] P2. **Apply the `odds_horizon_bucket` venue=ODDS_API→bookmaker manifest migration on a VM** (Update 11
+      Phase 2). **DONE 2026-07-28 — see Update 12.** Root cause of 5 prior failed attempts: the migration's CAS write
+      raced `uts-prod-manifest-consolidator-instruments-sports-cron` (`*/1min` against the same bucket) and could never
+      win regardless of retry count; fixed by pausing the cron for the write (codex-sanctioned pause-first recipe), then
+      resuming. Applied via `canonical-migration-sports-odds-venue-mig-20260728-141141`: **166,849 rows reconciled,
+      row-count conservation held exactly (old_sum=new_sum=5,410,990), 2,229,975 new per-bookmaker rows written**,
+      manifest grew 7,128,841 → 9,191,967 rows. Independently re-verified by downloading the post-apply manifest and
+      re-querying with the script's own row-selection logic (not just trusting its self-report): 3,063 rows correctly
+      left unmigrated (matches exactly), 2,229,975 new rows confirmed carrying real bookmaker venues
+      (unibet/paddypower/pinnacle/draftkings/williamhill/betfair_ex_uk/+20 more), 1,940 coarse aggregate rows correctly
+      untouched. Consolidator resumed, canonical generation confirmed stable (no resurrection) across ~10 min of
+      post-resume cycles. (repo: market-data-processing-service, deployment-service)
+
+- [ ] [SCRIPT] P3. **Investigate the 3,063 pre-existing `odds_horizon_bucket` manifest rows that could not be migrated**
+      (surfaced by the venue-migration apply, Update 12 Phase 2d) — a genuine, separate, pre-existing data-quality gap,
+      not caused by and not fixable within that migration. Two sub-populations: (a) manifest rows whose `row_count` is
+      already `NaN`, clustered at the 2020-06/07 edge of the sports data floor; (b) `404     NotFound` rows where the
+      manifest claims `capture_status=captured` but the physical
+      `processed/.../data_type=odds_horizon_bucket/.../bucketed.parquet` shard doesn't exist in GCS (an honest-absence
+      violation — these should likely be reclassified, not left as phantom `captured` rows). Needs real investigation
+      before a fix (is this isolated to the data-floor boundary dates, does it affect other sports data_types, was there
+      a writer bug at that specific time) — not a guessable one-liner. (repo: market-data-processing-service)

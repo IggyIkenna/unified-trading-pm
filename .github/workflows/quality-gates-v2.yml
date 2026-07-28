@@ -49,7 +49,7 @@ jobs:
     if:
       github.event_name == 'push' && github.ref == 'refs/heads/staging' && needs.quality-gates-v2.outputs.docs_only !=
       'true'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, glue]
     steps:
       - name: Dispatch qg-passed → cloud-build-router
         env:

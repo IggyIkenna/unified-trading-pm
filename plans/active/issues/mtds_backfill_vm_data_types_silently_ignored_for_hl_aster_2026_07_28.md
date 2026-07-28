@@ -86,13 +86,21 @@ silently hit the same trap.
       unified-trading-pm. Done when: both doc changes are present and the doc's own line-cap check passes. —
       unified-trading-pm@bd1d97a8b; `vm-launcher-runbook.md` (codex/) is out of `check_line_caps.sh`'s scope
       (plans/active + plans/epics only), so no line-cap gate applies to it.
-- [ ] [BACKEND] P2. Harden `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`'s `VM_TASK=mtds-backfill` branch:
-      when `VM_ASSET_GROUP` resolves to a CeFi on-chain-perp venue (HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/ EXTENDED-STARKNET
-      — reuse whatever registry `OnchainPerpBatchHandler` already uses to recognize these) AND `VM_DATA_TYPES` is set,
-      either (a) route to `--operation collect-onchain-perp-batch --onchain-perp-data-types` automatically instead of
-      the generic `--operation download --data-types` path, or (b) fail loud at VM startup with a clear message pointing
-      at the dedicated launcher, rather than silently accepting and ignoring the scoping flag. (a) is preferable (fixes
-      the trap transparently) but needs verifying no other caller relies on the current `download` routing behavior for
-      these venues. Repo: deployment-service. Done when: a `--data-types trades`-scoped
+- [x] ✅ [BACKEND] P2. Harden `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`'s `VM_TASK=mtds-backfill`
+      branch: when `VM_ASSET_GROUP` resolves to a CeFi on-chain-perp venue (HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/
+      EXTENDED-STARKNET — reuse whatever registry `OnchainPerpBatchHandler` already uses to recognize these) AND
+      `VM_DATA_TYPES` is set, either (a) route to `--operation collect-onchain-perp-batch --onchain-perp-data-types`
+      automatically instead of the generic `--operation download --data-types` path, or (b) fail loud at VM startup with
+      a clear message pointing at the dedicated launcher, rather than silently accepting and ignoring the scoping flag.
+      (a) is preferable (fixes the trap transparently) but needs verifying no other caller relies on the current
+      `download` routing behavior for these venues. Repo: deployment-service. Done when: a `--data-types trades`-scoped
       `launch-mtds-backfill-vm.sh --venues HYPERLIQUID` launch either correctly fetches trades-only or refuses with an
-      actionable error, verified via a `--test-run` smoke launch.
+      actionable error, verified via a `--test-run` smoke launch. — Implemented (a): membership detected via
+      `market_tick_data_service.adapters.umi_tick_provider.ONCHAIN_PERP_VENUE_CHAIN` (already exported for launcher
+      reuse) rather than a re-declared venue list, scoped to `VM_DATA_TYPES` being set (unscoped launches for these
+      venues untouched); confirmed no other `VM_TASK=mtds-backfill` caller targets these venues with data-types scoping
+      (`launch-cefi-sharded-backfill.sh` explicitly excludes HL/ASTER; `launch-mtds-live.sh` uses a different VM_TASK).
+      Verified via a real `--test-run` smoke launch (`mtds-backfill-cefi-pipelinecheck-1`, HYPERLIQUID/trades/
+      2025-05-25): run.log shows
+      `OnchainPerpBatch complete for 2025-05-25: 768164 rows across venues=['HYPERLIQUID']     data_types=['trades']` —
+      trades-only, no book_snapshot_5/derivative_ticker over-fetch, exit_code=0. — deployment-service@5f598d9
