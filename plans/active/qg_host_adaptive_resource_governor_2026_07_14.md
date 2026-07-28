@@ -225,7 +225,7 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 1 — Interim quick-win: raise K on 61 GB hosts (operator-approved 2026-07-14)
 
-- [ ] [INFRA] P0. **RESOLVED-BY-RULING, DEFERRED — cleaned 2026-07-28 (stale-tag audit; this was never a live
+- [ ] [INFRA] P0. **RESOLVED-BY-RULING — stale DEFERRED tag cleaned 2026-07-28 (stale-tag audit; this was never a live
       `[OPERATOR]` gate, just an inline label describing an already-made decision).** Operator ruling 2026-07-14, "raise
       K to 6 for now": the live load-repro is skipped; safety is instead established by analysis — 6×UTL worst-case = 33
       GB < the 43 GB (70 %) ceiling, and each worker's QG is already capped in a per-worker 10 GB systemd scope

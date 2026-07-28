@@ -759,7 +759,22 @@ source: >-
       API-Football daily quota resets, (3) the window `08:12Z`→stop-time was written under the OLD buggy code — those
       dates' `empty_confirmed` rows must be relabeled/re-fetched (issue doc todo 4), not trusted at face value by the
       eventual re-census. Released via `/skip-current-task {"reason_code":     "GATED"}` — genuinely gated on the
-      VM-stop + quota-reset, not undoable from this slot.
+      VM-stop + quota-reset, not undoable from this slot. — **Health-checked 2026-07-28T17:45Z (slot 9,
+      data_engineering)**: the re-fetch VM has been relaunched (post fix `f31fb2e9`, quota reset, tarball refresh) as
+      `af-backfill-20260728-141821`, launched 2026-07-28T13:22:16Z, `RUNNING` in `asia-northeast1-c` (confirmed via
+      `gcloud compute instances list`, `unified-trading-sa` account — `github-deploy` lacks `compute.instances.list`,
+      known WIF-poisoning issue, use `unified-trading-sa` or `ikenna@odum-research.com` instead). 2-read progress-metric
+      check over ~6min: `run.log` grew 53,041→54,766 lines, distinct `date=` markers 934→956
+      (`date=2021-09-15`→`date=2021-09-26`), live per-fixture `Fetched N events for fixture=X` lines interspersed with
+      the expected per-minute `rateLimit`/429 sleep-retry cycling (matches the pre-incident healthy pattern, not the
+      2026-07-25T08:12Z quota-exhaustion stall signature) — genuine forward progress, no
+      `DEPLOYMENT_COMPLETED`/`exit_code` terminal marker (`grep -c` = 0). Not completable this turn (2019-01-01 start,
+      ~2021-09 current, range runs to 2026-07-25). Released via `/skip-current-task {"reason_code": "GATED"}`, not
+      duplicate-launched. Next dispatch: repeat this health-check (2-read progress-metric — a new `date=` boundary OR
+      continued in-date fixture-fetch advance both count as live); once terminal, re-run
+      `scripts/census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) per the issue doc's "Next
+      action" before flipping this checkbox — also re-verify the `08:12Z`-`stop-time` suspect window from the prior VM
+      run was excluded/re-fetched (issue doc item 3), not trusted at face value.
 - [x] ✅ [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. — `instruments-service@f5fa9f8a`. Added a `player_stats` de-dup gate (drop
