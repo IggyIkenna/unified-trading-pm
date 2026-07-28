@@ -30,7 +30,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 ---
 
 ## What I found
@@ -45,16 +45,31 @@ CARRY_BASIS_PERP(drift-perp). No off-taxonomy venue/instrument_type except D3 be
 
 **Divergences (the "we enabled them differently" the operator suspected):**
 
-- [ ] [TEST] P2. **D1 — 5 of 7 engine-running e2e DeFi tests bypass the canonical config path.** They build the strategy
-      by directly calling the engine class ctor with a hand-built `StrategyInstanceIdentity` + free-form `params` dict,
-      skipping the production `load_strategy_config → ARCHETYPE_ENGINE_REGISTRY →     ArchetypeEngineFactory.build` path
-      that live/wizard/`colocated_engine` deployments use: `test_csb_paper_e2e_smoke.py:61`,
+- [ ] [TEST] P2. **DEFERRED-BY-DESIGN** — **D1 — 5 of 7 engine-running e2e DeFi tests bypass the canonical config
+      path.** They build the strategy by directly calling the engine class ctor with a hand-built
+      `StrategyInstanceIdentity` + free-form `params` dict, skipping the production
+      `load_strategy_config → ARCHETYPE_ENGINE_REGISTRY → ArchetypeEngineFactory.build` path that
+      live/wizard/`colocated_engine` deployments use: `test_csb_paper_e2e_smoke.py:61`,
       `test_apd_paper_e2e_smoke.py:61`, `test_failure_modes_e2e_smoke.py:76,102`,
       `test_additional_asset_groups_e2e_smoke.py:80,175` (scen a+b). So these smokes prove engine MATH, not that the
       config loads through the production config-loader — a config that fails `strategy_config_loader` would still pass
-      them. (The orchestrator-based tests — `test_concurrent_*`, scen c, `backtest_solana_basis.py` — DO use the
-      canonical factory.) FIX: route the smokes through `load_strategy_config_by_type`/`register_instance` so they
-      exercise the real config→factory path. Repo: e2e-testing.
+      them. **Operator-ruled INTENTIONAL (2026-06-17, re-confirmed 2026-07-27
+      `june_2026_vintage_audit_findings_2026_07_27.md` §5 item 5): the e2e tests build in isolation on purpose; they'll
+      relocate to the canonical `load_strategy_config`/factory path when the isolation phase ends — no timeline given,
+      NOT a fix to schedule.** Not routing to a fix-worker; **DEFERRED-BY-DESIGN** marker added (mirrors the `BLOCKED-*`
+      convention used elsewhere in this corpus) so the backlog no longer re-derives this as ordinary open test work.
+      (The orchestrator-based tests — `test_concurrent_*`, scen c, `backtest_solana_basis.py` — DO use the canonical
+      factory.) WHEN the isolation phase ends (operator-owned, no timeline): route the smokes through
+      `load_strategy_config_by_type`/ `register_instance` so they exercise the real config→factory path. Repo:
+      e2e-testing. **Backlog-dispatch + M3 done-gate bugs fixed 2026-07-28** — this exact todo exposed 3 live gaps in
+      agent-orchestrator: (1) `_NON_DISPATCHABLE_RE` in `regen_backlog_from_plan.py` did not exclude
+      `DEFERRED-BY-DESIGN` items, so it kept re-entering the backlog under a P-tag-less default priority and getting
+      dispatched to workers every regen tick despite the standing 2026-06-17 ruling — fixed agent-orchestrator@12d656f
+      (mirrors the existing BLOCKED-* exclusion); (2) `check_plan_flip`'s M3 `/done` verification had no accepted
+      disposition for a todo retagged DEFERRED-BY-DESIGN (only `[x]`-flip or CANCELLED) — fixed
+      agent-orchestrator@85eb84b (`_diff_defers_checkbox`, mirrors the existing CANCELLED-marker exception); (3) the
+      PM-log lookback window (`_pm_log_commits_touching_plan_ref`) was 10 minutes, too short for a worker's own session
+      (PM-flip commit → real root-cause code fix → QG → ship) — widened to 30 minutes, fixed agent-orchestrator@14af586.
 - [ ] [SCRIPT] P2. **D2 — e2e-hardcoded engine params are not wizard-expressible.** `entry_bps`/`exit_bps`/
       `stake_fraction`/`candidate_venues` (comma-list)/token identities/`dispersion_bps`/`cost_bps` are free-form engine
       params, NOT axis enums; the wizard form exposes archetype + per-leg venue/instrument only. A wizard user can
