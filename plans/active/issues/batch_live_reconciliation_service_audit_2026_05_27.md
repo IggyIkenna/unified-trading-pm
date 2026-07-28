@@ -578,8 +578,17 @@ defect, just confirming the coupling is daily, not real-time.
 
 ## 10. Todos
 
-- [ ] [BACKEND] P1. **Close BLRS's still-open gaps (G1/G3/G10)** — as of 2026-07-27: G1 resolution API is still
-      mock-backed (in-memory store, 3 hardcoded breaks, not reading Stage-5 summaries); G3 stage4 agent dispatch is
-      markdown-only; G10 UI→resolution-API wiring is unverified. All three are rehomed as todos in
-      `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`, but this audit doc's own ledger (✅/❓
-      narrative markers, no real checkboxes) never reflected them as open work.
+- [ ] [BACKEND] P1. **Close BLRS's still-open gaps (G1/G3/G10)** — status as of 2026-07-28:
+  - G1 ✅ DONE (batch-live-reconciliation-service@80380c5). Resolution API now reads real Stage-5
+    `index.json`/`summary_*.json` output instead of the 3 hardcoded mock breaks; falls back to mock only when no run has
+    ever produced a summary. 6 new unit tests, QG green.
+  - G3 — RESCOPED, still open. "Wire the real dispatch call" undersold it: `trading-agent-service` has zero inbound
+    consumption surface for a recon-analysis task (health/readiness endpoints only). Needs an `[OPERATOR]` design
+    decision first — see `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md`.
+  - G10 — VERIFIED, still open. Confirmed broken on both ends: 9 `use-reports.ts` reconciliation hooks in
+    `unified-trading-system-ui` call gateway routes that don't exist in `unified-trading-api` — but zero UI pages
+    consume those hooks, so nothing is live-broken. Concrete per-repo build todos in the same rescope doc.
+
+  All three rehomed as `P1.BLRS1`/`P2.BLRS2`/`P3.BLRS3` in
+  `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (P1.BLRS1 now flipped done there); G3/G10's
+  corrected scope + build todos live in `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md`.
