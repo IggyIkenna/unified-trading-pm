@@ -204,6 +204,22 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
 
 ## Progress Log
 
+- **2026-07-28 (slot-12)** — **Fresh live recurrence, post-fix, on a `done` row this time (not `dispatched`).**
+  `sports_consolidated_native_ao_extract-010` (`plan_ref: sports_consolidated_native_ao_extract_2026_07_25.md`, Track H
+  denominator todo) was dispatched to me at `2026-07-28T23:02:42Z`. Its plan checkbox had already been flipped +
+  extracted into a machine-gated child plan by slot-15 at `unified-trading-pm@dc44d0c6d` (`2026-07-28T12:38:13Z`, "split
+  Track H denominator todo into a machine-gated child plan"), and the backlog row itself already carried
+  `done_sha=dc44d0c6d` + `done_at=2026-07-28T12:38:45Z` — i.e. **~10h before** the `dispatched_at` I received. So this
+  is a `done` row (with a real `done_sha`, not a NULL-hash legacy row) that got re-dispatched despite the 2026-07-20
+  sibling-reset guard (`agent-orchestrator@9c7a0fd`) that's supposed to refuse exactly this reset. Confirmed via fresh
+  git log the underlying work genuinely never re-executed (MDPS `reprocess_sports_odds.py` HEAD still `6f7422e`,
+  unrelated venue-stamp fix; the footystats migration script was never committed to `market-tick-data-service`) — so
+  this isn't a case of legitimately-new content landing on a reused id, it's the same completed todo bouncing back.
+  Filed as extra evidence for the already-RULED content-hash-id rewrite above (this is a THIRD independent guard-class
+  miss, on the `done`-row path this time, not the `dispatched`-row path the 2026-07-27 finding covered) — not a new fix
+  task, since the rewrite already covers this blast radius. Raised `/blocked` on my own dispatched -010 rather than
+  silently redoing already-done work; see that question's resolution for how the stale duplicate itself was closed.
+
 - **2026-07-28** — **RULED: do the content-hash rewrite now** (operator gated-decision closeout pass, general theme
   applied — "opt for full completions, no shortcuts, full functionality... if it's about canonicalisation rather than a
   hack, do it properly"). The 2026-06-25/26-era deferral ("wait until a new incident forces it") is treated as MET by
