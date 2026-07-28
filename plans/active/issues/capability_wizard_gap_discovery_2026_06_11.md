@@ -407,10 +407,29 @@ context; recommended owner strategy-service PBM):
       Ran the live test suite: `test_cefi_margin_traceability.py` + `test_emit_live_cefi_margin_events.py` +
       `test_venue_balance_tracker.py` — 37/37 passed. No code change required; closing per re-verification, not a new
       implementation.
-- [ ] [IMPLEMENT] P2. Runtime consumer for the UAC collateral registry: haircut-adjusted posted-collateral value feeding
-      MarginHealthSnapshot.collateral_usd (also resolves the F28 dual-SSOT risk). UTL/strategy-service. **LOGIC FREEZE —
-      engine-runtime consumer; the UAC COLLATERAL_REGISTRY it would read is now backfilled (2026-06-12), so this is
-      unblocked on the data side and waits only on the strategy-service/UTL runtime change.**
+- [x] ✅ [IMPLEMENT] P2. Runtime consumer for the UAC collateral registry: haircut-adjusted posted-collateral value
+      feeding MarginHealthSnapshot.collateral_usd (also resolves the F28 dual-SSOT risk). UTL/strategy-service. —
+      **RE-SCOPED + DONE 2026-07-28 (slot-3)**: re-verified against current code first (the 2026-07-27 slot-13
+      recurring-pattern note above applies here too). strategy-service's `margin_health.py` (`_snapshot_for_venue` →
+      `_haircut_adjusted_collateral_usd`) ALREADY builds a real, live, haircut-adjusted
+      `MarginHealthSnapshot.     collateral_usd` per CeFi perp venue, reading `get_collateral_haircut()` from UAC's
+      F28-canonical `venue_collateral.py` — the functional runtime-consumer ask was met by the sibling
+      margin-traceability work above (built after this todo was written 2026-06-11/12), just not via the literal
+      `COLLATERAL_REGISTRY` module this todo names. **The real residual gap**: `COLLATERAL_REGISTRY` (architecture_v2)
+      was a HAND-TRANSCRIBED copy of `venue_collateral.py`'s perp-CEX haircuts (confirmed via `git log` — commit
+      `bc455499` had to touch BOTH files in the same commit to stay in sync) — a live F28-class dual-SSOT drift risk
+      (not yet drifted, but one manual-sync-miss from it), distinct from the already-resolved F28 (venue_collateral.py
+      vs the now-deleted execution-service `lst_collateral_resolver.py` `_LST_REGISTRY`). Fixed: `COLLATERAL_REGISTRY`'s
+      5 perp-CEX venues (hyperliquid/binance/bybit/deribit/okx) now DERIVE their `accepted`/`haircut_pct` fields from
+      `venue_accepts_collateral()`/`get_collateral_haircut()` at import time (`_ah_from_venue_collateral()`), mirroring
+      the fix already shipped for `lst_collateral_resolver.py` — `unified-api-contracts@c0111ee1`. Verified numerically
+      identical to the prior hardcoded values for all 30 perp-CEX rows (zero drift today); added a regression test
+      (`test_perp_cex_haircuts_derived_from_venue_collateral_live`) pinning the derivation so a future accidental revert
+      to a hardcoded literal is caught immediately instead of silently drifting. Aave/Kamino (LENDING) numerics stay
+      hand-sourced — `venue_collateral.py` carries no LENDING rows to derive from, so there is no duplicate there.
+      `quality-gates.sh` green (553s). No UTL-side change needed — UTL's margin models consume an already-computed
+      `collateral_usd`, not raw haircut data; grepped UTL for `collateral_registry`/`COLLATERAL_REGISTRY` — zero hits,
+      confirming no other consumer expectation exists there.
 - [ ] [UI] P2. uts-ui Stage-A jurisdiction-filter surface is the follow-on consumer of the UAC jurisdiction overlay
       registry (`unified_api_contracts.internal.architecture_v2.jurisdiction_overlay` — `Jurisdiction` /
       `JURISDICTION_VENUE_POLICIES` / `allowed_venues_for_jurisdiction` / `is_venue_allowed`, backfilled 2026-06-13):
