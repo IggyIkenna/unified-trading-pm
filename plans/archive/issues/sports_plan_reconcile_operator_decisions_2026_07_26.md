@@ -16,7 +16,7 @@ summary: >-
   (`unified-trading-pm@57ed9271c`) archived all of them at 02:57Z while this shard was in flight, re-measured green.
   Item 3 (LIVE) is a 1216L issue doc the prek line-cap gate has frozen against ALL edits — including a correctness fix
   this run wrote and had to revert — because splitting a plan over its cap is operator-gated.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -47,13 +47,21 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: >-
+  All 3 items closed. Item 1 (VM-resumption hard-stop) self-resolved by its own evidence chain (2026-07-26); item 2
+  (terminal-status archival) auto-resolved mid-run by the plan_health gate (unified-trading-pm@57ed9271c); item 3
+  (line-cap split) overtaken — the target file was independently archived + resolved before the split was needed, so the
+  hunter-7 formatting fix was applied directly to the now-exempt archived file instead (unified-trading-pm, this
+  commit). Zero open checkboxes remain.
 source:
   "/plan-reconcile skill run (sports tranche), 2026-07-26, autonomous mode — operator away and unreachable, so genuine
   authority/blast-radius calls are parked here per the skill's Modes section rather than asked."
 ---
 
 # Sports /plan-reconcile shard (2026-07-26) — queued operator decisions
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
+> archive-on-resolve rule. All 3 items closed (see `resolved_by:` above); zero open checkboxes remain in this doc.
 
 > Nothing below blocked the rest of the run. Five evidence-settled fixes shipped in the same session (listed at the
 > bottom). **Items 1 and 3 are genuinely yours to decide. Item 2 auto-resolved mid-run** (another actor's CI
@@ -216,15 +224,15 @@ A 6th fix of the same class as #3 was written, verified, and then reverted unapp
       session's scope — `sports_master.md` is a separate file, `locked_by: live-defi-rollout`): someone with access to
       that epic file should flip its `:448` `[OPERATOR] P0` line to `[x]` citing this same evidence chain, and downgrade
       its tag off `[OPERATOR]` since the ruling is now recorded here.
-- [ ] [DOCS] P1. **RULED 2026-07-28 (no specific operator answer given — applying the standing workspace design-choice
-      theme; retagged from `[OPERATOR]`): Option A — split `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`**
-      along its own §3/§4/Phase-5 section boundaries into a parent + one child doc, mirroring the treatment the 5 AG
-      consolidated closeouts got on 2026-07-25. Reasoning: the theme's standing rule is the full/proper fix over a
-      shortcut — Option B (promote to a real epic just to raise the cap) uses the wrong `doc_type` purely to dodge the
-      size gate, and Option C (leave frozen) is exactly the permanent partial-completion the theme rules against (a doc
-      nobody can ever land a fix to again). **Status note (re-verified 2026-07-28, `check_line_caps.sh` run directly
-      against the file)**: the target file is now exactly 1000 lines — at the hard cap, not over it, because a
-      2026-07-26 archive-extraction pass (moving 2 large historical sections to
+- [x] ✅ [DOCS] P1. **RULED 2026-07-28 (no specific operator answer given — applying the standing workspace
+      design-choice theme; retagged from `[OPERATOR]`): Option A — split
+      `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`** along its own §3/§4/Phase-5 section boundaries into a
+      parent + one child doc, mirroring the treatment the 5 AG consolidated closeouts got on 2026-07-25. Reasoning: the
+      theme's standing rule is the full/proper fix over a shortcut — Option B (promote to a real epic just to raise the
+      cap) uses the wrong `doc_type` purely to dodge the size gate, and Option C (leave frozen) is exactly the permanent
+      partial-completion the theme rules against (a doc nobody can ever land a fix to again). **Status note (re-verified
+      2026-07-28, `check_line_caps.sh` run directly against the file)**: the target file is now exactly 1000 lines — at
+      the hard cap, not over it, because a 2026-07-26 archive-extraction pass (moving 2 large historical sections to
       `/plans/archive/2026_07/sports_shard_enumeration_cartesian_blowup_deferred_history_2026_07_22.md`) already brought
       it down from the 1216L this item's premise describes. `check_line_caps.sh` reports SOFT, not HARD, on it today —
       the file is NOT currently blocked from new commits, and the still-pending hunter-7 `### 3.2` heading fix (patch
@@ -233,4 +241,18 @@ A 6th fix of the same class as #3 was written, verified, and then reverted unapp
       future net-positive edit re-trips the HARD gate the moment it's staged), so this todo stays open, not moot.
       Done-when: content split parent+child under `plans/active/issues/`, both files under 1000L, the hunter-7 patch
       applied in whichever file now owns §3.2, and every corpus referrer to the original doc's now-relocated sections
-      repointed per the cross-reference convention. (repo: unified-trading-pm)
+      repointed per the cross-reference convention. **RE-VERIFIED 2026-07-28 (this session) — premise overtaken since
+      the status note above, so the split itself did not happen; the still-real piece (the hunter-7 fix) did.** The
+      target file was independently resolved and archived in the meantime:
+      `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` now lives at
+      `/plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (moved by commit `fdbafb3be`,
+      "archive 22 zero-todo docs"), carries `status: resolved`, and has zero open `- [ ]` checkboxes (confirmed by
+      grep). `check_line_caps.sh` scopes ONLY to `plans/active/*.md` + `plans/epics/*.md` by explicit design (its own
+      comment: archived "status: complete / nature: record docs are unbounded") — a doc under `plans/archive/` is
+      categorically exempt, so the 1016L-and-growing HARD-cap risk this item worried about no longer applies, split or
+      not. Splitting a frozen, resolved archive record to satisfy a cap it is exempt from would be scope creep. The
+      hunter-7 `### 3.2` heading defect (unclosed `(` turning its continuation into an orphan-`)` body paragraph) was
+      still present on disk — applied directly to the archived file this session (unified-trading-pm, same commit as
+      this flip). No referrer fix needed: this was a same-location heading-text correction, not a content move
+      (`grep -rl` across `plans/` + `codex/` shows every hit references the doc by topic/path, none by line number).
+      (repo: unified-trading-pm)

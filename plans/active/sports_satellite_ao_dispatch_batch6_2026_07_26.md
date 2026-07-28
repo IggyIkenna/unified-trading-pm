@@ -24,7 +24,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md,
+    /plans/archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
@@ -271,11 +271,11 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       none of my edits caused a new violation on any of the 4 checks the sweep runs that DO relate to plan content (line
       caps, reference paths, frontmatter, todo format all pass). `quality-gates.sh` (the actual per-repo ship gate,
       which does NOT invoke `run_hygiene_sweep.sh`) is green on this commit. Source:
-      `issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2 (the "one durable gap this leaves" note —
-      filed there explicitly as _"a small authoring change, not a decision"_). **Scope guard honored**: did NOT edit
-      `plans/active/task_template.md` § 4 or the codex rule to make this workspace-wide — generalising the authoring
-      rule to every AG's finalize plans stays parked for the operator (see Deferred; the 2 DeFi docs above are fresh
-      supporting evidence for approving that generalisation).
+      `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2 (the "one durable gap this leaves"
+      note — filed there explicitly as _"a small authoring change, not a decision"_). **Scope guard honored**: did NOT
+      edit `plans/active/task_template.md` § 4 or the codex rule to make this workspace-wide — generalising the
+      authoring rule to every AG's finalize plans stays parked for the operator (see Deferred; the 2 DeFi docs above are
+      fresh supporting evidence for approving that generalisation).
 
 - [ ] [DOC] P2. **Close out `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md` — 2 of its 3
       prose steps are now satisfied by shipped commits.** This doc has zero checkboxes and expresses its remaining work

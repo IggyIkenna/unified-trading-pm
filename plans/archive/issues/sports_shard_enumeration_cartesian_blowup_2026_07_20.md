@@ -46,10 +46,10 @@ estimate_calibrated_ai_days: 0.9
 assigned_role: data-pipeline
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: >-
   Parts 1/2/4 code fixes + vocabulary canonicalisation shipped (unified-api-contracts@a32ad5fb,
-  market-tick-data-service@f7504a10, deployment-api@1f0d3a0); Part 3 remediation predicate resolved (2-agent
-  independent re-derivation, exact match 37,426) and 3 of 5 safety-tooling items shipped 2026-07-26
+  market-tick-data-service@f7504a10, deployment-api@1f0d3a0); Part 3 remediation predicate resolved (2-agent independent
+  re-derivation, exact match 37,426) and 3 of 5 safety-tooling items shipped 2026-07-26
   (unified-trading-library@080a84a0 fixes the scheduler env-short-form 404). Zero real `- [ ]` checkboxes remain in this
   doc. VERIFIED 2026-07-28 (post-archival follow-up): the doc's own Part 3 prose describes the CAS+alarm write-mechanism
   implementation and item 3.4 (drop phantom uppercase ODDS rows) as remaining safety tooling, and its claim that this is
@@ -473,11 +473,11 @@ an explicit membership test for the two new reasons and a golden-number test on 
 **Verification:** `bash scripts/quality-gates.sh` in UAC; then recompute `compute_honest_coverage` over a local copy of
 the prod index and assert 87.64% ±0.01pp.
 
-### 3.2 ⛔ NOT-TO-DO (as proposed) — bulk purge of the dead-pair rows (923,952 by this section's own narrower predicate;
+### 3.2 ⛔ NOT-TO-DO (as proposed) — bulk purge of the dead-pair rows
 
-operative scope per the operator's 2026-07-22 ruling is 1,066,231, see Phase 5 decisions below — 1,136,624, the other
-figure this heading used to cite, turned out to be Option C's population in §4.2, not this one's; see that decision's
-full writeup)
+**Scope note:** 923,952 rows by this section's own narrower predicate; the operative scope per the operator's 2026-07-22
+ruling is 1,066,231 — see Phase 5 decisions below. 1,136,624, the other figure this heading used to cite, turned out to
+be Option C's population in §4.2, not this one's; see that decision's full writeup.
 
 **Marked NOT-TO-DO. Four independent grounds, all verified:**
 
