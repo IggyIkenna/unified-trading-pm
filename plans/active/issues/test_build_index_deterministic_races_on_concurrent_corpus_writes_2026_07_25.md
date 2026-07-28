@@ -83,7 +83,7 @@ not urgent.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Rewrite `test_build_index_is_deterministic` to build from a frozen `tmp_path` fixture (or
-      snapshot+skip-on-mutation) instead of two live walks of the shared `pm_root`, per the recommended fix above.
-      **Done when**: the test no longer reads live `plans/active/**` twice within its own body, and a manual repro
-      (touch a doc's frontmatter between the two `build_index` calls via a debugger/sleep) no longer fails it.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-28.** Rewrote `test_build_index_is_deterministic` to build from a frozen
+      `tmp_path` fixture (seeded with 2 representative docs) instead of two live walks of the shared `pm_root` — the
+      test no longer reads live `plans/active/**` at all. Verified: `pytest scripts/docs/test_gen_doc_index.py` → 3
+      passed. — `unified-trading-pm@91324d0b1`.

@@ -83,8 +83,10 @@ relying on every worker rediscovering the padding trick.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P3. In `unified-trading-pm/scripts/quickmerge.sh`, when the `--files` staging loop's `ADDED_ANY` stays 0
-      (line ~1569), check `AHEAD_COUNT=$(git rev-list origin/main..HEAD --count)` before exiting — mirror the existing
-      `git diff --cached --name-only`-empty branch immediately below it (line ~1573-1584): if `AHEAD_COUNT -gt 0`, print
-      the same "already committed, ahead of main — proceeding to push + PR" message and fall through instead of
-      `exit 1`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-28.** When the `--files` staging loop's `ADDED_ANY` stays 0, `quickmerge.sh` now
+      checks `AHEAD_COUNT=$(git rev-list origin/main..HEAD --count)` before exiting — mirrors the existing
+      `git diff --cached --name-only`-empty fallback: if ahead of main, prints "already committed... proceeding to
+      push + PR" and falls through instead of hard-failing. Verified via a sandbox repro (git rm + commit a file, then
+      exercise the exact staging-loop logic against the fully-committed-deletion shape — confirmed neither the
+      worktree-present nor already-staged-deletion branches catch it, matching the bug report, and the new AHEAD_COUNT
+      branch does). — `unified-trading-pm@5acc25839`.

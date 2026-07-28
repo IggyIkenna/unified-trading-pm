@@ -112,7 +112,7 @@ That file has zero `# DERIVED` markers on any of its 12 addresses at the time of
 
 ## Todos
 
-- [ ] [INFRA] P2. **Apply the fix sketch** — drop the second absolute-path `_is_excluded_path(path)` call in
-      `_iter_py_files` (or scope it to a nested worktree only, not the ambient slot directory) in
-      `check_defi_address_citations.py`; not yet applied, so STEP 5.97 still silently no-ops under every `.tabs/<slot>/`
-      local run.
+- [x] ✅ [INFRA] P2. **DONE 2026-07-28.** Dropped the second absolute-path `_is_excluded_path(path)` call in
+      `_iter_py_files` — the relative-path check alone already covers the intended nested-worktree case. STEP 5.97 now
+      actually scans local `.tabs/<slot>/` runs instead of unconditionally excluding every file. —
+      `unified-trading-pm@4c8dbb8bc`.
