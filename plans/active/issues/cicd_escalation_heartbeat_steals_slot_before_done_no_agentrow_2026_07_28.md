@@ -101,10 +101,18 @@ boot contract verbatim is exposed, not just a dev/manual edge case.
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Confirm the exact mechanism (activity-log trace on a fresh repro, or add a regression test that
-      spawns a typed escalation, calls `/heartbeat` once, then asserts `find_active_agent_for_session` still finds the
-      row) — is it the `spawn_base_role=None`/`current_task` overwrite alone, or does `reap_orphan_agents` additionally
-      need the slot to look "typed" to spare the row? Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-28.** Confirmed via regression test (not activity-log trace) —
+      `test_heartbeat_on_freshly_claimed_typed_slot_steals_it_into_normal_dispatch` reproduces the exact live mechanism:
+      `heartbeat_slot`'s idle-vs-working branch has no `spawn_base_role`/`AgentRow`-lifecycle awareness (unlike
+      `boot_slot`), so the escalation's mandated STEP-0 heartbeat on a freshly `claim_slot_for_typed_agent`'d slot
+      (`current_task=None` by design) takes the idle branch and `assign_task_to_slot` overwrites `current_task` + wipes
+      `spawn_base_role`. A second test, `test_heartbeat_steals_typed_slot_but_agentrow_lookup_still_succeeds`, directly
+      answers the open question: the slot-field clobbering ALONE does NOT explain the live `/done` 400 —
+      `find_active_agent_for_session` / `reap_orphan_agents` key only off `AgentRow.tmux_session`/`status`/`last_ping`,
+      never `SlotRow.current_task`/`spawn_base_role`, so the AgentRow still resolves immediately after the steal. The
+      slot-clobbering bug is real and confirmed but not sufficient by itself — a separate, still-open mechanism explains
+      the AgentRow going missing by `/done` time (out of this task's scope; todo below still needs the fix for the
+      confirmed clobbering bug). — agent-orchestrator@d59f1af.
 - [ ] [BACKEND] P2. Fix once confirmed — two candidate shapes, pick per what the trace above shows: (a) escalation.py's
       `claim_slot_for_typed_agent` should also set `slot.current_task` to a non-None sentinel (e.g. the escalation_id)
       so `heartbeat_slot()`'s `current_task is not None` check correctly treats the slot as occupied and never reaches
