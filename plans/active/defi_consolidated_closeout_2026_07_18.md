@@ -106,8 +106,8 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: 2026-06-27
-  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+last_updated:
+  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"; "2026-07-27" session-3 lending-resolver close-out (todo 18)
@@ -746,10 +746,12 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   open" count above); top P0s: R3-run full-corpus migration VM still applying, catalogue-venue-gap re-enum/re-rollup
   deploy-gated, ~16.7M-row LENDING→A_TOKEN/DEBT_TOKEN Wave-D migration, residual canon walk C2-C12, address/UUID
   fallback elimination in `canonical_instrument_id`.
-- [ ] [DOC] P1. **Add the digest entry above into `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`** and
+- [x] ✅ [DOC] P1. **Add the digest entry above into `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`** and
       fix every dangling "tracked under X below" reference there to point at it (bold digest style, task_template.md
       finding H) — re-grep the file for the live set rather than trusting a restated count; as of 2026-07-26 there are
-      exactly 2, at `…aggregated_sources_2026_07_24.md:379` and `:398`. (repo: unified-trading-pm)
+      exactly 2, at `…aggregated_sources_2026_07_24.md:379` and `:398`. (repo: unified-trading-pm) — 2026-07-28 (slot
+      8): digest bullet added at `…aggregated_sources_2026_07_24.md:533`; both dangling refs converted to real links.
+      Tracked in `defi_consolidated_native_ao_extract_2026_07_25.md`.
 
 - **2026-07-27** — Discoverability fix (`na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` Phase 4): 5
   defi-tagged docs reclassified `assigned_vm: NA → planning` this session were not mentioned anywhere in this hub — the

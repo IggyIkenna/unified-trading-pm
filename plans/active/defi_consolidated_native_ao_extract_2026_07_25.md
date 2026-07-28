@@ -109,7 +109,7 @@ source: >-
       `commit_sha` matches `origin/live-defi-rollout` HEAD at time of republish. Source:
       `issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md` (cited by
       `defi_consolidated_closeout_2026_07_18.md` Track 8).
-- [ ] [DOC] P1. **Add the missing digest entry for `defi_track01_per_instrument_and_canon_id_2026_07_24.md` into
+- [x] ✅ [DOC] P1. **Add the missing digest entry for `defi_track01_per_instrument_and_canon_id_2026_07_24.md` into
       `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`** and fix its dangling "tracked under X below" prose
       references so they resolve to a real linked entry instead of a phantom forward-pointer (bold digest style,
       `- **[TAG] P<n>.**`, per `task_template.md` finding H — never real `- [ ]` checkbox syntax for a digest line). Use
@@ -124,7 +124,14 @@ source: >-
       and a fresh grep for `defi_track01_per_instrument_and_canon_id` shows every "tracked under X below" occurrence now
       resolves to that linked entry (no dangling forward-pointer remains). Source:
       `defi_consolidated_closeout_2026_07_18.md` (native, bottom of file, "Missing digest entry" note + its own
-      `[DOC] P1` todo).
+      `[DOC] P1` todo). **Evidence (2026-07-28, slot 8)**: live count was 2 (not 3), confirmed by fresh grep before
+      editing. Added the digest bullet verbatim (from `defi_consolidated_closeout_2026_07_18.md:744-748`) to the end of
+      the "DeFi-specific canonicalisation residuals" section in
+      `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`, and converted both dangling
+      `` `defi_track01_per_instrument_and_canon_id_2026_07_24.md` below `` backtick mentions (lines 390/413 pre-edit)
+      into real markdown links to the file. Fresh grep post-edit shows all 3 occurrences (2 fixed references + 1 new
+      entry) — no dangling forward-pointer remains. Native duplicate todo in
+      `defi_consolidated_closeout_2026_07_18.md:749` flipped in the same commit citing this doc.
 
 ## Conflicts / staleness found (not drafted — reported, not silently worked around)
 

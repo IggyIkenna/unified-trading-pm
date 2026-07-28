@@ -387,8 +387,9 @@ drift_direction: none
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`](/plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md)
     (1 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos" entry only accounted for
-    the relabel-forward verification tracked under `defi_track01_per_instrument_and_canon_id_2026_07_24.md` below, and
-    missed this separate item at `:254`)
+    the relabel-forward verification tracked under
+    [`defi_track01_per_instrument_and_canon_id_2026_07_24.md`](/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md)
+    below, and missed this separate item at `:254`)
     - **[DATA] P2.** Item 6 — resolve item 4's "inconclusive, not a clean bill" gap for Kamino/Solend `lending_indices`;
       probe BOTH `instrument_type=solana_lending` AND `instrument_type=solana_amm_pool` path shapes before filing a
       verdict (operator ruling 2026-07-25).
@@ -410,7 +411,8 @@ drift_direction: none
       backfill completes.
   - [`plans/active/issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`](/plans/active/issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md)
     — 0 open todos (closed/archived/record-only) — its follow-up capture work is tracked under
-    `defi_track01_per_instrument_and_canon_id_2026_07_24.md` below.
+    [`defi_track01_per_instrument_and_canon_id_2026_07_24.md`](/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md)
+    below.
   - [`plans/active/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`](/plans/archive/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md)
     (4 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos
     (closed/archived/record-only)" entry was wrong, this doc is `status: open` with 4 live `- [ ]` todos at
@@ -528,6 +530,11 @@ drift_direction: none
     — 4 open (3 P1, 1 P2) — scale-measurement + content-sample todos gating an OPERATOR fold-vs-migrate decision on
     whether this legacy glued-venue composite population should be folded onto its correct canonical path or given some
     other disposition.
+  - **[`defi_track01_per_instrument_and_canon_id_2026_07_24.md`](/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md)**
+    — 13 open (5 P0, 3 P1, 5 P2 — 11 plain-open + 2 `[~]` partial; re-verified LIVE 2026-07-25, corrects the stale "18
+    open" count above); top P0s: R3-run full-corpus migration VM still applying, catalogue-venue-gap re-enum/re-rollup
+    deploy-gated, ~16.7M-row LENDING→A_TOKEN/DEBT_TOKEN Wave-D migration, residual canon walk C2-C12, address/UUID
+    fallback elimination in `canonical_instrument_id`.
 
 - **Cross-AG / infra / process**:
   - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md)
