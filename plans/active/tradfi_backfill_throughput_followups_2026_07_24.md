@@ -284,11 +284,18 @@ source:
       code-level look at the FX Yahoo-daily writer path specifically (not a data migration — a writer-code fix) as the
       concrete next step; the broader 21.9% residual across other venues/types may resolve further once the chain-bundle
       content migration (item above) actually applies at scale. (repo: mtds)
-- [ ] [DATA] P2. **182,407 todo cells below the vendor discovery floor are permanently unfillable** →
-      `plans/active/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` (P2). Databento
-      XNAS.ITCH/XNYS.PILLAR have nothing pre-2023-04-15 and the launchers already clamp there, so the DENOMINATOR
-      disagrees with the write path. Reclassify `expected_unattempted` (writer-side materialisation, never
-      reader-derived) so coverage stops showing a gap no launcher can ever close. (repo: mtds)
+- [x] ✅ [DATA] P2. **DONE 2026-07-28 (slot-2) — same ground as `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s
+      todo, resolved there in full.** →
+      `plans/active/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` (now `status: resolved`, all 5
+      todos done). Ran the corrective `--apply` reclassification: 182,407 below-floor cells (NASDAQ/NYSE/CME) flipped
+      `expected_unattempted`(blank)→`empty_confirmed(EXPECTED_PRE_SOURCE_COVERAGE_START)`, writer-side, verified
+      420,438→238,031 todo cells (exact delta), 0 below-floor cells remaining on re-check. The original candidate's
+      `sentinels.py` target was already corrected (2026-07-25, plan-reconcile) to the actual gap:
+      `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_tradfi` (write-time fix already shipped
+      `instruments-service@31cf3952`) + the one-off reclassification script
+      `scripts/reclassify_tradfi_below_floor_expected_unattempted_2026_07_27.py` (this session's `--apply` run) — not
+      `mtds`. Regression-guard test `instruments-service@5104befc`. (repo: instruments-service, not mtds — corrected per
+      the above)
 - [ ] [INFRA] P1. **Bundle roots into fewer larger VMs.** `_tradfi-ohlcv-launcher-lib.sh` spawns one VM per
       (venue,root,year); accumulate multiple roots' symbol-sets into one VM's `VM_INSTRUMENT_IDS` per year-shard
       (SINGLE_VM_QUEUE-analog). Fewer, saturated VMs. Also folds the pd-balanced 250GB / `TRADFI_OHLCV_BOOT_TYPE` disk
