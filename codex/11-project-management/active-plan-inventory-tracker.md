@@ -52,10 +52,12 @@ last_executed: 2026-05-17
 > `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` #2. The dashboard table + markers still physically exist
 > in that file, but `scripts/plans/regenerate_active_plan_inventory.py`'s `MASTER_FILE` constant still hardcodes the old
 > `plans/active/` path, so **the auto-regen step now errors `MASTER_FILE not found` on every run** (daily via
-> `run_hygiene_sweep.sh`'s default regen step / `hygiene_sweep_scheduler.tf`) until a human either repoints
-> `MASTER_FILE` at a new host doc (e.g. `plans/active/INDEX.md`) or retires this feature outright now that the May-23
-> cutover it was built for is over. Not resolved as part of the archival — needs an owner decision, not a mechanical
-> fix.
+> `run_hygiene_sweep.sh`'s default regen step, invoked as STEP 1 of the daily deep `plan-reconciler` agent — the
+> `hygiene_sweep_scheduler.tf` Cloud Run job that used to invoke it directly was retired 2026-07-28, RULE-11
+> prove-then-retire; the underlying regen-step bug this note describes is unaffected by that retirement, same broken
+> `MASTER_FILE` constant, different daily caller now) until a human either repoints `MASTER_FILE` at a new host doc
+> (e.g. `plans/active/INDEX.md`) or retires this feature outright now that the May-23 cutover it was built for is over.
+> Not resolved as part of the archival — needs an owner decision, not a mechanical fix.
 
 > SSOT for the auto-tracked workspace-wide plan inventory that lives inside `master_to_live_defi_2026_05_23.md`. Shipped
 > 2026-05-12 (PM@ab1a471f) to solve two coupled problems surfaced in the calibration thread:

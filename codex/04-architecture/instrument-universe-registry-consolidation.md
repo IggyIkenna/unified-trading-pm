@@ -24,7 +24,7 @@ referenced_by:
   [
     /codex/04-architecture/asset-class-ownership.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md,
+    plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     plans/audit/results/mvp_instrument_universe_gap_audit_2026_06_17.md,
   ]
 owner:

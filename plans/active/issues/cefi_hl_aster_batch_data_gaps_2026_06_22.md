@@ -260,8 +260,9 @@ to today (a hardcoded date goes stale tomorrow).
       `instrument-catalogue-regen` Cloud Run job builds the SEPARATE availability-MATRIX, not the per-instrument
       catalog) → `prod/catalog.parquet` PROMOTED 230,073 rows (monotonic ACCEPT). Per-venue breadth + available_from/to
       genesis verified (see FINAL REPORT).
-- [ ] [INFRA] P2. **Tomorrow-verify (2026-06-24)**: confirm both schedulers fired on the new day (02:00 + 06:00 UTC) +
-      produced fresh shards + aggregate on the new code. Flip only after 100% confirmed.
+- [x] ✅ [INFRA] P2. **VERIFIED (2026-07-28, slot-9)**: 06:00 FETCH shard day=2026-06-24 holds all 24 venues +
+      continuous daily since; 02:00 aggregate (now `lifecycle-catalogue-regen-cefi-daily`) green, `catalog.parquet`
+      fresh today.
 - [x] ✅ [SCRIPT] P2. **DONE (2026-07-26, slot-12)**: entries already existed (added via a since-landed "CeFi venues
       added 2026-06-23" for-loop section in `data_type_capability.py`, not a literal per-venue block — a literal-string
       grep missed them). Locked in with a new regression test (`unified-api-contracts@b0547c36`, 9 tests). Full

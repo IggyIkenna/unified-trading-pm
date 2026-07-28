@@ -27,7 +27,7 @@ related:
     issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
     issues/cefi_universe_capture_rule_2026_06_23.md,
     issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
-    issues/instruments_service_plan_reconciliation_2026_06_29.md,
+    /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
     issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md,
     issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md,
@@ -173,7 +173,7 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 ## Stage 0 — Unblock (decisions + plan consolidation)
 
 - [x] [DESIGN] P0. **D1–D3 decided** (see Decision Gates) — **hard gate on Stage 2** (all three decided 2026-07-06)
-- [ ] [ADMIN] P1. Plan consolidation (from `issues/instruments_service_plan_reconciliation_2026_06_29.md` §F.1) —
+- [ ] [ADMIN] P1. Plan consolidation (from `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` §F.1) —
       **REASSESSED 2026-07-06**:
   - [x] **merge `path_to_100pct` → `data_completion` = ✅ ALREADY DONE** (superseded + archived 2026-06-30;
         `data_completion` § "Folded-in from `path_to_100pct`"; only the DEDUP residual remains = the Stage-5 item).
@@ -853,7 +853,7 @@ reconciling + signing off, not redoing.)_
 - **Open corrections:** `issues/cefi_layer1_denominator_gaps_2026_07_03.md` ·
   `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` · `issues/cefi_universe_capture_rule_2026_06_23.md`
 - **Resolved / map:** `issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md` ·
-  `issues/instruments_service_plan_reconciliation_2026_06_29.md`
+  `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md`
 - **New from the 2026-07-07 ASTER/CEFI audit:** `issues/aster_mtds_failure_count_regression_2026_07_07.md` (🔴
   unexplained live regression) · `issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` (🔴
   LIGHTER/PACIFICA dark 11+ days + zero alerting on the monotonicity guard) ·

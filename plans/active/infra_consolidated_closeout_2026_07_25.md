@@ -73,7 +73,7 @@ governance — ruff-lint, deprecate/delete audit) ·
 (lift CVE-driven dependency caps once blockers clear) ·
 [issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md](/plans/active/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md)
 (fleet-wide setuptools CVE, PYSEC-2026-3447, blocking the zero-tolerance codex gate) ·
-[issues/uv_pin_fleet_drift_2026_06_22.md](/plans/active/issues/uv_pin_fleet_drift_2026_06_22.md) (uv binary drifted off
+[/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md](/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md) (uv binary drifted off
 its pinned version on the VM fleet) ·
 [issues/pm_scripts_typecheck_debt_2026_06_11.md](/plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md) (PM
 `scripts/` basedpyright typecheck-debt ratchet regression) ·
@@ -138,7 +138,7 @@ all active repo docs vs codex SSOT" hygiene) ·
 operator's original catalogue/process doc for background-agent-driven issue remediation at scale) ·
 [issues/issue_docs_remediation_sweep_2026_06_02.md](/plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md)
 (code-fixable-items sweep across the issue-doc backlog) ·
-[issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md](/plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md)
+[/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md](/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md)
 (plan-hygiene tooling migration: prek + fold-to-QG + agentic contradiction resolution) ·
 [issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md](/plans/archive/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md)
 (**ARCHIVED 2026-07-27/28** — the "NOT archived" note above was accurate when written but is now stale: the operator

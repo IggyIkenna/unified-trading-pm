@@ -44,7 +44,7 @@ tags:
 related:
   [
     /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
-    /plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md,
+    /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     ../instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
     ../layer1_remeasure_and_certify_2026_07_06.md,
@@ -168,7 +168,7 @@ Real code fixes / features needed (not backfills, not pure doc drift).
    violation, plus 3 `tofu apply` infra items pending operator execution.
 
 6. **DP alert-flood triage — 06:00-UTC TradFi OHLCV OOM crash-loop** (+ a terraform-default drift risk)
-   `plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` Root-cause + run-to-completion still
+   `plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` Root-cause + run-to-completion still
    open; separately, `deployment-service:latest` doesn't yet carry the wave-launcher sentinel writer (a `tofu apply`
    would silently revert the live pin).
 
@@ -469,7 +469,7 @@ Cross-doc / cross-registry contradiction, drift, or design-authority gaps.
 ### P1
 
 1. **Instruments-Service Plan Reconciliation — open plans vs SSOT**
-   `plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md` 986-line cross-plan contradiction audit
+   `plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` 986-line cross-plan contradiction audit
    (67 plans vs live UAC+codex). Most of C1–C9 resolved, but **C6, C7, C9 still "AWAITING IKENNA"**, **C5
    "with-Ikenna"** (Deribit options false-complete), and Section F plan-consolidation/archival (F.1–F.4) awaiting
    operator sign-off.

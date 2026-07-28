@@ -35,7 +35,7 @@ related:
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
     /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
     /plans/active/data_completion_cefi_2026_07_15.md,
-    /plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md,
+    /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
     /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
@@ -277,15 +277,15 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   (`BTC-USD-PERP`) never match `CEFI_MARGIN_TIERS`; the tier-miss fallback then self-referentially substitutes
   `mmr_warning_pct` as the assumed MMR rate, misclassifying healthy positions as WARNING/CRITICAL. Affects every live
   CeFi margin computation (both `margin_health.py` and the new `emit_live_cefi_margin_events` push path). P1, open.
-- `issues/vm_backfill_data_correctness_findings_2026_06_29.md` F5 (rehomed here 2026-07-27, was falsely cited "0 open
+- `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md` F5 (rehomed here 2026-07-27, was falsely cited "0 open
   todos" there) — bybit dated-futures fetches (`BTC-26DEC25`, `MNTUSDT-29MAY26`) time out en masse against
   `datasets.tardis.dev` (~2,600 failures/VM across `cefi-bybit-2025-light`/`cefi-bybit-2026-light`) while perps succeed;
   the date is marked OK regardless. Open question: are these failures recorded as honest-absence (`record_captured`
   failed/unattempted) or silently dropped — verify before deciding whether it's a vendor-gap skip-list fix or a
   recording-correctness bug. P2, open.
-- `issues/instruments_service_plan_reconciliation_2026_06_29.md` §C9 (rehomed here 2026-07-28 per operator ruling
-  2026-07-27, interactive session §5#27; source doc still active/locked, pending `[unlock-plan]` for its own eventual
-  archival — see that doc's C9 section) — EXTENDED candle/ohlcv fetch path (`_fetch_extended_candles_for_symbol`,
+- `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` §C9 (rehomed here 2026-07-28 per operator ruling
+  2026-07-27, interactive session §5#27; source doc archived 2026-07-28, `[unlock-plan]` granted — see that doc's C9
+  section) — EXTENDED candle/ohlcv fetch path (`_fetch_extended_candles_for_symbol`,
   `adapters/_umi_extended.py:151`) silently swallows HTTP-error/exception/ empty-200 failures (no
   `failed_per_instrument` param wired, unlike sibling `/funding`/`/trades`/`/orderbook`) — a real honest-absence
   violation, low MVP urgency (ohlcv non-MVP today), ~10-line fix (thread the failure router + `record()` on error +

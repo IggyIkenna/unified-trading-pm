@@ -594,7 +594,7 @@ drift_direction: advance-code
   (`cross_cutting_consolidated_closeout_2026_07_25.md` Track 21, citing
   `issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md`) is a DIFFERENT bug with a
   different fix target — that doc...
-- **`plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md`**: Conflict check: grepped
+- **`plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md`**: Conflict check: grepped
   plans/active/cross_cutting_consolidated_closeout_2026_07_25.md — it cites this doc only under Track 7 ("Sources") and
   its own stated "close-out criterion" for Track 7 is passive ("both reconciliation docs unlock once their few remaining
   items resolve"), explicitly naming the SAME remainders (C5...

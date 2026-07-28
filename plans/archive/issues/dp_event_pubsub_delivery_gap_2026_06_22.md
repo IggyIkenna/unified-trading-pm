@@ -5,7 +5,7 @@ title:
 summary:
   The Phase-0/Wave-3 substrate routes a DP\_\* event to `#data-pipeline-alerts` ONLY once it reaches the
   alerting-service `route_event()`. `route_event()` is reached **exclusively** through the PubSu...
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [alerting, observability, data-pipeline, slack, self-healing, monitoring]
 related:
   [
-    plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
+    /plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
     plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
     /codex/05-infrastructure/deployment-observability.md,
   ]
@@ -23,13 +23,17 @@ parent_epic: observability_master
 priority: P2
 source: [data_pipeline_hardening_self_monitoring_2026_06_22.md, DP-WATCHER (delivery substrate)]
 assigned_vm: planning
-resolved_by:
+resolved_by: 2026-07-28 (plan-vintage-audit archival, [unlock-plan] granted)
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
 ---
+
+> **✅ ARCHIVED 2026-07-28** ([unlock-plan] granted). All items done — zero remaining `- [ ]` checkboxes as of
+> 2026-07-28 (the Cloud Logging ingestion gap, the last open item, was resolved in-place `alerting-service@62b850c`,
+> re-verified 2026-07-28T06:18Z live).
 
 # DP\_\* event delivery gap — cron/monitor emits never reach Slack
 

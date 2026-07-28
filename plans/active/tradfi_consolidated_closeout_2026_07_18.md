@@ -681,7 +681,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     — 0 open todos (closed/archived/record-only)
   - [`plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
     — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
+  - [`plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
     — **CORRECTED 2026-07-27** (was falsely cited "0 open todos" — F4-F7 are prose findings, not checkboxes, so a naive
     checkbox-count read the doc as closed): F1-F3 fixed (instruments-service@a4dfa6b,
     market-tick-data-service@7da5f6ad/75c8f148); F4/F5/F6 are DeFi/CeFi findings, rehomed to

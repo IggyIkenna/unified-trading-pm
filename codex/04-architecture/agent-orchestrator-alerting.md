@@ -162,9 +162,15 @@ check it against this table** — the default for any automatic/self-healing/lif
 | `notify_git_staleness_resolved`                                                                                                                                                                                                                                                                                                                                                                                   | **PAGE**                                 | closes the RED page in-channel with the episode summary + a "closes the RED opened `<ts>`" correlation line (operator 2026-07-14 / 2026-07-18)                                                                                                                                                                                                                                                                        |
 | `notify_spawn_failure` / `notify_slot_stale` / `notify_slot_failed` / `notify_unpushed_plans` / `notify_main_agent_rate_limited` / `notify_worker_usage_frozen` / `notify_account_pool_exhausted` / `notify_plan_health_findings` / `notify_account_rotated` / `notify_context_burn` / `notify_likely_claude_outage` / `notify_account_usage_high` / `notify_gh_rate_limit_threshold` / `notify_run_volume_spike` | summary                                  | already `logger.info` (prior downgrades)                                                                                                                                                                                                                                                                                                                                                                              |
 
-**Not an AO notifier (separate fix):** the daily `:broom: Plan-hygiene sweep FAILED` is a PM **Cloud Run cron**
-(`uts-prod-plan-hygiene-sweep`, 05:00) that re-posts the same unchanged failure every day with no dedup — fix the
-underlying hygiene failure or add read-back dedup to that job; it does not flow through `slack._post`.
+**RETIRED 2026-07-28 (RULE-11 prove-then-retire)**: the daily `:broom: Plan-hygiene sweep FAILED` PM Cloud Run cron
+(`uts-prod-plan-hygiene-sweep`, 05:00) described below no longer exists — the job + its Cloud Scheduler + terraform
+were deleted, superseded by the daily deep `plan-reconciler` agent (01:00 UTC, systemd timer on the central
+orchestrator VM) which fixes findings instead of just re-posting the same unchanged Slack failure. See
+`/codex/11-project-management/plan-hygiene.md` § "Daily deep reconciler" for the full record. Preserved below for
+history (the dedup gap it names never got fixed — moot now that the job is gone):
+
+> the daily `:broom: Plan-hygiene sweep FAILED` was a PM **Cloud Run cron** (`uts-prod-plan-hygiene-sweep`, 05:00) that
+> re-posted the same unchanged failure every day with no dedup — it did not flow through `slack._post`.
 
 ## Token failures are classified by the DEFINITIVE HTTP code, never guessed
 

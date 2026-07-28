@@ -29,7 +29,7 @@ referenced_by:
   [
     /codex/02-data/tradfi-data-types-catalog.md,
     /codex/04-architecture/tradfi-batch-live.md,
-    plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
+    plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
     plans/audit/instructions/tradfi_master_audit_instructions.md,
     plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md,
     plans/epics/tradfi_master.md,

@@ -29,7 +29,7 @@ referenced_by:
     /codex/02-data/shard-coverage-classification.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
-    plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md,
+    plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md,
     plans/epics/mtds_mdps_master.md,
   ]
 owner:

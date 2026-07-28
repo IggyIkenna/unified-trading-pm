@@ -5,7 +5,7 @@ summary:
   Six data-pipeline defects found while auditing running GCP backfill VMs 2026-06-29 — backfills are "alive"
   (heartbeating) but several produce invalid/empty output. Code-fixable defects fixed so the next VM generation runs
   clean.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports, defi, cefi, tradfi]
 stage: [data]
@@ -24,7 +24,7 @@ parent_epic: infrastructure_master
 priority: P1
 source: VM spend/health audit 2026-06-29 (gcp_vm_spend_audit.md)
 assigned_vm: planning
-resolved_by:
+resolved_by: 2026-07-28 (plan-vintage-audit archival, [unlock-plan] granted)
 locked_by: live-defi-rollout
 audited_scope: data-correctness
 execution_scope: orchestrator-agent
@@ -39,16 +39,14 @@ locked_since: 2026-05-21
 
 # Backfill-VM data-correctness findings — 2026-06-29
 
-> **🟢 REHOMED 2026-07-27** (plan-vintage-audit corrected-citation fix): F1-F3 fixed (see Progress Log). F4/F6 rehomed
-> to [`defi_consolidated_closeout_2026_07_18.md`](/plans/active/defi_consolidated_closeout_2026_07_18.md)'s Open
-> follow-ups; F5 rehomed to
-> [`cefi_consolidated_closeout_2026_07_18.md`](/plans/active/cefi_consolidated_closeout_2026_07_18.md) Track 6; F7
-> rehomed to [`tradfi_consolidated_closeout_2026_07_18.md`](/plans/active/tradfi_consolidated_closeout_2026_07_18.md)
-> (operator decision applied: gate TradFi capture by `is_mvp`). This doc is otherwise resolved — 4 closeout plans
-> previously cited it as "0 open todos" (a checkbox-counting miscount; F4-F7 were prose findings, not checkboxes), now
-> corrected to point at the real open items above. **Still `locked_by: live-defi-rollout` — archive only after an
-> explicit `[unlock-plan]` grant** (not yet asked; this doc's substantive content is fully migrated, so archival is now
-> just a formality pending that ask).
+> **✅ ARCHIVED 2026-07-28** ([unlock-plan] granted, operator 2026-07-27/28 decision). F1-F3 fixed (see Progress Log).
+> F4/F6 rehomed to [`defi_consolidated_closeout_2026_07_18.md`](/plans/active/defi_consolidated_closeout_2026_07_18.md)'s
+> Open follow-ups (verified present, real `- [ ]` todos); F5 rehomed to
+> [`cefi_consolidated_closeout_2026_07_18.md`](/plans/active/cefi_consolidated_closeout_2026_07_18.md) Track 6 (verified
+> present); F7 rehomed to
+> [`tradfi_consolidated_closeout_2026_07_18.md`](/plans/active/tradfi_consolidated_closeout_2026_07_18.md) (verified
+> present, operator decision applied: gate TradFi capture by `is_mvp`). Doc content fully migrated + re-verified
+> 2026-07-28 before archival.
 
 ## Context
 

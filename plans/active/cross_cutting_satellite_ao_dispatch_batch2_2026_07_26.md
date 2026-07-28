@@ -304,11 +304,11 @@ drift_direction: advance-code
       `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions and their subscriber IAM in terraform" prose
       item is DONE: `deployment-service/terraform/gcp/alerting_relay_pubsub.tf` carries both
       `google_pubsub_subscription` resources, both `google_pubsub_subscription_iam_member` bindings, and matching import
-      blocks. Sources: `issues/dp_event_pubsub_delivery_gap_2026_06_22.md`,
+      blocks. Sources: `/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md`,
       `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`. Evidence: alerting-service@62b850c (QG green
       sentinel `.qg_last_passed_sha=62b850c`), live `gcloud logging read` excerpt above.
 - [ ] [CODE] P2. **Two bounded data-pipeline-alert bug fixes** (Source:
-      `issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`). (a) **Finding 3** — add a
+      `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`). (a) **Finding 3** — add a
       per-VM shard check to `DP_VM_GONE_NO_CAPTURE`: the alert reads the CONSOLIDATED captured count, but per-VM shards
       written with `process_final=False` do not reach that count until the consolidator runs (~30 min after VM
       self-delete), so a VM that wrote real rows fires a false GONE_NO_CAPTURE (confirmed: VM
@@ -389,14 +389,14 @@ drift_direction: advance-code
       subprocess `gcloud`/`gsutil`) and its general snapshot-before-mutate discipline. **Before running `--apply`**: (1)
       snapshot the defi + tradfi `_index/availability_index.parquet` files; (2) verify via a live GCS row sample that
       the contamination is single-column only (only `schema_version` wrong) and NOT a full-row positional shift — per
-      `issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`'s own stated prerequisite,
+      `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`'s own stated prerequisite,
       a positional shift needs re-derivation, not a version bump; (3) run `populate_v9_index_columns_inplace.py --apply`
       against the defi + tradfi index buckets only; (4) verify before/after row counts and that the non-v9 residual
       shrank by exactly the expected contaminated-row count. **Done when**: the pre-mutate snapshot exists, the
       sample-verification result is recorded (single-column vs positional-shift, with the sample cited), the `--apply`
       run completes with before/after counts, and the source doc's "Operator decision (prod-manifest mutation)" checkbox
       is flipped `[x]` citing this evidence. Source:
-      `issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` Finding 1's "Operator
+      `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` Finding 1's "Operator
       decision (prod-manifest mutation)" item. **Note**: the source doc itself carries `locked_by: live-defi-rollout` —
       this todo does not require unlocking the source doc (it only needs a checkbox flip there, not archival), but the
       source doc's own archival still needs a separate operator `[unlock-plan]` grant once all 3 of its items are

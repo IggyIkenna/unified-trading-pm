@@ -55,7 +55,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
 ## §1 — Fix first (2 cross-plan false-citation bugs, P1)
 
 - [x] ✅ [DATA] P1. **Fix false "0 open todos/closed" citation for
-      `plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md`** — unified-trading-pm (this commit).
+      `plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`** — unified-trading-pm (this commit).
       **CORRECTED SCOPE on execution**: the false citation only existed in `tradfi_consolidated_closeout_2026_07_18.md`
       (lines 684-685) — defi/cefi/sports closeouts never cited this doc at all (verified via grep before editing, the
       "across FOUR AG closeout plans" framing was itself stale). F7 rehomed into `tradfi_consolidated_closeout` with the
@@ -63,6 +63,8 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `defi_consolidated_closeout_2026_07_18.md` Open follow-ups; F5 rehomed into
       `cefi_consolidated_closeout_2026_07_18.md` Track 6. Source doc annotated REHOMED, still
       `locked_by: live-defi-rollout` — archival needs an explicit `[unlock-plan]` grant (not yet asked, not done here).
+      **ARCHIVED 2026-07-28** ([unlock-plan] granted, all-9 unlock decision) — re-verified all 3 rehomes present as
+      real `- [ ]` todos before moving; `git mv` to `plans/archive/issues/`.
 - [x] ✅ [DATA] P1. **Fix stale "Plan 3 never authored" claim** — unified-trading-pm (this commit). **CORRECTED SCOPE on
       execution**: the false claim lived only in the 2 downstream docs
       (`cross_cutting_consolidated_closeout_2026_07_25.md` Track 10,
@@ -205,7 +207,13 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `[unlock-plan]` grant in this session — per the HARD RULE (`PLAN_FORMAT.md`: "Agents MUST NOT archive locked plans
       even if all todos are done... only a human with `[unlock-plan]`") this is a STOP-and-report, not an archive.
       Flagging for the operator: this doc is ready for a quick `[unlock-plan]` + archive pass whenever convenient.
-- [ ] [PLAN] P2. `plans/active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` →
+      **DISCREPANCY FOUND 2026-07-28** (unlock WAS granted this session, but NOT archived anyway): re-reading the doc
+      fresh surfaced a genuine NEW open item the "all 5 items [x]" framing above missed — a `[TRADFI] P3` follow-up
+      ("Fix the pyarrow per-symbol-writer fan-out identified by the 2026-07-27 memray repro") was added alongside the
+      P2 memray flip and is still `- [ ]`, explicitly framed as real (if non-blocking) deferred work, matching the
+      precedent of the still-open, still-active analogous doc `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`.
+      Leaving this doc open rather than force-archiving over genuine remaining scope.
+- [x] ✅ [PLAN] P2. `plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` →
       `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (~L270-286), covers items (2) DP_VM_GONE_NO_CAPTURE
       debounce + (3) InstrumentsHandler str/int bug. Item (1) (operator-gated prod-manifest `--apply`) has no other home
       — see §5, needs an operator-decision-ledger home first. **STATUS UPDATE 2026-07-28
@@ -215,16 +223,15 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`; the source doc's own checkbox annotated with the
       approval + pointer, left unflipped (approval ≠ execution). All 3 items now have a home. **NOT archived**: doc
       carries `locked_by: live-defi-rollout` (line 31), no `[unlock-plan]` grant this session — STOP-and-report per the
-      same HARD RULE as above.
-- [ ] [PLAN] P2. `plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` →
+      same HARD RULE as above. **ARCHIVED 2026-07-28** ([unlock-plan] granted) — re-verified all 3 items present before
+      moving; `git mv` to `plans/archive/issues/`.
+- [x] ✅ [PLAN] P2. `plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (L69-81), verbatim, cites Source + "Done when." Not
       yet executed either place. **STATUS UPDATE 2026-07-28 (unified-trading-pm, verification-only, no file edit)**:
       confirmed verbatim + accurate at batch1b L69-81 (the ONLY remaining open checkbox in the source doc — the
-      `deployment-service:latest` terraform-default-vs-runtime-pin item). Not yet executed either place. **NOT
-      archived**: doc carries `locked_by: live-defi-rollout` + `locked_since: 2026-06-23` (lines 31-32), no
-      `[unlock-plan]` grant this session — otherwise this doc is exactly the "verified present → archive the source
-      anyway" case this entry calls for, and is ready to archive the moment it's unlocked.
-- [ ] [PLAN] P2. `plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md` →
+      `deployment-service:latest` terraform-default-vs-runtime-pin item). Not yet executed either place.
+      **ARCHIVED 2026-07-28** ([unlock-plan] granted) — re-verified before moving; `git mv` to `plans/archive/issues/`.
+- [x] ✅ [PLAN] P2. `plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md` →
       `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (L248-269). Sole remaining item (Cloud Logging
       ingestion gap) merged with a duplicate finding in `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`. 2
       other items already done in code (`alerting-service/alerting_service/api/main.py:77-88`;
@@ -237,16 +244,22 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`) — these weren't in this entry's original
       2-item scope but were real open prose-form work the strict archival bar requires closing first (trap (b) in the
       vintage-audit skill). The sole remaining checkbox (Cloud Logging ingestion gap) confirmed already migrated
-      verbatim into batch2. All items now resolved-in-place or migrated. **NOT archived**: doc carries
-      `locked_by: live-defi-rollout` (line 27), no `[unlock-plan]` grant this session — STOP-and-report; this doc is
-      otherwise fully closeable.
+      verbatim into batch2. All items now resolved-in-place or migrated. **ARCHIVED 2026-07-28** ([unlock-plan]
+      granted) — re-verified 0 remaining `- [ ]` checkboxes (the Cloud Logging gap was itself resolved in-place
+      `alerting-service@62b850c` by the time of archival, even better than "migrated"); `git mv` to
+      `plans/archive/issues/`.
 - [x] ✅ [PLAN] P2. **PARTIAL — content-verified + 2 stale boxes flipped, NOT archived (locked, no `[unlock-plan]`
-      grant)** — unified-trading-pm@cff8d611b. `plans/active/issues/uv_pin_fleet_drift_2026_06_22.md` →
+      grant)** — unified-trading-pm@cff8d611b. `plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`. setup.sh fleet rollout + boot-script hardening already "DONE
       2026-07-26" there (instruments-service@40240042, unified-trading-pm@703b1e912); residue (0.10.8 constant
       centralization, uv-version drift-guard) cross-referenced to batch1 Deferred items 2/3 (real content, confirmed).
       Harsh's-laptop/epic-VM item NOT covered by batch1 (verified 0 grep hits) — epic-VM half moot now (durable fix
-      shipped), laptop half stays a small open manual step.
+      shipped), laptop half stays a small open manual step. **ARCHIVED 2026-07-28** ([unlock-plan] granted) — the
+      laptop-item resolved-by-ruling this session (operator 2026-07-27: no more Ikenna/Harsh human-owner splits;
+      residual generic-drift risk subsumed by the open drift-guard todo); also found + flipped 2 more stale duplicate
+      checkboxes on re-verification (`scripts/setup.sh` astral-uv fallback, already shipped earlier in-doc; CICD
+      `main-backmerge-to-ldr` durable drift-tick fix, confirmed live in `branch-health.yml`). `git mv` to
+      `plans/archive/issues/`.
 - [x] [PLAN] P2. `plans/active/l0_doc_index_generator_2026_06_24.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (~L476-498). 2 remaining Deferred items (AO-dashboard L0-graph
       route; on-demand stale-check wrapper) cited Source verbatim, still open there. — ✅ archived with banner
@@ -269,7 +282,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       forks + the Tardis resolution (`plans/archive/issues/plan_issue_epic_consolidation_2026_06_30.md`); referrers
       fixed corpus-wide (`master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
       `/codex/11-project-management/doc-frontmatter-schema.md`).
-- [ ] [PLAN] P2. `plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md` — C2/C4 confirmed: their
+- [x] ✅ [PLAN] P2. `plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` — C2/C4 confirmed: their
       home `cefi_layer1_denominator_gaps_2026_07_03.md` is itself now `status: resolved` + archived
       (`plans/archive/issues/`), C2 point-fix + C4 G4-gate-strengthening both shipped and closed there — nothing
       orphaned. C5 confirmed live + still open in `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` (same
@@ -279,15 +292,21 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `VENUE_FETCH_FAILED` in passing); C6's actual concern is now MOOT instead — 2 of its 3 named target docs are
       archived and the third no longer carries a live task on the literal string. C9 (EXTENDED-candle honest-absence,
       ~10-line fix) folded into `cefi_consolidated_closeout_2026_07_18.md` Track 6 per operator ruling 2026-07-27
-      (§5-RESOLVED #24/#27), not `instruments_completion_tracker_2026_07_06.md`. **NOT archived — doc is
-      `locked_by: live-defi-rollout` and this wave had no `[unlock-plan]` authorization; all residual content
-      (C2/C4/C5/C6/C9) is now confirmed homed or closed, so archival is a pure `[unlock-plan]` ask away.**
+      (§5-RESOLVED #24/#27), not `instruments_completion_tracker_2026_07_06.md`. **ARCHIVED 2026-07-28** ([unlock-plan]
+      granted) — re-verified C9 present verbatim in `cefi_consolidated_closeout_2026_07_18.md` Track 6 (citing back to
+      this doc) before moving; `git mv` to `plans/archive/issues/`.
 - [x] ✅ [PLAN] P2. **PARTIAL — orphans rehomed, NOT archived (locked, no grant + genuine non-infra remainder)** —
       unified-trading-pm@cff8d611b. `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, which cites this doc for 3 open todos (execution-service
       `service_name` drift; SIT's 2 QG failures; UAC `infura_*` rename), confirmed present with real content. Both true
       orphans (deployment-scripts bucket lifecycle rules; G-TRACE E2E trace API) filed as new todos into that same plan
-      per operator decision (§5#28).
+      per operator decision (§5#28). **RE-VERIFIED 2026-07-28 (unlock WAS granted this session, still NOT archived
+      anyway)**: even with the 2 orphans confirmed rehomed, the doc's OWN per-source-doc archive criterion is not met —
+      it still carries substantial genuinely-open, non-infra work outside the infra-tranche migration's scope (UAC
+      DeFi venue-registry `BLOCKED-DISCIPLINE` items pending live smoke-tests, alerting-service `NEEDS-LIVE`
+      ML-baseline item, 2 operator-gated `tofu apply` infra items, the `## BLOCKED clusters` section). Correctly left
+      open — this doc's own "Archive-readiness verdict" section (written 2026-07-27) already reached this exact
+      conclusion; confirmed still true.
 - [ ] [PLAN] P2. `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft), dispatches both AO-eligible residuals
       (FeaturesMvpRule/StrategiesMvpRule+consumer; real-data MVP-toggle verify) verbatim. Not yet archivable (batch1b
@@ -408,18 +427,21 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       market-data-processing-service@bffb9df, ml-service, trading-agent-service) — 0 checkboxes flipped, flip them.
       execution-service, greeks-service, strategy-service (also vendoring MTDS) still confirmed Pattern-B, gated on
       "Owner: Ikenna" design call — see §5. Track remainder via `infra_consolidated_closeout_2026_07_25.md` Track 1.
-- [x] ✅ [PLAN] P2. **PARTIAL — both items homed, NOT archived (locked, no grant)** — unified-trading-pm@cff8d611b. Item
-      (a) RULE-11 flipped citing the migration into `infra_satellite_ao_dispatch_batch1_2026_07_26.md`
-      ([OPERATOR]-tagged, open); approval on record (§5#21) but execution (edit `plan-health-agent.yml` + template twin,
-      delete the live Cloud Run job + scheduler, edit deployment-service terraform) NOT done this session — cross-repo
-      live-prod-delete out of this task's file scope, files located for the next pass. Item (b) (fold `--precommit` into
-      quality-gates-v2) filed as a new todo directly into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` next to
-      RULE-11. `plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md` — 9/11 done. Item (a)
-      RULE-11 (drop `schedule:`/Haiku, delete Cloud Run hygiene-sweep job) confirmed still needed and already migrated
-      verbatim into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` ([OPERATOR]-tagged, open) — flip here. Item (b)
-      "fold `--precommit` sweep into quality-gates-v2 + retire standalone plan-health-gate GHA job" is a true orphan —
-      rehome into a July infra plan (batch2 once drafted, or `infra_consolidated_closeout_2026_07_25.md` Track 1) before
-      archiving.
+- [x] ✅ [PLAN] P2. **EXECUTED + ARCHIVED 2026-07-28** ([unlock-plan] granted). RULE-11 (item a) actually EXECUTED this
+      session (not just migrated): `.github/workflows/plan-health-agent.yml` + its
+      `scripts/self-hosted-runners/hosted-baseline/` template twin both dropped the `schedule:` trigger + the Haiku
+      `plan-health`/`notify` job pair, keeping only the `pull_request`-triggered `plan-health-gate` hard gate; the live
+      Cloud Run Job `uts-prod-plan-hygiene-sweep` + Cloud Scheduler `uts-prod-plan-hygiene-sweep-cron` were deleted via
+      `gcloud run/scheduler jobs delete` (verified `NOT_FOUND` + absent from `gcloud run jobs list`);
+      `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` + both repos' copies of
+      `cron_hygiene_sweep_entrypoint.sh` deleted (`git rm`); the 2 terraform `import {}` blocks in
+      `deployment-service/terraform/gcp/_imports_reconcile.tf` replaced with removal comments (matching that file's own
+      convention); the stale `cloud_run_job_registry.py` entry removed; `/codex/11-project-management/plan-hygiene.md`
+      + `/codex/12-agent-workflow/plan-hygiene.md` rewritten to the timer-on-central model. Item (b) — "fold
+      `--precommit` sweep into quality-gates-v2 + retire standalone plan-health-gate GHA job" — a **prior migration
+      pass's claim that this was already filed in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` was FALSE**
+      (verified via grep, zero hits); landed for real this session as a genuine todo next to RULE-11 in that plan.
+      `git mv` source doc to `plans/archive/issues/`.
 - [x] ✅ [PLAN] P3. `plans/active/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md` — core premise ("7 branches
       left in place") now factually false: `git ls-remote` (2026-07-27) confirms 0 matching `tab/rootm/*` branches
       remain in any of the 6 repos — add a correction banner. Disposition rehomed into
@@ -461,12 +483,13 @@ needed.
    (hard-stop #2).
 10. `monitoring_control_plane_master_2026_06_10.md` — G4/G5 panels "BLOCKED-ON: verdict-store OR operator OK on a
     faithful port."
-11. `issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` — prod-manifest mutation via
-    `populate_v9_index_columns_inplace.py --apply` explicitly surfaced to operator, not auto-applied.
+11. `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` —
+    prod-manifest mutation via `populate_v9_index_columns_inplace.py --apply` explicitly surfaced to operator, not
+    auto-applied.
 12. `issues/fleet_audit_triad_deferred_followups_2026_06_01.md` — Tardis paid key + GCS manifest 22-day gap under the
     operator's 2026-06-01 "let it be" banner.
-13. `issues/vm_backfill_data_correctness_findings_2026_06_29.md` — F4 (Curve subgraph dead) BLOCKED-CREDENTIALS; F7
-    (TradFi `is_mvp` gating) inventory-only pending a scope call (see also §1).
+13. `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md` — F4 (Curve subgraph dead)
+    BLOCKED-CREDENTIALS; F7 (TradFi `is_mvp` gating) inventory-only pending a scope call (see also §1).
 14. `master_data_canonicalisation_migration_catalogue_2026_06_07.md` — G5 (backfill-to-100%) has no per-AG owner
     anywhere, needs an ownership ruling; G1-ENUM P1 finding needs an owner picked from 3 given fix options.
 15. `citadel_paper_batch_live_reconciliation_2026_06_19.md` — P2.7.3/P7.3 live-wallet reconciliation is
@@ -486,15 +509,15 @@ needed.
 22. `codex_violations_ratchet_to_five_2026_06_10.md` — locked (`live-defi-rollout`), needs `[unlock-plan]`;
     `delta_proxy_repricer.py` dead-code needs operator/architect confirm.
 23. `repo_scripts_governance_audit_2026_06_18.md` — delete-execution is campaign-gated; D16 carve-scope decision open.
-24. `issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md` — RULE-11 (drop `schedule:`/Haiku, delete Cloud
-    Run job) is [OPERATOR]-tagged.
+24. `/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md` — RULE-11 (drop
+    `schedule:`/Haiku, delete Cloud Run job) is [OPERATOR]-tagged.
 25. `issues/plan_issue_epic_consolidation_2026_06_30.md` — residual operator-decision queue (5 of 7 already forked;
     Tardis-historical-billing item needs confirming).
 26. `issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md` — finding 2 (`plans/active/INDEX.md` abandoned,
     226-entry drift) is an explicit A/B/C operator call, parked in `infra_plan_reconcile_parked_decisions_2026_07_26.md`
     §3.
-27. `issues/instruments_service_plan_reconciliation_2026_06_29.md` — C9 (EXTENDED-candle honest-absence fix) needs
-    folding into a live successor before archival.
+27. `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` — C9 (EXTENDED-candle honest-absence
+    fix) needs folding into a live successor before archival.
 28. `issues/issue_docs_remediation_sweep_2026_06_02.md` — 2 true orphans (bucket lifecycle rules; G-TRACE API) need a
     home before archiving.
 29. `bigquery_feature_ml_compute_engine_option_2026_06_08.md` — all 5 remaining todos gated behind 3 named "Open
@@ -590,7 +613,28 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
 19. codex_violations — unlock **GRANTED**. `delta_proxy_repricer.py`: NOT dead code as assumed — its dependency
     `UnderlyingTracker` is tested/used elsewhere but the repricer class itself has zero tests/callers (built, never
     wired in). **File as real work to wire in**: keep the module, open a new todo to integrate it into the live
-    execution handler + add tests (MM delta-proxy repricing IS wanted).
+    execution handler + add tests (MM delta-proxy repricing IS wanted). — **DONE 2026-07-28** —
+    `execution-service@89fbf99d1` (QG green, 626s, `.qg_last_passed_sha` verified == HEAD). Wired via a new
+    `execution_service/engine/quote_maintenance.py` (`QuoteMaintainer`), connecting the two things that already existed
+    but were never joined: `execution_service.v2.handlers.QuoteHandler` (the typed dispatch point for strategy-service's
+    `QuoteInstruction`, MARKET_MAKING archetypes) and `DeltaProxyRepricer` itself. `QuoteHandler.set_quote_maintainer()`
+    (classmethod-set shared state, mirroring `BaseHandler.set_matching_engine`) wires instrument registration on every
+    QUOTE receipt; `QuoteMaintainer.on_underlying_tick()` reprices + submits BUY@bid/SELL@ask LIMIT orders through the
+    existing `OrderAdapter.submit_order` venue path (via a structural `QuoteVenueSubmitter` protocol, matching the
+    `engine/live/protocols.py` I/O-free-engine convention — no new venue-submission mechanism invented). **Scoped
+    honestly, not force-integrated**: `QuoteInstruction` (UAC) has no delta/gamma/underlying_instrument_id fields yet,
+    so this wiring defaults `underlying_instrument_id = instrument`, `delta = 1.0` (the Spot/Perp self-underlying case);
+    real derivative delta-proxy hedging (TradFi options/sports exchanges vs a distinct underlying) awaits that UAC
+    schema extension — documented as a scope note in both files, not silently assumed. **Also confirmed and left as an
+    explicit TODO, not invented**: no live underlying-tick-ingestion loop exists anywhere in execution-service yet (zero
+    `EventTransport` consumers) to actually call `on_underlying_tick()` in production, and `QuoteHandler`/
+    `V2InstructionRouter` itself isn't yet invoked by any live entrypoint (still an additive, pre-migration typed
+    surface per its own package docstring) — both are pre-existing gaps outside this task's scope, not something this
+    change fabricated. Real tests added: `tests/unit/engine/test_delta_proxy_repricer.py` (new — the repricer itself had
+    zero tests before this) covering registration/repricing-math/gamma/clamp/floor-guard edge cases, and
+    `tests/unit/engine/test_quote_maintenance.py` + additions to `tests/unit/v2/test_router_and_handlers.py` proving a
+    registered instrument reprices on an underlying tick AND that the repriced quote reaches the mocked venue-submission
+    call (BUY@bid + SELL@ask, correct instrument/price/quantity).
 20. repo_scripts_governance D16 — **PM-only carve scope chosen** (matches current CLAUDE.md carve #3). The
     campaign-gated delete-execution cohort is a sequencing gate, not a fresh decision (already correctly scoped: wait
     for each AG's manifest-canonicalisation plan to archive).
@@ -671,12 +715,23 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
 
 ## §6 — Unclear, needs a closer look before deciding (2 docs)
 
-- [ ] [VALIDATE] P3. `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md` — 23 done/8 open: 3 UI todos
-      are code-shipped but un-ticked pending a playwright pw:L2 run — no evidence found that pw:L2 has actually run
-      since. Plus a fresh 2026-07-18 finding (IS/sports + IS/tradfi CSV downloads return HTTP 500) with no successor
-      tracking it anywhere. Check for a newer regression-spec commit on deployment-ui to see if pw:L2 quietly ran; if
-      genuinely still blocked on a UI-capable slot, it's real open work, not stale. File the HTTP-500 finding into a
-      tracked successor if none exists.
+- [x] [VALIDATE] P3. ✅ **DISPOSITIONED 2026-07-28** —
+      `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`. **3 UI todos**: confirmed genuinely still
+      blocked, not stale. Ran a fresh full `npx playwright test     --project=chromium tests/smoke/` (deployment-ui HEAD
+      `dfa5d0e`): 410/423 passed, 0 failures touching any of the 3 items (venue-filter/de-dupe-panel/pagination), and
+      the plan's previously-cited `prediction_v9_breakdown.spec.ts` blocker is independently confirmed fixed
+      (deployment-ui@`687d4ce`, 2026-06-16). But 13 NEW, unrelated failures (Fleet Git-Health nav entry apparently
+      dropped 2026-07-27) now keep the full-suite exit non-zero, so the `pw:L2` SSOT bar (full `tests/smoke/` exits 0)
+      isn't met — filed as its own issue rather than ticking on a partial pass:
+      `plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`. The 3 items stay open in the
+      source plan, now with full evidence instead of a stale "pending" note. **HTTP-500 finding**: a successor doc
+      ALREADY existed and was ALREADY resolved+archived before this session —
+      `plans/archive/issues/data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md` (resolved 2026-07-20,
+      deployment-api@`65f5593`: tradfi was a real Cloud Run buffered-response-size bug, fixed via CSV streaming; sports
+      was a transient manifest-consolidator staleness, not a code bug, honest-absence 500 by design). No new doc needed;
+      the source plan's Phase E line now points to it instead of reading as untracked. Not archiving this §6 row —
+      leaving it visible as the audit trail per the source plan's own evidence, one of the two disposition halves (the
+      Fleet-Git regression) is a newly-opened doc, not a closure.
 - [ ] [VALIDATE] P3. `plans/active/issues/empty_reprobe_disagreement_2026_06_22.md` — (also in §2) the specific 4 defi
       cells' current-day disposition was not independently re-probed this session. Run one fresh
       `reprobe_new_empty_confirmed.py` pass on the 4 named cells before deciding archive-as-is vs re-probe-first.
@@ -827,3 +882,15 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
   way this entry did, ship/reconcile as they land, and keep going until every item in this whole plan doc (§1-§6)
   reaches a genuinely complete, verified, shipped state per the autonomous completion contract — no stopping at
   partial/blocked without a documented, genuinely-physically-impossible reason.
+- 2026-07-28 — **§6 `data_status_tab` resolution — one of the 9 resumed autonomous agents, this item picked back up from
+  a genuine cold start** (no salvageable prior-crash artifacts existed for it per the entry above). Full disposition
+  recorded in §6 above; summary: ran a fresh `npx playwright test --project=chromium tests/smoke/` on deployment-ui
+  (410/423 passed) — the plan's previously-cited `prediction_v9_breakdown.spec.ts` blocker is independently confirmed
+  fixed (deployment-ui@`687d4ce`), but a NEW unrelated 13-failure Fleet Git-Health nav regression (2026-07-27) now
+  blocks the same `pw:L2` gate, filed as
+  `plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`; the 3 UI todos in the source plan
+  stay open (genuinely blocked, not stale — updated with full evidence). The HTTP-500 finding already had a resolved +
+  archived successor doc from 2026-07-20 (`data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md`,
+  deployment-api@`65f5593`) that this session's original 2026-07-18 finding-author never cross-linked — the source
+  plan's Phase E line now points to it. Both halves of this §6 item are now dispositioned with evidence; nothing left
+  unclear about it.

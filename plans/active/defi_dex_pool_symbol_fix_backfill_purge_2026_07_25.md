@@ -99,24 +99,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                                                  | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                                                  | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                                                  | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                                                  | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                                                  | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                                          | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                                          | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                                          | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                                          | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                                          | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                                                  "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                                                  the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                                                  genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                                                  for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                                                  `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                                                  (specific `_migrated_*` marker objects, never the bucket), target
-                                                  `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                                                  returned `604800` (7 days) fresh-checked 2026-07-27 per
-                                                  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                                                  this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                                                  per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                                                  Progress Log below.
+                                                          "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                                          the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                                          genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                                          for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                                          `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                                          (specific `_migrated_*` marker objects, never the bucket), target
+                                                          `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                                          returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                                          `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                                          this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                                          per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                                          Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -406,3 +406,40 @@ is quick and doesn't block anything.
       commits in the interim) -- verified via `git merge-base --is-ancestor` that the actually-deployed tarball SHA
       (`33fa3b58`) still descends from the query/parser fix commit (`63199601`), so no re-publish was needed before
       trusting either relaunch's output.
+    - **SECOND preemption at ~08:31 UTC** (`compute.instances.preempted`, confirmed via
+      `gcloud compute operations list`) after only ~38 minutes of runtime on the rescoped VM -- last confirmed
+      processing day ~2025-04-06/07 (2025-04-07 partially in progress at preemption, per the log's per-day
+      `DEX pools collection complete` / `_instruments_metadata: loaded ...` ordering). This zone (`asia-northeast1-c`)
+      showed elevated SPOT preemption frequency this session (2 preemptions in ~1.5h of wall-clock monitoring) -- not
+      itself an action item (SPOT is the correct default per the backfill-VM HARD RULE and idempotent shards tolerate
+      it), just an observation for anyone reading this log wondering why there are 3 launch entries for one todo.
+      Relaunched a THIRD time, scoped to `--start 2025-04-03` (a few days' margin before the last confirmed day)
+      `--end 2026-07-27` -- verified via the VM's own serial console (`get-serial-port-output`, not just trusting the
+      launcher's echoed flags) that the actual `--start-date 2025-04-03` reached the process command line, and via
+      `gcloud storage cat .../code/mtds-code.manifest.json` + `git merge-base --is-ancestor` that the tarball SHA
+      redeployed by ANOTHER slot in the interim (`0413e5cdf89e`) still descends from the fix commit. Confirmed via log
+      tail that this third launch is correctly processing from day 2025-04-05 onward (not repeating the
+      first-recovery-attempt mistake of silently replaying from 2020-01-20).
+    - **THIRD preemption at ~08:38 UTC**, only ~4 minutes after that launch's own task start -- confirmed via
+      `gcloud compute operations list` (`compute.instances.preempted`). Three preemptions in ~2h of wall-clock
+      monitoring, with STRICTLY DECREASING runtime each time (~8.3h -> ~38min -> ~4min), is a clear signal of a real
+      SPOT capacity crunch in `asia-northeast1-c` at this time, not a fluke. **Switched to on-demand for the final
+      push** (`--on-demand` / `ON_DEMAND=true` on `launch-mtds-dex-pools-backfill-vm.sh`) -- this is the codex's own
+      sanctioned opt-out from the SPOT-default HARD RULE, and with only ~480 remaining days of work left, the on-demand
+      price premium for a single ~1-1.5h run is clearly cheaper than continuing to lose 4-40 minutes of progress to
+      repeated preemptions. Relaunched scoped to `--start 2025-04-02` (last confirmed complete day ~2025-04-04, small
+      safety margin) `--end 2026-07-27`, verified `[on-demand]` in the launcher's own creation output (empty
+      `PREEMPTIBLE` column, not `true`) and via `git merge-base --is-ancestor` that the tarball redeployed yet again by
+      another slot (`b2cb7bc05ba0`) still descends from the fix commit.
+    - **As of this checkpoint (2026-07-28, session still monitoring)**: the on-demand relaunch is RUNNING. Todo 4 is NOT
+      yet checked done -- still awaiting this VM's completion + a manifest spot-check for curve/ETHEREUM,
+      curve/AVALANCHE, sushiswap/ARBITRUM (mirroring the velodrome_v2/trader_joe_v2 verification already done above),
+      then the checkbox flip + `/done`. If this session's context is compacted before that happens, the next session
+      should: (1) check
+      `gcloud compute instances describe mtds-dex-pools-symbolfix-batch1 --zone=asia-northeast1-c --project=central-element-323112`
+      for RUNNING/gone: since this launch is ON-DEMAND, "gone" now most likely means genuine completion (self-delete on
+      `DEPLOYMENT_COMPLETED`), not preemption -- but still verify via `gcloud compute operations list` before assuming
+      success, since an on-demand instance can still be manually stopped/deleted by someone; (2) if it completed cleanly
+      (`DEPLOYMENT_COMPLETED exit_code=0`), do the manifest spot-check for the remaining 3 protocols and finish the
+      todo; (3) if somehow still gone without a clean completion log, relaunch scoped to the measured last day (same
+      recipe as above -- do NOT replay from 2020-01-20, 2025-01-10, or 2025-04-03).

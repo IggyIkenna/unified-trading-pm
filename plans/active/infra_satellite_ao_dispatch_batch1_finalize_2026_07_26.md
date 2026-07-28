@@ -72,7 +72,7 @@ source: >-
       one (the setuptools 3-step chain, the uv `setup.sh` fix + rollout pair, the e2e-login 3-step chain, the
       PROGRESS.json rollout folding three families, the fleet-monitor pair, the launcher-write pair) — flip ALL the
       constituent boxes, not just one per todo, and say in each flip which combined todo covered it. The 17 source docs
-      are: `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`, `issues/uv_pin_fleet_drift_2026_06_22.md`,
+      are: `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`, `/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md`,
       `issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md`,
       `issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`,
       `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`,
@@ -81,7 +81,7 @@ source: >-
       `codex_violations_ratchet_to_five_2026_06_10.md`, `repo_scripts_governance_audit_2026_06_18.md`,
       `issues/service_dockerfile_pattern_normalization_2026_06_17.md`, `codex_vs_repo_docs_ssot_audit_2026_06_01.md`,
       `issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md`,
-      `issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`, `l0_doc_index_generator_2026_06_24.md`,
+      `/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`, `l0_doc_index_generator_2026_06_24.md`,
       `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`, `stash_pile_workspace_cleanup_2026_06_03.md`,
       `issues/reference_path_convention_2026_07_23.md`. (That list is 18 entries because
       `session_bound_vm_monitoring_reliability_gap` co-sourced one combined todo with the billing-waste doc — reconcile

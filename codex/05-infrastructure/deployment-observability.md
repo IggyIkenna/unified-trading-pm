@@ -41,8 +41,8 @@ referenced_by:
     /codex/04-architecture/cross-venue-prediction-arb-detection.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
-    plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
-    plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
+    plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
+    plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
     plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
   ]
 owner:
