@@ -104,10 +104,45 @@ A new `select_account_for_spawn(task_context)` function sits in front of the exi
    automatically if DeepSeek looks unhealthy — this is what makes the blend a reliability win, not just a cost split.
 4. The Claude branch delegates to the **existing, unmodified** `_pick_headroom_account()` ranking, scoped by one added
    `provider == "anthropic"` filter.
+5. **Resume is a special case, discovered during implementation (2026-07-28)**: `_resume_pass` (dead-worker `--resume`)
+   must NOT run the full eligibility/split/health-gate decision — it must stay on the SAME PROVIDER the dying session
+   was already running on. Replaying one model's transcript into a DIFFERENT model mid-task is a correctness risk, not a
+   cost/routing decision. `select_account_for_spawn()` therefore takes a `preferred_provider` parameter: `None` (the two
+   fresh-dispatch call sites — the main AutoSpawn loop and `ensure_review_agents`) runs the full decision;
+   `_resume_pass` passes the slot's last-bound account's provider (looked up via `SlotRow.account_id` →
+   `accounts_file.get(...).provider`), pinning the pick to that provider's pool unconditionally.
 
 ## Progress Log
 
-_(none yet — plan just authored 2026-07-28)_
+**2026-07-28 — Todos 1-5 implemented + verified GREEN locally, NOT YET SHIPPED (operator instruction: hold until the
+real DeepSeek account is registered and smoke-tested end to end — todos 6/7 below).**
+
+- `provider: Literal["anthropic", "deepseek"] = "anthropic"` added to `AccountDef` (`server/accounts.py`).
+- `usage_poller.py::_tick_once()` now excludes any `provider != "anthropic"` account from the `CLAUDE_CODE_OAUTH_TOKEN`
+  probe entirely (no `auth_failed` marking) — via a `non_anthropic_ids` set built alongside the existing `env_files`
+  loop.
+- `select_account_for_spawn()` implemented in `autospawn.py` (eligibility + round-robin split + health gate +
+  `preferred_provider` pin for resumes — see Design summary item 5 above). Two new module-level stores:
+  `_recent_spawn_failures` (health-gate ring) and `_deepseek_round_robin_counter` (split counter).
+- `_pick_headroom_account()` gained a `provider: str = "anthropic"` parameter (one filter line in its candidate loop) —
+  ranking math itself is untouched, and it degenerates correctly for a `provider="deepseek"` scoped call because
+  `_account_has_headroom(None, ...)` already treats "no usage row" as healthy (confirmed by reading the function before
+  relying on it, not assumed).
+- All 3 call sites rewired: `ensure_review_agents` and the main AutoSpawn loop call `select_account_for_spawn()` with
+  `preferred_provider=None`; `_resume_pass` calls it with `preferred_provider=<last account's provider>`. The main
+  loop's model-tier resolution (`plan_model`/`eff_model` incl. the pinned-task upgrade check) was reordered to run
+  BEFORE the account pick, since eligibility needs the FINAL tier, not the pre-upgrade one.
+- New tunables on `TuningDefaults` (`config.py`): `deepseek_route_fraction` (default 0.3),
+  `deepseek_health_failure_threshold` (default 3), `deepseek_health_window_seconds` (default 900).
+- New test file `tests/test_deepseek_provider_routing.py` (provider defaulting, provider-scoped picking, eligibility,
+  split ratio, health-gate fallback, `preferred_provider` pin, zero-fraction disables routing). Fixed 2 pre-existing
+  tests in `tests/test_usage_poller_auth_failover.py` whose account `MagicMock`s had no `.provider` attribute (an unset
+  `MagicMock` attribute is never the string `"anthropic"`, so they'd have been incorrectly excluded by the new guard).
+- **Verified**: `bash scripts/quality-gates.sh` — ruff, basedpyright (0 errors), 1905 passed / 1 skipped, dashboard
+  tsc+vitest all green. (Along the way: this checkout's `.venv` was stale against `pyproject.toml`'s `fastapi>=0.137.0`
+  — `uv sync` fixed it; pre-existing environment drift, unrelated to this plan's own code.)
+- **Deliberately NOT committed/pushed** — operator instruction: local-only until the DeepSeek account is actually
+  registered in `data/config/accounts.json` and smoke-tested (`claude -p 'reply AUTH_OK'`), per todos 6/7 below.
 
 ## Todos
 
